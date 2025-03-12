@@ -11,6 +11,7 @@ setup(
         "pytest",
         "pytest-mock",
         "win10toast",  # For Windows notifications
+        "geopy",      # For geocoding addresses and zip codes
     ],
     description="Desktop application to check NOAA weather with accessibility features",
     author="User",

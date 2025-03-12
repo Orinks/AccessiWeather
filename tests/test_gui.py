@@ -18,13 +18,27 @@ def wx_app():
 class TestLocationDialog:
     """Test suite for LocationDialog"""
     
+    def setup_method(self):
+        """Set up test fixture"""
+        # Create geocoding service mock
+        self.geocoding_patcher = patch('noaa_weather_app.gui.GeocodingService')
+        self.mock_geocoding_class = self.geocoding_patcher.start()
+        self.mock_geocoding = MagicMock()
+        self.mock_geocoding_class.return_value = self.mock_geocoding
+    
+    def teardown_method(self):
+        """Tear down test fixture"""
+        # Stop geocoding patch
+        self.geocoding_patcher.stop()
+    
     def test_init(self, wx_app):
         """Test initialization"""
         dialog = LocationDialog(None, title="Test Dialog", location_name="Test", lat=35.0, lon=-80.0)
         try:
             assert dialog.name_ctrl.GetValue() == "Test"
-            assert dialog.lat_ctrl.GetValue() == "35.0"
-            assert dialog.lon_ctrl.GetValue() == "-80.0"
+            assert dialog.latitude == 35.0
+            assert dialog.longitude == -80.0
+            assert "Custom coordinates: 35.0" in dialog.result_text.GetValue()
         finally:
             dialog.Destroy()
     
@@ -32,10 +46,13 @@ class TestLocationDialog:
         """Test input validation"""
         dialog = LocationDialog(None)
         try:
+            # Set initial state with valid coordinates
+            dialog.latitude = 35.0
+            dialog.longitude = -80.0
+            dialog.result_text.SetValue("Custom coordinates: 35.0, -80.0")
+            
             # Test with valid inputs
             dialog.name_ctrl.SetValue("Test")
-            dialog.lat_ctrl.SetValue("35.0")
-            dialog.lon_ctrl.SetValue("-80.0")
             
             # Mock the event
             event = MagicMock()
@@ -44,9 +61,9 @@ class TestLocationDialog:
             # Skip should have been called for valid inputs
             event.Skip.assert_called_once()
             
-            # Test with invalid latitude
+            # Test with empty name
             event.reset_mock()
-            dialog.lat_ctrl.SetValue("invalid")
+            dialog.name_ctrl.SetValue("")
             
             # Need to patch MessageBox
             with patch('wx.MessageBox') as mock_message_box:
@@ -58,7 +75,7 @@ class TestLocationDialog:
                 # MessageBox should have been called
                 mock_message_box.assert_called_once()
                 args = mock_message_box.call_args[0]
-                assert "Invalid latitude" in args[0]
+                assert "name" in args[0].lower()
         finally:
             dialog.Destroy()
     
@@ -67,8 +84,8 @@ class TestLocationDialog:
         dialog = LocationDialog(None)
         try:
             dialog.name_ctrl.SetValue("Test")
-            dialog.lat_ctrl.SetValue("35.0")
-            dialog.lon_ctrl.SetValue("-80.0")
+            dialog.latitude = 35.0
+            dialog.longitude = -80.0
             
             name, lat, lon = dialog.GetValues()
             assert name == "Test"

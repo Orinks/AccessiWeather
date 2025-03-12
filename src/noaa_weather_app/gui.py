@@ -24,16 +24,17 @@ logger = logging.getLogger(__name__)
 UPDATE_INTERVAL = 15 * 60  # 15 minutes
 
 
-class LocationDialog(wx.Dialog):
-    """Dialog for adding or editing a location"""
+from noaa_weather_app.geocoding import GeocodingService
+
+class AdvancedLocationDialog(wx.Dialog):
+    """Dialog for manually entering lat/lon coordinates"""
     
-    def __init__(self, parent, title="Add Location", location_name="", lat=None, lon=None):
-        """Initialize the location dialog
+    def __init__(self, parent, title="Advanced Location Options", lat=None, lon=None):
+        """Initialize the advanced location dialog
         
         Args:
             parent: Parent window
             title: Dialog title
-            location_name: Initial location name
             lat: Initial latitude
             lon: Initial longitude
         """
@@ -42,14 +43,6 @@ class LocationDialog(wx.Dialog):
         # Create a panel with accessible widgets
         panel = wx.Panel(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
-        
-        # Name field
-        name_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        name_label = AccessibleStaticText(panel, label="Location Name:")
-        self.name_ctrl = AccessibleTextCtrl(panel, value=location_name, label="Location Name")
-        name_sizer.Add(name_label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
-        name_sizer.Add(self.name_ctrl, 1, wx.ALL | wx.EXPAND, 5)
-        sizer.Add(name_sizer, 0, wx.EXPAND | wx.ALL, 5)
         
         # Latitude field
         lat_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -96,7 +89,7 @@ class LocationDialog(wx.Dialog):
         sizer.Fit(self)
         
         # Set initial focus for accessibility
-        self.name_ctrl.SetFocus()
+        self.lat_ctrl.SetFocus()
         
         # Connect events
         self.Bind(wx.EVT_BUTTON, self.OnOK, id=wx.ID_OK)
@@ -108,14 +101,8 @@ class LocationDialog(wx.Dialog):
             event: Button event
         """
         # Validate inputs
-        name = self.name_ctrl.GetValue().strip()
         lat_str = self.lat_ctrl.GetValue().strip()
         lon_str = self.lon_ctrl.GetValue().strip()
-        
-        if not name:
-            wx.MessageBox("Please enter a location name", "Error", wx.OK | wx.ICON_ERROR)
-            self.name_ctrl.SetFocus()
-            return
             
         try:
             lat = float(lat_str)
@@ -125,7 +112,7 @@ class LocationDialog(wx.Dialog):
             wx.MessageBox(f"Invalid latitude: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
             self.lat_ctrl.SetFocus()
             return
-            
+                
         try:
             lon = float(lon_str)
             if lon < -180 or lon > 180:
@@ -134,7 +121,187 @@ class LocationDialog(wx.Dialog):
             wx.MessageBox(f"Invalid longitude: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
             self.lon_ctrl.SetFocus()
             return
+                
+        event.Skip()  # Continue with default handler
+    
+    def GetValues(self):
+        """Get the dialog values
+        
+        Returns:
+            Tuple of (latitude, longitude)
+        """
+        lat = float(self.lat_ctrl.GetValue().strip())
+        lon = float(self.lon_ctrl.GetValue().strip())
+        return (lat, lon)
+
+
+class LocationDialog(wx.Dialog):
+    """Dialog for adding or editing a location"""
+    
+    def __init__(self, parent, title="Add Location", location_name="", lat=None, lon=None):
+        """Initialize the location dialog
+        
+        Args:
+            parent: Parent window
+            title: Dialog title
+            location_name: Initial location name
+            lat: Initial latitude
+            lon: Initial longitude
+        """
+        super().__init__(parent, title=title, style=wx.DEFAULT_DIALOG_STYLE)
+        
+        # Initialize geocoding service
+        self.geocoding_service = GeocodingService()
+        self.latitude = lat
+        self.longitude = lon
+        
+        # Create a panel with accessible widgets
+        panel = wx.Panel(self)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        
+        # Name field
+        name_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        name_label = AccessibleStaticText(panel, label="Location Name:")
+        self.name_ctrl = AccessibleTextCtrl(panel, value=location_name, label="Location Name")
+        name_sizer.Add(name_label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+        name_sizer.Add(self.name_ctrl, 1, wx.ALL | wx.EXPAND, 5)
+        sizer.Add(name_sizer, 0, wx.EXPAND | wx.ALL, 5)
+        
+        # Location search (address or zip code)
+        search_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        search_label = AccessibleStaticText(panel, label="Search Location:")
+        self.search_ctrl = AccessibleTextCtrl(panel, value="", label="Search by Address or ZIP Code")
+        search_sizer.Add(search_label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+        search_sizer.Add(self.search_ctrl, 1, wx.ALL | wx.EXPAND, 5)
+        sizer.Add(search_sizer, 0, wx.EXPAND | wx.ALL, 5)
+        
+        # Search button
+        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.search_button = AccessibleButton(panel, wx.ID_ANY, "Search")
+        self.advanced_button = AccessibleButton(panel, wx.ID_ANY, "Advanced (Lat/Lon)")
+        button_sizer.Add(self.search_button, 0, wx.ALL, 5)
+        button_sizer.Add(self.advanced_button, 0, wx.ALL, 5)
+        sizer.Add(button_sizer, 0, wx.CENTER, 5)
+        
+        # Result display
+        self.result_text = AccessibleTextCtrl(
+            panel,
+            value="",
+            style=wx.TE_MULTILINE | wx.TE_READONLY,
+            size=(-1, 60)
+        )
+        self.result_text.SetLabel("Search Result")
+        sizer.Add(self.result_text, 0, wx.ALL | wx.EXPAND, 5)
+        
+        # Description for screen readers
+        help_text = AccessibleStaticText(
+            panel, 
+            label="Enter an address, city, or ZIP code to search for a location"
+        )
+        sizer.Add(help_text, 0, wx.ALL, 10)
+        
+        # Buttons
+        btn_sizer = wx.StdDialogButtonSizer()
+        self.ok_button = AccessibleButton(panel, wx.ID_OK, "Save")
+        self.cancel_button = AccessibleButton(panel, wx.ID_CANCEL, "Cancel")
+        
+        btn_sizer.AddButton(self.ok_button)
+        btn_sizer.AddButton(self.cancel_button)
+        btn_sizer.Realize()
+        sizer.Add(btn_sizer, 0, wx.ALIGN_CENTER | wx.ALL, 10)
+        
+        panel.SetSizer(sizer)
+        sizer.Fit(self)
+        
+        # Set initial focus for accessibility
+        self.name_ctrl.SetFocus()
+        
+        # If lat/lon are provided, show them in the result
+        if lat is not None and lon is not None:
+            self.latitude = lat
+            self.longitude = lon
+            self.result_text.SetValue(f"Custom coordinates: {lat}, {lon}")
+        
+        # Connect events
+        self.Bind(wx.EVT_BUTTON, self.OnSearch, self.search_button)
+        self.Bind(wx.EVT_BUTTON, self.OnAdvanced, self.advanced_button)
+        self.Bind(wx.EVT_BUTTON, self.OnOK, id=wx.ID_OK)
+    
+    def OnSearch(self, event):
+        """Handle search button click
+        
+        Args:
+            event: Button event
+        """
+        # Get search query
+        query = self.search_ctrl.GetValue().strip()
+        if not query:
+            wx.MessageBox("Please enter an address or ZIP code to search", "Error", wx.OK | wx.ICON_ERROR)
+            self.search_ctrl.SetFocus()
+            return
+        
+        # Show searching message
+        self.result_text.SetValue("Searching...")
+        wx.GetApp().Yield()  # Update UI immediately
+        
+        # Search for location
+        result = self.geocoding_service.geocode_address(query)
+        if result:
+            lat, lon, address = result
+            self.latitude = lat
+            self.longitude = lon
             
+            # If the user hasn't entered a name, suggest one based on the address
+            if not self.name_ctrl.GetValue().strip():
+                # Extract a short name from the address (first part before comma)
+                suggested_name = address.split(',')[0]
+                self.name_ctrl.SetValue(suggested_name)
+            
+            # Display result
+            self.result_text.SetValue(f"Found: {address}\nCoordinates: {lat:.6f}, {lon:.6f}")
+        else:
+            self.result_text.SetValue("Location not found. Try a different search or use Advanced options.")
+    
+    def OnAdvanced(self, event):
+        """Handle advanced button click to open manual lat/lon dialog
+        
+        Args:
+            event: Button event
+        """
+        # Open advanced dialog with current coordinates if available
+        dialog = AdvancedLocationDialog(
+            self, 
+            lat=self.latitude, 
+            lon=self.longitude
+        )
+        
+        if dialog.ShowModal() == wx.ID_OK:
+            lat, lon = dialog.GetValues()
+            self.latitude = lat
+            self.longitude = lon
+            self.result_text.SetValue(f"Custom coordinates: {lat:.6f}, {lon:.6f}")
+        
+        dialog.Destroy()
+    
+    def OnOK(self, event):
+        """Handle OK button event
+        
+        Args:
+            event: Button event
+        """
+        # Validate inputs
+        name = self.name_ctrl.GetValue().strip()
+        
+        if not name:
+            wx.MessageBox("Please enter a location name", "Error", wx.OK | wx.ICON_ERROR)
+            self.name_ctrl.SetFocus()
+            return
+        
+        if self.latitude is None or self.longitude is None:
+            wx.MessageBox("Please search for a location or enter coordinates using the Advanced option", "Error", wx.OK | wx.ICON_ERROR)
+            self.search_ctrl.SetFocus()
+            return
+        
         event.Skip()  # Continue with default handler
     
     def GetValues(self):
@@ -144,9 +311,7 @@ class LocationDialog(wx.Dialog):
             Tuple of (name, latitude, longitude)
         """
         name = self.name_ctrl.GetValue().strip()
-        lat = float(self.lat_ctrl.GetValue().strip())
-        lon = float(self.lon_ctrl.GetValue().strip())
-        return (name, lat, lon)
+        return (name, self.latitude, self.longitude)
 
 
 class WeatherDiscussionDialog(wx.Dialog):

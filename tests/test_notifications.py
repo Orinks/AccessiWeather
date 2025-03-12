@@ -81,7 +81,7 @@ class TestWeatherNotifier:
             assert "test-alert-1" in weather_notifier.active_alerts
             assert "test-alert-2" in weather_notifier.active_alerts
 
-    @patch('noaa_weather_app.notifications.ToastNotifier.show_toast')
+    @patch('noaa_weather_app.notifications.SafeToastNotifier.show_toast')
     def test_show_notification(self, mock_toast, weather_notifier):
         """Test showing a notification"""
         alert = {
