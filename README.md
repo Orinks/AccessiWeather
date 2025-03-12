@@ -1,6 +1,6 @@
-# NOAA Weather App
+# AccessiWeather
 
-A desktop application to check NOAA weather with accessibility features built using wxPython.
+A desktop application to check NOAA weather with robust accessibility features built using wxPython.
 
 ## Features
 
@@ -29,3 +29,7 @@ python -m pytest tests/
 - Python 3.7+
 - wxPython
 - Internet connection for NOAA data access
+
+## GitHub Repository
+
+The project is available on GitHub at [Orinks/AccessiWeather](https://github.com/Orinks/AccessiWeather)
