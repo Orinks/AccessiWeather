@@ -1,4 +1,4 @@
-"""Geocoding service for NOAA Weather App
+"""Geocoding service for AccessiWeather
 
 This module provides geocoding functionality to convert addresses and zip codes to coordinates.
 """
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class GeocodingService:
     """Service for geocoding addresses and zip codes"""
     
-    def __init__(self, user_agent: str = "NOAA Weather App"):
+    def __init__(self, user_agent: str = "AccessiWeather"):
         """Initialize the geocoding service
         
         Args:

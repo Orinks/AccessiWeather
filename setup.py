@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="noaa_weather_app",
+    name="accessiweather",
     version="0.1.0",
     packages=find_packages(where="src"),
     package_dir={"":"src"},
@@ -13,7 +13,7 @@ setup(
         "win10toast",  # For Windows notifications
         "geopy",      # For geocoding addresses and zip codes
     ],
-    description="Desktop application to check NOAA weather with accessibility features",
+    description="AccessiWeather: An accessible weather application using NOAA data with focus on screen reader compatibility",
     author="User",
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -23,7 +23,7 @@ setup(
     python_requires=">=3.7",
     entry_points={
         'console_scripts': [
-            'noaa-weather=noaa_weather_app.cli:main',
+            'accessiweather=noaa_weather_app.cli:main',
         ],
     },
 )

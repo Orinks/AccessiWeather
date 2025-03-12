@@ -1,4 +1,4 @@
-"""NOAA Weather API Client
+"""AccessiWeather NOAA API Client
 
 This module provides access to NOAA weather data through their public APIs.
 """
@@ -16,7 +16,7 @@ class NoaaApiClient:
     # NOAA Weather API base URL
     BASE_URL = "https://api.weather.gov"
     
-    def __init__(self, user_agent: str = "NOAA Weather App"):
+    def __init__(self, user_agent: str = "AccessiWeather"):
         """Initialize the NOAA API client
         
         Args:

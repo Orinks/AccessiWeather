@@ -1,4 +1,4 @@
-"""Command-line interface for NOAA Weather App
+"""Command-line interface for AccessiWeather
 
 This module provides a command-line interface for running the application.
 """
@@ -20,7 +20,7 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
     Returns:
         Parsed arguments
     """
-    parser = argparse.ArgumentParser(description="NOAA Weather App")
+    parser = argparse.ArgumentParser(description="AccessiWeather - An accessible weather application using NOAA data")
     parser.add_argument(
         "-d", "--debug", 
         action="store_true", 

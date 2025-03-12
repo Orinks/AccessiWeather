@@ -380,7 +380,7 @@ class WeatherApp(wx.Frame):
         Args:
             parent: Parent window
         """
-        super().__init__(parent, title="NOAA Weather App", size=(800, 600))
+        super().__init__(parent, title="AccessiWeather", size=(800, 600))
         
         # Initialize components
         self.api_client = NoaaApiClient()
@@ -409,10 +409,10 @@ class WeatherApp(wx.Frame):
         self.last_update = 0
         
         # Register with accessibility system
-        self.SetName("NOAA Weather App")
+        self.SetName("AccessiWeather")
         accessible = self.GetAccessible()
         if accessible:
-            accessible.SetName("NOAA Weather App")
+            accessible.SetName("AccessiWeather")
             accessible.SetRole(wx.ACC_ROLE_WINDOW)
         
         # Initial load
