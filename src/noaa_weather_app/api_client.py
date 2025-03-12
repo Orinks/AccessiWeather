@@ -121,3 +121,6 @@ class NoaaApiClient:
         except requests.exceptions.RequestException as e:
             logger.error(f"API request failed: {str(e)}")
             raise ConnectionError(f"Failed to connect to NOAA API: {str(e)}")
+        except Exception as e:
+            logger.error(f"Unexpected error in API request: {str(e)}")
+            raise ConnectionError(f"Failed to connect to NOAA API: {str(e)}")
