@@ -245,7 +245,7 @@ class WeatherApp(wx.Frame):
         
         # Register with accessibility system
         self.SetName("NOAA Weather App")
-        accessible = self.CreateAccessible()
+        accessible = self.GetAccessible()
         if accessible:
             accessible.SetName("NOAA Weather App")
             accessible.SetRole(wx.ACC_ROLE_WINDOW)
@@ -294,7 +294,7 @@ class WeatherApp(wx.Frame):
         
         # Make forecast text accessible
         self.forecast_text.SetName("Forecast Text")
-        accessible = self.forecast_text.CreateAccessible()
+        accessible = self.forecast_text.GetAccessible()
         if accessible:
             accessible.SetName("Forecast Text")
             accessible.SetRole(wx.ACC_ROLE_TEXT)
