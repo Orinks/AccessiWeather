@@ -175,8 +175,8 @@ class WeatherDiscussionDialog(wx.Dialog):
         # Set accessible name and description
         self.text_ctrl.SetName("Weather Discussion Text")
         
-        # Create accessible object
-        accessible = self.text_ctrl.CreateAccessible()
+        # Get accessible object
+        accessible = self.text_ctrl.GetAccessible()
         if accessible:
             accessible.SetName("Weather Discussion Text")
             accessible.SetRole(wx.ACC_ROLE_TEXT)

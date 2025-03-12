@@ -35,8 +35,8 @@ class AccessibleTextCtrl(wx.TextCtrl):
         self.accessible_label = label
         self.SetName(label)  # Set name for accessibility
         
-        # Create accessible object
-        self.accessible = self.CreateAccessible()
+        # Get accessible object
+        self.accessible = self.GetAccessible()
         if self.accessible:
             self.accessible.SetName(label)            
             self.accessible.SetRole(wx.ACC_ROLE_TEXT)
@@ -78,8 +78,8 @@ class AccessibleButton(wx.Button):
         # Set accessible name and description
         self.SetName(label)  # Set name for accessibility
         
-        # Create accessible object
-        self.accessible = self.CreateAccessible()
+        # Get accessible object
+        self.accessible = self.GetAccessible()
         if self.accessible:
             self.accessible.SetName(label)
             self.accessible.SetRole(wx.ACC_ROLE_BUTTON)
@@ -125,8 +125,8 @@ class AccessibleListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.accessible_label = label
         self.SetName(label)  # Set name for accessibility
         
-        # Create accessible object
-        self.accessible = self.CreateAccessible()
+        # Get accessible object
+        self.accessible = self.GetAccessible()
         if self.accessible:
             self.accessible.SetName(label)
             self.accessible.SetRole(wx.ACC_ROLE_LIST)
@@ -167,8 +167,8 @@ class AccessibleStaticText(wx.StaticText):
         # Set accessible name and description
         self.SetName(label)  # Set name for accessibility
         
-        # Create accessible object
-        self.accessible = self.CreateAccessible()
+        # Get accessible object
+        self.accessible = self.GetAccessible()
         if self.accessible:
             self.accessible.SetName(label)
             self.accessible.SetRole(wx.ACC_ROLE_STATICTEXT)
@@ -199,8 +199,8 @@ class AccessibleChoice(wx.Choice):
         self.accessible_label = label
         self.SetName(label)  # Set name for accessibility
         
-        # Create accessible object
-        self.accessible = self.CreateAccessible()
+        # Get accessible object
+        self.accessible = self.GetAccessible()
         if self.accessible:
             self.accessible.SetName(label)
             self.accessible.SetRole(wx.ACC_ROLE_COMBOBOX)
