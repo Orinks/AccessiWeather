@@ -8,11 +8,13 @@ import wx
 import threading
 import time
 import logging
+import json
+import os
 from typing import Dict, Any, List, Optional, Tuple
+import traceback
 
 from noaa_weather_app.api_client import NoaaApiClient
 from noaa_weather_app.notifications import WeatherNotifier
-from noaa_weather_app.location import LocationManager
 from noaa_weather_app.accessible_widgets import (
     AccessibleTextCtrl, AccessibleButton, AccessibleListCtrl,
     AccessibleStaticText, AccessibleChoice
@@ -382,10 +384,13 @@ class WeatherApp(wx.Frame):
         """
         super().__init__(parent, title="AccessiWeather", size=(800, 600))
         
+        # Load config file if it exists
+        self.config = self._load_config()
+        
         # Initialize components
-        self.api_client = NoaaApiClient()
+        self.api_client = self._initialize_api_client()
         self.notifier = WeatherNotifier()
-        self.location_manager = LocationManager()
+        self.location_manager = None  # Will be set by main.py
         
         # State variables
         self.current_forecast = None
@@ -415,9 +420,49 @@ class WeatherApp(wx.Frame):
             accessible.SetName("AccessiWeather")
             accessible.SetRole(wx.ACC_ROLE_WINDOW)
         
-        # Initial load
-        self.UpdateLocationDropdown()
-        self.UpdateWeatherData()
+        # Initial load will be done after location_manager is set
+    
+    def _load_config(self):
+        """Load configuration from file
+        
+        Returns:
+            Dict containing configuration or empty dict if not found
+        """
+        # Config file locations to check
+        config_paths = [
+            os.path.join(os.getcwd(), "config.json"),  # Current directory
+            os.path.expanduser("~/.accessiweather/config.json"),  # User home directory
+            os.path.expanduser("~/.noaa_weather_app/config.json")  # Legacy location
+        ]
+        
+        for config_path in config_paths:
+            if os.path.exists(config_path):
+                try:
+                    with open(config_path, 'r') as f:
+                        logger.info(f"Loading config from {config_path}")
+                        return json.load(f)
+                except Exception as e:
+                    logger.error(f"Error loading config from {config_path}: {str(e)}")
+        
+        # Default configuration if no file found
+        logger.info("No config file found, using defaults")
+        return {}
+    
+    def _initialize_api_client(self):
+        """Initialize the NOAA API client with configuration
+        
+        Returns:
+            Configured NoaaApiClient instance
+        """
+        # Default app name
+        user_agent = "AccessiWeather"
+        
+        # Get API settings from config if available
+        api_settings = self.config.get("api_settings", {})
+        contact_info = api_settings.get("contact_info", None)
+        
+        # Initialize client with configured values
+        return NoaaApiClient(user_agent=user_agent, contact_info=contact_info)
     
     def InitUI(self):
         """Initialize the user interface"""
@@ -538,6 +583,9 @@ class WeatherApp(wx.Frame):
         """Update the location dropdown with saved locations"""
         self.location_choice.Clear()
         
+        if self.location_manager is None:
+            return
+            
         locations = self.location_manager.get_all_locations()
         for location in locations:
             self.location_choice.Append(location)
@@ -550,7 +598,7 @@ class WeatherApp(wx.Frame):
     
     def UpdateWeatherData(self):
         """Update weather data in a separate thread"""
-        if self.updating:
+        if self.updating or self.location_manager is None:
             return
         
         # Get current location
@@ -562,6 +610,10 @@ class WeatherApp(wx.Frame):
         
         self.updating = True
         self.SetStatusText("Updating weather data...")
+        
+        # Clear any previous error messages
+        self.forecast_text.SetValue("Loading forecast...")
+        self.alerts_list.DeleteAllItems()
         
         # Start update in a separate thread
         self.update_thread = threading.Thread(target=self._FetchWeatherData, args=(location,))
@@ -577,22 +629,43 @@ class WeatherApp(wx.Frame):
         name, lat, lon = location
         
         try:
-            # Get forecast
-            forecast_data = self.api_client.get_forecast(lat, lon)
+            logger.info(f"Fetching weather data for location: {name} ({lat}, {lon})")
             
-            # Get alerts
-            alerts_data = self.api_client.get_alerts(lat, lon)
+            # Get forecast with detailed error handling
+            try:
+                logger.debug("Requesting forecast data...")
+                start_time = time.time()
+                forecast_data = self.api_client.get_forecast(lat, lon)
+                logger.debug(f"Forecast data retrieved in {time.time() - start_time:.2f} seconds")
+                wx.CallAfter(self._UpdateForecastDisplay, forecast_data)
+            except Exception as e:
+                logger.error(f"Failed to retrieve forecast: {str(e)}")
+                error_message = f"Unable to retrieve forecast data: {str(e)}"
+                wx.CallAfter(self.forecast_text.SetValue, error_message)
+                wx.CallAfter(self.SetStatusText, f"Error: {str(e)}")
             
-            # Process data
-            wx.CallAfter(self._UpdateForecastDisplay, forecast_data)
-            wx.CallAfter(self._UpdateAlertsDisplay, alerts_data)
-            wx.CallAfter(self.SetStatusText, f"Weather data updated at {time.strftime('%H:%M:%S')}")
+            # Get alerts with detailed error handling
+            try:
+                logger.debug("Requesting alerts data...")
+                start_time = time.time()
+                alerts_data = self.api_client.get_alerts(lat, lon)
+                logger.debug(f"Alerts data retrieved in {time.time() - start_time:.2f} seconds")
+                wx.CallAfter(self._UpdateAlertsDisplay, alerts_data)
+            except Exception as e:
+                logger.error(f"Failed to retrieve alerts: {str(e)}")
+                # Just clear alerts list on error, we've already shown an error in the status bar
+                wx.CallAfter(self.alerts_list.DeleteAllItems)
             
             # Update last update time
             self.last_update = time.time()
+            wx.CallAfter(self.SetStatusText, f"Weather data updated at {time.strftime('%H:%M:%S')}")
+            
         except Exception as e:
-            wx.CallAfter(self.SetStatusText, f"Error updating weather data: {str(e)}")
-            logger.error(f"Error updating weather data: {str(e)}")
+            error_msg = f"Error updating weather data: {str(e)}"
+            logger.error(error_msg)
+            logger.debug(f"Traceback: {traceback.format_exc()}")
+            wx.CallAfter(self.SetStatusText, error_msg)
+            wx.CallAfter(self.forecast_text.SetValue, f"Error retrieving weather data:\n\n{str(e)}\n\nPlease check your internet connection and try again.")
         finally:
             self.updating = False
     
@@ -602,26 +675,34 @@ class WeatherApp(wx.Frame):
         Args:
             forecast_data: Dictionary with forecast data
         """
-        self.current_forecast = forecast_data
-        
-        # Extract periods
-        periods = forecast_data.get("properties", {}).get("periods", [])
-        if not periods:
-            self.forecast_text.SetValue("No forecast data available.")
-            return
-        
-        # Format forecast text
-        text = ""
-        for period in periods[:5]:  # Show next 5 periods
-            name = period.get("name", "Unknown")
-            temp = period.get("temperature", "?")
-            unit = period.get("temperatureUnit", "F")
-            detail = period.get("detailedForecast", "No details available.")
+        try:
+            self.current_forecast = forecast_data
             
-            text += f"{name}: {temp}°{unit}\n"
-            text += f"{detail}\n\n"
-        
-        self.forecast_text.SetValue(text)
+            # Extract periods
+            periods = forecast_data.get("properties", {}).get("periods", [])
+            if not periods:
+                logger.warning("No forecast periods found in data")
+                logger.debug(f"Available properties: {list(forecast_data.get('properties', {}).keys())}")
+                self.forecast_text.SetValue("No forecast data available.")
+                return
+            
+            # Format forecast text
+            text = ""
+            for period in periods[:5]:  # Show next 5 periods
+                name = period.get("name", "Unknown")
+                temp = period.get("temperature", "?")
+                unit = period.get("temperatureUnit", "F")
+                detail = period.get("detailedForecast", "No details available.")
+                
+                text += f"{name}: {temp}°{unit}\n"
+                text += f"{detail}\n\n"
+            
+            logger.debug(f"Processed {len(periods[:5])} forecast periods")
+            self.forecast_text.SetValue(text)
+        except Exception as e:
+            logger.error(f"Error updating forecast display: {str(e)}")
+            logger.debug(f"Traceback: {traceback.format_exc()}")
+            self.forecast_text.SetValue(f"Error processing forecast data:\n\n{str(e)}")
     
     def _UpdateAlertsDisplay(self, alerts_data):
         """Update the alerts display with data
@@ -629,20 +710,38 @@ class WeatherApp(wx.Frame):
         Args:
             alerts_data: Dictionary with alerts data
         """
-        # Process alerts
-        self.current_alerts = self.notifier.process_alerts(alerts_data)
-        
-        # Clear and update list
-        self.alerts_list.DeleteAllItems()
-        
-        for i, alert in enumerate(self.current_alerts):
-            event_type = alert.get("event", "Unknown")
-            severity = alert.get("severity", "Unknown")
-            headline = alert.get("headline", "No details")
+        try:
+            # Process alerts
+            logger.debug(f"Processing alerts data with {len(alerts_data.get('features', []))} features")
+            self.current_alerts = self.notifier.process_alerts(alerts_data)
             
-            index = self.alerts_list.InsertItem(i, event_type)
-            self.alerts_list.SetItem(index, 1, severity)
-            self.alerts_list.SetItem(index, 2, headline)
+            # Clear and update list
+            self.alerts_list.DeleteAllItems()
+            
+            if not self.current_alerts:
+                logger.info("No active alerts for this location")
+                index = self.alerts_list.InsertItem(0, "No active alerts")
+                self.alerts_list.SetItem(index, 1, "")
+                self.alerts_list.SetItem(index, 2, "")
+                return
+            
+            for i, alert in enumerate(self.current_alerts):
+                event_type = alert.get("event", "Unknown")
+                severity = alert.get("severity", "Unknown")
+                headline = alert.get("headline", "No details")
+                
+                index = self.alerts_list.InsertItem(i, event_type)
+                self.alerts_list.SetItem(index, 1, severity)
+                self.alerts_list.SetItem(index, 2, headline)
+                
+            logger.debug(f"Updated alerts list with {len(self.current_alerts)} items")
+        except Exception as e:
+            logger.error(f"Error updating alerts display: {str(e)}")
+            logger.debug(f"Traceback: {traceback.format_exc()}")
+            self.alerts_list.DeleteAllItems()
+            index = self.alerts_list.InsertItem(0, "Error loading alerts")
+            self.alerts_list.SetItem(index, 1, "Error")
+            self.alerts_list.SetItem(index, 2, str(e)[:50])
     
     def OnLocationChange(self, event):
         """Handle location choice change
@@ -652,8 +751,17 @@ class WeatherApp(wx.Frame):
         """
         selected = self.location_choice.GetStringSelection()
         if selected:
-            self.location_manager.set_current_location(selected)
-            self.UpdateWeatherData()
+            logger.info(f"Location changed to: {selected}")
+            success = self.location_manager.set_current_location(selected)
+            if success:
+                # Clear current forecast before fetching new data
+                self.forecast_text.SetValue("Loading forecast...")
+                self.alerts_list.DeleteAllItems()
+                # Perform the update
+                self.UpdateWeatherData()
+            else:
+                logger.error(f"Failed to set location: {selected}")
+                self.SetStatusText(f"Error: Failed to set location {selected}")
     
     def OnAddLocation(self, event):
         """Handle add location button

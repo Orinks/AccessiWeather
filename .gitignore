@@ -32,6 +32,7 @@ ENV/
 *.log
 
 # Local configuration
+config.json
 ~/.noaa_weather_app/
 
 # Windows specific

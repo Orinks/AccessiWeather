@@ -20,7 +20,7 @@ class LocationManager:
             config_dir: Directory for config files, defaults to user's home directory
         """
         if config_dir is None:
-            self.config_dir = os.path.expanduser("~/.noaa_weather_app")
+            self.config_dir = os.path.expanduser("~/.accessiweather")
         else:
             self.config_dir = config_dir
             

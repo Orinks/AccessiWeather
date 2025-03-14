@@ -18,5 +18,8 @@
         "update_interval_minutes": 15,
         "alert_notification_duration": 10,
         "alerts_radius_miles": 25
+    },
+    "api_settings": {
+        "contact_info": "yourwebsite.com or your-email@example.com"
     }
 }
