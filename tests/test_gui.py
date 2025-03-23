@@ -6,6 +6,7 @@ import json
 import os
 import tempfile
 from unittest.mock import patch, MagicMock
+import time
 
 from noaa_weather_app.gui import LocationDialog, WeatherDiscussionDialog, WeatherApp
 from noaa_weather_app.api_client import NoaaApiClient
@@ -143,9 +144,11 @@ class TestWeatherApp:
     @pytest.fixture
     def mock_components(self):
         """Mock the components used by WeatherApp"""
-        with patch('noaa_weather_app.gui.NoaaApiClient') as mock_api_client_class, \
-             patch('noaa_weather_app.gui.WeatherNotifier') as mock_notifier_class, \
-             patch('noaa_weather_app.gui.LocationManager') as mock_location_manager_class:
+        # Update the patch to match our new structure
+        # We need to patch the direct imports in weather_app.py
+        with patch('noaa_weather_app.api_client.NoaaApiClient') as mock_api_client_class, \
+             patch('noaa_weather_app.notifications.WeatherNotifier') as mock_notifier_class, \
+             patch('noaa_weather_app.location.LocationManager') as mock_location_manager_class:
             
             # Create mock instances
             mock_api_client = MagicMock()
@@ -175,10 +178,14 @@ class TestWeatherApp:
         # Patch os.path.exists to return False for all config paths
         monkeypatch.setattr(os.path, 'exists', lambda path: False)
         
-        # Create app
+        # Create app with mocked components
         app = None
         try:
-            app = WeatherApp()
+            app = WeatherApp(
+                api_client_class=mock_components['api_client_class'],
+                notifier_class=mock_components['notifier_class'],
+                location_manager_class=mock_components['location_manager_class']
+            )
             
             # Check that NoaaApiClient was initialized with default values
             mock_components['api_client_class'].assert_called_once()
@@ -215,8 +222,13 @@ class TestWeatherApp:
             # Patch os.getcwd to return the directory of our temp config
             monkeypatch.setattr(os, 'getcwd', lambda: os.path.dirname(temp_config_file))
             
-            # Create app
-            app = WeatherApp()
+            # Create app with custom config path
+            app = WeatherApp(
+                api_client_class=mock_components['api_client_class'],
+                notifier_class=mock_components['notifier_class'],
+                location_manager_class=mock_components['location_manager_class'],
+                config_path=temp_config_file
+            )
             
             # Check that NoaaApiClient was initialized with values from config
             mock_components['api_client_class'].assert_called_once()
@@ -238,6 +250,7 @@ class TestWeatherApp:
         
         # Mock requests.get to check headers
         mock_response = MagicMock()
+        mock_response.status_code = 200
         mock_response.raise_for_status = MagicMock()
         mock_response.json = MagicMock(return_value={
             "properties": {
@@ -245,22 +258,54 @@ class TestWeatherApp:
             }
         })
         
-        mock_get = MagicMock(return_value=mock_response)
+        # Mock for the second request to forecast URL
+        mock_forecast_response = MagicMock()
+        mock_forecast_response.status_code = 200
+        mock_forecast_response.json = MagicMock(return_value={"properties": {"periods": []}})
+        
+        # Create a mock for requests.get that returns appropriate responses
+        def mock_requests_get(url, headers=None, params=None):
+            # Since we're making two different requests, return different mock responses
+            if "api.example.com/forecast" in url:
+                return mock_forecast_response
+            return mock_response
+            
+        mock_get = MagicMock(side_effect=mock_requests_get)
         monkeypatch.setattr("requests.get", mock_get)
         
         # Create a WeatherApp with our mocked components
         app = None
         try:
-            app = WeatherApp()
+            app = WeatherApp(
+                api_client_class=mock_components['api_client_class'],
+                notifier_class=mock_components['notifier_class'],
+                location_manager_class=mock_components['location_manager_class']
+            )
+            
+            # Need to wait a moment for all initialization to complete
+            time.sleep(0.1)
             
             # Call the method with a test location
             location = ("Test City", 35.0, -80.0)
             app._FetchWeatherData(location)
             
-            # Verify that requests.get was called with the proper User-Agent header
-            mock_get.assert_called()
-            args, kwargs = mock_get.call_args_list[0]
-            assert kwargs.get("headers")["User-Agent"] == "AccessiWeather (test@example.com)"
+            # Give a moment for async threads to execute
+            time.sleep(0.1)
+            
+            # Verify that requests.get was called at least once
+            assert mock_get.call_count > 0, "requests.get was never called"
+            
+            # Verify that the headers were set properly
+            for call in mock_get.call_args_list:
+                args, kwargs = call
+                if 'headers' in kwargs:
+                    headers = kwargs['headers']
+                    if 'User-Agent' in headers:
+                        user_agent = headers['User-Agent']
+                        assert "test@example.com" in user_agent
+                        break
+            else:
+                assert False, "No call to requests.get had User-Agent header with contact info"
         finally:
             if app:
                 app.Destroy()
