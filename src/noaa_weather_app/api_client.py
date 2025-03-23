@@ -10,6 +10,7 @@ from typing import Dict, List, Any, Optional
 import logging
 import traceback
 import time
+import threading
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,9 @@ class NoaaApiClient:
         # Add request tracking for rate limiting
         self.last_request_time = 0
         self.min_request_interval = 0.5  # Half a second between requests to avoid rate limiting
+        
+        # Add thread lock for thread safety
+        self.request_lock = threading.RLock()
         
         logger.info(f"Initialized NOAA API client with User-Agent: {user_agent_string}")
     
@@ -193,40 +197,42 @@ class NoaaApiClient:
             Dict containing response data
         """
         try:
-            # Rate limiting
-            if self.last_request_time is not None:
-                elapsed = time.time() - self.last_request_time
-                sleep_time = max(0, self.min_request_interval - elapsed)
-                time.sleep(sleep_time)
-            
-            # Determine the full URL
-            if use_full_url:
-                request_url = endpoint_or_url  # Use the provided URL directly
-            else:
-                # Ensure we don't have a leading slash to avoid double slashes
-                clean_endpoint = endpoint_or_url.lstrip('/')
-                if endpoint_or_url.startswith(self.BASE_URL):
-                    request_url = endpoint_or_url
+            # Acquire the thread lock
+            with self.request_lock:
+                # Rate limiting
+                if self.last_request_time is not None:
+                    elapsed = time.time() - self.last_request_time
+                    sleep_time = max(0, self.min_request_interval - elapsed)
+                    time.sleep(sleep_time)
+                
+                # Determine the full URL
+                if use_full_url:
+                    request_url = endpoint_or_url  # Use the provided URL directly
                 else:
-                    request_url = f"{self.BASE_URL}/{clean_endpoint}"
-            
-            # Make the request
-            response = requests.get(request_url, headers=self.headers, params=params)
-            self.last_request_time = time.time()
-            
-            # Check for errors
-            if response.status_code != 200:
-                error_msg = f"API error: {response.status_code}"
-                try:
-                    error_json = response.json()
-                    if 'detail' in error_json:
-                        error_msg = f"API error: {response.status_code} - {error_json['detail']}"
-                except:
-                    pass
-                raise ValueError(error_msg)
-            
-            # Return the response data
-            return response.json()
+                    # Ensure we don't have a leading slash to avoid double slashes
+                    clean_endpoint = endpoint_or_url.lstrip('/')
+                    if endpoint_or_url.startswith(self.BASE_URL):
+                        request_url = endpoint_or_url
+                    else:
+                        request_url = f"{self.BASE_URL}/{clean_endpoint}"
+                
+                # Make the request
+                response = requests.get(request_url, headers=self.headers, params=params)
+                self.last_request_time = time.time()
+                
+                # Check for errors
+                if response.status_code != 200:
+                    error_msg = f"API error: {response.status_code}"
+                    try:
+                        error_json = response.json()
+                        if 'detail' in error_json:
+                            error_msg = f"API error: {response.status_code} - {error_json['detail']}"
+                    except:
+                        pass
+                    raise ValueError(error_msg)
+                
+                # Return the response data
+                return response.json()
         except requests.RequestException as e:
             logging.error(f"Failed to make API request: {str(e)}")
             raise ConnectionError(f"Failed to connect to NOAA API: {str(e)}")

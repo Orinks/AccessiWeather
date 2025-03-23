@@ -252,6 +252,10 @@ class LocationDialog(wx.Dialog):
                 self.latitude = lat
                 self.longitude = lon
                 self.result_text.SetValue(f"Found: {address}\nCoordinates: {lat}, {lon}")
+                
+                # Auto-populate name field if it's empty
+                if not self.name_ctrl.GetValue().strip():
+                    self.name_ctrl.SetValue(query)
             else:
                 self.result_text.SetValue("No results found for the given address")
                 self.latitude = None

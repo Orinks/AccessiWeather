@@ -130,7 +130,7 @@ class TestLocationDialog:
         self.frame = wx.Frame(None)
         
         # Create patch for geocoding service
-        self.geocoding_patcher = patch('noaa_weather_app.gui.GeocodingService')
+        self.geocoding_patcher = patch('noaa_weather_app.gui.dialogs.GeocodingService')
         self.mock_geocoding_class = self.geocoding_patcher.start()
         self.mock_geocoding = MagicMock()
         self.mock_geocoding_class.return_value = self.mock_geocoding
@@ -207,7 +207,7 @@ class TestLocationDialog:
             self.mock_geocoding.geocode_address.assert_called_once_with("Nonexistent Address")
             
             # Check result
-            assert "Location not found" in dialog.result_text.GetValue()
+            assert "No results found" in dialog.result_text.GetValue()
         finally:
             wx.CallAfter(dialog.Destroy)
     
@@ -230,7 +230,7 @@ class TestLocationDialog:
         finally:
             wx.CallAfter(dialog.Destroy)
     
-    @patch('noaa_weather_app.gui.AdvancedLocationDialog')
+    @patch('noaa_weather_app.gui.dialogs.AdvancedLocationDialog')
     def test_advanced_dialog(self, mock_advanced_dialog_class):
         """Test opening advanced dialog"""
         # Set up mock advanced dialog

@@ -163,7 +163,7 @@ class DiscussionFetcher:
             additional_data: Additional data to pass to callbacks
         """
         try:
-            discussion_text = self.api_client.get_forecast_discussion(lat, lon)
+            discussion_text = self.api_client.get_discussion(lat, lon)
             if on_success:
                 if additional_data:
                     # Call callback on main thread with additional data
