@@ -290,7 +290,10 @@ class WeatherApp(wx.Frame):
     
     def UpdateWeatherData(self):
         """Update weather data in a separate thread"""
-        if self.updating or self.location_manager is None:
+        # Even if updating is true, we still want to proceed if this is a location change
+        # This is to ensure that location changes always trigger a data refresh
+        
+        if self.location_manager is None:
             return
         
         # Get current location
@@ -299,7 +302,8 @@ class WeatherApp(wx.Frame):
             self.SetStatusText("No location selected")
             return
         
-        # Start update
+        # Always reset updating flag to ensure we can fetch for a new location
+        # This is critical for location changes to work properly
         self.updating = True
         self._FetchWeatherData(location)
     

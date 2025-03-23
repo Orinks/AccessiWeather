@@ -129,6 +129,14 @@ class LocationManager:
         
         return None
     
+    def get_current_location_name(self) -> Optional[str]:
+        """Get the name of the current location
+        
+        Returns:
+            Name of current location if it exists, None otherwise
+        """
+        return self.current_location if self.current_location in self.saved_locations else None
+    
     def get_all_locations(self) -> List[str]:
         """Get all saved location names
         
@@ -136,3 +144,22 @@ class LocationManager:
             List of location names
         """
         return list(self.saved_locations.keys())
+        
+    def set_locations(self, locations: Dict[str, Dict[str, float]], current: Optional[str] = None) -> None:
+        """Set all locations and optionally the current location
+        
+        This is used when initializing from saved config or in tests.
+        
+        Args:
+            locations: Dictionary of location names to coordinate dictionaries
+            current: Current location name (must be in locations dict)
+        """
+        self.saved_locations = locations
+        
+        if current and current in self.saved_locations:
+            self.current_location = current
+        elif self.saved_locations and not self.current_location:
+            # If no current location set but we have locations, set the first one
+            self.current_location = next(iter(self.saved_locations))
+            
+        self._save_locations()
