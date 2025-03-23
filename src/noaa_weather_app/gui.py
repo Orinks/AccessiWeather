@@ -631,43 +631,135 @@ class WeatherApp(wx.Frame):
         try:
             logger.info(f"Fetching weather data for location: {name} ({lat}, {lon})")
             
-            # Get forecast with detailed error handling
-            try:
-                logger.debug("Requesting forecast data...")
-                start_time = time.time()
-                forecast_data = self.api_client.get_forecast(lat, lon)
-                logger.debug(f"Forecast data retrieved in {time.time() - start_time:.2f} seconds")
-                wx.CallAfter(self._UpdateForecastDisplay, forecast_data)
-            except Exception as e:
-                logger.error(f"Failed to retrieve forecast: {str(e)}")
-                error_message = f"Unable to retrieve forecast data: {str(e)}"
-                wx.CallAfter(self.forecast_text.SetValue, error_message)
-                wx.CallAfter(self.SetStatusText, f"Error: {str(e)}")
+            # Start threads to fetch forecast and alerts in parallel
+            forecast_thread = threading.Thread(
+                target=self._fetch_forecast_thread,
+                args=(lat, lon)
+            )
+            forecast_thread.daemon = True
+            forecast_thread.start()
             
-            # Get alerts with detailed error handling
-            try:
-                logger.debug("Requesting alerts data...")
-                start_time = time.time()
-                alerts_data = self.api_client.get_alerts(lat, lon)
-                logger.debug(f"Alerts data retrieved in {time.time() - start_time:.2f} seconds")
-                wx.CallAfter(self._UpdateAlertsDisplay, alerts_data)
-            except Exception as e:
-                logger.error(f"Failed to retrieve alerts: {str(e)}")
-                # Just clear alerts list on error, we've already shown an error in the status bar
-                wx.CallAfter(self.alerts_list.DeleteAllItems)
+            alerts_thread = threading.Thread(
+                target=self._fetch_alerts_thread,
+                args=(lat, lon)
+            )
+            alerts_thread.daemon = True
+            alerts_thread.start()
             
             # Update last update time
             self.last_update = time.time()
             wx.CallAfter(self.SetStatusText, f"Weather data updated at {time.strftime('%H:%M:%S')}")
             
         except Exception as e:
-            error_msg = f"Error updating weather data: {str(e)}"
+            error_msg = f"Error initiating weather data update: {str(e)}"
             logger.error(error_msg)
             logger.debug(f"Traceback: {traceback.format_exc()}")
             wx.CallAfter(self.SetStatusText, error_msg)
             wx.CallAfter(self.forecast_text.SetValue, f"Error retrieving weather data:\n\n{str(e)}\n\nPlease check your internet connection and try again.")
         finally:
             self.updating = False
+    
+    def _fetch_forecast_thread(self, lat, lon):
+        """Thread function to fetch the forecast in the background
+        
+        Args:
+            lat: Latitude
+            lon: Longitude
+        """
+        try:
+            # Get forecast with detailed error handling
+            logger.debug("Requesting forecast data...")
+            start_time = time.time()
+            forecast_data = self.api_client.get_forecast(lat, lon)
+            logger.debug(f"Forecast data retrieved in {time.time() - start_time:.2f} seconds")
+            
+            # For testing purposes, provide a direct way to override this behavior
+            if hasattr(self, '_testing_forecast_callback') and self._testing_forecast_callback:
+                self._testing_forecast_callback(forecast_data)
+            else:
+                wx.CallAfter(self._on_forecast_fetched, forecast_data)
+        except Exception as e:
+            logger.error(f"Failed to retrieve forecast: {str(e)}")
+            error_message = f"Unable to retrieve forecast data: {str(e)}"
+            
+            # For testing purposes, provide a direct way to override error handling
+            if hasattr(self, '_testing_forecast_error_callback') and self._testing_forecast_error_callback:
+                self._testing_forecast_error_callback(error_message)
+            else:
+                wx.CallAfter(self._on_forecast_error, error_message)
+    
+    def _on_forecast_fetched(self, forecast_data):
+        """Handle the fetched forecast in the main thread
+        
+        Args:
+            forecast_data: Dictionary with forecast data
+        """
+        try:
+            self._UpdateForecastDisplay(forecast_data)
+        except Exception as e:
+            logger.error(f"Error processing forecast data: {str(e)}")
+            self.forecast_text.SetValue(f"Error processing forecast data: {str(e)}")
+    
+    def _on_forecast_error(self, error_message):
+        """Handle errors during forecast fetching
+        
+        Args:
+            error_message: Error message
+        """
+        self.forecast_text.SetValue(error_message)
+        self.SetStatusText(f"Error: {error_message}")
+    
+    def _fetch_alerts_thread(self, lat, lon):
+        """Thread function to fetch alerts in the background
+        
+        Args:
+            lat: Latitude
+            lon: Longitude
+        """
+        try:
+            logger.debug("Requesting alerts data...")
+            start_time = time.time()
+            alerts_data = self.api_client.get_alerts(lat, lon)
+            logger.debug(f"Alerts data retrieved in {time.time() - start_time:.2f} seconds")
+            
+            # For testing purposes, provide a direct way to override this behavior
+            if hasattr(self, '_testing_alerts_callback') and self._testing_alerts_callback:
+                self._testing_alerts_callback(alerts_data)
+            else:
+                wx.CallAfter(self._on_alerts_fetched, alerts_data)
+        except Exception as e:
+            logger.error(f"Failed to retrieve alerts: {str(e)}")
+            
+            # For testing purposes, provide a direct way to override error handling
+            if hasattr(self, '_testing_alerts_error_callback') and self._testing_alerts_error_callback:
+                self._testing_alerts_error_callback(str(e))
+            else:
+                wx.CallAfter(self._on_alerts_error, str(e))
+    
+    def _on_alerts_fetched(self, alerts_data):
+        """Handle the fetched alerts in the main thread
+        
+        Args:
+            alerts_data: Dictionary with alerts data
+        """
+        try:
+            self._UpdateAlertsDisplay(alerts_data)
+        except Exception as e:
+            logger.error(f"Error processing alerts data: {str(e)}")
+            logger.debug(f"Traceback: {traceback.format_exc()}")
+            self.alerts_list.DeleteAllItems()
+            index = self.alerts_list.InsertItem(0, "Error loading alerts")
+            self.alerts_list.SetItem(index, 1, "Error")
+            self.alerts_list.SetItem(index, 2, str(e)[:50])
+    
+    def _on_alerts_error(self, error_message):
+        """Handle errors during alerts fetching
+        
+        Args:
+            error_message: Error message
+        """
+        self.alerts_list.DeleteAllItems()
+        self.SetStatusText(f"Error retrieving alerts: {error_message}")
     
     def _UpdateForecastDisplay(self, forecast_data):
         """Update the forecast display with data
