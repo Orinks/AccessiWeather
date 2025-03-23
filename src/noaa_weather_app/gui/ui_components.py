@@ -176,3 +176,85 @@ class AccessibleListCtrl(wx.ListCtrl):
         accessible = self.GetAccessible()
         if accessible:
             accessible.SetName(label)
+
+
+class AccessibleComboBox(wx.ComboBox):
+    """Combo box with enhanced accessibility support
+    
+    This provides a dropdown combobox that allows typing and selecting from options,
+    with full screen reader support for accessibility.
+    """
+    
+    def __init__(self, parent, id=wx.ID_ANY, value="", choices=None, label="", **kwargs):
+        """Initialize accessible combo box
+        
+        Args:
+            parent: Parent window
+            id: Control ID
+            value: Initial text value
+            choices: List of choices
+            label: Accessible label
+            **kwargs: Additional arguments for wx.ComboBox
+        """
+        if choices is None:
+            choices = []
+        
+        # Use default style if none provided to ensure it's editable
+        if 'style' not in kwargs:
+            kwargs['style'] = wx.CB_DROPDOWN
+        
+        super().__init__(parent, id, value, choices=choices, **kwargs)
+        
+        # Set accessible name
+        self.SetName(label)
+        
+        # Get accessible object
+        accessible = self.GetAccessible()
+        if accessible:
+            accessible.SetName(label)
+            accessible.SetRole(wx.ACC_ROLE_COMBOBOX)
+            
+    def SetLabel(self, label):
+        """Set accessible label
+        
+        Args:
+            label: Accessible label
+        """
+        self.SetName(label)
+        accessible = self.GetAccessible()
+        if accessible:
+            accessible.SetName(label)
+    
+    def SetValue(self, value):
+        """Set the value of the combo box and update selection if it matches an item
+        
+        Args:
+            value: Text value to set
+        """
+        # Call parent method to set text value
+        super().SetValue(value)
+        
+        # Try to find the text in the list of choices and update selection
+        for i in range(self.GetCount()):
+            if self.GetString(i) == value:
+                self.SetSelection(i)
+                break
+    
+    def Append(self, items):
+        """Add items to the combo box
+        
+        Args:
+            items: String or list of strings to add
+        
+        Returns:
+            Index of the last item added
+        """
+        # Handle both single string and list of strings
+        if isinstance(items, str):
+            return super().Append(items)
+        else:
+            # Add items one by one
+            last_index = -1
+            for item in items:
+                last_index = super().Append(item)
+            return last_index

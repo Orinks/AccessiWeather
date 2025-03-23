@@ -10,7 +10,8 @@ from noaa_weather_app.geocoding import GeocodingService
 from .ui_components import (
     AccessibleStaticText,
     AccessibleTextCtrl,
-    AccessibleButton
+    AccessibleButton,
+    AccessibleComboBox
 )
 
 logger = logging.getLogger(__name__)
@@ -139,6 +140,9 @@ class AdvancedLocationDialog(wx.Dialog):
 class LocationDialog(wx.Dialog):
     """Dialog for adding or editing a location"""
     
+    # Maximum number of items to keep in search history
+    MAX_HISTORY_ITEMS = 10
+    
     def __init__(self, parent, title="Add Location", location_name="", lat=None, lon=None):
         """Initialize the location dialog
         
@@ -155,6 +159,7 @@ class LocationDialog(wx.Dialog):
         self.geocoding_service = GeocodingService()
         self.latitude = lat
         self.longitude = lon
+        self.search_history = []
         
         # Create a panel with accessible widgets
         panel = wx.Panel(self)
@@ -168,10 +173,14 @@ class LocationDialog(wx.Dialog):
         name_sizer.Add(self.name_ctrl, 1, wx.ALL | wx.EXPAND, 5)
         sizer.Add(name_sizer, 0, wx.EXPAND | wx.ALL, 5)
         
-        # Location search (address or zip code)
+        # Location search (address or zip code) with combo box
         search_sizer = wx.BoxSizer(wx.HORIZONTAL)
         search_label = AccessibleStaticText(panel, label="Search Location:")
-        self.search_ctrl = AccessibleTextCtrl(panel, value="", label="Search by Address or ZIP Code")
+        self.search_ctrl = AccessibleComboBox(
+            panel, 
+            value="", 
+            label="Search by Address or ZIP Code"
+        )
         search_sizer.Add(search_label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
         search_sizer.Add(self.search_ctrl, 1, wx.ALL | wx.EXPAND, 5)
         sizer.Add(search_sizer, 0, wx.EXPAND | wx.ALL, 5)
@@ -197,7 +206,7 @@ class LocationDialog(wx.Dialog):
         # Description for screen readers
         help_text = AccessibleStaticText(
             panel, 
-            label="Enter an address, city, or ZIP code to search for a location"
+            label="Enter an address, city, or ZIP code to search for a location or select from recent searches"
         )
         sizer.Add(help_text, 0, wx.ALL, 10)
         
@@ -227,6 +236,19 @@ class LocationDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.OnSearch, self.search_button)
         self.Bind(wx.EVT_BUTTON, self.OnAdvanced, self.advanced_button)
         self.Bind(wx.EVT_BUTTON, self.OnOK, id=wx.ID_OK)
+        self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, self.search_ctrl)
+    
+    def OnComboBoxSelect(self, event):
+        """Handle combo box selection
+        
+        Args:
+            event: Combo box selection event
+        """
+        # Get selected item
+        selected_value = self.search_ctrl.GetValue()
+        if selected_value:
+            # Perform search with selected value
+            self._perform_search(selected_value)
     
     def OnSearch(self, event):
         """Handle search button click
@@ -244,6 +266,15 @@ class LocationDialog(wx.Dialog):
             )
             return
         
+        # Perform the search
+        self._perform_search(query)
+    
+    def _perform_search(self, query):
+        """Perform location search
+        
+        Args:
+            query: Search query string
+        """
         # Search for location
         try:
             result = self.geocoding_service.geocode_address(query)
@@ -252,6 +283,9 @@ class LocationDialog(wx.Dialog):
                 self.latitude = lat
                 self.longitude = lon
                 self.result_text.SetValue(f"Found: {address}\nCoordinates: {lat}, {lon}")
+                
+                # Add to search history if not already in the list
+                self._add_to_search_history(query)
                 
                 # Auto-populate name field if it's empty
                 if not self.name_ctrl.GetValue().strip():
@@ -265,6 +299,28 @@ class LocationDialog(wx.Dialog):
             self.result_text.SetValue(f"Error: {str(e)}")
             self.latitude = None
             self.longitude = None
+    
+    def _add_to_search_history(self, query):
+        """Add query to search history and update combo box
+        
+        Args:
+            query: Search query to add
+        """
+        # Remove the query if it already exists in history
+        if query in self.search_history:
+            self.search_history.remove(query)
+        
+        # Add query to beginning of history list
+        self.search_history.insert(0, query)
+        
+        # Limit the size of history
+        if len(self.search_history) > self.MAX_HISTORY_ITEMS:
+            self.search_history = self.search_history[:self.MAX_HISTORY_ITEMS]
+        
+        # Clear and repopulate the combo box
+        self.search_ctrl.Clear()
+        self.search_ctrl.Append(self.search_history)
+        self.search_ctrl.SetValue(query)
     
     def OnAdvanced(self, event):
         """Handle advanced button click to open manual lat/lon dialog
