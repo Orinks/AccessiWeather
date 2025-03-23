@@ -826,59 +826,150 @@ class WeatherApp(wx.Frame):
         
         name, lat, lon = location
         
+        # Disable the button while fetching
+        self.discussion_btn.Disable()
+        self.SetStatusText("Fetching forecast discussion...")
+        
+        # Create a loading indicator dialog with cancel option
+        loading_dialog = wx.ProgressDialog(
+            "Loading",
+            "Fetching weather discussion...",
+            maximum=100,
+            parent=self,
+            style=wx.PD_APP_MODAL | wx.PD_AUTO_HIDE | wx.PD_CAN_ABORT
+        )
+        loading_dialog.SetSize((300, 150))
+        loading_dialog.Update(30)
+        
+        # Start a thread to fetch the discussion
+        thread = threading.Thread(
+            target=self._fetch_discussion_thread,
+            args=(lat, lon, name, loading_dialog)
+        )
+        thread.daemon = True
+        thread.start()
+    
+    def _fetch_discussion_thread(self, lat, lon, name, loading_dialog):
+        """Thread function to fetch the discussion in the background
+        
+        Args:
+            lat: Latitude
+            lon: Longitude
+            name: Location name
+            loading_dialog: Loading dialog reference
+        """
         try:
-            self.SetStatusText("Fetching forecast discussion...")
+            # Update progress
+            if not loading_dialog:
+                return
+            
+            # Use CallAfter to interact with UI from a non-main thread
+            # This is safe because it posts a message to the main thread
+            wx.CallAfter(lambda: loading_dialog and loading_dialog.Update(50))
+            
+            # Fetch the discussion
             discussion_text = self.api_client.get_discussion(lat, lon)
+            
+            # Process the result in the main thread
+            # For testing purposes, provide a direct way to override this behavior
+            if hasattr(self, '_testing_callback') and self._testing_callback:
+                self._testing_callback(discussion_text, name)
+            else:
+                wx.CallAfter(self._on_discussion_fetched, discussion_text, name, loading_dialog)
+            
+        except Exception as e:
+            # Handle errors in the main thread
+            if hasattr(self, '_testing_error_callback') and self._testing_error_callback:
+                self._testing_error_callback(str(e))
+            else:
+                wx.CallAfter(self._on_discussion_error, str(e), loading_dialog)
+    
+    def _on_discussion_fetched(self, discussion_text, name, loading_dialog):
+        """Handle the fetched discussion in the main thread
+        
+        Args:
+            discussion_text: The fetched discussion text
+            name: Location name
+            loading_dialog: Loading dialog reference
+        """
+        try:
+            # Close loading dialog
+            if loading_dialog:
+                loading_dialog.Update(100)
+                loading_dialog.Destroy()
+            
+            # Re-enable the button
+            self.discussion_btn.Enable()
             
             if not discussion_text:
                 wx.MessageBox("No forecast discussion available.", "Information", wx.OK | wx.ICON_INFORMATION)
+                self.SetStatusText("Ready")
                 return
             
             # Show discussion dialog
             dialog = WeatherDiscussionDialog(self, title=f"Weather Discussion for {name}", text=discussion_text)
             dialog.ShowModal()
             dialog.Destroy()
-        except Exception as e:
-            wx.MessageBox(f"Error fetching discussion: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
+            
         finally:
             self.SetStatusText("Ready")
     
+    def _on_discussion_error(self, error_message, loading_dialog):
+        """Handle errors during discussion fetching
+        
+        Args:
+            error_message: Error message
+            loading_dialog: Loading dialog reference
+        """
+        try:
+            # Close loading dialog
+            if loading_dialog:
+                loading_dialog.Destroy()
+            
+            # Re-enable the button
+            self.discussion_btn.Enable()
+            
+            # Show error message
+            wx.MessageBox(f"Error fetching discussion: {error_message}", "Error", wx.OK | wx.ICON_ERROR)
+        finally:
+            self.SetStatusText("Ready")
+        
     def OnViewAlert(self, event):
         """Handle view alert button
         
         Args:
             event: Button event
         """
-        self.ShowSelectedAlert()
-    
-    def OnAlertActivated(self, event):
-        """Handle double-click on alert
-        
-        Args:
-            event: List event
-        """
-        self.ShowSelectedAlert()
-    
-    def ShowSelectedAlert(self):
-        """Show details for the selected alert"""
-        selected = self.alerts_list.GetFirstSelected()
-        if selected == -1:
+        # Get selected alert
+        selected = self.alerts_list.GetFocusedItem()
+        if selected < 0:
             wx.MessageBox("Please select an alert to view", "Error", wx.OK | wx.ICON_ERROR)
             return
         
-        if selected >= len(self.current_alerts):
-            return
-        
+        # Get alert details
         alert = self.current_alerts[selected]
-        event_type = alert.get("event", "Unknown Event")
-        description = alert.get("description", "No description available.")
+        details = alert.get("description", "No details available")
         
-        # Show alert details in a dialog
-        wx.MessageBox(
-            description,
-            f"Alert: {event_type}",
-            wx.OK | wx.ICON_INFORMATION
-        )
+        # Show alert details dialog
+        dialog = WeatherDiscussionDialog(self, title="Alert Details", text=details)
+        dialog.ShowModal()
+        dialog.Destroy()
+    
+    def OnAlertActivated(self, event):
+        """Handle alert list item activation
+        
+        Args:
+            event: List item event
+        """
+        self.OnViewAlert(event)
+    
+    def OnClose(self, event):
+        """Handle close event
+        
+        Args:
+            event: Close event
+        """
+        self.Destroy()
     
     def OnTimer(self, event):
         """Handle timer event for periodic updates
@@ -889,12 +980,3 @@ class WeatherApp(wx.Frame):
         # Check if we need to update
         if time.time() - self.last_update > UPDATE_INTERVAL and not self.updating:
             self.UpdateWeatherData()
-    
-    def OnClose(self, event):
-        """Handle window close event
-        
-        Args:
-            event: Close event
-        """
-        self.timer.Stop()
-        event.Skip()  # Continue with default handler
