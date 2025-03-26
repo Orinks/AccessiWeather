@@ -1,4 +1,5 @@
 import unittest
+# mypy: ignore-errors
 import wx
 import time
 from unittest.mock import MagicMock, patch
@@ -45,11 +46,14 @@ class TestLocationChange(unittest.TestCase):
         try:
             # If async fetchers were created, make sure they are stopped
             if hasattr(self.frame, 'forecast_fetcher') and self.frame.forecast_fetcher is not None:
-                self.frame.forecast_fetcher._stop_event.set()
+                if hasattr(self.frame.forecast_fetcher, '_stop_event'):
+                    self.frame.forecast_fetcher._stop_event.set()
             if hasattr(self.frame, 'alerts_fetcher') and self.frame.alerts_fetcher is not None:
-                self.frame.alerts_fetcher._stop_event.set()
+                if hasattr(self.frame.alerts_fetcher, '_stop_event'):
+                    self.frame.alerts_fetcher._stop_event.set()
             if hasattr(self.frame, 'discussion_fetcher') and self.frame.discussion_fetcher is not None:
-                self.frame.discussion_fetcher._stop_event.set()
+                if hasattr(self.frame.discussion_fetcher, '_stop_event'):
+                    self.frame.discussion_fetcher._stop_event.set()
             
             # Small delay to ensure threads can process stop events
             time.sleep(0.1)
