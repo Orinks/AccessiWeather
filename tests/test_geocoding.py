@@ -3,14 +3,14 @@
 import pytest
 from unittest.mock import patch, MagicMock
 
-from noaa_weather_app.geocoding import GeocodingService
+from accessiweather.geocoding import GeocodingService
 from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 
 
 class TestGeocodingService:
     """Test suite for GeocodingService"""
 
-    @patch('noaa_weather_app.geocoding.Nominatim')
+    @patch('accessiweather.geocoding.Nominatim')
     def test_init(self, mock_nominatim):
         """Test initialization"""
         # Create a service
@@ -20,7 +20,7 @@ class TestGeocodingService:
         mock_nominatim.assert_called_once_with(user_agent="Test App")
         assert service.geolocator == mock_nominatim.return_value
 
-    @patch('noaa_weather_app.geocoding.Nominatim')
+    @patch('accessiweather.geocoding.Nominatim')
     def test_geocode_address_success(self, mock_nominatim):
         """Test successful geocoding of an address"""
         # Set up mock
@@ -43,7 +43,7 @@ class TestGeocodingService:
         # Check result
         assert result == (35.0, -80.0, "123 Main St, City, State")
     
-    @patch('noaa_weather_app.geocoding.Nominatim')
+    @patch('accessiweather.geocoding.Nominatim')
     def test_geocode_zip_code(self, mock_nominatim):
         """Test geocoding a zip code"""
         # Set up mock
@@ -66,7 +66,7 @@ class TestGeocodingService:
         # Check result
         assert result == (35.0, -80.0, "City, State 12345, USA")
     
-    @patch('noaa_weather_app.geocoding.Nominatim')
+    @patch('accessiweather.geocoding.Nominatim')
     def test_geocode_address_not_found(self, mock_nominatim):
         """Test geocoding an address that isn't found"""
         # Set up mock
@@ -84,7 +84,7 @@ class TestGeocodingService:
         # Check result
         assert result is None
     
-    @patch('noaa_weather_app.geocoding.Nominatim')
+    @patch('accessiweather.geocoding.Nominatim')
     def test_geocode_address_timeout(self, mock_nominatim):
         """Test handling of geocoder timeout"""
         # Set up mock
@@ -102,7 +102,7 @@ class TestGeocodingService:
         # Check result
         assert result is None
 
-    @patch('noaa_weather_app.geocoding.Nominatim')
+    @patch('accessiweather.geocoding.Nominatim')
     def test_geocode_address_service_error(self, mock_nominatim):
         """Test handling of geocoder service error"""
         # Set up mock

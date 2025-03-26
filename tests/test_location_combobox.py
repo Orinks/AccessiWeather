@@ -32,7 +32,7 @@ def safe_destroy():
                 except Exception:
                     # If direct destroy fails, try wxPython's safe way
                     try:
-                        from noaa_weather_app.gui.async_fetchers import safe_call_after
+                        from accessiweather.gui.async_fetchers import safe_call_after
                         safe_call_after(obj.Destroy)
                     except Exception:
                         pass  # Last resort, just ignore
@@ -40,8 +40,8 @@ def safe_destroy():
             pass  # Ignore any errors in cleanup
 
 # Import after wx.App is created
-from noaa_weather_app.gui import LocationDialog
-from noaa_weather_app.gui.ui_components import AccessibleComboBox
+from accessiweather.gui import LocationDialog
+from accessiweather.gui.ui_components import AccessibleComboBox
 
 
 class TestLocationDialogWithComboBox:
@@ -61,7 +61,7 @@ class TestLocationDialogWithComboBox:
         self.frame = wx.Frame(None)
         
         # Create patch for geocoding service
-        self.geocoding_patcher = patch('noaa_weather_app.gui.dialogs.GeocodingService')
+        self.geocoding_patcher = patch('accessiweather.gui.dialogs.GeocodingService')
         self.mock_geocoding_class = self.geocoding_patcher.start()
         self.mock_geocoding = MagicMock()
         self.mock_geocoding_class.return_value = self.mock_geocoding
@@ -73,7 +73,7 @@ class TestLocationDialogWithComboBox:
         
         # Destroy frame safely
         try:
-            from noaa_weather_app.gui.async_fetchers import safe_call_after
+            from accessiweather.gui.async_fetchers import safe_call_after
             safe_call_after(self.frame.Destroy)
         except Exception:
             pass  # Ignore any errors in cleanup

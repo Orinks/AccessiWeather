@@ -12,7 +12,7 @@ def wx_app():
     yield app
 
 # Import this after wx.App is created
-from noaa_weather_app.gui.ui_components import AccessibleComboBox
+from accessiweather.gui.ui_components import AccessibleComboBox
 
 
 class TestAccessibleComboBox:

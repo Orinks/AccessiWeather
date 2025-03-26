@@ -6,7 +6,7 @@ import os
 from unittest.mock import patch, MagicMock
 import requests
 
-from noaa_weather_app.api_client import NoaaApiClient
+from accessiweather.api_client import NoaaApiClient
 
 
 @pytest.fixture
@@ -51,7 +51,7 @@ class TestNoaaApiClient:
             "Accept": "application/geo+json"
         }
 
-    @patch("noaa_weather_app.api_client.requests.get")
+    @patch("accessiweather.api_client.requests.get")
     def test_get_point_data(self, mock_get, api_client, mock_response):
         """Test retrieving point data"""
         # Configure mock response with a proper status code
@@ -71,7 +71,7 @@ class TestNoaaApiClient:
             params=None
         )
 
-    @patch("noaa_weather_app.api_client.requests.get")
+    @patch("accessiweather.api_client.requests.get")
     def test_get_forecast(self, mock_get, api_client, mock_response):
         """Test retrieving forecast data"""
         # For the point data request
@@ -103,7 +103,7 @@ class TestNoaaApiClient:
         assert calls[0][0][0] == "https://api.weather.gov/points/35.0,-80.0"
         assert calls[1][0][0] == "https://api.weather.gov/gridpoints/GSP/112,57/forecast"
 
-    @patch("noaa_weather_app.api_client.requests.get")
+    @patch("accessiweather.api_client.requests.get")
     def test_get_alerts(self, mock_get, api_client, mock_response):
         """Test retrieving alerts"""
         # Create point data mock response
@@ -140,7 +140,7 @@ class TestNoaaApiClient:
         assert calls[1][0][0] == "https://api.weather.gov/alerts/active"      # Alerts request
         assert calls[1][1]["params"] == {"area": "NC"}                       # State-based filtering
 
-    @patch("noaa_weather_app.api_client.requests.get")
+    @patch("accessiweather.api_client.requests.get")
     def test_get_alerts_county_fallback(self, mock_get, api_client, mock_response):
         """Test retrieving alerts with county fallback for state determination"""
         # Create point data mock response with no relativeLocation but with county
@@ -173,7 +173,7 @@ class TestNoaaApiClient:
         assert calls[1][0][0] == "https://api.weather.gov/alerts/active"      # Alerts request
         assert calls[1][1]["params"] == {"area": "TX"}                       # State-based filtering
 
-    @patch("noaa_weather_app.api_client.requests.get")
+    @patch("accessiweather.api_client.requests.get")
     def test_get_alerts_no_state(self, mock_get, api_client, mock_response):
         """Test retrieving alerts when state cannot be determined"""
         # Create point data mock response with no state information
@@ -210,8 +210,8 @@ class TestNoaaApiClient:
         assert params["point"] == "35.0,-80.0"
         assert params["radius"] == "50"
 
-    @patch("noaa_weather_app.api_client.NoaaApiClient.get_point_data")
-    @patch("noaa_weather_app.api_client.NoaaApiClient._make_request")
+    @patch("accessiweather.api_client.NoaaApiClient.get_point_data")
+    @patch("accessiweather.api_client.NoaaApiClient._make_request")
     def test_get_alerts_michigan_location(self, mock_make_request, mock_get_point_data):
         """Test retrieving alerts for a Michigan location (simulating Lumberton Township)"""
         # Set up mock for get_point_data
@@ -259,7 +259,7 @@ class TestNoaaApiClient:
         assert len(data["features"]) == 1
         assert data["features"][0]["properties"]["headline"] == "Winter Weather Advisory for Lumberton Township, MI"
 
-    @patch("noaa_weather_app.api_client.requests.get")
+    @patch("accessiweather.api_client.requests.get")
     def test_get_discussion(self, mock_get, api_client):
         """Test retrieving forecast discussion"""
         # Mock responses for the three API calls
@@ -301,7 +301,7 @@ class TestNoaaApiClient:
         assert calls[1][0][0] == "https://api.weather.gov/products/types/AFD/locations/ABC"
         assert calls[2][0][0] == "https://api.weather.gov/products/ABC-AFD-202503121200"
 
-    @patch("noaa_weather_app.api_client.requests.get")
+    @patch("accessiweather.api_client.requests.get")
     def test_api_error_handling(self, mock_get, api_client):
         """Test error handling in API requests"""
         # Mock a failed request with a requests.RequestException type
@@ -314,7 +314,7 @@ class TestNoaaApiClient:
         # Verify the error message
         assert "Failed to connect to NOAA API" in str(exc_info.value)
 
-    @patch("noaa_weather_app.api_client.requests.get")
+    @patch("accessiweather.api_client.requests.get")
     def test_get_alerts_direct(self, mock_get, api_client, mock_response):
         """Test retrieving alerts with direct URL"""
         # Mock the response
@@ -328,8 +328,8 @@ class TestNoaaApiClient:
         assert data == {"mock": "data"}
         mock_get.assert_called_once()
 
-    @patch("noaa_weather_app.api_client.requests.get")
-    def test_get_alerts_no_state(self, mock_get, api_client, mock_response):
+    @patch("accessiweather.api_client.requests.get")
+    def test_get_alerts_no_state_fallback(self, mock_get, api_client, mock_response):
         """Test retrieving alerts when no state can be determined"""
         # Create point data mock response with no state info
         point_mock = MagicMock()

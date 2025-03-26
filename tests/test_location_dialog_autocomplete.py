@@ -2,9 +2,9 @@ import pytest
 import wx
 from unittest.mock import MagicMock, patch
 
-from noaa_weather_app.gui.dialogs import LocationDialog
-from noaa_weather_app.gui.ui_components import WeatherLocationAutocomplete
-from noaa_weather_app.geocoding import GeocodingService
+from accessiweather.gui.dialogs import LocationDialog
+from accessiweather.gui.ui_components import WeatherLocationAutocomplete
+from accessiweather.geocoding import GeocodingService
 
 @pytest.fixture(autouse=True)
 def setup_wx_testing():
@@ -53,7 +53,7 @@ def test_location_dialog_has_autocomplete(parent_frame):
 def test_location_dialog_search_triggers_autocomplete(parent_frame, mock_geocoding_service):
     """Test that typing in search field shows autocomplete suggestions"""
     # Create the dialog and assign mock service
-    with patch('noaa_weather_app.gui.dialogs.GeocodingService', return_value=mock_geocoding_service):
+    with patch('accessiweather.gui.dialogs.GeocodingService', return_value=mock_geocoding_service):
         dialog = LocationDialog(parent_frame)
         
         # Verify the geocoding service is properly set
@@ -70,7 +70,7 @@ def test_location_dialog_search_triggers_autocomplete(parent_frame, mock_geocodi
 def test_autocomplete_selection_performs_search(parent_frame, mock_geocoding_service):
     """Test that selecting an autocomplete suggestion performs the search"""
     # Create the dialog and assign mock service
-    with patch('noaa_weather_app.gui.dialogs.GeocodingService', return_value=mock_geocoding_service):
+    with patch('accessiweather.gui.dialogs.GeocodingService', return_value=mock_geocoding_service):
         dialog = LocationDialog(parent_frame)
         
         # Set a value first so GetValue() returns something

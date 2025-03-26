@@ -8,8 +8,8 @@ import tempfile
 from unittest.mock import patch, MagicMock
 import time
 
-from noaa_weather_app.gui import LocationDialog, WeatherDiscussionDialog, WeatherApp
-from noaa_weather_app.api_client import NoaaApiClient
+from accessiweather.gui import LocationDialog, WeatherDiscussionDialog, WeatherApp
+from accessiweather.api_client import NoaaApiClient
 
 
 # We need a wx App for testing wx components
@@ -52,7 +52,7 @@ class TestLocationDialog:
     def setup_method(self):
         """Set up test fixture"""
         # Create geocoding service mock
-        self.geocoding_patcher = patch('noaa_weather_app.gui.GeocodingService')
+        self.geocoding_patcher = patch('accessiweather.gui.GeocodingService')
         self.mock_geocoding_class = self.geocoding_patcher.start()
         self.mock_geocoding = MagicMock()
         self.mock_geocoding_class.return_value = self.mock_geocoding
@@ -146,9 +146,9 @@ class TestWeatherApp:
         """Mock the components used by WeatherApp"""
         # Update the patch to match our new structure
         # We need to patch the direct imports in weather_app.py
-        with patch('noaa_weather_app.api_client.NoaaApiClient') as mock_api_client_class, \
-             patch('noaa_weather_app.notifications.WeatherNotifier') as mock_notifier_class, \
-             patch('noaa_weather_app.location.LocationManager') as mock_location_manager_class:
+        with patch('accessiweather.api_client.NoaaApiClient') as mock_api_client_class, \
+             patch('accessiweather.notifications.WeatherNotifier') as mock_notifier_class, \
+             patch('accessiweather.location.LocationManager') as mock_location_manager_class:
             
             # Create mock instances
             mock_api_client = MagicMock()

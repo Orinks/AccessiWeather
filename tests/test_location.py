@@ -6,7 +6,7 @@ import json
 import tempfile
 from unittest.mock import patch, mock_open
 
-from noaa_weather_app.location import LocationManager
+from accessiweather.location import LocationManager
 
 
 @pytest.fixture

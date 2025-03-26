@@ -3,8 +3,8 @@ import wx
 from unittest.mock import MagicMock, patch
 
 # Import the class we'll be creating
-from noaa_weather_app.gui.ui_components import WeatherLocationAutocomplete
-from noaa_weather_app.geocoding import GeocodingService
+from accessiweather.gui.ui_components import WeatherLocationAutocomplete
+from accessiweather.geocoding import GeocodingService
 
 @pytest.fixture(autouse=True)
 def setup_wx_testing():

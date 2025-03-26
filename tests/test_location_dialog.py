@@ -32,14 +32,14 @@ def safe_destroy():
                 except Exception:
                     # If direct destroy fails, try wxPython's safe way
                     try:
-                        from noaa_weather_app.gui.async_fetchers import safe_call_after
+                        from accessiweather.gui.async_fetchers import safe_call_after
                         safe_call_after(obj.Destroy)
                     except Exception:
                         pass  # Last resort, just ignore
         except Exception:
             pass  # Ignore any errors in cleanup
 
-from noaa_weather_app.gui import LocationDialog, AdvancedLocationDialog
+from accessiweather.gui import LocationDialog, AdvancedLocationDialog
 
 
 class TestAdvancedLocationDialog:
@@ -54,7 +54,7 @@ class TestAdvancedLocationDialog:
         """Tear down test fixture"""
         # Destroy frame safely
         try:
-            from noaa_weather_app.gui.async_fetchers import safe_call_after
+            from accessiweather.gui.async_fetchers import safe_call_after
             safe_call_after(self.frame.Destroy)
         except Exception:
             pass  # Ignore any errors in cleanup
@@ -170,7 +170,7 @@ class TestLocationDialog:
         self.frame = wx.Frame(None)
         
         # Create patch for geocoding service
-        self.geocoding_patcher = patch('noaa_weather_app.gui.dialogs.GeocodingService')
+        self.geocoding_patcher = patch('accessiweather.gui.dialogs.GeocodingService')
         self.mock_geocoding_class = self.geocoding_patcher.start()
         self.mock_geocoding = MagicMock()
         self.mock_geocoding_class.return_value = self.mock_geocoding
@@ -182,7 +182,7 @@ class TestLocationDialog:
         
         # Destroy frame safely
         try:
-            from noaa_weather_app.gui.async_fetchers import safe_call_after
+            from accessiweather.gui.async_fetchers import safe_call_after
             safe_call_after(self.frame.Destroy)
         except Exception:
             pass  # Ignore any errors in cleanup
@@ -279,7 +279,7 @@ class TestLocationDialog:
     
     def test_advanced_dialog(self, wx_app, safe_destroy):
         """Test advanced dialog integration"""
-        with patch('noaa_weather_app.gui.dialogs.AdvancedLocationDialog') as mock_dialog_class:
+        with patch('accessiweather.gui.dialogs.AdvancedLocationDialog') as mock_dialog_class:
             # Create mock dialog
             mock_dialog = MagicMock()
             mock_dialog.ShowModal.return_value = wx.ID_OK

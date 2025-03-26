@@ -5,8 +5,8 @@ import queue
 import wx
 from unittest.mock import MagicMock, patch
 
-from noaa_weather_app.gui import WeatherApp, WeatherDiscussionDialog
-from noaa_weather_app.api_client import NoaaApiClient
+from accessiweather.gui import WeatherApp, WeatherDiscussionDialog
+from accessiweather.api_client import NoaaApiClient
 
 @pytest.fixture
 def wx_app():

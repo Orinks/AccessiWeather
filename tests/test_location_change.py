@@ -31,10 +31,10 @@ class TestLocationChange(unittest.TestCase):
         self.la_forecast = {'properties': {'periods': [{'name': 'Tonight', 'temperature': 70, 'temperatureUnit': 'F', 'detailedForecast': 'Sunny'}]}}
         
         # Import here to avoid circular imports
-        from noaa_weather_app.gui.weather_app import WeatherApp
+        from accessiweather.gui.weather_app import WeatherApp
         
         # Create WeatherApp with mocked dependencies
-        with patch('noaa_weather_app.gui.weather_app.wx.CallAfter', side_effect=lambda func, *args, **kwargs: func(*args, **kwargs)):
+        with patch('accessiweather.gui.weather_app.wx.CallAfter', side_effect=lambda func, *args, **kwargs: func(*args, **kwargs)):
             self.frame = WeatherApp(
                 api_client_class=lambda **kwargs: self.api_client_mock,
                 notifier_class=lambda: self.notifier_mock,
@@ -85,11 +85,11 @@ class TestLocationChange(unittest.TestCase):
         # we'll patch the specific async fetchers modules
         
         # First, patch the ForecastFetcher and AlertsFetcher classes
-        with patch('noaa_weather_app.gui.async_fetchers.ForecastFetcher.fetch', 
-                   side_effect=lambda lat, lon, on_success=None, on_error=None: 
+        with patch('accessiweather.gui.async_fetchers.ForecastFetcher.fetch',
+                   side_effect=lambda lat, lon, on_success=None, on_error=None:
                        on_success(self.la_forecast) if on_success else None), \
-             patch('noaa_weather_app.gui.async_fetchers.AlertsFetcher.fetch', 
-                   side_effect=lambda lat, lon, on_success=None, on_error=None: 
+             patch('accessiweather.gui.async_fetchers.AlertsFetcher.fetch',
+                   side_effect=lambda lat, lon, on_success=None, on_error=None:
                        on_success({"features": []}) if on_success else None), \
              patch('wx.CallAfter', side_effect=lambda func, *args, **kwargs: func(*args, **kwargs)):
             

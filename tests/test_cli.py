@@ -3,7 +3,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
 
-from noaa_weather_app.cli import parse_args, main
+from accessiweather.cli import parse_args, main
 
 
 class TestCli:
@@ -35,10 +35,10 @@ class TestCli:
         args = parse_args(["--config", "/path/to/config"])
         assert args.config == "/path/to/config"
     
-    @patch('noaa_weather_app.cli.app_main')
+    @patch('accessiweather.cli.app_main')
     def test_main_success(self, mock_app_main):
         """Test main function with successful execution"""
-        with patch('noaa_weather_app.cli.parse_args') as mock_parse_args:
+        with patch('accessiweather.cli.parse_args') as mock_parse_args:
             # Set up mock args
             mock_args = MagicMock()
             mock_args.debug = True
@@ -52,10 +52,10 @@ class TestCli:
             assert result == 0
             mock_app_main.assert_called_once_with(config_dir="/test/config")
     
-    @patch('noaa_weather_app.cli.app_main')
+    @patch('accessiweather.cli.app_main')
     def test_main_error(self, mock_app_main):
         """Test main function with error"""
-        with patch('noaa_weather_app.cli.parse_args') as mock_parse_args:
+        with patch('accessiweather.cli.parse_args') as mock_parse_args:
             # Set up mock args
             mock_args = MagicMock()
             mock_args.debug = False
