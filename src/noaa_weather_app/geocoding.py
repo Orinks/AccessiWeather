@@ -4,7 +4,7 @@ This module provides geocoding functionality to convert addresses and zip codes 
 """
 
 import logging
-from typing import Optional, Tuple, Dict, Any
+from typing import Optional, Tuple, Dict, Any, List
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 
@@ -45,3 +45,33 @@ class GeocodingService:
         except Exception as e:
             logger.error(f"Unexpected geocoding error: {str(e)}")
             return None
+
+    def suggest_locations(self, query: str, limit: int = 5) -> List[str]:
+        """Suggest location completions based on partial input
+        
+        Args:
+            query: Partial address or location name
+            limit: Maximum number of suggestions to return
+            
+        Returns:
+            List of suggested location strings
+        """
+        try:
+            if not query or len(query) < 2:
+                return []
+                
+            # Use geocoder to get suggestions
+            # Note: Nominatim doesn't have native autocomplete, so we're simulating it
+            # by using the geocode function with limit parameter
+            locations = self.geolocator.geocode(query, exactly_one=False, limit=limit)
+            
+            if locations:
+                # Extract the display names
+                return [location.address for location in locations]
+            return []
+        except (GeocoderTimedOut, GeocoderServiceError) as e:
+            logger.error(f"Location suggestion error: {str(e)}")
+            return []
+        except Exception as e:
+            logger.error(f"Unexpected location suggestion error: {str(e)}")
+            return []

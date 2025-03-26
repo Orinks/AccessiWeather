@@ -11,7 +11,8 @@ from .ui_components import (
     AccessibleStaticText,
     AccessibleTextCtrl,
     AccessibleButton,
-    AccessibleComboBox
+    AccessibleComboBox,
+    WeatherLocationAutocomplete
 )
 
 logger = logging.getLogger(__name__)
@@ -173,16 +174,17 @@ class LocationDialog(wx.Dialog):
         name_sizer.Add(self.name_ctrl, 1, wx.ALL | wx.EXPAND, 5)
         sizer.Add(name_sizer, 0, wx.EXPAND | wx.ALL, 5)
         
-        # Location search (address or zip code) with combo box
+        # Location search (address or zip code) with autocomplete
         search_sizer = wx.BoxSizer(wx.HORIZONTAL)
         search_label = AccessibleStaticText(panel, label="Search Location:")
-        self.search_ctrl = AccessibleComboBox(
+        self.search_field = WeatherLocationAutocomplete(
             panel, 
-            value="", 
             label="Search by Address or ZIP Code"
         )
+        # Set up the geocoding service for autocomplete
+        self.search_field.set_geocoding_service(self.geocoding_service)
         search_sizer.Add(search_label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
-        search_sizer.Add(self.search_ctrl, 1, wx.ALL | wx.EXPAND, 5)
+        search_sizer.Add(self.search_field, 1, wx.ALL | wx.EXPAND, 5)
         sizer.Add(search_sizer, 0, wx.EXPAND | wx.ALL, 5)
         
         # Search button
@@ -236,20 +238,19 @@ class LocationDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.OnSearch, self.search_button)
         self.Bind(wx.EVT_BUTTON, self.OnAdvanced, self.advanced_button)
         self.Bind(wx.EVT_BUTTON, self.OnOK, id=wx.ID_OK)
-        self.Bind(wx.EVT_COMBOBOX, self.OnComboBoxSelect, self.search_ctrl)
+        self.Bind(wx.EVT_COMBOBOX, self.on_autocomplete_selection, self.search_field)
     
-    def OnComboBoxSelect(self, event):
-        """Handle combo box selection
+    def on_autocomplete_selection(self, event):
+        """Handle autocomplete selection event
         
         Args:
-            event: Combo box selection event
+            event: Selection event
         """
-        # Get selected item
-        selected_value = self.search_ctrl.GetValue()
+        # Get selected item and perform search
+        selected_value = self.search_field.GetValue()
         if selected_value:
-            # Perform search with selected value
             self._perform_search(selected_value)
-    
+            
     def OnSearch(self, event):
         """Handle search button click
         
@@ -257,7 +258,7 @@ class LocationDialog(wx.Dialog):
             event: Button event
         """
         # Get search query
-        query = self.search_ctrl.GetValue().strip()
+        query = self.search_field.GetValue().strip()
         if not query:
             wx.MessageBox(
                 "Please enter an address, city, or ZIP code to search",
@@ -301,7 +302,7 @@ class LocationDialog(wx.Dialog):
             self.longitude = None
     
     def _add_to_search_history(self, query):
-        """Add query to search history and update combo box
+        """Add query to search history and update autocomplete
         
         Args:
             query: Search query to add
@@ -317,10 +318,9 @@ class LocationDialog(wx.Dialog):
         if len(self.search_history) > self.MAX_HISTORY_ITEMS:
             self.search_history = self.search_history[:self.MAX_HISTORY_ITEMS]
         
-        # Clear and repopulate the combo box
-        self.search_ctrl.Clear()
-        self.search_ctrl.Append(self.search_history)
-        self.search_ctrl.SetValue(query)
+        # Update the autocomplete with history items
+        self.search_field.update_choices(self.search_history)
+        self.search_field.SetValue(query)
     
     def OnAdvanced(self, event):
         """Handle advanced button click to open manual lat/lon dialog
