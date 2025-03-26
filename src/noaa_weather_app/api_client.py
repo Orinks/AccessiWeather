@@ -197,7 +197,7 @@ class NoaaApiClient:
             Dict containing response data
         """
         try:
-            # Acquire the thread lock
+            # Acquire the thread lock - ensure thread safety for all API requests
             with self.request_lock:
                 # Rate limiting
                 if self.last_request_time is not None:
@@ -216,7 +216,7 @@ class NoaaApiClient:
                     else:
                         request_url = f"{self.BASE_URL}/{clean_endpoint}"
                 
-                # Make the request
+                # Make the request - keeping this inside the lock to avoid concurrent access
                 response = requests.get(request_url, headers=self.headers, params=params)
                 self.last_request_time = time.time()
                 
@@ -231,7 +231,7 @@ class NoaaApiClient:
                         pass
                     raise ValueError(error_msg)
                 
-                # Return the response data
+                # Return the response data - process it inside the lock to prevent race conditions
                 return response.json()
         except requests.RequestException as e:
             logging.error(f"Failed to make API request: {str(e)}")
