@@ -1,4 +1,4 @@
-"""Location handling for NOAA weather app
+"""Location handling for AccessiWeather
 
 This module handles location storage and retrieval.
 """

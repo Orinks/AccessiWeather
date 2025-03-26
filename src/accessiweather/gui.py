@@ -1,14 +1,14 @@
-"""Main GUI module for NOAA Weather App
+"""Main GUI module for AccessiWeather
 
 This module provides the main application window and GUI components.
 It integrates accessibility features for screen readers.
 
-Note: This file now serves as a compatibility layer importing from the 
+Note: This file now serves as a compatibility layer importing from the
 modular gui package structure.
 """
 
 # Re-export all components from the modular gui package
-from noaa_weather_app.gui import (
+from accessiweather.gui import (
     # Dialog classes
     AdvancedLocationDialog,
     LocationDialog,
@@ -29,10 +29,10 @@ from noaa_weather_app.gui import (
 )
 
 # Re-export dependencies for backward compatibility with tests
-from noaa_weather_app.api_client import NoaaApiClient
-from noaa_weather_app.notifications import WeatherNotifier
-from noaa_weather_app.location import LocationManager
-from noaa_weather_app.geocoding import GeocodingService
+from accessiweather.api_client import NoaaApiClient
+from accessiweather.notifications import WeatherNotifier
+from accessiweather.location import LocationManager
+from accessiweather.geocoding import GeocodingService
 
 # Make all imports available at module level for backward compatibility
 __all__ = [

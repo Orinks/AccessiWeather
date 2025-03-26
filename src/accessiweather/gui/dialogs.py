@@ -1,4 +1,4 @@
-"""Dialog components for NOAA Weather App
+"""Dialog components for AccessiWeather
 
 This module provides dialog windows for user interaction.
 """

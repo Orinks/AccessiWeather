@@ -1,4 +1,4 @@
-"""Accessible UI components for NOAA Weather App
+"""Accessible UI components for AccessiWeather
 
 This module provides accessible UI widgets that enhance screen reader support.
 """

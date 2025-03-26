@@ -1,4 +1,4 @@
-"""Accessible widgets for NOAA Weather App
+"""Accessible widgets for AccessiWeather
 
 This module provides wxPython widgets enhanced with accessibility features.
 """

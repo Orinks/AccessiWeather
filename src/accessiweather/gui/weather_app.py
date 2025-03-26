@@ -1,4 +1,4 @@
-"""Main application window for NOAA Weather App
+"""Main application window for AccessiWeather
 
 This module provides the main application window and integrates all components.
 """
@@ -14,22 +14,22 @@ import importlib
 import sys
 
 # Special import approach that allows for monkeypatching in tests
-# Look for these classes in noaa_weather_app.gui first (for tests)
+# Look for these classes in accessiweather.gui first (for tests)
 # If not found there, import them from their original modules
 
 # Define what we need to import
 to_import = {
-    'NoaaApiClient': 'noaa_weather_app.api_client',
-    'WeatherNotifier': 'noaa_weather_app.notifications',
-    'LocationManager': 'noaa_weather_app.location',
-    'GeocodingService': 'noaa_weather_app.geocoding'
+    'NoaaApiClient': 'accessiweather.api_client',
+    'WeatherNotifier': 'accessiweather.notifications',
+    'LocationManager': 'accessiweather.location',
+    'GeocodingService': 'accessiweather.geocoding'
 }
 
 # Try to import from gui module first (for test patching)
 for name, original_module in to_import.items():
     try:
         # First try to get it from gui module (patched version in tests)
-        gui_module = importlib.import_module('noaa_weather_app.gui')
+        gui_module = importlib.import_module('accessiweather.gui')
         globals()[name] = getattr(gui_module, name)
     except (ImportError, AttributeError):
         # If not available in gui, import from original source
@@ -52,7 +52,7 @@ logger = logging.getLogger(__name__)
 
 # Constants
 UPDATE_INTERVAL = 1800  # 30 minutes in seconds
-CONFIG_PATH = os.path.expanduser("~/.noaa_weather_app/config.json")
+CONFIG_PATH = os.path.expanduser("~/.accessiweather/config.json")
 
 
 class WeatherApp(wx.Frame):

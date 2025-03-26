@@ -1,6 +1,6 @@
 """Main entry point for running the module directly
 
-Allows running the module with `python -m noaa_weather_app`
+Allows running the module with `python -m accessiweather`
 """
 
 from accessiweather.cli import main

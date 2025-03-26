@@ -34,6 +34,15 @@ ENV/
 # Local configuration
 config.json
 ~/.noaa_weather_app/
+~/.accessiweather/
+
+# Memory Bank
+memory-bank/
+
+# Roo files
+.roo/
+.roomodes
+.rooignore
 
 # Windows specific
 Thumbs.db

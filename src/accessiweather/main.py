@@ -14,6 +14,7 @@ import json
 
 from accessiweather.gui import WeatherApp
 from accessiweather.location import LocationManager
+from accessiweather.data_migration import migrate_config_directory
 
 
 def setup_logging(debug_mode=False):
@@ -81,6 +82,16 @@ def main(config_dir: Optional[str] = None, debug_mode: bool = False):
     # Get logger
     logger = logging.getLogger(__name__)
     logger.info(f"Starting AccessiWeather using config directory: {config_dir}")
+    
+    # Migrate data from old config directory if needed
+    old_config_dir = os.path.expanduser("~/.noaa_weather_app")
+    if os.path.exists(old_config_dir):
+        logger.info(f"Found old config directory: {old_config_dir}")
+        migration_result = migrate_config_directory(old_config_dir, config_dir)
+        if migration_result:
+            logger.info("Successfully migrated data from old config directory")
+        else:
+            logger.warning("Failed to migrate data from old config directory")
     
     # Create location manager with config directory
     location_manager = LocationManager(config_dir=config_dir)

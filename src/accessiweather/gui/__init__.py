@@ -1,4 +1,4 @@
-"""GUI Components for NOAA Weather App
+"""GUI Components for AccessiWeather
 
 This package contains all graphical user interface components for the application.
 It provides backward-compatible imports for existing code.

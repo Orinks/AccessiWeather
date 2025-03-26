@@ -1,4 +1,4 @@
-"""Asynchronous data fetching components for NOAA Weather App
+"""Asynchronous data fetching components for AccessiWeather
 
 This module provides thread-based asynchronous fetching of weather data.
 """
