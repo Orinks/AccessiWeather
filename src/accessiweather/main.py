@@ -12,8 +12,8 @@ import importlib.util
 import pathlib
 import json
 
-from noaa_weather_app.gui import WeatherApp
-from noaa_weather_app.location import LocationManager
+from accessiweather.gui import WeatherApp
+from accessiweather.location import LocationManager
 
 
 def setup_logging(debug_mode=False):

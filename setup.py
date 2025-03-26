@@ -4,7 +4,7 @@ setup(
     name="accessiweather",
     version="0.1.0",
     packages=find_packages(where="src"),
-    package_dir={"":"src"},
+    package_dir={"": "src"},
     install_requires=[
         "wxPython",
         "requests",
@@ -23,7 +23,7 @@ setup(
     python_requires=">=3.7",
     entry_points={
         'console_scripts': [
-            'accessiweather=noaa_weather_app.cli:main',
+            'accessiweather=accessiweather.cli:main',
         ],
     },
 )

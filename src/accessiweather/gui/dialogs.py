@@ -5,7 +5,7 @@ This module provides dialog windows for user interaction.
 
 import wx
 import logging
-from noaa_weather_app.geocoding import GeocodingService
+from accessiweather.geocoding import GeocodingService
 
 from .ui_components import (
     AccessibleStaticText,

@@ -8,7 +8,7 @@ import logging
 import sys
 from typing import List, Optional
 
-from noaa_weather_app.main import main as app_main
+from accessiweather.main import main as app_main
 
 
 def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:

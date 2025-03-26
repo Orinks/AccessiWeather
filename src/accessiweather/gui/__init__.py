@@ -18,10 +18,10 @@ from .ui_components import (
 
 # Re-export dependencies for backward compatibility with tests
 # We don't import these directly to avoid circular imports
-from noaa_weather_app.api_client import NoaaApiClient
-from noaa_weather_app.notifications import WeatherNotifier
-from noaa_weather_app.location import LocationManager
-from noaa_weather_app.geocoding import GeocodingService
+from accessiweather.api_client import NoaaApiClient
+from accessiweather.notifications import WeatherNotifier
+from accessiweather.location import LocationManager
+from accessiweather.geocoding import GeocodingService
 
 # Import WeatherApp last to avoid circular import issues
 from .weather_app import WeatherApp
