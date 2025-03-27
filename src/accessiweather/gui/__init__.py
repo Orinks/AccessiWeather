@@ -1,27 +1,32 @@
 """GUI Components for AccessiWeather
 
-This package contains all graphical user interface components for the application.
-It provides backward-compatible imports for existing code.
+This package contains all graphical user interface components for the
+application.
 """
 
+# Define exported symbols
+__all__ = [
+    'AdvancedLocationDialog', 'LocationDialog', 'WeatherDiscussionDialog',
+    'AccessibleStaticText', 'AccessibleTextCtrl', 'AccessibleChoice',
+    'AccessibleButton', 'AccessibleListCtrl', 'WeatherApp',
+    'UPDATE_INTERVAL'
+]
+
 # Import dialog classes
-from .dialogs import AdvancedLocationDialog, LocationDialog, WeatherDiscussionDialog
+from .dialogs import (
+    AdvancedLocationDialog,
+    LocationDialog,
+    WeatherDiscussionDialog
+)
 
 # Import UI components
 from .ui_components import (
     AccessibleStaticText,
-    AccessibleTextCtrl, 
+    AccessibleTextCtrl,
     AccessibleChoice,
     AccessibleButton,
     AccessibleListCtrl
 )
-
-# Re-export dependencies for backward compatibility with tests
-# We don't import these directly to avoid circular imports
-from accessiweather.api_client import NoaaApiClient
-from accessiweather.notifications import WeatherNotifier
-from accessiweather.location import LocationManager
-from accessiweather.geocoding import GeocodingService
 
 # Import WeatherApp last to avoid circular import issues
 from .weather_app import WeatherApp
