@@ -3,10 +3,12 @@ import threading
 import time
 import queue
 import wx
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
+
 
 from accessiweather.gui.weather_app import WeatherApp
 from accessiweather.api_client import NoaaApiClient
+
 
 @pytest.fixture
 def wx_app():
@@ -14,18 +16,25 @@ def wx_app():
     yield app
     app.Destroy()
 
+
 @pytest.fixture
 def frame(wx_app):
     frame = wx.Frame(None)
     yield frame
     frame.Destroy()
 
+
 @pytest.fixture
 def mock_api_client():
     mock_client = MagicMock(spec=NoaaApiClient)
-    mock_client.get_forecast.return_value = {"periods": [{"name": "Today", "temperature": 72}]}
-    mock_client.get_alerts.return_value = [{"headline": "Test Alert", "description": "Test Description"}]
+    mock_client.get_forecast.return_value = {
+        "periods": [{"name": "Today", "temperature": 72}]
+    }
+    mock_client.get_alerts.return_value = [
+        {"headline": "Test Alert", "description": "Test Description"}
+    ]
     return mock_client
+
 
 @pytest.fixture
 def mock_location_manager():
@@ -33,9 +42,11 @@ def mock_location_manager():
     manager.get_current_location.return_value = ("Test Location", 35.0, -80.0)
     return manager
 
+
 @pytest.fixture
 def event_queue():
     return queue.Queue()
+
 
 @pytest.fixture
 def mock_wx_callafter(monkeypatch):
@@ -45,12 +56,19 @@ def mock_wx_callafter(monkeypatch):
     monkeypatch.setattr(wx, 'CallAfter', mock_call_after)
     return mock_call_after
 
-def test_forecast_fetched_asynchronously(frame, mock_api_client, mock_location_manager, event_queue, monkeypatch, mock_wx_callafter):
+
+def test_forecast_fetched_asynchronously(
+    frame, mock_api_client, mock_location_manager, event_queue, 
+    monkeypatch, mock_wx_callafter
+):
     """Test that the forecast is fetched in a background thread."""
     # Create test app
-    app = WeatherApp(frame)
-    app.api_client = mock_api_client
-    app.location_manager = mock_location_manager
+    app = WeatherApp(
+        frame, 
+        location_manager=mock_location_manager, 
+        api_client=mock_api_client, 
+        notifier=MagicMock()
+    )
     
     # Track status text changes
     def track_status(text):
@@ -66,7 +84,6 @@ def test_forecast_fetched_asynchronously(frame, mock_api_client, mock_location_m
     app._on_forecast_fetched = on_forecast_callback
     
     # Patch the forecast fetcher to directly call the success callback
-    original_fetch = app.forecast_fetcher.fetch
     def mock_fetch(lat, lon, on_success=None, on_error=None):
         # Record that fetch was called
         event_queue.put(("fetch_called", (lat, lon)))
@@ -94,12 +111,19 @@ def test_forecast_fetched_asynchronously(frame, mock_api_client, mock_location_m
     assert forecast_event[0] == "forecast_fetched"
     assert "periods" in forecast_event[1]
 
-def test_alerts_fetched_asynchronously(frame, mock_api_client, mock_location_manager, event_queue, monkeypatch, mock_wx_callafter):
+
+def test_alerts_fetched_asynchronously(
+    frame, mock_api_client, mock_location_manager, event_queue, 
+    monkeypatch, mock_wx_callafter
+):
     """Test that alerts are fetched in a background thread."""
     # Create test app
-    app = WeatherApp(frame)
-    app.api_client = mock_api_client
-    app.location_manager = mock_location_manager
+    app = WeatherApp(
+        frame, 
+        location_manager=mock_location_manager, 
+        api_client=mock_api_client, 
+        notifier=MagicMock()
+    )
     
     # Track status text changes
     def track_status(text):
@@ -115,13 +139,14 @@ def test_alerts_fetched_asynchronously(frame, mock_api_client, mock_location_man
     app._on_alerts_fetched = on_alerts_callback
     
     # Patch the alerts fetcher to directly call the success callback
-    original_fetch = app.alerts_fetcher.fetch
     def mock_fetch(lat, lon, on_success=None, on_error=None):
         # Record that fetch was called
         event_queue.put(("fetch_called", (lat, lon)))
         # Directly call success callback
         if on_success:
-            on_success([{"headline": "Test Alert", "description": "Test Description"}])
+            on_success({"features": [
+                {"properties": {"headline": "Test Alert", "description": "Test Description"}}
+            ]})
         return
     app.alerts_fetcher.fetch = mock_fetch
     
@@ -141,14 +166,21 @@ def test_alerts_fetched_asynchronously(frame, mock_api_client, mock_location_man
     # Then we should get the alerts data
     alerts_event = event_queue.get(block=False)
     assert alerts_event[0] == "alerts_fetched"
-    assert isinstance(alerts_event[1], list)
+    assert "features" in alerts_event[1]
 
-def test_forecast_error_handling(frame, mock_api_client, mock_location_manager, event_queue, monkeypatch, mock_wx_callafter):
+
+def test_forecast_error_handling(
+    frame, mock_api_client, mock_location_manager, event_queue, 
+    monkeypatch, mock_wx_callafter
+):
     """Test that errors during forecast fetching are handled properly."""
     # Create test app
-    app = WeatherApp(frame)
-    app.api_client = mock_api_client
-    app.location_manager = mock_location_manager
+    app = WeatherApp(
+        frame, 
+        location_manager=mock_location_manager, 
+        api_client=mock_api_client, 
+        notifier=MagicMock()
+    )
     
     # Track status text changes
     def track_status(text):
@@ -192,12 +224,19 @@ def test_forecast_error_handling(frame, mock_api_client, mock_location_manager, 
     assert error_event[0] == "forecast_error"
     assert "Network error in forecast" in error_event[1]
 
-def test_alerts_error_handling(frame, mock_api_client, mock_location_manager, event_queue, monkeypatch, mock_wx_callafter):
+
+def test_alerts_error_handling(
+    frame, mock_api_client, mock_location_manager, event_queue, 
+    monkeypatch, mock_wx_callafter
+):
     """Test that errors during alerts fetching are handled properly."""
     # Create test app
-    app = WeatherApp(frame)
-    app.api_client = mock_api_client
-    app.location_manager = mock_location_manager
+    app = WeatherApp(
+        frame, 
+        location_manager=mock_location_manager, 
+        api_client=mock_api_client, 
+        notifier=MagicMock()
+    )
     
     # Track status text changes
     def track_status(text):
@@ -241,18 +280,24 @@ def test_alerts_error_handling(frame, mock_api_client, mock_location_manager, ev
     assert error_event[0] == "alerts_error"
     assert "Network error in alerts" in error_event[1]
 
-def test_concurrent_fetching(frame, mock_api_client, mock_location_manager, event_queue, monkeypatch, mock_wx_callafter):
+
+def test_concurrent_fetching(
+    frame, mock_api_client, mock_location_manager, event_queue, 
+    monkeypatch, mock_wx_callafter
+):
     """Test that forecast and alerts are fetched concurrently."""
     # Create test app
-    app = WeatherApp(frame)
-    app.api_client = mock_api_client
-    app.location_manager = mock_location_manager
+    app = WeatherApp(
+        frame, 
+        location_manager=mock_location_manager, 
+        api_client=mock_api_client, 
+        notifier=MagicMock()
+    )
     
     # Track data fetching
     fetch_events = []
     
     # Forecast fetcher mock
-    original_forecast_fetch = app.forecast_fetcher.fetch
     def mock_forecast_fetch(lat, lon, on_success=None, on_error=None):
         fetch_events.append("forecast_start")
         event_queue.put(("forecast_start", time.time()))
@@ -265,13 +310,14 @@ def test_concurrent_fetching(frame, mock_api_client, mock_location_manager, even
     app.forecast_fetcher.fetch = mock_forecast_fetch
     
     # Alerts fetcher mock
-    original_alerts_fetch = app.alerts_fetcher.fetch
     def mock_alerts_fetch(lat, lon, on_success=None, on_error=None):
         fetch_events.append("alerts_start")
         event_queue.put(("alerts_start", time.time()))
         # Call success after a very short delay to simulate work
         if on_success:
-            on_success([{"headline": "Test Alert", "description": "Test Description"}])
+            on_success({"features": [
+                {"properties": {"headline": "Test Alert", "description": "Test Description"}}
+            ]})
         fetch_events.append("alerts_end")
         event_queue.put(("alerts_end", time.time()))
         return

@@ -598,11 +598,12 @@ class WeatherApp(wx.Frame):
         finally:
             self.SetStatusText("Ready")
     
-    def _on_discussion_error(self, error_message, loading_dialog):
+    def _on_discussion_error(self, error_message, name, loading_dialog):
         """Handle errors during discussion fetching
         
         Args:
             error_message: Error message
+            name: Location name
             loading_dialog: Loading dialog reference
         """
         try:
@@ -614,7 +615,7 @@ class WeatherApp(wx.Frame):
             self.discussion_btn.Enable()
             
             # Show error message
-            wx.MessageBox(f"Error fetching discussion: {error_message}", "Error", wx.OK | wx.ICON_ERROR)
+            wx.MessageBox(f"Error fetching discussion for {name}: {error_message}", "Error", wx.OK | wx.ICON_ERROR)
         finally:
             self.SetStatusText("Ready")
         
