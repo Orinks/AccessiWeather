@@ -8,16 +8,8 @@ import os
 import json
 import time
 import logging
-import threading
-import requests
-import importlib
-import sys
 
-# Import dependencies directly from their modules
-from accessiweather.api_client import NoaaApiClient
-from accessiweather.notifications import WeatherNotifier
-from accessiweather.location import LocationManager
-from accessiweather.geocoding import GeocodingService
+# Import local modules
 
 # Import local modules
 from .dialogs import LocationDialog, WeatherDiscussionDialog
@@ -41,44 +33,33 @@ CONFIG_PATH = os.path.expanduser("~/.accessiweather/config.json")
 class WeatherApp(wx.Frame):
     """Main application window"""
     
-    def __init__(self, parent=None, api_client_class=None, notifier_class=None, location_manager_class=None, config_path=None):
+    def __init__(self, parent=None, location_manager=None, api_client=None, notifier=None, config=None, config_path=None):
         """Initialize the weather app
         
         Args:
             parent: Parent window
-            api_client_class: Class to use for API client (for testing)
-            notifier_class: Class to use for notifier (for testing)
-            location_manager_class: Class to use for location manager (for testing)
-            config_path: Custom path to config file (for testing)
+            location_manager: LocationManager instance
+            api_client: NoaaApiClient instance
+            notifier: WeatherNotifier instance
+            config: Configuration dictionary (optional)
+            config_path: Custom path to config file (optional, used only if config is None)
         """
         super().__init__(parent, title="AccessiWeather", size=(800, 600))
         
-        # Set component classes (used for dependency injection in tests)
-        self._api_client_class = api_client_class or NoaaApiClient
-        self._notifier_class = notifier_class or WeatherNotifier
-        self._location_manager_class = location_manager_class or LocationManager
+        # Set config path
         self._config_path = config_path or CONFIG_PATH
         
-        # Load config file if it exists
-        self.config = self._load_config()
+        # Load or use provided config
+        self.config = config if config is not None else self._load_config()
         
-        # Initialize components
-        self.api_client = self._initialize_api_client()
-        self.notifier = self._notifier_class()
+        # Store provided dependencies
+        self.api_client = api_client
+        self.notifier = notifier
+        self.location_manager = location_manager
         
-        # Initialize location manager
-        # In the real app this is set externally, but for tests we need to initialize it here
-        try:
-            self.location_manager = self._location_manager_class()
-            # Initialize with saved locations from config
-            locations = self.config.get("locations", {})
-            current = self.config.get("current")
-            if locations:
-                self.location_manager.set_locations(locations, current)
-        except Exception as e:
-            # This is primarily to support tests that mock LocationManager
-            logger.warning(f"Could not initialize location manager: {e}")
-            self.location_manager = None
+        # Validate required dependencies
+        if self.api_client is None or self.notifier is None or self.location_manager is None:
+            raise ValueError("Required dependencies (location_manager, api_client, notifier) must be provided")
         
         # Initialize async fetchers
         self.forecast_fetcher = ForecastFetcher(self.api_client)
@@ -112,13 +93,15 @@ class WeatherApp(wx.Frame):
             accessible.SetName("AccessiWeather")
             accessible.SetRole(wx.ACC_ROLE_WINDOW)
         
-        # Initial load will be done after location_manager is set
-        
         # Test hooks for async tests
         self._testing_forecast_callback = None
         self._testing_forecast_error_callback = None
         self._testing_alerts_callback = None
         self._testing_alerts_error_callback = None
+        
+        # Initialize UI with location data
+        self.UpdateLocationDropdown()
+        self.UpdateWeatherData()
     
     def _load_config(self):
         """Load configuration from file
@@ -141,20 +124,7 @@ class WeatherApp(wx.Frame):
             "api_settings": {}
         }
     
-    def _initialize_api_client(self):
-        """Initialize the NOAA API client with configuration
-        
-        Returns:
-            Configured NoaaApiClient instance
-        """
-        # Get API settings from config
-        api_settings = self.config.get("api_settings", {})
-        
-        # Create API client with settings
-        return self._api_client_class(
-            user_agent="AccessiWeather",
-            contact_info=api_settings.get("contact_info")
-        )
+    # _initialize_api_client method removed as API client is now injected directly
     
     def InitUI(self):
         """Initialize the user interface"""

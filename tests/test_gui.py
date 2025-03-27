@@ -183,16 +183,16 @@ class TestWeatherApp:
         app = None
         try:
             app = WeatherApp(
-                api_client_class=mock_components['api_client_class'],
-                notifier_class=mock_components['notifier_class'],
-                location_manager_class=mock_components['location_manager_class']
+                parent=None,
+                location_manager=mock_components['location_manager'],
+                api_client=mock_components['api_client'],
+                notifier=mock_components['notifier']
             )
             
-            # Check that NoaaApiClient was initialized with default values
-            mock_components['api_client_class'].assert_called_once()
-            args, kwargs = mock_components['api_client_class'].call_args
-            assert kwargs.get('user_agent') == 'AccessiWeather'
-            assert kwargs.get('contact_info') is None
+            # Check that the dependencies were properly set
+            assert app.location_manager == mock_components['location_manager']
+            assert app.api_client == mock_components['api_client']
+            assert app.notifier == mock_components['notifier']
         finally:
             if app:
                 app.Destroy()
@@ -201,6 +201,7 @@ class TestWeatherApp:
         """Test initialization with config file"""
         # Patch os.path.exists to return True only for our temp config file
         original_exists = os.path.exists
+        
         def mock_exists(path):
             if path == temp_config_file:
                 return True
@@ -210,6 +211,7 @@ class TestWeatherApp:
         
         # Patch open to return our temp config file content
         original_open = open
+        
         def mock_open(file, *args, **kwargs):
             if file == temp_config_file:
                 return original_open(temp_config_file, *args, **kwargs)
@@ -217,25 +219,27 @@ class TestWeatherApp:
         
         monkeypatch.setattr('builtins.open', mock_open)
         
+        # Load config from the temp file
+        with open(temp_config_file, 'r') as f:
+            config = json.load(f)
+        
         # Create a new WeatherApp instance
         app = None
         try:
-            # Patch os.getcwd to return the directory of our temp config
-            monkeypatch.setattr(os, 'getcwd', lambda: os.path.dirname(temp_config_file))
-            
-            # Create app with custom config path
+            # Create app with the loaded config
             app = WeatherApp(
-                api_client_class=mock_components['api_client_class'],
-                notifier_class=mock_components['notifier_class'],
-                location_manager_class=mock_components['location_manager_class'],
-                config_path=temp_config_file
+                parent=None,
+                location_manager=mock_components['location_manager'],
+                api_client=mock_components['api_client'],
+                notifier=mock_components['notifier'],
+                config=config
             )
             
-            # Check that NoaaApiClient was initialized with values from config
-            mock_components['api_client_class'].assert_called_once()
-            args, kwargs = mock_components['api_client_class'].call_args
-            assert kwargs.get('user_agent') == 'AccessiWeather'
-            assert kwargs.get('contact_info') == 'test@example.com'
+            # Check that the dependencies were properly set
+            assert app.location_manager == mock_components['location_manager']
+            assert app.api_client == mock_components['api_client']
+            assert app.notifier == mock_components['notifier']
+            assert app.config == config
         finally:
             if app:
                 app.Destroy()
@@ -245,9 +249,6 @@ class TestWeatherApp:
         """Test that _FetchWeatherData uses proper headers from API client"""
         # Create real API client with contact info
         api_client = NoaaApiClient(user_agent="AccessiWeather", contact_info="test@example.com")
-        
-        # Set up the mock API client in our components
-        mock_components['api_client_class'].return_value = api_client
         
         # Mock requests.get to check headers
         mock_response = MagicMock()
@@ -278,9 +279,10 @@ class TestWeatherApp:
         app = None
         try:
             app = WeatherApp(
-                api_client_class=mock_components['api_client_class'],
-                notifier_class=mock_components['notifier_class'],
-                location_manager_class=mock_components['location_manager_class']
+                parent=None,
+                location_manager=mock_components['location_manager'],
+                api_client=api_client,  # Use the real API client with contact info
+                notifier=mock_components['notifier']
             )
             
             # Need to wait a moment for all initialization to complete

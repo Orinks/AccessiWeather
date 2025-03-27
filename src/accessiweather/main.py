@@ -14,6 +14,8 @@ import json
 
 from accessiweather.gui.weather_app import WeatherApp
 from accessiweather.location import LocationManager
+from accessiweather.api_client import NoaaApiClient
+from accessiweather.notifications import WeatherNotifier
 from accessiweather.data_migration import migrate_config_directory
 
 
@@ -93,17 +95,38 @@ def main(config_dir: Optional[str] = None, debug_mode: bool = False):
         else:
             logger.warning("Failed to migrate data from old config directory")
     
-    # Create location manager with config directory
+    # Load configuration
+    config_file = os.path.join(config_dir, "config.json")
+    config = {}
+    if os.path.exists(config_file):
+        try:
+            with open(config_file, 'r') as f:
+                config = json.load(f)
+        except Exception as e:
+            logger.error(f"Failed to load config: {str(e)}")
+    
+    # Create dependencies
     location_manager = LocationManager(config_dir=config_dir)
+    
+    # Create API client with settings
+    api_settings = config.get("api_settings", {})
+    api_client = NoaaApiClient(
+        user_agent="AccessiWeather",
+        contact_info=api_settings.get("contact_info")
+    )
+    
+    # Create notifier
+    notifier = WeatherNotifier()
     
     # Create the application
     app = wx.App(False)
-    frame = WeatherApp(None)
-    frame.location_manager = location_manager  # Use the configured location manager
-    
-    # Now that location manager is set, update the UI
-    frame.UpdateLocationDropdown()
-    frame.UpdateWeatherData()
+    frame = WeatherApp(
+        parent=None,
+        location_manager=location_manager,
+        api_client=api_client,
+        notifier=notifier,
+        config=config
+    )
     
     frame.Show()
     
