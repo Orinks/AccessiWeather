@@ -1,7 +1,7 @@
 """Tests for the notification module"""
 
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from accessiweather.notifications import WeatherNotifier
 
@@ -21,8 +21,12 @@ def sample_alerts_data():
                 "properties": {
                     "id": "test-alert-1",
                     "event": "Severe Thunderstorm Warning",
-                    "headline": "Severe Thunderstorm Warning for Example County",
-                    "description": "A severe thunderstorm is moving through the area",
+                    "headline": (
+                        "Severe Thunderstorm Warning for Example County"
+                    ),
+                    "description": (
+                        "A severe thunderstorm is moving through the area"
+                    ),
                     "severity": "Severe",
                     "urgency": "Immediate",
                     "sent": "2025-03-12T10:00:00-04:00",
@@ -99,7 +103,8 @@ class TestWeatherNotifier:
         # Check the arguments
         assert kwargs["title"] == "Weather Tornado Warning"
         assert kwargs["msg"] == "Tornado Warning for Test County"
-        assert kwargs["threaded"] is True
+        assert kwargs["timeout"] == 10
+        assert kwargs["app_name"] == "AccessiWeather"
 
     def test_clear_expired_alerts(self, weather_notifier, sample_alerts_data):
         """Test clearing expired alerts"""

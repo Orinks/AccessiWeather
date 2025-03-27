@@ -8,40 +8,58 @@ import logging
 import sys
 from typing import Dict, Any, List
 
+# Type checking will report this as missing, but it's a runtime dependency
+from plyer import notification  # type: ignore
+
 logger = logging.getLogger(__name__)
 
-# Create a wrapper for ToastNotifier to handle potential errors in test environment
+
+# Create a wrapper for notifications to handle potential errors in test
+# environment
 class SafeToastNotifier:
-    """A wrapper around the ToastNotifier class that handles exceptions gracefully"""
+    """
+    A wrapper around the notification system that handles exceptions.
+    Provides cross-platform notification support using plyer.
+    """
     
     def __init__(self):
         """Initialize the safe toast notifier"""
-        self._notifier = None
-        try:
-            # Only import win10toast if we're not running in test mode
-            from win10toast import ToastNotifier
-            self._notifier = ToastNotifier()
-        except Exception as e:
-            logger.warning(f"Could not initialize ToastNotifier: {str(e)}")
+        # No initialization needed for plyer
+        pass
     
     def show_toast(self, **kwargs):
         """Show a toast notification"""
-        if self._notifier is None:
-            logger.info(f"Toast notification would show: {kwargs.get('title')} - {kwargs.get('msg')}")
-            return True
-        
         try:
-            # If we're running tests, don't use threaded mode to avoid thread exceptions
+            # If we're running tests, just log the notification
             if 'pytest' in sys.modules:
                 # For tests, just log the notification and return success
-                logger.info(f"Toast notification: {kwargs.get('title')} - {kwargs.get('msg')}")
+                title = kwargs.get('title', '')
+                msg = kwargs.get('msg', '')
+                logger.info(f"Toast notification: {title} - {msg}")
                 return True
-            else:
-                # Only use the actual ToastNotifier in non-test environments
-                return self._notifier.show_toast(**kwargs)
+            
+            # Map win10toast parameters to plyer parameters
+            title = kwargs.get('title', 'Notification')
+            message = kwargs.get('msg', '')
+            app_name = 'AccessiWeather'
+            timeout = kwargs.get('duration', 10)
+            
+            # Use plyer's cross-platform notification
+            notification.notify(
+                title=title,
+                message=message,
+                app_name=app_name,
+                timeout=timeout
+            )
+            return True
         except Exception as e:
             logger.warning(f"Failed to show toast notification: {str(e)}")
+            logger.info(
+                f"Toast notification would show: {kwargs.get('title')} - "
+                f"{kwargs.get('msg')}"
+            )
             return False
+
 
 class WeatherNotifier:
     """Class for handling weather notifications"""
@@ -60,7 +78,9 @@ class WeatherNotifier:
         self.toaster = SafeToastNotifier()
         self.active_alerts = {}
     
-    def process_alerts(self, alerts_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def process_alerts(
+        self, alerts_data: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Process alerts data from NOAA API
         
         Args:
@@ -114,10 +134,11 @@ class WeatherNotifier:
             # Show notification
             self.toaster.show_toast(
                 title=title,
+                # 'msg' parameter is mapped to 'message' in SafeToastNotifier
                 msg=message,
-                icon_path=None,  # Could use a weather icon here
-                duration=10,
-                threaded=True  # Run in background thread
+                # 'timeout' instead of 'duration'
+                timeout=10,
+                app_name='AccessiWeather'
             )
             
             logger.info(f"Displayed notification for {alert['event']}")
@@ -141,6 +162,9 @@ class WeatherNotifier:
         # Sort by severity
         return sorted(
             alerts,
-            key=lambda x: self.PRIORITY.get(x.get("severity"), self.PRIORITY["Unknown"]),
+            key=lambda x: self.PRIORITY.get(
+                x.get("severity", "Unknown"), 
+                self.PRIORITY["Unknown"]
+            ),
             reverse=True
         )

@@ -10,7 +10,7 @@ setup(
         "requests",
         "pytest",
         "pytest-mock",
-        "win10toast",  # For Windows notifications
+        "plyer",      # For cross-platform notifications
         "geopy",      # For geocoding addresses and zip codes
     ],
     description="AccessiWeather: An accessible weather application using NOAA data with focus on screen reader compatibility",
