@@ -405,6 +405,15 @@ class WeatherLocationAutocomplete(AccessibleComboBox):
         self.lock = threading.RLock()
         self.suppress_events = False
         
+        # Create debounce timer for typing
+        self.debounce_timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.on_debounce_timer, self.debounce_timer)
+        self.debounce_delay = 300  # milliseconds
+        
+        # Thread control
+        self.fetch_thread = None
+        self.stop_event = threading.Event()
+        
         # Bind events
         self.Bind(wx.EVT_TEXT, self.on_text_changed)
     
@@ -427,6 +436,7 @@ class WeatherLocationAutocomplete(AccessibleComboBox):
         super().SetValue(value)
         self.suppress_events = False
     
+        
     def on_text_changed(self, event):
         """Handle text change event to trigger autocomplete
         
@@ -444,19 +454,28 @@ class WeatherLocationAutocomplete(AccessibleComboBox):
         
         # Check if we have enough characters to trigger suggestions
         if current_text and len(current_text) >= self.min_chars and self.geocoding_service:
-            # Always get suggestions directly in test mode
-            suggestions = self.geocoding_service.suggest_locations(current_text)
+            # Restart the debounce timer
+            self.debounce_timer.Stop()
+            self.debounce_timer.Start(self.debounce_delay, wx.TIMER_ONE_SHOT)
             
-            # In test mode, update immediately
+            # In test mode, fetch immediately
             if hasattr(wx, 'testing') and wx.testing:
+                suggestions = self.geocoding_service.suggest_locations(current_text)
                 self._update_completions(suggestions)
-            else:
-                # In normal usage, handle in a separate thread
-                wx.CallAfter(self._update_completions, suggestions)
         
         # Allow event to continue
         if event:
             event.Skip()
+            
+    def on_debounce_timer(self, event):
+        """Handle debounce timer event to fetch suggestions after typing stops
+        
+        Args:
+            event: Timer event
+        """
+        current_text = self.GetValue()
+        if current_text and len(current_text) >= self.min_chars and self.geocoding_service:
+            self._fetch_suggestions(current_text)
     
     def _fetch_suggestions(self, text):
         """Fetch location suggestions in the background
@@ -464,15 +483,48 @@ class WeatherLocationAutocomplete(AccessibleComboBox):
         Args:
             text: Text to get suggestions for
         """
+        # Cancel any existing fetch
+        if self.fetch_thread is not None and self.fetch_thread.is_alive():
+            logger.debug("Cancelling in-progress location suggestions fetch")
+            self.stop_event.set()
+            # Don't join here as it may block the UI
+        
+        # Reset stop event for new fetch
+        self.stop_event.clear()
+        
+        # Start a new thread to fetch suggestions
+        self.fetch_thread = threading.Thread(
+            target=self._fetch_thread_func,
+            args=(text,)
+        )
+        self.fetch_thread.daemon = True
+        self.fetch_thread.start()
+        
+    def _fetch_thread_func(self, text):
+        """Thread function to fetch location suggestions
+        
+        Args:
+            text: Text to get suggestions for
+        """
         try:
-            # This method is no longer used in test mode, but kept for compatibility
+            # Check if we've been asked to stop
+            if self.stop_event.is_set():
+                logger.debug("Location suggestions fetch cancelled")
+                return
+                
             # Get suggestions from geocoding service
             suggestions = self.geocoding_service.suggest_locations(text)
             
+            # Check again if we've been asked to stop before delivering results
+            if self.stop_event.is_set():
+                logger.debug("Suggestions fetch completed but results discarded")
+                return
+                
             # Update the completer on the main thread
             wx.CallAfter(self._update_completions, suggestions)
         except Exception as e:
-            logger.error(f"Error fetching location suggestions: {e}")
+            if not self.stop_event.is_set():
+                logger.error(f"Error fetching location suggestions: {e}")
     
     def _update_completions(self, suggestions):
         """Update the completions in the text completer
