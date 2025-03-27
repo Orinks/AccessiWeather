@@ -39,7 +39,7 @@ def safe_destroy():
         except Exception:
             pass  # Ignore any errors in cleanup
 
-from accessiweather.gui import LocationDialog, AdvancedLocationDialog
+from accessiweather.gui.dialogs import LocationDialog, AdvancedLocationDialog
 
 
 class TestAdvancedLocationDialog:

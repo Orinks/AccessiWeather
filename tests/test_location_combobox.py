@@ -40,7 +40,7 @@ def safe_destroy():
             pass  # Ignore any errors in cleanup
 
 # Import after wx.App is created
-from accessiweather.gui import LocationDialog
+from accessiweather.gui.dialogs import LocationDialog
 from accessiweather.gui.ui_components import AccessibleComboBox
 
 

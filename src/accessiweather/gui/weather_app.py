@@ -13,28 +13,11 @@ import requests
 import importlib
 import sys
 
-# Special import approach that allows for monkeypatching in tests
-# Look for these classes in accessiweather.gui first (for tests)
-# If not found there, import them from their original modules
-
-# Define what we need to import
-to_import = {
-    'NoaaApiClient': 'accessiweather.api_client',
-    'WeatherNotifier': 'accessiweather.notifications',
-    'LocationManager': 'accessiweather.location',
-    'GeocodingService': 'accessiweather.geocoding'
-}
-
-# Try to import from gui module first (for test patching)
-for name, original_module in to_import.items():
-    try:
-        # First try to get it from gui module (patched version in tests)
-        gui_module = importlib.import_module('accessiweather.gui')
-        globals()[name] = getattr(gui_module, name)
-    except (ImportError, AttributeError):
-        # If not available in gui, import from original source
-        module = importlib.import_module(original_module)
-        globals()[name] = getattr(module, name)
+# Import dependencies directly from their modules
+from accessiweather.api_client import NoaaApiClient
+from accessiweather.notifications import WeatherNotifier
+from accessiweather.location import LocationManager
+from accessiweather.geocoding import GeocodingService
 
 # Import local modules
 from .dialogs import LocationDialog, WeatherDiscussionDialog

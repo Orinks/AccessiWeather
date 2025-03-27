@@ -8,7 +8,8 @@ import tempfile
 from unittest.mock import patch, MagicMock
 import time
 
-from accessiweather.gui import LocationDialog, WeatherDiscussionDialog, WeatherApp
+from accessiweather.gui.dialogs import LocationDialog, WeatherDiscussionDialog
+from accessiweather.gui.weather_app import WeatherApp
 from accessiweather.api_client import NoaaApiClient
 
 
@@ -52,7 +53,7 @@ class TestLocationDialog:
     def setup_method(self):
         """Set up test fixture"""
         # Create geocoding service mock
-        self.geocoding_patcher = patch('accessiweather.gui.GeocodingService')
+        self.geocoding_patcher = patch('accessiweather.gui.dialogs.GeocodingService')
         self.mock_geocoding_class = self.geocoding_patcher.start()
         self.mock_geocoding = MagicMock()
         self.mock_geocoding_class.return_value = self.mock_geocoding

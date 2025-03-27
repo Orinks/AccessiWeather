@@ -12,7 +12,7 @@ import importlib.util
 import pathlib
 import json
 
-from accessiweather.gui import WeatherApp
+from accessiweather.gui.weather_app import WeatherApp
 from accessiweather.location import LocationManager
 from accessiweather.data_migration import migrate_config_directory
 
