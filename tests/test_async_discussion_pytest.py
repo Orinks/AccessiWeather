@@ -3,13 +3,12 @@ import threading
 import queue
 import time  # Import time for the wait loop
 import wx  # type: ignore
-from unittest.mock import MagicMock  # Removed unused patch
+from unittest.mock import MagicMock, patch  # Import patch
 
 from accessiweather.gui.weather_app import WeatherApp
 from accessiweather.gui.dialogs import WeatherDiscussionDialog
 from accessiweather.api_client import NoaaApiClient, ApiClientError
-# Import the fetcher to patch its methods
-from accessiweather.gui.async_fetchers import DiscussionFetcher
+# Removed unused import: DiscussionFetcher
 
 
 @pytest.fixture
@@ -110,7 +109,7 @@ def mock_dialogs(monkeypatch, event_queue):
 
 def test_discussion_fetched_asynchronously(
     wx_app, frame, mock_api_client, mock_location_manager, event_queue,
-    monkeypatch, mock_dialogs
+    mock_dialogs
 ):
     """Test discussion fetch and UI update via wx.CallAfter."""
     app = WeatherApp(
@@ -129,35 +128,36 @@ def test_discussion_fetched_asynchronously(
     # Event to signal completion of the callback via wx.CallAfter
     callback_finished_event = threading.Event()
 
-    # --- Patch the callback method ---
-    original_success_callback = DiscussionFetcher._on_discussion_success
+    # --- Patch the callback method on the app instance ---
+    # Get the original bound method from the instance
+    # Ensure the method exists before trying to access it
+    assert hasattr(app, '_on_discussion_fetched'), "No _on_discussion_fetched"
+    original_success_callback = app._on_discussion_fetched
 
-    def patched_on_success(fetcher_self, discussion_text):
+    # Define the wrapper function with the correct signature
+    def wrapper_on_success(discussion_text, name, loading_dialog):
         # Call the original callback logic first
-        original_success_callback(fetcher_self, discussion_text)
+        original_success_callback(discussion_text, name, loading_dialog)
         # Signal that the callback has completed
         callback_finished_event.set()
 
-    monkeypatch.setattr(
-        DiscussionFetcher, '_on_discussion_success', patched_on_success
-    )
-    # ---------------------------------
-
-    # Call the method that triggers fetching
-    app.OnViewDiscussion(event)
-
-    # --- Wait for the callback to execute via wx event loop ---
-    start_time = time.time()
-    timeout = 10  # seconds
     processed_event = False
-    while time.time() - start_time < timeout:
-        # Wait briefly for the event, non-blocking
-        if callback_finished_event.wait(timeout=0.01):
-            processed_event = True
-            break
-        # Allow wxPython event loop to process pending CallAfter events
-        wx.YieldIfNeeded()
-        # time.sleep(0.01) # Optional small sleep if YieldIfNeeded isn't enough
+    # Use patch.object as a context manager with the CORRECT method name
+    with patch.object(app, '_on_discussion_fetched', new=wrapper_on_success):
+        # Call the method that triggers fetching
+        app.OnViewDiscussion(event)
+
+        # --- Wait for the callback to execute via wx event loop ---
+        start_time = time.time()
+        timeout = 10  # seconds
+        while time.time() - start_time < timeout:
+            # Wait briefly for the event, non-blocking
+            if callback_finished_event.wait(timeout=0.01):
+                processed_event = True
+                break
+            # Allow wxPython event loop to process pending CallAfter events
+            wx.YieldIfNeeded()
+            # time.sleep(0.01) # Optional small sleep
 
     assert processed_event, "Callback did not finish within the timeout."
     # ---------------------------------------------------------
@@ -186,12 +186,12 @@ def test_discussion_fetched_asynchronously(
     # Check that button was re-enabled (in the callback)
     app.discussion_btn.Enable.assert_called_once()
 
-    # Pytest handles monkeypatch cleanup automatically for function scope
+    # patch.object context manager handles cleanup automatically
 
 
 def test_discussion_error_handling(
     wx_app, frame, mock_api_client, mock_location_manager, event_queue,
-    monkeypatch, mock_dialogs
+    mock_dialogs
 ):
     """Test discussion fetch error handling via wx.CallAfter."""
     app = WeatherApp(
@@ -210,33 +210,34 @@ def test_discussion_error_handling(
     # Event to signal completion of the error callback
     callback_finished_event = threading.Event()
 
-    # --- Patch the error callback method ---
-    original_error_callback = DiscussionFetcher._on_discussion_error
+    # --- Patch the error callback method on the app instance ---
+    # Get the original bound method from the instance
+    # Ensure the method exists before trying to access it
+    assert hasattr(app, '_on_discussion_error'), "Missing _on_discussion_error"
+    original_error_callback = app._on_discussion_error
 
-    def patched_on_error(fetcher_self, error):
+    # Define the wrapper function with the correct signature
+    def wrapper_on_error(error, name, loading_dialog):
         # Call the original callback logic first
-        original_error_callback(fetcher_self, error)
+        original_error_callback(error, name, loading_dialog)
         # Signal that the callback has completed
         callback_finished_event.set()
 
-    monkeypatch.setattr(
-        DiscussionFetcher, '_on_discussion_error', patched_on_error
-    )
-    # ---------------------------------
-
-    # Call the method that triggers fetching
-    app.OnViewDiscussion(event)
-
-    # --- Wait for the callback to execute via wx event loop ---
-    start_time = time.time()
-    timeout = 10  # seconds
     processed_event = False
-    while time.time() - start_time < timeout:
-        if callback_finished_event.wait(timeout=0.01):
-            processed_event = True
-            break
-        wx.YieldIfNeeded()
-        # time.sleep(0.01)
+    # Use patch.object as a context manager with the CORRECT method name
+    with patch.object(app, '_on_discussion_error', new=wrapper_on_error):
+        # Call the method that triggers fetching
+        app.OnViewDiscussion(event)
+
+        # --- Wait for the callback to execute via wx event loop ---
+        start_time = time.time()
+        timeout = 10  # seconds
+        while time.time() - start_time < timeout:
+            if callback_finished_event.wait(timeout=0.01):
+                processed_event = True
+                break
+            wx.YieldIfNeeded()
+            # time.sleep(0.01)
 
     assert processed_event, "Error callback did not finish within the timeout."
     # ---------------------------------------------------------
@@ -264,3 +265,5 @@ def test_discussion_error_handling(
 
     # Check that button was re-enabled (in the error callback)
     app.discussion_btn.Enable.assert_called_once()
+
+    # patch.object context manager handles cleanup automatically
