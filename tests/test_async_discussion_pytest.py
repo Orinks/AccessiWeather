@@ -1,25 +1,38 @@
 import pytest
 import threading
-# import time # Unused
 import queue
-import wx
-from unittest.mock import MagicMock  # Removed unused patch and ANY
+import time  # Import time for the wait loop
+import wx  # type: ignore
+from unittest.mock import MagicMock  # Removed unused patch
 
 from accessiweather.gui.weather_app import WeatherApp
 from accessiweather.gui.dialogs import WeatherDiscussionDialog
 from accessiweather.api_client import NoaaApiClient, ApiClientError
+# Import the fetcher to patch its methods
+from accessiweather.gui.async_fetchers import DiscussionFetcher
 
 
 @pytest.fixture
 def wx_app():
-    app = wx.App()
+    # Ensure an app exists for wx.CallAfter processing
+    app = wx.App(False)  # Redirect stdout/stderr if needed
     yield app
+    # Allow pending events to process before destroying
+    # Sometimes needed, especially on slower systems or complex tests
+    for _ in range(5):  # Process pending events a few times
+        wx.YieldIfNeeded()
+        time.sleep(0.01)
     app.Destroy()
+    # Clean up any leftover top-level windows
+    # for win in wx.GetTopLevelWindows():
+    #     win.Destroy()
 
 
 @pytest.fixture
 def frame(wx_app):
     frame = wx.Frame(None)
+    # Frame needs to be shown for event loop processing in some cases
+    # frame.Show() # Optional: Show frame if needed, but usually not required
     yield frame
     frame.Destroy()
 
@@ -27,6 +40,7 @@ def frame(wx_app):
 @pytest.fixture
 def mock_api_client():
     mock_client = MagicMock(spec=NoaaApiClient)
+    # Configure default return value, can be overridden in tests
     mock_client.get_discussion.return_value = "Sample discussion text"
     return mock_client
 
@@ -45,52 +59,49 @@ def event_queue():
 
 @pytest.fixture
 def mock_dialogs(monkeypatch, event_queue):
-    # Mock ProgressDialog
+    # Mock ProgressDialog - Keep as is, seems fine
     progress_dialog_mock = MagicMock()
     progress_dialog_mock.Pulse.return_value = None
     progress_dialog_mock.Destroy.return_value = None
     monkeypatch.setattr(
-        wx, 'ProgressDialog', 
+        wx, 'ProgressDialog',
         lambda *args, **kwargs: progress_dialog_mock
     )
-    
-    # Mock MessageBox to put an event in our queue instead of showing dialog
+
+    # Mock MessageBox - Keep as is
     def mock_message_box(*args, **kwargs):
         event_queue.put(("error_shown", args[0]))
         return None
     monkeypatch.setattr(wx, 'MessageBox', mock_message_box)
-    
-    # Mock WeatherDiscussionDialog
+
+    # Mock WeatherDiscussionDialog - Keep as is
     discussion_dialog_mock = MagicMock()
     discussion_dialog_mock.ShowModal.return_value = None
     discussion_dialog_mock.Destroy.return_value = None
-    
+
     def mock_discussion_dialog_init(self, parent, title, text):
         event_queue.put(("dialog_shown", text))
+        # Simulate basic attributes needed if accessed later
         self.text = text
         self.parent = parent
         self.title = title
+        # Assign mock methods
         self.ShowModal = discussion_dialog_mock.ShowModal
         self.Destroy = discussion_dialog_mock.Destroy
-    
+
+    # Patch __init__; this covers ShowModal/Destroy for instances created
+    # via this mock init.
     monkeypatch.setattr(
-        WeatherDiscussionDialog, 
-        '__init__', 
+        WeatherDiscussionDialog,
+        '__init__',
         mock_discussion_dialog_init
     )
-    monkeypatch.setattr(
-        WeatherDiscussionDialog, 
-        'ShowModal', 
-        lambda self: None
-    )
-    monkeypatch.setattr(
-        WeatherDiscussionDialog, 
-        'Destroy', 
-        lambda self: None
-    )
-    
-    # We want wx.CallAfter to run normally in the main thread now
-    
+    # Ensure ShowModal/Destroy are patched on the class if needed elsewhere
+    # monkeypatch.setattr(WeatherDiscussionDialog, 'ShowModal', lambda s: None)
+    # monkeypatch.setattr(WeatherDiscussionDialog, 'Destroy', lambda s: None)
+
+    # No longer mocking safe_call_after - let wx.CallAfter run
+
     return {
         "progress_dialog": progress_dialog_mock,
         "discussion_dialog": discussion_dialog_mock
@@ -98,142 +109,158 @@ def mock_dialogs(monkeypatch, event_queue):
 
 
 def test_discussion_fetched_asynchronously(
-    frame, mock_api_client, mock_location_manager, event_queue, 
+    wx_app, frame, mock_api_client, mock_location_manager, event_queue,
     monkeypatch, mock_dialogs
 ):
-    """Test that the weather discussion is fetched in a background thread."""
-    # Create test app
+    """Test discussion fetch and UI update via wx.CallAfter."""
     app = WeatherApp(
-        frame, 
-        location_manager=mock_location_manager, 
-        api_client=mock_api_client, 
+        frame,
+        location_manager=mock_location_manager,
+        api_client=mock_api_client,
         notifier=MagicMock()
     )
-    
-    # Mock discussion button
-    app.discussion_btn = MagicMock()
-    
-    # Create a mock event
-    event = MagicMock()
-    
-    # Ensure the mock API client returns the expected data
-    mock_api_client.get_discussion.return_value = "Sample discussion text"
+    app.discussion_btn = MagicMock()  # Mock the button
+    event = MagicMock()  # Mock the event object for the handler
 
-    # Event to signal completion of the callback
-    callback_finished = threading.Event()
+    # Configure API mock response for this specific test
+    expected_discussion = "Async discussion success!"
+    mock_api_client.get_discussion.return_value = expected_discussion
 
-    # Add a test hook to the app
-    app._testing_discussion_callback = lambda *args: callback_finished.set()
+    # Event to signal completion of the callback via wx.CallAfter
+    callback_finished_event = threading.Event()
 
-    # Mock safe_call_after to directly execute callbacks
-    def mock_safe_call_after(callback, *args, **kwargs):
-        """Directly execute the callback without wx.CallAfter"""
-        callback(*args, **kwargs)
-    
+    # --- Patch the callback method ---
+    original_success_callback = DiscussionFetcher._on_discussion_success
+
+    def patched_on_success(fetcher_self, discussion_text):
+        # Call the original callback logic first
+        original_success_callback(fetcher_self, discussion_text)
+        # Signal that the callback has completed
+        callback_finished_event.set()
+
     monkeypatch.setattr(
-        'accessiweather.gui.async_fetchers.safe_call_after',
-        mock_safe_call_after
+        DiscussionFetcher, '_on_discussion_success', patched_on_success
     )
-    
+    # ---------------------------------
+
     # Call the method that triggers fetching
     app.OnViewDiscussion(event)
-    
-    # Wait for the callback to finish (with a timeout)
-    assert callback_finished.wait(timeout=10), (
-        "Callback did not finish in time"
-    )
 
-    # Verify the API call was made
+    # --- Wait for the callback to execute via wx event loop ---
+    start_time = time.time()
+    timeout = 10  # seconds
+    processed_event = False
+    while time.time() - start_time < timeout:
+        # Wait briefly for the event, non-blocking
+        if callback_finished_event.wait(timeout=0.01):
+            processed_event = True
+            break
+        # Allow wxPython event loop to process pending CallAfter events
+        wx.YieldIfNeeded()
+        # time.sleep(0.01) # Optional small sleep if YieldIfNeeded isn't enough
+
+    assert processed_event, "Callback did not finish within the timeout."
+    # ---------------------------------------------------------
+
+    # Verify the API call was made correctly (in the background thread)
     mock_api_client.get_discussion.assert_called_once_with(35.0, -80.0)
 
-    # Verify dialog creation was triggered through our event queue
+    # Verify dialog creation was triggered (via callback on main thread)
     dialog_event = None
     try:
-        # Use timeout to avoid hanging if event never arrives
-        dialog_event = event_queue.get(block=True, timeout=1)
+        # Should be there now
+        dialog_event = event_queue.get(block=False)
     except queue.Empty:
-        pass  # dialog_event remains None
+        pass
 
-    assert dialog_event is not None, "Dialog event not found in queue"
+    assert dialog_event is not None, (
+        "Dialog event not found in queue after callback"
+    )
     assert dialog_event[0] == "dialog_shown", (
         f"Expected 'dialog_shown', got {dialog_event[0]}"
     )
-    assert dialog_event[1] == "Sample discussion text", (
-        f"Expected 'Sample discussion text', got {dialog_event[1]}"
+    assert dialog_event[1] == expected_discussion, (
+        f"Expected '{expected_discussion}', got {dialog_event[1]}"
     )
 
-    # Check that button was enabled
+    # Check that button was re-enabled (in the callback)
     app.discussion_btn.Enable.assert_called_once()
+
+    # Pytest handles monkeypatch cleanup automatically for function scope
 
 
 def test_discussion_error_handling(
-    frame, mock_api_client, mock_location_manager, event_queue, 
+    wx_app, frame, mock_api_client, mock_location_manager, event_queue,
     monkeypatch, mock_dialogs
 ):
-    """Test that errors during discussion fetching are handled properly."""
-    # Create test app
+    """Test discussion fetch error handling via wx.CallAfter."""
     app = WeatherApp(
-        frame, 
-        location_manager=mock_location_manager, 
-        api_client=mock_api_client, 
+        frame,
+        location_manager=mock_location_manager,
+        api_client=mock_api_client,
         notifier=MagicMock()
     )
-    
-    # Mock discussion button
     app.discussion_btn = MagicMock()
-    
-    # Create a mock event
     event = MagicMock()
-    
-    # Mock the API client to raise an error
+
+    # Configure API mock to raise an error
     error_message = "Network error fetching discussion"
     mock_api_client.get_discussion.side_effect = ApiClientError(error_message)
 
-    # Event to signal completion of the callback
-    callback_finished = threading.Event()
+    # Event to signal completion of the error callback
+    callback_finished_event = threading.Event()
 
-    # Add a test hook to the app
-    app._testing_discussion_error_callback = lambda *args: \
-        callback_finished.set()
+    # --- Patch the error callback method ---
+    original_error_callback = DiscussionFetcher._on_discussion_error
 
-    # Mock safe_call_after to directly execute callbacks
-    def mock_safe_call_after(callback, *args, **kwargs):
-        """Directly execute the callback without wx.CallAfter"""
-        callback(*args, **kwargs)
-    
+    def patched_on_error(fetcher_self, error):
+        # Call the original callback logic first
+        original_error_callback(fetcher_self, error)
+        # Signal that the callback has completed
+        callback_finished_event.set()
+
     monkeypatch.setattr(
-        'accessiweather.gui.async_fetchers.safe_call_after',
-        mock_safe_call_after
+        DiscussionFetcher, '_on_discussion_error', patched_on_error
     )
-    
+    # ---------------------------------
+
     # Call the method that triggers fetching
     app.OnViewDiscussion(event)
-    
-    # Wait for the callback to finish (with a timeout)
-    assert callback_finished.wait(timeout=10), (
-        "Callback did not finish in time"
-    )
+
+    # --- Wait for the callback to execute via wx event loop ---
+    start_time = time.time()
+    timeout = 10  # seconds
+    processed_event = False
+    while time.time() - start_time < timeout:
+        if callback_finished_event.wait(timeout=0.01):
+            processed_event = True
+            break
+        wx.YieldIfNeeded()
+        # time.sleep(0.01)
+
+    assert processed_event, "Error callback did not finish within the timeout."
+    # ---------------------------------------------------------
 
     # Verify the API call was made
     mock_api_client.get_discussion.assert_called_once_with(35.0, -80.0)
 
-    # Verify error message was shown via the event queue
+    # Verify error message was shown via event queue (triggered by callback)
     error_event = None
     try:
-        # Use timeout to avoid hanging if event never arrives
-        error_event = event_queue.get(block=True, timeout=1)
+        error_event = event_queue.get(block=False)
     except queue.Empty:
-        pass  # error_event remains None
+        pass
 
-    assert error_event is not None, "Error event not found in queue"
+    assert error_event is not None, (
+        "Error event not found in queue after callback"
+    )
     assert error_event[0] == "error_shown", (
         f"Expected 'error_shown', got {error_event[0]}"
     )
-    # The error callback prepends text, so check if our original message
-    # is included
+    # Check if the original error message is part of the displayed message
     assert error_message in error_event[1], (
         f"Expected '{error_message}' in '{error_event[1]}'"
     )
-    
-    # Check that button was enabled
+
+    # Check that button was re-enabled (in the error callback)
     app.discussion_btn.Enable.assert_called_once()

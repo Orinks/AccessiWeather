@@ -12,8 +12,12 @@ setup(
         "pytest-mock",
         "plyer",      # For cross-platform notifications
         "geopy",      # For geocoding addresses and zip codes
+        "python-dateutil",  # For parsing ISO timestamps
     ],
-    description="AccessiWeather: An accessible weather application using NOAA data with focus on screen reader compatibility",
+    description=(
+        "AccessiWeather: An accessible weather application using NOAA data "
+        "with focus on screen reader compatibility"
+    ),
     author="User",
     classifiers=[
         "Programming Language :: Python :: 3",

@@ -2,18 +2,23 @@
 
 ## Architecture Overview
 
-The NOAA Weather App follows a modular design with clear separation of concerns:
+The AccessiWeather App follows a modular design with clear separation of concerns:
 
 ```
-noaa_weather_app/
-├── api_client.py   # NOAA API interaction
-├── notifications.py # Alert notifications
-├── location.py     # Location management
-├── gui.py          # Main GUI components
-├── accessible_widgets.py # Accessibility-enhanced widgets
-├── main.py         # Application entry point
-├── cli.py          # Command-line interface
+accessiweather/
+├── api_client.py      # NOAA API interaction
+├── notifications.py   # Alert notifications
+├── constants.py       # Shared constants and configurations
+├── main.py            # Application entry point (starts GUI or CLI)
+├── cli.py             # Command-line interface logic
+└── gui/
+    ├── __init__.py
+    ├── weather_app.py   # Main application window/frame
+    ├── ui_manager.py    # Manages UI elements and updates
+    └── async_fetchers.py # Handles background data fetching
 ```
+
+The application can be run either as a command-line tool (`cli.py`) or a graphical application (`gui/`). The `main.py` script serves as the entry point, directing execution based on arguments. Core logic like API interaction (`api_client.py`) and notifications (`notifications.py`) are shared. The GUI components are organized within the `gui` package.
 
 ## Module Descriptions
 
@@ -29,32 +34,37 @@ Responsible for all interactions with the NOAA Weather API, including:
 
 Handles processing and displaying weather alerts:
 - Processes alert data from the API
-- Displays desktop notifications
+- Displays desktop notifications (platform-dependent)
 - Sorts alerts by priority
 - Manages active alert state
 
-### Location Manager (`location.py`)
+### Constants (`constants.py`)
 
-Manages user-defined locations:
-- Saves and loads locations from disk
-- Adds, removes, and updates locations
-- Tracks the current selected location
+Defines shared constants, configurations (like API endpoints or default settings), and potentially enum types used across the application to ensure consistency and ease of modification.
 
-### GUI (`gui.py`)
+### Main Entry Point (`main.py`)
 
-Implements the main user interface:
-- Main application window
-- Location management dialogs
-- Weather data display
-- Alert listing and details
-- Forecast discussion viewer
+The primary script to launch the application. It parses command-line arguments to determine whether to start the graphical user interface or the command-line interface.
 
-### Accessible Widgets (`accessible_widgets.py`)
+### Command-Line Interface (`cli.py`)
 
-Provides enhanced wxPython widgets with accessibility features:
-- Screen reader support
-- Keyboard navigation
-- ARIA roles and properties
+Provides a text-based interface for accessing weather information. It utilizes the `api_client` and other core modules to fetch and display data in the terminal.
+
+### GUI Package (`gui/`)
+
+Contains all modules related to the graphical user interface.
+
+#### Main Application Frame (`gui/weather_app.py`)
+
+Implements the main graphical user interface window (e.g., using wxPython). This class sets up the overall structure of the application window and hosts the various UI panels and controls.
+
+#### UI Manager (`gui/ui_manager.py`)
+
+Responsible for creating, arranging, updating, and managing the state of the various UI components (like forecast displays, alert lists, input fields) within the `WeatherApp` frame. It acts as a coordinator between the data fetching logic and the UI presentation.
+
+#### Async Fetchers (`gui/async_fetchers.py`)
+
+Provides functions to perform potentially long-running operations, primarily network requests to the NOAA API, asynchronously. This prevents the GUI from freezing while waiting for data and ensures a responsive user experience. It typically uses background threads or asynchronous programming techniques.
 
 ## Development Workflow
 
@@ -70,13 +80,7 @@ This project follows test-driven development (TDD) practices:
 
 ### Running Tests
 
-Use the `run_tests.py` script to execute all tests:
-
-```
-python run_tests.py
-```
-
-Or use pytest directly:
+Use pytest directly:
 
 ```
 python -m pytest tests/
@@ -93,24 +97,24 @@ python -m pytest tests/
 
 When developing the UI, follow these accessibility guidelines:
 
-1. All UI elements must have proper labels and descriptions
-2. Ensure keyboard navigation works for all features
-3. Implement proper focus management
-4. Use high-contrast color schemes
-5. Test with screen readers (e.g., NVDA, JAWS)
+1. All UI elements must have proper labels and descriptions accessible to assistive technologies.
+2. Ensure full keyboard navigation works for all interactive elements and features.
+3. Implement proper focus management, indicating the currently focused element clearly.
+4. Use high-contrast color schemes suitable for users with visual impairments.
+5. Test with screen readers (e.g., NVDA, JAWS, VoiceOver) to ensure usability.
 
 ## Adding New Features
 
-1. Start by adding tests in the appropriate test module
-2. Implement the feature in the relevant application module
-3. Ensure all tests pass before committing
-4. Update documentation to reflect the new feature
+1. Start by adding tests in the appropriate test module (e.g., `tests/test_gui.py`, `tests/test_cli.py`).
+2. Implement the feature in the relevant application module(s).
+3. Ensure all tests pass before committing.
+4. Update documentation (like this guide) to reflect the new feature or changes.
 
 ## Code Style
 
 This project follows PEP 8 guidelines for Python code style. Key points:
 
 - Use 4 spaces for indentation
-- Maximum line length of 79 characters
-- Add docstrings to all modules, classes, and functions
-- Use type hints for function parameters and return values
+- Aim for a maximum line length of ~88-100 characters (aligned with tools like Black/Ruff).
+- Add docstrings to all public modules, classes, and functions.
+- Use type hints for function parameters and return values.
