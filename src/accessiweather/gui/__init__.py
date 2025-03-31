@@ -8,8 +8,7 @@ application.
 __all__ = [
     'AdvancedLocationDialog', 'LocationDialog', 'WeatherDiscussionDialog',
     'AccessibleStaticText', 'AccessibleTextCtrl', 'AccessibleChoice',
-    'AccessibleButton', 'AccessibleListCtrl', 'WeatherApp',
-    'UPDATE_INTERVAL'
+    'AccessibleButton', 'AccessibleListCtrl', 'WeatherApp'
 ]
 
 # Import dialog classes
@@ -31,8 +30,7 @@ from .ui_components import (
 # Import WeatherApp last to avoid circular import issues
 from .weather_app import WeatherApp
 
-# Constants
-UPDATE_INTERVAL = 1800  # 30 minutes in seconds
+# Constants (UPDATE_INTERVAL moved to accessiweather.constants)
 
 # Version
 __version__ = '1.0.0'

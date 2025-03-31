@@ -1,13 +1,14 @@
 import pytest
 import threading
-import time
+import time  # Import time for the loop timeout
 import queue
 import wx
-from unittest.mock import MagicMock
-
+from unittest.mock import MagicMock, patch
 
 from accessiweather.gui.weather_app import WeatherApp
-from accessiweather.api_client import NoaaApiClient
+# NoaaApiClient imported below
+from accessiweather.api_client import NoaaApiClient, ApiClientError
+# Removed duplicate import of NoaaApiClient
 
 
 @pytest.fixture
@@ -27,12 +28,15 @@ def frame(wx_app):
 @pytest.fixture
 def mock_api_client():
     mock_client = MagicMock(spec=NoaaApiClient)
-    mock_client.get_forecast.return_value = {
+    # Configure specific return values within each test as needed
+    mock_client.get_forecast.return_value = {"properties": {
         "periods": [{"name": "Today", "temperature": 72}]
-    }
-    mock_client.get_alerts.return_value = [
-        {"headline": "Test Alert", "description": "Test Description"}
-    ]
+    }}
+    mock_client.get_alerts.return_value = {"features": [
+        {"properties": {
+            "headline": "Test Alert", "description": "Test Description"
+        }}
+    ]}
     return mock_client
 
 
@@ -48,295 +52,423 @@ def event_queue():
     return queue.Queue()
 
 
-@pytest.fixture
-def mock_wx_callafter(monkeypatch):
-    # Mock wx.CallAfter to directly call the function instead of scheduling it
-    def mock_call_after(func, *args, **kwargs):
-        func(*args, **kwargs)
-    monkeypatch.setattr(wx, 'CallAfter', mock_call_after)
-    return mock_call_after
+# Remove mock_wx_callafter fixture, let wx.CallAfter run normally
 
 
 def test_forecast_fetched_asynchronously(
-    frame, mock_api_client, mock_location_manager, event_queue, 
-    monkeypatch, mock_wx_callafter
+    frame, mock_api_client, mock_location_manager, event_queue, monkeypatch
 ):
     """Test that the forecast is fetched in a background thread."""
-    # Create test app
-    app = WeatherApp(
-        frame, 
-        location_manager=mock_location_manager, 
-        api_client=mock_api_client, 
-        notifier=MagicMock()
-    )
+    # Prevent UpdateWeatherData during __init__
+    with patch.object(WeatherApp, 'UpdateWeatherData', return_value=None):
+        app = WeatherApp(
+            frame, 
+            location_manager=mock_location_manager, 
+            api_client=mock_api_client, 
+            notifier=MagicMock()
+        )
+    # Original method restored after 'with' block
     
     # Track status text changes
     def track_status(text):
         event_queue.put(("status", text))
     app.SetStatusText = track_status
     
-    # Override the forecast callback
+    # Set expected API return value
+    expected_forecast = {"properties": {
+        "periods": [{"name": "Today", "temperature": 72}]
+    }}
+    mock_api_client.get_forecast.return_value = expected_forecast
+
+    # Event to signal completion
+    forecast_callback_finished = threading.Event()
+
+    # Patch the callback
     original_on_forecast = app._on_forecast_fetched
-    def on_forecast_callback(forecast_data):
-        event_queue.put(("forecast_fetched", forecast_data))
-        # Call original to continue normal flow
-        original_on_forecast(forecast_data)
-    app._on_forecast_fetched = on_forecast_callback
-    
-    # Patch the forecast fetcher to directly call the success callback
-    def mock_fetch(lat, lon, on_success=None, on_error=None):
-        # Record that fetch was called
-        event_queue.put(("fetch_called", (lat, lon)))
-        # Directly call success callback
-        if on_success:
-            on_success({"periods": [{"name": "Today", "temperature": 72}]})
-        return
-    app.forecast_fetcher.fetch = mock_fetch
+
+    def patched_on_forecast(forecast_data):
+        try:
+            # Put data in queue *before* calling original to check it later
+            event_queue.put(("forecast_fetched", forecast_data))
+            original_on_forecast(forecast_data)
+        finally:
+            forecast_callback_finished.set()
+    monkeypatch.setattr(app, '_on_forecast_fetched', patched_on_forecast)
     
     # Trigger the update which should start the process
     app.updating = False  # Make sure we can start an update
-    app.UpdateWeatherData()
+    app.UpdateWeatherData()  # This call should now be the *only* one
     
-    # First we'll get a status update
-    status_event = event_queue.get(block=False)
-    assert status_event[0] == "status"
-    assert "Updating weather data for Test Location" in status_event[1]
-    
-    # Verify fetch was called
-    fetch_event = event_queue.get(block=False)
-    assert fetch_event[0] == "fetch_called"
-    
-    # Then we should get the forecast data
-    forecast_event = event_queue.get(block=False)
-    assert forecast_event[0] == "forecast_fetched"
-    assert "periods" in forecast_event[1]
+    # Process wx events until the callback finishes or timeout
+    start_time = time.time()
+    while not forecast_callback_finished.is_set():
+        wx.Yield()
+        if time.time() - start_time > 10:  # 10 second timeout
+            break
+            
+    assert forecast_callback_finished.is_set(), (
+        "Forecast callback did not finish within timeout"
+    )
+
+    # Verify API call
+    mock_api_client.get_forecast.assert_called_once_with(35.0, -80.0)
+
+    # Verify status updates and fetched data via queue
+    status_events = []  # Collect all status events
+    forecast_event = None
+    while not event_queue.empty():
+        event_item = event_queue.get(block=False)
+        if event_item[0] == "status":
+            status_events.append(event_item[1])  # Append status text
+        elif event_item[0] == "forecast_fetched":
+            forecast_event = event_item
+
+    assert status_events, "No status update events found"
+    assert "Updating weather data for Test Location" in status_events[0], \
+        f"First status was '{status_events[0]}'"
+    # Check for completion status update as well
+    assert "Ready" in status_events[-1], \
+        f"Last status was '{status_events[-1]}'"
+
+    assert forecast_event is not None, "Forecast fetched event not found"
+    assert forecast_event[1] == expected_forecast
 
 
 def test_alerts_fetched_asynchronously(
-    frame, mock_api_client, mock_location_manager, event_queue, 
-    monkeypatch, mock_wx_callafter
+    frame, mock_api_client, mock_location_manager, event_queue, monkeypatch
 ):
     """Test that alerts are fetched in a background thread."""
-    # Create test app
-    app = WeatherApp(
-        frame, 
-        location_manager=mock_location_manager, 
-        api_client=mock_api_client, 
-        notifier=MagicMock()
-    )
+    # Prevent UpdateWeatherData during __init__
+    with patch.object(WeatherApp, 'UpdateWeatherData', return_value=None):
+        app = WeatherApp(
+            frame, 
+            location_manager=mock_location_manager, 
+            api_client=mock_api_client, 
+            notifier=MagicMock()
+        )
+    # Original method restored after 'with' block
     
     # Track status text changes
     def track_status(text):
         event_queue.put(("status", text))
     app.SetStatusText = track_status
     
-    # Override the alerts callback
+    # Set expected API return value
+    expected_alerts = {"features": [
+        {"properties": {
+            "headline": "Test Alert", "description": "Test Description"
+        }}
+    ]}
+    mock_api_client.get_alerts.return_value = expected_alerts
+
+    # Event to signal completion
+    alerts_callback_finished = threading.Event()
+
+    # Patch the callback
     original_on_alerts = app._on_alerts_fetched
-    def on_alerts_callback(alerts_data):
-        event_queue.put(("alerts_fetched", alerts_data))
-        # Call original to continue normal flow
-        original_on_alerts(alerts_data)
-    app._on_alerts_fetched = on_alerts_callback
-    
-    # Patch the alerts fetcher to directly call the success callback
-    def mock_fetch(lat, lon, on_success=None, on_error=None):
-        # Record that fetch was called
-        event_queue.put(("fetch_called", (lat, lon)))
-        # Directly call success callback
-        if on_success:
-            on_success({"features": [
-                {"properties": {"headline": "Test Alert", "description": "Test Description"}}
-            ]})
-        return
-    app.alerts_fetcher.fetch = mock_fetch
+
+    def patched_on_alerts(alerts_data):
+        try:
+            # Put data in queue *before* calling original
+            event_queue.put(("alerts_fetched", alerts_data))
+            original_on_alerts(alerts_data)
+        finally:
+            alerts_callback_finished.set()
+    monkeypatch.setattr(app, '_on_alerts_fetched', patched_on_alerts)
     
     # Trigger the update which should start the process
     app.updating = False  # Make sure we can start an update
-    app.UpdateWeatherData()
+    app.UpdateWeatherData()  # This call should now be the *only* one
     
-    # First we'll get a status update
-    status_event = event_queue.get(block=False)
-    assert status_event[0] == "status"
-    assert "Updating weather data for Test Location" in status_event[1]
-    
-    # Verify fetch was called
-    fetch_event = event_queue.get(block=False)
-    assert fetch_event[0] == "fetch_called"
-    
-    # Then we should get the alerts data
-    alerts_event = event_queue.get(block=False)
-    assert alerts_event[0] == "alerts_fetched"
-    assert "features" in alerts_event[1]
+    # Process wx events until the callback finishes or timeout
+    start_time = time.time()
+    while not alerts_callback_finished.is_set():
+        wx.Yield()
+        if time.time() - start_time > 10:  # 10 second timeout
+            break
+
+    assert alerts_callback_finished.is_set(), (
+        "Alerts callback did not finish within timeout"
+    )
+
+    # Verify API call
+    mock_api_client.get_alerts.assert_called_once_with(35.0, -80.0)
+
+    # Verify status updates and fetched data via queue
+    status_events = []  # Collect all status events
+    alerts_event = None
+    while not event_queue.empty():
+        event_item = event_queue.get(block=False)
+        if event_item[0] == "status":
+            status_events.append(event_item[1])  # Append status text
+        elif event_item[0] == "alerts_fetched":
+            alerts_event = event_item
+
+    assert status_events, "No status update events found"
+    assert "Updating weather data for Test Location" in status_events[0], \
+        f"First status was '{status_events[0]}'"
+    # Check for completion status update as well
+    assert "Ready" in status_events[-1], \
+        f"Last status was '{status_events[-1]}'"
+
+    assert alerts_event is not None, "Alerts fetched event not found"
+    assert alerts_event[1] == expected_alerts
 
 
 def test_forecast_error_handling(
-    frame, mock_api_client, mock_location_manager, event_queue, 
-    monkeypatch, mock_wx_callafter
+    frame, mock_api_client, mock_location_manager, event_queue, monkeypatch
 ):
-    """Test that errors during forecast fetching are handled properly."""
-    # Create test app
-    app = WeatherApp(
-        frame, 
-        location_manager=mock_location_manager, 
-        api_client=mock_api_client, 
-        notifier=MagicMock()
-    )
+    """Test forecast error handling, patching MessageBox."""
+    # Patch wx.MessageBox to prevent GUI dialog during test
+    # Prevent UpdateWeatherData during __init__
+    with patch.object(WeatherApp, 'UpdateWeatherData', return_value=None):
+        app = WeatherApp(
+            frame, 
+            location_manager=mock_location_manager, 
+            api_client=mock_api_client, 
+            notifier=MagicMock()
+        )
+    # Original method restored after 'with' block
     
     # Track status text changes
     def track_status(text):
         event_queue.put(("status", text))
     app.SetStatusText = track_status
     
-    # Override the error callback
+    # Configure API client to raise an error
+    error_message = "API forecast error"
+    mock_api_client.get_forecast.side_effect = ApiClientError(error_message)
+
+    # Event to signal completion
+    forecast_error_callback_finished = threading.Event()
+
+    # Patch the error callback
     original_on_error = app._on_forecast_error
-    def on_error_callback(error):
-        event_queue.put(("forecast_error", error))
-        # Call original to continue normal flow
-        original_on_error(error)
-    app._on_forecast_error = on_error_callback
-    
-    # Patch the forecast fetcher to directly call the error callback
-    error_message = "Network error in forecast"
-    def mock_fetch(lat, lon, on_success=None, on_error=None):
-        # Record that fetch was called
-        event_queue.put(("fetch_called", (lat, lon)))
-        # Directly call error callback
-        if on_error:
-            on_error(f"Unable to retrieve forecast: {error_message}")
-        return
-    app.forecast_fetcher.fetch = mock_fetch
+
+    def patched_on_error(error):
+        try:
+            # Put error in queue *before* calling original
+            event_queue.put(("forecast_error", error))
+            original_on_error(error)
+        finally:
+            forecast_error_callback_finished.set()
+    monkeypatch.setattr(app, '_on_forecast_error', patched_on_error)
     
     # Trigger the update which should start the process
-    app.updating = False  # Make sure we can start an update
-    app.UpdateWeatherData()
+    # Use patch context manager for MessageBox
+    with patch('wx.MessageBox') as mock_message_box:
+        app.updating = False  # Make sure we can start an update
+        app.UpdateWeatherData()  # This call should now be the *only* one
+        
+        # Process wx events until the callback finishes or timeout
+        start_time = time.time()
+        while not forecast_error_callback_finished.is_set():
+            wx.Yield()
+            if time.time() - start_time > 10:  # 10 second timeout
+                break
+
+        assert forecast_error_callback_finished.is_set(), (
+            "Forecast error callback did not finish within timeout"
+        )
+
+    # Verify API call
+    mock_api_client.get_forecast.assert_called_once_with(35.0, -80.0)
+
+    # Verify status updates and error message via queue
+    status_events = []  # Collect all status events
+    error_event = None
+    while not event_queue.empty():
+        event_item = event_queue.get(block=False)
+        if event_item[0] == "status":
+            status_events.append(event_item[1])  # Append status text
+        elif event_item[0] == "forecast_error":
+            error_event = event_item
+
+    assert status_events, "No status update events found"
+    assert "Updating weather data for Test Location" in status_events[0], \
+        f"First status was '{status_events[0]}'"
+    # Check for error status update as well
+    assert any("Error fetching forecast" in s for s in status_events), \
+        f"Error status not found in {status_events}"
+
+    assert error_event is not None, "Forecast error event not found"
+    # The callback prepends text, check if original message is included
+    assert error_message in error_event[1]
     
-    # First we'll get a status update
-    status_event = event_queue.get(block=False)
-    assert status_event[0] == "status"
-    assert "Updating weather data for Test Location" in status_event[1]
-    
-    # Verify fetch was called
-    fetch_event = event_queue.get(block=False)
-    assert fetch_event[0] == "fetch_called"
-    
-    # Then we should get the error
-    error_event = event_queue.get(block=False)
-    assert error_event[0] == "forecast_error"
-    assert "Network error in forecast" in error_event[1]
+    # Verify MessageBox was called (or would have been)
+    mock_message_box.assert_called_once()
 
 
 def test_alerts_error_handling(
-    frame, mock_api_client, mock_location_manager, event_queue, 
-    monkeypatch, mock_wx_callafter
+    frame, mock_api_client, mock_location_manager, event_queue, monkeypatch
 ):
-    """Test that errors during alerts fetching are handled properly."""
-    # Create test app
-    app = WeatherApp(
-        frame, 
-        location_manager=mock_location_manager, 
-        api_client=mock_api_client, 
-        notifier=MagicMock()
-    )
+    """Test alerts error handling, patching MessageBox."""
+    # Patch wx.MessageBox to prevent GUI dialog during test
+    # Prevent UpdateWeatherData during __init__
+    with patch.object(WeatherApp, 'UpdateWeatherData', return_value=None):
+        app = WeatherApp(
+            frame, 
+            location_manager=mock_location_manager, 
+            api_client=mock_api_client, 
+            notifier=MagicMock()
+        )
+    # Original method restored after 'with' block
     
     # Track status text changes
     def track_status(text):
         event_queue.put(("status", text))
     app.SetStatusText = track_status
     
-    # Override the error callback
+    # Configure API client to raise an error
+    error_message = "API alerts error"
+    mock_api_client.get_alerts.side_effect = ApiClientError(error_message)
+
+    # Event to signal completion
+    alerts_error_callback_finished = threading.Event()
+
+    # Patch the error callback
     original_on_error = app._on_alerts_error
-    def on_error_callback(error):
-        event_queue.put(("alerts_error", error))
-        # Call original to continue normal flow
-        original_on_error(error)
-    app._on_alerts_error = on_error_callback
-    
-    # Patch the alerts fetcher to directly call the error callback
-    error_message = "Network error in alerts"
-    def mock_fetch(lat, lon, on_success=None, on_error=None):
-        # Record that fetch was called
-        event_queue.put(("fetch_called", (lat, lon)))
-        # Directly call error callback
-        if on_error:
-            on_error(f"Unable to retrieve alerts: {error_message}")
-        return
-    app.alerts_fetcher.fetch = mock_fetch
+
+    def patched_on_error(error):
+        try:
+            # Put error in queue *before* calling original
+            event_queue.put(("alerts_error", error))
+            original_on_error(error)
+        finally:
+            alerts_error_callback_finished.set()
+    monkeypatch.setattr(app, '_on_alerts_error', patched_on_error)
     
     # Trigger the update which should start the process
-    app.updating = False  # Make sure we can start an update
-    app.UpdateWeatherData()
+    # Use patch context manager for MessageBox
+    with patch('wx.MessageBox') as mock_message_box:
+        app.updating = False  # Make sure we can start an update
+        app.UpdateWeatherData()  # This call should now be the *only* one
+        
+        # Process wx events until the callback finishes or timeout
+        start_time = time.time()
+        while not alerts_error_callback_finished.is_set():
+            wx.Yield()
+            if time.time() - start_time > 10:  # 10 second timeout
+                break
+
+        assert alerts_error_callback_finished.is_set(), (
+            "Alerts error callback did not finish within timeout"
+        )
+
+    # Verify API call
+    mock_api_client.get_alerts.assert_called_once_with(35.0, -80.0)
+
+    # Verify status updates and error message via queue
+    status_events = []  # Collect all status events
+    error_event = None
+    while not event_queue.empty():
+        event_item = event_queue.get(block=False)
+        if event_item[0] == "status":
+            status_events.append(event_item[1])  # Append status text
+        elif event_item[0] == "alerts_error":
+            error_event = event_item  # Corrected typo: item -> event_item
+
+    assert status_events, "No status update events found"
+    assert "Updating weather data for Test Location" in status_events[0], \
+        f"First status was '{status_events[0]}'"
+    # Check for error status update as well
+    assert any("Error fetching alerts" in s for s in status_events), \
+        f"Error status not found in {status_events}"
+
+    assert error_event is not None, "Alerts error event not found"
+    # The callback prepends text, check if original message is included
+    assert error_message in error_event[1]
     
-    # First we'll get a status update
-    status_event = event_queue.get(block=False)
-    assert status_event[0] == "status"
-    assert "Updating weather data for Test Location" in status_event[1]
-    
-    # Verify fetch was called
-    fetch_event = event_queue.get(block=False)
-    assert fetch_event[0] == "fetch_called"
-    
-    # Then we should get the error
-    error_event = event_queue.get(block=False)
-    assert error_event[0] == "alerts_error"
-    assert "Network error in alerts" in error_event[1]
+    # Verify MessageBox was called (or would have been)
+    mock_message_box.assert_called_once()
 
 
 def test_concurrent_fetching(
-    frame, mock_api_client, mock_location_manager, event_queue, 
-    monkeypatch, mock_wx_callafter
+    frame, mock_api_client, mock_location_manager, event_queue, monkeypatch
 ):
     """Test that forecast and alerts are fetched concurrently."""
-    # Create test app
-    app = WeatherApp(
-        frame, 
-        location_manager=mock_location_manager, 
-        api_client=mock_api_client, 
-        notifier=MagicMock()
-    )
+    # Prevent UpdateWeatherData during __init__
+    with patch.object(WeatherApp, 'UpdateWeatherData', return_value=None):
+        app = WeatherApp(
+            frame, 
+            location_manager=mock_location_manager, 
+            api_client=mock_api_client, 
+            notifier=MagicMock()
+        )
+    # Original method restored after 'with' block
+
+    # ADDED: Track status text changes
+    def track_status(text):
+        event_queue.put(("status", text))
+    app.SetStatusText = track_status
     
-    # Track data fetching
-    fetch_events = []
-    
-    # Forecast fetcher mock
-    def mock_forecast_fetch(lat, lon, on_success=None, on_error=None):
-        fetch_events.append("forecast_start")
-        event_queue.put(("forecast_start", time.time()))
-        # Call success after a very short delay to simulate work
-        if on_success:
-            on_success({"periods": [{"name": "Today", "temperature": 72}]})
-        fetch_events.append("forecast_end")
-        event_queue.put(("forecast_end", time.time()))
-        return
-    app.forecast_fetcher.fetch = mock_forecast_fetch
-    
-    # Alerts fetcher mock
-    def mock_alerts_fetch(lat, lon, on_success=None, on_error=None):
-        fetch_events.append("alerts_start")
-        event_queue.put(("alerts_start", time.time()))
-        # Call success after a very short delay to simulate work
-        if on_success:
-            on_success({"features": [
-                {"properties": {"headline": "Test Alert", "description": "Test Description"}}
-            ]})
-        fetch_events.append("alerts_end")
-        event_queue.put(("alerts_end", time.time()))
-        return
-    app.alerts_fetcher.fetch = mock_alerts_fetch
+    # Set expected API return values
+    mock_api_client.get_forecast.return_value = {"properties": {
+        "periods": [{"name": "Today", "temperature": 72}]
+    }}
+    mock_api_client.get_alerts.return_value = {"features": [
+        {"properties": {
+            "headline": "Test Alert", "description": "Test Description"
+        }}
+    ]}
+
+    # Events to signal completion of both callbacks
+    forecast_callback_finished = threading.Event()
+    alerts_callback_finished = threading.Event()
+
+    # Patch forecast callback
+    original_on_forecast = app._on_forecast_fetched
+
+    def patched_on_forecast(*args, **kwargs):
+        try:
+            original_on_forecast(*args, **kwargs)
+        finally:
+            forecast_callback_finished.set()
+    monkeypatch.setattr(app, '_on_forecast_fetched', patched_on_forecast)
+
+    # Patch alerts callback
+    original_on_alerts = app._on_alerts_fetched
+
+    def patched_on_alerts(*args, **kwargs):
+        try:
+            original_on_alerts(*args, **kwargs)
+        finally:
+            alerts_callback_finished.set()
+    monkeypatch.setattr(app, '_on_alerts_fetched', patched_on_alerts)
     
     # Trigger the update which should start both fetches
     app.updating = False  # Make sure we can start an update
-    app.UpdateWeatherData()
+    app.UpdateWeatherData()  # This call should now be the *only* one
     
-    # Collect all events from the queue
-    events = []
+    # Process wx events until both callbacks finish or timeout
+    start_time = time.time()
+    both_finished = (forecast_callback_finished.is_set() and 
+                     alerts_callback_finished.is_set())
+    while not both_finished:
+        wx.Yield()  # Process pending events like CallAfter callbacks
+        if time.time() - start_time > 10:  # 10 second timeout
+            break
+        both_finished = (forecast_callback_finished.is_set() and 
+                         alerts_callback_finished.is_set())
+
+    # Assert that both events were set within the timeout
+    assert forecast_callback_finished.is_set(), (
+        "Forecast callback did not finish within timeout"
+    )
+    assert alerts_callback_finished.is_set(), (
+        "Alerts callback did not finish within timeout"
+    )
+
+    # Verify both API calls were made
+    mock_api_client.get_forecast.assert_called_once_with(35.0, -80.0)
+    mock_api_client.get_alerts.assert_called_once_with(35.0, -80.0)
+
+    # Verify status update indicates completion
+    status_event = None
     while not event_queue.empty():
-        events.append(event_queue.get(block=False))
-    
-    # Verify both forecast and alerts were started
-    fetch_types = [event[0] for event in events]
-    assert "forecast_start" in fetch_types
-    assert "alerts_start" in fetch_types
-    
-    # Verify both completed
-    assert "forecast_end" in fetch_types
-    assert "alerts_end" in fetch_types
+        event_item = event_queue.get(block=False)
+        if event_item[0] == "status":
+            status_event = event_item  # Keep the last status update
+
+    assert status_event is not None, "Status update event not found"
+    assert "Ready" in status_event[1]  # Check for final 'Ready' status

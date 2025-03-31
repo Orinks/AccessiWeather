@@ -7,6 +7,8 @@ for weather alerts.
 import logging
 import sys
 from typing import Dict, Any, List
+from datetime import datetime, timezone  # Added
+from dateutil.parser import isoparse  # type: ignore # requires python-dateutil
 
 # Type checking will report this as missing, but it's a runtime dependency
 from plyer import notification  # type: ignore
@@ -89,6 +91,9 @@ class WeatherNotifier:
         Returns:
             List of processed alerts
         """
+        # Clear expired alerts before processing new ones
+        self.clear_expired_alerts()  # Added this line
+
         features = alerts_data.get("features", [])
         processed_alerts = []
         
@@ -115,6 +120,7 @@ class WeatherNotifier:
             
             # Update our active alerts dictionary
             alert_id = alert["id"]
+            # Only add/notify if it's a new alert (after clearing expired ones)
             if alert_id and alert_id not in self.active_alerts:
                 self.active_alerts[alert_id] = alert
                 self.show_notification(alert)
@@ -147,9 +153,57 @@ class WeatherNotifier:
     
     def clear_expired_alerts(self) -> None:
         """Remove expired alerts from the active alerts list"""
-        # In a real implementation, this would check timestamps
-        # For now, we'll just keep it simple
-        self.active_alerts = {}
+        now = datetime.now(timezone.utc)
+        expired_alert_ids = []
+
+        # Iterate over a copy of items to allow modification during iteration
+        for alert_id, alert_data in list(self.active_alerts.items()):
+            expires_str = alert_data.get("expires")
+            if not expires_str:
+                logger.warning(
+                    f"Alert {alert_id} has no 'expires' timestamp. Skipping."
+                )
+                continue
+
+            try:
+                # Parse the ISO 8601 timestamp string
+                expiration_time = isoparse(expires_str)
+
+                # Ensure the parsed time is timezone-aware for comparison
+                if expiration_time.tzinfo is None:
+                    # This case should ideally not happen with NOAA data,
+                    # but handle it defensively. Assuming UTC if naive.
+                    logger.warning(
+                        f"Alert {alert_id} expiration time '{expires_str}' "
+                        f"is timezone-naive. Assuming UTC."
+                    )
+                    # Ensure the time is timezone-aware before comparison
+                    expiration_time = expiration_time.replace(
+                        tzinfo=timezone.utc
+                    )
+
+                # Compare with current time
+                if expiration_time < now:
+                    expired_alert_ids.append(alert_id)
+                    logger.info(
+                        f"Alert {alert_id} expired at {expires_str}. Removing."
+                    )
+
+            except ValueError as e:
+                logger.warning(
+                    f"Could not parse 'expires' timestamp '{expires_str}' "
+                    f"for alert {alert_id}: {e}. Skipping."
+                )
+            except Exception as e:  # Catch other potential parsing errors
+                logger.error(
+                    f"Unexpected error parsing 'expires' timestamp "
+                    f"'{expires_str}' for alert {alert_id}: {e}. Skipping."
+                )
+
+        # Remove expired alerts
+        for alert_id in expired_alert_ids:
+            if alert_id in self.active_alerts:
+                del self.active_alerts[alert_id]
         
     def get_sorted_alerts(self) -> List[Dict[str, Any]]:
         """Get all active alerts sorted by priority

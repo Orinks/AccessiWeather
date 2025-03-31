@@ -20,7 +20,12 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
     Returns:
         Parsed arguments
     """
-    parser = argparse.ArgumentParser(description="AccessiWeather - An accessible weather application using NOAA data")
+    parser = argparse.ArgumentParser(
+        description=(
+            "AccessiWeather - An accessible weather "
+            "application using NOAA data"
+        )
+    )
     parser.add_argument(
         "-d", "--debug", 
         action="store_true", 
@@ -42,12 +47,11 @@ def main() -> int:
     """
     args = parse_args()
     
-    # Set up logging level based on arguments
-    log_level = logging.DEBUG if args.debug else logging.INFO
-    logging.basicConfig(level=log_level)
+    # Logging setup is now handled in main.py
     
     try:
-        app_main(config_dir=args.config)
+        # Pass debug flag to main application entry point
+        app_main(config_dir=args.config, debug_mode=args.debug)
         return 0
     except Exception as e:
         logging.error(f"Error running application: {str(e)}")
