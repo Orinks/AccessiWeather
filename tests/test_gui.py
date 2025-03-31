@@ -53,7 +53,8 @@ class TestLocationDialog:
     def setup_method(self):
         """Set up test fixture"""
         # Create geocoding service mock
-        self.geocoding_patcher = patch('accessiweather.gui.dialogs.GeocodingService')
+        patch_target = 'accessiweather.gui.dialogs.GeocodingService'
+        self.geocoding_patcher = patch(patch_target)
         self.mock_geocoding_class = self.geocoding_patcher.start()
         self.mock_geocoding = MagicMock()
         self.mock_geocoding_class.return_value = self.mock_geocoding
@@ -65,7 +66,13 @@ class TestLocationDialog:
     
     def test_init(self, wx_app):
         """Test initialization"""
-        dialog = LocationDialog(None, title="Test Dialog", location_name="Test", lat=35.0, lon=-80.0)
+        dialog = LocationDialog(
+            None,
+            title="Test Dialog",
+            location_name="Test",
+            lat=35.0,
+            lon=-80.0
+        )
         try:
             assert dialog.name_ctrl.GetValue() == "Test"
             assert dialog.latitude == 35.0
@@ -132,7 +139,9 @@ class TestWeatherDiscussionDialog:
     
     def test_init(self, wx_app):
         """Test initialization"""
-        dialog = WeatherDiscussionDialog(None, title="Test Discussion", text="Test discussion text")
+        dialog = WeatherDiscussionDialog(
+            None, title="Test Discussion", text="Test discussion text"
+        )
         try:
             assert dialog.text_ctrl.GetValue() == "Test discussion text"
         finally:
@@ -147,9 +156,12 @@ class TestWeatherApp:
         """Mock the components used by WeatherApp"""
         # Update the patch to match our new structure
         # We need to patch the direct imports in weather_app.py
-        with patch('accessiweather.api_client.NoaaApiClient') as mock_api_client_class, \
-             patch('accessiweather.notifications.WeatherNotifier') as mock_notifier_class, \
-             patch('accessiweather.location.LocationManager') as mock_location_manager_class:
+        with patch('accessiweather.api_client.NoaaApiClient') \
+                as mock_api_client_class, \
+             patch('accessiweather.notifications.WeatherNotifier') \
+                as mock_notifier_class, \
+             patch('accessiweather.location.LocationManager') \
+                as mock_location_manager_class:
             
             # Create mock instances
             mock_api_client = MagicMock()
@@ -157,8 +169,12 @@ class TestWeatherApp:
             mock_location_manager = MagicMock()
             
             # Configure mock location manager to return valid data
-            mock_location_manager.get_all_locations.return_value = ["Test City"]
-            mock_location_manager.get_current_location.return_value = ("Test City", 35.0, -80.0)
+            mock_location_manager.get_all_locations.return_value = [
+                "Test City"
+            ]
+            mock_location_manager.get_current_location.return_value = (
+                "Test City", 35.0, -80.0
+            )
             
             # Configure mock classes to return mock instances
             mock_api_client_class.return_value = mock_api_client
@@ -174,7 +190,9 @@ class TestWeatherApp:
                 'location_manager': mock_location_manager
             }
     
-    def test_init_with_default_config(self, wx_app, mock_components, monkeypatch):
+    def test_init_with_default_config(
+        self, wx_app, mock_components, monkeypatch
+    ):
         """Test initialization with default config"""
         # Patch os.path.exists to return False for all config paths
         monkeypatch.setattr(os.path, 'exists', lambda path: False)
@@ -197,7 +215,9 @@ class TestWeatherApp:
             if app:
                 app.Destroy()
     
-    def test_init_with_config_file(self, wx_app, mock_components, temp_config_file, monkeypatch):
+    def test_init_with_config_file(
+        self, wx_app, mock_components, temp_config_file, monkeypatch
+    ):
         """Test initialization with config file"""
         # Patch os.path.exists to return True only for our temp config file
         original_exists = os.path.exists
@@ -245,10 +265,14 @@ class TestWeatherApp:
                 app.Destroy()
     
     @patch('wx.CallAfter')
-    def test_fetch_weather_data_with_proper_headers(self, mock_call_after, wx_app, mock_components, monkeypatch):
+    def test_fetch_weather_data_with_proper_headers(
+        self, mock_call_after, wx_app, mock_components, monkeypatch
+    ):
         """Test that _FetchWeatherData uses proper headers from API client"""
         # Create real API client with contact info
-        api_client = NoaaApiClient(user_agent="AccessiWeather", contact_info="test@example.com")
+        api_client = NoaaApiClient(
+            user_agent="AccessiWeather", contact_info="test@example.com"
+        )
         
         # Mock requests.get to check headers
         mock_response = MagicMock()
@@ -263,11 +287,14 @@ class TestWeatherApp:
         # Mock for the second request to forecast URL
         mock_forecast_response = MagicMock()
         mock_forecast_response.status_code = 200
-        mock_forecast_response.json = MagicMock(return_value={"properties": {"periods": []}})
+        mock_forecast_response.json = MagicMock(
+            return_value={"properties": {"periods": []}}
+        )
         
         # Create a mock for requests.get that returns appropriate responses
-        def mock_requests_get(url, headers=None, params=None):
-            # Since we're making two different requests, return different mock responses
+        def mock_requests_get(url, headers=None, params=None, **kwargs):
+            # Since we're making two different requests, return different
+            # mock responses
             if "api.example.com/forecast" in url:
                 return mock_forecast_response
             return mock_response
@@ -281,7 +308,8 @@ class TestWeatherApp:
             app = WeatherApp(
                 parent=None,
                 location_manager=mock_components['location_manager'],
-                api_client=api_client,  # Use the real API client with contact info
+                # Use the real API client with contact info
+                api_client=api_client,
                 notifier=mock_components['notifier']
             )
             
@@ -308,7 +336,12 @@ class TestWeatherApp:
                         assert "test@example.com" in user_agent
                         break
             else:
-                assert False, "No call to requests.get had User-Agent header with contact info"
+                # No call to requests.get had User-Agent header
+                # with contact info
+                assert False, (
+                    "No call to requests.get had User-Agent header with "
+                    "contact info"
+                )
         finally:
             if app:
                 app.Destroy()

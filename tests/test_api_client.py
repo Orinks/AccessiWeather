@@ -3,6 +3,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
 import requests
+# Removed unused logging import
 
 from accessiweather.api_client import (
     NoaaApiClient, ApiClientError
@@ -329,9 +330,10 @@ class TestNoaaApiClient:
         )
         assert calls[2][0][0] == discussion_url
 
+    @patch("accessiweather.api_client.logger.error")  # Patch logger.error
     @patch("accessiweather.api_client.requests.get")
-    def test_api_error_handling(self, mock_get, api_client):
-        """Test error handling in API requests"""
+    def test_api_error_handling(self, mock_get, mock_logger_error, api_client):
+        """Test error handling and suppress traceback for expected errors"""
         # Mock a failed request with a requests.RequestException type
         mock_get.side_effect = requests.RequestException(
             "Test connection error"
@@ -343,6 +345,12 @@ class TestNoaaApiClient:
 
         # Verify the error message
         assert "Network error during API request" in str(exc_info.value)
+        # Verify logger.error was called (suppressing traceback)
+        mock_logger_error.assert_called_once()
+        # Optional: Check arguments if needed for more specific verification
+        # args, kwargs = mock_logger_error.call_args
+        # assert "Network error during API request" in args[0]
+        # assert kwargs.get('exc_info') is not True
 
     @patch("accessiweather.api_client.requests.get")
     def test_get_alerts_direct(self, mock_get, api_client, mock_response):
