@@ -16,8 +16,8 @@ from accessiweather.location import LocationManager
 from accessiweather.api_client import NoaaApiClient
 from accessiweather.notifications import WeatherNotifier
 from accessiweather.data_migration import migrate_config_directory
-# Use root config for logging setup
-from logging_config import setup_logging as setup_root_logging
+# Use root config for logging setup - Corrected import path
+from accessiweather.logging_config import setup_logging as setup_root_logging
 
 
 def main(config_dir: Optional[str] = None, debug_mode: bool = False):
