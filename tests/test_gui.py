@@ -1,50 +1,21 @@
 """Tests for the GUI components"""
 
 import pytest
-import wx
+# import wx  # Not used directly in this file
 import json
 import os
-import tempfile
+# import tempfile  # No longer used directly in this file
 from unittest.mock import patch, MagicMock
 import time
+# import wx.richtext  # Not used directly in this file's tests
 
 from accessiweather.gui.dialogs import LocationDialog, WeatherDiscussionDialog
 from accessiweather.gui.weather_app import WeatherApp
 from accessiweather.api_client import NoaaApiClient
+# from accessiweather.location import LocationManager # Unused import
 
 
-# We need a wx App for testing wx components
-@pytest.fixture(scope="module")
-def wx_app():
-    """Create a wx App for testing"""
-    app = wx.App()
-    yield app
-
-
-@pytest.fixture
-def temp_config_file():
-    """Create a temporary config file for testing"""
-    # Create a temporary directory
-    with tempfile.TemporaryDirectory() as temp_dir:
-        # Create a temporary config file
-        config_path = os.path.join(temp_dir, "config.json")
-        config_data = {
-            "locations": {
-                "Test City": {"lat": 35.0, "lon": -80.0}
-            },
-            "current": "Test City",
-            "settings": {
-                "update_interval_minutes": 30
-            },
-            "api_settings": {
-                "contact_info": "test@example.com"
-            }
-        }
-        
-        with open(config_path, "w") as f:
-            json.dump(config_data, f)
-        
-        yield config_path
+# Fixtures `wx_app` and `temp_config_file` moved to conftest.py
 
 
 class TestLocationDialog:
@@ -345,3 +316,9 @@ class TestWeatherApp:
         finally:
             if app:
                 app.Destroy()
+
+    # Removed announcement tests as the feature was removed based on user
+    # feedback
+
+
+# SettingsDialog tests moved to tests/test_settings_dialog.py

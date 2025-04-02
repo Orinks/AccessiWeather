@@ -52,9 +52,15 @@ class UIManager:
         self.frame.add_btn = AccessibleButton(panel, wx.ID_ANY, "Add")
         self.frame.remove_btn = AccessibleButton(panel, wx.ID_ANY, "Remove")
         self.frame.refresh_btn = AccessibleButton(panel, wx.ID_ANY, "Refresh")
+        self.frame.settings_btn = AccessibleButton(
+            panel, wx.ID_ANY, "Settings"
+        )  # Added Settings button
         location_sizer.Add(self.frame.add_btn, 0, wx.ALL, 5)
         location_sizer.Add(self.frame.remove_btn, 0, wx.ALL, 5)
         location_sizer.Add(self.frame.refresh_btn, 0, wx.ALL, 5)
+        location_sizer.Add(
+            self.frame.settings_btn, 0, wx.ALL, 5
+        )  # Added Settings button to sizer
         main_sizer.Add(location_sizer, 0, wx.EXPAND | wx.ALL, 10)
 
         # --- Forecast Panel ---
@@ -131,6 +137,9 @@ class UIManager:
         self.frame.Bind(
             wx.EVT_LIST_ITEM_ACTIVATED, self.frame.OnAlertActivated,
             self.frame.alerts_list
+        )
+        self.frame.Bind(  # Added binding for Settings button
+            wx.EVT_BUTTON, self.frame.OnSettings, self.frame.settings_btn
         )
         # KeyDown is bound here as it relates to general UI interaction
         self.frame.Bind(wx.EVT_KEY_DOWN, self.frame.OnKeyDown)

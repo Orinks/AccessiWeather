@@ -4,6 +4,7 @@ This module provides the main application window and integrates all components.
 """
 
 import wx
+# import wx.richtext  # Removed screen reader import
 import os
 import json
 import time
@@ -16,6 +17,10 @@ import logging
 # Import local modules
 from .dialogs import LocationDialog, WeatherDiscussionDialog
 from .async_fetchers import ForecastFetcher, AlertsFetcher, DiscussionFetcher
+# Import SettingsDialog and keys (split for length)
+from .settings_dialog import (
+    SettingsDialog, API_CONTACT_KEY, UPDATE_INTERVAL_KEY, ALERT_RADIUS_KEY
+)
 from .ui_manager import UIManager  # Import the new UI Manager
 
 # Logger
@@ -76,7 +81,10 @@ class WeatherApp(wx.Frame):
         # Initialize UI using UIManager
         # UI elements are now attached to self by UIManager
         self.ui_manager = UIManager(self, self.notifier)  # Pass notifier
-        
+
+        # Set up menu bar
+        # self._setup_menu_bar() # Removed menu bar setup
+
         # Set up status bar
         self.CreateStatusBar()
         self.SetStatusText("Ready")
@@ -109,6 +117,9 @@ class WeatherApp(wx.Frame):
         # Initialize UI with location data
         self.UpdateLocationDropdown()
         self.UpdateWeatherData()
+        
+        # Check if API contact is configured
+        self._check_api_contact_configured()
     
     def _load_config(self):
         """Load configuration from file
@@ -123,12 +134,17 @@ class WeatherApp(wx.Frame):
             except Exception as e:
                 logger.error(f"Failed to load config: {str(e)}")
         
-        # Return default config
+        # Return default config structure
         return {
             "locations": {},
             "current": None,
-            "settings": {"update_interval_minutes": 30},
-            "api_settings": {}
+            "settings": {
+                "update_interval_minutes": 30,
+                "alert_radius_miles": 25  # Added default
+            },
+            "api_settings": {
+                "api_contact": ""  # Added default
+            }
         }
     
     # _initialize_api_client method removed as API client is now injected
@@ -195,7 +211,18 @@ class WeatherApp(wx.Frame):
         """
         name, lat, lon = location
         self.SetStatusText(f"Updating weather data for {name}...")
-        
+
+        # --- Start Loading State ---
+        self.refresh_btn.Disable()  # Disable refresh button
+        # Show loading message
+        self.forecast_text.SetValue("Loading forecast...")
+        self.alerts_list.DeleteAllItems()  # Clear previous alerts
+        # Optional: Add a placeholder item
+        # self.alerts_list.InsertItem(0, "Loading alerts...")
+        # self.alerts_list.SetItem(0, 1, "...")
+        # self.alerts_list.SetItem(0, 2, "...")
+        # --- End Loading State ---
+
         # Reset completion flags for this fetch cycle
         self._forecast_complete = False
         self._alerts_complete = False
@@ -221,7 +248,10 @@ class WeatherApp(wx.Frame):
         if self._forecast_complete and self._alerts_complete:
             self.updating = False
             self.SetStatusText("Ready")  # Set final status only when both done
-            logger.debug("Both forecast and alerts fetch complete.")
+            self.refresh_btn.Enable()  # Re-enable refresh button
+            log_msg = ("Both forecast and alerts fetch complete. "
+                       "Refresh button re-enabled.")
+            logger.debug(log_msg)
             
     def _on_forecast_fetched(self, forecast_data):
         """Handle the fetched forecast in the main thread
@@ -241,6 +271,8 @@ class WeatherApp(wx.Frame):
         # Mark forecast as complete and check overall completion
         self._forecast_complete = True
         self._check_update_complete()
+        # self._announce_to_screen_reader("Forecast updated.")
+        # Removed announcement
         
         # Notify testing framework if hook is set
         if self._testing_forecast_callback:
@@ -297,6 +329,9 @@ class WeatherApp(wx.Frame):
         # Mark alerts as complete and check overall completion
         self._alerts_complete = True
         self._check_update_complete()
+        # Announce update (split for line length)
+        # self._announce_to_screen_reader("Weather alerts updated.")
+        # Removed announcement
         
         # Notify testing framework if hook is set
         if self._testing_alerts_callback:
@@ -604,8 +639,8 @@ class WeatherApp(wx.Frame):
         # Stop timer
         self.timer.Stop()
         
-        # Save config
-        # self._save_config() # Config saving disabled for now
+        # Save config before closing
+        self._save_config()
         
         # Destroy window
         self.Destroy()
@@ -630,3 +665,112 @@ class WeatherApp(wx.Frame):
                 self.UpdateWeatherData()
             else:
                 logger.debug("Timer skipped update: already updating.")
+# Removed _announce_to_screen_reader method
+
+    # _setup_menu_bar method removed as settings are now accessed via button
+    def OnSettings(self, event):
+        """Show the settings dialog and handle updates."""
+        # Prepare current settings from self.config
+        current_api_settings = self.config.get("api_settings", {})
+        current_app_settings = self.config.get("settings", {})
+
+        dialog_settings = {
+            API_CONTACT_KEY: current_api_settings.get(API_CONTACT_KEY, ""),
+            UPDATE_INTERVAL_KEY: current_app_settings.get(
+                UPDATE_INTERVAL_KEY, 30
+            ),
+            ALERT_RADIUS_KEY: current_app_settings.get(ALERT_RADIUS_KEY, 25),
+        }
+
+        dialog = SettingsDialog(self, dialog_settings)
+
+        if dialog.ShowModal() == wx.ID_OK:
+            new_settings = dialog.get_settings()
+            logger.info(f"Settings updated via dialog: {new_settings}")
+
+            # Update self.config structure
+            if "api_settings" not in self.config:
+                self.config["api_settings"] = {}
+            if "settings" not in self.config:
+                self.config["settings"] = {}
+
+            self.config["api_settings"][API_CONTACT_KEY] = \
+                new_settings[API_CONTACT_KEY]
+            self.config["settings"][UPDATE_INTERVAL_KEY] = \
+                new_settings[UPDATE_INTERVAL_KEY]
+            self.config["settings"][ALERT_RADIUS_KEY] = \
+                new_settings[ALERT_RADIUS_KEY]
+
+            # Save the updated configuration
+            self._save_config()
+
+            # Apply relevant changes immediately (e.g., restart timer)
+            old_interval = current_app_settings.get(UPDATE_INTERVAL_KEY)
+            new_interval = new_settings[UPDATE_INTERVAL_KEY]
+            self._apply_settings_changes(old_interval, new_interval)
+
+        dialog.Destroy()
+
+    def _apply_settings_changes(self, old_interval, new_interval):
+        """Apply changes made in the settings dialog."""
+        # Restart timer only if the interval changed
+        if old_interval != new_interval:
+            log_msg = (f"Update interval changed from {old_interval} to "
+                       f"{new_interval}. Restarting timer.")
+            logger.info(log_msg)
+            self.timer.Stop()
+            # Use the new interval immediately for the next check cycle
+            self.timer.Start(1000)  # Keep checking every second
+            # The OnTimer logic will now use the updated interval from config
+            # Force an immediate update check after changing interval? Optional
+            # self.last_update = 0 # Reset last update to force check sooner
+            # self.OnTimer(None) # Trigger timer logic
+
+    def _save_config(self):
+        """Save the current configuration to the config file."""
+        try:
+            # Ensure the directory exists
+            config_dir = os.path.dirname(self._config_path)
+            if not os.path.exists(config_dir):
+                os.makedirs(config_dir, exist_ok=True)
+                logger.info(f"Created config directory: {config_dir}")
+
+            # Write the config file
+            with open(self._config_path, 'w') as f:
+                json.dump(self.config, f, indent=4)
+            logger.info(f"Configuration saved to {self._config_path}")
+
+        except Exception as e:
+            log_msg = (f"Failed to save configuration to "
+                       f"{self._config_path}: {e}")
+            logger.error(log_msg)
+            # Optionally notify the user
+            wx.MessageBox(f"Error saving settings: {e}", "Save Error",
+                          wx.OK | wx.ICON_ERROR, self)
+    
+    def _check_api_contact_configured(self):
+        """
+        Check if the API contact information is configured.
+        
+        If not, display a message dialog prompting the user to configure it.
+        If the user clicks OK, automatically open the settings dialog.
+        """
+        # Get API contact from config
+        api_settings = self.config.get("api_settings", {})
+        api_contact = api_settings.get("api_contact", "")
+        
+        # Check if API contact is missing or empty
+        if not api_contact:
+            # Show message dialog
+            dialog = wx.MessageDialog(
+                self,
+                "API contact information is missing or empty. "
+                "This information is required for making API requests. "
+                "Would you like to configure it now?",
+                "API Contact Required",
+                wx.OK | wx.ICON_INFORMATION
+            )
+            
+            # If user clicks OK, open settings dialog
+            if dialog.ShowModal() == wx.ID_OK:
+                self.OnSettings(None)
