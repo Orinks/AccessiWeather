@@ -68,6 +68,33 @@ All UI components must be accessible to screen readers. Before submitting a pull
 - Use type hints where appropriate
 - Include meaningful commit messages
 
+### Commit Messages
+
+This project uses a commit message template to standardize commit messages. To set up the template, run:
+
+```
+python setup_git_template.py
+```
+
+The template follows the conventional commits format:
+
+```
+<type>: <subject>
+
+<body>
+
+<footer>
+```
+
+Where `type` can be:
+- feat: A new feature
+- fix: A bug fix
+- docs: Documentation changes
+- style: Changes that don't affect the meaning of the code (formatting, etc.)
+- refactor: Code changes that neither fix a bug nor add a feature
+- test: Adding or modifying tests
+- chore: Changes to the build process or auxiliary tools
+
 ## Feature Requests and Bug Reports
 
 Please use the GitHub issue tracker to submit feature requests and bug reports. Include as much detail as possible to help us understand your request or issue.

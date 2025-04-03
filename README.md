@@ -46,6 +46,20 @@ This project uses a test-driven development approach. To run tests:
 python -m pytest tests/
 ```
 
+### GitHub Workflow
+
+This repository uses GitHub Actions to automatically run tests and linting on push and pull requests. The workflow configuration is in `.github/workflows/python-app.yml`.
+
+### Pre-commit Hooks
+
+This project uses pre-commit hooks to ensure code quality. To set up the hooks, run:
+
+```bash
+python setup_hooks.py
+```
+
+This will install pre-commit and set up the hooks. The hooks will run automatically when you commit changes.
+
 ## Requirements
 
 - Python 3.7+
