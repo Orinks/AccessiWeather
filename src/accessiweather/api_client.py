@@ -5,7 +5,7 @@ This module provides access to NOAA weather data through their public APIs.
 
 import requests
 import json
-# import os  # Unused
+import os  # Import os
 from typing import Dict, Any, Optional  # Removed unused List
 import logging
 import traceback
@@ -250,83 +250,104 @@ class NoaaApiClient:
         # Initialize to avoid potential UnboundLocalError in finally block
         request_url = ""
         try:
-            # Acquire the thread lock - ensure thread safety for all API
-            # requests
-            with self.request_lock:
-                # Rate limiting
-                if self.last_request_time is not None:
-                    elapsed = time.time() - self.last_request_time
-                    sleep_time = max(0, self.min_request_interval - elapsed)
-                    if sleep_time > 0:
-                        logger.debug(
-                            f"Rate limiting: sleeping for {sleep_time:.2f}s"
-                        )
-                        time.sleep(sleep_time)
+            # Check if API calls should be skipped (for testing)
+            skip_api_calls = os.environ.get(
+                'ACCESSIWEATHER_SKIP_API_CALLS'
+            ) == '1'
 
-                # Determine the full URL
-                if use_full_url:
-                    # Use the provided URL directly
+            # Conditionally acquire lock and rate limit only if not skipping
+            # API calls
+            lock_acquired = False
+            if not skip_api_calls:
+                self.request_lock.acquire()
+                lock_acquired = True
+                try:
+                    # Rate limiting
+                    if self.last_request_time is not None:
+                        elapsed = time.time() - self.last_request_time
+                        sleep_time = max(
+                            0, self.min_request_interval - elapsed
+                        )
+                        if sleep_time > 0:
+                            logger.debug(
+                                f"Rate limiting: sleeping for "
+                                f"{sleep_time:.2f}s"
+                            )
+                            time.sleep(sleep_time)
+                except Exception:  # Ensure lock is released if sleep fails
+                    if lock_acquired:
+                        self.request_lock.release()
+                    raise
+            else:
+                logger.debug(
+                    "Skipping lock and rate limit due to "
+                    "ACCESSIWEATHER_SKIP_API_CALLS=1"
+                )
+
+            # --- Request Execution ---
+            # Determine the full URL
+            if use_full_url:
+                request_url = endpoint_or_url
+            else:
+                clean_endpoint = endpoint_or_url.lstrip('/')
+                if endpoint_or_url.startswith(self.BASE_URL):
                     request_url = endpoint_or_url
                 else:
-                    # Ensure we don't have a leading slash to avoid double
-                    # slashes
-                    clean_endpoint = endpoint_or_url.lstrip('/')
-                    if endpoint_or_url.startswith(self.BASE_URL):
-                        request_url = endpoint_or_url
-                    else:
-                        request_url = f"{self.BASE_URL}/{clean_endpoint}"
+                    request_url = f"{self.BASE_URL}/{clean_endpoint}"
 
-                logger.debug(
-                    f"API request to: {request_url} with params: {params}"
-                )
-                # Make the request - keeping this inside the lock to avoid
-                # concurrent access. Added timeout.
-                response = requests.get(
-                    request_url,
-                    headers=self.headers,
-                    params=params,
-                    timeout=10
-                )
+            logger.debug(
+                f"API request to: {request_url} with params: {params}"
+            )
+            # Make the request. Added timeout.
+            response = requests.get(
+                request_url,
+                headers=self.headers,
+                params=params,
+                timeout=10
+            )
+            # Update last request time only if lock was acquired
+            # (i.e., not skipping)
+            if lock_acquired:
                 self.last_request_time = time.time()
 
-                # Check for HTTP errors first
+            # --- Process the response ---
+            # Check for HTTP errors first
+            try:
+                # Raises HTTPError for bad responses (4xx or 5xx)
+                response.raise_for_status()
+            except requests.exceptions.HTTPError as http_err:
+                status_code = http_err.response.status_code
+                error_msg = (
+                    f"API HTTP error: {status_code} for URL {request_url}"
+                )
                 try:
-                    # Raises HTTPError for bad responses (4xx or 5xx)
-                    response.raise_for_status()
-                except requests.exceptions.HTTPError as http_err:
-                    status_code = http_err.response.status_code
-                    error_msg = (
-                        f"API HTTP error: {status_code} for URL {request_url}"
+                    # Try getting detail from JSON response if available
+                    error_json = http_err.response.json()
+                    detail = error_json.get('detail', 'No detail provided')
+                    error_msg += f" - Detail: {detail}"
+                except JSONDecodeError:
+                    # If error response isn't valid JSON, use raw text
+                    resp_text = http_err.response.text[:200]
+                    error_msg += f" - Response body: {resp_text}"
+                except Exception as json_err:  # Catch other JSON errors
+                    error_msg += (
+                        f" - Error parsing error response JSON: {json_err}"
                     )
-                    try:
-                        # Try getting detail from JSON response if available
-                        error_json = http_err.response.json()
-                        detail = error_json.get('detail', 'No detail provided')
-                        error_msg += f" - Detail: {detail}"
-                    except JSONDecodeError:
-                        # If error response isn't valid JSON, use raw text
-                        resp_text = http_err.response.text[:200]
-                        error_msg += f" - Response body: {resp_text}"
-                    except Exception as json_err:  # Catch other JSON errors
-                        error_msg += (
-                            f" - Error parsing error response JSON: {json_err}"
-                        )
 
-                    logger.error(error_msg, exc_info=True)
-                    raise ApiClientError(error_msg) from http_err
+                logger.error(error_msg, exc_info=True)
+                raise ApiClientError(error_msg) from http_err
 
-                # If status is OK, try to parse JSON
-                try:
-                    return response.json()
-                except JSONDecodeError as json_err:
-                    resp_text = response.text[:200]  # Limit length
-                    error_msg = (
-                        f"Failed to decode JSON response from {request_url}. "
-                        f"Error: {json_err}. Response text: {resp_text}"
-                    )
-                    logger.error(error_msg, exc_info=True)
-                    raise ApiClientError(error_msg) from json_err
-
+            # If status is OK, try to parse JSON
+            try:
+                return response.json()
+            except JSONDecodeError as json_err:
+                resp_text = response.text[:200]  # Limit length
+                error_msg = (
+                    f"Failed to decode JSON response from {request_url}. "
+                    f"Error: {json_err}. Response text: {resp_text}"
+                )
+                logger.error(error_msg, exc_info=True)
+                raise ApiClientError(error_msg) from json_err
         except requests.exceptions.RequestException as req_err:
             # Catch connection errors, timeouts, etc.
             error_msg = (
@@ -343,3 +364,7 @@ class NoaaApiClient:
             )
             logger.error(error_msg, exc_info=True)  # Log with traceback
             raise ApiClientError(error_msg) from e
+        finally:
+            # Ensure the lock is released if it was acquired
+            if lock_acquired:
+                self.request_lock.release()
