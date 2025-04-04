@@ -102,6 +102,10 @@ jobs:
 
     - name: Test with pytest
       run: |
+        # Add src directory to PYTHONPATH to handle potential nested checkout path in CI
+        echo "Adding src to PYTHONPATH: $env:GITHUB_WORKSPACE\src"
+        echo "PYTHONPATH=$env:GITHUB_WORKSPACE\src;$env:PYTHONPATH" | Out-File -FilePath $env:GITHUB_ENV -Append
+
         # Run pytest directly, skipping GUI/real API tests.
         # GitHub Actions will fail the step on non-zero exit code.
         pytest tests/ -v -s --showlocals --no-header --no-summary -k "not (test_gui or test_accessible_combo_box or test_location_dialog or test_location_combobox or test_gui_loading or test_get_point_data_real or test_get_alerts_real or test_get_discussion_real)"
