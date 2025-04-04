@@ -1,0 +1,17 @@
+{
+    "locations": {
+        "Test City": {"lat": 35.0, "lon": -80.0}
+    },
+    "current": "Test City",
+    "settings": {
+        "update_interval_minutes": 30,
+        "alert_radius_miles": 25
+    },
+    "api_settings": {
+        "contact_info": "ci-test@example.com"
+    },
+    "testing": {
+        "use_mocks": true,
+        "skip_api_calls": true
+    }
+}

@@ -46,6 +46,32 @@ This project uses a test-driven development approach. To run tests:
 python -m pytest tests/
 ```
 
+### GitHub Workflow
+
+This project includes a GitHub workflow that runs on push to main and on pull requests:
+
+- Runs on Windows environment
+- Sets up Python 3.12
+- Installs dependencies
+- Runs linting with flake8
+- Checks API connectivity
+- Runs tests with pytest
+
+### Pre-commit Hooks
+
+To ensure code quality, this project uses pre-commit hooks. To set up:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+The pre-commit hooks include:
+- Code formatting with Black and isort
+- Linting with flake8
+- Type checking with mypy
+- Various file checks (trailing whitespace, YAML validation, etc.)
+
 ## Requirements
 
 - Python 3.7+
