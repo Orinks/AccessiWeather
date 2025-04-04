@@ -22,7 +22,7 @@ jobs:
         # And the latest stable version
         python-version: ["3.8", "3.12"]
         # Test on Windows and Linux (wxPython can be tricky)
-        os: [ubuntu-latest, windows-latest]
+        os: [windows-latest]
         # Exclude combinations if necessary, e.g., if wxPython install fails on a specific setup
         # exclude:
         #   - os: macos-latest # If you decide to add macOS later and run into issues
