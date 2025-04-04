@@ -19,3 +19,4 @@ exclude = '''
 profile = "black"
 line_length = 79
 known_first_party = ["accessiweather"]
+src_paths = ["src"] # Explicitly tell isort where the source code is

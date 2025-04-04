@@ -9,13 +9,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 import wx
 import wx.richtext
+from tests.test_gui import TestWeatherApp  # To potentially inherit fixtures
 
 # Assuming WeatherApp is importable and fixtures might be needed
 # We might need to duplicate or import fixtures from test_gui.py if complex
 # For simplicity, let's redefine a minimal mock_components fixture here
 # or assume it's available via conftest.py later.
 from accessiweather.gui.weather_app import WeatherApp
-from tests.test_gui import TestWeatherApp  # To potentially inherit fixtures
 
 
 # Minimal fixture redefinition for standalone use (adapt as needed)
