@@ -85,4 +85,4 @@ jobs:
 
     - name: Test with pytest
       run: |
-        pytest tests/ -v -s --showlocals --no-header --no-summary -k "not (test_gui or test_accessible_combo_box or test_location_dialog or test_location_combobox or test_gui_loading or test_get_point_data_real or test_get_alerts_real or test_get_discussion_real)"
+        pytest tests/ -v -s --showlocals --no-header --no-summary --timeout=30 -k "not (test_gui or test_accessible_combo_box or test_location_dialog or test_location_combobox or test_gui_loading or test_get_point_data_real or test_get_alerts_real or test_get_discussion_real)"
