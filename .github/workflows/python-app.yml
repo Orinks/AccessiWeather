@@ -32,16 +32,22 @@ jobs:
           libgstreamer1.0-dev \
           libgstreamer-plugins-base1.0-dev \
           libnotify-dev \
-          libsdl2-dev
+          libsdl2-dev \
+          libjpeg-dev \
+          libpng-dev \
+          libtiff-dev \
+          gstreamer1.0-plugins-base \
+          gstreamer1.0-plugins-good
         Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
+        pip install --upgrade pip setuptools wheel
         echo "Installing test dependencies..."
         pip install pytest pytest-cov
         echo "Installing wxPython (attempting to use pre-built wheel)..."
-        pip install wxPython --prefer-binary
+        pip install wxPython==4.2.1 --prefer-binary
         echo "Installing other project dependencies..."
         pip install requests geopy python-dateutil plyer
         echo "Installing AccessiWeather in editable mode (no deps)..."
