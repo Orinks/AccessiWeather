@@ -39,7 +39,7 @@ jobs:
     - name: List test files
       run: |
         echo "Test files found:"
-        dir /s /b tests\*.py
+        Get-ChildItem -Path tests -Filter *.py -Recurse | ForEach-Object { $_.FullName }
 
     - name: Setup CI test environment
       run: |
@@ -52,9 +52,16 @@ jobs:
     - name: Test with pytest
       run: |
         # Run with verbose output and show local variables on failure
-        # Add timeout to prevent hanging
         # Skip tests that might make real API calls
-        timeout 300 pytest -v --showlocals --no-header --no-summary -k "not test_get_point_data_real and not test_get_alerts_real and not test_get_discussion_real" || echo "Tests failed but continuing workflow"
+        # Use PowerShell's Start-Process with a timeout
+        $process = Start-Process -FilePath python -ArgumentList "-m", "pytest", "-v", "--showlocals", "--no-header", "--no-summary", "-k", "not test_get_point_data_real and not test_get_alerts_real and not test_get_discussion_real" -NoNewWindow -PassThru
+        Wait-Process -InputObject $process -Timeout 300 -ErrorAction SilentlyContinue
+        if (-not $process.HasExited -or $process.ExitCode -ne 0) {
+            echo "Tests failed or timed out but continuing workflow"
+            if (-not $process.HasExited) {
+                Stop-Process -InputObject $process -Force
+            }
+        }
       continue-on-error: true
       env:
         ACCESSIWEATHER_TESTING: "1"
