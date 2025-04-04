@@ -3,17 +3,19 @@
 This module provides thread-based asynchronous fetching of weather data.
 """
 
-import threading
-import wx
 import logging
+import threading
+
+import wx
 
 logger = logging.getLogger(__name__)
 
-
 # Helper function to safely use CallAfter
+
+
 def safe_call_after(callback, *args, **kwargs):
     """Safely use wx.CallAfter to schedule callback on the main thread.
-    
+
     Args:
         callback: Function to call on the main thread
         *args: Arguments to pass to the callback
@@ -32,20 +34,20 @@ def safe_call_after(callback, *args, **kwargs):
 
 class ForecastFetcher:
     """Handles asynchronous fetching of forecast data"""
-    
+
     def __init__(self, api_client):
         """Initialize forecast fetcher
-        
+
         Args:
             api_client: NoaaApiClient instance
         """
         self.api_client = api_client
         self.thread = None
         self._stop_event = threading.Event()
-        
+
     def fetch(self, lat, lon, on_success=None, on_error=None):
         """Fetch forecast data asynchronously
-        
+
         Args:
             lat: Latitude
             lon: Longitude
@@ -58,21 +60,20 @@ class ForecastFetcher:
             self._stop_event.set()
             # Join with a short timeout to avoid blocking UI indefinitely
             self.thread.join(0.5)
-        
+
         # Reset stop event for new fetch
         self._stop_event.clear()
-            
+
         # Create and start new thread
         self.thread = threading.Thread(
-            target=self._fetch_thread,
-            args=(lat, lon, on_success, on_error)
+            target=self._fetch_thread, args=(lat, lon, on_success, on_error)
         )
         self.thread.daemon = True
         self.thread.start()
-    
+
     def _fetch_thread(self, lat, lon, on_success, on_error):
         """Thread function to fetch the forecast
-        
+
         Args:
             lat: Latitude
             lon: Longitude
@@ -84,15 +85,15 @@ class ForecastFetcher:
             if self._stop_event.is_set():
                 logger.debug("Forecast fetch cancelled before API call")
                 return
-            
+
             # Get forecast data from API
             forecast_data = self.api_client.get_forecast(lat, lon)
-            
+
             # Check again if we've been asked to stop before delivering results
             if self._stop_event.is_set():
                 logger.debug("Forecast fetch completed but cancelled")
                 return
-            
+
             # Call success callback if provided
             if on_success and not self._stop_event.is_set():
                 # Call callback on main thread
@@ -108,20 +109,20 @@ class ForecastFetcher:
 
 class AlertsFetcher:
     """Handles asynchronous fetching of alerts data"""
-    
+
     def __init__(self, api_client):
         """Initialize alerts fetcher
-        
+
         Args:
             api_client: NoaaApiClient instance
         """
         self.api_client = api_client
         self.thread = None
         self._stop_event = threading.Event()
-        
+
     def fetch(self, lat, lon, on_success=None, on_error=None):
         """Fetch alerts data asynchronously
-        
+
         Args:
             lat: Latitude
             lon: Longitude
@@ -134,21 +135,20 @@ class AlertsFetcher:
             self._stop_event.set()
             # Join with a short timeout to avoid blocking UI indefinitely
             self.thread.join(0.5)
-        
+
         # Reset stop event for new fetch
         self._stop_event.clear()
-            
+
         # Create and start new thread
         self.thread = threading.Thread(
-            target=self._fetch_thread,
-            args=(lat, lon, on_success, on_error)
+            target=self._fetch_thread, args=(lat, lon, on_success, on_error)
         )
         self.thread.daemon = True
         self.thread.start()
-    
+
     def _fetch_thread(self, lat, lon, on_success, on_error):
         """Thread function to fetch the alerts
-        
+
         Args:
             lat: Latitude
             lon: Longitude
@@ -160,15 +160,15 @@ class AlertsFetcher:
             if self._stop_event.is_set():
                 logger.debug("Alerts fetch cancelled before API call")
                 return
-                
+
             # Get alerts data from API
             alerts_data = self.api_client.get_alerts(lat, lon)
-            
+
             # Check again if we've been asked to stop before delivering results
             if self._stop_event.is_set():
                 logger.debug("Alerts fetch completed but cancelled")
                 return
-                
+
             # Call success callback if provided
             if on_success and not self._stop_event.is_set():
                 # Call callback on main thread
@@ -184,21 +184,22 @@ class AlertsFetcher:
 
 class DiscussionFetcher:
     """Handles asynchronous fetching of weather discussion data"""
-    
+
     def __init__(self, api_client):
         """Initialize discussion fetcher
-        
+
         Args:
             api_client: NoaaApiClient instance
         """
         self.api_client = api_client
         self.thread = None
         self._stop_event = threading.Event()
-        
-    def fetch(self, lat, lon, on_success=None, on_error=None,
-              additional_data=None):
+
+    def fetch(
+        self, lat, lon, on_success=None, on_error=None, additional_data=None
+    ):
         """Fetch discussion data asynchronously
-        
+
         Args:
             lat: Latitude
             lon: Longitude
@@ -212,21 +213,21 @@ class DiscussionFetcher:
             self._stop_event.set()
             # Join with a short timeout to avoid blocking UI indefinitely
             self.thread.join(0.5)
-        
+
         # Reset stop event for new fetch
         self._stop_event.clear()
-            
+
         # Create and start new thread
         self.thread = threading.Thread(
             target=self._fetch_thread,
-            args=(lat, lon, on_success, on_error, additional_data)
+            args=(lat, lon, on_success, on_error, additional_data),
         )
         self.thread.daemon = True
         self.thread.start()
-    
+
     def _fetch_thread(self, lat, lon, on_success, on_error, additional_data):
         """Thread function to fetch the discussion
-        
+
         Args:
             lat: Latitude
             lon: Longitude
@@ -239,15 +240,15 @@ class DiscussionFetcher:
             if self._stop_event.is_set():
                 logger.debug("Discussion fetch cancelled before API call")
                 return
-                
+
             # Get discussion text from API
             discussion_text = self.api_client.get_discussion(lat, lon)
-            
+
             # Check again if we've been asked to stop before delivering results
             if self._stop_event.is_set():
                 logger.debug("Discussion fetch completed but cancelled")
                 return
-                
+
             # Call success callback if provided
             if on_success and not self._stop_event.is_set():
                 # Call callback on main thread

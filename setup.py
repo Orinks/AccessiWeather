@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 setup(
     name="accessiweather",
@@ -9,8 +9,8 @@ setup(
         "requests",
         "pytest",
         "pytest-mock",
-        "plyer",      # For cross-platform notifications
-        "geopy",      # For geocoding addresses and zip codes
+        "plyer",  # For cross-platform notifications
+        "geopy",  # For geocoding addresses and zip codes
         "python-dateutil",  # For parsing ISO timestamps
     ],
     extras_require={
@@ -29,8 +29,8 @@ setup(
     ],
     python_requires=">=3.7",
     entry_points={
-        'console_scripts': [
-            'accessiweather=accessiweather.cli:main',
+        "console_scripts": [
+            "accessiweather=accessiweather.cli:main",
         ],
     },
 )

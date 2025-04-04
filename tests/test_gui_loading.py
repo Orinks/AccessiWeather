@@ -1,12 +1,14 @@
 # tests/test_gui_loading.py
 """Tests specifically for loading feedback in WeatherApp"""
 
+import os  # Import os module
+
+# import time # No longer needed after removing sleep
+from unittest.mock import MagicMock, patch
+
 import pytest
 import wx
 import wx.richtext
-import os  # Import os module
-# import time # No longer needed after removing sleep
-from unittest.mock import patch, MagicMock
 
 # Assuming WeatherApp is importable and fixtures might be needed
 # We might need to duplicate or import fixtures from test_gui.py if complex
@@ -20,18 +22,21 @@ from tests.test_gui import TestWeatherApp  # To potentially inherit fixtures
 @pytest.fixture
 def mock_components_loading():
     """Minimal mock components for loading tests"""
-    with patch('accessiweather.api_client.NoaaApiClient') \
-            as mock_api_client_class, \
-         patch('accessiweather.notifications.WeatherNotifier') \
-            as mock_notifier_class, \
-         patch('accessiweather.location.LocationManager') \
-            as mock_location_manager_class:
+    with patch(
+        "accessiweather.api_client.NoaaApiClient"
+    ) as mock_api_client_class, patch(
+        "accessiweather.notifications.WeatherNotifier"
+    ) as mock_notifier_class, patch(
+        "accessiweather.location.LocationManager"
+    ) as mock_location_manager_class:
 
         mock_api_client = MagicMock()
         mock_notifier = MagicMock()
         mock_location_manager = MagicMock()
         mock_location_manager.get_current_location.return_value = (
-            "Test City", 35.0, -80.0
+            "Test City",
+            35.0,
+            -80.0,
         )
 
         mock_api_client_class.return_value = mock_api_client
@@ -39,19 +44,21 @@ def mock_components_loading():
         mock_location_manager_class.return_value = mock_location_manager
 
         yield {
-            'api_client': mock_api_client,
-            'notifier': mock_notifier,
-            'location_manager': mock_location_manager
+            "api_client": mock_api_client,
+            "notifier": mock_notifier,
+            "location_manager": mock_location_manager,
         }
 
 
 # Use the base class from test_gui to inherit wx_app fixture
+
+
 # Note: This class duplicates announcement tests from TestWeatherApp.
 # Consider refactoring or removing duplication later.
 # Skip GUI tests in CI environment
 @pytest.mark.skipif(
-    os.environ.get('ACCESSIWEATHER_TESTING') == '1',
-    reason="GUI test skipped in CI"
+    os.environ.get("ACCESSIWEATHER_TESTING") == "1",
+    reason="GUI test skipped in CI",
 )
 class TestWeatherAppLoadingFeedback(TestWeatherApp):
     """Tests specifically for loading feedback and related UI states"""
@@ -66,7 +73,7 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
     # --- Original Loading Feedback Tests (Applying Fixes) ---
 
     # Removed threading.Thread patch as async fetchers handle threading
-    @patch('wx.CallAfter')
+    @patch("wx.CallAfter")
     def test_ui_state_during_fetch(
         self, mock_call_after, wx_app, mock_components  # Removed mock_announce
     ):
@@ -75,9 +82,9 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
         try:
             app = WeatherApp(
                 parent=None,
-                location_manager=mock_components['location_manager'],
-                api_client=mock_components['api_client'],
-                notifier=mock_components['notifier']
+                location_manager=mock_components["location_manager"],
+                api_client=mock_components["api_client"],
+                notifier=mock_components["notifier"],
             )
             # Mock UI elements directly on the instance
             # Correct attribute name
@@ -90,8 +97,9 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
             location = ("Test City", 35.0, -80.0)
             # Mock the fetcher methods directly to prevent actual calls
             # Assign to _ as mocks are not used directly
-            with patch.object(app.forecast_fetcher, 'fetch') as _, \
-                 patch.object(app.alerts_fetcher, 'fetch') as _:
+            with patch.object(
+                app.forecast_fetcher, "fetch"
+            ) as _, patch.object(app.alerts_fetcher, "fetch") as _:
                 app._FetchWeatherData(location)
 
             # Assertions immediately after calling _FetchWeatherData
@@ -114,20 +122,23 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
                 app.Destroy()
 
     # Patch the actual fetcher methods and wx.MessageBox
-    @patch('wx.MessageBox')  # Mock message box display
-    @patch('wx.CallAfter')
+    @patch("wx.MessageBox")  # Mock message box display
+    @patch("wx.CallAfter")
     def test_ui_state_on_fetch_error(
-        self, mock_call_after, mock_message_box,  # Removed mock_announce
-        wx_app, mock_components
+        self,
+        mock_call_after,
+        mock_message_box,  # Removed mock_announce
+        wx_app,
+        mock_components,
     ):
         """Test UI elements are re-enabled/show error on fetch failure"""
         app = None
         try:
             app = WeatherApp(
                 parent=None,
-                location_manager=mock_components['location_manager'],
-                api_client=mock_components['api_client'],
-                notifier=mock_components['notifier']
+                location_manager=mock_components["location_manager"],
+                api_client=mock_components["api_client"],
+                notifier=mock_components["notifier"],
             )
             # Mock UI elements
             # Correct attribute name
@@ -143,11 +154,17 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
             location = ("Test City", 35.0, -80.0)
             # Use side_effect on the fetcher mocks to call error handlers
             with patch.object(
-                app.forecast_fetcher, 'fetch',
-                side_effect=lambda lat, lon, on_success, on_error: on_error("Forecast API Error") # noqa E501
+                app.forecast_fetcher,
+                "fetch",
+                side_effect=lambda lat, lon, on_success, on_error: on_error(
+                    "Forecast API Error"
+                ),  # noqa E501
             ) as mock_f_fetch, patch.object(
-                app.alerts_fetcher, 'fetch',
-                side_effect=lambda lat, lon, on_success, on_error: on_error("Alerts API Error") # noqa E501
+                app.alerts_fetcher,
+                "fetch",
+                side_effect=lambda lat, lon, on_success, on_error: on_error(
+                    "Alerts API Error"
+                ),  # noqa E501
             ) as mock_a_fetch:
                 app._FetchWeatherData(location)
 
@@ -161,7 +178,10 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
             app.refresh_btn.Enable.assert_called()  # Re-enabled
             # Check forecast text shows error
             app.forecast_text.SetValue.assert_called()
-            assert "Error fetching forecast" in app.forecast_text.SetValue.call_args[0][0] # noqa E501
+            assert (
+                "Error fetching forecast"
+                in app.forecast_text.SetValue.call_args[0][0]
+            )  # noqa E501
             # Check alerts list is cleared
             app.alerts_list.DeleteAllItems.assert_called()
             # Check MessageBox was called (at least twice, once for each error)
@@ -174,7 +194,7 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
                 app.Destroy()
 
     # Patch the actual fetcher methods
-    @patch('wx.CallAfter')
+    @patch("wx.CallAfter")
     def test_ui_state_on_fetch_success(
         self, mock_call_after, wx_app, mock_components  # Removed mock_announce
     ):
@@ -183,9 +203,9 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
         try:
             app = WeatherApp(
                 parent=None,
-                location_manager=mock_components['location_manager'],
-                api_client=mock_components['api_client'],
-                notifier=mock_components['notifier']
+                location_manager=mock_components["location_manager"],
+                api_client=mock_components["api_client"],
+                notifier=mock_components["notifier"],
             )
             # Mock UI elements and update methods
             # Correct attribute name
@@ -204,18 +224,26 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
             # Trigger fetch, simulating success in callbacks via fetcher mocks
             location = ("Test City", 35.0, -80.0)
             mock_forecast_data = {
-                "properties": {"periods": [{"name": "Today", "detailedForecast": "Sunny"}]} # noqa E501
+                "properties": {
+                    "periods": [{"name": "Today", "detailedForecast": "Sunny"}]
+                }  # noqa E501
             }
             mock_alerts_data = {
                 "features": [{"properties": {"event": "Flood Warning"}}]
             }
 
             with patch.object(
-                app.forecast_fetcher, 'fetch',
-                side_effect=lambda lat, lon, on_success, on_error: on_success(mock_forecast_data) # noqa E501
+                app.forecast_fetcher,
+                "fetch",
+                side_effect=lambda lat, lon, on_success, on_error: on_success(
+                    mock_forecast_data
+                ),  # noqa E501
             ) as mock_f_fetch, patch.object(
-                app.alerts_fetcher, 'fetch',
-                side_effect=lambda lat, lon, on_success, on_error: on_success(mock_alerts_data) # noqa E501
+                app.alerts_fetcher,
+                "fetch",
+                side_effect=lambda lat, lon, on_success, on_error: on_success(
+                    mock_alerts_data
+                ),  # noqa E501
             ) as mock_a_fetch:
                 app._FetchWeatherData(location)
 

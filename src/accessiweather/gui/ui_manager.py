@@ -1,12 +1,15 @@
-import wx
 import logging  # Added for potential logging in UI updates
-from .ui_components import (
+
+import wx
+
+from .accessible_widgets import (
+    AccessibleButton,
+    AccessibleChoice,
+    AccessibleListCtrl,
     AccessibleStaticText,
     AccessibleTextCtrl,
-    AccessibleChoice,
-    AccessibleButton,
-    AccessibleListCtrl
 )
+
 # Import dialogs if event handlers that use them are moved here later
 # from .dialogs import LocationDialog, WeatherDiscussionDialog
 
@@ -17,6 +20,7 @@ class UIManager:
     """Manages the UI setup and event bindings for the WeatherApp frame."""
 
     # Modified __init__ to accept notifier
+
     def __init__(self, frame, notifier):
         """
         Initializes the UI Manager.
@@ -71,7 +75,7 @@ class UIManager:
             value="Select a location to view the forecast",
             style=wx.TE_MULTILINE | wx.TE_READONLY,
             size=(-1, 200),
-            label="Forecast Content"
+            label="Forecast Content",
         )
         main_sizer.Add(self.frame.forecast_text, 1, wx.ALL | wx.EXPAND, 10)
 
@@ -90,7 +94,7 @@ class UIManager:
             panel,
             style=wx.LC_REPORT | wx.LC_SINGLE_SEL,
             label="Weather Alerts List",
-            size=(-1, 150)
+            size=(-1, 150),
         )
         # Set up columns for alerts list
         self.frame.alerts_list.InsertColumn(0, "Alert Type")
@@ -115,8 +119,9 @@ class UIManager:
         """Bind UI events to their handlers in the main frame."""
         # Bind events to methods defined in WeatherApp
         self.frame.Bind(
-            wx.EVT_CHOICE, self.frame.OnLocationChange,
-            self.frame.location_choice
+            wx.EVT_CHOICE,
+            self.frame.OnLocationChange,
+            self.frame.location_choice,
         )
         self.frame.Bind(
             wx.EVT_BUTTON, self.frame.OnAddLocation, self.frame.add_btn
@@ -128,15 +133,17 @@ class UIManager:
             wx.EVT_BUTTON, self.frame.OnRefresh, self.frame.refresh_btn
         )
         self.frame.Bind(
-            wx.EVT_BUTTON, self.frame.OnViewDiscussion,
-            self.frame.discussion_btn
+            wx.EVT_BUTTON,
+            self.frame.OnViewDiscussion,
+            self.frame.discussion_btn,
         )
         self.frame.Bind(
             wx.EVT_BUTTON, self.frame.OnViewAlert, self.frame.alert_btn
         )
         self.frame.Bind(
-            wx.EVT_LIST_ITEM_ACTIVATED, self.frame.OnAlertActivated,
-            self.frame.alerts_list
+            wx.EVT_LIST_ITEM_ACTIVATED,
+            self.frame.OnAlertActivated,
+            self.frame.alerts_list,
         )
         self.frame.Bind(  # Added binding for Settings button
             wx.EVT_BUTTON, self.frame.OnSettings, self.frame.settings_btn

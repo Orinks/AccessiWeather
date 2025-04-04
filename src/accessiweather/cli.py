@@ -13,10 +13,10 @@ from accessiweather.main import main as app_main
 
 def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
     """Parse command-line arguments
-    
+
     Args:
         args: Command-line arguments (uses sys.argv if None)
-        
+
     Returns:
         Parsed arguments
     """
@@ -27,28 +27,25 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
         )
     )
     parser.add_argument(
-        "-d", "--debug",
-        action="store_true",
-        help="Enable debug logging"
+        "-d", "--debug", action="store_true", help="Enable debug logging"
     )
     parser.add_argument(
-        "-c", "--config",
-        help="Path to configuration directory"
+        "-c", "--config", help="Path to configuration directory"
     )
-    
+
     return parser.parse_args(args)
 
 
 def main() -> int:
     """Main entry point for the command-line interface
-    
+
     Returns:
         Exit code
     """
     args = parse_args()
-    
+
     # Logging setup is now handled in main.py
-    
+
     try:
         # Pass debug flag to main application entry point
         app_main(config_dir=args.config, debug_mode=args.debug)

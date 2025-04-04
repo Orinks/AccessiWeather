@@ -1,13 +1,13 @@
 """Tests for the NOAA API client"""
 
-import pytest
-from unittest.mock import patch, MagicMock
-import requests
-# Removed unused logging import
+from unittest.mock import MagicMock, patch
 
-from accessiweather.api_client import (
-    NoaaApiClient, ApiClientError
-)
+import pytest
+import requests
+
+from accessiweather.api_client import ApiClientError, NoaaApiClient
+
+# Removed unused logging import
 
 
 @pytest.fixture
@@ -43,7 +43,7 @@ class TestNoaaApiClient:
         assert api_client.user_agent == "Test User Agent"
         assert api_client.headers == {
             "User-Agent": "Test User Agent",
-            "Accept": "application/geo+json"
+            "Accept": "application/geo+json",
         }
         print("END: test_init")
 
@@ -54,7 +54,7 @@ class TestNoaaApiClient:
         assert api_client_with_contact.contact_info == "test@example.com"
         assert api_client_with_contact.headers == {
             "User-Agent": "Test User Agent (test@example.com)",
-            "Accept": "application/geo+json"
+            "Accept": "application/geo+json",
         }
         print("END: test_init_with_contact")
 
@@ -79,7 +79,7 @@ class TestNoaaApiClient:
             "https://api.weather.gov/points/35.0,-80.0",
             headers=api_client.headers,
             params=None,
-            timeout=10  # Added timeout=10
+            timeout=10,  # Added timeout=10
         )
         print("END: test_get_point_data")
 
@@ -92,11 +92,9 @@ class TestNoaaApiClient:
         point_mock.status_code = 200
         point_mock.raise_for_status = MagicMock()
         forecast_url = "https://api.weather.gov/gridpoints/GSP/112,57/forecast"
-        point_mock.json = MagicMock(return_value={
-            "properties": {
-                "forecast": forecast_url
-            }
-        })
+        point_mock.json = MagicMock(
+            return_value={"properties": {"forecast": forecast_url}}
+        )
 
         # For the forecast request
         forecast_mock = mock_response
@@ -125,15 +123,13 @@ class TestNoaaApiClient:
         # Create point data mock response
         point_mock = MagicMock()
         point_mock.raise_for_status = MagicMock()
-        point_mock.json = MagicMock(return_value={
-            "properties": {
-                "relativeLocation": {
-                    "properties": {
-                        "state": "NC"
-                    }
+        point_mock.json = MagicMock(
+            return_value={
+                "properties": {
+                    "relativeLocation": {"properties": {"state": "NC"}}
                 }
             }
-        })
+        )
         point_mock.status_code = 200
 
         # Create alerts mock response
@@ -170,11 +166,13 @@ class TestNoaaApiClient:
         # but with county
         point_mock = MagicMock()
         point_mock.raise_for_status = MagicMock()
-        point_mock.json = MagicMock(return_value={
-            "properties": {
-                "county": "https://api.weather.gov/zones/county/TXC141"
+        point_mock.json = MagicMock(
+            return_value={
+                "properties": {
+                    "county": "https://api.weather.gov/zones/county/TXC141"
+                }
             }
-        })
+        )
         point_mock.status_code = 200
 
         # Create alerts mock response
@@ -208,9 +206,7 @@ class TestNoaaApiClient:
         # Create point data mock response with no state information
         point_mock = MagicMock()
         point_mock.raise_for_status = MagicMock()
-        point_mock.json = MagicMock(return_value={
-            "properties": {}
-        })
+        point_mock.json = MagicMock(return_value={"properties": {}})
         point_mock.status_code = 200
 
         # Create alerts mock response with features
@@ -255,10 +251,7 @@ class TestNoaaApiClient:
         mock_get_point_data.return_value = {
             "properties": {
                 "relativeLocation": {
-                    "properties": {
-                        "state": "MI",
-                        "city": "Lumberton Township"
-                    }
+                    "properties": {"state": "MI", "city": "Lumberton Township"}
                 }
             }
         }
@@ -272,8 +265,8 @@ class TestNoaaApiClient:
                     "properties": {
                         "event": "Winter Weather Advisory",
                         "headline": headline,
-                        "severity": "Moderate"
-                    }
+                        "severity": "Moderate",
+                    },
                 }
             ]
         }
@@ -305,18 +298,12 @@ class TestNoaaApiClient:
         # Mock responses for the three API calls
         point_mock = MagicMock()
         point_mock.status_code = 200
-        point_mock.json.return_value = {
-            "properties": {
-                "gridId": "ABC"
-            }
-        }
+        point_mock.json.return_value = {"properties": {"gridId": "ABC"}}
 
         products_mock = MagicMock()
         products_mock.status_code = 200
         products_mock.json.return_value = {
-            "@graph": [{
-                "id": "ABC-AFD-202503121200"
-            }]
+            "@graph": [{"id": "ABC-AFD-202503121200"}]
         }
 
         discussion_mock = MagicMock()
@@ -400,13 +387,11 @@ class TestNoaaApiClient:
         point_mock.status_code = 200
         point_mock.raise_for_status = MagicMock()
         # This response is missing the state information
-        point_mock.json = MagicMock(return_value={
-            "properties": {
-                "relativeLocation": {
-                    "properties": {}
-                }
+        point_mock.json = MagicMock(
+            return_value={
+                "properties": {"relativeLocation": {"properties": {}}}
             }
-        })
+        )
 
         # Create alerts mock response
         alerts_mock = mock_response

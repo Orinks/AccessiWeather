@@ -3,14 +3,16 @@
 This module provides access to NOAA weather data through their public APIs.
 """
 
-import requests
 import json
-import os  # Import os
-from typing import Dict, Any, Optional  # Removed unused List
 import logging
-import traceback
-import time
+import os  # Import os
 import threading
+import time
+import traceback
+from typing import Any, Dict, Optional  # Removed unused List
+
+import requests
+
 # Import the specific exception for JSON decoding errors
 from requests.exceptions import JSONDecodeError
 
@@ -19,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 class ApiClientError(Exception):
     """Custom exception for API client errors."""
+
     pass
 
 
@@ -28,8 +31,11 @@ class NoaaApiClient:
     # NOAA Weather API base URL
     BASE_URL = "https://api.weather.gov"
 
-    def __init__(self, user_agent: str = "AccessiWeather",
-                 contact_info: Optional[str] = None):
+    def __init__(
+        self,
+        user_agent: str = "AccessiWeather",
+        contact_info: Optional[str] = None,
+    ):
         """Initialize the NOAA API client
 
         Args:
@@ -48,7 +54,7 @@ class NoaaApiClient:
 
         self.headers = {
             "User-Agent": user_agent_string,
-            "Accept": "application/geo+json"
+            "Accept": "application/geo+json",
         }
 
         # Add request tracking for rate limiting
@@ -100,7 +106,7 @@ class NoaaApiClient:
             forecast_url = point_data.get("properties", {}).get("forecast")
 
             if not forecast_url:
-                props = list(point_data.get('properties', {}).keys())
+                props = list(point_data.get("properties", {}).keys())
                 logger.error(
                     "Could not find forecast URL in point data. "
                     f"Available properties: {props}"
@@ -115,8 +121,9 @@ class NoaaApiClient:
             logger.debug(f"Traceback: {traceback.format_exc()}")
             raise
 
-    def get_alerts(self, lat: float, lon: float,
-                   radius: float = 50) -> Dict[str, Any]:
+    def get_alerts(
+        self, lat: float, lon: float, radius: float = 50
+    ) -> Dict[str, Any]:
         """Get active weather alerts for the given coordinates.
 
         Args:
@@ -153,8 +160,11 @@ class NoaaApiClient:
             # Try to extract state from county URL if available
             try:
                 county_url = point_data["properties"]["county"]
-                if (county_url and isinstance(county_url, str) and
-                        "/county/" in county_url):
+                if (
+                    county_url
+                    and isinstance(county_url, str)
+                    and "/county/" in county_url
+                ):
                     # Extract state code from county URL
                     # (format: .../zones/county/XXC###)
                     state_code = county_url.split("/county/")[1][:2]
@@ -174,7 +184,7 @@ class NoaaApiClient:
             )
             return self._make_request(
                 "alerts/active",
-                params={"point": f"{lat},{lon}", "radius": str(radius)}
+                params={"point": f"{lat},{lon}", "radius": str(radius)},
             )
 
     def get_alerts_direct(self, url: str) -> Dict[str, Any]:
@@ -233,21 +243,23 @@ class NoaaApiClient:
             logger.debug(f"Traceback: {traceback.format_exc()}")
             return None
 
-    def _build_request_url(self, endpoint_or_url: str,
-                           use_full_url: bool) -> str:
+    def _build_request_url(
+        self, endpoint_or_url: str, use_full_url: bool
+    ) -> str:
         """Helper method to build the request URL."""
         if use_full_url:
             return endpoint_or_url
         else:
-            clean_endpoint = endpoint_or_url.lstrip('/')
+            clean_endpoint = endpoint_or_url.lstrip("/")
             # Check if it's already a full URL (less common case)
             if endpoint_or_url.startswith(self.BASE_URL):
                 return endpoint_or_url
             else:
                 return f"{self.BASE_URL}/{clean_endpoint}"
 
-    def _process_response(self, response: requests.Response,
-                          request_url: str) -> Dict[str, Any]:
+    def _process_response(
+        self, response: requests.Response, request_url: str
+    ) -> Dict[str, Any]:
         """Processes the API response, handling errors and JSON decoding."""
         try:
             # Raises HTTPError for bad responses (4xx or 5xx)
@@ -258,15 +270,16 @@ class NoaaApiClient:
             try:
                 # Try getting detail from JSON response if available
                 error_json = http_err.response.json()
-                detail = error_json.get('detail', 'No detail provided')
+                detail = error_json.get("detail", "No detail provided")
                 error_msg += f" - Detail: {detail}"
             except JSONDecodeError:
                 # If error response isn't valid JSON, use raw text
                 resp_text = http_err.response.text[:200]
                 error_msg += f" - Response body: {resp_text}"
             except Exception as json_err:  # Catch other JSON errors
-                error_msg += \
+                error_msg += (
                     f" - Error parsing error response JSON: {json_err}"
+                )
 
             logger.error(error_msg, exc_info=True)
             raise ApiClientError(error_msg) from http_err
@@ -283,17 +296,20 @@ class NoaaApiClient:
             logger.error(error_msg, exc_info=True)
             raise ApiClientError(error_msg) from json_err
 
-    def _make_request(self, endpoint_or_url: str,
-                      params: Optional[Dict[str, Any]] = None,
-                      use_full_url: bool = False) -> Dict[str, Any]:
+    def _make_request(
+        self,
+        endpoint_or_url: str,
+        params: Optional[Dict[str, Any]] = None,
+        use_full_url: bool = False,
+    ) -> Dict[str, Any]:
         """Make a request to the NOAA API, handling rate limits and errors."""
         lock_acquired = False
         request_url = ""  # Initialize here
         try:
             # Check if API calls should be skipped (for testing)
-            skip_api_calls = os.environ.get(
-                'ACCESSIWEATHER_SKIP_API_CALLS'
-            ) == '1'
+            skip_api_calls = (
+                os.environ.get("ACCESSIWEATHER_SKIP_API_CALLS") == "1"
+            )
 
             # Conditionally acquire lock and rate limit only if not skipping
             # API calls
@@ -332,10 +348,7 @@ class NoaaApiClient:
                 f"API request to: {request_url} with params: {params}"
             )
             response = requests.get(
-                request_url,
-                headers=self.headers,
-                params=params,
-                timeout=10
+                request_url, headers=self.headers, params=params, timeout=10
             )
             if lock_acquired:
                 self.last_request_time = time.time()
