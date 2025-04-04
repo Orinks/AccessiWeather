@@ -16,10 +16,10 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v4
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: '3.12'
 
     - name: Set up virtual framebuffer
       run: |
@@ -38,10 +38,14 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
+        echo "Installing test dependencies..."
         pip install pytest pytest-cov
-        # Install wxPython separately first to isolate potential issues
-        pip install wxPython
-        pip install -e .
+        echo "Installing wxPython (attempting to use pre-built wheel)..."
+        pip install wxPython --prefer-binary
+        echo "Installing other project dependencies..."
+        pip install requests geopy python-dateutil plyer
+        echo "Installing AccessiWeather in editable mode (no deps)..."
+        pip install -e . --no-build-isolation --no-deps
 
     - name: Run tests with pytest
       run: |
