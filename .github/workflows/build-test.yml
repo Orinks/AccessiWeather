@@ -1,0 +1,81 @@
+# .github/workflows/build-test.yml
+name: Build, Lint, and Test
+
+# Trigger the workflow on push or pull request events but only for the main branch
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+# Sets default permissions for the GITHUB_TOKEN to allow read access.
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false # Keep running other matrix jobs even if one fails
+      matrix:
+        # Test on the minimum supported Python version (adjust if needed, based on setup.py/requirements)
+        # And the latest stable version
+        python-version: ["3.8", "3.12"]
+        # Test on Windows and Linux (wxPython can be tricky)
+        os: [ubuntu-latest, windows-latest]
+        # Exclude combinations if necessary, e.g., if wxPython install fails on a specific setup
+        # exclude:
+        #   - os: macos-latest # If you decide to add macOS later and run into issues
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip' # Cache pip dependencies
+
+    - name: Install Linux System Dependencies (for wxPython)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev xvfb
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip wheel
+        # Install pre-commit for linting/formatting checks
+        pip install pre-commit
+        # Install test dependencies (like pytest-cov)
+        pip install pytest pytest-cov pytest-mock pytest-asyncio
+        # Install the project and its core dependencies defined in setup.py
+        pip install -e .
+
+    - name: Lint and Format checks (via pre-commit)
+      run: |
+        pre-commit run --all-files --show-diff-on-failure
+
+    - name: Set up CI Test Configuration
+      run: |
+        # Use Python for cross-platform directory creation and file copying
+        python -c "import os, shutil; \
+          config_dir = os.path.expanduser('~/.accessiweather'); \
+          os.makedirs(config_dir, exist_ok=True); \
+          ci_config_src = os.path.join('tests', 'ci_config.json'); \
+          config_dest = os.path.join(config_dir, 'config.json'); \
+          shutil.copyfile(ci_config_src, config_dest); \
+          print(f'Copied {ci_config_src} to {config_dest}')"
+
+    - name: Test with pytest and Generate Coverage Report
+      # Wrap pytest command with xvfb-run on Linux for GUI tests
+      run: |
+        ${{ runner.os == 'Linux' && 'xvfb-run --auto-servernum' || '' }} python -m pytest tests/ --cov=src/accessiweather --cov-report=term -v --showlocals --no-header
+      env:
+        # Keep environment variables potentially used by tests to skip live API calls
+        ACCESSIWEATHER_TESTING: "1"
+        ACCESSIWEATHER_SKIP_API_CALLS: "1"
+        # For Linux GUI tests, ensure DISPLAY is set within xvfb-run context
+        # (xvfb-run usually handles this automatically)
+        PYTHONIOENCODING: "utf-8" # Recommended for cross-platform compatibility
