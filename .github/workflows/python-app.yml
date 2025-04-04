@@ -24,7 +24,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        # Install project in editable mode (pulls runtime deps from setup.py)
+        # Install project in editable mode without GUI dependencies
+        # Now that wxPython is an optional dependency, this won't install it
         pip install -e .
         # Install development/testing dependencies
         if (Test-Path "requirements-dev.txt") {

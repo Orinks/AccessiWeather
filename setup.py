@@ -6,7 +6,6 @@ setup(
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     install_requires=[
-        "wxPython",
         "requests",
         "pytest",
         "pytest-mock",
@@ -14,6 +13,10 @@ setup(
         "geopy",      # For geocoding addresses and zip codes
         "python-dateutil",  # For parsing ISO timestamps
     ],
+    extras_require={
+        # GUI dependencies, optional for headless environments
+        "gui": ["wxPython"],
+    },
     description=(
         "AccessiWeather: An accessible weather application using NOAA data "
         "with focus on screen reader compatibility"
