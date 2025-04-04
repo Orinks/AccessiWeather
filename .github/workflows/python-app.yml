@@ -41,9 +41,21 @@ jobs:
         echo "Test files found:"
         dir /s /b tests\*.py
 
+    - name: Setup CI test environment
+      run: |
+        echo "Setting up CI test environment"
+        # Copy CI config to the expected location
+        if not exist "%USERPROFILE%\.accessiweather" mkdir "%USERPROFILE%\.accessiweather"
+        copy tests\ci_config.json "%USERPROFILE%\.accessiweather\config.json"
+        echo "CI config copied to %USERPROFILE%\.accessiweather\config.json"
+
     - name: Test with pytest
       run: |
         # Run with verbose output and show local variables on failure
         # Add timeout to prevent hanging
-        timeout 300 pytest -v --showlocals --no-header --no-summary || echo "Tests failed but continuing workflow"
+        # Skip tests that might make real API calls
+        timeout 300 pytest -v --showlocals --no-header --no-summary -k "not test_get_point_data_real and not test_get_alerts_real and not test_get_discussion_real" || echo "Tests failed but continuing workflow"
       continue-on-error: true
+      env:
+        ACCESSIWEATHER_TESTING: "1"
+        ACCESSIWEATHER_SKIP_API_CALLS: "1"
