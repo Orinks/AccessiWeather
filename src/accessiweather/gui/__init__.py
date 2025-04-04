@@ -17,24 +17,19 @@ __all__ = [
     "WeatherApp",
 ]
 
-# Import dialog classes
-from .dialogs import (
-    AdvancedLocationDialog,
-    LocationDialog,
-    WeatherDiscussionDialog,
-)
-
-# Import UI components
-from .accessible_widgets import (
+from .accessible_widgets import (  # noqa: E402
     AccessibleButton,
     AccessibleChoice,
     AccessibleListCtrl,
     AccessibleStaticText,
     AccessibleTextCtrl,
 )
-
-# Import WeatherApp last to avoid circular import issues
-from .weather_app import WeatherApp
+from .dialogs import (  # noqa: E402
+    AdvancedLocationDialog,
+    LocationDialog,
+    WeatherDiscussionDialog,
+)
+from .weather_app import WeatherApp  # noqa: E402
 
 # Constants (UPDATE_INTERVAL moved to accessiweather.constants)
 
