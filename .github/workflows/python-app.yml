@@ -50,7 +50,7 @@ jobs:
         echo "Installing wxPython (forcing binary from extras URL)..."
         pip install \
           -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-24.04/ \
-          wxPython==4.2.1 --only-binary :all: -vvv
+          wxPython --only-binary :all: -vvv
         echo "Installing other project dependencies..."
         pip install requests geopy python-dateutil plyer
         echo "Installing AccessiWeather in editable mode (no deps)..."
