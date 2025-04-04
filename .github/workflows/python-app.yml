@@ -37,8 +37,12 @@ jobs:
             # Install essential test deps and formatters as fallback
             pip install flake8 pytest pytest-mock pytest-timeout black isort
             # Install specific dependencies needed for the project
-            pip install requests plyer python-dateutil mock wxPython
+            pip install requests plyer python-dateutil mock
         }
+
+    - name: Install wxPython
+      run: |
+        python -m pip install --only-binary wxPython wxPython
 
     - name: Check formatting with isort
       run: |
