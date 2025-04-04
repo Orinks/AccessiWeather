@@ -177,7 +177,11 @@ class TestWeatherApp:
                 "location_manager": mock_location_manager,
             }
 
-    def test_init_with_default_config(self, wx_app, mock_components, monkeypatch):
+    @patch("accessiweather.gui.weather_app.WeatherApp." "_check_api_contact_configured")
+    @patch("accessiweather.gui.ui_manager.UIManager")  # Patch UIManager
+    def test_init_with_default_config(
+        self, mock_ui_manager, mock_check_api_contact, wx_app, mock_components, monkeypatch
+    ):
         """Test initialization with default config."""
         # Patch os.path.exists to return False for all config paths
         monkeypatch.setattr(os.path, "exists", lambda path: False)
@@ -200,7 +204,10 @@ class TestWeatherApp:
             if app:
                 app.Destroy()
 
-    def test_init_with_config_file(self, wx_app, mock_components, temp_config_file, monkeypatch):
+    @patch("accessiweather.gui.ui_manager.UIManager")  # Patch UIManager
+    def test_init_with_config_file(
+        self, mock_ui_manager, wx_app, mock_components, temp_config_file, monkeypatch
+    ):
         """Test initialization with config file."""
         # Patch os.path.exists to return True only for our temp config file
         original_exists = os.path.exists
@@ -229,27 +236,33 @@ class TestWeatherApp:
         # Create a new WeatherApp instance
         app = None
         try:
-            # Create app with the loaded config
-            app = WeatherApp(
-                parent=None,
-                location_manager=mock_components["location_manager"],
-                api_client=mock_components["api_client"],
-                notifier=mock_components["notifier"],
-                config=config,
+            # Patch _check_api_contact_configured for this test
+            patch_target = (
+                "accessiweather.gui.weather_app.WeatherApp." "_check_api_contact_configured"
             )
+            with patch(patch_target) as _:
+                # Create app with the loaded config
+                app = WeatherApp(
+                    parent=None,
+                    location_manager=mock_components["location_manager"],
+                    api_client=mock_components["api_client"],
+                    notifier=mock_components["notifier"],
+                    config=config,
+                )
 
-            # Check that the dependencies were properly set
-            assert app.location_manager == mock_components["location_manager"]
-            assert app.api_client == mock_components["api_client"]
-            assert app.notifier == mock_components["notifier"]
-            assert app.config == config
+                # Check that the dependencies were properly set
+                assert app.location_manager == mock_components["location_manager"]
+                assert app.api_client == mock_components["api_client"]
+                assert app.notifier == mock_components["notifier"]
+                assert app.config == config
         finally:
             if app:
                 app.Destroy()
 
+    @patch("accessiweather.gui.ui_manager.UIManager")  # Patch UIManager
     @patch("wx.CallAfter")
     def test_fetch_weather_data_with_proper_headers(
-        self, mock_call_after, wx_app, mock_components, monkeypatch
+        self, mock_call_after, mock_ui_manager, wx_app, mock_components, monkeypatch
     ):
         """Test that _FetchWeatherData uses proper headers from API client."""
         # Create real API client with contact info

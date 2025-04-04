@@ -12,7 +12,7 @@ if os.environ.get("ACCESSIWEATHER_TESTING") != "1":
 
 
 # We need a wx App for testing wx components
-@pytest.fixture(scope="session")  # Use session scope for efficiency
+@pytest.fixture(scope="function")  # Use function scope for GUI tests
 def wx_app():
     """Create a wx App for testing (session-scoped)."""
     if os.environ.get("ACCESSIWEATHER_TESTING") != "1":

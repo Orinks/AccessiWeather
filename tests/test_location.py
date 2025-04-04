@@ -28,7 +28,8 @@ class TestLocationManager:
     def test_init(self, location_manager, temp_config_dir):
         """Test initialization and directory creation."""
         assert location_manager.config_dir == temp_config_dir
-        assert location_manager.locations_file == os.path.join(temp_config_dir, "locations.json")
+        expected_path = os.path.join(temp_config_dir, "locations.json")
+        assert location_manager.locations_file == expected_path
         assert location_manager.current_location is None
         assert location_manager.saved_locations == {}
         assert os.path.exists(temp_config_dir)
@@ -67,62 +68,53 @@ class TestLocationManager:
         location_manager.add_location("Home", 35.0, -80.0)
         location_manager.add_location("Work", 36.0, -81.0)
 
-        # Remove a non-current location
-        result = location_manager.remove_location("Work")
-        assert result is True
+        # Remove a non-current location (remove_location returns None)
+        location_manager.remove_location("Work")
         assert "Work" not in location_manager.saved_locations
         assert location_manager.current_location == "Home"
 
-        # Remove the current location
-        result = location_manager.remove_location("Home")
-        assert result is True
+        # Remove the current location (remove_location returns None)
+        location_manager.remove_location("Home")
         assert "Home" not in location_manager.saved_locations
         assert location_manager.current_location is None
 
-        # Try to remove a non-existent location
-        result = location_manager.remove_location("Nonexistent")
-        assert result is False
+        # Try to remove a non-existent location (should not raise error)
+        location_manager.remove_location("Nonexistent")
+        # Assert the state hasn't changed unexpectedly (optional)
+        assert "Nonexistent" not in location_manager.saved_locations
 
-    def test_set_current_location(self, location_manager):
-        """Test setting the current location."""
-        # Add locations
-        location_manager.add_location("Home", 35.0, -80.0)
-        location_manager.add_location("Work", 36.0, -81.0)
-
-        # Set current location
-        result = location_manager.set_current_location("Work")
-        assert result is True
-        assert location_manager.current_location == "Work"
-
-        # Try to set a non-existent location
-        result = location_manager.set_current_location("Nonexistent")
-        assert result is False
-        assert location_manager.current_location == "Work"  # Unchanged
+    # Removed test_set_current_location as the method no longer exists
 
     def test_get_current_location(self, location_manager):
         """Test getting the current location."""
         # When no location is set
-        assert location_manager.get_current_location() is None
+        assert location_manager.current_location is None
 
         # Add a location
         location_manager.add_location("Home", 35.0, -80.0)
 
         # Check current location
-        current = location_manager.get_current_location()
-        assert current == ("Home", 35.0, -80.0)
+        # Check current location name
+        assert location_manager.current_location == "Home"
+        # Check getting the current location object
+        current_loc_obj = location_manager.get_location("Home")
+        assert current_loc_obj is not None
+        assert current_loc_obj.name == "Home"
+        assert current_loc_obj.lat == 35.0
+        assert current_loc_obj.lon == -80.0
 
     def test_get_all_locations(self, location_manager):
         """Test getting all locations."""
         # When no locations are saved
-        assert location_manager.get_all_locations() == []
+        assert location_manager.get_location_names() == []
 
         # Add locations
         location_manager.add_location("Home", 35.0, -80.0)
         location_manager.add_location("Work", 36.0, -81.0)
 
         # Check all locations
-        all_locations = location_manager.get_all_locations()
-        assert sorted(all_locations) == sorted(["Home", "Work"])
+        all_location_names = location_manager.get_location_names()
+        assert sorted(all_location_names) == sorted(["Home", "Work"])
 
     def test_load_locations(self, temp_config_dir):
         """Test loading locations from file."""

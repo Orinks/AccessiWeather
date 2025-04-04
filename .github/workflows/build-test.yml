@@ -51,7 +51,7 @@ jobs:
         # Install test dependencies (like pytest-cov)
         pip install pytest pytest-cov pytest-mock pytest-asyncio
         # Install the project and its core dependencies defined in setup.py
-        pip install -e .
+        pip install -e .[gui] # Install with GUI extras
 
     - name: Lint and Format checks (via pre-commit)
       run: |

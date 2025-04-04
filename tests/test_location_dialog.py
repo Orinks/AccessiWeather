@@ -13,7 +13,7 @@ from accessiweather.gui.dialogs import AdvancedLocationDialog, LocationDialog
 
 
 # Create a wx App fixture for testing
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")  # Change scope to function
 def wx_app():
     """Create a wx App for testing."""
     app = wx.App(False)
@@ -61,33 +61,35 @@ def safe_destroy():
 class TestAdvancedLocationDialog:
     """Test suite for AdvancedLocationDialog."""
 
-    def setup_method(self, wx_app):
-        """Set up test fixture."""
-        # Create parent frame
-        self.frame = wx.Frame(None)
-
-    def teardown_method(self):
-        """Tear down test fixture."""
-        # Destroy frame safely
-        try:
-            # Import moved to top
-            safe_call_after(self.frame.Destroy)
-        except Exception:
-            pass  # Ignore any errors in cleanup
-
+    # Remove setup_method as frame creation is moved to tests
+    # def setup_method(self, wx_app):
+    #     """Set up test fixture."""
+    #     # Create parent frame
+    #     # self.frame = wx.Frame(None) # Moved to tests
+    # Remove teardown_method as frame cleanup is handled by safe_destroy
+    # def teardown_method(self):
+    #     """Tear down test fixture."""
+    #     # Destroy frame safely
+    #     # try:
+    #     #     # Import moved to top
+    #     #     safe_call_after(self.frame.Destroy)
+    #     # except Exception:
+    #     #     pass  # Ignore any errors in cleanup
     def test_init(self, wx_app, safe_destroy):
         """Test initialization."""
-        dialog = safe_destroy(AdvancedLocationDialog(self.frame, lat=35.0, lon=-80.0))
+        frame = safe_destroy(wx.Frame(None))  # Create and register frame
+        dialog = safe_destroy(AdvancedLocationDialog(frame, lat=35.0, lon=-80.0))
         try:
             # Check initial values
             assert dialog.lat_ctrl.GetValue() == "35.0"
             assert dialog.lon_ctrl.GetValue() == "-80.0"
         finally:
-            wx.CallAfter(dialog.Destroy)
+            pass  # Cleanup handled by safe_destroy
 
     def test_get_values(self, wx_app, safe_destroy):
         """Test getting values from dialog."""
-        dialog = safe_destroy(AdvancedLocationDialog(self.frame))
+        frame = safe_destroy(wx.Frame(None))  # Create and register frame
+        dialog = safe_destroy(AdvancedLocationDialog(frame))
         try:
             # Set values
             dialog.lat_ctrl.SetValue("35.5")
@@ -98,11 +100,12 @@ class TestAdvancedLocationDialog:
             assert lat == 35.5
             assert lon == -80.5
         finally:
-            wx.CallAfter(dialog.Destroy)
+            pass  # Cleanup handled by safe_destroy
 
     def test_validation_success(self, wx_app, safe_destroy):
         """Test validation with valid inputs."""
-        dialog = safe_destroy(AdvancedLocationDialog(self.frame))
+        frame = safe_destroy(wx.Frame(None))  # Create and register frame
+        dialog = safe_destroy(AdvancedLocationDialog(frame))
         try:
             # Set values
             dialog.lat_ctrl.SetValue("35.0")
@@ -118,12 +121,13 @@ class TestAdvancedLocationDialog:
             # Check that event.Skip was called
             event.Skip.assert_called_once()
         finally:
-            wx.CallAfter(dialog.Destroy)
+            pass  # Cleanup handled by safe_destroy
 
     def test_validation_invalid_lat(self, wx_app, safe_destroy):
         """Test validation with invalid latitude."""
         with patch("wx.MessageBox") as mock_message_box:
-            dialog = safe_destroy(AdvancedLocationDialog(self.frame))
+            frame = safe_destroy(wx.Frame(None))  # Create and register frame
+            dialog = safe_destroy(AdvancedLocationDialog(frame))
             try:
                 # Set values
                 dialog.lat_ctrl.SetValue("invalid")
@@ -142,12 +146,13 @@ class TestAdvancedLocationDialog:
                 # Check that MessageBox was called
                 mock_message_box.assert_called_once()
             finally:
-                wx.CallAfter(dialog.Destroy)
+                pass  # Cleanup handled by safe_destroy
 
     def test_validation_invalid_lon(self, wx_app, safe_destroy):
         """Test validation with invalid longitude."""
         with patch("wx.MessageBox") as mock_message_box:
-            dialog = safe_destroy(AdvancedLocationDialog(self.frame))
+            frame = safe_destroy(wx.Frame(None))  # Create and register frame
+            dialog = safe_destroy(AdvancedLocationDialog(frame))
             try:
                 # Set values
                 dialog.lat_ctrl.SetValue("35.0")
@@ -166,7 +171,7 @@ class TestAdvancedLocationDialog:
                 # Check that MessageBox was called
                 mock_message_box.assert_called_once()
             finally:
-                wx.CallAfter(dialog.Destroy)
+                pass  # Cleanup handled by safe_destroy
 
 
 # Skip GUI tests in CI environment
@@ -177,42 +182,25 @@ class TestAdvancedLocationDialog:
 class TestLocationDialog:
     """Test suite for LocationDialog."""
 
+    # Note: Frame creation moved into individual tests.
+    # setup_method and teardown_method are kept ONLY for managing the
+    # geocoding_patcher lifecycle for the tests in this class.
     def setup_method(self, wx_app):
-        """Set up test fixture."""
-        # Ensure wx.App exists
-        try:
-            app = wx.GetApp()
-            if app is None:
-                self.app = wx.App(False)
-        except Exception:
-            self.app = wx.App(False)
-
-        # Create parent frame
-        self.frame = wx.Frame(None)
-
-        # Create patch for geocoding service
+        """Set up test fixture for patching."""
         patch_target = "accessiweather.gui.dialogs.GeocodingService"
         self.geocoding_patcher = patch(patch_target)
-
         self.mock_geocoding_class = self.geocoding_patcher.start()
         self.mock_geocoding = MagicMock()
         self.mock_geocoding_class.return_value = self.mock_geocoding
 
     def teardown_method(self):
-        """Tear down test fixture."""
-        # Stop geocoding patch
+        """Tear down test fixture for patching."""
         self.geocoding_patcher.stop()
-
-        # Destroy frame safely
-        try:
-            # Import moved to top
-            safe_call_after(self.frame.Destroy)
-        except Exception:
-            pass  # Ignore any errors in cleanup
 
     def test_init(self, wx_app, safe_destroy):
         """Test initialization."""
-        dialog = safe_destroy(LocationDialog(self.frame, location_name="Home", lat=35.0, lon=-80.0))
+        frame = safe_destroy(wx.Frame(None))  # Create and register frame
+        dialog = safe_destroy(LocationDialog(frame, location_name="Home", lat=35.0, lon=-80.0))
         try:
             # Check initial values
             assert dialog.name_ctrl.GetValue() == "Home"
@@ -220,11 +208,12 @@ class TestLocationDialog:
             assert dialog.longitude == -80.0
             assert dialog.result_text.GetValue() == ("Custom coordinates: 35.0, -80.0")
         finally:
-            wx.CallAfter(dialog.Destroy)
+            pass  # Cleanup handled by safe_destroy
 
     def test_get_values(self, wx_app, safe_destroy):
         """Test getting values from dialog."""
-        dialog = safe_destroy(LocationDialog(self.frame, location_name="Home", lat=35.0, lon=-80.0))
+        frame = safe_destroy(wx.Frame(None))  # Create and register frame
+        dialog = safe_destroy(LocationDialog(frame, location_name="Home", lat=35.0, lon=-80.0))
         try:
             # Get values
             name, lat, lon = dialog.GetValues()
@@ -232,7 +221,7 @@ class TestLocationDialog:
             assert lat == 35.0
             assert lon == -80.0
         finally:
-            wx.CallAfter(dialog.Destroy)
+            pass  # Cleanup handled by safe_destroy
 
     def test_search_success(self, wx_app, safe_destroy):
         """Test successful location search."""
@@ -245,7 +234,8 @@ class TestLocationDialog:
 
         # Mock MessageBox to prevent UI interaction
         with patch("wx.MessageBox"):
-            dialog = safe_destroy(LocationDialog(self.frame))
+            frame = safe_destroy(wx.Frame(None))  # Create and register frame
+            dialog = safe_destroy(LocationDialog(frame))
             try:
                 # Set search query
                 dialog.search_field.SetValue("123 Main St")
@@ -261,7 +251,7 @@ class TestLocationDialog:
                 assert dialog.longitude == -80.0
                 assert "Found: 123 Main St, City, State" in (dialog.result_text.GetValue())
             finally:
-                wx.CallAfter(dialog.Destroy)
+                pass  # Cleanup handled by safe_destroy
 
     def test_search_not_found(self, wx_app, safe_destroy):
         """Test location search with no results."""
@@ -270,7 +260,8 @@ class TestLocationDialog:
 
         # Mock MessageBox to prevent UI interaction
         with patch("wx.MessageBox"):
-            dialog = safe_destroy(LocationDialog(self.frame))
+            frame = safe_destroy(wx.Frame(None))  # Create and register frame
+            dialog = safe_destroy(LocationDialog(frame))
             try:
                 # Set search query
                 dialog.search_field.SetValue("Nonexistent Address")
@@ -284,7 +275,7 @@ class TestLocationDialog:
                 # Check result
                 assert "No results found" in dialog.result_text.GetValue()
             finally:
-                wx.CallAfter(dialog.Destroy)
+                pass  # Cleanup handled by safe_destroy
 
     def test_search_auto_name(self, wx_app, safe_destroy):
         """Test auto-population of name field when search is successful."""
@@ -297,7 +288,8 @@ class TestLocationDialog:
 
         # Mock MessageBox to prevent UI interaction
         with patch("wx.MessageBox"):
-            dialog = safe_destroy(LocationDialog(self.frame))
+            frame = safe_destroy(wx.Frame(None))  # Create and register frame
+            dialog = safe_destroy(LocationDialog(frame))
             try:
                 # Set search query but leave name empty
                 dialog.search_field.SetValue("123 Main St")
@@ -309,7 +301,7 @@ class TestLocationDialog:
                 # Check that name field was auto-populated with search query
                 assert dialog.name_ctrl.GetValue() == "123 Main St"
             finally:
-                wx.CallAfter(dialog.Destroy)
+                pass  # Cleanup handled by safe_destroy
 
     def test_advanced_dialog(self, wx_app, safe_destroy):
         """Test advanced dialog integration."""
@@ -322,7 +314,9 @@ class TestLocationDialog:
             mock_dialog_class.return_value = mock_dialog
 
             with patch("wx.MessageBox"):  # Prevent MessageBox from showing
-                dialog = safe_destroy(LocationDialog(self.frame))
+                # Create and register frame
+                frame = safe_destroy(wx.Frame(None))
+                dialog = safe_destroy(LocationDialog(frame))
                 try:
                     # Call advanced button handler
                     dialog.OnAdvanced(None)
@@ -336,11 +330,12 @@ class TestLocationDialog:
                     assert dialog.longitude == -75.0
                     assert "Custom coordinates: 40.0, -75.0" in (dialog.result_text.GetValue())
                 finally:
-                    wx.CallAfter(dialog.Destroy)
+                    pass  # Cleanup handled by safe_destroy
 
     def test_validation_success(self, wx_app, safe_destroy):
         """Test validation with valid inputs."""
-        dialog = safe_destroy(LocationDialog(self.frame))
+        frame = safe_destroy(wx.Frame(None))  # Create and register frame
+        dialog = safe_destroy(LocationDialog(frame))
         try:
             # Set values
             dialog.name_ctrl.SetValue("Home")
@@ -358,12 +353,13 @@ class TestLocationDialog:
             # Check that event.Skip was called
             event.Skip.assert_called_once()
         finally:
-            wx.CallAfter(dialog.Destroy)
+            pass  # Cleanup handled by safe_destroy
 
     def test_validation_no_name(self, wx_app, safe_destroy):
         """Test validation with no name."""
         with patch("wx.MessageBox") as mock_message_box:
-            dialog = safe_destroy(LocationDialog(self.frame))
+            frame = safe_destroy(wx.Frame(None))  # Create and register frame
+            dialog = safe_destroy(LocationDialog(frame))
             try:
                 # Set values but leave name empty
                 dialog.name_ctrl.SetValue("")
@@ -385,12 +381,13 @@ class TestLocationDialog:
                 # Check that first argument mentions name
                 assert "name" in mock_message_box.call_args[0][0].lower()
             finally:
-                wx.CallAfter(dialog.Destroy)
+                pass  # Cleanup handled by safe_destroy
 
     def test_validation_no_location(self, wx_app, safe_destroy):
         """Test validation with no location data."""
         with patch("wx.MessageBox") as mock_message_box:
-            dialog = safe_destroy(LocationDialog(self.frame))
+            frame = safe_destroy(wx.Frame(None))  # Create and register frame
+            dialog = safe_destroy(LocationDialog(frame))
             try:
                 # Set name but no location
                 dialog.name_ctrl.SetValue("Home")
@@ -412,4 +409,4 @@ class TestLocationDialog:
                 # Check that first argument mentions location
                 assert "location" in mock_message_box.call_args[0][0].lower()
             finally:
-                wx.CallAfter(dialog.Destroy)
+                pass  # Cleanup handled by safe_destroy

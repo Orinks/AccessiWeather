@@ -94,8 +94,8 @@ class WeatherApp(wx.Frame):
 
         # Initialize UI using UIManager
         # UI elements are now attached to self by UIManager
-        self.ui_manager = UIManager(self, self.notifier)
-        self.event_handlers = WeatherAppEventHandlers(self)  # Instantiate
+        self.event_handlers = WeatherAppEventHandlers(self)  # Init handlers
+        self.ui_manager = UIManager(self, self.notifier)  # Then UI Manager
         # Set up menu bar
         # self._setup_menu_bar() # Removed menu bar setup
 
@@ -294,7 +294,8 @@ class WeatherApp(wx.Frame):
 
         # Show error in forecast display
         # Keep error in text area too
-        self.forecast_text.SetValue(f"Error fetching forecast: {error_message}")
+        error_text = f"Error fetching forecast: {error_message}"
+        self.forecast_text.SetValue(error_text)
 
         # Mark forecast as complete (due to error) and check overall completion
         self._forecast_complete = True
@@ -392,7 +393,8 @@ class WeatherApp(wx.Frame):
             event: Timer event
         """
         # Get update interval from config (default to 30 minutes)
-        update_interval_minutes = self.config.get("settings", {}).get("update_interval_minutes", 30)
+        settings = self.config.get("settings", {})
+        update_interval_minutes = settings.get("update_interval_minutes", 30)
         update_interval_seconds = update_interval_minutes * 60
 
         # Check if it's time to update
@@ -471,4 +473,4 @@ class WeatherApp(wx.Frame):
 
             # If user clicks OK, open settings dialog
             if dialog.ShowModal() == wx.ID_OK:
-                self.OnSettings(None)
+                self.event_handlers.OnSettings(None)

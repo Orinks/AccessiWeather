@@ -91,13 +91,14 @@ class TestApiContactCheck:
             # No api_settings section
         }
 
+    @patch("accessiweather.gui.ui_manager.UIManager")  # Patch UIManager
     def test_no_dialog_when_api_contact_present(
-        self, wx_app, mock_components, config_with_api_contact
+        self, mock_ui_manager, wx_app, mock_components, config_with_api_contact
     ):
         """Test that no dialog is shown when API contact is present."""
-        with patch("wx.MessageDialog") as mock_dialog, patch.object(
-            WeatherApp, "_check_api_contact_configured"
-        ):
+        # Patch MessageDialog. No need to patch _check_api_contact_configured
+        with patch("wx.MessageDialog") as mock_dialog:
+            # mock_ui_manager is already active due to the decorator
             app = None
             try:
                 app = WeatherApp(
@@ -111,144 +112,168 @@ class TestApiContactCheck:
                 # Reset the mock to clear any calls during initialization
                 mock_dialog.reset_mock()
 
-                # Now call the method directly
-                app._check_api_contact_configured.restore()
-
-                # Also verify that OnSettings was not called
-                with patch.object(app, "OnSettings") as mock_on_settings:
+                # Patch OnSettings on the actual event_handlers instance
+                with patch.object(app.event_handlers, "OnSettings") as mock_on_settings:
+                    # Call the method under test again directly
+                    # (it was already called during init, but we want to check
+                    # behaviour with the specific config provided)
                     app._check_api_contact_configured()
 
-                    # Assert that MessageDialog was not created
+                    # Assert that MessageDialog was not created or shown
                     mock_dialog.assert_not_called()
+                    # If called during init check ShowModal
+                    if mock_dialog.call_count > 0:
+                        mock_dialog.return_value.ShowModal.assert_not_called()
 
-                    # Assert that OnSettings was not called
+                    # Assert that OnSettings on the handler was not called
                     mock_on_settings.assert_not_called()
             finally:
                 if app:
                     app.Destroy()
 
+    @patch("accessiweather.gui.weather_app.WeatherAppEventHandlers")
+    @patch("wx.MessageDialog")
     def test_dialog_shown_when_api_contact_missing(
-        self, wx_app, mock_components, config_without_api_contact
+        self,
+        mock_message_dialog_class,
+        mock_event_handlers_class,
+        wx_app,
+        mock_components,
+        config_without_api_contact,
     ):
         """Test that dialog is shown when API contact is missing."""
-        # Create a mock for OnSettings
-        mock_on_settings = MagicMock()
+        # Configure the mock MessageDialog instance
+        mock_dialog_instance = MagicMock()
+        mock_dialog_instance.ShowModal.return_value = wx.ID_OK
+        mock_message_dialog_class.return_value = mock_dialog_instance
 
-        # Create a mock for MessageDialog
-        mock_dialog = MagicMock()
-        mock_dialog.ShowModal.return_value = wx.ID_OK
+        # Configure the mock EventHandlers instance
+        mock_handlers_instance = MagicMock()
+        mock_event_handlers_class.return_value = mock_handlers_instance
 
         # Create a WeatherApp instance with the empty API contact config
         app = None
         try:
-            # Patch the methods we want to test
-            with patch.object(WeatherApp, "OnSettings", mock_on_settings), patch(
-                "wx.MessageDialog", return_value=mock_dialog
-            ):
+            # No need for inner patches, outer patches handle it
 
-                # Create the app with our config that has empty API contact
-                app = WeatherApp(
-                    parent=None,
-                    location_manager=mock_components["location_manager"],
-                    api_client=mock_components["api_client"],
-                    notifier=mock_components["notifier"],
-                    config=config_without_api_contact,
-                )
-                # The _check_api_contact_configured method should have been
-                # called during initialization and should have shown a dialog
-                # and called OnSettings
+            # Create the app with our config that has empty API contact
+            app = WeatherApp(
+                parent=None,
+                location_manager=mock_components["location_manager"],
+                api_client=mock_components["api_client"],
+                notifier=mock_components["notifier"],
+                config=config_without_api_contact,
+            )
+            # The _check_api_contact_configured method should have been
+            # called during initialization and should have shown a dialog
+            # and called OnSettings
 
-                # Assert that MessageDialog was created
-                wx.MessageDialog.assert_called_once()
-                # Assert that OnSettings was called since dialog returned
-                # wx.ID_OK
-                mock_on_settings.assert_called_once()
+            # Assert that MessageDialog was created and shown
+            mock_message_dialog_class.assert_called_once()
+            mock_dialog_instance.ShowModal.assert_called_once()
+
+            # Assert OnSettings called on the mocked handlers instance
+            mock_handlers_instance.OnSettings.assert_called_once()
         finally:
             if app:
                 app.Destroy()
 
+    @patch("accessiweather.gui.weather_app.WeatherAppEventHandlers")
+    @patch("wx.MessageDialog")
     def test_dialog_shown_when_api_settings_missing(
-        self, wx_app, mock_components, config_without_api_settings
+        self,
+        mock_message_dialog_class,
+        mock_event_handlers_class,
+        wx_app,
+        mock_components,
+        config_without_api_settings,
     ):
         """Test that dialog is shown when api_settings section is missing."""
-        # Create a mock for OnSettings
-        mock_on_settings = MagicMock()
+        # Configure the mock MessageDialog instance
+        mock_dialog_instance = MagicMock()
+        mock_dialog_instance.ShowModal.return_value = wx.ID_OK
+        mock_message_dialog_class.return_value = mock_dialog_instance
 
-        # Create a mock for MessageDialog
-        mock_dialog = MagicMock()
-        mock_dialog.ShowModal.return_value = wx.ID_OK
+        # Configure the mock EventHandlers instance
+        mock_handlers_instance = MagicMock()
+        mock_event_handlers_class.return_value = mock_handlers_instance
 
         # Create a WeatherApp instance with the config missing api_settings
         app = None
         try:
-            # Patch the methods we want to test
-            with patch.object(WeatherApp, "OnSettings", mock_on_settings), patch(
-                "wx.MessageDialog", return_value=mock_dialog
-            ):
-                # Create the app with our config that has no api_settings
-                # section
-                app = WeatherApp(
-                    parent=None,
-                    location_manager=mock_components["location_manager"],
-                    api_client=mock_components["api_client"],
-                    notifier=mock_components["notifier"],
-                    config=config_without_api_settings,
-                )
-                # The _check_api_contact_configured method should have been
-                # called during initialization and should have shown a dialog
-                # and called OnSettings
+            # No need for inner patches, outer patches handle it
+            # Create the app with our config that has no api_settings section
+            app = WeatherApp(
+                parent=None,
+                location_manager=mock_components["location_manager"],
+                api_client=mock_components["api_client"],
+                notifier=mock_components["notifier"],
+                config=config_without_api_settings,
+            )
+            # The _check_api_contact_configured method should have been
+            # called during initialization and should have shown a dialog
+            # and called OnSettings
 
-                # Assert that MessageDialog was created
-                wx.MessageDialog.assert_called_once()
-                # Assert that OnSettings was called since dialog returned
-                # wx.ID_OK
-                mock_on_settings.assert_called_once()
+            # Assert that MessageDialog was created and shown
+            mock_message_dialog_class.assert_called_once()
+            mock_dialog_instance.ShowModal.assert_called_once()
+
+            # Assert OnSettings called on the mocked handlers instance
+            mock_handlers_instance.OnSettings.assert_called_once()
         finally:
             if app:
                 app.Destroy()
 
+    @patch("accessiweather.gui.weather_app.WeatherAppEventHandlers")
+    @patch("wx.MessageDialog")
     def test_settings_not_opened_if_dialog_cancelled(
-        self, wx_app, mock_components, config_without_api_contact
+        self,
+        mock_message_dialog_class,
+        mock_event_handlers_class,
+        wx_app,
+        mock_components,
+        config_without_api_contact,
     ):
         """Test that settings are not opened if dialog is cancelled."""
-        # Create a mock for OnSettings
-        mock_on_settings = MagicMock()
+        # Configure the mock MessageDialog instance to return CANCEL
+        mock_dialog_instance = MagicMock()
+        mock_dialog_instance.ShowModal.return_value = wx.ID_CANCEL
+        mock_message_dialog_class.return_value = mock_dialog_instance
 
-        # Create a mock for MessageDialog that returns CANCEL
-        mock_dialog = MagicMock()
-        mock_dialog.ShowModal.return_value = wx.ID_CANCEL
+        # Configure the mock EventHandlers instance
+        mock_handlers_instance = MagicMock()
+        mock_event_handlers_class.return_value = mock_handlers_instance
 
         # Create a WeatherApp instance with the empty API contact config
         app = None
         try:
-            # Patch the methods we want to test
-            with patch.object(WeatherApp, "OnSettings", mock_on_settings), patch(
-                "wx.MessageDialog", return_value=mock_dialog
-            ):
+            # No need for inner patches, outer patches handle it
 
-                # Create the app with our config that has empty API contact
-                app = WeatherApp(
-                    parent=None,
-                    location_manager=mock_components["location_manager"],
-                    api_client=mock_components["api_client"],
-                    notifier=mock_components["notifier"],
-                    config=config_without_api_contact,
-                )
-                # The _check_api_contact_configured method should have been
-                # called during initialization and should have shown a dialog
-                # but NOT called OnSettings since we returned CANCEL
+            # Create the app with our config that has empty API contact
+            app = WeatherApp(
+                parent=None,
+                location_manager=mock_components["location_manager"],
+                api_client=mock_components["api_client"],
+                notifier=mock_components["notifier"],
+                config=config_without_api_contact,
+            )
+            # The _check_api_contact_configured method should have been
+            # called during initialization and should have shown a dialog
+            # but NOT called OnSettings since we returned CANCEL
 
-                # Assert that MessageDialog was created
-                wx.MessageDialog.assert_called_once()
-                # Assert that OnSettings was NOT called since dialog returned
-                # wx.ID_CANCEL
-                mock_on_settings.assert_not_called()
+            # Assert that MessageDialog was created and shown
+            mock_message_dialog_class.assert_called_once()
+            mock_dialog_instance.ShowModal.assert_called_once()
+
+            # Assert that OnSettings was NOT called on the handler instance
+            mock_handlers_instance.OnSettings.assert_not_called()
         finally:
             if app:
                 app.Destroy()
 
     def test_check_called_on_init(self, wx_app, mock_components, config_without_api_contact):
         """Test that the API contact check is called during initialization."""
+        # Patch method and MessageDialog to prevent popups
         with patch.object(WeatherApp, "_check_api_contact_configured") as mock_check, patch(
             "wx.MessageDialog"
         ):

@@ -26,7 +26,7 @@ def mock_components_loading():
         "accessiweather.notifications.WeatherNotifier"
     ) as mock_notifier_class, patch(
         "accessiweather.location.LocationManager"
-    ) as mock_location_manager_class:
+    ) as mock_loc_mgr_class:
 
         mock_api_client = MagicMock()
         mock_notifier = MagicMock()
@@ -39,7 +39,7 @@ def mock_components_loading():
 
         mock_api_client_class.return_value = mock_api_client
         mock_notifier_class.return_value = mock_notifier
-        mock_location_manager_class.return_value = mock_location_manager
+        mock_loc_mgr_class.return_value = mock_location_manager
 
         yield {
             "api_client": mock_api_client,
@@ -72,9 +72,11 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
     # --- Original Loading Feedback Tests (Applying Fixes) ---
 
     # Removed threading.Thread patch as async fetchers handle threading
+    @patch("accessiweather.gui.ui_manager.UIManager")  # Patch UIManager
+    @patch("accessiweather.gui.weather_app.WeatherAppEventHandlers")
     @patch("wx.CallAfter")
     def test_ui_state_during_fetch(
-        self, mock_call_after, wx_app, mock_components  # Removed mock_announce
+        self, mock_call_after, mock_event_handlers, mock_ui_manager, wx_app, mock_components
     ):
         """Test UI elements are disabled/show loading during fetch."""
         app = None
@@ -121,12 +123,16 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
                 app.Destroy()
 
     # Patch the actual fetcher methods and wx.MessageBox
+    @patch("accessiweather.gui.ui_manager.UIManager")  # Patch UIManager
+    @patch("accessiweather.gui.weather_app.WeatherAppEventHandlers")
     @patch("wx.MessageBox")  # Mock message box display
     @patch("wx.CallAfter")
     def test_ui_state_on_fetch_error(
         self,
         mock_call_after,
-        mock_message_box,  # Removed mock_announce
+        mock_message_box,
+        mock_event_handlers,  # Mock handlers injected
+        mock_ui_manager,  # Add mock_ui_manager
         wx_app,
         mock_components,
     ):
@@ -148,7 +154,8 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
             # Mock UIManager methods as they are called in error handlers too
             app.ui_manager._UpdateForecastDisplay = MagicMock()
             app.ui_manager._UpdateAlertsDisplay = MagicMock()
-
+            # Patch SetStatusText as it requires wx.App
+            app.SetStatusText = MagicMock()
             # Trigger fetch, simulating errors in callbacks via fetcher mocks
             location = ("Test City", 35.0, -80.0)
             # Use side_effect on the fetcher mocks to call error handlers
@@ -177,8 +184,8 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
             app.refresh_btn.Enable.assert_called()  # Re-enabled
             # Check forecast text shows error
             app.forecast_text.SetValue.assert_called()
-            assert "Error fetching forecast" in (
-                app.forecast_text.SetValue.call_args[0][0]
+            assert (
+                "Error fetching forecast" in app.forecast_text.SetValue.call_args[0][0]
             )  # noqa E501
             # Check alerts list is cleared
             app.alerts_list.DeleteAllItems.assert_called()
@@ -192,9 +199,11 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
                 app.Destroy()
 
     # Patch the actual fetcher methods
+    @patch("accessiweather.gui.ui_manager.UIManager")  # Patch UIManager
+    @patch("accessiweather.gui.weather_app.WeatherAppEventHandlers")
     @patch("wx.CallAfter")
     def test_ui_state_on_fetch_success(
-        self, mock_call_after, wx_app, mock_components  # Removed mock_announce
+        self, mock_call_after, mock_event_handlers, mock_ui_manager, wx_app, mock_components
     ):
         """Test UI elements are updated and enabled on fetch success."""
         app = None
@@ -220,9 +229,7 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
             # Trigger fetch, simulating success in callbacks via fetcher mocks
             location = ("Test City", 35.0, -80.0)
             mock_forecast_data = {
-                "properties": {
-                    "periods": [{"name": "Today", "detailedForecast": "Sunny"}]
-                }  # noqa E501
+                "properties": {"periods": [{"name": "Today", "detailedForecast": "Sunny"}]}
             }
             mock_alerts_data = {"features": [{"properties": {"event": "Flood Warning"}}]}
 

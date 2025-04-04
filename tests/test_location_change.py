@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 # mypy: ignore-errors
 import wx
+import wx.richtext  # Added import
 
 
 class TestLocationChange(unittest.TestCase):
@@ -64,18 +65,31 @@ class TestLocationChange(unittest.TestCase):
         }
 
         # Import here to avoid circular imports
+        from accessiweather.gui.event_handlers import WeatherAppEventHandlers
         from accessiweather.gui.weather_app import WeatherApp
 
         # Create WeatherApp with mocked dependencies
-        with patch(
-            "wx.CallAfter",
-            side_effect=lambda func, *args, **kwargs: func(*args, **kwargs),
-        ):
+        # Patch UIManager and EventHandlers
+        # Create a mock for location_choice here so we can reference it later
+        with patch("accessiweather.gui.ui_manager.UIManager") as self.mock_ui_manager_class:
+            # Store the mock UI manager instance
+            self.mock_ui_manager_instance = MagicMock()
+            self.mock_ui_manager_class.return_value = self.mock_ui_manager_instance
+
             self.frame = WeatherApp(
                 location_manager=self.location_manager_mock,
                 api_client=self.api_client_mock,
                 notifier=self.notifier_mock,
             )
+
+            # Manually add MagicMock instances for required UI elements
+            self.frame.location_choice = MagicMock(spec=wx.Choice)
+            self.frame.refresh_btn = MagicMock(spec=wx.Button)
+            self.frame.forecast_text = MagicMock(spec=wx.richtext.RichTextCtrl)
+            self.frame.alerts_list = MagicMock(spec=wx.ListCtrl)
+
+            # Create a real event handler instance with our frame
+            self.frame.event_handlers = WeatherAppEventHandlers(self.frame)
 
     def tearDown(self):
         """Clean up the test environment after each test."""
@@ -142,26 +156,33 @@ class TestLocationChange(unittest.TestCase):
 
         self.frame.alerts_fetcher.fetch = mock_alerts_fetch
 
-        # Simulate selecting Los Angeles
-        self.location_manager_mock.get_current_location.return_value = (
-            "Los Angeles",
-            34.0522,
-            -118.2437,
-        )
-
-        # Mock the location choice selection
-        with patch.object(
-            self.frame.location_choice,
-            "GetStringSelection",
-            return_value="Los Angeles",
+        # Patch the specific UI update methods on the real UIManager instance
+        # to prevent them from running and potentially causing errors due to
+        # other missing mocks.
+        with patch.object(self.frame.ui_manager, "_UpdateForecastDisplay"), patch.object(
+            self.frame.ui_manager, "_UpdateAlertsDisplay"
         ):
-            # Trigger the location change event
-            self.frame.OnLocationChange(None)
+            # Simulate selecting Los Angeles
+            self.location_manager_mock.get_current_location.return_value = (
+                "Los Angeles",
+                34.0522,
+                -118.2437,
+            )
 
-            # Verify location manager was updated
+            # Mock the location choice selection (needed by the handler)
+            # Use self.frame.location_choice now that it's manually mocked
+            self.frame.location_choice.GetStringSelection.return_value = "Los Angeles"
+
+            # Trigger the location change event using the real handler instance
+            self.frame.event_handlers.OnLocationChange(None)
+
+            # Verify location manager was updated (called by the handler)
             self.location_manager_mock.set_current_location.assert_called_with("Los Angeles")
 
             # Verify test hooks were called with the correct data
+            # These are called via wx.CallAfter from the fetcher callbacks,
+            # which eventually call the real _on_forecast_fetched/
+            # _on_alerts_fetched on the frame, calling our test hooks.
             forecast_callback.assert_called_once_with(self.la_forecast)
             alerts_callback.assert_called_once_with({"features": []})
 

@@ -1,7 +1,6 @@
 """Tests for asynchronous forecast and alert fetching."""
 
 import queue
-import threading
 import time
 from unittest.mock import MagicMock  # Removed unused patch
 
@@ -43,117 +42,105 @@ def event_queue():
     return queue.Queue()
 
 
-def test_forecast_fetch_success(wx_app):
+def test_forecast_fetch_success(wx_app, frame, mock_api_client):
     """Test successful forecast fetch."""
-    with frame(wx_app):  # Removed unused 'frm' variable
-        mock_client = mock_api_client()
-        expected_forecast = {"properties": {"periods": [{"name": "Today", "temperature": 75}]}}
-        mock_client.get_forecast.return_value = expected_forecast
+    # No 'with' needed, frame fixture provides the frame
+    mock_client = mock_api_client  # Use injected fixture
+    expected_forecast = {"properties": {"periods": [{"name": "Today", "temperature": 75}]}}
+    mock_client.get_forecast.return_value = expected_forecast
 
-        fetcher = ForecastFetcher(mock_client)
-        callback_finished_event = threading.Event()
+    fetcher = ForecastFetcher(mock_client)
 
-        def on_success(forecast_data):
-            assert forecast_data == expected_forecast
-            callback_finished_event.set()
+    mock_success_callback = MagicMock()
+    fetcher.fetch(35.0, -80.0, on_success=mock_success_callback)
 
-        fetcher.fetch(35.0, -80.0, on_success=on_success)
+    # Allow time for thread and callback scheduling
+    time.sleep(0.2)
+    wx.GetApp().ProcessPendingEvents()  # Process events once
+    # Add another small sleep just in case
+    time.sleep(0.1)
 
-        start_time = time.time()
-        timeout = 10
-        processed_event = False
-        while time.time() - start_time < timeout:
-            if callback_finished_event.wait(timeout=0.01):
-                processed_event = True
-                break
-            wx.YieldIfNeeded()
-        assert processed_event, "Callback did not finish within the timeout."
+    mock_success_callback.assert_called_once()
+    # Verify the data passed to the callback
+    args, _ = mock_success_callback.call_args
+    assert args[0] == expected_forecast
 
-        mock_client.get_forecast.assert_called_once_with(35.0, -80.0)
+    mock_client.get_forecast.assert_called_once_with(35.0, -80.0)
 
 
-def test_forecast_fetch_error(wx_app):
+def test_forecast_fetch_error(wx_app, frame, mock_api_client):
     """Test forecast fetch error handling."""
-    with frame(wx_app):  # Removed unused 'frm' variable
-        mock_client = mock_api_client()
-        error_message = "Network error fetching forecast"
-        mock_client.get_forecast.side_effect = ApiClientError(error_message)
+    # No 'with' needed, frame fixture provides the frame
+    mock_client = mock_api_client  # Use injected fixture
+    error_message = "Network error fetching forecast"
+    mock_client.get_forecast.side_effect = ApiClientError(error_message)
 
-        fetcher = ForecastFetcher(mock_client)
-        callback_finished_event = threading.Event()
+    fetcher = ForecastFetcher(mock_client)
 
-        def on_error(error):
-            assert error == f"Unable to retrieve forecast data: {error_message}"
-            callback_finished_event.set()
+    mock_error_callback = MagicMock()
+    fetcher.fetch(35.0, -80.0, on_error=mock_error_callback)
 
-        fetcher.fetch(35.0, -80.0, on_error=on_error)
+    # Allow time for thread and callback scheduling
+    time.sleep(0.2)
+    wx.GetApp().ProcessPendingEvents()  # Process events once
+    # Add another small sleep just in case
+    time.sleep(0.1)
 
-        start_time = time.time()
-        timeout = 10
-        processed_event = False
-        while time.time() - start_time < timeout:
-            if callback_finished_event.wait(timeout=0.01):
-                processed_event = True
-                break
-            wx.YieldIfNeeded()
-        assert processed_event, "Error callback did not finish within the timeout."
+    mock_error_callback.assert_called_once()
+    # Verify the error message passed to the callback
+    args, _ = mock_error_callback.call_args
+    assert args[0] == f"Unable to retrieve forecast data: {error_message}"
 
-        mock_client.get_forecast.assert_called_once_with(35.0, -80.0)
+    mock_client.get_forecast.assert_called_once_with(35.0, -80.0)
 
 
-def test_alerts_fetch_success(wx_app):
+def test_alerts_fetch_success(wx_app, frame, mock_api_client):
     """Test successful alerts fetch."""
-    with frame(wx_app):  # Removed unused 'frm' variable
-        mock_client = mock_api_client()
-        expected_alerts = {"features": [{"properties": {"event": "Test Alert"}}]}
-        mock_client.get_alerts.return_value = expected_alerts
+    # No 'with' needed, frame fixture provides the frame
+    mock_client = mock_api_client  # Use injected fixture
+    expected_alerts = {"features": [{"properties": {"event": "Test Alert"}}]}
+    mock_client.get_alerts.return_value = expected_alerts
 
-        fetcher = AlertsFetcher(mock_client)
-        callback_finished_event = threading.Event()
+    fetcher = AlertsFetcher(mock_client)
 
-        def on_success(alerts_data):
-            assert alerts_data == expected_alerts
-            callback_finished_event.set()
+    mock_success_callback = MagicMock()
+    fetcher.fetch(35.0, -80.0, on_success=mock_success_callback)
 
-        fetcher.fetch(35.0, -80.0, on_success=on_success)
+    # Allow time for thread and callback scheduling
+    time.sleep(0.2)
+    wx.GetApp().ProcessPendingEvents()  # Process events once
+    # Add another small sleep just in case
+    time.sleep(0.1)
 
-        start_time = time.time()
-        timeout = 10
-        processed_event = False
-        while time.time() - start_time < timeout:
-            if callback_finished_event.wait(timeout=0.01):
-                processed_event = True
-                break
-            wx.YieldIfNeeded()
-        assert processed_event, "Callback did not finish within the timeout."
+    mock_success_callback.assert_called_once()
+    # Verify the data passed to the callback
+    args, _ = mock_success_callback.call_args
+    assert args[0] == expected_alerts
 
-        mock_client.get_alerts.assert_called_once_with(35.0, -80.0)
+    mock_client.get_alerts.assert_called_once_with(35.0, -80.0)
 
 
-def test_alerts_fetch_error(wx_app):
+def test_alerts_fetch_error(wx_app, frame, mock_api_client):
     """Test alerts fetch error handling."""
-    with frame(wx_app):  # Removed unused 'frm' variable
-        mock_client = mock_api_client()
-        error_message = "Network error fetching alerts"
-        mock_client.get_alerts.side_effect = ApiClientError(error_message)
+    # No 'with' needed, frame fixture provides the frame
+    mock_client = mock_api_client  # Use injected fixture
+    error_message = "Network error fetching alerts"
+    mock_client.get_alerts.side_effect = ApiClientError(error_message)
 
-        fetcher = AlertsFetcher(mock_client)
-        callback_finished_event = threading.Event()
+    fetcher = AlertsFetcher(mock_client)
 
-        def on_error(error):
-            assert error == f"Unable to retrieve alerts data: {error_message}"
-            callback_finished_event.set()
+    mock_error_callback = MagicMock()
+    fetcher.fetch(35.0, -80.0, on_error=mock_error_callback)
 
-        fetcher.fetch(35.0, -80.0, on_error=on_error)
+    # Allow time for thread and callback scheduling
+    time.sleep(0.2)
+    wx.GetApp().ProcessPendingEvents()  # Process events once
+    # Add another small sleep just in case
+    time.sleep(0.1)
 
-        start_time = time.time()
-        timeout = 10
-        processed_event = False
-        while time.time() - start_time < timeout:
-            if callback_finished_event.wait(timeout=0.01):
-                processed_event = True
-                break
-            wx.YieldIfNeeded()
-        assert processed_event, "Error callback did not finish within the timeout."
+    mock_error_callback.assert_called_once()
+    # Verify the error message passed to the callback
+    args, _ = mock_error_callback.call_args
+    assert args[0] == f"Unable to retrieve alerts data: {error_message}"
 
-        mock_client.get_alerts.assert_called_once_with(35.0, -80.0)
+    mock_client.get_alerts.assert_called_once_with(35.0, -80.0)

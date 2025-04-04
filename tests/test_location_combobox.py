@@ -12,7 +12,7 @@ from accessiweather.gui.dialogs import LocationDialog
 
 
 # Create a wx App fixture for testing
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")  # Change scope to function
 def wx_app():
     """Create a wx App for testing."""
     app = wx.App(False)
@@ -58,16 +58,10 @@ class TestLocationDialogWithComboBox:
 
     def setup_method(self):
         """Set up test fixture."""
-        # Ensure wx.App exists
-        try:
-            app = wx.GetApp()
-            if app is None:
-                self.app = wx.App(False)
-        except Exception:
-            self.app = wx.App(False)
+        # wx.App is now handled by the function-scoped wx_app fixture
+        # No need to create it manually here
 
-        # Create parent frame
-        self.frame = wx.Frame(None)
+        # Frame creation moved to individual tests
 
         # Create patch for geocoding service
         patch_target = "accessiweather.gui.dialogs.GeocodingService"
@@ -82,16 +76,12 @@ class TestLocationDialogWithComboBox:
         # Stop geocoding patch
         self.geocoding_patcher.stop()
 
-        # Destroy frame safely
-        try:
-            # Import moved to top
-            safe_call_after(self.frame.Destroy)
-        except Exception:
-            pass  # Ignore any errors in cleanup
+        # Frame destruction handled by safe_destroy in individual tests
 
     def test_search_combo_initialization(self, wx_app, safe_destroy):
         """Test that the search control is an AccessibleComboBox."""
-        dialog = safe_destroy(LocationDialog(self.frame))
+        frame = safe_destroy(wx.Frame(None))
+        dialog = safe_destroy(LocationDialog(frame))
         # Verify that search_field is an AccessibleComboBox
         assert isinstance(dialog.search_field, AccessibleComboBox)
         assert dialog.search_field.GetName() == "Search by Address or ZIP Code"
@@ -101,7 +91,8 @@ class TestLocationDialogWithComboBox:
 
     def test_search_history_persistence(self, wx_app, safe_destroy):
         """Test that search history is persisted between searches."""
-        dialog = safe_destroy(LocationDialog(self.frame))
+        frame = safe_destroy(wx.Frame(None))
+        dialog = safe_destroy(LocationDialog(frame))
         self.mock_geocoding.geocode_address.return_value = (
             35.0,
             -80.0,
@@ -137,7 +128,8 @@ class TestLocationDialogWithComboBox:
 
     def test_combo_selection_triggers_search(self, wx_app, safe_destroy):
         """Test that selecting an item from the dropdown triggers a search."""
-        dialog = safe_destroy(LocationDialog(self.frame))
+        frame = safe_destroy(wx.Frame(None))
+        dialog = safe_destroy(LocationDialog(frame))
         self.mock_geocoding.geocode_address.return_value = (
             35.0,
             -80.0,
@@ -165,7 +157,8 @@ class TestLocationDialogWithComboBox:
 
     def test_duplicate_search_terms_not_added(self, wx_app, safe_destroy):
         """Test that duplicate search terms aren't added to history."""
-        dialog = safe_destroy(LocationDialog(self.frame))
+        frame = safe_destroy(wx.Frame(None))
+        dialog = safe_destroy(LocationDialog(frame))
         self.mock_geocoding.geocode_address.return_value = (
             35.0,
             -80.0,
@@ -191,7 +184,8 @@ class TestLocationDialogWithComboBox:
 
     def test_max_history_items(self, wx_app, safe_destroy):
         """Test that only a limited number of search terms are kept."""
-        dialog = safe_destroy(LocationDialog(self.frame))
+        frame = safe_destroy(wx.Frame(None))
+        dialog = safe_destroy(LocationDialog(frame))
         self.mock_geocoding.geocode_address.return_value = (
             35.0,
             -80.0,
