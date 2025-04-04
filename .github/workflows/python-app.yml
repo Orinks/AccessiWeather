@@ -35,7 +35,7 @@ jobs:
             # Install essential test deps as fallback
             pip install flake8 pytest pytest-mock pytest-timeout
             # Install specific dependencies needed for the project
-            pip install requests piver gcopy python-dateutil mock
+            pip install requests plyer python-dateutil mock
         }
 
     - name: Setup wxPython mock for headless testing
