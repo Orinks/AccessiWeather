@@ -34,8 +34,25 @@ jobs:
             # Install essential test deps as fallback
             pip install flake8 pytest pytest-mock pytest-timeout
             # Install specific dependencies needed for the project
-            pip install requests wxPython piver gcopy python-dateutil
+            pip install requests piver gcopy python-dateutil mock
         }
+
+    - name: Setup wxPython mock for headless testing
+      run: |
+        echo "Setting up wxPython mock for headless testing..."
+        # Create a directory for the mock
+        $mockDir = "wx"
+        if (-not (Test-Path $mockDir)) {
+            New-Item -Path $mockDir -ItemType Directory -Force
+        }
+        
+        # Create __init__.py that imports from our mock
+        $initContent = "from tests.wx_mock import *"
+        Set-Content -Path "$mockDir\__init__.py" -Value $initContent
+        
+        # Add the mock directory to PYTHONPATH
+        echo "PYTHONPATH=$pwd\$mockDir;$env:PYTHONPATH" | Out-File -FilePath $env:GITHUB_ENV -Append
+        echo "wxPython mock setup complete"
 
     - name: Lint with flake8
       run: |
@@ -74,9 +91,8 @@ jobs:
     - name: Test with pytest
       run: |
         # Run with verbose output and show local variables on failure
-        # Skip tests that might make real API calls
-        # Use PowerShell's Start-Process with a timeout
-        $process = Start-Process -FilePath python -ArgumentList "-m", "pytest", "tests/", "-v", "-s", "--showlocals", "--no-header", "--no-summary", "-k", "not (test_get_point_data_real or test_get_alerts_real or test_get_discussion_real)" -NoNewWindow -PassThru
+        # Skip all GUI tests and real API calls
+        $process = Start-Process -FilePath python -ArgumentList "-m", "pytest", "tests/", "-v", "-s", "--showlocals", "--no-header", "--no-summary", "-k", "not (test_gui or test_accessible_combo_box or test_location_dialog or test_location_combobox or test_gui_loading or test_get_point_data_real or test_get_alerts_real or test_get_discussion_real)" -NoNewWindow -PassThru
         Wait-Process -InputObject $process -Timeout 300 -ErrorAction SilentlyContinue
         if (-not $process.HasExited -or $process.ExitCode -ne 0) {
             echo "Tests failed or timed out but continuing workflow"
@@ -87,7 +103,7 @@ jobs:
             exit $process.ExitCode
         }
       continue-on-error: true
-      # Set environment variables needed for testing
       env:
         ACCESSIWEATHER_TESTING: '1' # Used by tests to skip GUI elements
         ACCESSIWEATHER_SKIP_API_CALLS: '1' # Used by api_client to bypass lock/sleep
+        ACCESSIWEATHER_HEADLESS: '1' # Indicate headless environment
