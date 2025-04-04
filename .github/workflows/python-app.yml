@@ -31,8 +31,8 @@ jobs:
             pip install -r requirements-dev.txt
         } else {
             echo "Warning: requirements-dev.txt not found."
-            # Install essential test deps as fallback
-            pip install flake8 pytest pytest-mock pytest-timeout
+            # Install essential test deps and formatters as fallback
+            pip install flake8 pytest pytest-mock pytest-timeout black isort
             # Install specific dependencies needed for the project
             pip install requests plyer python-dateutil mock
         }
@@ -56,6 +56,14 @@ jobs:
         # Add the mock directory to PYTHONPATH using GITHUB_ENV
         echo "PYTHONPATH=$($pwd)\$mockDir;$($env:PYTHONPATH)" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "wxPython mock setup complete"
+
+    - name: Check formatting with isort
+      run: |
+        isort --check .
+
+    - name: Check formatting with black
+      run: |
+        black --check .
 
     - name: Lint with flake8
       run: |
