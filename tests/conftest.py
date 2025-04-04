@@ -5,18 +5,18 @@ import tempfile
 
 import pytest
 
-# We need a wx App for testing wx components
-# The pytest-wx plugin provides this fixture automatically.
-# Defining it here can cause conflicts.
-# @pytest.fixture(scope="session")  # Use session scope for efficiency
+import wx  # Make sure wx is imported
 
-# def wx_app():
-#     """Create a wx App for testing (session-scoped)"""
-#     app = wx.App()
-#     yield app
-#     # Optional cleanup if needed, though usually pytest handles it.
-#     # wx.CallLater(100, app.ExitMainLoop)
-#     # app.MainLoop()
+
+# We need a wx App for testing wx components
+@pytest.fixture(scope="session")  # Use session scope for efficiency
+def wx_app():
+    """Create a wx App for testing (session-scoped)"""
+    app = wx.App()
+    yield app
+    # Optional cleanup if needed, though usually pytest handles it.
+    # wx.CallLater(100, app.ExitMainLoop)
+    # app.MainLoop() # MainLoop should not be called in tests
 
 
 @pytest.fixture

@@ -202,8 +202,10 @@ def test_fetch_thread_handles_errors(frame):
     error_service.suggest_locations.side_effect = Exception("Test error")
     autocomplete.set_geocoding_service(error_service)
 
-    # Patch the logger directly in the module where it's used
-    with patch("accessiweather.gui.ui_components.logger") as mock_logger:
+    # Patch the logger directly in the location_autocomplete module
+    with patch(
+        "accessiweather.gui.location_autocomplete.logger"
+    ) as mock_logger:
         # Call the thread function directly
         autocomplete._fetch_thread_func("New")
 

@@ -1,4 +1,4 @@
-"""Tests for the NOAA API client"""
+t"""Tests for the NOAA API client"""
 
 from unittest.mock import MagicMock, patch
 
@@ -349,8 +349,8 @@ class TestNoaaApiClient:
         with pytest.raises(ApiClientError) as exc_info:
             api_client.get_point_data(35.0, -80.0)
 
-        # Verify the error message
-        assert "Network error during API request" in str(exc_info.value)
+        # Verify the error message (updated for retry logic)
+        assert "Request failed after 1 retries" in str(exc_info.value)
         # Verify logger.error was called (suppressing traceback)
         mock_logger_error.assert_called_once()
         # Optional: Check arguments if needed for more specific verification
