@@ -1,4 +1,4 @@
-"""Tests for the location manager module"""
+"""Tests for the location manager module."""
 
 import json
 import os
@@ -11,32 +11,30 @@ from accessiweather.location import LocationManager
 
 @pytest.fixture
 def temp_config_dir():
-    """Create a temporary directory for test config files"""
+    """Create a temporary directory for test config files."""
     with tempfile.TemporaryDirectory() as temp_dir:
         yield temp_dir
 
 
 @pytest.fixture
 def location_manager(temp_config_dir):
-    """Create a LocationManager with a temporary config directory"""
+    """Create a LocationManager with a temporary config directory."""
     return LocationManager(config_dir=temp_config_dir)
 
 
 class TestLocationManager:
-    """Test suite for LocationManager"""
+    """Test suite for LocationManager."""
 
     def test_init(self, location_manager, temp_config_dir):
-        """Test initialization and directory creation"""
+        """Test initialization and directory creation."""
         assert location_manager.config_dir == temp_config_dir
-        assert location_manager.locations_file == os.path.join(
-            temp_config_dir, "locations.json"
-        )
+        assert location_manager.locations_file == os.path.join(temp_config_dir, "locations.json")
         assert location_manager.current_location is None
         assert location_manager.saved_locations == {}
         assert os.path.exists(temp_config_dir)
 
     def test_add_location(self, location_manager):
-        """Test adding a location"""
+        """Test adding a location."""
         # Add a location
         location_manager.add_location("Home", 35.0, -80.0)
 
@@ -64,7 +62,7 @@ class TestLocationManager:
         assert location_manager.current_location == "Home"
 
     def test_remove_location(self, location_manager):
-        """Test removing a location"""
+        """Test removing a location."""
         # Add locations
         location_manager.add_location("Home", 35.0, -80.0)
         location_manager.add_location("Work", 36.0, -81.0)
@@ -86,7 +84,7 @@ class TestLocationManager:
         assert result is False
 
     def test_set_current_location(self, location_manager):
-        """Test setting the current location"""
+        """Test setting the current location."""
         # Add locations
         location_manager.add_location("Home", 35.0, -80.0)
         location_manager.add_location("Work", 36.0, -81.0)
@@ -102,7 +100,7 @@ class TestLocationManager:
         assert location_manager.current_location == "Work"  # Unchanged
 
     def test_get_current_location(self, location_manager):
-        """Test getting the current location"""
+        """Test getting the current location."""
         # When no location is set
         assert location_manager.get_current_location() is None
 
@@ -114,7 +112,7 @@ class TestLocationManager:
         assert current == ("Home", 35.0, -80.0)
 
     def test_get_all_locations(self, location_manager):
-        """Test getting all locations"""
+        """Test getting all locations."""
         # When no locations are saved
         assert location_manager.get_all_locations() == []
 
@@ -127,7 +125,7 @@ class TestLocationManager:
         assert sorted(all_locations) == sorted(["Home", "Work"])
 
     def test_load_locations(self, temp_config_dir):
-        """Test loading locations from file"""
+        """Test loading locations from file."""
         # Create a locations file
         test_data = {
             "locations": {
@@ -149,7 +147,7 @@ class TestLocationManager:
         assert manager.current_location == test_data["current"]
 
     def test_save_locations(self, location_manager):
-        """Test saving locations to file"""
+        """Test saving locations to file."""
         # Add locations
         location_manager.add_location("Home", 35.0, -80.0)
         location_manager.add_location("Work", 36.0, -81.0)

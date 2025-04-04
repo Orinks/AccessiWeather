@@ -1,5 +1,5 @@
 # tests/test_gui_loading.py
-"""Tests specifically for loading feedback in WeatherApp"""
+"""Tests specifically for loading feedback in WeatherApp."""
 
 import os  # Import os module
 
@@ -21,10 +21,8 @@ from accessiweather.gui.weather_app import WeatherApp
 # Minimal fixture redefinition for standalone use (adapt as needed)
 @pytest.fixture
 def mock_components_loading():
-    """Minimal mock components for loading tests"""
-    with patch(
-        "accessiweather.api_client.NoaaApiClient"
-    ) as mock_api_client_class, patch(
+    """Minimal mock components for loading tests."""
+    with patch("accessiweather.api_client.NoaaApiClient") as mock_api_client_class, patch(
         "accessiweather.notifications.WeatherNotifier"
     ) as mock_notifier_class, patch(
         "accessiweather.location.LocationManager"
@@ -61,11 +59,12 @@ def mock_components_loading():
     reason="GUI test skipped in CI",
 )
 class TestWeatherAppLoadingFeedback(TestWeatherApp):
-    """Tests specifically for loading feedback and related UI states"""
+    """Tests specifically for loading feedback and related UI states."""
 
     # Use the locally defined fixture for components
     @pytest.fixture
     def mock_components(self, mock_components_loading):
+        """Fixture to provide mock components for these tests."""
         return mock_components_loading
 
     # Removed duplicated announcement tests as the feature was removed
@@ -77,7 +76,7 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
     def test_ui_state_during_fetch(
         self, mock_call_after, wx_app, mock_components  # Removed mock_announce
     ):
-        """Test UI elements are disabled/show loading during fetch"""
+        """Test UI elements are disabled/show loading during fetch."""
         app = None
         try:
             app = WeatherApp(
@@ -97,9 +96,9 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
             location = ("Test City", 35.0, -80.0)
             # Mock the fetcher methods directly to prevent actual calls
             # Assign to _ as mocks are not used directly
-            with patch.object(
-                app.forecast_fetcher, "fetch"
-            ) as _, patch.object(app.alerts_fetcher, "fetch") as _:
+            with patch.object(app.forecast_fetcher, "fetch") as _, patch.object(
+                app.alerts_fetcher, "fetch"
+            ) as _:
                 app._FetchWeatherData(location)
 
             # Assertions immediately after calling _FetchWeatherData
@@ -131,7 +130,7 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
         wx_app,
         mock_components,
     ):
-        """Test UI elements are re-enabled/show error on fetch failure"""
+        """Test UI elements are re-enabled/show error on fetch failure."""
         app = None
         try:
             app = WeatherApp(
@@ -178,9 +177,8 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
             app.refresh_btn.Enable.assert_called()  # Re-enabled
             # Check forecast text shows error
             app.forecast_text.SetValue.assert_called()
-            assert (
-                "Error fetching forecast"
-                in app.forecast_text.SetValue.call_args[0][0]
+            assert "Error fetching forecast" in (
+                app.forecast_text.SetValue.call_args[0][0]
             )  # noqa E501
             # Check alerts list is cleared
             app.alerts_list.DeleteAllItems.assert_called()
@@ -198,7 +196,7 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
     def test_ui_state_on_fetch_success(
         self, mock_call_after, wx_app, mock_components  # Removed mock_announce
     ):
-        """Test UI elements are updated and enabled on fetch success"""
+        """Test UI elements are updated and enabled on fetch success."""
         app = None
         try:
             app = WeatherApp(
@@ -217,9 +215,7 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
             app.ui_manager._UpdateForecastDisplay = MagicMock()
             app.ui_manager._UpdateAlertsDisplay = MagicMock()
             # Mock return value for alerts display as it's used in main app
-            app.ui_manager._UpdateAlertsDisplay.return_value = [
-                {"event": "Flood Warning"}
-            ]
+            app.ui_manager._UpdateAlertsDisplay.return_value = [{"event": "Flood Warning"}]
 
             # Trigger fetch, simulating success in callbacks via fetcher mocks
             location = ("Test City", 35.0, -80.0)
@@ -228,9 +224,7 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
                     "periods": [{"name": "Today", "detailedForecast": "Sunny"}]
                 }  # noqa E501
             }
-            mock_alerts_data = {
-                "features": [{"properties": {"event": "Flood Warning"}}]
-            }
+            mock_alerts_data = {"features": [{"properties": {"event": "Flood Warning"}}]}
 
             with patch.object(
                 app.forecast_fetcher,
@@ -256,12 +250,8 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
             # Assertions after success handlers
             app.refresh_btn.Enable.assert_called_once()  # Re-enabled
             # Check UIManager methods were called
-            app.ui_manager._UpdateForecastDisplay.assert_called_once_with(
-                mock_forecast_data
-            )
-            app.ui_manager._UpdateAlertsDisplay.assert_called_once_with(
-                mock_alerts_data
-            )
+            app.ui_manager._UpdateForecastDisplay.assert_called_once_with(mock_forecast_data)
+            app.ui_manager._UpdateAlertsDisplay.assert_called_once_with(mock_alerts_data)
 
             # pytest.fail("UI mocking needs refinement.") # Keep failing
 

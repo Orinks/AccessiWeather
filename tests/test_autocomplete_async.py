@@ -1,4 +1,4 @@
-"""Tests for asynchronous behavior of WeatherLocationAutocomplete"""
+"""Tests for asynchronous behavior of WeatherLocationAutocomplete."""
 
 import time
 from unittest.mock import MagicMock, patch
@@ -7,14 +7,12 @@ import pytest
 import wx
 
 from accessiweather.geocoding import GeocodingService
-from accessiweather.gui.location_autocomplete import (
-    WeatherLocationAutocomplete,
-)
+from accessiweather.gui.location_autocomplete import WeatherLocationAutocomplete
 
 
 @pytest.fixture(autouse=True)
 def setup_wx_testing():
-    """Set up wx testing mode for autocomplete testing"""
+    """Set up wx testing mode for autocomplete testing."""
     # Set testing flag for wx
     wx.testing = True
     yield
@@ -25,6 +23,7 @@ def setup_wx_testing():
 
 @pytest.fixture
 def wx_app():
+    """Fixture for creating a wx.App instance."""
     app = wx.App()
     yield app
     app.Destroy()
@@ -32,6 +31,7 @@ def wx_app():
 
 @pytest.fixture
 def frame(wx_app):
+    """Fixture for creating a wx.Frame instance."""
     frame = wx.Frame(None)
     yield frame
     frame.Destroy()
@@ -39,6 +39,7 @@ def frame(wx_app):
 
 @pytest.fixture
 def mock_geocoding_service():
+    """Fixture for creating a mock GeocodingService."""
     geocoding_service = MagicMock(spec=GeocodingService)
     # Mock the function that will suggest locations
     geocoding_service.suggest_locations.return_value = [
@@ -51,7 +52,7 @@ def mock_geocoding_service():
 
 @pytest.fixture
 def slow_geocoding_service():
-    """Create a mock geocoding service that takes time to respond"""
+    """Create a mock geocoding service that takes time to respond."""
     geocoding_service = MagicMock(spec=GeocodingService)
 
     def slow_suggest(text):
@@ -64,10 +65,8 @@ def slow_geocoding_service():
 
 
 def test_debounce_timer_creation(frame):
-    """Test that the debounce timer is created properly"""
-    autocomplete = WeatherLocationAutocomplete(
-        frame, label="Test Autocomplete"
-    )
+    """Test that the debounce timer is created properly."""
+    autocomplete = WeatherLocationAutocomplete(frame, label="Test Autocomplete")
 
     # Check that timer exists and is configured
     assert hasattr(autocomplete, "debounce_timer")
@@ -76,16 +75,12 @@ def test_debounce_timer_creation(frame):
 
 
 def test_debounce_timer_starts_on_text_change(frame, mock_geocoding_service):
-    """Test that the debounce timer starts when text changes"""
-    autocomplete = WeatherLocationAutocomplete(
-        frame, label="Test Autocomplete"
-    )
+    """Test that the debounce timer starts when text changes."""
+    autocomplete = WeatherLocationAutocomplete(frame, label="Test Autocomplete")
     autocomplete.set_geocoding_service(mock_geocoding_service)
 
     # Patch the timer methods
-    with patch.object(
-        autocomplete.debounce_timer, "Stop"
-    ) as mock_stop, patch.object(
+    with patch.object(autocomplete.debounce_timer, "Stop") as mock_stop, patch.object(
         autocomplete.debounce_timer, "Start"
     ) as mock_start:
 
@@ -99,10 +94,8 @@ def test_debounce_timer_starts_on_text_change(frame, mock_geocoding_service):
 
 
 def test_debounce_timer_triggers_fetch(frame, mock_geocoding_service):
-    """Test that the debounce timer triggers fetch when it fires"""
-    autocomplete = WeatherLocationAutocomplete(
-        frame, label="Test Autocomplete"
-    )
+    """Test that the debounce timer triggers fetch when it fires."""
+    autocomplete = WeatherLocationAutocomplete(frame, label="Test Autocomplete")
     autocomplete.set_geocoding_service(mock_geocoding_service)
 
     # Patch the _fetch_suggestions method
@@ -118,10 +111,8 @@ def test_debounce_timer_triggers_fetch(frame, mock_geocoding_service):
 
 
 def test_fetch_suggestions_uses_threading(frame, mock_geocoding_service):
-    """Test that _fetch_suggestions starts a background thread"""
-    autocomplete = WeatherLocationAutocomplete(
-        frame, label="Test Autocomplete"
-    )
+    """Test that _fetch_suggestions starts a background thread."""
+    autocomplete = WeatherLocationAutocomplete(frame, label="Test Autocomplete")
     autocomplete.set_geocoding_service(mock_geocoding_service)
 
     # Patch the threading.Thread
@@ -141,10 +132,8 @@ def test_fetch_suggestions_uses_threading(frame, mock_geocoding_service):
 
 
 def test_fetch_thread_cancellation(frame, slow_geocoding_service):
-    """Test that in-progress fetches can be cancelled"""
-    autocomplete = WeatherLocationAutocomplete(
-        frame, label="Test Autocomplete"
-    )
+    """Test that in-progress fetches can be cancelled."""
+    autocomplete = WeatherLocationAutocomplete(frame, label="Test Autocomplete")
     autocomplete.set_geocoding_service(slow_geocoding_service)
 
     # Mock the threading.Thread to capture what happens
@@ -170,10 +159,8 @@ def test_fetch_thread_cancellation(frame, slow_geocoding_service):
 
 
 def test_fetch_thread_updates_ui_on_completion(frame, mock_geocoding_service):
-    """Test that the fetch thread updates the UI when complete"""
-    autocomplete = WeatherLocationAutocomplete(
-        frame, label="Test Autocomplete"
-    )
+    """Test that the fetch thread updates the UI when complete."""
+    autocomplete = WeatherLocationAutocomplete(frame, label="Test Autocomplete")
     autocomplete.set_geocoding_service(mock_geocoding_service)
 
     # Patch wx.CallAfter
@@ -192,10 +179,8 @@ def test_fetch_thread_updates_ui_on_completion(frame, mock_geocoding_service):
 
 
 def test_fetch_thread_handles_errors(frame):
-    """Test that the fetch thread handles errors gracefully"""
-    autocomplete = WeatherLocationAutocomplete(
-        frame, label="Test Autocomplete"
-    )
+    """Test that the fetch thread handles errors gracefully."""
+    autocomplete = WeatherLocationAutocomplete(frame, label="Test Autocomplete")
 
     # Create a geocoding service that raises an exception
     error_service = MagicMock(spec=GeocodingService)
@@ -203,9 +188,7 @@ def test_fetch_thread_handles_errors(frame):
     autocomplete.set_geocoding_service(error_service)
 
     # Patch the logger directly in the location_autocomplete module
-    with patch(
-        "accessiweather.gui.location_autocomplete.logger"
-    ) as mock_logger:
+    with patch("accessiweather.gui.location_autocomplete.logger") as mock_logger:
         # Call the thread function directly
         autocomplete._fetch_thread_func("New")
 
@@ -217,10 +200,8 @@ def test_fetch_thread_handles_errors(frame):
 
 
 def test_integration_with_real_timer(frame, mock_geocoding_service):
-    """Test the full flow with a real timer (integration test)"""
-    autocomplete = WeatherLocationAutocomplete(
-        frame, label="Test Autocomplete"
-    )
+    """Test the full flow with a real timer (integration test)."""
+    autocomplete = WeatherLocationAutocomplete(frame, label="Test Autocomplete")
     autocomplete.set_geocoding_service(mock_geocoding_service)
 
     # Patch the methods we want to verify

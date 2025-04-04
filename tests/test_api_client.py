@@ -1,4 +1,4 @@
-"""Tests for the NOAA API client"""
+"""Tests for the NOAA API client."""
 
 from unittest.mock import MagicMock, patch
 
@@ -12,7 +12,7 @@ from accessiweather.api_client import ApiClientError, NoaaApiClient
 
 @pytest.fixture
 def mock_response():
-    """Create a mock response object"""
+    """Create a mock response object."""
     mock_resp = MagicMock()
     mock_resp.raise_for_status = MagicMock()
     mock_resp.json = MagicMock(return_value={"mock": "data"})
@@ -22,23 +22,21 @@ def mock_response():
 
 @pytest.fixture
 def api_client():
-    """Create an instance of the NoaaApiClient"""
+    """Create an instance of the NoaaApiClient."""
     return NoaaApiClient(user_agent="Test User Agent")
 
 
 @pytest.fixture
 def api_client_with_contact():
-    """Create an instance of the NoaaApiClient with contact information"""
-    return NoaaApiClient(
-        user_agent="Test User Agent", contact_info="test@example.com"
-    )
+    """Create an instance of the NoaaApiClient with contact information."""
+    return NoaaApiClient(user_agent="Test User Agent", contact_info="test@example.com")
 
 
 class TestNoaaApiClient:
-    """Test suite for NoaaApiClient"""
+    """Test suite for NoaaApiClient."""
 
     def test_init(self, api_client):
-        """Test client initialization without contact info"""
+        """Test client initialization without contact info."""
         print("START: test_init")
         assert api_client.user_agent == "Test User Agent"
         assert api_client.headers == {
@@ -48,7 +46,7 @@ class TestNoaaApiClient:
         print("END: test_init")
 
     def test_init_with_contact(self, api_client_with_contact):
-        """Test client initialization with contact info"""
+        """Test client initialization with contact info."""
         print("START: test_init_with_contact")
         assert api_client_with_contact.user_agent == "Test User Agent"
         assert api_client_with_contact.contact_info == "test@example.com"
@@ -60,13 +58,11 @@ class TestNoaaApiClient:
 
     @patch("accessiweather.api_client.requests.get")
     def test_get_point_data(self, mock_get, api_client, mock_response):
-        """Test retrieving point data"""
+        """Test retrieving point data."""
         print("START: test_get_point_data")
         # Configure mock response with a proper status code
         mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "properties": {"forecast": "test_forecast_url"}
-        }
+        mock_response.json.return_value = {"properties": {"forecast": "test_forecast_url"}}
         mock_get.return_value = mock_response
 
         # Call the method
@@ -85,16 +81,14 @@ class TestNoaaApiClient:
 
     @patch("accessiweather.api_client.requests.get")
     def test_get_forecast(self, mock_get, api_client, mock_response):
-        """Test retrieving forecast data"""
+        """Test retrieving forecast data."""
         print("START: test_get_forecast")
         # For the point data request
         point_mock = MagicMock()
         point_mock.status_code = 200
         point_mock.raise_for_status = MagicMock()
         forecast_url = "https://api.weather.gov/gridpoints/GSP/112,57/forecast"
-        point_mock.json = MagicMock(
-            return_value={"properties": {"forecast": forecast_url}}
-        )
+        point_mock.json = MagicMock(return_value={"properties": {"forecast": forecast_url}})
 
         # For the forecast request
         forecast_mock = mock_response
@@ -118,17 +112,13 @@ class TestNoaaApiClient:
 
     @patch("accessiweather.api_client.requests.get")
     def test_get_alerts(self, mock_get, api_client, mock_response):
-        """Test retrieving alerts"""
+        """Test retrieving alerts."""
         print("START: test_get_alerts")
         # Create point data mock response
         point_mock = MagicMock()
         point_mock.raise_for_status = MagicMock()
         point_mock.json = MagicMock(
-            return_value={
-                "properties": {
-                    "relativeLocation": {"properties": {"state": "NC"}}
-                }
-            }
+            return_value={"properties": {"relativeLocation": {"properties": {"state": "NC"}}}}
         )
         point_mock.status_code = 200
 
@@ -157,9 +147,7 @@ class TestNoaaApiClient:
         print("END: test_get_alerts")
 
     @patch("accessiweather.api_client.requests.get")
-    def test_get_alerts_county_fallback(
-        self, mock_get, api_client, mock_response
-    ):
+    def test_get_alerts_county_fallback(self, mock_get, api_client, mock_response):
         """Test alerts retrieval with county fallback for state."""
         print("START: test_get_alerts_county_fallback")
         # Create point data mock response with no relativeLocation
@@ -167,11 +155,7 @@ class TestNoaaApiClient:
         point_mock = MagicMock()
         point_mock.raise_for_status = MagicMock()
         point_mock.json = MagicMock(
-            return_value={
-                "properties": {
-                    "county": "https://api.weather.gov/zones/county/TXC141"
-                }
-            }
+            return_value={"properties": {"county": "https://api.weather.gov/zones/county/TXC141"}}
         )
         point_mock.status_code = 200
 
@@ -201,7 +185,7 @@ class TestNoaaApiClient:
 
     @patch("accessiweather.api_client.requests.get")
     def test_get_alerts_no_state(self, mock_get, api_client, mock_response):
-        """Test retrieving alerts when state cannot be determined"""
+        """Test retrieving alerts when state cannot be determined."""
         print("START: test_get_alerts_no_state")
         # Create point data mock response with no state information
         point_mock = MagicMock()
@@ -212,9 +196,7 @@ class TestNoaaApiClient:
         # Create alerts mock response with features
         alerts_mock = mock_response
         alerts_mock.status_code = 200
-        alerts_mock.json = MagicMock(
-            return_value={"features": [{"id": "test"}]}
-        )
+        alerts_mock.json = MagicMock(return_value={"features": [{"id": "test"}]})
 
         # Set up the side effects for consecutive calls
         mock_get.side_effect = [point_mock, alerts_mock]
@@ -242,17 +224,13 @@ class TestNoaaApiClient:
 
     @patch("accessiweather.api_client.NoaaApiClient.get_point_data")
     @patch("accessiweather.api_client.NoaaApiClient._make_request")
-    def test_get_alerts_michigan_location(
-        self, mock_make_request, mock_get_point_data
-    ):
+    def test_get_alerts_michigan_location(self, mock_make_request, mock_get_point_data):
         """Test retrieving alerts for a Michigan location (Lumberton)."""
         print("START: test_get_alerts_michigan_location")
         # Set up mock for get_point_data
         mock_get_point_data.return_value = {
             "properties": {
-                "relativeLocation": {
-                    "properties": {"state": "MI", "city": "Lumberton Township"}
-                }
+                "relativeLocation": {"properties": {"state": "MI", "city": "Lumberton Township"}}
             }
         }
 
@@ -293,7 +271,7 @@ class TestNoaaApiClient:
 
     @patch("accessiweather.api_client.requests.get")
     def test_get_discussion(self, mock_get, api_client):
-        """Test retrieving forecast discussion"""
+        """Test retrieving forecast discussion."""
         print("START: test_get_discussion")
         # Mock responses for the three API calls
         point_mock = MagicMock()
@@ -302,15 +280,11 @@ class TestNoaaApiClient:
 
         products_mock = MagicMock()
         products_mock.status_code = 200
-        products_mock.json.return_value = {
-            "@graph": [{"id": "ABC-AFD-202503121200"}]
-        }
+        products_mock.json.return_value = {"@graph": [{"id": "ABC-AFD-202503121200"}]}
 
         discussion_mock = MagicMock()
         discussion_mock.status_code = 200
-        discussion_mock.json.return_value = {
-            "productText": "Test forecast discussion text"
-        }
+        discussion_mock.json.return_value = {"productText": "Test forecast discussion text"}
 
         # Set up the side effects for consecutive calls
         mock_get.side_effect = [point_mock, products_mock, discussion_mock]
@@ -325,25 +299,19 @@ class TestNoaaApiClient:
         # Check calls
         calls = mock_get.call_args_list
         assert calls[0][0][0] == "https://api.weather.gov/points/35.0,-80.0"
-        products_url = (
-            "https://api.weather.gov/products/types/AFD/locations/ABC"
-        )
+        products_url = "https://api.weather.gov/products/types/AFD/locations/ABC"
         assert calls[1][0][0] == products_url
-        discussion_url = (
-            "https://api.weather.gov/products/ABC-AFD-202503121200"
-        )
+        discussion_url = "https://api.weather.gov/products/ABC-AFD-202503121200"
         assert calls[2][0][0] == discussion_url
         print("END: test_get_discussion")
 
     @patch("accessiweather.api_client.logger.error")  # Patch logger.error
     @patch("accessiweather.api_client.requests.get")
     def test_api_error_handling(self, mock_get, mock_logger_error, api_client):
-        """Test error handling and suppress traceback for expected errors"""
+        """Test error handling and suppress traceback for expected errors."""
         print("START: test_api_error_handling")
         # Mock a failed request with a requests.RequestException type
-        mock_get.side_effect = requests.RequestException(
-            "Test connection error"
-        )
+        mock_get.side_effect = requests.RequestException("Test connection error")
 
         # Test that the error is raised and converted to ApiClientError
         with pytest.raises(ApiClientError) as exc_info:
@@ -361,7 +329,7 @@ class TestNoaaApiClient:
 
     @patch("accessiweather.api_client.requests.get")
     def test_get_alerts_direct(self, mock_get, api_client, mock_response):
-        """Test retrieving alerts with direct URL"""
+        """Test retrieving alerts with direct URL."""
         print("START: test_get_alerts_direct")
         # Mock the response
         mock_response.status_code = 200
@@ -377,10 +345,8 @@ class TestNoaaApiClient:
         print("END: test_get_alerts_direct")
 
     @patch("accessiweather.api_client.requests.get")
-    def test_get_alerts_no_state_fallback(
-        self, mock_get, api_client, mock_response
-    ):
-        """Test retrieving alerts when no state can be determined"""
+    def test_get_alerts_no_state_fallback(self, mock_get, api_client, mock_response):
+        """Test retrieving alerts when no state can be determined."""
         print("START: test_get_alerts_no_state_fallback")
         # Create point data mock response with no state info
         point_mock = MagicMock()
@@ -388,9 +354,7 @@ class TestNoaaApiClient:
         point_mock.raise_for_status = MagicMock()
         # This response is missing the state information
         point_mock.json = MagicMock(
-            return_value={
-                "properties": {"relativeLocation": {"properties": {}}}
-            }
+            return_value={"properties": {"relativeLocation": {"properties": {}}}}
         )
 
         # Create alerts mock response
@@ -423,7 +387,7 @@ class TestNoaaApiClient:
         print("END: test_get_alerts_no_state_fallback")
 
     def test_request_uses_formatted_user_agent(self, monkeypatch):
-        """Test that requests use the properly formatted User-Agent"""
+        """Test that requests use the properly formatted User-Agent."""
         print("START: test_request_uses_formatted_user_agent")
         # Create a mock for requests.get
         mock_get = MagicMock()
@@ -437,9 +401,7 @@ class TestNoaaApiClient:
         monkeypatch.setattr("requests.get", mock_get)
 
         # Create client with contact info
-        client = NoaaApiClient(
-            user_agent="AccessiWeather", contact_info="test@example.com"
-        )
+        client = NoaaApiClient(user_agent="AccessiWeather", contact_info="test@example.com")
 
         # Make a request
         client.get_point_data(35.0, -80.0)

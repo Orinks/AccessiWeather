@@ -1,4 +1,4 @@
-"""Accessible UI components for AccessiWeather
+"""Accessible UI components for AccessiWeather.
 
 This module provides accessible UI widgets that enhance screen reader support.
 """
@@ -12,10 +12,10 @@ logger = logging.getLogger(__name__)
 
 
 class AccessibleStaticText(wx.StaticText):
-    """Static text with enhanced accessibility support"""
+    """Static text with enhanced accessibility support."""
 
     def __init__(self, parent, id=wx.ID_ANY, label="", **kwargs):
-        """Initialize accessible static text
+        """Initialize accessible static text.
 
         Args:
             parent: Parent window
@@ -35,7 +35,7 @@ class AccessibleStaticText(wx.StaticText):
             accessible.SetRole(wx.ACC_ROLE_STATICTEXT)
 
     def SetLabel(self, label):
-        """Set text label with accessibility support
+        """Set text label with accessibility support.
 
         Args:
             label: Text label
@@ -48,9 +48,10 @@ class AccessibleStaticText(wx.StaticText):
 
 
 class AccessibleTextCtrl(wx.TextCtrl):
+    """Text control with enhanced accessibility support."""
 
     def __init__(self, parent, id=wx.ID_ANY, value="", label="", **kwargs):
-        """Initialize accessible text control
+        """Initialize accessible text control.
 
         Args:
             parent: Parent window
@@ -74,7 +75,7 @@ class AccessibleTextCtrl(wx.TextCtrl):
         self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
 
     def SetLabel(self, label):
-        """Set accessible label
+        """Set accessible label.
 
         Args:
             label: Accessible label
@@ -85,7 +86,7 @@ class AccessibleTextCtrl(wx.TextCtrl):
             accessible.SetName(label)
 
     def OnKeyDown(self, event):
-        """Handle key down event
+        """Handle key down event.
 
         Args:
             event: Key event
@@ -96,10 +97,10 @@ class AccessibleTextCtrl(wx.TextCtrl):
 
 
 class AccessibleChoice(wx.Choice):
-    """Choice control with enhanced accessibility support"""
+    """Choice control with enhanced accessibility support."""
 
     def __init__(self, parent, id=wx.ID_ANY, choices=None, label="", **kwargs):
-        """Initialize accessible choice control
+        """Initialize accessible choice control.
 
         Args:
             parent: Parent window
@@ -125,7 +126,7 @@ class AccessibleChoice(wx.Choice):
         self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
 
     def SetLabel(self, label):
-        """Set accessible label
+        """Set accessible label.
 
         Args:
             label: Accessible label
@@ -136,7 +137,7 @@ class AccessibleChoice(wx.Choice):
             accessible.SetName(label)
 
     def OnKeyDown(self, event):
-        """Handle key down event
+        """Handle key down event.
 
         Args:
             event: Key event
@@ -146,10 +147,10 @@ class AccessibleChoice(wx.Choice):
 
 
 class AccessibleButton(wx.Button):
-    """Button with enhanced accessibility support"""
+    """Button with enhanced accessibility support."""
 
     def __init__(self, parent, id=wx.ID_ANY, label="", **kwargs):
-        """Initialize accessible button
+        """Initialize accessible button.
 
         Args:
             parent: Parent window
@@ -172,7 +173,7 @@ class AccessibleButton(wx.Button):
         self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
 
     def SetLabel(self, label):
-        """Set button label with accessibility support
+        """Set button label with accessibility support.
 
         Args:
             label: Button label
@@ -184,7 +185,7 @@ class AccessibleButton(wx.Button):
             accessible.SetName(label)
 
     def OnKeyDown(self, event):
-        """Handle key down event
+        """Handle key down event.
 
         Args:
             event: Key event
@@ -193,9 +194,7 @@ class AccessibleButton(wx.Button):
 
         # Handle Enter or Space to activate button (standard for accessibility)
         if key_code in (wx.WXK_RETURN, wx.WXK_SPACE):
-            evt = wx.CommandEvent(
-                wx.wxEVT_COMMAND_BUTTON_CLICKED, self.GetId()
-            )
+            evt = wx.CommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED, self.GetId())
             evt.SetEventObject(self)
             self.GetEventHandler().ProcessEvent(evt)
         else:
@@ -203,10 +202,10 @@ class AccessibleButton(wx.Button):
 
 
 class AccessibleListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
-    """List control with enhanced accessibility support"""
+    """List control with enhanced accessibility support."""
 
     def __init__(self, parent, id=wx.ID_ANY, label="", **kwargs):
-        """Initialize accessible list control
+        """Initialize accessible list control.
 
         Args:
             parent: Parent window
@@ -230,7 +229,7 @@ class AccessibleListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown)
 
     def SetLabel(self, label):
-        """Set accessible label
+        """Set accessible label.
 
         Args:
             label: Accessible label
@@ -241,7 +240,7 @@ class AccessibleListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             accessible.SetName(label)
 
     def OnKeyDown(self, event):
-        """Handle key down event for accessibility navigation
+        """Handle key down event for accessibility navigation.
 
         Args:
             event: Key event
@@ -251,16 +250,14 @@ class AccessibleListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 
 
 class AccessibleComboBox(wx.ComboBox):
-    """Combo box with enhanced accessibility support
+    """Combo box with enhanced accessibility support.
 
     This provides a dropdown combobox that allows typing and selecting from
     options, with full screen reader support for accessibility.
     """
 
-    def __init__(
-        self, parent, id=wx.ID_ANY, value="", choices=None, label="", **kwargs
-    ):
-        """Initialize accessible combo box
+    def __init__(self, parent, id=wx.ID_ANY, value="", choices=None, label="", **kwargs):
+        """Initialize accessible combo box.
 
         Args:
             parent: Parent window
@@ -289,7 +286,7 @@ class AccessibleComboBox(wx.ComboBox):
             accessible.SetRole(wx.ACC_ROLE_COMBOBOX)
 
     def SetLabel(self, label):
-        """Set accessible label
+        """Set accessible label.
 
         Args:
             label: Accessible label
@@ -300,8 +297,7 @@ class AccessibleComboBox(wx.ComboBox):
             accessible.SetName(label)
 
     def SetValue(self, value):
-        """Set the value of the combo box and update selection if it matches
-        an item
+        """Set the value of the combo box and update selection if it matches an item.
 
         Args:
             value: Text value to set
@@ -316,7 +312,7 @@ class AccessibleComboBox(wx.ComboBox):
                 break
 
     def Append(self, items):
-        """Add items to the combo box
+        """Add items to the combo box.
 
         Args:
             items: String or list of strings to add

@@ -6,33 +6,32 @@ for weather alerts.
 
 import logging
 import sys
-from datetime import datetime, timezone  # Added
+from datetime import datetime, timezone
 from typing import Any, Dict, List
 
-from dateutil.parser import isoparse  # type: ignore # requires python-dateutil
-
-# Type checking will report this as missing, but it's a runtime dependency
-from plyer import notification  # type: ignore
+from dateutil.parser import isoparse
+from plyer import notification
 
 logger = logging.getLogger(__name__)
 
-# Create a wrapper for notifications to handle potential errors in test
-# environment
-
 
 class SafeToastNotifier:
-    """
-    A wrapper around the notification system that handles exceptions.
+    """A wrapper around the notification system that handles exceptions.
+
     Provides cross-platform notification support using plyer.
     """
 
     def __init__(self):
-        """Initialize the safe toast notifier"""
+        """Initialize the safe toast notifier."""
         # No initialization needed for plyer
         pass
 
     def show_toast(self, **kwargs):
-        """Show a toast notification"""
+        """Show a toast notification.
+
+        Args:
+            **kwargs: Notification parameters
+        """
         try:
             # If we're running tests, just log the notification
             if "pytest" in sys.modules:
@@ -59,14 +58,13 @@ class SafeToastNotifier:
         except Exception as e:
             logger.warning(f"Failed to show toast notification: {str(e)}")
             logger.info(
-                f"Toast notification would show: {kwargs.get('title')} - "
-                f"{kwargs.get('msg')}"
+                f"Toast notification would show: {kwargs.get('title')} - " f"{kwargs.get('msg')}"
             )
             return False
 
 
 class WeatherNotifier:
-    """Class for handling weather notifications"""
+    """Class for handling weather notifications."""
 
     # Alert priority levels
     PRIORITY = {
@@ -78,14 +76,12 @@ class WeatherNotifier:
     }
 
     def __init__(self):
-        """Initialize the weather notifier"""
+        """Initialize the weather notifier."""
         self.toaster = SafeToastNotifier()
         self.active_alerts = {}
 
-    def process_alerts(
-        self, alerts_data: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
-        """Process alerts data from NOAA API
+    def process_alerts(self, alerts_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Process alerts data from NOAA API.
 
         Args:
             alerts_data: Dictionary containing alerts data from NOAA API
@@ -94,7 +90,7 @@ class WeatherNotifier:
             List of processed alerts
         """
         # Clear expired alerts before processing new ones
-        self.clear_expired_alerts()  # Added this line
+        self.clear_expired_alerts()
 
         features = alerts_data.get("features", [])
         processed_alerts = []
@@ -130,7 +126,7 @@ class WeatherNotifier:
         return processed_alerts
 
     def show_notification(self, alert: Dict[str, Any]) -> None:
-        """Show a desktop notification for an alert
+        """Show a desktop notification for an alert.
 
         Args:
             alert: Dictionary containing alert information
@@ -154,7 +150,7 @@ class WeatherNotifier:
             logger.error(f"Failed to show notification: {str(e)}")
 
     def clear_expired_alerts(self) -> None:
-        """Remove expired alerts from the active alerts list"""
+        """Remove expired alerts from the active alerts list."""
         now = datetime.now(timezone.utc)
         expired_alert_ids = []
 
@@ -162,9 +158,7 @@ class WeatherNotifier:
         for alert_id, alert_data in list(self.active_alerts.items()):
             expires_str = alert_data.get("expires")
             if not expires_str:
-                logger.warning(
-                    f"Alert {alert_id} has no 'expires' timestamp. Skipping."
-                )
+                logger.warning(f"Alert {alert_id} has no 'expires' timestamp. Skipping.")
                 continue
 
             try:
@@ -180,16 +174,12 @@ class WeatherNotifier:
                         f"is timezone-naive. Assuming UTC."
                     )
                     # Ensure the time is timezone-aware before comparison
-                    expiration_time = expiration_time.replace(
-                        tzinfo=timezone.utc
-                    )
+                    expiration_time = expiration_time.replace(tzinfo=timezone.utc)
 
                 # Compare with current time
                 if expiration_time < now:
                     expired_alert_ids.append(alert_id)
-                    logger.info(
-                        f"Alert {alert_id} expired at {expires_str}. Removing."
-                    )
+                    logger.info(f"Alert {alert_id} expired at {expires_str}. Removing.")
 
             except ValueError as e:
                 logger.warning(
@@ -208,7 +198,7 @@ class WeatherNotifier:
                 del self.active_alerts[alert_id]
 
     def get_sorted_alerts(self) -> List[Dict[str, Any]]:
-        """Get all active alerts sorted by priority
+        """Get all active alerts sorted by priority.
 
         Returns:
             List of alerts sorted by priority (highest first)
@@ -218,8 +208,6 @@ class WeatherNotifier:
         # Sort by severity
         return sorted(
             alerts,
-            key=lambda x: self.PRIORITY.get(
-                x.get("severity", "Unknown"), self.PRIORITY["Unknown"]
-            ),
+            key=lambda x: self.PRIORITY.get(x.get("severity", "Unknown"), self.PRIORITY["Unknown"]),
             reverse=True,
         )

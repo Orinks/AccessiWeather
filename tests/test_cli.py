@@ -1,4 +1,4 @@
-"""Tests for the CLI module"""
+"""Tests for the CLI module."""
 
 from unittest.mock import MagicMock, patch
 
@@ -6,16 +6,16 @@ from accessiweather.cli import main, parse_args
 
 
 class TestCli:
-    """Test suite for CLI functionality"""
+    """Test suite for CLI functionality."""
 
     def test_parse_args_defaults(self):
-        """Test parsing arguments with defaults"""
+        """Test parsing arguments with defaults."""
         args = parse_args([])
         assert not args.debug
         assert args.config is None
 
     def test_parse_args_debug(self):
-        """Test parsing debug argument"""
+        """Test parsing debug argument."""
         args = parse_args(["-d"])
         assert args.debug
         assert args.config is None
@@ -25,7 +25,7 @@ class TestCli:
         assert args.debug
 
     def test_parse_args_config(self):
-        """Test parsing config argument"""
+        """Test parsing config argument."""
         args = parse_args(["-c", "/path/to/config"])
         assert not args.debug
         assert args.config == "/path/to/config"
@@ -36,7 +36,7 @@ class TestCli:
 
     @patch("accessiweather.cli.app_main")
     def test_main_success(self, mock_app_main):
-        """Test main function with successful execution"""
+        """Test main function with successful execution."""
         with patch("accessiweather.cli.parse_args") as mock_parse_args:
             # Set up mock args
             mock_args = MagicMock()
@@ -50,13 +50,11 @@ class TestCli:
             # Check result
             assert result == 0
             # Updated assertion: Added debug_mode=True and reformatted
-            mock_app_main.assert_called_once_with(
-                config_dir="/test/config", debug_mode=True
-            )
+            mock_app_main.assert_called_once_with(config_dir="/test/config", debug_mode=True)
 
     @patch("accessiweather.cli.app_main")
     def test_main_error(self, mock_app_main):
-        """Test main function with error"""
+        """Test main function with error."""
         with patch("accessiweather.cli.parse_args") as mock_parse_args:
             # Set up mock args
             mock_args = MagicMock()

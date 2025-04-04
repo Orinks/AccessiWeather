@@ -1,3 +1,5 @@
+"""Setup script for AccessiWeather package."""
+
 from setuptools import find_packages, setup
 
 setup(

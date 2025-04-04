@@ -1,7 +1,6 @@
-"""Data migration utilities for AccessiWeather
+"""Data migration utilities for AccessiWeather.
 
-This module provides utilities for migrating data from the old package name
-to the new package name.
+This module provides functionality for migrating data between versions.
 """
 
 import logging
@@ -18,7 +17,7 @@ logger = logging.getLogger(__name__)
 def migrate_config_directory(
     old_dir: str = "~/.noaa_weather_app", new_dir: str = "~/.accessiweather"
 ) -> bool:
-    """Migrate data from old config directory to new config directory
+    """Migrate data from old config directory to new config directory.
 
     Args:
         old_dir: Path to old config directory

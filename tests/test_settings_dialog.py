@@ -1,5 +1,5 @@
 # tests/test_settings_dialog.py
-"""Tests for the SettingsDialog GUI component"""
+"""Tests for the SettingsDialog GUI component."""
 
 import os  # Import os module
 
@@ -23,11 +23,11 @@ from accessiweather.gui.settings_dialog import SettingsDialog
     reason="GUI test skipped in CI",
 )
 class TestSettingsDialog:
-    """Test suite for the SettingsDialog"""
+    """Test suite for the SettingsDialog."""
 
     @pytest.fixture
     def mock_config(self):
-        """Provides a mock configuration dictionary"""
+        """Provide a mock configuration dictionary."""
         # Match the keys used in SettingsDialog
         return {
             "api_contact": "initial@example.com",
@@ -36,7 +36,7 @@ class TestSettingsDialog:
         }
 
     def test_settings_dialog_init_reads_config(self, wx_app, mock_config):
-        """Test SettingsDialog reads initial values from the passed settings"""
+        """Test SettingsDialog reads initial values from passed settings."""
         dialog = None
         try:
             # Pass the mock_config directly as current_settings
@@ -52,7 +52,7 @@ class TestSettingsDialog:
                 dialog.Destroy()
 
     def test_settings_dialog_writes_config_on_save(self, wx_app, mock_config):
-        """Test SettingsDialog returns updated values via get_settings"""
+        """Test SettingsDialog returns updated values via get_settings."""
         dialog = None
         try:
             # Pass the mock_config directly as current_settings

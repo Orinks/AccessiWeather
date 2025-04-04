@@ -1,20 +1,61 @@
-"""Location handling for AccessiWeather
+"""Location management for AccessiWeather.
 
-This module handles location storage and retrieval.
+This module handles location data storage and retrieval.
 """
 
 import json
 import logging
 import os
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 
+class Location:
+    """A class representing a weather location."""
+
+    def __init__(self, name: str, lat: float, lon: float):
+        """Initialize a location.
+
+        Args:
+            name: Location name
+            lat: Latitude
+            lon: Longitude
+        """
+        self.name = name
+        self.lat = lat
+        self.lon = lon
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert location to dictionary.
+
+        Returns:
+            Dictionary representation of location
+        """
+        return {"name": self.name, "lat": self.lat, "lon": self.lon}
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "Location":
+        """Create location from dictionary.
+
+        Args:
+            data: Dictionary containing location data
+
+        Returns:
+            Location instance
+        """
+        return cls(data["name"], data["lat"], data["lon"])
+
+
 class LocationManager:
-    """Manager for handling saved locations"""
+    """Manages saved weather locations."""
 
     def __init__(self, config_dir: Optional[str] = None):
+        """Initialize location manager.
+
+        Args:
+            config_dir: Optional configuration directory path
+        """
         self.config_dir: str
         """Initialize the location manager
 
@@ -38,7 +79,7 @@ class LocationManager:
         self._load_locations()
 
     def _load_locations(self) -> None:
-        """Load saved locations from file"""
+        """Load saved locations from file."""
         try:
             if os.path.exists(self.locations_file):
                 with open(self.locations_file, "r") as f:
@@ -55,7 +96,7 @@ class LocationManager:
             self.current_location = None
 
     def _save_locations(self) -> None:
-        """Save locations to file"""
+        """Save locations to file."""
         try:
             data = {
                 "locations": self.saved_locations,
@@ -68,7 +109,7 @@ class LocationManager:
             logger.error(f"Failed to save locations: {str(e)}")
 
     def add_location(self, name: str, lat: float, lon: float) -> None:
-        """Add a new location
+        """Add a new location.
 
         Args:
             name: Location name
@@ -83,103 +124,59 @@ class LocationManager:
 
         self._save_locations()
 
-    def remove_location(self, name: str) -> bool:
-        """Remove a location
+    def remove_location(self, name: str) -> None:
+        """Remove a location.
 
         Args:
-            name: Location name to remove
-
-        Returns:
-            True if location was removed, False otherwise
+            name: Location name
         """
         if name in self.saved_locations:
             del self.saved_locations[name]
 
             # If we removed the current location, update it
             if self.current_location == name:
-                self.current_location = (
-                    next(iter(self.saved_locations))
-                    if self.saved_locations
-                    else None
-                )
+                # Get the first key if locations exist, otherwise None
+                self.current_location = next(iter(self.saved_locations), None)
 
             self._save_locations()
-            return True
 
-        return False
-
-    def set_current_location(self, name: str) -> bool:
-        """Set the current location
+    def get_location(self, name: str) -> Optional[Location]:
+        """Get a location by name.
 
         Args:
             name: Location name
 
         Returns:
-            True if successful, False if location doesn't exist
+            Location if found, None otherwise
         """
         if name in self.saved_locations:
-            self.current_location = name
-            self._save_locations()
-            return True
-
-        return False
-
-    def get_current_location(self) -> Optional[Tuple[str, float, float]]:
-        """Get the current location
-
-        Returns:
-            Tuple of (name, lat, lon) if current location exists, None
-            otherwise
-        """
-        if (
-            self.current_location
-            and self.current_location in self.saved_locations
-        ):
-            loc = self.saved_locations[self.current_location]
-            return (self.current_location, loc["lat"], loc["lon"])
+            loc = self.saved_locations[name]
+            return Location(name, loc["lat"], loc["lon"])
 
         return None
 
-    def get_current_location_name(self) -> Optional[str]:
-        """Get the name of the current location
+    def get_locations(self) -> List[Location]:
+        """Get all saved locations.
 
         Returns:
-            Name of current location if it exists, None otherwise
+            List of locations
         """
-        return (
-            self.current_location
-            if self.current_location in self.saved_locations
-            else None
-        )
+        return [
+            Location(name, loc["lat"], loc["lon"]) for name, loc in self.saved_locations.items()
+        ]
 
-    def get_all_locations(self) -> List[str]:
-        """Get all saved location names
+    def get_location_names(self) -> List[str]:
+        """Get names of all saved locations.
 
         Returns:
             List of location names
         """
         return list(self.saved_locations.keys())
 
-    def set_locations(
-        self,
-        locations: Dict[str, Dict[str, float]],
-        current: Optional[str] = None,
-    ) -> None:
-        """Set all locations and optionally the current location
-
-        This is used when initializing from saved config or in tests.
-
-        Args:
-            locations: Dictionary of location names to coordinate dictionaries
-            current: Current location name (must be in locations dict)
-        """
-        self.saved_locations = locations
-
-        if current and current in self.saved_locations:
-            self.current_location = current
-        elif self.saved_locations and not self.current_location:
-            # If no current location set but we have locations, set the first
-            # one
-            self.current_location = next(iter(self.saved_locations))
-
+    def save_locations(self) -> None:
+        """Save locations to disk."""
         self._save_locations()
+
+    def load_locations(self) -> None:
+        """Load locations from disk."""
+        self._load_locations()

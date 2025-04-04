@@ -1,4 +1,4 @@
-"""Tests for the API contact check when config file is missing"""
+"""Tests for the API contact check when config file is missing."""
 
 from unittest.mock import MagicMock, patch
 
@@ -11,20 +11,18 @@ from accessiweather.gui.weather_app import WeatherApp
 # Create a wx App fixture for testing
 @pytest.fixture
 def wx_app():
-    """Create a wx App for testing"""
+    """Create a wx App for testing."""
     app = wx.App()
     yield app
 
 
 class TestApiContactMissingConfig:
-    """Test suite for the API contact check when config file is missing"""
+    """Test suite for the API contact check when config file is missing."""
 
     @pytest.fixture
     def mock_components(self):
-        """Mock the components used by WeatherApp"""
-        with patch(
-            "accessiweather.api_client.NoaaApiClient"
-        ) as mock_api_client_class, patch(
+        """Mock the components used by WeatherApp."""
+        with patch("accessiweather.api_client.NoaaApiClient") as mock_api_client_class, patch(
             "accessiweather.notifications.WeatherNotifier"
         ) as mock_notifier_class, patch(
             "accessiweather.location.LocationManager"
@@ -36,9 +34,7 @@ class TestApiContactMissingConfig:
             mock_location_manager = MagicMock()
 
             # Configure mock location manager to return valid data
-            mock_location_manager.get_all_locations.return_value = [
-                "Test City"
-            ]
+            mock_location_manager.get_all_locations.return_value = ["Test City"]
             mock_location_manager.get_current_location.return_value = (
                 "Test City",
                 35.0,
@@ -56,10 +52,8 @@ class TestApiContactMissingConfig:
                 "location_manager": mock_location_manager,
             }
 
-    def test_dialog_shown_when_config_file_missing(
-        self, wx_app, mock_components
-    ):
-        """Test that dialog is shown when config file doesn't exist"""
+    def test_dialog_shown_when_config_file_missing(self, wx_app, mock_components):
+        """Test that dialog is shown when config file doesn't exist."""
         # Create a mock for OnSettings
         mock_on_settings = MagicMock()
 

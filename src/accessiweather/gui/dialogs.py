@@ -1,4 +1,4 @@
-"""Dialog components for AccessiWeather
+"""Dialog components for AccessiWeather.
 
 This module provides dialog windows for user interaction.
 """
@@ -9,23 +9,17 @@ import wx
 
 from accessiweather.geocoding import GeocodingService
 
-from .accessible_widgets import (
-    AccessibleButton,
-    AccessibleStaticText,
-    AccessibleTextCtrl,
-)
+from .accessible_widgets import AccessibleButton, AccessibleStaticText, AccessibleTextCtrl
 from .location_autocomplete import WeatherLocationAutocomplete
 
 logger = logging.getLogger(__name__)
 
 
 class AdvancedLocationDialog(wx.Dialog):
-    """Dialog for manually entering lat/lon coordinates"""
+    """Dialog for manually entering lat/lon coordinates."""
 
-    def __init__(
-        self, parent, title="Advanced Location Options", lat=None, lon=None
-    ):
-        """Initialize the advanced location dialog
+    def __init__(self, parent, title="Advanced Location Options", lat=None, lon=None):
+        """Initialize the advanced location dialog.
 
         Args:
             parent: Parent window
@@ -62,10 +56,7 @@ class AdvancedLocationDialog(wx.Dialog):
         # Description for screen readers
         help_text = AccessibleStaticText(
             panel,
-            label=(
-                "Enter latitude and longitude in decimal format "
-                "(e.g., 35.123, -80.456)"
-            ),
+            label=("Enter latitude and longitude in decimal format " "(e.g., 35.123, -80.456)"),
         )
         sizer.Add(help_text, 0, wx.ALL, 10)
 
@@ -89,7 +80,7 @@ class AdvancedLocationDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.OnOK, id=wx.ID_OK)
 
     def OnOK(self, event):
-        """Handle OK button event
+        """Handle OK button event.
 
         Args:
             event: Button event
@@ -127,7 +118,7 @@ class AdvancedLocationDialog(wx.Dialog):
             )
 
     def GetValues(self):
-        """Get the dialog values
+        """Get the dialog values.
 
         Returns:
             Tuple of (latitude, longitude)
@@ -141,7 +132,7 @@ class AdvancedLocationDialog(wx.Dialog):
 
 
 class LocationDialog(wx.Dialog):
-    """Dialog for adding or editing a location"""
+    """Dialog for adding or editing a location."""
 
     # Maximum number of items to keep in search history
     MAX_HISTORY_ITEMS = 10
@@ -154,7 +145,7 @@ class LocationDialog(wx.Dialog):
         lat=None,
         lon=None,
     ):
-        """Initialize the location dialog
+        """Initialize the location dialog.
 
         Args:
             parent: Parent window
@@ -178,9 +169,7 @@ class LocationDialog(wx.Dialog):
         # Name field
         name_sizer = wx.BoxSizer(wx.HORIZONTAL)
         name_label = AccessibleStaticText(panel, label="Location Name:")
-        self.name_ctrl = AccessibleTextCtrl(
-            panel, value=location_name, label="Location Name"
-        )
+        self.name_ctrl = AccessibleTextCtrl(panel, value=location_name, label="Location Name")
         name_sizer.Add(name_label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
         name_sizer.Add(self.name_ctrl, 1, wx.ALL | wx.EXPAND, 5)
         sizer.Add(name_sizer, 0, wx.EXPAND | wx.ALL, 5)
@@ -200,9 +189,7 @@ class LocationDialog(wx.Dialog):
         # Search button
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.search_button = AccessibleButton(panel, wx.ID_ANY, "Search")
-        self.advanced_button = AccessibleButton(
-            panel, wx.ID_ANY, "Advanced (Lat/Lon)"
-        )
+        self.advanced_button = AccessibleButton(panel, wx.ID_ANY, "Advanced (Lat/Lon)")
         button_sizer.Add(self.search_button, 0, wx.ALL, 5)
         button_sizer.Add(self.advanced_button, 0, wx.ALL, 5)
         sizer.Add(button_sizer, 0, wx.CENTER, 5)
@@ -253,12 +240,10 @@ class LocationDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.OnSearch, self.search_button)
         self.Bind(wx.EVT_BUTTON, self.OnAdvanced, self.advanced_button)
         self.Bind(wx.EVT_BUTTON, self.OnOK, id=wx.ID_OK)
-        self.Bind(
-            wx.EVT_COMBOBOX, self.on_autocomplete_selection, self.search_field
-        )
+        self.Bind(wx.EVT_COMBOBOX, self.on_autocomplete_selection, self.search_field)
 
     def on_autocomplete_selection(self, event):
-        """Handle autocomplete selection event
+        """Handle autocomplete selection event.
 
         Args:
             event: Selection event
@@ -269,7 +254,7 @@ class LocationDialog(wx.Dialog):
             self._perform_search(selected_value)
 
     def OnSearch(self, event):
-        """Handle search button click
+        """Handle search button click.
 
         Args:
             event: Button event
@@ -288,7 +273,7 @@ class LocationDialog(wx.Dialog):
         self._perform_search(query)
 
     def _perform_search(self, query):
-        """Perform location search
+        """Perform location search.
 
         Args:
             query: Search query string
@@ -300,9 +285,7 @@ class LocationDialog(wx.Dialog):
                 lat, lon, address = result
                 self.latitude = lat
                 self.longitude = lon
-                self.result_text.SetValue(
-                    f"Found: {address}\nCoordinates: {lat}, {lon}"
-                )
+                self.result_text.SetValue(f"Found: {address}\nCoordinates: {lat}, {lon}")
 
                 # Add to search history if not already in the list
                 self._add_to_search_history(query)
@@ -311,9 +294,7 @@ class LocationDialog(wx.Dialog):
                 if not self.name_ctrl.GetValue().strip():
                     self.name_ctrl.SetValue(query)
             else:
-                self.result_text.SetValue(
-                    "No results found for the given address"
-                )
+                self.result_text.SetValue("No results found for the given address")
                 self.latitude = None
                 self.longitude = None
         except Exception as e:
@@ -323,7 +304,7 @@ class LocationDialog(wx.Dialog):
             self.longitude = None
 
     def _add_to_search_history(self, query):
-        """Add query to search history and update autocomplete
+        """Add query to search history and update autocomplete.
 
         Args:
             query: Search query to add
@@ -344,7 +325,7 @@ class LocationDialog(wx.Dialog):
         self.search_field.SetValue(query)
 
     def OnAdvanced(self, event):
-        """Handle advanced button click to open manual lat/lon dialog
+        """Handle advanced button click to open manual lat/lon dialog.
 
         Args:
             event: Button event
@@ -366,7 +347,7 @@ class LocationDialog(wx.Dialog):
         dialog.Destroy()
 
     def OnOK(self, event):
-        """Handle OK button event
+        """Handle OK button event.
 
         Args:
             event: Button event
@@ -393,7 +374,7 @@ class LocationDialog(wx.Dialog):
         event.Skip()
 
     def GetValues(self):
-        """Get the dialog values
+        """Get the dialog values.
 
         Returns:
             Tuple of (name, latitude, longitude)
@@ -402,10 +383,10 @@ class LocationDialog(wx.Dialog):
 
 
 class WeatherDiscussionDialog(wx.Dialog):
-    """Dialog for displaying weather discussion text"""
+    """Dialog for displaying weather discussion text."""
 
     def __init__(self, parent, title="Weather Discussion", text=""):
-        """Initialize the weather discussion dialog
+        """Initialize the weather discussion dialog.
 
         Args:
             parent: Parent window
@@ -454,7 +435,7 @@ class WeatherDiscussionDialog(wx.Dialog):
         self.text_ctrl.SetFocus()
 
     def OnClose(self, event):
-        """Handle close button event
+        """Handle close button event.
 
         Args:
             event: Button event

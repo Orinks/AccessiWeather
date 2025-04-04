@@ -1,11 +1,11 @@
-"""Geocoding service for AccessiWeather
+"""Geocoding service for AccessiWeather.
 
 This module provides geocoding functionality to convert addresses/zip codes
 to coordinates.
 """
 
 import logging
-from typing import List, Optional, Tuple  # Removed unused Dict, Any
+from typing import List, Optional, Tuple
 
 from geopy.exc import GeocoderServiceError, GeocoderTimedOut
 from geopy.geocoders import Nominatim
@@ -14,20 +14,18 @@ logger = logging.getLogger(__name__)
 
 
 class GeocodingService:
-    """Service for geocoding addresses and zip codes"""
+    """Service for geocoding addresses and zip codes."""
 
     def __init__(self, user_agent: str = "AccessiWeather"):
-        """Initialize the geocoding service
+        """Initialize the geocoding service.
 
         Args:
             user_agent: User agent string for API requests
         """
         self.geolocator = Nominatim(user_agent=user_agent)
 
-    def geocode_address(
-        self, address: str
-    ) -> Optional[Tuple[float, float, str]]:
-        """Convert an address or zip code to coordinates
+    def geocode_address(self, address: str) -> Optional[Tuple[float, float, str]]:
+        """Convert an address or zip code to coordinates.
 
         Args:
             address: Address or zip code to geocode
@@ -54,7 +52,7 @@ class GeocodingService:
             return None
 
     def suggest_locations(self, query: str, limit: int = 5) -> List[str]:
-        """Suggest location completions based on partial input
+        """Suggest location completions based on partial input.
 
         Args:
             query: Partial address or location name
@@ -70,9 +68,7 @@ class GeocodingService:
             # Use geocoder to get suggestions
             # Note: Nominatim doesn't have native autocomplete, so we simulate
             # it by using the geocode function with limit parameter
-            locations = self.geolocator.geocode(
-                query, exactly_one=False, limit=limit
-            )
+            locations = self.geolocator.geocode(query, exactly_one=False, limit=limit)
 
             if locations:
                 # Extract the display names

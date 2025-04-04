@@ -1,4 +1,4 @@
-"""Tests for the notification module"""
+"""Tests for the notification module."""
 
 from unittest.mock import patch
 
@@ -9,25 +9,21 @@ from accessiweather.notifications import WeatherNotifier
 
 @pytest.fixture
 def weather_notifier():
-    """Create a WeatherNotifier instance"""
+    """Create a WeatherNotifier instance."""
     return WeatherNotifier()
 
 
 @pytest.fixture
 def sample_alerts_data():
-    """Sample alerts data for testing"""
+    """Sample alerts data for testing."""
     return {
         "features": [
             {
                 "properties": {
                     "id": "test-alert-1",
                     "event": "Severe Thunderstorm Warning",
-                    "headline": (
-                        "Severe Thunderstorm Warning for Example County"
-                    ),
-                    "description": (
-                        "A severe thunderstorm is moving through the area"
-                    ),
+                    "headline": ("Severe Thunderstorm Warning for Example County"),
+                    "description": ("A severe thunderstorm is moving through the area"),
                     "severity": "Severe",
                     "urgency": "Immediate",
                     "sent": "2025-03-12T10:00:00-04:00",
@@ -61,15 +57,15 @@ def sample_alerts_data():
 
 
 class TestWeatherNotifier:
-    """Test suite for WeatherNotifier"""
+    """Test suite for WeatherNotifier."""
 
     def test_init(self, weather_notifier):
-        """Test initialization"""
+        """Test initialization."""
         assert weather_notifier.active_alerts == {}
         assert weather_notifier.toaster is not None
 
     def test_process_alerts(self, weather_notifier, sample_alerts_data):
-        """Test alert processing"""
+        """Test alert processing."""
         with patch.object(weather_notifier, "show_notification") as mock_show:
             processed = weather_notifier.process_alerts(sample_alerts_data)
 
@@ -88,7 +84,7 @@ class TestWeatherNotifier:
 
     @patch("accessiweather.notifications.SafeToastNotifier.show_toast")
     def test_show_notification(self, mock_toast, weather_notifier):
-        """Test showing a notification"""
+        """Test showing a notification."""
         alert = {
             "id": "test-alert",
             "event": "Tornado Warning",
@@ -108,7 +104,7 @@ class TestWeatherNotifier:
         assert kwargs["app_name"] == "AccessiWeather"
 
     def test_clear_expired_alerts(self, weather_notifier, sample_alerts_data):
-        """Test clearing expired alerts"""
+        """Test clearing expired alerts."""
         # First add some alerts
         weather_notifier.process_alerts(sample_alerts_data)
         assert len(weather_notifier.active_alerts) == 2
@@ -118,7 +114,7 @@ class TestWeatherNotifier:
         assert len(weather_notifier.active_alerts) == 0
 
     def test_get_sorted_alerts(self, weather_notifier, sample_alerts_data):
-        """Test getting alerts sorted by priority"""
+        """Test getting alerts sorted by priority."""
         # Add alerts
         weather_notifier.process_alerts(sample_alerts_data)
 

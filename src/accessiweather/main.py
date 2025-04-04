@@ -1,13 +1,11 @@
-"""Main entry point for AccessiWeather
+"""Main module for AccessiWeather.
 
-This module provides the main entry point for running the application.
+This module provides the main entry point and initialization.
 """
 
-# import pathlib # Removed as unused
 import json
 import logging
 import os
-import sys
 from typing import Optional
 
 import wx
@@ -16,22 +14,20 @@ from accessiweather.api_client import NoaaApiClient
 from accessiweather.data_migration import migrate_config_directory
 from accessiweather.gui.weather_app import WeatherApp
 from accessiweather.location import LocationManager
-
-# Use root config for logging setup - Corrected import path
-from accessiweather.logging_config import setup_logging as setup_root_logging
+from accessiweather.logging_config import setup_logging
 from accessiweather.notifications import WeatherNotifier
 
 
-def main(config_dir: Optional[str] = None, debug_mode: bool = False):
-    """Main entry point for the application
+def run_app(config_dir: Optional[str] = None, debug_mode: bool = False) -> None:
+    """Run the AccessiWeather application.
 
     Args:
-        config_dir: Configuration directory, defaults to ~/.accessiweather
-        debug_mode: Whether to enable debug logging
+        config_dir: Optional configuration directory path
+        debug_mode: Enable debug logging if True
     """
     # Set up logging using the root config
     log_level = logging.DEBUG if debug_mode else logging.INFO
-    setup_root_logging(log_level=log_level)
+    setup_logging(log_level=log_level)
 
     # Configure application directory
     if config_dir is None:
@@ -97,9 +93,3 @@ def main(config_dir: Optional[str] = None, debug_mode: bool = False):
         raise
     finally:
         logger.info("Exiting AccessiWeather")
-
-
-if __name__ == "__main__":
-    # If run directly, debug_mode defaults to False.
-    # Assumes primary execution via cli.py which handles arg parsing.
-    sys.exit(main())

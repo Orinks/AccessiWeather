@@ -1,6 +1,4 @@
-"""
-Dialog for configuring AccessiWeather settings.
-"""
+"""Settings dialog for configuring AccessiWeather."""
 
 import logging
 
@@ -15,9 +13,7 @@ ALERT_RADIUS_KEY = "alert_radius_miles"
 
 
 class SettingsDialog(wx.Dialog):
-    """
-    A dialog window for modifying application settings.
-    """
+    """A dialog window for modifying application settings."""
 
     def __init__(self, parent, current_settings):
         """
@@ -52,51 +48,32 @@ class SettingsDialog(wx.Dialog):
         grid_sizer.AddGrowableCol(1, 1)  # Make the input column growable
 
         # API Contact
-        api_contact_label = wx.StaticText(
-            self, label="API Contact (Email/Website):"
-        )
+        api_contact_label = wx.StaticText(self, label="API Contact (Email/Website):")
         self.api_contact_ctrl = wx.TextCtrl(self, name="API Contact")
-        tooltip_api = (
-            "Enter the email or website required by the weather "
-            "API provider."
-        )
+        tooltip_api = "Enter the email or website required by the weather API provider."
         self.api_contact_ctrl.SetToolTip(tooltip_api)
-        grid_sizer.Add(
-            api_contact_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5
-        )
+        grid_sizer.Add(api_contact_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         grid_sizer.Add(self.api_contact_ctrl, 1, wx.EXPAND | wx.ALL, 5)
 
         # Update Interval
-        update_interval_label = wx.StaticText(
-            self, label="Update Interval (minutes):"
-        )
+        update_interval_label = wx.StaticText(self, label="Update Interval (minutes):")
         # 1 min to 24 hours
         self.update_interval_ctrl = wx.SpinCtrl(
             self, min=1, max=1440, initial=30, name="Update Interval"
         )
-        tooltip_interval = (
-            "How often to automatically refresh weather data " "(in minutes)."
-        )
+        tooltip_interval = "How often to automatically refresh weather data (in minutes)."
         self.update_interval_ctrl.SetToolTip(tooltip_interval)
-        grid_sizer.Add(
-            update_interval_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5
-        )
+        grid_sizer.Add(update_interval_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         # Don't expand spin control
         grid_sizer.Add(self.update_interval_ctrl, 0, wx.ALL, 5)
 
         # Alert Radius (Optional - Add if needed by API or features)
         # Assuming it might be needed later or by tests
         alert_radius_label = wx.StaticText(self, label="Alert Radius (miles):")
-        self.alert_radius_ctrl = wx.SpinCtrl(
-            self, min=1, max=500, initial=25, name="Alert Radius"
-        )
-        tooltip_radius = (
-            "Radius around location to check for alerts " "(in miles)."
-        )
+        self.alert_radius_ctrl = wx.SpinCtrl(self, min=1, max=500, initial=25, name="Alert Radius")
+        tooltip_radius = "Radius around location to check for alerts (in miles)."
         self.alert_radius_ctrl.SetToolTip(tooltip_radius)
-        grid_sizer.Add(
-            alert_radius_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5
-        )
+        grid_sizer.Add(alert_radius_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         # Don't expand spin control
         grid_sizer.Add(self.alert_radius_ctrl, 0, wx.ALL, 5)
 
@@ -124,9 +101,7 @@ class SettingsDialog(wx.Dialog):
         """Load current settings into the UI controls."""
         try:
             api_contact = self.current_settings.get(API_CONTACT_KEY, "")
-            update_interval = self.current_settings.get(
-                UPDATE_INTERVAL_KEY, 30
-            )
+            update_interval = self.current_settings.get(UPDATE_INTERVAL_KEY, 30)
             alert_radius = self.current_settings.get(ALERT_RADIUS_KEY, 25)
 
             self.api_contact_ctrl.SetValue(api_contact)

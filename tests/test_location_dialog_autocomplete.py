@@ -1,3 +1,5 @@
+"""Tests for the integration of autocomplete in LocationDialog."""
+
 import os  # Import os module
 from unittest.mock import MagicMock, patch
 
@@ -6,14 +8,12 @@ import wx
 
 from accessiweather.geocoding import GeocodingService
 from accessiweather.gui.dialogs import LocationDialog
-from accessiweather.gui.location_autocomplete import (
-    WeatherLocationAutocomplete,
-)
+from accessiweather.gui.location_autocomplete import WeatherLocationAutocomplete
 
 
 @pytest.fixture(autouse=True)
 def setup_wx_testing():
-    """Set up wx testing mode for autocomplete testing"""
+    """Set up wx testing mode for autocomplete testing."""
     # Set testing flag for wx
     wx.testing = True
     yield
@@ -24,6 +24,7 @@ def setup_wx_testing():
 
 @pytest.fixture
 def wx_app():
+    """Fixture for creating a wx.App instance."""
     app = wx.App()
     yield app
     app.Destroy()
@@ -31,6 +32,7 @@ def wx_app():
 
 @pytest.fixture
 def parent_frame(wx_app):
+    """Fixture for creating a parent wx.Frame."""
     frame = wx.Frame(None)
     yield frame
     frame.Destroy()
@@ -38,6 +40,7 @@ def parent_frame(wx_app):
 
 @pytest.fixture
 def mock_geocoding_service():
+    """Fixture for creating a mock GeocodingService."""
     geocoding_service = MagicMock(spec=GeocodingService)
     # Mock the function that will suggest locations
     geocoding_service.suggest_locations.return_value = [
@@ -59,7 +62,7 @@ def mock_geocoding_service():
     reason="GUI test skipped in CI",
 )
 def test_location_dialog_has_autocomplete(parent_frame):
-    """Test that LocationDialog now uses WeatherLocationAutocomplete"""
+    """Test that LocationDialog now uses WeatherLocationAutocomplete."""
     # Create the dialog
     dialog = LocationDialog(parent_frame)
 
@@ -72,10 +75,8 @@ def test_location_dialog_has_autocomplete(parent_frame):
     os.environ.get("ACCESSIWEATHER_TESTING") == "1",
     reason="GUI test skipped in CI",
 )
-def test_location_dialog_search_triggers_autocomplete(
-    parent_frame, mock_geocoding_service
-):
-    """Test that typing in search field shows autocomplete suggestions"""
+def test_location_dialog_search_triggers_autocomplete(parent_frame, mock_geocoding_service):
+    """Test that typing in search field shows autocomplete suggestions."""
     # Create the dialog and assign mock service
     patch_target = "accessiweather.gui.dialogs.GeocodingService"
     with patch(patch_target, return_value=mock_geocoding_service):
@@ -97,10 +98,8 @@ def test_location_dialog_search_triggers_autocomplete(
     os.environ.get("ACCESSIWEATHER_TESTING") == "1",
     reason="GUI test skipped in CI",
 )
-def test_autocomplete_selection_performs_search(
-    parent_frame, mock_geocoding_service
-):
-    """Test that selecting an autocomplete suggestion performs the search"""
+def test_autocomplete_selection_performs_search(parent_frame, mock_geocoding_service):
+    """Test that selecting an autocomplete suggestion performs the search."""
     # Create the dialog and assign mock service
     patch_target = "accessiweather.gui.dialogs.GeocodingService"
     with patch(patch_target, return_value=mock_geocoding_service):

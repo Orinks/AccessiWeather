@@ -1,4 +1,4 @@
-"""Tests for the geocoding service"""
+"""Tests for the geocoding service."""
 
 from unittest.mock import MagicMock, patch
 
@@ -8,11 +8,11 @@ from accessiweather.geocoding import GeocodingService
 
 
 class TestGeocodingService:
-    """Test suite for GeocodingService"""
+    """Test suite for GeocodingService."""
 
     @patch("accessiweather.geocoding.Nominatim")
     def test_init(self, mock_nominatim):
-        """Test initialization"""
+        """Test initialization."""
         # Create a service
         service = GeocodingService(user_agent="Test App")
 
@@ -22,7 +22,7 @@ class TestGeocodingService:
 
     @patch("accessiweather.geocoding.Nominatim")
     def test_geocode_address_success(self, mock_nominatim):
-        """Test successful geocoding of an address"""
+        """Test successful geocoding of an address."""
         # Set up mock
         mock_location = MagicMock()
         mock_location.latitude = 35.0
@@ -45,7 +45,7 @@ class TestGeocodingService:
 
     @patch("accessiweather.geocoding.Nominatim")
     def test_geocode_zip_code(self, mock_nominatim):
-        """Test geocoding a zip code"""
+        """Test geocoding a zip code."""
         # Set up mock
         mock_location = MagicMock()
         mock_location.latitude = 35.0
@@ -68,7 +68,7 @@ class TestGeocodingService:
 
     @patch("accessiweather.geocoding.Nominatim")
     def test_geocode_address_not_found(self, mock_nominatim):
-        """Test geocoding an address that isn't found"""
+        """Test geocoding an address that isn't found."""
         # Set up mock
         mock_geolocator = MagicMock()
         mock_geolocator.geocode.return_value = None
@@ -86,7 +86,7 @@ class TestGeocodingService:
 
     @patch("accessiweather.geocoding.Nominatim")
     def test_geocode_address_timeout(self, mock_nominatim):
-        """Test handling of geocoder timeout"""
+        """Test handling of geocoder timeout."""
         # Set up mock
         mock_geolocator = MagicMock()
         mock_geolocator.geocode.side_effect = GeocoderTimedOut("Timeout")
@@ -104,12 +104,10 @@ class TestGeocodingService:
 
     @patch("accessiweather.geocoding.Nominatim")
     def test_geocode_address_service_error(self, mock_nominatim):
-        """Test handling of geocoder service error"""
+        """Test handling of geocoder service error."""
         # Set up mock
         mock_geolocator = MagicMock()
-        mock_geolocator.geocode.side_effect = GeocoderServiceError(
-            "Service Error"
-        )
+        mock_geolocator.geocode.side_effect = GeocoderServiceError("Service Error")
         mock_nominatim.return_value = mock_geolocator
 
         # Create a service and try to geocode an address

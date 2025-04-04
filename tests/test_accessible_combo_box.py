@@ -1,4 +1,4 @@
-"""Tests for the AccessibleComboBox component"""
+"""Tests for the AccessibleComboBox component."""
 
 import os  # Import os module
 from unittest.mock import MagicMock  # Removed unused 'patch'
@@ -13,7 +13,7 @@ from accessiweather.gui.accessible_widgets import AccessibleComboBox
 # Create a wx App fixture for testing
 @pytest.fixture(scope="module", autouse=True)
 def wx_app():
-    """Create a wx App for testing"""
+    """Create a wx App for testing."""
     app = wx.App(False)
     yield app
 
@@ -24,20 +24,20 @@ def wx_app():
     reason="GUI test skipped in CI",
 )
 class TestAccessibleComboBox:
-    """Test suite for AccessibleComboBox"""
+    """Test suite for AccessibleComboBox."""
 
     def setup_method(self):
-        """Set up test fixture"""
+        """Set up test fixture."""
         # Create parent frame
         self.frame = wx.Frame(None)
 
     def teardown_method(self):
-        """Tear down test fixture"""
+        """Tear down test fixture."""
         # Destroy frame
         wx.CallAfter(self.frame.Destroy)
 
     def test_init(self):
-        """Test initialization with different parameters"""
+        """Test initialization with different parameters."""
         # Test with empty choices
         combo = AccessibleComboBox(self.frame, label="Test Combo")
         try:
@@ -48,9 +48,7 @@ class TestAccessibleComboBox:
 
         # Test with choices
         choices = ["Option 1", "Option 2", "Option 3"]
-        combo = AccessibleComboBox(
-            self.frame, choices=choices, label="Test Combo"
-        )
+        combo = AccessibleComboBox(self.frame, choices=choices, label="Test Combo")
         try:
             assert combo.GetName() == "Test Combo"
             assert combo.GetCount() == 3
@@ -60,7 +58,7 @@ class TestAccessibleComboBox:
             wx.CallAfter(combo.Destroy)
 
     def test_set_label(self):
-        """Test setting accessible label"""
+        """Test setting accessible label."""
         combo = AccessibleComboBox(self.frame, label="Initial Label")
         try:
             assert combo.GetName() == "Initial Label"
@@ -72,7 +70,7 @@ class TestAccessibleComboBox:
             wx.CallAfter(combo.Destroy)
 
     def test_add_items(self):
-        """Test adding items to combo box"""
+        """Test adding items to combo box."""
         combo = AccessibleComboBox(self.frame, label="Test Combo")
         try:
             # Add single item
@@ -89,11 +87,9 @@ class TestAccessibleComboBox:
             wx.CallAfter(combo.Destroy)
 
     def test_get_set_value(self):
-        """Test getting and setting value"""
+        """Test getting and setting value."""
         choices = ["Option 1", "Option 2", "Option 3"]
-        combo = AccessibleComboBox(
-            self.frame, choices=choices, label="Test Combo"
-        )
+        combo = AccessibleComboBox(self.frame, choices=choices, label="Test Combo")
         try:
             # Set by index
             combo.SetSelection(1)
@@ -113,11 +109,9 @@ class TestAccessibleComboBox:
             wx.CallAfter(combo.Destroy)
 
     def test_events(self):
-        """Test that events are properly triggered"""
+        """Test that events are properly triggered."""
         choices = ["Option 1", "Option 2", "Option 3"]
-        combo = AccessibleComboBox(
-            self.frame, choices=choices, label="Test Combo"
-        )
+        combo = AccessibleComboBox(self.frame, choices=choices, label="Test Combo")
 
         try:
             # Mock event handlers

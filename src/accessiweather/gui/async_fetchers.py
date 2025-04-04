@@ -1,4 +1,4 @@
-"""Asynchronous data fetching components for AccessiWeather
+"""Asynchronous data fetching components for AccessiWeather.
 
 This module provides thread-based asynchronous fetching of weather data.
 """
@@ -9,8 +9,6 @@ import threading
 import wx
 
 logger = logging.getLogger(__name__)
-
-# Helper function to safely use CallAfter
 
 
 def safe_call_after(callback, *args, **kwargs):
@@ -33,10 +31,10 @@ def safe_call_after(callback, *args, **kwargs):
 
 
 class ForecastFetcher:
-    """Handles asynchronous fetching of forecast data"""
+    """Handles asynchronous fetching of forecast data."""
 
     def __init__(self, api_client):
-        """Initialize forecast fetcher
+        """Initialize forecast fetcher.
 
         Args:
             api_client: NoaaApiClient instance
@@ -46,7 +44,7 @@ class ForecastFetcher:
         self._stop_event = threading.Event()
 
     def fetch(self, lat, lon, on_success=None, on_error=None):
-        """Fetch forecast data asynchronously
+        """Fetch forecast data asynchronously.
 
         Args:
             lat: Latitude
@@ -72,7 +70,7 @@ class ForecastFetcher:
         self.thread.start()
 
     def _fetch_thread(self, lat, lon, on_success, on_error):
-        """Thread function to fetch the forecast
+        """Thread function to fetch the forecast.
 
         Args:
             lat: Latitude
@@ -108,10 +106,10 @@ class ForecastFetcher:
 
 
 class AlertsFetcher:
-    """Handles asynchronous fetching of alerts data"""
+    """Handles asynchronous fetching of alerts data."""
 
     def __init__(self, api_client):
-        """Initialize alerts fetcher
+        """Initialize alerts fetcher.
 
         Args:
             api_client: NoaaApiClient instance
@@ -121,7 +119,7 @@ class AlertsFetcher:
         self._stop_event = threading.Event()
 
     def fetch(self, lat, lon, on_success=None, on_error=None):
-        """Fetch alerts data asynchronously
+        """Fetch alerts data asynchronously.
 
         Args:
             lat: Latitude
@@ -147,7 +145,7 @@ class AlertsFetcher:
         self.thread.start()
 
     def _fetch_thread(self, lat, lon, on_success, on_error):
-        """Thread function to fetch the alerts
+        """Thread function to fetch the alerts.
 
         Args:
             lat: Latitude
@@ -183,10 +181,10 @@ class AlertsFetcher:
 
 
 class DiscussionFetcher:
-    """Handles asynchronous fetching of weather discussion data"""
+    """Handles asynchronous fetching of weather discussion data."""
 
     def __init__(self, api_client):
-        """Initialize discussion fetcher
+        """Initialize discussion fetcher.
 
         Args:
             api_client: NoaaApiClient instance
@@ -195,10 +193,8 @@ class DiscussionFetcher:
         self.thread = None
         self._stop_event = threading.Event()
 
-    def fetch(
-        self, lat, lon, on_success=None, on_error=None, additional_data=None
-    ):
-        """Fetch discussion data asynchronously
+    def fetch(self, lat, lon, on_success=None, on_error=None, additional_data=None):
+        """Fetch discussion data asynchronously.
 
         Args:
             lat: Latitude
@@ -226,7 +222,7 @@ class DiscussionFetcher:
         self.thread.start()
 
     def _fetch_thread(self, lat, lon, on_success, on_error, additional_data):
-        """Thread function to fetch the discussion
+        """Thread function to fetch the discussion.
 
         Args:
             lat: Latitude
@@ -253,9 +249,7 @@ class DiscussionFetcher:
             if on_success and not self._stop_event.is_set():
                 # Call callback on main thread
                 if additional_data is not None:
-                    safe_call_after(
-                        on_success, discussion_text, *additional_data
-                    )
+                    safe_call_after(on_success, discussion_text, *additional_data)
                 else:
                     safe_call_after(on_success, discussion_text)
         except Exception as e:
@@ -263,9 +257,7 @@ class DiscussionFetcher:
                 logger.error(f"Failed to retrieve discussion: {str(e)}")
                 if on_error:
                     # Call error callback on main thread
-                    error_msg = (
-                        f"Unable to retrieve forecast discussion: {str(e)}"
-                    )
+                    error_msg = f"Unable to retrieve forecast discussion: {str(e)}"
                     if additional_data is not None:
                         safe_call_after(on_error, error_msg, *additional_data)
                     else:

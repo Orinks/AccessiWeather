@@ -1,3 +1,5 @@
+"""Tests for the WeatherLocationAutocomplete component."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -6,14 +8,12 @@ import wx
 from accessiweather.geocoding import GeocodingService
 
 # Import the class we'll be creating
-from accessiweather.gui.location_autocomplete import (
-    WeatherLocationAutocomplete,
-)
+from accessiweather.gui.location_autocomplete import WeatherLocationAutocomplete
 
 
 @pytest.fixture(autouse=True)
 def setup_wx_testing():
-    """Set up wx testing mode for autocomplete testing"""
+    """Set up wx testing mode for autocomplete testing."""
     # Set testing flag for wx
     wx.testing = True
     yield
@@ -24,6 +24,7 @@ def setup_wx_testing():
 
 @pytest.fixture
 def wx_app():
+    """Fixture for creating a wx.App instance."""
     app = wx.App()
     yield app
     app.Destroy()
@@ -31,6 +32,7 @@ def wx_app():
 
 @pytest.fixture
 def frame(wx_app):
+    """Fixture for creating a wx.Frame instance."""
     frame = wx.Frame(None)
     yield frame
     frame.Destroy()
@@ -38,6 +40,7 @@ def frame(wx_app):
 
 @pytest.fixture
 def mock_geocoding_service():
+    """Fixture for creating a mock GeocodingService."""
     geocoding_service = MagicMock(spec=GeocodingService)
     # Mock the function that will suggest locations
     geocoding_service.suggest_locations.return_value = [
@@ -49,10 +52,8 @@ def mock_geocoding_service():
 
 
 def test_autocomplete_creation(frame):
-    """Test that the autocomplete control can be instantiated properly"""
-    autocomplete = WeatherLocationAutocomplete(
-        frame, label="Test Autocomplete"
-    )
+    """Test that the autocomplete control can be instantiated properly."""
+    autocomplete = WeatherLocationAutocomplete(frame, label="Test Autocomplete")
 
     # Check basic properties
     assert autocomplete is not None
@@ -61,11 +62,9 @@ def test_autocomplete_creation(frame):
 
 
 def test_autocomplete_suggestions(frame, mock_geocoding_service):
-    """Test that autocomplete shows suggestions based on typed text"""
+    """Test that autocomplete shows suggestions based on typed text."""
     # Create the autocomplete control with mock service
-    autocomplete = WeatherLocationAutocomplete(
-        frame, label="Test Autocomplete"
-    )
+    autocomplete = WeatherLocationAutocomplete(frame, label="Test Autocomplete")
     autocomplete.set_geocoding_service(mock_geocoding_service)
 
     # Simulate typing 'New'
@@ -81,11 +80,9 @@ def test_autocomplete_suggestions(frame, mock_geocoding_service):
 
 
 def test_autocomplete_min_chars(frame, mock_geocoding_service):
-    """Test that autocomplete only triggers after minimum character count"""
+    """Test that autocomplete only triggers after minimum character count."""
     # Create the autocomplete control with mock service
-    autocomplete = WeatherLocationAutocomplete(
-        frame, label="Test Autocomplete", min_chars=3
-    )
+    autocomplete = WeatherLocationAutocomplete(frame, label="Test Autocomplete", min_chars=3)
     autocomplete.set_geocoding_service(mock_geocoding_service)
 
     # Simulate typing 'Ne' (less than min chars)
@@ -104,10 +101,8 @@ def test_autocomplete_min_chars(frame, mock_geocoding_service):
 
 
 def test_autocomplete_completer_integration(frame):
-    """Test that the TextCompleterSimple is properly integrated"""
-    autocomplete = WeatherLocationAutocomplete(
-        frame, label="Test Autocomplete"
-    )
+    """Test that the TextCompleterSimple is properly integrated."""
+    autocomplete = WeatherLocationAutocomplete(frame, label="Test Autocomplete")
 
     # Get the completer
     completer = autocomplete.get_completer()

@@ -1,4 +1,4 @@
-"""GUI Components for AccessiWeather
+"""GUI Components for AccessiWeather.
 
 This package contains all graphical user interface components for the
 application.
@@ -24,11 +24,7 @@ from .accessible_widgets import (  # noqa: E402
     AccessibleStaticText,
     AccessibleTextCtrl,
 )
-from .dialogs import (  # noqa: E402
-    AdvancedLocationDialog,
-    LocationDialog,
-    WeatherDiscussionDialog,
-)
+from .dialogs import AdvancedLocationDialog, LocationDialog, WeatherDiscussionDialog  # noqa: E402
 from .weather_app import WeatherApp  # noqa: E402
 
 # Constants (UPDATE_INTERVAL moved to accessiweather.constants)

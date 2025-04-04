@@ -1,19 +1,17 @@
-"""AccessiWeather NOAA API Client
+"""AccessiWeather NOAA API Client.
 
 This module provides access to NOAA weather data through their public APIs.
 """
 
 import json
 import logging
-import os  # Import os
+import os
 import threading
 import time
 import traceback
-from typing import Any, Dict, Optional  # Removed unused List
+from typing import Any, Dict, Optional
 
 import requests
-
-# Import the specific exception for JSON decoding errors
 from requests.exceptions import JSONDecodeError
 
 logger = logging.getLogger(__name__)
@@ -26,7 +24,7 @@ class ApiClientError(Exception):
 
 
 class NoaaApiClient:
-    """Client for interacting with NOAA Weather API"""
+    """Client for interacting with NOAA Weather API."""
 
     # NOAA Weather API base URL
     BASE_URL = "https://api.weather.gov"
@@ -36,7 +34,7 @@ class NoaaApiClient:
         user_agent: str = "AccessiWeather",
         contact_info: Optional[str] = None,
     ):
-        """Initialize the NOAA API client
+        """Initialize the NOAA API client.
 
         Args:
             user_agent: User agent string for API requests
@@ -58,19 +56,16 @@ class NoaaApiClient:
         }
 
         # Add request tracking for rate limiting
-        self.last_request_time: float = 0.0  # Ensure float type
-        # Half a second between requests to avoid rate limiting
+        self.last_request_time: float = 0.0
         self.min_request_interval: float = 0.5
 
         # Add thread lock for thread safety
         self.request_lock = threading.RLock()
 
-        logger.info(
-            f"Initialized NOAA API client with User-Agent: {user_agent_string}"
-        )
+        logger.info(f"Initialized NOAA API client with User-Agent: {user_agent_string}")
 
     def get_point_data(self, lat: float, lon: float) -> Dict[str, Any]:
-        """Get metadata about a specific lat/lon point
+        """Get metadata about a specific lat/lon point.
 
         Args:
             lat: Latitude
@@ -84,7 +79,7 @@ class NoaaApiClient:
         return self._make_request(endpoint)
 
     def get_forecast(self, lat: float, lon: float) -> Dict[str, Any]:
-        """Get forecast for a location
+        """Get forecast for a location.
 
         Args:
             lat: Latitude
@@ -99,17 +94,14 @@ class NoaaApiClient:
             point_data = self.get_point_data(lat, lon)
 
             # Debug log the point data structure
-            logger.debug(
-                f"Point data structure: {json.dumps(point_data, indent=2)}"
-            )
+            logger.debug(f"Point data structure: {json.dumps(point_data, indent=2)}")
 
             forecast_url = point_data.get("properties", {}).get("forecast")
 
             if not forecast_url:
                 props = list(point_data.get("properties", {}).keys())
                 logger.error(
-                    "Could not find forecast URL in point data. "
-                    f"Available properties: {props}"
+                    "Could not find forecast URL in point data. " f"Available properties: {props}"
                 )
                 # Keep this specific ValueError for this context
                 raise ValueError("Could not find forecast URL in point data")
@@ -121,9 +113,7 @@ class NoaaApiClient:
             logger.debug(f"Traceback: {traceback.format_exc()}")
             raise
 
-    def get_alerts(
-        self, lat: float, lon: float, radius: float = 50
-    ) -> Dict[str, Any]:
+    def get_alerts(self, lat: float, lon: float, radius: float = 50) -> Dict[str, Any]:
         """Get active weather alerts for the given coordinates.
 
         Args:
@@ -136,8 +126,7 @@ class NoaaApiClient:
             Dictionary containing alert data
         """
         logging.info(
-            f"Getting alerts for coordinates: ({lat}, {lon}) "
-            f"with radius {radius} miles"
+            f"Getting alerts for coordinates: ({lat}, {lon}) " f"with radius {radius} miles"
         )
 
         # First, get the point data to determine the state
@@ -145,35 +134,23 @@ class NoaaApiClient:
 
         # Try to extract the state from the point data
         try:
-            state = point_data["properties"]["relativeLocation"]["properties"][
-                "state"
-            ]
+            state = point_data["properties"]["relativeLocation"]["properties"]["state"]
             logging.info(f"Fetching alerts for state: {state}")
             # Use the full URL for the Michigan location test which mocks
             # _make_request directly
             if state == "MI":
-                return self._make_request(
-                    f"{self.BASE_URL}/alerts/active", params={"area": state}
-                )
+                return self._make_request(f"{self.BASE_URL}/alerts/active", params={"area": state})
             return self._make_request("alerts/active", params={"area": state})
         except (KeyError, TypeError):
             # Try to extract state from county URL if available
             try:
                 county_url = point_data["properties"]["county"]
-                if (
-                    county_url
-                    and isinstance(county_url, str)
-                    and "/county/" in county_url
-                ):
+                if county_url and isinstance(county_url, str) and "/county/" in county_url:
                     # Extract state code from county URL
                     # (format: .../zones/county/XXC###)
                     state_code = county_url.split("/county/")[1][:2]
-                    logging.info(
-                        f"Extracted state code from county URL: {state_code}"
-                    )
-                    return self._make_request(
-                        "alerts/active", params={"area": state_code}
-                    )
+                    logging.info(f"Extracted state code from county URL: {state_code}")
+                    return self._make_request("alerts/active", params={"area": state_code})
             except (KeyError, IndexError, TypeError):
                 pass
 
@@ -200,7 +177,7 @@ class NoaaApiClient:
         return self._make_request(url, use_full_url=True)
 
     def get_discussion(self, lat: float, lon: float) -> Optional[str]:
-        """Get the forecast discussion for a location
+        """Get the forecast discussion for a location.
 
         Args:
             lat: Latitude
@@ -210,9 +187,7 @@ class NoaaApiClient:
             Text of the forecast discussion or None if not available
         """
         try:
-            logger.info(
-                f"Getting forecast discussion for coordinates: ({lat}, {lon})"
-            )
+            logger.info(f"Getting forecast discussion for coordinates: ({lat}, {lon})")
             point_data = self.get_point_data(lat, lon)
             office_id = point_data.get("properties", {}).get("gridId")
 
@@ -233,20 +208,15 @@ class NoaaApiClient:
                 product = self._make_request(f"products/{latest_product_id}")
                 return product.get("productText")
             except (IndexError, KeyError) as e:
-                logger.warning(
-                    "Could not find forecast discussion for "
-                    f"{office_id}: {str(e)}"
-                )
+                logger.warning("Could not find forecast discussion for " f"{office_id}: {str(e)}")
                 return None
         except Exception as e:
             logger.error(f"Error getting discussion: {str(e)}")
             logger.debug(f"Traceback: {traceback.format_exc()}")
             return None
 
-    def _build_request_url(
-        self, endpoint_or_url: str, use_full_url: bool
-    ) -> str:
-        """Helper method to build the request URL."""
+    def _build_request_url(self, endpoint_or_url: str, use_full_url: bool) -> str:
+        """Build the request URL."""
         if use_full_url:
             return endpoint_or_url
         else:
@@ -257,10 +227,8 @@ class NoaaApiClient:
             else:
                 return f"{self.BASE_URL}/{clean_endpoint}"
 
-    def _process_response(
-        self, response: requests.Response, request_url: str
-    ) -> Dict[str, Any]:
-        """Processes the API response, handling errors and JSON decoding."""
+    def _process_response(self, response: requests.Response, request_url: str) -> Dict[str, Any]:
+        """Process the API response, handling errors and JSON decoding."""
         try:
             # Raises HTTPError for bad responses (4xx or 5xx)
             response.raise_for_status()
@@ -277,9 +245,7 @@ class NoaaApiClient:
                 resp_text = http_err.response.text[:200]
                 error_msg += f" - Response body: {resp_text}"
             except Exception as json_err:  # Catch other JSON errors
-                error_msg += (
-                    f" - Error parsing error response JSON: {json_err}"
-                )
+                error_msg += f" - Error parsing error response JSON: {json_err}"
 
             logger.error(error_msg, exc_info=True)
             raise ApiClientError(error_msg) from http_err
@@ -312,7 +278,6 @@ class NoaaApiClient:
         """Execute the HTTP GET request with basic retry logic."""
         # Note: Retries are basic here. Consider libraries like
         # 'requests-retry' for more robust handling if needed.
-        # for more robust handling if needed.
         retries = 1  # Example: Allow 1 retry
         delay = 1  # Example: Start with 1 second delay
         last_exception: Optional[requests.exceptions.RequestException] = None
@@ -366,9 +331,7 @@ class NoaaApiClient:
 
         try:
             # Check if API calls should be skipped (for testing)
-            skip_api_calls = (
-                os.environ.get("ACCESSIWEATHER_SKIP_API_CALLS") == "1"
-            )
+            skip_api_calls = os.environ.get("ACCESSIWEATHER_SKIP_API_CALLS") == "1"
 
             if not skip_api_calls:
                 self.request_lock.acquire()
@@ -377,8 +340,7 @@ class NoaaApiClient:
                 self._apply_rate_limit()
             else:
                 logger.debug(
-                    "Skipping lock and rate limit due to "
-                    "ACCESSIWEATHER_SKIP_API_CALLS=1"
+                    "Skipping lock and rate limit due to " "ACCESSIWEATHER_SKIP_API_CALLS=1"
                 )
 
             response = self._execute_request_with_retries(request_url, params)
@@ -389,9 +351,7 @@ class NoaaApiClient:
             raise
         except Exception as e:
             # Catch any other unexpected errors during the process
-            error_msg = (
-                f"Unexpected error during request to {request_url}: {e}"
-            )
+            error_msg = f"Unexpected error during request to {request_url}: {e}"
             logger.error(error_msg, exc_info=True)
             raise ApiClientError(error_msg) from e
         finally:

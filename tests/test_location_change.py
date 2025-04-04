@@ -1,3 +1,5 @@
+"""Tests for location change triggering weather updates."""
+
 import time
 import unittest
 from unittest.mock import MagicMock, patch
@@ -7,9 +9,10 @@ import wx
 
 
 class TestLocationChange(unittest.TestCase):
-    """Test case for verifying location change updates weather data"""
+    """Test case for verifying location change updates weather data."""
 
     def setUp(self):
+        """Set up the test environment before each test."""
         self.app = wx.App()
 
         # Mock dependencies
@@ -27,9 +30,7 @@ class TestLocationChange(unittest.TestCase):
         self.location_manager_mock.get_all_locations.return_value = list(
             self.sample_locations.keys()
         )
-        self.location_manager_mock.get_current_location_name.return_value = (
-            "New York"
-        )
+        self.location_manager_mock.get_current_location_name.return_value = "New York"
         self.location_manager_mock.get_current_location.return_value = (
             "New York",
             40.7128,
@@ -77,20 +78,15 @@ class TestLocationChange(unittest.TestCase):
             )
 
     def tearDown(self):
+        """Clean up the test environment after each test."""
         # Ensure all threads are properly terminated before destroying the
         # frame
         try:
             # If async fetchers were created, make sure they are stopped
-            if (
-                hasattr(self.frame, "forecast_fetcher")
-                and self.frame.forecast_fetcher is not None
-            ):
+            if hasattr(self.frame, "forecast_fetcher") and self.frame.forecast_fetcher is not None:
                 if hasattr(self.frame.forecast_fetcher, "_stop_event"):
                     self.frame.forecast_fetcher._stop_event.set()
-            if (
-                hasattr(self.frame, "alerts_fetcher")
-                and self.frame.alerts_fetcher is not None
-            ):
+            if hasattr(self.frame, "alerts_fetcher") and self.frame.alerts_fetcher is not None:
                 if hasattr(self.frame.alerts_fetcher, "_stop_event"):
                     self.frame.alerts_fetcher._stop_event.set()
             if (
@@ -108,7 +104,7 @@ class TestLocationChange(unittest.TestCase):
             # during testing when threads are involved
 
     def test_location_change_updates_forecast(self):
-        """Test that changing location updates the forecast"""
+        """Test that changing location updates the forecast."""
         # Set up test hooks for tracking callbacks
         forecast_callback = MagicMock()
         self.frame._testing_forecast_callback = forecast_callback
@@ -119,9 +115,7 @@ class TestLocationChange(unittest.TestCase):
         self.frame._testing_alerts_error_callback = MagicMock()
 
         # Before changing location: verify New York is current
-        self.assertEqual(
-            self.location_manager_mock.get_current_location_name(), "New York"
-        )
+        self.assertEqual(self.location_manager_mock.get_current_location_name(), "New York")
 
         # Patch the forecast and alerts fetchers to directly call the success
         # callbacks
@@ -165,9 +159,7 @@ class TestLocationChange(unittest.TestCase):
             self.frame.OnLocationChange(None)
 
             # Verify location manager was updated
-            self.location_manager_mock.set_current_location.assert_called_with(
-                "Los Angeles"
-            )
+            self.location_manager_mock.set_current_location.assert_called_with("Los Angeles")
 
             # Verify test hooks were called with the correct data
             forecast_callback.assert_called_once_with(self.la_forecast)

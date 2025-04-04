@@ -1,4 +1,4 @@
-"""Tests for the API contact check feature on application startup"""
+"""Tests for the API contact check feature on application startup."""
 
 from unittest.mock import MagicMock, patch
 
@@ -11,20 +11,18 @@ from accessiweather.gui.weather_app import WeatherApp
 # Create a wx App fixture for testing
 @pytest.fixture
 def wx_app():
-    """Create a wx App for testing"""
+    """Create a wx App for testing."""
     app = wx.App()
     yield app
 
 
 class TestApiContactCheck:
-    """Test suite for the API contact check feature on application startup"""
+    """Test suite for the API contact check feature on application startup."""
 
     @pytest.fixture
     def mock_components(self):
-        """Mock the components used by WeatherApp"""
-        with patch(
-            "accessiweather.api_client.NoaaApiClient"
-        ) as mock_api_client_class, patch(
+        """Mock the components used by WeatherApp."""
+        with patch("accessiweather.api_client.NoaaApiClient") as mock_api_client_class, patch(
             "accessiweather.notifications.WeatherNotifier"
         ) as mock_notifier_class, patch(
             "accessiweather.location.LocationManager"
@@ -36,9 +34,7 @@ class TestApiContactCheck:
             mock_location_manager = MagicMock()
 
             # Configure mock location manager to return valid data
-            mock_location_manager.get_all_locations.return_value = [
-                "Test City"
-            ]
+            mock_location_manager.get_all_locations.return_value = ["Test City"]
             mock_location_manager.get_current_location.return_value = (
                 "Test City",
                 35.0,
@@ -58,7 +54,7 @@ class TestApiContactCheck:
 
     @pytest.fixture
     def config_with_api_contact(self):
-        """Config with valid API contact information"""
+        """Config with valid API contact information."""
         return {
             "locations": {},
             "current": None,
@@ -71,7 +67,7 @@ class TestApiContactCheck:
 
     @pytest.fixture
     def config_without_api_contact(self):
-        """Config with missing API contact information"""
+        """Config with missing API contact information."""
         return {
             "locations": {},
             "current": None,
@@ -84,7 +80,7 @@ class TestApiContactCheck:
 
     @pytest.fixture
     def config_without_api_settings(self):
-        """Config without api_settings section"""
+        """Config without api_settings section."""
         return {
             "locations": {},
             "current": None,
@@ -98,7 +94,7 @@ class TestApiContactCheck:
     def test_no_dialog_when_api_contact_present(
         self, wx_app, mock_components, config_with_api_contact
     ):
-        """Test that no dialog is shown when API contact is present"""
+        """Test that no dialog is shown when API contact is present."""
         with patch("wx.MessageDialog") as mock_dialog, patch.object(
             WeatherApp, "_check_api_contact_configured"
         ):
@@ -134,7 +130,7 @@ class TestApiContactCheck:
     def test_dialog_shown_when_api_contact_missing(
         self, wx_app, mock_components, config_without_api_contact
     ):
-        """Test that dialog is shown when API contact is missing"""
+        """Test that dialog is shown when API contact is missing."""
         # Create a mock for OnSettings
         mock_on_settings = MagicMock()
 
@@ -146,9 +142,9 @@ class TestApiContactCheck:
         app = None
         try:
             # Patch the methods we want to test
-            with patch.object(
-                WeatherApp, "OnSettings", mock_on_settings
-            ), patch("wx.MessageDialog", return_value=mock_dialog):
+            with patch.object(WeatherApp, "OnSettings", mock_on_settings), patch(
+                "wx.MessageDialog", return_value=mock_dialog
+            ):
 
                 # Create the app with our config that has empty API contact
                 app = WeatherApp(
@@ -174,7 +170,7 @@ class TestApiContactCheck:
     def test_dialog_shown_when_api_settings_missing(
         self, wx_app, mock_components, config_without_api_settings
     ):
-        """Test that dialog is shown when api_settings section is missing"""
+        """Test that dialog is shown when api_settings section is missing."""
         # Create a mock for OnSettings
         mock_on_settings = MagicMock()
 
@@ -186,9 +182,9 @@ class TestApiContactCheck:
         app = None
         try:
             # Patch the methods we want to test
-            with patch.object(
-                WeatherApp, "OnSettings", mock_on_settings
-            ), patch("wx.MessageDialog", return_value=mock_dialog):
+            with patch.object(WeatherApp, "OnSettings", mock_on_settings), patch(
+                "wx.MessageDialog", return_value=mock_dialog
+            ):
                 # Create the app with our config that has no api_settings
                 # section
                 app = WeatherApp(
@@ -214,7 +210,7 @@ class TestApiContactCheck:
     def test_settings_not_opened_if_dialog_cancelled(
         self, wx_app, mock_components, config_without_api_contact
     ):
-        """Test that settings are not opened if dialog is cancelled"""
+        """Test that settings are not opened if dialog is cancelled."""
         # Create a mock for OnSettings
         mock_on_settings = MagicMock()
 
@@ -226,9 +222,9 @@ class TestApiContactCheck:
         app = None
         try:
             # Patch the methods we want to test
-            with patch.object(
-                WeatherApp, "OnSettings", mock_on_settings
-            ), patch("wx.MessageDialog", return_value=mock_dialog):
+            with patch.object(WeatherApp, "OnSettings", mock_on_settings), patch(
+                "wx.MessageDialog", return_value=mock_dialog
+            ):
 
                 # Create the app with our config that has empty API contact
                 app = WeatherApp(
@@ -251,13 +247,11 @@ class TestApiContactCheck:
             if app:
                 app.Destroy()
 
-    def test_check_called_on_init(
-        self, wx_app, mock_components, config_without_api_contact
-    ):
-        """Test that the API contact check is called during initialization"""
-        with patch.object(
-            WeatherApp, "_check_api_contact_configured"
-        ) as mock_check, patch("wx.MessageDialog"):
+    def test_check_called_on_init(self, wx_app, mock_components, config_without_api_contact):
+        """Test that the API contact check is called during initialization."""
+        with patch.object(WeatherApp, "_check_api_contact_configured") as mock_check, patch(
+            "wx.MessageDialog"
+        ):
             app = None
             try:
                 app = WeatherApp(

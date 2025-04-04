@@ -1,4 +1,4 @@
-"""Location autocomplete component for AccessiWeather"""
+"""Location autocomplete component for AccessiWeather."""
 
 import logging
 import threading
@@ -11,19 +11,18 @@ logger = logging.getLogger(__name__)
 
 
 class WeatherTextCompleter(wx.TextCompleterSimple):
-    """Concrete implementation of TextCompleterSimple for location
-    autocompletion
+    """Concrete implementation of TextCompleterSimple for location autocompletion.
 
     This implements the abstract methods required by TextCompleterSimple.
     """
 
     def __init__(self):
-        """Initialize the text completer"""
+        """Initialize the text completer."""
         super().__init__()
         self.completions = []
 
     def GetCompletions(self, prefix):
-        """Get completions that match the given prefix
+        """Get completions that match the given prefix.
 
         Args:
             prefix: Text prefix to match
@@ -36,14 +35,10 @@ class WeatherTextCompleter(wx.TextCompleterSimple):
 
         # Case-insensitive prefix matching
         prefix_lower = prefix.lower()
-        return [
-            comp
-            for comp in self.completions
-            if comp.lower().startswith(prefix_lower)
-        ]
+        return [comp for comp in self.completions if comp.lower().startswith(prefix_lower)]
 
     def SetCompletions(self, completions):
-        """Set the available completions
+        """Set the available completions.
 
         Args:
             completions: List of completion strings
@@ -52,13 +47,10 @@ class WeatherTextCompleter(wx.TextCompleterSimple):
 
 
 class WeatherLocationAutocomplete(AccessibleComboBox):
-    """Weather location search with autocomplete support
+    """Weather location search with autocomplete support.
 
     This component extends the AccessibleComboBox to provide location
     search autocomplete functionality with wxPython's TextCompleterSimple.
-
-    It asynchronously fetches location suggestions as the user types and
-    provides accessible autocompletion for screen readers.
     """
 
     def __init__(
@@ -71,7 +63,7 @@ class WeatherLocationAutocomplete(AccessibleComboBox):
         min_chars=2,
         **kwargs,
     ):
-        """Initialize the autocomplete location search control
+        """Initialize the autocomplete location search control.
 
         Args:
             parent: Parent window
@@ -86,9 +78,7 @@ class WeatherLocationAutocomplete(AccessibleComboBox):
         if choices is None:
             choices = []
 
-        super().__init__(
-            parent, id, value, choices=choices, label=label, **kwargs
-        )
+        super().__init__(parent, id, value, choices=choices, label=label, **kwargs)
 
         # Create text completer for autocomplete
         self.completer = WeatherTextCompleter()
@@ -114,7 +104,7 @@ class WeatherLocationAutocomplete(AccessibleComboBox):
         self.Bind(wx.EVT_TEXT, self.on_text_changed)
 
     def set_geocoding_service(self, service):
-        """Set the geocoding service for location suggestions
+        """Set the geocoding service for location suggestions.
 
         Args:
             service: GeocodingService instance
@@ -122,7 +112,7 @@ class WeatherLocationAutocomplete(AccessibleComboBox):
         self.geocoding_service = service
 
     def SetValue(self, value):
-        """Set the value of the combo box while preventing duplicate events
+        """Set the value of the combo box while preventing duplicate events.
 
         Args:
             value: Text value to set
@@ -133,7 +123,7 @@ class WeatherLocationAutocomplete(AccessibleComboBox):
         self.suppress_events = False
 
     def on_text_changed(self, event):
-        """Handle text change event to trigger autocomplete
+        """Handle text change event to trigger autocomplete.
 
         Args:
             event: Text event
@@ -148,20 +138,14 @@ class WeatherLocationAutocomplete(AccessibleComboBox):
         current_text = self.GetValue()
 
         # Check if we have enough characters to trigger suggestions
-        if (
-            current_text
-            and len(current_text) >= self.min_chars
-            and self.geocoding_service
-        ):
+        if current_text and len(current_text) >= self.min_chars and self.geocoding_service:
             # Restart the debounce timer
             self.debounce_timer.Stop()
             self.debounce_timer.Start(self.debounce_delay, wx.TIMER_ONE_SHOT)
 
             # In test mode, fetch immediately
             if hasattr(wx, "testing") and wx.testing:
-                suggestions = self.geocoding_service.suggest_locations(
-                    current_text
-                )
+                suggestions = self.geocoding_service.suggest_locations(current_text)
                 self._update_completions(suggestions)
 
         # Allow event to continue
@@ -169,21 +153,17 @@ class WeatherLocationAutocomplete(AccessibleComboBox):
             event.Skip()
 
     def on_debounce_timer(self, event):
-        """Handle debounce timer event to fetch suggestions after typing stops
+        """Handle debounce timer event to fetch suggestions after typing stops.
 
         Args:
             event: Timer event
         """
         current_text = self.GetValue()
-        if (
-            current_text
-            and len(current_text) >= self.min_chars
-            and self.geocoding_service
-        ):
+        if current_text and len(current_text) >= self.min_chars and self.geocoding_service:
             self._fetch_suggestions(current_text)
 
     def _fetch_suggestions(self, text):
-        """Fetch location suggestions in the background
+        """Fetch location suggestions in the background.
 
         Args:
             text: Text to get suggestions for
@@ -198,14 +178,12 @@ class WeatherLocationAutocomplete(AccessibleComboBox):
         self.stop_event.clear()
 
         # Start a new thread to fetch suggestions
-        self.fetch_thread = threading.Thread(
-            target=self._fetch_thread_func, args=(text,)
-        )
+        self.fetch_thread = threading.Thread(target=self._fetch_thread_func, args=(text,))
         self.fetch_thread.daemon = True
         self.fetch_thread.start()
 
     def _fetch_thread_func(self, text):
-        """Thread function to fetch location suggestions
+        """Thread function to fetch location suggestions.
 
         Args:
             text: Text to get suggestions for
@@ -221,9 +199,7 @@ class WeatherLocationAutocomplete(AccessibleComboBox):
 
             # Check again if we've been asked to stop before delivering results
             if self.stop_event.is_set():
-                logger.debug(
-                    "Suggestions fetch completed but results discarded"
-                )
+                logger.debug("Suggestions fetch completed but results discarded")
                 return
 
             # Update the completer on the main thread
@@ -233,7 +209,7 @@ class WeatherLocationAutocomplete(AccessibleComboBox):
                 logger.error(f"Error fetching location suggestions: {e}")
 
     def _update_completions(self, suggestions):
-        """Update the completions in the text completer
+        """Update the completions in the text completer.
 
         Args:
             suggestions: List of location suggestions
@@ -247,7 +223,7 @@ class WeatherLocationAutocomplete(AccessibleComboBox):
                 self.AutoComplete(self.completer)
 
     def update_choices(self, choices):
-        """Update autocomplete choices
+        """Update autocomplete choices.
 
         This is a convenience method primarily used for testing.
 
@@ -266,7 +242,7 @@ class WeatherLocationAutocomplete(AccessibleComboBox):
             self.Append(choices)
 
     def get_completer(self):
-        """Get the text completer for testing
+        """Get the text completer for testing.
 
         Returns:
             TextCompleterSimple instance

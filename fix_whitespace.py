@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-Script to automatically fix common Flake8 whitespace and formatting issues.
-"""
+"""Script to fix common Flake8 whitespace and formatting issues."""
 
 import os
 import re

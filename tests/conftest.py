@@ -1,4 +1,5 @@
-# tests/conftest.py
+"""Test configuration and fixtures for AccessiWeather."""
+
 import json
 import os
 import tempfile
@@ -13,7 +14,7 @@ if os.environ.get("ACCESSIWEATHER_TESTING") != "1":
 # We need a wx App for testing wx components
 @pytest.fixture(scope="session")  # Use session scope for efficiency
 def wx_app():
-    """Create a wx App for testing (session-scoped)"""
+    """Create a wx App for testing (session-scoped)."""
     if os.environ.get("ACCESSIWEATHER_TESTING") != "1":
         app = wx.App()
         yield app
@@ -26,7 +27,7 @@ def wx_app():
 
 @pytest.fixture
 def temp_config_file():
-    """Create a temporary config file for testing"""
+    """Create a temporary config file for testing."""
     # Create a temporary directory
     with tempfile.TemporaryDirectory() as temp_dir:
         # Create a temporary config file

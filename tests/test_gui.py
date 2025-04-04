@@ -1,4 +1,4 @@
-"""Tests for the GUI components"""
+"""Tests for the GUI components."""
 
 # import wx  # Not used directly in this file
 import json
@@ -27,10 +27,10 @@ from accessiweather.gui.weather_app import WeatherApp
     reason="GUI test skipped in CI",
 )
 class TestLocationDialog:
-    """Test suite for LocationDialog"""
+    """Test suite for LocationDialog."""
 
     def setup_method(self):
-        """Set up test fixture"""
+        """Set up test fixture."""
         # Create geocoding service mock
         patch_target = "accessiweather.gui.dialogs.GeocodingService"
         self.geocoding_patcher = patch(patch_target)
@@ -40,12 +40,12 @@ class TestLocationDialog:
         self.mock_geocoding_class.return_value = self.mock_geocoding
 
     def teardown_method(self):
-        """Tear down test fixture"""
+        """Tear down test fixture."""
         # Stop geocoding patch
         self.geocoding_patcher.stop()
 
     def test_init(self, wx_app):
-        """Test initialization"""
+        """Test initialization."""
         dialog = LocationDialog(
             None,
             title="Test Dialog",
@@ -62,7 +62,7 @@ class TestLocationDialog:
             dialog.Destroy()
 
     def test_validation(self, wx_app):
-        """Test input validation"""
+        """Test input validation."""
         dialog = LocationDialog(None)
         try:
             # Set initial state with valid coordinates
@@ -99,7 +99,7 @@ class TestLocationDialog:
             dialog.Destroy()
 
     def test_get_values(self, wx_app):
-        """Test getting values from the dialog"""
+        """Test getting values from the dialog."""
         dialog = LocationDialog(None)
         try:
             dialog.name_ctrl.SetValue("Test")
@@ -120,13 +120,11 @@ class TestLocationDialog:
     reason="GUI test skipped in CI",
 )
 class TestWeatherDiscussionDialog:
-    """Test suite for WeatherDiscussionDialog"""
+    """Test suite for WeatherDiscussionDialog."""
 
     def test_init(self, wx_app):
-        """Test initialization"""
-        dialog = WeatherDiscussionDialog(
-            None, title="Test Discussion", text="Test discussion text"
-        )
+        """Test initialization."""
+        dialog = WeatherDiscussionDialog(None, title="Test Discussion", text="Test discussion text")
         try:
             assert dialog.text_ctrl.GetValue() == "Test discussion text"
         finally:
@@ -139,16 +137,14 @@ class TestWeatherDiscussionDialog:
     reason="GUI test skipped in CI",
 )
 class TestWeatherApp:
-    """Test suite for WeatherApp"""
+    """Test suite for WeatherApp."""
 
     @pytest.fixture
     def mock_components(self):
-        """Mock the components used by WeatherApp"""
+        """Mock the components used by WeatherApp."""
         # Update the patch to match our new structure
         # We need to patch the direct imports in weather_app.py
-        with patch(
-            "accessiweather.api_client.NoaaApiClient"
-        ) as mock_api_client_class, patch(
+        with patch("accessiweather.api_client.NoaaApiClient") as mock_api_client_class, patch(
             "accessiweather.notifications.WeatherNotifier"
         ) as mock_notifier_class, patch(
             "accessiweather.location.LocationManager"
@@ -160,9 +156,7 @@ class TestWeatherApp:
             mock_location_manager = MagicMock()
 
             # Configure mock location manager to return valid data
-            mock_location_manager.get_all_locations.return_value = [
-                "Test City"
-            ]
+            mock_location_manager.get_all_locations.return_value = ["Test City"]
             mock_location_manager.get_current_location.return_value = (
                 "Test City",
                 35.0,
@@ -183,10 +177,8 @@ class TestWeatherApp:
                 "location_manager": mock_location_manager,
             }
 
-    def test_init_with_default_config(
-        self, wx_app, mock_components, monkeypatch
-    ):
-        """Test initialization with default config"""
+    def test_init_with_default_config(self, wx_app, mock_components, monkeypatch):
+        """Test initialization with default config."""
         # Patch os.path.exists to return False for all config paths
         monkeypatch.setattr(os.path, "exists", lambda path: False)
 
@@ -208,10 +200,8 @@ class TestWeatherApp:
             if app:
                 app.Destroy()
 
-    def test_init_with_config_file(
-        self, wx_app, mock_components, temp_config_file, monkeypatch
-    ):
-        """Test initialization with config file"""
+    def test_init_with_config_file(self, wx_app, mock_components, temp_config_file, monkeypatch):
+        """Test initialization with config file."""
         # Patch os.path.exists to return True only for our temp config file
         original_exists = os.path.exists
 
@@ -261,28 +251,22 @@ class TestWeatherApp:
     def test_fetch_weather_data_with_proper_headers(
         self, mock_call_after, wx_app, mock_components, monkeypatch
     ):
-        """Test that _FetchWeatherData uses proper headers from API client"""
+        """Test that _FetchWeatherData uses proper headers from API client."""
         # Create real API client with contact info
-        api_client = NoaaApiClient(
-            user_agent="AccessiWeather", contact_info="test@example.com"
-        )
+        api_client = NoaaApiClient(user_agent="AccessiWeather", contact_info="test@example.com")
 
         # Mock requests.get to check headers
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.raise_for_status = MagicMock()
         mock_response.json = MagicMock(
-            return_value={
-                "properties": {"forecast": "https://api.example.com/forecast"}
-            }
+            return_value={"properties": {"forecast": "https://api.example.com/forecast"}}
         )
 
         # Mock for the second request to forecast URL
         mock_forecast_response = MagicMock()
         mock_forecast_response.status_code = 200
-        mock_forecast_response.json = MagicMock(
-            return_value={"properties": {"periods": []}}
-        )
+        mock_forecast_response.json = MagicMock(return_value={"properties": {"periods": []}})
 
         # Create a mock for requests.get that returns appropriate responses
 
@@ -332,10 +316,7 @@ class TestWeatherApp:
             else:
                 # No call to requests.get had User-Agent header
                 # with contact info
-                assert False, (
-                    "No call to requests.get had User-Agent header with "
-                    "contact info"
-                )
+                assert False, "No call to requests.get had User-Agent header with " "contact info"
         finally:
             if app:
                 app.Destroy()

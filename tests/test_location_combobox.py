@@ -1,4 +1,4 @@
-"""Tests for LocationDialog with AccessibleComboBox integration"""
+"""Tests for LocationDialog with AccessibleComboBox integration."""
 
 import os
 from unittest.mock import MagicMock, patch
@@ -14,7 +14,7 @@ from accessiweather.gui.dialogs import LocationDialog
 # Create a wx App fixture for testing
 @pytest.fixture(scope="module")
 def wx_app():
-    """Create a wx App for testing"""
+    """Create a wx App for testing."""
     app = wx.App(False)
     yield app
 
@@ -22,7 +22,7 @@ def wx_app():
 # Fixture to safely destroy wx objects
 @pytest.fixture
 def safe_destroy():
-    """Fixture to safely destroy wx objects even without an app"""
+    """Fixture to safely destroy wx objects even without an app."""
     objs_to_destroy = []
 
     def _register(obj):
@@ -54,10 +54,10 @@ def safe_destroy():
     reason="GUI test skipped in CI",
 )
 class TestLocationDialogWithComboBox:
-    """Test suite for LocationDialog with AccessibleComboBox integration"""
+    """Test suite for LocationDialog with AccessibleComboBox integration."""
 
     def setup_method(self):
-        """Set up test fixture"""
+        """Set up test fixture."""
         # Ensure wx.App exists
         try:
             app = wx.GetApp()
@@ -78,7 +78,7 @@ class TestLocationDialogWithComboBox:
         self.mock_geocoding_class.return_value = self.mock_geocoding
 
     def teardown_method(self):
-        """Tear down test fixture"""
+        """Tear down test fixture."""
         # Stop geocoding patch
         self.geocoding_patcher.stop()
 
@@ -90,7 +90,7 @@ class TestLocationDialogWithComboBox:
             pass  # Ignore any errors in cleanup
 
     def test_search_combo_initialization(self, wx_app, safe_destroy):
-        """Test that the search control is an AccessibleComboBox"""
+        """Test that the search control is an AccessibleComboBox."""
         dialog = safe_destroy(LocationDialog(self.frame))
         # Verify that search_field is an AccessibleComboBox
         assert isinstance(dialog.search_field, AccessibleComboBox)
@@ -100,7 +100,7 @@ class TestLocationDialogWithComboBox:
         assert dialog.search_field.GetCount() == 0
 
     def test_search_history_persistence(self, wx_app, safe_destroy):
-        """Test that search history is persisted between searches"""
+        """Test that search history is persisted between searches."""
         dialog = safe_destroy(LocationDialog(self.frame))
         self.mock_geocoding.geocode_address.return_value = (
             35.0,
@@ -136,7 +136,7 @@ class TestLocationDialogWithComboBox:
         assert dialog.search_field.GetString(1) == "123 Main St"
 
     def test_combo_selection_triggers_search(self, wx_app, safe_destroy):
-        """Test that selecting an item from the dropdown triggers a search"""
+        """Test that selecting an item from the dropdown triggers a search."""
         dialog = safe_destroy(LocationDialog(self.frame))
         self.mock_geocoding.geocode_address.return_value = (
             35.0,
@@ -159,14 +159,12 @@ class TestLocationDialogWithComboBox:
         self.mock_geocoding.geocode_address.assert_called_with("123 Main St")
 
         # Check results are displayed
-        assert (
-            "Found: 123 Main St, City, State" in dialog.result_text.GetValue()
-        )
+        assert "Found: 123 Main St, City, State" in (dialog.result_text.GetValue())
         assert dialog.latitude == 35.0
         assert dialog.longitude == -80.0
 
     def test_duplicate_search_terms_not_added(self, wx_app, safe_destroy):
-        """Test that duplicate search terms aren't added to history"""
+        """Test that duplicate search terms aren't added to history."""
         dialog = safe_destroy(LocationDialog(self.frame))
         self.mock_geocoding.geocode_address.return_value = (
             35.0,
@@ -192,7 +190,7 @@ class TestLocationDialogWithComboBox:
         assert dialog.search_field.GetString(0) == "123 Main St"
 
     def test_max_history_items(self, wx_app, safe_destroy):
-        """Test that only a limited number of search terms are kept"""
+        """Test that only a limited number of search terms are kept."""
         dialog = safe_destroy(LocationDialog(self.frame))
         self.mock_geocoding.geocode_address.return_value = (
             35.0,
