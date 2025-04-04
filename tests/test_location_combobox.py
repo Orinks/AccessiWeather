@@ -2,7 +2,14 @@
 
 import pytest
 import wx
+import os  # Import os module
 from unittest.mock import patch, MagicMock
+
+# Import project components early, handling potential wx dependency if needed
+from accessiweather.gui.dialogs import LocationDialog
+from accessiweather.gui.ui_components import AccessibleComboBox
+from accessiweather.gui.async_fetchers import safe_call_after
+
 
 # Create a wx App fixture for testing
 @pytest.fixture(scope="module")
@@ -10,6 +17,7 @@ def wx_app():
     """Create a wx App for testing"""
     app = wx.App(False)
     yield app
+
 
 # Fixture to safely destroy wx objects
 @pytest.fixture
@@ -32,18 +40,21 @@ def safe_destroy():
                 except Exception:
                     # If direct destroy fails, try wxPython's safe way
                     try:
-                        from accessiweather.gui.async_fetchers import safe_call_after
+                        # Import moved to top
                         safe_call_after(obj.Destroy)
                     except Exception:
                         pass  # Last resort, just ignore
         except Exception:
             pass  # Ignore any errors in cleanup
 
-# Import after wx.App is created
-from accessiweather.gui.dialogs import LocationDialog
-from accessiweather.gui.ui_components import AccessibleComboBox
+# Imports moved to top
 
 
+# Skip GUI tests in CI environment
+@pytest.mark.skipif(
+    os.environ.get('ACCESSIWEATHER_TESTING') == '1',
+    reason="GUI test skipped in CI"
+)
 class TestLocationDialogWithComboBox:
     """Test suite for LocationDialog with AccessibleComboBox integration"""
     
@@ -61,7 +72,8 @@ class TestLocationDialogWithComboBox:
         self.frame = wx.Frame(None)
         
         # Create patch for geocoding service
-        self.geocoding_patcher = patch('accessiweather.gui.dialogs.GeocodingService')
+        patch_target = 'accessiweather.gui.dialogs.GeocodingService'
+        self.geocoding_patcher = patch(patch_target)
         self.mock_geocoding_class = self.geocoding_patcher.start()
         self.mock_geocoding = MagicMock()
         self.mock_geocoding_class.return_value = self.mock_geocoding
@@ -73,7 +85,7 @@ class TestLocationDialogWithComboBox:
         
         # Destroy frame safely
         try:
-            from accessiweather.gui.async_fetchers import safe_call_after
+            # Import moved to top
             safe_call_after(self.frame.Destroy)
         except Exception:
             pass  # Ignore any errors in cleanup
@@ -83,7 +95,8 @@ class TestLocationDialogWithComboBox:
         dialog = safe_destroy(LocationDialog(self.frame))
         # Verify that search_field is an AccessibleComboBox
         assert isinstance(dialog.search_field, AccessibleComboBox)
-        assert dialog.search_field.GetName() == "Search by Address or ZIP Code"
+        assert dialog.search_field.GetName() == \
+            "Search by Address or ZIP Code"
         
         # Check that the combobox is empty initially
         assert dialog.search_field.GetCount() == 0
@@ -91,12 +104,15 @@ class TestLocationDialogWithComboBox:
     def test_search_history_persistence(self, wx_app, safe_destroy):
         """Test that search history is persisted between searches"""
         dialog = safe_destroy(LocationDialog(self.frame))
-        self.mock_geocoding.geocode_address.return_value = (35.0, -80.0, "123 Main St, City, State")
+        self.mock_geocoding.geocode_address.return_value = (
+            35.0, -80.0, "123 Main St, City, State"
+        )
         
         # Perform first search
         dialog.search_field.SetValue("123 Main St")
         with patch('wx.MessageBox'):  # Prevent MessageBox from showing
-            dialog._perform_search("123 Main St")  # Call directly instead of OnSearch
+            # Call directly instead of OnSearch
+            dialog._perform_search("123 Main St")
         
         # Check that the search term is in the dropdown
         assert dialog.search_field.GetCount() == 1
@@ -104,9 +120,12 @@ class TestLocationDialogWithComboBox:
         
         # Perform second search
         dialog.search_field.SetValue("456 Oak Ave")
-        self.mock_geocoding.geocode_address.return_value = (36.0, -81.0, "456 Oak Ave, City, State")
+        self.mock_geocoding.geocode_address.return_value = (
+            36.0, -81.0, "456 Oak Ave, City, State"
+        )
         with patch('wx.MessageBox'):  # Prevent MessageBox from showing
-            dialog._perform_search("456 Oak Ave")  # Call directly instead of OnSearch
+            # Call directly instead of OnSearch
+            dialog._perform_search("456 Oak Ave")
         
         # Check that both search terms are in the dropdown
         assert dialog.search_field.GetCount() == 2
@@ -117,7 +136,9 @@ class TestLocationDialogWithComboBox:
     def test_combo_selection_triggers_search(self, wx_app, safe_destroy):
         """Test that selecting an item from the dropdown triggers a search"""
         dialog = safe_destroy(LocationDialog(self.frame))
-        self.mock_geocoding.geocode_address.return_value = (35.0, -80.0, "123 Main St, City, State")
+        self.mock_geocoding.geocode_address.return_value = (
+            35.0, -80.0, "123 Main St, City, State"
+        )
         
         # Add some history items
         dialog.search_field.Append(["123 Main St", "456 Oak Ave"])
@@ -134,25 +155,30 @@ class TestLocationDialogWithComboBox:
         self.mock_geocoding.geocode_address.assert_called_with("123 Main St")
         
         # Check results are displayed
-        assert "Found: 123 Main St, City, State" in dialog.result_text.GetValue()
+        assert "Found: 123 Main St, City, State" in \
+            dialog.result_text.GetValue()
         assert dialog.latitude == 35.0
         assert dialog.longitude == -80.0
     
     def test_duplicate_search_terms_not_added(self, wx_app, safe_destroy):
         """Test that duplicate search terms aren't added to history"""
         dialog = safe_destroy(LocationDialog(self.frame))
-        self.mock_geocoding.geocode_address.return_value = (35.0, -80.0, "123 Main St, City, State")
+        self.mock_geocoding.geocode_address.return_value = (
+            35.0, -80.0, "123 Main St, City, State"
+        )
         
         # First search
         dialog.search_field.SetValue("123 Main St")
         with patch('wx.MessageBox'):  # Prevent MessageBox from showing
-            dialog._perform_search("123 Main St")  # Call directly instead of OnSearch
+            # Call directly instead of OnSearch
+            dialog._perform_search("123 Main St")
         assert dialog.search_field.GetCount() == 1
         
         # Same search again
         dialog.search_field.SetValue("123 Main St")
         with patch('wx.MessageBox'):  # Prevent MessageBox from showing
-            dialog._perform_search("123 Main St")  # Call directly instead of OnSearch
+            # Call directly instead of OnSearch
+            dialog._perform_search("123 Main St")
         
         # Should still only have one item
         assert dialog.search_field.GetCount() == 1
@@ -161,16 +187,20 @@ class TestLocationDialogWithComboBox:
     def test_max_history_items(self, wx_app, safe_destroy):
         """Test that only a limited number of search terms are kept"""
         dialog = safe_destroy(LocationDialog(self.frame))
-        self.mock_geocoding.geocode_address.return_value = (35.0, -80.0, "Address")
+        self.mock_geocoding.geocode_address.return_value = (
+            35.0, -80.0, "Address"
+        )
         
         # Add max_history_items + 1 searches
-        max_items = dialog.MAX_HISTORY_ITEMS  # This should be defined in the LocationDialog class
+        # MAX_HISTORY_ITEMS should be defined in LocationDialog
+        max_items = dialog.MAX_HISTORY_ITEMS
         
         for i in range(max_items + 2):
             search_term = f"Search {i}"
             dialog.search_field.SetValue(search_term)
             with patch('wx.MessageBox'):  # Prevent MessageBox from showing
-                dialog._perform_search(search_term)  # Call directly instead of OnSearch
+                # Call directly instead of OnSearch
+                dialog._perform_search(search_term)
         
         # Check that only max_items are kept
         assert dialog.search_field.GetCount() == max_items

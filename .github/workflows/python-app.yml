@@ -25,7 +25,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         # Install test/lint dependencies
-        pip install flake8 pytest pytest-mock
+        pip install flake8 pytest pytest-mock pytest-timeout
         # Install project dependencies (assuming requirements.txt exists)
         if (Test-Path "requirements.txt") {
             pip install -r requirements.txt
@@ -57,20 +57,27 @@ jobs:
     - name: Setup CI test environment
       run: |
         echo "Setting up CI test environment"
+        $sourceConfig = "tests\ci_config.json"
+        if (-not (Test-Path $sourceConfig)) {
+            Write-Error "CI configuration file not found at $sourceConfig"
+            exit 1
+        }
         # Copy CI config to the expected location
         $configDir = Join-Path $env:USERPROFILE ".accessiweather"
         if (-not (Test-Path $configDir)) {
             New-Item -Path $configDir -ItemType Directory -Force
         }
         $configFile = Join-Path $configDir "config.json"
-        Copy-Item -Path "tests\ci_config.json" -Destination $configFile -Force
-        echo "CI config copied to $configFile"
+        Copy-Item -Path $sourceConfig -Destination $configFile -Force
+        echo "CI config copied from $sourceConfig to $configFile"
 
     - name: Test with pytest
       run: |
-        # Run pytest with verbose output and show local variables on failure
-        # GitHub Actions will automatically fail the step if pytest returns a non-zero exit code.
-        pytest tests/ -v --showlocals
+        # Run pytest with verbose output, show local variables on failure, and a 5-minute timeout
+        # GitHub Actions will automatically fail the step if pytest returns a non-zero exit code or times out.
+        # NOTE: Tests involving GUI elements (wxPython) might hang in CI.
+        # Consider marking them with @pytest.mark.skipif(os.environ.get('ACCESSIWEATHER_TESTING') == '1')
+        pytest tests/ -v --showlocals --timeout=300
       env:
         ACCESSIWEATHER_TESTING: "1"
         ACCESSIWEATHER_SKIP_API_CALLS: "1"

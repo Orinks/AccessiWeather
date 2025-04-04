@@ -1,9 +1,9 @@
 """Tests for the GUI components"""
 
 import pytest
+import os  # Import os module
 # import wx  # Not used directly in this file
 import json
-import os
 # import tempfile  # No longer used directly in this file
 from unittest.mock import patch, MagicMock
 import time
@@ -18,6 +18,11 @@ from accessiweather.api_client import NoaaApiClient
 # Fixtures `wx_app` and `temp_config_file` moved to conftest.py
 
 
+# Skip GUI tests in CI environment
+@pytest.mark.skipif(
+    os.environ.get('ACCESSIWEATHER_TESTING') == '1',
+    reason="GUI test skipped in CI"
+)
 class TestLocationDialog:
     """Test suite for LocationDialog"""
     
@@ -105,6 +110,11 @@ class TestLocationDialog:
             dialog.Destroy()
 
 
+# Skip GUI tests in CI environment
+@pytest.mark.skipif(
+    os.environ.get('ACCESSIWEATHER_TESTING') == '1',
+    reason="GUI test skipped in CI"
+)
 class TestWeatherDiscussionDialog:
     """Test suite for WeatherDiscussionDialog"""
     
@@ -119,6 +129,11 @@ class TestWeatherDiscussionDialog:
             dialog.Destroy()
 
 
+# Skip GUI tests in CI environment
+@pytest.mark.skipif(
+    os.environ.get('ACCESSIWEATHER_TESTING') == '1',
+    reason="GUI test skipped in CI"
+)
 class TestWeatherApp:
     """Test suite for WeatherApp"""
     

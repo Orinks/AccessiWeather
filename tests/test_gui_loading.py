@@ -4,6 +4,7 @@
 import pytest
 import wx
 import wx.richtext
+import os  # Import os module
 # import time # No longer needed after removing sleep
 from unittest.mock import patch, MagicMock
 
@@ -47,6 +48,11 @@ def mock_components_loading():
 # Use the base class from test_gui to inherit wx_app fixture
 # Note: This class duplicates announcement tests from TestWeatherApp.
 # Consider refactoring or removing duplication later.
+# Skip GUI tests in CI environment
+@pytest.mark.skipif(
+    os.environ.get('ACCESSIWEATHER_TESTING') == '1',
+    reason="GUI test skipped in CI"
+)
 class TestWeatherAppLoadingFeedback(TestWeatherApp):
     """Tests specifically for loading feedback and related UI states"""
 

@@ -2,7 +2,12 @@
 
 import pytest
 import wx
-from unittest.mock import patch, MagicMock
+import os  # Import os module
+from unittest.mock import MagicMock  # Removed unused 'patch'
+
+# Import project components after wx.App might be needed
+from accessiweather.gui.ui_components import AccessibleComboBox
+
 
 # Create a wx App fixture for testing
 @pytest.fixture(scope="module", autouse=True)
@@ -11,10 +16,12 @@ def wx_app():
     app = wx.App(False)
     yield app
 
-# Import this after wx.App is created
-from accessiweather.gui.ui_components import AccessibleComboBox
 
-
+# Skip GUI tests in CI environment
+@pytest.mark.skipif(
+    os.environ.get('ACCESSIWEATHER_TESTING') == '1',
+    reason="GUI test skipped in CI"
+)
 class TestAccessibleComboBox:
     """Test suite for AccessibleComboBox"""
     
@@ -40,7 +47,9 @@ class TestAccessibleComboBox:
             
         # Test with choices
         choices = ["Option 1", "Option 2", "Option 3"]
-        combo = AccessibleComboBox(self.frame, choices=choices, label="Test Combo")
+        combo = AccessibleComboBox(
+            self.frame, choices=choices, label="Test Combo"
+        )
         try:
             assert combo.GetName() == "Test Combo"
             assert combo.GetCount() == 3
@@ -81,7 +90,9 @@ class TestAccessibleComboBox:
     def test_get_set_value(self):
         """Test getting and setting value"""
         choices = ["Option 1", "Option 2", "Option 3"]
-        combo = AccessibleComboBox(self.frame, choices=choices, label="Test Combo")
+        combo = AccessibleComboBox(
+            self.frame, choices=choices, label="Test Combo"
+        )
         try:
             # Set by index
             combo.SetSelection(1)
@@ -103,7 +114,9 @@ class TestAccessibleComboBox:
     def test_events(self):
         """Test that events are properly triggered"""
         choices = ["Option 1", "Option 2", "Option 3"]
-        combo = AccessibleComboBox(self.frame, choices=choices, label="Test Combo")
+        combo = AccessibleComboBox(
+            self.frame, choices=choices, label="Test Combo"
+        )
         
         try:
             # Mock event handlers

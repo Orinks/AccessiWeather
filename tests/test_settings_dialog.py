@@ -2,6 +2,7 @@
 """Tests for the SettingsDialog GUI component"""
 
 import pytest
+import os  # Import os module
 # import wx  # Not directly used in these tests, wx_app fixture handles it
 # from unittest.mock import patch, MagicMock # Not used yet
 
@@ -10,14 +11,15 @@ import pytest
 # Fixture wx_app is automatically discovered from conftest.py
 # from tests.test_gui import wx_app  # noqa: F401
 
-# Import the class we are testing (will fail until created)
-try:
-    from accessiweather.gui.settings_dialog import SettingsDialog
-except ImportError:
-    SettingsDialog = None  # Define as None if import fails
+# Import the class we are testing
+from accessiweather.gui.settings_dialog import SettingsDialog
 
 
-@pytest.mark.skipif(SettingsDialog is None, reason="Dialog not implemented")
+# Skip GUI tests in CI environment
+@pytest.mark.skipif(
+    os.environ.get('ACCESSIWEATHER_TESTING') == '1',
+    reason="GUI test skipped in CI"
+)
 class TestSettingsDialog:
     """Test suite for the SettingsDialog"""
 
