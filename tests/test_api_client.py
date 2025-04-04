@@ -1,4 +1,4 @@
-t"""Tests for the NOAA API client"""
+"""Tests for the NOAA API client"""
 
 from unittest.mock import MagicMock, patch
 
