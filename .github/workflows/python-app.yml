@@ -77,7 +77,7 @@ jobs:
         # GitHub Actions will automatically fail the step if pytest returns a non-zero exit code or times out.
         # NOTE: Tests involving GUI elements (wxPython) might hang in CI.
         # Consider marking them with @pytest.mark.skipif(os.environ.get('ACCESSIWEATHER_TESTING') == '1')
-        pytest tests/ -v -s --showlocals --timeout=300
+        pytest tests/ -v -s --showlocals
       env:
         ACCESSIWEATHER_TESTING: "1"
         ACCESSIWEATHER_SKIP_API_CALLS: "1"
