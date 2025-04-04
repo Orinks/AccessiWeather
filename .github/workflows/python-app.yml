@@ -24,25 +24,23 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        # Install test/lint dependencies
-        pip install flake8 pytest pytest-mock pytest-timeout
-        # Install project dependencies (assuming requirements.txt exists)
-        if (Test-Path "requirements.txt") {
-            pip install -r requirements.txt
-        } else {
-            echo "Warning: requirements.txt not found. Specific dependencies might be missing."
-            # Optionally, list essential dependencies here as a fallback, but requirements.txt is preferred
-            # pip install requests wxPython plyer geopy python-dateutil
-        }
-        # Install the package itself in editable mode
+        # Install project in editable mode (pulls runtime deps from setup.py)
         pip install -e .
+        # Install development/testing dependencies
+        if (Test-Path "requirements-dev.txt") {
+            pip install -r requirements-dev.txt
+        } else {
+            echo "Warning: requirements-dev.txt not found."
+            # Install essential test deps as fallback
+            pip install flake8 pytest pytest-mock pytest-timeout
+        }
 
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=100 --statistics
+        flake8 . --count --max-complexity=10 --max-line-length=100 --statistics
 
     - name: Check API connectivity
       run: |
@@ -78,6 +76,7 @@ jobs:
         # NOTE: Tests involving GUI elements (wxPython) might hang in CI.
         # Consider marking them with @pytest.mark.skipif(os.environ.get('ACCESSIWEATHER_TESTING') == '1')
         pytest tests/ -v -s --showlocals
+      # Set environment variables needed for testing
       env:
-        ACCESSIWEATHER_TESTING: "1"
-        ACCESSIWEATHER_SKIP_API_CALLS: "1"
+        ACCESSIWEATHER_TESTING: '1' # Used by tests to skip GUI elements
+        ACCESSIWEATHER_SKIP_API_CALLS: '1' # Used by api_client to bypass lock/sleep
