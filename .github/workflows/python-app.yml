@@ -36,7 +36,14 @@ jobs:
         python -c "import requests; print('NOAA API Status:', requests.get('https://api.weather.gov/').status_code)"
       continue-on-error: true
 
+    - name: List test files
+      run: |
+        echo "Test files found:"
+        dir /s /b tests\*.py
+
     - name: Test with pytest
       run: |
-        pytest || echo "Tests failed but continuing workflow"
+        # Run with verbose output and show local variables on failure
+        # Add timeout to prevent hanging
+        timeout 300 pytest -v --showlocals --no-header --no-summary || echo "Tests failed but continuing workflow"
       continue-on-error: true
