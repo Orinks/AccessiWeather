@@ -11,6 +11,10 @@ permissions:
 jobs:
   build:
     runs-on: windows-latest
+    env:
+      ACCESSIWEATHER_TESTING: "1"
+      ACCESSIWEATHER_SKIP_API_CALLS: "1"
+      ACCESSIWEATHER_HEADLESS: "1"
 
     steps:
     - uses: actions/checkout@v4
@@ -81,7 +85,3 @@ jobs:
     - name: Test with pytest
       run: |
         pytest tests/ -v -s --showlocals --no-header --no-summary -k "not (test_gui or test_accessible_combo_box or test_location_dialog or test_location_combobox or test_gui_loading or test_get_point_data_real or test_get_alerts_real or test_get_discussion_real)"
-      env:
-        ACCESSIWEATHER_TESTING: '1' # Used by tests to skip GUI elements
-        ACCESSIWEATHER_SKIP_API_CALLS: '1' # Used by api_client to bypass lock/sleep
-        ACCESSIWEATHER_HEADLESS: '1' # Indicate headless environment
