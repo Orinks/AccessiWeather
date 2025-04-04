@@ -24,7 +24,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         # Install project in editable mode without GUI dependencies
-        # Now that wxPython is an optional dependency, this won't install it
         pip install -e .
         # Install development/testing dependencies
         if (Test-Path "requirements-dev.txt") {
@@ -37,41 +36,20 @@ jobs:
             pip install requests plyer python-dateutil mock
         }
 
-    - name: Setup wxPython mock for headless testing
+    - name: Check formatting with isort
       run: |
-        echo "Setting up wxPython mock for headless testing..."
-        # Create a directory for the mock
-        $mockDir = "wx"
-        if (-not (Test-Path $mockDir)) {
-            New-Item -Path $mockDir -ItemType Directory -Force
-        }
-        # Create __init__.py that explicitly imports from our mock
-        $initContent = @"
-        from tests.wx_mock import (
-            App, Frame, Panel, BoxSizer, StaticText, Button, ComboBox,
-            VERTICAL, HORIZONTAL, ID_ANY, EXPAND, ALL
-        )
-        "@
-        Set-Content -Path "$mockDir\__init__.py" -Value $initContent
-        # Add the mock directory to PYTHONPATH using GITHUB_ENV
-        echo "PYTHONPATH=$($pwd)\$mockDir;$($env:PYTHONPATH)" | Out-File -FilePath $env:GITHUB_ENV -Append
-        echo "wxPython mock setup complete"
-
-    # - name: Check formatting with isort # Temporarily disabled due to CI/local discrepancy
-    #   run: |
-    #     isort --check .
+        isort --check .
 
     - name: Check formatting with black
       run: |
-        # Exclude the generated wx mock directory
-        black --check . --exclude wx/
+        black --check .
 
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. Ignore F401 in generated wx mock.
-        flake8 . --count --max-complexity=10 --max-line-length=100 --statistics --per-file-ignores="wx/__init__.py:F401"
+        # exit-zero treats all errors as warnings
+        flake8 . --count --max-complexity=10 --max-line-length=100 --statistics
 
     - name: Check API connectivity
       run: |
@@ -102,14 +80,7 @@ jobs:
 
     - name: Test with pytest
       run: |
-        # Add src directory to PYTHONPATH to handle potential nested checkout path in CI
-        echo "Adding src to PYTHONPATH: $env:GITHUB_WORKSPACE\src"
-        echo "PYTHONPATH=$env:GITHUB_WORKSPACE\src;$env:PYTHONPATH" | Out-File -FilePath $env:GITHUB_ENV -Append
-
-        # Run pytest directly, skipping GUI/real API tests.
-        # GitHub Actions will fail the step on non-zero exit code.
         pytest tests/ -v -s --showlocals --no-header --no-summary -k "not (test_gui or test_accessible_combo_box or test_location_dialog or test_location_combobox or test_gui_loading or test_get_point_data_real or test_get_alerts_real or test_get_discussion_real)"
-      continue-on-error: true # Allow workflow to finish even if tests fail
       env:
         ACCESSIWEATHER_TESTING: '1' # Used by tests to skip GUI elements
         ACCESSIWEATHER_SKIP_API_CALLS: '1' # Used by api_client to bypass lock/sleep

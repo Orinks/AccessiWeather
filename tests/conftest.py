@@ -4,7 +4,6 @@ import os
 import tempfile
 
 import pytest
-
 import wx  # Make sure wx is imported
 
 
