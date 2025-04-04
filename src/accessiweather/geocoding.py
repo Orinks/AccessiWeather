@@ -1,14 +1,16 @@
 """Geocoding service for AccessiWeather
 
-This module provides geocoding functionality to convert addresses and zip codes to coordinates.
+This module provides geocoding functionality to convert addresses/zip codes
+to coordinates.
 """
 
 import logging
-from typing import Optional, Tuple, Dict, Any, List
+from typing import Optional, Tuple, List  # Removed unused Dict, Any
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 
 logger = logging.getLogger(__name__)
+
 
 class GeocodingService:
     """Service for geocoding addresses and zip codes"""
@@ -21,19 +23,23 @@ class GeocodingService:
         """
         self.geolocator = Nominatim(user_agent=user_agent)
     
-    def geocode_address(self, address: str) -> Optional[Tuple[float, float, str]]:
+    def geocode_address(
+        self, address: str
+    ) -> Optional[Tuple[float, float, str]]:
         """Convert an address or zip code to coordinates
         
         Args:
             address: Address or zip code to geocode
             
         Returns:
-            Tuple of (latitude, longitude, display_name) if successful, None otherwise
+            Tuple of (latitude, longitude, display_name) if successful,
+            None otherwise
         """
         try:
             # Check if it's possibly a US zip code (5 digits)
             if address.isdigit() and len(address) == 5:
-                address = f"{address}, USA"  # Add USA to improve geocoding accuracy for zip codes
+                # Add USA to improve geocoding accuracy for zip codes
+                address = f"{address}, USA"
                 
             location = self.geolocator.geocode(address)
             if location:
@@ -61,9 +67,11 @@ class GeocodingService:
                 return []
                 
             # Use geocoder to get suggestions
-            # Note: Nominatim doesn't have native autocomplete, so we're simulating it
-            # by using the geocode function with limit parameter
-            locations = self.geolocator.geocode(query, exactly_one=False, limit=limit)
+            # Note: Nominatim doesn't have native autocomplete, so we simulate
+            # it by using the geocode function with limit parameter
+            locations = self.geolocator.geocode(
+                query, exactly_one=False, limit=limit
+            )
             
             if locations:
                 # Extract the display names

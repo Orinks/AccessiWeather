@@ -27,12 +27,12 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
         )
     )
     parser.add_argument(
-        "-d", "--debug", 
-        action="store_true", 
+        "-d", "--debug",
+        action="store_true",
         help="Enable debug logging"
     )
     parser.add_argument(
-        "-c", "--config", 
+        "-c", "--config",
         help="Path to configuration directory"
     )
     

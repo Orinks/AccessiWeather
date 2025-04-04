@@ -233,22 +233,62 @@ class NoaaApiClient:
             logger.debug(f"Traceback: {traceback.format_exc()}")
             return None
 
+    def _build_request_url(self, endpoint_or_url: str,
+                           use_full_url: bool) -> str:
+        """Helper method to build the request URL."""
+        if use_full_url:
+            return endpoint_or_url
+        else:
+            clean_endpoint = endpoint_or_url.lstrip('/')
+            # Check if it's already a full URL (less common case)
+            if endpoint_or_url.startswith(self.BASE_URL):
+                return endpoint_or_url
+            else:
+                return f"{self.BASE_URL}/{clean_endpoint}"
+
+    def _process_response(self, response: requests.Response,
+                          request_url: str) -> Dict[str, Any]:
+        """Processes the API response, handling errors and JSON decoding."""
+        try:
+            # Raises HTTPError for bad responses (4xx or 5xx)
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as http_err:
+            status_code = http_err.response.status_code
+            error_msg = f"API HTTP error: {status_code} for URL {request_url}"
+            try:
+                # Try getting detail from JSON response if available
+                error_json = http_err.response.json()
+                detail = error_json.get('detail', 'No detail provided')
+                error_msg += f" - Detail: {detail}"
+            except JSONDecodeError:
+                # If error response isn't valid JSON, use raw text
+                resp_text = http_err.response.text[:200]
+                error_msg += f" - Response body: {resp_text}"
+            except Exception as json_err:  # Catch other JSON errors
+                error_msg += \
+                    f" - Error parsing error response JSON: {json_err}"
+
+            logger.error(error_msg, exc_info=True)
+            raise ApiClientError(error_msg) from http_err
+
+        # If status is OK, try to parse JSON
+        try:
+            return response.json()
+        except JSONDecodeError as json_err:
+            resp_text = response.text[:200]  # Limit length
+            error_msg = (
+                f"Failed to decode JSON response from {request_url}. "
+                f"Error: {json_err}. Response text: {resp_text}"
+            )
+            logger.error(error_msg, exc_info=True)
+            raise ApiClientError(error_msg) from json_err
+
     def _make_request(self, endpoint_or_url: str,
                       params: Optional[Dict[str, Any]] = None,
                       use_full_url: bool = False) -> Dict[str, Any]:
-        """Make a request to the NOAA API
-
-        Args:
-            endpoint_or_url: API endpoint path or full URL if use_full_url
-                             is True
-            params: Query parameters
-            use_full_url: Whether the endpoint_or_url is a complete URL
-
-        Returns:
-            Dict containing response data
-        """
-        # Initialize to avoid potential UnboundLocalError in finally block
-        request_url = ""
+        """Make a request to the NOAA API, handling rate limits and errors."""
+        lock_acquired = False
+        request_url = ""  # Initialize here
         try:
             # Check if API calls should be skipped (for testing)
             skip_api_calls = os.environ.get(
@@ -257,7 +297,6 @@ class NoaaApiClient:
 
             # Conditionally acquire lock and rate limit only if not skipping
             # API calls
-            lock_acquired = False
             if not skip_api_calls:
                 self.request_lock.acquire()
                 lock_acquired = True
@@ -277,6 +316,7 @@ class NoaaApiClient:
                 except Exception:  # Ensure lock is released if sleep fails
                     if lock_acquired:
                         self.request_lock.release()
+                        lock_acquired = False  # Prevent double release
                     raise
             else:
                 logger.debug(
@@ -285,84 +325,44 @@ class NoaaApiClient:
                 )
 
             # --- Request Execution ---
-            # Determine the full URL
-            if use_full_url:
-                request_url = endpoint_or_url
-            else:
-                clean_endpoint = endpoint_or_url.lstrip('/')
-                if endpoint_or_url.startswith(self.BASE_URL):
-                    request_url = endpoint_or_url
-                else:
-                    request_url = f"{self.BASE_URL}/{clean_endpoint}"
-
+            request_url = self._build_request_url(
+                endpoint_or_url, use_full_url
+            )
             logger.debug(
                 f"API request to: {request_url} with params: {params}"
             )
-            # Make the request. Added timeout.
             response = requests.get(
                 request_url,
                 headers=self.headers,
                 params=params,
                 timeout=10
             )
-            # Update last request time only if lock was acquired
-            # (i.e., not skipping)
             if lock_acquired:
                 self.last_request_time = time.time()
 
             # --- Process the response ---
-            # Check for HTTP errors first
-            try:
-                # Raises HTTPError for bad responses (4xx or 5xx)
-                response.raise_for_status()
-            except requests.exceptions.HTTPError as http_err:
-                status_code = http_err.response.status_code
-                error_msg = (
-                    f"API HTTP error: {status_code} for URL {request_url}"
-                )
-                try:
-                    # Try getting detail from JSON response if available
-                    error_json = http_err.response.json()
-                    detail = error_json.get('detail', 'No detail provided')
-                    error_msg += f" - Detail: {detail}"
-                except JSONDecodeError:
-                    # If error response isn't valid JSON, use raw text
-                    resp_text = http_err.response.text[:200]
-                    error_msg += f" - Response body: {resp_text}"
-                except Exception as json_err:  # Catch other JSON errors
-                    error_msg += (
-                        f" - Error parsing error response JSON: {json_err}"
-                    )
+            return self._process_response(response, request_url)
 
-                logger.error(error_msg, exc_info=True)
-                raise ApiClientError(error_msg) from http_err
-
-            # If status is OK, try to parse JSON
-            try:
-                return response.json()
-            except JSONDecodeError as json_err:
-                resp_text = response.text[:200]  # Limit length
-                error_msg = (
-                    f"Failed to decode JSON response from {request_url}. "
-                    f"Error: {json_err}. Response text: {resp_text}"
-                )
-                logger.error(error_msg, exc_info=True)
-                raise ApiClientError(error_msg) from json_err
         except requests.exceptions.RequestException as req_err:
             # Catch connection errors, timeouts, etc.
+            # Ensure request_url is defined if _build_request_url failed
+            if not request_url:
+                request_url = f"URL build failed for: {endpoint_or_url}"
             error_msg = (
                 f"Network error during API request to {request_url}: {req_err}"
             )
-            logger.error(error_msg, exc_info=True)  # Log with traceback
+            logger.error(error_msg, exc_info=True)
             raise ApiClientError(error_msg) from req_err
-        except ApiClientError:  # Re-raise ApiClientErrors directly
+        except ApiClientError:  # Re-raise known API client errors
             raise
         except Exception as e:
             # Catch any other unexpected errors
+            if not request_url:
+                request_url = f"URL build failed for: {endpoint_or_url}"
             error_msg = (
                 f"Unexpected error during API request to {request_url}: {e}"
             )
-            logger.error(error_msg, exc_info=True)  # Log with traceback
+            logger.error(error_msg, exc_info=True)
             raise ApiClientError(error_msg) from e
         finally:
             # Ensure the lock is released if it was acquired

@@ -5,15 +5,19 @@ to the new package name.
 """
 
 import os
-import json
 import shutil
 import logging
-from typing import Optional
+# Unused imports commented out:
+# import json
+# from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-def migrate_config_directory(old_dir: str = "~/.noaa_weather_app", 
-                            new_dir: str = "~/.accessiweather") -> bool:
+
+def migrate_config_directory(
+    old_dir: str = "~/.noaa_weather_app",
+    new_dir: str = "~/.accessiweather"
+) -> bool:
     """Migrate data from old config directory to new config directory
     
     Args:
@@ -29,12 +33,12 @@ def migrate_config_directory(old_dir: str = "~/.noaa_weather_app",
     
     # Check if old directory exists
     if not os.path.exists(old_dir):
-        logger.info(f"No old config directory found at {old_dir}, no migration needed")
+        logger.info(f"Old config dir {old_dir} not found, skipping migration")
         return True
     
     # Check if new directory already has data
     if os.path.exists(new_dir) and os.listdir(new_dir):
-        logger.info(f"New config directory {new_dir} already has data, skipping migration")
+        logger.info(f"New config dir {new_dir} has data, skipping migration")
         return True
     
     # Create new directory if it doesn't exist
@@ -51,10 +55,10 @@ def migrate_config_directory(old_dir: str = "~/.noaa_weather_app",
                 logger.info(f"Migrated {filename} from {old_dir} to {new_dir}")
             elif os.path.isdir(old_file):
                 shutil.copytree(old_file, new_file, dirs_exist_ok=True)
-                logger.info(f"Migrated directory {filename} from {old_dir} to {new_dir}")
+                logger.info(f"Migrated dir {filename} to {new_dir}")
         
         logger.info(f"Successfully migrated data from {old_dir} to {new_dir}")
         return True
     except Exception as e:
-        logger.error(f"Failed to migrate data from {old_dir} to {new_dir}: {str(e)}")
+        logger.error(f"Failed migration from {old_dir} to {new_dir}: {e}")
         return False
