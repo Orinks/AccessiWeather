@@ -35,7 +35,7 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-        cache: 'pip' # Cache pip dependencies
+        # cache: 'pip' # Cache pip dependencies
 
     - name: Install Linux System Dependencies (for wxPython)
       if: runner.os == 'Linux'
