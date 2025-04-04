@@ -1,16 +1,14 @@
 """Tests for LocationDialog with AccessibleComboBox integration"""
 
-import os  # Import os module
+import os
 from unittest.mock import MagicMock, patch
 
 import pytest
 import wx
 
-from accessiweather.gui.async_fetchers import safe_call_after
-
-# Import project components early, handling potential wx dependency if needed
-from accessiweather.gui.dialogs import LocationDialog
 from accessiweather.gui.accessible_widgets import AccessibleComboBox
+from accessiweather.gui.async_fetchers import safe_call_after
+from accessiweather.gui.dialogs import LocationDialog
 
 
 # Create a wx App fixture for testing
@@ -48,9 +46,6 @@ def safe_destroy():
                         pass  # Last resort, just ignore
         except Exception:
             pass  # Ignore any errors in cleanup
-
-
-# Imports moved to top
 
 
 # Skip GUI tests in CI environment
