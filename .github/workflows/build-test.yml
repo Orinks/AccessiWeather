@@ -1,4 +1,3 @@
-# .github/workflows/build-test.yml
 name: Build, Lint, and Test
 
 # Trigger the workflow on push or pull request events but only for the main branch
@@ -70,8 +69,6 @@ jobs:
 
     - name: Test with pytest and Generate Coverage Report
       # Wrap pytest command with xvfb-run on Linux for GUI tests
-      run: |
-        ${{ runner.os == 'Linux' && 'xvfb-run --auto-servernum' || '' }} python -m pytest tests/ --cov=src/accessiweather --cov-report=term -v --showlocals --no-header
       env:
         # Keep environment variables potentially used by tests to skip live API calls
         ACCESSIWEATHER_TESTING: "1"
@@ -79,3 +76,5 @@ jobs:
         # For Linux GUI tests, ensure DISPLAY is set within xvfb-run context
         # (xvfb-run usually handles this automatically)
         PYTHONIOENCODING: "utf-8" # Recommended for cross-platform compatibility
+      run: |
+        ${{ runner.os == 'Linux' && 'xvfb-run --auto-servernum' || '' }} python -m pytest tests/ --cov=src/accessiweather --cov-report=term -v --showlocals --no-header

@@ -1,14 +1,22 @@
 """Tests for location change triggering weather updates."""
 
+import os
 import time
 import unittest
 from unittest.mock import MagicMock, patch
 
-# mypy: ignore-errors
+import pytest
 import wx
-import wx.richtext  # Added import
+import wx.richtext
+
+# Skip GUI tests only on non-Windows CI environments
+should_skip = os.environ.get("ACCESSIWEATHER_TESTING") == "1" and os.name != "nt"  # Not Windows
 
 
+@pytest.mark.skipif(
+    should_skip,
+    reason="GUI test skipped in non-Windows CI environment",
+)
 class TestLocationChange(unittest.TestCase):
     """Test case for verifying location change updates weather data."""
 

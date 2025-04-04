@@ -6,21 +6,19 @@ import tempfile
 
 import pytest
 
-# Only import wx if we're not in CI/headless mode
-if os.environ.get("ACCESSIWEATHER_TESTING") != "1":
-    import wx  # Make sure wx is imported
+# Only skip wx import on Linux/Mac CI environments
+should_skip_wx = os.environ.get("ACCESSIWEATHER_TESTING") == "1" and os.name != "nt"  # Not Windows
+
+if not should_skip_wx:
+    import wx
 
 
-# We need a wx App for testing wx components
-@pytest.fixture(scope="function")  # Use function scope for GUI tests
+@pytest.fixture(scope="function")
 def wx_app():
-    """Create a wx App for testing (session-scoped)."""
-    if os.environ.get("ACCESSIWEATHER_TESTING") != "1":
+    """Create a wx App for testing."""
+    if not should_skip_wx:
         app = wx.App()
         yield app
-        # Optional cleanup if needed, though usually pytest handles it.
-        # wx.CallLater(100, app.ExitMainLoop)
-        # app.MainLoop() # MainLoop should not be called in tests
     else:
         yield None
 

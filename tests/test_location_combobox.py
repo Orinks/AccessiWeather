@@ -10,6 +10,9 @@ from accessiweather.gui.accessible_widgets import AccessibleComboBox
 from accessiweather.gui.async_fetchers import safe_call_after
 from accessiweather.gui.dialogs import LocationDialog
 
+# Skip GUI tests only on non-Windows CI environments
+should_skip = os.environ.get("ACCESSIWEATHER_TESTING") == "1" and os.name != "nt"  # Not Windows
+
 
 # Create a wx App fixture for testing
 @pytest.fixture(scope="function")  # Change scope to function
@@ -50,8 +53,8 @@ def safe_destroy():
 
 # Skip GUI tests in CI environment
 @pytest.mark.skipif(
-    os.environ.get("ACCESSIWEATHER_TESTING") == "1",
-    reason="GUI test skipped in CI",
+    should_skip,
+    reason="GUI test skipped in non-Windows CI environment",
 )
 class TestLocationDialogWithComboBox:
     """Test suite for LocationDialog with AccessibleComboBox integration."""

@@ -1,6 +1,6 @@
 """Tests for the location dialog UI components."""
 
-import os  # Import os module
+import os
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -11,9 +11,12 @@ from accessiweather.gui.async_fetchers import safe_call_after
 # Import project components early
 from accessiweather.gui.dialogs import AdvancedLocationDialog, LocationDialog
 
+# Skip GUI tests only on non-Windows CI environments
+should_skip = os.environ.get("ACCESSIWEATHER_TESTING") == "1" and os.name != "nt"  # Not Windows
+
 
 # Create a wx App fixture for testing
-@pytest.fixture(scope="function")  # Change scope to function
+@pytest.fixture(scope="function")
 def wx_app():
     """Create a wx App for testing."""
     app = wx.App(False)
@@ -49,32 +52,14 @@ def safe_destroy():
             pass  # Ignore any errors in cleanup
 
 
-# Imports moved to top
-# Removed duplicate import from line 48
-
-
-# Skip GUI tests in CI environment
+# Skip GUI tests only on non-Windows CI environments
 @pytest.mark.skipif(
-    os.environ.get("ACCESSIWEATHER_TESTING") == "1",
-    reason="GUI test skipped in CI",
+    should_skip,
+    reason="GUI test skipped in non-Windows CI environment",
 )
 class TestAdvancedLocationDialog:
     """Test suite for AdvancedLocationDialog."""
 
-    # Remove setup_method as frame creation is moved to tests
-    # def setup_method(self, wx_app):
-    #     """Set up test fixture."""
-    #     # Create parent frame
-    #     # self.frame = wx.Frame(None) # Moved to tests
-    # Remove teardown_method as frame cleanup is handled by safe_destroy
-    # def teardown_method(self):
-    #     """Tear down test fixture."""
-    #     # Destroy frame safely
-    #     # try:
-    #     #     # Import moved to top
-    #     #     safe_call_after(self.frame.Destroy)
-    #     # except Exception:
-    #     #     pass  # Ignore any errors in cleanup
     def test_init(self, wx_app, safe_destroy):
         """Test initialization."""
         frame = safe_destroy(wx.Frame(None))  # Create and register frame
@@ -174,17 +159,14 @@ class TestAdvancedLocationDialog:
                 pass  # Cleanup handled by safe_destroy
 
 
-# Skip GUI tests in CI environment
+# Skip GUI tests only on non-Windows CI environments
 @pytest.mark.skipif(
-    os.environ.get("ACCESSIWEATHER_TESTING") == "1",
-    reason="GUI test skipped in CI",
+    should_skip,
+    reason="GUI test skipped in non-Windows CI environment",
 )
 class TestLocationDialog:
     """Test suite for LocationDialog."""
 
-    # Note: Frame creation moved into individual tests.
-    # setup_method and teardown_method are kept ONLY for managing the
-    # geocoding_patcher lifecycle for the tests in this class.
     def setup_method(self, wx_app):
         """Set up test fixture for patching."""
         patch_target = "accessiweather.gui.dialogs.GeocodingService"

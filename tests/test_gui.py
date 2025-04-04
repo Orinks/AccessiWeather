@@ -1,11 +1,8 @@
 """Tests for the GUI components."""
 
-# import wx  # Not used directly in this file
 import json
-import os  # Import os module
+import os
 import time
-
-# import tempfile  # No longer used directly in this file
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -14,17 +11,13 @@ from accessiweather.api_client import NoaaApiClient
 from accessiweather.gui.dialogs import LocationDialog, WeatherDiscussionDialog
 from accessiweather.gui.weather_app import WeatherApp
 
-# import wx.richtext  # Not used directly in this file's tests
-
-# from accessiweather.location import LocationManager # Unused import
-
-# Fixtures `wx_app` and `temp_config_file` moved to conftest.py
+# Skip GUI tests only on non-Windows CI environments
+should_skip = os.environ.get("ACCESSIWEATHER_TESTING") == "1" and os.name != "nt"  # Not Windows
 
 
-# Skip GUI tests in CI environment
 @pytest.mark.skipif(
-    os.environ.get("ACCESSIWEATHER_TESTING") == "1",
-    reason="GUI test skipped in CI",
+    should_skip,
+    reason="GUI test skipped in non-Windows CI environment",
 )
 class TestLocationDialog:
     """Test suite for LocationDialog."""
@@ -114,10 +107,9 @@ class TestLocationDialog:
             dialog.Destroy()
 
 
-# Skip GUI tests in CI environment
 @pytest.mark.skipif(
-    os.environ.get("ACCESSIWEATHER_TESTING") == "1",
-    reason="GUI test skipped in CI",
+    should_skip,
+    reason="GUI test skipped in non-Windows CI environment",
 )
 class TestWeatherDiscussionDialog:
     """Test suite for WeatherDiscussionDialog."""
@@ -131,10 +123,9 @@ class TestWeatherDiscussionDialog:
             dialog.Destroy()
 
 
-# Skip GUI tests in CI environment
 @pytest.mark.skipif(
-    os.environ.get("ACCESSIWEATHER_TESTING") == "1",
-    reason="GUI test skipped in CI",
+    should_skip,
+    reason="GUI test skipped in non-Windows CI environment",
 )
 class TestWeatherApp:
     """Test suite for WeatherApp."""
