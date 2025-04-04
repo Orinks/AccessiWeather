@@ -1,0 +1,68 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+    -   id: check-yaml
+    -   id: check-added-large-files
+    -   id: check-ast
+    -   id: check-json
+    -   id: check-merge-conflict
+    -   id: detect-private-key
+
+-   repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+    -   id: flake8
+        additional_dependencies: [flake8-docstrings]
+        args: ['--max-line-length=100']
+        exclude: '^tests/'
+
+-   repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+    -   id: isort
+        args: ['--profile', 'black', '--line-length=100']
+
+-   repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+    -   id: black
+        args: ['--line-length=100']
+
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.3.0
+    hooks:
+    -   id: mypy
+        additional_dependencies: [types-requests]
+        args: ['--ignore-missing-imports']
+        exclude: '^tests/'
+
+# Custom hook to ensure tests don't try to show GUI dialogs
+-   repo: local
+    hooks:
+    -   id: headless-test-check
+        name: Check for headless-friendly tests
+        entry: |
+          import sys
+          import re
+          import ast
+          errors = False
+          for file_path in sys.argv[1:]:
+            if not file_path.endswith('.py'):
+              continue
+            try:
+              with open(file_path, 'r') as f:
+                content = f.read()
+                # Simple check for unmocked dialog calls in test files
+                if 'test_' in file_path and ('wx.MessageBox(' in content or '.ShowModal(' in content) and 'patch(' not in content:
+                  print(f'ERROR: {file_path} contains potentially unmocked GUI dialog calls (wx.MessageBox or .ShowModal). Ensure these are properly patched or removed for headless testing.')
+                  errors = True
+            except Exception as e:
+              print(f'ERROR: Could not process {file_path}: {e}')
+              errors = True
+          sys.exit(1 if errors else 0)
+        language: system
+        files: ^tests/.*\.py$
+        pass_filenames: true
