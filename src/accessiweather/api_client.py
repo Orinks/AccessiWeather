@@ -296,6 +296,64 @@ class NoaaApiClient:
             logger.error(error_msg, exc_info=True)
             raise ApiClientError(error_msg) from json_err
 
+    def _apply_rate_limit(self) -> None:
+        """Acquire lock and apply rate limiting if necessary."""
+        if self.last_request_time > 0:  # Check if it's been initialized
+            elapsed = time.time() - self.last_request_time
+            sleep_time = max(0, self.min_request_interval - elapsed)
+            if sleep_time > 0:
+                logger.debug(f"Rate limiting: sleeping for {sleep_time:.2f}s")
+                time.sleep(sleep_time)
+        self.last_request_time = time.time()
+
+    def _execute_request_with_retries(
+        self, url: str, params: Optional[Dict[str, Any]]
+    ) -> requests.Response:
+        """Execute the HTTP GET request with basic retry logic."""
+        # Note: Retries are basic here. Consider libraries like
+        # 'requests-retry' for more robust handling if needed.
+        # for more robust handling if needed.
+        retries = 1  # Example: Allow 1 retry
+        delay = 1  # Example: Start with 1 second delay
+        last_exception: Optional[requests.exceptions.RequestException] = None
+
+        for attempt in range(retries + 1):
+            try:
+                logger.debug(f"API request (attempt {attempt+1}) to: {url}")
+                response = requests.get(
+                    url,
+                    headers=self.headers,
+                    params=params,
+                    timeout=10,  # Use a reasonable timeout
+                )
+                return response  # Success
+            except requests.exceptions.Timeout as e:
+                last_exception = e
+                logger.warning(f"Request timed out for {url}: {e}")
+            except requests.exceptions.ConnectionError as e:
+                last_exception = e
+                logger.warning(f"Connection error for {url}: {e}")
+            except requests.exceptions.RequestException as e:
+                last_exception = e
+                logger.error(f"Request failed for {url}: {e}", exc_info=True)
+                break  # Don't retry on all request exceptions
+
+            if attempt < retries:
+                logger.info(f"Retrying in {delay} seconds...")
+                time.sleep(delay)
+                delay *= 2  # Exponential backoff
+            else:
+                logger.error(f"Max retries reached for {url}.")
+                break
+
+        # If all retries failed, raise the last exception
+        if last_exception:
+            raise ApiClientError(
+                f"Request failed after {retries} retries for {url}"
+            ) from last_exception
+        else:
+            raise ApiClientError(f"Request failed unexpectedly for {url}")
+
     def _make_request(
         self,
         endpoint_or_url: str,
@@ -304,80 +362,39 @@ class NoaaApiClient:
     ) -> Dict[str, Any]:
         """Make a request to the NOAA API, handling rate limits and errors."""
         lock_acquired = False
-        request_url = ""  # Initialize here
+        request_url = self._build_request_url(endpoint_or_url, use_full_url)
+
         try:
             # Check if API calls should be skipped (for testing)
             skip_api_calls = (
                 os.environ.get("ACCESSIWEATHER_SKIP_API_CALLS") == "1"
             )
 
-            # Conditionally acquire lock and rate limit only if not skipping
-            # API calls
             if not skip_api_calls:
                 self.request_lock.acquire()
                 lock_acquired = True
-                try:
-                    # Rate limiting
-                    if self.last_request_time is not None:
-                        elapsed = time.time() - self.last_request_time
-                        sleep_time = max(
-                            0, self.min_request_interval - elapsed
-                        )
-                        if sleep_time > 0:
-                            logger.debug(
-                                f"Rate limiting: sleeping for "
-                                f"{sleep_time:.2f}s"
-                            )
-                            time.sleep(sleep_time)
-                except Exception:  # Ensure lock is released if sleep fails
-                    if lock_acquired:
-                        self.request_lock.release()
-                        lock_acquired = False  # Prevent double release
-                    raise
+                # Apply rate limit after acquiring lock
+                self._apply_rate_limit()
             else:
                 logger.debug(
                     "Skipping lock and rate limit due to "
                     "ACCESSIWEATHER_SKIP_API_CALLS=1"
                 )
 
-            # --- Request Execution ---
-            request_url = self._build_request_url(
-                endpoint_or_url, use_full_url
-            )
-            logger.debug(
-                f"API request to: {request_url} with params: {params}"
-            )
-            response = requests.get(
-                request_url, headers=self.headers, params=params, timeout=10
-            )
-            if lock_acquired:
-                self.last_request_time = time.time()
-
-            # --- Process the response ---
+            response = self._execute_request_with_retries(request_url, params)
             return self._process_response(response, request_url)
 
-        except requests.exceptions.RequestException as req_err:
-            # Catch connection errors, timeouts, etc.
-            # Ensure request_url is defined if _build_request_url failed
-            if not request_url:
-                request_url = f"URL build failed for: {endpoint_or_url}"
-            error_msg = (
-                f"Network error during API request to {request_url}: {req_err}"
-            )
-            logger.error(error_msg, exc_info=True)
-            raise ApiClientError(error_msg) from req_err
-        except ApiClientError:  # Re-raise known API client errors
+        except ApiClientError:
+            # Re-raise ApiClientErrors directly
             raise
         except Exception as e:
-            # Catch any other unexpected errors
-            if not request_url:
-                request_url = f"URL build failed for: {endpoint_or_url}"
+            # Catch any other unexpected errors during the process
             error_msg = (
-                f"Unexpected error during API request to {request_url}: {e}"
+                f"Unexpected error during request to {request_url}: {e}"
             )
             logger.error(error_msg, exc_info=True)
             raise ApiClientError(error_msg) from e
         finally:
-            # Ensure the lock is released if it was acquired
+            # Ensure lock is released if it was acquired
             if lock_acquired:
                 self.request_lock.release()

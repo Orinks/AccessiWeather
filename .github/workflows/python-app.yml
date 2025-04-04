@@ -47,8 +47,13 @@ jobs:
             New-Item -Path $mockDir -ItemType Directory -Force
         }
         
-        # Create __init__.py that imports from our mock
-        $initContent = "from tests.wx_mock import *"
+        # Create __init__.py that explicitly imports from our mock
+        $initContent = @"
+from tests.wx_mock import (
+    App, Frame, Panel, BoxSizer, StaticText, Button, ComboBox,
+    VERTICAL, HORIZONTAL, ID_ANY, EXPAND, ALL
+)
+"@
         Set-Content -Path "$mockDir\__init__.py" -Value $initContent
         
         # Add the mock directory to PYTHONPATH
