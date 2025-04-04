@@ -37,7 +37,8 @@ jobs:
           libpng-dev \
           libtiff-dev \
           gstreamer1.0-plugins-base \
-          gstreamer1.0-plugins-good
+          gstreamer1.0-plugins-good \
+          freeglut3-dev
         Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
 
     - name: Install dependencies
@@ -46,8 +47,10 @@ jobs:
         pip install --upgrade pip setuptools wheel
         echo "Installing test dependencies..."
         pip install pytest pytest-cov
-        echo "Installing wxPython (attempting to use pre-built wheel)..."
-        pip install wxPython==4.2.1 --prefer-binary
+        echo "Installing wxPython (using extras URL for pre-built wheel)..."
+        pip install \
+          -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-24.04/ \
+          wxPython==4.2.1
         echo "Installing other project dependencies..."
         pip install requests geopy python-dateutil plyer
         echo "Installing AccessiWeather in editable mode (no deps)..."
