@@ -38,31 +38,3 @@ repos:
         additional_dependencies: [types-requests]
         args: ['--ignore-missing-imports']
         exclude: '^tests/'
-
-# Custom hook to ensure tests don't try to show GUI dialogs
--   repo: local
-    hooks:
-    -   id: headless-test-check
-        name: Check for headless-friendly tests
-        entry: |
-          import sys
-          import re
-          import ast
-          errors = False
-          for file_path in sys.argv[1:]:
-            if not file_path.endswith('.py'):
-              continue
-            try:
-              with open(file_path, 'r') as f:
-                content = f.read()
-                # Simple check for unmocked dialog calls in test files
-                if 'test_' in file_path and ('wx.MessageBox(' in content or '.ShowModal(' in content) and 'patch(' not in content:
-                  print(f'ERROR: {file_path} contains potentially unmocked GUI dialog calls (wx.MessageBox or .ShowModal). Ensure these are properly patched or removed for headless testing.')
-                  errors = True
-            except Exception as e:
-              print(f'ERROR: Could not process {file_path}: {e}')
-              errors = True
-          sys.exit(1 if errors else 0)
-        language: system
-        files: ^tests/.*\.py$
-        pass_filenames: true

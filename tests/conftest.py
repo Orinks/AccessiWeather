@@ -1,10 +1,12 @@
 # tests/conftest.py
-import pytest
+import json
 import os
 import tempfile
-import json
- 
- 
+from unittest import mock  # Added for mocking
+
+import pytest
+import wx  # Added for wx types
+
 # We need a wx App for testing wx components
 # The pytest-wx plugin provides this fixture automatically.
 # Defining it here can cause conflicts.
@@ -26,19 +28,25 @@ def temp_config_file():
         # Create a temporary config file
         config_path = os.path.join(temp_dir, "config.json")
         config_data = {
-            "locations": {
-                "Test City": {"lat": 35.0, "lon": -80.0}
-            },
+            "locations": {"Test City": {"lat": 35.0, "lon": -80.0}},
             "current": "Test City",
-            "settings": {
-                "update_interval_minutes": 30
-            },
-            "api_settings": {
-                "contact_info": "test@example.com"
-            }
+            "settings": {"update_interval_minutes": 30},
+            "api_settings": {"contact_info": "test@example.com"},
         }
 
         with open(config_path, "w") as f:
             json.dump(config_data, f)
 
         yield config_path
+
+
+@pytest.fixture(autouse=True)
+def mock_wx_accessibility(mocker):
+    """
+    Mock wx.Window.GetAccessible to prevent NotImplementedError in headless CI
+    where accessibility services (like AT-SPI) might not be running.
+    We patch it to return None, as the specific return value doesn't seem
+    immediately necessary for the failing initialization path.
+    """
+    if hasattr(wx, "Window"):
+        mocker.patch("wx.Window.GetAccessible", return_value=None, create=True)
