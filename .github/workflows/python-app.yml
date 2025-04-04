@@ -3,8 +3,7 @@ name: Python application
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  pull_request: # Triggers on PRs targeting any branch
 
 permissions:
   contents: read
@@ -46,18 +45,16 @@ jobs:
         if (-not (Test-Path $mockDir)) {
             New-Item -Path $mockDir -ItemType Directory -Force
         }
-        
         # Create __init__.py that explicitly imports from our mock
         $initContent = @"
-from tests.wx_mock import (
-    App, Frame, Panel, BoxSizer, StaticText, Button, ComboBox,
-    VERTICAL, HORIZONTAL, ID_ANY, EXPAND, ALL
-)
-"@
+        from tests.wx_mock import (
+            App, Frame, Panel, BoxSizer, StaticText, Button, ComboBox,
+            VERTICAL, HORIZONTAL, ID_ANY, EXPAND, ALL
+        )
+        "@
         Set-Content -Path "$mockDir\__init__.py" -Value $initContent
-        
-        # Add the mock directory to PYTHONPATH
-        echo "PYTHONPATH=$pwd\$mockDir;$env:PYTHONPATH" | Out-File -FilePath $env:GITHUB_ENV -Append
+        # Add the mock directory to PYTHONPATH using GITHUB_ENV
+        echo "PYTHONPATH=$($pwd)\$mockDir;$($env:PYTHONPATH)" | Out-File -FilePath $env:GITHUB_ENV -Append
         echo "wxPython mock setup complete"
 
     - name: Lint with flake8
