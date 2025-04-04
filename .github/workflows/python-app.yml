@@ -15,6 +15,7 @@ jobs:
       ACCESSIWEATHER_TESTING: "1"
       ACCESSIWEATHER_SKIP_API_CALLS: "1"
       ACCESSIWEATHER_HEADLESS: "1"
+      PYTHONPATH: "src"
 
     steps:
     - uses: actions/checkout@v4
@@ -39,10 +40,6 @@ jobs:
             # Install specific dependencies needed for the project
             pip install requests plyer python-dateutil mock
         }
-
-    - name: Install wxPython
-      run: |
-        python -m pip install --only-binary wxPython wxPython
 
     - name: Check formatting with isort
       run: |
