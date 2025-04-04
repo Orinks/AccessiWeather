@@ -24,13 +24,23 @@ jobs:
     - name: Set up virtual framebuffer
       run: |
         sudo apt-get update
-        sudo apt-get install -y xvfb libgtk-3-dev
+        sudo apt-get install -y --no-install-recommends \
+          xvfb \
+          build-essential \
+          libgtk-3-dev \
+          libwebkit2gtk-4.0-dev \
+          libgstreamer1.0-dev \
+          libgstreamer-plugins-base1.0-dev \
+          libnotify-dev \
+          libsdl2-dev
         Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pytest pytest-cov
+        pip install pytest pytest-cov pytest-wx
+        # Install wxPython separately first to isolate potential issues
+        pip install wxPython
         pip install -e .
 
     - name: Run tests with pytest
