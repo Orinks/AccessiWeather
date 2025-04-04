@@ -63,7 +63,8 @@ jobs:
 
     - name: Check formatting with black
       run: |
-        black --check .
+        # Exclude the generated wx mock directory
+        black --check . --exclude wx/
 
     - name: Lint with flake8
       run: |
