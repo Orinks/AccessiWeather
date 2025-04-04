@@ -102,19 +102,10 @@ jobs:
 
     - name: Test with pytest
       run: |
-        # Run with verbose output and show local variables on failure
-        # Skip all GUI tests and real API calls
-        $process = Start-Process -FilePath python -ArgumentList "-m", "pytest", "tests/", "-v", "-s", "--showlocals", "--no-header", "--no-summary", "-k", "not (test_gui or test_accessible_combo_box or test_location_dialog or test_location_combobox or test_gui_loading or test_get_point_data_real or test_get_alerts_real or test_get_discussion_real)" -NoNewWindow -PassThru
-        Wait-Process -InputObject $process -Timeout 300 -ErrorAction SilentlyContinue
-        if (-not $process.HasExited -or $process.ExitCode -ne 0) {
-            echo "Tests failed or timed out but continuing workflow"
-            if (-not $process.HasExited) {
-                Stop-Process -InputObject $process -Force
-            }
-            # Return a non-zero exit code to mark the step as failed
-            exit $process.ExitCode
-        }
-      continue-on-error: true
+        # Run pytest directly, skipping GUI/real API tests.
+        # GitHub Actions will fail the step on non-zero exit code.
+        pytest tests/ -v -s --showlocals --no-header --no-summary -k "not (test_gui or test_accessible_combo_box or test_location_dialog or test_location_combobox or test_gui_loading or test_get_point_data_real or test_get_alerts_real or test_get_discussion_real)"
+      continue-on-error: true # Allow workflow to finish even if tests fail
       env:
         ACCESSIWEATHER_TESTING: '1' # Used by tests to skip GUI elements
         ACCESSIWEATHER_SKIP_API_CALLS: '1' # Used by api_client to bypass lock/sleep
