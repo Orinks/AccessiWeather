@@ -28,7 +28,7 @@ jobs:
           xvfb \
           build-essential \
           libgtk-3-dev \
-          libwebkit2gtk-4.0-dev \
+          libwebkitgtk-6.0-dev \
           libgstreamer1.0-dev \
           libgstreamer-plugins-base1.0-dev \
           libnotify-dev \
