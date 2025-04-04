@@ -45,9 +45,13 @@ jobs:
       run: |
         echo "Setting up CI test environment"
         # Copy CI config to the expected location
-        if not exist "%USERPROFILE%\.accessiweather" mkdir "%USERPROFILE%\.accessiweather"
-        copy tests\ci_config.json "%USERPROFILE%\.accessiweather\config.json"
-        echo "CI config copied to %USERPROFILE%\.accessiweather\config.json"
+        $configDir = Join-Path $env:USERPROFILE ".accessiweather"
+        if (-not (Test-Path $configDir)) {
+            New-Item -Path $configDir -ItemType Directory -Force
+        }
+        $configFile = Join-Path $configDir "config.json"
+        Copy-Item -Path "tests\ci_config.json" -Destination $configFile -Force
+        echo "CI config copied to $configFile"
 
     - name: Test with pytest
       run: |
