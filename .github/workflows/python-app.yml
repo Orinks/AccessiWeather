@@ -69,7 +69,7 @@ jobs:
     - name: Setup CI test environment
       run: |
         echo "Setting up CI test environment"
-        $sourceConfig = "tests\ci_config.json"
+        $sourceConfig = "tests/ci_config.json"
         if (-not (Test-Path $sourceConfig)) {
             Write-Error "CI configuration file not found at $sourceConfig"
             exit 1
