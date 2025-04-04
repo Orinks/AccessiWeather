@@ -47,10 +47,10 @@ jobs:
         pip install --upgrade pip setuptools wheel
         echo "Installing test dependencies..."
         pip install pytest pytest-cov
-        echo "Installing wxPython (using extras URL for pre-built wheel)..."
+        echo "Installing wxPython (forcing binary from extras URL)..."
         pip install \
           -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-24.04/ \
-          wxPython==4.2.1
+          wxPython==4.2.1 --only-binary :all: -vvv
         echo "Installing other project dependencies..."
         pip install requests geopy python-dateutil plyer
         echo "Installing AccessiWeather in editable mode (no deps)..."
