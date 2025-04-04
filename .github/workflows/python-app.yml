@@ -24,14 +24,17 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        # Install test dependencies
+        # Install test/lint dependencies
         pip install flake8 pytest pytest-mock
-        # Install specific dependencies needed for the project
-        pip install requests wxPython plyer geopy python-dateutil
+        # Install project dependencies (assuming requirements.txt exists)
         if (Test-Path "requirements.txt") {
             pip install -r requirements.txt
+        } else {
+            echo "Warning: requirements.txt not found. Specific dependencies might be missing."
+            # Optionally, list essential dependencies here as a fallback, but requirements.txt is preferred
+            # pip install requests wxPython plyer geopy python-dateutil
         }
-        # Install the package in development mode
+        # Install the package itself in editable mode
         pip install -e .
 
     - name: Lint with flake8
@@ -65,19 +68,9 @@ jobs:
 
     - name: Test with pytest
       run: |
-        # Run with verbose output and show local variables on failure
-        # Use PowerShell's Start-Process with a timeout
-        $process = Start-Process -FilePath python -ArgumentList "-m", "pytest", "tests/", "-v", "--showlocals" -NoNewWindow -PassThru
-        Wait-Process -InputObject $process -Timeout 300 -ErrorAction SilentlyContinue
-        if (-not $process.HasExited -or $process.ExitCode -ne 0) {
-            echo "Tests failed or timed out but continuing workflow"
-            if (-not $process.HasExited) {
-                Stop-Process -InputObject $process -Force
-            }
-            # Return a non-zero exit code to mark the step as failed
-            exit $process.ExitCode
-        }
-      continue-on-error: true
+        # Run pytest with verbose output and show local variables on failure
+        # GitHub Actions will automatically fail the step if pytest returns a non-zero exit code.
+        pytest tests/ -v --showlocals
       env:
         ACCESSIWEATHER_TESTING: "1"
         ACCESSIWEATHER_SKIP_API_CALLS: "1"
