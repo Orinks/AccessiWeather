@@ -66,9 +66,8 @@ jobs:
     - name: Test with pytest
       run: |
         # Run with verbose output and show local variables on failure
-        # Skip tests that might make real API calls
         # Use PowerShell's Start-Process with a timeout
-        $process = Start-Process -FilePath python -ArgumentList "-m", "pytest", "tests/", "-v", "--showlocals", "--no-header", "--no-summary", "-k", "not (test_get_point_data_real or test_get_alerts_real or test_get_discussion_real)" -NoNewWindow -PassThru
+        $process = Start-Process -FilePath python -ArgumentList "-m", "pytest", "tests/", "-v", "--showlocals" -NoNewWindow -PassThru
         Wait-Process -InputObject $process -Timeout 300 -ErrorAction SilentlyContinue
         if (-not $process.HasExited -or $process.ExitCode -ne 0) {
             echo "Tests failed or timed out but continuing workflow"
