@@ -1,0 +1,244 @@
+﻿2025-04-05T00:48:23.4016874Z ##[group]Run pytest --cov=accessiweather tests/ --cov-report=xml -v
+2025-04-05T00:48:23.4017376Z [36;1mpytest --cov=accessiweather tests/ --cov-report=xml -v[0m
+2025-04-05T00:48:23.4064534Z shell: /usr/bin/bash -e {0}
+2025-04-05T00:48:23.4064754Z env:
+2025-04-05T00:48:23.4064907Z   DISPLAY: :99.0
+2025-04-05T00:48:23.4065177Z   PYTHONPATH: /home/runner/work/AccessiWeather/AccessiWeather
+2025-04-05T00:48:23.4065563Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.9/x64
+2025-04-05T00:48:23.4065942Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.9/x64/lib/pkgconfig
+2025-04-05T00:48:23.4066309Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.9/x64
+2025-04-05T00:48:23.4066646Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.9/x64
+2025-04-05T00:48:23.4066971Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.9/x64
+2025-04-05T00:48:23.4067294Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.9/x64/lib
+2025-04-05T00:48:23.4067573Z ##[endgroup]
+2025-04-05T00:48:24.9085250Z ============================= test session starts ==============================
+2025-04-05T00:48:24.9085955Z platform linux -- Python 3.12.9, pytest-8.3.5, pluggy-1.5.0 -- /opt/hostedtoolcache/Python/3.12.9/x64/bin/python
+2025-04-05T00:48:24.9086405Z cachedir: .pytest_cache
+2025-04-05T00:48:24.9086772Z rootdir: /home/runner/work/AccessiWeather/AccessiWeather
+2025-04-05T00:48:24.9087081Z configfile: pytest.ini
+2025-04-05T00:48:24.9087610Z plugins: cov-6.1.0, mock-3.14.0
+2025-04-05T00:48:25.7931641Z collecting ... collected 108 items
+2025-04-05T00:48:25.7932088Z
+2025-04-05T00:48:26.0460877Z tests/test_accessible_combo_box.py::TestAccessibleComboBox::test_init PASSED [  0%]
+2025-04-05T00:48:26.0497928Z tests/test_accessible_combo_box.py::TestAccessibleComboBox::test_set_label PASSED [  1%]
+2025-04-05T00:48:26.0536012Z tests/test_accessible_combo_box.py::TestAccessibleComboBox::test_add_items PASSED [  2%]
+2025-04-05T00:48:26.0576485Z tests/test_accessible_combo_box.py::TestAccessibleComboBox::test_get_set_value PASSED [  3%]
+2025-04-05T00:48:26.0625070Z tests/test_accessible_combo_box.py::TestAccessibleComboBox::test_events PASSED [  4%]
+2025-04-05T00:48:26.0639307Z tests/test_api_client.py::TestNoaaApiClient::test_init
+2025-04-05T00:48:26.0639903Z -------------------------------- live log setup --------------------------------
+2025-04-05T00:48:26.0640540Z INFO     accessiweather.api_client:api_client.py:62 Initialized NOAA API client with User-Agent: Test User Agent
+2025-04-05T00:48:26.0653687Z PASSED                                                                   [  5%]
+2025-04-05T00:48:26.0665629Z tests/test_api_client.py::TestNoaaApiClient::test_init_with_contact
+2025-04-05T00:48:26.0666262Z -------------------------------- live log setup --------------------------------
+2025-04-05T00:48:26.0667219Z INFO     accessiweather.api_client:api_client.py:62 Initialized NOAA API client with User-Agent: Test User Agent (test@example.com)
+2025-04-05T00:48:26.0680407Z PASSED                                                                   [  6%]
+2025-04-05T00:48:26.0693524Z tests/test_api_client.py::TestNoaaApiClient::test_get_point_data
+2025-04-05T00:48:26.0694171Z -------------------------------- live log setup --------------------------------
+2025-04-05T00:48:26.0694751Z INFO     accessiweather.api_client:api_client.py:62 Initialized NOAA API client with User-Agent: Test User Agent
+2025-04-05T00:48:26.0707881Z -------------------------------- live log call ---------------------------------
+2025-04-05T00:48:26.0708725Z INFO     accessiweather.api_client:api_client.py:77 Fetching point data for coordinates: (35.0, -80.0)
+2025-04-05T00:48:26.0722320Z PASSED                                                                   [  7%]
+2025-04-05T00:48:26.0735240Z tests/test_api_client.py::TestNoaaApiClient::test_get_forecast
+2025-04-05T00:48:26.0735885Z -------------------------------- live log setup --------------------------------
+2025-04-05T00:48:26.0736505Z INFO     accessiweather.api_client:api_client.py:62 Initialized NOAA API client with User-Agent: Test User Agent
+2025-04-05T00:48:26.0753228Z -------------------------------- live log call ---------------------------------
+2025-04-05T00:48:26.0754018Z INFO     accessiweather.api_client:api_client.py:92 Getting forecast for coordinates: (35.0, -80.0)
+2025-04-05T00:48:26.0754963Z INFO     accessiweather.api_client:api_client.py:77 Fetching point data for coordinates: (35.0, -80.0)
+2025-04-05T00:48:26.0762843Z INFO     accessiweather.api_client:api_client.py:111 Retrieved forecast URL: https://api.weather.gov/gridpoints/GSP/112,57/forecast
+2025-04-05T00:48:26.5777272Z PASSED                                                                   [  8%]
+2025-04-05T00:48:26.5791482Z tests/test_api_client.py::TestNoaaApiClient::test_get_alerts
+2025-04-05T00:48:26.5792056Z -------------------------------- live log setup --------------------------------
+2025-04-05T00:48:26.5792600Z INFO     accessiweather.api_client:api_client.py:62 Initialized NOAA API client with User-Agent: Test User Agent
+2025-04-05T00:48:26.5811057Z -------------------------------- live log call ---------------------------------
+2025-04-05T00:48:26.5811886Z INFO     root:api_client.py:131 Getting alerts for coordinates: (35.0, -80.0) with radius 50 miles
+2025-04-05T00:48:26.5812682Z INFO     accessiweather.api_client:api_client.py:77 Fetching point data for coordinates: (35.0, -80.0)
+2025-04-05T00:48:26.5817233Z INFO     root:api_client.py:144 Fetching alerts for state: NC
+2025-04-05T00:48:27.0835486Z PASSED                                                                   [  9%]
+2025-04-05T00:48:27.0852182Z tests/test_api_client.py::TestNoaaApiClient::test_get_alerts_county_fallback
+2025-04-05T00:48:27.0852684Z -------------------------------- live log setup --------------------------------
+2025-04-05T00:48:27.0853228Z INFO     accessiweather.api_client:api_client.py:62 Initialized NOAA API client with User-Agent: Test User Agent
+2025-04-05T00:48:27.0870638Z -------------------------------- live log call ---------------------------------
+2025-04-05T00:48:27.0871406Z INFO     root:api_client.py:131 Getting alerts for coordinates: (35.0, -80.0) with radius 50 miles
+2025-04-05T00:48:27.0872403Z INFO     accessiweather.api_client:api_client.py:77 Fetching point data for coordinates: (35.0, -80.0)
+2025-04-05T00:48:27.0877455Z INFO     root:api_client.py:161 Extracted state code from county URL: TX
+2025-04-05T00:48:27.5894545Z PASSED                                                                   [ 10%]
+2025-04-05T00:48:27.5908595Z tests/test_api_client.py::TestNoaaApiClient::test_get_alerts_no_state
+2025-04-05T00:48:27.5909040Z -------------------------------- live log setup --------------------------------
+2025-04-05T00:48:27.5909563Z INFO     accessiweather.api_client:api_client.py:62 Initialized NOAA API client with User-Agent: Test User Agent
+2025-04-05T00:48:27.5929508Z -------------------------------- live log call ---------------------------------
+2025-04-05T00:48:27.5930021Z INFO     root:api_client.py:131 Getting alerts for coordinates: (35.0, -80.0) with radius 50 miles
+2025-04-05T00:48:27.5931167Z INFO     accessiweather.api_client:api_client.py:77 Fetching point data for coordinates: (35.0, -80.0)
+2025-04-05T00:48:27.5936286Z INFO     root:api_client.py:171 Using point-radius search for alerts since state could not be determined: (35.0, -80.0) with radius 50 miles
+2025-04-05T00:48:28.0953818Z PASSED                                                                   [ 11%]
+2025-04-05T00:48:28.0977251Z tests/test_api_client.py::TestNoaaApiClient::test_get_alerts_michigan_location
+2025-04-05T00:48:28.0977896Z -------------------------------- live log call ---------------------------------
+2025-04-05T00:48:28.0978528Z INFO     accessiweather.api_client:api_client.py:62 Initialized NOAA API client with User-Agent: Test User Agent
+2025-04-05T00:48:28.0979276Z INFO     root:api_client.py:131 Getting alerts for coordinates: (43.1, -86.3) with radius 25 miles
+2025-04-05T00:48:28.0981072Z INFO     root:api_client.py:144 Fetching alerts for state: MI
+2025-04-05T00:48:28.0992917Z PASSED                                                                   [ 12%]
+2025-04-05T00:48:28.1005107Z tests/test_api_client.py::TestNoaaApiClient::test_get_discussion
+2025-04-05T00:48:28.1005502Z -------------------------------- live log setup --------------------------------
+2025-04-05T00:48:28.1006011Z INFO     accessiweather.api_client:api_client.py:62 Initialized NOAA API client with User-Agent: Test User Agent
+2025-04-05T00:48:28.1023659Z -------------------------------- live log call ---------------------------------
+2025-04-05T00:48:28.1024162Z INFO     accessiweather.api_client:api_client.py:203 Getting forecast discussion for coordinates: (35.0, -80.0)
+2025-04-05T00:48:28.1025593Z INFO     accessiweather.api_client:api_client.py:77 Fetching point data for coordinates: (35.0, -80.0)
+2025-04-05T00:48:28.1031803Z INFO     accessiweather.api_client:api_client.py:216 Fetching products for office: ABC
+2025-04-05T00:48:28.6048524Z INFO     accessiweather.api_client:api_client.py:222 Fetching product text for: ABC-AFD-202503121200
+2025-04-05T00:48:29.1052349Z PASSED                                                                   [ 12%]
+2025-04-05T00:48:29.1066124Z tests/test_api_client.py::TestNoaaApiClient::test_api_error_handling
+2025-04-05T00:48:29.1066603Z -------------------------------- live log setup --------------------------------
+2025-04-05T00:48:29.1067545Z INFO     accessiweather.api_client:api_client.py:62 Initialized NOAA API client with User-Agent: Test User Agent
+2025-04-05T00:48:29.1079726Z -------------------------------- live log call ---------------------------------
+2025-04-05T00:48:29.1080308Z INFO     accessiweather.api_client:api_client.py:77 Fetching point data for coordinates: (35.0, -80.0)
+2025-04-05T00:48:29.1094559Z PASSED                                                                   [ 13%]
+2025-04-05T00:48:29.1107147Z tests/test_api_client.py::TestNoaaApiClient::test_get_alerts_direct
+2025-04-05T00:48:29.1107877Z -------------------------------- live log setup --------------------------------
+2025-04-05T00:48:29.1108804Z INFO     accessiweather.api_client:api_client.py:62 Initialized NOAA API client with User-Agent: Test User Agent
+2025-04-05T00:48:29.1122293Z -------------------------------- live log call ---------------------------------
+2025-04-05T00:48:29.1123236Z INFO     root:api_client.py:189 Fetching alerts directly from URL: https://api.weather.gov/alerts/active/area/NY
+2025-04-05T00:48:29.1137280Z PASSED                                                                   [ 14%]
+2025-04-05T00:48:29.1149870Z tests/test_api_client.py::TestNoaaApiClient::test_get_alerts_no_state_fallback
+2025-04-05T00:48:29.1150664Z -------------------------------- live log setup --------------------------------
+2025-04-05T00:48:29.1151805Z INFO     accessiweather.api_client:api_client.py:62 Initialized NOAA API client with User-Agent: Test User Agent
+2025-04-05T00:48:29.1170119Z -------------------------------- live log call ---------------------------------
+2025-04-05T00:48:29.1170990Z INFO     root:api_client.py:131 Getting alerts for coordinates: (35.0, -80.0) with radius 50 miles
+2025-04-05T00:48:29.1172268Z INFO     accessiweather.api_client:api_client.py:77 Fetching point data for coordinates: (35.0, -80.0)
+2025-04-05T00:48:29.1177709Z INFO     root:api_client.py:171 Using point-radius search for alerts since state could not be determined: (35.0, -80.0) with radius 50 miles
+2025-04-05T00:48:29.6194293Z PASSED                                                                   [ 15%]
+2025-04-05T00:48:29.6219568Z tests/test_api_client.py::TestNoaaApiClient::test_request_uses_formatted_user_agent
+2025-04-05T00:48:29.6220094Z -------------------------------- live log call ---------------------------------
+2025-04-05T00:48:29.6221053Z INFO     accessiweather.api_client:api_client.py:62 Initialized NOAA API client with User-Agent: AccessiWeather (test@example.com)
+2025-04-05T00:48:29.6222248Z INFO     accessiweather.api_client:api_client.py:77 Fetching point data for coordinates: (35.0, -80.0)
+2025-04-05T00:48:29.6238441Z PASSED                                                                   [ 16%]
+2025-04-05T00:48:29.6776574Z tests/test_api_contact_check.py::TestApiContactCheck::test_no_dialog_when_api_contact_present PASSED [ 17%]
+2025-04-05T00:48:29.6953106Z tests/test_api_contact_check.py::TestApiContactCheck::test_dialog_shown_when_api_contact_missing PASSED [ 18%]
+2025-04-05T00:48:29.7117601Z tests/test_api_contact_check.py::TestApiContactCheck::test_dialog_shown_when_api_settings_missing PASSED [ 19%]
+2025-04-05T00:48:29.7291804Z tests/test_api_contact_check.py::TestApiContactCheck::test_settings_not_opened_if_dialog_cancelled PASSED [ 20%]
+2025-04-05T00:48:29.7466714Z tests/test_api_contact_check.py::TestApiContactCheck::test_check_called_on_init PASSED [ 21%]
+2025-04-05T00:48:29.7645563Z tests/test_api_contact_missing_config.py::TestApiContactMissingConfig::test_dialog_shown_when_config_file_missing PASSED [ 22%]
+2025-04-05T00:48:29.8527554Z tests/test_async_discussion_pytest.py::test_discussion_fetched_asynchronously PASSED [ 23%]
+2025-04-05T00:48:29.8716199Z tests/test_async_discussion_pytest.py::test_discussion_error_handling
+2025-04-05T00:48:29.8716949Z -------------------------------- live log call ---------------------------------
+2025-04-05T00:48:29.8717977Z ERROR    accessiweather.gui.async_fetchers:async_fetchers.py:262 Failed to retrieve discussion: Network error fetching discussion
+2025-04-05T00:48:29.9368496Z PASSED                                                                   [ 24%]
+2025-04-05T00:48:30.0158262Z tests/test_async_forecast_alerts.py::test_forecast_fetched_asynchronously PASSED [ 25%]
+2025-04-05T00:48:30.0953944Z tests/test_async_forecast_alerts.py::test_alerts_fetched_asynchronously PASSED [ 25%]
+2025-04-05T00:48:30.1109282Z tests/test_async_forecast_alerts.py::test_forecast_error_handling
+2025-04-05T00:48:30.1110029Z -------------------------------- live log call ---------------------------------
+2025-04-05T00:48:30.1111000Z ERROR    accessiweather.gui.async_fetchers:async_fetchers.py:102 Failed to retrieve forecast: API forecast network error
+2025-04-05T00:48:30.1750990Z PASSED                                                                   [ 26%]
+2025-04-05T00:48:30.2078559Z tests/test_async_forecast_alerts.py::test_alerts_error_handling
+2025-04-05T00:48:30.2079517Z -------------------------------- live log call ---------------------------------
+2025-04-05T00:48:30.2080561Z ERROR    accessiweather.gui.async_fetchers:async_fetchers.py:178 Failed to retrieve alerts: API alerts network error
+2025-04-05T00:48:30.2726162Z PASSED                                                                   [ 27%]
+2025-04-05T00:48:30.3530668Z tests/test_async_forecast_alerts.py::test_concurrent_fetching PASSED     [ 28%]
+2025-04-05T00:48:30.3592134Z tests/test_autocomplete_async.py::test_debounce_timer_creation PASSED    [ 29%]
+2025-04-05T00:48:30.3662895Z tests/test_autocomplete_async.py::test_debounce_timer_starts_on_text_change PASSED [ 30%]
+2025-04-05T00:48:30.3727841Z tests/test_autocomplete_async.py::test_debounce_timer_triggers_fetch PASSED [ 31%]
+2025-04-05T00:48:30.3794276Z tests/test_autocomplete_async.py::test_fetch_suggestions_uses_threading PASSED [ 32%]
+2025-04-05T00:48:30.3867442Z tests/test_autocomplete_async.py::test_fetch_thread_cancellation PASSED  [ 33%]
+2025-04-05T00:48:30.3931039Z tests/test_autocomplete_async.py::test_fetch_thread_updates_ui_on_completion PASSED [ 34%]
+2025-04-05T00:48:30.3982969Z tests/test_autocomplete_async.py::test_fetch_thread_handles_errors
+2025-04-05T00:48:30.3983706Z -------------------------------- live log call ---------------------------------
+2025-04-05T00:48:30.3984657Z ERROR    accessiweather.gui.autocomplete:autocomplete.py:213 Error fetching location suggestions: Test error
+2025-04-05T00:48:30.4955231Z FAILED                                                                   [ 35%]
+2025-04-05T00:48:30.5031940Z tests/test_autocomplete_async.py::test_integration_with_real_timer PASSED [ 36%]
+2025-04-05T00:48:30.5093726Z tests/test_autocomplete_search.py::test_autocomplete_creation PASSED     [ 37%]
+2025-04-05T00:48:30.5200643Z tests/test_autocomplete_search.py::test_autocomplete_suggestions FAILED  [ 37%]
+2025-04-05T00:48:30.5263046Z tests/test_autocomplete_search.py::test_autocomplete_min_chars PASSED    [ 38%]
+2025-04-05T00:48:30.5316421Z tests/test_autocomplete_search.py::test_autocomplete_completer_integration PASSED [ 39%]
+2025-04-05T00:48:30.5346567Z tests/test_cli.py::TestCli::test_parse_args_defaults PASSED              [ 40%]
+2025-04-05T00:48:30.5378946Z tests/test_cli.py::TestCli::test_parse_args_debug PASSED                 [ 41%]
+2025-04-05T00:48:30.5410851Z tests/test_cli.py::TestCli::test_parse_args_config PASSED                [ 42%]
+2025-04-05T00:48:30.5442776Z tests/test_cli.py::TestCli::test_main_success PASSED                     [ 43%]
+2025-04-05T00:48:30.5478200Z tests/test_cli.py::TestCli::test_main_error PASSED                       [ 44%]
+2025-04-05T00:48:30.5507668Z tests/test_geocoding.py::TestGeocodingService::test_init PASSED          [ 45%]
+2025-04-05T00:48:30.5540817Z tests/test_geocoding.py::TestGeocodingService::test_geocode_address_success PASSED [ 46%]
+2025-04-05T00:48:30.5573942Z tests/test_geocoding.py::TestGeocodingService::test_geocode_zip_code PASSED [ 47%]
+2025-04-05T00:48:30.5602665Z tests/test_geocoding.py::TestGeocodingService::test_geocode_address_not_found PASSED [ 48%]
+2025-04-05T00:48:30.5624386Z tests/test_geocoding.py::TestGeocodingService::test_geocode_address_timeout
+2025-04-05T00:48:30.5625205Z -------------------------------- live log call ---------------------------------
+2025-04-05T00:48:30.5625782Z ERROR    accessiweather.geocoding:geocoding.py:43 Geocoding error: Timeout
+2025-04-05T00:48:30.5635056Z PASSED                                                                   [ 49%]
+2025-04-05T00:48:30.5656740Z tests/test_geocoding.py::TestGeocodingService::test_geocode_address_service_error
+2025-04-05T00:48:30.5657407Z -------------------------------- live log call ---------------------------------
+2025-04-05T00:48:30.5657951Z ERROR    accessiweather.geocoding:geocoding.py:43 Geocoding error: Service Error
+2025-04-05T00:48:30.5669552Z PASSED                                                                   [ 50%]
+2025-04-05T00:48:30.5704952Z tests/test_gui.py::TestLocationDialog::test_init ERROR                   [ 50%]
+2025-04-05T00:48:30.5741469Z tests/test_gui.py::TestLocationDialog::test_validation ERROR             [ 51%]
+2025-04-05T00:48:30.5774800Z tests/test_gui.py::TestLocationDialog::test_get_values ERROR             [ 52%]
+2025-04-05T00:48:30.5801808Z tests/test_gui.py::TestWeatherDiscussionDialog::test_init ERROR          [ 53%]
+2025-04-05T00:48:30.5839864Z tests/test_gui.py::TestWeatherApp::test_init_with_default_config ERROR   [ 54%]
+2025-04-05T00:48:30.5873158Z tests/test_gui.py::TestWeatherApp::test_init_with_config_file ERROR      [ 55%]
+2025-04-05T00:48:30.5910656Z tests/test_gui.py::TestWeatherApp::test_fetch_weather_data_with_proper_headers ERROR [ 56%]
+2025-04-05T00:48:30.5942250Z tests/test_gui_loading.py::TestWeatherApp::test_init_with_default_config <- tests/test_gui.py ERROR [ 57%]
+2025-04-05T00:48:30.5976321Z tests/test_gui_loading.py::TestWeatherApp::test_init_with_config_file <- tests/test_gui.py ERROR [ 58%]
+2025-04-05T00:48:30.6014300Z tests/test_gui_loading.py::TestWeatherApp::test_fetch_weather_data_with_proper_headers <- tests/test_gui.py ERROR [ 59%]
+2025-04-05T00:48:30.6045783Z tests/test_gui_loading.py::TestWeatherAppLoadingFeedback::test_init_with_default_config <- tests/test_gui.py ERROR [ 60%]
+2025-04-05T00:48:30.6079831Z tests/test_gui_loading.py::TestWeatherAppLoadingFeedback::test_init_with_config_file <- tests/test_gui.py ERROR [ 61%]
+2025-04-05T00:48:30.6121474Z tests/test_gui_loading.py::TestWeatherAppLoadingFeedback::test_fetch_weather_data_with_proper_headers <- tests/test_gui.py ERROR [ 62%]
+2025-04-05T00:48:30.6156209Z tests/test_gui_loading.py::TestWeatherAppLoadingFeedback::test_ui_state_during_fetch ERROR [ 62%]
+2025-04-05T00:48:30.6192164Z tests/test_gui_loading.py::TestWeatherAppLoadingFeedback::test_ui_state_on_fetch_error ERROR [ 63%]
+2025-04-05T00:48:30.6232729Z tests/test_gui_loading.py::TestWeatherAppLoadingFeedback::test_ui_state_on_fetch_success ERROR [ 64%]
+2025-04-05T00:48:30.6264161Z tests/test_location.py::TestLocationManager::test_init PASSED            [ 65%]
+2025-04-05T00:48:30.6296956Z tests/test_location.py::TestLocationManager::test_add_location PASSED    [ 66%]
+2025-04-05T00:48:30.6336992Z tests/test_location.py::TestLocationManager::test_remove_location PASSED [ 67%]
+2025-04-05T00:48:30.6373890Z tests/test_location.py::TestLocationManager::test_set_current_location PASSED [ 68%]
+2025-04-05T00:48:30.6404339Z tests/test_location.py::TestLocationManager::test_get_current_location PASSED [ 69%]
+2025-04-05T00:48:30.6436482Z tests/test_location.py::TestLocationManager::test_get_all_locations PASSED [ 70%]
+2025-04-05T00:48:30.6466547Z tests/test_location.py::TestLocationManager::test_load_locations PASSED  [ 71%]
+2025-04-05T00:48:30.6502638Z tests/test_location.py::TestLocationManager::test_save_locations PASSED  [ 72%]
+2025-04-05T00:48:30.8571057Z Fatal Python error: Segmentation fault
+2025-04-05T00:48:30.8571677Z
+2025-04-05T00:48:30.8571932Z Current thread 0x00007f8f16c006c0 (most recent call first):
+2025-04-05T00:48:30.8573442Z   File "/home/runner/work/AccessiWeather/AccessiWeather/src/accessiweather/gui/autocomplete.py", line 230 in _update_completions
+2025-04-05T00:48:30.8575138Z   File "/home/runner/work/AccessiWeather/AccessiWeather/tests/test_location_change.py", line 65 in <lambda>
+2025-04-05T00:48:30.8576099Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/unittest/mock.py", line 1204 in _execute_mock_call
+2025-04-05T00:48:30.8576798Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/unittest/mock.py", line 1143 in _mock_call
+2025-04-05T00:48:30.8577474Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/unittest/mock.py", line 1139 in __call__
+2025-04-05T00:48:30.8578307Z   File "/home/runner/work/AccessiWeather/AccessiWeather/src/accessiweather/gui/autocomplete.py", line 210 in _fetch_thread_func
+2025-04-05T00:48:30.8579068Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/threading.py", line 1012 in run
+2025-04-05T00:48:30.8579705Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/threading.py", line 1075 in _bootstrap_inner
+2025-04-05T00:48:30.8580353Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/threading.py", line 1032 in _bootstrap
+2025-04-05T00:48:30.8580696Z
+2025-04-05T00:48:30.8580812Z Thread 0x00007f8f36762b80 (most recent call first):
+2025-04-05T00:48:30.8581548Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/threading.py", line 355 in wait
+2025-04-05T00:48:30.8582486Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/threading.py", line 655 in wait
+2025-04-05T00:48:30.8583364Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/threading.py", line 999 in start
+2025-04-05T00:48:30.8584126Z   File "/home/runner/work/AccessiWeather/AccessiWeather/src/accessiweather/gui/autocomplete.py", line 187 in _fetch_suggestions
+2025-04-05T00:48:30.8585046Z   File "/home/runner/work/AccessiWeather/AccessiWeather/src/accessiweather/gui/autocomplete.py", line 167 in on_debounce_timer
+2025-04-05T00:48:30.8585986Z   File "/home/runner/work/AccessiWeather/AccessiWeather/src/accessiweather/gui/weather_app.py", line 775 in _check_api_contact_configured
+2025-04-05T00:48:30.8586878Z   File "/home/runner/work/AccessiWeather/AccessiWeather/src/accessiweather/gui/weather_app.py", line 122 in __init__
+2025-04-05T00:48:30.8587638Z   File "/home/runner/work/AccessiWeather/AccessiWeather/tests/test_location_change.py", line 66 in setUp
+2025-04-05T00:48:30.8588312Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/unittest/case.py", line 586 in _callSetUp
+2025-04-05T00:48:30.8588937Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/unittest/case.py", line 630 in run
+2025-04-05T00:48:30.8589766Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/unittest/case.py", line 690 in __call__
+2025-04-05T00:48:30.8590460Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/_pytest/unittest.py", line 351 in runtest
+2025-04-05T00:48:30.8591455Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/_pytest/runner.py", line 174 in pytest_runtest_call
+2025-04-05T00:48:30.8592261Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/pluggy/_callers.py", line 103 in _multicall
+2025-04-05T00:48:30.8593016Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/pluggy/_manager.py", line 120 in _hookexec
+2025-04-05T00:48:30.8593744Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/pluggy/_hooks.py", line 513 in __call__
+2025-04-05T00:48:30.8594482Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/_pytest/runner.py", line 242 in <lambda>
+2025-04-05T00:48:30.8595229Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/_pytest/runner.py", line 341 in from_call
+2025-04-05T00:48:30.8595995Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/_pytest/runner.py", line 241 in call_and_report
+2025-04-05T00:48:30.8596784Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/_pytest/runner.py", line 132 in runtestprotocol
+2025-04-05T00:48:30.8597741Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/_pytest/runner.py", line 113 in pytest_runtest_protocol
+2025-04-05T00:48:30.8598528Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/pluggy/_callers.py", line 103 in _multicall
+2025-04-05T00:48:30.8599274Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/pluggy/_manager.py", line 120 in _hookexec
+2025-04-05T00:48:30.8600006Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/pluggy/_hooks.py", line 513 in __call__
+2025-04-05T00:48:30.8600767Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/_pytest/main.py", line 362 in pytest_runtestloop
+2025-04-05T00:48:30.8601715Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/pluggy/_callers.py", line 103 in _multicall
+2025-04-05T00:48:30.8602457Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/pluggy/_manager.py", line 120 in _hookexec
+2025-04-05T00:48:30.8603183Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/pluggy/_hooks.py", line 513 in __call__
+2025-04-05T00:48:30.8603891Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/_pytest/main.py", line 337 in _main
+2025-04-05T00:48:30.8604605Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/_pytest/main.py", line 283 in wrap_session
+2025-04-05T00:48:30.8605375Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/_pytest/main.py", line 330 in pytest_cmdline_main
+2025-04-05T00:48:30.8606145Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/pluggy/_callers.py", line 103 in _multicall
+2025-04-05T00:48:30.8606877Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/pluggy/_manager.py", line 120 in _hookexec
+2025-04-05T00:48:30.8607599Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/pluggy/_hooks.py", line 513 in __call__
+2025-04-05T00:48:30.8608336Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/_pytest/config/__init__.py", line 175 in main
+2025-04-05T00:48:30.8609133Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/lib/python3.12/site-packages/_pytest/config/__init__.py", line 201 in console_main
+2025-04-05T00:48:30.8609778Z   File "/opt/hostedtoolcache/Python/3.12.9/x64/bin/pytest", line 8 in <module>
+2025-04-05T00:48:33.9598857Z /home/runner/work/_temp/84a7bede-8fc6-4e5c-ae59-0aa793e583e8.sh: line 1:  5345 Segmentation fault      (core dumped) pytest --cov=accessiweather tests/ --cov-report=xml -v
+2025-04-05T00:48:33.9600765Z tests/test_location_change.py::TestLocationChange::test_location_change_updates_forecast
+2025-04-05T00:48:33.9615626Z ##[error]Process completed with exit code 139.
