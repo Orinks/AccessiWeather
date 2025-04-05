@@ -97,11 +97,17 @@ def mock_dialogs(monkeypatch, event_queue):
 
     # No longer mocking safe_call_after - let wx.CallAfter run
 
-    return {"progress_dialog": progress_dialog_mock, "discussion_dialog": discussion_dialog_mock}
+    return {
+        "progress_dialog": progress_dialog_mock,
+        "discussion_dialog": discussion_dialog_mock,
+    }
 
 
 # Patch the method that might show a dialog during init
-@patch("accessiweather.gui.weather_app.WeatherApp._check_api_contact_configured", return_value=None)
+@patch(
+    "accessiweather.gui.weather_app.WeatherApp._check_api_contact_configured",
+    return_value=None,
+)
 def test_discussion_fetched_asynchronously(
     mock_check_api_contact,  # Patch argument comes first
     wx_app,
@@ -185,8 +191,19 @@ def test_discussion_fetched_asynchronously(
     # patch.object context manager handles cleanup automatically
 
 
+# Patch the method that might show a dialog during init
+@patch(
+    "accessiweather.gui.weather_app.WeatherApp._check_api_contact_configured",
+    return_value=None,
+)
 def test_discussion_error_handling(
-    wx_app, frame, mock_api_client, mock_location_manager, event_queue, mock_dialogs
+    mock_check_api_contact,  # Add patch argument
+    wx_app,
+    frame,
+    mock_api_client,
+    mock_location_manager,
+    event_queue,
+    mock_dialogs,
 ):
     """Test discussion fetch error handling via wx.CallAfter."""
     app = WeatherApp(
