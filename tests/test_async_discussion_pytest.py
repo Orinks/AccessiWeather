@@ -1,13 +1,15 @@
-import pytest
-import threading
 import queue
+import threading
 import time  # Import time for the wait loop
-import wx  # type: ignore
 from unittest.mock import MagicMock, patch  # Import patch
 
-from accessiweather.gui.weather_app import WeatherApp
+import pytest
+import wx  # type: ignore
+
+from accessiweather.api_client import ApiClientError, NoaaApiClient
 from accessiweather.gui.dialogs import WeatherDiscussionDialog
-from accessiweather.api_client import NoaaApiClient, ApiClientError
+from accessiweather.gui.weather_app import WeatherApp
+
 # Removed unused import: DiscussionFetcher
 
 
@@ -62,16 +64,14 @@ def mock_dialogs(monkeypatch, event_queue):
     progress_dialog_mock = MagicMock()
     progress_dialog_mock.Pulse.return_value = None
     progress_dialog_mock.Destroy.return_value = None
-    monkeypatch.setattr(
-        wx, 'ProgressDialog',
-        lambda *args, **kwargs: progress_dialog_mock
-    )
+    monkeypatch.setattr(wx, "ProgressDialog", lambda *args, **kwargs: progress_dialog_mock)
 
     # Mock MessageBox - Keep as is
     def mock_message_box(*args, **kwargs):
         event_queue.put(("error_shown", args[0]))
         return None
-    monkeypatch.setattr(wx, 'MessageBox', mock_message_box)
+
+    monkeypatch.setattr(wx, "MessageBox", mock_message_box)
 
     # Mock WeatherDiscussionDialog - Keep as is
     discussion_dialog_mock = MagicMock()
@@ -90,33 +90,33 @@ def mock_dialogs(monkeypatch, event_queue):
 
     # Patch __init__; this covers ShowModal/Destroy for instances created
     # via this mock init.
-    monkeypatch.setattr(
-        WeatherDiscussionDialog,
-        '__init__',
-        mock_discussion_dialog_init
-    )
+    monkeypatch.setattr(WeatherDiscussionDialog, "__init__", mock_discussion_dialog_init)
     # Ensure ShowModal/Destroy are patched on the class if needed elsewhere
     # monkeypatch.setattr(WeatherDiscussionDialog, 'ShowModal', lambda s: None)
     # monkeypatch.setattr(WeatherDiscussionDialog, 'Destroy', lambda s: None)
 
     # No longer mocking safe_call_after - let wx.CallAfter run
 
-    return {
-        "progress_dialog": progress_dialog_mock,
-        "discussion_dialog": discussion_dialog_mock
-    }
+    return {"progress_dialog": progress_dialog_mock, "discussion_dialog": discussion_dialog_mock}
 
 
+# Patch the method that might show a dialog during init
+@patch("accessiweather.gui.weather_app.WeatherApp._check_api_contact_configured", return_value=None)
 def test_discussion_fetched_asynchronously(
-    wx_app, frame, mock_api_client, mock_location_manager, event_queue,
-    mock_dialogs
+    mock_check_api_contact,  # Patch argument comes first
+    wx_app,
+    frame,
+    mock_api_client,
+    mock_location_manager,
+    event_queue,
+    mock_dialogs,
 ):
     """Test discussion fetch and UI update via wx.CallAfter."""
     app = WeatherApp(
         frame,
         location_manager=mock_location_manager,
         api_client=mock_api_client,
-        notifier=MagicMock()
+        notifier=MagicMock(),
     )
     app.discussion_btn = MagicMock()  # Mock the button
     event = MagicMock()  # Mock the event object for the handler
@@ -131,7 +131,7 @@ def test_discussion_fetched_asynchronously(
     # --- Patch the callback method on the app instance ---
     # Get the original bound method from the instance
     # Ensure the method exists before trying to access it
-    assert hasattr(app, '_on_discussion_fetched'), "No _on_discussion_fetched"
+    assert hasattr(app, "_on_discussion_fetched"), "No _on_discussion_fetched"
     original_success_callback = app._on_discussion_fetched
 
     # Define the wrapper function with the correct signature
@@ -143,7 +143,7 @@ def test_discussion_fetched_asynchronously(
 
     processed_event = False
     # Use patch.object as a context manager with the CORRECT method name
-    with patch.object(app, '_on_discussion_fetched', new=wrapper_on_success):
+    with patch.object(app, "_on_discussion_fetched", new=wrapper_on_success):
         # Call the method that triggers fetching
         app.OnViewDiscussion(event)
 
@@ -173,15 +173,11 @@ def test_discussion_fetched_asynchronously(
     except queue.Empty:
         pass
 
-    assert dialog_event is not None, (
-        "Dialog event not found in queue after callback"
-    )
-    assert dialog_event[0] == "dialog_shown", (
-        f"Expected 'dialog_shown', got {dialog_event[0]}"
-    )
-    assert dialog_event[1] == expected_discussion, (
-        f"Expected '{expected_discussion}', got {dialog_event[1]}"
-    )
+    assert dialog_event is not None, "Dialog event not found in queue after callback"
+    assert dialog_event[0] == "dialog_shown", f"Expected 'dialog_shown', got {dialog_event[0]}"
+    assert (
+        dialog_event[1] == expected_discussion
+    ), f"Expected '{expected_discussion}', got {dialog_event[1]}"
 
     # Check that button was re-enabled (in the callback)
     app.discussion_btn.Enable.assert_called_once()
@@ -190,15 +186,14 @@ def test_discussion_fetched_asynchronously(
 
 
 def test_discussion_error_handling(
-    wx_app, frame, mock_api_client, mock_location_manager, event_queue,
-    mock_dialogs
+    wx_app, frame, mock_api_client, mock_location_manager, event_queue, mock_dialogs
 ):
     """Test discussion fetch error handling via wx.CallAfter."""
     app = WeatherApp(
         frame,
         location_manager=mock_location_manager,
         api_client=mock_api_client,
-        notifier=MagicMock()
+        notifier=MagicMock(),
     )
     app.discussion_btn = MagicMock()
     event = MagicMock()
@@ -213,7 +208,7 @@ def test_discussion_error_handling(
     # --- Patch the error callback method on the app instance ---
     # Get the original bound method from the instance
     # Ensure the method exists before trying to access it
-    assert hasattr(app, '_on_discussion_error'), "Missing _on_discussion_error"
+    assert hasattr(app, "_on_discussion_error"), "Missing _on_discussion_error"
     original_error_callback = app._on_discussion_error
 
     # Define the wrapper function with the correct signature
@@ -225,7 +220,7 @@ def test_discussion_error_handling(
 
     processed_event = False
     # Use patch.object as a context manager with the CORRECT method name
-    with patch.object(app, '_on_discussion_error', new=wrapper_on_error):
+    with patch.object(app, "_on_discussion_error", new=wrapper_on_error):
         # Call the method that triggers fetching
         app.OnViewDiscussion(event)
 
@@ -252,16 +247,10 @@ def test_discussion_error_handling(
     except queue.Empty:
         pass
 
-    assert error_event is not None, (
-        "Error event not found in queue after callback"
-    )
-    assert error_event[0] == "error_shown", (
-        f"Expected 'error_shown', got {error_event[0]}"
-    )
+    assert error_event is not None, "Error event not found in queue after callback"
+    assert error_event[0] == "error_shown", f"Expected 'error_shown', got {error_event[0]}"
     # Check if the original error message is part of the displayed message
-    assert error_message in error_event[1], (
-        f"Expected '{error_message}' in '{error_event[1]}'"
-    )
+    assert error_message in error_event[1], f"Expected '{error_message}' in '{error_event[1]}'"
 
     # Check that button was re-enabled (in the error callback)
     app.discussion_btn.Enable.assert_called_once()
