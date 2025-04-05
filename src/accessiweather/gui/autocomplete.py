@@ -228,7 +228,6 @@ class WeatherLocationAutocomplete(AccessibleComboBox):
                 is_testing = hasattr(wx, "testing") and wx.testing
                 if not is_testing:
                     self.AutoComplete(self.completer)
-                self.AutoComplete(self.completer)
 
     def update_choices(self, choices):
         """Update autocomplete choices.
