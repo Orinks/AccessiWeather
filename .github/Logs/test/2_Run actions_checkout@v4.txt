@@ -1,0 +1,86 @@
+﻿2025-04-05T00:47:15.5423615Z ##[group]Run actions/checkout@v4
+2025-04-05T00:47:15.5424518Z with:
+2025-04-05T00:47:15.5425021Z   repository: Orinks/AccessiWeather
+2025-04-05T00:47:15.5425745Z   token: ***
+2025-04-05T00:47:15.5426162Z   ssh-strict: true
+2025-04-05T00:47:15.5426580Z   ssh-user: git
+2025-04-05T00:47:15.5427019Z   persist-credentials: true
+2025-04-05T00:47:15.5427497Z   clean: true
+2025-04-05T00:47:15.5427944Z   sparse-checkout-cone-mode: true
+2025-04-05T00:47:15.5428469Z   fetch-depth: 1
+2025-04-05T00:47:15.5428893Z   fetch-tags: false
+2025-04-05T00:47:15.5429320Z   show-progress: true
+2025-04-05T00:47:15.5429761Z   lfs: false
+2025-04-05T00:47:15.5430160Z   submodules: false
+2025-04-05T00:47:15.5430617Z   set-safe-directory: true
+2025-04-05T00:47:15.5431511Z env:
+2025-04-05T00:47:15.5431943Z   DISPLAY: :99.0
+2025-04-05T00:47:15.5432560Z   PYTHONPATH: /home/runner/work/AccessiWeather/AccessiWeather
+2025-04-05T00:47:15.5433326Z ##[endgroup]
+2025-04-05T00:47:15.7080378Z Syncing repository: Orinks/AccessiWeather
+2025-04-05T00:47:15.7083078Z ##[group]Getting Git version info
+2025-04-05T00:47:15.7084093Z Working directory is '/home/runner/work/AccessiWeather/AccessiWeather'
+2025-04-05T00:47:15.7085505Z [command]/usr/bin/git version
+2025-04-05T00:47:15.7129517Z git version 2.49.0
+2025-04-05T00:47:15.7157907Z ##[endgroup]
+2025-04-05T00:47:15.7171649Z Temporarily overriding HOME='/home/runner/work/_temp/5033de5e-1505-4088-92d4-f8f245e6cdf8' before making global git config changes
+2025-04-05T00:47:15.7173196Z Adding repository directory to the temporary git global config as a safe directory
+2025-04-05T00:47:15.7176883Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/AccessiWeather/AccessiWeather
+2025-04-05T00:47:15.7228043Z Deleting the contents of '/home/runner/work/AccessiWeather/AccessiWeather'
+2025-04-05T00:47:15.7231934Z ##[group]Initializing the repository
+2025-04-05T00:47:15.7235897Z [command]/usr/bin/git init /home/runner/work/AccessiWeather/AccessiWeather
+2025-04-05T00:47:15.7292208Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-04-05T00:47:15.7293777Z hint: is subject to change. To configure the initial branch name to use in all
+2025-04-05T00:47:15.7295044Z hint: of your new repositories, which will suppress this warning, call:
+2025-04-05T00:47:15.7296389Z hint:
+2025-04-05T00:47:15.7297276Z hint: 	git config --global init.defaultBranch <name>
+2025-04-05T00:47:15.7298307Z hint:
+2025-04-05T00:47:15.7299251Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-04-05T00:47:15.7300464Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-04-05T00:47:15.7301555Z hint:
+2025-04-05T00:47:15.7302003Z hint: 	git branch -m <name>
+2025-04-05T00:47:15.7302868Z Initialized empty Git repository in /home/runner/work/AccessiWeather/AccessiWeather/.git/
+2025-04-05T00:47:15.7309687Z [command]/usr/bin/git remote add origin https://github.com/Orinks/AccessiWeather
+2025-04-05T00:47:15.7343479Z ##[endgroup]
+2025-04-05T00:47:15.7344290Z ##[group]Disabling automatic garbage collection
+2025-04-05T00:47:15.7347870Z [command]/usr/bin/git config --local gc.auto 0
+2025-04-05T00:47:15.7383358Z ##[endgroup]
+2025-04-05T00:47:15.7384658Z ##[group]Setting up auth
+2025-04-05T00:47:15.7385954Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-04-05T00:47:15.7415674Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-04-05T00:47:15.7699556Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-04-05T00:47:15.7727658Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-04-05T00:47:15.7957604Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-04-05T00:47:15.7994574Z ##[endgroup]
+2025-04-05T00:47:15.7995956Z ##[group]Fetching the repository
+2025-04-05T00:47:15.8005126Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +63daec50dd440e6c02d9125fdb90c366f0f8880c:refs/remotes/pull/7/merge
+2025-04-05T00:47:16.0797501Z From https://github.com/Orinks/AccessiWeather
+2025-04-05T00:47:16.0798767Z  * [new ref]         63daec50dd440e6c02d9125fdb90c366f0f8880c -> pull/7/merge
+2025-04-05T00:47:16.0823115Z ##[endgroup]
+2025-04-05T00:47:16.0823889Z ##[group]Determining the checkout info
+2025-04-05T00:47:16.0825281Z ##[endgroup]
+2025-04-05T00:47:16.0830218Z [command]/usr/bin/git sparse-checkout disable
+2025-04-05T00:47:16.0870419Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-04-05T00:47:16.0897655Z ##[group]Checking out the ref
+2025-04-05T00:47:16.0901097Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/7/merge
+2025-04-05T00:47:16.0980316Z Note: switching to 'refs/remotes/pull/7/merge'.
+2025-04-05T00:47:16.0981460Z
+2025-04-05T00:47:16.0981965Z You are in 'detached HEAD' state. You can look around, make experimental
+2025-04-05T00:47:16.0982885Z changes and commit them, and you can discard any commits you make in this
+2025-04-05T00:47:16.0983787Z state without impacting any branches by switching back to a branch.
+2025-04-05T00:47:16.0984310Z
+2025-04-05T00:47:16.0984811Z If you want to create a new branch to retain commits you create, you may
+2025-04-05T00:47:16.0986469Z do so (now or later) by using -c with the switch command. Example:
+2025-04-05T00:47:16.0987472Z
+2025-04-05T00:47:16.0987899Z   git switch -c <new-branch-name>
+2025-04-05T00:47:16.0988598Z
+2025-04-05T00:47:16.0988994Z Or undo this operation with:
+2025-04-05T00:47:16.0989918Z
+2025-04-05T00:47:16.0990244Z   git switch -
+2025-04-05T00:47:16.0990682Z
+2025-04-05T00:47:16.0991604Z Turn off this advice by setting config variable advice.detachedHead to false
+2025-04-05T00:47:16.0992710Z
+2025-04-05T00:47:16.0994017Z HEAD is now at 63daec5 Merge 9317ccd0f7a4000bb4a7657453631f4e1ee2ddf2 into ea743c7a7b4e96c99a762dfb63198768fb83d5b1
+2025-04-05T00:47:16.0997513Z ##[endgroup]
+2025-04-05T00:47:16.1026407Z [command]/usr/bin/git log -1 --format=%H
+2025-04-05T00:47:16.1050103Z 63daec50dd440e6c02d9125fdb90c366f0f8880c

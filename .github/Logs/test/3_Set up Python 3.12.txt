@@ -1,0 +1,15 @@
+﻿2025-04-05T00:47:16.1282370Z ##[group]Run actions/setup-python@v5
+2025-04-05T00:47:16.1282983Z with:
+2025-04-05T00:47:16.1283381Z   python-version: 3.12
+2025-04-05T00:47:16.1283843Z   check-latest: false
+2025-04-05T00:47:16.1284469Z   token: ***
+2025-04-05T00:47:16.1284898Z   update-environment: true
+2025-04-05T00:47:16.1285378Z   allow-prereleases: false
+2025-04-05T00:47:16.1285844Z   freethreaded: false
+2025-04-05T00:47:16.1286294Z env:
+2025-04-05T00:47:16.1286658Z   DISPLAY: :99.0
+2025-04-05T00:47:16.1287236Z   PYTHONPATH: /home/runner/work/AccessiWeather/AccessiWeather
+2025-04-05T00:47:16.1287903Z ##[endgroup]
+2025-04-05T00:47:16.2975500Z ##[group]Installed versions
+2025-04-05T00:47:16.3038022Z Successfully set up CPython (3.12.9)
+2025-04-05T00:47:16.3039692Z ##[endgroup]
