@@ -10,7 +10,7 @@ import time
 import traceback
 
 # import os  # Unused
-from typing import Any, Dict, Optional  # Removed unused List
+from typing import Any, Dict, Optional
 
 import requests
 
@@ -287,7 +287,7 @@ class NoaaApiClient:
 
                 # If status is OK, try to parse JSON
                 try:
-                    return response.json()
+                    return response.json()  # type: ignore
                 except JSONDecodeError as json_err:
                     resp_text = response.text[:200]  # Limit length
                     error_msg = (

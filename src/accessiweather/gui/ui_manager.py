@@ -1,4 +1,5 @@
 import logging  # Added for potential logging in UI updates
+from typing import Any, Dict, List, Optional
 
 import wx
 
@@ -149,7 +150,7 @@ class UIManager:
 
         self.frame.forecast_text.SetValue(text)
 
-    def _UpdateAlertsDisplay(self, alerts_data):
+    def _UpdateAlertsDisplay(self, alerts_data: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Update the alerts display with data and return processed alerts.
 
         Args:
@@ -161,7 +162,7 @@ class UIManager:
         # Clear current alerts display
         alerts_list_ctrl = self.frame.alerts_list
         alerts_list_ctrl.DeleteAllItems()
-        processed_alerts = []  # List to store alert properties
+        processed_alerts: List[Dict[str, Any]] = []  # List to store alert properties
 
         if not alerts_data or "features" not in alerts_data:
             return processed_alerts  # Return empty list

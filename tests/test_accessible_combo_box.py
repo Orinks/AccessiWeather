@@ -1,9 +1,12 @@
 """Tests for the AccessibleComboBox component"""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 import wx
+
+# Import before creating wx.App
+from accessiweather.gui.ui_components import AccessibleComboBox
 
 
 # Create a wx App fixture for testing
@@ -12,10 +15,6 @@ def wx_app():
     """Create a wx App for testing"""
     app = wx.App(False)
     yield app
-
-
-# Import this after wx.App is created
-from accessiweather.gui.ui_components import AccessibleComboBox
 
 
 class TestAccessibleComboBox:

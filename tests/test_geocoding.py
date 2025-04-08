@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-import pytest
 from geopy.exc import GeocoderServiceError, GeocoderTimedOut
 
 from accessiweather.geocoding import GeocodingService

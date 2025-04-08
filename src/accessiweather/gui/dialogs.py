@@ -11,7 +11,6 @@ from accessiweather.geocoding import GeocodingService
 
 from .ui_components import (
     AccessibleButton,
-    AccessibleComboBox,
     AccessibleStaticText,
     AccessibleTextCtrl,
     WeatherLocationAutocomplete,
@@ -201,7 +200,10 @@ class LocationDialog(wx.Dialog):
         # Description for screen readers
         help_text = AccessibleStaticText(
             panel,
-            label="Enter an address, city, or ZIP code to search for a location or select from recent searches",
+            label=(
+                "Enter an address, city, or ZIP code to search for a location "
+                "or select from recent searches"
+            ),
         )
         sizer.Add(help_text, 0, wx.ALL, 10)
 

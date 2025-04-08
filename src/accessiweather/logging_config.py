@@ -5,7 +5,6 @@ This module sets up logging for the application with both console and file outpu
 
 import logging
 import logging.handlers
-import os
 import sys
 from pathlib import Path
 

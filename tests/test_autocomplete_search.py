@@ -28,7 +28,7 @@ def wx_app():
 
 
 @pytest.fixture
-def frame(wx_app):
+def frame(wx_app):  # wx_app is needed to ensure wx.App exists
     frame = wx.Frame(None)
     yield frame
     frame.Destroy()
@@ -53,7 +53,7 @@ def test_autocomplete_creation(frame):
     # Check basic properties
     assert autocomplete is not None
     assert autocomplete.GetName() == "Test Autocomplete"
-    assert autocomplete.IsEditable() == True
+    assert autocomplete.IsEditable() is True
 
 
 def test_autocomplete_suggestions(frame, mock_geocoding_service):

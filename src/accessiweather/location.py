@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class LocationManager:
     """Manager for handling saved locations"""
 
-    def __init__(self, config_dir: str = None):
+    def __init__(self, config_dir: Optional[str] = None):
         """Initialize the location manager
 
         Args:
@@ -26,8 +26,8 @@ class LocationManager:
             self.config_dir = config_dir
 
         self.locations_file = os.path.join(self.config_dir, "locations.json")
-        self.current_location = None
-        self.saved_locations = {}
+        self.current_location: Optional[str] = None
+        self.saved_locations: Dict[str, Dict[str, float]] = {}
 
         # Ensure config directory exists
         os.makedirs(self.config_dir, exist_ok=True)

@@ -79,7 +79,7 @@ class TestApiContactCheck:
         }
 
     def test_no_dialog_when_api_contact_present(
-        self, wx_app, mock_components, config_with_api_contact
+        self, mock_components, config_with_api_contact
     ):
         """Test that no dialog is shown when API contact is present"""
         with (
@@ -116,7 +116,7 @@ class TestApiContactCheck:
                     app.Destroy()
 
     def test_dialog_shown_when_api_contact_missing(
-        self, wx_app, mock_components, config_without_api_contact
+        self, mock_components, config_without_api_contact
     ):
         """Test that dialog is shown when API contact is missing"""
         # Create a mock for OnSettings
@@ -144,8 +144,8 @@ class TestApiContactCheck:
                     config=config_without_api_contact,
                 )
 
-                # The _check_api_contact_configured method should have been called during initialization
-                # and should have shown a dialog and called OnSettings
+                # The _check_api_contact_configured method should have been called
+                # during initialization and should have shown a dialog and called OnSettings
 
                 # Assert that MessageDialog was created
                 wx.MessageDialog.assert_called_once()
@@ -157,7 +157,7 @@ class TestApiContactCheck:
                 app.Destroy()
 
     def test_dialog_shown_when_api_settings_missing(
-        self, wx_app, mock_components, config_without_api_settings
+        self, mock_components, config_without_api_settings
     ):
         """Test that dialog is shown when api_settings section is missing"""
         # Create a mock for OnSettings
@@ -185,8 +185,8 @@ class TestApiContactCheck:
                     config=config_without_api_settings,
                 )
 
-                # The _check_api_contact_configured method should have been called during initialization
-                # and should have shown a dialog and called OnSettings
+                # The _check_api_contact_configured method should have been called
+                # during initialization and should have shown a dialog and called OnSettings
 
                 # Assert that MessageDialog was created
                 wx.MessageDialog.assert_called_once()
@@ -198,7 +198,7 @@ class TestApiContactCheck:
                 app.Destroy()
 
     def test_settings_not_opened_if_dialog_cancelled(
-        self, wx_app, mock_components, config_without_api_contact
+        self, mock_components, config_without_api_contact
     ):
         """Test that settings are not opened if dialog is cancelled"""
         # Create a mock for OnSettings
@@ -226,8 +226,8 @@ class TestApiContactCheck:
                     config=config_without_api_contact,
                 )
 
-                # The _check_api_contact_configured method should have been called during initialization
-                # and should have shown a dialog but NOT called OnSettings since we returned CANCEL
+                # The _check_api_contact_configured method should have been called
+                # during initialization and should have shown a dialog but NOT called OnSettings
 
                 # Assert that MessageDialog was created
                 wx.MessageDialog.assert_called_once()
@@ -238,7 +238,7 @@ class TestApiContactCheck:
             if app:
                 app.Destroy()
 
-    def test_check_called_on_init(self, wx_app, mock_components, config_without_api_contact):
+    def test_check_called_on_init(self, mock_components, config_without_api_contact):
         """Test that the API contact check is called during initialization"""
         with (
             patch.object(WeatherApp, "_check_api_contact_configured") as mock_check,

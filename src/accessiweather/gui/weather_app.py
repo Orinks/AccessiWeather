@@ -106,7 +106,7 @@ class WeatherApp(wx.Frame):
         self.timer.Start(1000)  # Check every 1 second for updates
 
         # Last update timestamp
-        self.last_update = 0
+        self.last_update: float = 0.0
 
         # Register with accessibility system
         self.SetName("AccessiWeather")

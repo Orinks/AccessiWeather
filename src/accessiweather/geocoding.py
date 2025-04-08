@@ -4,7 +4,7 @@ This module provides geocoding functionality to convert addresses and zip codes 
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from geopy.exc import GeocoderServiceError, GeocoderTimedOut
 from geopy.geocoders import Nominatim

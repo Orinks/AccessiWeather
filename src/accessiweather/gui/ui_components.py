@@ -5,6 +5,7 @@ This module provides accessible UI widgets that enhance screen reader support.
 
 import logging
 import threading
+from typing import List
 
 import wx
 import wx.lib.mixins.listctrl as listmix
@@ -499,7 +500,7 @@ class WeatherLocationAutocomplete(AccessibleComboBox):
         self.fetch_thread.daemon = True
         self.fetch_thread.start()
 
-    def _fetch_thread_func(self, text):
+    def _fetch_thread_func(self, text: str) -> None:
         """Thread function to fetch location suggestions
 
         Args:
@@ -512,7 +513,10 @@ class WeatherLocationAutocomplete(AccessibleComboBox):
                 return
 
             # Get suggestions from geocoding service
-            suggestions = self.geocoding_service.suggest_locations(text)
+            if self.geocoding_service is not None:
+                suggestions = self.geocoding_service.suggest_locations(text)
+            else:
+                suggestions = []
 
             # Check again if we've been asked to stop before delivering results
             if self.stop_event.is_set():
@@ -525,7 +529,7 @@ class WeatherLocationAutocomplete(AccessibleComboBox):
             if not self.stop_event.is_set():
                 logger.error(f"Error fetching location suggestions: {e}")
 
-    def _update_completions(self, suggestions):
+    def _update_completions(self, suggestions: List[str]) -> None:
         """Update the completions in the text completer
 
         Args:
