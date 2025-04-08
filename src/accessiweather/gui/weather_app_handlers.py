@@ -7,17 +7,55 @@ import json
 import logging
 import os
 import time
+from typing import Any
 
 import wx
 
-from .dialogs import LocationDialog, WeatherDiscussionDialog
-from .settings_dialog import ALERT_RADIUS_KEY, API_CONTACT_KEY, UPDATE_INTERVAL_KEY, SettingsDialog
+from .dialogs import LocationDialog
+from .settings_dialog import ALERT_RADIUS_KEY, API_CONTACT_KEY, SettingsDialog
 
 logger = logging.getLogger(__name__)
 
 
 class WeatherAppHandlers:
-    """Event handlers for the WeatherApp class"""
+    """Event handlers for the WeatherApp class
+
+    This class is meant to be inherited by WeatherApp, not used directly.
+    It provides event handlers for the WeatherApp class.
+    """
+
+    # Type annotations for attributes that will be provided by WeatherApp
+    timer: wx.Timer
+    location_choice: wx.Choice
+    location_manager: Any
+    forecast_text: wx.TextCtrl
+    alerts_list: wx.ListCtrl
+    current_alerts: list
+    updating: bool
+    last_update: float
+    config: dict
+    _config_path: str
+    api_client: Any
+    discussion_fetcher: Any
+    _on_discussion_fetched: Any
+    _on_discussion_error: Any
+
+    # Methods that will be provided by WeatherApp
+    def Destroy(self) -> None:
+        """Placeholder for wx.Frame.Destroy method"""
+        pass
+
+    def UpdateWeatherData(self) -> None:
+        """Placeholder for WeatherApp.UpdateWeatherData method"""
+        pass
+
+    def UpdateLocationDropdown(self) -> None:
+        """Placeholder for WeatherApp.UpdateLocationDropdown method"""
+        pass
+
+    def SetStatusText(self, text: str) -> None:
+        """Placeholder for wx.Frame.SetStatusText method"""
+        pass
 
     def OnKeyDown(self, event):
         """Handle key down events for accessibility
@@ -32,7 +70,7 @@ class WeatherAppHandlers:
         else:
             event.Skip()
 
-    def OnClose(self, event):
+    def OnClose(self, event):  # event is required by wx
         """Handle close event
 
         Args:
@@ -47,7 +85,7 @@ class WeatherAppHandlers:
         # Destroy the window
         self.Destroy()
 
-    def OnLocationChange(self, event):
+    def OnLocationChange(self, event):  # event is required by wx
         """Handle location change event
 
         Args:
@@ -64,7 +102,7 @@ class WeatherAppHandlers:
         # Update weather data
         self.UpdateWeatherData()
 
-    def OnAddLocation(self, event):
+    def OnAddLocation(self, event):  # event is required by wx
         """Handle add location button click
 
         Args:
@@ -92,7 +130,7 @@ class WeatherAppHandlers:
 
         dialog.Destroy()
 
-    def OnRemoveLocation(self, event):
+    def OnRemoveLocation(self, event):  # event is required by wx
         """Handle remove location button click
 
         Args:
@@ -130,7 +168,7 @@ class WeatherAppHandlers:
                 # If another location is now current, update data
                 self.UpdateWeatherData()
 
-    def OnRefresh(self, event):
+    def OnRefresh(self, event):  # event is required by wx
         """Handle refresh button click
 
         Args:
@@ -139,7 +177,7 @@ class WeatherAppHandlers:
         # Trigger weather data update
         self.UpdateWeatherData()
 
-    def OnViewDiscussion(self, event):
+    def OnViewDiscussion(self, event):  # event is required by wx
         """Handle view discussion button click
 
         Args:
@@ -165,7 +203,7 @@ class WeatherAppHandlers:
             on_error=self._on_discussion_error,
         )
 
-    def OnViewAlert(self, event):
+    def OnViewAlert(self, event):  # event is required by wx
         """Handle view alert button click
 
         Args:
@@ -174,7 +212,9 @@ class WeatherAppHandlers:
         # Get selected alert
         selected = self.alerts_list.GetFirstSelected()
         if selected == -1:
-            wx.MessageBox("Please select an alert to view", "No Alert Selected", wx.OK | wx.ICON_ERROR)
+            wx.MessageBox(
+                "Please select an alert to view", "No Alert Selected", wx.OK | wx.ICON_ERROR
+            )
             return
 
         # Get alert data
@@ -195,7 +235,7 @@ class WeatherAppHandlers:
         # Just call the view alert handler
         self.OnViewAlert(event)
 
-    def OnSettings(self, event):
+    def OnSettings(self, event):  # event is required by wx
         """Handle settings button click
 
         Args:
@@ -205,8 +245,12 @@ class WeatherAppHandlers:
         settings = self.config.get("settings", {})
         api_settings = self.config.get("api_settings", {})
 
+        # Combine settings and api_settings for the dialog
+        combined_settings = settings.copy()
+        combined_settings.update(api_settings)
+
         # Create settings dialog
-        dialog = SettingsDialog(self, settings, api_settings)
+        dialog = SettingsDialog(self, combined_settings)
         result = dialog.ShowModal()
 
         if result == wx.ID_OK:
@@ -231,7 +275,7 @@ class WeatherAppHandlers:
 
         dialog.Destroy()
 
-    def OnTimer(self, event):
+    def OnTimer(self, event):  # event is required by wx
         """Handle timer event for periodic updates
 
         Args:

@@ -10,6 +10,46 @@ import wx
 logger = logging.getLogger(__name__)
 
 
+class AccessibleComboBox(wx.ComboBox):
+    """Combo box with enhanced accessibility support"""
+
+    def __init__(self, parent, id=wx.ID_ANY, value="", choices=None, label="", **kwargs):
+        """Initialize accessible combo box
+
+        Args:
+            parent: Parent window
+            id: Control ID
+            value: Initial text value
+            choices: List of choices
+            label: Accessible label
+            **kwargs: Additional arguments for wx.ComboBox
+        """
+        if choices is None:
+            choices = []
+        super().__init__(parent, id, value, choices=choices, **kwargs)
+
+        # Set accessible name
+        self.SetName(label)
+
+    def set_label(self, label):
+        """Set the accessible label
+
+        Args:
+            label: New accessible label
+        """
+        self.SetName(label)
+
+    def SetItems(self, items):
+        """Set the items in the combo box
+
+        Args:
+            items: List of items
+        """
+        self.Clear()
+        for item in items:
+            self.Append(item)
+
+
 class AccessibleStaticText(wx.StaticText):
     """Static text with enhanced accessibility support"""
 
