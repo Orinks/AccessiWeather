@@ -1,7 +1,8 @@
 """Dialog for displaying weather forecast discussion"""
 
-import wx
 import logging
+
+import wx
 
 logger = logging.getLogger(__name__)
 
@@ -36,16 +37,16 @@ class WeatherDiscussionDialog(wx.Dialog):
             # Create a simple panel
             logger.debug("Creating panel for discussion dialog")
             panel = wx.Panel(self)
-            
+
             # Create a vertical box sizer
             sizer = wx.BoxSizer(wx.VERTICAL)
 
             # Create a text control for the discussion
             logger.debug("Creating text control for discussion dialog")
             self.text_ctrl = wx.TextCtrl(
-                panel, 
+                panel,
                 style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
-                size=(780, 500)  # Set a fixed size for the text control
+                size=(780, 500),  # Set a fixed size for the text control
             )
 
             # Set a monospace font for better readability of formatted text
@@ -57,7 +58,7 @@ class WeatherDiscussionDialog(wx.Dialog):
             logger.debug(f"Setting text value (length: {len(text)})")
             self.text_ctrl.SetValue(text)
             logger.debug("Text value set successfully")
-            
+
             # Set accessible name and description
             logger.debug("Setting accessible name for text control")
             self.text_ctrl.SetName("Weather Discussion Text")
@@ -74,12 +75,12 @@ class WeatherDiscussionDialog(wx.Dialog):
             # Set the sizer for the panel
             logger.debug("Setting panel sizer")
             panel.SetSizer(sizer)
-            
+
             # Set the dialog size
             logger.debug("Setting dialog size")
             self.SetSize((800, 600))
             logger.debug("Dialog size set successfully")
-            
+
             # Center the dialog on the parent
             logger.debug("Centering dialog on parent")
             self.CenterOnParent()
@@ -96,9 +97,7 @@ class WeatherDiscussionDialog(wx.Dialog):
             logger.error(f"Error creating discussion dialog: {e}")
             # Show error message to user
             wx.MessageBox(
-                f"Error creating discussion dialog: {e}",
-                "Dialog Error",
-                wx.OK | wx.ICON_ERROR
+                f"Error creating discussion dialog: {e}", "Dialog Error", wx.OK | wx.ICON_ERROR
             )
             raise
 

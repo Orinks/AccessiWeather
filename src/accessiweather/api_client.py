@@ -236,7 +236,7 @@ class NoaaApiClient:
                         f"Successfully retrieved product text (length: {len(product_text)})"
                     )
                     # Log the first 100 characters of the product text
-                    preview = product_text[:100].replace('\n', '\\n')
+                    preview = product_text[:100].replace("\n", "\\n")
                     logger.debug(f"Product text preview: {preview}...")
                 else:
                     logger.warning("Product text is empty or missing")
@@ -303,7 +303,9 @@ class NoaaApiClient:
                     response = requests.get(
                         request_url, headers=self.headers, params=params, timeout=10
                     )
-                    logger.debug(f"Received response from {request_url} with status code: {response.status_code}")
+                    logger.debug(
+                        f"Received response from {request_url} with status code: {response.status_code}"
+                    )
                     self.last_request_time = time.time()
                 except Exception as e:
                     logger.error(f"Exception during GET request to {request_url}: {e}")

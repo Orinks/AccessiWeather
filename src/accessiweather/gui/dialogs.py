@@ -405,7 +405,9 @@ class WeatherDiscussionDialog(wx.Dialog):
 
             # Create a text control for the discussion
             logger.debug("Creating text control for discussion dialog")
-            self.text_ctrl = wx.TextCtrl(panel, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2)
+            self.text_ctrl = wx.TextCtrl(
+                panel, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2
+            )
 
             # Set a monospace font for better readability of formatted text
             logger.debug("Setting font for text control")

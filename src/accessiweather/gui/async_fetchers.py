@@ -254,9 +254,13 @@ class DiscussionFetcher:
                     # Use a default message instead of None
                     discussion_text = "No discussion available"
                 else:
-                    logger.debug(f"API returned discussion text with length: {len(discussion_text)}")
+                    logger.debug(
+                        f"API returned discussion text with length: {len(discussion_text)}"
+                    )
                     # Log the first 100 characters of the discussion text
-                    preview = discussion_text[:100].replace('\n', '\\n') if discussion_text else 'None'
+                    preview = (
+                        discussion_text[:100].replace("\n", "\\n") if discussion_text else "None"
+                    )
                     logger.debug(f"Discussion text preview: {preview}...")
 
                 # Check again if we've been asked to stop before delivering results
@@ -283,9 +287,15 @@ class DiscussionFetcher:
                     except Exception as e:
                         logger.error(f"Error scheduling success callback: {e}")
                         # Try to close the loading dialog if it exists
-                        if additional_data and len(additional_data) > 1 and hasattr(additional_data[1], 'Destroy'):
+                        if (
+                            additional_data
+                            and len(additional_data) > 1
+                            and hasattr(additional_data[1], "Destroy")
+                        ):
                             try:
-                                logger.debug("Attempting to close loading dialog after callback error")
+                                logger.debug(
+                                    "Attempting to close loading dialog after callback error"
+                                )
                                 safe_call_after(additional_data[1].Destroy)
                             except Exception as dialog_e:
                                 logger.error(f"Error closing loading dialog: {dialog_e}")
