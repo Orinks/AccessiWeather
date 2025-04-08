@@ -195,12 +195,23 @@ class WeatherAppHandlers:
         name, lat, lon = location
         self.SetStatusText(f"Loading forecast discussion for {name}...")
 
+        # Create a progress dialog
+        loading_dialog = wx.ProgressDialog(
+            "Fetching Discussion",
+            f"Fetching forecast discussion for {name}...",
+            maximum=100,
+            parent=self,
+            style=wx.PD_APP_MODAL | wx.PD_AUTO_HIDE | wx.PD_CAN_ABORT,
+        )
+        loading_dialog.Pulse()
+
         # Fetch discussion data
         self.discussion_fetcher.fetch(
             lat,
             lon,
             on_success=self._on_discussion_fetched,
             on_error=self._on_discussion_error,
+            additional_data=[name, loading_dialog]
         )
 
     def OnViewAlert(self, event):  # event is required by wx
