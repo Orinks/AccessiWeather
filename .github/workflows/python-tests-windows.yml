@@ -1,0 +1,33 @@
+name: Python Tests Windows
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  test:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-mock
+        pip install -e .
+        
+    - name: Install wxPython
+      run: |
+        pip install -U wxPython==4.2.2
+        
+    - name: Run tests
+      run: |
+        python -m pytest tests/test_location_switching_fixed.py tests/test_notification_settings.py
