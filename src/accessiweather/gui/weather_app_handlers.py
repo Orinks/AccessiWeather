@@ -211,7 +211,7 @@ class WeatherAppHandlers:
             lon,
             on_success=self._on_discussion_fetched,
             on_error=self._on_discussion_error,
-            additional_data=[name, loading_dialog]
+            additional_data=[name, loading_dialog],
         )
 
     def OnViewAlert(self, event):  # event is required by wx

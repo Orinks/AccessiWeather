@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, patch
 
 import wx
 
-from accessiweather.gui.async_fetchers import DiscussionFetcher
 from accessiweather.api_client import NoaaApiClient
+from accessiweather.gui.async_fetchers import DiscussionFetcher
 
 # Enable faulthandler to get better information about segmentation faults
 faulthandler.enable()
@@ -30,7 +30,7 @@ class TestDiscussionFetcher:
 
         assert fetcher.api_client == api_client
 
-    @patch('accessiweather.api_client.NoaaApiClient.get_discussion')
+    @patch("accessiweather.api_client.NoaaApiClient.get_discussion")
     def test_fetch_success(self, mock_get_discussion, wx_app):
         """Test successful fetching of discussion data."""
         # Set up mocks
@@ -61,7 +61,7 @@ class TestDiscussionFetcher:
         # Verify the error callback was not called
         error_callback.assert_not_called()
 
-    @patch('accessiweather.api_client.NoaaApiClient.get_discussion')
+    @patch("accessiweather.api_client.NoaaApiClient.get_discussion")
     def test_fetch_error(self, mock_get_discussion, wx_app):
         """Test error handling when fetching discussion data."""
         # Set up mocks

@@ -212,7 +212,9 @@ class NoaaApiClient:
 
                 product_text = product.get("productText")
                 if product_text:
-                    logger.debug(f"Successfully retrieved product text (length: {len(product_text)})")
+                    logger.debug(
+                        f"Successfully retrieved product text (length: {len(product_text)})"
+                    )
                 else:
                     logger.warning("Product text is empty or missing")
 
