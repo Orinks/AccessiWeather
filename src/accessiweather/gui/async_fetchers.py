@@ -243,40 +243,61 @@ class DiscussionFetcher:
 
             # Get discussion text from API
             logger.debug(f"Calling get_discussion with coordinates: ({lat}, {lon})")
-            discussion_text = self.api_client.get_discussion(lat, lon)
+            try:
+                logger.debug("About to call api_client.get_discussion")
+                discussion_text = self.api_client.get_discussion(lat, lon)
+                logger.debug("Returned from api_client.get_discussion call")
 
-            # Log the discussion text
-            if discussion_text is None:
-                logger.warning("API returned None for discussion text")
-                # Use a default message instead of None
-                discussion_text = "No discussion available"
-            else:
-                logger.debug(f"API returned discussion text with length: {len(discussion_text)}")
-                logger.debug(
-                    f"Discussion text preview: {discussion_text[:100] if discussion_text else 'None'}..."
-                )
+                # Log the discussion text
+                if discussion_text is None:
+                    logger.warning("API returned None for discussion text")
+                    # Use a default message instead of None
+                    discussion_text = "No discussion available"
+                else:
+                    logger.debug(f"API returned discussion text with length: {len(discussion_text)}")
+                    # Log the first 100 characters of the discussion text
+                    preview = discussion_text[:100].replace('\n', '\\n') if discussion_text else 'None'
+                    logger.debug(f"Discussion text preview: {preview}...")
 
-            # Check again if we've been asked to stop before delivering results
-            if self._stop_event.is_set():
-                logger.debug("Discussion fetch completed but cancelled")
-                return
+                # Check again if we've been asked to stop before delivering results
+                if self._stop_event.is_set():
+                    logger.debug("Discussion fetch completed but cancelled")
+                    return
 
-            # Call success callback if provided
-            if on_success and not self._stop_event.is_set():
-                logger.debug(
-                    f"Calling success callback with discussion_text and additional_data: {additional_data}"
-                )
-                # Call callback on main thread
-                try:
+                # Call success callback if provided
+                if on_success and not self._stop_event.is_set():
+                    logger.debug(
+                        f"Calling success callback with discussion_text and additional_data: {additional_data}"
+                    )
+                    # Call callback on main thread
+                    try:
+                        if additional_data is not None:
+                            logger.debug(
+                                f"Calling success callback with additional data: {additional_data}"
+                            )
+                            safe_call_after(on_success, discussion_text, *additional_data)
+                        else:
+                            logger.debug("Calling success callback without additional data")
+                            safe_call_after(on_success, discussion_text)
+                        logger.debug("Success callback scheduled successfully")
+                    except Exception as e:
+                        logger.error(f"Error scheduling success callback: {e}")
+                        # Try to close the loading dialog if it exists
+                        if additional_data and len(additional_data) > 1 and hasattr(additional_data[1], 'Destroy'):
+                            try:
+                                logger.debug("Attempting to close loading dialog after callback error")
+                                safe_call_after(additional_data[1].Destroy)
+                            except Exception as dialog_e:
+                                logger.error(f"Error closing loading dialog: {dialog_e}")
+            except Exception as e:
+                logger.error(f"Error in get_discussion: {e}")
+                # If there's an error, still try to call the error callback
+                if on_error and not self._stop_event.is_set():
+                    error_msg = f"Failed to retrieve discussion: {str(e)}"
                     if additional_data is not None:
-                        logger.debug(f"Calling success callback with additional data: {additional_data}")
-                        safe_call_after(on_success, discussion_text, *additional_data)
+                        safe_call_after(on_error, error_msg, *additional_data)
                     else:
-                        logger.debug("Calling success callback without additional data")
-                        safe_call_after(on_success, discussion_text)
-                    logger.debug("Success callback scheduled successfully")
-                except Exception as e:
-                    logger.error(f"Error scheduling success callback: {e}")
+                        safe_call_after(on_error, error_msg)
         except Exception as e:
             if not self._stop_event.is_set():
                 logger.error(f"Failed to retrieve discussion: {str(e)}")

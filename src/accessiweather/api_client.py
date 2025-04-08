@@ -184,7 +184,9 @@ class NoaaApiClient:
         """
         try:
             logger.info(f"Getting forecast discussion for coordinates: ({lat}, {lon})")
+            logger.debug("Calling get_point_data")
             point_data = self.get_point_data(lat, lon)
+            logger.debug("Returned from get_point_data")
             logger.debug(f"Point data keys: {list(point_data.keys())}")
             logger.debug(
                 f"Point data properties keys: {list(point_data.get('properties', {}).keys())}"
@@ -200,7 +202,9 @@ class NoaaApiClient:
             # Get the forecast discussion product
             endpoint = f"products/types/AFD/locations/{office_id}"
             logger.info(f"Fetching products for office: {office_id}")
+            logger.debug(f"Making request to endpoint: {endpoint}")
             products = self._make_request(endpoint)
+            logger.debug("Returned from _make_request for products")
             logger.debug(f"Products keys: {list(products.keys())}")
 
             # Get the latest discussion
@@ -220,7 +224,10 @@ class NoaaApiClient:
                     return None
 
                 logger.info(f"Fetching product text for: {latest_product_id}")
-                product = self._make_request(f"products/{latest_product_id}")
+                product_endpoint = f"products/{latest_product_id}"
+                logger.debug(f"Making request to endpoint: {product_endpoint}")
+                product = self._make_request(product_endpoint)
+                logger.debug("Returned from _make_request for product text")
                 logger.debug(f"Product keys: {list(product.keys())}")
 
                 product_text = product.get("productText")
@@ -229,13 +236,15 @@ class NoaaApiClient:
                         f"Successfully retrieved product text (length: {len(product_text)})"
                     )
                     # Log the first 100 characters of the product text
-                    logger.debug(f"Product text preview: {product_text[:100]}...")
+                    preview = product_text[:100].replace('\n', '\\n')
+                    logger.debug(f"Product text preview: {preview}...")
                 else:
                     logger.warning("Product text is empty or missing")
 
+                logger.debug("Returning product_text from get_discussion")
                 return product_text
             except (IndexError, KeyError) as e:
-                logger.warning("Could not find forecast discussion for " f"{office_id}: {str(e)}")
+                logger.warning(f"Could not find forecast discussion for {office_id}: {str(e)}")
                 return None
         except Exception as e:
             logger.error(f"Error getting discussion: {str(e)}")
@@ -289,10 +298,16 @@ class NoaaApiClient:
                 logger.debug(f"API request to: {request_url} with params: {params}")
                 # Make the request - keeping this inside the lock to avoid
                 # concurrent access. Added timeout.
-                response = requests.get(
-                    request_url, headers=self.headers, params=params, timeout=10
-                )
-                self.last_request_time = time.time()
+                try:
+                    logger.debug(f"Sending GET request to {request_url}")
+                    response = requests.get(
+                        request_url, headers=self.headers, params=params, timeout=10
+                    )
+                    logger.debug(f"Received response from {request_url} with status code: {response.status_code}")
+                    self.last_request_time = time.time()
+                except Exception as e:
+                    logger.error(f"Exception during GET request to {request_url}: {e}")
+                    raise
 
                 # Check for HTTP errors first
                 try:
