@@ -235,7 +235,7 @@ class LocationDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.OnOK, id=wx.ID_OK)
         self.Bind(wx.EVT_COMBOBOX, self.on_autocomplete_selection, self.search_field)
 
-    def on_autocomplete_selection(self, event):
+    def on_autocomplete_selection(self, event):  # event is required by wx
         """Handle autocomplete selection event
 
         Args:
@@ -246,7 +246,7 @@ class LocationDialog(wx.Dialog):
         if selected_value:
             self._perform_search(selected_value)
 
-    def OnSearch(self, event):
+    def OnSearch(self, event):  # event is required by wx
         """Handle search button click
 
         Args:
@@ -317,7 +317,7 @@ class LocationDialog(wx.Dialog):
         self.search_field.update_choices(self.search_history)
         self.search_field.SetValue(query)
 
-    def OnAdvanced(self, event):
+    def OnAdvanced(self, event):  # event is required by wx
         """Handle advanced button click to open manual lat/lon dialog
 
         Args:
@@ -419,7 +419,7 @@ class WeatherDiscussionDialog(wx.Dialog):
         # Set initial focus for accessibility
         self.text_ctrl.SetFocus()
 
-    def OnClose(self, event):
+    def OnClose(self, event):  # event is required by wx
         """Handle close button event
 
         Args:
