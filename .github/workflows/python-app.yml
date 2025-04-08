@@ -1,0 +1,48 @@
+name: Python Application
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pytest mypy black isort
+        pip install -e .
+        
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 src/accessiweather --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings
+        flake8 src/accessiweather --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        
+    - name: Type check with mypy
+      run: |
+        mypy src/accessiweather --ignore-missing-imports
+        
+    - name: Format check with black
+      run: |
+        black --check src/accessiweather
+        
+    - name: Import sort check with isort
+      run: |
+        isort --check-only --profile black src/accessiweather
+        
+    - name: Test with pytest
+      run: |
+        pytest tests/test_location.py
