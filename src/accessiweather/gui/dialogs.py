@@ -386,6 +386,12 @@ class WeatherDiscussionDialog(wx.Dialog):
         """
         super().__init__(parent, title=title, style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
 
+        # Log the discussion text for debugging
+        logger.debug(f"Creating discussion dialog with text length: {len(text)}")
+        if not text:
+            logger.warning("Empty discussion text provided to dialog")
+            text = "No discussion available"
+
         panel = wx.Panel(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
 
