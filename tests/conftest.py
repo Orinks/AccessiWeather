@@ -1,4 +1,5 @@
 # tests/conftest.py
+import faulthandler
 import json
 import os
 import tempfile
@@ -7,6 +8,9 @@ from unittest.mock import MagicMock
 
 import pytest
 import wx
+
+# Enable faulthandler to get better information about segmentation faults
+faulthandler.enable()
 
 # No need to import test utilities here
 
@@ -27,15 +31,27 @@ def wx_app_session():
 
     yield app
 
-    # Clean up after all tests - use a safer approach
-    for win in wx.GetTopLevelWindows():
-        if win:
-            win.Destroy()
+    # Clean up after all tests - use a safer approach with exception handling
+    try:
+        # Get a list of all top-level windows
+        windows = list(wx.GetTopLevelWindows())
 
-    # Process pending events
-    for _ in range(5):
-        wx.SafeYield()
-        time.sleep(0.01)
+        # Destroy each window
+        for win in windows:
+            if win and win.IsShown():
+                win.Hide()
+                wx.SafeYield()
+                win.Destroy()
+                wx.SafeYield()
+
+        # Process pending events
+        for _ in range(5):
+            wx.SafeYield()
+            time.sleep(0.01)
+
+    except Exception as e:
+        print(f"Warning: Exception during wx cleanup: {e}")
+        # Continue with test completion even if cleanup fails
 
 
 @pytest.fixture
