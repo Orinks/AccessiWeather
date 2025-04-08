@@ -30,20 +30,20 @@ jobs:
         
     - name: Run black
       run: |
-        black --check src/accessiweather tests || true
+        python -m black --check src\accessiweather tests || echo "Black check failed but continuing"
         
     - name: Run isort
       run: |
-        isort --check-only --diff src/accessiweather tests || true
+        python -m isort --check-only --diff src\accessiweather tests || echo "isort check failed but continuing"
         
     - name: Run flake8
       run: |
-        flake8 src/accessiweather tests || true
+        python -m flake8 src\accessiweather tests || echo "flake8 check failed but continuing"
         
     - name: Run mypy
       run: |
-        mypy src/accessiweather || true
+        python -m mypy src\accessiweather || echo "mypy check failed but continuing"
         
     - name: Run tests
       run: |
-        python -m pytest tests/test_location_switching_fixed.py tests/test_notification_settings.py || true
+        python -m pytest tests\test_location_switching_fixed.py tests\test_notification_settings.py || echo "Tests failed but continuing"
