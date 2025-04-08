@@ -3,6 +3,7 @@
 This module contains event handlers for the WeatherApp class.
 """
 
+import functools
 import json
 import logging
 import os
@@ -209,9 +210,12 @@ class WeatherAppHandlers:
         self.discussion_fetcher.fetch(
             lat,
             lon,
-            on_success=self._on_discussion_fetched,
-            on_error=self._on_discussion_error,
-            additional_data=[name, loading_dialog],
+            on_success=functools.partial(
+                self._on_discussion_fetched, name=name, loading_dialog=loading_dialog
+            ),
+            on_error=functools.partial(
+                self._on_discussion_error, name=name, loading_dialog=loading_dialog
+            ),
         )
 
     def OnViewAlert(self, event):  # event is required by wx
