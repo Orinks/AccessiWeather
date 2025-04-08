@@ -185,7 +185,12 @@ class NoaaApiClient:
         try:
             logger.info(f"Getting forecast discussion for coordinates: ({lat}, {lon})")
             point_data = self.get_point_data(lat, lon)
+            logger.debug(f"Point data keys: {list(point_data.keys())}")
+            logger.debug(
+                f"Point data properties keys: {list(point_data.get('properties', {}).keys())}"
+            )
             office_id = point_data.get("properties", {}).get("gridId")
+            logger.debug(f"Office ID: {office_id}")
 
             if not office_id:
                 logger.warning("Could not find office ID in point data")
@@ -196,6 +201,7 @@ class NoaaApiClient:
             endpoint = f"products/types/AFD/locations/{office_id}"
             logger.info(f"Fetching products for office: {office_id}")
             products = self._make_request(endpoint)
+            logger.debug(f"Products keys: {list(products.keys())}")
 
             # Get the latest discussion
             try:
@@ -206,15 +212,24 @@ class NoaaApiClient:
                     logger.warning("No products found in @graph")
                     return None
 
-                latest_product_id = graph_data[0].get("id")
+                latest_product = graph_data[0]
+                logger.debug(f"Latest product keys: {list(latest_product.keys())}")
+                latest_product_id = latest_product.get("id")
+                if not latest_product_id:
+                    logger.warning("No product ID found in latest product")
+                    return None
+
                 logger.info(f"Fetching product text for: {latest_product_id}")
                 product = self._make_request(f"products/{latest_product_id}")
+                logger.debug(f"Product keys: {list(product.keys())}")
 
                 product_text = product.get("productText")
                 if product_text:
                     logger.debug(
                         f"Successfully retrieved product text (length: {len(product_text)})"
                     )
+                    # Log the first 100 characters of the product text
+                    logger.debug(f"Product text preview: {product_text[:100]}...")
                 else:
                     logger.warning("Product text is empty or missing")
 
