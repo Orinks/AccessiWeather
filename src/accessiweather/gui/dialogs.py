@@ -387,21 +387,20 @@ class WeatherDiscussionDialog(wx.Dialog):
         super().__init__(parent, title=title, style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
 
         # Log the discussion text for debugging
-        logger.debug(f"Creating discussion dialog with text length: {len(text)}")
+        logger.debug(f"Creating discussion dialog with text type: {type(text)}, length: {len(text)}")
         if not text:
             logger.warning("Empty discussion text provided to dialog")
             text = "No discussion available"
         else:
             # Log a preview of the text
-            logger.debug(f"Text preview: {text[:100]}...")
+            preview = text[:100].replace('\n', '\\n')
+            logger.debug(f"Text preview: {preview}...")
 
         panel = wx.Panel(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         # Create a text control for the discussion
-        self.text_ctrl = wx.TextCtrl(
-            panel, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2
-        )
+        self.text_ctrl = wx.TextCtrl(panel, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2)
 
         # Set a monospace font for better readability of formatted text
         font = wx.Font(10, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)

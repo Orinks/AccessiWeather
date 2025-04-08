@@ -21,9 +21,13 @@ def safe_call_after(callback, *args, **kwargs):
         **kwargs: Keyword arguments to pass to the callback
     """
     try:
+        # Log callback details
+        callback_name = getattr(callback, '__name__', str(callback))
+        logger.debug(f"Scheduling callback {callback_name} with args: {args}, kwargs: {kwargs}")
+
         # Always use wx.CallAfter to ensure main thread execution
         wx.CallAfter(callback, *args, **kwargs)
-        logger.debug("Scheduled callback using wx.CallAfter")
+        logger.debug(f"Successfully scheduled callback {callback_name} using wx.CallAfter")
     except (AssertionError, RuntimeError) as e:
         # This might happen if wx.App isn't fully initialized or is destroyed
         # Log the error. Depending on context, raising might be better.
@@ -241,6 +245,13 @@ class DiscussionFetcher:
             logger.debug(f"Calling get_discussion with coordinates: ({lat}, {lon})")
             discussion_text = self.api_client.get_discussion(lat, lon)
 
+            # Log the discussion text
+            if discussion_text is None:
+                logger.warning("API returned None for discussion text")
+            else:
+                logger.debug(f"API returned discussion text with length: {len(discussion_text)}")
+                logger.debug(f"Discussion text preview: {discussion_text[:100] if discussion_text else 'None'}...")
+
             # Check again if we've been asked to stop before delivering results
             if self._stop_event.is_set():
                 logger.debug("Discussion fetch completed but cancelled")
@@ -248,6 +259,7 @@ class DiscussionFetcher:
 
             # Call success callback if provided
             if on_success and not self._stop_event.is_set():
+                logger.debug(f"Calling success callback with discussion_text and additional_data: {additional_data}")
                 # Call callback on main thread
                 if additional_data is not None:
                     safe_call_after(on_success, discussion_text, *additional_data)
