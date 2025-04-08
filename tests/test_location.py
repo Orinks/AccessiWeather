@@ -1,10 +1,11 @@
 """Tests for the location manager module"""
 
-import pytest
-import os
 import json
+import os
 import tempfile
-from unittest.mock import patch, mock_open
+from unittest.mock import mock_open, patch
+
+import pytest
 
 from accessiweather.location import LocationManager
 
@@ -37,21 +38,21 @@ class TestLocationManager:
         """Test adding a location"""
         # Add a location
         location_manager.add_location("Home", 35.0, -80.0)
-        
+
         # Check that it was added
         assert "Home" in location_manager.saved_locations
         assert location_manager.saved_locations["Home"] == {"lat": 35.0, "lon": -80.0}
-        
+
         # Check that it was set as current (first location)
         assert location_manager.current_location == "Home"
-        
+
         # Add another location
         location_manager.add_location("Work", 36.0, -81.0)
-        
+
         # Check that it was added
         assert "Work" in location_manager.saved_locations
         assert location_manager.saved_locations["Work"] == {"lat": 36.0, "lon": -81.0}
-        
+
         # Current location should still be Home
         assert location_manager.current_location == "Home"
 
@@ -60,19 +61,19 @@ class TestLocationManager:
         # Add locations
         location_manager.add_location("Home", 35.0, -80.0)
         location_manager.add_location("Work", 36.0, -81.0)
-        
+
         # Remove a non-current location
         result = location_manager.remove_location("Work")
         assert result is True
         assert "Work" not in location_manager.saved_locations
         assert location_manager.current_location == "Home"
-        
+
         # Remove the current location
         result = location_manager.remove_location("Home")
         assert result is True
         assert "Home" not in location_manager.saved_locations
         assert location_manager.current_location is None
-        
+
         # Try to remove a non-existent location
         result = location_manager.remove_location("Nonexistent")
         assert result is False
@@ -82,12 +83,12 @@ class TestLocationManager:
         # Add locations
         location_manager.add_location("Home", 35.0, -80.0)
         location_manager.add_location("Work", 36.0, -81.0)
-        
+
         # Set current location
         result = location_manager.set_current_location("Work")
         assert result is True
         assert location_manager.current_location == "Work"
-        
+
         # Try to set a non-existent location
         result = location_manager.set_current_location("Nonexistent")
         assert result is False
@@ -97,10 +98,10 @@ class TestLocationManager:
         """Test getting the current location"""
         # When no location is set
         assert location_manager.get_current_location() is None
-        
+
         # Add a location
         location_manager.add_location("Home", 35.0, -80.0)
-        
+
         # Check current location
         current = location_manager.get_current_location()
         assert current == ("Home", 35.0, -80.0)
@@ -109,11 +110,11 @@ class TestLocationManager:
         """Test getting all locations"""
         # When no locations are saved
         assert location_manager.get_all_locations() == []
-        
+
         # Add locations
         location_manager.add_location("Home", 35.0, -80.0)
         location_manager.add_location("Work", 36.0, -81.0)
-        
+
         # Check all locations
         all_locations = location_manager.get_all_locations()
         assert sorted(all_locations) == sorted(["Home", "Work"])
@@ -122,20 +123,17 @@ class TestLocationManager:
         """Test loading locations from file"""
         # Create a locations file
         test_data = {
-            "locations": {
-                "Home": {"lat": 35.0, "lon": -80.0},
-                "Work": {"lat": 36.0, "lon": -81.0}
-            },
-            "current": "Home"
+            "locations": {"Home": {"lat": 35.0, "lon": -80.0}, "Work": {"lat": 36.0, "lon": -81.0}},
+            "current": "Home",
         }
-        
+
         locations_file = os.path.join(temp_config_dir, "locations.json")
-        with open(locations_file, 'w') as f:
+        with open(locations_file, "w") as f:
             json.dump(test_data, f)
-        
+
         # Create a new location manager to load the file
         manager = LocationManager(config_dir=temp_config_dir)
-        
+
         # Check that locations were loaded
         assert manager.saved_locations == test_data["locations"]
         assert manager.current_location == test_data["current"]
@@ -145,16 +143,16 @@ class TestLocationManager:
         # Add locations
         location_manager.add_location("Home", 35.0, -80.0)
         location_manager.add_location("Work", 36.0, -81.0)
-        
+
         # Check that the file exists
         assert os.path.exists(location_manager.locations_file)
-        
+
         # Read the file and check contents
-        with open(location_manager.locations_file, 'r') as f:
+        with open(location_manager.locations_file, "r") as f:
             data = json.load(f)
-            
+
         assert data["locations"] == {
             "Home": {"lat": 35.0, "lon": -80.0},
-            "Work": {"lat": 36.0, "lon": -81.0}
+            "Work": {"lat": 36.0, "lon": -81.0},
         }
         assert data["current"] == "Home"

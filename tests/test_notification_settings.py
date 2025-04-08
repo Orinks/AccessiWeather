@@ -1,9 +1,11 @@
 """Tests for notification settings functionality."""
-import pytest
-import os
+
 import json
+import os
 import tempfile
 from unittest.mock import patch
+
+import pytest
 
 from accessiweather.notifications import WeatherNotifier
 
@@ -12,15 +14,13 @@ from accessiweather.notifications import WeatherNotifier
 def mock_components():
     """Mock the components used by WeatherApp."""
     # Mock the API client
-    with patch('accessiweather.api_client.NoaaApiClient') as mock_api_client_class:
+    with patch("accessiweather.api_client.NoaaApiClient") as mock_api_client_class:
         mock_api_client = mock_api_client_class.return_value
 
         # Mock the location manager
-        with patch('accessiweather.location.LocationManager') as mock_location_manager_class:
+        with patch("accessiweather.location.LocationManager") as mock_location_manager_class:
             mock_location_manager = mock_location_manager_class.return_value
-            mock_location_manager.get_current_location.return_value = (
-                "Test City", 35.0, -80.0
-            )
+            mock_location_manager.get_current_location.return_value = ("Test City", 35.0, -80.0)
 
             # Use a real notifier for these tests
             real_notifier = WeatherNotifier()
@@ -31,16 +31,16 @@ def mock_components():
 @pytest.fixture
 def temp_config_file():
     """Create a temporary config file."""
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.json') as temp_file:
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as temp_file:
         # Create a default config
         default_config = {
             "settings": {
                 "update_interval_minutes": 30,
                 "api_contact": "test@example.com",
-                "alert_radius_miles": 25
+                "alert_radius_miles": 25,
             }
         }
-        temp_file.write(json.dumps(default_config).encode('utf-8'))
+        temp_file.write(json.dumps(default_config).encode("utf-8"))
         temp_file_path = temp_file.name
 
     yield temp_file_path
@@ -78,7 +78,7 @@ def test_notifier_processes_alerts(mock_components):
             "effective": "2023-01-01T00:00:00Z",
             "expires": "2099-01-02T00:00:00Z",  # Far future date
             "severity": "Extreme",
-            "certainty": "Observed"
+            "certainty": "Observed",
         },
         "geometry": {
             "type": "Polygon",
@@ -88,14 +88,14 @@ def test_notifier_processes_alerts(mock_components):
                     [-80.0, 35.1],
                     [-80.0, 35.0],
                     [-80.1, 35.0],
-                    [-80.1, 35.1]
+                    [-80.1, 35.1],
                 ]
-            ]
-        }
+            ],
+        },
     }
 
     # Patch the show_notification method
-    with patch.object(notifier, 'show_notification') as mock_show_notification:
+    with patch.object(notifier, "show_notification") as mock_show_notification:
         # Process the alert
         processed_alerts = notifier.process_alerts({"features": [alert]})
 
