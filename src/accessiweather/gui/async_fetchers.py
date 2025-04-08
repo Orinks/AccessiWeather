@@ -238,6 +238,7 @@ class DiscussionFetcher:
                 return
 
             # Get discussion text from API
+            logger.debug(f"Calling get_discussion with coordinates: ({lat}, {lon})")
             discussion_text = self.api_client.get_discussion(lat, lon)
 
             # Check again if we've been asked to stop before delivering results

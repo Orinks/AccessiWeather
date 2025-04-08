@@ -199,10 +199,24 @@ class NoaaApiClient:
 
             # Get the latest discussion
             try:
-                latest_product_id = products.get("@graph", [])[0].get("id")
+                graph_data = products.get("@graph", [])
+                logger.debug(f"Found {len(graph_data)} products in @graph")
+
+                if not graph_data:
+                    logger.warning("No products found in @graph")
+                    return None
+
+                latest_product_id = graph_data[0].get("id")
                 logger.info(f"Fetching product text for: {latest_product_id}")
                 product = self._make_request(f"products/{latest_product_id}")
-                return product.get("productText")
+
+                product_text = product.get("productText")
+                if product_text:
+                    logger.debug(f"Successfully retrieved product text (length: {len(product_text)})")
+                else:
+                    logger.warning("Product text is empty or missing")
+
+                return product_text
             except (IndexError, KeyError) as e:
                 logger.warning("Could not find forecast discussion for " f"{office_id}: {str(e)}")
                 return None
@@ -287,7 +301,12 @@ class NoaaApiClient:
 
                 # If status is OK, try to parse JSON
                 try:
-                    return response.json()  # type: ignore
+                    json_data = response.json()  # type: ignore
+                    logger.debug(f"Successfully parsed JSON response from {request_url}")
+                    # Log the keys in the response for debugging
+                    if isinstance(json_data, dict):
+                        logger.debug(f"Response keys: {list(json_data.keys())}")
+                    return json_data
                 except JSONDecodeError as json_err:
                     resp_text = response.text[:200]  # Limit length
                     error_msg = (
