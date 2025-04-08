@@ -78,9 +78,7 @@ class TestApiContactCheck:
             # No api_settings section
         }
 
-    def test_no_dialog_when_api_contact_present(
-        self, mock_components, config_with_api_contact
-    ):
+    def test_no_dialog_when_api_contact_present(self, mock_components, config_with_api_contact):
         """Test that no dialog is shown when API contact is present"""
         with (
             patch("wx.MessageDialog") as mock_dialog,
