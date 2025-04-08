@@ -391,18 +391,24 @@ class WeatherDiscussionDialog(wx.Dialog):
         if not text:
             logger.warning("Empty discussion text provided to dialog")
             text = "No discussion available"
+        else:
+            # Log a preview of the text
+            logger.debug(f"Text preview: {text[:100]}...")
 
         panel = wx.Panel(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         # Create a text control for the discussion
         self.text_ctrl = wx.TextCtrl(
-            panel, value=text, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2
+            panel, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2
         )
 
         # Set a monospace font for better readability of formatted text
         font = wx.Font(10, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
         self.text_ctrl.SetFont(font)
+
+        # Set the text after setting the font
+        self.text_ctrl.SetValue(text)
 
         # Set accessible name and description
         self.text_ctrl.SetName("Weather Discussion Text")
