@@ -22,7 +22,7 @@ def safe_call_after(callback, *args, **kwargs):
     """
     try:
         # Log callback details
-        callback_name = getattr(callback, '__name__', str(callback))
+        callback_name = getattr(callback, "__name__", str(callback))
         logger.debug(f"Scheduling callback {callback_name} with args: {args}, kwargs: {kwargs}")
 
         # Always use wx.CallAfter to ensure main thread execution
@@ -248,9 +248,13 @@ class DiscussionFetcher:
             # Log the discussion text
             if discussion_text is None:
                 logger.warning("API returned None for discussion text")
+                # Use a default message instead of None
+                discussion_text = "No discussion available"
             else:
                 logger.debug(f"API returned discussion text with length: {len(discussion_text)}")
-                logger.debug(f"Discussion text preview: {discussion_text[:100] if discussion_text else 'None'}...")
+                logger.debug(
+                    f"Discussion text preview: {discussion_text[:100] if discussion_text else 'None'}..."
+                )
 
             # Check again if we've been asked to stop before delivering results
             if self._stop_event.is_set():
@@ -259,12 +263,20 @@ class DiscussionFetcher:
 
             # Call success callback if provided
             if on_success and not self._stop_event.is_set():
-                logger.debug(f"Calling success callback with discussion_text and additional_data: {additional_data}")
+                logger.debug(
+                    f"Calling success callback with discussion_text and additional_data: {additional_data}"
+                )
                 # Call callback on main thread
-                if additional_data is not None:
-                    safe_call_after(on_success, discussion_text, *additional_data)
-                else:
-                    safe_call_after(on_success, discussion_text)
+                try:
+                    if additional_data is not None:
+                        logger.debug(f"Calling success callback with additional data: {additional_data}")
+                        safe_call_after(on_success, discussion_text, *additional_data)
+                    else:
+                        logger.debug("Calling success callback without additional data")
+                        safe_call_after(on_success, discussion_text)
+                    logger.debug("Success callback scheduled successfully")
+                except Exception as e:
+                    logger.error(f"Error scheduling success callback: {e}")
         except Exception as e:
             if not self._stop_event.is_set():
                 logger.error(f"Failed to retrieve discussion: {str(e)}")
