@@ -394,6 +394,10 @@ class WeatherDiscussionDialog(wx.Dialog):
             panel, value=text, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2
         )
 
+        # Set a monospace font for better readability of formatted text
+        font = wx.Font(10, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
+        self.text_ctrl.SetFont(font)
+
         # Set accessible name and description
         self.text_ctrl.SetName("Weather Discussion Text")
 
@@ -411,7 +415,10 @@ class WeatherDiscussionDialog(wx.Dialog):
         sizer.Add(close_button, 0, wx.ALIGN_CENTER | wx.ALL, 10)
 
         panel.SetSizer(sizer)
-        self.SetSize((600, 400))
+        self.SetSize((800, 600))
+
+        # Center on parent
+        self.CenterOnParent()
 
         # Bind events
         self.Bind(wx.EVT_BUTTON, self.OnClose, id=wx.ID_CLOSE)
