@@ -231,12 +231,12 @@ class WeatherAppHandlers:
         Args:
             event: Timer event
         """
-        has_dialog = hasattr(self, '_discussion_loading_dialog')
+        has_dialog = hasattr(self, "_discussion_loading_dialog")
         dialog_exists = has_dialog and self._discussion_loading_dialog is not None
 
         if not dialog_exists:
             # Dialog no longer exists, stop the timer
-            if hasattr(self, '_discussion_timer'):
+            if hasattr(self, "_discussion_timer"):
                 logger.debug("Dialog no longer exists, stopping timer")
                 self._discussion_timer.Stop()
                 # Try to unbind the timer event to prevent memory leaks
@@ -244,7 +244,7 @@ class WeatherAppHandlers:
                     self.Unbind(
                         wx.EVT_TIMER,
                         handler=self._on_discussion_timer,
-                        source=self._discussion_timer
+                        source=self._discussion_timer,
                     )
                 except Exception as e:
                     logger.error(f"Error unbinding timer event: {e}")
@@ -259,9 +259,9 @@ class WeatherAppHandlers:
                 logger.debug("Cancel button clicked on discussion loading dialog")
 
                 # Stop the fetching
-                if hasattr(self, 'discussion_fetcher'):
+                if hasattr(self, "discussion_fetcher"):
                     # Set the stop event to cancel the fetch
-                    if hasattr(self.discussion_fetcher, '_stop_event'):
+                    if hasattr(self.discussion_fetcher, "_stop_event"):
                         logger.debug("Setting stop event for discussion fetcher")
                         self.discussion_fetcher._stop_event.set()
 
@@ -288,13 +288,13 @@ class WeatherAppHandlers:
                     self.Unbind(
                         wx.EVT_TIMER,
                         handler=self._on_discussion_timer,
-                        source=self._discussion_timer
+                        source=self._discussion_timer,
                     )
                 except Exception as e:
                     logger.error(f"Error unbinding timer event: {e}")
 
                 # Re-enable the discussion button
-                if hasattr(self, 'discussion_btn') and self.discussion_btn:
+                if hasattr(self, "discussion_btn") and self.discussion_btn:
                     logger.debug("Re-enabling discussion button")
                     self.discussion_btn.Enable()
 
@@ -308,14 +308,14 @@ class WeatherAppHandlers:
         except Exception as e:
             # Dialog might have been destroyed already
             logger.error(f"Error in discussion timer: {e}")
-            if hasattr(self, '_discussion_timer'):
+            if hasattr(self, "_discussion_timer"):
                 self._discussion_timer.Stop()
                 # Try to unbind the timer event to prevent memory leaks
                 try:
                     self.Unbind(
                         wx.EVT_TIMER,
                         handler=self._on_discussion_timer,
-                        source=self._discussion_timer
+                        source=self._discussion_timer,
                     )
                 except Exception as unbind_e:
                     logger.error(f"Error unbinding timer event: {unbind_e}")

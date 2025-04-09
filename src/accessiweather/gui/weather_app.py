@@ -321,7 +321,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         logger.debug("Discussion dialog closed")
 
         # Re-enable button if it exists
-        if hasattr(self, 'discussion_btn') and self.discussion_btn:
+        if hasattr(self, "discussion_btn") and self.discussion_btn:
             self.discussion_btn.Enable()
 
         # Notify testing framework if hook is set
@@ -332,65 +332,88 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         """Clean up the discussion loading dialog and timer
 
         Args:
-            loading_dialog: Progress dialog instance (optional)
+            loading_dialog: Progress dialog instance passed from the callback (optional)
         """
         logger.debug("Cleaning up discussion loading resources")
 
-        # Stop the timer if it exists
-        if hasattr(self, '_discussion_timer'):
-            if self._discussion_timer.IsRunning():
+        # --- Timer Cleanup ---
+        if hasattr(self, "_discussion_timer"):
+            timer = self._discussion_timer
+            if timer.IsRunning():
                 logger.debug("Stopping discussion timer")
-                self._discussion_timer.Stop()
-            # Unbind the timer event to prevent memory leaks
+                timer.Stop()
+            # Always try to unbind to prevent issues if Stop() failed or wasn't needed
             try:
-                self.Unbind(
-                    wx.EVT_TIMER,
-                    handler=self._on_discussion_timer,
-                    source=self._discussion_timer
-                )
-                logger.debug("Unbound timer event")
+                # Make sure the handler reference is correct
+                handler_method = getattr(self, "_on_discussion_timer", None)
+                if handler_method:
+                    self.Unbind(wx.EVT_TIMER, handler=handler_method, source=timer)
+                    logger.debug("Unbound timer event")
+                else:
+                    logger.warning("Could not find _on_discussion_timer method to unbind")
             except Exception as e:
-                logger.error(f"Error unbinding timer event: {e}")
+                # Log error but continue cleanup
+                logger.error(f"Error unbinding timer event: {e}", exc_info=True)
+            # Remove timer reference (optional, but good practice)
+            # del self._discussion_timer
 
-        # Close loading dialog if provided as parameter
-        if loading_dialog:
+        # --- Dialog Cleanup ---
+        # Primarily use the dialog passed via the callback
+        dialog_to_close = loading_dialog
+
+        # Fallback: If no dialog was passed, try the instance variable
+        if not dialog_to_close and hasattr(self, "_discussion_loading_dialog"):
+            dialog_to_close = self._discussion_loading_dialog
+            logger.debug("Using instance variable for loading dialog cleanup")
+
+        if dialog_to_close:
             try:
-                if loading_dialog.IsShown():
-                    logger.debug("Destroying loading dialog from parameter")
-                    loading_dialog.Destroy()
-            except Exception as e:
-                logger.error(f"Error closing loading dialog from parameter: {e}")
-                # Try to hide it if we can't destroy it
-                try:
-                    loading_dialog.Hide()
-                except Exception as hide_e:
-                    logger.error(f"Error hiding dialog from parameter: {hide_e}")
-
-        # Also check for the instance variable and close it if it exists and is different
-        if hasattr(self, '_discussion_loading_dialog') and self._discussion_loading_dialog:
-            # Only process if it's different from the parameter (to avoid double destruction)
-            if not loading_dialog or self._discussion_loading_dialog != loading_dialog:
-                try:
-                    if self._discussion_loading_dialog.IsShown():
-                        logger.debug("Destroying loading dialog from instance variable")
-                        self._discussion_loading_dialog.Destroy()
-                except Exception as e:
-                    logger.error(f"Error closing loading dialog from instance variable: {e}")
-                    # Try to hide it if we can't destroy it
+                # Check if it's a valid wx window instance before proceeding
+                if isinstance(dialog_to_close, wx.Window) and dialog_to_close.IsShown():
+                    logger.debug("Hiding loading dialog")
+                    dialog_to_close.Hide()
+                    wx.SafeYield()  # Give UI a chance to process Hide
+                    logger.debug("Destroying loading dialog")
+                    dialog_to_close.Destroy()
+                    wx.SafeYield()  # Give UI a chance to process Destroy
+                elif isinstance(dialog_to_close, wx.Window):
+                    logger.debug(
+                        "Loading dialog exists but is not shown, attempting destroy anyway."
+                    )
+                    # Attempt destroy even if not shown, might already be destroyed
                     try:
-                        self._discussion_loading_dialog.Hide()
-                    except Exception as hide_e:
-                        logger.error(f"Error hiding dialog from instance variable: {hide_e}")
+                        dialog_to_close.Destroy()
+                        wx.SafeYield()
+                    except wx.wxAssertionError:
+                        logger.debug("Dialog likely already destroyed.")  # Expected if already gone
+                    except Exception as destroy_e:
+                        logger.error(
+                            f"Error destroying hidden/non-window dialog: {destroy_e}",
+                            exc_info=True
+                        )
+                else:
+                    logger.warning(
+                        f"Item to close is not a valid wx.Window: {type(dialog_to_close)}"
+                    )
 
-        # Clear the instance variable
-        if hasattr(self, '_discussion_loading_dialog'):
+            except wx.wxAssertionError:
+                # This often happens if the dialog is already destroyed (e.g., by Cancel)
+                logger.debug("Loading dialog was likely already destroyed.")
+            except Exception as e:
+                logger.error(f"Error closing loading dialog: {e}", exc_info=True)
+
+        # --- Clear Reference ---
+        # Always clear the instance variable after attempting cleanup
+        if hasattr(self, "_discussion_loading_dialog"):
             logger.debug("Clearing discussion loading dialog reference")
             self._discussion_loading_dialog = None
 
-        # Force a UI update
-        wx.SafeYield()
-        # Process pending events to ensure UI is updated
+        # --- Force UI Update ---
+        # Process pending events more thoroughly
+        logger.debug("Processing pending events after cleanup")
         wx.GetApp().ProcessPendingEvents()
+        wx.SafeYield()
+        logger.debug("Cleanup processing complete")
 
     def _on_discussion_error(self, error, name=None, loading_dialog=None):
         """Handle discussion fetch error
@@ -400,7 +423,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             name: Location name (optional)
             loading_dialog: Progress dialog instance (optional)
         """
-        location_str = name if name else 'unknown location'
+        location_str = name if name else "unknown location"
         logger.debug(f"Discussion fetch error for {location_str}, handling in main thread")
 
         # Make sure we clean up properly before showing the error message
@@ -417,7 +440,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         )
 
         # Re-enable button if it exists
-        if hasattr(self, 'discussion_btn') and self.discussion_btn:
+        if hasattr(self, "discussion_btn") and self.discussion_btn:
             self.discussion_btn.Enable()
 
         # Notify testing framework if hook is set

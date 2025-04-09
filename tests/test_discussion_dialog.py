@@ -1,14 +1,15 @@
 """Tests for the discussion dialog and loading dialog interaction."""
 
 import faulthandler
-import time
 import threading
+import time
 from unittest.mock import MagicMock, patch
 
 import wx
 
 from accessiweather.api_client import NoaaApiClient
 from accessiweather.gui.async_fetchers import DiscussionFetcher
+
 # No need to import WeatherAppHandlers for this test
 
 # Enable faulthandler to get better information about segmentation faults
@@ -59,7 +60,7 @@ class TestDiscussionDialogClosing:
             37.7749,
             -122.4194,
             on_success=lambda text: on_success(text, "Test Location", loading_dialog),
-            on_error=lambda _error: None  # We don't use the error in this test
+            on_error=lambda _error: None,  # We don't use the error in this test
         )
 
         # Process events to allow callbacks to execute
@@ -69,8 +70,9 @@ class TestDiscussionDialogClosing:
             time.sleep(0.1)  # Add a delay to allow processing
 
         # Verify the loading dialog was destroyed
-        assert loading_dialog_destroyed.is_set(), \
-            "Loading dialog was not destroyed after discussion was fetched"
+        assert (
+            loading_dialog_destroyed.is_set()
+        ), "Loading dialog was not destroyed after discussion was fetched"
         loading_dialog.Destroy.assert_called_once()
 
     @patch("accessiweather.api_client.NoaaApiClient.get_discussion")
@@ -117,7 +119,7 @@ class TestDiscussionDialogClosing:
             37.7749,
             -122.4194,
             on_success=lambda text: on_success(text, "Test Location", loading_dialog),
-            on_error=lambda _error: None  # We don't use the error in this test
+            on_error=lambda _error: None,  # We don't use the error in this test
         )
 
         # Process events to allow callbacks to execute
@@ -127,6 +129,7 @@ class TestDiscussionDialogClosing:
             time.sleep(0.1)  # Add a delay to allow processing
 
         # Verify the loading dialog was destroyed
-        assert loading_dialog_destroyed.is_set(), \
-            "Loading dialog was not destroyed after discussion dialog was closed"
+        assert (
+            loading_dialog_destroyed.is_set()
+        ), "Loading dialog was not destroyed after discussion dialog was closed"
         loading_dialog.Destroy.assert_called_once()
