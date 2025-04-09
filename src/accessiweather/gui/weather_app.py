@@ -293,38 +293,132 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         if self._testing_alerts_error_callback:
             self._testing_alerts_error_callback(error)
 
-    def _on_discussion_fetched(self, discussion_data):
+    def _on_discussion_fetched(self, discussion_text, name=None, loading_dialog=None):
         """Handle the fetched discussion in the main thread
 
         Args:
-            discussion_data: Dictionary with discussion data
+            discussion_text: Fetched discussion text
+            name: Location name (optional)
+            loading_dialog: Progress dialog instance (optional)
         """
-        # Extract discussion text
-        discussion_text = "No discussion available"
-        if discussion_data and "productText" in discussion_data:
-            discussion_text = discussion_data["productText"]
+        logger.debug("Discussion fetched successfully, handling in main thread")
+
+        # Make sure we clean up properly before showing the discussion dialog
+        self._cleanup_discussion_loading(loading_dialog)
+
+        # Use default text if none provided
+        if not discussion_text:
+            discussion_text = "No discussion available"
+
+        # Create title with location name if provided
+        title = f"Forecast Discussion for {name}" if name else "Weather Discussion"
 
         # Show discussion dialog
-        dialog = WeatherDiscussionDialog(self, discussion_text)
+        logger.debug("Creating and showing discussion dialog")
+        dialog = WeatherDiscussionDialog(self, title, discussion_text)
         dialog.ShowModal()
         dialog.Destroy()
+        logger.debug("Discussion dialog closed")
+
+        # Re-enable button if it exists
+        if hasattr(self, 'discussion_btn') and self.discussion_btn:
+            self.discussion_btn.Enable()
 
         # Notify testing framework if hook is set
         if self._testing_discussion_callback:
-            self._testing_discussion_callback(discussion_data)
+            self._testing_discussion_callback(discussion_text)
 
-    def _on_discussion_error(self, error):
+    def _cleanup_discussion_loading(self, loading_dialog=None):
+        """Clean up the discussion loading dialog and timer
+
+        Args:
+            loading_dialog: Progress dialog instance (optional)
+        """
+        logger.debug("Cleaning up discussion loading resources")
+
+        # Stop the timer if it exists
+        if hasattr(self, '_discussion_timer'):
+            if self._discussion_timer.IsRunning():
+                logger.debug("Stopping discussion timer")
+                self._discussion_timer.Stop()
+            # Unbind the timer event to prevent memory leaks
+            try:
+                self.Unbind(
+                    wx.EVT_TIMER,
+                    handler=self._on_discussion_timer,
+                    source=self._discussion_timer
+                )
+                logger.debug("Unbound timer event")
+            except Exception as e:
+                logger.error(f"Error unbinding timer event: {e}")
+
+        # Close loading dialog if provided as parameter
+        if loading_dialog:
+            try:
+                if loading_dialog.IsShown():
+                    logger.debug("Destroying loading dialog from parameter")
+                    loading_dialog.Destroy()
+            except Exception as e:
+                logger.error(f"Error closing loading dialog from parameter: {e}")
+                # Try to hide it if we can't destroy it
+                try:
+                    loading_dialog.Hide()
+                except Exception as hide_e:
+                    logger.error(f"Error hiding dialog from parameter: {hide_e}")
+
+        # Also check for the instance variable and close it if it exists and is different
+        if hasattr(self, '_discussion_loading_dialog') and self._discussion_loading_dialog:
+            # Only process if it's different from the parameter (to avoid double destruction)
+            if not loading_dialog or self._discussion_loading_dialog != loading_dialog:
+                try:
+                    if self._discussion_loading_dialog.IsShown():
+                        logger.debug("Destroying loading dialog from instance variable")
+                        self._discussion_loading_dialog.Destroy()
+                except Exception as e:
+                    logger.error(f"Error closing loading dialog from instance variable: {e}")
+                    # Try to hide it if we can't destroy it
+                    try:
+                        self._discussion_loading_dialog.Hide()
+                    except Exception as hide_e:
+                        logger.error(f"Error hiding dialog from instance variable: {hide_e}")
+
+        # Clear the instance variable
+        if hasattr(self, '_discussion_loading_dialog'):
+            logger.debug("Clearing discussion loading dialog reference")
+            self._discussion_loading_dialog = None
+
+        # Force a UI update
+        wx.SafeYield()
+        # Process pending events to ensure UI is updated
+        wx.GetApp().ProcessPendingEvents()
+
+    def _on_discussion_error(self, error, name=None, loading_dialog=None):
         """Handle discussion fetch error
 
         Args:
             error: Error message
+            name: Location name (optional)
+            loading_dialog: Progress dialog instance (optional)
         """
+        location_str = name if name else 'unknown location'
+        logger.debug(f"Discussion fetch error for {location_str}, handling in main thread")
+
+        # Make sure we clean up properly before showing the error message
+        self._cleanup_discussion_loading(loading_dialog)
+
         logger.error(f"Discussion fetch error: {error}")
+
+        # Create a more informative error message if we have the location name
+        location_info = f" for {name}" if name else ""
         wx.MessageBox(
-            f"Error fetching forecast discussion: {error}",
+            f"Error fetching forecast discussion{location_info}: {error}",
             "Fetch Error",
             wx.OK | wx.ICON_ERROR,
         )
+
+        # Re-enable button if it exists
+        if hasattr(self, 'discussion_btn') and self.discussion_btn:
+            self.discussion_btn.Enable()
 
         # Notify testing framework if hook is set
         if self._testing_discussion_error_callback:

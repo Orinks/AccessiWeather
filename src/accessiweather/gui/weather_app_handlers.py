@@ -204,7 +204,14 @@ class WeatherAppHandlers:
             parent=self,
             style=wx.PD_APP_MODAL | wx.PD_AUTO_HIDE | wx.PD_CAN_ABORT,
         )
-        loading_dialog.Pulse()
+
+        # Store the loading dialog as an instance variable so we can access it later
+        self._discussion_loading_dialog = loading_dialog
+
+        # Start a timer to pulse the dialog and check for cancel
+        self._discussion_timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self._on_discussion_timer, self._discussion_timer)
+        self._discussion_timer.Start(100)  # Check every 100ms
 
         # Fetch discussion data
         self.discussion_fetcher.fetch(
@@ -217,6 +224,101 @@ class WeatherAppHandlers:
                 self._on_discussion_error, name=name, loading_dialog=loading_dialog
             ),
         )
+
+    def _on_discussion_timer(self, event):  # event is required by wx
+        """Handle timer events for the discussion loading dialog
+
+        Args:
+            event: Timer event
+        """
+        has_dialog = hasattr(self, '_discussion_loading_dialog')
+        dialog_exists = has_dialog and self._discussion_loading_dialog is not None
+
+        if not dialog_exists:
+            # Dialog no longer exists, stop the timer
+            if hasattr(self, '_discussion_timer'):
+                logger.debug("Dialog no longer exists, stopping timer")
+                self._discussion_timer.Stop()
+                # Try to unbind the timer event to prevent memory leaks
+                try:
+                    self.Unbind(
+                        wx.EVT_TIMER,
+                        handler=self._on_discussion_timer,
+                        source=self._discussion_timer
+                    )
+                except Exception as e:
+                    logger.error(f"Error unbinding timer event: {e}")
+            return
+
+        try:
+            # Pulse the dialog and check for cancel
+            # The first return value indicates if the user wants to continue (hasn't clicked cancel)
+            # The second return value (skip) is not used in this implementation
+            cont, _ = self._discussion_loading_dialog.Pulse()
+            if not cont:  # User clicked cancel
+                logger.debug("Cancel button clicked on discussion loading dialog")
+
+                # Stop the fetching
+                if hasattr(self, 'discussion_fetcher'):
+                    # Set the stop event to cancel the fetch
+                    if hasattr(self.discussion_fetcher, '_stop_event'):
+                        logger.debug("Setting stop event for discussion fetcher")
+                        self.discussion_fetcher._stop_event.set()
+
+                # Force immediate cleanup
+                try:
+                    logger.debug("Destroying discussion loading dialog")
+                    self._discussion_loading_dialog.Destroy()
+                except Exception as destroy_e:
+                    logger.error(f"Error destroying dialog: {destroy_e}")
+                    # Try to hide it if we can't destroy it
+                    try:
+                        self._discussion_loading_dialog.Hide()
+                    except Exception:
+                        pass
+
+                # Clear references
+                self._discussion_loading_dialog = None
+
+                # Stop the timer
+                logger.debug("Stopping discussion timer")
+                self._discussion_timer.Stop()
+                # Try to unbind the timer event to prevent memory leaks
+                try:
+                    self.Unbind(
+                        wx.EVT_TIMER,
+                        handler=self._on_discussion_timer,
+                        source=self._discussion_timer
+                    )
+                except Exception as e:
+                    logger.error(f"Error unbinding timer event: {e}")
+
+                # Re-enable the discussion button
+                if hasattr(self, 'discussion_btn') and self.discussion_btn:
+                    logger.debug("Re-enabling discussion button")
+                    self.discussion_btn.Enable()
+
+                # Update status
+                self.SetStatusText("Discussion fetch cancelled")
+
+                # Force a UI update
+                wx.SafeYield()
+                # Process pending events to ensure UI is updated
+                wx.GetApp().ProcessPendingEvents()
+        except Exception as e:
+            # Dialog might have been destroyed already
+            logger.error(f"Error in discussion timer: {e}")
+            if hasattr(self, '_discussion_timer'):
+                self._discussion_timer.Stop()
+                # Try to unbind the timer event to prevent memory leaks
+                try:
+                    self.Unbind(
+                        wx.EVT_TIMER,
+                        handler=self._on_discussion_timer,
+                        source=self._discussion_timer
+                    )
+                except Exception as unbind_e:
+                    logger.error(f"Error unbinding timer event: {unbind_e}")
 
     def OnViewAlert(self, event):  # event is required by wx
         """Handle view alert button click

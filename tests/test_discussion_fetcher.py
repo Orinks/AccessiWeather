@@ -48,9 +48,8 @@ class TestDiscussionFetcher:
 
         # Process events to allow callbacks to execute
         for i in range(10):
-            print(f"Processing event {i}")
             wx.SafeYield()
-            print(f"After SafeYield {i}")
+            time.sleep(0.05)  # Add a small delay to allow thread to complete
 
         # Verify the API client was called correctly
         mock_get_discussion.assert_called_once_with(37.7749, -122.4194)
@@ -79,9 +78,8 @@ class TestDiscussionFetcher:
 
         # Process events to allow callbacks to execute
         for i in range(10):
-            print(f"Processing error event {i}")
             wx.SafeYield()
-            print(f"After error SafeYield {i}")
+            time.sleep(0.05)  # Add a small delay to allow thread to complete
 
         # Verify the API client was called correctly
         mock_get_discussion.assert_called_once_with(37.7749, -122.4194)

@@ -28,26 +28,35 @@ def wx_app_session():
 
     # Allow the app to initialize
     wx.SafeYield()
+    time.sleep(0.1)  # Give the app a moment to fully initialize
 
     yield app
 
     # Clean up after all tests - use a safer approach with exception handling
     try:
+        # Process any pending events before cleanup
+        for _ in range(5):
+            wx.SafeYield()
+            time.sleep(0.02)
+
         # Get a list of all top-level windows
         windows = list(wx.GetTopLevelWindows())
 
         # Destroy each window
         for win in windows:
             if win and win.IsShown():
-                win.Hide()
-                wx.SafeYield()
-                win.Destroy()
-                wx.SafeYield()
+                try:
+                    win.Hide()
+                    wx.SafeYield()
+                    win.Destroy()
+                    wx.SafeYield()
+                except Exception as win_e:
+                    print(f"Warning: Exception destroying window: {win_e}")
 
         # Process pending events
-        for _ in range(5):
+        for _ in range(10):  # Increased iterations for better cleanup
             wx.SafeYield()
-            time.sleep(0.01)
+            time.sleep(0.02)  # Slightly longer delay
 
     except Exception as e:
         print(f"Warning: Exception during wx cleanup: {e}")
@@ -66,19 +75,27 @@ def wx_app(wx_app_session):
 
     # Process any pending events before the test
     wx.SafeYield()
+    time.sleep(0.05)  # Give a moment for events to process
 
     yield app
 
     # Clean up after the test - hide windows instead of destroying them
     # This is safer for function-level cleanup
-    for win in wx.GetTopLevelWindows():
-        if win and win.IsShown():
-            win.Hide()
+    try:
+        for win in wx.GetTopLevelWindows():
+            if win and win.IsShown():
+                try:
+                    win.Hide()
+                    wx.SafeYield()
+                except Exception as win_e:
+                    print(f"Warning: Exception hiding window: {win_e}")
 
-    # Process pending events after the test
-    for _ in range(5):
-        wx.SafeYield()
-        time.sleep(0.01)
+        # Process pending events after the test
+        for _ in range(10):  # Increased iterations for better cleanup
+            wx.SafeYield()
+            time.sleep(0.02)  # Slightly longer delay
+    except Exception as e:
+        print(f"Warning: Exception during function-level wx cleanup: {e}")
 
 
 @pytest.fixture
