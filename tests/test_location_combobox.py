@@ -1,5 +1,6 @@
 """Tests for LocationDialog with AccessibleComboBox integration"""
 
+import time
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -101,7 +102,13 @@ class TestLocationDialogWithComboBox:
         # Perform first search
         dialog.search_field.SetValue("123 Main St")
         with patch("wx.MessageBox"):  # Prevent MessageBox from showing
-            dialog._perform_search("123 Main St")  # Call directly instead of OnSearch
+            # Call directly instead of OnSearch
+            dialog._perform_search("123 Main St")
+            # Directly call the thread function to simulate synchronous behavior for testing
+            dialog._search_thread_func("123 Main St")
+            # Directly call the update function to simulate the CallAfter
+            result = self.mock_geocoding.geocode_address.return_value
+            dialog._update_search_result(result, "123 Main St")
 
         # Check that the search term is in the dropdown
         assert dialog.search_field.GetCount() == 1
@@ -111,7 +118,13 @@ class TestLocationDialogWithComboBox:
         dialog.search_field.SetValue("456 Oak Ave")
         self.mock_geocoding.geocode_address.return_value = (36.0, -81.0, "456 Oak Ave, City, State")
         with patch("wx.MessageBox"):  # Prevent MessageBox from showing
-            dialog._perform_search("456 Oak Ave")  # Call directly instead of OnSearch
+            # Call directly instead of OnSearch
+            dialog._perform_search("456 Oak Ave")
+            # Directly call the thread function to simulate synchronous behavior for testing
+            dialog._search_thread_func("456 Oak Ave")
+            # Directly call the update function to simulate the CallAfter
+            result = self.mock_geocoding.geocode_address.return_value
+            dialog._update_search_result(result, "456 Oak Ave")
 
         # Check that both search terms are in the dropdown
         assert dialog.search_field.GetCount() == 2
@@ -133,10 +146,16 @@ class TestLocationDialogWithComboBox:
         # Create and process a selection event
         event = wx.CommandEvent(wx.wxEVT_COMBOBOX, dialog.search_field.GetId())
         with patch("wx.MessageBox"):  # Prevent MessageBox from showing
-            dialog.search_field.GetEventHandler().ProcessEvent(event)
+            # Mock the _perform_search method to capture the call
+            with patch.object(dialog, '_perform_search') as mock_perform_search:
+                dialog.search_field.GetEventHandler().ProcessEvent(event)
+                # Verify that search was triggered with the selected value
+                mock_perform_search.assert_called_with("123 Main St")
 
-        # Verify that search was triggered with the selected value
-        self.mock_geocoding.geocode_address.assert_called_with("123 Main St")
+            # Now simulate the actual search process
+            dialog._search_thread_func("123 Main St")
+            result = self.mock_geocoding.geocode_address.return_value
+            dialog._update_search_result(result, "123 Main St")
 
         # Check results are displayed
         assert "Found: 123 Main St, City, State" in dialog.result_text.GetValue()
@@ -151,13 +170,21 @@ class TestLocationDialogWithComboBox:
         # First search
         dialog.search_field.SetValue("123 Main St")
         with patch("wx.MessageBox"):  # Prevent MessageBox from showing
-            dialog._perform_search("123 Main St")  # Call directly instead of OnSearch
+            # Call directly instead of OnSearch
+            dialog._perform_search("123 Main St")
+            dialog._search_thread_func("123 Main St")
+            result = self.mock_geocoding.geocode_address.return_value
+            dialog._update_search_result(result, "123 Main St")
         assert dialog.search_field.GetCount() == 1
 
         # Same search again
         dialog.search_field.SetValue("123 Main St")
         with patch("wx.MessageBox"):  # Prevent MessageBox from showing
-            dialog._perform_search("123 Main St")  # Call directly instead of OnSearch
+            # Call directly instead of OnSearch
+            dialog._perform_search("123 Main St")
+            dialog._search_thread_func("123 Main St")
+            result = self.mock_geocoding.geocode_address.return_value
+            dialog._update_search_result(result, "123 Main St")
 
         # Should still only have one item
         assert dialog.search_field.GetCount() == 1
@@ -175,7 +202,11 @@ class TestLocationDialogWithComboBox:
             search_term = f"Search {i}"
             dialog.search_field.SetValue(search_term)
             with patch("wx.MessageBox"):  # Prevent MessageBox from showing
-                dialog._perform_search(search_term)  # Call directly instead of OnSearch
+                # Call directly instead of OnSearch
+                dialog._perform_search(search_term)
+                dialog._search_thread_func(search_term)
+                result = self.mock_geocoding.geocode_address.return_value
+                dialog._update_search_result(result, search_term)
 
         # Check that only max_items are kept
         assert dialog.search_field.GetCount() == max_items

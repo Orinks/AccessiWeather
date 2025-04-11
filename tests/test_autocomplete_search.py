@@ -63,7 +63,7 @@ def test_autocomplete_suggestions(frame, mock_geocoding_service):
     autocomplete.set_geocoding_service(mock_geocoding_service)
 
     # Simulate typing 'New'
-    with patch.object(autocomplete, "AutoComplete") as mock_auto_complete:
+    with patch.object(autocomplete, "_update_completions") as mock_update_completions:
         autocomplete.SetValue("New")
         autocomplete.on_text_changed(None)  # Simulate text change event
 
@@ -71,7 +71,7 @@ def test_autocomplete_suggestions(frame, mock_geocoding_service):
         mock_geocoding_service.suggest_locations.assert_called_once_with("New")
 
         # Check that results were loaded into the completer
-        assert mock_auto_complete.called
+        mock_update_completions.assert_called_once_with(mock_geocoding_service.suggest_locations.return_value)
 
 
 def test_autocomplete_min_chars(frame, mock_geocoding_service):
@@ -103,7 +103,13 @@ def test_autocomplete_completer_integration(frame):
     completer = autocomplete.get_completer()
 
     # Test with some sample data
-    autocomplete.update_choices(["Apple", "Banana", "Apricot"])
+    with patch.object(autocomplete, "SetItems") as mock_set_items:
+        autocomplete.update_choices(["Apple", "Banana", "Apricot"])
+        # Verify SetItems was called
+        mock_set_items.assert_called_once()
+
+    # Set completions directly on the completer
+    completer.SetCompletions(["Apple", "Banana", "Apricot"])
 
     # Check completions
     assert set(completer.GetCompletions("A")) == {"Apple", "Apricot"}

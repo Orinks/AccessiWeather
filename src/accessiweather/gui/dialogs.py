@@ -4,6 +4,7 @@ This module provides dialog windows for user interaction.
 """
 
 import logging
+import threading
 
 import wx
 
@@ -158,6 +159,10 @@ class LocationDialog(wx.Dialog):
         self.longitude = lon
         self.search_history = []
 
+        # Thread control for geocoding
+        self.search_thread = None
+        self.search_stop_event = threading.Event()
+
         # Create a panel with accessible widgets
         panel = wx.Panel(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -234,6 +239,7 @@ class LocationDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.OnAdvanced, self.advanced_button)
         self.Bind(wx.EVT_BUTTON, self.OnOK, id=wx.ID_OK)
         self.Bind(wx.EVT_COMBOBOX, self.on_autocomplete_selection, self.search_field)
+        self.Bind(wx.EVT_CLOSE, self.OnClose)
 
     def on_autocomplete_selection(self, event):  # event is required by wx
         """Handle autocomplete selection event
@@ -271,9 +277,59 @@ class LocationDialog(wx.Dialog):
         Args:
             query: Search query string
         """
-        # Search for location
+        # Update UI to show searching state
+        self.result_text.SetValue(f"Searching for {query}...")
+
+        # Cancel any existing search
+        if self.search_thread is not None and self.search_thread.is_alive():
+            logger.debug("Cancelling in-progress location search")
+            self.search_stop_event.set()
+            # Don't join here as it may block the UI
+
+        # Reset stop event for new search
+        self.search_stop_event.clear()
+
+        # Start a new thread to perform the search
+        self.search_thread = threading.Thread(target=self._search_thread_func, args=(query,))
+        self.search_thread.daemon = True
+        self.search_thread.start()
+
+    def _search_thread_func(self, query):
+        """Thread function to perform location search
+
+        Args:
+            query: Search query string
+        """
         try:
+            # Check if we've been asked to stop
+            if self.search_stop_event.is_set():
+                logger.debug("Location search cancelled")
+                return
+
+            # Perform the geocoding
+            logger.debug(f"Performing geocoding for query: {query}")
             result = self.geocoding_service.geocode_address(query)
+
+            # Check again if we've been asked to stop before delivering results
+            if self.search_stop_event.is_set():
+                logger.debug("Location search completed but results discarded")
+                return
+
+            # Update the UI on the main thread
+            wx.CallAfter(self._update_search_result, result, query)
+        except Exception as e:
+            if not self.search_stop_event.is_set():
+                logger.error(f"Error during geocoding thread: {str(e)}")
+                wx.CallAfter(self._update_search_error, str(e))
+
+    def _update_search_result(self, result, query):
+        """Update the UI with search results
+
+        Args:
+            result: Geocoding result (lat, lon, address) or None
+            query: Original search query
+        """
+        try:
             if result:
                 lat, lon, address = result
                 self.latitude = lat
@@ -291,10 +347,18 @@ class LocationDialog(wx.Dialog):
                 self.latitude = None
                 self.longitude = None
         except Exception as e:
-            logger.error(f"Error during geocoding: {str(e)}")
-            self.result_text.SetValue(f"Error: {str(e)}")
-            self.latitude = None
-            self.longitude = None
+            logger.error(f"Error updating search result: {str(e)}")
+            self._update_search_error(str(e))
+
+    def _update_search_error(self, error_msg):
+        """Update the UI with an error message
+
+        Args:
+            error_msg: Error message to display
+        """
+        self.result_text.SetValue(f"Error during search: {error_msg}")
+        self.latitude = None
+        self.longitude = None
 
     def _add_to_search_history(self, query):
         """Add query to search history and update autocomplete
@@ -363,6 +427,44 @@ class LocationDialog(wx.Dialog):
 
         # Continue with default handler
         event.Skip()
+
+    def OnClose(self, event):
+        """Handle dialog close event
+
+        Args:
+            event: Close event
+        """
+        # Stop any running search thread
+        if self.search_thread is not None and self.search_thread.is_alive():
+            logger.debug("Stopping search thread due to dialog close")
+            self.search_stop_event.set()
+            # Join with a short timeout to avoid blocking UI indefinitely
+            self.search_thread.join(0.5)
+
+        # Also stop the autocomplete thread
+        if hasattr(self.search_field, 'stop_event'):
+            logger.debug("Stopping autocomplete thread due to dialog close")
+            self.search_field.stop_event.set()
+
+        # Continue with default close handler
+        event.Skip()
+
+    def Destroy(self):
+        """Clean up resources before destroying the dialog"""
+        # Stop any running search thread
+        if self.search_thread is not None and self.search_thread.is_alive():
+            logger.debug("Stopping search thread in Destroy")
+            self.search_stop_event.set()
+            # Join with a short timeout to avoid blocking UI indefinitely
+            self.search_thread.join(0.5)
+
+        # Also stop the autocomplete thread
+        if hasattr(self.search_field, 'stop_event'):
+            logger.debug("Stopping autocomplete thread in Destroy")
+            self.search_field.stop_event.set()
+
+        # Call the parent class Destroy method
+        super().Destroy()
 
     def GetValues(self):
         """Get the dialog values
