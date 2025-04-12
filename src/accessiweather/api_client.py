@@ -3,14 +3,17 @@
 This module provides access to NOAA weather data through their public APIs.
 """
 
-import requests
 import json
-# import os  # Unused
-from typing import Dict, Any, Optional  # Removed unused List
 import logging
-import traceback
-import time
 import threading
+import time
+import traceback
+
+# import os  # Unused
+from typing import Any, Dict, Optional, Tuple  # Removed unused List
+
+import requests
+
 # Import the specific exception for JSON decoding errors
 from requests.exceptions import JSONDecodeError
 
@@ -19,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 class ApiClientError(Exception):
     """Custom exception for API client errors."""
+
     pass
 
 
@@ -28,8 +32,7 @@ class NoaaApiClient:
     # NOAA Weather API base URL
     BASE_URL = "https://api.weather.gov"
 
-    def __init__(self, user_agent: str = "AccessiWeather",
-                 contact_info: Optional[str] = None):
+    def __init__(self, user_agent: str = "AccessiWeather", contact_info: Optional[str] = None):
         """Initialize the NOAA API client
 
         Args:
@@ -46,10 +49,7 @@ class NoaaApiClient:
         else:
             user_agent_string = user_agent
 
-        self.headers = {
-            "User-Agent": user_agent_string,
-            "Accept": "application/geo+json"
-        }
+        self.headers = {"User-Agent": user_agent_string, "Accept": "application/geo+json"}
 
         # Add request tracking for rate limiting
         self.last_request_time: float = 0.0  # Ensure float type
@@ -59,9 +59,7 @@ class NoaaApiClient:
         # Add thread lock for thread safety
         self.request_lock = threading.RLock()
 
-        logger.info(
-            f"Initialized NOAA API client with User-Agent: {user_agent_string}"
-        )
+        logger.info(f"Initialized NOAA API client with User-Agent: {user_agent_string}")
 
     def get_point_data(self, lat: float, lon: float) -> Dict[str, Any]:
         """Get metadata about a specific lat/lon point
@@ -93,17 +91,14 @@ class NoaaApiClient:
             point_data = self.get_point_data(lat, lon)
 
             # Debug log the point data structure
-            logger.debug(
-                f"Point data structure: {json.dumps(point_data, indent=2)}"
-            )
+            logger.debug(f"Point data structure: {json.dumps(point_data, indent=2)}")
 
             forecast_url = point_data.get("properties", {}).get("forecast")
 
             if not forecast_url:
-                props = list(point_data.get('properties', {}).keys())
+                props = list(point_data.get("properties", {}).keys())
                 logger.error(
-                    "Could not find forecast URL in point data. "
-                    f"Available properties: {props}"
+                    "Could not find forecast URL in point data. " f"Available properties: {props}"
                 )
                 # Keep this specific ValueError for this context
                 raise ValueError("Could not find forecast URL in point data")
@@ -115,55 +110,91 @@ class NoaaApiClient:
             logger.debug(f"Traceback: {traceback.format_exc()}")
             raise
 
-    def get_alerts(self, lat: float, lon: float,
-                   radius: float = 50) -> Dict[str, Any]:
+    def identify_location_type(self, lat: float, lon: float) -> Tuple[str, str]:
+        """Identify the type of location (county, state) for the given coordinates.
+
+        Args:
+            lat: Latitude of the location
+            lon: Longitude of the location
+
+        Returns:
+            Tuple of (location_type, location_id) where location_type is 'county' or 'state'
+            and location_id is the county or state identifier
+        """
+        # Get the point data to determine the location
+        point_data = self.get_point_data(lat, lon)
+
+        # Try to extract the county from the point data
+        try:
+            county_url = point_data["properties"]["county"]
+            if county_url and isinstance(county_url, str) and "/county/" in county_url:
+                # Extract county code from county URL (format: .../zones/county/XXC###)
+                county_code = county_url.split("/county/")[1]
+                return "county", county_code
+        except (KeyError, IndexError, TypeError):
+            pass
+
+        # If county can't be determined, try to get the state
+        try:
+            state = point_data["properties"]["relativeLocation"]["properties"]["state"]
+            return "state", state
+        except (KeyError, TypeError):
+            pass
+
+        # If neither county nor state can be determined, return None
+        return "unknown", ""
+
+    def get_alerts(
+        self, lat: float, lon: float, radius: float = 50, precise_location: bool = True
+    ) -> Dict[str, Any]:
         """Get active weather alerts for the given coordinates.
 
         Args:
             lat: Latitude of the location
             lon: Longitude of the location
-            radius: Radius in miles to search for alerts
-                    (used if state cannot be determined)
+            radius: Radius in miles to search for alerts (used if state cannot be determined)
+            precise_location: If True, filter alerts to the specific county/township.
+                             If False, get all alerts for the state.
 
         Returns:
             Dictionary containing alert data
         """
         logging.info(
-            f"Getting alerts for coordinates: ({lat}, {lon}) "
-            f"with radius {radius} miles"
+            f"Getting alerts for coordinates: ({lat}, {lon}) with radius {radius} miles"
         )
 
-        # First, get the point data to determine the state
+        # First, get the point data to determine the location
         point_data = self.get_point_data(lat, lon)
 
-        # Try to extract the state from the point data
+        if precise_location:
+            # Try to extract the county from the point data for precise location alerts
+            try:
+                county_url = point_data["properties"]["county"]
+                if county_url and isinstance(county_url, str) and "/county/" in county_url:
+                    # Extract county code from county URL (format: .../zones/county/XXC###)
+                    county_code = county_url.split("/county/")[1]
+                    logging.info(f"Fetching alerts for county: {county_code}")
+                    return self._make_request("alerts/active", params={"zone": county_code})
+            except (KeyError, IndexError, TypeError):
+                pass
+
+        # If precise location is False or county couldn't be determined, try to get state alerts
         try:
-            state = point_data["properties"]["relativeLocation"]["properties"][
-                "state"
-            ]
+            state = point_data["properties"]["relativeLocation"]["properties"]["state"]
             logging.info(f"Fetching alerts for state: {state}")
-            # Use the full URL for the Michigan location test which mocks
-            # _make_request directly
+            # Use the full URL for the Michigan location test which mocks _make_request directly
             if state == "MI":
-                return self._make_request(
-                    f"{self.BASE_URL}/alerts/active", params={"area": state}
-                )
+                return self._make_request(f"{self.BASE_URL}/alerts/active", params={"area": state})
             return self._make_request("alerts/active", params={"area": state})
         except (KeyError, TypeError):
             # Try to extract state from county URL if available
             try:
                 county_url = point_data["properties"]["county"]
-                if (county_url and isinstance(county_url, str) and
-                        "/county/" in county_url):
-                    # Extract state code from county URL
-                    # (format: .../zones/county/XXC###)
+                if county_url and isinstance(county_url, str) and "/county/" in county_url:
+                    # Extract state code from county URL (format: .../zones/county/XXC###)
                     state_code = county_url.split("/county/")[1][:2]
-                    logging.info(
-                        f"Extracted state code from county URL: {state_code}"
-                    )
-                    return self._make_request(
-                        "alerts/active", params={"area": state_code}
-                    )
+                    logging.info(f"Extracted state code from county URL: {state_code}")
+                    return self._make_request("alerts/active", params={"area": state_code})
             except (KeyError, IndexError, TypeError):
                 pass
 
@@ -173,8 +204,7 @@ class NoaaApiClient:
                 f"be determined: ({lat}, {lon}) with radius {radius} miles"
             )
             return self._make_request(
-                "alerts/active",
-                params={"point": f"{lat},{lon}", "radius": str(radius)}
+                "alerts/active", params={"point": f"{lat},{lon}", "radius": str(radius)}
             )
 
     def get_alerts_direct(self, url: str) -> Dict[str, Any]:
@@ -200,9 +230,7 @@ class NoaaApiClient:
             Text of the forecast discussion or None if not available
         """
         try:
-            logger.info(
-                f"Getting forecast discussion for coordinates: ({lat}, {lon})"
-            )
+            logger.info(f"Getting forecast discussion for coordinates: ({lat}, {lon})")
             point_data = self.get_point_data(lat, lon)
             office_id = point_data.get("properties", {}).get("gridId")
 
@@ -223,19 +251,19 @@ class NoaaApiClient:
                 product = self._make_request(f"products/{latest_product_id}")
                 return product.get("productText")
             except (IndexError, KeyError) as e:
-                logger.warning(
-                    "Could not find forecast discussion for "
-                    f"{office_id}: {str(e)}"
-                )
+                logger.warning("Could not find forecast discussion for " f"{office_id}: {str(e)}")
                 return None
         except Exception as e:
             logger.error(f"Error getting discussion: {str(e)}")
             logger.debug(f"Traceback: {traceback.format_exc()}")
             return None
 
-    def _make_request(self, endpoint_or_url: str,
-                      params: Optional[Dict[str, Any]] = None,
-                      use_full_url: bool = False) -> Dict[str, Any]:
+    def _make_request(
+        self,
+        endpoint_or_url: str,
+        params: Optional[Dict[str, Any]] = None,
+        use_full_url: bool = False,
+    ) -> Dict[str, Any]:
         """Make a request to the NOAA API
 
         Args:
@@ -258,9 +286,7 @@ class NoaaApiClient:
                     elapsed = time.time() - self.last_request_time
                     sleep_time = max(0, self.min_request_interval - elapsed)
                     if sleep_time > 0:
-                        logger.debug(
-                            f"Rate limiting: sleeping for {sleep_time:.2f}s"
-                        )
+                        logger.debug(f"Rate limiting: sleeping for {sleep_time:.2f}s")
                         time.sleep(sleep_time)
 
                 # Determine the full URL
@@ -270,22 +296,17 @@ class NoaaApiClient:
                 else:
                     # Ensure we don't have a leading slash to avoid double
                     # slashes
-                    clean_endpoint = endpoint_or_url.lstrip('/')
+                    clean_endpoint = endpoint_or_url.lstrip("/")
                     if endpoint_or_url.startswith(self.BASE_URL):
                         request_url = endpoint_or_url
                     else:
                         request_url = f"{self.BASE_URL}/{clean_endpoint}"
 
-                logger.debug(
-                    f"API request to: {request_url} with params: {params}"
-                )
+                logger.debug(f"API request to: {request_url} with params: {params}")
                 # Make the request - keeping this inside the lock to avoid
                 # concurrent access. Added timeout.
                 response = requests.get(
-                    request_url,
-                    headers=self.headers,
-                    params=params,
-                    timeout=10
+                    request_url, headers=self.headers, params=params, timeout=10
                 )
                 self.last_request_time = time.time()
 
@@ -295,22 +316,18 @@ class NoaaApiClient:
                     response.raise_for_status()
                 except requests.exceptions.HTTPError as http_err:
                     status_code = http_err.response.status_code
-                    error_msg = (
-                        f"API HTTP error: {status_code} for URL {request_url}"
-                    )
+                    error_msg = f"API HTTP error: {status_code} for URL {request_url}"
                     try:
                         # Try getting detail from JSON response if available
                         error_json = http_err.response.json()
-                        detail = error_json.get('detail', 'No detail provided')
+                        detail = error_json.get("detail", "No detail provided")
                         error_msg += f" - Detail: {detail}"
                     except JSONDecodeError:
                         # If error response isn't valid JSON, use raw text
                         resp_text = http_err.response.text[:200]
                         error_msg += f" - Response body: {resp_text}"
                     except Exception as json_err:  # Catch other JSON errors
-                        error_msg += (
-                            f" - Error parsing error response JSON: {json_err}"
-                        )
+                        error_msg += f" - Error parsing error response JSON: {json_err}"
 
                     logger.error(error_msg, exc_info=True)
                     raise ApiClientError(error_msg) from http_err
@@ -329,17 +346,13 @@ class NoaaApiClient:
 
         except requests.exceptions.RequestException as req_err:
             # Catch connection errors, timeouts, etc.
-            error_msg = (
-                f"Network error during API request to {request_url}: {req_err}"
-            )
+            error_msg = f"Network error during API request to {request_url}: {req_err}"
             logger.error(error_msg, exc_info=True)  # Log with traceback
             raise ApiClientError(error_msg) from req_err
         except ApiClientError:  # Re-raise ApiClientErrors directly
             raise
         except Exception as e:
             # Catch any other unexpected errors
-            error_msg = (
-                f"Unexpected error during API request to {request_url}: {e}"
-            )
+            error_msg = f"Unexpected error during API request to {request_url}: {e}"
             logger.error(error_msg, exc_info=True)  # Log with traceback
             raise ApiClientError(error_msg) from e

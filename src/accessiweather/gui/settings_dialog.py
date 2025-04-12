@@ -2,8 +2,9 @@
 Dialog for configuring AccessiWeather settings.
 """
 
-import wx
 import logging
+
+import wx
 
 logger = logging.getLogger(__name__)
 
@@ -11,6 +12,7 @@ logger = logging.getLogger(__name__)
 API_CONTACT_KEY = "api_contact"
 UPDATE_INTERVAL_KEY = "update_interval_minutes"
 ALERT_RADIUS_KEY = "alert_radius_miles"
+PRECISE_LOCATION_ALERTS_KEY = "precise_location_alerts"
 
 
 class SettingsDialog(wx.Dialog):
@@ -30,8 +32,7 @@ class SettingsDialog(wx.Dialog):
                                      'update_interval_minutes',
                                      'alert_radius_miles'.
         """
-        super().__init__(parent, title="Settings",
-                         style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
+        super().__init__(parent, title="Settings", style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
 
         self.current_settings = current_settings
         self._init_ui()
@@ -48,46 +49,47 @@ class SettingsDialog(wx.Dialog):
         grid_sizer.AddGrowableCol(1, 1)  # Make the input column growable
 
         # API Contact
-        api_contact_label = wx.StaticText(self,
-                                          label="API Contact (Email/Website):")
+        api_contact_label = wx.StaticText(self, label="API Contact (Email/Website):")
         self.api_contact_ctrl = wx.TextCtrl(self, name="API Contact")
-        tooltip_api = ("Enter the email or website required by the weather "
-                       "API provider.")
+        tooltip_api = "Enter the email or website required by the weather " "API provider."
         self.api_contact_ctrl.SetToolTip(tooltip_api)
-        grid_sizer.Add(api_contact_label, 0,
-                       wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+        grid_sizer.Add(api_contact_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         grid_sizer.Add(self.api_contact_ctrl, 1, wx.EXPAND | wx.ALL, 5)
 
         # Update Interval
-        update_interval_label = wx.StaticText(
-            self, label="Update Interval (minutes):"
-        )
+        update_interval_label = wx.StaticText(self, label="Update Interval (minutes):")
         # 1 min to 24 hours
-        self.update_interval_ctrl = wx.SpinCtrl(self, min=1, max=1440,
-                                                initial=30,
-                                                name="Update Interval")
-        tooltip_interval = ("How often to automatically refresh weather data "
-                            "(in minutes).")
+        self.update_interval_ctrl = wx.SpinCtrl(
+            self, min=1, max=1440, initial=30, name="Update Interval"
+        )
+        tooltip_interval = "How often to automatically refresh weather data " "(in minutes)."
         self.update_interval_ctrl.SetToolTip(tooltip_interval)
-        grid_sizer.Add(update_interval_label, 0,
-                       wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+        grid_sizer.Add(update_interval_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         # Don't expand spin control
         grid_sizer.Add(self.update_interval_ctrl, 0, wx.ALL, 5)
 
         # Alert Radius (Optional - Add if needed by API or features)
         # Assuming it might be needed later or by tests
         alert_radius_label = wx.StaticText(self, label="Alert Radius (miles):")
-        self.alert_radius_ctrl = wx.SpinCtrl(self, min=1, max=500, initial=25,
-                                             name="Alert Radius")
-        tooltip_radius = ("Radius around location to check for alerts "
-                          "(in miles).")
+        self.alert_radius_ctrl = wx.SpinCtrl(self, min=1, max=500, initial=25, name="Alert Radius")
+        tooltip_radius = "Radius around location to check for alerts " "(in miles)."
         self.alert_radius_ctrl.SetToolTip(tooltip_radius)
-        grid_sizer.Add(alert_radius_label, 0,
-                       wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+        grid_sizer.Add(alert_radius_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         # Don't expand spin control
         grid_sizer.Add(self.alert_radius_ctrl, 0, wx.ALL, 5)
 
         self.main_sizer.Add(grid_sizer, 1, wx.EXPAND | wx.ALL, 10)
+
+        # Precise Location Alerts Checkbox
+        self.precise_location_alerts_ctrl = wx.CheckBox(
+            self, label="Use precise location for alerts (county/township level)"
+        )
+        tooltip_precise = (
+            "When checked, alerts will be filtered to your specific county/township. "
+            "When unchecked, all alerts for the state will be shown."
+        )
+        self.precise_location_alerts_ctrl.SetToolTip(tooltip_precise)
+        self.main_sizer.Add(self.precise_location_alerts_ctrl, 0, wx.ALL, 10)
 
         # --- Buttons ---
         button_sizer = wx.StdDialogButtonSizer()
@@ -111,35 +113,42 @@ class SettingsDialog(wx.Dialog):
         """Load current settings into the UI controls."""
         try:
             api_contact = self.current_settings.get(API_CONTACT_KEY, "")
-            update_interval = self.current_settings.get(
-                UPDATE_INTERVAL_KEY, 30
-            )
+            update_interval = self.current_settings.get(UPDATE_INTERVAL_KEY, 30)
             alert_radius = self.current_settings.get(ALERT_RADIUS_KEY, 25)
+            precise_location = self.current_settings.get(PRECISE_LOCATION_ALERTS_KEY, True)
 
             self.api_contact_ctrl.SetValue(api_contact)
             self.update_interval_ctrl.SetValue(update_interval)
             self.alert_radius_ctrl.SetValue(alert_radius)
+            self.precise_location_alerts_ctrl.SetValue(precise_location)
             logger.debug("Settings loaded into dialog.")
         except Exception as e:
             logger.error(f"Error loading settings into dialog: {e}")
-            wx.MessageBox(f"Error loading settings: {e}", "Error",
-                          wx.OK | wx.ICON_ERROR, self)
+            wx.MessageBox(f"Error loading settings: {e}", "Error", wx.OK | wx.ICON_ERROR, self)
 
-    def _on_ok(self, event):
+    def _on_ok(self, _):
         """Handle OK button click: Validate and signal success."""
         # Basic validation (more can be added)
         interval = self.update_interval_ctrl.GetValue()
         radius = self.alert_radius_ctrl.GetValue()
 
         if interval < 1:
-            wx.MessageBox("Update interval must be at least 1 minute.",
-                          "Invalid Setting", wx.OK | wx.ICON_WARNING, self)
+            wx.MessageBox(
+                "Update interval must be at least 1 minute.",
+                "Invalid Setting",
+                wx.OK | wx.ICON_WARNING,
+                self,
+            )
             self.update_interval_ctrl.SetFocus()
             return  # Prevent dialog closing
 
         if radius < 1:
-            wx.MessageBox("Alert radius must be at least 1 mile.",
-                          "Invalid Setting", wx.OK | wx.ICON_WARNING, self)
+            wx.MessageBox(
+                "Alert radius must be at least 1 mile.",
+                "Invalid Setting",
+                wx.OK | wx.ICON_WARNING,
+                self,
+            )
             self.alert_radius_ctrl.SetFocus()
             return  # Prevent dialog closing
 
@@ -159,4 +168,17 @@ class SettingsDialog(wx.Dialog):
             API_CONTACT_KEY: self.api_contact_ctrl.GetValue(),
             UPDATE_INTERVAL_KEY: self.update_interval_ctrl.GetValue(),
             ALERT_RADIUS_KEY: self.alert_radius_ctrl.GetValue(),
+            PRECISE_LOCATION_ALERTS_KEY: self.precise_location_alerts_ctrl.GetValue(),
+        }
+
+    def get_api_settings(self):
+        """
+        Retrieve API-specific settings.
+
+        Returns:
+            dict: A dictionary containing API-specific settings.
+        """
+        return {
+            API_CONTACT_KEY: self.api_contact_ctrl.GetValue(),
+            PRECISE_LOCATION_ALERTS_KEY: self.precise_location_alerts_ctrl.GetValue(),
         }
