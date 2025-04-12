@@ -19,7 +19,13 @@ from .async_fetchers import AlertsFetcher, DiscussionFetcher, ForecastFetcher
 from .dialogs import LocationDialog, WeatherDiscussionDialog
 
 # Import SettingsDialog and keys (split for length)
-from .settings_dialog import ALERT_RADIUS_KEY, API_CONTACT_KEY, UPDATE_INTERVAL_KEY, SettingsDialog
+from .settings_dialog import (
+    ALERT_RADIUS_KEY,
+    API_CONTACT_KEY,
+    PRECISE_LOCATION_ALERTS_KEY,
+    UPDATE_INTERVAL_KEY,
+    SettingsDialog,
+)
 from .ui_manager import UIManager  # Import the new UI Manager
 
 # Import local modules

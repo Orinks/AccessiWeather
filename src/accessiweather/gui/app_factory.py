@@ -5,6 +5,7 @@ with the service layer.
 """
 
 import logging
+import os
 from typing import Any, Dict, Optional
 
 from accessiweather.api_client import NoaaApiClient
@@ -38,7 +39,8 @@ def create_weather_app(
     api_client = NoaaApiClient()
 
     # Create the location manager
-    location_manager = LocationManager(config)
+    config_dir = os.path.dirname(config_path) if config_path else None
+    location_manager = LocationManager(config_dir=config_dir)
 
     # Create the notifier
     notifier = WeatherNotifier()

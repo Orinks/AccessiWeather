@@ -12,14 +12,11 @@ from typing import Optional
 
 import wx
 
-from accessiweather.api_client import NoaaApiClient
 from accessiweather.data_migration import migrate_config_directory
-from accessiweather.gui.weather_app import WeatherApp
-from accessiweather.location import LocationManager
+from accessiweather.gui.app_factory import create_weather_app
 
 # Use root config for logging setup - Corrected import path
 from accessiweather.logging_config import setup_logging as setup_root_logging
-from accessiweather.notifications import WeatherNotifier
 
 
 def main(config_dir: Optional[str] = None, debug_mode: bool = False):
@@ -63,27 +60,11 @@ def main(config_dir: Optional[str] = None, debug_mode: bool = False):
         except Exception as e:
             logger.error(f"Failed to load config: {str(e)}")
 
-    # Create dependencies
-    location_manager = LocationManager(config_dir=config_dir)
-
-    # Create API client with settings
-    api_settings = config.get("api_settings", {})
-    api_client = NoaaApiClient(
-        user_agent="AccessiWeather", contact_info=api_settings.get("contact_info")
-    )
-
-    # Create notifier
-    notifier = WeatherNotifier()
+    # The app factory will create all the necessary dependencies
 
     # Create the application
     app = wx.App(False)
-    frame = WeatherApp(
-        parent=None,
-        location_manager=location_manager,
-        api_client=api_client,
-        notifier=notifier,
-        config=config,
-    )
+    frame = create_weather_app(parent=None, config=config, config_path=config_file)
 
     frame.Show()
 

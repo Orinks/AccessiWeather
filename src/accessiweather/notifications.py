@@ -200,3 +200,25 @@ class WeatherNotifier:
             key=lambda x: self.PRIORITY.get(x.get("severity", "Unknown"), self.PRIORITY["Unknown"]),
             reverse=True,
         )
+
+    def notify_alerts(self, count: int) -> None:
+        """Notify the user of weather alerts
+
+        Args:
+            count: Number of alerts to notify about
+        """
+        if count <= 0:
+            return
+
+        title = "Weather Alerts"
+        message = f"{count} active weather {'alert' if count == 1 else 'alerts'} in your area"
+
+        # Show notification
+        self.toaster.show_toast(
+            title=title,
+            msg=message,
+            timeout=10,
+            app_name="AccessiWeather",
+        )
+
+        logger.info(f"Displayed notification for {count} weather alerts")
