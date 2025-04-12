@@ -2,7 +2,6 @@
 """Tests for the SettingsDialog GUI component"""
 
 import pytest
-
 # import wx  # Not directly used in these tests, wx_app fixture handles it
 # from unittest.mock import patch, MagicMock # Not used yet
 
@@ -29,7 +28,7 @@ class TestSettingsDialog:
         return {
             "api_contact": "initial@example.com",
             "update_interval_minutes": 30,
-            "alert_radius_miles": 25,
+            "alert_radius_miles": 25
         }
 
     def test_settings_dialog_init_reads_config(self, wx_app, mock_config):
@@ -48,7 +47,9 @@ class TestSettingsDialog:
             if dialog:
                 dialog.Destroy()
 
-    def test_settings_dialog_writes_config_on_save(self, wx_app, mock_config):
+    def test_settings_dialog_writes_config_on_save(
+        self, wx_app, mock_config
+    ):
         """Test SettingsDialog returns updated values via get_settings"""
         dialog = None
         try:

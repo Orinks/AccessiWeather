@@ -1,0 +1,141 @@
+"""Tests for the location dialog with proper wx.App initialization."""
+import pytest
+import wx
+from unittest.mock import patch, MagicMock
+
+from accessiweather.gui.dialogs import LocationDialog
+from accessiweather.geocoding import GeocodingService
+
+
+class TestLocationDialogFixed:
+    """Test the LocationDialog class with proper wx.App initialization."""
+
+    @pytest.fixture
+    def setup_dialog(self, wx_app):
+        """Set up the test environment with a proper wx.App."""
+        # Create a parent frame
+        self.frame = wx.Frame(None)
+        
+        # Mock the geocoding service
+        self.geocoding_patcher = patch('accessiweather.gui.dialogs.GeocodingService')
+        self.mock_geocoding_class = self.geocoding_patcher.start()
+        self.mock_geocoding = MagicMock(spec=GeocodingService)
+        self.mock_geocoding_class.return_value = self.mock_geocoding
+        
+        yield
+        
+        # Clean up
+        self.geocoding_patcher.stop()
+        self.frame.Destroy()
+    
+    def test_init(self, setup_dialog):
+        """Test initialization of the dialog."""
+        # Create the dialog with initial values
+        dialog = LocationDialog(self.frame, location_name="Home", lat=35.0, lon=-80.0)
+        
+        try:
+            # Check initial values
+            assert dialog.name_ctrl.GetValue() == "Home"
+            assert dialog.latitude == 35.0
+            assert dialog.longitude == -80.0
+            assert "Custom coordinates: 35.0, -80.0" in dialog.result_text.GetValue()
+        finally:
+            # Clean up
+            dialog.Destroy()
+    
+    def test_get_values(self, setup_dialog):
+        """Test getting values from the dialog."""
+        # Create the dialog with initial values
+        dialog = LocationDialog(self.frame, location_name="Home", lat=35.0, lon=-80.0)
+        
+        try:
+            # Get values
+            name, lat, lon = dialog.GetValues()
+            assert name == "Home"
+            assert lat == 35.0
+            assert lon == -80.0
+        finally:
+            # Clean up
+            dialog.Destroy()
+    
+    def test_search_success(self, setup_dialog):
+        """Test successful location search."""
+        # Set up mock geocoding service
+        self.mock_geocoding.geocode_address.return_value = (35.0, -80.0, "123 Main St, City, State")
+        
+        # Create the dialog
+        dialog = LocationDialog(self.frame)
+        
+        try:
+            # Set search query
+            dialog.search_field.SetValue("123 Main St")
+            
+            # Call _perform_search directly instead of OnSearch to avoid event loop issues
+            dialog._perform_search("123 Main St")
+            
+            # Check that geocoding service was called
+            self.mock_geocoding.geocode_address.assert_called_once_with("123 Main St")
+            
+            # Check result
+            assert dialog.latitude == 35.0
+            assert dialog.longitude == -80.0
+            assert "Found: 123 Main St, City, State" in dialog.result_text.GetValue()
+        finally:
+            # Clean up
+            dialog.Destroy()
+    
+    def test_validation_success(self, setup_dialog):
+        """Test validation with valid inputs."""
+        # Create the dialog
+        dialog = LocationDialog(self.frame)
+        
+        try:
+            # Set values
+            dialog.name_ctrl.SetValue("Home")
+            dialog.latitude = 35.0
+            dialog.longitude = -80.0
+            dialog.result_text.SetValue("Custom coordinates: 35.0, -80.0")
+            
+            # Create mock event
+            event = MagicMock()
+            event.Skip = MagicMock()
+            
+            # Call OnOK
+            dialog.OnOK(event)
+            
+            # Check that event.Skip was called
+            event.Skip.assert_called_once()
+        finally:
+            # Clean up
+            dialog.Destroy()
+    
+    def test_validation_no_name(self, setup_dialog):
+        """Test validation with no name."""
+        # Create the dialog
+        dialog = LocationDialog(self.frame)
+        
+        try:
+            # Set values but leave name empty
+            dialog.name_ctrl.SetValue("")
+            dialog.latitude = 35.0
+            dialog.longitude = -80.0
+            
+            # Create mock event
+            event = MagicMock()
+            event.Skip = MagicMock()
+            
+            # Patch wx.MessageBox to prevent dialog from showing
+            with patch('wx.MessageBox') as mock_message_box:
+                # Call OnOK
+                dialog.OnOK(event)
+                
+                # Check that event.Skip was not called
+                event.Skip.assert_not_called()
+                
+                # Check that MessageBox was called
+                mock_message_box.assert_called_once()
+                # Check that first argument mentions name
+                assert "name" in mock_message_box.call_args[0][0].lower()
+        finally:
+            # Clean up
+            dialog.Destroy()

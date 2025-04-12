@@ -43,10 +43,10 @@ def test_identify_location_type(mock_api_client, sample_point_data):
     """Test that the API client correctly identifies location types."""
     # Mock the get_point_data method to return our sample data
     mock_api_client.get_point_data = MagicMock(return_value=sample_point_data)
-    
+
     # Call the method that will identify location type
     location_type, location_id = mock_api_client.identify_location_type(40.0, -74.0)
-    
+
     # Assert that the location type and ID are correctly identified
     assert location_type == "county"
     assert location_id == "NJC015"  # This should match what's in the sample data
@@ -57,16 +57,15 @@ def test_get_alerts_precise_location(mock_api_client, sample_point_data, sample_
     # Mock the necessary methods
     mock_api_client.get_point_data = MagicMock(return_value=sample_point_data)
     mock_api_client._make_request.return_value = sample_alerts_data
-    
+
     # Call get_alerts with precise_location=True
     alerts = mock_api_client.get_alerts(40.0, -74.0, precise_location=True)
-    
+
     # Check that the correct endpoint and parameters were used
     mock_api_client._make_request.assert_called_with(
-        "alerts/active", 
-        params={"zone": "NJC015"}  # Should use the county/zone ID
+        "alerts/active", params={"zone": "NJC015"}  # Should use the county/zone ID
     )
-    
+
     # Verify the returned alerts
     assert alerts == sample_alerts_data
 
@@ -76,16 +75,15 @@ def test_get_alerts_statewide(mock_api_client, sample_point_data, sample_alerts_
     # Mock the necessary methods
     mock_api_client.get_point_data = MagicMock(return_value=sample_point_data)
     mock_api_client._make_request.return_value = sample_alerts_data
-    
+
     # Call get_alerts with precise_location=False
     alerts = mock_api_client.get_alerts(40.0, -74.0, precise_location=False)
-    
+
     # Check that the correct endpoint and parameters were used
     mock_api_client._make_request.assert_called_with(
-        "alerts/active", 
-        params={"area": "NJ"}  # Should use the state code
+        "alerts/active", params={"area": "NJ"}  # Should use the state code
     )
-    
+
     # Verify the returned alerts
     assert alerts == sample_alerts_data
 
@@ -95,12 +93,11 @@ def test_fallback_to_radius_search(mock_api_client):
     # Mock get_point_data to return data without location information
     mock_api_client.get_point_data = MagicMock(return_value={"properties": {}})
     mock_api_client._make_request.return_value = {"features": []}
-    
+
     # Call get_alerts
     alerts = mock_api_client.get_alerts(40.0, -74.0, radius=25)
-    
+
     # Check that it fell back to radius search
     mock_api_client._make_request.assert_called_with(
-        "alerts/active", 
-        params={"point": "40.0,-74.0", "radius": "25"}
+        "alerts/active", params={"point": "40.0,-74.0", "radius": "25"}
     )

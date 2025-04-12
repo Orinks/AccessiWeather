@@ -108,10 +108,10 @@ class WeatherService:
         """
         processed_alerts = []
         features = alerts_data.get("features", [])
-        
+
         for feature in features:
             properties = feature.get("properties", {})
-            
+
             # Extract relevant alert information
             alert = {
                 "id": feature.get("id", ""),
@@ -126,7 +126,7 @@ class WeatherService:
                 "messageType": properties.get("messageType", ""),
                 "areaDesc": properties.get("areaDesc", "Unknown Area"),
             }
-            
+
             processed_alerts.append(alert)
-            
+
         return processed_alerts

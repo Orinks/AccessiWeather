@@ -159,9 +159,7 @@ class NoaaApiClient:
         Returns:
             Dictionary containing alert data
         """
-        logging.info(
-            f"Getting alerts for coordinates: ({lat}, {lon}) with radius {radius} miles"
-        )
+        logging.info(f"Getting alerts for coordinates: ({lat}, {lon}) with radius {radius} miles")
 
         # First, get the point data to determine the location
         point_data = self.get_point_data(lat, lon)

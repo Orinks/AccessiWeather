@@ -144,7 +144,7 @@ class AlertsFetcher:
         # Create and start new thread
         self.thread = threading.Thread(
             target=self._fetch_thread,
-            args=(lat, lon, on_success, on_error, precise_location, radius)
+            args=(lat, lon, on_success, on_error, precise_location, radius),
         )
         self.thread.daemon = True
         self.thread.start()

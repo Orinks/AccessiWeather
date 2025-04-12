@@ -1,0 +1,281 @@
+"""Tests for the notification system."""
+import pytest
+import wx
+import time
+from datetime import datetime, timedelta
+from unittest.mock import MagicMock, patch
+
+from accessiweather.gui.weather_app import WeatherApp
+from accessiweather.notifications import WeatherNotifier
+from tests.wx_test_utils import AsyncEventWaiter
+
+
+@pytest.fixture
+def mock_components():
+    """Mock the components used by WeatherApp."""
+    with patch('accessiweather.api_client.NoaaApiClient') as mock_api_client_class, \
+         patch('accessiweather.notifications.WeatherNotifier') as mock_notifier_class, \
+         patch('accessiweather.location.LocationManager') as mock_location_manager_class:
+
+        # Configure the mock API client
+        mock_api_client = mock_api_client_class.return_value
+        mock_api_client.get_point_data.return_value = {
+            "properties": {
+                "forecast": "https://api.weather.gov/gridpoints/RAH/53,88/forecast",
+                "forecastHourly": "https://api.weather.gov/gridpoints/RAH/53,88/forecast/hourly",
+                "relativeLocation": {
+                    "properties": {
+                        "city": "Test City",
+                        "state": "NC"
+                    }
+                }
+            }
+        }
+
+        # Configure the mock location manager
+        mock_location_manager = mock_location_manager_class.return_value
+        mock_location_manager.get_current_location.return_value = ("Test City", 35.0, -80.0)
+        mock_location_manager.get_location_coordinates.return_value = (35.0, -80.0)
+        mock_location_manager.saved_locations = {
+            "Test City": {"lat": 35.0, "lon": -80.0}
+        }
+
+        # Use a real notifier for these tests
+        real_notifier = WeatherNotifier()
+
+        yield mock_api_client, mock_location_manager, real_notifier
+
+
+def test_notifier_processes_alerts(wx_app):
+    """Test that the notifier processes alerts correctly."""
+    # Create a notifier
+    notifier = WeatherNotifier()
+
+    # Create a sample alert
+    now = datetime.now()
+    future = now + timedelta(hours=2)
+
+    alert = {
+        "properties": {
+            "id": "test-alert-1",
+            "event": "Tornado Warning",
+            "headline": "Tornado Warning for Test County",
+            "description": "A tornado has been spotted in the area.",
+            "instruction": "Take shelter immediately.",
+            "effective": now.isoformat(),
+            "expires": future.isoformat(),
+            "severity": "Extreme",
+            "certainty": "Observed"
+        },
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [-80.1, 35.1],
+                    [-80.0, 35.1],
+                    [-80.0, 35.0],
+                    [-80.1, 35.0],
+                    [-80.1, 35.1]
+                ]
+            ]
+        }
+    }
+
+    # Patch the show_notification method
+    with patch.object(notifier, 'show_notification') as mock_show_notification:
+        # Process the alert
+        notifier.process_alerts({"features": [alert]})
+
+        # Verify the notification was shown
+        mock_show_notification.assert_called_once()
+        call_args = mock_show_notification.call_args[0]
+        assert call_args[0] == "Tornado Warning"
+        assert "Test County" in call_args[1]
+
+
+def test_notifier_filters_by_location(wx_app):
+    """Test that the notifier filters alerts by location."""
+    # Create a notifier
+    notifier = WeatherNotifier()
+
+    # Set the current location
+    notifier.set_current_location(35.0, -80.0)
+
+    # Create a sample alert that is far away
+    now = datetime.now()
+    future = now + timedelta(hours=2)
+
+    far_alert = {
+        "properties": {
+            "id": "test-alert-far",
+            "event": "Flood Warning",
+            "headline": "Flood Warning for Far County",
+            "description": "Flooding has been reported in the area.",
+            "instruction": "Avoid low-lying areas.",
+            "effective": now.isoformat(),
+            "expires": future.isoformat(),
+            "severity": "Moderate",
+            "certainty": "Observed"
+        },
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [-120.1, 40.1],
+                    [-120.0, 40.1],
+                    [-120.0, 40.0],
+                    [-120.1, 40.0],
+                    [-120.1, 40.1]
+                ]
+            ]
+        }
+    }
+
+    # Patch the show_notification method
+    with patch.object(notifier, 'show_notification') as mock_show_notification:
+        # Process the alert
+        notifier.process_alerts({"features": [far_alert]})
+
+        # Verify no notification was shown (alert is too far away)
+        mock_show_notification.assert_not_called()
+
+
+def test_notifier_clears_expired_alerts(wx_app):
+    """Test that the notifier clears expired alerts."""
+    # Create a notifier
+    notifier = WeatherNotifier()
+
+    # Create a sample alert that is already expired
+    now = datetime.now()
+    past = now - timedelta(hours=2)
+
+    expired_alert = {
+        "properties": {
+            "id": "test-alert-expired",
+            "event": "Severe Thunderstorm Warning",
+            "headline": "Severe Thunderstorm Warning for Test County",
+            "description": "A severe thunderstorm has been spotted in the area.",
+            "instruction": "Take shelter.",
+            "effective": past.isoformat(),
+            "expires": past.isoformat(),
+            "severity": "Severe",
+            "certainty": "Observed"
+        },
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [-80.1, 35.1],
+                    [-80.0, 35.1],
+                    [-80.0, 35.0],
+                    [-80.1, 35.0],
+                    [-80.1, 35.1]
+                ]
+            ]
+        }
+    }
+
+    # Patch the show_notification method
+    with patch.object(notifier, 'show_notification') as mock_show_notification:
+        # Process the alert
+        notifier.process_alerts({"features": [expired_alert]})
+
+        # Verify no notification was shown (alert is expired)
+        mock_show_notification.assert_not_called()
+
+
+def test_app_processes_alerts_on_update(wx_app, mock_components):
+    """Test that the app processes alerts when weather data is updated."""
+    mock_api_client, mock_location_manager, notifier = mock_components
+
+    # Create a parent frame
+    parent_frame = wx.Frame(None)
+
+    # Create the app
+    app = WeatherApp(
+        parent=parent_frame,
+        location_manager=mock_location_manager,
+        api_client=mock_api_client,
+        notifier=notifier
+    )
+
+    # Create a sample alert
+    now = datetime.now()
+    future = now + timedelta(hours=2)
+
+    alert = {
+        "properties": {
+            "id": "test-alert-1",
+            "event": "Tornado Warning",
+            "headline": "Tornado Warning for Test County",
+            "description": "A tornado has been spotted in the area.",
+            "instruction": "Take shelter immediately.",
+            "effective": now.isoformat(),
+            "expires": future.isoformat(),
+            "severity": "Extreme",
+            "certainty": "Observed"
+        },
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [-80.1, 35.1],
+                    [-80.0, 35.1],
+                    [-80.0, 35.0],
+                    [-80.1, 35.0],
+                    [-80.1, 35.1]
+                ]
+            ]
+        }
+    }
+
+    # Configure the API client to return the alert
+    mock_api_client.get_alerts.return_value = {"features": [alert]}
+
+    # Create an event waiter
+    waiter = AsyncEventWaiter()
+
+    # Patch the notifier's process_alerts method
+    original_process = notifier.process_alerts
+
+    def patched_process(alerts_data):
+        result = original_process(alerts_data)
+        waiter.callback(alerts_data)
+        return result
+
+    notifier.process_alerts = patched_process
+
+    # Trigger a weather update
+    app.UpdateWeatherData()
+
+    # Wait for the alerts to be processed
+    result = waiter.wait(timeout_ms=5000)
+
+    # Verify the alerts were processed
+    assert result == {"features": [alert]}
+
+    # Clean up
+    app.Destroy()
+    parent_frame.Destroy()
+    wx.SafeYield()
+
+
+def test_notification_display(wx_app):
+    """Test that notifications are displayed correctly."""
+    # Create a notifier
+    notifier = WeatherNotifier()
+
+    # Patch the toast notification function
+    with patch('accessiweather.notifications.toast_notification') as mock_toast:
+        # Show a notification
+        notifier.show_notification(
+            "Test Alert",
+            "This is a test alert message",
+            "Test instructions"
+        )
+
+        # Verify the toast notification was called
+        mock_toast.assert_called_once()
+        call_args = mock_toast.call_args[0]
+        assert call_args[0] == "Weather Test Alert"
+        assert "This is a test alert message" in call_args[1]

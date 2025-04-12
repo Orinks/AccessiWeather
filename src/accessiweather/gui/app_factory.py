@@ -5,7 +5,7 @@ with the service layer.
 """
 
 import logging
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 from accessiweather.api_client import NoaaApiClient
 from accessiweather.location import LocationManager
@@ -13,6 +13,7 @@ from accessiweather.notifications import WeatherNotifier
 from accessiweather.services.location_service import LocationService
 from accessiweather.services.notification_service import NotificationService
 from accessiweather.services.weather_service import WeatherService
+
 from .weather_app_refactored import WeatherApp
 
 logger = logging.getLogger(__name__)

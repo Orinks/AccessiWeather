@@ -38,9 +38,7 @@ class TestWeatherService:
     def test_get_forecast(self, weather_service, mock_api_client):
         """Test getting forecast data."""
         # Set up mock return value
-        expected_forecast = {
-            "properties": {"periods": [{"name": "Today", "temperature": 75}]}
-        }
+        expected_forecast = {"properties": {"periods": [{"name": "Today", "temperature": 75}]}}
         mock_api_client.get_forecast.return_value = expected_forecast
 
         # Call the method

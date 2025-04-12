@@ -8,7 +8,7 @@ import json
 import logging
 import os
 import time
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Any, Dict, List, Optional, Tuple
 
 import wx
 
@@ -16,6 +16,7 @@ from accessiweather.api_client import ApiClientError
 from accessiweather.services.location_service import LocationService
 from accessiweather.services.notification_service import NotificationService
 from accessiweather.services.weather_service import WeatherService
+
 from .async_fetchers import AlertsFetcher, DiscussionFetcher, ForecastFetcher
 from .dialogs import WeatherDiscussionDialog
 from .settings_dialog import (
@@ -73,7 +74,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
 
         # For backward compatibility
         self.api_client = api_client
-        
+
         # Validate required services
         if not all([self.weather_service, self.location_service, self.notification_service]):
             raise ValueError(
