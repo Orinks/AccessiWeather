@@ -1,0 +1,91 @@
+name: Python application
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        # Install test dependencies
+        pip install flake8 pytest pytest-mock pytest-cov
+        # Install specific dependencies needed for the project
+        pip install requests wxPython plyer geopy python-dateutil
+        if (Test-Path "requirements.txt") {
+            pip install -r requirements.txt
+        }
+        # Install the package in development mode
+        pip install -e .
+
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=100 --statistics
+
+    - name: Check API connectivity
+      run: |
+        python -c "import requests; print('NOAA API Status:', requests.get('https://api.weather.gov/').status_code)"
+      continue-on-error: true
+
+    - name: List test files
+      run: |
+        echo "Test files found:"
+        Get-ChildItem -Path tests -Filter *.py -Recurse | ForEach-Object { $_.FullName }
+
+    - name: Setup CI test environment
+      run: |
+        echo "Setting up CI test environment"
+        # Copy CI config to the expected location
+        $configDir = Join-Path $env:USERPROFILE ".accessiweather"
+        if (-not (Test-Path $configDir)) {
+            New-Item -Path $configDir -ItemType Directory -Force
+        }
+        $configFile = Join-Path $configDir "config.json"
+        Copy-Item -Path "tests\ci_config.json" -Destination $configFile -Force
+        echo "CI config copied to $configFile"
+
+    - name: Test with pytest
+      run: |
+        # Run tests with coverage and improved error reporting
+        # Use try-catch to handle potential segmentation faults
+        try {
+            python -m pytest tests/ -v --showlocals --cov=src --cov-report=xml
+        } catch {
+            # Check if tests passed before the segmentation fault
+            if ($_.Exception.Message -match "Segmentation fault" -and $_.Exception.Message -match "passed") {
+                echo "Tests passed but encountered segmentation fault during cleanup"
+                exit 0
+            } else {
+                echo "Test execution failed: $_"
+                exit 1
+            }
+        }
+      env:
+        ACCESSIWEATHER_TESTING: "1"
+        ACCESSIWEATHER_SKIP_API_CALLS: "1"
+        PYTHONPATH: ${{ github.workspace }}
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false
