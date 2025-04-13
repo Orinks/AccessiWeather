@@ -64,6 +64,10 @@ def parse_args():
     parser.add_argument(
         "--repeat", type=int, default=1, help="Repeat tests multiple times"
     )
+    parser.add_argument(
+        "--timeout", type=int, default=30,
+        help="Timeout in seconds for each test (default: 30)"
+    )
     return parser.parse_args()
 
 
@@ -139,8 +143,51 @@ def run_tests_isolated(args):
         if args.coverage:
             cmd.extend(["--cov=src", "--cov-append"])
 
-        # Run the test
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        # Run the test with timeout
+        try:
+            process = subprocess.Popen(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                text=True, bufsize=1
+            )
+
+            # Read output with timeout
+            start_time = time.time()
+            output = []
+
+            while True:
+                # Check if process has finished
+                if process.poll() is not None:
+                    break
+
+                # Check for timeout
+                if time.time() - start_time > args.timeout:
+                    logger.error(f"Test {test_item} timed out after {args.timeout} seconds")
+                    process.kill()
+                    failed_tests.append(test_item)
+                    break
+
+                # Read a line of output
+                line = process.stdout.readline()
+                if line:
+                    print(line, end="")
+                    output.append(line)
+                else:
+                    # No output, sleep briefly
+                    time.sleep(0.1)
+
+            # Get any remaining output
+            remaining_output, _ = process.communicate()
+            if remaining_output:
+                print(remaining_output, end="")
+                output.append(remaining_output)
+
+            result = process
+            result.stdout = ''.join(output) if output else ''
+            result.stderr = ''
+        except Exception as e:
+            logger.error(f"Error running test {test_item}: {e}")
+            failed_tests.append(test_item)
+            continue
 
         # Log the result
         if result.returncode != 0:
@@ -197,11 +244,46 @@ def run_tests_normal(args):
         if args.repeat > 1:
             logger.info(f"Running tests (iteration {_+1}/{args.repeat})")
 
-        result = subprocess.run(cmd, env=env)
+        try:
+            # Run with timeout
+            process = subprocess.Popen(
+                cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                text=True, bufsize=1
+            )
 
-        if result.returncode != 0:
-            logger.error(f"Tests failed with exit code {result.returncode}")
-            return result.returncode
+            # Read output with timeout
+            start_time = time.time()
+
+            while True:
+                # Check if process has finished
+                if process.poll() is not None:
+                    break
+
+                # Check for timeout
+                if time.time() - start_time > args.timeout:
+                    logger.error(f"Tests timed out after {args.timeout} seconds")
+                    process.kill()
+                    return 1
+
+                # Read a line of output
+                line = process.stdout.readline()
+                if line:
+                    print(line, end="")
+                else:
+                    # No output, sleep briefly
+                    time.sleep(0.1)
+
+            # Get any remaining output
+            remaining_output, _ = process.communicate()
+            if remaining_output:
+                print(remaining_output, end="")
+
+            if process.returncode != 0:
+                logger.error(f"Tests failed with exit code {process.returncode}")
+                return process.returncode
+        except Exception as e:
+            logger.error(f"Error running tests: {e}")
+            return 1
 
     return 0
 

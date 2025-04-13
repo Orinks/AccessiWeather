@@ -6,6 +6,7 @@ segmentation faults during testing.
 
 import logging
 import os
+import time
 from unittest.mock import MagicMock, patch
 
 import wx
@@ -71,9 +72,7 @@ class SafeSettingsDialog:
         logger.debug(f"SafeSettingsDialog created: {current_settings}")
 
         # Create mock controls that mimic the real SettingsDialog
-        self.api_contact_ctrl = self._create_mock_control(
-            current_settings.get("api_contact", "")
-        )
+        self.api_contact_ctrl = self._create_mock_control(current_settings.get("api_contact", ""))
         self.update_interval_ctrl = self._create_mock_control(
             current_settings.get("update_interval_minutes", 30)
         )
@@ -114,11 +113,13 @@ class SafeSettingsDialog:
         # Define GetValue method
         def get_value():
             return mock_control._value
+
         mock_control.GetValue = get_value
 
         # Define SetValue method
         def set_value(value):
             mock_control._value = value
+
         mock_control.SetValue = set_value
 
         return mock_control
@@ -152,11 +153,67 @@ class SafeSettingsDialog:
         }
 
 
+class SafeDiscussionDialog:
+    """A safe replacement for WeatherDiscussionDialog that doesn't cause segmentation faults."""
+
+    def __init__(self, parent, title="Weather Discussion", text=""):
+        """Initialize the safe discussion dialog.
+
+        Args:
+            parent: Parent window
+            title: Dialog title
+            text: Discussion text to display
+        """
+        self.parent = parent
+        self.title = title
+        self.text = text
+        logger.debug(f"SafeDiscussionDialog created: {title}")
+
+        # Create a mock text control
+        self.text_ctrl = MagicMock()
+        self.text_ctrl._value = text
+
+        # Define GetValue method
+        def get_value():
+            return self.text_ctrl._value
+
+        self.text_ctrl.GetValue = get_value
+
+        # Define SetValue method
+        def set_value(value):
+            self.text_ctrl._value = value
+
+        self.text_ctrl.SetValue = set_value
+
+    def ShowModal(self):
+        """Show the dialog modally.
+
+        Returns:
+            int: wx.ID_OK
+        """
+        logger.debug("SafeDiscussionDialog.ShowModal called")
+        # Process events to ensure UI is responsive
+        for _ in range(5):
+            wx.SafeYield()
+            time.sleep(0.01)
+        # Always return OK in testing environment
+        return wx.ID_OK
+
+    def Destroy(self):
+        """Destroy the dialog."""
+        logger.debug("SafeDiscussionDialog.Destroy called")
+        # Process events to ensure UI is responsive
+        for _ in range(5):
+            wx.SafeYield()
+            time.sleep(0.01)
+        # No-op in testing environment
+
+
 def patch_wx_dialogs():
     """Patch wxPython dialogs to prevent segmentation faults.
 
-    This function patches wx.MessageDialog and SettingsDialog to use safe
-    replacements that don't cause segmentation faults.
+    This function patches wx.MessageDialog, SettingsDialog, and WeatherDiscussionDialog
+    to use safe replacements that don't cause segmentation faults.
 
     Returns:
         list: List of patches that were applied
@@ -176,7 +233,10 @@ def patch_wx_dialogs():
     # Patch SettingsDialog
     try:
         from accessiweather.gui.settings_dialog import SettingsDialog
-        settings_dialog_patch = patch("accessiweather.gui.settings_dialog.SettingsDialog", SafeSettingsDialog)
+
+        settings_dialog_patch = patch(
+            "accessiweather.gui.settings_dialog.SettingsDialog", SafeSettingsDialog
+        )
         settings_dialog_patch.start()
         patches.append(settings_dialog_patch)
     except ImportError:
@@ -184,11 +244,35 @@ def patch_wx_dialogs():
 
     # Patch SettingsDialog in weather_app.py
     try:
-        settings_dialog_patch = patch("accessiweather.gui.weather_app.SettingsDialog", SafeSettingsDialog)
+        settings_dialog_patch = patch(
+            "accessiweather.gui.weather_app.SettingsDialog", SafeSettingsDialog
+        )
         settings_dialog_patch.start()
         patches.append(settings_dialog_patch)
     except ImportError:
         logger.warning("Could not patch SettingsDialog in weather_app.py (module not found)")
+
+    # Patch WeatherDiscussionDialog
+    try:
+        from accessiweather.gui.dialogs import WeatherDiscussionDialog
+
+        discussion_dialog_patch = patch(
+            "accessiweather.gui.dialogs.WeatherDiscussionDialog", SafeDiscussionDialog
+        )
+        discussion_dialog_patch.start()
+        patches.append(discussion_dialog_patch)
+    except ImportError:
+        logger.warning("Could not patch WeatherDiscussionDialog (module not found)")
+
+    # Patch WeatherDiscussionDialog in weather_app.py
+    try:
+        discussion_dialog_patch = patch(
+            "accessiweather.gui.weather_app.WeatherDiscussionDialog", SafeDiscussionDialog
+        )
+        discussion_dialog_patch.start()
+        patches.append(discussion_dialog_patch)
+    except ImportError:
+        logger.warning("Could not patch WeatherDiscussionDialog in weather_app.py")
 
     return patches
 
