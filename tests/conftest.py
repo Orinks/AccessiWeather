@@ -29,6 +29,7 @@ enable_faulthandler(log_file_path=fault_log_path, all_threads=True, register_all
 
 # Patch wxPython dialogs to prevent segmentation faults
 from tests.wx_dialog_patch import patch_wx_dialogs, unpatch_wx_dialogs
+
 _wx_dialog_patches = patch_wx_dialogs()
 
 

@@ -6,12 +6,14 @@ import wx
 
 # from unittest.mock import patch, MagicMock # Not used yet
 
+
 # We need a wx App for testing wx components
 @pytest.fixture
 def wx_app():
     """Create a wx App for testing"""
     app = wx.App()
     yield app
+
 
 # Import the class we are testing (will fail until created)
 try:

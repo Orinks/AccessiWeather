@@ -76,7 +76,9 @@ class TestDiscussionDialogClosing:
         loading_dialog.Destroy.assert_called_once()
 
     @patch("accessiweather.api_client.NoaaApiClient.get_discussion")
-    def test_loading_dialog_closes_when_discussion_dialog_closes(self, mock_get_discussion, wx_app_isolated):
+    def test_loading_dialog_closes_when_discussion_dialog_closes(
+        self, mock_get_discussion, wx_app_isolated
+    ):
         """Test that the loading dialog is closed when the discussion dialog is closed."""
         # Mock the API client
         mock_get_discussion.return_value = SAMPLE_DISCUSSION_TEXT

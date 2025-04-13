@@ -178,7 +178,9 @@ class TestWeatherApp:
             if app:
                 app.Destroy()
 
-    def test_init_with_config_file(self, wx_app_isolated, mock_components, temp_config_file, monkeypatch):
+    def test_init_with_config_file(
+        self, wx_app_isolated, mock_components, temp_config_file, monkeypatch
+    ):
         """Test initialization with config file"""
         # Patch os.path.exists to return True only for our temp config file
         original_exists = os.path.exists
