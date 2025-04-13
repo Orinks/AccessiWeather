@@ -12,8 +12,8 @@ from pathlib import Path
 import pytest
 import wx
 
-from accessiweather.utils.faulthandler_utils import enable_faulthandler, dump_traceback
-from tests.wx_cleanup_utils import safe_destroy_windows, safe_cleanup
+from accessiweather.utils.faulthandler_utils import dump_traceback, enable_faulthandler
+from tests.wx_cleanup_utils import safe_cleanup, safe_destroy_windows
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -27,6 +27,11 @@ log_dir.mkdir(exist_ok=True, parents=True)
 fault_log_path = log_dir / "test_faulthandler.log"
 enable_faulthandler(log_file_path=fault_log_path, all_threads=True, register_all_signals=True)
 
+# Patch wxPython dialogs to prevent segmentation faults
+from tests.wx_dialog_patch import patch_wx_dialogs, unpatch_wx_dialogs
+_wx_dialog_patches = patch_wx_dialogs()
+
+
 # Define pytest hooks
 def pytest_configure(config):
     """Configure pytest before test collection."""
@@ -39,6 +44,9 @@ def pytest_unconfigure(config):
     logger.info("Cleaning up after all tests")
     # Perform final cleanup
     try:
+        # Unpatch wxPython dialogs
+        unpatch_wx_dialogs(_wx_dialog_patches)
+
         # Dump a final traceback before exiting
         dump_traceback(all_threads=True)
         # Force garbage collection

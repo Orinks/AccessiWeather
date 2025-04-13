@@ -82,12 +82,12 @@ def setup_faulthandler():
         log_file = open(fault_log_path, "w")
         faulthandler.enable(file=log_file)
         logger.info(f"Faulthandler enabled, logging to {fault_log_path}")
-        
+
         # Register for SIGUSR1 signal if on Unix
         if hasattr(signal, "SIGUSR1"):
             faulthandler.register(signal.SIGUSR1, file=log_file)
             logger.info("Registered faulthandler for SIGUSR1 signal")
-            
+
         return log_file
     except Exception as e:
         logger.error(f"Failed to set up faulthandler log file: {e}")
@@ -96,18 +96,34 @@ def setup_faulthandler():
 
 def run_tests_isolated(args):
     """Run each test in a separate process for better isolation."""
-    import pytest
+    # Use a different approach to collect tests
+    # Run pytest with the --collect-only flag but with a custom format
+    collect_cmd = [
+        sys.executable, "-m", "pytest",
+        args.test_path,
+        "--collect-only",
+        "-q",  # Quiet mode
+        "--no-header",  # No header
+        "--no-summary",  # No summary
+    ]
+    logger.info(f"Collecting tests with command: {' '.join(collect_cmd)}")
 
-    # Collect test items
-    collected = pytest.main(["--collect-only", "-q", args.test_path])
-    if collected != 0:
-        logger.error("Failed to collect tests")
+    # Run the command to get a list of test nodeids
+    result = subprocess.run(collect_cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        logger.error(f"Failed to collect tests: {result.stderr}")
         return 1
 
-    # Get the list of test items
+    # Get the test nodeids from the output
     test_items = []
-    for item in pytest.main(["--collect-only", "-v", args.test_path]).items:
-        test_items.append(item.nodeid)
+    for line in result.stdout.splitlines():
+        if line.strip():
+            test_items.append(line.strip())
+            logger.debug(f"Found test: {line.strip()}")
+
+    if not test_items:
+        logger.error("No tests found")
+        return 1
 
     logger.info(f"Running {len(test_items)} tests in isolated mode")
 
@@ -115,17 +131,17 @@ def run_tests_isolated(args):
     failed_tests = []
     for i, test_item in enumerate(test_items):
         logger.info(f"Running test {i+1}/{len(test_items)}: {test_item}")
-        
+
         # Build command
         cmd = [sys.executable, "-m", "pytest", test_item, "-v"]
         if args.memory_tracking:
             cmd.append("--memory-tracking")
         if args.coverage:
             cmd.extend(["--cov=src", "--cov-append"])
-            
+
         # Run the test
         result = subprocess.run(cmd, capture_output=True, text=True)
-        
+
         # Log the result
         if result.returncode != 0:
             logger.error(f"Test {test_item} failed with exit code {result.returncode}")
@@ -134,11 +150,11 @@ def run_tests_isolated(args):
             failed_tests.append(test_item)
         else:
             logger.info(f"Test {test_item} passed")
-            
+
         # Force garbage collection between tests
         gc.collect()
         time.sleep(0.1)  # Small delay to allow OS to clean up resources
-        
+
     # Report results
     if failed_tests:
         logger.error(f"{len(failed_tests)}/{len(test_items)} tests failed:")
@@ -154,7 +170,7 @@ def run_tests_normal(args):
     """Run tests normally with pytest."""
     # Build command
     cmd = [sys.executable, "-m", "pytest", args.test_path]
-    
+
     # Add options
     if args.verbose:
         cmd.append("-v")
@@ -164,45 +180,45 @@ def run_tests_normal(args):
         cmd.append("--memory-tracking")
     if args.coverage:
         cmd.extend(["--cov=src", "--cov-report=term"])
-        
+
     # Add environment variables
     env = os.environ.copy()
     env["PYTHONPATH"] = os.getcwd()
     env["ACCESSIWEATHER_TESTING"] = "1"
     env["ACCESSIWEATHER_SKIP_API_CALLS"] = "1"
-    
+
     # If faulthandler is enabled in Python, make sure it's enabled in the subprocess
     if not args.no_faulthandler:
         env["PYTHONFAULTHANDLER"] = "1"
-        
+
     # Run the tests
     logger.info(f"Running command: {' '.join(cmd)}")
     for _ in range(args.repeat):
         if args.repeat > 1:
             logger.info(f"Running tests (iteration {_+1}/{args.repeat})")
-            
+
         result = subprocess.run(cmd, env=env)
-        
+
         if result.returncode != 0:
             logger.error(f"Tests failed with exit code {result.returncode}")
             return result.returncode
-            
+
     return 0
 
 
 def main():
     """Main entry point."""
     args = parse_args()
-    
+
     # Set log level
     if args.debug:
         logging.getLogger().setLevel(logging.DEBUG)
-        
+
     # Set up faulthandler
     log_file = None
     if not args.no_faulthandler:
         log_file = setup_faulthandler()
-        
+
     try:
         # Run tests
         if args.isolated:

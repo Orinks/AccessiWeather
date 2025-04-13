@@ -40,7 +40,7 @@ class TestLocationDialog:
         # Stop geocoding patch
         self.geocoding_patcher.stop()
 
-    def test_init(self, wx_app):
+    def test_init(self, wx_app_isolated):
         """Test initialization"""
         dialog = LocationDialog(
             None, title="Test Dialog", location_name="Test", lat=35.0, lon=-80.0
@@ -53,7 +53,7 @@ class TestLocationDialog:
         finally:
             dialog.Destroy()
 
-    def test_validation(self, wx_app):
+    def test_validation(self, wx_app_isolated):
         """Test input validation"""
         dialog = LocationDialog(None)
         try:
@@ -90,7 +90,7 @@ class TestLocationDialog:
         finally:
             dialog.Destroy()
 
-    def test_get_values(self, wx_app):
+    def test_get_values(self, wx_app_isolated):
         """Test getting values from the dialog"""
         dialog = LocationDialog(None)
         try:
@@ -109,7 +109,7 @@ class TestLocationDialog:
 class TestWeatherDiscussionDialog:
     """Test suite for WeatherDiscussionDialog"""
 
-    def test_init(self, wx_app):
+    def test_init(self, wx_app_isolated):
         """Test initialization"""
         dialog = WeatherDiscussionDialog(None, title="Test Discussion", text="Test discussion text")
         try:
@@ -155,7 +155,7 @@ class TestWeatherApp:
                 "location_manager": mock_location_manager,
             }
 
-    def test_init_with_default_config(self, wx_app, mock_components, monkeypatch):
+    def test_init_with_default_config(self, wx_app_isolated, mock_components, monkeypatch):
         """Test initialization with default config"""
         # Patch os.path.exists to return False for all config paths
         monkeypatch.setattr(os.path, "exists", lambda path: False)
@@ -178,7 +178,7 @@ class TestWeatherApp:
             if app:
                 app.Destroy()
 
-    def test_init_with_config_file(self, wx_app, mock_components, temp_config_file, monkeypatch):
+    def test_init_with_config_file(self, wx_app_isolated, mock_components, temp_config_file, monkeypatch):
         """Test initialization with config file"""
         # Patch os.path.exists to return True only for our temp config file
         original_exists = os.path.exists
@@ -227,7 +227,7 @@ class TestWeatherApp:
 
     @patch("wx.CallAfter")
     def test_fetch_weather_data_with_proper_headers(
-        self, mock_call_after, wx_app, mock_components, monkeypatch
+        self, mock_call_after, wx_app_isolated, mock_components, monkeypatch
     ):
         """Test that _FetchWeatherData uses proper headers from API client"""
         # Create real API client with contact info

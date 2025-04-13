@@ -130,13 +130,13 @@ class WxPytestPlugin:
             exitstatus: Exit status
         """
         logger.info("Finishing wxPython test session")
-        
+
         # Clean up any remaining wxPython objects
         try:
             safe_cleanup()
         except Exception as e:
             logger.warning(f"Error during final cleanup: {e}")
-            
+
         # Log memory statistics if tracking is enabled
         if self.memory_tracking:
             try:
@@ -144,7 +144,7 @@ class WxPytestPlugin:
                 memory_tracker.stop()
             except Exception as e:
                 logger.warning(f"Error during memory tracking cleanup: {e}")
-                
+
         # Force garbage collection
         gc.collect()
 
@@ -166,7 +166,7 @@ class WxPytestPlugin:
         """
         if self.memory_tracking:
             wx_object_tracker.stop_tracking()
-            
+
         # Process events and force garbage collection
         try:
             for _ in range(5):
@@ -180,10 +180,12 @@ class WxPytestPlugin:
 # Monkey patch wx.Object to track creation
 original_init = wx.Object.__init__
 
+
 def tracked_init(self, *args, **kwargs):
     """Tracked version of wx.Object.__init__."""
     original_init(self, *args, **kwargs)
     wx_object_tracker.register_object(self)
+
 
 # Apply the monkey patch if not already applied
 if wx.Object.__init__ is original_init:

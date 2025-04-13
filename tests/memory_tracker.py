@@ -116,7 +116,9 @@ class MemoryTracker:
             try:
                 # This will raise an exception if the object has been garbage collected
                 obj_type = type(obj_ref)
-                logger.debug(f"Object {obj_name} (id={obj_id}, type={obj_type.__name__}) still exists")
+                logger.debug(
+                    f"Object {obj_name} (id={obj_id}, type={obj_type.__name__}) still exists"
+                )
             except Exception:
                 logger.debug(f"Object {obj_name} (id={obj_id}) has been garbage collected")
                 del self.tracked_objects[obj_id]
@@ -160,12 +162,12 @@ class MemoryTracker:
         """Log all wxPython objects in memory."""
         wx_objects = self.find_wx_objects()
         logger.info(f"Found {len(wx_objects)} wxPython objects in memory")
-        
+
         # Count by type
         type_counts = defaultdict(int)
         for _, type_name in wx_objects:
             type_counts[type_name] += 1
-        
+
         # Log counts by type
         logger.info("wxPython objects by type:")
         for type_name, count in sorted(type_counts.items(), key=lambda x: x[1], reverse=True):
