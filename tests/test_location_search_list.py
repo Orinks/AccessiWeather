@@ -129,9 +129,9 @@ class TestLocationSearchList:
         dialog.search_field.SetValue("New")
 
         # Trigger search button click
-        with patch.object(dialog, "_perform_search") as mock_perform_search:
+        with patch.object(dialog, "_fetch_search_suggestions") as mock_fetch:
             dialog.OnSearch(None)  # None for the event
-            mock_perform_search.assert_called_once_with("New")
+            mock_fetch.assert_called_once_with("New")
 
         # Directly call the search thread function to simulate synchronous behavior
         dialog._search_thread_func("New")

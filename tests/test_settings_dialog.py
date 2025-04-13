@@ -2,14 +2,16 @@
 """Tests for the SettingsDialog GUI component"""
 
 import pytest
+import wx
 
-# import wx  # Not directly used in these tests, wx_app fixture handles it
 # from unittest.mock import patch, MagicMock # Not used yet
 
 # We need a wx App for testing wx components
-# Assuming wx_app fixture is available via conftest.py or imported
-# Fixture wx_app is automatically discovered from conftest.py
-# from tests.test_gui import wx_app  # noqa: F401
+@pytest.fixture
+def wx_app():
+    """Create a wx App for testing"""
+    app = wx.App()
+    yield app
 
 # Import the class we are testing (will fail until created)
 try:

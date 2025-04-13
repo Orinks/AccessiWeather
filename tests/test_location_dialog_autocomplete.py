@@ -47,47 +47,25 @@ def mock_geocoding_service():
     return geocoding_service
 
 
+@pytest.mark.skip(reason="Autocomplete functionality has been removed for accessibility reasons")
 def test_location_dialog_has_autocomplete(parent_frame):
     """Test that LocationDialog now uses WeatherLocationAutocomplete"""
-    # Create the dialog
-    dialog = LocationDialog(parent_frame)
-
-    # Check that the search field is now a WeatherLocationAutocomplete
-    assert isinstance(dialog.search_field, WeatherLocationAutocomplete)
-    assert dialog.search_field.IsEditable() == True
+    # This test is skipped because autocomplete functionality has been removed
+    # for accessibility reasons and replaced with a list-based approach
+    pass
 
 
+@pytest.mark.skip(reason="Autocomplete functionality has been removed for accessibility reasons")
 def test_location_dialog_search_triggers_autocomplete(parent_frame, mock_geocoding_service):
     """Test that typing in search field shows autocomplete suggestions"""
-    # Create the dialog and assign mock service
-    with patch("accessiweather.gui.dialogs.GeocodingService", return_value=mock_geocoding_service):
-        dialog = LocationDialog(parent_frame)
-
-        # Verify the geocoding service is properly set
-        assert dialog.search_field.geocoding_service is not None
-
-        # Directly patch the suggest_locations method to verify it gets called
-        dialog.search_field.SetValue("New")
-        # Simulate the text changed event manually since it's mocked in tests
-        dialog.search_field.on_text_changed(None)
-
-        # Verify suggest_locations was called
-        assert mock_geocoding_service.suggest_locations.called
+    # This test is skipped because autocomplete functionality has been removed
+    # for accessibility reasons and replaced with a list-based approach
+    pass
 
 
+@pytest.mark.skip(reason="Autocomplete functionality has been removed for accessibility reasons")
 def test_autocomplete_selection_performs_search(parent_frame, mock_geocoding_service):
     """Test that selecting an autocomplete suggestion performs the search"""
-    # Create the dialog and assign mock service
-    with patch("accessiweather.gui.dialogs.GeocodingService", return_value=mock_geocoding_service):
-        dialog = LocationDialog(parent_frame)
-
-        # Set a value first so GetValue() returns something
-        dialog.search_field.SetValue("New York")
-
-        # Patch the _perform_search method to check if it's called
-        with patch.object(dialog, "_perform_search") as mock_perform_search:
-            # Simulate selecting an item from autocomplete
-            dialog.on_autocomplete_selection(None)
-
-            # Verify search is performed with the selected value
-            mock_perform_search.assert_called_once_with("New York")
+    # This test is skipped because autocomplete functionality has been removed
+    # for accessibility reasons and replaced with a list-based approach
+    pass
