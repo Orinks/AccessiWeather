@@ -173,18 +173,14 @@ class LocationDialog(wx.Dialog):
         # Location search (address or zip code) with search results list
         search_sizer = wx.BoxSizer(wx.HORIZONTAL)
         search_label = AccessibleStaticText(panel, label="Search Location:")
-        self.search_field = AccessibleTextCtrl(
-            panel, label="Search by Address or ZIP Code"
-        )
+        self.search_field = AccessibleTextCtrl(panel, label="Search by Address or ZIP Code")
         search_sizer.Add(search_label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
         search_sizer.Add(self.search_field, 1, wx.ALL | wx.EXPAND, 5)
         sizer.Add(search_sizer, 0, wx.EXPAND | wx.ALL, 5)
 
         # Search results list
         self.search_results_list = AccessibleListCtrl(
-            panel,
-            label="Search Results",
-            style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN
+            panel, label="Search Results", style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN
         )
         self.search_results_list.InsertColumn(0, "Location")
         self.search_results_list.SetColumnWidth(0, wx.LIST_AUTOSIZE_USEHEADER)
@@ -211,7 +207,7 @@ class LocationDialog(wx.Dialog):
         help_text = AccessibleStaticText(
             panel,
             label="Enter an address, city, or ZIP code and click Search. "
-                  "Then select a location from the results list.",
+            "Then select a location from the results list.",
         )
         sizer.Add(help_text, 0, wx.ALL, 10)
 
@@ -276,7 +272,7 @@ class LocationDialog(wx.Dialog):
             return
 
         # For test compatibility - this is what the test expects
-        if hasattr(self, '_mock_perform_search'):
+        if hasattr(self, "_mock_perform_search"):
             self._perform_search(query)
             return
 
