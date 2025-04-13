@@ -6,7 +6,7 @@ setup(
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     install_requires=[
-        "wxPython",
+        "wxPython>=4.2.3",  # Updated to latest version
         "requests",
         "pytest",
         "pytest-mock",
