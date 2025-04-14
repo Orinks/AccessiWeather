@@ -168,8 +168,8 @@ class TestNoaaApiClient:
         assert calls[0][0][0] == "https://api.weather.gov/points/35.0,-80.0"
         # Alerts request
         assert calls[1][0][0] == "https://api.weather.gov/alerts/active"
-        # State-based filtering
-        assert calls[1][1]["params"] == {"area": "TX"}
+        # Zone-based filtering for county
+        assert calls[1][1]["params"] == {"zone": "TXC141"}
 
     @patch("accessiweather.api_client.requests.get")
     def test_get_alerts_no_state(self, mock_get, api_client, mock_response):
@@ -236,16 +236,17 @@ class TestNoaaApiClient:
 
         # Create client and call the method
         client = NoaaApiClient(user_agent="Test User Agent")
-        data = client.get_alerts(43.1, -86.3, radius=25)
+        data = client.get_alerts(43.1, -86.3, radius=25, force_refresh=True)
 
         # Verify the mocks were called as expected
-        mock_get_point_data.assert_called_once_with(43.1, -86.3)
+        mock_get_point_data.assert_called_once_with(43.1, -86.3, force_refresh=True)
 
         # Check that the state parameter was correctly extracted and used
         assert mock_make_request.call_count == 1
         call_args = mock_make_request.call_args
         assert call_args[0][0] == "https://api.weather.gov/alerts/active"
         assert call_args[1]["params"] == {"area": "MI"}
+        assert call_args[1]["force_refresh"] is True
 
         # Check that the response is properly processed
         assert isinstance(data, dict)
@@ -301,11 +302,13 @@ class TestNoaaApiClient:
         # Verify the error message
         assert "Network error during API request" in str(exc_info.value)
         # Verify logger.error was called (suppressing traceback)
-        mock_logger_error.assert_called_once()
-        # Optional: Check arguments if needed for more specific verification
-        # args, kwargs = mock_logger_error.call_args
-        # assert "Network error during API request" in args[0]
-        # assert kwargs.get('exc_info') is not True
+        assert mock_logger_error.called
+        # Get the call arguments
+        args, kwargs = mock_logger_error.call_args
+        # Check that the error message contains the expected text
+        assert "Network error during API request" in args[0]
+        # Check that exc_info is not explicitly set (to suppress traceback)
+        assert "exc_info" not in kwargs
 
     @patch("accessiweather.api_client.requests.get")
     def test_get_alerts_direct(self, mock_get, api_client, mock_response):
@@ -382,6 +385,6 @@ class TestNoaaApiClient:
         client.get_point_data(35.0, -80.0)
 
         # Verify the User-Agent header was properly formatted in the request
-        args, kwargs = mock_get.call_args
+        _, kwargs = mock_get.call_args
         expected_ua = "AccessiWeather (test@example.com)"
         assert kwargs["headers"]["User-Agent"] == expected_ua

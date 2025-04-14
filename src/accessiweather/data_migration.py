@@ -4,11 +4,9 @@ This module provides utilities for migrating data from the old package name
 to the new package name.
 """
 
-import json
 import logging
 import os
 import shutil
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 

@@ -1,147 +1,182 @@
 # tests/conftest.py
-import faulthandler
-import gc
+
+# Import faulthandler setup first to enable faulthandler
+import tests.faulthandler_setup
+
 import json
 import logging
 import os
-import sys
 import tempfile
 import time
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 import wx
 
-from accessiweather.utils.faulthandler_utils import dump_traceback, enable_faulthandler
-from tests.wx_cleanup_utils import safe_cleanup, safe_destroy_windows
+from tests.wx_cleanup_utils import safe_cleanup
 
 # Set up logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Create logs directory if it doesn't exist
-log_dir = Path("tests/logs")
-log_dir.mkdir(exist_ok=True, parents=True)
+# Faulthandler is already enabled by the faulthandler_setup module
 
-# Enable faulthandler at the module level
-fault_log_path = log_dir / "test_faulthandler.log"
-enable_faulthandler(log_file_path=fault_log_path, all_threads=True, register_all_signals=True)
-
-# Patch wxPython dialogs to prevent segmentation faults
-from tests.wx_dialog_patch import patch_wx_dialogs, unpatch_wx_dialogs
-
-_wx_dialog_patches = patch_wx_dialogs()
+# No need to import test utilities here
 
 
-# Define pytest hooks
-def pytest_configure(config):
-    """Configure pytest before test collection."""
-    logger.info("Configuring pytest for wxPython testing")
-    # Register any additional plugins or configurations here
+@pytest.fixture(scope="session")
+def wx_app_session():
+    """Create a wx App for testing (session-scoped).
 
-
-def pytest_unconfigure(config):
-    """Clean up after all tests have completed."""
-    logger.info("Cleaning up after all tests")
-    # Perform final cleanup
-    try:
-        # Unpatch wxPython dialogs
-        unpatch_wx_dialogs(_wx_dialog_patches)
-
-        # Dump a final traceback before exiting
-        dump_traceback(all_threads=True)
-        # Force garbage collection
-        gc.collect()
-    except Exception as e:
-        logger.error(f"Error during final cleanup: {e}")
-
-
-@pytest.fixture(scope="function")
-def wx_app_isolated():
-    """Create a wx App for testing with enhanced isolation.
-
-    This fixture creates a new wx.App for each test function and performs
-    thorough cleanup afterward to prevent segmentation faults.
-
-    Use this instead of wx_app when you need better isolation between tests.
+    This fixture creates a wx.App that can be used for the entire test session.
+    It ensures proper cleanup after all tests are complete.
     """
-    # Create a new app for each test
+    # Create a new app for the session
+    # This is more reliable than checking for an existing app
     app = wx.App(False)  # False means don't redirect stdout/stderr
 
-    # Process initial events
-    for _ in range(5):
-        wx.SafeYield()
-        time.sleep(0.01)
+    # Allow the app to initialize
+    wx.SafeYield()
+    time.sleep(0.1)  # Give the app a moment to fully initialize
 
-    # Provide the app to the test
     yield app
 
-    # Clean up after the test
-    logger.debug("Cleaning up wx_app_isolated fixture")
-
-    # Process any pending events
-    for _ in range(5):
-        wx.SafeYield()
-        time.sleep(0.01)
-
-    # Safely destroy all top-level windows
-    safe_destroy_windows()
-
-    # Process events again
-    for _ in range(5):
-        wx.SafeYield()
-        time.sleep(0.01)
-
-    # Force garbage collection
-    gc.collect()
-
-    # Dump traceback for debugging
-    dump_traceback(all_threads=False)
-
-
-@pytest.fixture(scope="function")
-def memory_tracker():
-    """Track memory usage during a test.
-
-    This fixture tracks memory usage before and after a test to help identify
-    potential memory leaks.
-    """
-    # Get initial memory usage
-    gc.collect()  # Force collection before measuring
-    objects_before = len(gc.get_objects())
-
-    # Run the test
-    yield
-
-    # Get final memory usage
-    gc.collect()  # Force collection before measuring
-    objects_after = len(gc.get_objects())
-
-    # Log the difference
-    diff = objects_after - objects_before
-    logger.info(f"Memory usage: {diff:+d} objects")
-
-    # If there's a significant increase, log more details
-    if diff > 100:  # Arbitrary threshold
-        logger.warning(f"Possible memory leak: {diff:+d} objects")
-        # Could add more detailed memory analysis here
+    # Clean up after all tests using the safe cleanup utility
+    logger.info("Performing session cleanup")
+    try:
+        # Use the safe cleanup utility
+        safe_cleanup()
+    except Exception as e:
+        logger.warning(f"Exception during wx cleanup: {e}")
+        # Continue with test completion even if cleanup fails
 
 
 @pytest.fixture
-def temp_config_file():
-    """Create a temporary config file for testing"""
-    # Create a temporary directory
+def wx_app(wx_app_session):
+    """Create a wx App for testing (function-scoped).
+
+    This fixture uses the session-scoped app but provides function-level
+    cleanup.
+    """
+    # The app is already created by the session fixture
+    app = wx_app_session
+
+    # Process any pending events before the test
+    wx.SafeYield()
+    time.sleep(0.05)  # Give a moment for events to process
+
+    yield app
+
+    # Clean up after the test for any top-level windows
+    logger.debug("Performing function-level cleanup")
+    try:
+        # Clean up all top-level windows
+        windows = list(wx.GetTopLevelWindows())
+        for win in windows:
+            if win and win.IsShown():
+                try:
+                    # Hide the window first
+                    win.Hide()
+                    wx.SafeYield()
+                    # Then destroy it
+                    wx.CallAfter(win.Destroy)
+                    wx.SafeYield()
+                except Exception as win_e:
+                    logger.warning(f"Exception cleaning up window: {win_e}")
+
+        # Process pending events
+        for _ in range(5):
+            wx.SafeYield()
+            time.sleep(0.02)
+    except Exception as e:
+        logger.warning(f"Exception during function-level wx cleanup: {e}")
+
+
+@pytest.fixture
+def temp_config_dir():
+    """Create a temporary directory for configuration files."""
     with tempfile.TemporaryDirectory() as temp_dir:
-        # Create a temporary config file
-        config_path = os.path.join(temp_dir, "config.json")
-        config_data = {
-            "locations": {"Test City": {"lat": 35.0, "lon": -80.0}},
-            "current": "Test City",
-            "settings": {"update_interval_minutes": 30},
-            "api_settings": {"contact_info": "test@example.com"},
+        # Create the directory structure
+        os.makedirs(temp_dir, exist_ok=True)
+        yield temp_dir
+
+
+@pytest.fixture
+def temp_config_file(temp_config_dir):
+    """Create a temporary config file for testing."""
+    # Create a temporary config file
+    config_path = os.path.join(temp_config_dir, "config.json")
+    config_data = {
+        "locations": {"Test City": {"lat": 35.0, "lon": -80.0}},
+        "current": "Test City",
+        "settings": {"update_interval_minutes": 30, "alert_radius_miles": 25},
+        "api_settings": {"contact_info": "test@example.com"},
+        "testing": {"use_mocks": True, "skip_api_calls": True},
+    }
+
+    with open(config_path, "w") as f:
+        json.dump(config_data, f)
+
+    yield config_path
+
+
+@pytest.fixture
+def mock_api_client():
+    """Create a mock NoaaApiClient."""
+    from accessiweather.api_client import NoaaApiClient
+
+    # Create a mock API client
+    mock_client = MagicMock(spec=NoaaApiClient)
+
+    # Configure common mock responses
+    mock_client.get_point_data.return_value = {
+        "properties": {
+            "forecast": ("https://api.weather.gov/gridpoints/RAH/53,88/forecast"),
+            "forecastHourly": ("https://api.weather.gov/gridpoints/RAH/53,88/forecast/hourly"),
+            "relativeLocation": {"properties": {"city": "Test City", "state": "NC"}},
         }
+    }
 
-        with open(config_path, "w") as f:
-            json.dump(config_data, f)
+    mock_client.get_forecast.return_value = {
+        "properties": {
+            "periods": [
+                {
+                    "name": "Today",
+                    "temperature": 75,
+                    "temperatureUnit": "F",
+                    "shortForecast": "Sunny",
+                    "detailedForecast": "Sunny with a high near 75.",
+                }
+            ]
+        }
+    }
 
-        yield config_path
+    mock_client.get_alerts.return_value = {"features": []}
+
+    return mock_client
+
+
+@pytest.fixture
+def mock_notifier():
+    """Create a mock WeatherNotifier."""
+    from accessiweather.notifications import WeatherNotifier
+
+    # Create a mock notifier
+    mock_notifier = MagicMock(spec=WeatherNotifier)
+    return mock_notifier
+
+
+@pytest.fixture
+def mock_location_manager(temp_config_dir):
+    """Create a mock LocationManager with test data."""
+    from accessiweather.location import LocationManager
+
+    # Create a real location manager with the temp directory
+    location_manager = LocationManager(config_dir=temp_config_dir)
+
+    # Add test locations
+    location_manager.add_location("Test City", 35.0, -80.0)
+    location_manager.set_current_location("Test City")
+
+    return location_manager

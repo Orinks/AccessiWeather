@@ -69,6 +69,26 @@ class WeatherNotifier:
         self.toaster = SafeToastNotifier()
         self.active_alerts = {}
 
+    def notify_alerts(self, alert_count):
+        """Notify the user about new alerts
+
+        Args:
+            alert_count: Number of active alerts
+        """
+        if alert_count > 0:
+            title = "Weather Alerts"
+            message = f"{alert_count} active weather {'alert' if alert_count == 1 else 'alerts'} in your area"
+
+            # Show notification
+            self.toaster.show_toast(
+                title=title,
+                msg=message,
+                timeout=10,
+                app_name="AccessiWeather",
+            )
+
+            logger.info(f"Displayed notification for {alert_count} active alerts")
+
     def process_alerts(self, alerts_data: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Process alerts data from NOAA API
 
@@ -200,25 +220,3 @@ class WeatherNotifier:
             key=lambda x: self.PRIORITY.get(x.get("severity", "Unknown"), self.PRIORITY["Unknown"]),
             reverse=True,
         )
-
-    def notify_alerts(self, count: int) -> None:
-        """Notify the user of weather alerts
-
-        Args:
-            count: Number of alerts to notify about
-        """
-        if count <= 0:
-            return
-
-        title = "Weather Alerts"
-        message = f"{count} active weather {'alert' if count == 1 else 'alerts'} in your area"
-
-        # Show notification
-        self.toaster.show_toast(
-            title=title,
-            msg=message,
-            timeout=10,
-            app_name="AccessiWeather",
-        )
-
-        logger.info(f"Displayed notification for {count} weather alerts")

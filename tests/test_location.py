@@ -3,7 +3,6 @@
 import json
 import os
 import tempfile
-from unittest.mock import mock_open, patch
 
 import pytest
 

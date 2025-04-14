@@ -48,7 +48,7 @@ class TestApiContactMissingConfig:
                 "location_manager": mock_location_manager,
             }
 
-    def test_dialog_shown_when_config_file_missing(self, wx_app, mock_components):
+    def test_dialog_shown_when_config_file_missing(self, mock_components):
         """Test that dialog is shown when config file doesn't exist"""
         # Create a mock for OnSettings
         mock_on_settings = MagicMock()
@@ -63,7 +63,7 @@ class TestApiContactMissingConfig:
             # Patch the methods we want to test and os.path.exists
             with (
                 patch("os.path.exists", return_value=False),
-                patch.object(WeatherApp, "OnSettings", mock_on_settings),
+                patch.object(WeatherApp, "OnSettings", new=mock_on_settings),
                 patch("wx.MessageDialog", return_value=mock_dialog),
             ):
 
@@ -75,8 +75,8 @@ class TestApiContactMissingConfig:
                     notifier=mock_components["notifier"],
                 )
 
-                # The _check_api_contact_configured method should have been called during initialization
-                # and should have shown a dialog and called OnSettings
+                # The _check_api_contact_configured method should have been called
+                # during initialization and should have shown a dialog and called OnSettings
 
                 # Assert that MessageDialog was created
                 wx.MessageDialog.assert_called_once()
