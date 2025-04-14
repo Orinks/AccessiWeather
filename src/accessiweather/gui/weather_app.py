@@ -12,6 +12,8 @@ from typing import Dict, List, Optional, Tuple, Any
 
 import wx
 
+from accessiweather.config_utils import get_config_dir
+
 from accessiweather.api_client import ApiClientError
 from accessiweather.services.location_service import LocationService
 from accessiweather.services.notification_service import NotificationService
@@ -32,7 +34,7 @@ from .weather_app_handlers import WeatherAppHandlers
 logger = logging.getLogger(__name__)
 
 # Constants
-CONFIG_DIR = os.path.expanduser("~/.accessiweather")
+CONFIG_DIR = get_config_dir()
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
 
 

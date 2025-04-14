@@ -10,6 +10,7 @@ import os
 import sys
 from typing import Optional
 
+from accessiweather.config_utils import get_config_dir
 from accessiweather.data_migration import migrate_config_directory
 from accessiweather.gui.app import AccessiWeatherApp
 from accessiweather.gui.app_factory import create_weather_app
@@ -31,9 +32,7 @@ def main(config_dir: Optional[str] = None, debug_mode: bool = False, enable_cach
     setup_root_logging(log_level=log_level)
 
     # Configure application directory
-    if config_dir is None:
-        config_dir = os.path.expanduser("~/.accessiweather")
-
+    config_dir = get_config_dir(config_dir)
     os.makedirs(config_dir, exist_ok=True)
 
     # Get logger
