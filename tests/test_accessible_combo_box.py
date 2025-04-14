@@ -1,9 +1,15 @@
 """Tests for the AccessibleComboBox component"""
 
-from unittest.mock import MagicMock, patch
+# Import faulthandler setup first to enable faulthandler
+import tests.faulthandler_setup
+
+from unittest.mock import MagicMock
 
 import pytest
 import wx
+
+# Import before creating wx.App
+from accessiweather.gui.ui_components import AccessibleComboBox
 
 
 # Create a wx App fixture for testing
@@ -12,10 +18,6 @@ def wx_app():
     """Create a wx App for testing"""
     app = wx.App(False)
     yield app
-
-
-# Import this after wx.App is created
-from accessiweather.gui.ui_components import AccessibleComboBox
 
 
 class TestAccessibleComboBox:
@@ -28,8 +30,12 @@ class TestAccessibleComboBox:
 
     def teardown_method(self):
         """Tear down test fixture"""
-        # Destroy frame
+        # Hide the window first
+        wx.CallAfter(self.frame.Hide)
+        wx.SafeYield()
+        # Then destroy it
         wx.CallAfter(self.frame.Destroy)
+        wx.SafeYield()
 
     def test_init(self):
         """Test initialization with different parameters"""

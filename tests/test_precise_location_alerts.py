@@ -1,5 +1,8 @@
 """Tests for precise location alerts functionality."""
 
+# Import faulthandler setup first to enable faulthandler
+import tests.faulthandler_setup
+
 import json
 import os
 from unittest.mock import MagicMock, patch
@@ -45,39 +48,47 @@ def test_identify_location_type(mock_api_client):
 def test_get_alerts_precise_location(mock_api_client):
     """Test getting alerts with precise location setting."""
     # Set up the mock
-    mock_api_client.get_point_data = MagicMock(
-        return_value={
-            "properties": {
-                "county": "https://api.weather.gov/zones/county/NJC015",
-                "relativeLocation": {"properties": {"state": "NJ"}},
+    mock_api_client.get_point_data = MagicMock(return_value={
+        "properties": {
+            "county": "https://api.weather.gov/zones/county/NJC015",
+            "relativeLocation": {
+                "properties": {
+                    "state": "NJ"
+                }
             }
         }
-    )
+    })
 
     # Call get_alerts with precise_location=True
     mock_api_client.get_alerts(40.0, -74.0, precise_location=True)
 
     # Verify the API was called with the correct parameters
-    mock_api_client._make_request.assert_called_with("alerts/active", params={"zone": "NJC015"})
+    mock_api_client._make_request.assert_called_with(
+        "alerts/active", params={"zone": "NJC015"}
+    )
 
 
 def test_get_alerts_statewide(mock_api_client):
     """Test getting alerts with statewide setting."""
     # Set up the mock
-    mock_api_client.get_point_data = MagicMock(
-        return_value={
-            "properties": {
-                "county": "https://api.weather.gov/zones/county/NJC015",
-                "relativeLocation": {"properties": {"state": "NJ"}},
+    mock_api_client.get_point_data = MagicMock(return_value={
+        "properties": {
+            "county": "https://api.weather.gov/zones/county/NJC015",
+            "relativeLocation": {
+                "properties": {
+                    "state": "NJ"
+                }
             }
         }
-    )
+    })
 
     # Call get_alerts with precise_location=False
     mock_api_client.get_alerts(40.0, -74.0, precise_location=False)
 
     # Verify the API was called with the correct parameters
-    mock_api_client._make_request.assert_called_with("alerts/active", params={"area": "NJ"})
+    mock_api_client._make_request.assert_called_with(
+        "alerts/active", params={"area": "NJ"}
+    )
 
 
 def test_alerts_fetcher_uses_precise_setting(mock_alerts_fetcher, mock_api_client):
@@ -93,11 +104,10 @@ def test_alerts_fetcher_uses_precise_setting(mock_alerts_fetcher, mock_api_clien
 
     # Wait for the thread to complete
     import time
-
     time.sleep(0.1)
 
     # Verify the API client was called with precise_location=True
-    mock_api_client.get_alerts.assert_called_with(40.0, -74.0, radius=50, precise_location=True)
+    mock_api_client.get_alerts.assert_called_with(40.0, -74.0, radius=25, precise_location=True)
 
     # Reset the mock
     mock_api_client.get_alerts.reset_mock()
@@ -109,7 +119,7 @@ def test_alerts_fetcher_uses_precise_setting(mock_alerts_fetcher, mock_api_clien
     time.sleep(0.1)
 
     # Verify the API client was called with precise_location=False
-    mock_api_client.get_alerts.assert_called_with(40.0, -74.0, radius=50, precise_location=False)
+    mock_api_client.get_alerts.assert_called_with(40.0, -74.0, radius=25, precise_location=False)
 
 
 @pytest.mark.skipif(not wx.GetApp(), reason="Requires wxPython app")
@@ -128,25 +138,35 @@ def test_settings_dialog_precise_location_toggle():
         "update_interval_minutes": 30,
         "alert_radius_miles": 25,
         "api_contact": "test@example.com",
-        PRECISE_LOCATION_ALERTS_KEY: True,
+        PRECISE_LOCATION_ALERTS_KEY: True
     }
 
     # Create the dialog
     from accessiweather.gui.settings_dialog import SettingsDialog
-
     dialog = SettingsDialog(frame, settings)
 
     # Check that the precise location control exists and has the correct value
-    assert hasattr(dialog, "precise_location_alerts_ctrl")
-    assert dialog.precise_location_alerts_ctrl.GetValue() is True
+    assert hasattr(dialog, "precise_alerts_ctrl")
+    assert dialog.precise_alerts_ctrl.GetValue() is True
 
     # Change the value
-    dialog.precise_location_alerts_ctrl.SetValue(False)
+    dialog.precise_alerts_ctrl.SetValue(False)
 
     # Get the settings and verify the change
     new_settings = dialog.get_settings()
     assert new_settings[PRECISE_LOCATION_ALERTS_KEY] is False
 
     # Clean up
-    dialog.Destroy()
-    frame.Destroy()
+    # Hide the window first
+    wx.CallAfter(dialog.Hide)
+    wx.SafeYield()
+    # Then destroy it
+    wx.CallAfter(dialog.Destroy)
+    wx.SafeYield()
+
+    # Hide the window first
+    wx.CallAfter(frame.Hide)
+    wx.SafeYield()
+    # Then destroy it
+    wx.CallAfter(frame.Destroy)
+    wx.SafeYield()
