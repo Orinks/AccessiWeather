@@ -8,6 +8,8 @@ import logging
 import os
 from typing import Dict, List, Optional, Tuple
 
+from accessiweather.config_utils import get_config_dir
+
 logger = logging.getLogger(__name__)
 
 
@@ -20,10 +22,7 @@ class LocationManager:
         Args:
             config_dir: Directory for config files, defaults to user's home directory
         """
-        if config_dir is None:
-            self.config_dir = os.path.expanduser("~/.accessiweather")
-        else:
-            self.config_dir = config_dir
+        self.config_dir = get_config_dir(config_dir)
 
         self.locations_file = os.path.join(self.config_dir, "locations.json")
         self.current_location: Optional[str] = None

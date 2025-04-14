@@ -7,22 +7,28 @@ to the new package name.
 import logging
 import os
 import shutil
+from typing import Optional
+
+from accessiweather.config_utils import get_config_dir
 
 logger = logging.getLogger(__name__)
 
 
 def migrate_config_directory(
-    old_dir: str = "~/.noaa_weather_app", new_dir: str = "~/.accessiweather"
+    old_dir: str = "~/.noaa_weather_app", new_dir: Optional[str] = None
 ) -> bool:
     """Migrate data from old config directory to new config directory
 
     Args:
         old_dir: Path to old config directory
-        new_dir: Path to new config directory
+        new_dir: Path to new config directory (defaults to platform-specific location)
 
     Returns:
         True if migration was successful or not needed, False if it failed
     """
+    # Use the config_utils to get the default config directory if not specified
+    if new_dir is None:
+        new_dir = get_config_dir()
     # Expand user paths
     old_dir = os.path.expanduser(old_dir)
     new_dir = os.path.expanduser(new_dir)
