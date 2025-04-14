@@ -17,6 +17,8 @@ from .dialogs import LocationDialog
 from .settings_dialog import (
     ALERT_RADIUS_KEY,
     API_CONTACT_KEY,
+    CACHE_ENABLED_KEY,
+    CACHE_TTL_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
     SettingsDialog,
 )
@@ -34,7 +36,7 @@ class WeatherAppHandlers:
     # Type annotations for attributes that will be provided by WeatherApp
     timer: wx.Timer
     location_choice: wx.Choice
-    location_manager: Any
+    location_service: Any
     forecast_text: wx.TextCtrl
     alerts_list: wx.ListCtrl
     current_alerts: list
@@ -43,6 +45,8 @@ class WeatherAppHandlers:
     config: dict
     _config_path: str
     api_client: Any
+    weather_service: Any
+    notification_service: Any
     discussion_fetcher: Any
     _on_discussion_fetched: Any
     _on_discussion_error: Any
@@ -107,8 +111,8 @@ class WeatherAppHandlers:
         if not selected:
             return
 
-        # Set current location
-        self.location_manager.set_current_location(selected)
+        # Set current location using the location service
+        self.location_service.set_current_location(selected)
 
         # Update weather data
         self.UpdateWeatherData()
@@ -128,8 +132,8 @@ class WeatherAppHandlers:
             name, lat, lon = dialog.GetValues()
 
             if name and lat is not None and lon is not None:
-                # Add location
-                self.location_manager.add_location(name, lat, lon)
+                # Add location using the location service
+                self.location_service.add_location(name, lat, lon)
 
                 # Update dropdown
                 self.UpdateLocationDropdown()
@@ -138,7 +142,7 @@ class WeatherAppHandlers:
                 self.location_choice.SetStringSelection(name)
 
                 # Set as current location
-                self.location_manager.set_current_location(name)
+                self.location_service.set_current_location(name)
 
                 # Update weather data
                 self.UpdateWeatherData()
@@ -167,14 +171,14 @@ class WeatherAppHandlers:
         )
 
         if confirm == wx.YES:
-            # Remove location
-            self.location_manager.remove_location(selected)
+            # Remove location using the location service
+            self.location_service.remove_location(selected)
 
             # Update dropdown
             self.UpdateLocationDropdown()
 
             # Clear forecast and alerts if current location was removed
-            if self.location_manager.get_current_location_name() is None:
+            if self.location_service.get_current_location_name() is None:
                 self.forecast_text.SetValue("Select a location to view the forecast")
                 self.alerts_list.DeleteAllItems()  # Clear display
                 self.current_alerts = []
@@ -198,8 +202,8 @@ class WeatherAppHandlers:
         Args:
             event: Button event
         """
-        # Get current location
-        location = self.location_manager.get_current_location()
+        # Get current location from the location service
+        location = self.location_service.get_current_location()
         if location is None:
             wx.MessageBox(
                 "Please select a location first", "No Location Selected", wx.OK | wx.ICON_ERROR
@@ -405,11 +409,13 @@ class WeatherAppHandlers:
 
             # Update API client contact info
             api_contact = updated_api_settings.get(API_CONTACT_KEY, "")
-            self.api_client.set_contact_info(api_contact)
+            # Note: We can't update the contact info directly in the API client
+            # as it doesn't have a setter method. The contact info will be used
+            # the next time the app is started.
 
             # Update notifier settings
-            alert_radius = updated_settings.get(ALERT_RADIUS_KEY, 25)
-            self.api_client.set_alert_radius(alert_radius)
+            # Note: Alert radius is stored in config and will be used
+            # the next time alerts are fetched
 
             # If precise location setting changed, refresh alerts
             old_precise_setting = settings.get(PRECISE_LOCATION_ALERTS_KEY, True)
@@ -421,6 +427,21 @@ class WeatherAppHandlers:
                 )
                 # Refresh weather data to apply new setting
                 self.UpdateWeatherData()
+
+            # If cache settings changed, update API client if possible
+            old_cache_enabled = settings.get(CACHE_ENABLED_KEY, True)
+            new_cache_enabled = updated_settings.get(CACHE_ENABLED_KEY, True)
+            old_cache_ttl = settings.get(CACHE_TTL_KEY, 300)
+            new_cache_ttl = updated_settings.get(CACHE_TTL_KEY, 300)
+
+            if old_cache_enabled != new_cache_enabled or old_cache_ttl != new_cache_ttl:
+                logger.info(
+                    f"Cache settings changed: enabled {old_cache_enabled} -> {new_cache_enabled}, "
+                    f"TTL {old_cache_ttl} -> {new_cache_ttl}"
+                )
+                # Note: We can't update the cache settings directly in the API client
+                # as it doesn't have setter methods. The cache settings will be used
+                # the next time the app is started.
 
         dialog.Destroy()
 

@@ -21,9 +21,13 @@ def safe_call_after(callback, *args, **kwargs):
         **kwargs: Keyword arguments to pass to the callback
     """
     try:
+        # Log callback details
+        callback_name = getattr(callback, "__name__", str(callback))
+        logger.debug(f"Scheduling callback {callback_name} with args: {args}, kwargs: {kwargs}")
+
         # Always use wx.CallAfter to ensure main thread execution
         wx.CallAfter(callback, *args, **kwargs)
-        logger.debug("Scheduled callback using wx.CallAfter")
+        logger.debug(f"Successfully scheduled callback {callback_name} using wx.CallAfter")
     except (AssertionError, RuntimeError) as e:
         # This might happen if wx.App isn't fully initialized or is destroyed
         # Log the error. Depending on context, raising might be better.
@@ -119,7 +123,7 @@ class AlertsFetcher:
         self.thread = None
         self._stop_event = threading.Event()
 
-    def fetch(self, lat, lon, on_success=None, on_error=None, precise_location=True, radius=50):
+    def fetch(self, lat, lon, on_success=None, on_error=None, precise_location=True, radius=25):
         """Fetch alerts data asynchronously
 
         Args:
@@ -127,9 +131,8 @@ class AlertsFetcher:
             lon: Longitude
             on_success: Callback for successful fetch
             on_error: Callback for error handling
-            precise_location: If True, filter alerts to the specific county/township.
-                             If False, get all alerts for the state.
-            radius: Radius in miles to search for alerts (used if state cannot be determined)
+            precise_location: Whether to get alerts for the precise location or statewide
+            radius: Radius in miles to search for alerts if location type cannot be determined
         """
         # Cancel any existing fetch
         if self.thread is not None and self.thread.is_alive():
@@ -144,7 +147,7 @@ class AlertsFetcher:
         # Create and start new thread
         self.thread = threading.Thread(
             target=self._fetch_thread,
-            args=(lat, lon, on_success, on_error, precise_location, radius),
+            args=(lat, lon, on_success, on_error, precise_location, radius)
         )
         self.thread.daemon = True
         self.thread.start()
@@ -157,8 +160,8 @@ class AlertsFetcher:
             lon: Longitude
             on_success: Success callback
             on_error: Error callback
-            precise_location: If True, filter alerts to the specific county/township
-            radius: Radius in miles to search for alerts
+            precise_location: Whether to get alerts for the precise location or statewide
+            radius: Radius in miles to search for alerts if location type cannot be determined
         """
         try:
             # Check if we've been asked to stop
@@ -166,7 +169,10 @@ class AlertsFetcher:
                 logger.debug("Alerts fetch cancelled before API call")
                 return
 
-            # Get alerts data from API
+            # Get alerts data from API with precise location setting
+            logger.debug(
+                f"Fetching alerts with precise_location={precise_location}, radius={radius}"
+            )
             alerts_data = self.api_client.get_alerts(
                 lat, lon, radius=radius, precise_location=precise_location
             )
@@ -246,20 +252,73 @@ class DiscussionFetcher:
                 return
 
             # Get discussion text from API
-            discussion_text = self.api_client.get_discussion(lat, lon)
+            logger.debug(f"Calling get_discussion with coordinates: ({lat}, {lon})")
+            try:
+                logger.debug("About to call api_client.get_discussion")
+                discussion_text = self.api_client.get_discussion(lat, lon)
+                logger.debug("Returned from api_client.get_discussion call")
 
-            # Check again if we've been asked to stop before delivering results
-            if self._stop_event.is_set():
-                logger.debug("Discussion fetch completed but cancelled")
-                return
-
-            # Call success callback if provided
-            if on_success and not self._stop_event.is_set():
-                # Call callback on main thread
-                if additional_data is not None:
-                    safe_call_after(on_success, discussion_text, *additional_data)
+                # Log the discussion text
+                if discussion_text is None:
+                    logger.warning("API returned None for discussion text")
+                    # Use a default message instead of None
+                    discussion_text = "No discussion available"
                 else:
-                    safe_call_after(on_success, discussion_text)
+                    logger.debug(
+                        f"API returned discussion text with length: {len(discussion_text)}"
+                    )
+                    # Log the first 100 characters of the discussion text
+                    preview = (
+                        discussion_text[:100].replace("\n", "\\n") if discussion_text else "None"
+                    )
+                    logger.debug(f"Discussion text preview: {preview}...")
+
+                # Check again if we've been asked to stop before delivering results
+                if self._stop_event.is_set():
+                    logger.debug("Discussion fetch completed but cancelled")
+                    return
+
+                # Call success callback if provided
+                if on_success and not self._stop_event.is_set():
+                    logger.debug(
+                        f"Calling success callback with discussion_text and "
+                        f"additional_data: {additional_data}"
+                    )
+                    # Call callback on main thread
+                    try:
+                        if additional_data is not None:
+                            logger.debug(
+                                f"Calling success callback with additional data: {additional_data}"
+                            )
+                            safe_call_after(on_success, discussion_text, *additional_data)
+                        else:
+                            logger.debug("Calling success callback without additional data")
+                            safe_call_after(on_success, discussion_text)
+                        logger.debug("Success callback scheduled successfully")
+                    except Exception as e:
+                        logger.error(f"Error scheduling success callback: {e}")
+                        # Try to close the loading dialog if it exists
+                        if (
+                            additional_data
+                            and len(additional_data) > 1
+                            and hasattr(additional_data[1], "Destroy")
+                        ):
+                            try:
+                                logger.debug(
+                                    "Attempting to close loading dialog after callback error"
+                                )
+                                safe_call_after(additional_data[1].Destroy)
+                            except Exception as dialog_e:
+                                logger.error(f"Error closing loading dialog: {dialog_e}")
+            except Exception as e:
+                logger.error(f"Error in get_discussion: {e}")
+                # If there's an error, still try to call the error callback
+                if on_error and not self._stop_event.is_set():
+                    error_msg = f"Failed to retrieve discussion: {str(e)}"
+                    if additional_data is not None:
+                        safe_call_after(on_error, error_msg, *additional_data)
+                    else:
+                        safe_call_after(on_error, error_msg)
         except Exception as e:
             if not self._stop_event.is_set():
                 logger.error(f"Failed to retrieve discussion: {str(e)}")

@@ -5,7 +5,7 @@ separating business logic from UI concerns.
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from accessiweather.api_client import ApiClientError, NoaaApiClient
 
@@ -23,12 +23,14 @@ class WeatherService:
         """
         self.api_client = api_client
 
-    def get_forecast(self, lat: float, lon: float) -> Dict[str, Any]:
+    def get_forecast(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
         """Get forecast data for a location.
 
         Args:
             lat: Latitude of the location.
             lon: Longitude of the location.
+            force_refresh: Whether to force a refresh of the data from the API
+                instead of using cache.
 
         Returns:
             Dictionary containing forecast data.
@@ -38,13 +40,14 @@ class WeatherService:
         """
         try:
             logger.info(f"Getting forecast for coordinates: ({lat}, {lon})")
-            return self.api_client.get_forecast(lat, lon)
+            return self.api_client.get_forecast(lat, lon, force_refresh=force_refresh)
         except Exception as e:
             logger.error(f"Error getting forecast: {str(e)}")
             raise ApiClientError(f"Unable to retrieve forecast data: {str(e)}")
 
     def get_alerts(
-        self, lat: float, lon: float, radius: float = 50, precise_location: bool = True
+        self, lat: float, lon: float, radius: float = 50, precise_location: bool = True,
+        force_refresh: bool = False
     ) -> Dict[str, Any]:
         """Get alerts for a location.
 
@@ -54,6 +57,8 @@ class WeatherService:
             radius: Radius in miles to search for alerts.
             precise_location: Whether to get alerts for the precise location (county/zone)
                              or for the entire state.
+            force_refresh: Whether to force a refresh of the data from the API
+                instead of using cache.
 
         Returns:
             Dictionary containing alert data.
@@ -64,21 +69,24 @@ class WeatherService:
         try:
             logger.info(
                 f"Getting alerts for coordinates: ({lat}, {lon}) with radius {radius} miles, "
-                f"precise_location={precise_location}"
+                f"precise_location={precise_location}, force_refresh={force_refresh}"
             )
             return self.api_client.get_alerts(
-                lat, lon, radius=radius, precise_location=precise_location
+                lat, lon, radius=radius, precise_location=precise_location,
+                force_refresh=force_refresh
             )
         except Exception as e:
             logger.error(f"Error getting alerts: {str(e)}")
             raise ApiClientError(f"Unable to retrieve alerts data: {str(e)}")
 
-    def get_discussion(self, lat: float, lon: float) -> Optional[str]:
+    def get_discussion(self, lat: float, lon: float, force_refresh: bool = False) -> Optional[str]:
         """Get forecast discussion for a location.
 
         Args:
             lat: Latitude of the location.
             lon: Longitude of the location.
+            force_refresh: Whether to force a refresh of the data from the API
+                instead of using cache.
 
         Returns:
             Text of the forecast discussion or None if not available.
@@ -88,7 +96,7 @@ class WeatherService:
         """
         try:
             logger.info(f"Getting forecast discussion for coordinates: ({lat}, {lon})")
-            discussion = self.api_client.get_discussion(lat, lon)
+            discussion = self.api_client.get_discussion(lat, lon, force_refresh=force_refresh)
             if not discussion:
                 logger.warning("No discussion available")
                 return None

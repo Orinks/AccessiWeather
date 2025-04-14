@@ -10,21 +10,21 @@ import os
 import sys
 from typing import Optional
 
-import wx
-
 from accessiweather.data_migration import migrate_config_directory
+from accessiweather.gui.app import AccessiWeatherApp
 from accessiweather.gui.app_factory import create_weather_app
 
 # Use root config for logging setup - Corrected import path
 from accessiweather.logging_config import setup_logging as setup_root_logging
 
 
-def main(config_dir: Optional[str] = None, debug_mode: bool = False):
+def main(config_dir: Optional[str] = None, debug_mode: bool = False, enable_caching: bool = True):
     """Main entry point for the application
 
     Args:
         config_dir: Configuration directory, defaults to ~/.accessiweather
         debug_mode: Whether to enable debug logging
+        enable_caching: Whether to enable API response caching
     """
     # Set up logging using the root config
     log_level = logging.DEBUG if debug_mode else logging.INFO
@@ -60,11 +60,23 @@ def main(config_dir: Optional[str] = None, debug_mode: bool = False):
         except Exception as e:
             logger.error(f"Failed to load config: {str(e)}")
 
-    # The app factory will create all the necessary dependencies
+    # No need to create dependencies here - app_factory handles it
 
-    # Create the application
-    app = wx.App(False)
-    frame = create_weather_app(parent=None, config=config, config_path=config_file)
+    # Create the application using our custom App class
+    app = AccessiWeatherApp(False)  # False means don't redirect stdout/stderr
+
+    # Use the app factory to create the WeatherApp with caching enabled
+    config_file_path = os.path.join(config_dir, "config.json")
+    frame = create_weather_app(
+        parent=None,
+        config=config,
+        config_path=config_file_path,
+        enable_caching=enable_caching,
+        cache_ttl=300  # 5 minutes default TTL
+    )
+
+    # Store a reference to the frame in the app
+    app.frame = frame
 
     frame.Show()
 
