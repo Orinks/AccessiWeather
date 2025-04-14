@@ -3,6 +3,9 @@
 This module tests the location search list functionality in the LocationDialog.
 """
 
+# Import faulthandler setup first to enable faulthandler
+import tests.faulthandler_setup
+
 import threading
 import time
 from unittest.mock import MagicMock, patch
@@ -21,8 +24,12 @@ def frame():
     app = wx.App()
     frame = wx.Frame(None)
     yield frame
+    # Hide the window first
+    wx.CallAfter(frame.Hide)
+    wx.SafeYield()
+    # Then destroy it
     wx.CallAfter(frame.Destroy)
-    app.MainLoop()
+    wx.SafeYield()
 
 
 @pytest.fixture
@@ -58,7 +65,12 @@ def safe_destroy():
     for obj in objects:
         if obj and hasattr(obj, "Destroy"):
             try:
+                # Hide the window first
+                wx.CallAfter(obj.Hide)
+                wx.SafeYield()
+                # Then destroy it
                 wx.CallAfter(obj.Destroy)
+                wx.SafeYield()
             except Exception:
                 pass  # Ignore errors in cleanup
 
@@ -94,12 +106,12 @@ class TestLocationSearchList:
         self.geocoding_patcher.stop()
 
         # Destroy frame safely
-        try:
-            from accessiweather.gui.async_fetchers import safe_call_after
-
-            safe_call_after(self.frame.Destroy)
-        except Exception:
-            pass  # Ignore any errors in cleanup
+        # Hide the window first
+        wx.CallAfter(self.frame.Hide)
+        wx.SafeYield()
+        # Then destroy it
+        wx.CallAfter(self.frame.Destroy)
+        wx.SafeYield()
 
     def test_search_field_is_text_ctrl(self, safe_destroy):
         """Test that the search field is an AccessibleTextCtrl"""
@@ -129,9 +141,9 @@ class TestLocationSearchList:
         dialog.search_field.SetValue("New")
 
         # Trigger search button click
-        with patch.object(dialog, "_fetch_search_suggestions") as mock_fetch:
+        with patch.object(dialog, "_perform_search") as mock_perform_search:
             dialog.OnSearch(None)  # None for the event
-            mock_fetch.assert_called_once_with("New")
+            mock_perform_search.assert_called_once_with("New")
 
         # Directly call the search thread function to simulate synchronous behavior
         dialog._search_thread_func("New")

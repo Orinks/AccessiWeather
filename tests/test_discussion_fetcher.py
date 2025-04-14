@@ -1,5 +1,8 @@
 """Tests for the DiscussionFetcher class."""
 
+# Import faulthandler setup first to enable faulthandler
+import tests.faulthandler_setup
+
 import logging
 import time
 from unittest.mock import MagicMock, patch
@@ -9,7 +12,6 @@ import wx
 from accessiweather.api_client import NoaaApiClient
 from accessiweather.gui.async_fetchers import DiscussionFetcher
 
-# Faulthandler is already enabled in conftest.py
 logger = logging.getLogger(__name__)
 
 # Sample discussion data for testing
@@ -31,7 +33,7 @@ class TestDiscussionFetcher:
         assert fetcher.api_client == api_client
 
     @patch("accessiweather.api_client.NoaaApiClient.get_discussion")
-    def test_fetch_success(self, mock_get_discussion, wx_app_isolated):
+    def test_fetch_success(self, mock_get_discussion, wx_app):
         """Test successful fetching of discussion data."""
         # Set up mocks
         api_client = MagicMock(spec=NoaaApiClient)
@@ -61,7 +63,7 @@ class TestDiscussionFetcher:
         error_callback.assert_not_called()
 
     @patch("accessiweather.api_client.NoaaApiClient.get_discussion")
-    def test_fetch_error(self, mock_get_discussion, wx_app_isolated):
+    def test_fetch_error(self, mock_get_discussion, wx_app):
         """Test error handling when fetching discussion data."""
         # Set up mocks
         api_client = MagicMock(spec=NoaaApiClient)

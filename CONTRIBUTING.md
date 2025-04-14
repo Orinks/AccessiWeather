@@ -1,6 +1,6 @@
-# Contributing to NOAA Weather App
+# Contributing to AccessiWeather
 
-Thank you for your interest in contributing to the NOAA Weather App! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to AccessiWeather! This document provides guidelines and instructions for contributing to the beta release and beyond.
 
 ## Code of Conduct
 
@@ -63,11 +63,38 @@ All UI components must be accessible to screen readers. Before submitting a pull
 
 ## Style Guidelines
 
-- Follow PEP 8 for Python code style
+- Follow PEP 8 for Python code style with a 100 character line length
+- Use Black for code formatting and isort for import sorting
+- Run mypy for type checking
 - Include docstrings for all modules, classes, and functions
 - Use type hints where appropriate
 - Include meaningful commit messages
 
+You can check your code with:
+```bash
+python -m black src/accessiweather tests
+python -m isort src/accessiweather tests
+python -m flake8 src/accessiweather tests
+python -m mypy src/accessiweather
+```
+
 ## Feature Requests and Bug Reports
 
-Please use the GitHub issue tracker to submit feature requests and bug reports. Include as much detail as possible to help us understand your request or issue.
+Please use the GitHub issue tracker to submit feature requests and bug reports. For bug reports, please include:
+
+- A clear description of the issue
+- Steps to reproduce
+- Expected behavior
+- Actual behavior
+- Screenshots if applicable
+- System information (OS, Python version, wxPython version)
+
+## Beta Testing
+
+During the beta phase, we especially appreciate feedback on:
+
+1. Accessibility issues with screen readers
+2. UI/UX improvements
+3. Weather data accuracy and presentation
+4. Performance on different systems
+5. Installation and setup experience

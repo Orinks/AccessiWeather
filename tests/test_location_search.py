@@ -1,5 +1,8 @@
 """Tests for LocationDialog with search functionality"""
 
+# Import faulthandler setup first to enable faulthandler
+import tests.faulthandler_setup
+
 import time
 from unittest.mock import MagicMock, patch
 
@@ -77,12 +80,12 @@ class TestLocationDialog:
         self.geocoding_patcher.stop()
 
         # Destroy frame safely
-        try:
-            from accessiweather.gui.async_fetchers import safe_call_after
-
-            safe_call_after(self.frame.Destroy)
-        except Exception:
-            pass  # Ignore any errors in cleanup
+        # Hide the window first
+        wx.CallAfter(self.frame.Hide)
+        wx.SafeYield()
+        # Then destroy it
+        wx.CallAfter(self.frame.Destroy)
+        wx.SafeYield()
 
     def test_search_field_initialization(self, safe_destroy):
         """Test that the search control is an AccessibleTextCtrl"""
@@ -258,3 +261,48 @@ class TestLocationDialog:
         assert "Search 0" not in dialog.search_history
         # Check that newest is at the top
         assert dialog.search_history[0] == f"Search {max_items + 1}"
+
+    def test_detailed_location_name(self, safe_destroy):
+        """Test that the detailed location name is created correctly"""
+        dialog = safe_destroy(LocationDialog(self.frame))
+
+        # Test full address
+        full_address = "Scottsburg, Scott County, Indiana, USA"
+        detailed_name = dialog._create_detailed_location_name(full_address, "Scottsburg")
+        assert detailed_name == full_address
+
+        # Test international address
+        intl_address = "Paris, Île-de-France, France"
+        detailed_name = dialog._create_detailed_location_name(intl_address, "Paris")
+        assert detailed_name == intl_address
+
+        # Test simple address with only two parts
+        simple_address = "London, UK"
+        detailed_name = dialog._create_detailed_location_name(simple_address, "London")
+        assert detailed_name == simple_address
+
+        # Test address with no commas
+        no_comma_address = "Somewhere"
+        detailed_name = dialog._create_detailed_location_name(no_comma_address, "Somewhere")
+        assert detailed_name == "Somewhere"
+
+    def test_detailed_name_used_in_search_result(self, safe_destroy):
+        """Test that the detailed location name is used when a search result is selected"""
+        dialog = safe_destroy(LocationDialog(self.frame))
+
+        # Mock the geocode_address method to return a full address
+        self.mock_geocoding.geocode_address.return_value = (
+            38.6851, -85.7702, "Scottsburg, Scott County, Indiana, USA"
+        )
+
+        # Perform search
+        dialog.search_field.SetValue("Scottsburg")
+        with patch("wx.MessageBox"):  # Prevent MessageBox from showing
+            # Call directly instead of OnSearch
+            dialog._perform_search("Scottsburg")
+            dialog._search_thread_func("Scottsburg")
+            result = self.mock_geocoding.geocode_address.return_value
+            dialog._update_search_result(result, "Scottsburg")
+
+        # Check that the name field was populated with the detailed name
+        assert dialog.name_ctrl.GetValue() == "Scottsburg, Scott County, Indiana, USA"

@@ -1,5 +1,8 @@
 """Tests for the discussion dialog and loading dialog interaction."""
 
+# Import faulthandler setup first to enable faulthandler
+import tests.faulthandler_setup
+
 import logging
 import threading
 import time
@@ -11,8 +14,6 @@ from accessiweather.api_client import NoaaApiClient
 from accessiweather.gui.async_fetchers import DiscussionFetcher
 
 # No need to import WeatherAppHandlers for this test
-
-# Faulthandler is already enabled in conftest.py
 logger = logging.getLogger(__name__)
 
 # Sample discussion data for testing
@@ -27,7 +28,7 @@ class TestDiscussionDialogClosing:
     """Tests for the discussion dialog and loading dialog interaction."""
 
     @patch("accessiweather.api_client.NoaaApiClient.get_discussion")
-    def test_loading_dialog_closes_properly(self, mock_get_discussion, wx_app_isolated):
+    def test_loading_dialog_closes_properly(self, mock_get_discussion, wx_app):
         """Test that the loading dialog is closed when the discussion is fetched."""
         # Mock the API client
         mock_get_discussion.return_value = SAMPLE_DISCUSSION_TEXT
@@ -76,9 +77,7 @@ class TestDiscussionDialogClosing:
         loading_dialog.Destroy.assert_called_once()
 
     @patch("accessiweather.api_client.NoaaApiClient.get_discussion")
-    def test_loading_dialog_closes_when_discussion_dialog_closes(
-        self, mock_get_discussion, wx_app_isolated
-    ):
+    def test_loading_dialog_closes_when_discussion_dialog_closes(self, mock_get_discussion, wx_app):
         """Test that the loading dialog is closed when the discussion dialog is closed."""
         # Mock the API client
         mock_get_discussion.return_value = SAMPLE_DISCUSSION_TEXT

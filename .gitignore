@@ -3,17 +3,36 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# C extensions
+*.so
+
 # Distribution / packaging
 dist/
 build/
 *.egg-info/
+*.egg
+wheelhouse/
+
+# PyInstaller
+# Usually these files are written by a python script from a template
+# before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
 
 # Unit test / coverage reports
-.pytest_cache/
+htmlcov/
 .coverage
 .coverage.*
+.cache
+nosetests.xml
 coverage.xml
 *.cover
+.pytest_cache/
+.tox/
 
 # Environments
 .env
@@ -21,30 +40,70 @@ coverage.xml
 env/
 venv/
 ENV/
+venv.bak/
+env.bak/
 
 # IDE specific files
 .idea/
 .vscode/
 *.swp
 *.swo
+*.sublime-project
+*.sublime-workspace
 
-# Logs
-*.log
+# Type checker caches
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
 
-# Local configuration
-config.json
-~/.noaa_weather_app/
-~/.accessiweather/
-
-# Memory Bank
-memory-bank/
-
-# Roo files
+# Tool-specific files (Aider, Roo, act)
+.aider.chat.history.md
+.aider.input.history
+.aider.tags.cache.v4/
 .roo/
 .roomodes
 .rooignore
 
-# Windows specific
+# act CLI tool files
+.secrets
+
+# Logs
+*.log
+logs/
+
+# Local configuration (secrets, API keys, etc.)
+# IMPORTANT: Ensure config.sample.json or similar is checked in
+config.json
+secrets.yaml
+*.env
+.*_env
+
+# User-specific directories (Generally better in global gitignore)
+# ~/.noaa_weather_app/
+# ~/.accessiweather/
+
+# Memory Bank (If specific to this project setup)
+# memory-bank/
+
+# OS generated files
+.DS_Store
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# Notebook checkpoints
+.ipynb_checkpoints
+
+# Python documentation builds
+docs/_build/
+
+# Sphinx documentation
+docs/build/
+docs/source/conf.py.bak
+
+# Temporary files
+*.tmp
+*.bak
+*.py,cover

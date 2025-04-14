@@ -15,7 +15,7 @@ from accessiweather.services.location_service import LocationService
 from accessiweather.services.notification_service import NotificationService
 from accessiweather.services.weather_service import WeatherService
 
-from .weather_app_refactored import WeatherApp
+from .weather_app import WeatherApp
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +24,8 @@ def create_weather_app(
     parent=None,
     config: Optional[Dict[str, Any]] = None,
     config_path: Optional[str] = None,
+    enable_caching: bool = True,
+    cache_ttl: int = 300,
 ) -> WeatherApp:
     """Create a WeatherApp instance with the service layer.
 
@@ -31,16 +33,27 @@ def create_weather_app(
         parent: Parent window
         config: Configuration dictionary (optional)
         config_path: Custom path to config file (optional)
+        enable_caching: Whether to enable API response caching (default: True)
+        cache_ttl: Time-to-live for cached responses in seconds (default: 5 minutes)
 
     Returns:
         WeatherApp instance
     """
-    # Create the API client
-    api_client = NoaaApiClient()
+    # Create the API client with caching enabled
+    api_settings = config.get("api_settings", {}) if config else {}
+    contact_info = api_settings.get("contact_info")
+
+    api_client = NoaaApiClient(
+        user_agent="AccessiWeather",
+        contact_info=contact_info,
+        enable_caching=enable_caching,
+        cache_ttl=cache_ttl
+    )
 
     # Create the location manager
+    # Extract config_dir from config_path if available
     config_dir = os.path.dirname(config_path) if config_path else None
-    location_manager = LocationManager(config_dir=config_dir)
+    location_manager = LocationManager(config_dir)
 
     # Create the notifier
     notifier = WeatherNotifier()

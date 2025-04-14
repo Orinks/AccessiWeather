@@ -46,7 +46,7 @@ class TestWeatherService:
 
         # Verify the result
         assert result == expected_forecast
-        mock_api_client.get_forecast.assert_called_once_with(35.0, -80.0)
+        mock_api_client.get_forecast.assert_called_once_with(35.0, -80.0, force_refresh=False)
 
     def test_get_forecast_error(self, weather_service, mock_api_client):
         """Test error handling when getting forecast data."""
@@ -60,7 +60,7 @@ class TestWeatherService:
         # Verify the error message
         assert "Unable to retrieve forecast data" in str(exc_info.value)
         assert "Test error" in str(exc_info.value)
-        mock_api_client.get_forecast.assert_called_once_with(35.0, -80.0)
+        mock_api_client.get_forecast.assert_called_once_with(35.0, -80.0, force_refresh=False)
 
     def test_get_alerts(self, weather_service, mock_api_client):
         """Test getting alerts data."""
@@ -78,7 +78,7 @@ class TestWeatherService:
         # Verify the result
         assert result == expected_alerts
         mock_api_client.get_alerts.assert_called_once_with(
-            35.0, -80.0, radius=25, precise_location=True
+            35.0, -80.0, radius=25, precise_location=True, force_refresh=False
         )
 
     def test_get_alerts_error(self, weather_service, mock_api_client):
@@ -94,7 +94,7 @@ class TestWeatherService:
         assert "Unable to retrieve alerts data" in str(exc_info.value)
         assert "Test error" in str(exc_info.value)
         mock_api_client.get_alerts.assert_called_once_with(
-            35.0, -80.0, radius=50, precise_location=True
+            35.0, -80.0, radius=50, precise_location=True, force_refresh=False
         )
 
     def test_get_discussion(self, weather_service, mock_api_client):
@@ -108,7 +108,7 @@ class TestWeatherService:
 
         # Verify the result
         assert result == expected_discussion
-        mock_api_client.get_discussion.assert_called_once_with(35.0, -80.0)
+        mock_api_client.get_discussion.assert_called_once_with(35.0, -80.0, force_refresh=False)
 
     def test_get_discussion_none(self, weather_service, mock_api_client):
         """Test getting discussion data when none is available."""
@@ -120,7 +120,7 @@ class TestWeatherService:
 
         # Verify the result
         assert result is None
-        mock_api_client.get_discussion.assert_called_once_with(35.0, -80.0)
+        mock_api_client.get_discussion.assert_called_once_with(35.0, -80.0, force_refresh=False)
 
     def test_get_discussion_error(self, weather_service, mock_api_client):
         """Test error handling when getting discussion data."""
@@ -134,7 +134,7 @@ class TestWeatherService:
         # Verify the error message
         assert "Unable to retrieve discussion data" in str(exc_info.value)
         assert "Test error" in str(exc_info.value)
-        mock_api_client.get_discussion.assert_called_once_with(35.0, -80.0)
+        mock_api_client.get_discussion.assert_called_once_with(35.0, -80.0, force_refresh=False)
 
     def test_process_alerts(self, weather_service):
         """Test processing alerts data."""
