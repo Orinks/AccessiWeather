@@ -1,0 +1,202 @@
+{
+  "@context": [
+    "https://geojson.org/geojson-ld/geojson-context.jsonld",
+    {
+      "@version": "1.1",
+      "wx": "https://api.weather.gov/ontology#",
+      "cap": "urn:oasis:names:tc:emergency:cap:1.2",
+      "@vocab": "https://api.weather.gov/ontology#"
+    }
+  ],
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.12345",
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -74.2,
+              40.1
+            ],
+            [
+              -73.9,
+              40.1
+            ],
+            [
+              -73.9,
+              39.9
+            ],
+            [
+              -74.2,
+              39.9
+            ],
+            [
+              -74.2,
+              40.1
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.12345",
+        "@type": "wx:Alert",
+        "id": "urn:oid:2.49.0.1.840.0.12345",
+        "areaDesc": "Lumberton Township, NJ",
+        "geocode": {
+          "SAME": [
+            "034015"
+          ],
+          "UGC": [
+            "NJC015"
+          ]
+        },
+        "affectedZones": [
+          "https://api.weather.gov/zones/county/NJC015"
+        ],
+        "references": [],
+        "sent": "2023-05-15T15:30:00-04:00",
+        "effective": "2023-05-15T15:30:00-04:00",
+        "onset": "2023-05-15T16:00:00-04:00",
+        "expires": "2023-05-15T20:00:00-04:00",
+        "ends": "2023-05-15T20:00:00-04:00",
+        "status": "Actual",
+        "messageType": "Alert",
+        "category": "Met",
+        "severity": "Moderate",
+        "certainty": "Likely",
+        "urgency": "Expected",
+        "event": "Flood Advisory",
+        "sender": "w-nws.webmaster@noaa.gov",
+        "senderName": "NWS Philadelphia - Mount Holly (New Jersey, Delaware, Southeastern Pennsylvania)",
+        "headline": "Flood Advisory issued May 15 at 3:30PM EDT until May 15 at 8:00PM EDT by NWS Philadelphia - Mount Holly",
+        "description": "* WHAT...Flooding caused by excessive rainfall is expected.\n\n* WHERE...A portion of central New Jersey, including Lumberton Township.\n\n* WHEN...Until 800 PM EDT.\n\n* IMPACTS...Minor flooding in low-lying and poor drainage areas.\n\n* ADDITIONAL DETAILS...\n- At 330 PM EDT, Doppler radar indicated heavy rain due to\nthunderstorms. Minor flooding is ongoing or expected to begin\nshortly in the advisory area. Between 1 and 2 inches of rain\nhave fallen.\n- Additional rainfall amounts of 1 to 2 inches are expected over\nthe area. This additional rain will result in minor flooding.\n- Some locations that will experience flooding include...\nLumberton Township.\n",
+        "instruction": "Turn around, don't drown when encountering flooded roads. Most flood deaths occur in vehicles.\n\nBe aware of your surroundings and do not drive on flooded roads.",
+        "response": "Avoid",
+        "parameters": {
+          "NWSheadline": [
+            "FLOOD ADVISORY IN EFFECT UNTIL 8 PM EDT THIS EVENING"
+          ],
+          "VTEC": [
+            "/O.NEW.KPHI.FA.Y.0123.230515T1930Z-230516T0000Z/"
+          ],
+          "EAS-ORG": [
+            "WXR"
+          ],
+          "PIL": [
+            "PHIBFWPHI"
+          ],
+          "BLOCKCHANNEL": [
+            "CMAS",
+            "EAS",
+            "NWEM"
+          ],
+          "eventEndingTime": [
+            "2023-05-15T20:00:00-04:00"
+          ]
+        }
+      }
+    },
+    {
+      "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.67890",
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -75.0,
+              41.0
+            ],
+            [
+              -73.0,
+              41.0
+            ],
+            [
+              -73.0,
+              39.0
+            ],
+            [
+              -75.0,
+              39.0
+            ],
+            [
+              -75.0,
+              41.0
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.67890",
+        "@type": "wx:Alert",
+        "id": "urn:oid:2.49.0.1.840.0.67890",
+        "areaDesc": "New Jersey",
+        "geocode": {
+          "SAME": [
+            "034"
+          ],
+          "UGC": [
+            "NJZ001",
+            "NJZ002",
+            "NJZ003",
+            "NJZ004",
+            "NJZ005"
+          ]
+        },
+        "affectedZones": [
+          "https://api.weather.gov/zones/forecast/NJZ001",
+          "https://api.weather.gov/zones/forecast/NJZ002",
+          "https://api.weather.gov/zones/forecast/NJZ003",
+          "https://api.weather.gov/zones/forecast/NJZ004",
+          "https://api.weather.gov/zones/forecast/NJZ005"
+        ],
+        "references": [],
+        "sent": "2023-05-15T12:00:00-04:00",
+        "effective": "2023-05-15T12:00:00-04:00",
+        "onset": "2023-05-16T00:00:00-04:00",
+        "expires": "2023-05-16T12:00:00-04:00",
+        "ends": "2023-05-16T12:00:00-04:00",
+        "status": "Actual",
+        "messageType": "Alert",
+        "category": "Met",
+        "severity": "Moderate",
+        "certainty": "Likely",
+        "urgency": "Expected",
+        "event": "Heat Advisory",
+        "sender": "w-nws.webmaster@noaa.gov",
+        "senderName": "NWS Philadelphia - Mount Holly (New Jersey, Delaware, Southeastern Pennsylvania)",
+        "headline": "Heat Advisory issued May 15 at 12:00PM EDT until May 16 at 12:00PM EDT by NWS Philadelphia - Mount Holly",
+        "description": "* WHAT...Heat index values up to 105 expected.\n\n* WHERE...Portions of New Jersey.\n\n* WHEN...From midnight tonight to noon EDT Tuesday.\n\n* IMPACTS...Hot temperatures and high humidity may cause heat illnesses.",
+        "instruction": "Drink plenty of fluids, stay in an air-conditioned room, stay out of the sun, and check up on relatives and neighbors.",
+        "response": "Execute",
+        "parameters": {
+          "NWSheadline": [
+            "HEAT ADVISORY IN EFFECT FROM MIDNIGHT TONIGHT TO NOON EDT TUESDAY"
+          ],
+          "VTEC": [
+            "/O.NEW.KPHI.HT.Y.0001.230516T0400Z-230516T1600Z/"
+          ],
+          "EAS-ORG": [
+            "WXR"
+          ],
+          "PIL": [
+            "PHINPWPHI"
+          ],
+          "BLOCKCHANNEL": [
+            "CMAS",
+            "EAS",
+            "NWEM"
+          ],
+          "eventEndingTime": [
+            "2023-05-16T12:00:00-04:00"
+          ]
+        }
+      }
+    }
+  ],
+  "title": "Current Watches, Warnings and Advisories for New Jersey",
+  "updated": "2023-05-15T16:00:00-04:00"
+}

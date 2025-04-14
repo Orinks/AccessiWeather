@@ -1,8 +1,8 @@
 """Tests for the CLI module"""
 
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-from accessiweather.cli import parse_args, main
+from accessiweather.cli import main, parse_args
 
 
 class TestCli:
@@ -13,6 +13,7 @@ class TestCli:
         args = parse_args([])
         assert not args.debug
         assert args.config is None
+        assert not args.no_cache  # Caching should be enabled by default
 
     def test_parse_args_debug(self):
         """Test parsing debug argument"""
@@ -34,14 +35,22 @@ class TestCli:
         args = parse_args(["--config", "/path/to/config"])
         assert args.config == "/path/to/config"
 
-    @patch('accessiweather.cli.app_main')
+    def test_parse_args_no_cache(self):
+        """Test parsing no-cache argument"""
+        args = parse_args(["--no-cache"])
+        assert not args.debug
+        assert args.config is None
+        assert args.no_cache  # Caching should be disabled
+
+    @patch("accessiweather.cli.app_main")
     def test_main_success(self, mock_app_main):
         """Test main function with successful execution"""
-        with patch('accessiweather.cli.parse_args') as mock_parse_args:
+        with patch("accessiweather.cli.parse_args") as mock_parse_args:
             # Set up mock args
             mock_args = MagicMock()
             mock_args.debug = True
             mock_args.config = "/test/config"
+            mock_args.no_cache = False
             mock_parse_args.return_value = mock_args
 
             # Call main
@@ -49,27 +58,29 @@ class TestCli:
 
             # Check result
             assert result == 0
-            # Updated assertion: Added debug_mode=True and reformatted
+            # Updated assertion with all parameters
             mock_app_main.assert_called_once_with(
                 config_dir="/test/config",
-                debug_mode=True
+                debug_mode=True,
+                enable_caching=True
             )
 
-    @patch('accessiweather.cli.app_main')
+    @patch("accessiweather.cli.app_main")
     def test_main_error(self, mock_app_main):
         """Test main function with error"""
-        with patch('accessiweather.cli.parse_args') as mock_parse_args:
+        with patch("accessiweather.cli.parse_args") as mock_parse_args:
             # Set up mock args
             mock_args = MagicMock()
             mock_args.debug = False
             mock_args.config = None
+            mock_args.no_cache = True
             mock_parse_args.return_value = mock_args
 
             # Set up app_main to raise an exception
             mock_app_main.side_effect = Exception("Test error")
 
             # Call main
-            with patch('logging.error') as mock_logging:
+            with patch("logging.error") as mock_logging:
                 result = main()
 
                 # Check result

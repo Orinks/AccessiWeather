@@ -1,12 +1,16 @@
-import wx
 import logging  # Added for potential logging in UI updates
+from typing import Any, Dict, List, Optional
+
+import wx
+
 from .ui_components import (
+    AccessibleButton,
+    AccessibleChoice,
+    AccessibleListCtrl,
     AccessibleStaticText,
     AccessibleTextCtrl,
-    AccessibleChoice,
-    AccessibleButton,
-    AccessibleListCtrl
 )
+
 # Import dialogs if event handlers that use them are moved here later
 # from .dialogs import LocationDialog, WeatherDiscussionDialog
 
@@ -37,17 +41,11 @@ class UIManager:
         # --- Location Controls ---
         location_sizer = wx.BoxSizer(wx.HORIZONTAL)
         location_label = AccessibleStaticText(panel, label="Location:")
-        location_sizer.Add(
-            location_label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5
-        )
+        location_sizer.Add(location_label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
 
         # Store UI elements directly on the frame object for access by handlers
-        self.frame.location_choice = AccessibleChoice(
-            panel, choices=[], label="Location Selection"
-        )
-        location_sizer.Add(
-            self.frame.location_choice, 1, wx.ALL | wx.EXPAND, 5
-        )
+        self.frame.location_choice = AccessibleChoice(panel, choices=[], label="Location Selection")
+        location_sizer.Add(self.frame.location_choice, 1, wx.ALL | wx.EXPAND, 5)
 
         self.frame.add_btn = AccessibleButton(panel, wx.ID_ANY, "Add")
         self.frame.remove_btn = AccessibleButton(panel, wx.ID_ANY, "Remove")
@@ -58,9 +56,7 @@ class UIManager:
         location_sizer.Add(self.frame.add_btn, 0, wx.ALL, 5)
         location_sizer.Add(self.frame.remove_btn, 0, wx.ALL, 5)
         location_sizer.Add(self.frame.refresh_btn, 0, wx.ALL, 5)
-        location_sizer.Add(
-            self.frame.settings_btn, 0, wx.ALL, 5
-        )  # Added Settings button to sizer
+        location_sizer.Add(self.frame.settings_btn, 0, wx.ALL, 5)  # Added Settings button to sizer
         main_sizer.Add(location_sizer, 0, wx.EXPAND | wx.ALL, 10)
 
         # --- Forecast Panel ---
@@ -71,17 +67,13 @@ class UIManager:
             value="Select a location to view the forecast",
             style=wx.TE_MULTILINE | wx.TE_READONLY,
             size=(-1, 200),
-            label="Forecast Content"
+            label="Forecast Content",
         )
         main_sizer.Add(self.frame.forecast_text, 1, wx.ALL | wx.EXPAND, 10)
 
         # --- Forecast Discussion Button ---
-        self.frame.discussion_btn = AccessibleButton(
-            panel, wx.ID_ANY, "View Forecast Discussion"
-        )
-        main_sizer.Add(
-            self.frame.discussion_btn, 0, wx.ALL | wx.ALIGN_CENTER, 5
-        )
+        self.frame.discussion_btn = AccessibleButton(panel, wx.ID_ANY, "View Forecast Discussion")
+        main_sizer.Add(self.frame.discussion_btn, 0, wx.ALL | wx.ALIGN_CENTER, 5)
 
         # --- Alerts Section ---
         alerts_label = AccessibleStaticText(panel, label="Weather Alerts:")
@@ -90,7 +82,7 @@ class UIManager:
             panel,
             style=wx.LC_REPORT | wx.LC_SINGLE_SEL,
             label="Weather Alerts List",
-            size=(-1, 150)
+            size=(-1, 150),
         )
         # Set up columns for alerts list
         self.frame.alerts_list.InsertColumn(0, "Alert Type")
@@ -102,9 +94,7 @@ class UIManager:
         main_sizer.Add(self.frame.alerts_list, 0, wx.ALL | wx.EXPAND, 10)
 
         # --- Alert Details Button ---
-        self.frame.alert_btn = AccessibleButton(
-            panel, wx.ID_ANY, "View Alert Details"
-        )
+        self.frame.alert_btn = AccessibleButton(panel, wx.ID_ANY, "View Alert Details")
         main_sizer.Add(self.frame.alert_btn, 0, wx.ALL | wx.ALIGN_CENTER, 5)
 
         # --- Finalize Panel Setup ---
@@ -114,29 +104,14 @@ class UIManager:
     def _bind_events(self):
         """Bind UI events to their handlers in the main frame."""
         # Bind events to methods defined in WeatherApp
+        self.frame.Bind(wx.EVT_CHOICE, self.frame.OnLocationChange, self.frame.location_choice)
+        self.frame.Bind(wx.EVT_BUTTON, self.frame.OnAddLocation, self.frame.add_btn)
+        self.frame.Bind(wx.EVT_BUTTON, self.frame.OnRemoveLocation, self.frame.remove_btn)
+        self.frame.Bind(wx.EVT_BUTTON, self.frame.OnRefresh, self.frame.refresh_btn)
+        self.frame.Bind(wx.EVT_BUTTON, self.frame.OnViewDiscussion, self.frame.discussion_btn)
+        self.frame.Bind(wx.EVT_BUTTON, self.frame.OnViewAlert, self.frame.alert_btn)
         self.frame.Bind(
-            wx.EVT_CHOICE, self.frame.OnLocationChange,
-            self.frame.location_choice
-        )
-        self.frame.Bind(
-            wx.EVT_BUTTON, self.frame.OnAddLocation, self.frame.add_btn
-        )
-        self.frame.Bind(
-            wx.EVT_BUTTON, self.frame.OnRemoveLocation, self.frame.remove_btn
-        )
-        self.frame.Bind(
-            wx.EVT_BUTTON, self.frame.OnRefresh, self.frame.refresh_btn
-        )
-        self.frame.Bind(
-            wx.EVT_BUTTON, self.frame.OnViewDiscussion,
-            self.frame.discussion_btn
-        )
-        self.frame.Bind(
-            wx.EVT_BUTTON, self.frame.OnViewAlert, self.frame.alert_btn
-        )
-        self.frame.Bind(
-            wx.EVT_LIST_ITEM_ACTIVATED, self.frame.OnAlertActivated,
-            self.frame.alerts_list
+            wx.EVT_LIST_ITEM_ACTIVATED, self.frame.OnAlertActivated, self.frame.alerts_list
         )
         self.frame.Bind(  # Added binding for Settings button
             wx.EVT_BUTTON, self.frame.OnSettings, self.frame.settings_btn
@@ -175,7 +150,7 @@ class UIManager:
 
         self.frame.forecast_text.SetValue(text)
 
-    def _UpdateAlertsDisplay(self, alerts_data):
+    def _UpdateAlertsDisplay(self, alerts_data: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Update the alerts display with data and return processed alerts.
 
         Args:
@@ -187,7 +162,7 @@ class UIManager:
         # Clear current alerts display
         alerts_list_ctrl = self.frame.alerts_list
         alerts_list_ctrl.DeleteAllItems()
-        processed_alerts = []  # List to store alert properties
+        processed_alerts: List[Dict[str, Any]] = []  # List to store alert properties
 
         if not alerts_data or "features" not in alerts_data:
             return processed_alerts  # Return empty list
@@ -199,9 +174,7 @@ class UIManager:
             severity = props.get("severity", "Unknown")
             headline = props.get("headline", "No headline")  # Shortened
 
-            index = alerts_list_ctrl.InsertItem(
-                alerts_list_ctrl.GetItemCount(), event
-            )
+            index = alerts_list_ctrl.InsertItem(alerts_list_ctrl.GetItemCount(), event)
             alerts_list_ctrl.SetItem(index, 1, severity)
             alerts_list_ctrl.SetItem(index, 2, headline)
             processed_alerts.append(props)  # Save alert data

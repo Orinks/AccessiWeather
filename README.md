@@ -1,6 +1,6 @@
-# AccessiWeather
+# AccessiWeather (Beta 0.9.0)
 
-A desktop application to check NOAA weather with robust accessibility features built using wxPython.
+A desktop application to check NOAA weather with robust accessibility features built using wxPython. This beta release provides all core functionality and is ready for user testing.
 
 ## Features
 
@@ -21,36 +21,50 @@ A desktop application to check NOAA weather with robust accessibility features b
   - Accessible widgets and controls
   - Clear, readable notifications
 - Desktop notifications for weather alerts
-- Built using Test-Driven Development practices
+- Precise location alerts (county/township level)
 
 ## Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/Orinks/AccessiWeather.git
+cd AccessiWeather
+
+# Install in development mode
 pip install -e .
 ```
 
-## Configuration
+## First-time Setup
 
-1. Copy `config.sample.json` to `config.json`
-2. Update the contact information in `config.json` for NOAA API access
-3. Customize other settings as needed:
-   - Update interval
-   - Alert notification duration
-   - Alert radius
+1. Run the application once to create the configuration directory:
+   ```bash
+   accessiweather
+   ```
 
-## Development
+2. The application will prompt you to enter your contact information for the NOAA API
 
-This project uses a test-driven development approach. To run tests:
-
-```bash
-python -m pytest tests/
-```
+3. Alternatively, you can manually set up the configuration:
+   - Copy `config.sample.json` to `~/.accessiweather/config.json`
+   - Update the contact information in `config.json` for NOAA API access
+   - Customize other settings as needed:
+     - Update interval (minutes)
+     - Alert notification duration (seconds)
+     - Alert radius (miles)
 
 ## Requirements
 
-- Python 3.7+
-- wxPython
+- Python 3.7+ (Python 3.11 recommended)
+- wxPython 4.2.2
 - Internet connection for NOAA data access
+
+## Known Issues in Beta
+
+- The geocoding service may find locations outside the United States that the National Weather Service does not support
+- The application has been primarily tested on Windows; Linux support is experimental
+
+## Reporting Issues
+
+Please report any issues you encounter on the [GitHub Issues page](https://github.com/Orinks/AccessiWeather/issues).
 
 ## GitHub Repository
 
