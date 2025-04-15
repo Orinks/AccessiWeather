@@ -13,6 +13,7 @@ This document outlines the implementation plan for the Nationwide view feature i
    - Add methods to fetch national forecast data from NOAA/NWS centers
    - Update the weather service to handle national forecast data
    - Update the UI to display national forecast data when the Nationwide location is selected
+   - Implement accessibility features for screen readers
 
 3. **nationwide-discussions**
    - Add methods to fetch national forecast discussions from NOAA/NWS centers
@@ -50,6 +51,13 @@ This document outlines the implementation plan for the Nationwide view feature i
   - Check if the selected location is the Nationwide location
   - Fetch national forecast data if it is
   - Format and display the national forecast data
+
+- Implement accessibility features for screen readers:
+  - Focus on text-based forecast discussions rather than graphical products
+  - Structure the text with clear headings and sections for easier navigation
+  - Create concise summaries of the most important information
+  - Use proper semantic HTML elements with appropriate ARIA attributes
+  - Ensure all elements are keyboard navigable
 
 ### 3. nationwide-discussions
 
@@ -98,6 +106,7 @@ This document outlines the implementation plan for the Nationwide view feature i
    - Verify that national forecast data is fetched when the Nationwide location is selected
    - Verify that the national forecast data is displayed correctly
    - Verify that error handling works correctly
+   - Verify that the national forecast data is accessible to screen readers
 
 3. Test the nationwide discussions feature:
    - Verify that the nationwide discussions dialog is shown when viewing discussions for the Nationwide location
