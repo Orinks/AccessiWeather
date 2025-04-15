@@ -12,6 +12,12 @@ from accessiweather.config_utils import get_config_dir
 
 logger = logging.getLogger(__name__)
 
+# Constants
+NATIONWIDE_LOCATION_NAME = "Nationwide"
+# Center of the contiguous US (approximate)
+NATIONWIDE_LAT = 39.8283
+NATIONWIDE_LON = -98.5795
+
 
 class LocationManager:
     """Manager for handling saved locations"""
@@ -33,6 +39,9 @@ class LocationManager:
 
         # Load saved locations
         self._load_locations()
+
+        # Ensure Nationwide location exists
+        self._ensure_nationwide_location()
 
     def _load_locations(self) -> None:
         """Load saved locations from file"""
@@ -86,6 +95,11 @@ class LocationManager:
         Returns:
             True if location was removed, False otherwise
         """
+        # Prevent removing the Nationwide location
+        if name == NATIONWIDE_LOCATION_NAME:
+            logger.warning(f"Cannot remove the {NATIONWIDE_LOCATION_NAME} location")
+            return False
+
         if name in self.saved_locations:
             del self.saved_locations[name]
 
@@ -163,4 +177,28 @@ class LocationManager:
             # If no current location set but we have locations, set the first one
             self.current_location = next(iter(self.saved_locations))
 
+        # Ensure Nationwide location exists even when setting locations directly
+        self._ensure_nationwide_location()
+
         self._save_locations()
+
+    def _ensure_nationwide_location(self) -> None:
+        """Ensure the Nationwide location exists in saved locations"""
+        if NATIONWIDE_LOCATION_NAME not in self.saved_locations:
+            logger.info(f"Adding {NATIONWIDE_LOCATION_NAME} location")
+            self.saved_locations[NATIONWIDE_LOCATION_NAME] = {
+                "lat": NATIONWIDE_LAT,
+                "lon": NATIONWIDE_LON
+            }
+            self._save_locations()
+
+    def is_nationwide_location(self, name: str) -> bool:
+        """Check if a location is the Nationwide location
+
+        Args:
+            name: Location name to check
+
+        Returns:
+            True if the location is the Nationwide location, False otherwise
+        """
+        return name == NATIONWIDE_LOCATION_NAME

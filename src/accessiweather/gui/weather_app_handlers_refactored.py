@@ -67,6 +67,14 @@ class WeatherAppHandlers:
         """Placeholder for wx.Frame.SetStatusText method"""
         pass
 
+    def Bind(self, *args, **kwargs) -> None:
+        """Placeholder for wx.Frame.Bind method"""
+        pass
+
+    def Unbind(self, *args, **kwargs) -> None:
+        """Placeholder for wx.Frame.Unbind method"""
+        pass
+
     def OnKeyDown(self, event):
         """Handle key down events for accessibility
 
@@ -109,6 +117,12 @@ class WeatherAppHandlers:
         selected = self.location_choice.GetStringSelection()
         if not selected:
             return
+
+        # Check if this is the Nationwide location and disable remove button if it is
+        if hasattr(self, "remove_btn") and self.location_service.is_nationwide_location(selected):
+            self.remove_btn.Disable()
+        elif hasattr(self, "remove_btn"):
+            self.remove_btn.Enable()
 
         # Set current location using the location service
         self.location_service.set_current_location(selected)
@@ -162,6 +176,15 @@ class WeatherAppHandlers:
             )
             return
 
+        # Check if this is the Nationwide location
+        if self.location_service.is_nationwide_location(selected):
+            wx.MessageBox(
+                "The Nationwide location cannot be removed.",
+                "Cannot Remove",
+                wx.OK | wx.ICON_INFORMATION
+            )
+            return
+
         # Confirm removal
         confirm = wx.MessageBox(
             f"Are you sure you want to remove {selected}?",
@@ -171,7 +194,15 @@ class WeatherAppHandlers:
 
         if confirm == wx.YES:
             # Remove location using the location service
-            self.location_service.remove_location(selected)
+            removed = self.location_service.remove_location(selected)
+
+            if not removed:
+                wx.MessageBox(
+                    f"Could not remove {selected}.",
+                    "Error",
+                    wx.OK | wx.ICON_ERROR
+                )
+                return
 
             # Update dropdown
             self.UpdateLocationDropdown()

@@ -5,7 +5,7 @@ separating business logic from UI concerns.
 """
 
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from accessiweather.location import LocationManager
 
@@ -58,14 +58,17 @@ class LocationService:
         logger.info(f"Adding location: {name} ({lat}, {lon})")
         self.location_manager.add_location(name, lat, lon)
 
-    def remove_location(self, name: str) -> None:
+    def remove_location(self, name: str) -> bool:
         """Remove a location.
 
         Args:
             name: Name of the location to remove.
+
+        Returns:
+            True if the location was removed, False otherwise.
         """
         logger.info(f"Removing location: {name}")
-        self.location_manager.remove_location(name)
+        return self.location_manager.remove_location(name)
 
     def set_current_location(self, name: str) -> None:
         """Set the current location.
@@ -85,7 +88,20 @@ class LocationService:
         Returns:
             Tuple of (lat, lon) or None if location not found.
         """
-        locations = self.location_manager.locations
+        # Get all locations from the location manager
+        locations = self.location_manager.saved_locations
         if name in locations:
-            return locations[name]
+            loc = locations[name]
+            return (loc["lat"], loc["lon"])
         return None
+
+    def is_nationwide_location(self, name: str) -> bool:
+        """Check if a location is the Nationwide location.
+
+        Args:
+            name: Name of the location to check.
+
+        Returns:
+            True if the location is the Nationwide location, False otherwise.
+        """
+        return self.location_manager.is_nationwide_location(name)
