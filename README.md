@@ -86,9 +86,11 @@ AccessiWeather includes a PowerShell script to build Windows binaries and instal
    - Build an installer with Inno Setup
 
 4. After completion, you'll find the following in the `dist` directory:
-   - `AccessiWeather_Setup_v0.9.0.exe` - Windows installer
-   - `AccessiWeather_Portable_v0.9.0.zip` - Portable ZIP archive
+   - `AccessiWeather_Setup_v{version}.exe` - Windows installer
+   - `AccessiWeather_Portable_v{version}.zip` - Portable ZIP archive
    - `AccessiWeather` folder - Standalone executable and dependencies
+
+   The version number is automatically extracted from `setup.py`.
 
 ### Troubleshooting
 
