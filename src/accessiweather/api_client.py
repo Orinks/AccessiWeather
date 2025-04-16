@@ -41,8 +41,13 @@ class NoaaApiClient:
     # NOAA Weather API base URL
     BASE_URL = "https://api.weather.gov"
 
-    def __init__(self, user_agent: str = "AccessiWeather", contact_info: Optional[str] = None,
-                 enable_caching: bool = False, cache_ttl: int = 300):
+    def __init__(
+        self,
+        user_agent: str = "AccessiWeather",
+        contact_info: Optional[str] = None,
+        enable_caching: bool = False,
+        cache_ttl: int = 300,
+    ):
         """Initialize the NOAA API client
 
         Args:
@@ -193,8 +198,12 @@ class NoaaApiClient:
             return None, None
 
     def get_alerts(
-        self, lat: float, lon: float, radius: float = 50, precise_location: bool = True,
-        force_refresh: bool = False
+        self,
+        lat: float,
+        lon: float,
+        radius: float = 50,
+        precise_location: bool = True,
+        force_refresh: bool = False,
     ) -> Dict[str, Any]:
         """Get active weather alerts for the given coordinates.
 
@@ -243,8 +252,9 @@ class NoaaApiClient:
                 # _make_request directly
                 if state == "MI":
                     return self._make_request(
-                        f"{self.BASE_URL}/alerts/active", params={"area": state},
-                        force_refresh=force_refresh
+                        f"{self.BASE_URL}/alerts/active",
+                        params={"area": state},
+                        force_refresh=force_refresh,
                     )
                 return self._make_request(
                     "alerts/active", params={"area": state}, force_refresh=force_refresh
@@ -256,8 +266,9 @@ class NoaaApiClient:
             f"be determined: ({lat}, {lon}) with radius {radius} miles"
         )
         return self._make_request(
-            "alerts/active", params={"point": f"{lat},{lon}", "radius": str(radius)},
-            force_refresh=force_refresh
+            "alerts/active",
+            params={"point": f"{lat},{lon}", "radius": str(radius)},
+            force_refresh=force_refresh,
         )
 
     def get_alerts_direct(self, url: str, force_refresh: bool = False) -> Dict[str, Any]:
@@ -396,7 +407,7 @@ class NoaaApiClient:
                 cached_data = self.cache.get(cache_key)
                 if cached_data is not None:
                     logger.debug(f"Using cached response for {request_url}")
-                    return cached_data
+                    return cached_data  # type: ignore
 
             # Acquire the thread lock - ensure thread safety for all API
             # requests
@@ -468,7 +479,7 @@ class NoaaApiClient:
                     # Log the keys in the response for debugging
                     if isinstance(json_data, dict):
                         logger.debug(f"Response keys: {list(json_data.keys())}")
-                    return json_data
+                    return json_data  # type: ignore
                 except JSONDecodeError as json_err:
                     resp_text = response.text[:200]  # Limit length
                     error_msg = (

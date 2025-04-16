@@ -46,8 +46,12 @@ class WeatherService:
             raise ApiClientError(f"Unable to retrieve forecast data: {str(e)}")
 
     def get_alerts(
-        self, lat: float, lon: float, radius: float = 50, precise_location: bool = True,
-        force_refresh: bool = False
+        self,
+        lat: float,
+        lon: float,
+        radius: float = 50,
+        precise_location: bool = True,
+        force_refresh: bool = False,
     ) -> Dict[str, Any]:
         """Get alerts for a location.
 
@@ -72,8 +76,11 @@ class WeatherService:
                 f"precise_location={precise_location}, force_refresh={force_refresh}"
             )
             return self.api_client.get_alerts(
-                lat, lon, radius=radius, precise_location=precise_location,
-                force_refresh=force_refresh
+                lat,
+                lon,
+                radius=radius,
+                precise_location=precise_location,
+                force_refresh=force_refresh,
             )
         except Exception as e:
             logger.error(f"Error getting alerts: {str(e)}")

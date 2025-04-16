@@ -25,9 +25,11 @@ from .settings_dialog import (
     API_CONTACT_KEY,
     CACHE_ENABLED_KEY,
     CACHE_TTL_KEY,
+    MINIMIZE_ON_STARTUP_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
     UPDATE_INTERVAL_KEY,
 )
+from .system_tray import TaskBarIcon
 from .ui_manager import UIManager
 from .weather_app_handlers import WeatherAppHandlers
 
@@ -118,6 +120,9 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             accessible.SetName("AccessiWeather")
             accessible.SetRole(wx.ACC_ROLE_WINDOW)
 
+        # Create system tray icon
+        self.taskbar_icon = TaskBarIcon(self)
+
         # Test hooks for async tests
         self._testing_forecast_callback = None
         self._testing_forecast_error_callback = None
@@ -132,6 +137,11 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
 
         # Check if API contact is configured
         self._check_api_contact_configured()
+
+        # Check if we should start minimized
+        if self.config.get("settings", {}).get(MINIMIZE_ON_STARTUP_KEY, False):
+            logger.info("Starting minimized to system tray")
+            self.Hide()
 
     def _load_config(self):
         """Load configuration from file
@@ -154,6 +164,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
                 UPDATE_INTERVAL_KEY: 30,
                 ALERT_RADIUS_KEY: 25,
                 PRECISE_LOCATION_ALERTS_KEY: True,  # Default to precise location alerts
+                MINIMIZE_ON_STARTUP_KEY: False,  # Default to not minimizing on startup
                 CACHE_ENABLED_KEY: True,  # Default to enabled caching
                 CACHE_TTL_KEY: 300,  # Default to 5 minutes (300 seconds)
             },

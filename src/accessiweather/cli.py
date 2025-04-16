@@ -25,9 +25,7 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
     )
     parser.add_argument("-d", "--debug", action="store_true", help="Enable debug logging")
     parser.add_argument("-c", "--config", help="Path to configuration directory")
-    parser.add_argument(
-        "--no-cache", action="store_true", help="Disable API response caching"
-    )
+    parser.add_argument("--no-cache", action="store_true", help="Disable API response caching")
 
     return parser.parse_args(args)
 
@@ -44,11 +42,7 @@ def main() -> int:
 
     try:
         # Pass arguments to main application entry point
-        app_main(
-            config_dir=args.config,
-            debug_mode=args.debug,
-            enable_caching=not args.no_cache
-        )
+        app_main(config_dir=args.config, debug_mode=args.debug, enable_caching=not args.no_cache)
         return 0
     except Exception as e:
         logging.error(f"Error running application: {str(e)}")

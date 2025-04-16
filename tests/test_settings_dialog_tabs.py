@@ -3,21 +3,20 @@
 This module tests the tabbed settings dialog with general and advanced settings.
 """
 
-# Import faulthandler setup first to enable faulthandler
-import tests.faulthandler_setup
-
 import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
 import wx
 
+# Import faulthandler setup first to enable faulthandler
+import tests.faulthandler_setup
 from accessiweather.gui.settings_dialog import (
     ALERT_RADIUS_KEY,
     API_CONTACT_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
-    SettingsDialog,
     UPDATE_INTERVAL_KEY,
+    SettingsDialog,
 )
 
 # Define constants for the new settings keys that will be added

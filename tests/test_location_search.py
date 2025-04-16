@@ -1,17 +1,17 @@
 """Tests for LocationDialog with search functionality"""
 
 # Import faulthandler setup first to enable faulthandler
-import tests.faulthandler_setup
-
 import time
 from unittest.mock import MagicMock, patch
 
 import pytest
 import wx
 
+import tests.faulthandler_setup
+
 # Import modules
 from accessiweather.gui.dialogs import LocationDialog
-from accessiweather.gui.ui_components import AccessibleListCtrl, AccessibleTextCtrl
+from accessiweather.gui.ui_components import AccessibleComboBox, AccessibleListCtrl
 
 
 # Create a wx App fixture for testing
@@ -88,10 +88,10 @@ class TestLocationDialog:
         wx.SafeYield()
 
     def test_search_field_initialization(self, safe_destroy):
-        """Test that the search control is an AccessibleTextCtrl"""
+        """Test that the search control is an AccessibleComboBox"""
         dialog = safe_destroy(LocationDialog(self.frame))
-        # Verify that search_field is an AccessibleTextCtrl
-        assert isinstance(dialog.search_field, AccessibleTextCtrl)
+        # Verify that search_field is an AccessibleComboBox
+        assert isinstance(dialog.search_field, AccessibleComboBox)
         assert dialog.search_field.GetName() == "Search by Address or ZIP Code"
 
     def test_search_results_list_initialization(self, safe_destroy):
@@ -292,7 +292,9 @@ class TestLocationDialog:
 
         # Mock the geocode_address method to return a full address
         self.mock_geocoding.geocode_address.return_value = (
-            38.6851, -85.7702, "Scottsburg, Scott County, Indiana, USA"
+            38.6851,
+            -85.7702,
+            "Scottsburg, Scott County, Indiana, USA",
         )
 
         # Perform search

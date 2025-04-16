@@ -1,8 +1,6 @@
 """Tests for the discussion dialog and loading dialog interaction."""
 
 # Import faulthandler setup first to enable faulthandler
-import tests.faulthandler_setup
-
 import logging
 import threading
 import time
@@ -10,6 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import wx
 
+import tests.faulthandler_setup
 from accessiweather.api_client import NoaaApiClient
 from accessiweather.gui.async_fetchers import DiscussionFetcher
 

@@ -1,8 +1,6 @@
 """Tests for the WeatherApp class."""
 
 # Import faulthandler setup first to enable faulthandler
-import tests.faulthandler_setup
-
 import queue
 import time
 from unittest.mock import MagicMock, patch
@@ -10,6 +8,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import wx
 
+import tests.faulthandler_setup
 from accessiweather.api_client import ApiClientError
 from accessiweather.gui.weather_app import WeatherApp
 from accessiweather.services.location_service import LocationService
@@ -213,9 +212,7 @@ class TestWeatherApp:
         weather_app.ui_manager = MagicMock()
 
         # Set up test data
-        forecast_data = {
-            "properties": {"periods": [{"name": "Test Period", "temperature": 75}]}
-        }
+        forecast_data = {"properties": {"periods": [{"name": "Test Period", "temperature": 75}]}}
 
         # Call the method
         weather_app._on_forecast_fetched(forecast_data)
@@ -237,7 +234,9 @@ class TestWeatherApp:
         weather_app._on_forecast_error(error)
 
         # Verify the method calls
-        weather_app.forecast_text.SetValue.assert_called_once_with(f"Error fetching forecast: {error}")
+        weather_app.forecast_text.SetValue.assert_called_once_with(
+            f"Error fetching forecast: {error}"
+        )
         assert weather_app._forecast_complete is True
 
     def test_on_alerts_fetched(self, weather_app, mock_notification_service):
@@ -288,7 +287,9 @@ class TestWeatherApp:
         # Verify the method calls
         weather_app.alerts_list.DeleteAllItems.assert_called_once()
         weather_app.alerts_list.InsertItem.assert_called_once_with(0, "Error")
-        weather_app.alerts_list.SetItem.assert_called_once_with(0, 1, f"Error fetching alerts: {error}")
+        weather_app.alerts_list.SetItem.assert_called_once_with(
+            0, 1, f"Error fetching alerts: {error}"
+        )
         assert weather_app._alerts_complete is True
 
     def test_check_update_complete(self, weather_app):

@@ -3,15 +3,14 @@
 This module tests the character navigation features of the combo box components.
 """
 
-# Import faulthandler setup first to enable faulthandler
-import tests.faulthandler_setup
-
 import logging
 from unittest.mock import MagicMock
 
 import pytest
 import wx
 
+# Import faulthandler setup first to enable faulthandler
+import tests.faulthandler_setup
 from accessiweather.gui.basic_components import AccessibleComboBox
 
 logger = logging.getLogger(__name__)

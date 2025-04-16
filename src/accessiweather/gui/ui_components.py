@@ -1,17 +1,14 @@
 """Accessible UI components for AccessiWeather
 
 This module provides accessible UI widgets that enhance screen reader support.
-It re-exports components from the basic_components, list_components, and
-autocomplete_components modules.
+It re-exports components from the basic_components and list_components modules.
 """
-
-# Re-export components from autocomplete_components
-from .autocomplete_components import AccessibleComboBox
 
 # Re-export components from basic_components
 from .basic_components import (
     AccessibleButton,
     AccessibleChoice,
+    AccessibleComboBox,
     AccessibleStaticText,
     AccessibleTextCtrl,
 )

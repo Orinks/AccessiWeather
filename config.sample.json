@@ -18,7 +18,8 @@
         "update_interval_minutes": 15,
         "alert_notification_duration": 10,
         "alerts_radius_miles": 25,
-        "precise_location_alerts": true
+        "precise_location_alerts": true,
+        "minimize_on_startup": false
     },
     "api_settings": {
         "contact_info": "yourwebsite.com or your-email@example.com"

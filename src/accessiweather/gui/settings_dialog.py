@@ -13,6 +13,7 @@ API_CONTACT_KEY = "api_contact"
 UPDATE_INTERVAL_KEY = "update_interval_minutes"
 ALERT_RADIUS_KEY = "alert_radius_miles"
 PRECISE_LOCATION_ALERTS_KEY = "precise_location_alerts"
+MINIMIZE_ON_STARTUP_KEY = "minimize_on_startup"
 
 # Advanced settings keys
 CACHE_ENABLED_KEY = "cache_enabled"
@@ -88,7 +89,7 @@ class SettingsDialog(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         # --- Input Fields ---
-        grid_sizer = wx.FlexGridSizer(rows=4, cols=2, vgap=10, hgap=5)
+        grid_sizer = wx.FlexGridSizer(rows=5, cols=2, vgap=10, hgap=5)
         grid_sizer.AddGrowableCol(1, 1)  # Make the input column growable
 
         # API Contact
@@ -123,9 +124,7 @@ class SettingsDialog(wx.Dialog):
         # Precise Location Alerts Toggle
         precise_alerts_label = "Use precise location for alerts"
         self.precise_alerts_ctrl = wx.CheckBox(
-            panel,
-            label=precise_alerts_label,
-            name="Precise Location Alerts"
+            panel, label=precise_alerts_label, name="Precise Location Alerts"
         )
         tooltip_precise = (
             "When checked, only shows alerts for your specific location. "
@@ -135,6 +134,17 @@ class SettingsDialog(wx.Dialog):
         # Add a spacer in the first column
         grid_sizer.Add((1, 1), 0, wx.ALL, 5)
         grid_sizer.Add(self.precise_alerts_ctrl, 0, wx.ALL, 5)
+
+        # Minimize on Startup Toggle
+        minimize_startup_label = "Minimize to system tray on startup"
+        self.minimize_startup_ctrl = wx.CheckBox(
+            panel, label=minimize_startup_label, name="Minimize on Startup"
+        )
+        tooltip_minimize = "When checked, the application will start minimized to the system tray."
+        self.minimize_startup_ctrl.SetToolTip(tooltip_minimize)
+        # Add a spacer in the first column
+        grid_sizer.Add((1, 1), 0, wx.ALL, 5)
+        grid_sizer.Add(self.minimize_startup_ctrl, 0, wx.ALL, 5)
 
         sizer.Add(grid_sizer, 1, wx.EXPAND | wx.ALL, 10)
         panel.SetSizer(sizer)
@@ -151,9 +161,7 @@ class SettingsDialog(wx.Dialog):
         # Cache Enabled Toggle
         cache_enabled_label = "Enable caching of weather data"
         self.cache_enabled_ctrl = wx.CheckBox(
-            panel,
-            label=cache_enabled_label,
-            name="Enable Caching"
+            panel, label=cache_enabled_label, name="Enable Caching"
         )
         tooltip_cache = (
             "When checked, weather data will be cached to reduce API calls. "
@@ -166,9 +174,7 @@ class SettingsDialog(wx.Dialog):
 
         # Cache TTL
         cache_ttl_label = wx.StaticText(panel, label="Cache Time-to-Live (seconds):")
-        self.cache_ttl_ctrl = wx.SpinCtrl(
-            panel, min=60, max=3600, initial=300, name="Cache TTL"
-        )
+        self.cache_ttl_ctrl = wx.SpinCtrl(panel, min=60, max=3600, initial=300, name="Cache TTL")
         tooltip_ttl = "How long cached data remains valid (in seconds)."
         self.cache_ttl_ctrl.SetToolTip(tooltip_ttl)
         grid_sizer.Add(cache_ttl_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
@@ -186,11 +192,13 @@ class SettingsDialog(wx.Dialog):
             update_interval = self.current_settings.get(UPDATE_INTERVAL_KEY, 30)
             alert_radius = self.current_settings.get(ALERT_RADIUS_KEY, 25)
             precise_alerts = self.current_settings.get(PRECISE_LOCATION_ALERTS_KEY, True)
+            minimize_startup = self.current_settings.get(MINIMIZE_ON_STARTUP_KEY, False)
 
             self.api_contact_ctrl.SetValue(api_contact)
             self.update_interval_ctrl.SetValue(update_interval)
             self.alert_radius_ctrl.SetValue(alert_radius)
             self.precise_alerts_ctrl.SetValue(precise_alerts)
+            self.minimize_startup_ctrl.SetValue(minimize_startup)
 
             # Load advanced settings
             cache_enabled = self.current_settings.get(CACHE_ENABLED_KEY, True)
@@ -261,7 +269,7 @@ class SettingsDialog(wx.Dialog):
             UPDATE_INTERVAL_KEY: self.update_interval_ctrl.GetValue(),
             ALERT_RADIUS_KEY: self.alert_radius_ctrl.GetValue(),
             PRECISE_LOCATION_ALERTS_KEY: self.precise_alerts_ctrl.GetValue(),
-
+            MINIMIZE_ON_STARTUP_KEY: self.minimize_startup_ctrl.GetValue(),
             # Advanced settings
             CACHE_ENABLED_KEY: self.cache_enabled_ctrl.GetValue(),
             CACHE_TTL_KEY: self.cache_ttl_ctrl.GetValue(),

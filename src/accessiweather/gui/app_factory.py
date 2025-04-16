@@ -47,7 +47,7 @@ def create_weather_app(
         user_agent="AccessiWeather",
         contact_info=contact_info,
         enable_caching=enable_caching,
-        cache_ttl=cache_ttl
+        cache_ttl=cache_ttl,
     )
 
     # Create the location manager

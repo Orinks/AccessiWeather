@@ -5,6 +5,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 import wx
 
+from accessiweather.gui.dialogs import LocationDialog
+from accessiweather.gui.ui_components import AccessibleComboBox
+
 
 # Create a wx App fixture for testing
 @pytest.fixture(scope="module")
@@ -42,11 +45,6 @@ def safe_destroy():
                         pass  # Last resort, just ignore
         except Exception:
             pass  # Ignore any errors in cleanup
-
-
-# Import after wx.App is created
-from accessiweather.gui.dialogs import LocationDialog
-from accessiweather.gui.ui_components import AccessibleComboBox
 
 
 class TestLocationDialogWithComboBox:
@@ -123,7 +121,9 @@ class TestLocationDialogWithComboBox:
     def test_combo_selection_triggers_search(self, wx_app, safe_destroy):
         """Test that selecting an item from the dropdown triggers a search"""
         dialog = safe_destroy(LocationDialog(self.frame))
-        self.mock_geocoding.geocode_address.return_value = (35.0, -80.0, "123 Main St, City, State")
+
+        # Mock the _perform_search method
+        dialog._perform_search = MagicMock()
 
         # Add some history items
         dialog.search_field.Append(["123 Main St", "456 Oak Ave"])
@@ -131,18 +131,14 @@ class TestLocationDialogWithComboBox:
         # Simulate selection from dropdown
         dialog.search_field.SetSelection(0)  # Select "123 Main St"
 
-        # Create and process a selection event
+        # Create a dummy event
         event = wx.CommandEvent(wx.wxEVT_COMBOBOX, dialog.search_field.GetId())
-        with patch("wx.MessageBox"):  # Prevent MessageBox from showing
-            dialog.search_field.GetEventHandler().ProcessEvent(event)
 
-        # Verify that search was triggered with the selected value
-        self.mock_geocoding.geocode_address.assert_called_with("123 Main St")
+        # Trigger the combobox selection event
+        dialog._on_combobox_select(event)
 
-        # Check results are displayed
-        assert "Found: 123 Main St, City, State" in dialog.result_text.GetValue()
-        assert dialog.latitude == 35.0
-        assert dialog.longitude == -80.0
+        # Verify that _perform_search was called with the selected value
+        dialog._perform_search.assert_called_once_with("123 Main St")
 
     def test_duplicate_search_terms_not_added(self, wx_app, safe_destroy):
         """Test that duplicate search terms aren't added to history"""

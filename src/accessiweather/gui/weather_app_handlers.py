@@ -8,7 +8,7 @@ import json
 import logging
 import os
 import time
-from typing import Any
+from typing import Any, Optional
 
 import wx
 
@@ -19,6 +19,7 @@ from .settings_dialog import (
     API_CONTACT_KEY,
     CACHE_ENABLED_KEY,
     CACHE_TTL_KEY,
+    MINIMIZE_ON_STARTUP_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
     SettingsDialog,
 )
@@ -81,12 +82,20 @@ class WeatherAppHandlers:
         else:
             event.Skip()
 
-    def OnClose(self, event):  # event is required by wx
+    def OnClose(self, event, force_close=False):  # event is required by wx
         """Handle close event
 
         Args:
             event: Close event
+            force_close: Whether to force the window to close (default: False)
         """
+        # If we have a taskbar icon and we're not force closing, just hide the window
+        if hasattr(self, "taskbar_icon") and self.taskbar_icon and not force_close:
+            logger.debug("Hiding window instead of closing")
+            self.Hide()
+            event.Veto()  # Prevent the window from closing
+            return
+
         # Stop the timer
         self.timer.Stop()
 
@@ -95,7 +104,9 @@ class WeatherAppHandlers:
         self._save_config()
 
         # Clean up any resources
-        # Add any additional cleanup here
+        if hasattr(self, "taskbar_icon") and self.taskbar_icon:
+            logger.debug("Destroying taskbar icon")
+            self.taskbar_icon.Destroy()
 
         # Destroy the window
         self.Destroy()
@@ -377,6 +388,15 @@ class WeatherAppHandlers:
         # Just call the view alert handler
         self.OnViewAlert(event)
 
+    def OnMinimizeToTray(self, event):  # event is required by wx
+        """Handle minimize to tray button click
+
+        Args:
+            event: Button event
+        """
+        logger.debug("Minimizing to tray")
+        self.Hide()
+
     def OnSettings(self, event):  # event is required by wx
         """Handle settings button click
 
@@ -427,6 +447,15 @@ class WeatherAppHandlers:
                 )
                 # Refresh weather data to apply new setting
                 self.UpdateWeatherData()
+
+            # If minimize on startup setting changed, log it
+            old_minimize_setting = settings.get(MINIMIZE_ON_STARTUP_KEY, False)
+            new_minimize_setting = updated_settings.get(MINIMIZE_ON_STARTUP_KEY, False)
+            if old_minimize_setting != new_minimize_setting:
+                logger.info(
+                    f"Minimize on startup setting changed from {old_minimize_setting} "
+                    f"to {new_minimize_setting}"
+                )
 
             # If cache settings changed, update API client if possible
             old_cache_enabled = settings.get(CACHE_ENABLED_KEY, True)

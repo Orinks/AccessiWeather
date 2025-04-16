@@ -1,13 +1,12 @@
 """Tests for the API contact check when config file is missing"""
 
 # Import faulthandler setup first to enable faulthandler
-import tests.faulthandler_setup
-
 from unittest.mock import MagicMock, patch
 
 import pytest
 import wx
 
+import tests.faulthandler_setup
 from accessiweather.gui.weather_app import WeatherApp
 
 

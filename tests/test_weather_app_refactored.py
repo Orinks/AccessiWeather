@@ -1,17 +1,16 @@
 """Tests for the refactored WeatherApp class."""
 
 import queue
+import time
 from unittest.mock import MagicMock, patch
 
 import pytest
 import wx
 
-from accessiweather.api_client import ApiClientError
 from accessiweather.gui.weather_app_refactored import WeatherApp
 from accessiweather.services.location_service import LocationService
 from accessiweather.services.notification_service import NotificationService
 from accessiweather.services.weather_service import WeatherService
-from tests.wx_test_utils import AsyncEventWaiter
 
 
 @pytest.fixture

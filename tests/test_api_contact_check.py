@@ -1,18 +1,44 @@
 """Tests for the API contact check feature on application startup"""
 
 # Import faulthandler setup first to enable faulthandler
-from tests.faulthandler_setup import cleanup_wx_app
-
 from unittest.mock import MagicMock, patch
 
 import pytest
 import wx
 
-from accessiweather.gui.weather_app import WeatherApp
 from accessiweather.gui.settings_dialog import API_CONTACT_KEY
-
+from accessiweather.gui.weather_app import WeatherApp
+from tests.faulthandler_setup import cleanup_wx_app
 
 # Use the wx_app fixture from conftest.py
+
+
+@pytest.fixture(autouse=True)
+def wx_app_for_tests():
+    """Create a wx App for testing"""
+    app = wx.App()
+    yield app
+
+
+@pytest.fixture(autouse=True)
+def patch_weather_app_update():
+    """Patch the WeatherApp.UpdateWeatherData method to prevent weather data updates"""
+    with patch.object(WeatherApp, "UpdateWeatherData"):
+        yield
+
+
+@pytest.fixture
+def mock_location_service():
+    """Create a mock location service that returns a valid location"""
+    mock_service = MagicMock()
+    mock_service.get_current_location.return_value = ("Test City", 35.0, -80.0)
+    return mock_service
+
+
+@pytest.fixture
+def mock_weather_service():
+    """Create a mock weather service"""
+    return MagicMock()
 
 
 class TestApiContactCheck:
@@ -47,7 +73,7 @@ class TestApiContactCheck:
                 "location_manager": mock_location_manager,
             }
 
-    def test_no_dialog_when_api_contact_present(self, mock_components):
+    def test_no_dialog_when_api_contact_present(self, mock_components, mock_location_service, mock_weather_service):
         """Test that no dialog is shown when API contact is present"""
         # Create a config with API contact
         config = {
@@ -62,9 +88,10 @@ class TestApiContactCheck:
             # Create the app
             app = WeatherApp(
                 parent=None,
-                location_manager=mock_components["location_manager"],
+                weather_service=mock_weather_service,
+                location_service=mock_location_service,
+                notification_service=MagicMock(),
                 api_client=mock_components["api_client"],
-                notifier=mock_components["notifier"],
                 config=config,
             )
 
@@ -74,7 +101,7 @@ class TestApiContactCheck:
             finally:
                 cleanup_wx_app(app)
 
-    def test_dialog_shown_when_api_contact_missing(self, mock_components):
+    def test_dialog_shown_when_api_contact_missing(self, mock_components, mock_location_service, mock_weather_service):
         """Test that dialog is shown when API contact is missing"""
         # Create a config without API contact
         config = {
@@ -85,8 +112,10 @@ class TestApiContactCheck:
         }
 
         # Mock the dialog and OnSettings method
-        with patch("wx.MessageDialog") as mock_dialog_class, \
-             patch.object(WeatherApp, "OnSettings") as mock_on_settings:
+        with (
+            patch("wx.MessageDialog") as mock_dialog_class,
+            patch.object(WeatherApp, "OnSettings") as mock_on_settings,
+        ):
             # Configure the mock dialog
             mock_dialog = MagicMock()
             mock_dialog.ShowModal.return_value = wx.ID_OK
@@ -95,9 +124,10 @@ class TestApiContactCheck:
             # Create the app
             app = WeatherApp(
                 parent=None,
-                location_manager=mock_components["location_manager"],
+                weather_service=MagicMock(),
+                location_service=MagicMock(),
+                notification_service=MagicMock(),
                 api_client=mock_components["api_client"],
-                notifier=mock_components["notifier"],
                 config=config,
             )
 
@@ -109,7 +139,7 @@ class TestApiContactCheck:
             finally:
                 cleanup_wx_app(app)
 
-    def test_dialog_shown_when_api_settings_missing(self, mock_components):
+    def test_dialog_shown_when_api_settings_missing(self, mock_components, mock_location_service, mock_weather_service):
         """Test that dialog is shown when api_settings section is missing"""
         # Create a config without api_settings section
         config = {
@@ -120,8 +150,10 @@ class TestApiContactCheck:
         }
 
         # Mock the dialog and OnSettings method
-        with patch("wx.MessageDialog") as mock_dialog_class, \
-             patch.object(WeatherApp, "OnSettings") as mock_on_settings:
+        with (
+            patch("wx.MessageDialog") as mock_dialog_class,
+            patch.object(WeatherApp, "OnSettings") as mock_on_settings,
+        ):
             # Configure the mock dialog
             mock_dialog = MagicMock()
             mock_dialog.ShowModal.return_value = wx.ID_OK
@@ -130,9 +162,10 @@ class TestApiContactCheck:
             # Create the app
             app = WeatherApp(
                 parent=None,
-                location_manager=mock_components["location_manager"],
+                weather_service=MagicMock(),
+                location_service=MagicMock(),
+                notification_service=MagicMock(),
                 api_client=mock_components["api_client"],
-                notifier=mock_components["notifier"],
                 config=config,
             )
 
@@ -144,7 +177,7 @@ class TestApiContactCheck:
             finally:
                 cleanup_wx_app(app)
 
-    def test_settings_not_opened_if_dialog_cancelled(self, mock_components):
+    def test_settings_not_opened_if_dialog_cancelled(self, mock_components, mock_location_service, mock_weather_service):
         """Test that settings are not opened if dialog is cancelled"""
         # Create a config without API contact
         config = {
@@ -155,8 +188,10 @@ class TestApiContactCheck:
         }
 
         # Mock the dialog and OnSettings method
-        with patch("wx.MessageDialog") as mock_dialog_class, \
-             patch.object(WeatherApp, "OnSettings") as mock_on_settings:
+        with (
+            patch("wx.MessageDialog") as mock_dialog_class,
+            patch.object(WeatherApp, "OnSettings") as mock_on_settings,
+        ):
             # Configure the mock dialog to return CANCEL
             mock_dialog = MagicMock()
             mock_dialog.ShowModal.return_value = wx.ID_CANCEL
@@ -165,9 +200,10 @@ class TestApiContactCheck:
             # Create the app
             app = WeatherApp(
                 parent=None,
-                location_manager=mock_components["location_manager"],
+                weather_service=MagicMock(),
+                location_service=MagicMock(),
+                notification_service=MagicMock(),
                 api_client=mock_components["api_client"],
-                notifier=mock_components["notifier"],
                 config=config,
             )
 
@@ -179,7 +215,7 @@ class TestApiContactCheck:
             finally:
                 cleanup_wx_app(app)
 
-    def test_check_called_on_init(self, mock_components):
+    def test_check_called_on_init(self, mock_components, mock_location_service, mock_weather_service):
         """Test that the API contact check is called during initialization"""
         # Create a config without API contact
         config = {
@@ -190,14 +226,17 @@ class TestApiContactCheck:
         }
 
         # Mock the _check_api_contact_configured method
-        with patch.object(WeatherApp, "_check_api_contact_configured") as mock_check, \
-             patch("wx.MessageDialog"):  # Prevent dialog from showing
+        with (
+            patch.object(WeatherApp, "_check_api_contact_configured") as mock_check,
+            patch("wx.MessageDialog"),
+        ):  # Prevent dialog from showing
             # Create the app
             app = WeatherApp(
                 parent=None,
-                location_manager=mock_components["location_manager"],
+                weather_service=MagicMock(),
+                location_service=MagicMock(),
+                notification_service=MagicMock(),
                 api_client=mock_components["api_client"],
-                notifier=mock_components["notifier"],
                 config=config,
             )
 

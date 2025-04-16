@@ -71,7 +71,7 @@ def main(config_dir: Optional[str] = None, debug_mode: bool = False, enable_cach
         config=config,
         config_path=config_file_path,
         enable_caching=enable_caching,
-        cache_ttl=300  # 5 minutes default TTL
+        cache_ttl=300,  # 5 minutes default TTL
     )
 
     # Store a reference to the frame in the app
