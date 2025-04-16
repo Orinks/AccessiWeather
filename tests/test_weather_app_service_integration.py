@@ -49,9 +49,7 @@ class TestWeatherAppServiceIntegration:
         result = mock_weather_service.get_forecast(35.0, -80.0)
 
         # Verify the result
-        assert result == {
-            "properties": {"periods": [{"name": "Test Period", "temperature": 75}]}
-        }
+        assert result == {"properties": {"periods": [{"name": "Test Period", "temperature": 75}]}}
         mock_weather_service.get_forecast.assert_called_once_with(35.0, -80.0)
 
     def test_weather_service_get_alerts(self, mock_weather_service):
@@ -167,9 +165,7 @@ class TestWeatherAppServiceIntegration:
         # Use the location to get forecast data from the weather service
         name, lat, lon = location
         forecast = mock_weather_service.get_forecast(lat, lon)
-        assert forecast == {
-            "properties": {"periods": [{"name": "Test Period", "temperature": 75}]}
-        }
+        assert forecast == {"properties": {"periods": [{"name": "Test Period", "temperature": 75}]}}
 
         # Use the location to get alerts data from the weather service
         alerts = mock_weather_service.get_alerts(lat, lon)
@@ -236,9 +232,7 @@ class TestWeatherAppServiceIntegration:
         # Use the location to get forecast data from the weather service
         name, lat, lon = location
         forecast = mock_weather_service.get_forecast(lat, lon)
-        assert forecast == {
-            "properties": {"periods": [{"name": "Test Period", "temperature": 75}]}
-        }
+        assert forecast == {"properties": {"periods": [{"name": "Test Period", "temperature": 75}]}}
 
         # Set up test data for alerts
         alerts_data = {

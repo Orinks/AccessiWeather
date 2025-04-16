@@ -60,9 +60,7 @@ class TestCli:
             assert result == 0
             # Updated assertion with all parameters
             mock_app_main.assert_called_once_with(
-                config_dir="/test/config",
-                debug_mode=True,
-                enable_caching=True
+                config_dir="/test/config", debug_mode=True, enable_caching=True
             )
 
     @patch("accessiweather.cli.app_main")

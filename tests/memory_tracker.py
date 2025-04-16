@@ -6,7 +6,6 @@ potential memory leaks in wxPython applications.
 
 import gc
 import logging
-import sys
 import tracemalloc
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Set, Tuple

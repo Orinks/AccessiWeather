@@ -3,15 +3,14 @@
 This module tests the accessibility features of the AccessibleComboBox component.
 """
 
-# Import faulthandler setup first to enable faulthandler
-import tests.faulthandler_setup
-
 import logging
 import unittest
 from unittest.mock import MagicMock, patch
 
 import wx
 
+# Import faulthandler setup first to enable faulthandler
+import tests.faulthandler_setup
 from accessiweather.gui.basic_components import AccessibleComboBox
 
 logger = logging.getLogger(__name__)

@@ -1,15 +1,14 @@
 """Tests for the API contact check feature on application startup"""
 
 # Import faulthandler setup first to enable faulthandler
-import tests.faulthandler_setup
-
 from unittest.mock import MagicMock, patch
 
 import pytest
 import wx
 
-from accessiweather.gui.weather_app import WeatherApp
+import tests.faulthandler_setup
 from accessiweather.gui.settings_dialog import API_CONTACT_KEY
+from accessiweather.gui.weather_app import WeatherApp
 
 
 @pytest.fixture
@@ -169,8 +168,10 @@ def test_settings_not_opened_if_dialog_cancelled(wx_app, mock_components):
     }
 
     # Mock the dialog and OnSettings method
-    with patch("wx.MessageDialog") as mock_dialog_class, \
-         patch.object(WeatherApp, "OnSettings") as mock_on_settings:
+    with (
+        patch("wx.MessageDialog") as mock_dialog_class,
+        patch.object(WeatherApp, "OnSettings") as mock_on_settings,
+    ):
         # Configure the mock dialog to return CANCEL
         mock_dialog = MagicMock()
         mock_dialog.ShowModal.return_value = wx.ID_CANCEL
@@ -210,8 +211,10 @@ def test_check_called_on_init(wx_app, mock_components):
     }
 
     # Mock the _check_api_contact_configured method
-    with patch.object(WeatherApp, "_check_api_contact_configured") as mock_check, \
-         patch("wx.MessageDialog"):  # Prevent dialog from showing
+    with (
+        patch.object(WeatherApp, "_check_api_contact_configured") as mock_check,
+        patch("wx.MessageDialog"),
+    ):  # Prevent dialog from showing
         # Create the app
         app = WeatherApp(
             parent=None,

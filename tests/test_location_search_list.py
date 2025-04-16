@@ -3,25 +3,22 @@
 This module tests the location search list functionality in the LocationDialog.
 """
 
-# Import faulthandler setup first to enable faulthandler
-import tests.faulthandler_setup
-
-import threading
-import time
 from unittest.mock import MagicMock, patch
 
 import pytest
 import wx
 
+# Import faulthandler setup for side effects (enables faulthandler)
+import tests.faulthandler_setup  # noqa: F401
 from accessiweather.geocoding import GeocodingService
 from accessiweather.gui.dialogs import LocationDialog
-from accessiweather.gui.ui_components import AccessibleListCtrl, AccessibleTextCtrl
+from accessiweather.gui.ui_components import AccessibleComboBox, AccessibleListCtrl
 
 
 @pytest.fixture
 def frame():
     """Create a frame for testing"""
-    app = wx.App()
+    wx.App()
     frame = wx.Frame(None)
     yield frame
     # Hide the window first
@@ -113,12 +110,12 @@ class TestLocationSearchList:
         wx.CallAfter(self.frame.Destroy)
         wx.SafeYield()
 
-    def test_search_field_is_text_ctrl(self, safe_destroy):
-        """Test that the search field is an AccessibleTextCtrl"""
+    def test_search_field_is_combo_box(self, safe_destroy):
+        """Test that the search field is an AccessibleComboBox"""
         dialog = safe_destroy(LocationDialog(self.frame))
 
-        # Verify that search_field is an AccessibleTextCtrl
-        assert isinstance(dialog.search_field, AccessibleTextCtrl)
+        # Verify that search_field is an AccessibleComboBox
+        assert isinstance(dialog.search_field, AccessibleComboBox)
         assert dialog.search_field.GetName() == "Search by Address or ZIP Code"
 
     def test_search_results_list_exists(self, safe_destroy):

@@ -50,9 +50,17 @@ def enable_faulthandler(
         try:
             import signal
 
-            for sig in (signal.SIGUSR1, signal.SIGUSR2):
-                faulthandler.register(sig, file=sys.stderr, all_threads=all_threads)
-            logger.info("Registered faulthandler for user signals")
+            # Check if the signals are available
+            if hasattr(signal, 'SIGUSR1') and hasattr(signal, 'SIGUSR2'):
+                # Use getattr to avoid mypy errors
+                sigusr1 = getattr(signal, 'SIGUSR1')
+                sigusr2 = getattr(signal, 'SIGUSR2')
+                for sig in (sigusr1, sigusr2):
+                    if hasattr(faulthandler, 'register'):
+                        faulthandler.register(sig, file=sys.stderr, all_threads=all_threads)
+                logger.info("Registered faulthandler for user signals")
+            else:
+                logger.warning("User signals (SIGUSR1, SIGUSR2) not available on this platform")
         except (ImportError, AttributeError) as e:
             logger.warning(f"Could not register signal handlers: {e}")
 
@@ -126,16 +134,19 @@ def register_signal_handler(signum: int, all_threads: bool = True, chain: bool =
     """
     # Register for stderr
     try:
-        faulthandler.register(signum, file=sys.stderr, all_threads=all_threads, chain=chain)
+        if hasattr(faulthandler, 'register'):
+            faulthandler.register(signum, file=sys.stderr, all_threads=all_threads, chain=chain)
 
-        # Register for log file if available
-        global _fault_log_file
-        if _fault_log_file is not None:
-            faulthandler.register(
-                signum, file=_fault_log_file, all_threads=all_threads, chain=chain
-            )
+            # Register for log file if available
+            global _fault_log_file
+            if _fault_log_file is not None:
+                faulthandler.register(
+                    signum, file=_fault_log_file, all_threads=all_threads, chain=chain
+                )
 
-        logger.info(f"Registered faulthandler for signal {signum}")
+            logger.info(f"Registered faulthandler for signal {signum}")
+        else:
+            logger.warning("faulthandler.register is not available on this platform")
     except (OSError, RuntimeError) as e:
         logger.error(f"Failed to register faulthandler for signal {signum}: {e}")
 

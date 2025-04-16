@@ -7,6 +7,8 @@ Import this module at the top of any test file that might encounter segmentation
 import atexit
 import faulthandler
 import os
+import time
+import wx
 
 # Enable faulthandler to debug segmentation faults
 faulthandler.enable()
@@ -22,3 +24,29 @@ faulthandler.enable(file=fault_log)
 
 # Register a cleanup function to close the log file
 atexit.register(fault_log.close)
+
+
+def cleanup_wx_app(app):
+    """Safely clean up a wxPython application or window.
+
+    This function safely destroys a wxPython application or window,
+    ensuring proper cleanup to prevent memory leaks and segmentation faults.
+
+    Args:
+        app: A wxPython application or window to clean up
+    """
+    if app is None:
+        return
+
+    try:
+        # Hide the window first
+        wx.CallAfter(app.Hide)
+        wx.SafeYield()
+        time.sleep(0.1)  # Give a moment for events to process
+
+        # Then destroy it
+        wx.CallAfter(app.Destroy)
+        wx.SafeYield()
+        time.sleep(0.1)  # Give a moment for events to process
+    except Exception as e:
+        print(f"Error during wx cleanup: {e}")

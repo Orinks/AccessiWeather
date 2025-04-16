@@ -1,11 +1,8 @@
 """Tests for the cache module."""
 
 import time
-from unittest.mock import MagicMock, patch
 
-import pytest
-
-from accessiweather.cache import Cache, CacheEntry
+from accessiweather.cache import Cache
 
 
 class TestCache:

@@ -60,7 +60,9 @@ class TestWeatherServiceCaching:
     def test_get_alerts_force_refresh(self, weather_service, mock_api_client):
         """Test getting alerts data with force_refresh."""
         # Call the method with force_refresh
-        weather_service.get_alerts(35.0, -80.0, radius=25, precise_location=True, force_refresh=True)
+        weather_service.get_alerts(
+            35.0, -80.0, radius=25, precise_location=True, force_refresh=True
+        )
 
         # Verify the API client was called with force_refresh=True
         mock_api_client.get_alerts.assert_called_once_with(

@@ -1,13 +1,13 @@
 # Import faulthandler setup first to enable faulthandler
-import tests.faulthandler_setup
-
 import queue
 from unittest.mock import MagicMock, patch
 
 import pytest
 import wx  # type: ignore
 
-from accessiweather.api_client import ApiClientError, NoaaApiClient
+# Import for side effects (enables faulthandler)
+import tests.faulthandler_setup  # noqa: F401
+from accessiweather.api_client import NoaaApiClient
 from accessiweather.gui.weather_app import WeatherApp
 
 # Import our test utilities
@@ -228,7 +228,6 @@ def test_forecast_error_handling(
     app.SetStatusText = track_status
 
     error_message = "API forecast network error"
-    expected_error = ApiClientError(error_message)
 
     # Create an event waiter to track when the error callback completes
     waiter = AsyncEventWaiter()
@@ -254,16 +253,16 @@ def test_forecast_error_handling(
 
     app.forecast_fetcher.fetch = mock_fetch
 
-    with patch("wx.MessageBox") as mock_message_box:
-        app.updating = False
-        app.UpdateWeatherData()
+    # No need to patch wx.MessageBox as we're handling the error ourselves
+    app.updating = False
+    app.UpdateWeatherData()
 
-        # Wait for the callback to complete (with timeout)
-        result = waiter.wait(timeout_ms=5000)
+    # Wait for the callback to complete (with timeout)
+    result = waiter.wait(timeout_ms=5000)
 
-        # Verify we got an error message back
-        assert result is not None
-        assert error_message in str(result)
+    # Verify we got an error message back
+    assert result is not None
+    assert error_message in str(result)
 
     # Process the events from the queue
     status_events = []
@@ -387,12 +386,8 @@ def test_concurrent_fetching(
     app.SetStatusText = track_status
 
     # Set expected data
-    forecast_data = {
-        "properties": {"periods": [{"name": "Concurrent Today", "temperature": 70}]}
-    }
-    alerts_data = {
-        "features": [{"properties": {"headline": "Concurrent Alert"}}]
-    }
+    forecast_data = {"properties": {"periods": [{"name": "Concurrent Today", "temperature": 70}]}}
+    alerts_data = {"features": [{"properties": {"headline": "Concurrent Alert"}}]}
 
     # Create event waiters to track when the callbacks complete
     forecast_waiter = AsyncEventWaiter()
@@ -431,7 +426,9 @@ def test_concurrent_fetching(
         return True
 
     # Patch the alerts fetcher to directly call our callback
-    def mock_alerts_fetch(lat, lon, on_success=None, on_error=None, precise_location=True, radius=25):
+    def mock_alerts_fetch(
+        lat, lon, on_success=None, on_error=None, precise_location=True, radius=25
+    ):
         if on_success:
             on_success(alerts_data)
         return True

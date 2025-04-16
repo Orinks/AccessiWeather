@@ -77,7 +77,8 @@ class WeatherNotifier:
         """
         if alert_count > 0:
             title = "Weather Alerts"
-            message = f"{alert_count} active weather {'alert' if alert_count == 1 else 'alerts'} in your area"
+            plural = 'alert' if alert_count == 1 else 'alerts'
+            message = f"{alert_count} active weather {plural} in your area"
 
             # Show notification
             self.toaster.show_toast(

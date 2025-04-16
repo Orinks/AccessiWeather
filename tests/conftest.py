@@ -1,20 +1,20 @@
 # tests/conftest.py
 
 # Import faulthandler setup first to enable faulthandler
-import tests.faulthandler_setup
-
 import json
 import logging
 import os
 import tempfile
 import time
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 import wx
 
+# Import faulthandler_setup for side effects (enables faulthandler)
+import tests.faulthandler_setup  # noqa: F401
 from tests.wx_cleanup_utils import safe_cleanup
+
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)

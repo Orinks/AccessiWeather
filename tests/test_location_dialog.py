@@ -5,6 +5,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 import wx
 
+from accessiweather.gui.dialogs import AdvancedLocationDialog, LocationDialog
+
 
 # Create a wx App fixture for testing
 @pytest.fixture(scope="module")
@@ -42,9 +44,6 @@ def safe_destroy():
                         pass  # Last resort, just ignore
         except Exception:
             pass  # Ignore any errors in cleanup
-
-
-from accessiweather.gui.dialogs import AdvancedLocationDialog, LocationDialog
 
 
 class TestAdvancedLocationDialog:
@@ -229,8 +228,10 @@ class TestLocationDialog:
                 # Set search query
                 dialog.search_field.SetValue("123 Main St")
 
-                # Call _perform_search directly instead of OnSearch to avoid event loop issues
+                # Wait for the search thread to complete
                 dialog._perform_search("123 Main St")
+                if dialog.search_thread:
+                    dialog.search_thread.join(timeout=1.0)
 
                 # Check that geocoding service was called
                 self.mock_geocoding.geocode_address.assert_called_once_with("123 Main St")
@@ -253,8 +254,10 @@ class TestLocationDialog:
                 # Set search query
                 dialog.search_field.SetValue("Nonexistent Address")
 
-                # Call _perform_search directly instead of OnSearch to avoid event loop issues
+                # Wait for the search thread to complete
                 dialog._perform_search("Nonexistent Address")
+                if dialog.search_thread:
+                    dialog.search_thread.join(timeout=1.0)
 
                 # Check that geocoding service was called
                 self.mock_geocoding.geocode_address.assert_called_once_with("Nonexistent Address")
@@ -276,8 +279,10 @@ class TestLocationDialog:
                 dialog.search_field.SetValue("123 Main St")
                 dialog.name_ctrl.SetValue("")
 
-                # Call _perform_search directly instead of OnSearch to avoid event loop issues
+                # Wait for the search thread to complete
                 dialog._perform_search("123 Main St")
+                if dialog.search_thread:
+                    dialog.search_thread.join(timeout=1.0)
 
                 # Check that name field was auto-populated with search query
                 assert dialog.name_ctrl.GetValue() == "123 Main St"
