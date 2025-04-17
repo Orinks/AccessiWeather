@@ -35,7 +35,8 @@ from .ui_components import (
     AccessibleStaticText,
     AccessibleTextCtrl,
 )
-from .weather_app import WeatherApp
+# DEPRECATED: The original WeatherApp class is now replaced by the refactored version.
+from .weather_app_refactored import WeatherApp
 
 # Constants (UPDATE_INTERVAL moved to accessiweather.constants)
 

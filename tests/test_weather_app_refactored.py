@@ -7,10 +7,19 @@ from unittest.mock import MagicMock, patch
 import pytest
 import wx
 
+<<<<<<< Updated upstream
 from accessiweather.gui.weather_app_refactored import WeatherApp
 from accessiweather.services.location_service import LocationService
 from accessiweather.services.notification_service import NotificationService
 from accessiweather.services.weather_service import WeatherService
+=======
+from accessiweather.api_client import ApiClientError
+from accessiweather.gui.weather_app import WeatherApp
+from accessiweather.services.location_service import LocationService
+from accessiweather.services.notification_service import NotificationService
+from accessiweather.services.weather_service import WeatherService
+
+>>>>>>> Stashed changes
 
 
 @pytest.fixture

@@ -95,6 +95,10 @@ class LocationService:
             return (loc["lat"], loc["lon"])
         return None
 
+    def get_nationwide_location(self) -> tuple:
+        """Return the Nationwide location's name and coordinates."""
+        return ("Nationwide", 39.8283, -98.5795)
+
     def is_nationwide_location(self, name: str) -> bool:
         """Check if a location is the Nationwide location.
 

@@ -132,6 +132,10 @@ class WeatherAppHandlers:
         # Check if this is the Nationwide location and disable remove button if it is
         if hasattr(self, "remove_btn") and self.location_service.is_nationwide_location(selected):
             self.remove_btn.Disable()
+            # Accessibility: update accessible description
+            if hasattr(self.remove_btn, 'SetAccessibleDescription'):
+                self.remove_btn.SetAccessibleDescription("Remove button disabled: Nationwide cannot be removed.")
+
         elif hasattr(self, "remove_btn"):
             self.remove_btn.Enable()
 
@@ -194,6 +198,9 @@ class WeatherAppHandlers:
                 "Cannot Remove",
                 wx.OK | wx.ICON_INFORMATION
             )
+            # Accessibility: announce for screen readers
+            if hasattr(self, 'AnnounceForScreenReader'):
+                self.AnnounceForScreenReader("The Nationwide location cannot be removed.")
             return
 
         # Confirm removal

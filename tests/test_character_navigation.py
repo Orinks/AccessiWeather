@@ -3,6 +3,12 @@
 This module tests the character navigation features of the combo box components.
 """
 
+<<<<<<< Updated upstream
+=======
+# Import faulthandler setup first to enable faulthandler
+
+
+>>>>>>> Stashed changes
 import logging
 from unittest.mock import MagicMock
 

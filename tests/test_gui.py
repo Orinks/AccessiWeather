@@ -129,13 +129,13 @@ class TestWeatherApp:
         with (
             patch("accessiweather.api_client.NoaaApiClient") as mock_api_client_class,
             patch("accessiweather.notifications.WeatherNotifier") as mock_notifier_class,
-            patch("accessiweather.location.LocationManager") as mock_location_manager_class,
+            patch("accessiweather.services.location_service.LocationService") as mock_location_service_class,
         ):
 
             # Create mock instances
             mock_api_client = MagicMock()
             mock_notifier = MagicMock()
-            mock_location_manager = MagicMock()
+            mock_location_service = MagicMock()
 
             # Configure mock location manager to return valid data
             mock_location_manager.get_all_locations.return_value = ["Test City"]
@@ -144,7 +144,7 @@ class TestWeatherApp:
             # Configure mock classes to return mock instances
             mock_api_client_class.return_value = mock_api_client
             mock_notifier_class.return_value = mock_notifier
-            mock_location_manager_class.return_value = mock_location_manager
+            mock_location_service_class.return_value = mock_location_service
 
             yield {
                 "api_client_class": mock_api_client_class,
@@ -152,7 +152,7 @@ class TestWeatherApp:
                 "notifier_class": mock_notifier_class,
                 "notifier": mock_notifier,
                 "location_manager_class": mock_location_manager_class,
-                "location_manager": mock_location_manager,
+                "location_service": mock_location_service,
             }
 
     def test_init_with_default_config(self, wx_app_isolated, mock_components, monkeypatch):
@@ -163,9 +163,9 @@ class TestWeatherApp:
         # Create app with mocked components
         app = None
         try:
-            app = WeatherApp(
+            app = WeatherApp(weather_service=MagicMock(), 
                 parent=None,
-                location_manager=mock_components["location_manager"],
+                location_service=mock_components["location_service"],
                 api_client=mock_components["api_client"],
                 notifier=mock_components["notifier"],
             )
@@ -210,9 +210,9 @@ class TestWeatherApp:
         app = None
         try:
             # Create app with the loaded config
-            app = WeatherApp(
+            app = WeatherApp(weather_service=MagicMock(), 
                 parent=None,
-                location_manager=mock_components["location_manager"],
+                location_service=mock_components["location_service"],
                 api_client=mock_components["api_client"],
                 notifier=mock_components["notifier"],
                 config=config,
@@ -262,9 +262,9 @@ class TestWeatherApp:
         # Create a WeatherApp with our mocked components
         app = None
         try:
-            app = WeatherApp(
+            app = WeatherApp(weather_service=MagicMock(), 
                 parent=None,
-                location_manager=mock_components["location_manager"],
+                location_service=mock_components["location_service"],
                 # Use the real API client with contact info
                 api_client=api_client,
                 notifier=mock_components["notifier"],

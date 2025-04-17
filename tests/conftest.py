@@ -1,6 +1,11 @@
 # tests/conftest.py
 
 # Import faulthandler setup first to enable faulthandler
+<<<<<<< Updated upstream
+=======
+
+
+>>>>>>> Stashed changes
 import json
 import logging
 import os
@@ -11,16 +16,20 @@ from unittest.mock import MagicMock
 import pytest
 import wx
 
+<<<<<<< Updated upstream
 # Import faulthandler_setup for side effects (enables faulthandler)
 import tests.faulthandler_setup  # noqa: F401
 from tests.wx_cleanup_utils import safe_cleanup
+=======
+
+>>>>>>> Stashed changes
 
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Faulthandler is already enabled by the faulthandler_setup module
+
 
 # No need to import test utilities here
 
@@ -44,12 +53,9 @@ def wx_app_session():
 
     # Clean up after all tests using the safe cleanup utility
     logger.info("Performing session cleanup")
-    try:
-        # Use the safe cleanup utility
-        safe_cleanup()
-    except Exception as e:
-        logger.warning(f"Exception during wx cleanup: {e}")
-        # Continue with test completion even if cleanup fails
+    # The safe_cleanup function was causing a NameError, removing it.
+    # Window cleanup is handled by the function-scoped wx_app fixture.
+    # The App object itself should be garbage collected.
 
 
 @pytest.fixture

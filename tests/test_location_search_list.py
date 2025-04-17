@@ -3,6 +3,14 @@
 This module tests the location search list functionality in the LocationDialog.
 """
 
+<<<<<<< Updated upstream
+=======
+# Import faulthandler setup first to enable faulthandler
+
+
+import threading
+import time
+>>>>>>> Stashed changes
 from unittest.mock import MagicMock, patch
 
 import pytest

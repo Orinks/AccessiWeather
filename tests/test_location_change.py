@@ -15,8 +15,16 @@ class TestLocationChange(unittest.TestCase):
 
         # Mock dependencies
         self.api_client_mock = MagicMock()
-        self.location_manager_mock = MagicMock()
+        self.location_service_mock = MagicMock()
         self.notifier_mock = MagicMock()
+        self.weather_service_mock = MagicMock()
+        # Patch get_forecast to return LA forecast if called with LA coordinates
+        def get_forecast_side_effect(lat, lon, force_refresh=False):
+            if abs(lat - 34.0522) < 0.001 and abs(lon + 118.2437) < 0.001:
+                return self.la_forecast
+            return self.ny_forecast
+        self.weather_service_mock.get_forecast.side_effect = get_forecast_side_effect
+        # Do not patch get_national_forecast_data; let it return the default MagicMock
 
         # Create sample locations
         self.sample_locations = {
@@ -25,9 +33,10 @@ class TestLocationChange(unittest.TestCase):
         }
 
         # Setup location manager mock
-        self.location_manager_mock.get_all_locations.return_value = list(
+        self.location_service_mock.get_all_locations.return_value = list(
             self.sample_locations.keys()
         )
+        self.location_manager_mock = MagicMock()
         self.location_manager_mock.get_current_location_name.return_value = "New York"
         self.location_manager_mock.get_current_location.return_value = (
             "New York",
@@ -63,13 +72,15 @@ class TestLocationChange(unittest.TestCase):
 
         # Import here to avoid circular imports
         from accessiweather.gui.weather_app import WeatherApp
+        from accessiweather.services.location_service import LocationService
 
         # Create WeatherApp with mocked dependencies
         with patch("wx.CallAfter", side_effect=lambda func, *args, **kwargs: func(*args, **kwargs)):
             self.frame = WeatherApp(
-                location_manager=self.location_manager_mock,
+                weather_service=self.weather_service_mock,
+                location_service=self.location_manager_mock,
                 api_client=self.api_client_mock,
-                notifier=self.notifier_mock,
+                notification_service=self.notifier_mock,
             )
 
     def tearDown(self):
