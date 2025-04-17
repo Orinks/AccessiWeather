@@ -2,24 +2,23 @@
 import unittest
 from unittest.mock import MagicMock
 from accessiweather.services.notification_service import NotificationService
+from accessiweather.notifications import WeatherNotifier
 
 
 class TestNotificationService(unittest.TestCase):
     def setUp(self):
-        # Create a mock notifier with all required methods
-        self.mock_notifier = MagicMock()
-        self.mock_notifier.process_alerts = MagicMock(return_value=[])
-        self.mock_notifier.get_sorted_alerts = MagicMock(return_value=[])
-        self.mock_notifier.notify_alerts = MagicMock()
-        self.mock_notifier.clear_expired_alerts = MagicMock()
+        # Create a mock notifier with the correct spec
+        self.mock_notifier = MagicMock(spec=WeatherNotifier)
+        self.mock_notifier.process_alerts.return_value = []
+        self.mock_notifier.get_sorted_alerts.return_value = []
 
         # Create the service with the mock
         self.notification_service = NotificationService(self.mock_notifier)
 
     def test_init(self):
         """Test service initialization."""
-        # Create a mock notifier directly
-        mock_notifier = MagicMock()
+        # Create a mock notifier with the correct spec
+        mock_notifier = MagicMock(spec=WeatherNotifier)
 
         # Create the service with the mock
         service = NotificationService(mock_notifier)
