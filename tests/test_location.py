@@ -23,14 +23,40 @@ def location_manager(temp_config_dir):
 
 
 class TestLocationManager:
+    NATIONWIDE_NAME = "Nationwide"
+    NATIONWIDE_COORDS = (39.8283, -98.5795)
+
+    def test_nationwide_location_exists_after_init(self, location_manager):
+        """Nationwide location is always present after initialization"""
+        assert self.NATIONWIDE_NAME in location_manager.saved_locations
+        coords = location_manager.saved_locations[self.NATIONWIDE_NAME]
+        assert coords["lat"] == self.NATIONWIDE_COORDS[0]
+        assert coords["lon"] == self.NATIONWIDE_COORDS[1]
+
+    def test_cannot_remove_nationwide_location(self, location_manager):
+        """Attempting to remove the Nationwide location fails and does not remove it"""
+        result = location_manager.remove_location(self.NATIONWIDE_NAME)
+        assert result is False
+        assert self.NATIONWIDE_NAME in location_manager.saved_locations
+
+    def test_is_nationwide_location_helper(self, location_manager):
+        """Helper method correctly identifies the Nationwide location"""
+        assert location_manager.is_nationwide_location(self.NATIONWIDE_NAME)
+        assert not location_manager.is_nationwide_location("Home")
+
+
     """Test suite for LocationManager"""
 
     def test_init(self, location_manager, temp_config_dir):
         """Test initialization and directory creation"""
         assert location_manager.config_dir == temp_config_dir
         assert location_manager.locations_file == os.path.join(temp_config_dir, "locations.json")
+        # After init, only Nationwide should exist
+        assert location_manager.saved_locations == {
+            "Nationwide": {"lat": 39.8283, "lon": -98.5795}
+        }
+        # Current location should be None (not set yet)
         assert location_manager.current_location is None
-        assert location_manager.saved_locations == {}
         assert os.path.exists(temp_config_dir)
 
     def test_add_location(self, location_manager):
@@ -66,12 +92,16 @@ class TestLocationManager:
         assert result is True
         assert "Work" not in location_manager.saved_locations
         assert location_manager.current_location == "Home"
+        # Nationwide must still be present
+        assert "Nationwide" in location_manager.saved_locations
 
         # Remove the current location
         result = location_manager.remove_location("Home")
         assert result is True
         assert "Home" not in location_manager.saved_locations
-        assert location_manager.current_location is None
+        # Now only Nationwide remains, should be current
+        assert location_manager.current_location == "Nationwide"
+        assert list(location_manager.saved_locations.keys()) == ["Nationwide"]
 
         # Try to remove a non-existent location
         result = location_manager.remove_location("Nonexistent")
@@ -107,8 +137,8 @@ class TestLocationManager:
 
     def test_get_all_locations(self, location_manager):
         """Test getting all locations"""
-        # When no locations are saved
-        assert location_manager.get_all_locations() == []
+        # When no locations are saved, only Nationwide is present
+        assert location_manager.get_all_locations() == ["Nationwide"]
 
         # Add locations
         location_manager.add_location("Home", 35.0, -80.0)
@@ -116,7 +146,7 @@ class TestLocationManager:
 
         # Check all locations
         all_locations = location_manager.get_all_locations()
-        assert sorted(all_locations) == sorted(["Home", "Work"])
+        assert sorted(all_locations) == sorted(["Home", "Work", "Nationwide"])
 
     def test_load_locations(self, temp_config_dir):
         """Test loading locations from file"""
@@ -133,8 +163,10 @@ class TestLocationManager:
         # Create a new location manager to load the file
         manager = LocationManager(config_dir=temp_config_dir)
 
-        # Check that locations were loaded
-        assert manager.saved_locations == test_data["locations"]
+        # Check that locations were loaded and Nationwide is present
+        expected = dict(test_data["locations"])
+        expected["Nationwide"] = {"lat": 39.8283, "lon": -98.5795}
+        assert manager.saved_locations == expected
         assert manager.current_location == test_data["current"]
 
     def test_save_locations(self, location_manager):
@@ -150,8 +182,10 @@ class TestLocationManager:
         with open(location_manager.locations_file, "r") as f:
             data = json.load(f)
 
-        assert data["locations"] == {
+        expected = {
             "Home": {"lat": 35.0, "lon": -80.0},
             "Work": {"lat": 36.0, "lon": -81.0},
+            "Nationwide": {"lat": 39.8283, "lon": -98.5795}
         }
+        assert data["locations"] == expected
         assert data["current"] == "Home"

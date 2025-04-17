@@ -22,18 +22,18 @@ def mock_components():
         }
 
         # Mock the location manager
-        with patch("accessiweather.location.LocationManager") as mock_location_manager_class:
-            mock_location_manager = mock_location_manager_class.return_value
+        with patch("accessiweather.services.location_service.LocationService") as mock_location_service_class:
+            mock_location_service = mock_location_service_class.return_value
 
             # Configure the mock location manager
-            mock_location_manager.get_current_location.return_value = ("Test City", 35.0, -80.0)
-            mock_location_manager.get_location_coordinates.return_value = (35.0, -80.0)
-            mock_location_manager.saved_locations = {
+            mock_location_service.get_current_location.return_value = ("Test City", 35.0, -80.0)
+            mock_location_service.get_location_coordinates.return_value = (35.0, -80.0)
+            mock_location_service.saved_locations = {
                 "Test City": {"lat": 35.0, "lon": -80.0},
                 "New York": {"lat": 40.7, "lon": -74.0},
                 "Los Angeles": {"lat": 34.0, "lon": -118.2},
             }
-            mock_location_manager.get_all_locations.return_value = [
+            mock_location_service.get_all_locations.return_value = [
                 "Test City",
                 "New York",
                 "Los Angeles",
@@ -43,7 +43,7 @@ def mock_components():
             with patch("accessiweather.notifications.WeatherNotifier") as mock_notifier_class:
                 mock_notifier = mock_notifier_class.return_value
 
-                yield mock_api_client, mock_location_manager, mock_notifier
+                yield mock_api_client, mock_location_service, mock_notifier
 
 
 def test_location_manager_get_all_locations(mock_components):

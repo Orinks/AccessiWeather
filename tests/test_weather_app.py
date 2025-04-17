@@ -1,6 +1,11 @@
 """Tests for the WeatherApp class."""
 
 # Import faulthandler setup first to enable faulthandler
+<<<<<<< Updated upstream
+=======
+
+
+>>>>>>> Stashed changes
 import queue
 import time
 from unittest.mock import MagicMock, patch
@@ -14,7 +19,7 @@ from accessiweather.gui.weather_app import WeatherApp
 from accessiweather.services.location_service import LocationService
 from accessiweather.services.notification_service import NotificationService
 from accessiweather.services.weather_service import WeatherService
-from tests.wx_test_utils import AsyncEventWaiter
+
 
 
 @pytest.fixture

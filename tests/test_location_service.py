@@ -29,6 +29,11 @@ def location_service(mock_location_manager):
 class TestLocationService:
     """Test suite for LocationService."""
 
+    def test_get_nationwide_location(self, location_service):
+        """Test getting the Nationwide location from the service."""
+        result = location_service.get_nationwide_location()
+        assert result == ("Nationwide", 39.8283, -98.5795)
+
     def test_init(self, mock_location_manager):
         """Test service initialization."""
         service = LocationService(mock_location_manager)
@@ -99,10 +104,10 @@ class TestLocationService:
 
     def test_get_location_coordinates(self, location_service, mock_location_manager):
         """Test getting location coordinates."""
-        # Set up mock locations
-        mock_location_manager.locations = {
-            "Test City": (35.0, -80.0),
-            "Another City": (40.0, -75.0),
+        # Set up mock saved_locations
+        mock_location_manager.saved_locations = {
+            "Test City": {"lat": 35.0, "lon": -80.0},
+            "Another City": {"lat": 40.0, "lon": -75.0},
         }
 
         # Call the method
@@ -113,8 +118,8 @@ class TestLocationService:
 
     def test_get_location_coordinates_not_found(self, location_service, mock_location_manager):
         """Test getting coordinates for a non-existent location."""
-        # Set up mock locations
-        mock_location_manager.locations = {"Test City": (35.0, -80.0)}
+        # Set up mock saved_locations
+        mock_location_manager.saved_locations = {"Test City": {"lat": 35.0, "lon": -80.0}}
 
         # Call the method
         result = location_service.get_location_coordinates("Non-existent City")

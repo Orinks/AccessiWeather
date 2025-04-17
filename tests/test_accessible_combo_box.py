@@ -1,40 +1,40 @@
 """Tests for the AccessibleComboBox component"""
 
 # Import faulthandler setup first to enable faulthandler
+<<<<<<< Updated upstream
+=======
+
+
+>>>>>>> Stashed changes
 from unittest.mock import MagicMock
 
-import pytest
+import unittest
+from unittest.mock import MagicMock
 import wx
+<<<<<<< Updated upstream
 
 # Import for side effects (enables faulthandler)
 import tests.faulthandler_setup  # noqa: F401
 
 # Import before creating wx.App
+=======
+>>>>>>> Stashed changes
 from accessiweather.gui.ui_components import AccessibleComboBox
 
-
-# Create a wx App fixture for testing
-@pytest.fixture(scope="module", autouse=True)
-def wx_app():
-    """Create a wx App for testing"""
-    app = wx.App(False)
-    yield app
-
-
-class TestAccessibleComboBox:
+class TestAccessibleComboBox(unittest.TestCase):
     """Test suite for AccessibleComboBox"""
 
-    def setup_method(self):
-        """Set up test fixture"""
-        # Create parent frame
+    def setUp(self):
+        # Ensure wx.App exists
+        if not wx.App.Get():
+            self.app = wx.App(False)
+        else:
+            self.app = wx.App.Get()
         self.frame = wx.Frame(None)
 
-    def teardown_method(self):
-        """Tear down test fixture"""
-        # Hide the window first
+    def tearDown(self):
         wx.CallAfter(self.frame.Hide)
         wx.SafeYield()
-        # Then destroy it
         wx.CallAfter(self.frame.Destroy)
         wx.SafeYield()
 
@@ -43,8 +43,8 @@ class TestAccessibleComboBox:
         # Test with empty choices
         combo = AccessibleComboBox(self.frame, label="Test Combo")
         try:
-            assert combo.GetName() == "Test Combo"
-            assert combo.GetCount() == 0
+            self.assertEqual(combo.GetName(), "Test Combo")
+            self.assertEqual(combo.GetCount(), 0)
         finally:
             wx.CallAfter(combo.Destroy)
 
@@ -52,10 +52,10 @@ class TestAccessibleComboBox:
         choices = ["Option 1", "Option 2", "Option 3"]
         combo = AccessibleComboBox(self.frame, choices=choices, label="Test Combo")
         try:
-            assert combo.GetName() == "Test Combo"
-            assert combo.GetCount() == 3
+            self.assertEqual(combo.GetName(), "Test Combo")
+            self.assertEqual(combo.GetCount(), 3)
             for i, choice in enumerate(choices):
-                assert combo.GetString(i) == choice
+                self.assertEqual(combo.GetString(i), choice)
         finally:
             wx.CallAfter(combo.Destroy)
 
@@ -63,11 +63,10 @@ class TestAccessibleComboBox:
         """Test setting accessible label"""
         combo = AccessibleComboBox(self.frame, label="Initial Label")
         try:
-            assert combo.GetName() == "Initial Label"
-
+            self.assertEqual(combo.GetName(), "Initial Label")
             # Change label
             combo.SetLabel("New Label")
-            assert combo.GetName() == "New Label"
+            self.assertEqual(combo.GetName(), "New Label")
         finally:
             wx.CallAfter(combo.Destroy)
 
@@ -77,14 +76,13 @@ class TestAccessibleComboBox:
         try:
             # Add single item
             combo.Append("Option 1")
-            assert combo.GetCount() == 1
-            assert combo.GetString(0) == "Option 1"
-
+            self.assertEqual(combo.GetCount(), 1)
+            self.assertEqual(combo.GetString(0), "Option 1")
             # Add multiple items
             combo.Append(["Option 2", "Option 3"])
-            assert combo.GetCount() == 3
-            assert combo.GetString(1) == "Option 2"
-            assert combo.GetString(2) == "Option 3"
+            self.assertEqual(combo.GetCount(), 3)
+            self.assertEqual(combo.GetString(1), "Option 2")
+            self.assertEqual(combo.GetString(2), "Option 3")
         finally:
             wx.CallAfter(combo.Destroy)
 
@@ -95,18 +93,16 @@ class TestAccessibleComboBox:
         try:
             # Set by index
             combo.SetSelection(1)
-            assert combo.GetValue() == "Option 2"
-            assert combo.GetSelection() == 1
-
+            self.assertEqual(combo.GetValue(), "Option 2")
+            self.assertEqual(combo.GetSelection(), 1)
             # Set by string
             combo.SetValue("Option 3")
-            assert combo.GetValue() == "Option 3"
-            assert combo.GetSelection() == 2
-
+            self.assertEqual(combo.GetValue(), "Option 3")
+            self.assertEqual(combo.GetSelection(), 2)
             # Set custom text
             combo.SetValue("Custom Text")
-            assert combo.GetValue() == "Custom Text"
-            assert combo.GetSelection() == wx.NOT_FOUND
+            self.assertEqual(combo.GetValue(), "Custom Text")
+            self.assertEqual(combo.GetSelection(), wx.NOT_FOUND)
         finally:
             wx.CallAfter(combo.Destroy)
 
@@ -128,10 +124,10 @@ class TestAccessibleComboBox:
             event = wx.CommandEvent(wx.wxEVT_COMBOBOX, combo.GetId())
             combo.GetEventHandler().ProcessEvent(event)
             on_combobox.assert_called_once()
-
             # Simulate text event
             event = wx.CommandEvent(wx.wxEVT_TEXT, combo.GetId())
             combo.GetEventHandler().ProcessEvent(event)
             on_text.assert_called_once()
         finally:
             wx.CallAfter(combo.Destroy)
+

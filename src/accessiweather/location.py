@@ -71,23 +71,27 @@ class LocationManager:
             logger.error(f"Failed to save locations: {str(e)}")
 
     def add_location(self, name: str, lat: float, lon: float) -> None:
-        """Add a new location
+        """Add a new location. Cannot overwrite Nationwide location.
 
         Args:
             name: Location name
             lat: Latitude
             lon: Longitude
         """
+        if name == NATIONWIDE_LOCATION_NAME:
+            # Do not allow overwriting Nationwide location
+            return
         self.saved_locations[name] = {"lat": lat, "lon": lon}
 
-        # If this is the first location, make it current
-        if self.current_location is None:
+        # If this is the first location (besides Nationwide), make it current
+        if self.current_location is None or self.current_location == NATIONWIDE_LOCATION_NAME:
             self.current_location = name
 
+        self._ensure_nationwide_location()
         self._save_locations()
 
     def remove_location(self, name: str) -> bool:
-        """Remove a location
+        """Remove a location. Cannot remove Nationwide location.
 
         Args:
             name: Location name to remove
@@ -105,10 +109,16 @@ class LocationManager:
 
             # If we removed the current location, update it
             if self.current_location == name:
-                self.current_location = (
-                    next(iter(self.saved_locations)) if self.saved_locations else None
-                )
+                # Pick a non-Nationwide location if possible
+                non_nationwide = [loc for loc in self.saved_locations if loc != NATIONWIDE_LOCATION_NAME]
+                if non_nationwide:
+                    self.current_location = non_nationwide[0]
+                elif NATIONWIDE_LOCATION_NAME in self.saved_locations:
+                    self.current_location = NATIONWIDE_LOCATION_NAME
+                else:
+                    self.current_location = None
 
+            self._ensure_nationwide_location()
             self._save_locations()
             return True
 
@@ -161,7 +171,7 @@ class LocationManager:
     def set_locations(
         self, locations: Dict[str, Dict[str, float]], current: Optional[str] = None
     ) -> None:
-        """Set all locations and optionally the current location
+        """Set all locations and optionally the current location. Nationwide is always present.
 
         This is used when initializing from saved config or in tests.
 
@@ -169,17 +179,25 @@ class LocationManager:
             locations: Dictionary of location names to coordinate dictionaries
             current: Current location name (must be in locations dict)
         """
-        self.saved_locations = locations
+        # Never allow setting locations without Nationwide
+        new_locations = dict(locations)
+        new_locations[NATIONWIDE_LOCATION_NAME] = {
+            "lat": NATIONWIDE_LAT,
+            "lon": NATIONWIDE_LON
+        }
+        self.saved_locations = new_locations
 
         if current and current in self.saved_locations:
             self.current_location = current
         elif self.saved_locations and not self.current_location:
-            # If no current location set but we have locations, set the first one
-            self.current_location = next(iter(self.saved_locations))
+            # If no current location set but we have locations, set the first non-Nationwide
+            non_nationwide = [loc for loc in self.saved_locations if loc != NATIONWIDE_LOCATION_NAME]
+            if non_nationwide:
+                self.current_location = non_nationwide[0]
+            else:
+                self.current_location = NATIONWIDE_LOCATION_NAME
 
-        # Ensure Nationwide location exists even when setting locations directly
         self._ensure_nationwide_location()
-
         self._save_locations()
 
     def _ensure_nationwide_location(self) -> None:
@@ -190,7 +208,7 @@ class LocationManager:
                 "lat": NATIONWIDE_LAT,
                 "lon": NATIONWIDE_LON
             }
-            self._save_locations()
+        # Never remove or overwrite Nationwide; do not save yet (callers will save)
 
     def is_nationwide_location(self, name: str) -> bool:
         """Check if a location is the Nationwide location

@@ -3,6 +3,12 @@
 This module tests the accessibility features of the AccessibleComboBox component.
 """
 
+<<<<<<< Updated upstream
+=======
+# Import faulthandler setup first to enable faulthandler
+
+
+>>>>>>> Stashed changes
 import logging
 import unittest
 from unittest.mock import MagicMock, patch

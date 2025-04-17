@@ -36,6 +36,68 @@ class ApiClientError(Exception):
 
 
 class NoaaApiClient:
+    # ... existing methods ...
+
+    def get_national_product(self, product_type: str, location: str, force_refresh: bool = False) -> Optional[str]:
+        """Get a national product from a specific center
+
+        Args:
+            product_type: Product type code (e.g., "FXUS01")
+            location: Location code (e.g., "KWNH")
+            force_refresh: Whether to force a refresh of the data
+
+        Returns:
+            Text of the product or None if not available
+        """
+        try:
+            endpoint = f"products/types/{product_type}/locations/{location}"
+            products = self._make_request(endpoint, force_refresh=force_refresh)
+
+            if "@graph" not in products or not products["@graph"]:
+                return None
+
+            # Get the latest product
+            latest_product = products["@graph"][0]
+            latest_product_id = latest_product["id"]
+
+            # Get the product text
+            product_endpoint = f"products/{latest_product_id}"
+            product = self._make_request(product_endpoint, force_refresh=force_refresh)
+
+            return product.get("productText")
+        except Exception as e:
+            logger.error(f"Error getting national product {product_type} from {location}: {str(e)}")
+            return None
+
+    def get_national_forecast_data(self, force_refresh: bool = False) -> Dict[str, Any]:
+        """Get national forecast data from various centers
+
+        Returns:
+            Dictionary containing national forecast data
+        """
+        result = {
+            "wpc": {
+                "short_range": self.get_national_product("FXUS01", "KWNH", force_refresh),
+                "medium_range": self.get_national_product("FXUS06", "KWNH", force_refresh),
+                "extended": self.get_national_product("FXUS07", "KWNH", force_refresh),
+                "qpf": self.get_national_product("FXUS02", "KWNH", force_refresh)
+            },
+            "spc": {
+                "day1": self.get_national_product("ACUS01", "KWNS", force_refresh),
+                "day2": self.get_national_product("ACUS02", "KWNS", force_refresh)
+            },
+            "nhc": {
+                "atlantic": self.get_national_product("MIATWOAT", "KNHC", force_refresh),
+                "east_pacific": self.get_national_product("MIATWOEP", "KNHC", force_refresh)
+            },
+            "cpc": {
+                "6_10_day": self.get_national_product("FXUS05", "KWNC", force_refresh),
+                "8_14_day": self.get_national_product("FXUS07", "KWNC", force_refresh)
+            }
+        }
+        return result
+
+
     """Client for interacting with NOAA Weather API"""
 
     # NOAA Weather API base URL

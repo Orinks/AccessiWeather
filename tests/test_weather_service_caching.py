@@ -1,35 +1,58 @@
 """Tests for the WeatherService class with caching."""
 
 from unittest.mock import MagicMock, patch
-
-import pytest
-
+import unittest
 from accessiweather.api_client import ApiClientError, NoaaApiClient
 from accessiweather.services.weather_service import WeatherService
 
-
-@pytest.fixture
-def mock_api_client():
-    """Create a mock API client with caching enabled."""
-    mock_client = MagicMock(spec=NoaaApiClient)
-    # Default values, tests can override
-    mock_client.get_forecast.return_value = {
-        "properties": {"periods": [{"name": "Default", "temperature": 0}]}
-    }
-    mock_client.get_alerts.return_value = {"features": []}
-    mock_client.get_discussion.return_value = "Test discussion"
-    mock_client.cache = MagicMock()  # Mock the cache
-    return mock_client
-
-
-@pytest.fixture
-def weather_service(mock_api_client):
-    """Create a WeatherService instance with a mock API client."""
-    return WeatherService(mock_api_client)
-
-
-class TestWeatherServiceCaching:
+class TestWeatherServiceCaching(unittest.TestCase):
     """Test suite for WeatherService with caching."""
+    def setUp(self):
+        self.mock_api_client = MagicMock(spec=NoaaApiClient)
+        self.mock_api_client.get_forecast.return_value = {
+            "properties": {"periods": [{"name": "Default", "temperature": 0}]}
+        }
+        self.mock_api_client.get_alerts.return_value = {"features": []}
+        self.mock_api_client.get_discussion.return_value = "Test discussion"
+        self.mock_api_client.cache = MagicMock()  # Mock the cache
+        self.weather_service = WeatherService(self.mock_api_client)
+
+    def test_get_forecast_with_cache(self):
+        self.weather_service.get_forecast(35.0, -80.0)
+        self.mock_api_client.get_forecast.assert_called_once_with(35.0, -80.0, force_refresh=False)
+
+    def test_get_forecast_force_refresh(self):
+        self.weather_service.get_forecast(35.0, -80.0, force_refresh=True)
+        self.mock_api_client.get_forecast.assert_called_once_with(35.0, -80.0, force_refresh=True)
+
+    def test_get_alerts_with_cache(self):
+        self.weather_service.get_alerts(35.0, -80.0, radius=25, precise_location=True)
+        self.mock_api_client.get_alerts.assert_called_once_with(
+            35.0, -80.0, radius=25, precise_location=True, force_refresh=False
+        )
+
+    def test_get_alerts_force_refresh(self):
+        self.weather_service.get_alerts(35.0, -80.0, radius=25, precise_location=True, force_refresh=True)
+        self.mock_api_client.get_alerts.assert_called_once_with(
+            35.0, -80.0, radius=25, precise_location=True, force_refresh=True
+        )
+
+    def test_get_discussion_with_cache(self):
+        self.weather_service.get_discussion(35.0, -80.0)
+        self.mock_api_client.get_discussion.assert_called_once_with(35.0, -80.0, force_refresh=False)
+
+    def test_get_discussion_force_refresh(self):
+        self.weather_service.get_discussion(35.0, -80.0, force_refresh=True)
+        self.mock_api_client.get_discussion.assert_called_once_with(35.0, -80.0, force_refresh=True)
+
+    def test_api_error_handling(self):
+        self.mock_api_client.get_forecast.side_effect = ApiClientError("Test error")
+        with self.assertRaises(ApiClientError) as exc_info:
+            self.weather_service.get_forecast(35.0, -80.0)
+        self.assertIn("Test error", str(exc_info.exception))
+
+if __name__ == "__main__":
+    unittest.main()
 
     def test_get_forecast_with_cache(self, weather_service, mock_api_client):
         """Test getting forecast data with caching."""

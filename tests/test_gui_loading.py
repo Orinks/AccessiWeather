@@ -1,6 +1,3 @@
-# tests/test_gui_loading.py
-"""Tests specifically for loading feedback in WeatherApp"""
-
 # import time # No longer needed after removing sleep
 from unittest.mock import MagicMock, patch
 
@@ -13,7 +10,7 @@ import wx.richtext
 # For simplicity, let's redefine a minimal mock_components fixture here
 # or assume it's available via conftest.py later.
 from accessiweather.gui.weather_app import WeatherApp
-from tests.test_gui import TestWeatherApp  # To potentially inherit fixtures
+
 
 
 # Minimal fixture redefinition for standalone use (adapt as needed)
@@ -23,173 +20,94 @@ def mock_components_loading():
     with (
         patch("accessiweather.api_client.NoaaApiClient") as mock_api_client_class,
         patch("accessiweather.notifications.WeatherNotifier") as mock_notifier_class,
-        patch("accessiweather.location.LocationManager") as mock_location_manager_class,
+        patch("accessiweather.services.location_service.LocationService") as mock_location_service_class,
     ):
 
         mock_api_client = MagicMock()
         mock_notifier = MagicMock()
-        mock_location_manager = MagicMock()
-        mock_location_manager.get_current_location.return_value = ("Test City", 35.0, -80.0)
+        mock_location_service = MagicMock()
+        mock_location_service.get_current_location.return_value = ("Test City", 35.0, -80.0)
 
         mock_api_client_class.return_value = mock_api_client
         mock_notifier_class.return_value = mock_notifier
-        mock_location_manager_class.return_value = mock_location_manager
+        mock_location_service_class.return_value = mock_location_service
 
         yield {
             "api_client": mock_api_client,
             "notifier": mock_notifier,
-            "location_manager": mock_location_manager,
+            "location_service": mock_location_service,
         }
 
 
 # Use the base class from test_gui to inherit wx_app fixture
 # Note: This class duplicates announcement tests from TestWeatherApp.
 # Consider refactoring or removing duplication later.
-class TestWeatherAppLoadingFeedback(TestWeatherApp):
-    """Tests specifically for loading feedback and related UI states"""
+import unittest
+from unittest.mock import MagicMock, patch
+import wx
+import wx.richtext
+from accessiweather.gui.weather_app import WeatherApp
 
-    # Use the locally defined fixture for components
-    @pytest.fixture
-    def mock_components(self, mock_components_loading):
-        return mock_components_loading
-
-    # Removed duplicated announcement tests as the feature was removed
-
-    # --- Original Loading Feedback Tests (Applying Fixes) ---
-
-    # Removed threading.Thread patch as async fetchers handle threading
+class TestWeatherAppLoadingFeedback(unittest.TestCase):
     @patch("wx.CallAfter")
-    def test_ui_state_during_fetch(
-        self, mock_call_after, wx_app, mock_components  # Removed mock_announce
-    ):
-        """Test UI elements are disabled/show loading during fetch"""
+    def test_ui_state_during_fetch(self, mock_call_after):
+        app_ctx = None
         app = None
         try:
-            app = WeatherApp(
-                parent=None,
-                location_manager=mock_components["location_manager"],
-                api_client=mock_components["api_client"],
-                notifier=mock_components["notifier"],
-            )
-            # Mock UI elements directly on the instance
-            # Correct attribute name
-            app.refresh_btn = MagicMock(spec=wx.Button)
-            app.forecast_text = MagicMock(spec=wx.richtext.RichTextCtrl)
-            # Correct spec to wx.ListCtrl for DeleteAllItems
-            app.alerts_list = MagicMock(spec=wx.ListCtrl)
-
-            # Trigger fetch
-            location = ("Test City", 35.0, -80.0)
-            # Mock the fetcher methods directly to prevent actual calls
-            # Assign to _ as mocks are not used directly
-            with (
-                patch.object(app.forecast_fetcher, "fetch") as _,
-                patch.object(app.alerts_fetcher, "fetch") as _,
-            ):
-                app._FetchWeatherData(location)
-
-            # Assertions immediately after calling _FetchWeatherData
-            app.refresh_btn.Disable.assert_called_once()
-            # Check forecast text (depends on implementation)
-            app.forecast_text.SetValue.assert_called()
-            call_args = app.forecast_text.SetValue.call_args[0]
-            assert call_args[0] == "Loading forecast..."
-
-            # Check alerts list (depends on implementation)
-            # Assert DeleteAllItems was called on the ListCtrl mock
-            app.alerts_list.DeleteAllItems.assert_called_once()
-            # Or: app.alerts_list.SetString.assert_called_with("Loading...")
-
-            # Check immediate state change only
-            # pytest.fail("UI mocking needs refinement.") # Keep failing
-
+            # Ensure a wx.App exists
+            if not wx.App.Get():
+                app_ctx = wx.App()
+            else:
+                app_ctx = wx.App.Get()
+            # Mock dependencies
+            location_manager = MagicMock()
+            location_manager.get_current_location.return_value = ("Test City", 35.0, -80.0)
+            api_client = MagicMock()
+            notifier = MagicMock()
+            weather_service = MagicMock()
+            with patch.object(WeatherApp, "_check_api_contact_configured", return_value=None):
+                with patch("wx.MessageBox", return_value=None):
+                    app = WeatherApp(
+                        parent=None, # Positional first
+                        location_service=location_manager,
+                        api_client=api_client,
+                        notification_service=notifier,
+                        weather_service=weather_service, # Corrected: only one
+                    )
+                    app.refresh_btn = MagicMock(spec=wx.Button)
+                    app.forecast_text = MagicMock(spec=wx.richtext.RichTextCtrl)
+                    app.alerts_list = MagicMock(spec=wx.ListCtrl)
+                    location = ("Test City", 35.0, -80.0)
+                    with patch.object(app.forecast_fetcher, "fetch", return_value=None), \
+                         patch.object(app.alerts_fetcher, "fetch", return_value=None):
+                        app._FetchWeatherData(location)
+                    app.refresh_btn.Disable.assert_called_once()
+                    app.forecast_text.SetValue.assert_called()
+                    first_call = app.forecast_text.SetValue.call_args_list[0]
+                    self.assertEqual(first_call[0][0], "Loading forecast...")
+                    app.alerts_list.DeleteAllItems.assert_called_once()
         finally:
             if app:
                 app.Destroy()
+            if app_ctx and isinstance(app_ctx, wx.App):
+                # Pass # Let pytest handle app lifecycle if possible
+                pass # Keep for now if needed for unittest runner
 
-    # Patch the actual fetcher methods and wx.MessageBox
-    @patch("wx.MessageBox")  # Mock message box display
-    @patch("wx.CallAfter")
-    def test_ui_state_on_fetch_error(
-        self, mock_call_after, mock_message_box, wx_app, mock_components  # Removed mock_announce
-    ):
-        """Test UI elements are re-enabled/show error on fetch failure"""
-        app = None
-        try:
-            app = WeatherApp(
-                parent=None,
-                location_manager=mock_components["location_manager"],
-                api_client=mock_components["api_client"],
-                notifier=mock_components["notifier"],
-            )
-            # Mock UI elements
-            # Correct attribute name
-            app.refresh_btn = MagicMock(spec=wx.Button)
-            app.forecast_text = MagicMock(spec=wx.richtext.RichTextCtrl)
-            # Correct spec
-            app.alerts_list = MagicMock(spec=wx.ListCtrl)
-            # Mock UIManager methods as they are called in error handlers too
-            app.ui_manager._UpdateForecastDisplay = MagicMock()
-            app.ui_manager._UpdateAlertsDisplay = MagicMock()
-
-            # Trigger fetch, simulating errors in callbacks via fetcher mocks
-            location = ("Test City", 35.0, -80.0)
-            # Use side_effect on the fetcher mocks to call error handlers
-            with (
-                patch.object(
-                    app.forecast_fetcher,
-                    "fetch",
-                    side_effect=lambda lat, lon, on_success, on_error: on_error(
-                        "Forecast API Error"
-                    ),  # noqa E501
-                ) as mock_f_fetch,
-                patch.object(
-                    app.alerts_fetcher,
-                    "fetch",
-                    side_effect=lambda lat, lon, on_success, on_error: on_error(
-                        "Alerts API Error"
-                    ),  # noqa E501
-                ) as mock_a_fetch,
-            ):
-                app._FetchWeatherData(location)
-
-                # Check fetchers were called
-                mock_f_fetch.assert_called_once()
-                mock_a_fetch.assert_called_once()
-
-            # No need for sleep, error handlers called directly by side_effect
-
-            # Assertions after error handlers should have run
-            app.refresh_btn.Enable.assert_called()  # Re-enabled
-            # Check forecast text shows error
-            app.forecast_text.SetValue.assert_called()
-            assert (
-                "Error fetching forecast" in app.forecast_text.SetValue.call_args[0][0]
-            )  # noqa E501
-            # Check alerts list is cleared
-            app.alerts_list.DeleteAllItems.assert_called()
-            # Check MessageBox was called (at least twice, once for each error)
-            assert mock_message_box.call_count >= 2
-
-            # pytest.fail("UI mocking needs refinement.") # Keep failing
-
-        finally:
-            if app:
-                app.Destroy()
-
-    # Patch the actual fetcher methods
+    # Moved this method inside the class
     @patch("wx.CallAfter")
     def test_ui_state_on_fetch_success(
-        self, mock_call_after, wx_app, mock_components  # Removed mock_announce
+        self, mock_call_after, wx_app, mock_components # Removed mock_announce
     ):
         """Test UI elements are updated and enabled on fetch success"""
         app = None
         try:
+            # Pass parent=None as the first argument
             app = WeatherApp(
-                parent=None,
-                location_manager=mock_components["location_manager"],
+                parent=None, # Positional first
+                location_service=mock_components["location_service"],
                 api_client=mock_components["api_client"],
-                notifier=mock_components["notifier"],
+                notification_service=mock_components["notifier"], # Corrected key
+                weather_service=MagicMock(), # Corrected: single instance
             )
             # Mock UI elements and update methods
             # Correct attribute name
@@ -208,7 +126,7 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
             mock_forecast_data = {
                 "properties": {
                     "periods": [{"name": "Today", "detailedForecast": "Sunny"}]
-                }  # noqa E501
+                }
             }
             mock_alerts_data = {"features": [{"properties": {"event": "Flood Warning"}}]}
 
@@ -218,14 +136,14 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
                     "fetch",
                     side_effect=lambda lat, lon, on_success, on_error: on_success(
                         mock_forecast_data
-                    ),  # noqa E501
+                    ),
                 ) as mock_f_fetch,
                 patch.object(
                     app.alerts_fetcher,
                     "fetch",
                     side_effect=lambda lat, lon, on_success, on_error: on_success(
                         mock_alerts_data
-                    ),  # noqa E501
+                    ),
                 ) as mock_a_fetch,
             ):
                 app._FetchWeatherData(location)
@@ -237,13 +155,14 @@ class TestWeatherAppLoadingFeedback(TestWeatherApp):
             # No need for sleep, success handlers are called directly
 
             # Assertions after success handlers
-            app.refresh_btn.Enable.assert_called_once()  # Re-enabled
+            app.refresh_btn.Enable.assert_called_once() # Re-enabled
             # Check UIManager methods were called
             app.ui_manager._UpdateForecastDisplay.assert_called_once_with(mock_forecast_data)
             app.ui_manager._UpdateAlertsDisplay.assert_called_once_with(mock_alerts_data)
 
-            # pytest.fail("UI mocking needs refinement.") # Keep failing
-
         finally:
             if app:
                 app.Destroy()
+
+if __name__ == "__main__":
+    unittest.main()

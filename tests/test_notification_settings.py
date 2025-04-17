@@ -18,14 +18,14 @@ def mock_components():
         mock_api_client = mock_api_client_class.return_value
 
         # Mock the location manager
-        with patch("accessiweather.location.LocationManager") as mock_location_manager_class:
-            mock_location_manager = mock_location_manager_class.return_value
-            mock_location_manager.get_current_location.return_value = ("Test City", 35.0, -80.0)
+        with patch("accessiweather.services.location_service.LocationService") as mock_location_service_class:
+            mock_location_service = mock_location_service_class.return_value
+            mock_location_service.get_current_location.return_value = ("Test City", 35.0, -80.0)
 
             # Use a real notifier for these tests
             real_notifier = WeatherNotifier()
 
-            yield mock_api_client, mock_location_manager, real_notifier
+            yield mock_api_client, mock_location_service, real_notifier
 
 
 @pytest.fixture

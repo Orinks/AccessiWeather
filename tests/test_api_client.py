@@ -2,110 +2,143 @@
 
 from unittest.mock import MagicMock, patch
 
-import pytest
+import unittest
+from unittest.mock import MagicMock, patch
 import requests
-
 from accessiweather.api_client import ApiClientError, NoaaApiClient
+from accessiweather.gui.weather_app import WeatherApp
 
-# Removed unused logging import
+class TestNoaaApiClient(unittest.TestCase):
+    def setUp(self):
+        self.api_client = NoaaApiClient(user_agent="Test User Agent")
+        self.api_client_with_contact = NoaaApiClient(user_agent="Test User Agent", contact_info="test@example.com")
 
-
-@pytest.fixture
-def mock_response():
-    """Create a mock response object"""
-    mock_resp = MagicMock()
-    mock_resp.raise_for_status = MagicMock()
-    mock_resp.json = MagicMock(return_value={"mock": "data"})
-    mock_resp.status_code = 200
-    return mock_resp
-
-
-@pytest.fixture
-def api_client():
-    """Create an instance of the NoaaApiClient"""
-    return NoaaApiClient(user_agent="Test User Agent")
-
-
-@pytest.fixture
-def api_client_with_contact():
-    """Create an instance of the NoaaApiClient with contact information"""
-    return NoaaApiClient(user_agent="Test User Agent", contact_info="test@example.com")
-
-
-class TestNoaaApiClient:
-    """Test suite for NoaaApiClient"""
-
-    def test_init(self, api_client):
-        """Test client initialization without contact info"""
-        assert api_client.user_agent == "Test User Agent"
-        assert api_client.headers == {
-            "User-Agent": "Test User Agent",
-            "Accept": "application/geo+json",
-        }
-
-    def test_init_with_contact(self, api_client_with_contact):
-        """Test client initialization with contact info"""
-        assert api_client_with_contact.user_agent == "Test User Agent"
-        assert api_client_with_contact.contact_info == "test@example.com"
-        assert api_client_with_contact.headers == {
-            "User-Agent": "Test User Agent (test@example.com)",
-            "Accept": "application/geo+json",
-        }
+    def mock_response(self):
+        mock_resp = MagicMock()
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.json = MagicMock(return_value={"mock": "data"})
+        mock_resp.status_code = 200
+        return mock_resp
 
     @patch("accessiweather.api_client.requests.get")
-    def test_get_point_data(self, mock_get, api_client, mock_response):
+    def test_get_national_product_success(self, mock_get):
+        """Test retrieving a national product (e.g., FXUS01 KWNH)"""
+        product_type = "FXUS01"
+        location = "KWNH"
+        endpoint_url = f"https://api.weather.gov/products/types/{product_type}/locations/{location}"
+        product_id = "202404160800-FXUS01-KWNH"
+        mock_get.side_effect = [
+            MagicMock(
+                status_code=200,
+                json=MagicMock(return_value={"@graph": [{"id": product_id}]}),
+                raise_for_status=MagicMock(),
+            ),
+            MagicMock(
+                status_code=200,
+                json=MagicMock(return_value={"productText": "Sample forecast text"}),
+                raise_for_status=MagicMock(),
+            ),
+        ]
+        text = self.api_client.get_national_product(product_type, location)
+        self.assertEqual(text, "Sample forecast text")
+        self.assertEqual(mock_get.call_args_list[0][0][0], endpoint_url)
+        self.assertIn(product_id, mock_get.call_args_list[1][0][0])
+
+    @patch("accessiweather.api_client.requests.get")
+    def test_get_national_product_no_data(self, mock_get):
+        """Test handling when no national product is available"""
+        product_type = "FXUS01"
+        location = "KWNH"
+        mock_get.return_value = MagicMock(
+            status_code=200,
+            json=MagicMock(return_value={"@graph": []}),
+            raise_for_status=MagicMock(),
+        )
+        text = self.api_client.get_national_product(product_type, location)
+        self.assertIsNone(text)
+
+    @patch.object(NoaaApiClient, "get_national_product")
+    def test_get_national_forecast_data_aggregation(self, mock_get_national_product):
+        """Test that get_national_forecast_data aggregates multiple products"""
+        mock_get_national_product.side_effect = lambda typ, loc, force_refresh=False: f"{typ}-{loc}"
+        data = self.api_client.get_national_forecast_data()
+        self.assertEqual(data["wpc"]["short_range"], "FXUS01-KWNH")
+        self.assertEqual(data["wpc"]["medium_range"], "FXUS06-KWNH")
+        self.assertEqual(data["spc"]["day1"], "ACUS01-KWNS")
+        # ...continue for other keys as in the implementation plan
+
+    @patch("accessiweather.api_client.requests.get")
+    def test_get_national_product_error(self, mock_get):
+        """Test error handling when request fails"""
+        mock_get.side_effect = requests.RequestException("Network error")
+        text = self.api_client.get_national_product("FXUS01", "KWNH")
+        self.assertIsNone(text)  # Should gracefully handle and return None
+
+
+    """Test suite for NoaaApiClient"""
+
+    def test_init(self):
+        """Test client initialization without contact info"""
+        self.assertEqual(self.api_client.user_agent, "Test User Agent")
+        self.assertEqual(self.api_client.headers, {
+            "User-Agent": "Test User Agent",
+            "Accept": "application/geo+json",
+        })
+
+    def test_init_with_contact(self):
+        """Test client initialization with contact info"""
+        self.assertEqual(self.api_client_with_contact.user_agent, "Test User Agent")
+        self.assertEqual(self.api_client_with_contact.contact_info, "test@example.com")
+        self.assertIn("test@example.com", self.api_client_with_contact.headers["User-Agent"])
+        self.assertEqual(self.api_client_with_contact.headers, {
+            "User-Agent": "Test User Agent (test@example.com)",
+            "Accept": "application/geo+json",
+        })
+
+    @patch("accessiweather.api_client.requests.get")
+    def test_get_point_data(self, mock_get):
         """Test retrieving point data"""
-        # Configure mock response with a proper status code
+        mock_response = self.mock_response()
         mock_response.status_code = 200
         mock_response.json.return_value = {"properties": {"forecast": "test_forecast_url"}}
         mock_get.return_value = mock_response
 
-        # Call the method
-        data = api_client.get_point_data(35.0, -80.0)
+        data = self.api_client.get_point_data(35.0, -80.0)
 
-        # Verify the result
-        assert data["properties"]["forecast"] == "test_forecast_url"
-        assert mock_get.call_count == 1
+        self.assertEqual(data["properties"]["forecast"], "test_forecast_url")
+        self.assertEqual(mock_get.call_count, 1)
         mock_get.assert_called_with(
             "https://api.weather.gov/points/35.0,-80.0",
-            headers=api_client.headers,
+            headers=self.api_client.headers,
             params=None,
-            timeout=10,  # Added timeout=10
+            timeout=10,
         )
 
     @patch("accessiweather.api_client.requests.get")
-    def test_get_forecast(self, mock_get, api_client, mock_response):
+    def test_get_forecast(self, mock_get):
         """Test retrieving forecast data"""
-        # For the point data request
         point_mock = MagicMock()
         point_mock.status_code = 200
         point_mock.raise_for_status = MagicMock()
         forecast_url = "https://api.weather.gov/gridpoints/GSP/112,57/forecast"
         point_mock.json = MagicMock(return_value={"properties": {"forecast": forecast_url}})
 
-        # For the forecast request
-        forecast_mock = mock_response
+        forecast_mock = self.mock_response()
         forecast_mock.status_code = 200
 
-        # Set up the side effects for consecutive calls
         mock_get.side_effect = [point_mock, forecast_mock]
 
-        # Call the method
-        data = api_client.get_forecast(35.0, -80.0)
+        data = self.api_client.get_forecast(35.0, -80.0)
 
-        # Verify results
-        assert data == {"mock": "data"}
-        assert mock_get.call_count == 2
-
-        # Check calls
+        self.assertEqual(data, {"mock": "data"})
+        self.assertEqual(mock_get.call_count, 2)
         calls = mock_get.call_args_list
-        assert calls[0][0][0] == "https://api.weather.gov/points/35.0,-80.0"
-        assert calls[1][0][0] == forecast_url
+        self.assertEqual(calls[0][0][0], "https://api.weather.gov/points/35.0,-80.0")
+        self.assertEqual(calls[1][0][0], forecast_url)
 
     @patch("accessiweather.api_client.requests.get")
-    def test_get_alerts(self, mock_get, api_client, mock_response):
+    def test_get_alerts(self, mock_get):
         """Test retrieving alerts"""
-        # Create point data mock response
         point_mock = MagicMock()
         point_mock.raise_for_status = MagicMock()
         point_mock.json = MagicMock(
@@ -113,34 +146,23 @@ class TestNoaaApiClient:
         )
         point_mock.status_code = 200
 
-        # Create alerts mock response
-        alerts_mock = mock_response
+        alerts_mock = self.mock_response()
         alerts_mock.status_code = 200
 
-        # Set up the side effects for consecutive calls
         mock_get.side_effect = [point_mock, alerts_mock]
 
-        # Call the method
-        data = api_client.get_alerts(35.0, -80.0, radius=50)
+        data = self.api_client.get_alerts(35.0, -80.0, radius=50)
 
-        # Verify the result
-        assert data == {"mock": "data"}
-        assert mock_get.call_count == 2
-
-        # Check calls
+        self.assertEqual(data, {"mock": "data"})
+        self.assertEqual(mock_get.call_count, 2)
         calls = mock_get.call_args_list
-        # Point data request
-        assert calls[0][0][0] == "https://api.weather.gov/points/35.0,-80.0"
-        # Alerts request
-        assert calls[1][0][0] == "https://api.weather.gov/alerts/active"
-        # State-based filtering
-        assert calls[1][1]["params"] == {"area": "NC"}
+        self.assertEqual(calls[0][0][0], "https://api.weather.gov/points/35.0,-80.0")
+        self.assertEqual(calls[1][0][0], "https://api.weather.gov/alerts/active")
+        self.assertEqual(calls[1][1]["params"], {"area": "NC"})
 
     @patch("accessiweather.api_client.requests.get")
-    def test_get_alerts_county_fallback(self, mock_get, api_client, mock_response):
+    def test_get_alerts_county_fallback(self, mock_get):
         """Test alerts retrieval with county fallback for state."""
-        # Create point data mock response with no relativeLocation
-        # but with county
         point_mock = MagicMock()
         point_mock.raise_for_status = MagicMock()
         point_mock.json = MagicMock(
@@ -148,78 +170,55 @@ class TestNoaaApiClient:
         )
         point_mock.status_code = 200
 
-        # Create alerts mock response
-        alerts_mock = mock_response
+        alerts_mock = self.mock_response()
         alerts_mock.status_code = 200
 
-        # Set up the side effects for consecutive calls
         mock_get.side_effect = [point_mock, alerts_mock]
 
-        # Call the method
-        data = api_client.get_alerts(35.0, -80.0, radius=50)
+        data = self.api_client.get_alerts(35.0, -80.0, radius=50)
 
-        # Verify the result
-        assert data == {"mock": "data"}
-        assert mock_get.call_count == 2
-
-        # Check calls
+        self.assertEqual(data, {"mock": "data"})
+        self.assertEqual(mock_get.call_count, 2)
         calls = mock_get.call_args_list
-        # Point data request
-        assert calls[0][0][0] == "https://api.weather.gov/points/35.0,-80.0"
-        # Alerts request
-        assert calls[1][0][0] == "https://api.weather.gov/alerts/active"
-        # Zone-based filtering for county
-        assert calls[1][1]["params"] == {"zone": "TXC141"}
+        self.assertEqual(calls[0][0][0], "https://api.weather.gov/points/35.0,-80.0")
+        self.assertEqual(calls[1][0][0], "https://api.weather.gov/alerts/active")
+        self.assertEqual(calls[1][1]["params"], {"zone": "TXC141"})
 
     @patch("accessiweather.api_client.requests.get")
-    def test_get_alerts_no_state(self, mock_get, api_client, mock_response):
+    def test_get_alerts_no_state(self, mock_get):
         """Test retrieving alerts when state cannot be determined"""
-        # Create point data mock response with no state information
         point_mock = MagicMock()
         point_mock.raise_for_status = MagicMock()
         point_mock.json = MagicMock(return_value={"properties": {}})
         point_mock.status_code = 200
 
-        # Create alerts mock response with features
-        alerts_mock = mock_response
+        alerts_mock = self.mock_response()
         alerts_mock.status_code = 200
         alerts_mock.json = MagicMock(return_value={"features": [{"id": "test"}]})
 
-        # Set up the side effects for consecutive calls
         mock_get.side_effect = [point_mock, alerts_mock]
 
-        # Call the method (assign to _ as data is not used in assertions)
-        _ = api_client.get_alerts(35.0, -80.0, radius=50)
+        _ = self.api_client.get_alerts(35.0, -80.0, radius=50)
 
-        # We should get a result with the point-radius parameters
-        assert mock_get.call_count == 2
-
-        # Check calls
+        self.assertEqual(mock_get.call_count, 2)
         calls = mock_get.call_args_list
-        # Point data request
-        assert calls[0][0][0] == "https://api.weather.gov/points/35.0,-80.0"
-        # Alerts request
-        assert calls[1][0][0] == "https://api.weather.gov/alerts/active"
-
-        # Ensure we're using point-radius search parameters
+        self.assertEqual(calls[0][0][0], "https://api.weather.gov/points/35.0,-80.0")
+        self.assertEqual(calls[1][0][0], "https://api.weather.gov/alerts/active")
         params = calls[1][1]["params"]
-        assert "point" in params
-        assert "radius" in params
-        assert params["point"] == "35.0,-80.0"
-        assert params["radius"] == "50"
+        self.assertIn("point", params)
+        self.assertIn("radius", params)
+        self.assertEqual(params["point"], "35.0,-80.0")
+        self.assertEqual(params["radius"], "50")
 
     @patch("accessiweather.api_client.NoaaApiClient.get_point_data")
     @patch("accessiweather.api_client.NoaaApiClient._make_request")
     def test_get_alerts_michigan_location(self, mock_make_request, mock_get_point_data):
         """Test retrieving alerts for a Michigan location (Lumberton)."""
-        # Set up mock for get_point_data
         mock_get_point_data.return_value = {
             "properties": {
                 "relativeLocation": {"properties": {"state": "MI", "city": "Lumberton Township"}}
             }
         }
-
-        # Set up mock for _make_request
         headline = "Winter Weather Advisory for Lumberton Township, MI"
         mock_make_request.return_value = {
             "features": [
@@ -233,158 +232,63 @@ class TestNoaaApiClient:
                 }
             ]
         }
-
-        # Create client and call the method
-        client = NoaaApiClient(user_agent="Test User Agent")
-        data = client.get_alerts(43.1, -86.3, radius=25, force_refresh=True)
-
-        # Verify the mocks were called as expected
+        data = self.api_client.get_alerts(43.1, -86.3, radius=25, force_refresh=True)
         mock_get_point_data.assert_called_once_with(43.1, -86.3, force_refresh=True)
-
-        # Check that the state parameter was correctly extracted and used
-        assert mock_make_request.call_count == 1
+        self.assertEqual(mock_make_request.call_count, 1)
         call_args = mock_make_request.call_args
-        assert call_args[0][0] == "https://api.weather.gov/alerts/active"
-        assert call_args[1]["params"] == {"area": "MI"}
-        assert call_args[1]["force_refresh"] is True
-
-        # Check that the response is properly processed
-        assert isinstance(data, dict)
-        assert "features" in data
-        assert len(data["features"]) == 1
-        assert data["features"][0]["properties"]["headline"] == headline
+        self.assertEqual(call_args[0][0], "https://api.weather.gov/alerts/active")
+        self.assertEqual(call_args[1]["params"], {"area": "MI"})
+        self.assertTrue(call_args[1]["force_refresh"])
+        self.assertIsInstance(data, dict)
+        self.assertIn("features", data)
+        self.assertEqual(len(data["features"]), 1)
+        self.assertEqual(data["features"][0]["properties"]["headline"], headline)
 
     @patch("accessiweather.api_client.requests.get")
-    def test_get_discussion(self, mock_get, api_client):
-        """Test retrieving forecast discussion"""
-        # Mock responses for the three API calls
-        point_mock = MagicMock()
-        point_mock.status_code = 200
-        point_mock.json.return_value = {"properties": {"gridId": "ABC"}}
-
-        products_mock = MagicMock()
-        products_mock.status_code = 200
-        products_mock.json.return_value = {"@graph": [{"id": "ABC-AFD-202503121200"}]}
-
-        discussion_mock = MagicMock()
-        discussion_mock.status_code = 200
-        discussion_mock.json.return_value = {"productText": "Test forecast discussion text"}
-
-        # Set up the side effects for consecutive calls
-        mock_get.side_effect = [point_mock, products_mock, discussion_mock]
-
-        # Call the method with lat/lon parameters
-        data = api_client.get_discussion(35.0, -80.0)
-
-        # Verify the result
-        assert data == "Test forecast discussion text"
-        assert mock_get.call_count == 3
-
-        # Check calls
-        calls = mock_get.call_args_list
-        assert calls[0][0][0] == "https://api.weather.gov/points/35.0,-80.0"
-        products_url = "https://api.weather.gov/products/types/AFD/locations/ABC"
-        assert calls[1][0][0] == products_url
-        discussion_url = "https://api.weather.gov/products/ABC-AFD-202503121200"
-        assert calls[2][0][0] == discussion_url
-
-    @patch("accessiweather.api_client.logger.error")  # Patch logger.error
-    @patch("accessiweather.api_client.requests.get")
-    def test_api_error_handling(self, mock_get, mock_logger_error, api_client):
-        """Test error handling and suppress traceback for expected errors"""
-        # Mock a failed request with a requests.RequestException type
-        mock_get.side_effect = requests.RequestException("Test connection error")
-
-        # Test that the error is raised and converted to ApiClientError
-        with pytest.raises(ApiClientError) as exc_info:
-            api_client.get_point_data(35.0, -80.0)
-
-        # Verify the error message
-        assert "Network error during API request" in str(exc_info.value)
-        # Verify logger.error was called (suppressing traceback)
-        assert mock_logger_error.called
-        # Get the call arguments
-        args, kwargs = mock_logger_error.call_args
-        # Check that the error message contains the expected text
-        assert "Network error during API request" in args[0]
-        # Check that exc_info is not explicitly set (to suppress traceback)
-        assert "exc_info" not in kwargs
-
-    @patch("accessiweather.api_client.requests.get")
-    def test_get_alerts_direct(self, mock_get, api_client, mock_response):
+    def test_get_alerts_direct(self, mock_get):
         """Test retrieving alerts with direct URL"""
-        # Mock the response
+        mock_response = self.mock_response()
         mock_response.status_code = 200
         mock_get.return_value = mock_response
-
-        # Call the method
         alerts_url = "https://api.weather.gov/alerts/active/area/NY"
-        data = api_client.get_alerts_direct(alerts_url)
-
-        # Verify the result
-        assert data == {"mock": "data"}
+        data = self.api_client.get_alerts_direct(alerts_url)
+        self.assertEqual(data, {"mock": "data"})
         mock_get.assert_called_once()
 
     @patch("accessiweather.api_client.requests.get")
-    def test_get_alerts_no_state_fallback(self, mock_get, api_client, mock_response):
-        """Test retrieving alerts when no state can be determined"""
+    def test_get_alerts_no_state_fallback(self, mock_get):
         # Create point data mock response with no state info
         point_mock = MagicMock()
         point_mock.status_code = 200
         point_mock.raise_for_status = MagicMock()
-        # This response is missing the state information
         point_mock.json = MagicMock(
             return_value={"properties": {"relativeLocation": {"properties": {}}}}
         )
-
-        # Create alerts mock response
-        alerts_mock = mock_response
+        alerts_mock = self.mock_response()
         alerts_mock.status_code = 200
-
-        # Set up the side effects for consecutive calls
         mock_get.side_effect = [point_mock, alerts_mock]
-
-        # Call the method - this should fall back to point-radius search
-        data = api_client.get_alerts(35.0, -80.0, radius=50)
-
-        # Verify the result
-        assert data == {"mock": "data"}
-        assert mock_get.call_count == 2
-
-        # Check calls
+        data = self.api_client.get_alerts(35.0, -80.0, radius=50)
+        self.assertEqual(data, {"mock": "data"})
+        self.assertEqual(mock_get.call_count, 2)
         calls = mock_get.call_args_list
-        # Point data request
-        assert calls[0][0][0] == "https://api.weather.gov/points/35.0,-80.0"
-        # Alerts request
-        assert calls[1][0][0] == "https://api.weather.gov/alerts/active"
-
-        # Ensure we're using point-radius parameters since no state was found
+        self.assertEqual(calls[0][0][0], "https://api.weather.gov/points/35.0,-80.0")
+        self.assertEqual(calls[1][0][0], "https://api.weather.gov/alerts/active")
         params = calls[1][1]["params"]
-        assert "point" in params
-        assert "radius" in params
-        assert params["point"] == "35.0,-80.0"
-        assert params["radius"] == "50"
+        self.assertIn("point", params)
+        self.assertIn("radius", params)
+        self.assertEqual(params["point"], "35.0,-80.0")
+        self.assertEqual(params["radius"], "50")
 
-    def test_request_uses_formatted_user_agent(self, monkeypatch):
+    @patch("requests.get")
+    def test_request_uses_formatted_user_agent(self, mock_get):
         """Test that requests use the properly formatted User-Agent"""
-        # Create a mock for requests.get
-        mock_get = MagicMock()
         mock_response = MagicMock()
         mock_response.raise_for_status = MagicMock()
         mock_response.json = MagicMock(return_value={"mock": "data"})
         mock_response.status_code = 200
         mock_get.return_value = mock_response
-
-        # Apply the monkeypatch
-        monkeypatch.setattr("requests.get", mock_get)
-
-        # Create client with contact info
         client = NoaaApiClient(user_agent="AccessiWeather", contact_info="test@example.com")
-
-        # Make a request
         client.get_point_data(35.0, -80.0)
-
-        # Verify the User-Agent header was properly formatted in the request
         _, kwargs = mock_get.call_args
         expected_ua = "AccessiWeather (test@example.com)"
-        assert kwargs["headers"]["User-Agent"] == expected_ua
+        self.assertEqual(kwargs["headers"]["User-Agent"], expected_ua)

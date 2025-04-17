@@ -1,6 +1,11 @@
 """Tests for the API contact check when config file is missing"""
 
 # Import faulthandler setup first to enable faulthandler
+<<<<<<< Updated upstream
+=======
+
+
+>>>>>>> Stashed changes
 from unittest.mock import MagicMock, patch
 
 import pytest
