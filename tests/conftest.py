@@ -108,6 +108,51 @@ def wx_app(wx_app_session):
 
 
 @pytest.fixture
+def wx_app_isolated():
+    """Create an isolated wx App for testing.
+
+    This fixture creates a new wx.App for each test, rather than reusing
+    the session-scoped app. This can help prevent issues with state leakage
+    between tests, but is less efficient.
+    """
+    # Create a new app for this test only
+    app = wx.App(False)  # False means don't redirect stdout/stderr
+
+    # Allow the app to initialize
+    wx.SafeYield()
+    time.sleep(0.1)  # Give the app a moment to fully initialize
+
+    yield app
+
+    # Clean up after the test
+    logger.debug("Performing isolated app cleanup")
+    try:
+        # Clean up all top-level windows
+        windows = list(wx.GetTopLevelWindows())
+        for win in windows:
+            if win and win.IsShown():
+                try:
+                    # Hide the window first
+                    win.Hide()
+                    wx.SafeYield()
+                    # Then destroy it
+                    wx.CallAfter(win.Destroy)
+                    wx.SafeYield()
+                except Exception as win_e:
+                    logger.warning(f"Exception cleaning up window: {win_e}")
+
+        # Process pending events
+        for _ in range(5):
+            wx.SafeYield()
+            time.sleep(0.02)
+
+        # Destroy the app
+        app.Destroy()
+    except Exception as e:
+        logger.warning(f"Exception during isolated app cleanup: {e}")
+
+
+@pytest.fixture
 def temp_config_dir():
     """Create a temporary directory for configuration files."""
     with tempfile.TemporaryDirectory() as temp_dir:
