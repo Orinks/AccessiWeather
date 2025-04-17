@@ -60,11 +60,17 @@ def event_queue():
 
 @pytest.fixture
 def mock_dialogs(monkeypatch, event_queue):
-    # Mock ProgressDialog - Keep as is, seems fine
-    progress_dialog_mock = MagicMock()
-    progress_dialog_mock.Pulse.return_value = None
-    progress_dialog_mock.Destroy.return_value = None
-    monkeypatch.setattr(wx, "ProgressDialog", lambda *args, **kwargs: progress_dialog_mock)
+    # Mock ProgressDialog to behave more like a real window
+    def mock_progress_factory(*args, **kwargs):
+        # Create a mock specifically for ProgressDialog instances
+        mock_instance = MagicMock(spec=wx.ProgressDialog)
+        mock_instance.Pulse.return_value = (True, False) # Match real signature return
+        mock_instance.Destroy.return_value = None
+        mock_instance.IsShown.return_value = True # Assume shown initially for cleanup logic
+        # Add Update method if needed by the code
+        mock_instance.Update.return_value = (True, False)
+        return mock_instance
+    monkeypatch.setattr(wx, "ProgressDialog", mock_progress_factory)
 
     # Mock MessageBox - Keep as is
     def mock_message_box(*args, **kwargs):
@@ -88,16 +94,18 @@ def mock_dialogs(monkeypatch, event_queue):
         self.ShowModal = discussion_dialog_mock.ShowModal
         self.Destroy = discussion_dialog_mock.Destroy
 
-    # Patch __init__; this covers ShowModal/Destroy for instances created
-    # via this mock init.
+    # Patch __init__ to capture text
     monkeypatch.setattr(WeatherDiscussionDialog, "__init__", mock_discussion_dialog_init)
-    # Ensure ShowModal/Destroy are patched on the class if needed elsewhere
-    # monkeypatch.setattr(WeatherDiscussionDialog, 'ShowModal', lambda s: None)
-    # monkeypatch.setattr(WeatherDiscussionDialog, 'Destroy', lambda s: None)
+    # Patch class methods directly to avoid RuntimeError from uninitialized base class
+    monkeypatch.setattr(WeatherDiscussionDialog, "ShowModal", discussion_dialog_mock.ShowModal)
+    monkeypatch.setattr(WeatherDiscussionDialog, "Destroy", discussion_dialog_mock.Destroy)
 
     # No longer mocking safe_call_after - let wx.CallAfter run
 
-    return {"progress_dialog": progress_dialog_mock, "discussion_dialog": discussion_dialog_mock}
+    # Return the main mock objects if needed elsewhere (though factory/patching is primary)
+    # Find a way to return the instance created by mock_progress_factory if needed
+    # For now, returning the class mock might suffice if static methods were mocked
+    return {"progress_dialog_class": wx.ProgressDialog, "discussion_dialog": discussion_dialog_mock}
 
 
 def test_discussion_fetched_asynchronously(
