@@ -56,17 +56,17 @@ class TestCachedApiClient:
 
         # Mock the cache to always return None (cache miss)
         with patch.object(client.cache, "get", return_value=None):
-            with patch.object(client.cache, "set"):
-                # Mock the requests.get method
-                with patch.object(requests, "get", return_value=mock_response) as mock_get:
-                    # First call
-                    client.get_point_data(35.0, -80.0)
-                    assert mock_get.call_count == 1
+            # We don't need to patch set since we're testing the cache miss behavior
+            # Mock the requests.get method
+            with patch.object(requests, "get", return_value=mock_response) as mock_get:
+                # First call
+                client.get_point_data(35.0, -80.0)
+                assert mock_get.call_count == 1
 
-                    # Call with different parameters
-                    client.get_point_data(36.0, -81.0)
-                    # Should make a new request
-                    assert mock_get.call_count == 2
+                # Call with different parameters
+                client.get_point_data(36.0, -81.0)
+                # Should make a new request
+                assert mock_get.call_count == 2
 
     def test_force_refresh(self, mock_response):
         """Test that force_refresh bypasses the cache."""
@@ -74,18 +74,18 @@ class TestCachedApiClient:
 
         # Mock the cache
         with patch.object(client.cache, "get", return_value={"mock": "cached_data"}):
-            with patch.object(client.cache, "set"):
-                # Mock the requests.get method
-                with patch.object(requests, "get", return_value=mock_response) as mock_get:
-                    # First call
-                    client.get_point_data(35.0, -80.0)
-                    # Should use cache, not make a request
-                    assert mock_get.call_count == 0
+            # We don't need to patch set since we're testing the force_refresh behavior
+            # Mock the requests.get method
+            with patch.object(requests, "get", return_value=mock_response) as mock_get:
+                # First call
+                client.get_point_data(35.0, -80.0)
+                # Should use cache, not make a request
+                assert mock_get.call_count == 0
 
-                    # Second call with force_refresh
-                    client.get_point_data(35.0, -80.0, force_refresh=True)
-                    # Should make a new request
-                    assert mock_get.call_count == 1
+                # Second call with force_refresh
+                client.get_point_data(35.0, -80.0, force_refresh=True)
+                # Should make a new request
+                assert mock_get.call_count == 1
 
     def test_cache_expiration(self, mock_response):
         """Test that expired cache entries are not used."""
@@ -114,35 +114,34 @@ class TestCachedApiClient:
 
         # Mock the cache to always return None (cache miss)
         with patch.object(client.cache, "get", return_value=None):
-            with patch.object(client.cache, "set"):
-                # Mock the API methods directly
-                point_data_mock = {"mock": "point_data"}
-                forecast_mock = {"mock": "forecast"}
-                alerts_mock = {"mock": "alerts"}
+            # Mock the API methods directly
+            point_data_mock = {"mock": "point_data"}
+            forecast_mock = {"mock": "forecast"}
+            alerts_mock = {"mock": "alerts"}
 
+            with patch.object(
+                client, "get_point_data", return_value=point_data_mock
+            ) as mock_point_data:
                 with patch.object(
-                    client, "get_point_data", return_value=point_data_mock
-                ) as mock_point_data:
+                    client, "get_forecast", return_value=forecast_mock
+                ) as mock_forecast:
                     with patch.object(
-                        client, "get_forecast", return_value=forecast_mock
-                    ) as mock_forecast:
-                        with patch.object(
-                            client, "get_alerts", return_value=alerts_mock
-                        ) as mock_alerts:
-                            # Call different methods
-                            point_data = client.get_point_data(35.0, -80.0)
-                            forecast = client.get_forecast(35.0, -80.0)
-                            alerts = client.get_alerts(35.0, -80.0)
+                        client, "get_alerts", return_value=alerts_mock
+                    ) as mock_alerts:
+                        # Call different methods
+                        point_data = client.get_point_data(35.0, -80.0)
+                        forecast = client.get_forecast(35.0, -80.0)
+                        alerts = client.get_alerts(35.0, -80.0)
 
-                            # Verify each method was called once
-                            assert mock_point_data.call_count == 1
-                            assert mock_forecast.call_count == 1
-                            assert mock_alerts.call_count == 1
+                        # Verify each method was called once
+                        assert mock_point_data.call_count == 1
+                        assert mock_forecast.call_count == 1
+                        assert mock_alerts.call_count == 1
 
-                            # Verify each method returned the expected data
-                            assert point_data == {"mock": "point_data"}
-                            assert forecast == {"mock": "forecast"}
-                            assert alerts == {"mock": "alerts"}
+                        # Verify each method returned the expected data
+                        assert point_data == {"mock": "point_data"}
+                        assert forecast == {"mock": "forecast"}
+                        assert alerts == {"mock": "alerts"}
 
     def test_cache_error_not_cached(self):
         """Test that errors are not cached."""
@@ -151,17 +150,16 @@ class TestCachedApiClient:
 
         # Create a mock for the cache
         with patch.object(client.cache, "get", return_value=None):
-            with patch.object(client.cache, "set"):
-                # First mock a failed request
-                with patch.object(
-                    requests, "get", side_effect=requests.RequestException("Test connection error")
-                ) as mock_get:
-                    # First call should raise an error
-                    with pytest.raises(ApiClientError):
-                        client.get_point_data(35.0, -80.0)
+            # First mock a failed request
+            with patch.object(
+                requests, "get", side_effect=requests.RequestException("Test connection error")
+            ) as mock_get:
+                # First call should raise an error
+                with pytest.raises(ApiClientError):
+                    client.get_point_data(35.0, -80.0)
 
-                    # Verify the request was made
-                    assert mock_get.call_count == 1
+                # Verify the request was made
+                assert mock_get.call_count == 1
 
         # Create a successful mock response
         mock_response = MagicMock()
@@ -171,9 +169,8 @@ class TestCachedApiClient:
 
         # Verify that a subsequent call succeeds and doesn't use a cached error
         with patch.object(client.cache, "get", return_value=None):
-            with patch.object(client.cache, "set"):
-                with patch.object(requests, "get", return_value=mock_response) as mock_get:
-                    # Second call should try again, not use a cached error
-                    result = client.get_point_data(35.0, -80.0)
-                    assert result == {"mock": "data"}
-                    assert mock_get.call_count == 1
+            with patch.object(requests, "get", return_value=mock_response) as mock_get:
+                # Second call should try again, not use a cached error
+                result = client.get_point_data(35.0, -80.0)
+                assert result == {"mock": "data"}
+                assert mock_get.call_count == 1

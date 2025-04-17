@@ -541,6 +541,12 @@ class NoaaApiClient:
                     # Log the keys in the response for debugging
                     if isinstance(json_data, dict):
                         logger.debug(f"Response keys: {list(json_data.keys())}")
+
+                    # Store the response in the cache if caching is enabled
+                    if self.cache and cache_key:
+                        logger.debug(f"Caching response for {request_url} with key {cache_key}")
+                        self.cache.set(cache_key, json_data)
+
                     return json_data  # type: ignore
                 except JSONDecodeError as json_err:
                     resp_text = response.text[:200]  # Limit length

@@ -1,18 +1,14 @@
 """Tests for the DiscussionFetcher class."""
 
 # Import faulthandler setup first to enable faulthandler
-<<<<<<< Updated upstream
-=======
-
-
->>>>>>> Stashed changes
 import logging
 import time
 from unittest.mock import MagicMock, patch
 
 import wx
 
-import tests.faulthandler_setup
+# Import for side effects (enables faulthandler)
+import tests.faulthandler_setup  # noqa: F401
 from accessiweather.api_client import NoaaApiClient
 from accessiweather.gui.async_fetchers import DiscussionFetcher
 

@@ -1,18 +1,13 @@
 """Tests for LocationDialog with search functionality"""
 
 # Import faulthandler setup first to enable faulthandler
-<<<<<<< Updated upstream
-=======
-
-
->>>>>>> Stashed changes
-import time
 from unittest.mock import MagicMock, patch
 
 import pytest
 import wx
 
-import tests.faulthandler_setup
+# Import for side effects (enables faulthandler)
+import tests.faulthandler_setup  # noqa: F401
 
 # Import modules
 from accessiweather.gui.dialogs import LocationDialog
