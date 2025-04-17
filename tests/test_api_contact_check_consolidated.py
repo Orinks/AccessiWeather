@@ -1,12 +1,9 @@
 """Tests for the API contact check feature on application startup"""
 
-# Import faulthandler setup first to enable faulthandler
-from unittest.mock import MagicMock, patch
-
 import pytest
 import wx
+from unittest.mock import MagicMock, patch
 
-import tests.faulthandler_setup
 from accessiweather.gui.settings_dialog import API_CONTACT_KEY
 from accessiweather.gui.weather_app import WeatherApp
 
@@ -95,14 +92,8 @@ def test_dialog_shown_when_api_contact_missing(wx_app, mock_components):
         "api_settings": {API_CONTACT_KEY: ""},  # Empty string
     }
 
-    # Create a mock for the original method
-    original_method = WeatherApp._check_api_contact_configured
-    mock_method = MagicMock()
-
-    try:
-        # Replace the method with our mock
-        WeatherApp._check_api_contact_configured = mock_method
-
+    # Mock the _check_api_contact_configured method
+    with patch.object(WeatherApp, "_check_api_contact_configured") as mock_method:
         # Create the app
         app = WeatherApp(
             parent=None,
@@ -123,9 +114,6 @@ def test_dialog_shown_when_api_contact_missing(wx_app, mock_components):
             # Then destroy it
             wx.CallAfter(app.Destroy)
             wx.SafeYield()
-    finally:
-        # Restore the original method
-        WeatherApp._check_api_contact_configured = original_method
 
 
 def test_dialog_shown_when_api_settings_missing(wx_app, mock_components):
@@ -138,14 +126,8 @@ def test_dialog_shown_when_api_settings_missing(wx_app, mock_components):
         # No api_settings section
     }
 
-    # Create a mock for the original method
-    original_method = WeatherApp._check_api_contact_configured
-    mock_method = MagicMock()
-
-    try:
-        # Replace the method with our mock
-        WeatherApp._check_api_contact_configured = mock_method
-
+    # Mock the _check_api_contact_configured method
+    with patch.object(WeatherApp, "_check_api_contact_configured") as mock_method:
         # Create the app
         app = WeatherApp(
             parent=None,
@@ -166,9 +148,6 @@ def test_dialog_shown_when_api_settings_missing(wx_app, mock_components):
             # Then destroy it
             wx.CallAfter(app.Destroy)
             wx.SafeYield()
-    finally:
-        # Restore the original method
-        WeatherApp._check_api_contact_configured = original_method
 
 
 def test_settings_not_opened_if_dialog_cancelled(wx_app, mock_components):
@@ -250,3 +229,30 @@ def test_check_called_on_init(wx_app, mock_components):
             # Then destroy it
             wx.CallAfter(app.Destroy)
             wx.SafeYield()
+
+
+def test_dialog_shown_when_config_file_missing(wx_app, mock_components):
+    """Test that dialog is shown when config file doesn't exist"""
+    # Mock the _check_api_contact_configured method
+    with patch.object(WeatherApp, "_check_api_contact_configured") as mock_method:
+        # Mock os.path.exists to return False
+        with patch("os.path.exists", return_value=False):
+            # Create the app
+            app = WeatherApp(
+                parent=None,
+                location_service=mock_components["location_service"],
+                weather_service=mock_components["weather_service"],
+                notification_service=mock_components["notification_service"],
+                api_client=mock_components["api_client"],
+            )
+
+            try:
+                # Verify the method was called
+                mock_method.assert_called_once()
+            finally:
+                # Hide the window first
+                wx.CallAfter(app.Hide)
+                wx.SafeYield()
+                # Then destroy it
+                wx.CallAfter(app.Destroy)
+                wx.SafeYield()

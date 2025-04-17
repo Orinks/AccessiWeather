@@ -1,28 +1,27 @@
 """Tests for the LocationService class."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 import pytest
 
 from accessiweather.services.location_service import LocationService
+from accessiweather.location import LocationManager
 
 
 @pytest.fixture
 def mock_location_manager():
     """Create a mock location manager."""
-    # Use patch.object to create a mock with the correct spec
-    with patch('accessiweather.location.LocationManager', autospec=True) as mock_manager_class:
-        # Create an instance of the mock
-        manager = mock_manager_class.return_value
+    # Create a mock with the correct spec
+    manager = MagicMock(spec=LocationManager)
 
-        # Default values, tests can override
-        manager.get_current_location.return_value = ("Test City", 35.0, -80.0)
-        manager.get_current_location_name.return_value = "Test City"
-        manager.get_all_locations.return_value = ["Test City"]
-        manager.saved_locations = {"Test City": {"lat": 35.0, "lon": -80.0}}
-        manager.is_nationwide_location.return_value = False
+    # Default values, tests can override
+    manager.get_current_location.return_value = ("Test City", 35.0, -80.0)
+    manager.get_current_location_name.return_value = "Test City"
+    manager.get_all_locations.return_value = ["Test City"]
+    manager.saved_locations = {"Test City": {"lat": 35.0, "lon": -80.0}}
+    manager.is_nationwide_location.return_value = False
 
-        yield manager
+    return manager
 
 
 @pytest.fixture

@@ -1,24 +1,14 @@
 """Tests for the AccessibleComboBox component"""
 
 # Import faulthandler setup first to enable faulthandler
-<<<<<<< Updated upstream
-=======
-
-
->>>>>>> Stashed changes
-from unittest.mock import MagicMock
-
 import unittest
 from unittest.mock import MagicMock
 import wx
-<<<<<<< Updated upstream
 
 # Import for side effects (enables faulthandler)
 import tests.faulthandler_setup  # noqa: F401
 
 # Import before creating wx.App
-=======
->>>>>>> Stashed changes
 from accessiweather.gui.ui_components import AccessibleComboBox
 
 class TestAccessibleComboBox(unittest.TestCase):

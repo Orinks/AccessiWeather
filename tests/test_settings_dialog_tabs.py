@@ -3,25 +3,13 @@
 This module tests the tabbed settings dialog with general and advanced settings.
 """
 
-<<<<<<< Updated upstream
-=======
 # Import faulthandler setup first to enable faulthandler
-
-
->>>>>>> Stashed changes
-import logging
-from unittest.mock import MagicMock, patch
-
 import logging
 import unittest
-from unittest.mock import MagicMock, patch
 import wx
-<<<<<<< Updated upstream
 
-# Import faulthandler setup first to enable faulthandler
-import tests.faulthandler_setup
-=======
->>>>>>> Stashed changes
+# Import for side effects (enables faulthandler)
+import tests.faulthandler_setup  # noqa: F401
 from accessiweather.gui.settings_dialog import (
     ALERT_RADIUS_KEY,
     API_CONTACT_KEY,
@@ -34,6 +22,7 @@ CACHE_ENABLED_KEY = "cache_enabled"
 CACHE_TTL_KEY = "cache_ttl"
 
 logger = logging.getLogger(__name__)
+
 
 class TestSettingsDialogTabs(unittest.TestCase):
     """Test suite for the tabbed settings dialog."""
@@ -87,7 +76,10 @@ class TestSettingsDialogTabs(unittest.TestCase):
         self.assertEqual(dialog.api_contact_ctrl.GetValue(), self.settings[API_CONTACT_KEY])
         self.assertEqual(dialog.update_interval_ctrl.GetValue(), self.settings[UPDATE_INTERVAL_KEY])
         self.assertEqual(dialog.alert_radius_ctrl.GetValue(), self.settings[ALERT_RADIUS_KEY])
-        self.assertEqual(dialog.precise_alerts_ctrl.GetValue(), self.settings[PRECISE_LOCATION_ALERTS_KEY])
+        self.assertEqual(
+            dialog.precise_alerts_ctrl.GetValue(),
+            self.settings[PRECISE_LOCATION_ALERTS_KEY]
+        )
         wx.CallAfter(dialog.Hide)
         wx.SafeYield()
         wx.CallAfter(dialog.Destroy)
@@ -136,6 +128,7 @@ class TestSettingsDialogTabs(unittest.TestCase):
         # Skip this test for now as it's causing issues
         # We've already verified the implementation works through manual testing
         pass
+
 
 if __name__ == "__main__":
     unittest.main()

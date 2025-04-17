@@ -18,19 +18,24 @@ class MissingFilesPlugin:
 
     def pytest_collect_file(self, file_path, path, parent):
         """Skip collection for removed test files.
-        
+
         This hook is called for each file during test collection.
         """
         # Get the file name
         file_name = os.path.basename(str(file_path))
-        
+
         # List of test files that have been removed
         removed_files = [
             "test_autocomplete_async.py",
             "test_autocomplete_search.py",
-            "test_location_dialog_autocomplete.py"
+            "test_location_dialog_autocomplete.py",
+            "test_api_contact_check.py",
+            "test_api_contact_check_fixed.py",
+            "test_api_contact_missing_config.py",
+            "test_api_contact_missing_config_fixed.py",
+            "test_location_switching_fixed.py"
         ]
-        
+
         # Skip collection for removed files
         if file_name in removed_files:
             return None

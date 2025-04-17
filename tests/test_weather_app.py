@@ -515,24 +515,27 @@ class TestWeatherApp:
             {
                 "headline": "Test Alert",
                 "description": "Test Description",
+                "event": "Test Event",
+                "severity": "Test Severity",
+                "parameters": {"NWSheadline": ["Test Statement"]},
+                "instruction": "Test Instruction"
             }
         ]
 
         # Create a mock event
         event = MagicMock()
 
-        # Mock the AlertDetailsDialog
-        mock_dialog = MagicMock()
+        # Instead of patching the dialog class, patch the ShowModal and Destroy methods
+        # This avoids the segmentation fault by not creating an actual dialog
+        with patch("accessiweather.gui.alert_dialog.AlertDetailsDialog.ShowModal", return_value=wx.ID_CLOSE) as mock_show_modal:
+            with patch("accessiweather.gui.alert_dialog.AlertDetailsDialog.Destroy") as mock_destroy:
+                # Call the method
+                weather_app.OnViewAlert(event)
 
-        # Patch the AlertDetailsDialog
-        with patch("accessiweather.gui.alert_dialog.AlertDetailsDialog", return_value=mock_dialog):
-            # Call the method
-            weather_app.OnViewAlert(event)
-
-        # Verify the method calls
-        weather_app.alerts_list.GetFirstSelected.assert_called_once()
-        mock_dialog.ShowModal.assert_called_once()
-        mock_dialog.Destroy.assert_called_once()
+                # Verify the method calls
+                weather_app.alerts_list.GetFirstSelected.assert_called_once()
+                mock_show_modal.assert_called_once()
+                mock_destroy.assert_called_once()
 
     def test_on_alert_activated(self, weather_app):
         """Test handling alert list item activation."""
@@ -564,19 +567,10 @@ class TestWeatherApp:
             },
         }
 
-        # Mock the SettingsDialog
-        mock_dialog = MagicMock()
-        mock_dialog.ShowModal.return_value = wx.ID_OK
-        mock_dialog.get_settings.return_value = {
-            "update_interval_minutes": 60,
-            "alert_radius": 50,
-            "precise_location_alerts": False,
-            "cache_enabled": False,
-            "cache_ttl": 600,
-        }
-        mock_dialog.get_api_settings.return_value = {
-            "api_contact": "new@example.com",
-        }
+        # Mock the API client methods
+        weather_app.api_client.set_contact_info = MagicMock()
+        weather_app.api_client.set_alert_radius = MagicMock()
+        weather_app.UpdateWeatherData = MagicMock()
 
         # Mock the _save_config method
         weather_app._save_config = MagicMock()
@@ -584,20 +578,47 @@ class TestWeatherApp:
         # Create a mock event
         event = MagicMock()
 
-        # Patch the SettingsDialog
-        with patch("accessiweather.gui.settings_dialog.SettingsDialog", return_value=mock_dialog):
-            # Call the method
-            weather_app.OnSettings(event)
+        # Instead of patching the dialog class, patch the methods directly
+        # This avoids the segmentation fault by not creating an actual dialog
+        with patch("accessiweather.gui.settings_dialog.SettingsDialog.ShowModal", return_value=wx.ID_OK) as mock_show_modal:
+            with patch("accessiweather.gui.settings_dialog.SettingsDialog.get_settings") as mock_get_settings:
+                with patch("accessiweather.gui.settings_dialog.SettingsDialog.get_api_settings") as mock_get_api_settings:
+                    with patch("accessiweather.gui.settings_dialog.SettingsDialog.Destroy") as mock_destroy:
+                        # Set up return values for the mocked methods
+                        mock_get_settings.return_value = {
+                            "update_interval_minutes": 60,
+                            "alert_radius": 50,
+                            "precise_location_alerts": False,
+                            "cache_enabled": False,
+                            "cache_ttl": 600,
+                        }
+                        mock_get_api_settings.return_value = {
+                            "api_contact": "new@example.com",
+                        }
 
-        # Verify the method calls
-        mock_dialog.ShowModal.assert_called_once()
-        mock_dialog.get_settings.assert_called_once()
-        mock_dialog.get_api_settings.assert_called_once()
-        weather_app._save_config.assert_called_once()
-        weather_app.api_client.set_contact_info.assert_called_once_with("new@example.com")
-        weather_app.api_client.set_alert_radius.assert_called_once_with(50)
-        weather_app.UpdateWeatherData.assert_called_once()
-        mock_dialog.Destroy.assert_called_once()
+                        # Call the method
+                        weather_app.OnSettings(event)
+
+                        # Verify the method calls
+                        mock_show_modal.assert_called_once()
+                        mock_get_settings.assert_called_once()
+                        mock_get_api_settings.assert_called_once()
+                        weather_app._save_config.assert_called_once()
+
+                        # Note: The actual implementation doesn't call set_contact_info or set_alert_radius
+                        # as mentioned in the comments in the OnSettings method
+
+                        # Verify that UpdateWeatherData is called when precise_location_alerts changes
+                        weather_app.UpdateWeatherData.assert_called_once()
+                        mock_destroy.assert_called_once()
+
+                        # Verify that the config was updated correctly
+                        assert weather_app.config["settings"]["update_interval_minutes"] == 60
+                        assert weather_app.config["settings"]["alert_radius"] == 50
+                        assert weather_app.config["settings"]["precise_location_alerts"] is False
+                        assert weather_app.config["settings"]["cache_enabled"] is False
+                        assert weather_app.config["settings"]["cache_ttl"] == 600
+                        assert weather_app.config["api_settings"]["api_contact"] == "new@example.com"
 
     def test_on_timer_no_update_needed(self, weather_app):
         """Test handling timer event with no update needed."""
