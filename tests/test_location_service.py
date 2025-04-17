@@ -11,12 +11,18 @@ from accessiweather.services.location_service import LocationService
 @pytest.fixture
 def mock_location_manager():
     """Create a mock location manager."""
-    manager = MagicMock(spec=LocationManager)
+    # Create a real LocationManager instance to get the correct attributes
+    real_manager = LocationManager()
+
+    # Create a mock with the same attributes as the real manager
+    manager = MagicMock(spec=real_manager)
+
     # Default values, tests can override
     manager.get_current_location.return_value = ("Test City", 35.0, -80.0)
     manager.get_current_location_name.return_value = "Test City"
     manager.get_all_locations.return_value = ["Test City"]
-    manager.locations = {"Test City": (35.0, -80.0)}
+    manager.saved_locations = {"Test City": {"lat": 35.0, "lon": -80.0}}
+    manager.is_nationwide_location.return_value = False
     return manager
 
 
@@ -104,25 +110,26 @@ class TestLocationService:
 
     def test_get_location_coordinates(self, location_service, mock_location_manager):
         """Test getting location coordinates."""
-        # Set up mock saved_locations
-        mock_location_manager.saved_locations = {
+        # Set up mock saved_locations using patch.object
+        with patch.object(mock_location_manager, "saved_locations", {
             "Test City": {"lat": 35.0, "lon": -80.0},
             "Another City": {"lat": 40.0, "lon": -75.0},
-        }
+        }):
 
-        # Call the method
-        result = location_service.get_location_coordinates("Test City")
+            # Call the method
+            result = location_service.get_location_coordinates("Test City")
 
-        # Verify the result
-        assert result == (35.0, -80.0)
+            # Verify the result
+            assert result == (35.0, -80.0)
 
     def test_get_location_coordinates_not_found(self, location_service, mock_location_manager):
         """Test getting coordinates for a non-existent location."""
-        # Set up mock saved_locations
-        mock_location_manager.saved_locations = {"Test City": {"lat": 35.0, "lon": -80.0}}
+        # Set up mock saved_locations using patch.object
+        with patch.object(mock_location_manager, "saved_locations",
+                          {"Test City": {"lat": 35.0, "lon": -80.0}}):
 
-        # Call the method
-        result = location_service.get_location_coordinates("Non-existent City")
+            # Call the method
+            result = location_service.get_location_coordinates("Non-existent City")
 
-        # Verify the result
-        assert result is None
+            # Verify the result
+            assert result is None
