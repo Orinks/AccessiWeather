@@ -76,7 +76,6 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
 
         # --- Internal State Variables ---
         self.updating = False
-<<<<<<< Updated upstream
         self._forecast_complete = False  # Flag for forecast fetch completion
         self._alerts_complete = False  # Flag for alerts fetch completion
 
@@ -107,11 +106,6 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         self.taskbar_icon = TaskBarIcon(self)
 
         # Test hooks for async tests
-=======
-        self.last_update = None
-        self.update_timer = wx.Timer(self)
-        # Test hooks (optional, can be set later if needed)
->>>>>>> Stashed changes
         self._testing_forecast_callback = None
         self._testing_forecast_error_callback = None
         self._testing_alerts_callback = None
@@ -134,15 +128,10 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         if self._should_check_api_contact:
             self._check_api_contact_configured()
 
-<<<<<<< Updated upstream
         # Check if we should start minimized
         if self.config.get("settings", {}).get(MINIMIZE_ON_STARTUP_KEY, False):
             logger.info("Starting minimized to system tray")
             self.Hide()
-
-=======
-        # 7. Show the Frame
-        self.Show()
 
     def _setup_logging(self):
         # --- Logging Setup (Explicit Handler Management) ---
@@ -183,20 +172,17 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         event.Skip() # Allow other close handlers to run
 
     def _init_ui(self):
-        # Create the status bar first, as UIManager setup might indirectly use it
-        self.CreateStatusBar()
-        self.SetStatusText("Initializing...") # Optional: Set initial status
+        # Menu Bar Setup (Remove call to non-existent method)
+        # self.ui_manager._setup_menubar() # Error: Method does not exist
 
-        # Initialize UI components using UIManager
-        self.ui_manager = UIManager(self, self.notification_service)
+        # Panel and Sizer Setup (Using UIManager)
         self.ui_manager._setup_ui() # Corrected method name
 
         # Bind events
         self.Bind(wx.EVT_CLOSE, self.OnClose)
-        self.Bind(wx.EVT_TIMER, self.OnUpdateTimer, self.update_timer)
+        # self.Bind(wx.EVT_TIMER, self.OnUpdateTimer, self.update_timer) # Redundant and incorrect
 
     # Load configuration from file
->>>>>>> Stashed changes
     def _load_config(self):
         # Load configuration from file or return default
         try:
@@ -235,16 +221,10 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             "settings": {
                 UPDATE_INTERVAL_KEY: 30,
                 ALERT_RADIUS_KEY: 25,
-<<<<<<< Updated upstream
                 PRECISE_LOCATION_ALERTS_KEY: True,  # Default to precise location alerts
                 MINIMIZE_ON_STARTUP_KEY: False,  # Default to not minimizing on startup
                 CACHE_ENABLED_KEY: True,  # Default to enabled caching
                 CACHE_TTL_KEY: 300,  # Default to 5 minutes (300 seconds)
-=======
-                PRECISE_LOCATION_ALERTS_KEY: True,
-                CACHE_ENABLED_KEY: True,
-                CACHE_TTL_KEY: 300,
->>>>>>> Stashed changes
             },
             "api_settings": {API_CONTACT_KEY: ""},
         }
@@ -287,7 +267,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
     def OnClose(self, event):
         # Handle window close event
         logging.info("Application closing.")
-        self.update_timer.Stop()
+        self.timer.Stop()
         # Save config before destroying?
         # self.SaveConfig()
         self.Destroy()
@@ -298,19 +278,16 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
 
     def StartUpdateTimer(self):
         """Start the update timer based on config."""
-        update_interval_minutes = self.config.get("settings", {}).get(UPDATE_INTERVAL_KEY, 30)
-        update_interval_ms = update_interval_minutes * 60 * 1000
-        if update_interval_ms > 0:
-            self.update_timer.Start(update_interval_ms)
-            logging.info(f"Update timer started with interval: {update_interval_minutes} minutes.")
-        else:
-             logging.warning("Update interval is zero or negative. Timer not started.")
+        update_interval_sec = self.config.get("settings", {}).get(UPDATE_INTERVAL_KEY, 30)
+        update_interval_ms = update_interval_sec * 1000
+        if not self.timer.IsRunning():
+            logger.info(f"Starting update timer with interval {update_interval_sec} seconds")
+            self.timer.Start(update_interval_ms)
 
     def StopUpdateTimer(self):
         """Stop the update timer."""
-        if self.update_timer.IsRunning():
-            self.update_timer.Stop()
-            logging.info("Update timer stopped.")
+        if self.timer.IsRunning():
+            self.timer.Stop()
 
     # --- Location Data Management ---
     def LoadLocations(self):

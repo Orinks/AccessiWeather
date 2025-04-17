@@ -1,11 +1,7 @@
 # tests/conftest.py
 
 # Import faulthandler setup first to enable faulthandler
-<<<<<<< Updated upstream
-=======
 
-
->>>>>>> Stashed changes
 import json
 import logging
 import os
@@ -16,22 +12,36 @@ from unittest.mock import MagicMock
 import pytest
 import wx
 
-<<<<<<< Updated upstream
-# Import faulthandler_setup for side effects (enables faulthandler)
-import tests.faulthandler_setup  # noqa: F401
-from tests.wx_cleanup_utils import safe_cleanup
-=======
-
->>>>>>> Stashed changes
-
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-
 # No need to import test utilities here
+
+
+import requests
+from unittest.mock import patch
+
+@pytest.fixture(autouse=True)
+def patch_requests():
+    """
+    Automatically patch requests.get, post, put, delete for all tests.
+    Prevents real network calls during test runs.
+    """
+    with patch.object(requests, "get") as mock_get, \
+         patch.object(requests, "post") as mock_post, \
+         patch.object(requests, "put") as mock_put, \
+         patch.object(requests, "delete") as mock_delete:
+        # Set default return values (can be overridden in individual tests)
+        for mock_method in (mock_get, mock_post, mock_put, mock_delete):
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.json.return_value = {}
+            mock_resp.raise_for_status = MagicMock()
+            mock_method.return_value = mock_resp
+        yield
 
 
 @pytest.fixture(scope="session")
