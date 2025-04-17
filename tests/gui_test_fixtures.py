@@ -6,6 +6,7 @@ These fixtures are designed to be reusable across different test modules.
 
 import time
 import types
+import threading
 import pytest
 import wx
 from unittest.mock import MagicMock, patch
@@ -13,6 +14,8 @@ from unittest.mock import MagicMock, patch
 from accessiweather.gui.weather_app import WeatherApp
 from accessiweather.services.location_service import LocationService
 from accessiweather.services.weather_service import WeatherService
+# Import UI components for creating test UI elements
+from accessiweather.gui.ui_components import AccessibleTextCtrl, AccessibleListCtrl
 
 
 def wait_for(condition_func, timeout=5.0, poll_interval=0.05):
@@ -33,6 +36,71 @@ def wait_for(condition_func, timeout=5.0, poll_interval=0.05):
         wx.Yield()
         time.sleep(poll_interval)
     return False
+
+
+def process_ui_events(iterations=5, sleep_time=0.02):
+    """Process pending UI events.
+
+    This function processes pending UI events to ensure UI updates are applied.
+    It's useful for tests that need to wait for UI updates to be processed.
+
+    Args:
+        iterations: Number of times to process events
+        sleep_time: Time to sleep between iterations in seconds
+    """
+    for _ in range(iterations):
+        wx.Yield()
+        time.sleep(sleep_time)
+
+
+def simulate_ui_action(action_func, process_events=True):
+    """Simulate a UI action and process events.
+
+    This function simulates a UI action and processes events to ensure
+    the action is fully processed by the UI.
+
+    Args:
+        action_func: Function that performs the UI action
+        process_events: Whether to process events after the action
+    """
+    action_func()
+    if process_events:
+        process_ui_events()
+
+
+class AsyncEventWaiter:
+    """Helper class for waiting for asynchronous events.
+
+    This class provides a way to wait for asynchronous events to complete
+    in GUI tests, such as when a background thread updates the UI.
+    """
+    def __init__(self):
+        self.event = threading.Event()
+        self.result = None
+
+    def callback(self, result=None):
+        """Callback to be called when the event completes.
+
+        Args:
+            result: Optional result to store
+        """
+        self.result = result
+        self.event.set()
+
+    def wait(self, timeout=5.0):
+        """Wait for the event to complete.
+
+        Args:
+            timeout: Maximum time to wait in seconds
+
+        Returns:
+            The result passed to the callback, or None if timeout
+        """
+        start_time = time.time()
+        while not self.event.is_set() and time.time() - start_time < timeout:
+            wx.Yield()
+            time.sleep(0.05)
+        return self.result
 
 
 @pytest.fixture
@@ -129,6 +197,95 @@ def mock_weather_app(wx_app_session):
 
         # Clean up
         parent.Destroy()
+
+
+@pytest.fixture
+def ui_component_frame(wx_app_session):
+    """Create a frame for testing UI components.
+
+    This fixture creates a frame that can be used to host UI components
+    for testing. It ensures proper cleanup after the test.
+
+    Args:
+        wx_app_session: The wx.App fixture from conftest.py
+
+    Returns:
+        A wx.Frame instance
+    """
+    # Create a parent frame for UI components
+    frame = wx.Frame(None, title="Test UI Components")
+
+    # Show the frame to ensure UI updates are processed
+    frame.Show()
+    wx.Yield()
+
+    yield frame
+
+    # Clean up
+    frame.Hide()
+    wx.Yield()
+    frame.Destroy()
+    wx.Yield()
+
+
+@pytest.fixture
+def text_control(ui_component_frame):
+    """Create an AccessibleTextCtrl for testing.
+
+    This fixture creates an AccessibleTextCtrl that can be used for testing
+    text-based UI components.
+
+    Args:
+        ui_component_frame: The frame fixture
+
+    Returns:
+        An AccessibleTextCtrl instance
+    """
+    # Create a text control
+    text_ctrl = AccessibleTextCtrl(
+        ui_component_frame,
+        style=wx.TE_MULTILINE | wx.TE_READONLY,
+        size=(400, 300),
+        label="Test Text Control"
+    )
+
+    # Process events to ensure the control is properly initialized
+    wx.Yield()
+
+    yield text_ctrl
+
+
+@pytest.fixture
+def list_control(ui_component_frame):
+    """Create an AccessibleListCtrl for testing.
+
+    This fixture creates an AccessibleListCtrl that can be used for testing
+    list-based UI components.
+
+    Args:
+        ui_component_frame: The frame fixture
+
+    Returns:
+        An AccessibleListCtrl instance
+    """
+    # Create a list control
+    list_ctrl = AccessibleListCtrl(
+        ui_component_frame,
+        style=wx.LC_REPORT | wx.LC_SINGLE_SEL,
+        label="Test List Control",
+        size=(400, 200)
+    )
+
+    # Set up columns
+    list_ctrl.InsertColumn(0, "Column 1")
+    list_ctrl.InsertColumn(1, "Column 2")
+    list_ctrl.SetColumnWidth(0, 150)
+    list_ctrl.SetColumnWidth(1, 250)
+
+    # Process events to ensure the control is properly initialized
+    wx.Yield()
+
+    yield list_ctrl
 
 
 @pytest.fixture
