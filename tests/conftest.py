@@ -13,6 +13,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 import wx
 
+# Import our service classes plugin
+pytest_plugins = ['tests.conftest_service_classes']
+
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)

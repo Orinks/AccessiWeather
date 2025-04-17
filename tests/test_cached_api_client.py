@@ -23,7 +23,9 @@ def mock_response():
 @pytest.fixture
 def api_client():
     """Create an instance of the NoaaApiClient with caching enabled."""
-    return NoaaApiClient(user_agent="Test User Agent", enable_caching=True)
+    # Patch the __new__ method to avoid issues with MagicMock
+    with patch.object(NoaaApiClient, '__new__', return_value=object.__new__(NoaaApiClient)):
+        return NoaaApiClient(user_agent="Test User Agent", enable_caching=True)
 
 
 class TestCachedApiClient:
@@ -38,10 +40,11 @@ class TestCachedApiClient:
     def test_caching_disabled(self):
         """Test that caching is disabled by default."""
         # Create a client with caching disabled
-        client = NoaaApiClient(user_agent="Test User Agent", enable_caching=False)
+        with patch.object(NoaaApiClient, '__new__', return_value=object.__new__(NoaaApiClient)):
+            client = NoaaApiClient(user_agent="Test User Agent", enable_caching=False)
 
-        # Verify that the cache is not initialized
-        assert client.cache is None
+            # Verify that the cache is not initialized
+            assert client.cache is None
 
     def test_cache_hit(self):
         """Test that cached responses are used when available."""
@@ -52,7 +55,8 @@ class TestCachedApiClient:
 
     def test_cache_miss_different_params(self, mock_response):
         """Test that different parameters result in a cache miss."""
-        client = NoaaApiClient(user_agent="Test User Agent", enable_caching=True)
+        with patch.object(NoaaApiClient, '__new__', return_value=object.__new__(NoaaApiClient)):
+            client = NoaaApiClient(user_agent="Test User Agent", enable_caching=True)
 
         # Mock the cache to always return None (cache miss)
         with patch.object(client.cache, "get", return_value=None):
@@ -70,7 +74,8 @@ class TestCachedApiClient:
 
     def test_force_refresh(self, mock_response):
         """Test that force_refresh bypasses the cache."""
-        client = NoaaApiClient(user_agent="Test User Agent", enable_caching=True)
+        with patch.object(NoaaApiClient, '__new__', return_value=object.__new__(NoaaApiClient)):
+            client = NoaaApiClient(user_agent="Test User Agent", enable_caching=True)
 
         # Mock the cache
         with patch.object(client.cache, "get", return_value={"mock": "cached_data"}):
@@ -110,7 +115,8 @@ class TestCachedApiClient:
 
     def test_cache_different_endpoints(self):
         """Test that different endpoints use different cache entries."""
-        client = NoaaApiClient(user_agent="Test User Agent", enable_caching=True)
+        with patch.object(NoaaApiClient, '__new__', return_value=object.__new__(NoaaApiClient)):
+            client = NoaaApiClient(user_agent="Test User Agent", enable_caching=True)
 
         # Mock the cache to always return None (cache miss)
         with patch.object(client.cache, "get", return_value=None):
@@ -146,7 +152,8 @@ class TestCachedApiClient:
     def test_cache_error_not_cached(self):
         """Test that errors are not cached."""
         # Create a client with caching enabled
-        client = NoaaApiClient(user_agent="Test User Agent", enable_caching=True)
+        with patch.object(NoaaApiClient, '__new__', return_value=object.__new__(NoaaApiClient)):
+            client = NoaaApiClient(user_agent="Test User Agent", enable_caching=True)
 
         # Create a mock for the cache
         with patch.object(client.cache, "get", return_value=None):
