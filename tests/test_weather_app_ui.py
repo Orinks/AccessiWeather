@@ -37,6 +37,9 @@ def test_nationwide_forecast_display(nationwide_app):
     # Bind the method to the app instance
     app._on_forecast_fetched = types.MethodType(on_forecast_fetched, app)
 
+    # Set up the testing callback attribute that the original method might expect
+    app._testing_forecast_callback = None
+
     # Call the method with test data from the weather service
     test_data = app.weather_service.get_national_forecast_data.return_value
     app._on_forecast_fetched(test_data)
@@ -89,6 +92,9 @@ def test_nationwide_error_handling(nationwide_app):
     # Bind the method to the app instance
     app._on_forecast_error = types.MethodType(on_forecast_error, app)
 
+    # Set up the testing callback attribute that the original method might expect
+    app._testing_forecast_error_callback = None
+
     # Call the method with an error message
     app._on_forecast_error("API connection failed")
 
@@ -124,12 +130,8 @@ def test_nationwide_fetch_process(nationwide_app):
     # Create an event waiter to track when the forecast is fetched
     waiter = AsyncEventWaiter()
 
-    # Set up a callback to be called when the forecast is fetched
-    def on_forecast_complete(forecast_data):
-        waiter.callback(forecast_data)
-
-    # Set the testing callback
-    app._testing_forecast_callback = on_forecast_complete
+    # Set up the testing callback attribute that the original method expects
+    app._testing_forecast_callback = waiter.callback
 
     # Call the _FetchWeatherData method with the nationwide location
     app._FetchWeatherData(app.selected_location)
