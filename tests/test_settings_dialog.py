@@ -9,6 +9,7 @@ try:
 except ImportError:
     SettingsDialog = None  # Define as None if import fails
 
+
 @unittest.skipIf(SettingsDialog is None, "Dialog not implemented")
 class TestSettingsDialog(unittest.TestCase):
     @classmethod
@@ -42,10 +43,18 @@ class TestSettingsDialog(unittest.TestCase):
         self.dialog.api_contact_ctrl.SetValue("updated@example.com")
         self.dialog.update_interval_ctrl.SetValue(60)
         self.dialog.alert_radius_ctrl.SetValue(50)
+
+        # Get settings from both methods
         updated_settings = self.dialog.get_settings()
-        self.assertEqual(updated_settings["api_contact"], "updated@example.com")
+        updated_api_settings = self.dialog.get_api_settings()
+
+        # Check API settings
+        self.assertEqual(updated_api_settings["api_contact"], "updated@example.com")
+
+        # Check general settings
         self.assertEqual(updated_settings["update_interval_minutes"], 60)
         self.assertEqual(updated_settings["alert_radius_miles"], 50)
+
 
 if __name__ == "__main__":
     unittest.main()
