@@ -5,9 +5,10 @@
 import json
 import logging
 import os
+import requests
 import tempfile
 import time
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 import wx
@@ -17,12 +18,6 @@ import wx
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-# No need to import test utilities here
-
-
-import requests
-from unittest.mock import patch
 
 @pytest.fixture(autouse=True)
 def patch_requests():
@@ -139,60 +134,66 @@ def temp_config_file(temp_config_dir):
 
 @pytest.fixture
 def mock_api_client():
-    """Create a mock NoaaApiClient."""
+    """Create a mock NoaaApiClient using patch.object."""
     from accessiweather.api_client import NoaaApiClient
 
-    # Create a mock API client
-    mock_client = MagicMock(spec=NoaaApiClient)
-
-    # Configure common mock responses
-    mock_client.get_point_data.return_value = {
-        "properties": {
-            "forecast": ("https://api.weather.gov/gridpoints/RAH/53,88/forecast"),
-            "forecastHourly": ("https://api.weather.gov/gridpoints/RAH/53,88/forecast/hourly"),
-            "relativeLocation": {"properties": {"city": "Test City", "state": "NC"}},
+    # Create a patcher for NoaaApiClient
+    with patch.object(
+        NoaaApiClient, '__new__', return_value=MagicMock(spec=NoaaApiClient)
+    ) as mock_client:
+        # Configure common mock responses
+        mock_client.get_point_data.return_value = {
+            "properties": {
+                "forecast": ("https://api.weather.gov/gridpoints/RAH/53,88/forecast"),
+                "forecastHourly": ("https://api.weather.gov/gridpoints/RAH/53,88/forecast/hourly"),
+                "relativeLocation": {"properties": {"city": "Test City", "state": "NC"}},
+            }
         }
-    }
 
-    mock_client.get_forecast.return_value = {
-        "properties": {
-            "periods": [
-                {
-                    "name": "Today",
-                    "temperature": 75,
-                    "temperatureUnit": "F",
-                    "shortForecast": "Sunny",
-                    "detailedForecast": "Sunny with a high near 75.",
-                }
-            ]
+        mock_client.get_forecast.return_value = {
+            "properties": {
+                "periods": [
+                    {
+                        "name": "Today",
+                        "temperature": 75,
+                        "temperatureUnit": "F",
+                        "shortForecast": "Sunny",
+                        "detailedForecast": "Sunny with a high near 75.",
+                    }
+                ]
+            }
         }
-    }
 
-    mock_client.get_alerts.return_value = {"features": []}
+        mock_client.get_alerts.return_value = {"features": []}
 
-    return mock_client
+        yield mock_client
 
 
 @pytest.fixture
 def mock_notifier():
-    """Create a mock WeatherNotifier."""
+    """Create a mock WeatherNotifier using patch.object."""
     from accessiweather.notifications import WeatherNotifier
 
-    # Create a mock notifier
-    mock_notifier = MagicMock(spec=WeatherNotifier)
-    return mock_notifier
+    # Create a patcher for WeatherNotifier
+    with patch.object(
+        WeatherNotifier, '__new__', return_value=MagicMock(spec=WeatherNotifier)
+    ) as mock_notifier:
+        yield mock_notifier
 
 
 @pytest.fixture
-def mock_location_manager(temp_config_dir):
-    """Create a mock LocationManager with test data."""
-    from accessiweather.location import LocationManager
+def mock_location_service():
+    """Create a mock LocationService with test data using patch.object."""
+    from accessiweather.services.location_service import LocationService
 
-    # Create a real location manager with the temp directory
-    location_manager = LocationManager(config_dir=temp_config_dir)
+    # Create a patcher for LocationService
+    with patch.object(
+        LocationService, '__new__', return_value=MagicMock(spec=LocationService)
+    ) as mock_location_service:
+        # Configure the mock
+        mock_location_service.get_current_location.return_value = ("Test City", 35.0, -80.0)
+        mock_location_service.get_current_location_name.return_value = "Test City"
+        mock_location_service.get_all_locations.return_value = ["Test City"]
+        mock_location_service.get_location_coordinates.return_value = (35.0, -80.0)
 
-    # Add test locations
-    location_manager.add_location("Test City", 35.0, -80.0)
-    location_manager.set_current_location("Test City")
-
-    return location_manager
+        yield mock_location_service
