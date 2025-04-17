@@ -15,6 +15,14 @@ logger = logging.getLogger(__name__)
 class WeatherService:
     """Service for weather-related operations."""
 
+    def __init__(self, api_client: NoaaApiClient):
+        """Initialize the weather service.
+
+        Args:
+            api_client: The API client to use for weather data retrieval.
+        """
+        self.api_client = api_client
+
     def get_national_forecast_data(self, force_refresh: bool = False) -> dict:
         """Get nationwide forecast data from the API client.
 
@@ -31,14 +39,6 @@ class WeatherService:
         except Exception as e:
             logger.error(f"Error getting nationwide forecast data: {str(e)}")
             raise ApiClientError(f"Unable to retrieve nationwide forecast data: {str(e)}")
-
-    def __init__(self, api_client: NoaaApiClient):
-        """Initialize the weather service.
-
-        Args:
-            api_client: The API client to use for weather data retrieval.
-        """
-        self.api_client = api_client
 
     def get_forecast(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
         """Get forecast data for a location.
