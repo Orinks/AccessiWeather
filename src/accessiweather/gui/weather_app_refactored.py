@@ -8,14 +8,7 @@ import json
 import logging
 import os
 import time
-from typing import Any, Dict, List, Optional, Tuple
-
 import wx
-
-from accessiweather.api_client import ApiClientError
-from accessiweather.services.location_service import LocationService
-from accessiweather.services.notification_service import NotificationService
-from accessiweather.services.weather_service import WeatherService
 
 from .async_fetchers import AlertsFetcher, DiscussionFetcher, ForecastFetcher
 from .dialogs import WeatherDiscussionDialog
@@ -167,8 +160,17 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
 
         # Update dropdown
         self.location_choice.Clear()
+
+        # Check if the selected location is the Nationwide location
+        selected_is_nationwide = current and self.location_service.is_nationwide_location(current)
+
         for location in locations:
             self.location_choice.Append(location)
+
+            # If this is the Nationwide location and it's selected, disable the remove button
+            is_nationwide = self.location_service.is_nationwide_location(location)
+            if hasattr(self, "remove_btn") and is_nationwide and selected_is_nationwide:
+                self.remove_btn.Disable()
 
         # Set current selection
         if current and current in locations:

@@ -15,7 +15,6 @@ import wx
 from .alert_dialog import AlertDetailsDialog
 from .dialogs import LocationDialog
 from .settings_dialog import (
-    ALERT_RADIUS_KEY,
     API_CONTACT_KEY,
     CACHE_ENABLED_KEY,
     CACHE_TTL_KEY,
@@ -67,6 +66,14 @@ class WeatherAppHandlers:
 
     def SetStatusText(self, text: str) -> None:
         """Placeholder for wx.Frame.SetStatusText method"""
+        pass
+
+    def Bind(self, *args, **kwargs) -> None:
+        """Placeholder for wx.Frame.Bind method"""
+        pass
+
+    def Unbind(self, *args, **kwargs) -> None:
+        """Placeholder for wx.Frame.Unbind method"""
         pass
 
     def OnKeyDown(self, event):
@@ -122,6 +129,12 @@ class WeatherAppHandlers:
         if not selected:
             return
 
+        # Check if this is the Nationwide location and disable remove button if it is
+        if hasattr(self, "remove_btn") and self.location_service.is_nationwide_location(selected):
+            self.remove_btn.Disable()
+        elif hasattr(self, "remove_btn"):
+            self.remove_btn.Enable()
+
         # Set current location using the location service
         self.location_service.set_current_location(selected)
 
@@ -174,6 +187,15 @@ class WeatherAppHandlers:
             )
             return
 
+        # Check if this is the Nationwide location
+        if self.location_service.is_nationwide_location(selected):
+            wx.MessageBox(
+                "The Nationwide location cannot be removed.",
+                "Cannot Remove",
+                wx.OK | wx.ICON_INFORMATION
+            )
+            return
+
         # Confirm removal
         confirm = wx.MessageBox(
             f"Are you sure you want to remove {selected}?",
@@ -183,7 +205,15 @@ class WeatherAppHandlers:
 
         if confirm == wx.YES:
             # Remove location using the location service
-            self.location_service.remove_location(selected)
+            removed = self.location_service.remove_location(selected)
+
+            if not removed:
+                wx.MessageBox(
+                    f"Could not remove {selected}.",
+                    "Error",
+                    wx.OK | wx.ICON_ERROR
+                )
+                return
 
             # Update dropdown
             self.UpdateLocationDropdown()
@@ -427,8 +457,6 @@ class WeatherAppHandlers:
             # Save config
             self._save_config()
 
-            # Update API client contact info
-            api_contact = updated_api_settings.get(API_CONTACT_KEY, "")
             # Note: We can't update the contact info directly in the API client
             # as it doesn't have a setter method. The contact info will be used
             # the next time the app is started.
