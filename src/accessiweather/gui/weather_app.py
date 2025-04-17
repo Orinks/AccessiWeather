@@ -309,6 +309,91 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         if self._testing_forecast_error_callback:
             self._testing_forecast_error_callback(error)
 
+    def _format_national_forecast(self, national_data):
+        """Format national forecast data for display
+
+        Args:
+            national_data: Dictionary with national forecast data
+
+        Returns:
+            Formatted text for display
+        """
+        from datetime import datetime
+        lines = []
+
+        # Add WPC data
+        wpc_data = national_data.get("wpc", {})
+        if wpc_data:
+            lines.append("=== WEATHER PREDICTION CENTER (WPC) ===")
+
+            # Short Range Forecast
+            short_range = wpc_data.get("short_range")
+            if short_range:
+                lines.append("\n--- SHORT RANGE FORECAST (Days 1-3) ---")
+                # Extract and add a summary (first few lines)
+                summary = "\n".join(short_range.split("\n")[0:10])
+                lines.append(summary)
+                lines.append("(View full discussion for more details)")
+
+            # Medium Range Forecast
+            medium_range = wpc_data.get("medium_range")
+            if medium_range:
+                lines.append("\n--- MEDIUM RANGE FORECAST (Days 3-7) ---")
+                # Extract and add a summary (first few lines)
+                summary = "\n".join(medium_range.split("\n")[0:10])
+                lines.append(summary)
+                lines.append("(View full discussion for more details)")
+
+        # Add SPC data
+        spc_data = national_data.get("spc", {})
+        if spc_data:
+            lines.append("\n=== STORM PREDICTION CENTER (SPC) ===")
+
+            # Day 1 Outlook
+            day1 = spc_data.get("day1")
+            if day1:
+                lines.append("\n--- DAY 1 CONVECTIVE OUTLOOK ---")
+                # Extract and add a summary (first few lines)
+                summary = "\n".join(day1.split("\n")[0:10])
+                lines.append(summary)
+                lines.append("(View full discussion for more details)")
+
+        # Add NHC data during hurricane season (June 1 - November 30)
+        current_month = datetime.now().month
+        if 6 <= current_month <= 11:  # Hurricane season
+            nhc_data = national_data.get("nhc", {})
+            if nhc_data:
+                lines.append("\n=== NATIONAL HURRICANE CENTER (NHC) ===")
+
+                # Atlantic Outlook
+                atlantic = nhc_data.get("atlantic")
+                if atlantic:
+                    lines.append("\n--- ATLANTIC TROPICAL WEATHER OUTLOOK ---")
+                    # Extract and add a summary (first few lines)
+                    summary = "\n".join(atlantic.split("\n")[0:10])
+                    lines.append(summary)
+                    lines.append("(View full discussion for more details)")
+
+        # Add CPC data
+        cpc_data = national_data.get("cpc", {})
+        if cpc_data:
+            lines.append("\n=== CLIMATE PREDICTION CENTER (CPC) ===")
+
+            # 6-10 Day Outlook
+            outlook_6_10 = cpc_data.get("6_10_day")
+            if outlook_6_10:
+                lines.append("\n--- 6-10 DAY OUTLOOK ---")
+                # Extract and add a summary (first few lines)
+                summary = "\n".join(outlook_6_10.split("\n")[0:10])
+                lines.append(summary)
+                lines.append("(View full discussion for more details)")
+
+        # If no data was added, add a message
+        if len(lines) == 0:
+            lines.append("No data available for national forecast.")
+
+        return "\n".join(lines)
+
     def _on_alerts_fetched(self, alerts_data):
         """Handle the fetched alerts in the main thread
 

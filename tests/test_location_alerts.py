@@ -63,7 +63,7 @@ def test_get_alerts_precise_location(mock_api_client, sample_point_data, sample_
 
     # Check that the correct endpoint and parameters were used
     mock_api_client._make_request.assert_called_with(
-        "alerts/active", params={"zone": "NJC015"}  # Should use the county/zone ID
+        "alerts/active", params={"zone": "NJC015"}, force_refresh=False  # Should use the county/zone ID
     )
 
     # Verify the returned alerts
@@ -81,7 +81,7 @@ def test_get_alerts_statewide(mock_api_client, sample_point_data, sample_alerts_
 
     # Check that the correct endpoint and parameters were used
     mock_api_client._make_request.assert_called_with(
-        "alerts/active", params={"area": "NJ"}  # Should use the state code
+        "alerts/active", params={"area": "NJ"}, force_refresh=False  # Should use the state code
     )
 
     # Verify the returned alerts
@@ -99,5 +99,5 @@ def test_fallback_to_radius_search(mock_api_client):
 
     # Check that it fell back to radius search
     mock_api_client._make_request.assert_called_with(
-        "alerts/active", params={"point": "40.0,-74.0", "radius": "25"}
+        "alerts/active", params={"point": "40.0,-74.0", "radius": "25"}, force_refresh=False
     )
