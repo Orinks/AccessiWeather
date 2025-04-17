@@ -1,17 +1,12 @@
 """Tests for the API contact check when config file is missing"""
 
 # Import faulthandler setup first to enable faulthandler
-<<<<<<< Updated upstream
-=======
-
-
->>>>>>> Stashed changes
 from unittest.mock import MagicMock, patch
 
 import pytest
 import wx
 
-import tests.faulthandler_setup
+import tests.faulthandler_setup  # noqa: F401
 from accessiweather.gui.weather_app import WeatherApp
 
 
@@ -21,26 +16,37 @@ def mock_components():
     with (
         patch("accessiweather.api_client.NoaaApiClient") as mock_api_client_class,
         patch("accessiweather.notifications.WeatherNotifier") as mock_notifier_class,
-        patch("accessiweather.location.LocationManager") as mock_location_manager_class,
+        patch("accessiweather.services.location_service.LocationService") as mock_location_service_class,
+        patch("accessiweather.services.weather_service.WeatherService") as mock_weather_service_class,
+        patch("accessiweather.services.notification_service.NotificationService") as mock_notification_service_class,
     ):
         # Create mock instances
         mock_api_client = MagicMock()
         mock_notifier = MagicMock()
-        mock_location_manager = MagicMock()
+        mock_location_service = MagicMock()
+        mock_weather_service = MagicMock()
+        mock_notification_service = MagicMock()
 
-        # Configure mock location manager to return valid data
-        mock_location_manager.get_all_locations.return_value = ["Test City"]
-        mock_location_manager.get_current_location.return_value = ("Test City", 35.0, -80.0)
+        # Configure mock location service to return valid data
+        mock_location_service.get_all_locations.return_value = ["Test City"]
+        mock_location_service.get_current_location.return_value = ("Test City", 35.0, -80.0)
+
+        # Configure notification service to have a notifier property
+        mock_notification_service.notifier = mock_notifier
 
         # Configure mock classes to return mock instances
         mock_api_client_class.return_value = mock_api_client
         mock_notifier_class.return_value = mock_notifier
-        mock_location_manager_class.return_value = mock_location_manager
+        mock_location_service_class.return_value = mock_location_service
+        mock_weather_service_class.return_value = mock_weather_service
+        mock_notification_service_class.return_value = mock_notification_service
 
         yield {
             "api_client": mock_api_client,
             "notifier": mock_notifier,
-            "location_manager": mock_location_manager,
+            "location_service": mock_location_service,
+            "weather_service": mock_weather_service,
+            "notification_service": mock_notification_service,
         }
 
 
@@ -59,9 +65,10 @@ def test_dialog_shown_when_config_file_missing(wx_app, mock_components):
             # Create the app
             app = WeatherApp(
                 parent=None,
-                location_manager=mock_components["location_manager"],
+                location_service=mock_components["location_service"],
+                weather_service=mock_components["weather_service"],
+                notification_service=mock_components["notification_service"],
                 api_client=mock_components["api_client"],
-                notifier=mock_components["notifier"],
             )
 
             try:

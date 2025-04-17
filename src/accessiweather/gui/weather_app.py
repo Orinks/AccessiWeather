@@ -17,9 +17,6 @@ from .dialogs import WeatherDiscussionDialog
 from .settings_dialog import (
     ALERT_RADIUS_KEY,
     API_CONTACT_KEY,
-    CACHE_ENABLED_KEY,
-    CACHE_TTL_KEY,
-    MINIMIZE_ON_STARTUP_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
     UPDATE_INTERVAL_KEY,
 )
@@ -54,32 +51,47 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             weather_service: WeatherService instance
             location_service: LocationService instance
             notification_service: NotificationService instance
-            api_client: ApiClient instance (potentially from tests)
+            api_client: NoaaApiClient instance (for backward compatibility)
             config: Configuration dictionary (optional)
             config_path: Custom path to config file (optional)
         """
-        # 1. Initialize the superclass (wx.Frame)
-        super().__init__(parent, title="AccessiWeather", size=(900, 700))
-        self._setup_logging()
+        super().__init__(parent, title="AccessiWeather", size=(800, 600))
 
-        # 2. Load Configuration and Set Skip Flag
+        # Set config path
         self._config_path = config_path or CONFIG_PATH
+
+        # Load or use provided config
         self.config = config if config is not None else self._load_config()
-        self._should_check_api_contact = not self.config.get("skip_api_contact_check", False)
 
-        # 3. Initialize Services (using self.config)
-        # Use provided services or initialize defaults
-        self.api_client = api_client or ApiClient(self.config.get("api_settings", {}))
-        self.weather_service = weather_service or WeatherService(self.api_client, self.config.get("api_settings", {}))
-        self.location_service = location_service or LocationService(self.config.get("settings", {}).get(ALERT_RADIUS_KEY, 25))
-        self.notification_service = notification_service or NotificationService(self)
+        # Store provided services
+        self.weather_service = weather_service
+        self.location_service = location_service
+        self.notification_service = notification_service
 
-        # --- Internal State Variables ---
+        # For backward compatibility
+        self.api_client = api_client
+
+        # Validate required services
+        if not all([self.weather_service, self.location_service, self.notification_service]):
+            raise ValueError(
+                "Required services (weather_service, location_service, notification_service) "
+                "must be provided"
+            )
+
+        # Initialize async fetchers (using the weather service)
+        self.forecast_fetcher = ForecastFetcher(self.api_client)
+        self.alerts_fetcher = AlertsFetcher(self.api_client)
+        self.discussion_fetcher = DiscussionFetcher(self.api_client)
+
+        # State variables
+        self.current_forecast = None
+        self.current_alerts = []
         self.updating = False
         self._forecast_complete = False  # Flag for forecast fetch completion
         self._alerts_complete = False  # Flag for alerts fetch completion
 
         # Initialize UI using UIManager
+        # UI elements are now attached to self by UIManager
         self.ui_manager = UIManager(self, self.notification_service.notifier)
 
         # Set up status bar
@@ -89,11 +101,15 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         # Start update timer
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.OnTimer, self.timer)
+        # Bind Close event here as it's frame-level, not UI-element specific
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.timer.Start(1000)  # Check every 1 second for updates
 
         # Last update timestamp
-        self.last_update = 0
+        self.last_update: float = 0.0
+
+        # Create system tray icon
+        self.taskbar_icon = TaskBarIcon(self)
 
         # Register with accessibility system
         self.SetName("AccessiWeather")
@@ -102,9 +118,6 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             accessible.SetName("AccessiWeather")
             accessible.SetRole(wx.ACC_ROLE_WINDOW)
 
-        # Create system tray icon
-        self.taskbar_icon = TaskBarIcon(self)
-
         # Test hooks for async tests
         self._testing_forecast_callback = None
         self._testing_forecast_error_callback = None
@@ -112,109 +125,28 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         self._testing_alerts_error_callback = None
         self._testing_discussion_callback = None
         self._testing_discussion_error_callback = None
-        # --- End Internal State ---
 
-        # 4. Initialize UI (uses services)
-        self._init_ui() # Sets up menus, status bar, panels, etc.
-
-        # 5. Load Initial Data and Update UI
-        self.LoadLocations()
-        self.LoadCurrentLocation()
+        # Initialize UI with location data
         self.UpdateLocationDropdown()
-        self.StartUpdateTimer() # Start the timer after UI is ready
-        wx.CallAfter(self.UpdateWeatherData) # Schedule initial update
+        self.UpdateWeatherData()
 
-        # 6. Conditional API Contact Check (at the end, using the flag)
-        if self._should_check_api_contact:
-            self._check_api_contact_configured()
+        # Check if API contact is configured
+        self._check_api_contact_configured()
 
-        # Check if we should start minimized
-        if self.config.get("settings", {}).get(MINIMIZE_ON_STARTUP_KEY, False):
-            logger.info("Starting minimized to system tray")
-            self.Hide()
-
-    def _setup_logging(self):
-        # --- Logging Setup (Explicit Handler Management) ---
-        log_dir = os.path.join(os.getenv("APPDATA"), ".accessiweather")
-        os.makedirs(log_dir, exist_ok=True)
-        self.log_file = os.path.join(log_dir, "app.log") # Store log file path
-
-        root_logger = logging.getLogger() # Get root logger
-        root_logger.setLevel(logging.INFO) # Ensure level is set
-
-        # Remove existing handlers pointing to the same log file
-        for handler in root_logger.handlers[:]: # Iterate over a copy
-            if isinstance(handler, logging.FileHandler) and handler.baseFilename == self.log_file:
-                handler.close()
-                root_logger.removeHandler(handler)
-                logging.debug(f"Removed existing file handler for {self.log_file}")
-
-        # Create and add the file handler
-        log_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-        file_handler = logging.FileHandler(self.log_file, mode='a')
-        file_handler.setFormatter(log_formatter)
-        root_logger.addHandler(file_handler)
-        # --- End Logging Setup ---
-
-        logging.info("Application started.")
-
-        # Initialize services if not provided
-        # Bind Close event
-        self.Bind(wx.EVT_CLOSE, self.OnClose)
-
-        # Setup logging shutdown on close
-        self.Bind(wx.EVT_CLOSE, self._on_close_shutdown_logging)
-
-    def _on_close_shutdown_logging(self, event):
-        """Ensure logging is shut down when the app closes."""
-        logging.info("Shutting down logging.")
-        logging.shutdown()
-        event.Skip() # Allow other close handlers to run
-
-    def _init_ui(self):
-        # Menu Bar Setup (Remove call to non-existent method)
-        # self.ui_manager._setup_menubar() # Error: Method does not exist
-
-        # Panel and Sizer Setup (Using UIManager)
-        self.ui_manager._setup_ui() # Corrected method name
-
-        # Bind events
-        self.Bind(wx.EVT_CLOSE, self.OnClose)
-        # self.Bind(wx.EVT_TIMER, self.OnUpdateTimer, self.update_timer) # Redundant and incorrect
-
-    # Load configuration from file
     def _load_config(self):
-        # Load configuration from file or return default
-        try:
-            with open(self._config_path, "r") as f:
-                loaded_config = json.load(f)
-                # --- Ensure essential keys exist --- Start
-                default_config = self._get_default_config()
-                # Ensure top-level keys
-                for key, value in default_config.items():
-                    if key not in loaded_config:
-                        loaded_config[key] = value
-                    # Ensure second-level keys (settings, api_settings)
-                    elif isinstance(value, dict):
-                        if key not in loaded_config or not isinstance(loaded_config[key], dict):
-                             loaded_config[key] = {}
-                        for sub_key, sub_value in value.items():
-                            if sub_key not in loaded_config[key]:
-                                loaded_config[key][sub_key] = sub_value
-                # --- Ensure essential keys exist --- End
-                return loaded_config
-        except FileNotFoundError:
-            logging.warning(f"Config file not found: {self._config_path}. Using default config.")
-            return self._get_default_config()
-        except json.JSONDecodeError:
-            logging.error(f"Error decoding config file: {self._config_path}. Using default config.")
-            return self._get_default_config()
-        except Exception as e:
-             logging.error(f"Unexpected error loading config: {e}. Using default config.")
-             return self._get_default_config()
+        """Load configuration from file
 
-    def _get_default_config(self):
-        """Returns the default configuration structure."""
+        Returns:
+            Dict containing configuration or empty dict if not found
+        """
+        if os.path.exists(self._config_path):
+            try:
+                with open(self._config_path, "r") as f:
+                    return json.load(f)
+            except Exception as e:
+                logger.error(f"Failed to load config: {str(e)}")
+
+        # Return default config structure
         return {
             "locations": {},
             "current": None,
@@ -222,107 +154,9 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
                 UPDATE_INTERVAL_KEY: 30,
                 ALERT_RADIUS_KEY: 25,
                 PRECISE_LOCATION_ALERTS_KEY: True,  # Default to precise location alerts
-                MINIMIZE_ON_STARTUP_KEY: False,  # Default to not minimizing on startup
-                CACHE_ENABLED_KEY: True,  # Default to enabled caching
-                CACHE_TTL_KEY: 300,  # Default to 5 minutes (300 seconds)
             },
-            "api_settings": {API_CONTACT_KEY: ""},
+            "api_settings": {API_CONTACT_KEY: ""},  # Added default
         }
-
-    # Check if API contact is configured
-    def _check_api_contact_configured(self):
-        """Check if API contact is configured and prompt user if not."""
-        api_settings = self.config.get("api_settings", {})
-        api_contact = api_settings.get(API_CONTACT_KEY, "")
-        if not api_contact:
-            logging.warning("API contact email is not configured.")
-            try:
-                # Use wx.CallAfter to ensure the dialog runs in the main UI thread
-                # This helps prevent issues in tests or complex UI scenarios
-                wx.CallAfter(self._show_api_contact_dialog)
-            except Exception as e:
-                logging.error(f"Error scheduling API contact dialog: {e}")
-
-    def _show_api_contact_dialog(self):
-        # This method contains the actual dialog creation and showing
-        # It's called via wx.CallAfter to ensure it runs safely in the main thread
-        try:
-            dlg = wx.MessageDialog(
-                self,
-                "The National Weather Service API requires a contact email for identification. "
-                "This helps them contact you if your application causes issues. "
-                "Would you like to add your email now in the settings?",
-                "Configure API Contact",
-                wx.YES_NO | wx.ICON_QUESTION,
-            )
-            response = dlg.ShowModal()
-            dlg.Destroy()
-            if response == wx.ID_YES:
-                self.OnSettings(None) # Open settings dialog
-        except RuntimeError as e:
-            # Catch potential errors if the dialog can't be shown (e.g., tests)
-            logging.error(f"Could not show API contact dialog: {e}")
-
-    # Event Handlers
-    def OnClose(self, event):
-        # Handle window close event
-        logging.info("Application closing.")
-        self.timer.Stop()
-        # Save config before destroying?
-        # self.SaveConfig()
-        self.Destroy()
-
-    def OnUpdateTimer(self, event):
-        """Handle the update timer event."""
-        self.UpdateWeatherData()
-
-    def StartUpdateTimer(self):
-        """Start the update timer based on config."""
-        update_interval_sec = self.config.get("settings", {}).get(UPDATE_INTERVAL_KEY, 30)
-        update_interval_ms = update_interval_sec * 1000
-        if not self.timer.IsRunning():
-            logger.info(f"Starting update timer with interval {update_interval_sec} seconds")
-            self.timer.Start(update_interval_ms)
-
-    def StopUpdateTimer(self):
-        """Stop the update timer."""
-        if self.timer.IsRunning():
-            self.timer.Stop()
-
-    # --- Location Data Management ---
-    def LoadLocations(self):
-        """Load locations dictionary from config."""
-        self.locations = self.config.get("locations", {})
-        logging.info(f"Loaded {len(self.locations)} locations from config.")
-
-    def SaveLocations(self):
-        """Save locations dictionary to config."""
-        self.config["locations"] = self.locations
-        self._save_config()
-
-    def LoadCurrentLocation(self):
-        """Load the name of the current location from config."""
-        self.current_location_name = self.config.get("current", None)
-        if self.current_location_name:
-             logging.info(f"Loaded current location: {self.current_location_name}")
-        else:
-             logging.info("No current location set in config.")
-
-    def SaveCurrentLocation(self):
-        """Save the name of the current location to config."""
-        self.config["current"] = self.current_location_name
-        self._save_config()
-
-    def _save_config(self):
-        """Save the current configuration dictionary to the file."""
-        try:
-            os.makedirs(os.path.dirname(self._config_path), exist_ok=True)
-            with open(self._config_path, "w") as f:
-                json.dump(self.config, f, indent=4)
-            logging.info(f"Configuration saved to {self._config_path}")
-        except Exception as e:
-            logging.error(f"Failed to save config: {str(e)}")
-    # --- End Location Data Management ---
 
     def UpdateLocationDropdown(self):
         """Update the location dropdown with saved locations"""
@@ -385,7 +219,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         self._forecast_complete = False
         self._alerts_complete = False
 
-        # Nationwide logic
+        # Check if this is the nationwide location
         if self.location_service.is_nationwide_location(name):
             try:
                 forecast_data = self.weather_service.get_national_forecast_data()
@@ -407,7 +241,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
                 self.refresh_btn.Enable()
                 return
 
-        # Start forecast fetching thread for regular locations
+        # Start forecast fetching thread
         self.forecast_fetcher.fetch(
             lat, lon, on_success=self._on_forecast_fetched, on_error=self._on_forecast_error
         )
@@ -545,13 +379,9 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         # Show discussion dialog
         logger.debug("Creating and showing discussion dialog")
         dialog = WeatherDiscussionDialog(self, title, discussion_text)
-        # Attempt to show the dialog; catch initialization errors (e.g., in tests)
-        try:
-            dialog.ShowModal()
-            dialog.Destroy()
-            logger.debug("Discussion dialog closed")
-        except RuntimeError as e:
-            logger.warning(f"Skipping ShowModal/Destroy due to runtime error: {e}")
+        dialog.ShowModal()
+        dialog.Destroy()
+        logger.debug("Discussion dialog closed")
 
         # Re-enable button if it exists
         if hasattr(self, "discussion_btn") and self.discussion_btn:
