@@ -1,11 +1,10 @@
 """Tests for the GUI components"""
 
-# import wx  # Not used directly in this file
 import json
 import os
 import time
+import wx
 
-# import tempfile  # No longer used directly in this file
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -42,6 +41,9 @@ class TestLocationDialog:
 
     def test_init(self, wx_app_isolated):
         """Test initialization"""
+        # Ensure we have a wx.App instance
+        assert wx.App.Get() is not None
+
         dialog = LocationDialog(
             None, title="Test Dialog", location_name="Test", lat=35.0, lon=-80.0
         )
@@ -52,9 +54,13 @@ class TestLocationDialog:
             assert "Custom coordinates: 35.0" in dialog.result_text.GetValue()
         finally:
             dialog.Destroy()
+            wx.SafeYield()
 
     def test_validation(self, wx_app_isolated):
         """Test input validation"""
+        # Ensure we have a wx.App instance
+        assert wx.App.Get() is not None
+
         dialog = LocationDialog(None)
         try:
             # Set initial state with valid coordinates
@@ -89,9 +95,13 @@ class TestLocationDialog:
                 assert "name" in args[0].lower()
         finally:
             dialog.Destroy()
+            wx.SafeYield()
 
     def test_get_values(self, wx_app_isolated):
         """Test getting values from the dialog"""
+        # Ensure we have a wx.App instance
+        assert wx.App.Get() is not None
+
         dialog = LocationDialog(None)
         try:
             dialog.name_ctrl.SetValue("Test")
@@ -104,6 +114,7 @@ class TestLocationDialog:
             assert lon == -80.0
         finally:
             dialog.Destroy()
+            wx.SafeYield()
 
 
 class TestWeatherDiscussionDialog:
@@ -111,11 +122,15 @@ class TestWeatherDiscussionDialog:
 
     def test_init(self, wx_app_isolated):
         """Test initialization"""
+        # Ensure we have a wx.App instance
+        assert wx.App.Get() is not None
+
         dialog = WeatherDiscussionDialog(None, title="Test Discussion", text="Test discussion text")
         try:
             assert dialog.text_ctrl.GetValue() == "Test discussion text"
         finally:
             dialog.Destroy()
+            wx.SafeYield()
 
 
 class TestWeatherApp:
@@ -124,64 +139,59 @@ class TestWeatherApp:
     @pytest.fixture
     def mock_components(self):
         """Mock the components used by WeatherApp"""
-        # Update the patch to match our new structure
-        # We need to patch the direct imports in weather_app.py
-        with (
-            patch("accessiweather.api_client.NoaaApiClient") as mock_api_client_class,
-            patch("accessiweather.notifications.WeatherNotifier") as mock_notifier_class,
-            patch("accessiweather.services.location_service.LocationService") as mock_location_service_class,
-        ):
+        # Create mock instances
+        mock_api_client = MagicMock(spec=NoaaApiClient)
+        mock_notifier = MagicMock()
+        mock_location_service = MagicMock()
+        mock_weather_service = MagicMock()
 
-            # Create mock instances
-            mock_api_client = MagicMock()
-            mock_notifier = MagicMock()
-            mock_location_service = MagicMock()
+        # Configure mock location service to return valid data
+        mock_location_service.get_all_locations.return_value = ["Test City"]
+        mock_location_service.get_current_location.return_value = ("Test City", 35.0, -80.0)
 
-            # Configure mock location manager to return valid data
-            mock_location_manager.get_all_locations.return_value = ["Test City"]
-            mock_location_manager.get_current_location.return_value = ("Test City", 35.0, -80.0)
-
-            # Configure mock classes to return mock instances
-            mock_api_client_class.return_value = mock_api_client
-            mock_notifier_class.return_value = mock_notifier
-            mock_location_service_class.return_value = mock_location_service
-
-            yield {
-                "api_client_class": mock_api_client_class,
-                "api_client": mock_api_client,
-                "notifier_class": mock_notifier_class,
-                "notifier": mock_notifier,
-                "location_manager_class": mock_location_manager_class,
-                "location_service": mock_location_service,
-            }
+        yield {
+            "api_client": mock_api_client,
+            "notifier": mock_notifier,
+            "location_service": mock_location_service,
+            "weather_service": mock_weather_service,
+        }
 
     def test_init_with_default_config(self, wx_app_isolated, mock_components, monkeypatch):
         """Test initialization with default config"""
+        # Ensure we have a wx.App instance
+        assert wx.App.Get() is not None
+
         # Patch os.path.exists to return False for all config paths
         monkeypatch.setattr(os.path, "exists", lambda path: False)
 
         # Create app with mocked components
         app = None
         try:
-            app = WeatherApp(weather_service=MagicMock(), 
-                parent=None,
-                location_service=mock_components["location_service"],
-                api_client=mock_components["api_client"],
-                notifier=mock_components["notifier"],
-            )
+            # Patch the _check_api_contact_configured method to avoid UI interactions
+            with patch.object(WeatherApp, "_check_api_contact_configured"):
+                app = WeatherApp(
+                    parent=None,
+                    weather_service=mock_components["weather_service"],
+                    location_service=mock_components["location_service"],
+                    notification_service=mock_components["notifier"],
+                    api_client=mock_components["api_client"],
+                )
 
-            # Check that the dependencies were properly set
-            assert app.location_manager == mock_components["location_manager"]
-            assert app.api_client == mock_components["api_client"]
-            assert app.notifier == mock_components["notifier"]
+                # Check that the dependencies were properly set
+                assert app.api_client == mock_components["api_client"]
+                assert app.location_service == mock_components["location_service"]
         finally:
             if app:
                 app.Destroy()
+                wx.SafeYield()
 
     def test_init_with_config_file(
         self, wx_app_isolated, mock_components, temp_config_file, monkeypatch
     ):
         """Test initialization with config file"""
+        # Ensure we have a wx.App instance
+        assert wx.App.Get() is not None
+
         # Patch os.path.exists to return True only for our temp config file
         original_exists = os.path.exists
 
@@ -209,29 +219,35 @@ class TestWeatherApp:
         # Create a new WeatherApp instance
         app = None
         try:
-            # Create app with the loaded config
-            app = WeatherApp(weather_service=MagicMock(), 
-                parent=None,
-                location_service=mock_components["location_service"],
-                api_client=mock_components["api_client"],
-                notifier=mock_components["notifier"],
-                config=config,
-            )
+            # Patch the _check_api_contact_configured method to avoid UI interactions
+            with patch.object(WeatherApp, "_check_api_contact_configured"):
+                # Create app with the loaded config
+                app = WeatherApp(
+                    parent=None,
+                    weather_service=mock_components["weather_service"],
+                    location_service=mock_components["location_service"],
+                    notification_service=mock_components["notifier"],
+                    api_client=mock_components["api_client"],
+                    config=config,
+                )
 
-            # Check that the dependencies were properly set
-            assert app.location_manager == mock_components["location_manager"]
-            assert app.api_client == mock_components["api_client"]
-            assert app.notifier == mock_components["notifier"]
-            assert app.config == config
+                # Check that the dependencies were properly set
+                assert app.api_client == mock_components["api_client"]
+                assert app.location_service == mock_components["location_service"]
+                assert app.config == config
         finally:
             if app:
                 app.Destroy()
+                wx.SafeYield()
 
     @patch("wx.CallAfter")
     def test_fetch_weather_data_with_proper_headers(
         self, mock_call_after, wx_app_isolated, mock_components, monkeypatch
     ):
         """Test that _FetchWeatherData uses proper headers from API client"""
+        # Ensure we have a wx.App instance
+        assert wx.App.Get() is not None
+
         # Create real API client with contact info
         api_client = NoaaApiClient(user_agent="AccessiWeather", contact_info="test@example.com")
 
@@ -249,7 +265,7 @@ class TestWeatherApp:
         mock_forecast_response.json = MagicMock(return_value={"properties": {"periods": []}})
 
         # Create a mock for requests.get that returns appropriate responses
-        def mock_requests_get(url, headers=None, params=None, **kwargs):
+        def mock_requests_get(url, **kwargs):
             # Since we're making two different requests, return different
             # mock responses
             if "api.example.com/forecast" in url:
@@ -262,43 +278,46 @@ class TestWeatherApp:
         # Create a WeatherApp with our mocked components
         app = None
         try:
-            app = WeatherApp(weather_service=MagicMock(), 
-                parent=None,
-                location_service=mock_components["location_service"],
-                # Use the real API client with contact info
-                api_client=api_client,
-                notifier=mock_components["notifier"],
-            )
+            # Patch the _check_api_contact_configured method to avoid UI interactions
+            with patch.object(WeatherApp, "_check_api_contact_configured"):
+                app = WeatherApp(
+                    parent=None,
+                    weather_service=mock_components["weather_service"],
+                    location_service=mock_components["location_service"],
+                    notification_service=mock_components["notifier"],
+                    api_client=api_client,
+                )
 
-            # Need to wait a moment for all initialization to complete
-            time.sleep(0.1)
+                # Need to wait a moment for all initialization to complete
+                time.sleep(0.1)
 
-            # Call the method with a test location
-            location = ("Test City", 35.0, -80.0)
-            app._FetchWeatherData(location)
+                # Call the method with a test location
+                location = ("Test City", 35.0, -80.0)
+                app._FetchWeatherData(location)
 
-            # Give a moment for async threads to execute
-            time.sleep(0.1)
+                # Give a moment for async threads to execute
+                time.sleep(0.1)
 
-            # Verify that requests.get was called at least once
-            assert mock_get.call_count > 0, "requests.get was never called"
+                # Verify that requests.get was called at least once
+                assert mock_get.call_count > 0, "requests.get was never called"
 
-            # Verify that the headers were set properly
-            for call in mock_get.call_args_list:
-                args, kwargs = call
-                if "headers" in kwargs:
-                    headers = kwargs["headers"]
-                    if "User-Agent" in headers:
-                        user_agent = headers["User-Agent"]
-                        assert "test@example.com" in user_agent
-                        break
-            else:
-                # No call to requests.get had User-Agent header
-                # with contact info
-                assert False, "No call to requests.get had User-Agent header with " "contact info"
+                # Verify that the headers were set properly
+                for call in mock_get.call_args_list:
+                    _, kwargs = call
+                    if "headers" in kwargs:
+                        headers = kwargs["headers"]
+                        if "User-Agent" in headers:
+                            user_agent = headers["User-Agent"]
+                            assert "test@example.com" in user_agent
+                            break
+                else:
+                    # No call to requests.get had User-Agent header
+                    # with contact info
+                    assert False, "No call to requests.get had User-Agent header with contact info"
         finally:
             if app:
                 app.Destroy()
+                wx.SafeYield()
 
     # Removed announcement tests as the feature was removed based on user
     # feedback

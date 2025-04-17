@@ -24,12 +24,19 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         Args:
             frame: The main application frame (WeatherApp)
         """
+        # Ensure we have a wx.App instance before initializing
+        if not wx.App.Get():
+            logger.warning("No wx.App instance found when creating TaskBarIcon. Creating one.")
+            self._app = wx.App()
+        else:
+            self._app = wx.App.Get()
+
         super().__init__()
         self.frame = frame
-        
+
         # Set the icon
         self.set_icon()
-        
+
         # Bind events
         self.Bind(wx.adv.EVT_TASKBAR_LEFT_DCLICK, self.on_left_dclick)
         self.Bind(wx.adv.EVT_TASKBAR_RIGHT_UP, self.on_right_click)
@@ -38,13 +45,13 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         """Set the taskbar icon."""
         # Try to load the icon from the application's resources
         icon_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "resources", "icon.ico")
-        
+
         if not os.path.exists(icon_path):
             # If the icon doesn't exist, use a default icon
             icon = wx.Icon(wx.ArtProvider.GetIcon(wx.ART_INFORMATION))
         else:
             icon = wx.Icon(icon_path, wx.BITMAP_TYPE_ICO)
-        
+
         self.SetIcon(icon, "AccessiWeather")
 
     def on_left_dclick(self, event):
@@ -74,7 +81,7 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
             wx.Menu: The popup menu
         """
         menu = wx.Menu()
-        
+
         # Add menu items
         show_hide_item = menu.Append(wx.ID_ANY, "Show/Hide AccessiWeather")
         menu.AppendSeparator()
@@ -82,13 +89,13 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         settings_item = menu.Append(wx.ID_PREFERENCES, "Settings")
         menu.AppendSeparator()
         exit_item = menu.Append(wx.ID_EXIT, "Exit AccessiWeather")
-        
+
         # Bind menu events
         self.Bind(wx.EVT_MENU, self.on_show_hide, show_hide_item)
         self.Bind(wx.EVT_MENU, self.on_refresh, refresh_item)
         self.Bind(wx.EVT_MENU, self.on_settings, settings_item)
         self.Bind(wx.EVT_MENU, self.on_exit, exit_item)
-        
+
         return menu
 
     def on_show_hide(self, event):
