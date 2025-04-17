@@ -12,15 +12,22 @@ We use a comprehensive testing approach that includes:
 
 ## Test Utilities
 
-The `wx_test_utils.py` module provides utilities for testing wxPython applications:
+The `gui_test_fixtures.py` module provides utilities and fixtures for testing wxPython applications:
 
-- `EventLoopContext`: Context manager for running code within a wx event loop
-- `CallAfterContext`: Context manager for executing code with wx.CallAfter and waiting for completion
-- `EventCatcher`: Catch and record wx events for testing
-- `post_event`: Post an event to a window
-- `wait_for_idle`: Wait for the application to be idle
-- `simulate_user_input`: Simulate user input on a window
+### Utilities
+
+- `wait_for`: Wait for a condition to be True or timeout
+- `process_ui_events`: Process pending UI events
+- `simulate_ui_action`: Simulate a UI action and process events
 - `AsyncEventWaiter`: Wait for asynchronous events to complete
+
+### Fixtures
+
+- `mock_weather_app`: Create a WeatherApp instance with mocked services
+- `nationwide_app`: Create a WeatherApp instance with mocked services for nationwide testing
+- `ui_component_frame`: Create a frame for testing UI components
+- `text_control`: Create an AccessibleTextCtrl for testing
+- `list_control`: Create an AccessibleListCtrl for testing
 
 ## Test Fixtures
 
@@ -52,20 +59,19 @@ def on_data_received(self, data):
 
 ### Event Handling
 
-Use `EventCatcher` to test event handling:
+Use `process_ui_events` to ensure UI updates are applied:
 
 ```python
-def test_button_click(self, wx_app):
-    frame = MyFrame()
-    catcher = EventCatcher([wx.EVT_BUTTON])
-    catcher.bind_to_window(frame.my_button)
-    
-    # Post a button event
-    post_event(frame.my_button, wx.EVT_BUTTON)
-    
-    # Wait for the event to be caught
-    event = catcher.wait_for_event()
-    assert event is not None
+def test_text_control_updates(text_control):
+    # Set the value of the text control
+    test_text = "This is a test of the text control"
+    text_control.SetValue(test_text)
+
+    # Process events to ensure UI updates are applied
+    process_ui_events()
+
+    # Verify the text control contains the expected content
+    assert text_control.GetValue() == test_text
 ```
 
 ### Asynchronous Operations
@@ -73,28 +79,74 @@ def test_button_click(self, wx_app):
 Use `AsyncEventWaiter` for testing asynchronous operations:
 
 ```python
-def test_async_operation(self, wx_app):
-    frame = MyFrame()
+def test_nationwide_forecast_display(nationwide_app):
+    app, _ = nationwide_app
+
+    # Create an event waiter to track when the forecast is fetched
     waiter = AsyncEventWaiter()
-    
-    # Patch the method to use our waiter
-    original_method = frame.fetch_data
-    def patched_method(*args, **kwargs):
-        try:
-            result = original_method(*args, **kwargs)
-            waiter.callback(result)
-        except Exception as e:
-            waiter.error_callback(e)
-        return result
-    
-    frame.fetch_data = patched_method
-    
-    # Trigger the operation
-    wx.CallAfter(frame.fetch_data)
-    
-    # Wait for completion
-    result = waiter.wait()
-    assert result is not None
+
+    # Define the _on_forecast_fetched method to simulate the actual behavior
+    def on_forecast_fetched(_, forecast_data):
+        app.current_forecast = forecast_data
+        formatted_text = app._format_national_forecast(forecast_data)
+        app.forecast_text.SetValue(formatted_text)
+        app._forecast_complete = True
+        waiter.callback(formatted_text)
+
+    # Bind the method to the app instance
+    app._on_forecast_fetched = types.MethodType(on_forecast_fetched, app)
+
+    # Call the method with test data
+    test_data = app.weather_service.get_national_forecast_data.return_value
+    app._on_forecast_fetched(test_data)
+
+    # Wait for the forecast to be fetched and UI to update
+    formatted_text = waiter.wait()
+    assert formatted_text is not None, "Forecast fetch timed out"
+
+    # Process events to ensure UI updates are applied
+    process_ui_events()
+```
+
+### Using Real UI Components
+
+Use real UI components when testing UI functionality to ensure the tests are realistic:
+
+```python
+@pytest.fixture
+def text_control(ui_component_frame):
+    # Create a real text control for testing
+    text_ctrl = AccessibleTextCtrl(
+        ui_component_frame,
+        style=wx.TE_MULTILINE | wx.TE_READONLY,
+        size=(400, 300),
+        label="Test Text Control"
+    )
+
+    # Process events to ensure the control is properly initialized
+    wx.Yield()
+
+    yield text_ctrl
+```
+
+### Testing Accessibility
+
+Always test that UI components are accessible to screen readers:
+
+```python
+def test_text_control_updates(text_control):
+    # Set the value of the text control
+    test_text = "This is a test of the text control"
+    text_control.SetValue(test_text)
+
+    # Process events to ensure UI updates are applied
+    process_ui_events()
+
+    # Verify the text control contains the expected content
+    assert text_control.GetValue() == test_text
+
+    # Verify that the text is accessible (has non-empty value)
+    assert len(text_control.GetValue().strip()) > 0
 ```
 
 ## Running Tests
