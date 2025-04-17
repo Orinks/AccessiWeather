@@ -36,13 +36,13 @@ class TestCachedApiClient:
             assert api_client.cache is not None
             assert isinstance(api_client.cache, Cache)
 
-    def test_caching_disabled(self, mock_response):
+    def test_caching_disabled(self):
         """Test that caching is disabled by default."""
-        with patch.object(requests, "get", return_value=mock_response):
-            client = NoaaApiClient(user_agent="Test User Agent", enable_caching=False)
+        # Create a client with caching disabled
+        client = NoaaApiClient(user_agent="Test User Agent", enable_caching=False)
 
-            # Verify that the cache is not initialized
-            assert client.cache is None
+        # Verify that the cache is not initialized
+        assert client.cache is None
 
     def test_cache_hit(self):
         """Test that cached responses are used when available."""

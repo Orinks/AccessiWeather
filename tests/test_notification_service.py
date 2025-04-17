@@ -1,6 +1,6 @@
 """Tests for the NotificationService class."""
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from accessiweather.notifications import WeatherNotifier
 from accessiweather.services.notification_service import NotificationService
 
@@ -12,8 +12,15 @@ class TestNotificationService(unittest.TestCase):
         self.notification_service = NotificationService(self.mock_notifier)
 
     def test_init(self):
-        service = NotificationService(self.mock_notifier)
-        self.assertEqual(service.notifier, self.mock_notifier)
+        """Test service initialization."""
+        # Create a mock notifier directly
+        mock_notifier = MagicMock(spec=WeatherNotifier)
+
+        # Create the service with the mock
+        service = NotificationService(mock_notifier)
+
+        # Verify the notifier was set correctly
+        self.assertEqual(service.notifier, mock_notifier)
 
     def test_notify_alerts(self):
         """Test notifying about alerts."""
