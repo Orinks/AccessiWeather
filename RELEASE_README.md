@@ -16,7 +16,7 @@ Run `AccessiWeather_Setup_v0.9.0.exe` to install the application. This will:
 
 Extract `AccessiWeather_Portable_v0.9.0.zip` to any location and run `AccessiWeather.exe`.
 
-Note: The portable version will still create a configuration directory at `%USERPROFILE%\.accessiweather` to store your settings and location data.
+Note: The portable version will store your settings and location data in a `config` folder within the application directory, making it fully portable.
 
 ## First-Time Setup
 
