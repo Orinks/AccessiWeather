@@ -16,10 +16,15 @@ def app():
     location_service = MagicMock(spec=LocationService)
     weather_service = MagicMock(spec=WeatherService)
     weather_service.get_national_forecast_data.return_value = {
-        "wpc": {"short_range": "WPC text"},
         "national_discussion_summaries": {
-            "wpc": {"short_range_summary": "WPC text"},
-            "spc": {"day1_summary": "SPC text"},
+            "wpc": {
+                "short_range_summary": "WPC text summary",
+                "short_range_full": "WPC text full discussion"
+            },
+            "spc": {
+                "day1_summary": "SPC text summary",
+                "day1_full": "SPC text full discussion"
+            },
             "attribution": "Data from NOAA/NWS/WPC and NOAA/NWS/SPC. See https://www.wpc.ncep.noaa.gov/ and https://www.spc.noaa.gov/ for full details."
         }
     }
@@ -32,7 +37,17 @@ def app():
 
     # Configure the weather service mock
     weather_service.get_national_forecast_data.return_value = {
-        'wpc': {'short_range': 'National Weather Forecast Test Data'}
+        'national_discussion_summaries': {
+            'wpc': {
+                'short_range_summary': 'National Weather Forecast Test Data',
+                'short_range_full': 'Full forecast discussion text'
+            },
+            'spc': {
+                'day1_summary': 'SPC Day 1 Test Data',
+                'day1_full': 'Full SPC discussion text'
+            },
+            'attribution': 'Data from NOAA/NWS/WPC and NOAA/NWS/SPC'
+        }
     }
 
     # Create a mock WeatherApp that doesn't initialize the UI

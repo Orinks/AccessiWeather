@@ -16,10 +16,15 @@ class TestNationalForecastFetcher:
         # Create a mock weather service
         mock_service = MagicMock()
         mock_service.get_national_forecast_data.return_value = {
-    "wpc": {"short_range": "WPC text"},
     "national_discussion_summaries": {
-        "wpc": {"short_range_summary": "WPC text"},
-        "spc": {"day1_summary": "SPC text"},
+        "wpc": {
+            "short_range_summary": "WPC text summary",
+            "short_range_full": "WPC text full discussion"
+        },
+        "spc": {
+            "day1_summary": "SPC text summary",
+            "day1_full": "SPC text full discussion"
+        },
         "attribution": "Data from NOAA/NWS/WPC and NOAA/NWS/SPC. See https://www.wpc.ncep.noaa.gov/ and https://www.spc.noaa.gov/ for full details."
     }
 }
@@ -45,7 +50,17 @@ class TestNationalForecastFetcher:
             fetcher.fetch(on_success=mock_success)
             
             # Verify the success callback was called with the correct data
-            mock_success.assert_called_once_with({"wpc": {"short_range": "WPC text"}})
+            mock_success.assert_called_once_with({"national_discussion_summaries": {
+                "wpc": {
+                    "short_range_summary": "WPC text summary",
+                    "short_range_full": "WPC text full discussion"
+                },
+                "spc": {
+                    "day1_summary": "SPC text summary",
+                    "day1_full": "SPC text full discussion"
+                },
+                "attribution": "Data from NOAA/NWS/WPC and NOAA/NWS/SPC. See https://www.wpc.ncep.noaa.gov/ and https://www.spc.noaa.gov/ for full details."
+            }})
             
             # Verify the service method was called
             mock_service.get_national_forecast_data.assert_called_once_with(force_refresh=False)

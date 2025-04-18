@@ -25,8 +25,17 @@ def test_nationwide_forecast_display(nationwide_app):
 
     # Ensure the mock returns instantly with real test data
     app.weather_service.get_national_forecast_data.return_value = {
-        "wpc": {"short_range": "Test forecast data for nationwide view"},
-        "spc": {"day1": "Test SPC data for nationwide view"}
+        "national_discussion_summaries": {
+            "wpc": {
+                "short_range_summary": "Test forecast data for nationwide view",
+                "short_range_full": "Full test forecast data for nationwide view with additional details"
+            },
+            "spc": {
+                "day1_summary": "Test SPC data for nationwide view",
+                "day1_full": "Full test SPC data for nationwide view with additional details"
+            },
+            "attribution": "Data from NOAA/NWS/WPC and NOAA/NWS/SPC. See https://www.wpc.ncep.noaa.gov/ and https://www.spc.noaa.gov/ for full details."
+        }
     }
     print("[TEST] Mock get_national_forecast_data returns:", app.weather_service.get_national_forecast_data.return_value)
 
