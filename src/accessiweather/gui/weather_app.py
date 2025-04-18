@@ -14,6 +14,7 @@ from accessiweather.config_utils import get_config_dir
 
 from .async_fetchers import AlertsFetcher, DiscussionFetcher, ForecastFetcher
 from .dialogs import WeatherDiscussionDialog
+from accessiweather.national_forecast_fetcher import NationalForecastFetcher
 from .settings_dialog import (
     ALERT_RADIUS_KEY,
     API_CONTACT_KEY,
@@ -82,6 +83,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         self.forecast_fetcher = ForecastFetcher(self.api_client)
         self.alerts_fetcher = AlertsFetcher(self.api_client)
         self.discussion_fetcher = DiscussionFetcher(self.api_client)
+        self.national_forecast_fetcher = NationalForecastFetcher(self.weather_service)
 
         # State variables
         self.current_forecast = None
@@ -221,20 +223,14 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
 
         # Check if this is the nationwide location
         if self.location_service.is_nationwide_location(name):
-            # Nationwide: Show national discussion summaries and attribution
-            forecast_data = self.weather_service.get_national_forecast_data()
-            summaries = forecast_data.get("national_discussion_summaries", {})
-            wpc_summary = summaries.get("wpc", {}).get("short_range_summary", "No discussion available.")
-            spc_summary = summaries.get("spc", {}).get("day1_summary", "No discussion available.")
-            attribution = summaries.get("attribution", "")
-
-            text = self._format_national_forecast(forecast_data)
-            self.forecast_text.SetValue(text)
-            self._forecast_complete = True
-            self._alerts_complete = True  # No alerts for nationwide
-            self.SetStatusText("National forecast loaded.")
-            self.refresh_btn.Enable()
-            return
+            # Nationwide: Use the dedicated async fetcher
+            logger.info("Initiating nationwide forecast fetch using NationalForecastFetcher")
+            self.national_forecast_fetcher.fetch(
+                on_success=self._on_forecast_fetched,
+                on_error=self._on_forecast_error
+            )
+            # Note: Status updates and button enabling will happen in the callbacks
+            return # Return after initiating the fetch
 
         # Start forecast fetching thread
         self.forecast_fetcher.fetch(
@@ -274,14 +270,20 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         # Save forecast data
         self.current_forecast = forecast_data
 
-        # Update display
-        self.ui_manager._UpdateForecastDisplay(forecast_data)  # Use UIManager
+        # Update display using UIManager
+        self.ui_manager._UpdateForecastDisplay(forecast_data)
 
         # Update timestamp
         self.last_update = time.time()
 
-        # Mark forecast as complete and check overall completion
+        # Mark forecast as complete
         self._forecast_complete = True
+
+        # If it's national data (identified by the specific key), mark alerts as complete too
+        if "national_discussion_summaries" in forecast_data:
+            self._alerts_complete = True
+
+        # Check overall completion
         self._check_update_complete()
 
         # Notify testing framework if hook is set
@@ -301,141 +303,42 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         self._forecast_complete = True
         self._check_update_complete()
 
-        # Notify testing framework if hook is set
-        if self._testing_forecast_error_callback:
-            self._testing_forecast_error_callback(error)
-
     def _format_national_forecast(self, national_data):
-        """Format national forecast data for display
-
-        Args:
-            national_data: Dictionary with national forecast data
-
-        Returns:
-            Formatted text for display
-        """
-        from datetime import datetime
+        """Format national forecast data for display."""
         lines = []
 
-        # Add WPC data
-        wpc_data = national_data.get("wpc", {})
-        if wpc_data:
+        # Check if data is nested in national_discussion_summaries
+        if "national_discussion_summaries" in national_data:
+            # Extract the actual data from the wrapper
+            forecast_data = national_data["national_discussion_summaries"]
+        else:
+            # Use the data as is if not wrapped
+            forecast_data = national_data
+            
+        # Log the structure to help debug
+        logger.debug(f"Formatting national forecast with data structure: {forecast_data.keys() if isinstance(forecast_data, dict) else 'not a dict'}")
+
+        # WPC
+        wpc_data = forecast_data.get("wpc", {})
+        if wpc_data and wpc_data.get("short_range_summary"):
             lines.append("=== WEATHER PREDICTION CENTER (WPC) ===")
+            lines.append(wpc_data["short_range_summary"])
 
-            # Short Range Forecast
-            short_range = wpc_data.get("short_range")
-            if short_range:
-                lines.append("\n--- SHORT RANGE FORECAST (Days 1-3) ---")
-                # Extract and add a summary (first few lines)
-                summary = "\n".join(short_range.split("\n")[0:10])
-                lines.append(summary)
-                lines.append("(View full discussion for more details)")
-
-            # Medium Range Forecast
-            medium_range = wpc_data.get("medium_range")
-            if medium_range:
-                lines.append("\n--- MEDIUM RANGE FORECAST (Days 3-7) ---")
-                # Extract and add a summary (first few lines)
-                summary = "\n".join(medium_range.split("\n")[0:10])
-                lines.append(summary)
-                lines.append("(View full discussion for more details)")
-
-        # Add SPC data
-        spc_data = national_data.get("spc", {})
-        if spc_data:
+        # SPC
+        spc_data = forecast_data.get("spc", {})
+        if spc_data and spc_data.get("day1_summary"):
             lines.append("\n=== STORM PREDICTION CENTER (SPC) ===")
+            lines.append(spc_data["day1_summary"])
 
-            # Day 1 Outlook
-            day1 = spc_data.get("day1")
-            if day1:
-                lines.append("\n--- DAY 1 CONVECTIVE OUTLOOK ---")
-                # Extract and add a summary (first few lines)
-                summary = "\n".join(day1.split("\n")[0:10])
-                lines.append(summary)
-                lines.append("(View full discussion for more details)")
+        # Attribution
+        attribution = forecast_data.get("attribution")
+        if attribution:
+            lines.append(f"\nSource: {attribution}")
 
-        # Add NHC data during hurricane season (June 1 - November 30)
-        current_month = datetime.now().month
-        if 6 <= current_month <= 11:  # Hurricane season
-            nhc_data = national_data.get("nhc", {})
-            if nhc_data:
-                lines.append("\n=== NATIONAL HURRICANE CENTER (NHC) ===")
-
-                # Atlantic Outlook
-                atlantic = nhc_data.get("atlantic")
-                if atlantic:
-                    lines.append("\n--- ATLANTIC TROPICAL WEATHER OUTLOOK ---")
-                    # Extract and add a summary (first few lines)
-                    summary = "\n".join(atlantic.split("\n")[0:10])
-                    lines.append(summary)
-                    lines.append("(View full discussion for more details)")
-
-        # Add CPC data
-        cpc_data = national_data.get("cpc", {})
-        if cpc_data:
-            lines.append("\n=== CLIMATE PREDICTION CENTER (CPC) ===")
-
-            # 6-10 Day Outlook
-            outlook_6_10 = cpc_data.get("6_10_day")
-            if outlook_6_10:
-                lines.append("\n--- 6-10 DAY OUTLOOK ---")
-                # Extract and add a summary (first few lines)
-                summary = "\n".join(outlook_6_10.split("\n")[0:10])
-                lines.append(summary)
-                lines.append("(View full discussion for more details)")
-
-        # If no data was added, add a message
-        if len(lines) == 0:
+        if not lines:
             lines.append("No data available for national forecast.")
 
         return "\n".join(lines)
-
-    def _on_alerts_fetched(self, alerts_data):
-        """Handle the fetched alerts in the main thread
-
-        Args:
-            alerts_data: Dictionary with alerts data
-        """
-        # Process alerts using the notification service
-        processed_alerts = self.notification_service.process_alerts(alerts_data)
-        self.current_alerts = processed_alerts
-
-        # Update display
-        self.ui_manager._UpdateAlertsDisplay(alerts_data)
-
-        # Notify user of alerts if any
-        if self.current_alerts:
-            self.notification_service.notify_alerts(self.current_alerts)
-
-        # Update timestamp
-        self.last_update = time.time()
-
-        # Mark alerts as complete and check overall completion
-        self._alerts_complete = True
-        self._check_update_complete()
-
-        # Notify testing framework if hook is set
-        if self._testing_alerts_callback:
-            self._testing_alerts_callback(alerts_data)
-
-    def _on_alerts_error(self, error):
-        """Handle alerts fetch error
-
-        Args:
-            error: Error message
-        """
-        logger.error(f"Alerts fetch error: {error}")
-        self.alerts_list.DeleteAllItems()
-        self.alerts_list.InsertItem(0, "Error")
-        self.alerts_list.SetItem(0, 1, f"Error fetching alerts: {error}")
-
-        # Mark alerts as complete and check overall completion
-        self._alerts_complete = True
-        self._check_update_complete()
-
-        # Notify testing framework if hook is set
-        if self._testing_alerts_error_callback:
-            self._testing_alerts_error_callback(error)
 
     def _on_discussion_fetched(self, discussion_text, name=None, loading_dialog=None):
         """Handle the fetched discussion in the main thread
@@ -450,19 +353,12 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         # Make sure we clean up properly before showing the discussion dialog
         self._cleanup_discussion_loading(loading_dialog)
 
-        # Use default text if none provided
-        if not discussion_text:
-            discussion_text = "No discussion available"
-
-        # Create title with location name if provided
-        title = f"Forecast Discussion for {name}" if name else "Weather Discussion"
-
-        # Show discussion dialog
-        logger.debug("Creating and showing discussion dialog")
-        dialog = WeatherDiscussionDialog(self, title, discussion_text)
-        dialog.ShowModal()
-        dialog.Destroy()
-        logger.debug("Discussion dialog closed")
+        # Show discussion in a dialog
+        discussion_dialog = WeatherDiscussionDialog(
+            self, discussion_text, location_name=name
+        )
+        discussion_dialog.ShowModal()
+        discussion_dialog.Destroy()
 
         # Re-enable button if it exists
         if hasattr(self, "discussion_btn") and self.discussion_btn:
@@ -478,37 +374,18 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         Args:
             loading_dialog: Progress dialog instance passed from the callback (optional)
         """
-        logger.debug("Cleaning up discussion loading resources")
+        logger.debug("Entering cleanup discussion loading")
 
-        # --- Timer Cleanup ---
-        if hasattr(self, "_discussion_timer"):
-            timer = self._discussion_timer
-            if timer.IsRunning():
-                logger.debug("Stopping discussion timer")
-                timer.Stop()
-            # Always try to unbind to prevent issues if Stop() failed or wasn't needed
-            try:
-                # Make sure the handler reference is correct
-                handler_method = getattr(self, "_on_discussion_timer", None)
-                if handler_method:
-                    self.Unbind(wx.EVT_TIMER, handler=handler_method, source=timer)
-                    logger.debug("Unbound timer event")
-                else:
-                    logger.warning("Could not find _on_discussion_timer method to unbind")
-            except Exception as e:
-                # Log error but continue cleanup
-                logger.error(f"Error unbinding timer event: {e}", exc_info=True)
-            # Remove timer reference (optional, but good practice)
-            # del self._discussion_timer
+        # --- Stop Timer --- (if applicable)
+        if hasattr(self, "_discussion_timer") and self._discussion_timer:
+            logger.debug("Stopping discussion timer")
+            self._discussion_timer.Stop()
+            self._discussion_timer = None
 
-        # --- Dialog Cleanup ---
-        # Primarily use the dialog passed via the callback
+        # --- Close Dialog --- Determine which dialog instance to close
         dialog_to_close = loading_dialog
-
-        # Fallback: If no dialog was passed, try the instance variable
         if not dialog_to_close and hasattr(self, "_discussion_loading_dialog"):
             dialog_to_close = self._discussion_loading_dialog
-            logger.debug("Using instance variable for loading dialog cleanup")
 
         if dialog_to_close:
             try:
@@ -545,14 +422,12 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             except Exception as e:
                 logger.error(f"Error closing loading dialog: {e}", exc_info=True)
 
-        # --- Clear Reference ---
-        # Always clear the instance variable after attempting cleanup
+        # --- Clear Reference --- Always clear the instance variable
         if hasattr(self, "_discussion_loading_dialog"):
             logger.debug("Clearing discussion loading dialog reference")
             self._discussion_loading_dialog = None
 
         # --- Force UI Update ---
-        # Process pending events more thoroughly
         logger.debug("Processing pending events after cleanup")
         wx.GetApp().ProcessPendingEvents()
         wx.SafeYield()

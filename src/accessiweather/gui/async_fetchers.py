@@ -21,6 +21,12 @@ def safe_call_after(callback, *args, **kwargs):
         **kwargs: Keyword arguments to pass to the callback
     """
     try:
+        # Check if the wx.App is still valid
+        app = wx.GetApp()
+        if app is None or not app.IsMainLoopRunning():
+            logger.warning("Cannot schedule callback: Application context not available")
+            return False
+            
         # Log callback details
         callback_name = getattr(callback, "__name__", str(callback))
         logger.debug(f"Scheduling callback {callback_name} with args: {args}, kwargs: {kwargs}")
@@ -28,11 +34,21 @@ def safe_call_after(callback, *args, **kwargs):
         # Always use wx.CallAfter to ensure main thread execution
         wx.CallAfter(callback, *args, **kwargs)
         logger.debug(f"Successfully scheduled callback {callback_name} using wx.CallAfter")
+        return True
     except (AssertionError, RuntimeError) as e:
         # This might happen if wx.App isn't fully initialized or is destroyed
-        # Log the error. Depending on context, raising might be better.
         logger.error(f"Could not schedule callback via wx.CallAfter: {e}")
-        # Consider re-raising or handling differently if needed
+        
+        # Try to display an error to the user if this is a UI callback
+        try:
+            # Only attempt to show error dialog if we have a valid app
+            if wx.GetApp() and wx.GetApp().IsMainLoopRunning():
+                wx.CallAfter(lambda: wx.MessageBox("Error: Application context lost. Try restarting the application.", 
+                                                "Error", wx.OK | wx.ICON_ERROR))
+        except Exception as dialog_err:
+            logger.error(f"Failed to show error dialog: {dialog_err}")
+        
+        return False
 
 
 class ForecastFetcher:
@@ -100,14 +116,16 @@ class ForecastFetcher:
             # Call success callback if provided
             if on_success and not self._stop_event.is_set():
                 # Call callback on main thread
-                safe_call_after(on_success, forecast_data)
+                if not safe_call_after(on_success, forecast_data):
+                    logger.error("Failed to deliver forecast data due to application context issues")
         except Exception as e:
             if not self._stop_event.is_set():
                 logger.error(f"Failed to retrieve forecast: {str(e)}")
                 if on_error:
                     # Call error callback on main thread
                     error_msg = f"Unable to retrieve forecast data: {str(e)}"
-                    safe_call_after(on_error, error_msg)
+                    if not safe_call_after(on_error, error_msg):
+                        logger.error("Failed to deliver forecast error due to application context issues")
 
 
 class AlertsFetcher:
@@ -185,14 +203,16 @@ class AlertsFetcher:
             # Call success callback if provided
             if on_success and not self._stop_event.is_set():
                 # Call callback on main thread
-                safe_call_after(on_success, alerts_data)
+                if not safe_call_after(on_success, alerts_data):
+                    logger.error("Failed to deliver alerts data due to application context issues")
         except Exception as e:
             if not self._stop_event.is_set():
                 logger.error(f"Failed to retrieve alerts: {str(e)}")
                 if on_error:
                     # Call error callback on main thread
                     error_msg = f"Unable to retrieve alerts data: {str(e)}"
-                    safe_call_after(on_error, error_msg)
+                    if not safe_call_after(on_error, error_msg):
+                        logger.error("Failed to deliver alerts error due to application context issues")
 
 
 class DiscussionFetcher:
@@ -290,10 +310,12 @@ class DiscussionFetcher:
                             logger.debug(
                                 f"Calling success callback with additional data: {additional_data}"
                             )
-                            safe_call_after(on_success, discussion_text, *additional_data)
+                            if not safe_call_after(on_success, discussion_text, *additional_data):
+                                logger.error("Failed to deliver discussion with additional data due to application context issues")
                         else:
                             logger.debug("Calling success callback without additional data")
-                            safe_call_after(on_success, discussion_text)
+                            if not safe_call_after(on_success, discussion_text):
+                                logger.error("Failed to deliver discussion data due to application context issues")
                         logger.debug("Success callback scheduled successfully")
                     except Exception as e:
                         logger.error(f"Error scheduling success callback: {e}")
@@ -307,7 +329,8 @@ class DiscussionFetcher:
                                 logger.debug(
                                     "Attempting to close loading dialog after callback error"
                                 )
-                                safe_call_after(additional_data[1].Destroy)
+                                if not safe_call_after(additional_data[1].Destroy):
+                                    logger.error("Failed to close loading dialog due to application context issues")
                             except Exception as dialog_e:
                                 logger.error(f"Error closing loading dialog: {dialog_e}")
             except Exception as e:
@@ -316,9 +339,11 @@ class DiscussionFetcher:
                 if on_error and not self._stop_event.is_set():
                     error_msg = f"Failed to retrieve discussion: {str(e)}"
                     if additional_data is not None:
-                        safe_call_after(on_error, error_msg, *additional_data)
+                        if not safe_call_after(on_error, error_msg, *additional_data):
+                            logger.error("Failed to deliver discussion error with additional data due to application context issues")
                     else:
-                        safe_call_after(on_error, error_msg)
+                        if not safe_call_after(on_error, error_msg):
+                            logger.error("Failed to deliver discussion error due to application context issues")
         except Exception as e:
             if not self._stop_event.is_set():
                 logger.error(f"Failed to retrieve discussion: {str(e)}")
@@ -326,6 +351,8 @@ class DiscussionFetcher:
                     # Call error callback on main thread
                     error_msg = f"Unable to retrieve forecast discussion: {str(e)}"
                     if additional_data is not None:
-                        safe_call_after(on_error, error_msg, *additional_data)
+                        if not safe_call_after(on_error, error_msg, *additional_data):
+                            logger.error("Failed to deliver discussion error with additional data due to application context issues")
                     else:
-                        safe_call_after(on_error, error_msg)
+                        if not safe_call_after(on_error, error_msg):
+                            logger.error("Failed to deliver discussion error due to application context issues")

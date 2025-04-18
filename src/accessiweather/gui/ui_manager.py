@@ -133,8 +133,8 @@ class UIManager:
         Args:
             forecast_data: Dictionary with forecast data
         """
-        # Detect nationwide data by presence of WPC/SPC keys
-        if ("wpc" in forecast_data or "spc" in forecast_data):
+        # Detect nationwide data by presence of national_discussion_summaries key
+        if "national_discussion_summaries" in forecast_data:
             # Sanitize: ensure all forecast strings are not None
             def sanitize(d):
                 if isinstance(d, dict):
@@ -142,16 +142,11 @@ class UIManager:
                 return d
             forecast_data = sanitize(forecast_data)
             try:
-                # Try to get the app instance from the frame
-                app = getattr(self.frame, 'app', None)
-                if app is not None:
-                    formatted = app._format_national_forecast(forecast_data)
-                else:
-                    # Static call fallback (may need adjustment if not classmethod)
-                    from .weather_app import WeatherApp
-                    formatted = WeatherApp._format_national_forecast(None, forecast_data)
+                # The frame itself is the WeatherApp instance
+                formatted = self.frame._format_national_forecast(forecast_data)
                 self.frame.forecast_text.SetValue(formatted)
             except Exception as e:
+                logger.exception("Error formatting national forecast")
                 self.frame.forecast_text.SetValue(f"Error formatting national forecast: {e}")
             return
 
