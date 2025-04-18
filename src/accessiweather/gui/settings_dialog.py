@@ -18,6 +18,9 @@ PRECISE_LOCATION_ALERTS_KEY = "precise_location_alerts"
 CACHE_ENABLED_KEY = "cache_enabled"
 CACHE_TTL_KEY = "cache_ttl"
 
+# System tray settings
+MINIMIZE_ON_STARTUP_KEY = "minimize_on_startup"
+
 
 class SettingsDialog(wx.Dialog):
     """
