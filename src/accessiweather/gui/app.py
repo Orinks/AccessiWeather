@@ -5,8 +5,15 @@ overrides the OnExit method to perform cleanup operations.
 """
 
 import logging
-
 import wx
+
+from accessiweather.config_utils import get_config_dir
+from accessiweather.logging_config import setup_logging
+from accessiweather.utils.thread_manager import stop_all_threads
+from .weather_app import WeatherApp
+
+# Setup logging
+setup_logging()
 
 logger = logging.getLogger(__name__)
 
@@ -37,25 +44,30 @@ class AccessiWeatherApp(wx.App):
         return super().OnInit()
 
     def OnExit(self):
-        """Called when the application is about to exit
+        """Clean up resources when the application exits."""
+        logging.info("Application exiting. Cleaning up...")
+        
+        # --- Save Configuration ---
+        top_window = self.GetTopWindow()
+        if isinstance(top_window, WeatherApp):
+            try:
+                logging.debug("Attempting to save configuration from App.OnExit...")
+                top_window._save_config() # Call the main window's save method
+                logging.debug("Configuration saved successfully from App.OnExit.")
+            except Exception as e:
+                logging.error(f"Error saving configuration during exit: {e}", exc_info=True)
+        else:
+            logging.warning("Could not find WeatherApp window to save configuration.")
+        # --- End Save Configuration ---
+        
+        # Stop any remaining threads
+        logging.debug("Attempting to stop all registered threads.")
+        remaining_threads = stop_all_threads(timeout=1.0) # Use the global stop function
+        if remaining_threads:
+            logging.warning(f"The following threads did not exit cleanly: {remaining_threads}")
+        else:
+            logging.debug("All registered threads stopped successfully.")
 
-        This method is called after all windows have been destroyed.
-        It's a good place to perform final cleanup operations.
-
-        Returns:
-            The exit code (0 for success)
-        """
-        logger.info("Application is exiting, performing final cleanup")
-
-        # Note: By this point, all windows have been destroyed
-        # Any cleanup that requires UI elements should be done in the
-        # WeatherApp.OnClose method instead
-
-        # Perform any additional cleanup here that doesn't require UI elements
-        # For example, closing database connections, network connections, etc.
-
-        # Log the exit
-        logger.info("AccessiWeather application exit complete")
-
-        # Call the parent class OnExit
-        return super().OnExit()
+        # Allow the default exit procedure to continue
+        logging.info("Cleanup complete. Proceeding with default exit.")
+        return super().OnExit() # Ensure the base class method is called
