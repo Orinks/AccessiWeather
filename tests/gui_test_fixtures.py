@@ -313,15 +313,16 @@ def nationwide_app(wx_app_session):
 
     # Configure the weather service mock with realistic test data
     weather_service.get_national_forecast_data.return_value = {
-        'wpc': {
-            'short_range': ('WPC SHORT RANGE FORECAST DISCUSSION\n\n'
-                            'Valid 12Z Tue Apr 30 2023 - 12Z Thu May 2 2023\n\n'
-                            'Test forecast data for nationwide view.')
-        },
-        'spc': {
-            'day1': ('SPC DAY 1 OUTLOOK\n\n'
-                     'Valid 120000Z - 011200Z\n\n'
-                     'Test SPC data for nationwide view.')
+        "national_discussion_summaries": {
+            "wpc": {
+                "short_range_summary": "National Weather Forecast Test Data",
+                "short_range_full": "Full National Weather Forecast Test Data with additional details"
+            },
+            "spc": {
+                "day1_summary": "SPC Test Forecast",
+                "day1_full": "Full SPC Test Forecast with additional details"
+            },
+            "attribution": "Data from NOAA/NWS/WPC and NOAA/NWS/SPC. See https://www.wpc.ncep.noaa.gov/ and https://www.spc.noaa.gov/ for full details."
         }
     }
 
@@ -386,32 +387,63 @@ def nationwide_app(wx_app_session):
                 Formatted text for display
             """
             lines = []
+            
+            # Check if we have the national_discussion_summaries key (new scraped structure)
+            discussions = national_data.get("national_discussion_summaries", {})
+            if discussions:
+                # Add WPC data from scraped structure
+                wpc_data = discussions.get("wpc", {})
+                if wpc_data:
+                    lines.append("=== WEATHER PREDICTION CENTER (WPC) ===")
+                    
+                    # Short Range Forecast Summary
+                    short_range_summary = wpc_data.get("short_range_summary")
+                    if short_range_summary:
+                        lines.append("\n--- SHORT RANGE FORECAST (Days 1-3) ---")
+                        lines.append(short_range_summary)
+                
+                # Add SPC data from scraped structure
+                spc_data = discussions.get("spc", {})
+                if spc_data:
+                    lines.append("\n=== STORM PREDICTION CENTER (SPC) ===")
+                    
+                    # Day 1 Outlook Summary
+                    day1_summary = spc_data.get("day1_summary")
+                    if day1_summary:
+                        lines.append("\n--- DAY 1 CONVECTIVE OUTLOOK ---")
+                        lines.append(day1_summary)
+                
+                # Add attribution if available
+                attribution = discussions.get("attribution")
+                if attribution:
+                    lines.append("\n\n")
+                    lines.append(attribution)
+            else:
+                # Add WPC data (legacy format)
+                wpc_data = national_data.get("wpc", {})
+                if wpc_data:
+                    lines.append("=== WEATHER PREDICTION CENTER (WPC) ===")
 
-            # Add WPC data
-            wpc_data = national_data.get("wpc", {})
-            if wpc_data:
-                lines.append("=== WEATHER PREDICTION CENTER (WPC) ===")
+                    # Short Range Forecast
+                    short_range = wpc_data.get("short_range")
+                    if short_range:
+                        lines.append("\n--- SHORT RANGE FORECAST (Days 1-3) ---")
+                        # Extract and add a summary (first few lines)
+                        summary = "\n".join(short_range.split("\n")[0:10])
+                        lines.append(summary)
 
-                # Short Range Forecast
-                short_range = wpc_data.get("short_range")
-                if short_range:
-                    lines.append("\n--- SHORT RANGE FORECAST (Days 1-3) ---")
-                    # Extract and add a summary (first few lines)
-                    summary = "\n".join(short_range.split("\n")[0:10])
-                    lines.append(summary)
+                # Add SPC data (legacy format)
+                spc_data = national_data.get("spc", {})
+                if spc_data:
+                    lines.append("\n=== STORM PREDICTION CENTER (SPC) ===")
 
-            # Add SPC data
-            spc_data = national_data.get("spc", {})
-            if spc_data:
-                lines.append("\n=== STORM PREDICTION CENTER (SPC) ===")
-
-                # Day 1 Outlook
-                day1 = spc_data.get("day1")
-                if day1:
-                    lines.append("\n--- DAY 1 CONVECTIVE OUTLOOK ---")
-                    # Extract and add a summary (first few lines)
-                    summary = "\n".join(day1.split("\n")[0:10])
-                    lines.append(summary)
+                    # Day 1 Outlook
+                    day1 = spc_data.get("day1")
+                    if day1:
+                        lines.append("\n--- DAY 1 CONVECTIVE OUTLOOK ---")
+                        # Extract and add a summary (first few lines)
+                        summary = "\n".join(day1.split("\n")[0:10])
+                        lines.append(summary)
 
             # If no data was added, add a message
             if len(lines) == 0:
