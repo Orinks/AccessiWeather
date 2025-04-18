@@ -13,10 +13,25 @@ if ($CurrentDir -eq $ScriptDir) {
     Write-Host "Working directory set to: $ProjectRoot" -ForegroundColor Green
 }
 
+# Function to extract version from setup.py
+function Get-AppVersion {
+    $setupPath = Join-Path $ProjectRoot "setup.py"
+    if (Test-Path $setupPath) {
+        $versionLine = Get-Content $setupPath | Where-Object { $_ -match 'version\s*=\s*"([0-9\.]+)"' }
+        if ($versionLine -match 'version\s*=\s*"([0-9\.]+)"') {
+            return $matches[1]
+        }
+    }
+    Write-Host "Warning: Could not extract version from setup.py. Using default version." -ForegroundColor Yellow
+    return "0.0.0"
+}
+
 # Set environment variables
 $AppName = "AccessiWeather"
-$AppVersion = "0.9.0"
+$AppVersion = Get-AppVersion
 $PyInstallerOpts = "--clean", "--noconfirm", "--onedir", "--windowed", "--name", $AppName
+
+Write-Host "Building $AppName version $AppVersion" -ForegroundColor Cyan
 
 # Function to check for running processes that might interfere with the build
 function Check-RunningProcesses {
@@ -255,9 +270,11 @@ Write-Host "Using Inno Setup script: $issPath" -ForegroundColor Yellow
 # Set environment variables for Inno Setup to use absolute paths
 $env:ACCESSIWEATHER_ROOT_DIR = $ProjectRoot
 $env:ACCESSIWEATHER_DIST_DIR = Join-Path $ProjectRoot "dist"
+$env:ACCESSIWEATHER_VERSION = $AppVersion
 Write-Host "Setting environment variables for Inno Setup:" -ForegroundColor Yellow
 Write-Host "  ACCESSIWEATHER_ROOT_DIR = $($env:ACCESSIWEATHER_ROOT_DIR)" -ForegroundColor Yellow
 Write-Host "  ACCESSIWEATHER_DIST_DIR = $($env:ACCESSIWEATHER_DIST_DIR)" -ForegroundColor Yellow
+Write-Host "  ACCESSIWEATHER_VERSION = $($env:ACCESSIWEATHER_VERSION)" -ForegroundColor Yellow
 
 if ($found) {
     & $isccPath $issPath
@@ -268,6 +285,7 @@ if ($found) {
 # Clean up environment variables
 $env:ACCESSIWEATHER_ROOT_DIR = $null
 $env:ACCESSIWEATHER_DIST_DIR = $null
+$env:ACCESSIWEATHER_VERSION = $null
 
 # Final message
 Write-Host "`n===== Build Complete =====" -ForegroundColor Green

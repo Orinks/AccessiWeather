@@ -1,8 +1,8 @@
 ; AccessiWeather Inno Setup Script
-; Created for AccessiWeather v0.9.0
+; Created dynamically for AccessiWeather
 
 #define MyAppName "AccessiWeather"
-#define MyAppVersion "0.9.0"
+#define MyAppVersion GetEnv("ACCESSIWEATHER_VERSION")
 #define MyAppPublisher "Orinks"
 #define MyAppURL "https://github.com/Orinks/AccessiWeather"
 #define MyAppExeName "AccessiWeather.exe"

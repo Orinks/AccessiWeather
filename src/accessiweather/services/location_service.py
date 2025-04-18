@@ -97,7 +97,8 @@ class LocationService:
 
     def get_nationwide_location(self) -> tuple:
         """Return the Nationwide location's name and coordinates."""
-        return ("Nationwide", 39.8283, -98.5795)
+        from accessiweather.location import NATIONWIDE_LOCATION_NAME, NATIONWIDE_LAT, NATIONWIDE_LON
+        return (NATIONWIDE_LOCATION_NAME, NATIONWIDE_LAT, NATIONWIDE_LON)
 
     def is_nationwide_location(self, name: str) -> bool:
         """Check if a location is the Nationwide location.

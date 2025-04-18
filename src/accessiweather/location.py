@@ -109,14 +109,13 @@ class LocationManager:
 
             # If we removed the current location, update it
             if self.current_location == name:
-                # Pick a non-Nationwide location if possible
-                non_nationwide = [loc for loc in self.saved_locations if loc != NATIONWIDE_LOCATION_NAME]
+                # Try to set to another non-Nationwide location first
+                non_nationwide = [loc for loc in self.saved_locations
+                                 if loc != NATIONWIDE_LOCATION_NAME]
                 if non_nationwide:
                     self.current_location = non_nationwide[0]
-                elif NATIONWIDE_LOCATION_NAME in self.saved_locations:
-                    self.current_location = NATIONWIDE_LOCATION_NAME
                 else:
-                    self.current_location = None
+                    self.current_location = NATIONWIDE_LOCATION_NAME
 
             self._ensure_nationwide_location()
             self._save_locations()

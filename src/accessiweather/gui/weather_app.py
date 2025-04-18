@@ -550,3 +550,66 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         # Notify testing framework if hook is set
         if self._testing_alerts_error_callback:
             self._testing_alerts_error_callback(error)
+
+    def _cleanup_discussion_loading(self, loading_dialog=None):
+        """Clean up resources related to discussion loading
+
+        Args:
+            loading_dialog: Progress dialog instance (optional)
+        """
+        # --- Stop Timer --- (if applicable)
+        if hasattr(self, "_discussion_timer") and self._discussion_timer:
+            logger.debug("Stopping discussion timer")
+            self._discussion_timer.Stop()
+            self._discussion_timer = None
+
+        # --- Close Dialog --- Determine which dialog instance to close
+        dialog_to_close = loading_dialog
+        if not dialog_to_close and hasattr(self, "_discussion_loading_dialog"):
+            dialog_to_close = self._discussion_loading_dialog
+
+        if dialog_to_close:
+            try:
+                # Check if it's a valid wx window instance before proceeding
+                if isinstance(dialog_to_close, wx.Window) and dialog_to_close.IsShown():
+                    logger.debug("Hiding loading dialog")
+                    dialog_to_close.Hide()
+                    wx.SafeYield()  # Give UI a chance to process Hide
+                    logger.debug("Destroying loading dialog")
+                    dialog_to_close.Destroy()
+                    wx.SafeYield()  # Give UI a chance to process Destroy
+                elif isinstance(dialog_to_close, wx.Window):
+                    logger.debug(
+                        "Loading dialog exists but is not shown, attempting destroy anyway."
+                    )
+                    # Attempt destroy even if not shown, might already be destroyed
+                    try:
+                        dialog_to_close.Destroy()
+                        wx.SafeYield()
+                    except wx.wxAssertionError:
+                        logger.debug("Dialog likely already destroyed.")  # Expected if already gone
+                    except Exception as destroy_e:
+                        logger.error(
+                            f"Error destroying hidden/non-window dialog: {destroy_e}", exc_info=True
+                        )
+                else:
+                    logger.warning(
+                        f"Item to close is not a valid wx.Window: {type(dialog_to_close)}"
+                    )
+
+            except wx.wxAssertionError:
+                # This often happens if the dialog is already destroyed (e.g., by Cancel)
+                logger.debug("Loading dialog was likely already destroyed.")
+            except Exception as e:
+                logger.error(f"Error closing loading dialog: {e}", exc_info=True)
+
+        # --- Clear Reference --- Always clear the instance variable
+        if hasattr(self, "_discussion_loading_dialog"):
+            logger.debug("Clearing discussion loading dialog reference")
+            self._discussion_loading_dialog = None
+
+        # --- Force UI Update ---
+        logger.debug("Processing pending events after cleanup")
+        wx.GetApp().ProcessPendingEvents()
+        wx.SafeYield()
+        logger.debug("Cleanup processing complete")
