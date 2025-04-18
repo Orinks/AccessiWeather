@@ -104,58 +104,93 @@ class ThreadManager:
         with self._lock:
             return list(self._stop_events.values())
             
-    def stop_all_threads(self, timeout=0.5):
-        """Signal all registered threads to stop and attempt to join them."""
+    def stop_all_threads(self, timeout=0.05):
+        """Signal all registered threads to stop and attempt to join them.
+        
+        Args:
+            timeout (float): Maximum time in seconds to wait for each thread to join.
+                Default reduced to 0.2 seconds for faster application exit.
+                
+        Returns:
+            list: Names of threads that did not stop cleanly within the timeout.
+        """
+        logger.info("[EXIT OPTIMIZATION] Beginning thread cleanup process")
+        overall_start_time = time.time()
         remaining_threads = []
+        
         with self._lock:
             if not self._threads:
                 logger.debug("stop_all_threads called, but no threads are registered.")
                 return []
             
-            logger.info(f"Stopping {len(self._threads)} registered threads...")
-            thread_ids = list(self._threads.keys()) # Copy keys to avoid runtime error
+            thread_count = len(self._threads)
+            logger.info(f"Stopping {thread_count} registered threads...")
+            thread_ids = list(self._threads.keys())  # Copy keys to avoid runtime error
             
-            # First, signal all threads to stop
-            for thread_id in thread_ids:
-                if thread_id in self._stop_events:
-                    logger.debug(f"Signaling thread {thread_id} ({self._threads.get(thread_id, {}).get('name', 'Unknown')}) to stop.")
-                    self._stop_events[thread_id].set()
-                else:
-                    logger.warning(f"Stop event not found for thread {thread_id}. Cannot signal stop.")
+            # Signal phase - Set all stop events at once to maximize parallel stopping
+            signal_start = time.time()
+            for thread_id, event in self._stop_events.items():
+                thread_info = self._threads.get(thread_id)
+                thread_name = thread_info.get('name') if thread_info else f"Thread-{thread_id}"
+                logger.debug(f"[EXIT OPTIMIZATION] Signaling thread {thread_name} to stop")
+                event.set()
+            signal_time = time.time() - signal_start
+            logger.debug(f"[EXIT OPTIMIZATION] Signal phase completed in {signal_time:.3f}s")
 
-            # Then, attempt to join all threads
-            start_time = time.time()
+            # Join phase - Try to join threads with individual timeouts
+            join_start = time.time()
+            per_thread_timeout = min(timeout, 0.2)  # Cap per-thread timeout
+            
             for thread_id in thread_ids:
                 thread_info = self._threads.get(thread_id)
-                if thread_info:
-                    thread_obj = thread_info['thread']
-                    thread_name = thread_info.get('name', f'Thread-{thread_id}')
-                    if thread_obj.is_alive():
-                        adjusted_timeout = max(0, timeout - (time.time() - start_time))
-                        logger.debug(f"Attempting to join thread {thread_name} (ID: {thread_id}) with timeout {adjusted_timeout:.2f}s.")
-                        thread_obj.join(adjusted_timeout)
-                        if thread_obj.is_alive():
-                            logger.warning(f"Thread {thread_name} (ID: {thread_id}) did not join within the timeout.")
-                            remaining_threads.append(thread_name)
-                        else:
-                            logger.debug(f"Thread {thread_name} (ID: {thread_id}) joined successfully.")
-                    else:
-                        logger.debug(f"Thread {thread_name} (ID: {thread_id}) was already stopped.")
+                if not thread_info:
+                    continue
+                    
+                thread_obj = thread_info['thread']
+                thread_name = thread_info.get('name', f'Thread-{thread_id}')
+                
+                if not thread_obj.is_alive():
+                    logger.debug(f"Thread {thread_name} already stopped")
+                    continue
+                    
+                # Quick join attempt with timeout
+                thread_join_start = time.time()
+                thread_obj.join(per_thread_timeout)
+                join_elapsed = time.time() - thread_join_start
+                
+                if thread_obj.is_alive():
+                    remaining_threads.append(thread_name)
+                else:
+                    logger.debug(f"Thread {thread_name} joined in {join_elapsed:.3f}s")
             
-            # Clean up references for joined threads (or threads that weren't alive)
-            # We do this separately to avoid modifying the dictionary while iterating
-            successfully_stopped_ids = [tid for tid in thread_ids if tid not in [t.get('thread').ident for t in self._threads.values() if t.get('thread').is_alive()] ]
-            for thread_id in successfully_stopped_ids:
-                 if thread_id in self._threads: # Check if still present
-                    logger.debug(f"Removing references for stopped thread {thread_id}.")
-                    del self._threads[thread_id]
+            join_time = time.time() - join_start
+            logger.debug(f"[EXIT OPTIMIZATION] Join phase completed in {join_time:.3f}s, {len(remaining_threads)} threads remain")
+            
+            # Cleanup phase - Remove references to stopped threads
+            cleanup_start = time.time()
+            for thread_id in list(self._threads.keys()):
+                thread_info = self._threads.get(thread_id)
+                if not thread_info:
+                    continue
+                    
+                thread_obj = thread_info['thread']
+                if not thread_obj.is_alive() or thread_info.get('name') in remaining_threads:
+                    # Either thread stopped or it's in our remaining list (we won't wait more)
+                    if thread_id in self._threads:
+                        del self._threads[thread_id]
                     if thread_id in self._stop_events:
                         del self._stop_events[thread_id]
+        
+            cleanup_time = time.time() - cleanup_start
+            logger.debug(f"[EXIT OPTIMIZATION] Cleanup phase completed in {cleanup_time:.3f}s")
 
+        # Final stats
+        total_time = time.time() - overall_start_time
         if remaining_threads:
-            logger.warning(f"stop_all_threads finished. {len(remaining_threads)} threads did not stop cleanly: {remaining_threads}")
+            logger.warning(f"[EXIT OPTIMIZATION] stop_all_threads finished in {total_time:.3f}s. {len(remaining_threads)} threads did not stop cleanly: {remaining_threads}")
         else:
-            logger.info("stop_all_threads finished. All registered threads stopped.")
+            logger.info(f"[EXIT OPTIMIZATION] stop_all_threads finished in {total_time:.3f}s. All threads stopped successfully.")
+            
         return remaining_threads
 
     def get_active_threads(self):
@@ -220,7 +255,7 @@ def unregister_thread(thread_id):
     return _thread_manager.unregister_thread(thread_id)
 
 
-def stop_all_threads(timeout=0.5):
+def stop_all_threads(timeout=0.05):
     """Stop all registered threads.
     
     Args:

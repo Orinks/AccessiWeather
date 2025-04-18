@@ -67,6 +67,20 @@ class ForecastFetcher:
         self.thread = None
         self._stop_event = threading.Event()
 
+    def cancel(self):
+        """Cancel any in-progress fetch operations immediately.
+        
+        Returns:
+            bool: True if a thread was cancelled, False otherwise
+        """
+        if self.thread is not None and self.thread.is_alive():
+            logger.debug("[EXIT OPTIMIZATION] Fast-cancelling forecast fetch thread")
+            self._stop_event.set()
+            # Use minimal timeout for immediate response
+            self.thread.join(0.01)
+            return True
+        return False
+
     def fetch(self, lat, lon, on_success=None, on_error=None):
         """Fetch forecast data asynchronously
 
@@ -80,8 +94,8 @@ class ForecastFetcher:
         if self.thread is not None and self.thread.is_alive():
             logger.debug("Cancelling in-progress forecast fetch")
             self._stop_event.set()
-            # Join with a short timeout to avoid blocking UI indefinitely
-            self.thread.join(0.5)
+            # Reduced timeout for faster UI response
+            self.thread.join(0.1)
 
         # Reset stop event for new fetch
         self._stop_event.clear()
@@ -151,6 +165,20 @@ class AlertsFetcher:
         self.thread = None
         self._stop_event = threading.Event()
 
+    def cancel(self):
+        """Cancel any in-progress fetch operations immediately.
+        
+        Returns:
+            bool: True if a thread was cancelled, False otherwise
+        """
+        if self.thread is not None and self.thread.is_alive():
+            logger.debug("[EXIT OPTIMIZATION] Fast-cancelling alerts fetch thread")
+            self._stop_event.set()
+            # Use minimal timeout for immediate response
+            self.thread.join(0.01)
+            return True
+        return False
+
     def fetch(self, lat, lon, on_success=None, on_error=None, precise_location=True, radius=25):
         """Fetch alerts data asynchronously
 
@@ -166,8 +194,8 @@ class AlertsFetcher:
         if self.thread is not None and self.thread.is_alive():
             logger.debug("Cancelling in-progress alerts fetch")
             self._stop_event.set()
-            # Join with a short timeout to avoid blocking UI indefinitely
-            self.thread.join(0.5)
+            # Reduced timeout for faster UI response
+            self.thread.join(0.1)
 
         # Reset stop event for new fetch
         self._stop_event.clear()
@@ -244,6 +272,20 @@ class DiscussionFetcher:
         self.thread = None
         self._stop_event = threading.Event()
 
+    def cancel(self):
+        """Cancel any in-progress fetch operations immediately.
+        
+        Returns:
+            bool: True if a thread was cancelled, False otherwise
+        """
+        if self.thread is not None and self.thread.is_alive():
+            logger.debug("[EXIT OPTIMIZATION] Fast-cancelling discussion fetch thread")
+            self._stop_event.set()
+            # Use minimal timeout for immediate response
+            self.thread.join(0.01)
+            return True
+        return False
+
     def fetch(self, lat, lon, on_success=None, on_error=None, additional_data=None):
         """Fetch discussion data asynchronously
 
@@ -258,8 +300,8 @@ class DiscussionFetcher:
         if self.thread is not None and self.thread.is_alive():
             logger.debug("Cancelling in-progress discussion fetch")
             self._stop_event.set()
-            # Join with a short timeout to avoid blocking UI indefinitely
-            self.thread.join(0.5)
+            # Reduced timeout for faster UI response
+            self.thread.join(0.1)
 
         # Reset stop event for new fetch
         self._stop_event.clear()
