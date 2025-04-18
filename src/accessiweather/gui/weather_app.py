@@ -91,6 +91,11 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         self.updating = False
         self._forecast_complete = False  # Flag for forecast fetch completion
         self._alerts_complete = False  # Flag for alerts fetch completion
+        
+        # Nationwide discussion state
+        self._in_nationwide_mode = False
+        self._nationwide_wpc_full = None
+        self._nationwide_spc_full = None
 
         # Initialize UI using UIManager
         # UI elements are now attached to self by UIManager
@@ -323,12 +328,27 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         if wpc_data and wpc_data.get("short_range_summary"):
             lines.append("=== WEATHER PREDICTION CENTER (WPC) ===")
             lines.append(wpc_data["short_range_summary"])
+            
+            # Store the full text for button clicks
+            if wpc_data.get("short_range_full"):
+                self._nationwide_wpc_full = wpc_data["short_range_full"]
+            else:
+                self._nationwide_wpc_full = None
 
         # SPC
         spc_data = forecast_data.get("spc", {})
         if spc_data and spc_data.get("day1_summary"):
             lines.append("\n=== STORM PREDICTION CENTER (SPC) ===")
             lines.append(spc_data["day1_summary"])
+            
+            # Store the full text for button clicks
+            if spc_data.get("day1_full"):
+                self._nationwide_spc_full = spc_data["day1_full"]
+            else:
+                self._nationwide_spc_full = None
+
+        # Set flag to indicate we're in nationwide mode
+        self._in_nationwide_mode = True
 
         # Attribution
         attribution = forecast_data.get("attribution")
@@ -355,7 +375,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
 
         # Show discussion in a dialog
         discussion_dialog = WeatherDiscussionDialog(
-            self, discussion_text, location_name=name
+            self, "Weather Discussion", text=discussion_text
         )
         discussion_dialog.ShowModal()
         discussion_dialog.Destroy()
@@ -368,13 +388,15 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         if self._testing_discussion_callback:
             self._testing_discussion_callback(discussion_text)
 
-    def _cleanup_discussion_loading(self, loading_dialog=None):
-        """Clean up the discussion loading dialog and timer
+    def _on_nationwide_discussion_fetched(self, discussion_text, name=None, loading_dialog=None):
+        """Handle the fetched nationwide discussion in the main thread
 
         Args:
-            loading_dialog: Progress dialog instance passed from the callback (optional)
+            discussion_text: Fetched discussion text
+            name: Location name (optional)
+            loading_dialog: Progress dialog instance (optional)
         """
-        logger.debug("Entering cleanup discussion loading")
+        logger.debug("Nationwide discussion fetched successfully, handling in main thread")
 
         # --- Stop Timer --- (if applicable)
         if hasattr(self, "_discussion_timer") and self._discussion_timer:
