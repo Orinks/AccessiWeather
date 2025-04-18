@@ -15,6 +15,14 @@ logger = logging.getLogger(__name__)
 class WeatherService:
     """Service for weather-related operations."""
 
+    def get_national_discussion_summary(self, force_refresh: bool = False) -> dict:
+        """
+        Fetch and summarize the latest WPC Short Range and SPC Day 1 discussions for nationwide view.
+        Returns:
+            dict: {"wpc": {"short_range_summary": str}, "spc": {"day1_summary": str}}
+        """
+        return self.api_client.get_national_discussion_summary(force_refresh=force_refresh)
+
     def __init__(self, api_client: NoaaApiClient):
         """Initialize the weather service.
 

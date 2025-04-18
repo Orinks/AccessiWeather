@@ -23,11 +23,19 @@ def test_nationwide_forecast_display(nationwide_app):
     """
     app, parent = nationwide_app
 
+    # Ensure the mock returns instantly with real test data
+    app.weather_service.get_national_forecast_data.return_value = {
+        "wpc": {"short_range": "Test forecast data for nationwide view"},
+        "spc": {"day1": "Test SPC data for nationwide view"}
+    }
+    print("[TEST] Mock get_national_forecast_data returns:", app.weather_service.get_national_forecast_data.return_value)
+
     # Create an event waiter to track when the forecast is fetched
     waiter = AsyncEventWaiter()
 
     # Define the _on_forecast_fetched method to simulate the actual behavior
     def on_forecast_fetched(_, forecast_data):
+        print("[TEST] on_forecast_fetched called with:", forecast_data)
         app.current_forecast = forecast_data
         formatted_text = app._format_national_forecast(forecast_data)
         app.forecast_text.SetValue(formatted_text)
@@ -42,6 +50,7 @@ def test_nationwide_forecast_display(nationwide_app):
 
     # Call the method with test data from the weather service
     test_data = app.weather_service.get_national_forecast_data.return_value
+    print("[TEST] Calling _on_forecast_fetched with:", test_data)
     app._on_forecast_fetched(test_data)
 
     # Wait for the forecast to be fetched and UI to update
@@ -133,6 +142,7 @@ def test_nationwide_fetch_process(nationwide_app):
     # Set up the testing callback attribute that the original method expects
     app._testing_forecast_callback = waiter.callback
 
+    print("[TEST] Calling _FetchWeatherData with:", app.selected_location)
     # Call the _FetchWeatherData method with the nationwide location
     app._FetchWeatherData(app.selected_location)
 

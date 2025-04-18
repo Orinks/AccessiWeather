@@ -221,25 +221,20 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
 
         # Check if this is the nationwide location
         if self.location_service.is_nationwide_location(name):
-            try:
-                forecast_data = self.weather_service.get_national_forecast_data()
-                # Add a label for accessibility and clarity
-                if isinstance(forecast_data, dict):
-                    forecast_data = dict(forecast_data)  # Ensure mutable
-                    forecast_data['properties'] = forecast_data.get('properties', {})
-                    forecast_data['properties']['title'] = 'National Forecast'
-                self._on_forecast_fetched(forecast_data)
-                self._forecast_complete = True
-                self._alerts_complete = True  # No alerts for nationwide
-                self.SetStatusText("National forecast loaded.")
-                self.refresh_btn.Enable()
-                return
-            except Exception as e:
-                self._on_forecast_error(str(e))
-                self._forecast_complete = True
-                self._alerts_complete = True
-                self.refresh_btn.Enable()
-                return
+            # Nationwide: Show national discussion summaries and attribution
+            forecast_data = self.weather_service.get_national_forecast_data()
+            summaries = forecast_data.get("national_discussion_summaries", {})
+            wpc_summary = summaries.get("wpc", {}).get("short_range_summary", "No discussion available.")
+            spc_summary = summaries.get("spc", {}).get("day1_summary", "No discussion available.")
+            attribution = summaries.get("attribution", "")
+
+            text = self._format_national_forecast(forecast_data)
+            self.forecast_text.SetValue(text)
+            self._forecast_complete = True
+            self._alerts_complete = True  # No alerts for nationwide
+            self.SetStatusText("National forecast loaded.")
+            self.refresh_btn.Enable()
+            return
 
         # Start forecast fetching thread
         self.forecast_fetcher.fetch(
@@ -275,6 +270,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         Args:
             forecast_data: Dictionary with forecast data
         """
+        print("[DEBUG] _on_forecast_fetched received:", forecast_data)
         # Save forecast data
         self.current_forecast = forecast_data
 

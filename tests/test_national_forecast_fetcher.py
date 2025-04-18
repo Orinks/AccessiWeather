@@ -15,7 +15,14 @@ class TestNationalForecastFetcher:
         """Test successful fetch of national forecast data."""
         # Create a mock weather service
         mock_service = MagicMock()
-        mock_service.get_national_forecast_data.return_value = {"wpc": {"short_range": "WPC text"}}
+        mock_service.get_national_forecast_data.return_value = {
+    "wpc": {"short_range": "WPC text"},
+    "national_discussion_summaries": {
+        "wpc": {"short_range_summary": "WPC text"},
+        "spc": {"day1_summary": "SPC text"},
+        "attribution": "Data from NOAA/NWS/WPC and NOAA/NWS/SPC. See https://www.wpc.ncep.noaa.gov/ and https://www.spc.noaa.gov/ for full details."
+    }
+}
         
         # Create the fetcher with the mock service
         fetcher = NationalForecastFetcher(mock_service)

@@ -8,12 +8,17 @@ setup(
     install_requires=[
         "wxPython",
         "requests",
-        "pytest",
-        "pytest-mock",
         "plyer",      # For cross-platform notifications
         "geopy",      # For geocoding addresses and zip codes
         "python-dateutil",  # For parsing ISO timestamps
+        "beautifulsoup4",  # For parsing HTML in the scraper
     ],
+    extras_require={
+        "dev": [
+            "pytest",
+            "pytest-mock"
+        ]
+    },
     description=(
         "AccessiWeather: An accessible weather application using NOAA data "
         "with focus on screen reader compatibility"

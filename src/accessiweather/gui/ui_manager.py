@@ -127,11 +127,34 @@ class UIManager:
         # elements.
 
     def _UpdateForecastDisplay(self, forecast_data):
+        print("[DEBUG] _UpdateForecastDisplay received:", forecast_data)
         """Update the forecast display with data
 
         Args:
             forecast_data: Dictionary with forecast data
         """
+        # Detect nationwide data by presence of WPC/SPC keys
+        if ("wpc" in forecast_data or "spc" in forecast_data):
+            # Sanitize: ensure all forecast strings are not None
+            def sanitize(d):
+                if isinstance(d, dict):
+                    return {k: (sanitize(v) if isinstance(v, dict) else (v if v is not None else "")) for k, v in d.items()}
+                return d
+            forecast_data = sanitize(forecast_data)
+            try:
+                # Try to get the app instance from the frame
+                app = getattr(self.frame, 'app', None)
+                if app is not None:
+                    formatted = app._format_national_forecast(forecast_data)
+                else:
+                    # Static call fallback (may need adjustment if not classmethod)
+                    from .weather_app import WeatherApp
+                    formatted = WeatherApp._format_national_forecast(None, forecast_data)
+                self.frame.forecast_text.SetValue(formatted)
+            except Exception as e:
+                self.frame.forecast_text.SetValue(f"Error formatting national forecast: {e}")
+            return
+
         if not forecast_data or "properties" not in forecast_data:
             self.frame.forecast_text.SetValue("No forecast data available")
             return

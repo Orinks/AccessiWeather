@@ -51,23 +51,33 @@ class NoaaApiClient:
         """
         try:
             endpoint = f"products/types/{product_type}/locations/{location}"
+            logger.debug(f"Requesting national product: product_type={product_type}, location={location}, endpoint={endpoint}")
             products = self._make_request(endpoint, force_refresh=force_refresh)
+            logger.debug(f"Raw product list response for {product_type}/{location}: {products}")
 
             if "@graph" not in products or not products["@graph"]:
+                logger.warning(f"No '@graph' key or empty product list for {product_type}/{location}")
                 return None
 
             # Get the latest product
             latest_product = products["@graph"][0]
             latest_product_id = latest_product["id"]
+            logger.debug(f"Latest product id for {product_type}/{location}: {latest_product_id}")
 
             # Get the product text
             product_endpoint = f"products/{latest_product_id}"
             product = self._make_request(product_endpoint, force_refresh=force_refresh)
+            logger.debug(f"Raw product text response for {product_type}/{location}: {product}")
+
+            if "productText" not in product:
+                logger.warning(f"No 'productText' in product for {product_type}/{location}")
+                return None
 
             return product.get("productText")
         except Exception as e:
             logger.error(f"Error getting national product {product_type} from {location}: {str(e)}")
             return None
+
 
     def get_national_forecast_data(self, force_refresh: bool = False) -> Dict[str, Any]:
         """Get national forecast data from various centers
@@ -96,6 +106,26 @@ class NoaaApiClient:
             }
         }
         return result
+
+    def get_national_discussion_summary(self, force_refresh: bool = False) -> dict:
+        """
+        Fetch and summarize the latest WPC Short Range and SPC Day 1 discussions for nationwide view.
+        Returns:
+            dict: {"wpc": {"short_range_summary": str}, "spc": {"day1_summary": str}}
+        """
+        def summarize(text, lines=10):
+            if not text:
+                return "No discussion available."
+            # Split into lines and join the first N non-empty lines
+            summary_lines = [l for l in text.splitlines() if l.strip()][:lines]
+            return "\n".join(summary_lines)
+
+        wpc_short = self.get_national_product("FXUS01", "KWNH", force_refresh)
+        spc_day1 = self.get_national_product("ACUS01", "KWNS", force_refresh)
+        return {
+            "wpc": {"short_range_summary": summarize(wpc_short)},
+            "spc": {"day1_summary": summarize(spc_day1)}
+        }
 
 
     """Client for interacting with NOAA Weather API"""
