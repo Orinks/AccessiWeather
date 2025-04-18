@@ -36,13 +36,110 @@ class ApiClientError(Exception):
 
 
 class NoaaApiClient:
+    # ... existing methods ...
+
+    def get_national_product(self, product_type: str, location: str, force_refresh: bool = False) -> Optional[str]:
+        """Get a national product from a specific center
+
+        Args:
+            product_type: Product type code (e.g., "FXUS01")
+            location: Location code (e.g., "KWNH")
+            force_refresh: Whether to force a refresh of the data
+
+        Returns:
+            Text of the product or None if not available
+        """
+        try:
+            endpoint = f"products/types/{product_type}/locations/{location}"
+            logger.debug(f"Requesting national product: product_type={product_type}, location={location}, endpoint={endpoint}")
+            products = self._make_request(endpoint, force_refresh=force_refresh)
+            logger.debug(f"Raw product list response for {product_type}/{location}: {products}")
+
+            if "@graph" not in products or not products["@graph"]:
+                logger.warning(f"No '@graph' key or empty product list for {product_type}/{location}")
+                return None
+
+            # Get the latest product
+            latest_product = products["@graph"][0]
+            latest_product_id = latest_product["id"]
+            logger.debug(f"Latest product id for {product_type}/{location}: {latest_product_id}")
+
+            # Get the product text
+            product_endpoint = f"products/{latest_product_id}"
+            product = self._make_request(product_endpoint, force_refresh=force_refresh)
+            logger.debug(f"Raw product text response for {product_type}/{location}: {product}")
+
+            if "productText" not in product:
+                logger.warning(f"No 'productText' in product for {product_type}/{location}")
+                return None
+
+            return product.get("productText")
+        except Exception as e:
+            logger.error(f"Error getting national product {product_type} from {location}: {str(e)}")
+            return None
+
+
+    def get_national_forecast_data(self, force_refresh: bool = False) -> Dict[str, Any]:
+        """Get national forecast data from various centers
+
+        Returns:
+            Dictionary containing national forecast data
+        """
+        result = {
+            "wpc": {
+                "short_range": self.get_national_product("FXUS01", "KWNH", force_refresh),
+                "medium_range": self.get_national_product("FXUS06", "KWNH", force_refresh),
+                "extended": self.get_national_product("FXUS07", "KWNH", force_refresh),
+                "qpf": self.get_national_product("FXUS02", "KWNH", force_refresh)
+            },
+            "spc": {
+                "day1": self.get_national_product("ACUS01", "KWNS", force_refresh),
+                "day2": self.get_national_product("ACUS02", "KWNS", force_refresh)
+            },
+            "nhc": {
+                "atlantic": self.get_national_product("MIATWOAT", "KNHC", force_refresh),
+                "east_pacific": self.get_national_product("MIATWOEP", "KNHC", force_refresh)
+            },
+            "cpc": {
+                "6_10_day": self.get_national_product("FXUS05", "KWNC", force_refresh),
+                "8_14_day": self.get_national_product("FXUS07", "KWNC", force_refresh)
+            }
+        }
+        return result
+
+    def get_national_discussion_summary(self, force_refresh: bool = False) -> dict:
+        """
+        Fetch and summarize the latest WPC Short Range and SPC Day 1 discussions for nationwide view.
+        Returns:
+            dict: {"wpc": {"short_range_summary": str}, "spc": {"day1_summary": str}}
+        """
+        def summarize(text, lines=10):
+            if not text:
+                return "No discussion available."
+            # Split into lines and join the first N non-empty lines
+            summary_lines = [l for l in text.splitlines() if l.strip()][:lines]
+            return "\n".join(summary_lines)
+
+        wpc_short = self.get_national_product("FXUS01", "KWNH", force_refresh)
+        spc_day1 = self.get_national_product("ACUS01", "KWNS", force_refresh)
+        return {
+            "wpc": {"short_range_summary": summarize(wpc_short)},
+            "spc": {"day1_summary": summarize(spc_day1)}
+        }
+
+
     """Client for interacting with NOAA Weather API"""
 
     # NOAA Weather API base URL
     BASE_URL = "https://api.weather.gov"
 
-    def __init__(self, user_agent: str = "AccessiWeather", contact_info: Optional[str] = None,
-                 enable_caching: bool = False, cache_ttl: int = 300):
+    def __init__(
+        self,
+        user_agent: str = "AccessiWeather",
+        contact_info: Optional[str] = None,
+        enable_caching: bool = False,
+        cache_ttl: int = 300,
+    ):
         """Initialize the NOAA API client
 
         Args:
@@ -193,8 +290,12 @@ class NoaaApiClient:
             return None, None
 
     def get_alerts(
-        self, lat: float, lon: float, radius: float = 50, precise_location: bool = True,
-        force_refresh: bool = False
+        self,
+        lat: float,
+        lon: float,
+        radius: float = 50,
+        precise_location: bool = True,
+        force_refresh: bool = False,
     ) -> Dict[str, Any]:
         """Get active weather alerts for the given coordinates.
 
@@ -243,8 +344,9 @@ class NoaaApiClient:
                 # _make_request directly
                 if state == "MI":
                     return self._make_request(
-                        f"{self.BASE_URL}/alerts/active", params={"area": state},
-                        force_refresh=force_refresh
+                        f"{self.BASE_URL}/alerts/active",
+                        params={"area": state},
+                        force_refresh=force_refresh,
                     )
                 return self._make_request(
                     "alerts/active", params={"area": state}, force_refresh=force_refresh
@@ -256,8 +358,9 @@ class NoaaApiClient:
             f"be determined: ({lat}, {lon}) with radius {radius} miles"
         )
         return self._make_request(
-            "alerts/active", params={"point": f"{lat},{lon}", "radius": str(radius)},
-            force_refresh=force_refresh
+            "alerts/active",
+            params={"point": f"{lat},{lon}", "radius": str(radius)},
+            force_refresh=force_refresh,
         )
 
     def get_alerts_direct(self, url: str, force_refresh: bool = False) -> Dict[str, Any]:
@@ -396,7 +499,7 @@ class NoaaApiClient:
                 cached_data = self.cache.get(cache_key)
                 if cached_data is not None:
                     logger.debug(f"Using cached response for {request_url}")
-                    return cached_data
+                    return cached_data  # type: ignore
 
             # Acquire the thread lock - ensure thread safety for all API
             # requests
@@ -468,7 +571,13 @@ class NoaaApiClient:
                     # Log the keys in the response for debugging
                     if isinstance(json_data, dict):
                         logger.debug(f"Response keys: {list(json_data.keys())}")
-                    return json_data
+
+                    # Store the response in the cache if caching is enabled
+                    if self.cache and cache_key:
+                        logger.debug(f"Caching response for {request_url} with key {cache_key}")
+                        self.cache.set(cache_key, json_data)
+
+                    return json_data  # type: ignore
                 except JSONDecodeError as json_err:
                     resp_text = response.text[:200]  # Limit length
                     error_msg = (
