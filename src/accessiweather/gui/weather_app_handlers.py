@@ -133,17 +133,34 @@ class WeatherAppHandlers:
         if hasattr(self, "remove_btn") and self.location_service.is_nationwide_location(selected):
             self.remove_btn.Disable()
             # Accessibility: update accessible description
-            if hasattr(self.remove_btn, 'SetAccessibleDescription'):
-                self.remove_btn.SetAccessibleDescription("Remove button disabled: Nationwide cannot be removed.")
-
+            self.remove_btn.SetHelpText("Remove button is disabled for nationwide location")
+            self.remove_btn.SetToolTip("Cannot remove nationwide location")
+            # Set nationwide mode flag if not already set
+            if hasattr(self, '_in_nationwide_mode'):
+                self._in_nationwide_mode = True
         elif hasattr(self, "remove_btn"):
             self.remove_btn.Enable()
+            # Reset accessible description
+            self.remove_btn.SetHelpText("Remove the selected location")
+            self.remove_btn.SetToolTip("Remove the selected location")
+            # Reset nationwide mode flag if set
+            if hasattr(self, '_in_nationwide_mode'):
+                self._in_nationwide_mode = False
+                self._nationwide_wpc_full = None
+                self._nationwide_spc_full = None
 
         # Set current location using the location service
         self.location_service.set_current_location(selected)
 
-        # Update weather data
+        # Set status and update weather
+        self.SetStatusText(f"Loading weather data for {selected}...")
         self.UpdateWeatherData()
+
+        # Explicitly clear the selection in the alerts list and disable the alert button
+        # to prevent accessing a cached alert for a previous location
+        if hasattr(self, "alerts_list") and hasattr(self, "alert_btn"):
+            self.alerts_list.DeleteAllItems()
+            self.alert_btn.Disable()
 
     def OnAddLocation(self, event):  # event is required by wx
         """Handle add location button click
@@ -250,6 +267,11 @@ class WeatherAppHandlers:
         Args:
             event: Button event
         """
+        # Check if we're in nationwide view mode
+        if hasattr(self, '_in_nationwide_mode') and self._in_nationwide_mode:
+            self._handle_nationwide_discussion()
+            return
+            
         # Get current location from the location service
         location = self.location_service.get_current_location()
         if location is None:
@@ -545,6 +567,67 @@ class WeatherAppHandlers:
                 wx.OK | wx.ICON_ERROR,
             )
 
+    def _handle_nationwide_discussion(self):
+        """Handle nationwide discussion view
+        
+        This method shows a dialog allowing the user to select which nationwide discussion to view,
+        then displays the full text of the selected discussion.
+        """
+        logger.debug("Handling nationwide discussion view")
+        
+        # Check if we have the full discussion data
+        if not hasattr(self, '_nationwide_wpc_full') and not hasattr(self, '_nationwide_spc_full'):
+            wx.MessageBox(
+                "No nationwide discussions available", "No Data", wx.OK | wx.ICON_INFORMATION
+            )
+            return
+        
+        # Create a dialog to select which discussion to view
+        choices = []
+        if hasattr(self, '_nationwide_wpc_full') and self._nationwide_wpc_full:
+            choices.append("Weather Prediction Center (WPC) Discussion")
+        if hasattr(self, '_nationwide_spc_full') and self._nationwide_spc_full:
+            choices.append("Storm Prediction Center (SPC) Discussion")
+            
+        # If only one choice, just show that one
+        if len(choices) == 1:
+            self._show_nationwide_discussion(0)
+            return
+            
+        dialog = wx.SingleChoiceDialog(
+            self, "Select a discussion to view:", "Nationwide Discussions", choices
+        )
+        result = dialog.ShowModal()
+        selection = dialog.GetSelection()
+        dialog.Destroy()
+        
+        if result == wx.ID_OK:
+            self._show_nationwide_discussion(selection)
+            
+    def _show_nationwide_discussion(self, selection):
+        """Show the selected nationwide discussion
+        
+        Args:
+            selection: Index of the selected discussion (0 for WPC, 1 for SPC)
+        """
+        from .dialogs import WeatherDiscussionDialog
+        
+        if selection == 0 and hasattr(self, '_nationwide_wpc_full') and self._nationwide_wpc_full:
+            # Show WPC discussion
+            title = "Weather Prediction Center (WPC) Discussion"
+            text = self._nationwide_wpc_full
+        elif selection == 1 and hasattr(self, '_nationwide_spc_full') and self._nationwide_spc_full:
+            # Show SPC discussion
+            title = "Storm Prediction Center (SPC) Discussion"
+            text = self._nationwide_spc_full
+        else:
+            logger.error(f"Invalid nationwide discussion selection: {selection}")
+            return
+            
+        discussion_dialog = WeatherDiscussionDialog(self, title, text)
+        discussion_dialog.ShowModal()
+        discussion_dialog.Destroy()
+        
     def _check_api_contact_configured(self):
         """Check if API contact information is configured and prompt if not"""
         # Check if api_settings section exists

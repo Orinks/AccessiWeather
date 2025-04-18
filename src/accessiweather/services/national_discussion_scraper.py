@@ -74,7 +74,18 @@ def get_national_discussion_summaries():
     """
     Fetch and summarize the latest WPC and SPC national discussions.
     Returns:
-        dict: {"wpc": {"short_range_summary": str}, "spc": {"day1_summary": str}, "attribution": str}
+        dict: Contains both summaries and full text for national discussions:
+            {
+                "wpc": {
+                    "short_range_summary": str,
+                    "short_range_full": str
+                },
+                "spc": {
+                    "day1_summary": str,
+                    "day1_full": str
+                },
+                "attribution": str
+            }
     """
     wpc = fetch_wpc_short_range()
     spc = fetch_spc_day1()
@@ -86,7 +97,13 @@ def get_national_discussion_summaries():
     attribution = ("Data from NOAA/NWS/WPC and NOAA/NWS/SPC. "
                    "See https://www.wpc.ncep.noaa.gov/ and https://www.spc.noaa.gov/ for full details.")
     return {
-        "wpc": {"short_range_summary": summarize(wpc)},
-        "spc": {"day1_summary": summarize(spc)},
+        "wpc": {
+            "short_range_summary": summarize(wpc),
+            "short_range_full": wpc
+        },
+        "spc": {
+            "day1_summary": summarize(spc),
+            "day1_full": spc
+        },
         "attribution": attribution
     }
