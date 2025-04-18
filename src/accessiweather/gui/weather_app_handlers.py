@@ -8,17 +8,17 @@ import json
 import logging
 import os
 import time
-from typing import Any
+from typing import Any, Optional
 
 import wx
 
 from .alert_dialog import AlertDetailsDialog
 from .dialogs import LocationDialog
 from .settings_dialog import (
-    ALERT_RADIUS_KEY,
     API_CONTACT_KEY,
     CACHE_ENABLED_KEY,
     CACHE_TTL_KEY,
+    MINIMIZE_ON_STARTUP_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
     SettingsDialog,
 )
@@ -68,6 +68,14 @@ class WeatherAppHandlers:
         """Placeholder for wx.Frame.SetStatusText method"""
         pass
 
+    def Bind(self, *args, **kwargs) -> None:
+        """Placeholder for wx.Frame.Bind method"""
+        pass
+
+    def Unbind(self, *args, **kwargs) -> None:
+        """Placeholder for wx.Frame.Unbind method"""
+        pass
+
     def OnKeyDown(self, event):
         """Handle key down events for accessibility
 
@@ -81,12 +89,20 @@ class WeatherAppHandlers:
         else:
             event.Skip()
 
-    def OnClose(self, event):  # event is required by wx
+    def OnClose(self, event, force_close=False):  # event is required by wx
         """Handle close event
 
         Args:
             event: Close event
+            force_close: Whether to force the window to close (default: False)
         """
+        # If we have a taskbar icon and we're not force closing, just hide the window
+        if hasattr(self, "taskbar_icon") and self.taskbar_icon and not force_close:
+            logger.debug("Hiding window instead of closing")
+            self.Hide()
+            event.Veto()  # Prevent the window from closing
+            return
+
         # Stop the timer
         self.timer.Stop()
 
@@ -95,7 +111,9 @@ class WeatherAppHandlers:
         self._save_config()
 
         # Clean up any resources
-        # Add any additional cleanup here
+        if hasattr(self, "taskbar_icon") and self.taskbar_icon:
+            logger.debug("Destroying taskbar icon")
+            self.taskbar_icon.Destroy()
 
         # Destroy the window
         self.Destroy()
@@ -111,11 +129,38 @@ class WeatherAppHandlers:
         if not selected:
             return
 
+        # Check if this is the Nationwide location and disable remove button if it is
+        if hasattr(self, "remove_btn") and self.location_service.is_nationwide_location(selected):
+            self.remove_btn.Disable()
+            # Accessibility: update accessible description
+            self.remove_btn.SetHelpText("Remove button is disabled for nationwide location")
+            self.remove_btn.SetToolTip("Cannot remove nationwide location")
+            # Set nationwide mode flag if not already set
+            if hasattr(self, '_in_nationwide_mode'):
+                self._in_nationwide_mode = True
+        elif hasattr(self, "remove_btn"):
+            self.remove_btn.Enable()
+            # Reset accessible description
+            self.remove_btn.SetHelpText("Remove the selected location")
+            self.remove_btn.SetToolTip("Remove the selected location")
+            # Reset nationwide mode flag if set
+            if hasattr(self, '_in_nationwide_mode'):
+                self._in_nationwide_mode = False
+                self._nationwide_wpc_full = None
+                self._nationwide_spc_full = None
+
         # Set current location using the location service
         self.location_service.set_current_location(selected)
 
-        # Update weather data
+        # Set status and update weather
+        self.SetStatusText(f"Loading weather data for {selected}...")
         self.UpdateWeatherData()
+
+        # Explicitly clear the selection in the alerts list and disable the alert button
+        # to prevent accessing a cached alert for a previous location
+        if hasattr(self, "alerts_list") and hasattr(self, "alert_btn"):
+            self.alerts_list.DeleteAllItems()
+            self.alert_btn.Disable()
 
     def OnAddLocation(self, event):  # event is required by wx
         """Handle add location button click
@@ -163,6 +208,18 @@ class WeatherAppHandlers:
             )
             return
 
+        # Check if this is the Nationwide location
+        if self.location_service.is_nationwide_location(selected):
+            wx.MessageBox(
+                "The Nationwide location cannot be removed.",
+                "Cannot Remove",
+                wx.OK | wx.ICON_INFORMATION
+            )
+            # Accessibility: announce for screen readers
+            if hasattr(self, 'AnnounceForScreenReader'):
+                self.AnnounceForScreenReader("The Nationwide location cannot be removed.")
+            return
+
         # Confirm removal
         confirm = wx.MessageBox(
             f"Are you sure you want to remove {selected}?",
@@ -172,7 +229,15 @@ class WeatherAppHandlers:
 
         if confirm == wx.YES:
             # Remove location using the location service
-            self.location_service.remove_location(selected)
+            removed = self.location_service.remove_location(selected)
+
+            if not removed:
+                wx.MessageBox(
+                    f"Could not remove {selected}.",
+                    "Error",
+                    wx.OK | wx.ICON_ERROR
+                )
+                return
 
             # Update dropdown
             self.UpdateLocationDropdown()
@@ -202,6 +267,11 @@ class WeatherAppHandlers:
         Args:
             event: Button event
         """
+        # Check if we're in nationwide view mode
+        if hasattr(self, '_in_nationwide_mode') and self._in_nationwide_mode:
+            self._handle_nationwide_discussion()
+            return
+            
         # Get current location from the location service
         location = self.location_service.get_current_location()
         if location is None:
@@ -377,6 +447,15 @@ class WeatherAppHandlers:
         # Just call the view alert handler
         self.OnViewAlert(event)
 
+    def OnMinimizeToTray(self, event):  # event is required by wx
+        """Handle minimize to tray button click
+
+        Args:
+            event: Button event
+        """
+        logger.debug("Minimizing to tray")
+        self.Hide()
+
     def OnSettings(self, event):  # event is required by wx
         """Handle settings button click
 
@@ -407,8 +486,6 @@ class WeatherAppHandlers:
             # Save config
             self._save_config()
 
-            # Update API client contact info
-            api_contact = updated_api_settings.get(API_CONTACT_KEY, "")
             # Note: We can't update the contact info directly in the API client
             # as it doesn't have a setter method. The contact info will be used
             # the next time the app is started.
@@ -427,6 +504,15 @@ class WeatherAppHandlers:
                 )
                 # Refresh weather data to apply new setting
                 self.UpdateWeatherData()
+
+            # If minimize on startup setting changed, log it
+            old_minimize_setting = settings.get(MINIMIZE_ON_STARTUP_KEY, False)
+            new_minimize_setting = updated_settings.get(MINIMIZE_ON_STARTUP_KEY, False)
+            if old_minimize_setting != new_minimize_setting:
+                logger.info(
+                    f"Minimize on startup setting changed from {old_minimize_setting} "
+                    f"to {new_minimize_setting}"
+                )
 
             # If cache settings changed, update API client if possible
             old_cache_enabled = settings.get(CACHE_ENABLED_KEY, True)
@@ -481,6 +567,67 @@ class WeatherAppHandlers:
                 wx.OK | wx.ICON_ERROR,
             )
 
+    def _handle_nationwide_discussion(self):
+        """Handle nationwide discussion view
+        
+        This method shows a dialog allowing the user to select which nationwide discussion to view,
+        then displays the full text of the selected discussion.
+        """
+        logger.debug("Handling nationwide discussion view")
+        
+        # Check if we have the full discussion data
+        if not hasattr(self, '_nationwide_wpc_full') and not hasattr(self, '_nationwide_spc_full'):
+            wx.MessageBox(
+                "No nationwide discussions available", "No Data", wx.OK | wx.ICON_INFORMATION
+            )
+            return
+        
+        # Create a dialog to select which discussion to view
+        choices = []
+        if hasattr(self, '_nationwide_wpc_full') and self._nationwide_wpc_full:
+            choices.append("Weather Prediction Center (WPC) Discussion")
+        if hasattr(self, '_nationwide_spc_full') and self._nationwide_spc_full:
+            choices.append("Storm Prediction Center (SPC) Discussion")
+            
+        # If only one choice, just show that one
+        if len(choices) == 1:
+            self._show_nationwide_discussion(0)
+            return
+            
+        dialog = wx.SingleChoiceDialog(
+            self, "Select a discussion to view:", "Nationwide Discussions", choices
+        )
+        result = dialog.ShowModal()
+        selection = dialog.GetSelection()
+        dialog.Destroy()
+        
+        if result == wx.ID_OK:
+            self._show_nationwide_discussion(selection)
+            
+    def _show_nationwide_discussion(self, selection):
+        """Show the selected nationwide discussion
+        
+        Args:
+            selection: Index of the selected discussion (0 for WPC, 1 for SPC)
+        """
+        from .dialogs import WeatherDiscussionDialog
+        
+        if selection == 0 and hasattr(self, '_nationwide_wpc_full') and self._nationwide_wpc_full:
+            # Show WPC discussion
+            title = "Weather Prediction Center (WPC) Discussion"
+            text = self._nationwide_wpc_full
+        elif selection == 1 and hasattr(self, '_nationwide_spc_full') and self._nationwide_spc_full:
+            # Show SPC discussion
+            title = "Storm Prediction Center (SPC) Discussion"
+            text = self._nationwide_spc_full
+        else:
+            logger.error(f"Invalid nationwide discussion selection: {selection}")
+            return
+            
+        discussion_dialog = WeatherDiscussionDialog(self, title, text)
+        discussion_dialog.ShowModal()
+        discussion_dialog.Destroy()
+        
     def _check_api_contact_configured(self):
         """Check if API contact information is configured and prompt if not"""
         # Check if api_settings section exists
