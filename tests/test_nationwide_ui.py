@@ -15,6 +15,14 @@ def app():
     # Create mocks for the services
     location_service = MagicMock(spec=LocationService)
     weather_service = MagicMock(spec=WeatherService)
+    weather_service.get_national_forecast_data.return_value = {
+        "wpc": {"short_range": "WPC text"},
+        "national_discussion_summaries": {
+            "wpc": {"short_range_summary": "WPC text"},
+            "spc": {"day1_summary": "SPC text"},
+            "attribution": "Data from NOAA/NWS/WPC and NOAA/NWS/SPC. See https://www.wpc.ncep.noaa.gov/ and https://www.spc.noaa.gov/ for full details."
+        }
+    }
     notification_service = MagicMock()
     api_client = MagicMock()
 
@@ -49,6 +57,7 @@ def app():
         app._testing_forecast_callback = None
         app._testing_forecast_error_callback = None
         return app
+
 
 
 def test_nationwide_selection_triggers_fetch(app):
