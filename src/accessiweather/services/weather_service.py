@@ -32,18 +32,14 @@ class WeatherService:
         self.api_client = api_client
 
     def get_national_forecast_data(self, force_refresh: bool = False) -> dict:
-        """Get nationwide forecast data from the API client.
-
-        Args:
-            force_refresh: Whether to force a refresh of the data from the API.
-        Returns:
-            Dictionary containing nationwide forecast data.
-        Raises:
-            ApiClientError: If there was an error retrieving the nationwide forecast.
-        """
+        """Get nationwide forecast data, including national discussion summaries."""
         try:
-            logger.info("Getting nationwide forecast data")
-            return self.api_client.get_national_forecast_data(force_refresh=force_refresh)
+            logger.info("Getting nationwide forecast data (with scraper summaries)")
+            from accessiweather.services import national_discussion_scraper
+            summaries = national_discussion_scraper.get_national_discussion_summaries()
+            return {
+                "national_discussion_summaries": summaries
+            }
         except Exception as e:
             logger.error(f"Error getting nationwide forecast data: {str(e)}")
             raise ApiClientError(f"Unable to retrieve nationwide forecast data: {str(e)}")
