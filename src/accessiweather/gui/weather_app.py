@@ -8,26 +8,20 @@ import json
 import logging
 import os
 import time
-from typing import Dict, List, Optional, Tuple, Any
-
 import wx
 
 from accessiweather.config_utils import get_config_dir
 
-from accessiweather.api_client import ApiClientError
-from accessiweather.services.location_service import LocationService
-from accessiweather.services.notification_service import NotificationService
-from accessiweather.services.weather_service import WeatherService
 from .async_fetchers import AlertsFetcher, DiscussionFetcher, ForecastFetcher
 from .dialogs import WeatherDiscussionDialog
+from accessiweather.national_forecast_fetcher import NationalForecastFetcher
 from .settings_dialog import (
     ALERT_RADIUS_KEY,
     API_CONTACT_KEY,
-    CACHE_ENABLED_KEY,
-    CACHE_TTL_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
     UPDATE_INTERVAL_KEY,
 )
+from .system_tray import TaskBarIcon
 from .ui_manager import UIManager
 from .weather_app_handlers import WeatherAppHandlers
 
@@ -70,23 +64,26 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         # Load or use provided config
         self.config = config if config is not None else self._load_config()
 
-        # Store provided dependencies
+        # Store provided services
         self.weather_service = weather_service
         self.location_service = location_service
         self.notification_service = notification_service
-        self.api_client = api_client  # For backward compatibility
 
-        # Validate required dependencies
+        # For backward compatibility
+        self.api_client = api_client
+
+        # Validate required services
         if not all([self.weather_service, self.location_service, self.notification_service]):
             raise ValueError(
-                "Required dependencies (weather_service, location_service, "
-                "notification_service) must be provided"
+                "Required services (weather_service, location_service, notification_service) "
+                "must be provided"
             )
 
-        # Initialize async fetchers
-        self.forecast_fetcher = ForecastFetcher(self.weather_service)
-        self.alerts_fetcher = AlertsFetcher(self.weather_service)
-        self.discussion_fetcher = DiscussionFetcher(self.weather_service)
+        # Initialize async fetchers (using the weather service)
+        self.forecast_fetcher = ForecastFetcher(self.api_client)
+        self.alerts_fetcher = AlertsFetcher(self.api_client)
+        self.discussion_fetcher = DiscussionFetcher(self.api_client)
+        self.national_forecast_fetcher = NationalForecastFetcher(self.weather_service)
 
         # State variables
         self.current_forecast = None
@@ -94,8 +91,14 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         self.updating = False
         self._forecast_complete = False  # Flag for forecast fetch completion
         self._alerts_complete = False  # Flag for alerts fetch completion
+        
+        # Nationwide discussion state
+        self._in_nationwide_mode = False
+        self._nationwide_wpc_full = None
+        self._nationwide_spc_full = None
 
         # Initialize UI using UIManager
+        # UI elements are now attached to self by UIManager
         self.ui_manager = UIManager(self, self.notification_service.notifier)
 
         # Set up status bar
@@ -105,11 +108,15 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         # Start update timer
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.OnTimer, self.timer)
+        # Bind Close event here as it's frame-level, not UI-element specific
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.timer.Start(1000)  # Check every 1 second for updates
 
         # Last update timestamp
-        self.last_update = 0
+        self.last_update: float = 0.0
+
+        # Create system tray icon
+        self.taskbar_icon = TaskBarIcon(self)
 
         # Register with accessibility system
         self.SetName("AccessiWeather")
@@ -154,8 +161,6 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
                 UPDATE_INTERVAL_KEY: 30,
                 ALERT_RADIUS_KEY: 25,
                 PRECISE_LOCATION_ALERTS_KEY: True,  # Default to precise location alerts
-                CACHE_ENABLED_KEY: True,  # Default to enabled caching
-                CACHE_TTL_KEY: 300,  # Default to 5 minutes (300 seconds)
             },
             "api_settings": {API_CONTACT_KEY: ""},  # Added default
         }
@@ -168,8 +173,17 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
 
         # Update dropdown
         self.location_choice.Clear()
+
+        # Check if the selected location is the Nationwide location
+        selected_is_nationwide = current and self.location_service.is_nationwide_location(current)
+
         for location in locations:
             self.location_choice.Append(location)
+
+            # If this is the Nationwide location and it's selected, disable the remove button
+            is_nationwide = self.location_service.is_nationwide_location(location)
+            if hasattr(self, "remove_btn") and is_nationwide and selected_is_nationwide:
+                self.remove_btn.Disable()
 
         # Set current selection
         if current and current in locations:
@@ -212,6 +226,17 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         self._forecast_complete = False
         self._alerts_complete = False
 
+        # Check if this is the nationwide location
+        if self.location_service.is_nationwide_location(name):
+            # Nationwide: Use the dedicated async fetcher
+            logger.info("Initiating nationwide forecast fetch using NationalForecastFetcher")
+            self.national_forecast_fetcher.fetch(
+                on_success=self._on_forecast_fetched,
+                on_error=self._on_forecast_error
+            )
+            # Note: Status updates and button enabling will happen in the callbacks
+            return # Return after initiating the fetch
+
         # Start forecast fetching thread
         self.forecast_fetcher.fetch(
             lat, lon, on_success=self._on_forecast_fetched, on_error=self._on_forecast_error
@@ -246,17 +271,24 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         Args:
             forecast_data: Dictionary with forecast data
         """
+        print("[DEBUG] _on_forecast_fetched received:", forecast_data)
         # Save forecast data
         self.current_forecast = forecast_data
 
-        # Update display
-        self.ui_manager._UpdateForecastDisplay(forecast_data)  # Use UIManager
+        # Update display using UIManager
+        self.ui_manager._UpdateForecastDisplay(forecast_data)
 
         # Update timestamp
         self.last_update = time.time()
 
-        # Mark forecast as complete and check overall completion
+        # Mark forecast as complete
         self._forecast_complete = True
+
+        # If it's national data (identified by the specific key), mark alerts as complete too
+        if "national_discussion_summaries" in forecast_data:
+            self._alerts_complete = True
+
+        # Check overall completion
         self._check_update_complete()
 
         # Notify testing framework if hook is set
@@ -276,56 +308,57 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         self._forecast_complete = True
         self._check_update_complete()
 
-        # Notify testing framework if hook is set
-        if self._testing_forecast_error_callback:
-            self._testing_forecast_error_callback(error)
+    def _format_national_forecast(self, national_data):
+        """Format national forecast data for display."""
+        lines = []
 
-    def _on_alerts_fetched(self, alerts_data):
-        """Handle the fetched alerts in the main thread
+        # Check if data is nested in national_discussion_summaries
+        if "national_discussion_summaries" in national_data:
+            # Extract the actual data from the wrapper
+            forecast_data = national_data["national_discussion_summaries"]
+        else:
+            # Use the data as is if not wrapped
+            forecast_data = national_data
+            
+        # Log the structure to help debug
+        logger.debug(f"Formatting national forecast with data structure: {forecast_data.keys() if isinstance(forecast_data, dict) else 'not a dict'}")
 
-        Args:
-            alerts_data: Dictionary with alerts data
-        """
-        # Process alerts using the notification service
-        processed_alerts = self.notification_service.process_alerts(alerts_data)
-        self.current_alerts = processed_alerts
+        # WPC
+        wpc_data = forecast_data.get("wpc", {})
+        if wpc_data and wpc_data.get("short_range_summary"):
+            lines.append("=== WEATHER PREDICTION CENTER (WPC) ===")
+            lines.append(wpc_data["short_range_summary"])
+            
+            # Store the full text for button clicks
+            if wpc_data.get("short_range_full"):
+                self._nationwide_wpc_full = wpc_data["short_range_full"]
+            else:
+                self._nationwide_wpc_full = None
 
-        # Update display
-        self.ui_manager._UpdateAlertsDisplay(alerts_data)
+        # SPC
+        spc_data = forecast_data.get("spc", {})
+        if spc_data and spc_data.get("day1_summary"):
+            lines.append("\n=== STORM PREDICTION CENTER (SPC) ===")
+            lines.append(spc_data["day1_summary"])
+            
+            # Store the full text for button clicks
+            if spc_data.get("day1_full"):
+                self._nationwide_spc_full = spc_data["day1_full"]
+            else:
+                self._nationwide_spc_full = None
 
-        # Notify user of alerts if any
-        if self.current_alerts:
-            self.notification_service.notify_alerts(self.current_alerts)
+        # Set flag to indicate we're in nationwide mode
+        self._in_nationwide_mode = True
 
-        # Update timestamp
-        self.last_update = time.time()
+        # Attribution
+        attribution = forecast_data.get("attribution")
+        if attribution:
+            lines.append(f"\nSource: {attribution}")
 
-        # Mark alerts as complete and check overall completion
-        self._alerts_complete = True
-        self._check_update_complete()
+        if not lines:
+            lines.append("No data available for national forecast.")
 
-        # Notify testing framework if hook is set
-        if self._testing_alerts_callback:
-            self._testing_alerts_callback(alerts_data)
-
-    def _on_alerts_error(self, error):
-        """Handle alerts fetch error
-
-        Args:
-            error: Error message
-        """
-        logger.error(f"Alerts fetch error: {error}")
-        self.alerts_list.DeleteAllItems()
-        self.alerts_list.InsertItem(0, "Error")
-        self.alerts_list.SetItem(0, 1, f"Error fetching alerts: {error}")
-
-        # Mark alerts as complete and check overall completion
-        self._alerts_complete = True
-        self._check_update_complete()
-
-        # Notify testing framework if hook is set
-        if self._testing_alerts_error_callback:
-            self._testing_alerts_error_callback(error)
+        return "\n".join(lines)
 
     def _on_discussion_fetched(self, discussion_text, name=None, loading_dialog=None):
         """Handle the fetched discussion in the main thread
@@ -340,19 +373,12 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         # Make sure we clean up properly before showing the discussion dialog
         self._cleanup_discussion_loading(loading_dialog)
 
-        # Use default text if none provided
-        if not discussion_text:
-            discussion_text = "No discussion available"
-
-        # Create title with location name if provided
-        title = f"Forecast Discussion for {name}" if name else "Weather Discussion"
-
-        # Show discussion dialog
-        logger.debug("Creating and showing discussion dialog")
-        dialog = WeatherDiscussionDialog(self, title, discussion_text)
-        dialog.ShowModal()
-        dialog.Destroy()
-        logger.debug("Discussion dialog closed")
+        # Show discussion in a dialog
+        discussion_dialog = WeatherDiscussionDialog(
+            self, "Weather Discussion", text=discussion_text
+        )
+        discussion_dialog.ShowModal()
+        discussion_dialog.Destroy()
 
         # Re-enable button if it exists
         if hasattr(self, "discussion_btn") and self.discussion_btn:
@@ -362,43 +388,26 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         if self._testing_discussion_callback:
             self._testing_discussion_callback(discussion_text)
 
-    def _cleanup_discussion_loading(self, loading_dialog=None):
-        """Clean up the discussion loading dialog and timer
+    def _on_nationwide_discussion_fetched(self, discussion_text, name=None, loading_dialog=None):
+        """Handle the fetched nationwide discussion in the main thread
 
         Args:
-            loading_dialog: Progress dialog instance passed from the callback (optional)
+            discussion_text: Fetched discussion text
+            name: Location name (optional)
+            loading_dialog: Progress dialog instance (optional)
         """
-        logger.debug("Cleaning up discussion loading resources")
+        logger.debug("Nationwide discussion fetched successfully, handling in main thread")
 
-        # --- Timer Cleanup ---
-        if hasattr(self, "_discussion_timer"):
-            timer = self._discussion_timer
-            if timer.IsRunning():
-                logger.debug("Stopping discussion timer")
-                timer.Stop()
-            # Always try to unbind to prevent issues if Stop() failed or wasn't needed
-            try:
-                # Make sure the handler reference is correct
-                handler_method = getattr(self, "_on_discussion_timer", None)
-                if handler_method:
-                    self.Unbind(wx.EVT_TIMER, handler=handler_method, source=timer)
-                    logger.debug("Unbound timer event")
-                else:
-                    logger.warning("Could not find _on_discussion_timer method to unbind")
-            except Exception as e:
-                # Log error but continue cleanup
-                logger.error(f"Error unbinding timer event: {e}", exc_info=True)
-            # Remove timer reference (optional, but good practice)
-            # del self._discussion_timer
+        # --- Stop Timer --- (if applicable)
+        if hasattr(self, "_discussion_timer") and self._discussion_timer:
+            logger.debug("Stopping discussion timer")
+            self._discussion_timer.Stop()
+            self._discussion_timer = None
 
-        # --- Dialog Cleanup ---
-        # Primarily use the dialog passed via the callback
+        # --- Close Dialog --- Determine which dialog instance to close
         dialog_to_close = loading_dialog
-
-        # Fallback: If no dialog was passed, try the instance variable
         if not dialog_to_close and hasattr(self, "_discussion_loading_dialog"):
             dialog_to_close = self._discussion_loading_dialog
-            logger.debug("Using instance variable for loading dialog cleanup")
 
         if dialog_to_close:
             try:
@@ -435,14 +444,12 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             except Exception as e:
                 logger.error(f"Error closing loading dialog: {e}", exc_info=True)
 
-        # --- Clear Reference ---
-        # Always clear the instance variable after attempting cleanup
+        # --- Clear Reference --- Always clear the instance variable
         if hasattr(self, "_discussion_loading_dialog"):
             logger.debug("Clearing discussion loading dialog reference")
             self._discussion_loading_dialog = None
 
         # --- Force UI Update ---
-        # Process pending events more thoroughly
         logger.debug("Processing pending events after cleanup")
         wx.GetApp().ProcessPendingEvents()
         wx.SafeYield()

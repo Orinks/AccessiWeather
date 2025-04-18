@@ -1,3 +1,40 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "accessiweather"
+version = "0.9.0"
+description = "AccessiWeather: An accessible weather application using NOAA data with focus on screen reader compatibility"
+authors = [
+    { name = "User" }
+]
+license = {text = "MIT"}
+requires-python = ">=3.7"
+dependencies = [
+    "wxPython",
+    "requests",
+    "plyer",
+    "geopy",
+    "python-dateutil",
+    "beautifulsoup4"
+]
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-mock"
+]
+
+[project.scripts]
+accessiweather = "accessiweather.cli:main"
+
 [tool.black]
 line-length = 100
 target-version = ['py312']
