@@ -85,7 +85,25 @@ class LocationService:
         Returns:
             Tuple of (lat, lon) or None if location not found.
         """
-        locations = self.location_manager.locations
+        # Get all locations from the location manager
+        locations = self.location_manager.saved_locations
         if name in locations:
-            return locations[name]
+            loc = locations[name]
+            return (loc["lat"], loc["lon"])
         return None
+
+    def get_nationwide_location(self) -> tuple:
+        """Return the Nationwide location's name and coordinates."""
+        from accessiweather.location import NATIONWIDE_LOCATION_NAME, NATIONWIDE_LAT, NATIONWIDE_LON
+        return (NATIONWIDE_LOCATION_NAME, NATIONWIDE_LAT, NATIONWIDE_LON)
+
+    def is_nationwide_location(self, name: str) -> bool:
+        """Check if a location is the Nationwide location.
+
+        Args:
+            name: Name of the location to check.
+
+        Returns:
+            True if the location is the Nationwide location, False otherwise.
+        """
+        return self.location_manager.is_nationwide_location(name)

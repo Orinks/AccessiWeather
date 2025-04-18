@@ -91,7 +91,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         self.updating = False
         self._forecast_complete = False  # Flag for forecast fetch completion
         self._alerts_complete = False  # Flag for alerts fetch completion
-        
+
         # Nationwide discussion state
         self._in_nationwide_mode = False
         self._nationwide_wpc_full = None
@@ -319,7 +319,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         else:
             # Use the data as is if not wrapped
             forecast_data = national_data
-            
+
         # Log the structure to help debug
         logger.debug(f"Formatting national forecast with data structure: {forecast_data.keys() if isinstance(forecast_data, dict) else 'not a dict'}")
 
@@ -328,7 +328,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         if wpc_data and wpc_data.get("short_range_summary"):
             lines.append("=== WEATHER PREDICTION CENTER (WPC) ===")
             lines.append(wpc_data["short_range_summary"])
-            
+
             # Store the full text for button clicks
             if wpc_data.get("short_range_full"):
                 self._nationwide_wpc_full = wpc_data["short_range_full"]
@@ -340,7 +340,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         if spc_data and spc_data.get("day1_summary"):
             lines.append("\n=== STORM PREDICTION CENTER (SPC) ===")
             lines.append(spc_data["day1_summary"])
-            
+
             # Store the full text for button clicks
             if spc_data.get("day1_full"):
                 self._nationwide_spc_full = spc_data["day1_full"]
@@ -497,3 +497,119 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
     def notifier(self):
         """Provide backward compatibility with the notifier property."""
         return self.notification_service.notifier
+
+    def _on_alerts_fetched(self, alerts_data):
+        """Handle the fetched alerts in the main thread
+
+        Args:
+            alerts_data: Dictionary with alerts data
+        """
+        logger.debug("Alerts fetched successfully, handling in main thread")
+
+        # Process alerts through notification service
+        processed_alerts = self.notification_service.process_alerts(alerts_data)
+
+        # Save processed alerts
+        self.current_alerts = processed_alerts
+
+        # Update display using UIManager
+        self.ui_manager._UpdateAlertsDisplay(alerts_data)
+
+        # Notify user about alerts
+        self.notification_service.notify_alerts(processed_alerts)
+
+        # Mark alerts as complete
+        self._alerts_complete = True
+
+        # Check overall completion
+        self._check_update_complete()
+
+        # Notify testing framework if hook is set
+        if self._testing_alerts_callback:
+            self._testing_alerts_callback(alerts_data)
+
+    def _on_alerts_error(self, error):
+        """Handle alerts fetch error
+
+        Args:
+            error: Error message
+        """
+        logger.error(f"Alerts fetch error: {error}")
+
+        # Clear alerts list
+        self.alerts_list.DeleteAllItems()
+
+        # Add error message to alerts list
+        index = self.alerts_list.InsertItem(0, "Error")
+        self.alerts_list.SetItem(index, 1, f"Error fetching alerts: {error}")
+
+        # Mark alerts as complete and check overall completion
+        self._alerts_complete = True
+        self._check_update_complete()
+
+        # Notify testing framework if hook is set
+        if self._testing_alerts_error_callback:
+            self._testing_alerts_error_callback(error)
+
+    def _cleanup_discussion_loading(self, loading_dialog=None):
+        """Clean up resources related to discussion loading
+
+        Args:
+            loading_dialog: Progress dialog instance (optional)
+        """
+        # --- Stop Timer --- (if applicable)
+        if hasattr(self, "_discussion_timer") and self._discussion_timer:
+            logger.debug("Stopping discussion timer")
+            self._discussion_timer.Stop()
+            self._discussion_timer = None
+
+        # --- Close Dialog --- Determine which dialog instance to close
+        dialog_to_close = loading_dialog
+        if not dialog_to_close and hasattr(self, "_discussion_loading_dialog"):
+            dialog_to_close = self._discussion_loading_dialog
+
+        if dialog_to_close:
+            try:
+                # Check if it's a valid wx window instance before proceeding
+                if isinstance(dialog_to_close, wx.Window) and dialog_to_close.IsShown():
+                    logger.debug("Hiding loading dialog")
+                    dialog_to_close.Hide()
+                    wx.SafeYield()  # Give UI a chance to process Hide
+                    logger.debug("Destroying loading dialog")
+                    dialog_to_close.Destroy()
+                    wx.SafeYield()  # Give UI a chance to process Destroy
+                elif isinstance(dialog_to_close, wx.Window):
+                    logger.debug(
+                        "Loading dialog exists but is not shown, attempting destroy anyway."
+                    )
+                    # Attempt destroy even if not shown, might already be destroyed
+                    try:
+                        dialog_to_close.Destroy()
+                        wx.SafeYield()
+                    except wx.wxAssertionError:
+                        logger.debug("Dialog likely already destroyed.")  # Expected if already gone
+                    except Exception as destroy_e:
+                        logger.error(
+                            f"Error destroying hidden/non-window dialog: {destroy_e}", exc_info=True
+                        )
+                else:
+                    logger.warning(
+                        f"Item to close is not a valid wx.Window: {type(dialog_to_close)}"
+                    )
+
+            except wx.wxAssertionError:
+                # This often happens if the dialog is already destroyed (e.g., by Cancel)
+                logger.debug("Loading dialog was likely already destroyed.")
+            except Exception as e:
+                logger.error(f"Error closing loading dialog: {e}", exc_info=True)
+
+        # --- Clear Reference --- Always clear the instance variable
+        if hasattr(self, "_discussion_loading_dialog"):
+            logger.debug("Clearing discussion loading dialog reference")
+            self._discussion_loading_dialog = None
+
+        # --- Force UI Update ---
+        logger.debug("Processing pending events after cleanup")
+        wx.GetApp().ProcessPendingEvents()
+        wx.SafeYield()
+        logger.debug("Cleanup processing complete")
