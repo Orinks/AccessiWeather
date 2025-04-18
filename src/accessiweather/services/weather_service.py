@@ -15,6 +15,14 @@ logger = logging.getLogger(__name__)
 class WeatherService:
     """Service for weather-related operations."""
 
+    def get_national_discussion_summary(self, force_refresh: bool = False) -> dict:
+        """
+        Fetch and summarize the latest WPC Short Range and SPC Day 1 discussions for nationwide view.
+        Returns:
+            dict: {"wpc": {"short_range_summary": str}, "spc": {"day1_summary": str}}
+        """
+        return self.api_client.get_national_discussion_summary(force_refresh=force_refresh)
+
     def __init__(self, api_client: NoaaApiClient):
         """Initialize the weather service.
 
@@ -22,6 +30,19 @@ class WeatherService:
             api_client: The API client to use for weather data retrieval.
         """
         self.api_client = api_client
+
+    def get_national_forecast_data(self, force_refresh: bool = False) -> dict:
+        """Get nationwide forecast data, including national discussion summaries."""
+        try:
+            logger.info("Getting nationwide forecast data (with scraper summaries)")
+            from accessiweather.services import national_discussion_scraper
+            summaries = national_discussion_scraper.get_national_discussion_summaries()
+            return {
+                "national_discussion_summaries": summaries
+            }
+        except Exception as e:
+            logger.error(f"Error getting nationwide forecast data: {str(e)}")
+            raise ApiClientError(f"Unable to retrieve nationwide forecast data: {str(e)}")
 
     def get_forecast(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
         """Get forecast data for a location.
@@ -46,8 +67,12 @@ class WeatherService:
             raise ApiClientError(f"Unable to retrieve forecast data: {str(e)}")
 
     def get_alerts(
-        self, lat: float, lon: float, radius: float = 50, precise_location: bool = True,
-        force_refresh: bool = False
+        self,
+        lat: float,
+        lon: float,
+        radius: float = 50,
+        precise_location: bool = True,
+        force_refresh: bool = False,
     ) -> Dict[str, Any]:
         """Get alerts for a location.
 
@@ -72,8 +97,11 @@ class WeatherService:
                 f"precise_location={precise_location}, force_refresh={force_refresh}"
             )
             return self.api_client.get_alerts(
-                lat, lon, radius=radius, precise_location=precise_location,
-                force_refresh=force_refresh
+                lat,
+                lon,
+                radius=radius,
+                precise_location=precise_location,
+                force_refresh=force_refresh,
             )
         except Exception as e:
             logger.error(f"Error getting alerts: {str(e)}")

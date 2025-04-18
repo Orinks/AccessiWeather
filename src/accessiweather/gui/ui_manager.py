@@ -50,13 +50,14 @@ class UIManager:
         self.frame.add_btn = AccessibleButton(panel, wx.ID_ANY, "Add")
         self.frame.remove_btn = AccessibleButton(panel, wx.ID_ANY, "Remove")
         self.frame.refresh_btn = AccessibleButton(panel, wx.ID_ANY, "Refresh")
-        self.frame.settings_btn = AccessibleButton(
-            panel, wx.ID_ANY, "Settings"
-        )  # Added Settings button
+        self.frame.settings_btn = AccessibleButton(panel, wx.ID_ANY, "Settings")
+        self.frame.minimize_to_tray_btn = AccessibleButton(panel, wx.ID_ANY, "Minimize to Tray")
+
         location_sizer.Add(self.frame.add_btn, 0, wx.ALL, 5)
         location_sizer.Add(self.frame.remove_btn, 0, wx.ALL, 5)
         location_sizer.Add(self.frame.refresh_btn, 0, wx.ALL, 5)
-        location_sizer.Add(self.frame.settings_btn, 0, wx.ALL, 5)  # Added Settings button to sizer
+        location_sizer.Add(self.frame.settings_btn, 0, wx.ALL, 5)
+        location_sizer.Add(self.frame.minimize_to_tray_btn, 0, wx.ALL, 5)
         main_sizer.Add(location_sizer, 0, wx.EXPAND | wx.ALL, 10)
 
         # --- Forecast Panel ---
@@ -113,8 +114,11 @@ class UIManager:
         self.frame.Bind(
             wx.EVT_LIST_ITEM_ACTIVATED, self.frame.OnAlertActivated, self.frame.alerts_list
         )
-        self.frame.Bind(  # Added binding for Settings button
+        self.frame.Bind(
             wx.EVT_BUTTON, self.frame.OnSettings, self.frame.settings_btn
+        )
+        self.frame.Bind(
+            wx.EVT_BUTTON, self.frame.OnMinimizeToTray, self.frame.minimize_to_tray_btn
         )
         # KeyDown is bound here as it relates to general UI interaction
         self.frame.Bind(wx.EVT_KEY_DOWN, self.frame.OnKeyDown)
@@ -123,11 +127,29 @@ class UIManager:
         # elements.
 
     def _UpdateForecastDisplay(self, forecast_data):
+        print("[DEBUG] _UpdateForecastDisplay received:", forecast_data)
         """Update the forecast display with data
 
         Args:
             forecast_data: Dictionary with forecast data
         """
+        # Detect nationwide data by presence of national_discussion_summaries key
+        if "national_discussion_summaries" in forecast_data:
+            # Sanitize: ensure all forecast strings are not None
+            def sanitize(d):
+                if isinstance(d, dict):
+                    return {k: (sanitize(v) if isinstance(v, dict) else (v if v is not None else "")) for k, v in d.items()}
+                return d
+            forecast_data = sanitize(forecast_data)
+            try:
+                # The frame itself is the WeatherApp instance
+                formatted = self.frame._format_national_forecast(forecast_data)
+                self.frame.forecast_text.SetValue(formatted)
+            except Exception as e:
+                logger.exception("Error formatting national forecast")
+                self.frame.forecast_text.SetValue(f"Error formatting national forecast: {e}")
+            return
+
         if not forecast_data or "properties" not in forecast_data:
             self.frame.forecast_text.SetValue("No forecast data available")
             return
