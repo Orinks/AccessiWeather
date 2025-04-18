@@ -8,6 +8,9 @@ import threading
 
 import wx
 
+# Import thread manager functions
+from accessiweather.utils.thread_manager import get_thread_manager, register_thread
+
 logger = logging.getLogger(__name__)
 
 
@@ -84,11 +87,12 @@ class ForecastFetcher:
         self._stop_event.clear()
 
         # Create and start new thread
-        self.thread = threading.Thread(
-            target=self._fetch_thread, args=(lat, lon, on_success, on_error)
-        )
-        self.thread.daemon = True
+        args = (lat, lon, on_success, on_error)
+        self.thread = threading.Thread(target=self._fetch_thread, args=args, daemon=True)
         self.thread.start()
+        # Register the thread with the manager
+        thread_manager = get_thread_manager()
+        register_thread(self.thread, self._stop_event, name=f"ForecastFetcher-{lat}-{lon}")
 
     def _fetch_thread(self, lat, lon, on_success, on_error):
         """Thread function to fetch the forecast
@@ -99,6 +103,8 @@ class ForecastFetcher:
             on_success: Success callback
             on_error: Error callback
         """
+        thread_id = threading.get_ident()
+        thread_manager = get_thread_manager()
         try:
             # Check if we've been asked to stop
             if self._stop_event.is_set():
@@ -126,6 +132,10 @@ class ForecastFetcher:
                     error_msg = f"Unable to retrieve forecast data: {str(e)}"
                     if not safe_call_after(on_error, error_msg):
                         logger.error("Failed to deliver forecast error due to application context issues")
+        finally:
+            # Ensure the thread is unregistered
+            logger.debug(f"ForecastFetcher ({thread_id}): Thread finished, unregistering.")
+            thread_manager.unregister_thread(thread_id) # Use thread_id
 
 
 class AlertsFetcher:
@@ -163,12 +173,12 @@ class AlertsFetcher:
         self._stop_event.clear()
 
         # Create and start new thread
-        self.thread = threading.Thread(
-            target=self._fetch_thread,
-            args=(lat, lon, on_success, on_error, precise_location, radius),
-        )
-        self.thread.daemon = True
+        args = (lat, lon, on_success, on_error, precise_location, radius)
+        self.thread = threading.Thread(target=self._fetch_thread, args=args, daemon=True)
         self.thread.start()
+        # Register the thread with the manager
+        thread_manager = get_thread_manager()
+        register_thread(self.thread, self._stop_event, name=f"AlertsFetcher-{lat}-{lon}")
 
     def _fetch_thread(self, lat, lon, on_success, on_error, precise_location, radius):
         """Thread function to fetch the alerts
@@ -181,6 +191,8 @@ class AlertsFetcher:
             precise_location: Whether to get alerts for the precise location or statewide
             radius: Radius in miles to search for alerts if location type cannot be determined
         """
+        thread_id = threading.get_ident()
+        thread_manager = get_thread_manager()
         try:
             # Check if we've been asked to stop
             if self._stop_event.is_set():
@@ -213,6 +225,10 @@ class AlertsFetcher:
                     error_msg = f"Unable to retrieve alerts data: {str(e)}"
                     if not safe_call_after(on_error, error_msg):
                         logger.error("Failed to deliver alerts error due to application context issues")
+        finally:
+            # Ensure the thread is unregistered
+            logger.debug(f"AlertsFetcher ({thread_id}): Thread finished, unregistering.")
+            thread_manager.unregister_thread(thread_id) # Use thread_id
 
 
 class DiscussionFetcher:
@@ -249,11 +265,12 @@ class DiscussionFetcher:
         self._stop_event.clear()
 
         # Create and start new thread
-        self.thread = threading.Thread(
-            target=self._fetch_thread, args=(lat, lon, on_success, on_error, additional_data)
-        )
-        self.thread.daemon = True
+        args = (lat, lon, on_success, on_error, additional_data)
+        self.thread = threading.Thread(target=self._fetch_thread, args=args, daemon=True)
         self.thread.start()
+        # Register the thread with the manager
+        thread_manager = get_thread_manager()
+        register_thread(self.thread, self._stop_event, name=f"DiscussionFetcher-{lat}-{lon}")
 
     def _fetch_thread(self, lat, lon, on_success, on_error, additional_data):
         """Thread function to fetch the discussion
@@ -265,6 +282,8 @@ class DiscussionFetcher:
             on_error: Error callback
             additional_data: Additional data to pass to callbacks
         """
+        thread_id = threading.get_ident()
+        thread_manager = get_thread_manager()
         try:
             # Check if we've been asked to stop
             if self._stop_event.is_set():
@@ -356,3 +375,7 @@ class DiscussionFetcher:
                     else:
                         if not safe_call_after(on_error, error_msg):
                             logger.error("Failed to deliver discussion error due to application context issues")
+        finally:
+            # Ensure the thread is unregistered
+            logger.debug(f"DiscussionFetcher ({thread_id}): Thread finished, unregistering.")
+            thread_manager.unregister_thread(thread_id) # Use thread_id
