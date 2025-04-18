@@ -34,7 +34,7 @@ Download and run `AccessiWeather_Setup_v0.9.0.exe` to install the application. T
 
 Download and extract `AccessiWeather_Portable_v0.9.0.zip` to any location and run `AccessiWeather.exe`.
 
-Note: The portable version will still create a configuration directory at `%USERPROFILE%\.accessiweather` to store your settings and location data.
+Note: The portable version will store your settings and location data in a `config` folder within the application directory, making it fully portable.
 
 ## First-Time Setup
 
@@ -42,6 +42,7 @@ When you first run the application, you'll be prompted to enter your contact inf
 
 ## Recent Changes
 
+- Added true portable mode support with local configuration storage
 - Standardized configuration directory location
 - Improved wxPython dialog patching to prevent segmentation faults
 - Added precise location alerts functionality
