@@ -123,18 +123,12 @@ function Check-RunningProcesses {
                 $remainingProcesses | ForEach-Object {
                     Write-Host "  - $($_.ProcessName) (PID: $($_.Id))" -ForegroundColor Red
                 }
-
-                $continue = Read-Host "Continue anyway? (Y/N)"
-                if ($continue -ne 'Y' -and $continue -ne 'y') {
-                    exit 1
-                }
-            }
-        } else {
-            Write-Host "Please close these processes manually before continuing." -ForegroundColor Yellow
-            $continue = Read-Host "Continue anyway? (Y/N)"
-            if ($continue -ne 'Y' -and $continue -ne 'y') {
+                Write-Host "Cannot continue build with locked processes. Exiting." -ForegroundColor Red
                 exit 1
             }
+        } else {
+            Write-Host "Cannot build while interfering processes are running. Exiting." -ForegroundColor Red
+            exit 1
         }
     } else {
         Write-Host "No interfering processes detected." -ForegroundColor Green
@@ -144,9 +138,8 @@ function Check-RunningProcesses {
 # Function to clean build directories
 function Clean-BuildDirectories {
     Write-Host "`n===== Cleaning build directories =====" -ForegroundColor Yellow
-
-    # Ask user if they want to clean the directories
-    $cleanDirs = Read-Host "Do you want to clean the build and dist directories before building? (Y/N)"
+    # Mandatory cleaning – no prompt
+    $cleanDirs = 'Y'
 
     if ($cleanDirs -eq 'Y' -or $cleanDirs -eq 'y') {
         # Clean dist directory
@@ -203,6 +196,10 @@ Clean-BuildDirectories
 # Step 1: Install required packages
 Write-Host "`n===== Step 1: Installing required packages =====" -ForegroundColor Cyan
 python -m pip install -U pyinstaller
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Failed to install/update PyInstaller. Exiting." -ForegroundColor Red
+    exit 1
+}
 
 # Step 2: Build executable with PyInstaller
 Write-Host "`n===== Step 2: Building executable with PyInstaller =====" -ForegroundColor Cyan
@@ -212,10 +209,18 @@ $PyInstallerArgs = $PyInstallerOpts + @(
     "src/accessiweather/main.py"
 )
 python -m PyInstaller $PyInstallerArgs
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "PyInstaller build failed. Exiting." -ForegroundColor Red
+    exit 1
+}
 
 # Step 3: Create portable ZIP archive
 Write-Host "`n===== Step 3: Creating portable ZIP archive =====" -ForegroundColor Cyan
-Compress-Archive -Path "dist\$AppName\*" -DestinationPath "dist\${AppName}_Portable_v${AppVersion}.zip" -Force
+try {
+    Compress-Archive -Path "dist\$AppName\*" -DestinationPath "dist\${AppName}_Portable_v${AppVersion}.zip" -Force -ErrorAction Stop
+} catch {
+    Write-Host "Warning: Could not create portable ZIP archive: $_" -ForegroundColor Yellow
+}
 
 # Step 4: Build installer with Inno Setup
 Write-Host "`n===== Step 4: Building installer with Inno Setup =====" -ForegroundColor Cyan
@@ -280,6 +285,10 @@ if ($found) {
     & $isccPath $issPath
 } else {
     & iscc $issPath
+}
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Inno Setup compiler failed. Exiting." -ForegroundColor Red
+    exit 1
 }
 
 # Clean up environment variables
