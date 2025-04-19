@@ -1,0 +1,13 @@
+{
+  "locations": {
+    "Lumberton Township": {
+      "lat": 39.9659459,
+      "lon": -74.8051628
+    },
+    "Copperas Cove": {
+      "lat": 31.124062,
+      "lon": -97.9030785
+    }
+  },
+  "current": "Copperas Cove"
+}

@@ -7,11 +7,15 @@ import logging
 import os
 import requests
 import tempfile
+import threading
 import time
 from unittest.mock import MagicMock, patch
 
 import pytest
 import wx
+
+# Import the thread manager for thread cleanup
+from accessiweather.utils.thread_manager import get_thread_manager, stop_all_threads
 
 # Import our service classes plugin
 pytest_plugins = ['tests.conftest_service_classes']
@@ -43,7 +47,26 @@ def patch_requests():
 
 
 @pytest.fixture(scope="session")
-def wx_app_session():
+def stop_all_background_threads():
+    """Stop all background threads at the end of the test session.
+    
+    This fixture ensures that any remaining threads are properly terminated
+    at the end of the test session to prevent resource leaks.
+    """
+    yield  # Run all tests first
+    
+    # At the end of the session, stop all remaining threads
+    logger.info("Stopping all background threads at end of test session")
+    try:
+        remaining_threads = stop_all_threads(timeout=0.2)
+        if remaining_threads:
+            logger.warning(f"Some threads could not be stopped: {remaining_threads}")
+    except Exception as e:
+        logger.error(f"Error stopping threads: {e}")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def wx_app_session(stop_all_background_threads):
     """Create a wx App for testing (session-scoped).
 
     This fixture creates a wx.App that can be used for the entire test session.
@@ -61,9 +84,67 @@ def wx_app_session():
 
     # Clean up after all tests using the safe cleanup utility
     logger.info("Performing session cleanup")
-    # The safe_cleanup function was causing a NameError, removing it.
-    # Window cleanup is handled by the function-scoped wx_app fixture.
-    # The App object itself should be garbage collected.
+    # Window cleanup is handled by the function-scoped wx_app fixture
+    # Thread cleanup is handled by the stop_all_background_threads fixture
+
+
+def cancel_all_fetcher_threads(app):
+    """Helper function to cancel all fetcher threads in a weather app instance.
+    
+    This helps prevent threading issues where background threads continue
+    after test completion and try to access destroyed UI components.
+    """
+    logger.debug("Canceling all fetcher threads")
+    try:
+        # Cancel all known fetcher threads if they exist
+        if hasattr(app, 'forecast_fetcher'):
+            if hasattr(app.forecast_fetcher, 'cancel'):
+                app.forecast_fetcher.cancel()
+                logger.debug("Canceled forecast fetcher")
+            elif hasattr(app.forecast_fetcher, '_stop_event'):
+                app.forecast_fetcher._stop_event.set()
+                logger.debug("Set stop event for forecast fetcher")
+        
+        if hasattr(app, 'alerts_fetcher'):
+            if hasattr(app.alerts_fetcher, 'cancel'):
+                app.alerts_fetcher.cancel()
+                logger.debug("Canceled alerts fetcher")
+            elif hasattr(app.alerts_fetcher, '_stop_event'):
+                app.alerts_fetcher._stop_event.set()
+                logger.debug("Set stop event for alerts fetcher")
+            
+        if hasattr(app, 'discussion_fetcher'):
+            if hasattr(app.discussion_fetcher, 'cancel'):
+                app.discussion_fetcher.cancel()
+                logger.debug("Canceled discussion fetcher")
+            elif hasattr(app.discussion_fetcher, '_stop_event'):
+                app.discussion_fetcher._stop_event.set()
+                logger.debug("Set stop event for discussion fetcher")
+            
+        if hasattr(app, 'national_forecast_fetcher'):
+            if hasattr(app.national_forecast_fetcher, 'cancel'):
+                app.national_forecast_fetcher.cancel()
+                logger.debug("Canceled national forecast fetcher")
+            elif hasattr(app.national_forecast_fetcher, '_stop_event'):
+                app.national_forecast_fetcher._stop_event.set()
+                logger.debug("Set stop event for national forecast fetcher")
+        
+        # Also ensure any threads registered with the thread manager are stopped
+        try:
+            thread_mgr = get_thread_manager()
+            if thread_mgr:
+                logger.debug("Stopping threads via thread manager")
+                remaining = thread_mgr.stop_all_threads(timeout=0.1)
+                if remaining:
+                    logger.warning(f"Some threads remained after test: {remaining}")
+        except Exception as tm_err:
+            logger.warning(f"Error using thread manager: {tm_err}")
+        
+        # Process events to allow callbacks to execute
+        wx.SafeYield()
+        time.sleep(0.05)  # Small delay to let threads terminate
+    except Exception as e:
+        logger.warning(f"Exception canceling fetcher threads: {e}")
 
 
 @pytest.fixture
@@ -85,9 +166,20 @@ def wx_app(wx_app_session):
     # Clean up after the test for any top-level windows
     logger.debug("Performing function-level cleanup")
     try:
-        # Clean up all top-level windows
+        # Clean up all top-level windows and get all app instances
         windows = list(wx.GetTopLevelWindows())
+        
+        # Cancel threads in all windows that might be WeatherApp instances
         for win in windows:
+            # Try to cancel threads in potential WeatherApp instances
+            try:
+                if hasattr(win, 'forecast_fetcher') or hasattr(win, 'alerts_fetcher') or \
+                   hasattr(win, 'discussion_fetcher') or hasattr(win, 'national_forecast_fetcher'):
+                    cancel_all_fetcher_threads(win)
+            except Exception as thread_e:
+                logger.warning(f"Exception canceling threads in window: {thread_e}")
+                
+            # Now hide and destroy the window
             if win and win.IsShown():
                 try:
                     # Hide the window first
@@ -115,22 +207,31 @@ def wx_app_isolated():
     the session-scoped app. This can help prevent issues with state leakage
     between tests, but is less efficient.
     """
-    # Create a new app for this test only
-    app = wx.App(False)  # False means don't redirect stdout/stderr
-
-    # Allow the app to initialize
-    wx.SafeYield()
-    time.sleep(0.1)  # Give the app a moment to fully initialize
-
-    yield app
-
-    # Clean up after the test
-    logger.debug("Performing isolated app cleanup")
     try:
-        # Clean up all top-level windows
-        windows = list(wx.GetTopLevelWindows())
-        for win in windows:
-            if win and win.IsShown():
+        # Create a new isolated app
+        app = wx.App(False)  # False means don't redirect stdout/stderr
+
+        # Allow the app to initialize
+        wx.SafeYield()
+        time.sleep(0.1)  # Give the app a moment to fully initialize
+
+        yield app
+
+    finally:
+        # Make sure any fetcher threads are cancelled first to avoid accessing
+        # destroyed windows
+        try:
+            logger.debug("Stopping threads in isolated wx app")
+            cancel_all_fetcher_threads(app)
+        except Exception as thread_err:
+            logger.warning(f"Error stopping threads in isolated app: {thread_err}")
+
+        # Clean up after the test
+        logger.debug("Cleaning up isolated wx app")
+        try:
+            # Find all top-level windows created during the test
+            for win in list(wx.GetTopLevelWindows()):
+                logger.debug(f"Cleaning up window: {win}")
                 try:
                     # Hide the window first
                     win.Hide()
@@ -141,15 +242,26 @@ def wx_app_isolated():
                 except Exception as win_e:
                     logger.warning(f"Exception cleaning up window: {win_e}")
 
-        # Process pending events
-        for _ in range(5):
-            wx.SafeYield()
-            time.sleep(0.02)
+            # Process pending events
+            for _ in range(5):
+                wx.SafeYield()
+                time.sleep(0.02)
 
-        # Destroy the app
-        app.Destroy()
-    except Exception as e:
-        logger.warning(f"Exception during isolated app cleanup: {e}")
+            # Destroy the app
+            app.Destroy()
+            
+            # One final check for any remaining threads
+            try:
+                thread_mgr = get_thread_manager()
+                active_threads = thread_mgr.get_active_threads()
+                if active_threads:
+                    logger.warning(f"Found {len(active_threads)} active threads after isolated app cleanup")
+                    thread_mgr.stop_all_threads(timeout=0.1)
+            except Exception as tm_err:
+                logger.warning(f"Error checking thread manager: {tm_err}")
+                
+        except Exception as e:
+            logger.warning(f"Exception during isolated app cleanup: {e}")
 
 
 @pytest.fixture

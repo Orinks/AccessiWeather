@@ -231,7 +231,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             # Nationwide: Use the dedicated async fetcher
             logger.info("Initiating nationwide forecast fetch using NationalForecastFetcher")
             self.national_forecast_fetcher.fetch(
-                on_success=self._on_forecast_fetched,
+                on_success=self._on_national_forecast_fetched,
                 on_error=self._on_forecast_error
             )
             # Note: Status updates and button enabling will happen in the callbacks
@@ -265,6 +265,36 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             log_msg = "Both forecast and alerts fetch complete. Refresh button re-enabled."
             logger.debug(log_msg)
 
+    def _on_national_forecast_fetched(self, forecast_data):
+        """Handle the fetched national forecast in the main thread
+
+        Args:
+            forecast_data: Dictionary with national forecast data
+        """
+        logger.debug("National forecast fetch callback received data")
+        # Save forecast data
+        self.current_forecast = forecast_data
+
+        # Format the national forecast for display
+        formatted_text = self._format_national_forecast(forecast_data)
+        
+        # Update the forecast text directly
+        self.forecast_text.SetValue(formatted_text)
+
+        # Update timestamp
+        self.last_update = time.time()
+
+        # Mark both forecast and alerts as complete for nationwide view
+        self._forecast_complete = True
+        self._alerts_complete = True  # No alerts for nationwide view
+
+        # Check overall completion
+        self._check_update_complete()
+
+        # Notify testing framework if hook is set
+        if self._testing_forecast_callback:
+            self._testing_forecast_callback(forecast_data)
+            
     def _on_forecast_fetched(self, forecast_data):
         """Handle the fetched forecast in the main thread
 
