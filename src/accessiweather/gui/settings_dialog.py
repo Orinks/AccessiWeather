@@ -21,6 +21,9 @@ CACHE_TTL_KEY = "cache_ttl"
 # System tray settings
 MINIMIZE_ON_STARTUP_KEY = "minimize_on_startup"
 
+# Add new constant for close to tray setting
+CLOSE_TO_TRAY_KEY = "close_to_tray"
+
 
 class SettingsDialog(wx.Dialog):
     """
@@ -91,7 +94,7 @@ class SettingsDialog(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         # --- Input Fields ---
-        grid_sizer = wx.FlexGridSizer(rows=4, cols=2, vgap=10, hgap=5)
+        grid_sizer = wx.FlexGridSizer(rows=5, cols=2, vgap=10, hgap=5)  # Increased rows to 5
         grid_sizer.AddGrowableCol(1, 1)  # Make the input column growable
 
         # API Contact
@@ -138,6 +141,22 @@ class SettingsDialog(wx.Dialog):
         # Add a spacer in the first column
         grid_sizer.Add((1, 1), 0, wx.ALL, 5)
         grid_sizer.Add(self.precise_alerts_ctrl, 0, wx.ALL, 5)
+
+        # Close to Tray Toggle
+        close_to_tray_label = "Minimize to tray when closing window"
+        self.close_to_tray_ctrl = wx.CheckBox(
+            panel,
+            label=close_to_tray_label,
+            name="Close to Tray"
+        )
+        tooltip_close = (
+            "When checked, closing the window will minimize to system tray. "
+            "When unchecked, closing the window will exit the application."
+        )
+        self.close_to_tray_ctrl.SetToolTip(tooltip_close)
+        # Add a spacer in the first column
+        grid_sizer.Add((1, 1), 0, wx.ALL, 5)
+        grid_sizer.Add(self.close_to_tray_ctrl, 0, wx.ALL, 5)
 
         sizer.Add(grid_sizer, 1, wx.EXPAND | wx.ALL, 10)
         panel.SetSizer(sizer)
@@ -202,6 +221,10 @@ class SettingsDialog(wx.Dialog):
             self.cache_enabled_ctrl.SetValue(cache_enabled)
             self.cache_ttl_ctrl.SetValue(cache_ttl)
 
+            # Load close to tray setting
+            close_to_tray = self.current_settings.get(CLOSE_TO_TRAY_KEY, True)  # Default to True
+            self.close_to_tray_ctrl.SetValue(close_to_tray)
+
             logger.debug("Settings loaded into dialog.")
         except Exception as e:
             logger.error(f"Error loading settings into dialog: {e}")
@@ -264,6 +287,7 @@ class SettingsDialog(wx.Dialog):
             UPDATE_INTERVAL_KEY: self.update_interval_ctrl.GetValue(),
             ALERT_RADIUS_KEY: self.alert_radius_ctrl.GetValue(),
             PRECISE_LOCATION_ALERTS_KEY: self.precise_alerts_ctrl.GetValue(),
+            CLOSE_TO_TRAY_KEY: self.close_to_tray_ctrl.GetValue(),
 
             # Advanced settings
             CACHE_ENABLED_KEY: self.cache_enabled_ctrl.GetValue(),

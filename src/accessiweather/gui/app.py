@@ -6,11 +6,13 @@ overrides the OnExit method to perform cleanup operations.
 
 import logging
 import wx
+import sys
 
 from accessiweather.config_utils import get_config_dir
 from accessiweather.logging_config import setup_logging
 from accessiweather.utils.thread_manager import stop_all_threads
 from .weather_app import WeatherApp
+from accessiweather.utils.single_instance import SingleInstanceChecker
 
 # Setup logging
 setup_logging()
@@ -30,6 +32,17 @@ class AccessiWeatherApp(wx.App):
             useBestVisual: Whether to use the best visual on systems that support it
             clearSigInt: Whether to catch SIGINT or not
         """
+        # Create single instance checker
+        self.instance_checker = SingleInstanceChecker()
+        if not self.instance_checker.try_acquire_lock():
+            # Another instance is running
+            wx.MessageBox(
+                "AccessiWeather is already running.",
+                "Already Running",
+                wx.OK | wx.ICON_INFORMATION
+            )
+            sys.exit(1)
+
         super().__init__(redirect, filename, useBestVisual, clearSigInt)
         self.frame = None  # Will store a reference to the main frame
         logger.debug("AccessiWeatherApp initialized")
@@ -49,6 +62,10 @@ class AccessiWeatherApp(wx.App):
         exit_start_time = time.time()
         logging.info("[EXIT OPTIMIZATION] Application exiting. Starting cleanup process...")
         
+        # Release single instance lock
+        if hasattr(self, 'instance_checker'):
+            self.instance_checker.release_lock()
+
         # --- Save Configuration ---
         config_start_time = time.time()
         config_save_thread = None

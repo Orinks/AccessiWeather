@@ -18,6 +18,7 @@ from accessiweather.national_forecast_fetcher import NationalForecastFetcher
 from .settings_dialog import (
     ALERT_RADIUS_KEY,
     API_CONTACT_KEY,
+    CLOSE_TO_TRAY_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
     UPDATE_INTERVAL_KEY,
 )
@@ -110,6 +111,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         self.Bind(wx.EVT_TIMER, self.OnTimer, self.timer)
         # Bind Close event here as it's frame-level, not UI-element specific
         self.Bind(wx.EVT_CLOSE, self.OnClose)
+        self.Bind(wx.EVT_ICONIZE, self.OnMinimize)
         self.timer.Start(1000)  # Check every 1 second for updates
 
         # Last update timestamp
@@ -139,6 +141,34 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
 
         # Check if API contact is configured
         self._check_api_contact_configured()
+
+    def OnMinimize(self, event):
+        """Handle minimize event by hiding to system tray."""
+        if event.IsIconized():
+            self.Hide()
+            event.Skip(False)  # Don't allow default minimize
+        else:
+            event.Skip()
+
+    def OnClose(self, event, force_close=False):
+        """Handle the close event.
+        
+        Args:
+            event: The close event
+            force_close: Whether to force close the application
+        """
+        # Get close to tray setting
+        close_to_tray = self.config.get("settings", {}).get(CLOSE_TO_TRAY_KEY, True)  # Default to True
+
+        if not force_close and close_to_tray and event.CanVeto():
+            # Hide instead of closing if close_to_tray is enabled
+            self.Hide()
+            event.Veto()
+        else:
+            # Cleanup and destroy
+            if hasattr(self, 'taskbar_icon') and self.taskbar_icon:
+                self.taskbar_icon.Destroy()
+            self.Destroy()
 
     def _load_config(self):
         """Load configuration from file
