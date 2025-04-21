@@ -19,7 +19,8 @@
         "alert_notification_duration": 10,
         "alerts_radius_miles": 25,
         "precise_location_alerts": true,
-        "minimize_on_startup": false
+        "minimize_on_startup": false,
+        "close_to_tray": true
     },
     "api_settings": {
         "contact_info": "yourwebsite.com or your-email@example.com"

@@ -108,3 +108,9 @@ docs/source/conf.py.bak
 *.tmp
 *.bak
 *.py,cover
+
+# Knowledge files
+knowledge.md
+**/knowledge.md
+CLAUDE.md
+**/CLAUDE.md
