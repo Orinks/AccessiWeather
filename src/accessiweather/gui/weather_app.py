@@ -157,17 +157,50 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             event: The close event
             force_close: Whether to force close the application
         """
-        # Get close to tray setting
-        close_to_tray = self.config.get("settings", {}).get(CLOSE_TO_TRAY_KEY, True)  # Default to True
-
+        logger.info("[EXIT] OnClose called with force_close=%s", force_close)
+        
+        # Get close to tray setting - default to False now to close fully by default
+        close_to_tray = self.config.get("settings", {}).get(CLOSE_TO_TRAY_KEY, False)
+        
+        logger.debug("[EXIT] close_to_tray setting is %s", close_to_tray)
+        
         if not force_close and close_to_tray and event.CanVeto():
             # Hide instead of closing if close_to_tray is enabled
+            logger.info("[EXIT] Hiding to tray instead of closing")
             self.Hide()
             event.Veto()
         else:
-            # Cleanup and destroy
+            # Stop all fetcher threads immediately
+            logger.info("[EXIT] Stopping all fetcher threads")
+            self._stop_fetcher_threads()
+            
+            # Stop the update timer
+            if hasattr(self, 'timer') and self.timer:
+                logger.info("[EXIT] Stopping update timer")
+                self.timer.Stop()
+            
+            # Save config before closing
+            logger.info("[EXIT] Saving configuration")
+            try:
+                self._save_config(show_errors=False)
+            except Exception as e:
+                logger.error("[EXIT] Error saving config: %s", e)
+            
+            # Cleanup taskbar icon
             if hasattr(self, 'taskbar_icon') and self.taskbar_icon:
-                self.taskbar_icon.Destroy()
+                logger.info("[EXIT] Destroying taskbar icon")
+                try:
+                    self.taskbar_icon.RemoveIcon()
+                    self.taskbar_icon.Destroy()
+                    self.taskbar_icon = None
+                except Exception as e:
+                    logger.error("[EXIT] Error destroying taskbar icon: %s", e)
+            
+            # Process any pending events before destroying
+            wx.GetApp().ProcessPendingEvents()
+            wx.SafeYield()
+            
+            logger.info("[EXIT] Destroying main window")
             self.Destroy()
 
     def _load_config(self):
@@ -517,17 +550,6 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         if self._testing_discussion_error_callback:
             self._testing_discussion_error_callback(error)
 
-    # For backward compatibility with WeatherAppHandlers
-    @property
-    def location_manager(self):
-        """Provide backward compatibility with the location_manager property."""
-        return self.location_service.location_manager
-
-    @property
-    def notifier(self):
-        """Provide backward compatibility with the notifier property."""
-        return self.notification_service.notifier
-
     def _on_alerts_fetched(self, alerts_data):
         """Handle the fetched alerts in the main thread
 
@@ -643,3 +665,32 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         wx.GetApp().ProcessPendingEvents()
         wx.SafeYield()
         logger.debug("Cleanup processing complete")
+
+    def _stop_fetcher_threads(self):
+        """Stop all fetcher threads immediately."""
+        fetchers = ['forecast_fetcher', 'alerts_fetcher', 'discussion_fetcher', 'national_forecast_fetcher']
+        for fetcher_name in fetchers:
+            if hasattr(self, fetcher_name):
+                fetcher = getattr(self, fetcher_name)
+                if fetcher:
+                    logger.debug(f"[EXIT] Stopping {fetcher_name}")
+                    try:
+                        if hasattr(fetcher, 'stop'):
+                            fetcher.stop()
+                        elif hasattr(fetcher, '_stop_event'):
+                            fetcher._stop_event.set()
+                        if hasattr(fetcher, 'thread') and fetcher.thread:
+                            fetcher.thread.join(0.1)  # Short timeout
+                    except Exception as e:
+                        logger.error(f"[EXIT] Error stopping {fetcher_name}: {e}")
+
+    def _save_config(self, show_errors=True):
+        """Save configuration to file."""
+        try:
+            with open(self._config_path, "w") as f:
+                json.dump(self.config, f, indent=4)
+        except Exception as e:
+            if show_errors:
+                logger.error(f"Failed to save config: {str(e)}")
+            else:
+                logger.warning(f"Failed to save config: {str(e)}")
