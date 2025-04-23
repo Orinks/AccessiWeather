@@ -110,6 +110,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         self.Bind(wx.EVT_TIMER, self.OnTimer, self.timer)
         # Bind Close event here as it's frame-level, not UI-element specific
         self.Bind(wx.EVT_CLOSE, self.OnClose)
+        self.Bind(wx.EVT_ICONIZE, self.OnMinimize)
         self.timer.Start(1000)  # Check every 1 second for updates
 
         # Last update timestamp
@@ -139,6 +140,9 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
 
         # Check if API contact is configured
         self._check_api_contact_configured()
+
+        # Add force close flag
+        self._force_close = True  # Default to force close when clicking X
 
     def _load_config(self):
         """Load configuration from file
@@ -336,6 +340,18 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         logger.info("Initiating shutdown by calling self.Destroy()...")
         self.Destroy()
         logger.info("self.Destroy() called. App.OnExit should now handle cleanup.")
+
+    def OnMinimize(self, event):
+        """Handle window minimize event"""
+        logger.debug("OnMinimize called")
+        if event.IsIconized():
+            # Window is being minimized
+            logger.debug("Window is being minimized, hiding to tray")
+            self.Hide()
+            event.Skip()
+        else:
+            # Window is being restored
+            event.Skip()
 
     def _stop_fetcher_threads(self):
         """Stop all fetcher threads directly.
