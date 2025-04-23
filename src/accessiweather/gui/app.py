@@ -60,77 +60,60 @@ class AccessiWeatherApp(wx.App):
         """Clean up resources when the application exits."""
         import time
         exit_start_time = time.time()
-        logging.info("[EXIT OPTIMIZATION] Application exiting. Starting cleanup process...")
+        logging.info("[EXIT] Application exiting. Starting cleanup process...")
         
         # Release single instance lock
         if hasattr(self, 'instance_checker'):
             self.instance_checker.release_lock()
 
-        # --- Save Configuration ---
-        config_start_time = time.time()
-        config_save_thread = None
+        # Get the top window (WeatherApp frame)
         top_window = self.GetTopWindow()
         if isinstance(top_window, WeatherApp):
             try:
-                # Try to save config asynchronously if the method exists
-                if hasattr(top_window, "_save_config_async"):
-                    logging.debug("[EXIT OPTIMIZATION] Using asynchronous config save...")
-                    config_save_thread = top_window._save_config_async()
-                else:
-                    # Fall back to synchronous save
-                    logging.debug("[EXIT OPTIMIZATION] Asynchronous save not available, using synchronous save...")
-                    top_window._save_config(show_errors=False)
-                    
-                config_time = time.time() - config_start_time
-                logging.debug(f"[EXIT OPTIMIZATION] Configuration save initiated in {config_time:.3f}s")
+                # Stop all fetcher threads
+                if hasattr(top_window, '_stop_fetcher_threads'):
+                    logging.info("[EXIT] Stopping fetcher threads...")
+                    top_window._stop_fetcher_threads()
+                
+                # Stop the update timer
+                if hasattr(top_window, 'timer') and top_window.timer:
+                    logging.info("[EXIT] Stopping update timer...")
+                    top_window.timer.Stop()
+                
+                # Save config
+                if hasattr(top_window, '_save_config'):
+                    logging.info("[EXIT] Saving configuration...")
+                    try:
+                        top_window._save_config(show_errors=False)
+                    except Exception as e:
+                        logging.error(f"[EXIT] Error saving configuration: {e}")
+                
+                # Cleanup taskbar icon
+                if hasattr(top_window, 'taskbar_icon') and top_window.taskbar_icon:
+                    logging.info("[EXIT] Cleaning up taskbar icon...")
+                    try:
+                        top_window.taskbar_icon.RemoveIcon()
+                        top_window.taskbar_icon.Destroy()
+                        top_window.taskbar_icon = None
+                    except Exception as e:
+                        logging.error(f"[EXIT] Error cleaning up taskbar icon: {e}")
             except Exception as e:
-                config_time = time.time() - config_start_time
-                logging.error(f"[EXIT OPTIMIZATION] Error saving configuration after {config_time:.3f}s: {e}", exc_info=True)
-        else:
-            logging.warning("Could not find WeatherApp window to save configuration.")
-        # --- End Save Configuration ---
-        
-        # --- Stop All Threads ---
-        threads_start_time = time.time()
-        logging.debug("[EXIT OPTIMIZATION] Stopping all registered threads...")
-        
-        # Use a much shorter timeout for faster exit
-        remaining_threads = stop_all_threads(timeout=0.02)
-        
-        threads_time = time.time() - threads_start_time
+                logging.error(f"[EXIT] Error during top window cleanup: {e}")
+
+        # Stop all threads using thread manager
+        from accessiweather.utils.thread_manager import stop_all_threads
+        logging.info("[EXIT] Stopping all remaining threads...")
+        remaining_threads = stop_all_threads(timeout=0.1)  # Short timeout for faster exit
         if remaining_threads:
-            logging.warning(f"[EXIT OPTIMIZATION] Thread cleanup took {threads_time:.3f}s. {len(remaining_threads)} threads did not exit cleanly: {remaining_threads}")
-        else:
-            logging.debug(f"[EXIT OPTIMIZATION] Thread cleanup completed in {threads_time:.3f}s. All threads stopped successfully.")
-        # --- End Stop All Threads ---
-
-        # --- Wait for Config Save (if async) ---
-        if config_save_thread and config_save_thread.is_alive():
-            wait_start = time.time()
-            logging.debug("[EXIT OPTIMIZATION] Waiting for async config save to complete...")
-            # Very short timeout since we don't want to block exit for too long
-            # Reduced timeout for config save thread
-            config_save_thread.join(0.05)
-            wait_time = time.time() - wait_start
-            if config_save_thread.is_alive():
-                logging.warning(f"[EXIT OPTIMIZATION] Config save thread still running after {wait_time:.3f}s wait, continuing with exit anyway")
-            else:
-                logging.debug(f"[EXIT OPTIMIZATION] Config save thread completed in {wait_time:.3f}s")
-        # --- End Wait for Config Save ---
-
-        # --- Process any pending events ---
-        wx_start = time.time()
+            logging.warning(f"[EXIT] {len(remaining_threads)} threads did not exit cleanly: {remaining_threads}")
+        
+        # Process any remaining events
         try:
-            # Process any remaining events to avoid error messages during exit
             self.ProcessPendingEvents()
-            wx_time = time.time() - wx_start
-            logging.debug(f"[EXIT OPTIMIZATION] Final event processing completed in {wx_time:.3f}s")
+            wx.SafeYield()
         except Exception as e:
-            wx_time = time.time() - wx_start
-            logging.error(f"[EXIT OPTIMIZATION] Error in final event processing after {wx_time:.3f}s: {e}")
-        # --- End Process Events ---
+            logging.error(f"[EXIT] Error processing final events: {e}")
 
-        # Allow the default exit procedure to continue
         total_time = time.time() - exit_start_time
-        logging.info(f"[EXIT OPTIMIZATION] Cleanup completed in {total_time:.3f}s. Proceeding with default exit.")
+        logging.info(f"[EXIT] Cleanup completed in {total_time:.3f}s. Proceeding with default exit.")
         return super().OnExit() # Ensure the base class method is called
