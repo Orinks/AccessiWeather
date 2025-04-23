@@ -88,91 +88,106 @@ class WeatherAppHandlers:
             event.Skip()
 
     def OnClose(self, event, force_close=False):  # event is required by wx
-        """Handle close event
-
+        """Handle window close event.
+        
         Args:
-            event: Close event
-            force_close: Whether to force the window to close (default: False)
+            event: The close event
+            force_close: Whether to force the window to close
         """
-        logger.info("OnClose called: Stopping fetcher threads immediately...")
+        logger.info("OnClose called with force_close=%s", force_close)
+        
+        # Check for force close flag on the instance or parameter
+        force_close = force_close or getattr(self, '_force_close', False)
+        logger.debug("Final force_close value: %s", force_close)
+        
+        # Stop all fetcher threads first
+        logger.info("Stopping fetcher threads...")
         self._stop_fetcher_threads()
-        logger.debug("Fetcher threads stop requested.")
         
-        # Check for force close flag on the instance
-        if hasattr(self, '_force_close'):
-            force_close = force_close or self._force_close
-        
-        # If we have a taskbar icon and we're not force closing, just hide the window
-        if hasattr(self, "taskbar_icon") and self.taskbar_icon and not force_close:
+        # If we're not force closing and have a taskbar icon, just hide
+        if not force_close and hasattr(self, "taskbar_icon") and self.taskbar_icon:
             logger.debug("Hiding window instead of closing")
-            # Stop the timer when hiding to prevent unnecessary updates
+            # Stop the timer when hiding
             if hasattr(self, "timer") and self.timer.IsRunning():
                 logger.debug("Stopping timer before hiding")
                 self.timer.Stop()
             self.Hide()
             event.Veto()
-            # Restart the timer after hiding to continue background updates
+            # Restart timer after hiding
             if hasattr(self, "timer"):
                 logger.debug("Restarting timer after hiding")
                 self.timer.Start()
-            logger.debug("Hide/Veto called.")
             return
- 
-        # Force closing - stop timer and clean up
+        
+        # Force closing - clean up resources
+        logger.info("Proceeding with force close cleanup")
+        
+        # Stop timer
         if hasattr(self, "timer") and self.timer.IsRunning():
-            logger.debug("Stopping timer for force close")
+            logger.debug("Stopping timer")
             self.timer.Stop()
 
         # Remove taskbar icon
         if hasattr(self, "taskbar_icon") and self.taskbar_icon:
             logger.debug("Removing taskbar icon")
-            if hasattr(self.taskbar_icon, "RemoveIcon"):
-                self.taskbar_icon.RemoveIcon()
-            self.taskbar_icon.Destroy()
-            self.taskbar_icon = None
+            try:
+                if hasattr(self.taskbar_icon, "RemoveIcon"):
+                    self.taskbar_icon.RemoveIcon()
+                self.taskbar_icon.Destroy()
+                self.taskbar_icon = None
+            except Exception as e:
+                logger.error("Error removing taskbar icon: %s", e)
 
-        # Save config before destroying
+        # Save config
         if hasattr(self, "_save_config"):
             logger.debug("Saving configuration")
-            self._save_config()
+            try:
+                self._save_config()
+            except Exception as e:
+                logger.error("Error saving config: %s", e)
 
-        # Proceed with destroying the window to trigger App.OnExit cleanup
-        logger.info("Initiating shutdown by calling self.Destroy()...")
+        # Destroy the window
+        logger.info("Destroying window")
         self.Destroy()
-        logger.info("self.Destroy() called. App.OnExit should now handle cleanup.")
 
     def _stop_fetcher_threads(self):
-        """Stop all fetcher threads directly.
-        This method directly stops the fetcher threads to avoid deadlocks during shutdown.
-        """
+        """Stop all fetcher threads directly."""
+        logger.debug("Stopping all fetcher threads")
         try:
-            # Stop the forecast fetcher
-            if hasattr(self, "forecast_fetcher") and self.forecast_fetcher:
-                logger.debug("Stopping forecast fetcher...")
+            # Stop forecast fetcher
+            if hasattr(self, "forecast_fetcher"):
+                logger.debug("Stopping forecast fetcher")
+                if hasattr(self.forecast_fetcher, "cancel"):
+                    self.forecast_fetcher.cancel()
                 if hasattr(self.forecast_fetcher, "_stop_event"):
                     self.forecast_fetcher._stop_event.set()
 
-            # Stop the alerts fetcher
-            if hasattr(self, "alerts_fetcher") and self.alerts_fetcher:
-                logger.debug("Stopping alerts fetcher...")
+            # Stop alerts fetcher
+            if hasattr(self, "alerts_fetcher"):
+                logger.debug("Stopping alerts fetcher")
+                if hasattr(self.alerts_fetcher, "cancel"):
+                    self.alerts_fetcher.cancel()
                 if hasattr(self.alerts_fetcher, "_stop_event"):
                     self.alerts_fetcher._stop_event.set()
 
-            # Stop the discussion fetcher
-            if hasattr(self, "discussion_fetcher") and self.discussion_fetcher:
-                logger.debug("Stopping discussion fetcher...")
+            # Stop discussion fetcher
+            if hasattr(self, "discussion_fetcher"):
+                logger.debug("Stopping discussion fetcher")
+                if hasattr(self.discussion_fetcher, "cancel"):
+                    self.discussion_fetcher.cancel()
                 if hasattr(self.discussion_fetcher, "_stop_event"):
                     self.discussion_fetcher._stop_event.set()
-                    
-            # Stop the national forecast fetcher
-            if hasattr(self, "national_forecast_fetcher") and self.national_forecast_fetcher:
-                logger.debug("Stopping national forecast fetcher...")
+
+            # Stop national forecast fetcher
+            if hasattr(self, "national_forecast_fetcher"):
+                logger.debug("Stopping national forecast fetcher")
+                if hasattr(self.national_forecast_fetcher, "cancel"):
+                    self.national_forecast_fetcher.cancel()
                 if hasattr(self.national_forecast_fetcher, "_stop_event"):
                     self.national_forecast_fetcher._stop_event.set()
 
-            logger.debug("All fetcher threads stop events set.")
         except Exception as e:
-            logger.error(f"Error stopping fetcher threads: {e}", exc_info=True)
+            logger.error("Error stopping fetcher threads: %s", e, exc_info=True)
 
     def OnLocationChange(self, event):  # event is required by wx
         """Handle location change event
@@ -781,4 +796,3 @@ class WeatherAppHandlers:
             if result == wx.ID_YES:
                 # Open settings dialog
                 self.OnSettings(None)
-
