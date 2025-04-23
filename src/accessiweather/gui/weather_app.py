@@ -287,21 +287,21 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
 
     def OnClose(self, event, force_close=False):
         """Handle window close event.
-        
+
         Args:
             event: The close event
             force_close: If True, force the window to close instead of minimizing
         """
         logger.debug("OnClose called with force_close=%s", force_close)
-        
+
         # Stop all fetcher threads first to avoid deadlocks
         self._stop_fetcher_threads()
         logger.debug("Fetcher threads stop requested.")
-        
+
         # Check for force close flag on the instance
         if hasattr(self, '_force_close'):
             force_close = force_close or self._force_close
-        
+
         # If we have a taskbar icon and we're not force closing, just hide the window
         if hasattr(self, "taskbar_icon") and self.taskbar_icon and not force_close:
             logger.debug("Hiding window instead of closing")
@@ -317,7 +317,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
                 self.timer.Start()
             logger.debug("Hide/Veto called.")
             return
- 
+
         # Force closing - stop timer and clean up
         if hasattr(self, "timer") and self.timer.IsRunning():
             logger.debug("Stopping timer for force close")
@@ -409,11 +409,11 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             summaries = forecast_data.get('national_discussion_summaries', {})
             wpc_data = summaries.get('wpc', {})
             spc_data = summaries.get('spc', {})
-            
+
             # Store full discussions from scraper data
             self._nationwide_wpc_full = wpc_data.get('short_range_full')
             self._nationwide_spc_full = spc_data.get('day1_full')
-            
+
             logger.debug(f"Stored WPC discussion (length: {len(self._nationwide_wpc_full) if self._nationwide_wpc_full else 0})")
             logger.debug(f"Stored SPC discussion (length: {len(self._nationwide_spc_full) if self._nationwide_spc_full else 0})")
         except Exception as e:
@@ -475,7 +475,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             error: Error message
         """
         logger.error(f"Forecast fetch error: {error}")
-        
+
         # Update the UI
         self.ui_manager.display_forecast_error(error)
 
@@ -505,7 +505,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         processed_alerts = self.ui_manager.display_alerts(alerts_data)
 
         # Notify user about alerts
-        self.notification_service.notify_alerts(processed_alerts)
+        self.notification_service.notify_alerts(processed_alerts, len(processed_alerts))
 
         # Mark alerts as complete
         self._alerts_complete = True
@@ -545,14 +545,14 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             loading_dialog: Progress dialog to close
         """
         logger.debug(f"Discussion fetch callback received for {name}")
-        
+
         # Clean up loading state
         self._cleanup_discussion_loading(loading_dialog)
-        
+
         # Re-enable discussion button
         if hasattr(self, "discussion_btn") and self.discussion_btn:
             self.discussion_btn.Enable()
-        
+
         # Show discussion dialog
         if discussion_text:
             title = f"Forecast Discussion for {name}"
@@ -576,14 +576,14 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             loading_dialog: Progress dialog to close
         """
         logger.error(f"Discussion fetch error for {name}: {error_message}")
-        
+
         # Clean up loading state
         self._cleanup_discussion_loading(loading_dialog)
-        
+
         # Re-enable discussion button
         if hasattr(self, "discussion_btn") and self.discussion_btn:
             self.discussion_btn.Enable()
-        
+
         # Show error message
         wx.MessageBox(
             f"Error fetching forecast discussion for {name}: {error_message}",
