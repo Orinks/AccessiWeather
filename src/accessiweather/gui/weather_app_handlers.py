@@ -209,6 +209,9 @@ class WeatherAppHandlers:
             # Set nationwide mode flag if not already set
             if hasattr(self, '_in_nationwide_mode'):
                 self._in_nationwide_mode = True
+                # Reset nationwide discussion data to ensure fresh fetch
+                self._nationwide_wpc_full = None
+                self._nationwide_spc_full = None
         elif hasattr(self, "remove_btn"):
             self.remove_btn.Enable()
             # Reset accessible description
@@ -733,11 +736,25 @@ class WeatherAppHandlers:
         if hasattr(self, '_nationwide_spc_full') and self._nationwide_spc_full:
             choices.append("Storm Prediction Center (SPC) Discussion")
             
-        # If only one choice, just show that one
-        if len(choices) == 1:
-            self._show_nationwide_discussion(0)
+        # Handle case where no discussions are available
+        if len(choices) == 0:
+            wx.MessageBox(
+                "No nationwide discussions are currently available. Please try again later.",
+                "No Data Available",
+                wx.OK | wx.ICON_INFORMATION
+            )
             return
             
+        # If only one choice, just show that one
+        if len(choices) == 1:
+            # Determine which discussion to show based on which one we have
+            if hasattr(self, '_nationwide_wpc_full') and self._nationwide_wpc_full:
+                self._show_nationwide_discussion(0)  # WPC
+            else:
+                self._show_nationwide_discussion(1)  # SPC
+            return
+            
+        # Show dialog for multiple choices
         dialog = wx.SingleChoiceDialog(
             self, "Select a discussion to view:", "Nationwide Discussions", choices
         )
@@ -760,10 +777,14 @@ class WeatherAppHandlers:
             # Show WPC discussion
             title = "Weather Prediction Center (WPC) Discussion"
             text = self._nationwide_wpc_full
+            logger.debug(f"Showing WPC discussion (length: {len(text)})")
+            logger.debug(f"WPC discussion preview: {text[:100].replace('\n', '\\n')}")
         elif selection == 1 and hasattr(self, '_nationwide_spc_full') and self._nationwide_spc_full:
             # Show SPC discussion
             title = "Storm Prediction Center (SPC) Discussion"
             text = self._nationwide_spc_full
+            logger.debug(f"Showing SPC discussion (length: {len(text)})")
+            logger.debug(f"SPC discussion preview: {text[:100].replace('\n', '\\n')}")
         else:
             logger.error(f"Invalid nationwide discussion selection: {selection}")
             return
