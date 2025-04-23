@@ -210,7 +210,7 @@ class LocationDialog(wx.Dialog):
         self.result_text = AccessibleTextCtrl(
             panel, value="", style=wx.TE_MULTILINE | wx.TE_READONLY, size=(-1, 60)
         )
-        self.result_text.SetLabel("Search Result")
+        self.result_text.set_label("Search Result")  # Use set_label instead of SetLabel
         sizer.Add(self.result_text, 0, wx.ALL | wx.EXPAND, 5)
 
         # Description for screen readers

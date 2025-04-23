@@ -14,7 +14,12 @@ logger = logging.getLogger(__name__)
 
 
 class ExitHandler:
-    """Exit handler for AccessiWeather."""
+    """Exit handler for AccessiWeather.
+
+    This class provides methods for properly cleaning up resources when the
+    application exits, including stopping timers, joining threads, and
+    destroying UI elements.
+    """
 
     @staticmethod
     def cleanup_threads(threads, stop_events=None, timeout=0.05):
@@ -35,45 +40,54 @@ class ExitHandler:
         if stop_events:
             for event in stop_events:
                 if event is not None:
-                    logger.debug("[EXIT] Setting stop event for thread")
                     event.set()
 
         # Join threads with timeout
         remaining_threads = []
         for thread in threads:
             if thread is not None and thread.is_alive():
-                logger.debug(f"[EXIT] Joining thread: {thread.name}")
+                logger.debug(f"[EXIT OPTIMIZATION] Joining thread: {thread.name}")
                 thread.join(timeout)
                 if thread.is_alive():
-                    logger.warning(f"[EXIT] Thread did not exit: {thread.name}")
+                    logger.warning(f"[EXIT OPTIMIZATION] Thread did not exit: {thread.name}")
                     remaining_threads.append(thread)
-                else:
-                    logger.debug(f"[EXIT] Thread successfully joined: {thread.name}")
 
         return remaining_threads
 
     @staticmethod
     def stop_timers(timers):
-        """Stop timers."""
+        """Stop timers.
+
+        Args:
+            timers: List of timers to stop
+
+        Returns:
+            List of timers that could not be stopped
+        """
         if not timers:
             return []
 
         remaining_timers = []
         for timer in timers:
             if timer is not None and timer.IsRunning():
-                logger.debug("[EXIT] Stopping timer")
+                logger.debug(f"[EXIT OPTIMIZATION] Stopping timer: {timer}")
                 timer.Stop()
                 if timer.IsRunning():
-                    logger.warning("[EXIT] Timer did not stop")
+                    logger.warning(f"[EXIT OPTIMIZATION] Timer did not stop: {timer}")
                     remaining_timers.append(timer)
-                else:
-                    logger.debug("[EXIT] Timer successfully stopped")
 
         return remaining_timers
 
     @staticmethod
     def destroy_windows(windows):
-        """Destroy windows."""
+        """Destroy windows.
+
+        Args:
+            windows: List of windows to destroy
+
+        Returns:
+            List of windows that could not be destroyed
+        """
         if not windows:
             return []
 
@@ -81,22 +95,30 @@ class ExitHandler:
         for window in windows:
             if window is not None:
                 try:
-                    logger.debug(f"[EXIT] Destroying window: {window}")
+                    logger.debug(f"[EXIT OPTIMIZATION] Destroying window: {window}")
                     window.Destroy()
-                    logger.debug("[EXIT] Window successfully destroyed")
                 except Exception as e:
-                    logger.error(f"[EXIT] Error destroying window: {e}")
+                    logger.warning(f"[EXIT OPTIMIZATION] Error destroying window: {e}")
                     remaining_windows.append(window)
 
         return remaining_windows
 
     @staticmethod
     def cleanup_app(app):
-        """Clean up an application."""
+        """Clean up an application.
+
+        This method performs a comprehensive cleanup of an application,
+        including stopping timers, joining threads, and destroying windows.
+
+        Args:
+            app: The application to clean up
+
+        Returns:
+            True if cleanup was successful, False otherwise
+        """
         if app is None:
             return True
 
-        logger.info("[EXIT] Starting application cleanup")
         success = True
 
         # Collect timers
@@ -109,92 +131,164 @@ class ExitHandler:
         # Stop timers
         remaining_timers = ExitHandler.stop_timers(timers)
         if remaining_timers:
-            logger.warning(f"[EXIT] {len(remaining_timers)} timers could not be stopped")
+            logger.warning(f"[EXIT OPTIMIZATION] {len(remaining_timers)} timers could not be stopped")
             success = False
 
-        # Cancel all fetcher threads
+        # Cancel all fetcher threads using their cancel methods if available
+        # Otherwise, collect threads and stop events for manual cleanup
         threads = []
         stop_events = []
 
-        fetchers = ['forecast_fetcher', 'alerts_fetcher', 'discussion_fetcher', 'national_forecast_fetcher']
-        for fetcher_name in fetchers:
-            if hasattr(app, fetcher_name):
-                fetcher = getattr(app, fetcher_name)
-                logger.debug(f"[EXIT] Cancelling {fetcher_name}")
+        # Forecast fetcher
+        if hasattr(app, 'forecast_fetcher'):
+            if hasattr(app.forecast_fetcher, 'cancel'):
+                logger.debug("[EXIT OPTIMIZATION] Cancelling forecast fetcher")
                 try:
-                    if hasattr(fetcher, 'cancel'):
-                        fetcher.cancel()
-                    else:
-                        if hasattr(fetcher, 'thread'):
-                            threads.append(fetcher.thread)
-                        if hasattr(fetcher, '_stop_event'):
-                            stop_events.append(fetcher._stop_event)
+                    app.forecast_fetcher.cancel()
                 except Exception as e:
-                    logger.error(f"[EXIT] Error cancelling {fetcher_name}: {e}")
+                    logger.error(f"[EXIT OPTIMIZATION] Error cancelling forecast fetcher: {e}")
+                    # Fall back to manual cleanup
+                    if hasattr(app.forecast_fetcher, 'thread'):
+                        threads.append(app.forecast_fetcher.thread)
+                    if hasattr(app.forecast_fetcher, '_stop_event'):
+                        stop_events.append(app.forecast_fetcher._stop_event)
+            else:
+                # Manual cleanup
+                if hasattr(app.forecast_fetcher, 'thread'):
+                    threads.append(app.forecast_fetcher.thread)
+                if hasattr(app.forecast_fetcher, '_stop_event'):
+                    stop_events.append(app.forecast_fetcher._stop_event)
+
+        # Alerts fetcher
+        if hasattr(app, 'alerts_fetcher'):
+            if hasattr(app.alerts_fetcher, 'cancel'):
+                logger.debug("[EXIT OPTIMIZATION] Cancelling alerts fetcher")
+                try:
+                    app.alerts_fetcher.cancel()
+                except Exception as e:
+                    logger.error(f"[EXIT OPTIMIZATION] Error cancelling alerts fetcher: {e}")
+                    # Fall back to manual cleanup
+                    if hasattr(app.alerts_fetcher, 'thread'):
+                        threads.append(app.alerts_fetcher.thread)
+                    if hasattr(app.alerts_fetcher, '_stop_event'):
+                        stop_events.append(app.alerts_fetcher._stop_event)
+            else:
+                # Manual cleanup
+                if hasattr(app.alerts_fetcher, 'thread'):
+                    threads.append(app.alerts_fetcher.thread)
+                if hasattr(app.alerts_fetcher, '_stop_event'):
+                    stop_events.append(app.alerts_fetcher._stop_event)
+
+        # Discussion fetcher
+        if hasattr(app, 'discussion_fetcher'):
+            if hasattr(app.discussion_fetcher, 'cancel'):
+                logger.debug("[EXIT OPTIMIZATION] Cancelling discussion fetcher")
+                try:
+                    app.discussion_fetcher.cancel()
+                except Exception as e:
+                    logger.error(f"[EXIT OPTIMIZATION] Error cancelling discussion fetcher: {e}")
+                    # Fall back to manual cleanup
+                    if hasattr(app.discussion_fetcher, 'thread'):
+                        threads.append(app.discussion_fetcher.thread)
+                    if hasattr(app.discussion_fetcher, '_stop_event'):
+                        stop_events.append(app.discussion_fetcher._stop_event)
+            else:
+                # Manual cleanup
+                if hasattr(app.discussion_fetcher, 'thread'):
+                    threads.append(app.discussion_fetcher.thread)
+                if hasattr(app.discussion_fetcher, '_stop_event'):
+                    stop_events.append(app.discussion_fetcher._stop_event)
+
+        # National forecast fetcher
+        if hasattr(app, 'national_forecast_fetcher'):
+            if hasattr(app.national_forecast_fetcher, 'cancel'):
+                logger.debug("[EXIT OPTIMIZATION] Cancelling national forecast fetcher")
+                try:
+                    app.national_forecast_fetcher.cancel()
+                except Exception as e:
+                    logger.error(f"[EXIT OPTIMIZATION] Error cancelling national forecast fetcher: {e}")
+                    # Fall back to manual cleanup
+                    if hasattr(app.national_forecast_fetcher, 'thread'):
+                        threads.append(app.national_forecast_fetcher.thread)
+                    if hasattr(app.national_forecast_fetcher, '_stop_event'):
+                        stop_events.append(app.national_forecast_fetcher._stop_event)
+            else:
+                # Manual cleanup
+                if hasattr(app.national_forecast_fetcher, 'thread'):
+                    threads.append(app.national_forecast_fetcher.thread)
+                if hasattr(app.national_forecast_fetcher, '_stop_event'):
+                    stop_events.append(app.national_forecast_fetcher._stop_event)
 
         # Clean up any remaining threads
         if threads:
             remaining_threads = ExitHandler.cleanup_threads(threads, stop_events)
             if remaining_threads:
-                logger.warning(f"[EXIT] {len(remaining_threads)} threads could not be joined")
+                logger.warning(f"[EXIT OPTIMIZATION] {len(remaining_threads)} threads could not be joined")
                 success = False
 
         # Destroy taskbar icon
         if hasattr(app, 'taskbar_icon') and app.taskbar_icon:
             try:
-                logger.debug("[EXIT] Removing and destroying taskbar icon")
+                logger.debug("[EXIT OPTIMIZATION] Removing and destroying taskbar icon")
+                # It's safer to RemoveIcon before Destroy
                 if hasattr(app.taskbar_icon, 'RemoveIcon'):
                     app.taskbar_icon.RemoveIcon()
                 app.taskbar_icon.Destroy()
-                app.taskbar_icon = None
-                logger.debug("[EXIT] Taskbar icon successfully destroyed")
+                app.taskbar_icon = None  # Clear reference
             except Exception as e:
-                logger.error(f"[EXIT] Error destroying taskbar icon: {e}")
+                logger.warning(f"[EXIT OPTIMIZATION] Error destroying taskbar icon: {e}")
                 success = False
 
-        # Process pending events
+        # Process pending events - reduced iterations and sleep time
         for _ in range(2):
             wx.SafeYield()
             time.sleep(0.01)
 
-        logger.info("[EXIT] Application cleanup completed")
         return success
 
     @staticmethod
     def safe_exit(app):
-        """Safely exit the application."""
+        """Safely exit the application.
+
+        This method performs a comprehensive cleanup of the application and
+        then exits the main loop.
+
+        Args:
+            app: The application to exit
+
+        Returns:
+            True if exit was successful, False otherwise
+        """
         if app is None:
             return False
 
-        logger.info("[EXIT] Starting safe exit process")
-        
         # Clean up the app
         success = ExitHandler.cleanup_app(app)
 
-        # Log all active threads
+        # Log all active threads for debugging
         active_threads = [t for t in threading.enumerate() if t != threading.current_thread()]
         if active_threads:
-            logger.warning(f"[EXIT] Active threads before exit: {len(active_threads)}")
+            logger.warning(f"[EXIT OPTIMIZATION] Active threads before exit: {len(active_threads)}")
             for thread in active_threads:
-                logger.warning(f"[EXIT] Active thread: {thread.name} (daemon: {thread.daemon})")
+                logger.warning(f"[EXIT OPTIMIZATION]   - {thread.name} (daemon: {thread.daemon})")
 
         # Exit the main loop
         try:
-            logger.info("[EXIT] Exiting main loop")
+            logger.info("[EXIT OPTIMIZATION] Exiting main loop")
             app.ExitMainLoop()
 
+            # Force Python to exit if we're still running after a short delay
             def force_exit():
-                logger.warning("[EXIT] Application did not exit cleanly, forcing exit")
-                os._exit(0)
+                logger.warning("[EXIT OPTIMIZATION] Application did not exit cleanly, forcing exit")
+                os._exit(0)  # Force exit - use with caution
 
-            # Schedule force exit after a short delay
+            # Schedule force exit after a shorter delay for faster termination
             exit_timer = threading.Timer(0.5, force_exit)
             exit_timer.daemon = True
             exit_timer.start()
 
         except Exception as e:
-            logger.error(f"[EXIT] Error exiting main loop: {e}")
+            logger.error(f"[EXIT OPTIMIZATION] Error exiting main loop: {e}")
             success = False
 
-        logger.info("[EXIT] Safe exit process completed")
         return success

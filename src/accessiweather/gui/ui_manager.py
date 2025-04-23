@@ -1,3 +1,8 @@
+"""UI Manager for AccessiWeather.
+
+This module provides the UIManager class which handles UI setup and updates.
+"""
+
 import logging  # Added for potential logging in UI updates
 from typing import Any, Dict, List, Optional
 
@@ -11,22 +16,18 @@ from .ui_components import (
     AccessibleTextCtrl,
 )
 
-# Import dialogs if event handlers that use them are moved here later
-# from .dialogs import LocationDialog, WeatherDiscussionDialog
-
 logger = logging.getLogger(__name__)
 
 
 class UIManager:
     """Manages the UI setup and event bindings for the WeatherApp frame."""
 
-    # Modified __init__ to accept notifier
     def __init__(self, frame, notifier):
-        """
-        Initializes the UI Manager.
+        """Initialize the UI Manager.
 
         Args:
             frame: The main WeatherApp frame instance.
+            notifier: The notification service instance.
         """
         self.frame = frame  # Reference to the main WeatherApp frame
         self.notifier = notifier  # Store notifier instance
@@ -122,17 +123,41 @@ class UIManager:
         )
         # KeyDown is bound here as it relates to general UI interaction
         self.frame.Bind(wx.EVT_KEY_DOWN, self.frame.OnKeyDown)
-        # Note: EVT_CLOSE and EVT_TIMER remain bound in WeatherApp.__init__
-        # as they relate more to the application lifecycle than specific UI
-        # elements.
 
-    def _UpdateForecastDisplay(self, forecast_data):
-        print("[DEBUG] _UpdateForecastDisplay received:", forecast_data)
-        """Update the forecast display with data
+    def display_loading_state(self, location_name=None, is_nationwide=False):
+        """Display loading state in the UI.
+
+        Args:
+            location_name: Optional location name for status text
+            is_nationwide: Whether this is a nationwide forecast
+        """
+        # Disable refresh button
+        self.frame.refresh_btn.Disable()
+
+        # Set loading text based on type
+        loading_text = "Loading nationwide forecast..." if is_nationwide else "Loading forecast..."
+        self.frame.forecast_text.SetValue(loading_text)
+
+        # Clear and set loading text in alerts list
+        self.frame.alerts_list.DeleteAllItems()
+        self.frame.alerts_list.InsertItem(0, "Loading alerts...")
+
+        # Set status text
+        if location_name:
+            status = f"Updating weather data for {location_name}..."
+            if is_nationwide:
+                status = f"Updating nationwide weather data..."
+        else:
+            status = "Updating weather data..."
+        self.frame.SetStatusText(status)
+
+    def display_forecast(self, forecast_data):
+        """Display forecast data in the UI.
 
         Args:
             forecast_data: Dictionary with forecast data
         """
+        print("[DEBUG] display_forecast received:", forecast_data)
         # Detect nationwide data by presence of national_discussion_summaries key
         if "national_discussion_summaries" in forecast_data:
             # Sanitize: ensure all forecast strings are not None
@@ -142,8 +167,7 @@ class UIManager:
                 return d
             forecast_data = sanitize(forecast_data)
             try:
-                # The frame itself is the WeatherApp instance
-                formatted = self.frame._format_national_forecast(forecast_data)
+                formatted = self._format_national_forecast(forecast_data)
                 self.frame.forecast_text.SetValue(formatted)
             except Exception as e:
                 logger.exception("Error formatting national forecast")
@@ -172,8 +196,42 @@ class UIManager:
 
         self.frame.forecast_text.SetValue(text)
 
-    def _UpdateAlertsDisplay(self, alerts_data: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Update the alerts display with data and return processed alerts.
+    def _format_national_forecast(self, forecast_data):
+        """Format national forecast data for display.
+
+        Args:
+            forecast_data: Dictionary containing national forecast data
+
+        Returns:
+            str: Formatted forecast text
+        """
+        if not forecast_data or "national_discussion_summaries" not in forecast_data:
+            return "No national forecast data available"
+
+        summaries = forecast_data["national_discussion_summaries"]
+        text = "National Weather Overview\n\n"
+
+        # Add WPC summary if available
+        wpc_data = summaries.get("wpc", {})
+        if wpc_data:
+            text += "Weather Prediction Center (WPC) Summary:\n"
+            text += (wpc_data.get("short_range_summary") or "No WPC summary available") + "\n\n"
+
+        # Add SPC summary if available
+        spc_data = summaries.get("spc", {})
+        if spc_data:
+            text += "Storm Prediction Center (SPC) Summary:\n"
+            text += (spc_data.get("day1_summary") or "No SPC summary available") + "\n\n"
+
+        # Add attribution if available
+        attribution = summaries.get("attribution", "")
+        if attribution:
+            text += f"\nSource: {attribution}"
+
+        return text
+
+    def display_alerts(self, alerts_data: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Display alerts data in the UI and return processed alerts.
 
         Args:
             alerts_data: Dictionary with alerts data
@@ -202,3 +260,30 @@ class UIManager:
             processed_alerts.append(props)  # Save alert data
 
         return processed_alerts
+
+    def display_forecast_error(self, error_msg):
+        """Display forecast error in the UI.
+
+        Args:
+            error_msg: Error message to display
+        """
+        self.frame.forecast_text.SetValue(f"Error fetching forecast: {error_msg}")
+
+    def display_alerts_error(self, error_msg):
+        """Display alerts error in the UI.
+
+        Args:
+            error_msg: Error message to display
+        """
+        # Clear alerts list
+        self.frame.alerts_list.DeleteAllItems()
+
+        # Add error message to alerts list
+        index = self.frame.alerts_list.InsertItem(0, "Error")
+        self.frame.alerts_list.SetItem(index, 1, "")  # Empty severity
+        self.frame.alerts_list.SetItem(index, 2, f"Error fetching alerts: {error_msg}")
+
+    def display_ready_state(self):
+        """Display ready state in the UI."""
+        self.frame.refresh_btn.Enable()
+        self.frame.SetStatusText("Ready")

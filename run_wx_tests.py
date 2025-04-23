@@ -129,6 +129,12 @@ def run_tests_isolated(args):
         logger.error("No tests found")
         return 1
 
+    # --- Debugging addition ---
+    print(f"Collected test items: {test_items}")
+    logger.info("Exiting after printing collected items for debugging.")
+    sys.exit(1) # Exit here to prevent running the tests
+    # --- End debugging addition ---
+
     logger.info(f"Running {len(test_items)} tests in isolated mode")
 
     # Run each test in a separate process
