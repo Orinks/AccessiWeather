@@ -157,15 +157,10 @@ class UIManager:
         Args:
             forecast_data: Dictionary with forecast data
         """
-        print("[DEBUG] display_forecast received:", forecast_data)
+        logger.debug(f"display_forecast received: {forecast_data}")
+        
         # Detect nationwide data by presence of national_discussion_summaries key
         if "national_discussion_summaries" in forecast_data:
-            # Sanitize: ensure all forecast strings are not None
-            def sanitize(d):
-                if isinstance(d, dict):
-                    return {k: (sanitize(v) if isinstance(v, dict) else (v if v is not None else "")) for k, v in d.items()}
-                return d
-            forecast_data = sanitize(forecast_data)
             try:
                 formatted = self._format_national_forecast(forecast_data)
                 self.frame.forecast_text.SetValue(formatted)
@@ -174,6 +169,7 @@ class UIManager:
                 self.frame.forecast_text.SetValue(f"Error formatting national forecast: {e}")
             return
 
+        # Handle regular location forecast data
         if not forecast_data or "properties" not in forecast_data:
             self.frame.forecast_text.SetValue("No forecast data available")
             return
@@ -200,7 +196,8 @@ class UIManager:
         """Format national forecast data for display.
 
         Args:
-            forecast_data: Dictionary containing national forecast data
+            forecast_data: Dictionary containing national forecast data from scraper
+                         with structure: {"national_discussion_summaries": {"wpc": {...}, "spc": {...}}}
 
         Returns:
             str: Formatted forecast text
@@ -223,10 +220,10 @@ class UIManager:
             text += "Storm Prediction Center (SPC) Summary:\n"
             text += (spc_data.get("day1_summary") or "No SPC summary available") + "\n\n"
 
-        # Add attribution if available
+        # Add attribution
         attribution = summaries.get("attribution", "")
         if attribution:
-            text += f"\nSource: {attribution}"
+            text += "\n" + attribution
 
         return text
 

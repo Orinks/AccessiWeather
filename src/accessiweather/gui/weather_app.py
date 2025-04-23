@@ -404,6 +404,23 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         # Save forecast data
         self.current_forecast = forecast_data
 
+        # Extract and store full discussions for WPC and SPC
+        try:
+            summaries = forecast_data.get('national_discussion_summaries', {})
+            wpc_data = summaries.get('wpc', {})
+            spc_data = summaries.get('spc', {})
+            
+            # Store full discussions from scraper data
+            self._nationwide_wpc_full = wpc_data.get('short_range_full')
+            self._nationwide_spc_full = spc_data.get('day1_full')
+            
+            logger.debug(f"Stored WPC discussion (length: {len(self._nationwide_wpc_full) if self._nationwide_wpc_full else 0})")
+            logger.debug(f"Stored SPC discussion (length: {len(self._nationwide_spc_full) if self._nationwide_spc_full else 0})")
+        except Exception as e:
+            logger.error(f"Error extracting national discussions: {e}")
+            self._nationwide_wpc_full = None
+            self._nationwide_spc_full = None
+
         # Update the UI
         self.ui_manager.display_forecast(forecast_data)
 
@@ -518,6 +535,61 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         # Notify testing framework if hook is set
         if self._testing_alerts_error_callback:
             self._testing_alerts_error_callback(error)
+
+    def _on_discussion_fetched(self, discussion_text, name, loading_dialog):
+        """Handle the fetched discussion in the main thread
+
+        Args:
+            discussion_text: The discussion text
+            name: Location name
+            loading_dialog: Progress dialog to close
+        """
+        logger.debug(f"Discussion fetch callback received for {name}")
+        
+        # Clean up loading state
+        self._cleanup_discussion_loading(loading_dialog)
+        
+        # Re-enable discussion button
+        if hasattr(self, "discussion_btn") and self.discussion_btn:
+            self.discussion_btn.Enable()
+        
+        # Show discussion dialog
+        if discussion_text:
+            title = f"Forecast Discussion for {name}"
+            from .dialogs import WeatherDiscussionDialog
+            discussion_dialog = WeatherDiscussionDialog(self, title, discussion_text)
+            discussion_dialog.ShowModal()
+            discussion_dialog.Destroy()
+        else:
+            wx.MessageBox(
+                f"No forecast discussion available for {name}",
+                "No Discussion Available",
+                wx.OK | wx.ICON_INFORMATION
+            )
+
+    def _on_discussion_error(self, error_message, name, loading_dialog):
+        """Handle discussion fetch error in the main thread
+
+        Args:
+            error_message: Error message
+            name: Location name
+            loading_dialog: Progress dialog to close
+        """
+        logger.error(f"Discussion fetch error for {name}: {error_message}")
+        
+        # Clean up loading state
+        self._cleanup_discussion_loading(loading_dialog)
+        
+        # Re-enable discussion button
+        if hasattr(self, "discussion_btn") and self.discussion_btn:
+            self.discussion_btn.Enable()
+        
+        # Show error message
+        wx.MessageBox(
+            f"Error fetching forecast discussion for {name}: {error_message}",
+            "Discussion Error",
+            wx.OK | wx.ICON_ERROR
+        )
 
     def _cleanup_discussion_loading(self, loading_dialog=None):
         """Clean up resources related to discussion loading

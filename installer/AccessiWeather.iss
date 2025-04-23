@@ -92,14 +92,15 @@ begin
   if not FileExists(ConfigFile) then
   begin
     SampleConfigContent := '{ ' + #13#10 +
-                          '  "api": {' + #13#10 +
-                          '    "contact_name": "Your Name",' + #13#10 +
-                          '    "contact_email": "your.email@example.com"' + #13#10 +
+                          '  "api_settings": {' + #13#10 +
+                          '    "contact_info": ""' + #13#10 +
                           '  },' + #13#10 +
-                          '  "update_interval_minutes": 30,' + #13#10 +
-                          '  "alert_notification_duration_seconds": 10,' + #13#10 +
-                          '  "alert_radius_miles": 25,' + #13#10 +
-                          '  "locations": []' + #13#10 +
+                          '  "settings": {' + #13#10 +
+                          '    "update_interval_minutes": 30,' + #13#10 +
+                          '    "alert_radius_miles": 25,' + #13#10 +
+                          '    "precise_location_alerts": true,' + #13#10 +
+                          '    "show_nationwide_location": true' + #13#10 +
+                          '  }' + #13#10 +
                           '}';
 
     SaveStringToFile(ConfigFile, SampleConfigContent, False);

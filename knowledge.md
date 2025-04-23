@@ -9,6 +9,7 @@ AccessiWeather: Accessible weather app using NOAA data. Focus on screen reader s
 - Portable mode support - detects if running from non-standard location
 - Single instance enforcement - only one instance can run
 - System tray integration with configurable minimize/close behavior
+- Fresh installations start with only Nationwide location in memory (no locations.json created until user adds a location)
 
 ## Development Guidelines
 
@@ -98,7 +99,6 @@ AccessiWeather: Accessible weather app using NOAA data. Focus on screen reader s
 ## Configuration
 - Default: `~/.accessiweather/` or `%APPDATA%\.accessiweather`
 - Portable mode: Uses `config/` in app directory
-- Sample config provided in config.sample.json
 - Settings include:
   - API contact info
   - Update intervals

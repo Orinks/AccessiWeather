@@ -13,6 +13,7 @@ API_CONTACT_KEY = "api_contact"
 UPDATE_INTERVAL_KEY = "update_interval_minutes"
 ALERT_RADIUS_KEY = "alert_radius_miles"
 PRECISE_LOCATION_ALERTS_KEY = "precise_location_alerts"
+SHOW_NATIONWIDE_KEY = "show_nationwide_location"
 
 # Advanced settings keys
 CACHE_ENABLED_KEY = "cache_enabled"
@@ -91,7 +92,7 @@ class SettingsDialog(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         # --- Input Fields ---
-        grid_sizer = wx.FlexGridSizer(rows=4, cols=2, vgap=10, hgap=5)
+        grid_sizer = wx.FlexGridSizer(rows=5, cols=2, vgap=10, hgap=5)  # Increased rows to 5
         grid_sizer.AddGrowableCol(1, 1)  # Make the input column growable
 
         # API Contact
@@ -104,14 +105,12 @@ class SettingsDialog(wx.Dialog):
 
         # Update Interval
         update_interval_label = wx.StaticText(panel, label="Update Interval (minutes):")
-        # 1 min to 24 hours
         self.update_interval_ctrl = wx.SpinCtrl(
             panel, min=1, max=1440, initial=30, name="Update Interval"
         )
         tooltip_interval = "How often to automatically refresh weather data (in minutes)."
         self.update_interval_ctrl.SetToolTip(tooltip_interval)
         grid_sizer.Add(update_interval_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
-        # Don't expand spin control
         grid_sizer.Add(self.update_interval_ctrl, 0, wx.ALL, 5)
 
         # Alert Radius
@@ -120,7 +119,6 @@ class SettingsDialog(wx.Dialog):
         tooltip_radius = "Radius around location to check for alerts (in miles)."
         self.alert_radius_ctrl.SetToolTip(tooltip_radius)
         grid_sizer.Add(alert_radius_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
-        # Don't expand spin control
         grid_sizer.Add(self.alert_radius_ctrl, 0, wx.ALL, 5)
 
         # Precise Location Alerts Toggle
@@ -135,9 +133,23 @@ class SettingsDialog(wx.Dialog):
             "When unchecked, shows all alerts for your state."
         )
         self.precise_alerts_ctrl.SetToolTip(tooltip_precise)
-        # Add a spacer in the first column
         grid_sizer.Add((1, 1), 0, wx.ALL, 5)
         grid_sizer.Add(self.precise_alerts_ctrl, 0, wx.ALL, 5)
+
+        # Show Nationwide Location Toggle
+        show_nationwide_label = "Show Nationwide location"
+        self.show_nationwide_ctrl = wx.CheckBox(
+            panel,
+            label=show_nationwide_label,
+            name="Show Nationwide Location"
+        )
+        tooltip_nationwide = (
+            "When checked, shows the Nationwide location in the location list. "
+            "When unchecked, hides it from view."
+        )
+        self.show_nationwide_ctrl.SetToolTip(tooltip_nationwide)
+        grid_sizer.Add((1, 1), 0, wx.ALL, 5)
+        grid_sizer.Add(self.show_nationwide_ctrl, 0, wx.ALL, 5)
 
         sizer.Add(grid_sizer, 1, wx.EXPAND | wx.ALL, 10)
         panel.SetSizer(sizer)
@@ -189,11 +201,13 @@ class SettingsDialog(wx.Dialog):
             update_interval = self.current_settings.get(UPDATE_INTERVAL_KEY, 30)
             alert_radius = self.current_settings.get(ALERT_RADIUS_KEY, 25)
             precise_alerts = self.current_settings.get(PRECISE_LOCATION_ALERTS_KEY, True)
+            show_nationwide = self.current_settings.get(SHOW_NATIONWIDE_KEY, True)
 
             self.api_contact_ctrl.SetValue(api_contact)
             self.update_interval_ctrl.SetValue(update_interval)
             self.alert_radius_ctrl.SetValue(alert_radius)
             self.precise_alerts_ctrl.SetValue(precise_alerts)
+            self.show_nationwide_ctrl.SetValue(show_nationwide)
 
             # Load advanced settings
             cache_enabled = self.current_settings.get(CACHE_ENABLED_KEY, True)
@@ -264,6 +278,7 @@ class SettingsDialog(wx.Dialog):
             UPDATE_INTERVAL_KEY: self.update_interval_ctrl.GetValue(),
             ALERT_RADIUS_KEY: self.alert_radius_ctrl.GetValue(),
             PRECISE_LOCATION_ALERTS_KEY: self.precise_alerts_ctrl.GetValue(),
+            SHOW_NATIONWIDE_KEY: self.show_nationwide_ctrl.GetValue(),
 
             # Advanced settings
             CACHE_ENABLED_KEY: self.cache_enabled_ctrl.GetValue(),
