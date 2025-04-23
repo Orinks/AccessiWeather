@@ -1,191 +1,257 @@
-"""Tests for the location manager module"""
+"""Tests for the LocationManager class."""
 
 import json
 import os
-import tempfile
+from unittest.mock import mock_open, patch
 
 import pytest
 
-from accessiweather.location import LocationManager
+from accessiweather.location import (
+    NATIONWIDE_LOCATION_NAME,
+    NATIONWIDE_LAT,
+    NATIONWIDE_LON,
+    LocationManager
+)
 
+# Sample test data
+SAMPLE_LOCATIONS = {
+    "Test City": {"lat": 40.0, "lon": -75.0},
+    "Another Place": {"lat": 35.0, "lon": -80.0},
+    NATIONWIDE_LOCATION_NAME: {"lat": NATIONWIDE_LAT, "lon": NATIONWIDE_LON}
+}
+
+SAMPLE_CONFIG = {
+    "locations": SAMPLE_LOCATIONS,
+    "current": "Test City"
+}
 
 @pytest.fixture
-def temp_config_dir():
-    """Create a temporary directory for test config files"""
-    with tempfile.TemporaryDirectory() as temp_dir:
-        yield temp_dir
-
+def mock_config_dir(tmp_path):
+    """Create a temporary directory for config files."""
+    config_dir = tmp_path / "config"
+    config_dir.mkdir()
+    return str(config_dir)
 
 @pytest.fixture
-def location_manager(temp_config_dir):
-    """Create a LocationManager with a temporary config directory"""
-    return LocationManager(config_dir=temp_config_dir)
+def location_manager(mock_config_dir):
+    """Create a LocationManager instance with a mock config directory."""
+    return LocationManager(config_dir=mock_config_dir)
 
+def test_init_creates_config_dir(mock_config_dir):
+    """Test that initialization creates the config directory."""
+    # Remove the directory created by the fixture
+    os.rmdir(mock_config_dir)
+    
+    # Initialize LocationManager
+    LocationManager(config_dir=mock_config_dir)
+    
+    # Check that directory was created
+    assert os.path.exists(mock_config_dir)
 
-class TestLocationManager:
-    NATIONWIDE_NAME = "Nationwide"
-    NATIONWIDE_COORDS = (39.8283, -98.5795)
+def test_init_loads_existing_config(mock_config_dir):
+    """Test loading existing configuration."""
+    # Create a locations file with test data
+    locations_file = os.path.join(mock_config_dir, "locations.json")
+    with open(locations_file, "w") as f:
+        json.dump(SAMPLE_CONFIG, f)
+    
+    # Initialize LocationManager
+    manager = LocationManager(config_dir=mock_config_dir)
+    
+    # Check that data was loaded correctly
+    assert manager.saved_locations == SAMPLE_CONFIG["locations"]
+    assert manager.current_location == SAMPLE_CONFIG["current"]
 
-    def test_nationwide_location_exists_after_init(self, location_manager):
-        """Nationwide location is always present after initialization"""
-        assert self.NATIONWIDE_NAME in location_manager.saved_locations
-        coords = location_manager.saved_locations[self.NATIONWIDE_NAME]
-        assert coords["lat"] == self.NATIONWIDE_COORDS[0]
-        assert coords["lon"] == self.NATIONWIDE_COORDS[1]
+def test_init_ensures_nationwide_location():
+    """Test that initialization always includes the Nationwide location."""
+    manager = LocationManager()
+    
+    assert NATIONWIDE_LOCATION_NAME in manager.saved_locations
+    assert manager.saved_locations[NATIONWIDE_LOCATION_NAME] == {
+        "lat": NATIONWIDE_LAT,
+        "lon": NATIONWIDE_LON
+    }
 
-    def test_cannot_remove_nationwide_location(self, location_manager):
-        """Attempting to remove the Nationwide location fails and does not remove it"""
-        result = location_manager.remove_location(self.NATIONWIDE_NAME)
-        assert result is False
-        assert self.NATIONWIDE_NAME in location_manager.saved_locations
+def test_add_location(location_manager):
+    """Test adding a new location."""
+    name = "New City"
+    lat, lon = 45.0, -70.0
+    
+    location_manager.add_location(name, lat, lon)
+    
+    assert name in location_manager.saved_locations
+    assert location_manager.saved_locations[name] == {"lat": lat, "lon": lon}
+    assert location_manager.current_location == name
 
-    def test_is_nationwide_location_helper(self, location_manager):
-        """Helper method correctly identifies the Nationwide location"""
-        assert location_manager.is_nationwide_location(self.NATIONWIDE_NAME)
-        assert not location_manager.is_nationwide_location("Home")
+def test_add_location_cannot_overwrite_nationwide(location_manager):
+    """Test that adding a location cannot overwrite the Nationwide location."""
+    lat, lon = 45.0, -70.0
+    
+    location_manager.add_location(NATIONWIDE_LOCATION_NAME, lat, lon)
+    
+    # Check that Nationwide location remains unchanged
+    assert location_manager.saved_locations[NATIONWIDE_LOCATION_NAME] == {
+        "lat": NATIONWIDE_LAT,
+        "lon": NATIONWIDE_LON
+    }
 
+def test_remove_location(location_manager):
+    """Test removing a location."""
+    # Add a location first
+    name = "Test City"
+    lat, lon = 40.0, -75.0
+    location_manager.add_location(name, lat, lon)
+    
+    # Remove it
+    result = location_manager.remove_location(name)
+    
+    assert result is True
+    assert name not in location_manager.saved_locations
 
-    """Test suite for LocationManager"""
+def test_remove_location_updates_current(location_manager):
+    """Test that removing the current location updates the current location."""
+    # Add two locations
+    location_manager.add_location("City1", 40.0, -75.0)
+    location_manager.add_location("City2", 35.0, -80.0)
+    location_manager.set_current_location("City1")
+    
+    # Remove the current location
+    location_manager.remove_location("City1")
+    
+    # Current location should be updated to City2
+    assert location_manager.current_location == "City2"
 
-    def test_init(self, location_manager, temp_config_dir):
-        """Test initialization and directory creation"""
-        assert location_manager.config_dir == temp_config_dir
-        assert location_manager.locations_file == os.path.join(temp_config_dir, "locations.json")
-        # After init, only Nationwide should exist
-        assert location_manager.saved_locations == {
-            "Nationwide": {"lat": 39.8283, "lon": -98.5795}
-        }
-        # Current location should be None (not set yet)
-        assert location_manager.current_location is None
-        assert os.path.exists(temp_config_dir)
+def test_remove_location_cannot_remove_nationwide(location_manager):
+    """Test that the Nationwide location cannot be removed."""
+    result = location_manager.remove_location(NATIONWIDE_LOCATION_NAME)
+    
+    assert result is False
+    assert NATIONWIDE_LOCATION_NAME in location_manager.saved_locations
 
-    def test_add_location(self, location_manager):
-        """Test adding a location"""
-        # Add a location
-        location_manager.add_location("Home", 35.0, -80.0)
+def test_set_current_location(location_manager):
+    """Test setting the current location."""
+    # Add a location first
+    name = "Test City"
+    lat, lon = 40.0, -75.0
+    location_manager.add_location(name, lat, lon)
+    
+    # Set it as current
+    result = location_manager.set_current_location(name)
+    
+    assert result is True
+    assert location_manager.current_location == name
 
-        # Check that it was added
-        assert "Home" in location_manager.saved_locations
-        assert location_manager.saved_locations["Home"] == {"lat": 35.0, "lon": -80.0}
+def test_set_current_location_nonexistent(location_manager):
+    """Test setting a nonexistent location as current."""
+    result = location_manager.set_current_location("Nonexistent")
+    
+    assert result is False
+    assert location_manager.current_location != "Nonexistent"
 
-        # Check that it was set as current (first location)
-        assert location_manager.current_location == "Home"
+def test_get_current_location(location_manager):
+    """Test getting the current location."""
+    # Add a location and set it as current
+    name = "Test City"
+    lat, lon = 40.0, -75.0
+    location_manager.add_location(name, lat, lon)
+    location_manager.set_current_location(name)
+    
+    result = location_manager.get_current_location()
+    
+    assert result == (name, lat, lon)
 
-        # Add another location
-        location_manager.add_location("Work", 36.0, -81.0)
+def test_get_current_location_none(location_manager):
+    """Test getting current location when none is set."""
+    result = location_manager.get_current_location()
+    
+    assert result is None
 
-        # Check that it was added
-        assert "Work" in location_manager.saved_locations
-        assert location_manager.saved_locations["Work"] == {"lat": 36.0, "lon": -81.0}
+def test_get_current_location_name(location_manager):
+    """Test getting the current location name."""
+    # Add a location and set it as current
+    name = "Test City"
+    lat, lon = 40.0, -75.0
+    location_manager.add_location(name, lat, lon)
+    location_manager.set_current_location(name)
+    
+    result = location_manager.get_current_location_name()
+    
+    assert result == name
 
-        # Current location should still be Home
-        assert location_manager.current_location == "Home"
+def test_get_all_locations(location_manager):
+    """Test getting all location names."""
+    # Add some locations
+    location_manager.add_location("City1", 40.0, -75.0)
+    location_manager.add_location("City2", 35.0, -80.0)
+    
+    result = location_manager.get_all_locations()
+    
+    assert set(result) == {"City1", "City2", NATIONWIDE_LOCATION_NAME}
 
-    def test_remove_location(self, location_manager):
-        """Test removing a location"""
-        # Add locations
-        location_manager.add_location("Home", 35.0, -80.0)
-        location_manager.add_location("Work", 36.0, -81.0)
+def test_set_locations(location_manager):
+    """Test setting all locations at once."""
+    locations = {
+        "City1": {"lat": 40.0, "lon": -75.0},
+        "City2": {"lat": 35.0, "lon": -80.0}
+    }
+    current = "City1"
+    
+    location_manager.set_locations(locations, current)
+    
+    # Check that locations were set (including Nationwide)
+    assert "City1" in location_manager.saved_locations
+    assert "City2" in location_manager.saved_locations
+    assert NATIONWIDE_LOCATION_NAME in location_manager.saved_locations
+    assert location_manager.current_location == current
 
-        # Remove a non-current location
-        result = location_manager.remove_location("Work")
-        assert result is True
-        assert "Work" not in location_manager.saved_locations
-        assert location_manager.current_location == "Home"
-        # Nationwide must still be present
-        assert "Nationwide" in location_manager.saved_locations
+def test_set_locations_ensures_nationwide(location_manager):
+    """Test that set_locations always includes the Nationwide location."""
+    locations = {"City1": {"lat": 40.0, "lon": -75.0}}
+    
+    location_manager.set_locations(locations)
+    
+    assert NATIONWIDE_LOCATION_NAME in location_manager.saved_locations
+    assert location_manager.saved_locations[NATIONWIDE_LOCATION_NAME] == {
+        "lat": NATIONWIDE_LAT,
+        "lon": NATIONWIDE_LON
+    }
 
-        # Remove the current location
-        result = location_manager.remove_location("Home")
-        assert result is True
-        assert "Home" not in location_manager.saved_locations
-        # Now only Nationwide remains, should be current
-        assert location_manager.current_location == "Nationwide"
-        assert list(location_manager.saved_locations.keys()) == ["Nationwide"]
+def test_is_nationwide_location(location_manager):
+    """Test checking if a location is the Nationwide location."""
+    assert location_manager.is_nationwide_location(NATIONWIDE_LOCATION_NAME) is True
+    assert location_manager.is_nationwide_location("Some Other City") is False
 
-        # Try to remove a non-existent location
-        result = location_manager.remove_location("Nonexistent")
-        assert result is False
+def test_save_and_load_locations(mock_config_dir):
+    """Test saving and loading locations from file."""
+    # Create a manager and add some locations
+    manager = LocationManager(config_dir=mock_config_dir)
+    manager.add_location("City1", 40.0, -75.0)
+    manager.add_location("City2", 35.0, -80.0)
+    manager.set_current_location("City1")
+    
+    # Create a new manager to load the saved data
+    new_manager = LocationManager(config_dir=mock_config_dir)
+    
+    # Check that data was saved and loaded correctly
+    assert new_manager.saved_locations == manager.saved_locations
+    assert new_manager.current_location == manager.current_location
 
-    def test_set_current_location(self, location_manager):
-        """Test setting the current location"""
-        # Add locations
-        location_manager.add_location("Home", 35.0, -80.0)
-        location_manager.add_location("Work", 36.0, -81.0)
+def test_save_locations_handles_error(location_manager):
+    """Test that saving locations handles file write errors gracefully."""
+    with patch("builtins.open", side_effect=IOError("Test error")):
+        # This should not raise an exception
+        location_manager._save_locations()
 
-        # Set current location
-        result = location_manager.set_current_location("Work")
-        assert result is True
-        assert location_manager.current_location == "Work"
-
-        # Try to set a non-existent location
-        result = location_manager.set_current_location("Nonexistent")
-        assert result is False
-        assert location_manager.current_location == "Work"  # Unchanged
-
-    def test_get_current_location(self, location_manager):
-        """Test getting the current location"""
-        # When no location is set
-        assert location_manager.get_current_location() is None
-
-        # Add a location
-        location_manager.add_location("Home", 35.0, -80.0)
-
-        # Check current location
-        current = location_manager.get_current_location()
-        assert current == ("Home", 35.0, -80.0)
-
-    def test_get_all_locations(self, location_manager):
-        """Test getting all locations"""
-        # When no locations are saved, only Nationwide is present
-        assert location_manager.get_all_locations() == ["Nationwide"]
-
-        # Add locations
-        location_manager.add_location("Home", 35.0, -80.0)
-        location_manager.add_location("Work", 36.0, -81.0)
-
-        # Check all locations
-        all_locations = location_manager.get_all_locations()
-        assert sorted(all_locations) == sorted(["Home", "Work", "Nationwide"])
-
-    def test_load_locations(self, temp_config_dir):
-        """Test loading locations from file"""
-        # Create a locations file
-        test_data = {
-            "locations": {"Home": {"lat": 35.0, "lon": -80.0}, "Work": {"lat": 36.0, "lon": -81.0}},
-            "current": "Home",
-        }
-
-        locations_file = os.path.join(temp_config_dir, "locations.json")
-        with open(locations_file, "w") as f:
-            json.dump(test_data, f)
-
-        # Create a new location manager to load the file
-        manager = LocationManager(config_dir=temp_config_dir)
-
-        # Check that locations were loaded and Nationwide is present
-        expected = dict(test_data["locations"])
-        expected["Nationwide"] = {"lat": 39.8283, "lon": -98.5795}
-        assert manager.saved_locations == expected
-        assert manager.current_location == test_data["current"]
-
-    def test_save_locations(self, location_manager):
-        """Test saving locations to file"""
-        # Add locations
-        location_manager.add_location("Home", 35.0, -80.0)
-        location_manager.add_location("Work", 36.0, -81.0)
-
-        # Check that the file exists
-        assert os.path.exists(location_manager.locations_file)
-
-        # Read the file and check contents
-        with open(location_manager.locations_file, "r") as f:
-            data = json.load(f)
-
-        expected = {
-            "Home": {"lat": 35.0, "lon": -80.0},
-            "Work": {"lat": 36.0, "lon": -81.0},
-            "Nationwide": {"lat": 39.8283, "lon": -98.5795}
-        }
-        assert data["locations"] == expected
-        assert data["current"] == "Home"
+def test_load_locations_handles_error(mock_config_dir):
+    """Test that loading locations handles file read errors gracefully."""
+    # Create an invalid JSON file
+    locations_file = os.path.join(mock_config_dir, "locations.json")
+    with open(locations_file, "w") as f:
+        f.write("invalid json")
+    
+    # This should not raise an exception
+    manager = LocationManager(config_dir=mock_config_dir)
+    
+    # Check that default values were used
+    assert NATIONWIDE_LOCATION_NAME in manager.saved_locations
+    assert manager.current_location is None

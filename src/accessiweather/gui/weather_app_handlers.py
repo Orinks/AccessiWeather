@@ -98,18 +98,48 @@ class WeatherAppHandlers:
         self._stop_fetcher_threads()
         logger.debug("Fetcher threads stop requested.")
         
+        # Check for force close flag on the instance
+        if hasattr(self, '_force_close'):
+            force_close = force_close or self._force_close
+        
         # If we have a taskbar icon and we're not force closing, just hide the window
         if hasattr(self, "taskbar_icon") and self.taskbar_icon and not force_close:
             logger.debug("Hiding window instead of closing")
+            # Stop the timer when hiding to prevent unnecessary updates
+            if hasattr(self, "timer") and self.timer.IsRunning():
+                logger.debug("Stopping timer before hiding")
+                self.timer.Stop()
             self.Hide()
             event.Veto()
+            # Restart the timer after hiding to continue background updates
+            if hasattr(self, "timer"):
+                logger.debug("Restarting timer after hiding")
+                self.timer.Start()
             logger.debug("Hide/Veto called.")
+            return
  
-        # Not hiding, proceed with destroying the window to trigger App.OnExit cleanup
+        # Force closing - stop timer and clean up
+        if hasattr(self, "timer") and self.timer.IsRunning():
+            logger.debug("Stopping timer for force close")
+            self.timer.Stop()
+
+        # Remove taskbar icon
+        if hasattr(self, "taskbar_icon") and self.taskbar_icon:
+            logger.debug("Removing taskbar icon")
+            if hasattr(self.taskbar_icon, "RemoveIcon"):
+                self.taskbar_icon.RemoveIcon()
+            self.taskbar_icon.Destroy()
+            self.taskbar_icon = None
+
+        # Save config before destroying
+        if hasattr(self, "_save_config"):
+            logger.debug("Saving configuration")
+            self._save_config()
+
+        # Proceed with destroying the window to trigger App.OnExit cleanup
         logger.info("Initiating shutdown by calling self.Destroy()...")
         self.Destroy()
         logger.info("self.Destroy() called. App.OnExit should now handle cleanup.")
-
 
     def _stop_fetcher_threads(self):
         """Stop all fetcher threads directly.
@@ -143,7 +173,6 @@ class WeatherAppHandlers:
             logger.debug("All fetcher threads stop events set.")
         except Exception as e:
             logger.error(f"Error stopping fetcher threads: {e}", exc_info=True)
-
 
     def OnLocationChange(self, event):  # event is required by wx
         """Handle location change event
@@ -672,7 +701,6 @@ class WeatherAppHandlers:
         """Handle nationwide discussion view
         
         This method shows a dialog allowing the user to select which nationwide discussion to view,
-{{ ... }}
         """
         logger.debug("Handling nationwide discussion view")
         
@@ -753,3 +781,4 @@ class WeatherAppHandlers:
             if result == wx.ID_YES:
                 # Open settings dialog
                 self.OnSettings(None)
+
