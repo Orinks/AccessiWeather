@@ -53,7 +53,13 @@ def create_weather_app(
     # Create the location manager
     # Extract config_dir from config_path if available
     config_dir = os.path.dirname(config_path) if config_path else None
-    location_manager = LocationManager(config_dir)
+    
+    # Get show_nationwide setting from config, default to True if not found
+    show_nationwide = True
+    if config and "settings" in config:
+        show_nationwide = config["settings"].get("show_nationwide_location", True)
+    
+    location_manager = LocationManager(config_dir, show_nationwide=show_nationwide)
 
     # Create the notifier
     notifier = WeatherNotifier()

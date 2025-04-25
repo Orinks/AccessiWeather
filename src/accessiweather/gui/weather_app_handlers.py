@@ -568,6 +568,20 @@ class WeatherAppHandlers:
             # Note: Alert radius is stored in config and will be used
             # the next time alerts are fetched
 
+            # If show nationwide setting changed, update location manager
+            from .settings_dialog import SHOW_NATIONWIDE_KEY
+            old_show_nationwide = settings.get(SHOW_NATIONWIDE_KEY, True)
+            new_show_nationwide = updated_settings.get(SHOW_NATIONWIDE_KEY, True)
+            if old_show_nationwide != new_show_nationwide:
+                logger.info(
+                    f"Show nationwide setting changed from {old_show_nationwide} "
+                    f"to {new_show_nationwide}"
+                )
+                # Update the location manager with the new setting
+                self.location_service.location_manager.set_show_nationwide(new_show_nationwide)
+                # Update the location dropdown to reflect the change
+                self.UpdateLocationDropdown()
+
             # If precise location setting changed, refresh alerts
             old_precise_setting = settings.get(PRECISE_LOCATION_ALERTS_KEY, True)
             new_precise_setting = updated_settings.get(PRECISE_LOCATION_ALERTS_KEY, True)
