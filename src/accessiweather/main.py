@@ -17,6 +17,9 @@ from accessiweather.gui.app_factory import create_weather_app
 from accessiweather.logging_config import setup_logging as setup_root_logging
 from accessiweather.utils.single_instance import SingleInstanceChecker
 
+# Add blank line before function definition
+
+
 def main(config_dir: Optional[str] = None, debug_mode: bool = False, enable_caching: bool = True):
     """Main entry point for the application
 
@@ -32,16 +35,31 @@ def main(config_dir: Optional[str] = None, debug_mode: bool = False, enable_cach
     # Get logger
     logger = logging.getLogger(__name__)
 
+    # Create a minimal wx.App instance first
+    # This is required for both wx.SingleInstanceChecker and wx.MessageBox
+    logger.debug("Creating wx.App instance for single instance checking...")
+    temp_app = wx.App(False)
+
     # Check for existing instance
     instance_checker = SingleInstanceChecker()
+    logger.debug("Attempting to acquire single instance lock...")
     if not instance_checker.try_acquire_lock():
         logger.info("Another instance is already running")
+
+        # Show the user-friendly message
         wx.MessageBox(
             "AccessiWeather is already running. Please check your system tray.",
             "AccessiWeather Already Running",
             wx.OK | wx.ICON_INFORMATION
         )
+
+        # Clean up the temporary app
+        temp_app.Destroy()
         return 1
+
+    # If we're continuing with a new instance, destroy the temporary app
+    # before creating the real one
+    temp_app.Destroy()
 
     try:
         # Configure application directory
@@ -70,6 +88,7 @@ def main(config_dir: Optional[str] = None, debug_mode: bool = False, enable_cach
             except Exception as e:
                 logger.error(f"Failed to load config: {str(e)}")
 
+        logger.debug("Creating wx.App instance...")  # Added log
         # Create the application using our custom App class
         app = AccessiWeatherApp(False)  # False means don't redirect stdout/stderr
 
@@ -106,6 +125,8 @@ def main(config_dir: Optional[str] = None, debug_mode: bool = False, enable_cach
 
     return 0
 
+
+# Add blank line before if __name__ == "__main__":
 if __name__ == "__main__":
     # If run directly, debug_mode defaults to False.
     # Assumes primary execution via cli.py which handles arg parsing.
