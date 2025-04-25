@@ -242,6 +242,7 @@ class WeatherService:
                 "status": properties.get("status", ""),
                 "messageType": properties.get("messageType", ""),
                 "areaDesc": properties.get("areaDesc", "Unknown Area"),
+                "parameters": properties.get("parameters", {}),  # For NWSheadline
             }
 
             processed_alerts.append(alert)

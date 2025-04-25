@@ -569,8 +569,8 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         # Save processed alerts
         self.current_alerts = processed_alerts
 
-        # Update the UI and get processed alerts
-        processed_alerts = self.ui_manager.display_alerts(alerts_data)
+        # Update the UI with the processed alerts
+        self.ui_manager.display_alerts_processed(processed_alerts)
 
         # Notify user about alerts
         self.notification_service.notify_alerts(processed_alerts, len(processed_alerts))

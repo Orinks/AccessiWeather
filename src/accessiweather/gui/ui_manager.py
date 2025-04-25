@@ -315,6 +315,28 @@ class UIManager:
             processed_alerts.append(props)  # Save alert data
 
         return processed_alerts
+        
+    def display_alerts_processed(self, processed_alerts: List[Dict[str, Any]]) -> None:
+        """Display already processed alerts data in the UI.
+        
+        Args:
+            processed_alerts: List of processed alert dictionaries
+        """
+        # Clear current alerts display
+        alerts_list_ctrl = self.frame.alerts_list
+        alerts_list_ctrl.DeleteAllItems()
+        
+        if not processed_alerts:
+            return
+            
+        for props in processed_alerts:
+            event = props.get("event", "Unknown")
+            severity = props.get("severity", "Unknown")
+            headline = props.get("headline", "No headline")
+            
+            index = alerts_list_ctrl.InsertItem(alerts_list_ctrl.GetItemCount(), event)
+            alerts_list_ctrl.SetItem(index, 1, severity)
+            alerts_list_ctrl.SetItem(index, 2, headline)
 
     def display_current_conditions(self, conditions_data):
         """Display current weather conditions in the UI.
