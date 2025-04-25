@@ -195,6 +195,7 @@ class NoaaApiClient:
         Args:
             lat: Latitude
             lon: Longitude
+            force_refresh: Whether to force a refresh of the data
 
         Returns:
             Dict containing forecast data
@@ -221,6 +222,119 @@ class NoaaApiClient:
             return self._make_request(forecast_url, use_full_url=True, force_refresh=force_refresh)
         except Exception as e:
             logger.error(f"Error getting forecast: {str(e)}")
+            logger.debug(f"Traceback: {traceback.format_exc()}")
+            raise
+
+    def get_hourly_forecast(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
+        """Get hourly forecast for a location
+
+        Args:
+            lat: Latitude
+            lon: Longitude
+            force_refresh: Whether to force a refresh of the data
+
+        Returns:
+            Dict containing hourly forecast data
+        """
+        # First get the hourly forecast URL from the point data
+        try:
+            logger.info(f"Getting hourly forecast for coordinates: ({lat}, {lon})")
+            point_data = self.get_point_data(lat, lon, force_refresh=force_refresh)
+
+            # Debug log the point data structure
+            logger.debug(f"Point data structure: {json.dumps(point_data, indent=2)}")
+
+            hourly_forecast_url = point_data.get("properties", {}).get("forecastHourly")
+
+            if not hourly_forecast_url:
+                props = list(point_data.get("properties", {}).keys())
+                logger.error(
+                    "Could not find hourly forecast URL in point data. "
+                    f"Available properties: {props}"
+                )
+                raise ValueError("Could not find hourly forecast URL in point data")
+
+            logger.info(f"Retrieved hourly forecast URL: {hourly_forecast_url}")
+            return self._make_request(
+                hourly_forecast_url, use_full_url=True, force_refresh=force_refresh
+            )
+        except Exception as e:
+            logger.error(f"Error getting hourly forecast: {str(e)}")
+            logger.debug(f"Traceback: {traceback.format_exc()}")
+            raise
+
+    def get_stations(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
+        """Get observation stations for a location
+
+        Args:
+            lat: Latitude
+            lon: Longitude
+            force_refresh: Whether to force a refresh of the data
+
+        Returns:
+            Dict containing observation stations data
+        """
+        try:
+            logger.info(f"Getting observation stations for coordinates: ({lat}, {lon})")
+            point_data = self.get_point_data(lat, lon, force_refresh=force_refresh)
+
+            # Debug log the point data structure
+            logger.debug(f"Point data structure: {json.dumps(point_data, indent=2)}")
+
+            stations_url = point_data.get("properties", {}).get("observationStations")
+
+            if not stations_url:
+                props = list(point_data.get("properties", {}).keys())
+                logger.error(
+                    "Could not find observation stations URL in point data. "
+                    f"Available properties: {props}"
+                )
+                raise ValueError("Could not find observation stations URL in point data")
+
+            logger.info(f"Retrieved observation stations URL: {stations_url}")
+            return self._make_request(stations_url, use_full_url=True, force_refresh=force_refresh)
+        except Exception as e:
+            logger.error(f"Error getting observation stations: {str(e)}")
+            logger.debug(f"Traceback: {traceback.format_exc()}")
+            raise
+
+    def get_current_conditions(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
+        """Get current weather conditions for a location from the nearest observation station
+
+        Args:
+            lat: Latitude
+            lon: Longitude
+            force_refresh: Whether to force a refresh of the data
+
+        Returns:
+            Dict containing current weather conditions
+        """
+        try:
+            logger.info(f"Getting current conditions for coordinates: ({lat}, {lon})")
+
+            # Get the observation stations
+            stations_data = self.get_stations(lat, lon, force_refresh=force_refresh)
+
+            # Check if we have any stations
+            if not stations_data.get("features") or len(stations_data["features"]) == 0:
+                logger.error("No observation stations found for the given coordinates")
+                raise ValueError("No observation stations found for the given coordinates")
+
+            # Get the first station (nearest)
+            station = stations_data["features"][0]
+            station_id = station["properties"]["stationIdentifier"]
+
+            logger.info(f"Using station {station_id} for current conditions")
+
+            # Get the latest observation from this station
+            observation_url = f"{self.BASE_URL}/stations/{station_id}/observations/latest"
+            logger.info(f"Fetching current conditions from: {observation_url}")
+
+            return self._make_request(
+                observation_url, use_full_url=True, force_refresh=force_refresh
+            )
+        except Exception as e:
+            logger.error(f"Error getting current conditions: {str(e)}")
             logger.debug(f"Traceback: {traceback.format_exc()}")
             raise
 
