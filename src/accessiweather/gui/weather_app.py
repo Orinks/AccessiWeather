@@ -15,10 +15,10 @@ from accessiweather.config_utils import get_config_dir
 from .async_fetchers import AlertsFetcher, DiscussionFetcher, ForecastFetcher
 from .current_conditions_fetcher import CurrentConditionsFetcher
 from .hourly_forecast_fetcher import HourlyForecastFetcher
-from .dialogs import WeatherDiscussionDialog
 from accessiweather.national_forecast_fetcher import NationalForecastFetcher
 from .settings_dialog import (
     ALERT_RADIUS_KEY,
+    ALERT_UPDATE_INTERVAL_KEY,
     API_CONTACT_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
     UPDATE_INTERVAL_KEY,
@@ -109,16 +109,20 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         self.CreateStatusBar()
         self.SetStatusText("Ready")
 
-        # Start update timer
+        # Start update timers
         self.timer = wx.Timer(self)
+        self.alerts_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.OnTimer, self.timer)
+        self.Bind(wx.EVT_TIMER, self.OnAlertsTimer, self.alerts_timer)
         # Bind Close event here as it's frame-level, not UI-element specific
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.Bind(wx.EVT_ICONIZE, self.OnMinimize)
         self.timer.Start(1000)  # Check every 1 second for updates
+        self.alerts_timer.Start(1000)  # Check every 1 second for alert updates
 
-        # Last update timestamp
+        # Last update timestamps
         self.last_update: float = 0.0
+        self.last_alerts_update: float = 0.0
 
         # Create system tray icon
         self.taskbar_icon = TaskBarIcon(self)
@@ -167,6 +171,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             "current": None,
             "settings": {
                 UPDATE_INTERVAL_KEY: 30,
+                ALERT_UPDATE_INTERVAL_KEY: 5,  # Default to 5 minutes for alert updates
                 ALERT_RADIUS_KEY: 25,
                 PRECISE_LOCATION_ALERTS_KEY: True,  # Default to precise location alerts
             },
@@ -214,6 +219,53 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         self.updating = True
         self._FetchWeatherData(location)
 
+    def UpdateAlerts(self):
+        """Update only the alerts data in a separate thread"""
+        # Get current location from the location service
+        location = self.location_service.get_current_location()
+        if location is None:
+            logger.debug("No location selected for alerts update")
+            return
+
+        # Check if this is the nationwide location
+        name, lat, lon = location
+        if self.location_service.is_nationwide_location(name):
+            logger.debug("Skipping alerts update for nationwide location")
+            return
+
+        # Set status
+        self.SetStatusText("Checking for alerts updates...")
+
+        # Get precise location setting from config
+        precise_location = self.config.get("settings", {}).get(PRECISE_LOCATION_ALERTS_KEY, True)
+        alert_radius = self.config.get("settings", {}).get(ALERT_RADIUS_KEY, 25)
+
+        # Fetch alerts only
+        if self.api_client:
+            # Use the alerts fetcher with api_client
+            self.alerts_fetcher.fetch(
+                lat,
+                lon,
+                on_success=self._on_alerts_fetched,
+                on_error=self._on_alerts_error,
+                precise_location=precise_location,
+                radius=alert_radius,
+            )
+        else:
+            # Use weather service
+            try:
+                alerts_data = self.weather_service.get_alerts(
+                    lat, lon, radius=alert_radius, precise_location=precise_location
+                )
+                self._on_alerts_fetched(alerts_data)
+            except Exception as e:
+                error_msg = f"Error fetching alerts data: {str(e)}"
+                logger.error(error_msg)
+                self._on_alerts_error(error_msg)
+
+        # Update the last alerts update timestamp
+        self.last_alerts_update = time.time()
+
     def _FetchWeatherData(self, location):
         """Fetch weather data using the weather service
 
@@ -240,7 +292,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
                 on_success=self._on_national_forecast_fetched,
                 on_error=self._on_forecast_error
             )
-            return # Return after initiating the fetch
+            return  # Return after initiating the fetch
 
         # For backward compatibility, use api_client directly if provided
         if self.api_client:
@@ -332,10 +384,14 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             logger.debug("Hide/Veto called.")
             return
 
-        # Force closing - stop timer and clean up
+        # Force closing - stop timers and clean up
         if hasattr(self, "timer") and self.timer.IsRunning():
-            logger.debug("Stopping timer for force close")
+            logger.debug("Stopping main timer for force close")
             self.timer.Stop()
+
+        if hasattr(self, "alerts_timer") and self.alerts_timer.IsRunning():
+            logger.debug("Stopping alerts timer for force close")
+            self.alerts_timer.Stop()
 
         # Remove taskbar icon
         if hasattr(self, "taskbar_icon") and self.taskbar_icon:
@@ -564,6 +620,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         logger.debug("Alerts fetched successfully, handling in main thread")
 
         # Process alerts through notification service
+        # The notification service will handle notifications for new/updated alerts
         processed_alerts = self.notification_service.process_alerts(alerts_data)
 
         # Save processed alerts
@@ -572,11 +629,11 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         # Update the UI with the processed alerts
         self.ui_manager.display_alerts_processed(processed_alerts)
 
-        # Notify user about alerts
-        self.notification_service.notify_alerts(processed_alerts, len(processed_alerts))
-
         # Mark alerts as complete
         self._alerts_complete = True
+
+        # Update the last alerts update timestamp
+        self.last_alerts_update = time.time()
 
         # Check overall completion
         self._check_update_complete()
@@ -598,6 +655,10 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
 
         # Mark alerts as complete and check overall completion
         self._alerts_complete = True
+
+        # Update the last alerts update timestamp
+        self.last_alerts_update = time.time()
+
         self._check_update_complete()
 
         # Notify testing framework if hook is set
@@ -624,8 +685,8 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         # Show discussion dialog
         if discussion_text:
             title = f"Forecast Discussion for {name}"
-            from .dialogs import WeatherDiscussionDialog
-            discussion_dialog = WeatherDiscussionDialog(self, title, discussion_text)
+            from .dialogs import WeatherDiscussionDialog as DiscussionDialog
+            discussion_dialog = DiscussionDialog(self, title, discussion_text)
             discussion_dialog.ShowModal()
             discussion_dialog.Destroy()
         else:
@@ -721,6 +782,45 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         wx.GetApp().ProcessPendingEvents()
         wx.SafeYield()
         logger.debug("Cleanup processing complete")
+
+    def OnTimer(self, event):  # event is required by wx
+        """Handle timer event for periodic updates
+
+        Args:
+            event: Timer event
+        """
+        # Get update interval from config (default to 30 minutes)
+        update_interval_minutes = self.config.get("settings", {}).get(UPDATE_INTERVAL_KEY, 30)
+        update_interval_seconds = update_interval_minutes * 60
+
+        # Check if it's time to update
+        now = time.time()
+        if (now - self.last_update) >= update_interval_seconds:
+            if not self.updating:
+                logger.info("Timer triggered weather update.")
+                self.UpdateWeatherData()
+            else:
+                logger.debug("Timer skipped update: already updating.")
+
+    def OnAlertsTimer(self, event):  # event is required by wx
+        """Handle timer event for alert updates
+
+        Args:
+            event: Timer event
+        """
+        # Get alert update interval from config (default to 5 minutes)
+        settings = self.config.get("settings", {})
+        alert_update_interval_minutes = settings.get(ALERT_UPDATE_INTERVAL_KEY, 5)
+        alert_update_interval_seconds = alert_update_interval_minutes * 60
+
+        # Check if it's time to update alerts
+        now = time.time()
+        if (now - self.last_alerts_update) >= alert_update_interval_seconds:
+            if not self.updating:
+                logger.info("Timer triggered alerts update.")
+                self.UpdateAlerts()
+            else:
+                logger.debug("Timer skipped alerts update: already updating.")
 
     # For backward compatibility with WeatherAppHandlers
     @property
