@@ -122,6 +122,8 @@ class WeatherNotifier:
                 "messageType": properties.get("messageType"),
                 "category": properties.get("category"),
                 "response": properties.get("response"),
+                "parameters": properties.get("parameters", {}),  # Add parameters field for NWSheadline
+                "instruction": properties.get("instruction", ""),  # Add instruction field
             }
 
             processed_alerts.append(alert)
