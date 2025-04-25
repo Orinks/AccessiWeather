@@ -83,6 +83,7 @@ def mock_ui_manager():
         mock_frame.settings_btn = MagicMock()
         mock_frame.minimize_to_tray_btn = MagicMock()
         mock_frame.forecast_text = MagicMock()
+        mock_frame.current_conditions_text = MagicMock()  # Add the current_conditions_text mock
         mock_frame.discussion_btn = MagicMock()
         mock_frame.alerts_list = MagicMock()
         mock_frame.alerts_list.InsertItem.return_value = 0
@@ -111,6 +112,7 @@ def test_display_loading_state(mock_ui_manager):
     mock_ui_manager.display_loading_state("New York")
     mock_ui_manager.mock_frame.refresh_btn.Disable.assert_called_once()
     mock_ui_manager.mock_frame.forecast_text.SetValue.assert_called_with("Loading forecast...")
+    mock_ui_manager.mock_frame.current_conditions_text.SetValue.assert_called_with("Loading current conditions...")
     mock_ui_manager.mock_frame.alerts_list.DeleteAllItems.assert_called_once()
     mock_ui_manager.mock_frame.alerts_list.InsertItem.assert_called_with(0, "Loading alerts...")
     mock_ui_manager.mock_frame.SetStatusText.assert_called_with(
@@ -124,6 +126,9 @@ def test_display_loading_state(mock_ui_manager):
     mock_ui_manager.display_loading_state(is_nationwide=True)
     mock_ui_manager.mock_frame.forecast_text.SetValue.assert_called_with(
         "Loading nationwide forecast..."
+    )
+    mock_ui_manager.mock_frame.current_conditions_text.SetValue.assert_called_with(
+        "Current conditions not available for nationwide view"
     )
     mock_ui_manager.mock_frame.SetStatusText.assert_called_with("Updating weather data...")
 
@@ -157,6 +162,11 @@ def test_display_national_forecast(mock_ui_manager):
     assert "Storm Prediction Center (SPC) Summary:" in forecast_text
     assert "Severe storms possible" in forecast_text
     assert "National Weather Service" in forecast_text
+
+    # Check that current conditions text is set correctly for nationwide view
+    mock_ui_manager.mock_frame.current_conditions_text.SetValue.assert_called_with(
+        "Current conditions not available for nationwide view"
+    )
 
     # Test with partial data (WPC only)
     mock_ui_manager.mock_frame.reset_mock()
@@ -215,6 +225,9 @@ def test_display_forecast_error(mock_ui_manager):
     mock_ui_manager.display_forecast_error("API error")
     mock_ui_manager.mock_frame.forecast_text.SetValue.assert_called_with(
         "Error fetching forecast: API error"
+    )
+    mock_ui_manager.mock_frame.current_conditions_text.SetValue.assert_called_with(
+        "Error fetching current conditions"
     )
 
 
