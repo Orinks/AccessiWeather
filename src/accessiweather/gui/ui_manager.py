@@ -127,6 +127,10 @@ class UIManager:
         self.frame.Bind(
             wx.EVT_LIST_ITEM_ACTIVATED, self.frame.OnAlertActivated, self.frame.alerts_list
         )
+        # Add binding for list item selection to enable the alert button
+        self.frame.Bind(
+            wx.EVT_LIST_ITEM_SELECTED, self.OnAlertSelected, self.frame.alerts_list
+        )
         self.frame.Bind(
             wx.EVT_BUTTON, self.frame.OnSettings, self.frame.settings_btn
         )
@@ -300,6 +304,9 @@ class UIManager:
         processed_alerts: List[Dict[str, Any]] = []  # List to store alert properties
 
         if not alerts_data or "features" not in alerts_data:
+            # Disable the alert button if there are no alerts
+            if hasattr(self.frame, "alert_btn"):
+                self.frame.alert_btn.Disable()
             return processed_alerts  # Return empty list
 
         features = alerts_data.get("features", [])
@@ -314,29 +321,46 @@ class UIManager:
             alerts_list_ctrl.SetItem(index, 2, headline)
             processed_alerts.append(props)  # Save alert data
 
+        # Enable the alert button if there are alerts
+        if features and hasattr(self.frame, "alert_btn"):
+            self.frame.alert_btn.Enable()
+            # Set accessibility properties to ensure it's in the tab order
+            self.frame.alert_btn.SetHelpText("View details for the selected alert")
+            self.frame.alert_btn.SetToolTip("View details for the selected alert")
+
         return processed_alerts
-        
+
     def display_alerts_processed(self, processed_alerts: List[Dict[str, Any]]) -> None:
         """Display already processed alerts data in the UI.
-        
+
         Args:
             processed_alerts: List of processed alert dictionaries
         """
         # Clear current alerts display
         alerts_list_ctrl = self.frame.alerts_list
         alerts_list_ctrl.DeleteAllItems()
-        
+
         if not processed_alerts:
+            # Disable the alert button if there are no alerts
+            if hasattr(self.frame, "alert_btn"):
+                self.frame.alert_btn.Disable()
             return
-            
+
         for props in processed_alerts:
             event = props.get("event", "Unknown")
             severity = props.get("severity", "Unknown")
             headline = props.get("headline", "No headline")
-            
+
             index = alerts_list_ctrl.InsertItem(alerts_list_ctrl.GetItemCount(), event)
             alerts_list_ctrl.SetItem(index, 1, severity)
             alerts_list_ctrl.SetItem(index, 2, headline)
+
+        # Enable the alert button if there are alerts
+        if hasattr(self.frame, "alert_btn"):
+            self.frame.alert_btn.Enable()
+            # Set accessibility properties to ensure it's in the tab order
+            self.frame.alert_btn.SetHelpText("View details for the selected alert")
+            self.frame.alert_btn.SetToolTip("View details for the selected alert")
 
     def display_current_conditions(self, conditions_data):
         """Display current weather conditions in the UI.
@@ -364,14 +388,14 @@ class UIManager:
         # Convert units if needed
         if temperature is not None:
             # Convert from Celsius to Fahrenheit
-            temperature_f = (temperature * 9/5) + 32
+            temperature_f = (temperature * 9 / 5) + 32
             temperature_str = f"{temperature_f:.1f}°F ({temperature:.1f}°C)"
         else:
             temperature_str = "N/A"
 
         if dewpoint is not None:
             # Convert from Celsius to Fahrenheit
-            dewpoint_f = (dewpoint * 9/5) + 32
+            dewpoint_f = (dewpoint * 9 / 5) + 32
             dewpoint_str = f"{dewpoint_f:.1f}°F ({dewpoint:.1f}°C)"
         else:
             dewpoint_str = "N/A"
@@ -448,7 +472,27 @@ class UIManager:
         self.frame.alerts_list.SetItem(index, 1, "")  # Empty severity
         self.frame.alerts_list.SetItem(index, 2, f"Error fetching alerts: {error_msg}")
 
+        # Disable the alert button since there are no valid alerts
+        if hasattr(self.frame, "alert_btn"):
+            self.frame.alert_btn.Disable()
+
     def display_ready_state(self):
         """Display ready state in the UI."""
         self.frame.refresh_btn.Enable()
         self.frame.SetStatusText("Ready")
+
+    def OnAlertSelected(self, event):
+        """Handle alert list item selection event.
+
+        Args:
+            event: List item selected event
+        """
+        # Enable the alert button when an alert is selected
+        if hasattr(self.frame, "alert_btn"):
+            self.frame.alert_btn.Enable()
+            # Set accessibility properties to ensure it's in the tab order
+            self.frame.alert_btn.SetHelpText("View details for the selected alert")
+            self.frame.alert_btn.SetToolTip("View details for the selected alert")
+
+        # Allow the event to propagate
+        event.Skip()
