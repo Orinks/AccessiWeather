@@ -29,10 +29,34 @@ class AlertDetailsDialog(wx.Dialog):
         severity = alert_data.get("severity", "Unknown")
         headline = alert_data.get("headline", "No headline available")
         description = alert_data.get("description", "No description available")
-        instruction = alert_data.get("instruction", "No instructions available")
-        statement = alert_data.get("parameters", {}).get("NWSheadline", ["No statement available"])[
-            0
-        ]
+        instruction = alert_data.get("instruction", "")  # Changed to empty string instead of "No instructions available"
+        if instruction is None:
+            instruction = ""  # Ensure instruction is never None
+
+        # Get parameters and log them for debugging
+        parameters = alert_data.get("parameters", {})
+        logger.debug(f"Alert parameters: {parameters}")
+
+        # Extract NWSheadline properly
+        nws_headline = parameters.get("NWSheadline", [])
+        logger.debug(f"NWSheadline value: {nws_headline}, type: {type(nws_headline)}")
+
+        # Make sure we handle both string and list formats
+        if isinstance(nws_headline, list) and len(nws_headline) > 0:
+            statement = nws_headline[0]
+            logger.debug(f"Using first element from NWSheadline list: {statement}")
+        elif isinstance(nws_headline, str):
+            statement = nws_headline
+            logger.debug(f"Using NWSheadline string directly: {statement}")
+        else:
+            # Fall back to headline if NWSheadline is not available
+            statement = headline
+            logger.debug(f"NWSheadline not available, using headline: {statement}")
+
+        # Print to console for immediate feedback
+        print(f"Alert parameters: {parameters}")
+        print(f"NWSheadline value: {nws_headline}, type: {type(nws_headline)}")
+        print(f"Final statement value: {statement}")
 
         # Log the alert data for debugging
         logger.debug(f"Creating alert dialog for {event} ({severity})")
