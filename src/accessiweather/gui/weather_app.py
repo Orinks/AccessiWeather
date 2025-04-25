@@ -13,6 +13,8 @@ import wx
 from accessiweather.config_utils import get_config_dir
 
 from .async_fetchers import AlertsFetcher, DiscussionFetcher, ForecastFetcher
+from .current_conditions_fetcher import CurrentConditionsFetcher
+from .hourly_forecast_fetcher import HourlyForecastFetcher
 from .dialogs import WeatherDiscussionDialog
 from accessiweather.national_forecast_fetcher import NationalForecastFetcher
 from .settings_dialog import (
@@ -83,6 +85,8 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         self.forecast_fetcher = ForecastFetcher(self.api_client)
         self.alerts_fetcher = AlertsFetcher(self.api_client)
         self.discussion_fetcher = DiscussionFetcher(self.api_client)
+        self.current_conditions_fetcher = CurrentConditionsFetcher(self.api_client)
+        self.hourly_forecast_fetcher = HourlyForecastFetcher(self.api_client)
         self.national_forecast_fetcher = NationalForecastFetcher(self.weather_service)
 
         # State variables
@@ -240,6 +244,16 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
 
         # For backward compatibility, use api_client directly if provided
         if self.api_client:
+            # Start current conditions fetching thread
+            self.current_conditions_fetcher.fetch(
+                lat, lon, on_success=self._on_current_conditions_fetched, on_error=self._on_current_conditions_error
+            )
+
+            # Start hourly forecast fetching thread
+            self.hourly_forecast_fetcher.fetch(
+                lat, lon, on_success=self._on_hourly_forecast_fetched, on_error=self._on_forecast_error
+            )
+
             # Start forecast fetching thread using api_client
             self.forecast_fetcher.fetch(
                 lat, lon, on_success=self._on_forecast_fetched, on_error=self._on_forecast_error
@@ -383,6 +397,22 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
                 if hasattr(self.discussion_fetcher, "_stop_event"):
                     self.discussion_fetcher._stop_event.set()
 
+            # Stop current conditions fetcher
+            if hasattr(self, "current_conditions_fetcher"):
+                logger.debug("Stopping current conditions fetcher")
+                if hasattr(self.current_conditions_fetcher, "cancel"):
+                    self.current_conditions_fetcher.cancel()
+                if hasattr(self.current_conditions_fetcher, "_stop_event"):
+                    self.current_conditions_fetcher._stop_event.set()
+
+            # Stop hourly forecast fetcher
+            if hasattr(self, "hourly_forecast_fetcher"):
+                logger.debug("Stopping hourly forecast fetcher")
+                if hasattr(self.hourly_forecast_fetcher, "cancel"):
+                    self.hourly_forecast_fetcher.cancel()
+                if hasattr(self.hourly_forecast_fetcher, "_stop_event"):
+                    self.hourly_forecast_fetcher._stop_event.set()
+
             # Stop national forecast fetcher
             if hasattr(self, "national_forecast_fetcher"):
                 logger.debug("Stopping national forecast fetcher")
@@ -438,18 +468,56 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         if self._testing_forecast_callback:
             self._testing_forecast_callback(forecast_data)
 
+    def _on_current_conditions_fetched(self, conditions_data):
+        """Handle the fetched current conditions in the main thread
+
+        Args:
+            conditions_data: Dictionary with current conditions data
+        """
+        logger.debug("_on_current_conditions_fetched received data")
+
+        # Update the UI
+        self.ui_manager.display_current_conditions(conditions_data)
+
+    def _on_current_conditions_error(self, error):
+        """Handle current conditions fetch error
+
+        Args:
+            error: Error message
+        """
+        logger.error(f"Current conditions fetch error: {error}")
+
+        # Update the UI
+        self.frame.current_conditions_text.SetValue(f"Error fetching current conditions: {error}")
+
+    def _on_hourly_forecast_fetched(self, hourly_forecast_data):
+        """Handle the fetched hourly forecast in the main thread
+
+        Args:
+            hourly_forecast_data: Dictionary with hourly forecast data
+        """
+        logger.debug("_on_hourly_forecast_fetched received data")
+
+        # Store the hourly forecast data to be used when displaying the regular forecast
+        self.hourly_forecast_data = hourly_forecast_data
+
+        # If we already have the regular forecast data, update the display
+        if hasattr(self, 'current_forecast') and self.current_forecast:
+            self.ui_manager.display_forecast(self.current_forecast, hourly_forecast_data)
+
     def _on_forecast_fetched(self, forecast_data):
         """Handle the fetched forecast in the main thread
 
         Args:
             forecast_data: Dictionary with forecast data
         """
-        print("[DEBUG] _on_forecast_fetched received:", forecast_data)
+        logger.debug("_on_forecast_fetched received data")
         # Save forecast data
         self.current_forecast = forecast_data
 
-        # Update the UI
-        self.ui_manager.display_forecast(forecast_data)
+        # Update the UI with both forecast and hourly forecast if available
+        hourly_data = getattr(self, 'hourly_forecast_data', None)
+        self.ui_manager.display_forecast(forecast_data, hourly_data)
 
         # Update timestamp
         self.last_update = time.time()
