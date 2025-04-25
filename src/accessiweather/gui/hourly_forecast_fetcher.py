@@ -6,7 +6,8 @@ This module provides asynchronous fetching of hourly forecast data.
 import logging
 import threading
 
-from accessiweather.gui.thread_utils import get_thread_manager, register_thread, safe_call_after
+from accessiweather.utils.thread_manager import get_thread_manager, register_thread
+from accessiweather.gui.async_fetchers import safe_call_after
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ class HourlyForecastFetcher:
 
     def cancel(self):
         """Cancel any in-progress fetch operations immediately.
-        
+
         Returns:
             bool: True if a thread was cancelled, False otherwise
         """
