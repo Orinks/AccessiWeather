@@ -139,6 +139,15 @@ clean_build_directories() {
     fi
 }
 
+# Function to detect the operating system
+detect_os() {
+    if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
+        echo "windows"
+    else
+        echo "unix"
+    fi
+}
+
 # Function to compare version strings
 compare_version() {
     if [[ "$1" == "$2" ]]; then
@@ -358,7 +367,16 @@ $PYTHON_CMD -m PyInstaller $PYINSTALLER_OPTS \
 
 # Step 3: Create portable ZIP archive
 echo -e "\n${CYAN}===== Step 3: Creating portable ZIP archive =====${NC}"
-(cd "dist/$APP_NAME" && zip -r "../${APP_NAME}_Portable_v${APP_VERSION}.zip" .)
+os_type=$(detect_os)
+if [ "$os_type" = "windows" ]; then
+    # Use PowerShell's Compress-Archive on Windows
+    echo -e "${YELLOW}Detected Windows environment, using PowerShell's Compress-Archive...${NC}"
+    powershell -Command "Compress-Archive -Path \"dist/$APP_NAME/*\" -DestinationPath \"dist/${APP_NAME}_Portable_v${APP_VERSION}.zip\" -Force"
+else
+    # Use zip command on Unix-like systems
+    echo -e "${YELLOW}Detected Unix-like environment, using zip command...${NC}"
+    (cd "dist/$APP_NAME" && zip -r "../${APP_NAME}_Portable_v${APP_VERSION}.zip" .)
+fi
 
 # Final message
 echo -e "\n${GREEN}===== Build Complete =====${NC}"
