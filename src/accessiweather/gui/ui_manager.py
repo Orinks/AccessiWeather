@@ -239,7 +239,7 @@ class UIManager:
 
         # Add daily forecast
         text += "Extended Forecast:\n"
-        for period in periods[:5]:  # Show first 5 periods
+        for period in periods[:14]:  # Show up to 14 periods (7 days, day and night)
             name = period.get("name", "Unknown")
             temp = period.get("temperature", "?")
             unit = period.get("temperatureUnit", "F")
