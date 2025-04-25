@@ -114,6 +114,127 @@ With weather information.
 """
 }
 
+# Sample station data
+SAMPLE_STATIONS_DATA = {
+    "features": [
+        {
+            "id": "https://api.weather.gov/stations/KXYZ",
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KXYZ",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "unitCode": "wmoUnit:m",
+                    "value": 123.4
+                },
+                "name": "Test Station",
+                "stationIdentifier": "KXYZ",
+                "timeZone": "America/New_York"
+            }
+        },
+        {
+            "id": "https://api.weather.gov/stations/KABC",
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KABC",
+                "@type": "wx:ObservationStation",
+                "elevation": {
+                    "unitCode": "wmoUnit:m",
+                    "value": 234.5
+                },
+                "name": "Another Test Station",
+                "stationIdentifier": "KABC",
+                "timeZone": "America/New_York"
+            }
+        }
+    ]
+}
+
+# Sample current observation data
+SAMPLE_OBSERVATION_DATA = {
+    "properties": {
+        "@id": "https://api.weather.gov/stations/KXYZ/observations/2023-01-01T12:00:00Z",
+        "temperature": {
+            "unitCode": "wmoUnit:degC",
+            "value": 22.8,
+            "qualityControl": "qc:V"
+        },
+        "dewpoint": {
+            "unitCode": "wmoUnit:degC",
+            "value": 15.6,
+            "qualityControl": "qc:V"
+        },
+        "windDirection": {
+            "unitCode": "wmoUnit:degree_(angle)",
+            "value": 180,
+            "qualityControl": "qc:V"
+        },
+        "windSpeed": {
+            "unitCode": "wmoUnit:km_h-1",
+            "value": 15.0,
+            "qualityControl": "qc:V"
+        },
+        "barometricPressure": {
+            "unitCode": "wmoUnit:Pa",
+            "value": 101325,
+            "qualityControl": "qc:V"
+        },
+        "seaLevelPressure": {
+            "unitCode": "wmoUnit:Pa",
+            "value": 101325,
+            "qualityControl": "qc:V"
+        },
+        "visibility": {
+            "unitCode": "wmoUnit:km",
+            "value": 16.09,
+            "qualityControl": "qc:V"
+        },
+        "relativeHumidity": {
+            "unitCode": "wmoUnit:percent",
+            "value": 65,
+            "qualityControl": "qc:V"
+        },
+        "textDescription": "Partly Cloudy",
+        "icon": "https://api.weather.gov/icons/land/day/sct?size=medium"
+    }
+}
+
+# Sample hourly forecast data
+SAMPLE_HOURLY_FORECAST_DATA = {
+    "properties": {
+        "periods": [
+            {
+                "number": 1,
+                "name": "This Hour",
+                "startTime": "2023-01-01T12:00:00-05:00",
+                "endTime": "2023-01-01T13:00:00-05:00",
+                "isDaytime": True,
+                "temperature": 72,
+                "temperatureUnit": "F",
+                "temperatureTrend": None,
+                "windSpeed": "10 mph",
+                "windDirection": "S",
+                "icon": "https://api.weather.gov/icons/land/day/sct?size=small",
+                "shortForecast": "Partly Sunny",
+                "detailedForecast": ""
+            },
+            {
+                "number": 2,
+                "name": "Next Hour",
+                "startTime": "2023-01-01T13:00:00-05:00",
+                "endTime": "2023-01-01T14:00:00-05:00",
+                "isDaytime": True,
+                "temperature": 73,
+                "temperatureUnit": "F",
+                "temperatureTrend": "rising",
+                "windSpeed": "12 mph",
+                "windDirection": "S",
+                "icon": "https://api.weather.gov/icons/land/day/sct?size=small",
+                "shortForecast": "Partly Sunny",
+                "detailedForecast": ""
+            }
+        ]
+    }
+}
+
 # Fixture to create a NoaaApiClient instance
 @pytest.fixture
 def api_client():
@@ -403,3 +524,128 @@ def test_thread_safety(api_client):
         assert all(result == SAMPLE_POINT_DATA for result in results)
         # Each request should have been made with proper rate limiting
         assert mock_get.call_count == 5
+
+
+def test_get_stations_success(api_client):
+    """Test getting observation stations successfully."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        # First call for point data, second for stations
+        mock_get.return_value.json.side_effect = [
+            SAMPLE_POINT_DATA,
+            SAMPLE_STATIONS_DATA
+        ]
+        mock_get.return_value.raise_for_status.return_value = None
+
+        result = api_client.get_stations(lat, lon)
+
+        assert result == SAMPLE_STATIONS_DATA
+        assert mock_get.call_count == 2
+        # Check that the second call used the stations URL from point data
+        assert "stations" in mock_get.call_args_list[1][0][0]
+
+
+def test_get_stations_no_url(api_client):
+    """Test getting stations when point data doesn't contain stations URL."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        bad_point_data = dict(SAMPLE_POINT_DATA)
+        # Remove the observationStations URL
+        bad_point_data["properties"] = dict(bad_point_data["properties"])
+        bad_point_data["properties"].pop("observationStations", None)
+        mock_get.return_value.json.return_value = bad_point_data
+        mock_get.return_value.raise_for_status.return_value = None
+
+        with pytest.raises(ValueError) as exc_info:
+            api_client.get_stations(lat, lon)
+
+        assert "Could not find observation stations URL" in str(exc_info.value)
+
+
+def test_get_current_conditions_success(api_client):
+    """Test getting current conditions successfully."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        # First call for point data, second for stations, third for observations
+        mock_get.return_value.json.side_effect = [
+            SAMPLE_POINT_DATA,
+            SAMPLE_STATIONS_DATA,
+            SAMPLE_OBSERVATION_DATA
+        ]
+        mock_get.return_value.raise_for_status.return_value = None
+
+        result = api_client.get_current_conditions(lat, lon)
+
+        assert result == SAMPLE_OBSERVATION_DATA
+        assert mock_get.call_count == 3
+        # Check that the third call used the first station's observations URL
+        assert "stations/KXYZ/observations/latest" in mock_get.call_args_list[2][0][0]
+
+
+def test_get_current_conditions_no_stations(api_client):
+    """Test getting current conditions when no stations are available."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        # Return point data but empty stations list
+        mock_get.return_value.json.side_effect = [
+            SAMPLE_POINT_DATA,
+            {"features": []}  # Empty stations list
+        ]
+        mock_get.return_value.raise_for_status.return_value = None
+
+        with pytest.raises(ValueError) as exc_info:
+            api_client.get_current_conditions(lat, lon)
+
+        assert "No observation stations found" in str(exc_info.value)
+
+
+def test_get_hourly_forecast_success(api_client):
+    """Test getting hourly forecast data successfully."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        # First call for point data, second for hourly forecast
+        mock_get.return_value.json.side_effect = [
+            SAMPLE_POINT_DATA,
+            SAMPLE_HOURLY_FORECAST_DATA
+        ]
+        mock_get.return_value.raise_for_status.return_value = None
+
+        result = api_client.get_hourly_forecast(lat, lon)
+
+        assert result == SAMPLE_HOURLY_FORECAST_DATA
+        assert mock_get.call_count == 2
+        # Check that the second call used the hourly forecast URL from point data
+        assert "forecast/hourly" in mock_get.call_args_list[1][0][0]
+
+
+def test_get_hourly_forecast_no_url(api_client):
+    """Test getting hourly forecast when point data doesn't contain hourly forecast URL."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        bad_point_data = dict(SAMPLE_POINT_DATA)
+        # Remove the forecastHourly URL
+        bad_point_data["properties"] = dict(bad_point_data["properties"])
+        bad_point_data["properties"].pop("forecastHourly", None)
+        mock_get.return_value.json.return_value = bad_point_data
+        mock_get.return_value.raise_for_status.return_value = None
+
+        with pytest.raises(ValueError) as exc_info:
+            api_client.get_hourly_forecast(lat, lon)
+
+        assert "Could not find hourly forecast URL" in str(exc_info.value)
+
+
+def test_rate_limiting_multiple_endpoints(api_client):
+    """Test that requests to multiple endpoints are rate limited."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get, patch("time.sleep") as mock_sleep:
+        # Set up the mock response
+        mock_get.return_value.json.return_value = SAMPLE_POINT_DATA
+        mock_get.return_value.raise_for_status.return_value = None
+
+        # Make multiple requests to the same endpoint
+        api_client.get_point_data(lat, lon)
+        api_client.get_point_data(lat, lon)
+
+        # Verify that sleep was called at least once for rate limiting
+        assert mock_sleep.call_count > 0
