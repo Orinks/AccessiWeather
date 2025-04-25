@@ -229,6 +229,20 @@ check_dependency_installed() {
         local python_cmd="python"
     fi
     
+    # Special case for PyInstaller - check if the module can be imported
+    if [ "$package_name" = "PyInstaller" ]; then
+        if $python_cmd -c "import PyInstaller" &>/dev/null; then
+            # Try to get the version if possible
+            local package_version=$($python_cmd -c "import PyInstaller; print(PyInstaller.__version__)" 2>/dev/null || echo "installed")
+            echo -e "${GREEN}$package_name $package_version is installed${NC}"
+            return 0
+        else
+            echo -e "${YELLOW}$package_name is not installed${NC}"
+            return 1
+        fi
+    fi
+    
+    # Standard check for other packages using pip list
     if $python_cmd -m pip list | grep -E "^$package_name[[:space:]]+" &>/dev/null; then
         local package_version=$($python_cmd -m pip list | grep -E "^$package_name[[:space:]]+" | awk '{print $2}')
         echo -e "${GREEN}$package_name $package_version is installed${NC}"
