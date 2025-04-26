@@ -240,6 +240,9 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         precise_location = self.config.get("settings", {}).get(PRECISE_LOCATION_ALERTS_KEY, True)
         alert_radius = self.config.get("settings", {}).get(ALERT_RADIUS_KEY, 25)
 
+        # Reset alerts completion flag for this fetch cycle
+        self._alerts_complete = False
+
         # Fetch alerts only
         if self.api_client:
             # Use the alerts fetcher with api_client
@@ -543,8 +546,11 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         """
         logger.error(f"Current conditions fetch error: {error}")
 
-        # Update the UI
-        self.frame.current_conditions_text.SetValue(f"Error fetching current conditions: {error}")
+        # Update the UI - use ui_manager to ensure proper error handling
+        try:
+            self.ui_manager.display_forecast_error(error)
+        except Exception as e:
+            logger.error(f"Error updating UI with current conditions error: {e}")
 
     def _on_hourly_forecast_fetched(self, hourly_forecast_data):
         """Handle the fetched hourly forecast in the main thread
@@ -621,9 +627,11 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
 
         # Process alerts through notification service
         # The notification service will handle notifications for new/updated alerts
+        # Note: process_alerts now returns a tuple of (processed_alerts, new_count, updated_count)
         processed_alerts = self.notification_service.process_alerts(alerts_data)
 
-        # Save processed alerts
+        # Save processed alerts - process_alerts returns processed_alerts as the first item in the tuple
+        # but notification_service.process_alerts now returns just the processed_alerts
         self.current_alerts = processed_alerts
 
         # Update the UI with the processed alerts
@@ -816,11 +824,12 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         # Check if it's time to update alerts
         now = time.time()
         if (now - self.last_alerts_update) >= alert_update_interval_seconds:
-            if not self.updating:
+            # Check if alerts are already being updated (using the alerts_complete flag)
+            if self._alerts_complete:
                 logger.info("Timer triggered alerts update.")
                 self.UpdateAlerts()
             else:
-                logger.debug("Timer skipped alerts update: already updating.")
+                logger.debug("Timer skipped alerts update: alerts already being updated.")
 
     # For backward compatibility with WeatherAppHandlers
     @property
