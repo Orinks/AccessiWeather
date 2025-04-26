@@ -81,9 +81,18 @@ class WeatherAppHandlers:
             event: Key event
         """
         # Handle key events for accessibility
-        # For example, F5 to refresh
-        if event.GetKeyCode() == wx.WXK_F5:
+        key_code = event.GetKeyCode()
+
+        if key_code == wx.WXK_F5:
+            # F5 to refresh
             self.OnRefresh(event)
+        elif key_code == wx.WXK_ESCAPE:
+            # Escape to hide to system tray
+            logger.debug("Escape key pressed, hiding to system tray")
+            if hasattr(self, "taskbar_icon") and self.taskbar_icon:
+                self.Hide()
+            else:
+                event.Skip()
         else:
             event.Skip()
 
