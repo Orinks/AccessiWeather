@@ -103,6 +103,7 @@ def mock_weather_app():
         app.last_update = 0.0
         app.last_alerts_update = 0.0
         app.updating = False
+        app._alerts_complete = True  # Add the missing attribute
 
         # Mock methods
         app.SetStatusText = MagicMock()
@@ -158,7 +159,9 @@ def test_on_alerts_timer_respects_interval(mock_weather_app):
     # Mock time.time() to return a specific value
     with patch('time.time', return_value=1000.0):
         # Set last_alerts_update to a value that will NOT trigger an update
-        mock_weather_app.last_alerts_update = 900.0  # Less than 5 minutes ago
+        # The default interval in SAMPLE_CONFIG is 1 minute (60 seconds)
+        # So we need to set last_alerts_update to a value less than 60 seconds ago
+        mock_weather_app.last_alerts_update = 950.0  # Less than 1 minute ago (50 seconds)
 
         # Call OnAlertsTimer
         mock_weather_app.OnAlertsTimer(None)
@@ -176,6 +179,9 @@ def test_on_alerts_timer_respects_updating_flag(mock_weather_app):
 
         # Set updating flag to True
         mock_weather_app.updating = True
+
+        # Set _alerts_complete to False to simulate alerts being updated
+        mock_weather_app._alerts_complete = False
 
         # Call OnAlertsTimer
         mock_weather_app.OnAlertsTimer(None)
