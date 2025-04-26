@@ -20,7 +20,7 @@ from accessiweather.notifications import WeatherNotifier
 SAMPLE_CONFIG = {
     "settings": {
         UPDATE_INTERVAL_KEY: 30,  # 30 minutes for regular updates
-        ALERT_UPDATE_INTERVAL_KEY: 5,  # 5 minutes for alert updates
+        ALERT_UPDATE_INTERVAL_KEY: 1,  # 1 minute for alert updates
         ALERT_RADIUS_KEY: 25,
         PRECISE_LOCATION_ALERTS_KEY: True,
     }

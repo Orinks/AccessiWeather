@@ -171,7 +171,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             "current": None,
             "settings": {
                 UPDATE_INTERVAL_KEY: 30,
-                ALERT_UPDATE_INTERVAL_KEY: 5,  # Default to 5 minutes for alert updates
+                ALERT_UPDATE_INTERVAL_KEY: 1,  # Default to 1 minute for alert updates
                 ALERT_RADIUS_KEY: 25,
                 PRECISE_LOCATION_ALERTS_KEY: True,  # Default to precise location alerts
             },

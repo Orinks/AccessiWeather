@@ -117,7 +117,7 @@ class SettingsDialog(wx.Dialog):
         # Alert Update Interval
         alert_update_interval_label = wx.StaticText(panel, label="Alert Update Interval (minutes):")
         self.alert_update_interval_ctrl = wx.SpinCtrl(
-            panel, min=1, max=1440, initial=5, name="Alert Update Interval"
+            panel, min=1, max=1440, initial=1, name="Alert Update Interval"
         )
         tooltip_alert_interval = "How often to check for new weather alerts (in minutes)."
         self.alert_update_interval_ctrl.SetToolTip(tooltip_alert_interval)
@@ -210,7 +210,7 @@ class SettingsDialog(wx.Dialog):
             # Load general settings
             api_contact = self.current_settings.get(API_CONTACT_KEY, "")
             update_interval = self.current_settings.get(UPDATE_INTERVAL_KEY, 30)
-            alert_update_interval = self.current_settings.get(ALERT_UPDATE_INTERVAL_KEY, 5)
+            alert_update_interval = self.current_settings.get(ALERT_UPDATE_INTERVAL_KEY, 1)
             alert_radius = self.current_settings.get(ALERT_RADIUS_KEY, 25)
             precise_alerts = self.current_settings.get(PRECISE_LOCATION_ALERTS_KEY, True)
             show_nationwide = self.current_settings.get(SHOW_NATIONWIDE_KEY, True)
