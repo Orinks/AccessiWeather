@@ -3,10 +3,10 @@
 # This file contains tests for the UIManager class using a patched approach
 # that avoids the need to create actual wxPython UI components.
 
-import wx
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
 import pytest
+import wx
 
 from accessiweather.gui.ui_manager import UIManager
 
@@ -19,14 +19,14 @@ SAMPLE_FORECAST_DATA = {
                 "name": "Today",
                 "temperature": 75,
                 "temperatureUnit": "F",
-                "detailedForecast": "Sunny with a high near 75."
+                "detailedForecast": "Sunny with a high near 75.",
             },
             {
                 "name": "Tonight",
                 "temperature": 60,
                 "temperatureUnit": "F",
-                "detailedForecast": "Clear with a low around 60."
-            }
+                "detailedForecast": "Clear with a low around 60.",
+            },
         ]
     }
 }
@@ -35,13 +35,13 @@ SAMPLE_NATIONAL_FORECAST_DATA = {
     "national_discussion_summaries": {
         "wpc": {
             "short_range_summary": "Rain in the Northeast, sunny in the West.",
-            "short_range_full": "Detailed WPC discussion..."
+            "short_range_full": "Detailed WPC discussion...",
         },
         "spc": {
             "day1_summary": "Severe storms possible in the Plains.",
-            "day1_full": "Detailed SPC discussion..."
+            "day1_full": "Detailed SPC discussion...",
         },
-        "attribution": "National Weather Service"
+        "attribution": "National Weather Service",
     }
 }
 
@@ -51,16 +51,16 @@ SAMPLE_ALERTS_DATA = {
             "properties": {
                 "event": "Severe Thunderstorm Warning",
                 "severity": "Severe",
-                "headline": "Severe thunderstorm warning until 5 PM"
+                "headline": "Severe thunderstorm warning until 5 PM",
             }
         },
         {
             "properties": {
                 "event": "Flash Flood Watch",
                 "severity": "Moderate",
-                "headline": "Flash flood watch in effect"
+                "headline": "Flash flood watch in effect",
             }
-        }
+        },
     ]
 }
 
@@ -71,8 +71,10 @@ SAMPLE_ALERTS_DATA = {
 def mock_ui_manager():
     """Create a mock UIManager with patched methods."""
     # Create a mock UIManager
-    with patch('accessiweather.gui.ui_manager.UIManager._setup_ui'), \
-         patch('accessiweather.gui.ui_manager.UIManager._bind_events'):
+    with (
+        patch("accessiweather.gui.ui_manager.UIManager._setup_ui"),
+        patch("accessiweather.gui.ui_manager.UIManager._bind_events"),
+    ):
 
         # Create a mock weather app frame
         mock_frame = MagicMock(spec=wx.Frame)
@@ -112,7 +114,9 @@ def test_display_loading_state(mock_ui_manager):
     mock_ui_manager.display_loading_state("New York")
     mock_ui_manager.mock_frame.refresh_btn.Disable.assert_called_once()
     mock_ui_manager.mock_frame.forecast_text.SetValue.assert_called_with("Loading forecast...")
-    mock_ui_manager.mock_frame.current_conditions_text.SetValue.assert_called_with("Loading current conditions...")
+    mock_ui_manager.mock_frame.current_conditions_text.SetValue.assert_called_with(
+        "Loading current conditions..."
+    )
     mock_ui_manager.mock_frame.alerts_list.DeleteAllItems.assert_called_once()
     mock_ui_manager.mock_frame.alerts_list.InsertItem.assert_called_with(0, "Loading alerts...")
     mock_ui_manager.mock_frame.SetStatusText.assert_called_with(
@@ -171,9 +175,7 @@ def test_display_national_forecast(mock_ui_manager):
     # Test with partial data (WPC only)
     mock_ui_manager.mock_frame.reset_mock()
     partial_data = {
-        "national_discussion_summaries": {
-            "wpc": {"short_range_summary": "WPC summary"}
-        }
+        "national_discussion_summaries": {"wpc": {"short_range_summary": "WPC summary"}}
     }
     mock_ui_manager.display_forecast(partial_data)
     forecast_text = mock_ui_manager.mock_frame.forecast_text.SetValue.call_args[0][0]
@@ -186,7 +188,7 @@ def test_format_national_forecast(mock_ui_manager):
     data_with_none = {
         "national_discussion_summaries": {
             "wpc": {"short_range_summary": None},
-            "spc": {"day1_summary": None}
+            "spc": {"day1_summary": None},
         }
     }
     result = mock_ui_manager._format_national_forecast(data_with_none)
@@ -236,10 +238,9 @@ def test_display_alerts_error(mock_ui_manager):
     mock_ui_manager.display_alerts_error("API error")
     mock_ui_manager.mock_frame.alerts_list.DeleteAllItems.assert_called_once()
     mock_ui_manager.mock_frame.alerts_list.InsertItem.assert_called_with(0, "Error")
-    mock_ui_manager.mock_frame.alerts_list.SetItem.assert_has_calls([
-        call(0, 1, ""),
-        call(0, 2, "Error fetching alerts: API error")
-    ])
+    mock_ui_manager.mock_frame.alerts_list.SetItem.assert_has_calls(
+        [call(0, 1, ""), call(0, 2, "Error fetching alerts: API error")]
+    )
 
 
 def test_display_ready_state(mock_ui_manager):
