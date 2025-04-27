@@ -255,7 +255,7 @@ def test_process_alerts(weather_service):
 
 def test_process_alerts_empty(weather_service):
     """Test processing empty alerts data."""
-    alerts_data = {"features": []}
+    alerts_data: dict = {"features": []}
 
     processed_alerts = weather_service.process_alerts(alerts_data)
 

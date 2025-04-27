@@ -46,9 +46,11 @@ def geocoding_service(mock_nominatim_instance):
         "accessiweather.geocoding.Nominatim", return_value=mock_nominatim_instance
     ) as mock_nominatim_class:
         service = GeocodingService(user_agent="TestApp", timeout=5)
-        # Store mocks for assertions
-        service._mock_nominatim_class = mock_nominatim_class
-        service._mock_geolocator_instance = mock_nominatim_instance
+        # Store mocks for assertions as attributes for testing
+        # We're adding these attributes just for testing purposes
+        # They don't exist in the actual class
+        setattr(service, "_mock_nominatim_class", mock_nominatim_class)
+        setattr(service, "_mock_geolocator_instance", mock_nominatim_instance)
         yield service
 
 
