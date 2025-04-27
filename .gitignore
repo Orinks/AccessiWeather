@@ -59,13 +59,20 @@ dmypy.json
 .pyre/
 .pytype/
 
-# Tool-specific files (Aider, Roo, act)
+# Tool-specific files (Aider, Roo, act, etc.)
 .aider.chat.history.md
 .aider.input.history
 .aider.tags.cache.v4/
 .roo/
 .roomodes
 .rooignore
+.docs/
+.kilocodemodes
+.serena/
+.specs/
+project_state.json
+fix_imports.py
+*.code-workspace
 
 # act CLI tool files
 .secrets
