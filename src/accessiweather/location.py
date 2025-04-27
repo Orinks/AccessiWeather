@@ -56,12 +56,12 @@ class LocationManager:
             if os.path.exists(self.locations_file):
                 with open(self.locations_file, "r") as f:
                     data = json.load(f)
-                    
+
                     # If show_nationwide is False, filter out the Nationwide location
                     locations = data.get("locations", {})
                     if not self.show_nationwide and NATIONWIDE_LOCATION_NAME in locations:
                         del locations[NATIONWIDE_LOCATION_NAME]
-                    
+
                     self.saved_locations = locations
 
                     # Set current location if available
@@ -89,13 +89,10 @@ class LocationManager:
             if NATIONWIDE_LOCATION_NAME not in locations_to_save:
                 locations_to_save[NATIONWIDE_LOCATION_NAME] = {
                     "lat": NATIONWIDE_LAT,
-                    "lon": NATIONWIDE_LON
+                    "lon": NATIONWIDE_LON,
                 }
-            
-            data = {
-                "locations": locations_to_save,
-                "current": self.current_location
-            }
+
+            data = {"locations": locations_to_save, "current": self.current_location}
 
             # Only save if we have more than just the Nationwide location
             # or if the file already exists
@@ -118,19 +115,16 @@ class LocationManager:
         """
         # Start with provided locations
         new_locations = dict(locations)
-        
+
         # Always ensure Nationwide exists in the saved data
         if NATIONWIDE_LOCATION_NAME not in new_locations:
-            new_locations[NATIONWIDE_LOCATION_NAME] = {
-                "lat": NATIONWIDE_LAT,
-                "lon": NATIONWIDE_LON
-            }
-        
+            new_locations[NATIONWIDE_LOCATION_NAME] = {"lat": NATIONWIDE_LAT, "lon": NATIONWIDE_LON}
+
         # If show_nationwide is False, remove it from the working set
         if not self.show_nationwide:
             if NATIONWIDE_LOCATION_NAME in new_locations:
                 del new_locations[NATIONWIDE_LOCATION_NAME]
-        
+
         self.saved_locations = new_locations
 
         # Handle current location setting
@@ -141,8 +135,9 @@ class LocationManager:
             if self.show_nationwide:
                 self.current_location = NATIONWIDE_LOCATION_NAME
             else:
-                non_nationwide = [loc for loc in self.saved_locations.keys() 
-                                if loc != NATIONWIDE_LOCATION_NAME]
+                non_nationwide = [
+                    loc for loc in self.saved_locations.keys() if loc != NATIONWIDE_LOCATION_NAME
+                ]
                 if non_nationwide:
                     self.current_location = non_nationwide[0]
                 else:
@@ -190,8 +185,9 @@ class LocationManager:
             # If we removed the current location, update it
             if self.current_location == name:
                 # Try to set to another non-Nationwide location first
-                non_nationwide = [loc for loc in self.saved_locations
-                                 if loc != NATIONWIDE_LOCATION_NAME]
+                non_nationwide = [
+                    loc for loc in self.saved_locations if loc != NATIONWIDE_LOCATION_NAME
+                ]
                 if non_nationwide:
                     self.current_location = non_nationwide[0]
                 else:
@@ -256,7 +252,7 @@ class LocationManager:
             logger.info(f"Adding {NATIONWIDE_LOCATION_NAME} location")
             self.saved_locations[NATIONWIDE_LOCATION_NAME] = {
                 "lat": NATIONWIDE_LAT,
-                "lon": NATIONWIDE_LON
+                "lon": NATIONWIDE_LON,
             }
         # Never remove or overwrite Nationwide; do not save yet (callers will save)
 
@@ -284,8 +280,9 @@ class LocationManager:
         elif NATIONWIDE_LOCATION_NAME in self.saved_locations:
             # If current location is Nationwide, switch to another location
             if self.current_location == NATIONWIDE_LOCATION_NAME:
-                non_nationwide = [loc for loc in self.saved_locations.keys() 
-                                if loc != NATIONWIDE_LOCATION_NAME]
+                non_nationwide = [
+                    loc for loc in self.saved_locations.keys() if loc != NATIONWIDE_LOCATION_NAME
+                ]
                 if non_nationwide:
                     self.current_location = non_nationwide[0]
                 else:

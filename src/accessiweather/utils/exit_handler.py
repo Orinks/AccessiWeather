@@ -8,6 +8,7 @@ import logging
 import os
 import threading
 import time
+
 import wx
 
 logger = logging.getLogger(__name__)
@@ -123,15 +124,17 @@ class ExitHandler:
 
         # Collect timers
         timers = []
-        if hasattr(app, 'timer'):
+        if hasattr(app, "timer"):
             timers.append(app.timer)
-        if hasattr(app, '_discussion_timer'):
+        if hasattr(app, "_discussion_timer"):
             timers.append(app._discussion_timer)
 
         # Stop timers
         remaining_timers = ExitHandler.stop_timers(timers)
         if remaining_timers:
-            logger.warning(f"[EXIT OPTIMIZATION] {len(remaining_timers)} timers could not be stopped")
+            logger.warning(
+                f"[EXIT OPTIMIZATION] {len(remaining_timers)} timers could not be stopped"
+            )
             success = False
 
         # Cancel all fetcher threads using their cancel methods if available
@@ -140,98 +143,102 @@ class ExitHandler:
         stop_events = []
 
         # Forecast fetcher
-        if hasattr(app, 'forecast_fetcher'):
-            if hasattr(app.forecast_fetcher, 'cancel'):
+        if hasattr(app, "forecast_fetcher"):
+            if hasattr(app.forecast_fetcher, "cancel"):
                 logger.debug("[EXIT OPTIMIZATION] Cancelling forecast fetcher")
                 try:
                     app.forecast_fetcher.cancel()
                 except Exception as e:
                     logger.error(f"[EXIT OPTIMIZATION] Error cancelling forecast fetcher: {e}")
                     # Fall back to manual cleanup
-                    if hasattr(app.forecast_fetcher, 'thread'):
+                    if hasattr(app.forecast_fetcher, "thread"):
                         threads.append(app.forecast_fetcher.thread)
-                    if hasattr(app.forecast_fetcher, '_stop_event'):
+                    if hasattr(app.forecast_fetcher, "_stop_event"):
                         stop_events.append(app.forecast_fetcher._stop_event)
             else:
                 # Manual cleanup
-                if hasattr(app.forecast_fetcher, 'thread'):
+                if hasattr(app.forecast_fetcher, "thread"):
                     threads.append(app.forecast_fetcher.thread)
-                if hasattr(app.forecast_fetcher, '_stop_event'):
+                if hasattr(app.forecast_fetcher, "_stop_event"):
                     stop_events.append(app.forecast_fetcher._stop_event)
 
         # Alerts fetcher
-        if hasattr(app, 'alerts_fetcher'):
-            if hasattr(app.alerts_fetcher, 'cancel'):
+        if hasattr(app, "alerts_fetcher"):
+            if hasattr(app.alerts_fetcher, "cancel"):
                 logger.debug("[EXIT OPTIMIZATION] Cancelling alerts fetcher")
                 try:
                     app.alerts_fetcher.cancel()
                 except Exception as e:
                     logger.error(f"[EXIT OPTIMIZATION] Error cancelling alerts fetcher: {e}")
                     # Fall back to manual cleanup
-                    if hasattr(app.alerts_fetcher, 'thread'):
+                    if hasattr(app.alerts_fetcher, "thread"):
                         threads.append(app.alerts_fetcher.thread)
-                    if hasattr(app.alerts_fetcher, '_stop_event'):
+                    if hasattr(app.alerts_fetcher, "_stop_event"):
                         stop_events.append(app.alerts_fetcher._stop_event)
             else:
                 # Manual cleanup
-                if hasattr(app.alerts_fetcher, 'thread'):
+                if hasattr(app.alerts_fetcher, "thread"):
                     threads.append(app.alerts_fetcher.thread)
-                if hasattr(app.alerts_fetcher, '_stop_event'):
+                if hasattr(app.alerts_fetcher, "_stop_event"):
                     stop_events.append(app.alerts_fetcher._stop_event)
 
         # Discussion fetcher
-        if hasattr(app, 'discussion_fetcher'):
-            if hasattr(app.discussion_fetcher, 'cancel'):
+        if hasattr(app, "discussion_fetcher"):
+            if hasattr(app.discussion_fetcher, "cancel"):
                 logger.debug("[EXIT OPTIMIZATION] Cancelling discussion fetcher")
                 try:
                     app.discussion_fetcher.cancel()
                 except Exception as e:
                     logger.error(f"[EXIT OPTIMIZATION] Error cancelling discussion fetcher: {e}")
                     # Fall back to manual cleanup
-                    if hasattr(app.discussion_fetcher, 'thread'):
+                    if hasattr(app.discussion_fetcher, "thread"):
                         threads.append(app.discussion_fetcher.thread)
-                    if hasattr(app.discussion_fetcher, '_stop_event'):
+                    if hasattr(app.discussion_fetcher, "_stop_event"):
                         stop_events.append(app.discussion_fetcher._stop_event)
             else:
                 # Manual cleanup
-                if hasattr(app.discussion_fetcher, 'thread'):
+                if hasattr(app.discussion_fetcher, "thread"):
                     threads.append(app.discussion_fetcher.thread)
-                if hasattr(app.discussion_fetcher, '_stop_event'):
+                if hasattr(app.discussion_fetcher, "_stop_event"):
                     stop_events.append(app.discussion_fetcher._stop_event)
 
         # National forecast fetcher
-        if hasattr(app, 'national_forecast_fetcher'):
-            if hasattr(app.national_forecast_fetcher, 'cancel'):
+        if hasattr(app, "national_forecast_fetcher"):
+            if hasattr(app.national_forecast_fetcher, "cancel"):
                 logger.debug("[EXIT OPTIMIZATION] Cancelling national forecast fetcher")
                 try:
                     app.national_forecast_fetcher.cancel()
                 except Exception as e:
-                    logger.error(f"[EXIT OPTIMIZATION] Error cancelling national forecast fetcher: {e}")
+                    logger.error(
+                        f"[EXIT OPTIMIZATION] Error cancelling national forecast fetcher: {e}"
+                    )
                     # Fall back to manual cleanup
-                    if hasattr(app.national_forecast_fetcher, 'thread'):
+                    if hasattr(app.national_forecast_fetcher, "thread"):
                         threads.append(app.national_forecast_fetcher.thread)
-                    if hasattr(app.national_forecast_fetcher, '_stop_event'):
+                    if hasattr(app.national_forecast_fetcher, "_stop_event"):
                         stop_events.append(app.national_forecast_fetcher._stop_event)
             else:
                 # Manual cleanup
-                if hasattr(app.national_forecast_fetcher, 'thread'):
+                if hasattr(app.national_forecast_fetcher, "thread"):
                     threads.append(app.national_forecast_fetcher.thread)
-                if hasattr(app.national_forecast_fetcher, '_stop_event'):
+                if hasattr(app.national_forecast_fetcher, "_stop_event"):
                     stop_events.append(app.national_forecast_fetcher._stop_event)
 
         # Clean up any remaining threads
         if threads:
             remaining_threads = ExitHandler.cleanup_threads(threads, stop_events)
             if remaining_threads:
-                logger.warning(f"[EXIT OPTIMIZATION] {len(remaining_threads)} threads could not be joined")
+                logger.warning(
+                    f"[EXIT OPTIMIZATION] {len(remaining_threads)} threads could not be joined"
+                )
                 success = False
 
         # Destroy taskbar icon
-        if hasattr(app, 'taskbar_icon') and app.taskbar_icon:
+        if hasattr(app, "taskbar_icon") and app.taskbar_icon:
             try:
                 logger.debug("[EXIT OPTIMIZATION] Removing and destroying taskbar icon")
                 # It's safer to RemoveIcon before Destroy
-                if hasattr(app.taskbar_icon, 'RemoveIcon'):
+                if hasattr(app.taskbar_icon, "RemoveIcon"):
                     app.taskbar_icon.RemoveIcon()
                 app.taskbar_icon.Destroy()
                 app.taskbar_icon = None  # Clear reference

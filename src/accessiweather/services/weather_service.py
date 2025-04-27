@@ -52,9 +52,7 @@ class WeatherService:
         try:
             logger.info("Getting nationwide forecast data (with scraper summaries)")
             summaries = national_discussion_scraper.get_national_discussion_summaries()
-            return {
-                "national_discussion_summaries": summaries
-            }
+            return {"national_discussion_summaries": summaries}
         except Exception as e:
             logger.error(f"Error getting nationwide forecast data: {str(e)}")
             raise ApiClientError(f"Unable to retrieve nationwide forecast data: {str(e)}")
@@ -81,7 +79,9 @@ class WeatherService:
             logger.error(f"Error getting forecast: {str(e)}")
             raise ApiClientError(f"Unable to retrieve forecast data: {str(e)}")
 
-    def get_hourly_forecast(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
+    def get_hourly_forecast(
+        self, lat: float, lon: float, force_refresh: bool = False
+    ) -> Dict[str, Any]:
         """Get hourly forecast data for a location.
 
         Args:
@@ -125,7 +125,9 @@ class WeatherService:
             logger.error(f"Error getting observation stations: {str(e)}")
             raise ApiClientError(f"Unable to retrieve observation stations data: {str(e)}")
 
-    def get_current_conditions(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
+    def get_current_conditions(
+        self, lat: float, lon: float, force_refresh: bool = False
+    ) -> Dict[str, Any]:
         """Get current weather conditions for a location.
 
         Args:

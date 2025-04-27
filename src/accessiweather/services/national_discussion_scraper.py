@@ -1,13 +1,12 @@
+import logging
+import time
+
 import requests
 from bs4 import BeautifulSoup
-import time
-import logging
 
 logger = logging.getLogger(__name__)
 
-HEADERS = {
-    "User-Agent": "AccessiWeatherBot/1.0 (contact: youremail@example.com)"
-}
+HEADERS = {"User-Agent": "AccessiWeatherBot/1.0 (contact: youremail@example.com)"}
 
 # Rate limit: minimum seconds between requests to the same domain
 MIN_REQUEST_INTERVAL = 10  # seconds
@@ -104,13 +103,7 @@ def get_national_discussion_summaries():
         "See https://www.wpc.ncep.noaa.gov/ and https://www.spc.noaa.gov/ for full details."
     )
     return {
-        "wpc": {
-            "short_range_summary": summarize(wpc),
-            "short_range_full": wpc
-        },
-        "spc": {
-            "day1_summary": summarize(spc),
-            "day1_full": spc
-        },
-        "attribution": attribution
+        "wpc": {"short_range_summary": summarize(wpc), "short_range_full": wpc},
+        "spc": {"day1_summary": summarize(spc), "day1_full": spc},
+        "attribution": attribution,
     }

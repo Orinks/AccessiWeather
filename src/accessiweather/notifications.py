@@ -84,21 +84,21 @@ class WeatherNotifier:
             if new_count > 0 or updated_count > 0:
                 parts = []
                 if new_count > 0:
-                    new_plural = 'alert' if new_count == 1 else 'alerts'
+                    new_plural = "alert" if new_count == 1 else "alerts"
                     parts.append(f"{new_count} new {new_plural}")
                 if updated_count > 0:
-                    updated_plural = 'alert' if updated_count == 1 else 'alerts'
+                    updated_plural = "alert" if updated_count == 1 else "alerts"
                     parts.append(f"{updated_count} updated {updated_plural}")
 
                 if parts:
                     message = f"{', '.join(parts)} in your area"
                 else:
                     # Fallback to the original message
-                    plural = 'alert' if alert_count == 1 else 'alerts'
+                    plural = "alert" if alert_count == 1 else "alerts"
                     message = f"{alert_count} active weather {plural} in your area"
             else:
                 # Use the original message format if no new/updated counts provided
-                plural = 'alert' if alert_count == 1 else 'alerts'
+                plural = "alert" if alert_count == 1 else "alerts"
                 message = f"{alert_count} active weather {plural} in your area"
 
             # Show notification
@@ -150,7 +150,9 @@ class WeatherNotifier:
                 "messageType": properties.get("messageType"),
                 "category": properties.get("category"),
                 "response": properties.get("response"),
-                "parameters": properties.get("parameters", {}),  # Add parameters field for NWSheadline
+                "parameters": properties.get(
+                    "parameters", {}
+                ),  # Add parameters field for NWSheadline
                 "instruction": properties.get("instruction", ""),  # Add instruction field
             }
 
