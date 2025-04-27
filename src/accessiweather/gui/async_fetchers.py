@@ -29,7 +29,7 @@ def safe_call_after(callback, *args, **kwargs):
         if app is None or not app.IsMainLoopRunning():
             logger.warning("Cannot schedule callback: Application context not available")
             return False
-            
+
         # Log callback details
         callback_name = getattr(callback, "__name__", str(callback))
         logger.debug(f"Scheduling callback {callback_name} with args: {args}, kwargs: {kwargs}")
@@ -41,16 +41,21 @@ def safe_call_after(callback, *args, **kwargs):
     except (AssertionError, RuntimeError) as e:
         # This might happen if wx.App isn't fully initialized or is destroyed
         logger.error(f"Could not schedule callback via wx.CallAfter: {e}")
-        
+
         # Try to display an error to the user if this is a UI callback
         try:
             # Only attempt to show error dialog if we have a valid app
             if wx.GetApp() and wx.GetApp().IsMainLoopRunning():
-                wx.CallAfter(lambda: wx.MessageBox("Error: Application context lost. Try restarting the application.", 
-                                                "Error", wx.OK | wx.ICON_ERROR))
+                wx.CallAfter(
+                    lambda: wx.MessageBox(
+                        "Error: Application context lost. Try restarting the application.",
+                        "Error",
+                        wx.OK | wx.ICON_ERROR,
+                    )
+                )
         except Exception as dialog_err:
             logger.error(f"Failed to show error dialog: {dialog_err}")
-        
+
         return False
 
 
@@ -69,7 +74,7 @@ class ForecastFetcher:
 
     def cancel(self):
         """Cancel any in-progress fetch operations immediately.
-        
+
         Returns:
             bool: True if a thread was cancelled, False otherwise
         """
@@ -105,7 +110,6 @@ class ForecastFetcher:
         self.thread = threading.Thread(target=self._fetch_thread, args=args, daemon=True)
         self.thread.start()
         # Register the thread with the manager
-        thread_manager = get_thread_manager()
         register_thread(self.thread, self._stop_event, name=f"ForecastFetcher-{lat}-{lon}")
 
     def _fetch_thread(self, lat, lon, on_success, on_error):
@@ -137,7 +141,9 @@ class ForecastFetcher:
             if on_success and not self._stop_event.is_set():
                 # Call callback on main thread
                 if not safe_call_after(on_success, forecast_data):
-                    logger.error("Failed to deliver forecast data due to application context issues")
+                    logger.error(
+                        "Failed to deliver forecast data due to application context issues"
+                    )
         except Exception as e:
             if not self._stop_event.is_set():
                 logger.error(f"Failed to retrieve forecast: {str(e)}")
@@ -145,11 +151,13 @@ class ForecastFetcher:
                     # Call error callback on main thread
                     error_msg = f"Unable to retrieve forecast data: {str(e)}"
                     if not safe_call_after(on_error, error_msg):
-                        logger.error("Failed to deliver forecast error due to application context issues")
+                        logger.error(
+                            "Failed to deliver forecast error due to application context issues"
+                        )
         finally:
             # Ensure the thread is unregistered
             logger.debug(f"ForecastFetcher ({thread_id}): Thread finished, unregistering.")
-            thread_manager.unregister_thread(thread_id) # Use thread_id
+            thread_manager.unregister_thread(thread_id)  # Use thread_id
 
 
 class AlertsFetcher:
@@ -167,7 +175,7 @@ class AlertsFetcher:
 
     def cancel(self):
         """Cancel any in-progress fetch operations immediately.
-        
+
         Returns:
             bool: True if a thread was cancelled, False otherwise
         """
@@ -205,7 +213,6 @@ class AlertsFetcher:
         self.thread = threading.Thread(target=self._fetch_thread, args=args, daemon=True)
         self.thread.start()
         # Register the thread with the manager
-        thread_manager = get_thread_manager()
         register_thread(self.thread, self._stop_event, name=f"AlertsFetcher-{lat}-{lon}")
 
     def _fetch_thread(self, lat, lon, on_success, on_error, precise_location, radius):
@@ -252,11 +259,13 @@ class AlertsFetcher:
                     # Call error callback on main thread
                     error_msg = f"Unable to retrieve alerts data: {str(e)}"
                     if not safe_call_after(on_error, error_msg):
-                        logger.error("Failed to deliver alerts error due to application context issues")
+                        logger.error(
+                            "Failed to deliver alerts error due to application context issues"
+                        )
         finally:
             # Ensure the thread is unregistered
             logger.debug(f"AlertsFetcher ({thread_id}): Thread finished, unregistering.")
-            thread_manager.unregister_thread(thread_id) # Use thread_id
+            thread_manager.unregister_thread(thread_id)  # Use thread_id
 
 
 class DiscussionFetcher:
@@ -274,7 +283,7 @@ class DiscussionFetcher:
 
     def cancel(self):
         """Cancel any in-progress fetch operations immediately.
-        
+
         Returns:
             bool: True if a thread was cancelled, False otherwise
         """
@@ -311,7 +320,6 @@ class DiscussionFetcher:
         self.thread = threading.Thread(target=self._fetch_thread, args=args, daemon=True)
         self.thread.start()
         # Register the thread with the manager
-        thread_manager = get_thread_manager()
         register_thread(self.thread, self._stop_event, name=f"DiscussionFetcher-{lat}-{lon}")
 
     def _fetch_thread(self, lat, lon, on_success, on_error, additional_data):
@@ -372,11 +380,15 @@ class DiscussionFetcher:
                                 f"Calling success callback with additional data: {additional_data}"
                             )
                             if not safe_call_after(on_success, discussion_text, *additional_data):
-                                logger.error("Failed to deliver discussion with additional data due to application context issues")
+                                logger.error(
+                                    "Failed to deliver discussion with additional data due to application context issues"
+                                )
                         else:
                             logger.debug("Calling success callback without additional data")
                             if not safe_call_after(on_success, discussion_text):
-                                logger.error("Failed to deliver discussion data due to application context issues")
+                                logger.error(
+                                    "Failed to deliver discussion data due to application context issues"
+                                )
                         logger.debug("Success callback scheduled successfully")
                     except Exception as e:
                         logger.error(f"Error scheduling success callback: {e}")
@@ -391,7 +403,9 @@ class DiscussionFetcher:
                                     "Attempting to close loading dialog after callback error"
                                 )
                                 if not safe_call_after(additional_data[1].Destroy):
-                                    logger.error("Failed to close loading dialog due to application context issues")
+                                    logger.error(
+                                        "Failed to close loading dialog due to application context issues"
+                                    )
                             except Exception as dialog_e:
                                 logger.error(f"Error closing loading dialog: {dialog_e}")
             except Exception as e:
@@ -401,10 +415,14 @@ class DiscussionFetcher:
                     error_msg = f"Failed to retrieve discussion: {str(e)}"
                     if additional_data is not None:
                         if not safe_call_after(on_error, error_msg, *additional_data):
-                            logger.error("Failed to deliver discussion error with additional data due to application context issues")
+                            logger.error(
+                                "Failed to deliver discussion error with additional data due to application context issues"
+                            )
                     else:
                         if not safe_call_after(on_error, error_msg):
-                            logger.error("Failed to deliver discussion error due to application context issues")
+                            logger.error(
+                                "Failed to deliver discussion error due to application context issues"
+                            )
         except Exception as e:
             if not self._stop_event.is_set():
                 logger.error(f"Failed to retrieve discussion: {str(e)}")
@@ -413,11 +431,15 @@ class DiscussionFetcher:
                     error_msg = f"Unable to retrieve forecast discussion: {str(e)}"
                     if additional_data is not None:
                         if not safe_call_after(on_error, error_msg, *additional_data):
-                            logger.error("Failed to deliver discussion error with additional data due to application context issues")
+                            logger.error(
+                                "Failed to deliver discussion error with additional data due to application context issues"
+                            )
                     else:
                         if not safe_call_after(on_error, error_msg):
-                            logger.error("Failed to deliver discussion error due to application context issues")
+                            logger.error(
+                                "Failed to deliver discussion error due to application context issues"
+                            )
         finally:
             # Ensure the thread is unregistered
             logger.debug(f"DiscussionFetcher ({thread_id}): Thread finished, unregistering.")
-            thread_manager.unregister_thread(thread_id) # Use thread_id
+            thread_manager.unregister_thread(thread_id)  # Use thread_id

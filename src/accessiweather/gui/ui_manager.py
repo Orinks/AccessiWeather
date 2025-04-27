@@ -128,15 +128,9 @@ class UIManager:
             wx.EVT_LIST_ITEM_ACTIVATED, self.frame.OnAlertActivated, self.frame.alerts_list
         )
         # Add binding for list item selection to enable the alert button
-        self.frame.Bind(
-            wx.EVT_LIST_ITEM_SELECTED, self.OnAlertSelected, self.frame.alerts_list
-        )
-        self.frame.Bind(
-            wx.EVT_BUTTON, self.frame.OnSettings, self.frame.settings_btn
-        )
-        self.frame.Bind(
-            wx.EVT_BUTTON, self.frame.OnMinimizeToTray, self.frame.minimize_to_tray_btn
-        )
+        self.frame.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnAlertSelected, self.frame.alerts_list)
+        self.frame.Bind(wx.EVT_BUTTON, self.frame.OnSettings, self.frame.settings_btn)
+        self.frame.Bind(wx.EVT_BUTTON, self.frame.OnMinimizeToTray, self.frame.minimize_to_tray_btn)
         # KeyDown is bound here as it relates to general UI interaction
         self.frame.Bind(wx.EVT_KEY_DOWN, self.frame.OnKeyDown)
 
@@ -158,7 +152,9 @@ class UIManager:
         if not is_nationwide:
             self.frame.current_conditions_text.SetValue("Loading current conditions...")
         else:
-            self.frame.current_conditions_text.SetValue("Current conditions not available for nationwide view")
+            self.frame.current_conditions_text.SetValue(
+                "Current conditions not available for nationwide view"
+            )
 
         # Clear and set loading text in alerts list
         self.frame.alerts_list.DeleteAllItems()
@@ -168,7 +164,7 @@ class UIManager:
         if location_name:
             status = f"Updating weather data for {location_name}..."
             if is_nationwide:
-                status = f"Updating nationwide weather data..."
+                status = "Updating nationwide weather data..."
         else:
             status = "Updating weather data..."
         self.frame.SetStatusText(status)
@@ -422,8 +418,24 @@ class UIManager:
         # Format wind direction
         if wind_direction is not None:
             # Convert degrees to cardinal direction
-            directions = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
-                          "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
+            directions = [
+                "N",
+                "NNE",
+                "NE",
+                "ENE",
+                "E",
+                "ESE",
+                "SE",
+                "SSE",
+                "S",
+                "SSW",
+                "SW",
+                "WSW",
+                "W",
+                "WNW",
+                "NW",
+                "NNW",
+            ]
             index = round(wind_direction / 22.5) % 16
             wind_dir_str = directions[index]
         else:
