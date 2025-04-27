@@ -98,9 +98,9 @@ def mock_ui_manager():
         # Create the UIManager instance
         ui_manager = UIManager(mock_frame, mock_notifier)
 
-        # Store references for test access
-        ui_manager.mock_frame = mock_frame
-        ui_manager.mock_notifier = mock_notifier
+        # Store references for test access using setattr to avoid type checking issues
+        setattr(ui_manager, "mock_frame", mock_frame)
+        setattr(ui_manager, "mock_notifier", mock_notifier)
 
         yield ui_manager
 
