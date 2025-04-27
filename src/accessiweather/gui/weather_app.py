@@ -115,6 +115,12 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         # Bind Close event here as it's frame-level, not UI-element specific
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.Bind(wx.EVT_ICONIZE, self.OnMinimize)
+
+        # Log the update interval from config
+        from .settings_dialog import UPDATE_INTERVAL_KEY
+        update_interval = self.config.get("settings", {}).get(UPDATE_INTERVAL_KEY, 30)
+        logger.debug(f"Starting timer with update interval: {update_interval} minutes")
+
         self.timer.Start(1000)  # Check every 1 second for updates
 
         # Last update timestamp
