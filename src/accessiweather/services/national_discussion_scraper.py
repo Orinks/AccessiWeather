@@ -11,14 +11,17 @@ HEADERS = {
 
 # Rate limit: minimum seconds between requests to the same domain
 MIN_REQUEST_INTERVAL = 10  # seconds
-_last_request_time = {}
+_last_request_time: dict[str, float] = {}
 
-def _rate_limit(domain):
+
+def _rate_limit(domain: str) -> None:
     now = time.time()
     last = _last_request_time.get(domain, 0)
     wait = MIN_REQUEST_INTERVAL - (now - last)
     if wait > 0:
-        logger.info(f"Rate limiting: sleeping for {wait:.1f} seconds before next request to {domain}")
+        logger.info(
+            f"Rate limiting: sleeping for {wait:.1f} seconds before next request to {domain}"
+        )
         time.sleep(wait)
     _last_request_time[domain] = time.time()
 
@@ -89,13 +92,17 @@ def get_national_discussion_summaries():
     """
     wpc = fetch_wpc_short_range()
     spc = fetch_spc_day1()
-    def summarize(text, lines=10):
+
+    def summarize(text: str, lines: int = 10) -> str:
         if not text:
             return "No discussion available."
-        summary_lines = [l for l in text.splitlines() if l.strip()][:lines]
+        summary_lines = [line for line in text.splitlines() if line.strip()][:lines]
         return "\n".join(summary_lines)
-    attribution = ("Data from NOAA/NWS/WPC and NOAA/NWS/SPC. "
-                   "See https://www.wpc.ncep.noaa.gov/ and https://www.spc.noaa.gov/ for full details.")
+
+    attribution = (
+        "Data from NOAA/NWS/WPC and NOAA/NWS/SPC. "
+        "See https://www.wpc.ncep.noaa.gov/ and https://www.spc.noaa.gov/ for full details."
+    )
     return {
         "wpc": {
             "short_range_summary": summarize(wpc),

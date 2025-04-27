@@ -10,6 +10,7 @@ import os
 import time
 from typing import Any, Optional
 import wx
+import wx.adv
 from .alert_dialog import AlertDetailsDialog
 from .dialogs import LocationDialog
 from .settings_dialog import (
@@ -48,6 +49,7 @@ class WeatherAppHandlers:
     discussion_fetcher: Any
     _on_discussion_fetched: Any
     _on_discussion_error: Any
+    taskbar_icon: Optional['wx.adv.TaskBarIcon']
 
     # Methods that will be provided by WeatherApp
     def Destroy(self) -> None:
@@ -72,6 +74,10 @@ class WeatherAppHandlers:
 
     def Unbind(self, *args, **kwargs) -> None:
         """Placeholder for wx.Frame.Unbind method"""
+        pass
+
+    def Hide(self) -> None:
+        """Placeholder for wx.Frame.Hide method"""
         pass
 
     def OnKeyDown(self, event):
@@ -194,6 +200,15 @@ class WeatherAppHandlers:
                     self.national_forecast_fetcher.cancel()
                 if hasattr(self.national_forecast_fetcher, "_stop_event"):
                     self.national_forecast_fetcher._stop_event.set()
+
+            # Stop timers
+            if hasattr(self, "timer") and self.timer.IsRunning():
+                logger.debug("Stopping main timer")
+                self.timer.Stop()
+
+            if hasattr(self, "alerts_timer") and self.alerts_timer.IsRunning():
+                logger.debug("Stopping alerts timer")
+                self.alerts_timer.Stop()
 
         except Exception as e:
             logger.error("Error stopping fetcher threads: %s", e, exc_info=True)
@@ -668,6 +683,16 @@ class WeatherAppHandlers:
             else:
                 logger.debug("Timer skipped update: already updating.")
 
+    def OnAlertsTimer(self, event):  # event is required by wx
+        """Handle timer event for alert updates
+
+        Args:
+            event: Timer event
+        """
+        # This method is implemented in the WeatherApp class
+        # This is just a placeholder in the handlers module
+        pass
+
     def _save_config(self, show_errors=True):
         """Save configuration to file
 
@@ -707,7 +732,7 @@ class WeatherAppHandlers:
             thread: The started thread object, which can be joined if needed
         """
         import threading
-        logger.debug(f"[EXIT OPTIMIZATION] Starting async config save thread")
+        logger.debug("[EXIT OPTIMIZATION] Starting async config save thread")
         # Create a unique thread name with timestamp for easier tracking
         thread_name = f"ConfigSaveThread-{int(time.time())}"
         thread = threading.Thread(target=self._save_config_thread, daemon=True, name=thread_name)
@@ -815,7 +840,7 @@ class WeatherAppHandlers:
         Args:
             selection: Index of the selected discussion (0 for WPC, 1 for SPC)
         """
-        from .dialogs import WeatherDiscussionDialog
+        from .dialogs import WeatherDiscussionDialog as DiscussionDialog
 
         if selection == 0 and hasattr(self, '_nationwide_wpc_full') and self._nationwide_wpc_full:
             # Show WPC discussion
@@ -833,7 +858,7 @@ class WeatherAppHandlers:
             logger.error(f"Invalid nationwide discussion selection: {selection}")
             return
 
-        discussion_dialog = WeatherDiscussionDialog(self, title, text)
+        discussion_dialog = DiscussionDialog(self, title, text)
         discussion_dialog.ShowModal()
         discussion_dialog.Destroy()
 
