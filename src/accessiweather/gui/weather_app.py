@@ -8,14 +8,15 @@ import json
 import logging
 import os
 import time
+
 import wx
 
 from accessiweather.config_utils import get_config_dir
+from accessiweather.national_forecast_fetcher import NationalForecastFetcher
 
 from .async_fetchers import AlertsFetcher, DiscussionFetcher, ForecastFetcher
 from .current_conditions_fetcher import CurrentConditionsFetcher
 from .hourly_forecast_fetcher import HourlyForecastFetcher
-from accessiweather.national_forecast_fetcher import NationalForecastFetcher
 from .settings_dialog import (
     ALERT_RADIUS_KEY,
     ALERT_UPDATE_INTERVAL_KEY,
@@ -297,8 +298,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             # Nationwide: Use the dedicated async fetcher
             logger.info("Initiating nationwide forecast fetch using NationalForecastFetcher")
             self.national_forecast_fetcher.fetch(
-                on_success=self._on_national_forecast_fetched,
-                on_error=self._on_forecast_error
+                on_success=self._on_national_forecast_fetched, on_error=self._on_forecast_error
             )
             return  # Return after initiating the fetch
 
@@ -306,12 +306,18 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         if self.api_client:
             # Start current conditions fetching thread
             self.current_conditions_fetcher.fetch(
-                lat, lon, on_success=self._on_current_conditions_fetched, on_error=self._on_current_conditions_error
+                lat,
+                lon,
+                on_success=self._on_current_conditions_fetched,
+                on_error=self._on_current_conditions_error,
             )
 
             # Start hourly forecast fetching thread
             self.hourly_forecast_fetcher.fetch(
-                lat, lon, on_success=self._on_hourly_forecast_fetched, on_error=self._on_forecast_error
+                lat,
+                lon,
+                on_success=self._on_hourly_forecast_fetched,
+                on_error=self._on_forecast_error,
             )
 
             # Start forecast fetching thread using api_client
@@ -320,7 +326,9 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             )
 
             # Get precise location setting from config
-            precise_location = self.config.get("settings", {}).get(PRECISE_LOCATION_ALERTS_KEY, True)
+            precise_location = self.config.get("settings", {}).get(
+                PRECISE_LOCATION_ALERTS_KEY, True
+            )
             alert_radius = self.config.get("settings", {}).get(ALERT_RADIUS_KEY, 25)
 
             # Start alerts fetching thread with precise location setting using api_client
@@ -340,7 +348,9 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
                 self._on_forecast_fetched(forecast_data)
 
                 # Get alerts data
-                precise_location = self.config.get("settings", {}).get(PRECISE_LOCATION_ALERTS_KEY, True)
+                precise_location = self.config.get("settings", {}).get(
+                    PRECISE_LOCATION_ALERTS_KEY, True
+                )
                 alert_radius = self.config.get("settings", {}).get(ALERT_RADIUS_KEY, 25)
                 alerts_data = self.weather_service.get_alerts(
                     lat, lon, radius=alert_radius, precise_location=precise_location
@@ -373,7 +383,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         logger.debug("Fetcher threads stop requested.")
 
         # Check for force close flag on the instance
-        if hasattr(self, '_force_close'):
+        if hasattr(self, "_force_close"):
             force_close = force_close or self._force_close
 
         # If we have a taskbar icon and we're not force closing, just hide the window
@@ -500,16 +510,18 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
 
         # Extract and store full discussions for WPC and SPC
         try:
-            summaries = forecast_data.get('national_discussion_summaries', {})
-            wpc_data = summaries.get('wpc', {})
-            spc_data = summaries.get('spc', {})
+            summaries = forecast_data.get("national_discussion_summaries", {})
+            wpc_data = summaries.get("wpc", {})
+            spc_data = summaries.get("spc", {})
 
             # Store full discussions from scraper data
-            self._nationwide_wpc_full = wpc_data.get('short_range_full')
-            self._nationwide_spc_full = spc_data.get('day1_full')
+            self._nationwide_wpc_full = wpc_data.get("short_range_full")
+            self._nationwide_spc_full = spc_data.get("day1_full")
 
-            logger.debug(f"Stored WPC discussion (length: {len(self._nationwide_wpc_full) if self._nationwide_wpc_full else 0})")
-            logger.debug(f"Stored SPC discussion (length: {len(self._nationwide_spc_full) if self._nationwide_spc_full else 0})")
+            wpc_len = len(self._nationwide_wpc_full) if self._nationwide_wpc_full else 0
+            spc_len = len(self._nationwide_spc_full) if self._nationwide_spc_full else 0
+            logger.debug(f"Stored WPC discussion (length: {wpc_len})")
+            logger.debug(f"Stored SPC discussion (length: {spc_len})")
         except Exception as e:
             logger.error(f"Error extracting national discussions: {e}")
             self._nationwide_wpc_full = None
@@ -569,7 +581,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         self.hourly_forecast_data = hourly_forecast_data
 
         # If we already have the regular forecast data, update the display
-        if hasattr(self, 'current_forecast') and self.current_forecast:
+        if hasattr(self, "current_forecast") and self.current_forecast:
             self.ui_manager.display_forecast(self.current_forecast, hourly_forecast_data)
 
     def _on_forecast_fetched(self, forecast_data):
@@ -583,7 +595,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         self.current_forecast = forecast_data
 
         # Update the UI with both forecast and hourly forecast if available
-        hourly_data = getattr(self, 'hourly_forecast_data', None)
+        hourly_data = getattr(self, "hourly_forecast_data", None)
         self.ui_manager.display_forecast(forecast_data, hourly_data)
 
         # Update timestamp
@@ -632,11 +644,11 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
 
         # Process alerts through notification service
         # The notification service will handle notifications for new/updated alerts
-        # Note: process_alerts now returns a tuple of (processed_alerts, new_count, updated_count)
-        processed_alerts = self.notification_service.process_alerts(alerts_data)
+        # Note: process_alerts returns a tuple of (processed_alerts, new_count, updated_count)
+        result = self.notification_service.process_alerts(alerts_data)
+        processed_alerts = result[0]  # We only need the first item
 
-        # Save processed alerts - process_alerts returns processed_alerts as the first item in the tuple
-        # but notification_service.process_alerts now returns just the processed_alerts
+        # Save processed alerts
         self.current_alerts = processed_alerts
 
         # Update the UI with the processed alerts
@@ -702,6 +714,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         if discussion_text:
             title = f"Forecast Discussion for {name}"
             from .dialogs import WeatherDiscussionDialog as DiscussionDialog
+
             discussion_dialog = DiscussionDialog(self, title, discussion_text)
             discussion_dialog.ShowModal()
             discussion_dialog.Destroy()
@@ -709,7 +722,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             wx.MessageBox(
                 f"No forecast discussion available for {name}",
                 "No Discussion Available",
-                wx.OK | wx.ICON_INFORMATION
+                wx.OK | wx.ICON_INFORMATION,
             )
 
     def _on_discussion_error(self, error_message, name, loading_dialog):
@@ -733,7 +746,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         wx.MessageBox(
             f"Error fetching forecast discussion for {name}: {error_message}",
             "Discussion Error",
-            wx.OK | wx.ICON_ERROR
+            wx.OK | wx.ICON_ERROR,
         )
 
     def _cleanup_discussion_loading(self, loading_dialog=None):
