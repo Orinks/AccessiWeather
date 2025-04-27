@@ -6,8 +6,8 @@ This module provides asynchronous fetching of current weather conditions data.
 import logging
 import threading
 
-from accessiweather.utils.thread_manager import get_thread_manager, register_thread
 from accessiweather.gui.async_fetchers import safe_call_after
+from accessiweather.utils.thread_manager import get_thread_manager, register_thread
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,6 @@ class CurrentConditionsFetcher:
         self.thread = threading.Thread(target=self._fetch_thread, args=args, daemon=True)
         self.thread.start()
         # Register the thread with the manager
-        thread_manager = get_thread_manager()
         register_thread(self.thread, self._stop_event, name=f"CurrentConditionsFetcher-{lat}-{lon}")
 
     def _fetch_thread(self, lat, lon, on_success, on_error):
@@ -95,7 +94,9 @@ class CurrentConditionsFetcher:
             if on_success and not self._stop_event.is_set():
                 # Call callback on main thread
                 if not safe_call_after(on_success, current_conditions):
-                    logger.error("Failed to deliver current conditions data due to application context issues")
+                    logger.error(
+                        "Failed to deliver current conditions data due to application context issues"
+                    )
         except Exception as e:
             if not self._stop_event.is_set():
                 logger.error(f"Failed to retrieve current conditions: {str(e)}")
@@ -103,7 +104,9 @@ class CurrentConditionsFetcher:
                     # Call error callback on main thread
                     error_msg = f"Unable to retrieve current conditions data: {str(e)}"
                     if not safe_call_after(on_error, error_msg):
-                        logger.error("Failed to deliver current conditions error due to application context issues")
+                        logger.error(
+                            "Failed to deliver current conditions error due to application context issues"
+                        )
         finally:
             # Ensure the thread is unregistered
             logger.debug(f"CurrentConditionsFetcher ({thread_id}): Thread finished, unregistering.")

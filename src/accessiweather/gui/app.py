@@ -5,11 +5,12 @@ overrides the OnExit method to perform cleanup operations.
 """
 
 import logging
+
 import wx
 
-from accessiweather.config_utils import get_config_dir
 from accessiweather.logging_config import setup_logging
 from accessiweather.utils.thread_manager import stop_all_threads
+
 from .weather_app import WeatherApp
 
 # Setup logging
@@ -46,9 +47,10 @@ class AccessiWeatherApp(wx.App):
     def OnExit(self):
         """Clean up resources when the application exits."""
         import time
+
         exit_start_time = time.time()
         logging.info("[EXIT OPTIMIZATION] Application exiting. Starting cleanup process...")
-        
+
         # --- Save Configuration ---
         config_start_time = time.time()
         config_save_thread = None
@@ -61,30 +63,41 @@ class AccessiWeatherApp(wx.App):
                     config_save_thread = top_window._save_config_async()
                 else:
                     # Fall back to synchronous save
-                    logging.debug("[EXIT OPTIMIZATION] Asynchronous save not available, using synchronous save...")
+                    logging.debug(
+                        "[EXIT OPTIMIZATION] Asynchronous save not available, using synchronous save..."
+                    )
                     top_window._save_config(show_errors=False)
-                    
+
                 config_time = time.time() - config_start_time
-                logging.debug(f"[EXIT OPTIMIZATION] Configuration save initiated in {config_time:.3f}s")
+                logging.debug(
+                    f"[EXIT OPTIMIZATION] Configuration save initiated in {config_time:.3f}s"
+                )
             except Exception as e:
                 config_time = time.time() - config_start_time
-                logging.error(f"[EXIT OPTIMIZATION] Error saving configuration after {config_time:.3f}s: {e}", exc_info=True)
+                logging.error(
+                    f"[EXIT OPTIMIZATION] Error saving configuration after {config_time:.3f}s: {e}",
+                    exc_info=True,
+                )
         else:
             logging.warning("Could not find WeatherApp window to save configuration.")
         # --- End Save Configuration ---
-        
+
         # --- Stop All Threads ---
         threads_start_time = time.time()
         logging.debug("[EXIT OPTIMIZATION] Stopping all registered threads...")
-        
+
         # Use a much shorter timeout for faster exit
         remaining_threads = stop_all_threads(timeout=0.02)
-        
+
         threads_time = time.time() - threads_start_time
         if remaining_threads:
-            logging.warning(f"[EXIT OPTIMIZATION] Thread cleanup took {threads_time:.3f}s. {len(remaining_threads)} threads did not exit cleanly: {remaining_threads}")
+            logging.warning(
+                f"[EXIT OPTIMIZATION] Thread cleanup took {threads_time:.3f}s. {len(remaining_threads)} threads did not exit cleanly: {remaining_threads}"
+            )
         else:
-            logging.debug(f"[EXIT OPTIMIZATION] Thread cleanup completed in {threads_time:.3f}s. All threads stopped successfully.")
+            logging.debug(
+                f"[EXIT OPTIMIZATION] Thread cleanup completed in {threads_time:.3f}s. All threads stopped successfully."
+            )
         # --- End Stop All Threads ---
 
         # --- Wait for Config Save (if async) ---
@@ -96,9 +109,13 @@ class AccessiWeatherApp(wx.App):
             config_save_thread.join(0.05)
             wait_time = time.time() - wait_start
             if config_save_thread.is_alive():
-                logging.warning(f"[EXIT OPTIMIZATION] Config save thread still running after {wait_time:.3f}s wait, continuing with exit anyway")
+                logging.warning(
+                    f"[EXIT OPTIMIZATION] Config save thread still running after {wait_time:.3f}s wait, continuing with exit anyway"
+                )
             else:
-                logging.debug(f"[EXIT OPTIMIZATION] Config save thread completed in {wait_time:.3f}s")
+                logging.debug(
+                    f"[EXIT OPTIMIZATION] Config save thread completed in {wait_time:.3f}s"
+                )
         # --- End Wait for Config Save ---
 
         # --- Process any pending events ---
@@ -110,10 +127,14 @@ class AccessiWeatherApp(wx.App):
             logging.debug(f"[EXIT OPTIMIZATION] Final event processing completed in {wx_time:.3f}s")
         except Exception as e:
             wx_time = time.time() - wx_start
-            logging.error(f"[EXIT OPTIMIZATION] Error in final event processing after {wx_time:.3f}s: {e}")
+            logging.error(
+                f"[EXIT OPTIMIZATION] Error in final event processing after {wx_time:.3f}s: {e}"
+            )
         # --- End Process Events ---
 
         # Allow the default exit procedure to continue
         total_time = time.time() - exit_start_time
-        logging.info(f"[EXIT OPTIMIZATION] Cleanup completed in {total_time:.3f}s. Proceeding with default exit.")
-        return super().OnExit() # Ensure the base class method is called
+        logging.info(
+            f"[EXIT OPTIMIZATION] Cleanup completed in {total_time:.3f}s. Proceeding with default exit."
+        )
+        return super().OnExit()  # Ensure the base class method is called
