@@ -1,31 +1,19 @@
 """Tests for the NoaaApiClient class."""
 
-import json
 import time
 from unittest.mock import MagicMock, patch
 
 import pytest
-import requests
 from requests.exceptions import HTTPError, JSONDecodeError, RequestException
 
-from accessiweather.api_client import (
-    ApiClientError,
-    NoaaApiClient,
-    LOCATION_TYPE_COUNTY,
-    LOCATION_TYPE_FORECAST,
-    LOCATION_TYPE_FIRE,
-    LOCATION_TYPE_STATE
-)
+from accessiweather.api_client import LOCATION_TYPE_COUNTY, ApiClientError, NoaaApiClient
 
 # Sample test data
 SAMPLE_POINT_DATA = {
     "@context": ["https://geojson.org/geojson-ld/geojson-context.jsonld"],
     "id": "https://api.weather.gov/points/40,-75",
     "type": "Feature",
-    "geometry": {
-        "type": "Point",
-        "coordinates": [-75.0, 40.0]
-    },
+    "geometry": {"type": "Point", "coordinates": [-75.0, 40.0]},
     "properties": {
         "@id": "https://api.weather.gov/points/40,-75",
         "gridId": "PHI",
@@ -37,19 +25,13 @@ SAMPLE_POINT_DATA = {
         "observationStations": "https://api.weather.gov/gridpoints/PHI/50,75/stations",
         "relativeLocation": {
             "type": "Feature",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [-75.1, 40.1]
-            },
-            "properties": {
-                "city": "Test City",
-                "state": "PA"
-            }
+            "geometry": {"type": "Point", "coordinates": [-75.1, 40.1]},
+            "properties": {"city": "Test City", "state": "PA"},
         },
         "forecastZone": "https://api.weather.gov/zones/forecast/PAZ106",
         "county": "https://api.weather.gov/zones/county/PAC091",
-        "fireWeatherZone": "https://api.weather.gov/zones/fire/PAZ106"
-    }
+        "fireWeatherZone": "https://api.weather.gov/zones/fire/PAZ106",
+    },
 }
 
 SAMPLE_FORECAST_DATA = {
@@ -60,7 +42,7 @@ SAMPLE_FORECAST_DATA = {
                 "temperature": 75,
                 "temperatureUnit": "F",
                 "shortForecast": "Sunny",
-                "detailedForecast": "Sunny with a high near 75."
+                "detailedForecast": "Sunny with a high near 75.",
             }
         ]
     }
@@ -74,20 +56,13 @@ SAMPLE_ALERTS_DATA = {
                 "description": "Test Description",
                 "instruction": "Test Instruction",
                 "severity": "Moderate",
-                "event": "Test Event"
+                "event": "Test Event",
             }
         }
     ]
 }
 
-SAMPLE_DISCUSSION_PRODUCTS = {
-    "@graph": [
-        {
-            "id": "AFD-PHI-202401010000",
-            "@type": "wx:TextProduct"
-        }
-    ]
-}
+SAMPLE_DISCUSSION_PRODUCTS = {"@graph": [{"id": "AFD-PHI-202401010000", "@type": "wx:TextProduct"}]}
 
 SAMPLE_DISCUSSION_TEXT = {
     "productText": """
@@ -98,12 +73,7 @@ With weather information.
 }
 
 SAMPLE_NATIONAL_PRODUCT = {
-    "@graph": [
-        {
-            "id": "FXUS01-KWNH-202401010000",
-            "@type": "wx:TextProduct"
-        }
-    ]
+    "@graph": [{"id": "FXUS01-KWNH-202401010000", "@type": "wx:TextProduct"}]
 }
 
 SAMPLE_NATIONAL_PRODUCT_TEXT = {
@@ -122,29 +92,23 @@ SAMPLE_STATIONS_DATA = {
             "properties": {
                 "@id": "https://api.weather.gov/stations/KXYZ",
                 "@type": "wx:ObservationStation",
-                "elevation": {
-                    "unitCode": "wmoUnit:m",
-                    "value": 123.4
-                },
+                "elevation": {"unitCode": "wmoUnit:m", "value": 123.4},
                 "name": "Test Station",
                 "stationIdentifier": "KXYZ",
-                "timeZone": "America/New_York"
-            }
+                "timeZone": "America/New_York",
+            },
         },
         {
             "id": "https://api.weather.gov/stations/KABC",
             "properties": {
                 "@id": "https://api.weather.gov/stations/KABC",
                 "@type": "wx:ObservationStation",
-                "elevation": {
-                    "unitCode": "wmoUnit:m",
-                    "value": 234.5
-                },
+                "elevation": {"unitCode": "wmoUnit:m", "value": 234.5},
                 "name": "Another Test Station",
                 "stationIdentifier": "KABC",
-                "timeZone": "America/New_York"
-            }
-        }
+                "timeZone": "America/New_York",
+            },
+        },
     ]
 }
 
@@ -152,48 +116,20 @@ SAMPLE_STATIONS_DATA = {
 SAMPLE_OBSERVATION_DATA = {
     "properties": {
         "@id": "https://api.weather.gov/stations/KXYZ/observations/2023-01-01T12:00:00Z",
-        "temperature": {
-            "unitCode": "wmoUnit:degC",
-            "value": 22.8,
-            "qualityControl": "qc:V"
-        },
-        "dewpoint": {
-            "unitCode": "wmoUnit:degC",
-            "value": 15.6,
-            "qualityControl": "qc:V"
-        },
+        "temperature": {"unitCode": "wmoUnit:degC", "value": 22.8, "qualityControl": "qc:V"},
+        "dewpoint": {"unitCode": "wmoUnit:degC", "value": 15.6, "qualityControl": "qc:V"},
         "windDirection": {
             "unitCode": "wmoUnit:degree_(angle)",
             "value": 180,
-            "qualityControl": "qc:V"
+            "qualityControl": "qc:V",
         },
-        "windSpeed": {
-            "unitCode": "wmoUnit:km_h-1",
-            "value": 15.0,
-            "qualityControl": "qc:V"
-        },
-        "barometricPressure": {
-            "unitCode": "wmoUnit:Pa",
-            "value": 101325,
-            "qualityControl": "qc:V"
-        },
-        "seaLevelPressure": {
-            "unitCode": "wmoUnit:Pa",
-            "value": 101325,
-            "qualityControl": "qc:V"
-        },
-        "visibility": {
-            "unitCode": "wmoUnit:km",
-            "value": 16.09,
-            "qualityControl": "qc:V"
-        },
-        "relativeHumidity": {
-            "unitCode": "wmoUnit:percent",
-            "value": 65,
-            "qualityControl": "qc:V"
-        },
+        "windSpeed": {"unitCode": "wmoUnit:km_h-1", "value": 15.0, "qualityControl": "qc:V"},
+        "barometricPressure": {"unitCode": "wmoUnit:Pa", "value": 101325, "qualityControl": "qc:V"},
+        "seaLevelPressure": {"unitCode": "wmoUnit:Pa", "value": 101325, "qualityControl": "qc:V"},
+        "visibility": {"unitCode": "wmoUnit:km", "value": 16.09, "qualityControl": "qc:V"},
+        "relativeHumidity": {"unitCode": "wmoUnit:percent", "value": 65, "qualityControl": "qc:V"},
         "textDescription": "Partly Cloudy",
-        "icon": "https://api.weather.gov/icons/land/day/sct?size=medium"
+        "icon": "https://api.weather.gov/icons/land/day/sct?size=medium",
     }
 }
 
@@ -214,7 +150,7 @@ SAMPLE_HOURLY_FORECAST_DATA = {
                 "windDirection": "S",
                 "icon": "https://api.weather.gov/icons/land/day/sct?size=small",
                 "shortForecast": "Partly Sunny",
-                "detailedForecast": ""
+                "detailedForecast": "",
             },
             {
                 "number": 2,
@@ -229,30 +165,28 @@ SAMPLE_HOURLY_FORECAST_DATA = {
                 "windDirection": "S",
                 "icon": "https://api.weather.gov/icons/land/day/sct?size=small",
                 "shortForecast": "Partly Sunny",
-                "detailedForecast": ""
-            }
+                "detailedForecast": "",
+            },
         ]
     }
 }
+
 
 # Fixture to create a NoaaApiClient instance
 @pytest.fixture
 def api_client():
     return NoaaApiClient(
-        user_agent="TestClient",
-        contact_info="test@example.com",
-        enable_caching=False
+        user_agent="TestClient", contact_info="test@example.com", enable_caching=False
     )
+
 
 # Fixture to create a NoaaApiClient instance with caching enabled
 @pytest.fixture
 def cached_api_client():
     return NoaaApiClient(
-        user_agent="TestClient",
-        contact_info="test@example.com",
-        enable_caching=True,
-        cache_ttl=300
+        user_agent="TestClient", contact_info="test@example.com", enable_caching=True, cache_ttl=300
     )
+
 
 def test_init_basic():
     """Test basic initialization without caching."""
@@ -262,11 +196,13 @@ def test_init_basic():
     assert client.headers["User-Agent"] == "TestClient"
     assert client.cache is None
 
+
 def test_init_with_contact():
     """Test initialization with contact info."""
     client = NoaaApiClient(user_agent="TestClient", contact_info="test@example.com")
 
     assert client.headers["User-Agent"] == "TestClient (test@example.com)"
+
 
 def test_init_with_caching():
     """Test initialization with caching enabled."""
@@ -274,6 +210,7 @@ def test_init_with_caching():
 
     assert client.cache is not None
     assert client.cache.default_ttl == 300
+
 
 def test_get_point_data_success(api_client):
     """Test getting point data successfully."""
@@ -287,6 +224,7 @@ def test_get_point_data_success(api_client):
         assert result == SAMPLE_POINT_DATA
         mock_get.assert_called_once()
         assert f"points/{lat},{lon}" in mock_get.call_args[0][0]
+
 
 def test_get_point_data_cached(cached_api_client):
     """Test that point data is cached."""
@@ -303,6 +241,7 @@ def test_get_point_data_cached(cached_api_client):
         assert result1 == result2
         mock_get.assert_called_once()
 
+
 def test_get_point_data_force_refresh(cached_api_client):
     """Test that force_refresh bypasses cache."""
     lat, lon = 40.0, -75.0
@@ -317,6 +256,7 @@ def test_get_point_data_force_refresh(cached_api_client):
 
         assert mock_get.call_count == 2
 
+
 def test_get_forecast_success(api_client):
     """Test getting forecast data successfully."""
     lat, lon = 40.0, -75.0
@@ -324,7 +264,7 @@ def test_get_forecast_success(api_client):
         # First call for point data
         mock_get.return_value.json.side_effect = [
             SAMPLE_POINT_DATA,  # First call returns point data
-            SAMPLE_FORECAST_DATA  # Second call returns forecast data
+            SAMPLE_FORECAST_DATA,  # Second call returns forecast data
         ]
         mock_get.return_value.raise_for_status.return_value = None
 
@@ -332,6 +272,7 @@ def test_get_forecast_success(api_client):
 
         assert result == SAMPLE_FORECAST_DATA
         assert mock_get.call_count == 2
+
 
 def test_get_forecast_no_url(api_client):
     """Test getting forecast when point data doesn't contain forecast URL."""
@@ -347,6 +288,7 @@ def test_get_forecast_no_url(api_client):
 
         assert "Could not find forecast URL" in str(exc_info.value)
 
+
 def test_identify_location_type_county(api_client):
     """Test identifying county location type."""
     lat, lon = 40.0, -75.0
@@ -359,21 +301,20 @@ def test_identify_location_type_county(api_client):
         assert location_type == LOCATION_TYPE_COUNTY
         assert location_id == "PAC091"
 
+
 def test_get_alerts_precise_location(api_client):
     """Test getting alerts for precise location."""
     lat, lon = 40.0, -75.0
     with patch("requests.get") as mock_get:
         # Mock point data and alerts response
-        mock_get.return_value.json.side_effect = [
-            SAMPLE_POINT_DATA,
-            SAMPLE_ALERTS_DATA
-        ]
+        mock_get.return_value.json.side_effect = [SAMPLE_POINT_DATA, SAMPLE_ALERTS_DATA]
         mock_get.return_value.raise_for_status.return_value = None
 
         result = api_client.get_alerts(lat, lon, precise_location=True)
 
         assert result == SAMPLE_ALERTS_DATA
         assert mock_get.call_count == 2
+
 
 def test_get_alerts_state_fallback(api_client):
     """Test getting alerts falls back to state when precise location not found."""
@@ -387,10 +328,7 @@ def test_get_alerts_state_fallback(api_client):
         # Ensure state is present in relativeLocation
         modified_point_data["properties"]["relativeLocation"]["properties"]["state"] = "PA"
 
-        mock_get.return_value.json.side_effect = [
-            modified_point_data,
-            SAMPLE_ALERTS_DATA
-        ]
+        mock_get.return_value.json.side_effect = [modified_point_data, SAMPLE_ALERTS_DATA]
         mock_get.return_value.raise_for_status.return_value = None
 
         result = api_client.get_alerts(lat, lon)
@@ -400,6 +338,7 @@ def test_get_alerts_state_fallback(api_client):
         params = mock_get.call_args[1].get("params", {})
         assert params.get("area") == "PA"
 
+
 def test_get_discussion_success(api_client):
     """Test getting discussion data successfully."""
     lat, lon = 40.0, -75.0
@@ -407,7 +346,7 @@ def test_get_discussion_success(api_client):
         mock_get.return_value.json.side_effect = [
             SAMPLE_POINT_DATA,
             SAMPLE_DISCUSSION_PRODUCTS,
-            SAMPLE_DISCUSSION_TEXT
+            SAMPLE_DISCUSSION_TEXT,
         ]
         mock_get.return_value.raise_for_status.return_value = None
 
@@ -418,6 +357,7 @@ def test_get_discussion_success(api_client):
         assert result.strip() == expected
         assert mock_get.call_count == 3
 
+
 def test_get_national_product_success(api_client):
     """Test getting national product successfully."""
     product_type = "FXUS01"
@@ -425,7 +365,7 @@ def test_get_national_product_success(api_client):
     with patch("requests.get") as mock_get:
         mock_get.return_value.json.side_effect = [
             SAMPLE_NATIONAL_PRODUCT,
-            SAMPLE_NATIONAL_PRODUCT_TEXT
+            SAMPLE_NATIONAL_PRODUCT_TEXT,
         ]
         mock_get.return_value.raise_for_status.return_value = None
 
@@ -433,6 +373,7 @@ def test_get_national_product_success(api_client):
 
         assert result == SAMPLE_NATIONAL_PRODUCT_TEXT["productText"]
         assert mock_get.call_count == 2
+
 
 def test_rate_limiting(api_client):
     """Test that requests are rate limited."""
@@ -448,6 +389,7 @@ def test_rate_limiting(api_client):
 
         # Should have waited at least min_request_interval
         assert end_time - start_time >= api_client.min_request_interval
+
 
 def test_http_error_handling(api_client):
     """Test handling of HTTP errors."""
@@ -466,6 +408,7 @@ def test_http_error_handling(api_client):
 
         assert "API HTTP error: 404" in str(exc_info.value)
 
+
 def test_json_decode_error_handling(api_client):
     """Test handling of JSON decode errors."""
     lat, lon = 40.0, -75.0
@@ -479,6 +422,7 @@ def test_json_decode_error_handling(api_client):
 
         assert "Failed to decode JSON response" in str(exc_info.value)
 
+
 def test_request_exception_handling(api_client):
     """Test handling of request exceptions."""
     lat, lon = 40.0, -75.0
@@ -489,6 +433,7 @@ def test_request_exception_handling(api_client):
             api_client.get_point_data(lat, lon)
 
         assert "Network error during API request" in str(exc_info.value)
+
 
 def test_thread_safety(api_client):
     """Test thread safety of request handling."""
@@ -531,10 +476,7 @@ def test_get_stations_success(api_client):
     lat, lon = 40.0, -75.0
     with patch("requests.get") as mock_get:
         # First call for point data, second for stations
-        mock_get.return_value.json.side_effect = [
-            SAMPLE_POINT_DATA,
-            SAMPLE_STATIONS_DATA
-        ]
+        mock_get.return_value.json.side_effect = [SAMPLE_POINT_DATA, SAMPLE_STATIONS_DATA]
         mock_get.return_value.raise_for_status.return_value = None
 
         result = api_client.get_stations(lat, lon)
@@ -570,7 +512,7 @@ def test_get_current_conditions_success(api_client):
         mock_get.return_value.json.side_effect = [
             SAMPLE_POINT_DATA,
             SAMPLE_STATIONS_DATA,
-            SAMPLE_OBSERVATION_DATA
+            SAMPLE_OBSERVATION_DATA,
         ]
         mock_get.return_value.raise_for_status.return_value = None
 
@@ -589,7 +531,7 @@ def test_get_current_conditions_no_stations(api_client):
         # Return point data but empty stations list
         mock_get.return_value.json.side_effect = [
             SAMPLE_POINT_DATA,
-            {"features": []}  # Empty stations list
+            {"features": []},  # Empty stations list
         ]
         mock_get.return_value.raise_for_status.return_value = None
 
@@ -604,10 +546,7 @@ def test_get_hourly_forecast_success(api_client):
     lat, lon = 40.0, -75.0
     with patch("requests.get") as mock_get:
         # First call for point data, second for hourly forecast
-        mock_get.return_value.json.side_effect = [
-            SAMPLE_POINT_DATA,
-            SAMPLE_HOURLY_FORECAST_DATA
-        ]
+        mock_get.return_value.json.side_effect = [SAMPLE_POINT_DATA, SAMPLE_HOURLY_FORECAST_DATA]
         mock_get.return_value.raise_for_status.return_value = None
 
         result = api_client.get_hourly_forecast(lat, lon)

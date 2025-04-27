@@ -19,16 +19,17 @@ files_to_remove = [
     "test_files.txt",
 ]
 
+
 def cleanup_files():
     """Remove the untracked files from the project."""
     # Get the project root directory (where this script is located)
     root_dir = os.path.dirname(os.path.abspath(__file__))
-    
+
     print("Starting cleanup of untracked files...\n")
-    
+
     for file_path in files_to_remove:
         full_path = os.path.join(root_dir, file_path)
-        
+
         if os.path.exists(full_path):
             try:
                 if os.path.isdir(full_path):
@@ -41,14 +42,15 @@ def cleanup_files():
                 print(f"Error removing {file_path}: {e}")
         else:
             print(f"File not found: {file_path}")
-    
+
     print("\nCleanup complete!")
     print("\nTo verify, run: git status")
+
 
 if __name__ == "__main__":
     # Ask for confirmation before proceeding
     confirm = input("This will remove all listed untracked files. Continue? (y/n): ")
-    if confirm.lower() == 'y':
+    if confirm.lower() == "y":
         cleanup_files()
     else:
         print("Cleanup cancelled.")

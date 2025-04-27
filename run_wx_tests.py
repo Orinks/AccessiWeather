@@ -28,21 +28,15 @@ logger = logging.getLogger(__name__)
 
 def parse_args():
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(
-        description="Run wxPython tests with enhanced debugging"
-    )
+    parser = argparse.ArgumentParser(description="Run wxPython tests with enhanced debugging")
     parser.add_argument(
         "test_path",
         nargs="?",
         default="tests/",
         help="Path to test file or directory (default: tests/)",
     )
-    parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Enable verbose output"
-    )
-    parser.add_argument(
-        "-d", "--debug", action="store_true", help="Enable debug logging"
-    )
+    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
+    parser.add_argument("-d", "--debug", action="store_true", help="Enable debug logging")
     parser.add_argument(
         "--memory-tracking",
         action="store_true",
@@ -58,15 +52,10 @@ def parse_args():
         action="store_true",
         help="Run each test in a separate process for better isolation",
     )
+    parser.add_argument("--coverage", action="store_true", help="Run tests with coverage")
+    parser.add_argument("--repeat", type=int, default=1, help="Repeat tests multiple times")
     parser.add_argument(
-        "--coverage", action="store_true", help="Run tests with coverage"
-    )
-    parser.add_argument(
-        "--repeat", type=int, default=1, help="Repeat tests multiple times"
-    )
-    parser.add_argument(
-        "--timeout", type=int, default=30,
-        help="Timeout in seconds for each test (default: 30)"
+        "--timeout", type=int, default=30, help="Timeout in seconds for each test (default: 30)"
     )
     return parser.parse_args()
 
@@ -88,7 +77,7 @@ def setup_faulthandler():
         logger.info(f"Faulthandler enabled, logging to {fault_log_path}")
 
         # Register for SIGUSR1 signal if on Unix
-        if hasattr(signal, "SIGUSR1"):
+        if hasattr(signal, "SIGUSR1") and hasattr(faulthandler, "register"):
             faulthandler.register(signal.SIGUSR1, file=log_file)
             logger.info("Registered faulthandler for SIGUSR1 signal")
 
@@ -103,7 +92,9 @@ def run_tests_isolated(args):
     # Use a different approach to collect tests
     # Run pytest with the --collect-only flag but with a custom format
     collect_cmd = [
-        sys.executable, "-m", "pytest",
+        sys.executable,
+        "-m",
+        "pytest",
         args.test_path,
         "--collect-only",
         "-q",  # Quiet mode
@@ -132,7 +123,7 @@ def run_tests_isolated(args):
     # --- Debugging addition ---
     print(f"Collected test items: {test_items}")
     logger.info("Exiting after printing collected items for debugging.")
-    sys.exit(1) # Exit here to prevent running the tests
+    sys.exit(1)  # Exit here to prevent running the tests
     # --- End debugging addition ---
 
     logger.info(f"Running {len(test_items)} tests in isolated mode")
@@ -140,7 +131,7 @@ def run_tests_isolated(args):
     # Run each test in a separate process
     failed_tests = []
     for i, test_item in enumerate(test_items):
-        logger.info(f"Running test {i+1}/{len(test_items)}: {test_item}")
+        logger.info(f"Running test {i + 1}/{len(test_items)}: {test_item}")
 
         # Build command
         cmd = [sys.executable, "-m", "pytest", test_item, "-v"]
@@ -152,8 +143,7 @@ def run_tests_isolated(args):
         # Run the test with timeout
         try:
             process = subprocess.Popen(
-                cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                text=True, bufsize=1
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1
             )
 
             # Read output with timeout
@@ -188,8 +178,8 @@ def run_tests_isolated(args):
                 output.append(remaining_output)
 
             result = process
-            result.stdout = ''.join(output) if output else ''
-            result.stderr = ''
+            result.stdout = "".join(output) if output else ""
+            result.stderr = ""
         except Exception as e:
             logger.error(f"Error running test {test_item}: {e}")
             failed_tests.append(test_item)
@@ -253,8 +243,7 @@ def run_tests_normal(args):
         try:
             # Run with timeout
             process = subprocess.Popen(
-                cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                text=True, bufsize=1
+                cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1
             )
 
             # Read output with timeout
@@ -272,11 +261,15 @@ def run_tests_normal(args):
                     return 1
 
                 # Read a line of output
-                line = process.stdout.readline()
-                if line:
-                    print(line, end="")
+                if process.stdout:
+                    line = process.stdout.readline()
+                    if line:
+                        print(line, end="")
+                    else:
+                        # No output, sleep briefly
+                        time.sleep(0.1)
                 else:
-                    # No output, sleep briefly
+                    # No stdout available
                     time.sleep(0.1)
 
             # Get any remaining output

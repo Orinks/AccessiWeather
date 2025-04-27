@@ -14,7 +14,6 @@ from accessiweather.gui.settings_dialog import (
 from accessiweather.gui.weather_app import WeatherApp
 from accessiweather.notifications import WeatherNotifier
 
-
 # --- Test Data ---
 
 SAMPLE_CONFIG = {
@@ -39,16 +38,10 @@ SAMPLE_ALERT = {
     "status": "Actual",
     "messageType": "Alert",
     "category": "Met",
-    "response": "Execute"
+    "response": "Execute",
 }
 
-SAMPLE_ALERTS_DATA = {
-    "features": [
-        {
-            "properties": SAMPLE_ALERT
-        }
-    ]
-}
+SAMPLE_ALERTS_DATA = {"features": [{"properties": SAMPLE_ALERT}]}
 
 SAMPLE_UPDATED_ALERT = {
     "id": "test-alert-1",
@@ -63,16 +56,10 @@ SAMPLE_UPDATED_ALERT = {
     "status": "Actual",
     "messageType": "Alert",
     "category": "Met",
-    "response": "Execute"
+    "response": "Execute",
 }
 
-SAMPLE_UPDATED_ALERTS_DATA = {
-    "features": [
-        {
-            "properties": SAMPLE_UPDATED_ALERT
-        }
-    ]
-}
+SAMPLE_UPDATED_ALERTS_DATA = {"features": [{"properties": SAMPLE_UPDATED_ALERT}]}
 
 # --- Fixtures ---
 
@@ -90,7 +77,7 @@ def mock_weather_app():
     mock_alerts_timer = MagicMock(spec=wx.Timer)
 
     # Create the app with mocked services
-    with patch.object(WeatherApp, '__init__', return_value=None):
+    with patch.object(WeatherApp, "__init__", return_value=None):
         app = WeatherApp()
 
         # Set up required attributes
@@ -123,6 +110,7 @@ def mock_notifier():
 
 # --- Tests ---
 
+
 def test_alert_update_interval_setting_exists():
     """Test that the alert update interval setting constant exists."""
     assert ALERT_UPDATE_INTERVAL_KEY == "alert_update_interval_minutes"
@@ -130,20 +118,20 @@ def test_alert_update_interval_setting_exists():
 
 def test_weather_app_has_alerts_timer(mock_weather_app):
     """Test that WeatherApp has an alerts timer attribute."""
-    assert hasattr(mock_weather_app, 'alerts_timer')
+    assert hasattr(mock_weather_app, "alerts_timer")
     assert isinstance(mock_weather_app.alerts_timer, MagicMock)
 
 
 def test_weather_app_has_last_alerts_update(mock_weather_app):
     """Test that WeatherApp has a last_alerts_update attribute."""
-    assert hasattr(mock_weather_app, 'last_alerts_update')
+    assert hasattr(mock_weather_app, "last_alerts_update")
     assert mock_weather_app.last_alerts_update == 0.0
 
 
 def test_on_alerts_timer_checks_interval(mock_weather_app):
     """Test that OnAlertsTimer checks the alert update interval."""
     # Mock time.time() to return a specific value
-    with patch('time.time', return_value=1000.0):
+    with patch("time.time", return_value=1000.0):
         # Set last_alerts_update to a value that will trigger an update
         mock_weather_app.last_alerts_update = 700.0  # 5 minutes = 300 seconds ago
 
@@ -157,7 +145,7 @@ def test_on_alerts_timer_checks_interval(mock_weather_app):
 def test_on_alerts_timer_respects_interval(mock_weather_app):
     """Test that OnAlertsTimer respects the alert update interval."""
     # Mock time.time() to return a specific value
-    with patch('time.time', return_value=1000.0):
+    with patch("time.time", return_value=1000.0):
         # Set last_alerts_update to a value that will NOT trigger an update
         # The default interval in SAMPLE_CONFIG is 1 minute (60 seconds)
         # So we need to set last_alerts_update to a value less than 60 seconds ago
@@ -173,7 +161,7 @@ def test_on_alerts_timer_respects_interval(mock_weather_app):
 def test_on_alerts_timer_respects_updating_flag(mock_weather_app):
     """Test that OnAlertsTimer respects the updating flag."""
     # Mock time.time() to return a specific value
-    with patch('time.time', return_value=1000.0):
+    with patch("time.time", return_value=1000.0):
         # Set last_alerts_update to a value that will trigger an update
         mock_weather_app.last_alerts_update = 700.0  # 5 minutes = 300 seconds ago
 
@@ -197,12 +185,7 @@ def test_update_alerts_method():
     mock_app.location_service = MagicMock()
     mock_app.weather_service = MagicMock()
     mock_app.api_client = None
-    mock_app.config = {
-        "settings": {
-            ALERT_RADIUS_KEY: 25,
-            PRECISE_LOCATION_ALERTS_KEY: True
-        }
-    }
+    mock_app.config = {"settings": {ALERT_RADIUS_KEY: 25, PRECISE_LOCATION_ALERTS_KEY: True}}
 
     # Set up mock location service to return a location
     mock_location = ("Test City", 40.0, -75.0)
@@ -248,7 +231,7 @@ def test_process_alerts_detects_new_alerts(mock_notifier):
     notifier.toaster = mock_notifier
 
     # Process alerts for the first time
-    with patch('time.time', return_value=1000.0):
+    with patch("time.time", return_value=1000.0):
         processed_alerts, new_count, updated_count = notifier.process_alerts(SAMPLE_ALERTS_DATA)
 
     # Verify results
@@ -266,8 +249,8 @@ def test_process_alerts_detects_updated_alerts():
     # Set up the mock to return the expected values
     notifier.process_alerts.return_value = (
         [SAMPLE_UPDATED_ALERT],  # processed_alerts
-        0,                       # new_count
-        1                        # updated_count
+        0,  # new_count
+        1,  # updated_count
     )
 
     # Call the method
@@ -296,7 +279,7 @@ def test_show_notification_for_new_alert(mock_notifier):
         title=f"Weather {SAMPLE_ALERT['event']}",
         msg=SAMPLE_ALERT["headline"],
         timeout=10,
-        app_name="AccessiWeather"
+        app_name="AccessiWeather",
     )
 
 
@@ -314,7 +297,7 @@ def test_show_notification_for_updated_alert(mock_notifier):
         title=f"Updated: Weather {SAMPLE_UPDATED_ALERT['event']}",
         msg=SAMPLE_UPDATED_ALERT["headline"],
         timeout=10,
-        app_name="AccessiWeather"
+        app_name="AccessiWeather",
     )
 
 
@@ -332,5 +315,5 @@ def test_notify_alerts_with_new_and_updated_counts(mock_notifier):
         title="Weather Alerts",
         msg="1 new alert, 1 updated alert in your area",
         timeout=10,
-        app_name="AccessiWeather"
+        app_name="AccessiWeather",
     )
