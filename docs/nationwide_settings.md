@@ -84,7 +84,7 @@ def _init_general_tab(self):
     # Add a spacer in the first column
     grid_sizer.Add((1, 1), 0, wx.ALL, 5)
     grid_sizer.Add(self.precise_alerts_ctrl, 0, wx.ALL, 5)
-    
+
     # Show Nationwide Toggle
     show_nationwide_label = "Show Nationwide location"
     self.show_nationwide_ctrl = wx.CheckBox(
@@ -169,13 +169,13 @@ def get_all_locations(self) -> List[str]:
     """
     # Get all locations
     locations = list(self.saved_locations.keys())
-    
+
     # Check if Nationwide should be hidden
     show_nationwide = self.config.get("settings", {}).get(SHOW_NATIONWIDE_KEY, True)
     if not show_nationwide and NATIONWIDE_LOCATION_NAME in locations:
         # Remove Nationwide from the list but keep it in saved_locations
         locations.remove(NATIONWIDE_LOCATION_NAME)
-        
+
     return locations
 ```
 
@@ -184,7 +184,7 @@ Add a method to update the Nationwide visibility setting:
 ```python
 def set_nationwide_visibility(self, show: bool) -> None:
     """Set the visibility of the Nationwide location
-    
+
     Args:
         show: Whether to show the Nationwide location
     """
@@ -192,7 +192,7 @@ def set_nationwide_visibility(self, show: bool) -> None:
     if "settings" not in self.config:
         self.config["settings"] = {}
     self.config["settings"][SHOW_NATIONWIDE_KEY] = show
-    
+
     # Save the config
     self._save_config()
 ```
@@ -204,7 +204,7 @@ Update the `LocationService` class to handle the Nationwide visibility setting:
 ```python
 def set_nationwide_visibility(self, show: bool) -> None:
     """Set the visibility of the Nationwide location
-    
+
     Args:
         show: Whether to show the Nationwide location
     """
@@ -242,7 +242,7 @@ def OnSettings(self, event):  # event is required by wx
         # Check if Nationwide visibility changed
         old_show_nationwide = settings.get(SHOW_NATIONWIDE_KEY, True)
         new_show_nationwide = updated_settings.get(SHOW_NATIONWIDE_KEY, True)
-        
+
         # Update config
         self.config["settings"] = updated_settings
         self.config["api_settings"] = updated_api_settings
