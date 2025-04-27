@@ -279,7 +279,15 @@ def test_get_forecast_no_url(api_client):
     lat, lon = 40.0, -75.0
     with patch("requests.get") as mock_get:
         bad_point_data = dict(SAMPLE_POINT_DATA)
-        bad_point_data["properties"].pop("forecast")
+        properties: dict = {}
+        # Copy all properties except 'forecast'
+        # Use a type-safe approach by accessing the dictionary directly
+        properties_dict = SAMPLE_POINT_DATA.get("properties", {})
+        if isinstance(properties_dict, dict):
+            for key in list(properties_dict.keys()):
+                if key != "forecast":
+                    properties[key] = properties_dict[key]
+        bad_point_data["properties"] = properties
         mock_get.return_value.json.return_value = bad_point_data
         mock_get.return_value.raise_for_status.return_value = None
 
@@ -322,11 +330,36 @@ def test_get_alerts_state_fallback(api_client):
     with patch("requests.get") as mock_get:
         # Remove all zone URLs from point data to force state fallback
         modified_point_data = dict(SAMPLE_POINT_DATA)
-        modified_point_data["properties"].pop("county", None)
-        modified_point_data["properties"].pop("forecastZone", None)
-        modified_point_data["properties"].pop("fireWeatherZone", None)
-        # Ensure state is present in relativeLocation
-        modified_point_data["properties"]["relativeLocation"]["properties"]["state"] = "PA"
+        properties: dict = {}
+        # Copy all properties except the ones we want to exclude
+        # Use a type-safe approach by accessing the dictionary directly
+        properties_dict = SAMPLE_POINT_DATA.get("properties", {})
+        if isinstance(properties_dict, dict):
+            for key in list(properties_dict.keys()):
+                if key not in ["county", "forecastZone", "fireWeatherZone"]:
+                    properties[key] = properties_dict[key]
+
+        # Create a deep copy of the relativeLocation in a type-safe way
+        rel_location = {}
+        rel_properties = {"state": "PA"}
+
+        # Copy other properties if they exist
+        if isinstance(properties_dict, dict) and "relativeLocation" in properties_dict:
+            rel_location_orig = properties_dict.get("relativeLocation", {})
+            if isinstance(rel_location_orig, dict):
+                for key in list(rel_location_orig.keys()):
+                    if key != "properties":
+                        rel_location[key] = rel_location_orig[key]
+
+                rel_props_orig = rel_location_orig.get("properties", {})
+                if isinstance(rel_props_orig, dict):
+                    for key in list(rel_props_orig.keys()):
+                        rel_properties[key] = rel_props_orig[key]
+
+        rel_location["properties"] = rel_properties
+
+        properties["relativeLocation"] = rel_location
+        modified_point_data["properties"] = properties
 
         mock_get.return_value.json.side_effect = [modified_point_data, SAMPLE_ALERTS_DATA]
         mock_get.return_value.raise_for_status.return_value = None
@@ -493,8 +526,15 @@ def test_get_stations_no_url(api_client):
     with patch("requests.get") as mock_get:
         bad_point_data = dict(SAMPLE_POINT_DATA)
         # Remove the observationStations URL
-        bad_point_data["properties"] = dict(bad_point_data["properties"])
-        bad_point_data["properties"].pop("observationStations", None)
+        properties: dict = {}
+        # Copy all properties except observationStations
+        # Use a type-safe approach by accessing the dictionary directly
+        properties_dict = SAMPLE_POINT_DATA.get("properties", {})
+        if isinstance(properties_dict, dict):
+            for key in list(properties_dict.keys()):
+                if key != "observationStations":
+                    properties[key] = properties_dict[key]
+        bad_point_data["properties"] = properties
         mock_get.return_value.json.return_value = bad_point_data
         mock_get.return_value.raise_for_status.return_value = None
 
@@ -563,8 +603,15 @@ def test_get_hourly_forecast_no_url(api_client):
     with patch("requests.get") as mock_get:
         bad_point_data = dict(SAMPLE_POINT_DATA)
         # Remove the forecastHourly URL
-        bad_point_data["properties"] = dict(bad_point_data["properties"])
-        bad_point_data["properties"].pop("forecastHourly", None)
+        properties: dict = {}
+        # Copy all properties except forecastHourly
+        # Use a type-safe approach by accessing the dictionary directly
+        properties_dict = SAMPLE_POINT_DATA.get("properties", {})
+        if isinstance(properties_dict, dict):
+            for key in list(properties_dict.keys()):
+                if key != "forecastHourly":
+                    properties[key] = properties_dict[key]
+        bad_point_data["properties"] = properties
         mock_get.return_value.json.return_value = bad_point_data
         mock_get.return_value.raise_for_status.return_value = None
 

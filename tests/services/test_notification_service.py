@@ -84,7 +84,7 @@ def test_notify_alerts_with_alerts(notification_service, mock_notifier):
 
 def test_notify_alerts_no_alerts(notification_service, mock_notifier):
     """Test notifying about alerts when there are no alerts."""
-    alerts = []
+    alerts: list = []
 
     notification_service.notify_alerts(alerts)
 

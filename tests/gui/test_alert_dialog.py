@@ -118,7 +118,7 @@ def test_process_alerts_preserves_parameters():
     assert headline == "This is a test statement from NWSheadline"
 
 
-def test_alert_details_dialog_with_nwsheadline(mock_wx_dialog):
+def test_alert_details_dialog_with_nwsheadline():
     """Test AlertDetailsDialog with an alert containing NWSheadline."""
     # Create a WeatherService instance with a mock API client
     mock_api_client = MagicMock()
@@ -153,7 +153,7 @@ def test_alert_details_dialog_with_nwsheadline(mock_wx_dialog):
         )
 
 
-def test_alert_details_dialog_without_nwsheadline(mock_wx_dialog):
+def test_alert_details_dialog_without_nwsheadline():
     """Test AlertDetailsDialog with an alert that doesn't have NWSheadline."""
     # Create a WeatherService instance with a mock API client
     mock_api_client = MagicMock()
@@ -186,7 +186,7 @@ def test_alert_details_dialog_without_nwsheadline(mock_wx_dialog):
         dialog.statement_text.SetValue.assert_called_once_with("No statement available")
 
 
-def test_alert_details_dialog_with_empty_parameters(mock_wx_dialog):
+def test_alert_details_dialog_with_empty_parameters():
     """Test AlertDetailsDialog with an alert that has empty parameters."""
     # Create an alert with empty parameters
     alert_data = {
@@ -209,9 +209,16 @@ def test_alert_details_dialog_with_empty_parameters(mock_wx_dialog):
         dialog.statement_text = MagicMock()
 
         # Manually call the code that would extract the statement
-        statement = alert_data.get("parameters", {}).get("NWSheadline", ["No statement available"])[
-            0
-        ]
+        parameters = alert_data.get("parameters", {})
+        statement: str
+        if isinstance(parameters, dict):
+            headline_list = parameters.get("NWSheadline", ["No statement available"])
+            if isinstance(headline_list, list) and headline_list:
+                statement = headline_list[0]
+            else:
+                statement = "No statement available"
+        else:
+            statement = "No statement available"
 
         # Set the statement text
         dialog.statement_text.SetValue = MagicMock()
@@ -221,7 +228,7 @@ def test_alert_details_dialog_with_empty_parameters(mock_wx_dialog):
         dialog.statement_text.SetValue.assert_called_once_with("No statement available")
 
 
-def test_alert_details_dialog_with_missing_parameters(mock_wx_dialog):
+def test_alert_details_dialog_with_missing_parameters():
     """Test AlertDetailsDialog with an alert that has no parameters field."""
     # Create an alert with no parameters field
     alert_data = {
@@ -244,9 +251,14 @@ def test_alert_details_dialog_with_missing_parameters(mock_wx_dialog):
         dialog.statement_text = MagicMock()
 
         # Manually call the code that would extract the statement
-        statement = alert_data.get("parameters", {}).get("NWSheadline", ["No statement available"])[
-            0
-        ]
+        statement: str = "No statement available"  # Default value
+
+        # Get parameters safely
+        parameters_value: object = alert_data.get("parameters", {})
+        if isinstance(parameters_value, dict):
+            headline_list = parameters_value.get("NWSheadline", ["No statement available"])
+            if isinstance(headline_list, list) and headline_list:
+                statement = headline_list[0]
 
         # Set the statement text
         dialog.statement_text.SetValue = MagicMock()
