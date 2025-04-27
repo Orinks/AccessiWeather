@@ -10,6 +10,7 @@ import os
 import time
 from typing import Any, Optional
 import wx
+import wx.adv
 from .alert_dialog import AlertDetailsDialog
 from .dialogs import LocationDialog
 from .settings_dialog import (
@@ -48,6 +49,7 @@ class WeatherAppHandlers:
     discussion_fetcher: Any
     _on_discussion_fetched: Any
     _on_discussion_error: Any
+    taskbar_icon: Optional['wx.adv.TaskBarIcon']
 
     # Methods that will be provided by WeatherApp
     def Destroy(self) -> None:
@@ -72,6 +74,10 @@ class WeatherAppHandlers:
 
     def Unbind(self, *args, **kwargs) -> None:
         """Placeholder for wx.Frame.Unbind method"""
+        pass
+
+    def Hide(self) -> None:
+        """Placeholder for wx.Frame.Hide method"""
         pass
 
     def OnKeyDown(self, event):
