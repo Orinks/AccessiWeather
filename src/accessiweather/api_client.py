@@ -38,7 +38,9 @@ class ApiClientError(Exception):
 class NoaaApiClient:
     # ... existing methods ...
 
-    def get_national_product(self, product_type: str, location: str, force_refresh: bool = False) -> Optional[str]:
+    def get_national_product(
+        self, product_type: str, location: str, force_refresh: bool = False
+    ) -> Optional[str]:
         """Get a national product from a specific center
 
         Args:
@@ -51,12 +53,17 @@ class NoaaApiClient:
         """
         try:
             endpoint = f"products/types/{product_type}/locations/{location}"
-            logger.debug(f"Requesting national product: product_type={product_type}, location={location}, endpoint={endpoint}")
+            logger.debug(
+                f"Requesting national product: type={product_type}, "
+                f"location={location}, endpoint={endpoint}"
+            )
             products = self._make_request(endpoint, force_refresh=force_refresh)
             logger.debug(f"Raw product list response for {product_type}/{location}: {products}")
 
             if "@graph" not in products or not products["@graph"]:
-                logger.warning(f"No '@graph' key or empty product list for {product_type}/{location}")
+                logger.warning(
+                    f"No '@graph' key or empty product list for {product_type}/{location}"
+                )
                 return None
 
             # Get the latest product
@@ -78,7 +85,6 @@ class NoaaApiClient:
             logger.error(f"Error getting national product {product_type} from {location}: {str(e)}")
             return None
 
-
     def get_national_forecast_data(self, force_refresh: bool = False) -> Dict[str, Any]:
         """Get national forecast data from various centers
 
@@ -90,43 +96,44 @@ class NoaaApiClient:
                 "short_range": self.get_national_product("FXUS01", "KWNH", force_refresh),
                 "medium_range": self.get_national_product("FXUS06", "KWNH", force_refresh),
                 "extended": self.get_national_product("FXUS07", "KWNH", force_refresh),
-                "qpf": self.get_national_product("FXUS02", "KWNH", force_refresh)
+                "qpf": self.get_national_product("FXUS02", "KWNH", force_refresh),
             },
             "spc": {
                 "day1": self.get_national_product("ACUS01", "KWNS", force_refresh),
-                "day2": self.get_national_product("ACUS02", "KWNS", force_refresh)
+                "day2": self.get_national_product("ACUS02", "KWNS", force_refresh),
             },
             "nhc": {
                 "atlantic": self.get_national_product("MIATWOAT", "KNHC", force_refresh),
-                "east_pacific": self.get_national_product("MIATWOEP", "KNHC", force_refresh)
+                "east_pacific": self.get_national_product("MIATWOEP", "KNHC", force_refresh),
             },
             "cpc": {
                 "6_10_day": self.get_national_product("FXUS05", "KWNC", force_refresh),
-                "8_14_day": self.get_national_product("FXUS07", "KWNC", force_refresh)
-            }
+                "8_14_day": self.get_national_product("FXUS07", "KWNC", force_refresh),
+            },
         }
         return result
 
     def get_national_discussion_summary(self, force_refresh: bool = False) -> dict:
         """
-        Fetch and summarize the latest WPC Short Range and SPC Day 1 discussions for nationwide view.
+        Fetch and summarize the latest WPC Short Range and SPC Day 1 discussions.
+
         Returns:
-            dict: {"wpc": {"short_range_summary": str}, "spc": {"day1_summary": str}}
+            dict: Summary of WPC and SPC discussions
         """
+
         def summarize(text, lines=10):
             if not text:
                 return "No discussion available."
             # Split into lines and join the first N non-empty lines
-            summary_lines = [l for l in text.splitlines() if l.strip()][:lines]
+            summary_lines = [line for line in text.splitlines() if line.strip()][:lines]
             return "\n".join(summary_lines)
 
         wpc_short = self.get_national_product("FXUS01", "KWNH", force_refresh)
         spc_day1 = self.get_national_product("ACUS01", "KWNS", force_refresh)
         return {
             "wpc": {"short_range_summary": summarize(wpc_short)},
-            "spc": {"day1_summary": summarize(spc_day1)}
+            "spc": {"day1_summary": summarize(spc_day1)},
         }
-
 
     """Client for interacting with NOAA Weather API"""
 
@@ -225,7 +232,9 @@ class NoaaApiClient:
             logger.debug(f"Traceback: {traceback.format_exc()}")
             raise
 
-    def get_hourly_forecast(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
+    def get_hourly_forecast(
+        self, lat: float, lon: float, force_refresh: bool = False
+    ) -> Dict[str, Any]:
         """Get hourly forecast for a location
 
         Args:
@@ -298,7 +307,9 @@ class NoaaApiClient:
             logger.debug(f"Traceback: {traceback.format_exc()}")
             raise
 
-    def get_current_conditions(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
+    def get_current_conditions(
+        self, lat: float, lon: float, force_refresh: bool = False
+    ) -> Dict[str, Any]:
         """Get current weather conditions for a location from the nearest observation station
 
         Args:
@@ -559,7 +570,7 @@ class NoaaApiClient:
                     logger.warning("Product text is empty or missing")
 
                 logger.debug("Returning product_text from get_discussion")
-                return product_text
+                return str(product_text) if product_text else None
             except (IndexError, KeyError) as e:
                 logger.warning(f"Could not find forecast discussion for {office_id}: {str(e)}")
                 return None

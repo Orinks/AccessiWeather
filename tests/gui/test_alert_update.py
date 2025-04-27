@@ -12,9 +12,9 @@ from accessiweather.gui.weather_app import WeatherApp
 def mock_services():
     """Create mock services for WeatherApp."""
     return {
-        'weather_service': MagicMock(),
-        'location_service': MagicMock(),
-        'notification_service': MagicMock(),
+        "weather_service": MagicMock(),
+        "location_service": MagicMock(),
+        "notification_service": MagicMock(),
     }
 
 
@@ -22,28 +22,26 @@ def mock_services():
 def mock_config():
     """Create a mock configuration with update interval set."""
     return {
-        'settings': {
+        "settings": {
             UPDATE_INTERVAL_KEY: 5,  # 5 minutes
-            'alert_radius_miles': 25,
-            'precise_location_alerts': True,
-            'show_nationwide_location': True,
+            "alert_radius_miles": 25,
+            "precise_location_alerts": True,
+            "show_nationwide_location": True,
         },
-        'api_settings': {
-            'api_contact': 'test@example.com'
-        }
+        "api_settings": {"api_contact": "test@example.com"},
     }
 
 
 @pytest.fixture
 def mock_app(mock_services, mock_config):
     """Create a mock WeatherApp instance."""
-    with patch('wx.Frame'):
+    with patch("wx.Frame"):
         app = MagicMock()
-        app.weather_service = mock_services['weather_service']
-        app.location_service = mock_services['location_service']
-        app.notification_service = mock_services['notification_service']
+        app.weather_service = mock_services["weather_service"]
+        app.location_service = mock_services["location_service"]
+        app.notification_service = mock_services["notification_service"]
         app.config = mock_config
-        app.current_location = {'latitude': 40.0, 'longitude': -75.0, 'name': 'Test Location'}
+        app.current_location = {"latitude": 40.0, "longitude": -75.0, "name": "Test Location"}
         app.current_alerts = []
         app.ui_manager = MagicMock()
         app.updating = False
@@ -66,38 +64,39 @@ def test_on_alerts_fetched():
     # Mock the notification service response
     processed_alerts = [
         {
-            'id': 'alert1',
-            'headline': 'Test Alert',
-            'description': 'Test Description',
-            'instruction': 'Test Instruction',
-            'severity': 'Moderate',
-            'event': 'Test Event',
-            'effective': '2024-01-01T00:00:00Z',
-            'expires': '2024-01-02T00:00:00Z',
-            'status': 'Actual',
-            'messageType': 'Alert',
-            'areaDesc': 'Test Area'
+            "id": "alert1",
+            "headline": "Test Alert",
+            "description": "Test Description",
+            "instruction": "Test Instruction",
+            "severity": "Moderate",
+            "event": "Test Event",
+            "effective": "2024-01-01T00:00:00Z",
+            "expires": "2024-01-02T00:00:00Z",
+            "status": "Actual",
+            "messageType": "Alert",
+            "areaDesc": "Test Area",
         }
     ]
-    mock_app.notification_service.process_alerts.return_value = processed_alerts
+    # Return a tuple of (processed_alerts, new_count, updated_count)
+    mock_app.notification_service.process_alerts.return_value = (processed_alerts, 1, 0)
 
     # Create sample alert data
     mock_alerts_data = {
-        'features': [
+        "features": [
             {
-                'id': 'alert1',
-                'properties': {
-                    'headline': 'Test Alert',
-                    'description': 'Test Description',
-                    'instruction': 'Test Instruction',
-                    'severity': 'Moderate',
-                    'event': 'Test Event',
-                    'effective': '2024-01-01T00:00:00Z',
-                    'expires': '2024-01-02T00:00:00Z',
-                    'status': 'Actual',
-                    'messageType': 'Alert',
-                    'areaDesc': 'Test Area'
-                }
+                "id": "alert1",
+                "properties": {
+                    "headline": "Test Alert",
+                    "description": "Test Description",
+                    "instruction": "Test Instruction",
+                    "severity": "Moderate",
+                    "event": "Test Event",
+                    "effective": "2024-01-01T00:00:00Z",
+                    "expires": "2024-01-02T00:00:00Z",
+                    "status": "Actual",
+                    "messageType": "Alert",
+                    "areaDesc": "Test Area",
+                },
             }
         ]
     }
@@ -130,7 +129,7 @@ def test_alert_update_interval(mock_app):
     """Test that alerts are updated based on the update interval."""
     # Set up the test
     mock_time = 1000.0
-    update_interval_minutes = mock_app.config['settings'][UPDATE_INTERVAL_KEY]
+    update_interval_minutes = mock_app.config["settings"][UPDATE_INTERVAL_KEY]
     update_interval_seconds = update_interval_minutes * 60
 
     # Set last_update to a time that will trigger an update
@@ -140,7 +139,7 @@ def test_alert_update_interval(mock_app):
     from accessiweather.gui.weather_app_handlers import WeatherAppHandlers
 
     # Call OnTimer with a mock event
-    with patch('time.time', return_value=mock_time):
+    with patch("time.time", return_value=mock_time):
         WeatherAppHandlers.OnTimer(mock_app, MagicMock())
 
     # Verify that UpdateWeatherData was called, which should include updating alerts
@@ -157,20 +156,15 @@ def test_update_weather_data_includes_alerts():
     mock_app._on_alerts_fetched = MagicMock()
 
     # Mock the location service to return a location
-    location = ('Test Location', 40.0, -75.0)
+    location = ("Test Location", 40.0, -75.0)
     mock_app.location_service.get_current_location.return_value = location
 
     # Mock the config
-    mock_app.config = {
-        'settings': {
-            'precise_location_alerts': True,
-            'alert_radius_miles': 25
-        }
-    }
+    mock_app.config = {"settings": {"precise_location_alerts": True, "alert_radius_miles": 25}}
 
     # Mock the weather service responses
-    mock_forecast_data: dict = {'properties': {'periods': []}}
-    mock_alerts_data: dict = {'features': []}
+    mock_forecast_data: dict = {"properties": {"periods": []}}
+    mock_alerts_data: dict = {"features": []}
     mock_app.weather_service.get_forecast.return_value = mock_forecast_data
     mock_app.weather_service.get_alerts.return_value = mock_alerts_data
 
@@ -205,7 +199,8 @@ def test_update_weather_data_includes_alerts():
 
     # Verify that get_alerts was called with the correct parameters
     mock_app.weather_service.get_alerts.assert_called_once_with(
-        40.0, -75.0,
-        radius=mock_app.config['settings']['alert_radius_miles'],
-        precise_location=mock_app.config['settings']['precise_location_alerts']
+        40.0,
+        -75.0,
+        radius=mock_app.config["settings"]["alert_radius_miles"],
+        precise_location=mock_app.config["settings"]["precise_location_alerts"],
     )

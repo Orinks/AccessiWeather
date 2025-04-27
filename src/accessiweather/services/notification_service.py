@@ -23,8 +23,13 @@ class NotificationService:
         """
         self.notifier = notifier
 
-    def notify_alerts(self, alerts: List[Dict], count: Optional[int] = None,
-                      new_count: int = 0, updated_count: int = 0) -> None:
+    def notify_alerts(
+        self,
+        alerts: List[Dict],
+        count: Optional[int] = None,
+        new_count: int = 0,
+        updated_count: int = 0,
+    ) -> None:
         """Notify the user of weather alerts.
 
         Args:
@@ -43,14 +48,17 @@ class NotificationService:
         logger.info(f"Notifying about {count} alerts (new: {new_count}, updated: {updated_count})")
         self.notifier.notify_alerts(count, new_count, updated_count)
 
-    def process_alerts(self, alerts_data: Dict) -> List[Dict]:
+    def process_alerts(self, alerts_data: Dict) -> tuple[List[Dict], int, int]:
         """Process alerts data and notify the user.
 
         Args:
             alerts_data: Raw alerts data from the API.
 
         Returns:
-            List of processed alert objects.
+            Tuple containing:
+            - List of processed alert objects
+            - Number of new alerts
+            - Number of updated alerts
         """
         processed_alerts, new_count, updated_count = self.notifier.process_alerts(alerts_data)
 
@@ -58,7 +66,7 @@ class NotificationService:
         if new_count > 0 or updated_count > 0:
             self.notify_alerts(processed_alerts, len(processed_alerts), new_count, updated_count)
 
-        return processed_alerts
+        return processed_alerts, new_count, updated_count
 
     def get_sorted_alerts(self) -> List[Dict]:
         """Get a sorted list of active alerts.
