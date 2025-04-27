@@ -135,9 +135,7 @@ class SettingsDialog(wx.Dialog):
         # Precise Location Alerts Toggle
         precise_alerts_label = "Use precise location for alerts"
         self.precise_alerts_ctrl = wx.CheckBox(
-            panel,
-            label=precise_alerts_label,
-            name="Precise Location Alerts"
+            panel, label=precise_alerts_label, name="Precise Location Alerts"
         )
         tooltip_precise = (
             "When checked, only shows alerts for your specific location. "
@@ -150,9 +148,7 @@ class SettingsDialog(wx.Dialog):
         # Show Nationwide Location Toggle
         show_nationwide_label = "Show Nationwide location"
         self.show_nationwide_ctrl = wx.CheckBox(
-            panel,
-            label=show_nationwide_label,
-            name="Show Nationwide Location"
+            panel, label=show_nationwide_label, name="Show Nationwide Location"
         )
         tooltip_nationwide = (
             "When checked, shows the Nationwide location in the location list. "
@@ -177,9 +173,7 @@ class SettingsDialog(wx.Dialog):
         # Cache Enabled Toggle
         cache_enabled_label = "Enable caching of weather data"
         self.cache_enabled_ctrl = wx.CheckBox(
-            panel,
-            label=cache_enabled_label,
-            name="Enable Caching"
+            panel, label=cache_enabled_label, name="Enable Caching"
         )
         tooltip_cache = (
             "When checked, weather data will be cached to reduce API calls. "
@@ -192,9 +186,7 @@ class SettingsDialog(wx.Dialog):
 
         # Cache TTL
         cache_ttl_label = wx.StaticText(panel, label="Cache Time-to-Live (seconds):")
-        self.cache_ttl_ctrl = wx.SpinCtrl(
-            panel, min=60, max=3600, initial=300, name="Cache TTL"
-        )
+        self.cache_ttl_ctrl = wx.SpinCtrl(panel, min=60, max=3600, initial=300, name="Cache TTL")
         tooltip_ttl = "How long cached data remains valid (in seconds)."
         self.cache_ttl_ctrl.SetToolTip(tooltip_ttl)
         grid_sizer.Add(cache_ttl_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
@@ -305,7 +297,6 @@ class SettingsDialog(wx.Dialog):
             ALERT_RADIUS_KEY: self.alert_radius_ctrl.GetValue(),
             PRECISE_LOCATION_ALERTS_KEY: self.precise_alerts_ctrl.GetValue(),
             SHOW_NATIONWIDE_KEY: self.show_nationwide_ctrl.GetValue(),
-
             # Advanced settings
             CACHE_ENABLED_KEY: self.cache_enabled_ctrl.GetValue(),
             CACHE_TTL_KEY: self.cache_ttl_ctrl.GetValue(),

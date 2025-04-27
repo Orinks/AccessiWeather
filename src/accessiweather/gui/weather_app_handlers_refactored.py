@@ -181,7 +181,7 @@ class WeatherAppHandlers:
             wx.MessageBox(
                 "The Nationwide location cannot be removed.",
                 "Cannot Remove",
-                wx.OK | wx.ICON_INFORMATION
+                wx.OK | wx.ICON_INFORMATION,
             )
             return
 
@@ -197,11 +197,7 @@ class WeatherAppHandlers:
             removed = self.location_service.remove_location(selected)
 
             if not removed:
-                wx.MessageBox(
-                    f"Could not remove {selected}.",
-                    "Error",
-                    wx.OK | wx.ICON_ERROR
-                )
+                wx.MessageBox(f"Could not remove {selected}.", "Error", wx.OK | wx.ICON_ERROR)
                 return
 
             # Update dropdown

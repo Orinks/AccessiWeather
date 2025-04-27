@@ -51,12 +51,12 @@ def enable_faulthandler(
             import signal
 
             # Check if the signals are available
-            if hasattr(signal, 'SIGUSR1') and hasattr(signal, 'SIGUSR2'):
+            if hasattr(signal, "SIGUSR1") and hasattr(signal, "SIGUSR2"):
                 # Use getattr to avoid mypy errors
-                sigusr1 = getattr(signal, 'SIGUSR1')
-                sigusr2 = getattr(signal, 'SIGUSR2')
+                sigusr1 = getattr(signal, "SIGUSR1")
+                sigusr2 = getattr(signal, "SIGUSR2")
                 for sig in (sigusr1, sigusr2):
-                    if hasattr(faulthandler, 'register'):
+                    if hasattr(faulthandler, "register"):
                         faulthandler.register(sig, file=sys.stderr, all_threads=all_threads)
                 logger.info("Registered faulthandler for user signals")
             else:
@@ -134,7 +134,7 @@ def register_signal_handler(signum: int, all_threads: bool = True, chain: bool =
     """
     # Register for stderr
     try:
-        if hasattr(faulthandler, 'register'):
+        if hasattr(faulthandler, "register"):
             faulthandler.register(signum, file=sys.stderr, all_threads=all_threads, chain=chain)
 
             # Register for log file if available

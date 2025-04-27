@@ -29,7 +29,9 @@ class AlertDetailsDialog(wx.Dialog):
         severity = alert_data.get("severity", "Unknown")
         headline = alert_data.get("headline", "No headline available")
         description = alert_data.get("description", "No description available")
-        instruction = alert_data.get("instruction", "")  # Changed to empty string instead of "No instructions available"
+        instruction = alert_data.get(
+            "instruction", ""
+        )  # Changed to empty string instead of "No instructions available"
         if instruction is None:
             instruction = ""  # Ensure instruction is never None
 

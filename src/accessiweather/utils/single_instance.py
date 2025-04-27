@@ -5,6 +5,7 @@ can run at a time using wxPython's SingleInstanceChecker.
 """
 
 import logging
+
 import wx
 
 logger = logging.getLogger(__name__)

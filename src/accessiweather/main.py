@@ -7,8 +7,9 @@ import json
 import logging
 import os
 import sys
-import wx
 from typing import Optional
+
+import wx
 
 from accessiweather.config_utils import get_config_dir
 from accessiweather.data_migration import migrate_config_directory
@@ -50,7 +51,7 @@ def main(config_dir: Optional[str] = None, debug_mode: bool = False, enable_cach
         wx.MessageBox(
             "AccessiWeather is already running. Please check your system tray.",
             "AccessiWeather Already Running",
-            wx.OK | wx.ICON_INFORMATION
+            wx.OK | wx.ICON_INFORMATION,
         )
 
         # Clean up the temporary app
