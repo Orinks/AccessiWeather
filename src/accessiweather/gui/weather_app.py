@@ -16,6 +16,15 @@ from accessiweather.national_forecast_fetcher import NationalForecastFetcher
 
 from .async_fetchers import AlertsFetcher, DiscussionFetcher, ForecastFetcher
 from .current_conditions_fetcher import CurrentConditionsFetcher
+from .handlers import (
+    WeatherAppAlertHandlers,
+    WeatherAppBaseHandlers,
+    WeatherAppConfigHandlers,
+    WeatherAppDiscussionHandlers,
+    WeatherAppLocationHandlers,
+    WeatherAppSettingsHandlers,
+    WeatherAppTimerHandlers,
+)
 from .hourly_forecast_fetcher import HourlyForecastFetcher
 from .settings_dialog import (
     ALERT_RADIUS_KEY,
@@ -26,7 +35,6 @@ from .settings_dialog import (
 )
 from .system_tray import TaskBarIcon
 from .ui_manager import UIManager
-from .weather_app_handlers import WeatherAppHandlers
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +43,16 @@ CONFIG_DIR = get_config_dir()
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
 
 
-class WeatherApp(wx.Frame, WeatherAppHandlers):
+class WeatherApp(
+    wx.Frame,
+    WeatherAppBaseHandlers,
+    WeatherAppLocationHandlers,
+    WeatherAppAlertHandlers,
+    WeatherAppDiscussionHandlers,
+    WeatherAppSettingsHandlers,
+    WeatherAppTimerHandlers,
+    WeatherAppConfigHandlers,
+):
     """Main application window for AccessiWeather."""
 
     def __init__(

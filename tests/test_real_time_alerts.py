@@ -92,10 +92,10 @@ def mock_weather_app():
         app.updating = False
         app._alerts_complete = True  # Add the missing attribute
 
-        # Mock methods
-        app.SetStatusText = MagicMock()
-        app.UpdateWeatherData = MagicMock()
-        app.UpdateAlerts = MagicMock()
+        # Mock methods - using setattr to avoid type checking issues
+        setattr(app, "SetStatusText", MagicMock())
+        setattr(app, "UpdateWeatherData", MagicMock())
+        setattr(app, "UpdateAlerts", MagicMock())
 
         yield app
 
