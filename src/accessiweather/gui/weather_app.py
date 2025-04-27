@@ -117,6 +117,11 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         # Bind Close event here as it's frame-level, not UI-element specific
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.Bind(wx.EVT_ICONIZE, self.OnMinimize)
+
+        # Log the update interval from config
+        update_interval = self.config.get("settings", {}).get(UPDATE_INTERVAL_KEY, 30)
+        logger.debug(f"Starting timer with update interval: {update_interval} minutes")
+
         self.timer.Start(1000)  # Check every 1 second for updates
         self.alerts_timer.Start(1000)  # Check every 1 second for alert updates
 
@@ -637,6 +642,9 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         # Update the UI with the processed alerts
         self.ui_manager.display_alerts_processed(processed_alerts)
 
+        # Notify about alerts
+        self.notification_service.notify_alerts(processed_alerts, len(processed_alerts))
+
         # Mark alerts as complete
         self._alerts_complete = True
 
@@ -798,14 +806,30 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             event: Timer event
         """
         # Get update interval from config (default to 30 minutes)
-        update_interval_minutes = self.config.get("settings", {}).get(UPDATE_INTERVAL_KEY, 30)
+        settings = self.config.get("settings", {})
+        update_interval_minutes = settings.get(UPDATE_INTERVAL_KEY, 30)
         update_interval_seconds = update_interval_minutes * 60
 
-        # Check if it's time to update
+        # Calculate time since last update
         now = time.time()
-        if (now - self.last_update) >= update_interval_seconds:
+        time_since_last_update = now - self.last_update
+        next_update_in = update_interval_seconds - time_since_last_update
+
+        # Log timer status at debug level
+        logger.debug(
+            f"Timer check: interval={update_interval_minutes}min, "
+            f"time_since_last={time_since_last_update:.1f}s, "
+            f"next_update_in={next_update_in:.1f}s"
+        )
+
+        # Check if it's time to update
+        if time_since_last_update >= update_interval_seconds:
             if not self.updating:
-                logger.info("Timer triggered weather update.")
+                logger.info(
+                    f"Timer triggered weather update. "
+                    f"Interval: {update_interval_minutes} minutes, "
+                    f"Time since last update: {time_since_last_update:.1f} seconds"
+                )
                 self.UpdateWeatherData()
             else:
                 logger.debug("Timer skipped update: already updating.")
