@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 setup(
     name="accessiweather",
@@ -8,17 +8,12 @@ setup(
     install_requires=[
         "wxPython",
         "requests",
-        "plyer",      # For cross-platform notifications
-        "geopy",      # For geocoding addresses and zip codes
+        "plyer",  # For cross-platform notifications
+        "geopy",  # For geocoding addresses and zip codes
         "python-dateutil",  # For parsing ISO timestamps
         "beautifulsoup4",  # For parsing HTML in the scraper
     ],
-    extras_require={
-        "dev": [
-            "pytest",
-            "pytest-mock"
-        ]
-    },
+    extras_require={"dev": ["pytest", "pytest-mock"]},
     description=(
         "AccessiWeather: An accessible weather application using NOAA data "
         "with focus on screen reader compatibility"
@@ -31,8 +26,8 @@ setup(
     ],
     python_requires=">=3.7",
     entry_points={
-        'console_scripts': [
-            'accessiweather=accessiweather.cli:main',
+        "console_scripts": [
+            "accessiweather=accessiweather.cli:main",
         ],
     },
 )

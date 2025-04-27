@@ -136,7 +136,7 @@ function Clean-BuildDirectories {
 
     # Automatically clean the directories without asking
     Write-Host "Automatically cleaning build and dist directories..." -ForegroundColor Yellow
-    
+
     # Clean dist directory
     if (Test-Path "dist") {
         Write-Host "Cleaning dist directory..." -ForegroundColor Yellow
@@ -179,10 +179,10 @@ function Compare-Version {
         [string]$Version1,
         [string]$Version2
     )
-    
+
     $v1 = [version]$Version1
     $v2 = [version]$Version2
-    
+
     if ($v1 -gt $v2) { return 1 }
     if ($v1 -lt $v2) { return -1 }
     return 0
@@ -193,13 +193,13 @@ function Check-PythonInstalled {
     param (
         [string]$MinVersion = "3.6.0"
     )
-    
+
     try {
         $pythonVersion = python --version 2>&1
         if ($pythonVersion -match 'Python (\d+\.\d+\.\d+)') {
             $currentVersion = $matches[1]
             $versionComparison = Compare-Version -Version1 $currentVersion -Version2 $MinVersion
-            
+
             if ($versionComparison -ge 0) {
                 Write-Host "Python $currentVersion is installed (minimum required: $MinVersion)" -ForegroundColor Green
                 return $true
@@ -212,7 +212,7 @@ function Check-PythonInstalled {
         Write-Host "Python is not installed or not in PATH" -ForegroundColor Red
         return $false
     }
-    
+
     return $false
 }
 
@@ -228,7 +228,7 @@ function Get-RequiredDependencies {
         "beautifulsoup4",
         "PyInstaller"
     )
-    
+
     return $dependencies
 }
 
@@ -237,18 +237,18 @@ function Check-DependencyInstalled {
     param (
         [string]$PackageName
     )
-    
+
     try {
         $pipList = pip list 2>&1
         $packagePattern = "^$PackageName\s+(\d+\.\d+\.\d+)"
-        
+
         foreach ($line in $pipList) {
             if ($line -match $packagePattern) {
                 Write-Host "$PackageName $($matches[1]) is installed" -ForegroundColor Green
                 return $true
             }
         }
-        
+
         Write-Host "$PackageName is not installed" -ForegroundColor Yellow
         return $false
     } catch {
@@ -264,19 +264,19 @@ function Install-Dependency {
         [string]$PackageName,
         [switch]$Upgrade
     )
-    
+
     $upgradeFlag = if ($Upgrade) { "--upgrade" } else { "" }
-    
+
     try {
         Write-Host "Installing $PackageName..." -ForegroundColor Cyan
-        
+
         # Special handling for wxPython which might need specific installation parameters
         if ($PackageName -eq "wxPython") {
             $result = pip install $upgradeFlag --no-cache-dir $PackageName 2>&1
         } else {
             $result = pip install $upgradeFlag $PackageName 2>&1
         }
-        
+
         if (Check-DependencyInstalled -PackageName $PackageName) {
             Write-Host "$PackageName installed successfully" -ForegroundColor Green
             return $true
@@ -297,10 +297,10 @@ function Check-InstallDependencies {
     param (
         [switch]$Force
     )
-    
+
     $allDependenciesInstalled = $true
     $dependencies = Get-RequiredDependencies
-    
+
     foreach ($dependency in $dependencies) {
         if (-not (Check-DependencyInstalled -PackageName $dependency) -or $Force) {
             $installSuccess = Install-Dependency -PackageName $dependency -Upgrade:$Force
@@ -309,7 +309,7 @@ function Check-InstallDependencies {
             }
         }
     }
-    
+
     return $allDependenciesInstalled
 }
 
@@ -342,7 +342,7 @@ $dependenciesInstalled = Check-InstallDependencies
 
 if (-not $dependenciesInstalled) {
     Write-Host "Failed to install all required dependencies. Please check the error messages above." -ForegroundColor Red
-    
+
     $retry = Read-Host "Do you want to retry with the -Force option to reinstall all dependencies? (y/n)"
     if ($retry -eq "y") {
         $dependenciesInstalled = Check-InstallDependencies -Force
