@@ -5,12 +5,9 @@ This module provides the TaskBarIcon class for system tray integration.
 
 import logging
 import os
-from typing import Optional
 
 import wx
 import wx.adv
-
-from accessiweather.config_utils import get_config_dir
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +41,9 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
     def set_icon(self):
         """Set the taskbar icon."""
         # Try to load the icon from the application's resources
-        icon_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "resources", "icon.ico")
+        icon_path = os.path.join(
+            os.path.dirname(__file__), "..", "..", "..", "resources", "icon.ico"
+        )
 
         if not os.path.exists(icon_path):
             # If the icon doesn't exist, use a default icon
