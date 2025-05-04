@@ -7,7 +7,7 @@ import logging
 import threading
 
 from accessiweather.gui.async_fetchers import safe_call_after
-from accessiweather.utils.thread_manager import get_thread_manager, register_thread
+from accessiweather.utils.thread_manager import ThreadManager
 
 logger = logging.getLogger(__name__)
 
@@ -61,9 +61,8 @@ class HourlyForecastFetcher:
         # Create and start new thread
         args = (lat, lon, on_success, on_error)
         self.thread = threading.Thread(target=self._fetch_thread, args=args, daemon=True)
+        self.thread.name = f"HourlyForecastFetcher-{lat}-{lon}"
         self.thread.start()
-        # Register the thread with the manager
-        register_thread(self.thread, self._stop_event, name=f"HourlyForecastFetcher-{lat}-{lon}")
 
     def _fetch_thread(self, lat, lon, on_success, on_error):
         """Thread function to fetch the hourly forecast
@@ -74,8 +73,8 @@ class HourlyForecastFetcher:
             on_success: Success callback
             on_error: Error callback
         """
-        thread_id = threading.get_ident()
-        thread_manager = get_thread_manager()
+        thread = threading.current_thread()
+        ThreadManager.instance().register_thread(thread, self._stop_event)
         try:
             # Check if we've been asked to stop
             if self._stop_event.is_set():
@@ -109,5 +108,5 @@ class HourlyForecastFetcher:
                         )
         finally:
             # Ensure the thread is unregistered
-            logger.debug(f"HourlyForecastFetcher ({thread_id}): Thread finished, unregistering.")
-            thread_manager.unregister_thread(thread_id)  # Use thread_id
+            logger.debug(f"HourlyForecastFetcher ({thread.ident}): Thread finished, unregistering.")
+            ThreadManager.instance().unregister_thread(thread.ident)

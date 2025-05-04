@@ -6,11 +6,20 @@ This module provides a class for fetching national forecast data asynchronously.
 import logging
 import threading
 
+import wx
+
+from accessiweather.utils.thread_manager import ThreadManager
+
 logger = logging.getLogger(__name__)
 
 
 class NationalForecastFetcher:
-    """Fetches national forecast data asynchronously."""
+    """Fetches national forecast data asynchronously.
+
+    This class is responsible for fetching national forecast data from the
+    WeatherService in a background thread and calling the appropriate callbacks
+    when the data is available or when an error occurs.
+    """
 
     def __init__(self, service):
         """Initialize the fetcher.
@@ -26,7 +35,6 @@ class NationalForecastFetcher:
         self,
         on_success=None,
         on_error=None,
-        additional_data=None,
         force_refresh=False,
         callback_timeout=5.0,
     ):
@@ -35,23 +43,46 @@ class NationalForecastFetcher:
         Args:
             on_success: Callback function to call on successful fetch.
             on_error: Callback function to call on error.
-            additional_data: Additional data to pass to the callbacks.
             force_refresh: Whether to force a refresh of the data.
             callback_timeout: Maximum time in seconds to wait for callbacks to complete.
         """
         logger.info("Starting national forecast fetch")
 
+        # Cancel any existing fetch operation
+        if self.thread and self.thread.is_alive():
+            logger.debug("Cancelling in-progress national forecast fetch")
+            self.cancel()
+            # Wait briefly for the thread to terminate
+            self.thread.join(0.5)
+
         # Reset the stop event in case it was set previously
         self._stop_event.clear()
 
         def _fetch_thread():
+            thread = threading.current_thread()
+            # Register this thread with the ThreadManager
+            ThreadManager.instance().register_thread(thread, self._stop_event)
             try:
                 # Check if we should stop
                 if self._stop_event.is_set():
                     logger.info("National forecast fetch cancelled")
                     return
 
-                # Fetch the data
+                # Fetch the data from the weather service
+                # This returns a dictionary with the structure:
+                # {
+                #     "national_discussion_summaries": {
+                #         "wpc": {
+                #             "short_range_summary": str,
+                #             "short_range_full": str
+                #         },
+                #         "spc": {
+                #             "day1_summary": str,
+                #             "day1_full": str
+                #         },
+                #         "attribution": str
+                #     }
+                # }
                 data = self.service.get_national_forecast_data(force_refresh=force_refresh)
 
                 # Check if we should stop before calling the callback
@@ -71,8 +102,9 @@ class NationalForecastFetcher:
                             timer.daemon = True
                             timer.start()
 
-                        # Wrap callback in try-except to prevent thread from hanging on callback errors
-                        on_success(data)
+                        # Use wx.CallAfter to ensure the callback runs in the main thread
+                        # This is important for UI updates
+                        wx.CallAfter(on_success, data)
 
                         # Cancel the timer if it's still active
                         if hasattr(threading, "Timer"):
@@ -100,7 +132,8 @@ class NationalForecastFetcher:
                             timer.daemon = True
                             timer.start()
 
-                        on_error(error_message)
+                        # Use wx.CallAfter to ensure the callback runs in the main thread
+                        wx.CallAfter(on_error, error_message)
 
                         # Cancel the timer if it's still active
                         if hasattr(threading, "Timer"):
@@ -109,6 +142,8 @@ class NationalForecastFetcher:
                         logger.error(f"Error in national forecast error callback: {callback_error}")
             finally:
                 logger.debug("National forecast fetch thread completed")
+                # Unregister this thread from the ThreadManager
+                ThreadManager.instance().unregister_thread(thread.ident)
 
         # Create and start the thread
         self.thread = threading.Thread(target=_fetch_thread, daemon=True)

@@ -35,6 +35,52 @@ class ApiClientError(Exception):
     pass
 
 
+class NoaaApiError(ApiClientError):
+    """Custom exception for NOAA API client errors with detailed information."""
+
+    # Error type constants
+    NETWORK_ERROR = "network"
+    TIMEOUT_ERROR = "timeout"
+    CONNECTION_ERROR = "connection"
+    AUTHENTICATION_ERROR = "authentication"
+    RATE_LIMIT_ERROR = "rate_limit"
+    CLIENT_ERROR = "client"
+    SERVER_ERROR = "server"
+    PARSE_ERROR = "parse"
+    UNKNOWN_ERROR = "unknown"
+
+    def __init__(
+        self,
+        message: str,
+        status_code: Optional[int] = None,
+        error_type: Optional[str] = None,
+        url: Optional[str] = None,
+    ):
+        """Initialize the NoaaApiError.
+
+        Args:
+            message: Error message
+            status_code: HTTP status code if applicable
+            error_type: Type of error (use class constants)
+            url: URL that caused the error
+        """
+        self.status_code = status_code
+        self.error_type = error_type or self.UNKNOWN_ERROR
+        self.url = url
+        super().__init__(message)
+
+    def __str__(self) -> str:
+        """Return a string representation of the error."""
+        parts = [super().__str__()]
+        if self.status_code:
+            parts.append(f"Status code: {self.status_code}")
+        if self.error_type:
+            parts.append(f"Error type: {self.error_type}")
+        if self.url:
+            parts.append(f"URL: {self.url}")
+        return " | ".join(parts)
+
+
 class NoaaApiClient:
     # ... existing methods ...
 
@@ -673,21 +719,62 @@ class NoaaApiClient:
                     response.raise_for_status()
                 except requests.exceptions.HTTPError as http_err:
                     status_code = http_err.response.status_code
-                    error_msg = f"API HTTP error: {status_code} for URL {request_url}"
+                    error_detail = ""
+                    error_type = NoaaApiError.UNKNOWN_ERROR
+
+                    # Try to get more details from the response
                     try:
                         # Try getting detail from JSON response if available
                         error_json = http_err.response.json()
                         detail = error_json.get("detail", "No detail provided")
-                        error_msg += f" - Detail: {detail}"
+                        error_detail = f"Detail: {detail}"
                     except JSONDecodeError:
                         # If error response isn't valid JSON, use raw text
                         resp_text = http_err.response.text[:200]
-                        error_msg += f" - Response body: {resp_text}"
+                        error_detail = f"Response body: {resp_text}"
                     except Exception as json_err:  # Catch other JSON errors
-                        error_msg += f" - Error parsing error response JSON: {json_err}"
+                        error_detail = f"Error parsing error response JSON: {json_err}"
 
-                    logger.error(error_msg, exc_info=True)
-                    raise ApiClientError(error_msg) from http_err
+                    # Determine error type and message based on status code
+                    if status_code == 400:
+                        error_type = NoaaApiError.CLIENT_ERROR
+                        error_msg = f"Bad request: {error_detail}"
+                        logger.error(error_msg)
+                    elif status_code == 401:
+                        error_type = NoaaApiError.AUTHENTICATION_ERROR
+                        error_msg = f"Authentication required: {error_detail}"
+                        logger.error(error_msg)
+                    elif status_code == 403:
+                        error_type = NoaaApiError.AUTHENTICATION_ERROR
+                        error_msg = f"Access forbidden: {error_detail}"
+                        logger.error(error_msg)
+                    elif status_code == 404:
+                        error_type = NoaaApiError.CLIENT_ERROR
+                        error_msg = f"Resource not found: {error_detail}"
+                        logger.warning(error_msg)  # 404 is often expected, so warning level
+                    elif status_code == 429:
+                        error_type = NoaaApiError.RATE_LIMIT_ERROR
+                        error_msg = f"Rate limit exceeded: {error_detail}"
+                        logger.warning(error_msg)
+                    elif 400 <= status_code < 500:
+                        error_type = NoaaApiError.CLIENT_ERROR
+                        error_msg = f"Client error ({status_code}): {error_detail}"
+                        logger.error(error_msg)
+                    elif 500 <= status_code < 600:
+                        error_type = NoaaApiError.SERVER_ERROR
+                        error_msg = f"Server error ({status_code}): {error_detail}"
+                        logger.error(error_msg)
+                    else:
+                        error_type = NoaaApiError.UNKNOWN_ERROR
+                        error_msg = f"Unexpected status code ({status_code}): {error_detail}"
+                        logger.error(error_msg)
+
+                    raise NoaaApiError(
+                        message=error_msg,
+                        status_code=status_code,
+                        error_type=error_type,
+                        url=request_url,
+                    ) from http_err
 
                 # If status is OK, try to parse JSON
                 try:
@@ -710,18 +797,43 @@ class NoaaApiClient:
                         f"Error: {json_err}. Response text: {resp_text}"
                     )
                     logger.error(error_msg, exc_info=True)
-                    raise ApiClientError(error_msg) from json_err
+                    raise NoaaApiError(
+                        message=error_msg,
+                        status_code=response.status_code,
+                        error_type=NoaaApiError.PARSE_ERROR,
+                        url=request_url,
+                    ) from json_err
 
+        except requests.exceptions.Timeout as timeout_err:
+            # Handle timeout errors specifically
+            error_msg = f"Request timed out during API request to {request_url}: {timeout_err}"
+            logger.error(error_msg)
+            raise NoaaApiError(
+                message=error_msg, error_type=NoaaApiError.TIMEOUT_ERROR, url=request_url
+            ) from timeout_err
+        except requests.exceptions.ConnectionError as conn_err:
+            # Handle connection errors specifically
+            error_msg = f"Connection error during API request to {request_url}: {conn_err}"
+            logger.error(error_msg)
+            raise NoaaApiError(
+                message=error_msg, error_type=NoaaApiError.CONNECTION_ERROR, url=request_url
+            ) from conn_err
         except requests.exceptions.RequestException as req_err:
-            # Catch connection errors, timeouts, etc.
+            # Catch other request exceptions
             error_msg = f"Network error during API request to {request_url}: {req_err}"
             # Log without traceback to avoid cluttering logs with expected errors
             logger.error(error_msg)  # Don't include exc_info=True
-            raise ApiClientError(error_msg) from req_err
+            raise NoaaApiError(
+                message=error_msg, error_type=NoaaApiError.NETWORK_ERROR, url=request_url
+            ) from req_err
+        except NoaaApiError:  # Re-raise NoaaApiErrors directly
+            raise
         except ApiClientError:  # Re-raise ApiClientErrors directly
             raise
         except Exception as e:
             # Catch any other unexpected errors
             error_msg = f"Unexpected error during API request to {request_url}: {e}"
             logger.error(error_msg, exc_info=True)  # Log with traceback
-            raise ApiClientError(error_msg) from e
+            raise NoaaApiError(
+                message=error_msg, error_type=NoaaApiError.UNKNOWN_ERROR, url=request_url
+            ) from e

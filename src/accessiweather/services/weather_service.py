@@ -5,10 +5,11 @@ separating business logic from UI concerns.
 """
 
 import logging
+import time
 from typing import Any, Dict, List, Optional
 
 from accessiweather.api_client import ApiClientError, NoaaApiClient
-from accessiweather.services import national_discussion_scraper
+from accessiweather.services.national_discussion_scraper import NationalDiscussionScraper
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,10 @@ class WeatherService:
             api_client: The API client to use for weather data retrieval.
         """
         self.api_client = api_client
+        self.national_scraper = NationalDiscussionScraper(request_delay=1.0)
+        self.national_data_cache = None
+        self.national_data_timestamp = 0
+        self.cache_expiry = 3600  # 1 hour in seconds
 
     def get_national_forecast_data(self, force_refresh: bool = False) -> dict:
         """Get nationwide forecast data, including national discussion summaries.
@@ -49,12 +54,36 @@ class WeatherService:
         Raises:
             ApiClientError: If there was an error retrieving the data
         """
+        current_time = time.time()
+
+        # Check if we have cached data that's still valid and not forcing refresh
+        if (
+            not force_refresh
+            and self.national_data_cache
+            and current_time - self.national_data_timestamp < self.cache_expiry
+        ):
+            logger.info("Using cached nationwide forecast data")
+            return {"national_discussion_summaries": self.national_data_cache}
+
         try:
-            logger.info("Getting nationwide forecast data (with scraper summaries)")
-            summaries = national_discussion_scraper.get_national_discussion_summaries()
-            return {"national_discussion_summaries": summaries}
+            logger.info("Getting nationwide forecast data from scraper")
+            # Fetch fresh data from the scraper
+            national_data = self.national_scraper.fetch_all_discussions()
+
+            # Update cache
+            self.national_data_cache = national_data
+            self.national_data_timestamp = current_time
+
+            return {"national_discussion_summaries": national_data}
         except Exception as e:
             logger.error(f"Error getting nationwide forecast data: {str(e)}")
+
+            # If we have cached data, return it even if expired
+            if self.national_data_cache:
+                logger.info("Returning cached national data due to fetch error")
+                return {"national_discussion_summaries": self.national_data_cache}
+
+            # Otherwise, raise an error
             raise ApiClientError(f"Unable to retrieve nationwide forecast data: {str(e)}")
 
     def get_forecast(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:

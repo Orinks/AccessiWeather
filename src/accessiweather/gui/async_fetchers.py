@@ -8,8 +8,8 @@ import threading
 
 import wx
 
-# Import thread manager functions
-from accessiweather.utils.thread_manager import get_thread_manager, register_thread
+# Import ThreadManager
+from accessiweather.utils.thread_manager import ThreadManager
 
 logger = logging.getLogger(__name__)
 
@@ -108,9 +108,8 @@ class ForecastFetcher:
         # Create and start new thread
         args = (lat, lon, on_success, on_error)
         self.thread = threading.Thread(target=self._fetch_thread, args=args, daemon=True)
+        self.thread.name = f"ForecastFetcher-{lat}-{lon}"
         self.thread.start()
-        # Register the thread with the manager
-        register_thread(self.thread, self._stop_event, name=f"ForecastFetcher-{lat}-{lon}")
 
     def _fetch_thread(self, lat, lon, on_success, on_error):
         """Thread function to fetch the forecast
@@ -121,8 +120,8 @@ class ForecastFetcher:
             on_success: Success callback
             on_error: Error callback
         """
-        thread_id = threading.get_ident()
-        thread_manager = get_thread_manager()
+        thread = threading.current_thread()
+        ThreadManager.instance().register_thread(thread, self._stop_event)
         try:
             # Check if we've been asked to stop
             if self._stop_event.is_set():
@@ -156,8 +155,8 @@ class ForecastFetcher:
                         )
         finally:
             # Ensure the thread is unregistered
-            logger.debug(f"ForecastFetcher ({thread_id}): Thread finished, unregistering.")
-            thread_manager.unregister_thread(thread_id)  # Use thread_id
+            logger.debug(f"ForecastFetcher ({thread.ident}): Thread finished, unregistering.")
+            ThreadManager.instance().unregister_thread(thread.ident)
 
 
 class AlertsFetcher:
@@ -211,9 +210,8 @@ class AlertsFetcher:
         # Create and start new thread
         args = (lat, lon, on_success, on_error, precise_location, radius)
         self.thread = threading.Thread(target=self._fetch_thread, args=args, daemon=True)
+        self.thread.name = f"AlertsFetcher-{lat}-{lon}"
         self.thread.start()
-        # Register the thread with the manager
-        register_thread(self.thread, self._stop_event, name=f"AlertsFetcher-{lat}-{lon}")
 
     def _fetch_thread(self, lat, lon, on_success, on_error, precise_location, radius):
         """Thread function to fetch the alerts
@@ -226,8 +224,8 @@ class AlertsFetcher:
             precise_location: Whether to get alerts for the precise location or statewide
             radius: Radius in miles to search for alerts if location type cannot be determined
         """
-        thread_id = threading.get_ident()
-        thread_manager = get_thread_manager()
+        thread = threading.current_thread()
+        ThreadManager.instance().register_thread(thread, self._stop_event)
         try:
             # Check if we've been asked to stop
             if self._stop_event.is_set():
@@ -264,8 +262,8 @@ class AlertsFetcher:
                         )
         finally:
             # Ensure the thread is unregistered
-            logger.debug(f"AlertsFetcher ({thread_id}): Thread finished, unregistering.")
-            thread_manager.unregister_thread(thread_id)  # Use thread_id
+            logger.debug(f"AlertsFetcher ({thread.ident}): Thread finished, unregistering.")
+            ThreadManager.instance().unregister_thread(thread.ident)
 
 
 class DiscussionFetcher:
@@ -318,9 +316,8 @@ class DiscussionFetcher:
         # Create and start new thread
         args = (lat, lon, on_success, on_error, additional_data)
         self.thread = threading.Thread(target=self._fetch_thread, args=args, daemon=True)
+        self.thread.name = f"DiscussionFetcher-{lat}-{lon}"
         self.thread.start()
-        # Register the thread with the manager
-        register_thread(self.thread, self._stop_event, name=f"DiscussionFetcher-{lat}-{lon}")
 
     def _fetch_thread(self, lat, lon, on_success, on_error, additional_data):
         """Thread function to fetch the discussion
@@ -332,8 +329,8 @@ class DiscussionFetcher:
             on_error: Error callback
             additional_data: Additional data to pass to callbacks
         """
-        thread_id = threading.get_ident()
-        thread_manager = get_thread_manager()
+        thread = threading.current_thread()
+        ThreadManager.instance().register_thread(thread, self._stop_event)
         try:
             # Check if we've been asked to stop
             if self._stop_event.is_set():
@@ -441,5 +438,5 @@ class DiscussionFetcher:
                             )
         finally:
             # Ensure the thread is unregistered
-            logger.debug(f"DiscussionFetcher ({thread_id}): Thread finished, unregistering.")
-            thread_manager.unregister_thread(thread_id)  # Use thread_id
+            logger.debug(f"DiscussionFetcher ({thread.ident}): Thread finished, unregistering.")
+            ThreadManager.instance().unregister_thread(thread.ident)

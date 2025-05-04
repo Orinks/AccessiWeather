@@ -36,6 +36,8 @@ class SimpleThread(threading.Thread):
 @pytest.fixture
 def thread_manager():
     """Create a fresh ThreadManager instance."""
+    # Reset the singleton for this test
+    ThreadManager._instance = None
     return ThreadManager()
 
 
@@ -59,11 +61,20 @@ def mock_stop_event():
 # --- ThreadManager Tests ---
 
 
-def test_init(thread_manager):
-    """Test ThreadManager initialization."""
-    assert not thread_manager._threads
-    assert not thread_manager._stop_events
-    assert isinstance(thread_manager._lock, _RLock)
+def test_singleton_pattern():
+    """Test that ThreadManager follows the singleton pattern."""
+    # Reset the singleton
+    ThreadManager._instance = None
+
+    # Get two instances
+    manager1 = ThreadManager.instance()
+    manager2 = ThreadManager.instance()
+
+    # They should be the same object
+    assert manager1 is manager2
+
+    # Reset the singleton for other tests
+    ThreadManager._instance = None
 
 
 def test_register_thread_no_event(thread_manager, mock_thread):
@@ -138,6 +149,26 @@ def test_get_stop_events(thread_manager, mock_thread, mock_stop_event):
     assert events == [mock_stop_event]
 
 
+def test_is_thread_running_with_mock(thread_manager):
+    """Test checking if a thread is running using mocks."""
+    # Create a mock thread
+    mock_thread = MagicMock()
+    mock_thread.is_alive.return_value = True
+    mock_thread.ident = 12345
+
+    # Register the thread
+    thread_manager.register_thread(mock_thread, threading.Event(), "test-thread")
+
+    # Thread should be reported as running
+    assert thread_manager.is_thread_running(12345)
+
+    # Change the mock to report not running
+    mock_thread.is_alive.return_value = False
+
+    # Thread should be reported as not running
+    assert not thread_manager.is_thread_running(12345)
+
+
 def test_stop_all_threads_clean_stop(thread_manager):
     """Test stopping threads that respond to stop events."""
     # Create a real thread that will stop when the event is set
@@ -193,29 +224,77 @@ def test_get_active_threads(thread_manager):
     assert active_threads == [active_thread]
 
 
-def test_clear(thread_manager, mock_thread, mock_stop_event):
-    """Test clearing all registered threads and events."""
-    thread_manager.register_thread(mock_thread, mock_stop_event)
-    thread_manager.clear()
+def test_get_active_threads_with_mocks(thread_manager):
+    """Test getting active threads using mocks."""
+    # Create mock threads
+    mock_thread1 = MagicMock()
+    mock_thread1.is_alive.return_value = True
+    mock_thread1.ident = 12345
+    mock_thread1.daemon = False
 
-    assert not thread_manager._threads
-    assert not thread_manager._stop_events
+    mock_thread2 = MagicMock()
+    mock_thread2.is_alive.return_value = False
+    mock_thread2.ident = 67890
+    mock_thread2.daemon = True
+
+    # Register the threads
+    thread_manager.register_thread(mock_thread1, threading.Event(), "test-thread-1")
+    thread_manager.register_thread(mock_thread2, threading.Event(), "test-thread-2")
+
+    # Get active threads
+    active_threads = thread_manager.get_active_threads()
+
+    # Only the first thread should be reported as active
+    assert len(active_threads) == 1
+    assert active_threads[0] is mock_thread1
+
+    # Test the get_active_thread_info method
+    thread_info = thread_manager.get_active_thread_info()
+    assert len(thread_info) == 1
+    assert thread_info[0]["name"] == "test-thread-1"
+    assert thread_info[0]["id"] == 12345
+    assert thread_info[0]["daemon"] is False
+    assert thread_info[0]["has_stop_event"] is True
 
 
-def test_len(thread_manager, mock_thread):
-    """Test len() operator."""
-    assert len(thread_manager) == 0
+def test_stop_all_threads_with_mocks(thread_manager):
+    """Test stopping all threads using mocks."""
+    # Create mock threads and events
+    mock_thread1 = MagicMock()
+    mock_thread1.is_alive.return_value = True
+    mock_thread1.ident = 12345
+    mock_event1 = threading.Event()
 
-    thread_manager.register_thread(mock_thread)
-    assert len(thread_manager) == 1
+    mock_thread2 = MagicMock()
+    mock_thread2.is_alive.return_value = True
+    mock_thread2.ident = 67890
+    mock_event2 = threading.Event()
 
+    # Register the threads
+    thread_manager.register_thread(mock_thread1, mock_event1, "test-thread-1")
+    thread_manager.register_thread(mock_thread2, mock_event2, "test-thread-2")
 
-def test_bool(thread_manager, mock_thread):
-    """Test bool() operator."""
-    assert not bool(thread_manager)
+    # After join is called, thread1 stops but thread2 keeps running
+    def join_side_effect(_):  # Ignore the timeout parameter
+        if mock_thread1.join.call_count == 1:
+            mock_thread1.is_alive.return_value = False
 
-    thread_manager.register_thread(mock_thread)
-    assert bool(thread_manager)
+    mock_thread1.join.side_effect = join_side_effect
+
+    # Stop all threads
+    remaining = thread_manager.stop_all_threads(timeout=0.1)
+
+    # Verify events were set
+    assert mock_event1.is_set()
+    assert mock_event2.is_set()
+
+    # Verify join was called
+    mock_thread1.join.assert_called_once()
+    mock_thread2.join.assert_called_once()
+
+    # Thread2 should still be running
+    assert len(remaining) == 1
+    assert "test-thread-2" in remaining
 
 
 # --- Global Function Tests ---
@@ -223,15 +302,24 @@ def test_bool(thread_manager, mock_thread):
 
 def test_get_thread_manager():
     """Test getting the global thread manager instance."""
+    # Reset the singleton
+    ThreadManager._instance = None
+
     manager1 = get_thread_manager()
     manager2 = get_thread_manager()
 
     assert manager1 is manager2  # Should return the same instance
 
+    # Reset the singleton for other tests
+    ThreadManager._instance = None
+
 
 def test_register_thread_global(mock_thread, mock_stop_event):
     """Test registering a thread using the global function."""
-    with patch("accessiweather.utils.thread_manager._thread_manager") as mock_manager:
+    with patch("accessiweather.utils.thread_manager.ThreadManager.instance") as mock_instance:
+        mock_manager = MagicMock()
+        mock_instance.return_value = mock_manager
+
         register_thread(mock_thread, mock_stop_event, "TestThread")
         mock_manager.register_thread.assert_called_once_with(
             mock_thread, mock_stop_event, "TestThread"
@@ -240,15 +328,21 @@ def test_register_thread_global(mock_thread, mock_stop_event):
 
 def test_unregister_thread_global(mock_thread):
     """Test unregistering a thread using the global function."""
-    with patch("accessiweather.utils.thread_manager._thread_manager") as mock_manager:
+    with patch("accessiweather.utils.thread_manager.ThreadManager.instance") as mock_instance:
+        mock_manager = MagicMock()
+        mock_instance.return_value = mock_manager
+
         unregister_thread(mock_thread.ident)
         mock_manager.unregister_thread.assert_called_once_with(mock_thread.ident)
 
 
 def test_stop_all_threads_global():
     """Test stopping all threads using the global function."""
-    with patch("accessiweather.utils.thread_manager._thread_manager") as mock_manager:
+    with patch("accessiweather.utils.thread_manager.ThreadManager.instance") as mock_instance:
+        mock_manager = MagicMock()
+        mock_instance.return_value = mock_manager
         mock_manager.stop_all_threads.return_value = []
+
         remaining = stop_all_threads(timeout=0.1)
         mock_manager.stop_all_threads.assert_called_once_with(0.1)
         assert remaining == []

@@ -30,6 +30,7 @@ from .settings_dialog import (
     ALERT_RADIUS_KEY,
     ALERT_UPDATE_INTERVAL_KEY,
     API_CONTACT_KEY,
+    MINIMIZE_TO_TRAY_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
     UPDATE_INTERVAL_KEY,
 )
@@ -197,6 +198,7 @@ class WeatherApp(
                 ALERT_UPDATE_INTERVAL_KEY: 1,  # Default to 1 minute for alert updates
                 ALERT_RADIUS_KEY: 25,
                 PRECISE_LOCATION_ALERTS_KEY: True,  # Default to precise location alerts
+                MINIMIZE_TO_TRAY_KEY: True,  # Default to minimize to tray when closing
             },
             "api_settings": {API_CONTACT_KEY: ""},  # Added default
         }
@@ -393,58 +395,99 @@ class WeatherApp(
             event: The close event
             force_close: If True, force the window to close instead of minimizing
         """
-        logger.debug("OnClose called with force_close=%s", force_close)
+        try:
+            logger.debug("OnClose called with force_close=%s", force_close)
 
-        # Stop all fetcher threads first to avoid deadlocks
-        self._stop_fetcher_threads()
-        logger.debug("Fetcher threads stop requested.")
+            # Stop all fetcher threads first to avoid deadlocks
+            self._stop_fetcher_threads()
+            logger.debug("Fetcher threads stop requested.")
 
-        # Check for force close flag on the instance
-        if hasattr(self, "_force_close"):
-            force_close = force_close or self._force_close
+            # Check for force close flag on the instance or parameter
+            if hasattr(self, "_force_close"):
+                force_close = force_close or self._force_close
 
-        # If we have a taskbar icon and we're not force closing, just hide the window
-        if hasattr(self, "taskbar_icon") and self.taskbar_icon and not force_close:
-            logger.debug("Hiding window instead of closing")
-            # Stop the timer when hiding to prevent unnecessary updates
+            # Check if we should minimize to tray instead of closing
+            # Get minimize_to_tray setting from config (default to True)
+            minimize_to_tray = self.config.get("settings", {}).get(MINIMIZE_TO_TRAY_KEY, True)
+
+            # If minimize_to_tray is enabled, we have a taskbar icon, and we're not force closing
+            if (
+                minimize_to_tray
+                and hasattr(self, "taskbar_icon")
+                and self.taskbar_icon
+                and not force_close
+            ):
+                logger.debug("Minimizing to tray instead of closing")
+
+                # Stop the timer when hiding to prevent unnecessary updates
+                if hasattr(self, "timer") and self.timer.IsRunning():
+                    logger.debug("Stopping timer before hiding")
+                    self.timer.Stop()
+
+                # Hide the window
+                self.Hide()
+
+                # Show notification if configured
+                if self.taskbar_icon:
+                    # Create a popup menu for the taskbar icon if it doesn't exist
+                    logger.debug("Showing notification about minimizing to tray")
+                    # We could show a balloon notification here, but it's not necessary
+                    # and might be annoying to users
+
+                # Prevent the default close behavior
+                event.Veto()
+
+                # Restart the timer after hiding to continue background updates
+                if hasattr(self, "timer"):
+                    logger.debug("Restarting timer after hiding")
+                    self.timer.Start()
+
+                logger.debug("Hide/Veto called.")
+                return
+
+            # Actually closing the application
+            logger.info("Proceeding with application close")
+
+            # Stop timers
             if hasattr(self, "timer") and self.timer.IsRunning():
-                logger.debug("Stopping timer before hiding")
+                logger.debug("Stopping main timer for force close")
                 self.timer.Stop()
-            self.Hide()
-            event.Veto()
-            # Restart the timer after hiding to continue background updates
-            if hasattr(self, "timer"):
-                logger.debug("Restarting timer after hiding")
-                self.timer.Start()
-            logger.debug("Hide/Veto called.")
-            return
 
-        # Force closing - stop timers and clean up
-        if hasattr(self, "timer") and self.timer.IsRunning():
-            logger.debug("Stopping main timer for force close")
-            self.timer.Stop()
+            if hasattr(self, "alerts_timer") and self.alerts_timer.IsRunning():
+                logger.debug("Stopping alerts timer for force close")
+                self.alerts_timer.Stop()
 
-        if hasattr(self, "alerts_timer") and self.alerts_timer.IsRunning():
-            logger.debug("Stopping alerts timer for force close")
-            self.alerts_timer.Stop()
+            # Remove taskbar icon
+            if hasattr(self, "taskbar_icon") and self.taskbar_icon:
+                logger.debug("Removing taskbar icon")
+                if hasattr(self.taskbar_icon, "RemoveIcon"):
+                    self.taskbar_icon.RemoveIcon()
+                self.taskbar_icon.Destroy()
+                # Don't set taskbar_icon to None until after all operations are complete
+                # This ensures that tests can verify that methods were called on it
 
-        # Remove taskbar icon
-        if hasattr(self, "taskbar_icon") and self.taskbar_icon:
-            logger.debug("Removing taskbar icon")
-            if hasattr(self.taskbar_icon, "RemoveIcon"):
-                self.taskbar_icon.RemoveIcon()
-            self.taskbar_icon.Destroy()
-            self.taskbar_icon = None
+            # Save config before destroying
+            if hasattr(self, "_save_config"):
+                logger.debug("Saving configuration")
+                self._save_config()
 
-        # Save config before destroying
-        if hasattr(self, "_save_config"):
-            logger.debug("Saving configuration")
-            self._save_config()
+            # Allow the close event to proceed
+            event.Skip()
 
-        # Proceed with destroying the window to trigger App.OnExit cleanup
-        logger.info("Initiating shutdown by calling self.Destroy()...")
-        self.Destroy()
-        logger.info("self.Destroy() called. App.OnExit should now handle cleanup.")
+            # Proceed with destroying the window to trigger App.OnExit cleanup
+            logger.info("Initiating shutdown by calling self.Destroy()...")
+            self.Destroy()
+            logger.info("self.Destroy() called. App.OnExit should now handle cleanup.")
+
+            # Now it's safe to set taskbar_icon to None after all operations are complete
+            if hasattr(self, "taskbar_icon"):
+                self.taskbar_icon = None
+
+        except Exception as e:
+            logger.error(f"Error during window close: {e}", exc_info=True)
+            # Ensure window closes even if there's an error
+            event.Skip()
+            self.Destroy()
 
     def OnMinimize(self, event):
         """Handle window minimize event"""
