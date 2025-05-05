@@ -13,7 +13,7 @@ setup(
         "python-dateutil",  # For parsing ISO timestamps
         "beautifulsoup4",  # For parsing HTML in the scraper
     ],
-    extras_require={"dev": ["pytest", "pytest-mock"]},
+    extras_require={"dev": ["pytest", "pytest-mock", "requests-mock"]},
     description=(
         "AccessiWeather: An accessible weather application using NOAA data "
         "with focus on screen reader compatibility"

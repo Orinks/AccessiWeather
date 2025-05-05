@@ -14,7 +14,6 @@ from typing import Any
 import wx
 
 from .alert_dialog import AlertDetailsDialog
-from .dialogs import LocationDialog
 from .settings_dialog import (
     ALERT_RADIUS_KEY,
     API_CONTACT_KEY,
@@ -107,111 +106,11 @@ class WeatherAppHandlers:
         # Destroy the window
         self.Destroy()
 
-    def OnLocationChange(self, event):  # event is required by wx
-        """Handle location change event
+    # OnLocationChange is now implemented in WeatherAppLocationHandlers
 
-        Args:
-            event: Choice event
-        """
-        # Get selected location
-        selected = self.location_choice.GetStringSelection()
-        if not selected:
-            return
+    # OnAddLocation is now implemented in WeatherAppLocationHandlers
 
-        # Check if this is the Nationwide location and disable remove button if it is
-        if hasattr(self, "remove_btn") and self.location_service.is_nationwide_location(selected):
-            self.remove_btn.Disable()
-        elif hasattr(self, "remove_btn"):
-            self.remove_btn.Enable()
-
-        # Set current location using the location service
-        self.location_service.set_current_location(selected)
-
-        # Update weather data
-        self.UpdateWeatherData()
-
-    def OnAddLocation(self, event):  # event is required by wx
-        """Handle add location button click
-
-        Args:
-            event: Button event
-        """
-        # Show location dialog
-        dialog = LocationDialog(self)
-        result = dialog.ShowModal()
-
-        if result == wx.ID_OK:
-            # Get location data using the GetValues method
-            name, lat, lon = dialog.GetValues()
-
-            if name and lat is not None and lon is not None:
-                # Add location using the location service
-                self.location_service.add_location(name, lat, lon)
-
-                # Update dropdown
-                self.UpdateLocationDropdown()
-
-                # Select the newly added location
-                self.location_choice.SetStringSelection(name)
-
-                # Set as current location
-                self.location_service.set_current_location(name)
-
-                # Update weather data
-                self.UpdateWeatherData()
-
-        dialog.Destroy()
-
-    def OnRemoveLocation(self, event):  # event is required by wx
-        """Handle remove location button click
-
-        Args:
-            event: Button event
-        """
-        # Get selected location
-        selected = self.location_choice.GetStringSelection()
-        if not selected:
-            wx.MessageBox(
-                "Please select a location to remove", "No Location Selected", wx.OK | wx.ICON_ERROR
-            )
-            return
-
-        # Check if this is the Nationwide location
-        if self.location_service.is_nationwide_location(selected):
-            wx.MessageBox(
-                "The Nationwide location cannot be removed.",
-                "Cannot Remove",
-                wx.OK | wx.ICON_INFORMATION,
-            )
-            return
-
-        # Confirm removal
-        confirm = wx.MessageBox(
-            f"Are you sure you want to remove {selected}?",
-            "Confirm Removal",
-            wx.YES_NO | wx.ICON_QUESTION,
-        )
-
-        if confirm == wx.YES:
-            # Remove location using the location service
-            removed = self.location_service.remove_location(selected)
-
-            if not removed:
-                wx.MessageBox(f"Could not remove {selected}.", "Error", wx.OK | wx.ICON_ERROR)
-                return
-
-            # Update dropdown
-            self.UpdateLocationDropdown()
-
-            # Clear forecast and alerts if current location was removed
-            if self.location_service.get_current_location_name() is None:
-                self.forecast_text.SetValue("Select a location to view the forecast")
-                self.alerts_list.DeleteAllItems()  # Clear display
-                self.current_alerts = []
-                self.SetStatusText("Location removed. Select a new location.")
-            else:
-                # If another location is now current, update data
-                self.UpdateWeatherData()
+    # OnRemoveLocation is now implemented in WeatherAppLocationHandlers
 
     def OnRefresh(self, event):  # event is required by wx
         """Handle refresh button click
@@ -238,6 +137,12 @@ class WeatherAppHandlers:
 
         # Show loading dialog
         name, lat, lon = location
+
+        # Check if this is the Nationwide location
+        if self.location_service.is_nationwide_location(name):
+            self._handle_nationwide_discussion()
+            return
+
         self.SetStatusText(f"Loading forecast discussion for {name}...")
 
         # Create a progress dialog
@@ -489,6 +394,45 @@ class WeatherAppHandlers:
                 "Configuration Error",
                 wx.OK | wx.ICON_ERROR,
             )
+
+    def _handle_nationwide_discussion(self):
+        """Handle nationwide discussion view
+
+        This method shows a dialog with tabbed interface for nationwide discussions.
+        """
+        logger.debug("Handling nationwide discussion view")
+
+        # Check if we have the full discussion data
+        if not hasattr(self, "_nationwide_wpc_full") and not hasattr(self, "_nationwide_spc_full"):
+            wx.MessageBox(
+                "No nationwide discussions available", "No Data", wx.OK | wx.ICON_INFORMATION
+            )
+            return
+
+        # Create the national discussion data structure
+        national_data = {
+            "national_discussion_summaries": {
+                "wpc": {
+                    "short_range_full": (
+                        self._nationwide_wpc_full if hasattr(self, "_nationwide_wpc_full") else None
+                    )
+                },
+                "spc": {
+                    "day1_full": (
+                        self._nationwide_spc_full if hasattr(self, "_nationwide_spc_full") else None
+                    )
+                },
+            }
+        }
+
+        # Show the national discussion dialog
+        from .dialogs import NationalDiscussionDialog
+
+        logger.debug("Creating and showing NationalDiscussionDialog")
+        dialog = NationalDiscussionDialog(self, national_data)
+        dialog.ShowModal()
+        dialog.Destroy()
+        logger.debug("NationalDiscussionDialog closed")
 
     def _check_api_contact_configured(self):
         """Check if API contact information is configured and prompt if not"""

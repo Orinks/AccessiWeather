@@ -1,6 +1,8 @@
-"""Asynchronous data fetching components for AccessiWeather
+"""Asynchronous data fetching components for AccessiWeather.
 
-This module provides thread-based asynchronous fetching of weather data.
+This module provides thread-based asynchronous fetching of weather data from the NOAA API.
+It includes classes for fetching different types of weather data (forecasts, alerts, discussions)
+in background threads, with proper thread management and error handling.
 """
 
 import logging
@@ -60,7 +62,12 @@ def safe_call_after(callback, *args, **kwargs):
 
 
 class ForecastFetcher:
-    """Handles asynchronous fetching of forecast data"""
+    """Handles asynchronous fetching of forecast data.
+
+    This class fetches forecast data from the NOAA API in a background thread,
+    with proper thread registration, cancellation support, and error handling.
+    It ensures callbacks are executed on the main thread for thread safety.
+    """
 
     def __init__(self, api_client):
         """Initialize forecast fetcher
@@ -160,7 +167,12 @@ class ForecastFetcher:
 
 
 class AlertsFetcher:
-    """Handles asynchronous fetching of alerts data"""
+    """Handles asynchronous fetching of weather alerts data.
+
+    This class fetches weather alerts from the NOAA API in a background thread,
+    with proper thread registration, cancellation support, and error handling.
+    It supports configurable alert radius and precise location settings.
+    """
 
     def __init__(self, api_client):
         """Initialize alerts fetcher
@@ -267,7 +279,13 @@ class AlertsFetcher:
 
 
 class DiscussionFetcher:
-    """Handles asynchronous fetching of weather discussion data"""
+    """Handles asynchronous fetching of weather discussion data.
+
+    This class fetches forecast discussion text from the NOAA API in a background thread,
+    with proper thread registration, cancellation support, and error handling.
+    It supports passing additional data to callbacks and has enhanced logging
+    for troubleshooting discussion fetching issues.
+    """
 
     def __init__(self, api_client):
         """Initialize discussion fetcher

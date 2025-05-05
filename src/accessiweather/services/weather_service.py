@@ -25,8 +25,8 @@ class WeatherService:
         """
         self.api_client = api_client
         self.national_scraper = NationalDiscussionScraper(request_delay=1.0)
-        self.national_data_cache = None
-        self.national_data_timestamp = 0
+        self.national_data_cache: Optional[Dict[str, Dict[str, str]]] = None
+        self.national_data_timestamp: float = 0.0
         self.cache_expiry = 3600  # 1 hour in seconds
 
     def get_national_forecast_data(self, force_refresh: bool = False) -> dict:

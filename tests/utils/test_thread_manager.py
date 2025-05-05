@@ -2,7 +2,6 @@
 
 import threading
 import time
-from _thread import RLock as _RLock
 from unittest.mock import MagicMock, patch
 
 import pytest

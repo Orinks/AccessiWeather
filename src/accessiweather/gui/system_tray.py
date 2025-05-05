@@ -79,15 +79,9 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         Returns:
             wx.Menu: The popup menu
         """
-        menu = wx.Menu()
-
-        # Add menu items
-        show_hide_item = menu.Append(wx.ID_ANY, "Show/Hide AccessiWeather")
-        menu.AppendSeparator()
-        refresh_item = menu.Append(wx.ID_REFRESH, "Refresh Weather")
-        settings_item = menu.Append(wx.ID_PREFERENCES, "Settings")
-        menu.AppendSeparator()
-        exit_item = menu.Append(wx.ID_EXIT, "Exit AccessiWeather")
+        # Use the menu handler from the frame to create the menu
+        menu, items = self.frame.CreateTaskBarMenu()
+        show_hide_item, refresh_item, settings_item, exit_item = items
 
         # Bind menu events
         self.Bind(wx.EVT_MENU, self.on_show_hide, show_hide_item)
@@ -103,11 +97,8 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         Args:
             event: The event object
         """
-        if self.frame.IsShown():
-            self.frame.Hide()
-        else:
-            self.frame.Show()
-            self.frame.Raise()
+        # Use the menu handler from the frame
+        self.frame.OnTaskBarShowHide(event)
 
     def on_refresh(self, event):
         """Handle refresh menu item.
@@ -133,5 +124,5 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         Args:
             event: The event object
         """
-        # Call the frame's Close method with force=True
-        self.frame.Close(force=True)
+        # Use the menu handler from the frame
+        self.frame.OnTaskBarExit(event)

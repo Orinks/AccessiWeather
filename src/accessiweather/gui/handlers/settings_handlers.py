@@ -14,7 +14,6 @@ from ..settings_dialog import (
     MINIMIZE_ON_STARTUP_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
     SHOW_NATIONWIDE_KEY,
-    SettingsDialog,
 )
 from .common import WeatherAppHandlerBase
 
@@ -42,15 +41,10 @@ class WeatherAppSettingsHandlers(WeatherAppHandlerBase):
         combined_settings = settings.copy()
         combined_settings.update(api_settings)
 
-        # Create settings dialog
-        dialog = SettingsDialog(self, combined_settings)
-        result = dialog.ShowModal()
+        # Use ShowSettingsDialog from DialogHandlers
+        result, updated_settings, updated_api_settings = self.ShowSettingsDialog(combined_settings)
 
-        if result == wx.ID_OK:
-            # Get updated settings
-            updated_settings = dialog.get_settings()
-            updated_api_settings = dialog.get_api_settings()
-
+        if result == wx.ID_OK and updated_settings and updated_api_settings:
             # Update config
             self.config["settings"] = updated_settings
             self.config["api_settings"] = updated_api_settings
@@ -114,8 +108,6 @@ class WeatherAppSettingsHandlers(WeatherAppHandlerBase):
                 # as it doesn't have setter methods. The cache settings will be used
                 # the next time the app is started.
 
-        dialog.Destroy()
-
     def _check_api_contact_configured(self):
         """Check if API contact information is configured and prompt if not"""
         # Check if api_settings section exists
@@ -127,16 +119,14 @@ class WeatherAppSettingsHandlers(WeatherAppHandlerBase):
         api_contact = self.config.get("api_settings", {}).get(API_CONTACT_KEY, "")
         if not api_contact:
             logger.warning("API contact information not configured")
-            dialog = wx.MessageDialog(
-                self,
+
+            # Use ShowConfirmDialog from DialogHandlers
+            confirmed = self.ShowConfirmDialog(
                 "API contact information is required for NOAA API access. "
                 "Would you like to configure it now?",
                 "API Configuration Required",
-                wx.YES_NO | wx.ICON_QUESTION,
             )
-            result = dialog.ShowModal()
-            dialog.Destroy()
 
-            if result == wx.ID_YES:
+            if confirmed:
                 # Open settings dialog
                 self.OnSettings(None)

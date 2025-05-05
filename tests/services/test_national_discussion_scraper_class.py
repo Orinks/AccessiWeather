@@ -2,9 +2,7 @@
 
 import time
 import unittest
-from unittest.mock import patch
 
-import pytest
 import requests_mock
 
 from accessiweather.services.national_discussion_scraper import NationalDiscussionScraper

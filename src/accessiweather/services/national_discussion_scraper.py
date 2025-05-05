@@ -1,3 +1,10 @@
+"""National Discussion Scraper for AccessiWeather.
+
+This module provides functionality to scrape and parse national weather discussions
+from NOAA websites, including the Weather Prediction Center (WPC) and Storm Prediction
+Center (SPC). It includes rate limiting to avoid overloading the servers.
+"""
+
 import logging
 import time
 from typing import Dict
@@ -15,7 +22,13 @@ _last_request_time: dict[str, float] = {}
 
 
 class NationalDiscussionScraper:
-    """Service for scraping text-based discussions from WPC/SPC websites with rate limiting."""
+    """Service for scraping text-based discussions from WPC/SPC websites with rate limiting.
+
+    This class provides methods to fetch and parse weather discussions from the
+    Weather Prediction Center (WPC) and Storm Prediction Center (SPC) websites.
+    It includes built-in rate limiting to avoid overloading the servers and
+    caching to improve performance.
+    """
 
     def __init__(self, request_delay: float = 1.0):
         """Initialize the scraper with rate limiting.
@@ -146,7 +159,9 @@ class NationalDiscussionScraper:
 
 
 # Create a singleton instance for use by other modules
-_scraper = NationalDiscussionScraper(request_delay=MIN_REQUEST_INTERVAL)
+# Note: This is currently unused but kept for potential future use
+# and backward compatibility with legacy functions
+_scraper = NationalDiscussionScraper(request_delay=MIN_REQUEST_INTERVAL)  # noqa: F841
 
 
 # Legacy functions for backward compatibility
