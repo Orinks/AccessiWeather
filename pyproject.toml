@@ -29,7 +29,8 @@ classifiers = [
 [project.optional-dependencies]
 dev = [
     "pytest",
-    "pytest-mock"
+    "pytest-mock",
+    "requests-mock"
 ]
 
 [project.scripts]

@@ -174,7 +174,7 @@ class WeatherAppDiscussionHandlers(WeatherAppHandlerBase):
     def _handle_nationwide_discussion(self):
         """Handle nationwide discussion view
 
-        This method shows a dialog allowing the user to select which nationwide discussion to view,
+        This method shows a dialog with tabbed interface for nationwide discussions.
         """
         logger.debug("Handling nationwide discussion view")
 
@@ -185,66 +185,27 @@ class WeatherAppDiscussionHandlers(WeatherAppHandlerBase):
             )
             return
 
-        # Create a dialog to select which discussion to view
-        choices = []
-        if hasattr(self, "_nationwide_wpc_full") and self._nationwide_wpc_full:
-            choices.append("Weather Prediction Center (WPC) Discussion")
-        if hasattr(self, "_nationwide_spc_full") and self._nationwide_spc_full:
-            choices.append("Storm Prediction Center (SPC) Discussion")
+        # Create the national discussion data structure
+        national_data = {
+            "national_discussion_summaries": {
+                "wpc": {
+                    "short_range_full": (
+                        self._nationwide_wpc_full if hasattr(self, "_nationwide_wpc_full") else None
+                    )
+                },
+                "spc": {
+                    "day1_full": (
+                        self._nationwide_spc_full if hasattr(self, "_nationwide_spc_full") else None
+                    )
+                },
+            }
+        }
 
-        # Handle case where no discussions are available
-        if len(choices) == 0:
-            wx.MessageBox(
-                "No nationwide discussions are currently available. Please try again later.",
-                "No Data Available",
-                wx.OK | wx.ICON_INFORMATION,
-            )
-            return
+        # Show the national discussion dialog
+        from ..dialogs import NationalDiscussionDialog
 
-        # If only one choice, just show that one
-        if len(choices) == 1:
-            # Determine which discussion to show based on which one we have
-            if hasattr(self, "_nationwide_wpc_full") and self._nationwide_wpc_full:
-                self._show_nationwide_discussion(0)  # WPC
-            else:
-                self._show_nationwide_discussion(1)  # SPC
-            return
-
-        # Show dialog for multiple choices
-        dialog = wx.SingleChoiceDialog(
-            self, "Select a discussion to view:", "Nationwide Discussions", choices
-        )
-        result = dialog.ShowModal()
-        selection = dialog.GetSelection()
+        logger.debug("Creating and showing NationalDiscussionDialog")
+        dialog = NationalDiscussionDialog(self, national_data)
+        dialog.ShowModal()
         dialog.Destroy()
-
-        if result == wx.ID_OK:
-            self._show_nationwide_discussion(selection)
-
-    def _show_nationwide_discussion(self, selection):
-        """Show the selected nationwide discussion
-
-        Args:
-            selection: Index of the selected discussion (0 for WPC, 1 for SPC)
-        """
-        from ..dialogs import WeatherDiscussionDialog as DiscussionDialog
-
-        if selection == 0 and hasattr(self, "_nationwide_wpc_full") and self._nationwide_wpc_full:
-            # Show WPC discussion
-            title = "Weather Prediction Center (WPC) Discussion"
-            text = self._nationwide_wpc_full
-            logger.debug(f"Showing WPC discussion (length: {len(text)})")
-            logger.debug(f"WPC discussion preview: {text[:100].replace('\n', '\\n')}")
-        elif selection == 1 and hasattr(self, "_nationwide_spc_full") and self._nationwide_spc_full:
-            # Show SPC discussion
-            title = "Storm Prediction Center (SPC) Discussion"
-            text = self._nationwide_spc_full
-            logger.debug(f"Showing SPC discussion (length: {len(text)})")
-            logger.debug(f"SPC discussion preview: {text[:100].replace('\n', '\\n')}")
-        else:
-            logger.error(f"Invalid nationwide discussion selection: {selection}")
-            return
-
-        discussion_dialog = DiscussionDialog(self, title, text)
-        discussion_dialog.ShowModal()
-        discussion_dialog.Destroy()
+        logger.debug("NationalDiscussionDialog closed")

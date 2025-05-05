@@ -1,6 +1,8 @@
-"""Hourly forecast fetcher for AccessiWeather
+"""Hourly forecast fetcher for AccessiWeather.
 
-This module provides asynchronous fetching of hourly forecast data.
+This module provides asynchronous fetching of hourly forecast data from the NOAA API.
+It handles thread management, error handling, and ensures callbacks are executed
+on the main thread for thread safety.
 """
 
 import logging
@@ -13,7 +15,12 @@ logger = logging.getLogger(__name__)
 
 
 class HourlyForecastFetcher:
-    """Handles asynchronous fetching of hourly forecast data"""
+    """Handles asynchronous fetching of hourly forecast data.
+
+    This class fetches hourly forecast data from the NOAA API in a background thread,
+    with proper thread registration, cancellation support, and error handling.
+    It ensures callbacks are executed on the main thread for thread safety.
+    """
 
     def __init__(self, api_client):
         """Initialize hourly forecast fetcher

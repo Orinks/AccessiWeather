@@ -111,7 +111,6 @@ def dump_traceback(all_threads: bool = True) -> None:
     faulthandler.dump_traceback(file=sys.stderr, all_threads=all_threads)
 
     # Dump to log file if available
-    global _fault_log_file
     if _fault_log_file is not None:
         try:
             _fault_log_file.write("\n" + "=" * 80 + "\n")
@@ -138,7 +137,6 @@ def register_signal_handler(signum: int, all_threads: bool = True, chain: bool =
             faulthandler.register(signum, file=sys.stderr, all_threads=all_threads, chain=chain)
 
             # Register for log file if available
-            global _fault_log_file
             if _fault_log_file is not None:
                 faulthandler.register(
                     signum, file=_fault_log_file, all_threads=all_threads, chain=chain

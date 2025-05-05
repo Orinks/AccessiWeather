@@ -20,6 +20,30 @@ class WeatherAppLocationHandlers(WeatherAppHandlerBase):
     It provides location-related event handlers for the WeatherApp class.
     """
 
+    def UpdateLocationDropdown(self):
+        """Update the location dropdown with saved locations"""
+        # Get all locations from the location service
+        locations = self.location_service.get_all_locations()
+        current = self.location_service.get_current_location_name()
+
+        # Update dropdown
+        self.location_choice.Clear()
+
+        # Check if the selected location is the Nationwide location
+        selected_is_nationwide = current and self.location_service.is_nationwide_location(current)
+
+        for location in locations:
+            self.location_choice.Append(location)
+
+            # If this is the Nationwide location and it's selected, disable the remove button
+            is_nationwide = self.location_service.is_nationwide_location(location)
+            if hasattr(self, "remove_btn") and is_nationwide and selected_is_nationwide:
+                self.remove_btn.Disable()
+
+        # Set current selection
+        if current and current in locations:
+            self.location_choice.SetStringSelection(current)
+
     def OnLocationChange(self, event):  # event is required by wx
         """Handle location change event
 

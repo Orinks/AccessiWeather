@@ -22,6 +22,7 @@ CACHE_TTL_KEY = "cache_ttl"
 
 # System tray settings
 MINIMIZE_ON_STARTUP_KEY = "minimize_on_startup"
+MINIMIZE_TO_TRAY_KEY = "minimize_to_tray"
 
 
 class SettingsDialog(wx.Dialog):
@@ -167,8 +168,22 @@ class SettingsDialog(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         # --- Input Fields ---
-        grid_sizer = wx.FlexGridSizer(rows=2, cols=2, vgap=10, hgap=5)
+        grid_sizer = wx.FlexGridSizer(rows=3, cols=2, vgap=10, hgap=5)  # Increased rows to 3
         grid_sizer.AddGrowableCol(1, 1)  # Make the input column growable
+
+        # Minimize to Tray Toggle
+        minimize_to_tray_label = "Minimize to system tray when closing"
+        self.minimize_to_tray_ctrl = wx.CheckBox(
+            panel, label=minimize_to_tray_label, name="Minimize to Tray"
+        )
+        tooltip_minimize = (
+            "When checked, clicking the X button will minimize the app to the system tray "
+            "instead of closing it. You can still exit from the system tray menu."
+        )
+        self.minimize_to_tray_ctrl.SetToolTip(tooltip_minimize)
+        # Add a spacer in the first column
+        grid_sizer.Add((1, 1), 0, wx.ALL, 5)
+        grid_sizer.Add(self.minimize_to_tray_ctrl, 0, wx.ALL, 5)
 
         # Cache Enabled Toggle
         cache_enabled_label = "Enable caching of weather data"
@@ -215,9 +230,11 @@ class SettingsDialog(wx.Dialog):
             self.show_nationwide_ctrl.SetValue(show_nationwide)
 
             # Load advanced settings
+            minimize_to_tray = self.current_settings.get(MINIMIZE_TO_TRAY_KEY, True)
             cache_enabled = self.current_settings.get(CACHE_ENABLED_KEY, True)
             cache_ttl = self.current_settings.get(CACHE_TTL_KEY, 300)
 
+            self.minimize_to_tray_ctrl.SetValue(minimize_to_tray)
             self.cache_enabled_ctrl.SetValue(cache_enabled)
             self.cache_ttl_ctrl.SetValue(cache_ttl)
 
@@ -298,6 +315,7 @@ class SettingsDialog(wx.Dialog):
             PRECISE_LOCATION_ALERTS_KEY: self.precise_alerts_ctrl.GetValue(),
             SHOW_NATIONWIDE_KEY: self.show_nationwide_ctrl.GetValue(),
             # Advanced settings
+            MINIMIZE_TO_TRAY_KEY: self.minimize_to_tray_ctrl.GetValue(),
             CACHE_ENABLED_KEY: self.cache_enabled_ctrl.GetValue(),
             CACHE_TTL_KEY: self.cache_ttl_ctrl.GetValue(),
         }

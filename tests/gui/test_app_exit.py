@@ -3,10 +3,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-import wx
-
 from accessiweather.gui.app import AccessiWeatherApp
-from accessiweather.utils.thread_manager import ThreadManager
 
 
 class TestAccessiWeatherAppExit(unittest.TestCase):
@@ -19,7 +16,7 @@ class TestAccessiWeatherAppExit(unittest.TestCase):
     def tearDown(self):
         """Clean up after the test."""
         # Ensure we don't leave any references to the app
-        self.app = None
+        self.app = None  # type: ignore
 
     @patch("accessiweather.utils.thread_manager.ThreadManager.instance")
     @patch("accessiweather.gui.app.logging")
