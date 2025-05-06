@@ -7,7 +7,6 @@ import wx
 
 from accessiweather.gui.settings_dialog import (
     ALERT_RADIUS_KEY,
-    ALERT_UPDATE_INTERVAL_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
     UPDATE_INTERVAL_KEY,
 )
@@ -19,7 +18,6 @@ from accessiweather.notifications import WeatherNotifier
 SAMPLE_CONFIG = {
     "settings": {
         UPDATE_INTERVAL_KEY: 30,  # 30 minutes for regular updates
-        ALERT_UPDATE_INTERVAL_KEY: 1,  # 1 minute for alert updates
         ALERT_RADIUS_KEY: 25,
         PRECISE_LOCATION_ALERTS_KEY: True,
     }
@@ -72,9 +70,8 @@ def mock_weather_app():
     mock_location_service = MagicMock()
     mock_notification_service = MagicMock()
 
-    # Create mock timers
+    # Create mock timer
     mock_timer = MagicMock(spec=wx.Timer)
-    mock_alerts_timer = MagicMock(spec=wx.Timer)
 
     # Create the app with mocked services
     with patch.object(WeatherApp, "__init__", return_value=None):
@@ -86,7 +83,6 @@ def mock_weather_app():
         app.notification_service = mock_notification_service
         app.config = SAMPLE_CONFIG.copy()
         app.timer = mock_timer
-        app.alerts_timer = mock_alerts_timer
         app.last_update = 0.0
         app.last_alerts_update = 0.0
         app.updating = False
@@ -95,7 +91,6 @@ def mock_weather_app():
         # Mock methods - using setattr to avoid type checking issues
         setattr(app, "SetStatusText", MagicMock())
         setattr(app, "UpdateWeatherData", MagicMock())
-        setattr(app, "UpdateAlerts", MagicMock())
 
         yield app
 
@@ -111,117 +106,10 @@ def mock_notifier():
 # --- Tests ---
 
 
-def test_alert_update_interval_setting_exists():
-    """Test that the alert update interval setting constant exists."""
-    assert ALERT_UPDATE_INTERVAL_KEY == "alert_update_interval_minutes"
-
-
-def test_weather_app_has_alerts_timer(mock_weather_app):
-    """Test that WeatherApp has an alerts timer attribute."""
-    assert hasattr(mock_weather_app, "alerts_timer")
-    assert isinstance(mock_weather_app.alerts_timer, MagicMock)
-
-
 def test_weather_app_has_last_alerts_update(mock_weather_app):
     """Test that WeatherApp has a last_alerts_update attribute."""
     assert hasattr(mock_weather_app, "last_alerts_update")
     assert mock_weather_app.last_alerts_update == 0.0
-
-
-def test_on_alerts_timer_checks_interval(mock_weather_app):
-    """Test that OnAlertsTimer checks the alert update interval."""
-    # Mock time.time() to return a specific value
-    with patch("time.time", return_value=1000.0):
-        # Set last_alerts_update to a value that will trigger an update
-        mock_weather_app.last_alerts_update = 700.0  # 5 minutes = 300 seconds ago
-
-        # Call OnAlertsTimer
-        mock_weather_app.OnAlertsTimer(None)
-
-        # Verify that UpdateAlerts was called
-        mock_weather_app.UpdateAlerts.assert_called_once()
-
-
-def test_on_alerts_timer_respects_interval(mock_weather_app):
-    """Test that OnAlertsTimer respects the alert update interval."""
-    # Mock time.time() to return a specific value
-    with patch("time.time", return_value=1000.0):
-        # Set last_alerts_update to a value that will NOT trigger an update
-        # The default interval in SAMPLE_CONFIG is 1 minute (60 seconds)
-        # So we need to set last_alerts_update to a value less than 60 seconds ago
-        mock_weather_app.last_alerts_update = 950.0  # Less than 1 minute ago (50 seconds)
-
-        # Call OnAlertsTimer
-        mock_weather_app.OnAlertsTimer(None)
-
-        # Verify that UpdateAlerts was NOT called
-        mock_weather_app.UpdateAlerts.assert_not_called()
-
-
-def test_on_alerts_timer_respects_updating_flag(mock_weather_app):
-    """Test that OnAlertsTimer respects the updating flag."""
-    # Mock time.time() to return a specific value
-    with patch("time.time", return_value=1000.0):
-        # Set last_alerts_update to a value that will trigger an update
-        mock_weather_app.last_alerts_update = 700.0  # 5 minutes = 300 seconds ago
-
-        # Set updating flag to True
-        mock_weather_app.updating = True
-
-        # Set _alerts_complete to False to simulate alerts being updated
-        mock_weather_app._alerts_complete = False
-
-        # Call OnAlertsTimer
-        mock_weather_app.OnAlertsTimer(None)
-
-        # Verify that UpdateAlerts was NOT called
-        mock_weather_app.UpdateAlerts.assert_not_called()
-
-
-def test_update_alerts_method():
-    """Test the UpdateAlerts method."""
-    # Create a mock WeatherApp with the necessary methods and attributes
-    mock_app = MagicMock()
-    mock_app.location_service = MagicMock()
-    mock_app.weather_service = MagicMock()
-    mock_app.api_client = None
-    mock_app.config = {"settings": {ALERT_RADIUS_KEY: 25, PRECISE_LOCATION_ALERTS_KEY: True}}
-
-    # Set up mock location service to return a location
-    mock_location = ("Test City", 40.0, -75.0)
-    mock_app.location_service.get_current_location.return_value = mock_location
-    mock_app.location_service.is_nationwide_location.return_value = False
-
-    # Set up mock weather service to return alerts data
-    mock_app.weather_service.get_alerts.return_value = SAMPLE_ALERTS_DATA
-
-    # Import the UpdateAlerts method from weather_app.py
-    from accessiweather.gui.weather_app import WeatherApp
-
-    # Call the method directly
-    WeatherApp.UpdateAlerts(mock_app)
-
-    # Verify that the weather service was called with the correct parameters
-    mock_app.weather_service.get_alerts.assert_called_once_with(
-        40.0, -75.0, radius=25, precise_location=True
-    )
-
-    # Verify that the status text was updated
-    mock_app.SetStatusText.assert_called_with("Checking for alerts updates...")
-
-
-def test_update_alerts_skips_nationwide(mock_weather_app):
-    """Test that UpdateAlerts skips nationwide location."""
-    # Set up mock location service to return a nationwide location
-    mock_location = ("Nationwide", 39.8, -98.5)
-    mock_weather_app.location_service.get_current_location.return_value = mock_location
-    mock_weather_app.location_service.is_nationwide_location.return_value = True
-
-    # Call UpdateAlerts
-    mock_weather_app.UpdateAlerts()
-
-    # Verify that the weather service was NOT called
-    mock_weather_app.weather_service.get_alerts.assert_not_called()
 
 
 def test_process_alerts_detects_new_alerts(mock_notifier):

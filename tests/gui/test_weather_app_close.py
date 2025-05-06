@@ -22,8 +22,7 @@ class TestWeatherAppClose(unittest.TestCase):
         # Set up default attributes
         self.app.timer = MagicMock()
         self.app.timer.IsRunning.return_value = True
-        self.app.alerts_timer = MagicMock()
-        self.app.alerts_timer.IsRunning.return_value = True
+        # alerts_timer has been removed in favor of unified update mechanism
         self.app.taskbar_icon = MagicMock()
         self.app.taskbar_icon.RemoveIcon = MagicMock()
         self.app.taskbar_icon.Destroy = MagicMock()
@@ -95,8 +94,7 @@ class TestWeatherAppClose(unittest.TestCase):
         # Verify that timer was stopped
         self.app.timer.Stop.assert_called_once()
 
-        # Verify that alerts_timer was stopped
-        self.app.alerts_timer.Stop.assert_called_once()
+        # alerts_timer has been removed in favor of unified update mechanism
 
         # Verify that taskbar_icon was removed and destroyed
         # Use the saved reference to avoid NoneType errors
@@ -139,8 +137,7 @@ class TestWeatherAppClose(unittest.TestCase):
         # Verify that timer was stopped
         self.app.timer.Stop.assert_called_once()
 
-        # Verify that alerts_timer was stopped
-        self.app.alerts_timer.Stop.assert_called_once()
+        # alerts_timer has been removed in favor of unified update mechanism
 
         # Verify that taskbar_icon was removed and destroyed
         # Use the saved reference to avoid NoneType errors
@@ -184,8 +181,7 @@ class TestWeatherAppClose(unittest.TestCase):
         app = MagicMock(spec=WeatherApp)
         app.timer = MagicMock()
         app.timer.IsRunning.return_value = True
-        app.alerts_timer = MagicMock()
-        app.alerts_timer.IsRunning.return_value = True
+        # alerts_timer has been removed in favor of unified update mechanism
         app._save_config = MagicMock()
         app._stop_fetcher_threads = MagicMock()
         app.Hide = MagicMock()
@@ -214,9 +210,9 @@ class TestWeatherAppClose(unittest.TestCase):
         # Verify that Destroy was called
         app.Destroy.assert_called_once()
 
-        # Verify that timers were stopped
+        # Verify that timer was stopped
         app.timer.Stop.assert_called_once()
-        app.alerts_timer.Stop.assert_called_once()
+        # alerts_timer has been removed in favor of unified update mechanism
 
         # Verify that config was saved
         app._save_config.assert_called_once()

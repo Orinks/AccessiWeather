@@ -57,13 +57,3 @@ class WeatherAppTimerHandlers(WeatherAppHandlerBase):
                 self.UpdateWeatherData()
             else:
                 logger.debug("Timer skipped update: already updating.")
-
-    def OnAlertsTimer(self, event):  # event is required by wx
-        """Handle timer event for alert updates
-
-        Args:
-            event: Timer event
-        """
-        # This method is implemented in the WeatherApp class
-        # This is just a placeholder in the handlers module
-        pass

@@ -27,8 +27,12 @@ class WeatherAppRefreshHandlers(WeatherAppHandlerBase):
         # Trigger weather data update
         self.UpdateWeatherData()
 
-    def UpdateWeatherData(self):
-        """Update weather data in a separate thread"""
+    def UpdateWeatherData(self, event=None):
+        """Update all weather data including forecasts and alerts.
+
+        Args:
+            event: Optional event parameter (required for wx event handlers)
+        """
         # Even if updating is true, we still want to proceed if this is a
         # location change
         # This is to ensure that location changes always trigger a data refresh
@@ -42,57 +46,12 @@ class WeatherAppRefreshHandlers(WeatherAppHandlerBase):
         # Always reset updating flag to ensure we can fetch for a new location
         # This is critical for location changes to work properly
         self.updating = True
+
+        # Set status text to indicate update is in progress
+        self.SetStatusText("Updating weather data...")
+
+        # Fetch both forecast and alert data
         self._FetchWeatherData(location)
-
-    def UpdateAlerts(self):
-        """Update only the alerts data in a separate thread"""
-        # Get current location from the location service
-        location = self.location_service.get_current_location()
-        if location is None:
-            logger.debug("No location selected for alerts update")
-            return
-
-        # Check if this is the nationwide location
-        name, lat, lon = location
-        if self.location_service.is_nationwide_location(name):
-            logger.debug("Skipping alerts update for nationwide location")
-            return
-
-        # Set status
-        self.SetStatusText("Checking for alerts updates...")
-
-        # Get precise location setting from config
-        precise_location = self.config.get("settings", {}).get("PRECISE_LOCATION_ALERTS_KEY", True)
-        alert_radius = self.config.get("settings", {}).get("ALERT_RADIUS_KEY", 25)
-
-        # Reset alerts completion flag for this fetch cycle
-        self._alerts_complete = False
-
-        # Fetch alerts only
-        if self.api_client:
-            # Use the alerts fetcher with api_client
-            self.alerts_fetcher.fetch(
-                lat,
-                lon,
-                on_success=self._on_alerts_fetched,
-                on_error=self._on_alerts_error,
-                precise_location=precise_location,
-                radius=alert_radius,
-            )
-        else:
-            # Use weather service
-            try:
-                alerts_data = self.weather_service.get_alerts(
-                    lat, lon, radius=alert_radius, precise_location=precise_location
-                )
-                self._on_alerts_fetched(alerts_data)
-            except Exception as e:
-                error_msg = f"Error fetching alerts data: {str(e)}"
-                logger.error(error_msg)
-                self._on_alerts_error(error_msg)
-
-        # Update the last alerts update timestamp
-        self.last_alerts_update = time.time()
 
     def _FetchWeatherData(self, location):
         """Fetch weather data using the weather service
@@ -188,6 +147,17 @@ class WeatherAppRefreshHandlers(WeatherAppHandlerBase):
     def _check_update_complete(self):
         """Check if both forecast and alerts fetches are complete."""
         if self._forecast_complete and self._alerts_complete:
+            # Update is complete, set updating flag to false
             self.updating = False
-            self.last_update = time.time()
+
+            # Update the last_update timestamp for both forecast and alerts
+            current_time = time.time()
+            self.last_update = current_time
+            self.last_alerts_update = current_time
+
+            # Format time for status bar
+            formatted_time = time.strftime("%I:%M %p", time.localtime(current_time))
+            self.SetStatusText(f"Weather data updated at {formatted_time}")
+
+            # Update UI to ready state
             self.ui_manager.display_ready_state()
