@@ -7,7 +7,8 @@ import logging
 
 import wx
 
-from ..dialogs import LocationDialog
+from accessiweather.location import NATIONWIDE_LOCATION_NAME
+
 from .common import WeatherAppHandlerBase
 
 logger = logging.getLogger(__name__)
@@ -20,76 +21,51 @@ class WeatherAppLocationHandlers(WeatherAppHandlerBase):
     It provides location-related event handlers for the WeatherApp class.
     """
 
-    def UpdateLocationDropdown(self):
-        """Update the location dropdown with saved locations"""
-        # Get all locations from the location service
-        locations = self.location_service.get_all_locations()
-        current = self.location_service.get_current_location_name()
-
-        # Update dropdown
-        self.location_choice.Clear()
-
-        # Check if the selected location is the Nationwide location
-        selected_is_nationwide = current and self.location_service.is_nationwide_location(current)
-
-        for location in locations:
-            self.location_choice.Append(location)
-
-            # If this is the Nationwide location and it's selected, disable the remove button
-            is_nationwide = self.location_service.is_nationwide_location(location)
-            if hasattr(self, "remove_btn") and is_nationwide and selected_is_nationwide:
-                self.remove_btn.Disable()
-
-        # Set current selection
-        if current and current in locations:
-            self.location_choice.SetStringSelection(current)
-
     def OnLocationChange(self, event):  # event is required by wx
-        """Handle location change event
+        """Handle location change event from dropdown
 
         Args:
             event: Choice event
         """
-        # Get selected location
-        selected = self.location_choice.GetStringSelection()
-        if not selected:
+        selected_index = self.location_choice.GetSelection()
+        if selected_index == wx.NOT_FOUND:
+            logger.warning("OnLocationChange called but no location selected")
             return
 
-        # Check if this is the Nationwide location and disable remove button if it is
-        if hasattr(self, "remove_btn") and self.location_service.is_nationwide_location(selected):
-            self.remove_btn.Disable()
-            # Accessibility: update accessible description
-            self.remove_btn.SetHelpText("Remove button is disabled for nationwide location")
-            self.remove_btn.SetToolTip("Cannot remove nationwide location")
-            # Set nationwide mode flag if not already set
-            if hasattr(self, "_in_nationwide_mode"):
-                self._in_nationwide_mode = True
-                # Reset nationwide discussion data to ensure fresh fetch
-                self._nationwide_wpc_full = None
-                self._nationwide_spc_full = None
-        elif hasattr(self, "remove_btn"):
-            self.remove_btn.Enable()
-            # Reset accessible description
-            self.remove_btn.SetHelpText("Remove the selected location")
-            self.remove_btn.SetToolTip("Remove the selected location")
-            # Reset nationwide mode flag if set
-            if hasattr(self, "_in_nationwide_mode"):
-                self._in_nationwide_mode = False
-                self._nationwide_wpc_full = None
-                self._nationwide_spc_full = None
+        selected_location_name = self.location_choice.GetString(selected_index)
+        logger.info(f"OnLocationChange: Selected location: '{selected_location_name}'")
 
-        # Set current location using the location service
-        self.location_service.set_current_location(selected)
+        # Check if this is the nationwide location
+        if self.location_service.is_nationwide_location(selected_location_name):
+            logger.info("OnLocationChange: Identified as Nationwide location")
+            self._select_nationwide_location()  # This sets _in_nationwide_mode = True
+            logger.info(
+                f"OnLocationChange: After _select_nationwide_location, _in_nationwide_mode = {self._in_nationwide_mode}"
+            )
+        else:
+            # This part is for regular locations
+            logger.info("OnLocationChange: Identified as regular location")
+            self.location_service.set_current_location(selected_location_name)
+            self._in_nationwide_mode = False
+            logger.info(f"OnLocationChange: _in_nationwide_mode set to {self._in_nationwide_mode}")
 
-        # Set status and update weather
-        self.SetStatusText(f"Loading weather data for {selected}...")
+            # Enable remove button for regular locations
+            if hasattr(self, "remove_btn"):
+                self.remove_btn.Enable()
+
+            # Enable discussion button if lat/lon are available
+            if hasattr(self, "discussion_btn"):
+                _, lat, lon = self.location_service.get_location(selected_location_name)
+                if lat is not None and lon is not None:
+                    self.discussion_btn.Enable()
+                else:
+                    self.discussion_btn.Disable()
+
+        # Update weather data for the new location
         self.UpdateWeatherData()
 
-        # Explicitly clear the selection in the alerts list and disable the alert button
-        # to prevent accessing a cached alert for a previous location
-        if hasattr(self, "alerts_list") and hasattr(self, "alert_btn"):
-            self.alerts_list.DeleteAllItems()
-            self.alert_btn.Disable()
+        # Save current location to config
+        self._save_config()
 
     def OnAddLocation(self, event):  # event is required by wx
         """Handle add location button click
@@ -97,31 +73,20 @@ class WeatherAppLocationHandlers(WeatherAppHandlerBase):
         Args:
             event: Button event
         """
-        # Show location dialog
-        dialog = LocationDialog(self)
-        result = dialog.ShowModal()
+        # Use ShowLocationDialog from DialogHandlers
+        result, location_data = self.ShowLocationDialog()
 
-        if result == wx.ID_OK:
-            # Get location data using the GetValues method
-            name, lat, lon = dialog.GetValues()
+        if result == wx.ID_OK and location_data:
+            name, lat, lon = location_data
+            # Add location to service
+            self.location_service.add_location(name, lat, lon)
 
-            if name and lat is not None and lon is not None:
-                # Add location using the location service
-                self.location_service.add_location(name, lat, lon)
+            # Update dropdown and select new location
+            self.UpdateLocationDropdown()
+            self.location_choice.SetStringSelection(name)
 
-                # Update dropdown
-                self.UpdateLocationDropdown()
-
-                # Select the newly added location
-                self.location_choice.SetStringSelection(name)
-
-                # Set as current location
-                self.location_service.set_current_location(name)
-
-                # Update weather data
-                self.UpdateWeatherData()
-
-        dialog.Destroy()
+            # Trigger location change to update weather data
+            self.OnLocationChange(event)
 
     def OnRemoveLocation(self, event):  # event is required by wx
         """Handle remove location button click
@@ -129,50 +94,87 @@ class WeatherAppLocationHandlers(WeatherAppHandlerBase):
         Args:
             event: Button event
         """
-        # Get selected location
-        selected = self.location_choice.GetStringSelection()
-        if not selected:
-            wx.MessageBox(
-                "Please select a location to remove", "No Location Selected", wx.OK | wx.ICON_ERROR
-            )
+        # Get current location
+        current_name = self.location_service.get_current_location_name()
+        if not current_name:
             return
 
-        # Check if this is the Nationwide location
-        if self.location_service.is_nationwide_location(selected):
+        # Don't allow removing the Nationwide location
+        if self.location_service.is_nationwide_location(current_name):
             wx.MessageBox(
                 "The Nationwide location cannot be removed.",
-                "Cannot Remove",
-                wx.OK | wx.ICON_INFORMATION,
+                "Cannot Remove Location",
+                wx.OK | wx.ICON_ERROR,
             )
-            # Accessibility: announce for screen readers
-            if hasattr(self, "AnnounceForScreenReader"):
-                self.AnnounceForScreenReader("The Nationwide location cannot be removed.")
             return
 
-        # Confirm removal
-        confirm = wx.MessageBox(
-            f"Are you sure you want to remove {selected}?",
-            "Confirm Removal",
-            wx.YES_NO | wx.ICON_QUESTION,
+        # Use ShowConfirmDialog from DialogHandlers
+        confirmed = self.ShowConfirmDialog(
+            f"Are you sure you want to remove {current_name}?",
+            "Confirm Remove Location",
         )
 
-        if confirm == wx.YES:
-            # Remove location using the location service
-            removed = self.location_service.remove_location(selected)
-
-            if not removed:
-                wx.MessageBox(f"Could not remove {selected}.", "Error", wx.OK | wx.ICON_ERROR)
-                return
+        if confirmed:
+            # Remove location from service
+            self.location_service.remove_location(current_name)
 
             # Update dropdown
             self.UpdateLocationDropdown()
 
-            # Clear forecast and alerts if current location was removed
-            if self.location_service.get_current_location_name() is None:
-                self.forecast_text.SetValue("Select a location to view the forecast")
-                self.alerts_list.DeleteAllItems()  # Clear display
-                self.current_alerts = []
-                self.SetStatusText("Location removed. Select a new location.")
+            # Update weather data for new selection
+            self.UpdateWeatherData()
+
+    def UpdateLocationDropdown(self):
+        """Update the location dropdown with current locations"""
+        # Get all location names from the service
+        names = (
+            self.location_service.get_all_locations()
+        )  # Changed from get_all_location_names to get_all_locations
+
+        # Clear and update the choice control
+        self.location_choice.Clear()
+        self.location_choice.Append(names)
+
+        # Get current selection name
+        current_selection_name = self.location_service.get_current_location_name()
+
+        # Set selection if we have one
+        if current_selection_name and current_selection_name in names:
+            logger.info(f"UpdateLocationDropdown: Setting selection to '{current_selection_name}'")
+            self.location_choice.SetStringSelection(current_selection_name)
+            # Manually trigger the logic that OnLocationChange would handle for the initial load
+            # This avoids redundant UpdateWeatherData calls if OnLocationChange also calls it.
+            if self.location_service.is_nationwide_location(current_selection_name):
+                logger.info("UpdateLocationDropdown: Identified as Nationwide location")
+                self._select_nationwide_location()  # Sets _in_nationwide_mode = True
+                logger.info(
+                    f"UpdateLocationDropdown: After _select_nationwide_location, _in_nationwide_mode = {self._in_nationwide_mode}"
+                )
             else:
-                # If another location is now current, update data
-                self.UpdateWeatherData()
+                logger.info("UpdateLocationDropdown: Identified as regular location")
+                self._in_nationwide_mode = False
+                logger.info(
+                    f"UpdateLocationDropdown: _in_nationwide_mode set to {self._in_nationwide_mode}"
+                )
+                # For regular locations, ensure remove button is enabled if a location is selected
+                if hasattr(self, "remove_btn"):
+                    self.remove_btn.Enable()
+
+    def _select_nationwide_location(self):
+        """Select the Nationwide location and update UI accordingly."""
+        logger.info("_select_nationwide_location: Setting nationwide location")
+        self.location_service.set_current_location(
+            NATIONWIDE_LOCATION_NAME
+        )  # Changed from set_current_location_to_nationwide
+        self._in_nationwide_mode = True
+        logger.info(
+            f"_select_nationwide_location: _in_nationwide_mode set to {self._in_nationwide_mode}"
+        )
+
+        # Disable remove button for nationwide location
+        if hasattr(self, "remove_btn"):
+            self.remove_btn.Disable()
+
+        # Enable discussion button for nationwide location
+        if hasattr(self, "discussion_btn"):
+            self.discussion_btn.Enable()

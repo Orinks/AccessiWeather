@@ -80,18 +80,14 @@ class NationalDiscussionScraper:
                 logger.error("Could not find WPC discussion text")
                 return {"summary": "WPC discussion unavailable", "full": ""}
 
-            full_text = discussion_element.get_text(strip=True)
+            # Get text without strip=True to preserve internal whitespace and newlines
+            full_text = discussion_element.get_text()
+            if full_text:
+                # Only strip leading/trailing whitespace from the whole block
+                full_text = full_text.strip()
 
-            # Extract a summary (first paragraph or first 150 chars)
-            lines = full_text.split("\n")
-            summary_text = ""
-            for line in lines:
-                if line.strip() and not line.startswith("...") and not line.startswith("$$$"):
-                    summary_text += line + " "
-                    if len(summary_text) > 150:
-                        break
-
-            summary = summary_text[:150] + "..." if len(summary_text) > 150 else summary_text
+            # Extract a summary (first 150 chars of the stripped full text)
+            summary = full_text[:150] + "..." if len(full_text) > 150 else full_text
 
             return {"summary": summary, "full": full_text}
 
@@ -123,11 +119,12 @@ class NationalDiscussionScraper:
 
             full_text = discussion_element.get_text()
 
-            # Try to extract only the discussion section if possible
-            if "...DISCUSSION..." in full_text:
-                full_text = full_text.split("...DISCUSSION...")[1].strip()
+            # Try to extract the discussion section, which now follows "...SUMMARY..."
+            if "...SUMMARY..." in full_text:
+                # Take everything after the first occurrence of "...SUMMARY..."
+                full_text = full_text.split("...SUMMARY...", 1)[1].strip()
 
-            # Extract a summary (first paragraph or first 150 chars)
+            # Extract a summary (first 150 chars)
             summary = full_text[:150] + "..." if len(full_text) > 150 else full_text
 
             return {"summary": summary, "full": full_text}
@@ -198,7 +195,10 @@ def fetch_wpc_short_range():
         soup = BeautifulSoup(resp.text, "html.parser")
         pre = soup.find("pre")
         if pre:
-            return pre.get_text(strip=True)
+            # Get text without strip=True to preserve internal whitespace and newlines
+            text = pre.get_text()
+            # Only strip leading/trailing whitespace from the whole block
+            return text.strip() if text else "No discussion found. (WPC)"
         return "No discussion found. (WPC)"
     except Exception as e:
         logger.error(f"Error fetching WPC discussion: {e}")
@@ -217,13 +217,14 @@ def fetch_spc_day1():
         resp = requests.get(url, headers=HEADERS, timeout=10)
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
-        # The discussion is usually in a <pre> tag after "...DISCUSSION..."
+        # The discussion is usually in a <pre> tag after "...SUMMARY..."
         pre = soup.find("pre")
         if pre:
-            # Try to extract only the discussion section if possible
+            # Try to extract the discussion section, which now follows "...SUMMARY..."
             text = pre.get_text()
-            if "...DISCUSSION..." in text:
-                text = text.split("...DISCUSSION...")[1].strip()
+            if "...SUMMARY..." in text:
+                # Take everything after the first occurrence of "...SUMMARY..."
+                text = text.split("...SUMMARY...", 1)[1].strip()
             return text.strip()
         return "No discussion found. (SPC)"
     except Exception as e:
