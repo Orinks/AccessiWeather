@@ -1,390 +1,728 @@
-"""Tests for the NOAA API client"""
+"""Tests for the NoaaApiClient class."""
 
+import time
 from unittest.mock import MagicMock, patch
 
 import pytest
-import requests
+from requests.exceptions import (
+    ConnectionError,
+    HTTPError,
+    JSONDecodeError,
+    RequestException,
+    Timeout,
+)
 
-from accessiweather.api_client import ApiClientError, NoaaApiClient
+from accessiweather.api_client import LOCATION_TYPE_COUNTY, NoaaApiClient, NoaaApiError
 
-# Removed unused logging import
+# Sample test data
+SAMPLE_POINT_DATA = {
+    "@context": ["https://geojson.org/geojson-ld/geojson-context.jsonld"],
+    "id": "https://api.weather.gov/points/40,-75",
+    "type": "Feature",
+    "geometry": {"type": "Point", "coordinates": [-75.0, 40.0]},
+    "properties": {
+        "@id": "https://api.weather.gov/points/40,-75",
+        "gridId": "PHI",
+        "gridX": 50,
+        "gridY": 75,
+        "forecast": "https://api.weather.gov/gridpoints/PHI/50,75/forecast",
+        "forecastHourly": "https://api.weather.gov/gridpoints/PHI/50,75/forecast/hourly",
+        "forecastGridData": "https://api.weather.gov/gridpoints/PHI/50,75",
+        "observationStations": "https://api.weather.gov/gridpoints/PHI/50,75/stations",
+        "relativeLocation": {
+            "type": "Feature",
+            "geometry": {"type": "Point", "coordinates": [-75.1, 40.1]},
+            "properties": {"city": "Test City", "state": "PA"},
+        },
+        "forecastZone": "https://api.weather.gov/zones/forecast/PAZ106",
+        "county": "https://api.weather.gov/zones/county/PAC091",
+        "fireWeatherZone": "https://api.weather.gov/zones/fire/PAZ106",
+    },
+}
 
+SAMPLE_FORECAST_DATA = {
+    "properties": {
+        "periods": [
+            {
+                "name": "Today",
+                "temperature": 75,
+                "temperatureUnit": "F",
+                "shortForecast": "Sunny",
+                "detailedForecast": "Sunny with a high near 75.",
+            }
+        ]
+    }
+}
 
-@pytest.fixture
-def mock_response():
-    """Create a mock response object"""
-    mock_resp = MagicMock()
-    mock_resp.raise_for_status = MagicMock()
-    mock_resp.json = MagicMock(return_value={"mock": "data"})
-    mock_resp.status_code = 200
-    return mock_resp
-
-
-@pytest.fixture
-def api_client():
-    """Create an instance of the NoaaApiClient"""
-    return NoaaApiClient(user_agent="Test User Agent")
-
-
-@pytest.fixture
-def api_client_with_contact():
-    """Create an instance of the NoaaApiClient with contact information"""
-    return NoaaApiClient(user_agent="Test User Agent", contact_info="test@example.com")
-
-
-class TestNoaaApiClient:
-    """Test suite for NoaaApiClient"""
-
-    def test_init(self, api_client):
-        """Test client initialization without contact info"""
-        assert api_client.user_agent == "Test User Agent"
-        assert api_client.headers == {
-            "User-Agent": "Test User Agent",
-            "Accept": "application/geo+json",
-        }
-
-    def test_init_with_contact(self, api_client_with_contact):
-        """Test client initialization with contact info"""
-        assert api_client_with_contact.user_agent == "Test User Agent"
-        assert api_client_with_contact.contact_info == "test@example.com"
-        assert api_client_with_contact.headers == {
-            "User-Agent": "Test User Agent (test@example.com)",
-            "Accept": "application/geo+json",
-        }
-
-    @patch("accessiweather.api_client.requests.get")
-    def test_get_point_data(self, mock_get, api_client, mock_response):
-        """Test retrieving point data"""
-        # Configure mock response with a proper status code
-        mock_response.status_code = 200
-        mock_response.json.return_value = {"properties": {"forecast": "test_forecast_url"}}
-        mock_get.return_value = mock_response
-
-        # Call the method
-        data = api_client.get_point_data(35.0, -80.0)
-
-        # Verify the result
-        assert data["properties"]["forecast"] == "test_forecast_url"
-        assert mock_get.call_count == 1
-        mock_get.assert_called_with(
-            "https://api.weather.gov/points/35.0,-80.0",
-            headers=api_client.headers,
-            params=None,
-            timeout=10,  # Added timeout=10
-        )
-
-    @patch("accessiweather.api_client.requests.get")
-    def test_get_forecast(self, mock_get, api_client, mock_response):
-        """Test retrieving forecast data"""
-        # For the point data request
-        point_mock = MagicMock()
-        point_mock.status_code = 200
-        point_mock.raise_for_status = MagicMock()
-        forecast_url = "https://api.weather.gov/gridpoints/GSP/112,57/forecast"
-        point_mock.json = MagicMock(return_value={"properties": {"forecast": forecast_url}})
-
-        # For the forecast request
-        forecast_mock = mock_response
-        forecast_mock.status_code = 200
-
-        # Set up the side effects for consecutive calls
-        mock_get.side_effect = [point_mock, forecast_mock]
-
-        # Call the method
-        data = api_client.get_forecast(35.0, -80.0)
-
-        # Verify results
-        assert data == {"mock": "data"}
-        assert mock_get.call_count == 2
-
-        # Check calls
-        calls = mock_get.call_args_list
-        assert calls[0][0][0] == "https://api.weather.gov/points/35.0,-80.0"
-        assert calls[1][0][0] == forecast_url
-
-    @patch("accessiweather.api_client.requests.get")
-    def test_get_alerts(self, mock_get, api_client, mock_response):
-        """Test retrieving alerts"""
-        # Create point data mock response
-        point_mock = MagicMock()
-        point_mock.raise_for_status = MagicMock()
-        point_mock.json = MagicMock(
-            return_value={"properties": {"relativeLocation": {"properties": {"state": "NC"}}}}
-        )
-        point_mock.status_code = 200
-
-        # Create alerts mock response
-        alerts_mock = mock_response
-        alerts_mock.status_code = 200
-
-        # Set up the side effects for consecutive calls
-        mock_get.side_effect = [point_mock, alerts_mock]
-
-        # Call the method
-        data = api_client.get_alerts(35.0, -80.0, radius=50)
-
-        # Verify the result
-        assert data == {"mock": "data"}
-        assert mock_get.call_count == 2
-
-        # Check calls
-        calls = mock_get.call_args_list
-        # Point data request
-        assert calls[0][0][0] == "https://api.weather.gov/points/35.0,-80.0"
-        # Alerts request
-        assert calls[1][0][0] == "https://api.weather.gov/alerts/active"
-        # State-based filtering
-        assert calls[1][1]["params"] == {"area": "NC"}
-
-    @patch("accessiweather.api_client.requests.get")
-    def test_get_alerts_county_fallback(self, mock_get, api_client, mock_response):
-        """Test alerts retrieval with county fallback for state."""
-        # Create point data mock response with no relativeLocation
-        # but with county
-        point_mock = MagicMock()
-        point_mock.raise_for_status = MagicMock()
-        point_mock.json = MagicMock(
-            return_value={"properties": {"county": "https://api.weather.gov/zones/county/TXC141"}}
-        )
-        point_mock.status_code = 200
-
-        # Create alerts mock response
-        alerts_mock = mock_response
-        alerts_mock.status_code = 200
-
-        # Set up the side effects for consecutive calls
-        mock_get.side_effect = [point_mock, alerts_mock]
-
-        # Call the method
-        data = api_client.get_alerts(35.0, -80.0, radius=50)
-
-        # Verify the result
-        assert data == {"mock": "data"}
-        assert mock_get.call_count == 2
-
-        # Check calls
-        calls = mock_get.call_args_list
-        # Point data request
-        assert calls[0][0][0] == "https://api.weather.gov/points/35.0,-80.0"
-        # Alerts request
-        assert calls[1][0][0] == "https://api.weather.gov/alerts/active"
-        # Zone-based filtering for county
-        assert calls[1][1]["params"] == {"zone": "TXC141"}
-
-    @patch("accessiweather.api_client.requests.get")
-    def test_get_alerts_no_state(self, mock_get, api_client, mock_response):
-        """Test retrieving alerts when state cannot be determined"""
-        # Create point data mock response with no state information
-        point_mock = MagicMock()
-        point_mock.raise_for_status = MagicMock()
-        point_mock.json = MagicMock(return_value={"properties": {}})
-        point_mock.status_code = 200
-
-        # Create alerts mock response with features
-        alerts_mock = mock_response
-        alerts_mock.status_code = 200
-        alerts_mock.json = MagicMock(return_value={"features": [{"id": "test"}]})
-
-        # Set up the side effects for consecutive calls
-        mock_get.side_effect = [point_mock, alerts_mock]
-
-        # Call the method (assign to _ as data is not used in assertions)
-        _ = api_client.get_alerts(35.0, -80.0, radius=50)
-
-        # We should get a result with the point-radius parameters
-        assert mock_get.call_count == 2
-
-        # Check calls
-        calls = mock_get.call_args_list
-        # Point data request
-        assert calls[0][0][0] == "https://api.weather.gov/points/35.0,-80.0"
-        # Alerts request
-        assert calls[1][0][0] == "https://api.weather.gov/alerts/active"
-
-        # Ensure we're using point-radius search parameters
-        params = calls[1][1]["params"]
-        assert "point" in params
-        assert "radius" in params
-        assert params["point"] == "35.0,-80.0"
-        assert params["radius"] == "50"
-
-    @patch("accessiweather.api_client.NoaaApiClient.get_point_data")
-    @patch("accessiweather.api_client.NoaaApiClient._make_request")
-    def test_get_alerts_michigan_location(self, mock_make_request, mock_get_point_data):
-        """Test retrieving alerts for a Michigan location (Lumberton)."""
-        # Set up mock for get_point_data
-        mock_get_point_data.return_value = {
+SAMPLE_ALERTS_DATA = {
+    "features": [
+        {
             "properties": {
-                "relativeLocation": {"properties": {"state": "MI", "city": "Lumberton Township"}}
+                "headline": "Test Alert",
+                "description": "Test Description",
+                "instruction": "Test Instruction",
+                "severity": "Moderate",
+                "event": "Test Event",
             }
         }
+    ]
+}
 
-        # Set up mock for _make_request
-        headline = "Winter Weather Advisory for Lumberton Township, MI"
-        mock_make_request.return_value = {
-            "features": [
-                {
-                    "id": "urn:oid:2.49.0.1.840.0.1234",
-                    "properties": {
-                        "event": "Winter Weather Advisory",
-                        "headline": headline,
-                        "severity": "Moderate",
-                    },
-                }
-            ]
-        }
+SAMPLE_DISCUSSION_PRODUCTS = {"@graph": [{"id": "AFD-PHI-202401010000", "@type": "wx:TextProduct"}]}
 
-        # Create client and call the method
-        client = NoaaApiClient(user_agent="Test User Agent")
-        data = client.get_alerts(43.1, -86.3, radius=25, force_refresh=True)
+SAMPLE_DISCUSSION_TEXT = {
+    "productText": """
+This is a sample forecast discussion.
+Multiple lines of text.
+With weather information.
+"""
+}
 
-        # Verify the mocks were called as expected
-        mock_get_point_data.assert_called_once_with(43.1, -86.3, force_refresh=True)
+SAMPLE_NATIONAL_PRODUCT = {
+    "@graph": [{"id": "FXUS01-KWNH-202401010000", "@type": "wx:TextProduct"}]
+}
 
-        # Check that the state parameter was correctly extracted and used
-        assert mock_make_request.call_count == 1
-        call_args = mock_make_request.call_args
-        assert call_args[0][0] == "https://api.weather.gov/alerts/active"
-        assert call_args[1]["params"] == {"area": "MI"}
-        assert call_args[1]["force_refresh"] is True
+SAMPLE_NATIONAL_PRODUCT_TEXT = {
+    "productText": """
+This is a sample national product text.
+Multiple lines of text.
+With weather information.
+"""
+}
 
-        # Check that the response is properly processed
-        assert isinstance(data, dict)
-        assert "features" in data
-        assert len(data["features"]) == 1
-        assert data["features"][0]["properties"]["headline"] == headline
+# Sample station data
+SAMPLE_STATIONS_DATA = {
+    "features": [
+        {
+            "id": "https://api.weather.gov/stations/KXYZ",
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KXYZ",
+                "@type": "wx:ObservationStation",
+                "elevation": {"unitCode": "wmoUnit:m", "value": 123.4},
+                "name": "Test Station",
+                "stationIdentifier": "KXYZ",
+                "timeZone": "America/New_York",
+            },
+        },
+        {
+            "id": "https://api.weather.gov/stations/KABC",
+            "properties": {
+                "@id": "https://api.weather.gov/stations/KABC",
+                "@type": "wx:ObservationStation",
+                "elevation": {"unitCode": "wmoUnit:m", "value": 234.5},
+                "name": "Another Test Station",
+                "stationIdentifier": "KABC",
+                "timeZone": "America/New_York",
+            },
+        },
+    ]
+}
 
-    @patch("accessiweather.api_client.requests.get")
-    def test_get_discussion(self, mock_get, api_client):
-        """Test retrieving forecast discussion"""
-        # Mock responses for the three API calls
-        point_mock = MagicMock()
-        point_mock.status_code = 200
-        point_mock.json.return_value = {"properties": {"gridId": "ABC"}}
+# Sample current observation data
+SAMPLE_OBSERVATION_DATA = {
+    "properties": {
+        "@id": "https://api.weather.gov/stations/KXYZ/observations/2023-01-01T12:00:00Z",
+        "temperature": {"unitCode": "wmoUnit:degC", "value": 22.8, "qualityControl": "qc:V"},
+        "dewpoint": {"unitCode": "wmoUnit:degC", "value": 15.6, "qualityControl": "qc:V"},
+        "windDirection": {
+            "unitCode": "wmoUnit:degree_(angle)",
+            "value": 180,
+            "qualityControl": "qc:V",
+        },
+        "windSpeed": {"unitCode": "wmoUnit:km_h-1", "value": 15.0, "qualityControl": "qc:V"},
+        "barometricPressure": {"unitCode": "wmoUnit:Pa", "value": 101325, "qualityControl": "qc:V"},
+        "seaLevelPressure": {"unitCode": "wmoUnit:Pa", "value": 101325, "qualityControl": "qc:V"},
+        "visibility": {"unitCode": "wmoUnit:km", "value": 16.09, "qualityControl": "qc:V"},
+        "relativeHumidity": {"unitCode": "wmoUnit:percent", "value": 65, "qualityControl": "qc:V"},
+        "textDescription": "Partly Cloudy",
+        "icon": "https://api.weather.gov/icons/land/day/sct?size=medium",
+    }
+}
 
-        products_mock = MagicMock()
-        products_mock.status_code = 200
-        products_mock.json.return_value = {"@graph": [{"id": "ABC-AFD-202503121200"}]}
+# Sample hourly forecast data
+SAMPLE_HOURLY_FORECAST_DATA = {
+    "properties": {
+        "periods": [
+            {
+                "number": 1,
+                "name": "This Hour",
+                "startTime": "2023-01-01T12:00:00-05:00",
+                "endTime": "2023-01-01T13:00:00-05:00",
+                "isDaytime": True,
+                "temperature": 72,
+                "temperatureUnit": "F",
+                "temperatureTrend": None,
+                "windSpeed": "10 mph",
+                "windDirection": "S",
+                "icon": "https://api.weather.gov/icons/land/day/sct?size=small",
+                "shortForecast": "Partly Sunny",
+                "detailedForecast": "",
+            },
+            {
+                "number": 2,
+                "name": "Next Hour",
+                "startTime": "2023-01-01T13:00:00-05:00",
+                "endTime": "2023-01-01T14:00:00-05:00",
+                "isDaytime": True,
+                "temperature": 73,
+                "temperatureUnit": "F",
+                "temperatureTrend": "rising",
+                "windSpeed": "12 mph",
+                "windDirection": "S",
+                "icon": "https://api.weather.gov/icons/land/day/sct?size=small",
+                "shortForecast": "Partly Sunny",
+                "detailedForecast": "",
+            },
+        ]
+    }
+}
 
-        discussion_mock = MagicMock()
-        discussion_mock.status_code = 200
-        discussion_mock.json.return_value = {"productText": "Test forecast discussion text"}
 
-        # Set up the side effects for consecutive calls
-        mock_get.side_effect = [point_mock, products_mock, discussion_mock]
+# Fixture to create a NoaaApiClient instance
+@pytest.fixture
+def api_client():
+    return NoaaApiClient(
+        user_agent="TestClient", contact_info="test@example.com", enable_caching=False
+    )
 
-        # Call the method with lat/lon parameters
-        data = api_client.get_discussion(35.0, -80.0)
 
-        # Verify the result
-        assert data == "Test forecast discussion text"
-        assert mock_get.call_count == 3
+# Fixture to create a NoaaApiClient instance with caching enabled
+@pytest.fixture
+def cached_api_client():
+    return NoaaApiClient(
+        user_agent="TestClient", contact_info="test@example.com", enable_caching=True, cache_ttl=300
+    )
 
-        # Check calls
-        calls = mock_get.call_args_list
-        assert calls[0][0][0] == "https://api.weather.gov/points/35.0,-80.0"
-        products_url = "https://api.weather.gov/products/types/AFD/locations/ABC"
-        assert calls[1][0][0] == products_url
-        discussion_url = "https://api.weather.gov/products/ABC-AFD-202503121200"
-        assert calls[2][0][0] == discussion_url
 
-    @patch("accessiweather.api_client.logger.error")  # Patch logger.error
-    @patch("accessiweather.api_client.requests.get")
-    def test_api_error_handling(self, mock_get, mock_logger_error, api_client):
-        """Test error handling and suppress traceback for expected errors"""
-        # Mock a failed request with a requests.RequestException type
-        mock_get.side_effect = requests.RequestException("Test connection error")
+def test_init_basic():
+    """Test basic initialization without caching."""
+    client = NoaaApiClient(user_agent="TestClient")
 
-        # Test that the error is raised and converted to ApiClientError
-        with pytest.raises(ApiClientError) as exc_info:
-            api_client.get_point_data(35.0, -80.0)
+    assert client.user_agent == "TestClient"
+    assert client.headers["User-Agent"] == "TestClient"
+    assert client.cache is None
 
-        # Verify the error message
-        assert "Network error during API request" in str(exc_info.value)
-        # Verify logger.error was called (suppressing traceback)
-        assert mock_logger_error.called
-        # Get the call arguments
-        args, kwargs = mock_logger_error.call_args
-        # Check that the error message contains the expected text
-        assert "Network error during API request" in args[0]
-        # Check that exc_info is not explicitly set (to suppress traceback)
-        assert "exc_info" not in kwargs
 
-    @patch("accessiweather.api_client.requests.get")
-    def test_get_alerts_direct(self, mock_get, api_client, mock_response):
-        """Test retrieving alerts with direct URL"""
-        # Mock the response
-        mock_response.status_code = 200
-        mock_get.return_value = mock_response
+def test_init_with_contact():
+    """Test initialization with contact info."""
+    client = NoaaApiClient(user_agent="TestClient", contact_info="test@example.com")
 
-        # Call the method
-        alerts_url = "https://api.weather.gov/alerts/active/area/NY"
-        data = api_client.get_alerts_direct(alerts_url)
+    assert client.headers["User-Agent"] == "TestClient (test@example.com)"
 
-        # Verify the result
-        assert data == {"mock": "data"}
+
+def test_init_with_caching():
+    """Test initialization with caching enabled."""
+    client = NoaaApiClient(user_agent="TestClient", enable_caching=True, cache_ttl=300)
+
+    assert client.cache is not None
+    assert client.cache.default_ttl == 300
+
+
+def test_get_point_data_success(api_client):
+    """Test getting point data successfully."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        mock_get.return_value.json.return_value = SAMPLE_POINT_DATA
+        mock_get.return_value.raise_for_status.return_value = None
+
+        result = api_client.get_point_data(lat, lon)
+
+        assert result == SAMPLE_POINT_DATA
+        mock_get.assert_called_once()
+        assert f"points/{lat},{lon}" in mock_get.call_args[0][0]
+
+
+def test_get_point_data_cached(cached_api_client):
+    """Test that point data is cached."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        mock_get.return_value.json.return_value = SAMPLE_POINT_DATA
+        mock_get.return_value.raise_for_status.return_value = None
+
+        # First call should hit the API
+        result1 = cached_api_client.get_point_data(lat, lon)
+        # Second call should use cache
+        result2 = cached_api_client.get_point_data(lat, lon)
+
+        assert result1 == result2
         mock_get.assert_called_once()
 
-    @patch("accessiweather.api_client.requests.get")
-    def test_get_alerts_no_state_fallback(self, mock_get, api_client, mock_response):
-        """Test retrieving alerts when no state can be determined"""
-        # Create point data mock response with no state info
-        point_mock = MagicMock()
-        point_mock.status_code = 200
-        point_mock.raise_for_status = MagicMock()
-        # This response is missing the state information
-        point_mock.json = MagicMock(
-            return_value={"properties": {"relativeLocation": {"properties": {}}}}
-        )
 
-        # Create alerts mock response
-        alerts_mock = mock_response
-        alerts_mock.status_code = 200
+def test_get_point_data_force_refresh(cached_api_client):
+    """Test that force_refresh bypasses cache."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        mock_get.return_value.json.return_value = SAMPLE_POINT_DATA
+        mock_get.return_value.raise_for_status.return_value = None
 
-        # Set up the side effects for consecutive calls
-        mock_get.side_effect = [point_mock, alerts_mock]
+        # First call
+        cached_api_client.get_point_data(lat, lon)
+        # Second call with force_refresh
+        cached_api_client.get_point_data(lat, lon, force_refresh=True)
 
-        # Call the method - this should fall back to point-radius search
-        data = api_client.get_alerts(35.0, -80.0, radius=50)
-
-        # Verify the result
-        assert data == {"mock": "data"}
         assert mock_get.call_count == 2
 
-        # Check calls
-        calls = mock_get.call_args_list
-        # Point data request
-        assert calls[0][0][0] == "https://api.weather.gov/points/35.0,-80.0"
-        # Alerts request
-        assert calls[1][0][0] == "https://api.weather.gov/alerts/active"
 
-        # Ensure we're using point-radius parameters since no state was found
-        params = calls[1][1]["params"]
-        assert "point" in params
-        assert "radius" in params
-        assert params["point"] == "35.0,-80.0"
-        assert params["radius"] == "50"
+def test_get_forecast_success(api_client):
+    """Test getting forecast data successfully."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        # First call for point data
+        mock_get.return_value.json.side_effect = [
+            SAMPLE_POINT_DATA,  # First call returns point data
+            SAMPLE_FORECAST_DATA,  # Second call returns forecast data
+        ]
+        mock_get.return_value.raise_for_status.return_value = None
 
-    def test_request_uses_formatted_user_agent(self, monkeypatch):
-        """Test that requests use the properly formatted User-Agent"""
-        # Create a mock for requests.get
-        mock_get = MagicMock()
+        result = api_client.get_forecast(lat, lon)
+
+        assert result == SAMPLE_FORECAST_DATA
+        assert mock_get.call_count == 2
+
+
+def test_get_forecast_no_url(api_client):
+    """Test getting forecast when point data doesn't contain forecast URL."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        bad_point_data = dict(SAMPLE_POINT_DATA)
+        properties: dict = {}
+        # Copy all properties except 'forecast'
+        # Use a type-safe approach by accessing the dictionary directly
+        properties_dict = SAMPLE_POINT_DATA.get("properties", {})
+        if isinstance(properties_dict, dict):
+            for key in list(properties_dict.keys()):
+                if key != "forecast":
+                    properties[key] = properties_dict[key]
+        bad_point_data["properties"] = properties
+        mock_get.return_value.json.return_value = bad_point_data
+        mock_get.return_value.raise_for_status.return_value = None
+
+        with pytest.raises(ValueError) as exc_info:
+            api_client.get_forecast(lat, lon)
+
+        assert "Could not find forecast URL" in str(exc_info.value)
+
+
+def test_identify_location_type_county(api_client):
+    """Test identifying county location type."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        mock_get.return_value.json.return_value = SAMPLE_POINT_DATA
+        mock_get.return_value.raise_for_status.return_value = None
+
+        location_type, location_id = api_client.identify_location_type(lat, lon)
+
+        assert location_type == LOCATION_TYPE_COUNTY
+        assert location_id == "PAC091"
+
+
+def test_get_alerts_precise_location(api_client):
+    """Test getting alerts for precise location."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        # Mock point data and alerts response
+        mock_get.return_value.json.side_effect = [SAMPLE_POINT_DATA, SAMPLE_ALERTS_DATA]
+        mock_get.return_value.raise_for_status.return_value = None
+
+        result = api_client.get_alerts(lat, lon, precise_location=True)
+
+        assert result == SAMPLE_ALERTS_DATA
+        assert mock_get.call_count == 2
+
+
+def test_get_alerts_state_fallback(api_client):
+    """Test getting alerts falls back to state when precise location not found."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        # Remove all zone URLs from point data to force state fallback
+        modified_point_data = dict(SAMPLE_POINT_DATA)
+        properties: dict = {}
+        # Copy all properties except the ones we want to exclude
+        # Use a type-safe approach by accessing the dictionary directly
+        properties_dict = SAMPLE_POINT_DATA.get("properties", {})
+        if isinstance(properties_dict, dict):
+            for key in list(properties_dict.keys()):
+                if key not in ["county", "forecastZone", "fireWeatherZone"]:
+                    properties[key] = properties_dict[key]
+
+        # Create a deep copy of the relativeLocation in a type-safe way
+        rel_location = {}
+        rel_properties = {"state": "PA"}
+
+        # Copy other properties if they exist
+        if isinstance(properties_dict, dict) and "relativeLocation" in properties_dict:
+            rel_location_orig = properties_dict.get("relativeLocation", {})
+            if isinstance(rel_location_orig, dict):
+                for key in list(rel_location_orig.keys()):
+                    if key != "properties":
+                        rel_location[key] = rel_location_orig[key]
+
+                rel_props_orig = rel_location_orig.get("properties", {})
+                if isinstance(rel_props_orig, dict):
+                    for key in list(rel_props_orig.keys()):
+                        rel_properties[key] = rel_props_orig[key]
+
+        rel_location["properties"] = rel_properties
+
+        properties["relativeLocation"] = rel_location
+        modified_point_data["properties"] = properties
+
+        mock_get.return_value.json.side_effect = [modified_point_data, SAMPLE_ALERTS_DATA]
+        mock_get.return_value.raise_for_status.return_value = None
+
+        result = api_client.get_alerts(lat, lon)
+
+        assert result == SAMPLE_ALERTS_DATA
+        # Check that state parameter was used
+        params = mock_get.call_args[1].get("params", {})
+        assert params.get("area") == "PA"
+
+
+def test_get_discussion_success(api_client):
+    """Test getting discussion data successfully."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        mock_get.return_value.json.side_effect = [
+            SAMPLE_POINT_DATA,
+            SAMPLE_DISCUSSION_PRODUCTS,
+            SAMPLE_DISCUSSION_TEXT,
+        ]
+        mock_get.return_value.raise_for_status.return_value = None
+
+        result = api_client.get_discussion(lat, lon)
+
+        # Strip all whitespace from both strings for comparison
+        expected = SAMPLE_DISCUSSION_TEXT["productText"].strip()
+        assert result.strip() == expected
+        assert mock_get.call_count == 3
+
+
+def test_get_national_product_success(api_client):
+    """Test getting national product successfully."""
+    product_type = "FXUS01"
+    location = "KWNH"
+    with patch("requests.get") as mock_get:
+        mock_get.return_value.json.side_effect = [
+            SAMPLE_NATIONAL_PRODUCT,
+            SAMPLE_NATIONAL_PRODUCT_TEXT,
+        ]
+        mock_get.return_value.raise_for_status.return_value = None
+
+        result = api_client.get_national_product(product_type, location)
+
+        assert result == SAMPLE_NATIONAL_PRODUCT_TEXT["productText"]
+        assert mock_get.call_count == 2
+
+
+def test_rate_limiting(api_client):
+    """Test that requests are rate limited."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        mock_get.return_value.json.return_value = SAMPLE_POINT_DATA
+        mock_get.return_value.raise_for_status.return_value = None
+
+        start_time = time.time()
+        api_client.get_point_data(lat, lon)
+        api_client.get_point_data(lat, lon)
+        end_time = time.time()
+
+        # Should have waited at least min_request_interval
+        assert end_time - start_time >= api_client.min_request_interval
+
+
+def test_http_error_handling_404(api_client):
+    """Test handling of 404 Not Found errors."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        # Create a proper mock response with status_code
         mock_response = MagicMock()
-        mock_response.raise_for_status = MagicMock()
-        mock_response.json = MagicMock(return_value={"mock": "data"})
-        mock_response.status_code = 200
-        mock_get.return_value = mock_response
+        mock_response.status_code = 404
+        mock_response.text = "Not Found"
+        mock_response.json.side_effect = JSONDecodeError("Invalid JSON", "", 0)
+        # Create a proper HTTPError with a response attribute
+        http_error = HTTPError("404 Client Error")
+        http_error.response = mock_response
+        mock_get.return_value.raise_for_status.side_effect = http_error
 
-        # Apply the monkeypatch
-        monkeypatch.setattr("requests.get", mock_get)
+        with pytest.raises(NoaaApiError) as exc_info:
+            api_client.get_point_data(lat, lon)
 
-        # Create client with contact info
-        client = NoaaApiClient(user_agent="AccessiWeather", contact_info="test@example.com")
+        error = exc_info.value
+        assert "Resource not found" in str(error)
+        assert error.status_code == 404
+        assert error.error_type == NoaaApiError.CLIENT_ERROR
 
-        # Make a request
-        client.get_point_data(35.0, -80.0)
 
-        # Verify the User-Agent header was properly formatted in the request
-        _, kwargs = mock_get.call_args
-        expected_ua = "AccessiWeather (test@example.com)"
-        assert kwargs["headers"]["User-Agent"] == expected_ua
+def test_http_error_handling_429(api_client):
+    """Test handling of 429 Rate Limit errors."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        # Create a proper mock response with status_code
+        mock_response = MagicMock()
+        mock_response.status_code = 429
+        mock_response.text = "Too Many Requests"
+        mock_response.json.side_effect = JSONDecodeError("Invalid JSON", "", 0)
+        # Create a proper HTTPError with a response attribute
+        http_error = HTTPError("429 Client Error")
+        http_error.response = mock_response
+        mock_get.return_value.raise_for_status.side_effect = http_error
+
+        with pytest.raises(NoaaApiError) as exc_info:
+            api_client.get_point_data(lat, lon)
+
+        error = exc_info.value
+        assert "Rate limit exceeded" in str(error)
+        assert error.status_code == 429
+        assert error.error_type == NoaaApiError.RATE_LIMIT_ERROR
+
+
+def test_http_error_handling_500(api_client):
+    """Test handling of 500 Server Error."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        # Create a proper mock response with status_code
+        mock_response = MagicMock()
+        mock_response.status_code = 500
+        mock_response.text = "Internal Server Error"
+        mock_response.json.side_effect = JSONDecodeError("Invalid JSON", "", 0)
+        # Create a proper HTTPError with a response attribute
+        http_error = HTTPError("500 Server Error")
+        http_error.response = mock_response
+        mock_get.return_value.raise_for_status.side_effect = http_error
+
+        with pytest.raises(NoaaApiError) as exc_info:
+            api_client.get_point_data(lat, lon)
+
+        error = exc_info.value
+        assert "Server error" in str(error)
+        assert error.status_code == 500
+        assert error.error_type == NoaaApiError.SERVER_ERROR
+
+
+def test_json_decode_error_handling(api_client):
+    """Test handling of JSON decode errors."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        mock_get.return_value.json.side_effect = JSONDecodeError("Invalid JSON", "", 0)
+        mock_get.return_value.text = "Invalid JSON response"
+        mock_get.return_value.status_code = 200
+        mock_get.return_value.raise_for_status.return_value = None
+
+        with pytest.raises(NoaaApiError) as exc_info:
+            api_client.get_point_data(lat, lon)
+
+        error = exc_info.value
+        assert "Failed to decode JSON response" in str(error)
+        assert error.status_code == 200
+        assert error.error_type == NoaaApiError.PARSE_ERROR
+
+
+def test_request_exception_handling(api_client):
+    """Test handling of request exceptions."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        mock_get.side_effect = RequestException("Connection error")
+
+        with pytest.raises(NoaaApiError) as exc_info:
+            api_client.get_point_data(lat, lon)
+
+        error = exc_info.value
+        assert "Network error during API request" in str(error)
+        assert error.error_type == NoaaApiError.NETWORK_ERROR
+
+
+def test_timeout_error_handling(api_client):
+    """Test handling of timeout errors."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        mock_get.side_effect = Timeout("Request timed out")
+
+        with pytest.raises(NoaaApiError) as exc_info:
+            api_client.get_point_data(lat, lon)
+
+        error = exc_info.value
+        assert "Request timed out" in str(error)
+        assert error.error_type == NoaaApiError.TIMEOUT_ERROR
+
+
+def test_connection_error_handling(api_client):
+    """Test handling of connection errors."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        mock_get.side_effect = ConnectionError("Connection refused")
+
+        with pytest.raises(NoaaApiError) as exc_info:
+            api_client.get_point_data(lat, lon)
+
+        error = exc_info.value
+        assert "Connection error" in str(error)
+        assert error.error_type == NoaaApiError.CONNECTION_ERROR
+
+
+def test_thread_safety(api_client):
+    """Test thread safety of request handling."""
+    import threading
+
+    results = []
+    errors = []
+
+    def make_request():
+        try:
+            result = api_client.get_point_data(40.0, -75.0)
+            results.append(result)
+        except Exception as e:
+            errors.append(e)
+
+    with patch("requests.get") as mock_get:
+        mock_get.return_value.json.return_value = SAMPLE_POINT_DATA
+        mock_get.return_value.raise_for_status.return_value = None
+
+        # Create multiple threads making concurrent requests
+        threads = [threading.Thread(target=make_request) for _ in range(5)]
+
+        # Start all threads
+        for thread in threads:
+            thread.start()
+
+        # Wait for all threads to complete
+        for thread in threads:
+            thread.join()
+
+        # Check results
+        assert len(errors) == 0
+        assert all(result == SAMPLE_POINT_DATA for result in results)
+        # Each request should have been made with proper rate limiting
+        assert mock_get.call_count == 5
+
+
+def test_get_stations_success(api_client):
+    """Test getting observation stations successfully."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        # First call for point data, second for stations
+        mock_get.return_value.json.side_effect = [SAMPLE_POINT_DATA, SAMPLE_STATIONS_DATA]
+        mock_get.return_value.raise_for_status.return_value = None
+
+        result = api_client.get_stations(lat, lon)
+
+        assert result == SAMPLE_STATIONS_DATA
+        assert mock_get.call_count == 2
+        # Check that the second call used the stations URL from point data
+        assert "stations" in mock_get.call_args_list[1][0][0]
+
+
+def test_get_stations_no_url(api_client):
+    """Test getting stations when point data doesn't contain stations URL."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        bad_point_data = dict(SAMPLE_POINT_DATA)
+        # Remove the observationStations URL
+        properties: dict = {}
+        # Copy all properties except observationStations
+        # Use a type-safe approach by accessing the dictionary directly
+        properties_dict = SAMPLE_POINT_DATA.get("properties", {})
+        if isinstance(properties_dict, dict):
+            for key in list(properties_dict.keys()):
+                if key != "observationStations":
+                    properties[key] = properties_dict[key]
+        bad_point_data["properties"] = properties
+        mock_get.return_value.json.return_value = bad_point_data
+        mock_get.return_value.raise_for_status.return_value = None
+
+        with pytest.raises(ValueError) as exc_info:
+            api_client.get_stations(lat, lon)
+
+        assert "Could not find observation stations URL" in str(exc_info.value)
+
+
+def test_get_current_conditions_success(api_client):
+    """Test getting current conditions successfully."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        # First call for point data, second for stations, third for observations
+        mock_get.return_value.json.side_effect = [
+            SAMPLE_POINT_DATA,
+            SAMPLE_STATIONS_DATA,
+            SAMPLE_OBSERVATION_DATA,
+        ]
+        mock_get.return_value.raise_for_status.return_value = None
+
+        result = api_client.get_current_conditions(lat, lon)
+
+        assert result == SAMPLE_OBSERVATION_DATA
+        assert mock_get.call_count == 3
+        # Check that the third call used the first station's observations URL
+        assert "stations/KXYZ/observations/latest" in mock_get.call_args_list[2][0][0]
+
+
+def test_get_current_conditions_no_stations(api_client):
+    """Test getting current conditions when no stations are available."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        # Return point data but empty stations list
+        mock_get.return_value.json.side_effect = [
+            SAMPLE_POINT_DATA,
+            {"features": []},  # Empty stations list
+        ]
+        mock_get.return_value.raise_for_status.return_value = None
+
+        with pytest.raises(ValueError) as exc_info:
+            api_client.get_current_conditions(lat, lon)
+
+        assert "No observation stations found" in str(exc_info.value)
+
+
+def test_get_hourly_forecast_success(api_client):
+    """Test getting hourly forecast data successfully."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        # First call for point data, second for hourly forecast
+        mock_get.return_value.json.side_effect = [SAMPLE_POINT_DATA, SAMPLE_HOURLY_FORECAST_DATA]
+        mock_get.return_value.raise_for_status.return_value = None
+
+        result = api_client.get_hourly_forecast(lat, lon)
+
+        assert result == SAMPLE_HOURLY_FORECAST_DATA
+        assert mock_get.call_count == 2
+        # Check that the second call used the hourly forecast URL from point data
+        assert "forecast/hourly" in mock_get.call_args_list[1][0][0]
+
+
+def test_get_hourly_forecast_no_url(api_client):
+    """Test getting hourly forecast when point data doesn't contain hourly forecast URL."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get:
+        bad_point_data = dict(SAMPLE_POINT_DATA)
+        # Remove the forecastHourly URL
+        properties: dict = {}
+        # Copy all properties except forecastHourly
+        # Use a type-safe approach by accessing the dictionary directly
+        properties_dict = SAMPLE_POINT_DATA.get("properties", {})
+        if isinstance(properties_dict, dict):
+            for key in list(properties_dict.keys()):
+                if key != "forecastHourly":
+                    properties[key] = properties_dict[key]
+        bad_point_data["properties"] = properties
+        mock_get.return_value.json.return_value = bad_point_data
+        mock_get.return_value.raise_for_status.return_value = None
+
+        with pytest.raises(ValueError) as exc_info:
+            api_client.get_hourly_forecast(lat, lon)
+
+        assert "Could not find hourly forecast URL" in str(exc_info.value)
+
+
+def test_rate_limiting_multiple_endpoints(api_client):
+    """Test that requests to multiple endpoints are rate limited."""
+    lat, lon = 40.0, -75.0
+    with patch("requests.get") as mock_get, patch("time.sleep") as mock_sleep:
+        # Set up the mock response
+        mock_get.return_value.json.return_value = SAMPLE_POINT_DATA
+        mock_get.return_value.raise_for_status.return_value = None
+
+        # Make multiple requests to the same endpoint
+        api_client.get_point_data(lat, lon)
+        api_client.get_point_data(lat, lon)
+
+        # Verify that sleep was called at least once for rate limiting
+        assert mock_sleep.call_count > 0
