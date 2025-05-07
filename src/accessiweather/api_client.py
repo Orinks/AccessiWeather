@@ -35,10 +35,58 @@ class ApiClientError(Exception):
     pass
 
 
+class NoaaApiError(ApiClientError):
+    """Custom exception for NOAA API client errors with detailed information."""
+
+    # Error type constants
+    NETWORK_ERROR = "network"
+    TIMEOUT_ERROR = "timeout"
+    CONNECTION_ERROR = "connection"
+    AUTHENTICATION_ERROR = "authentication"
+    RATE_LIMIT_ERROR = "rate_limit"
+    CLIENT_ERROR = "client"
+    SERVER_ERROR = "server"
+    PARSE_ERROR = "parse"
+    UNKNOWN_ERROR = "unknown"
+
+    def __init__(
+        self,
+        message: str,
+        status_code: Optional[int] = None,
+        error_type: Optional[str] = None,
+        url: Optional[str] = None,
+    ):
+        """Initialize the NoaaApiError.
+
+        Args:
+            message: Error message
+            status_code: HTTP status code if applicable
+            error_type: Type of error (use class constants)
+            url: URL that caused the error
+        """
+        self.status_code = status_code
+        self.error_type = error_type or self.UNKNOWN_ERROR
+        self.url = url
+        super().__init__(message)
+
+    def __str__(self) -> str:
+        """Return a string representation of the error."""
+        parts = [super().__str__()]
+        if self.status_code:
+            parts.append(f"Status code: {self.status_code}")
+        if self.error_type:
+            parts.append(f"Error type: {self.error_type}")
+        if self.url:
+            parts.append(f"URL: {self.url}")
+        return " | ".join(parts)
+
+
 class NoaaApiClient:
     # ... existing methods ...
 
-    def get_national_product(self, product_type: str, location: str, force_refresh: bool = False) -> Optional[str]:
+    def get_national_product(
+        self, product_type: str, location: str, force_refresh: bool = False
+    ) -> Optional[str]:
         """Get a national product from a specific center
 
         Args:
@@ -51,12 +99,17 @@ class NoaaApiClient:
         """
         try:
             endpoint = f"products/types/{product_type}/locations/{location}"
-            logger.debug(f"Requesting national product: product_type={product_type}, location={location}, endpoint={endpoint}")
+            logger.debug(
+                f"Requesting national product: type={product_type}, "
+                f"location={location}, endpoint={endpoint}"
+            )
             products = self._make_request(endpoint, force_refresh=force_refresh)
             logger.debug(f"Raw product list response for {product_type}/{location}: {products}")
 
             if "@graph" not in products or not products["@graph"]:
-                logger.warning(f"No '@graph' key or empty product list for {product_type}/{location}")
+                logger.warning(
+                    f"No '@graph' key or empty product list for {product_type}/{location}"
+                )
                 return None
 
             # Get the latest product
@@ -78,7 +131,6 @@ class NoaaApiClient:
             logger.error(f"Error getting national product {product_type} from {location}: {str(e)}")
             return None
 
-
     def get_national_forecast_data(self, force_refresh: bool = False) -> Dict[str, Any]:
         """Get national forecast data from various centers
 
@@ -90,43 +142,44 @@ class NoaaApiClient:
                 "short_range": self.get_national_product("FXUS01", "KWNH", force_refresh),
                 "medium_range": self.get_national_product("FXUS06", "KWNH", force_refresh),
                 "extended": self.get_national_product("FXUS07", "KWNH", force_refresh),
-                "qpf": self.get_national_product("FXUS02", "KWNH", force_refresh)
+                "qpf": self.get_national_product("FXUS02", "KWNH", force_refresh),
             },
             "spc": {
                 "day1": self.get_national_product("ACUS01", "KWNS", force_refresh),
-                "day2": self.get_national_product("ACUS02", "KWNS", force_refresh)
+                "day2": self.get_national_product("ACUS02", "KWNS", force_refresh),
             },
             "nhc": {
                 "atlantic": self.get_national_product("MIATWOAT", "KNHC", force_refresh),
-                "east_pacific": self.get_national_product("MIATWOEP", "KNHC", force_refresh)
+                "east_pacific": self.get_national_product("MIATWOEP", "KNHC", force_refresh),
             },
             "cpc": {
                 "6_10_day": self.get_national_product("FXUS05", "KWNC", force_refresh),
-                "8_14_day": self.get_national_product("FXUS07", "KWNC", force_refresh)
-            }
+                "8_14_day": self.get_national_product("FXUS07", "KWNC", force_refresh),
+            },
         }
         return result
 
     def get_national_discussion_summary(self, force_refresh: bool = False) -> dict:
         """
-        Fetch and summarize the latest WPC Short Range and SPC Day 1 discussions for nationwide view.
+        Fetch and summarize the latest WPC Short Range and SPC Day 1 discussions.
+
         Returns:
-            dict: {"wpc": {"short_range_summary": str}, "spc": {"day1_summary": str}}
+            dict: Summary of WPC and SPC discussions
         """
+
         def summarize(text, lines=10):
             if not text:
                 return "No discussion available."
             # Split into lines and join the first N non-empty lines
-            summary_lines = [l for l in text.splitlines() if l.strip()][:lines]
+            summary_lines = [line for line in text.splitlines() if line.strip()][:lines]
             return "\n".join(summary_lines)
 
         wpc_short = self.get_national_product("FXUS01", "KWNH", force_refresh)
         spc_day1 = self.get_national_product("ACUS01", "KWNS", force_refresh)
         return {
             "wpc": {"short_range_summary": summarize(wpc_short)},
-            "spc": {"day1_summary": summarize(spc_day1)}
+            "spc": {"day1_summary": summarize(spc_day1)},
         }
-
 
     """Client for interacting with NOAA Weather API"""
 
@@ -195,6 +248,7 @@ class NoaaApiClient:
         Args:
             lat: Latitude
             lon: Longitude
+            force_refresh: Whether to force a refresh of the data
 
         Returns:
             Dict containing forecast data
@@ -221,6 +275,123 @@ class NoaaApiClient:
             return self._make_request(forecast_url, use_full_url=True, force_refresh=force_refresh)
         except Exception as e:
             logger.error(f"Error getting forecast: {str(e)}")
+            logger.debug(f"Traceback: {traceback.format_exc()}")
+            raise
+
+    def get_hourly_forecast(
+        self, lat: float, lon: float, force_refresh: bool = False
+    ) -> Dict[str, Any]:
+        """Get hourly forecast for a location
+
+        Args:
+            lat: Latitude
+            lon: Longitude
+            force_refresh: Whether to force a refresh of the data
+
+        Returns:
+            Dict containing hourly forecast data
+        """
+        # First get the hourly forecast URL from the point data
+        try:
+            logger.info(f"Getting hourly forecast for coordinates: ({lat}, {lon})")
+            point_data = self.get_point_data(lat, lon, force_refresh=force_refresh)
+
+            # Debug log the point data structure
+            logger.debug(f"Point data structure: {json.dumps(point_data, indent=2)}")
+
+            hourly_forecast_url = point_data.get("properties", {}).get("forecastHourly")
+
+            if not hourly_forecast_url:
+                props = list(point_data.get("properties", {}).keys())
+                logger.error(
+                    "Could not find hourly forecast URL in point data. "
+                    f"Available properties: {props}"
+                )
+                raise ValueError("Could not find hourly forecast URL in point data")
+
+            logger.info(f"Retrieved hourly forecast URL: {hourly_forecast_url}")
+            return self._make_request(
+                hourly_forecast_url, use_full_url=True, force_refresh=force_refresh
+            )
+        except Exception as e:
+            logger.error(f"Error getting hourly forecast: {str(e)}")
+            logger.debug(f"Traceback: {traceback.format_exc()}")
+            raise
+
+    def get_stations(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
+        """Get observation stations for a location
+
+        Args:
+            lat: Latitude
+            lon: Longitude
+            force_refresh: Whether to force a refresh of the data
+
+        Returns:
+            Dict containing observation stations data
+        """
+        try:
+            logger.info(f"Getting observation stations for coordinates: ({lat}, {lon})")
+            point_data = self.get_point_data(lat, lon, force_refresh=force_refresh)
+
+            # Debug log the point data structure
+            logger.debug(f"Point data structure: {json.dumps(point_data, indent=2)}")
+
+            stations_url = point_data.get("properties", {}).get("observationStations")
+
+            if not stations_url:
+                props = list(point_data.get("properties", {}).keys())
+                logger.error(
+                    "Could not find observation stations URL in point data. "
+                    f"Available properties: {props}"
+                )
+                raise ValueError("Could not find observation stations URL in point data")
+
+            logger.info(f"Retrieved observation stations URL: {stations_url}")
+            return self._make_request(stations_url, use_full_url=True, force_refresh=force_refresh)
+        except Exception as e:
+            logger.error(f"Error getting observation stations: {str(e)}")
+            logger.debug(f"Traceback: {traceback.format_exc()}")
+            raise
+
+    def get_current_conditions(
+        self, lat: float, lon: float, force_refresh: bool = False
+    ) -> Dict[str, Any]:
+        """Get current weather conditions for a location from the nearest observation station
+
+        Args:
+            lat: Latitude
+            lon: Longitude
+            force_refresh: Whether to force a refresh of the data
+
+        Returns:
+            Dict containing current weather conditions
+        """
+        try:
+            logger.info(f"Getting current conditions for coordinates: ({lat}, {lon})")
+
+            # Get the observation stations
+            stations_data = self.get_stations(lat, lon, force_refresh=force_refresh)
+
+            # Check if we have any stations
+            if not stations_data.get("features") or len(stations_data["features"]) == 0:
+                logger.error("No observation stations found for the given coordinates")
+                raise ValueError("No observation stations found for the given coordinates")
+
+            # Get the first station (nearest)
+            station = stations_data["features"][0]
+            station_id = station["properties"]["stationIdentifier"]
+
+            logger.info(f"Using station {station_id} for current conditions")
+
+            # Get the latest observation from this station
+            observation_url = f"{self.BASE_URL}/stations/{station_id}/observations/latest"
+            logger.info(f"Fetching current conditions from: {observation_url}")
+
+            return self._make_request(
+                observation_url, use_full_url=True, force_refresh=force_refresh
+            )
+        except Exception as e:
+            logger.error(f"Error getting current conditions: {str(e)}")
             logger.debug(f"Traceback: {traceback.format_exc()}")
             raise
 
@@ -445,7 +616,7 @@ class NoaaApiClient:
                     logger.warning("Product text is empty or missing")
 
                 logger.debug("Returning product_text from get_discussion")
-                return product_text
+                return str(product_text) if product_text else None
             except (IndexError, KeyError) as e:
                 logger.warning(f"Could not find forecast discussion for {office_id}: {str(e)}")
                 return None
@@ -548,21 +719,62 @@ class NoaaApiClient:
                     response.raise_for_status()
                 except requests.exceptions.HTTPError as http_err:
                     status_code = http_err.response.status_code
-                    error_msg = f"API HTTP error: {status_code} for URL {request_url}"
+                    error_detail = ""
+                    error_type = NoaaApiError.UNKNOWN_ERROR
+
+                    # Try to get more details from the response
                     try:
                         # Try getting detail from JSON response if available
                         error_json = http_err.response.json()
                         detail = error_json.get("detail", "No detail provided")
-                        error_msg += f" - Detail: {detail}"
+                        error_detail = f"Detail: {detail}"
                     except JSONDecodeError:
                         # If error response isn't valid JSON, use raw text
                         resp_text = http_err.response.text[:200]
-                        error_msg += f" - Response body: {resp_text}"
+                        error_detail = f"Response body: {resp_text}"
                     except Exception as json_err:  # Catch other JSON errors
-                        error_msg += f" - Error parsing error response JSON: {json_err}"
+                        error_detail = f"Error parsing error response JSON: {json_err}"
 
-                    logger.error(error_msg, exc_info=True)
-                    raise ApiClientError(error_msg) from http_err
+                    # Determine error type and message based on status code
+                    if status_code == 400:
+                        error_type = NoaaApiError.CLIENT_ERROR
+                        error_msg = f"Bad request: {error_detail}"
+                        logger.error(error_msg)
+                    elif status_code == 401:
+                        error_type = NoaaApiError.AUTHENTICATION_ERROR
+                        error_msg = f"Authentication required: {error_detail}"
+                        logger.error(error_msg)
+                    elif status_code == 403:
+                        error_type = NoaaApiError.AUTHENTICATION_ERROR
+                        error_msg = f"Access forbidden: {error_detail}"
+                        logger.error(error_msg)
+                    elif status_code == 404:
+                        error_type = NoaaApiError.CLIENT_ERROR
+                        error_msg = f"Resource not found: {error_detail}"
+                        logger.warning(error_msg)  # 404 is often expected, so warning level
+                    elif status_code == 429:
+                        error_type = NoaaApiError.RATE_LIMIT_ERROR
+                        error_msg = f"Rate limit exceeded: {error_detail}"
+                        logger.warning(error_msg)
+                    elif 400 <= status_code < 500:
+                        error_type = NoaaApiError.CLIENT_ERROR
+                        error_msg = f"Client error ({status_code}): {error_detail}"
+                        logger.error(error_msg)
+                    elif 500 <= status_code < 600:
+                        error_type = NoaaApiError.SERVER_ERROR
+                        error_msg = f"Server error ({status_code}): {error_detail}"
+                        logger.error(error_msg)
+                    else:
+                        error_type = NoaaApiError.UNKNOWN_ERROR
+                        error_msg = f"Unexpected status code ({status_code}): {error_detail}"
+                        logger.error(error_msg)
+
+                    raise NoaaApiError(
+                        message=error_msg,
+                        status_code=status_code,
+                        error_type=error_type,
+                        url=request_url,
+                    ) from http_err
 
                 # If status is OK, try to parse JSON
                 try:
@@ -585,18 +797,43 @@ class NoaaApiClient:
                         f"Error: {json_err}. Response text: {resp_text}"
                     )
                     logger.error(error_msg, exc_info=True)
-                    raise ApiClientError(error_msg) from json_err
+                    raise NoaaApiError(
+                        message=error_msg,
+                        status_code=response.status_code,
+                        error_type=NoaaApiError.PARSE_ERROR,
+                        url=request_url,
+                    ) from json_err
 
+        except requests.exceptions.Timeout as timeout_err:
+            # Handle timeout errors specifically
+            error_msg = f"Request timed out during API request to {request_url}: {timeout_err}"
+            logger.error(error_msg)
+            raise NoaaApiError(
+                message=error_msg, error_type=NoaaApiError.TIMEOUT_ERROR, url=request_url
+            ) from timeout_err
+        except requests.exceptions.ConnectionError as conn_err:
+            # Handle connection errors specifically
+            error_msg = f"Connection error during API request to {request_url}: {conn_err}"
+            logger.error(error_msg)
+            raise NoaaApiError(
+                message=error_msg, error_type=NoaaApiError.CONNECTION_ERROR, url=request_url
+            ) from conn_err
         except requests.exceptions.RequestException as req_err:
-            # Catch connection errors, timeouts, etc.
+            # Catch other request exceptions
             error_msg = f"Network error during API request to {request_url}: {req_err}"
             # Log without traceback to avoid cluttering logs with expected errors
             logger.error(error_msg)  # Don't include exc_info=True
-            raise ApiClientError(error_msg) from req_err
+            raise NoaaApiError(
+                message=error_msg, error_type=NoaaApiError.NETWORK_ERROR, url=request_url
+            ) from req_err
+        except NoaaApiError:  # Re-raise NoaaApiErrors directly
+            raise
         except ApiClientError:  # Re-raise ApiClientErrors directly
             raise
         except Exception as e:
             # Catch any other unexpected errors
             error_msg = f"Unexpected error during API request to {request_url}: {e}"
             logger.error(error_msg, exc_info=True)  # Log with traceback
-            raise ApiClientError(error_msg) from e
+            raise NoaaApiError(
+                message=error_msg, error_type=NoaaApiError.UNKNOWN_ERROR, url=request_url
+            ) from e

@@ -26,6 +26,7 @@ def create_weather_app(
     config_path: Optional[str] = None,
     enable_caching: bool = True,
     cache_ttl: int = 300,
+    debug_alerts: bool = False,
 ) -> WeatherApp:
     """Create a WeatherApp instance with the service layer.
 
@@ -35,6 +36,7 @@ def create_weather_app(
         config_path: Custom path to config file (optional)
         enable_caching: Whether to enable API response caching (default: True)
         cache_ttl: Time-to-live for cached responses in seconds (default: 5 minutes)
+        debug_alerts: Whether to enable debug mode for alerts testing (default: False)
 
     Returns:
         WeatherApp instance
@@ -47,13 +49,19 @@ def create_weather_app(
         user_agent="AccessiWeather",
         contact_info=contact_info,
         enable_caching=enable_caching,
-        cache_ttl=cache_ttl
+        cache_ttl=cache_ttl,
     )
 
     # Create the location manager
     # Extract config_dir from config_path if available
     config_dir = os.path.dirname(config_path) if config_path else None
-    location_manager = LocationManager(config_dir)
+
+    # Get show_nationwide setting from config, default to True if not found
+    show_nationwide = True
+    if config and "settings" in config:
+        show_nationwide = config["settings"].get("show_nationwide_location", True)
+
+    location_manager = LocationManager(config_dir, show_nationwide=show_nationwide)
 
     # Create the notifier
     notifier = WeatherNotifier()
@@ -72,6 +80,7 @@ def create_weather_app(
         api_client=api_client,  # For backward compatibility
         config=config,
         config_path=config_path,
+        debug_alerts=debug_alerts,
     )
 
     return app

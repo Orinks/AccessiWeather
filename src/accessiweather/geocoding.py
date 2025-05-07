@@ -17,7 +17,7 @@ class GeocodingService:
     """Service for geocoding addresses and zip codes"""
 
     # Regular expression for US ZIP codes (both 5-digit and ZIP+4 formats)
-    ZIP_CODE_PATTERN = re.compile(r'^\d{5}(?:-\d{4})?$')
+    ZIP_CODE_PATTERN = re.compile(r"^\d{5}(?:-\d{4})?$")
 
     def __init__(self, user_agent: str = "AccessiWeather", timeout: int = 10):
         """Initialize the geocoding service
@@ -49,8 +49,8 @@ class GeocodingService:
             Formatted ZIP code string for geocoding
         """
         # Remove the dash for ZIP+4 codes to get just the 5-digit base
-        if '-' in zip_code:
-            zip_code = zip_code.split('-')[0]
+        if "-" in zip_code:
+            zip_code = zip_code.split("-")[0]
 
         # Add USA to improve geocoding accuracy
         return f"{zip_code}, USA"
