@@ -135,12 +135,12 @@ def test_alert_update_interval(mock_app):
     # Set last_update to a time that will trigger an update
     mock_app.last_update = mock_time - update_interval_seconds - 1
 
-    # Import the OnTimer method from weather_app_handlers.py
-    from accessiweather.gui.weather_app_handlers import WeatherAppHandlers
+    # Import the OnTimer method from timer_handlers.py
+    from accessiweather.gui.handlers.timer_handlers import WeatherAppTimerHandlers
 
     # Call OnTimer with a mock event
     with patch("time.time", return_value=mock_time):
-        WeatherAppHandlers.OnTimer(mock_app, MagicMock())
+        WeatherAppTimerHandlers.OnTimer(mock_app, MagicMock())
 
     # Verify that UpdateWeatherData was called, which should include updating alerts
     mock_app.UpdateWeatherData.assert_called_once()

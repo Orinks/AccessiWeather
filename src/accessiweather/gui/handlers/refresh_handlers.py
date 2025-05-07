@@ -144,16 +144,45 @@ class WeatherAppRefreshHandlers(WeatherAppHandlerBase):
                 self._on_forecast_error(error_msg)
                 self._on_alerts_error(error_msg)
 
+    def UpdateNationalData(self, event=None):
+        """Update national forecast data for the Nationwide view.
+
+        Args:
+            event: Optional event parameter (required for wx event handlers)
+        """
+        # Check if current location is Nationwide
+        current_location = self.location_service.get_current_location_name()
+        if not current_location or not self.location_service.is_nationwide_location(current_location):
+            logger.debug("UpdateNationalData called but current location is not Nationwide")
+            return
+
+        # Set status text to indicate update is in progress
+        self.SetStatusText("Updating national forecast data...")
+
+        # Set updating flag
+        self.updating = True
+
+        # Reset completion flags for this fetch cycle
+        self._forecast_complete = False
+        self._alerts_complete = False
+
+        # Use the dedicated async fetcher for national data
+        logger.info("Initiating national forecast fetch using NationalForecastFetcher")
+        self.national_forecast_fetcher.fetch(
+            on_success=self._on_national_forecast_fetched,
+            on_error=self._on_forecast_error,
+            force_refresh=True  # Force refresh to get the latest data
+        )
+
     def _check_update_complete(self):
         """Check if both forecast and alerts fetches are complete."""
         if self._forecast_complete and self._alerts_complete:
             # Update is complete, set updating flag to false
             self.updating = False
 
-            # Update the last_update timestamp for both forecast and alerts
+            # Update the last_update timestamp
             current_time = time.time()
             self.last_update = current_time
-            self.last_alerts_update = current_time
 
             # Format time for status bar
             formatted_time = time.strftime("%I:%M %p", time.localtime(current_time))

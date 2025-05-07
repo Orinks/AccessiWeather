@@ -1,13 +1,13 @@
 """Configuration utilities for AccessiWeather
 
-This module provides utilities for handling configuration paths.
+This module provides utilities for handling configuration paths and migration.
 """
 
 import logging
 import os
 import platform
 import sys
-from typing import Optional
+from typing import Dict, Optional, Any
 
 # Get logger
 logger = logging.getLogger(__name__)
@@ -86,3 +86,28 @@ def get_config_dir(custom_dir: Optional[str] = None) -> str:
 
     # Default to ~/.accessiweather for all other cases
     return os.path.expanduser("~/.accessiweather")
+
+
+def migrate_config(config: Dict[str, Any]) -> Dict[str, Any]:
+    """Migrate configuration to the latest format
+
+    This function removes obsolete settings and adds new default settings
+    as needed when the configuration format changes.
+
+    Args:
+        config: Configuration dictionary to migrate
+
+    Returns:
+        Migrated configuration dictionary
+    """
+    # Make a copy of the config to avoid modifying the original
+    migrated_config = config.copy()
+
+    # Remove obsolete alert_update_interval if present
+    if "settings" in migrated_config:
+        settings = migrated_config["settings"]
+        if "alert_update_interval" in settings:
+            logger.info("Removing obsolete alert_update_interval setting")
+            del settings["alert_update_interval"]
+
+    return migrated_config

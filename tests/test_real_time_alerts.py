@@ -84,7 +84,6 @@ def mock_weather_app():
         app.config = SAMPLE_CONFIG.copy()
         app.timer = mock_timer
         app.last_update = 0.0
-        app.last_alerts_update = 0.0
         app.updating = False
         app._alerts_complete = True  # Add the missing attribute
 
@@ -104,12 +103,6 @@ def mock_notifier():
 
 
 # --- Tests ---
-
-
-def test_weather_app_has_last_alerts_update(mock_weather_app):
-    """Test that WeatherApp has a last_alerts_update attribute."""
-    assert hasattr(mock_weather_app, "last_alerts_update")
-    assert mock_weather_app.last_alerts_update == 0.0
 
 
 def test_process_alerts_detects_new_alerts(mock_notifier):
