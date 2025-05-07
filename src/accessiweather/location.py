@@ -9,6 +9,7 @@ import os
 from typing import Dict, List, Optional, Tuple
 
 from accessiweather.config_utils import get_config_dir
+from accessiweather.geocoding import GeocodingService
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +37,9 @@ class LocationManager:
         self.current_location: Optional[str] = None
         self.saved_locations: Dict[str, Dict[str, float]] = {}
 
+        # Initialize geocoding service for location validation
+        self.geocoding_service = GeocodingService(user_agent="AccessiWeather-LocationManager")
+
         # Ensure config directory exists
         os.makedirs(self.config_dir, exist_ok=True)
 
@@ -51,14 +55,53 @@ class LocationManager:
                 self._save_locations()
 
     def _load_locations(self) -> None:
-        """Load saved locations from file"""
+        """Load saved locations from file and validate them"""
         try:
             if os.path.exists(self.locations_file):
                 with open(self.locations_file, "r") as f:
                     data = json.load(f)
 
-                    # If show_nationwide is False, filter out the Nationwide location
+                    # Get locations from file
                     locations = data.get("locations", {})
+
+                    # Track invalid locations for reporting
+                    invalid_locations = []
+
+                    # Validate each location (except Nationwide which is always valid)
+                    for name, loc_data in list(locations.items()):
+                        # Skip validation for Nationwide location
+                        if name == NATIONWIDE_LOCATION_NAME:
+                            continue
+
+                        lat = loc_data.get("lat")
+                        lon = loc_data.get("lon")
+
+                        # Validate coordinates
+                        if lat is not None and lon is not None:
+                            # Check if location is within US
+                            if not self.geocoding_service.validate_coordinates(lat, lon):
+                                logger.warning(
+                                    f"Location '{name}' with coordinates ({lat}, {lon}) "
+                                    f"is outside the US NWS coverage area. Removing from saved locations."
+                                )
+                                invalid_locations.append(name)
+                                del locations[name]
+                        else:
+                            logger.warning(
+                                f"Location '{name}' has invalid coordinates: lat={lat}, lon={lon}. "
+                                f"Removing from saved locations."
+                            )
+                            invalid_locations.append(name)
+                            del locations[name]
+
+                    # If any locations were removed, log a summary
+                    if invalid_locations:
+                        logger.info(
+                            f"Removed {len(invalid_locations)} location(s) outside the US NWS coverage area: "
+                            f"{', '.join(invalid_locations)}"
+                        )
+
+                    # If show_nationwide is False, filter out the Nationwide location
                     if not self.show_nationwide and NATIONWIDE_LOCATION_NAME in locations:
                         del locations[NATIONWIDE_LOCATION_NAME]
 
@@ -66,6 +109,15 @@ class LocationManager:
 
                     # Set current location if available
                     current = data.get("current")
+
+                    # If current location was removed because it was invalid, reset it
+                    if current in invalid_locations:
+                        logger.info(
+                            f"Current location '{current}' was outside the US NWS coverage area. "
+                            f"Resetting current location."
+                        )
+                        current = None
+
                     if current and current in self.saved_locations:
                         self.current_location = current
                     elif not self.show_nationwide and current == NATIONWIDE_LOCATION_NAME:
@@ -76,6 +128,25 @@ class LocationManager:
                             self.current_location = non_nationwide[0]
                         else:
                             self.current_location = None
+                    elif self.saved_locations:
+                        # If current location is not valid or was removed, set to first available
+                        if self.show_nationwide:
+                            self.current_location = NATIONWIDE_LOCATION_NAME
+                        else:
+                            non_nationwide = [
+                                loc
+                                for loc in self.saved_locations.keys()
+                                if loc != NATIONWIDE_LOCATION_NAME
+                            ]
+                            if non_nationwide:
+                                self.current_location = non_nationwide[0]
+                            else:
+                                self.current_location = None
+
+                    # Save the validated locations back to file
+                    if invalid_locations:
+                        self._save_locations()
+
         except Exception as e:
             logger.error(f"Failed to load locations: {str(e)}")
             self.saved_locations = {}
@@ -145,17 +216,32 @@ class LocationManager:
 
         self._save_locations()
 
-    def add_location(self, name: str, lat: float, lon: float) -> None:
+    def add_location(self, name: str, lat: float, lon: float) -> bool:
         """Add a new location. Cannot overwrite Nationwide location.
+        Validates that the location is within the US NWS coverage area.
 
         Args:
             name: Location name
             lat: Latitude
             lon: Longitude
+
+        Returns:
+            True if location was added successfully, False otherwise
         """
+        # Don't allow overwriting Nationwide location
         if name == NATIONWIDE_LOCATION_NAME:
-            # Do not allow overwriting Nationwide location
-            return
+            logger.warning(f"Cannot overwrite the {NATIONWIDE_LOCATION_NAME} location")
+            return False
+
+        # Validate coordinates are within US
+        if not self.geocoding_service.validate_coordinates(lat, lon):
+            logger.warning(
+                f"Cannot add location '{name}' with coordinates ({lat}, {lon}): "
+                f"Location is outside the US NWS coverage area."
+            )
+            return False
+
+        # Add the validated location
         self.saved_locations[name] = {"lat": lat, "lon": lon}
 
         # If this is the first location (besides Nationwide), make it current
@@ -164,6 +250,7 @@ class LocationManager:
 
         self._ensure_nationwide_location()
         self._save_locations()
+        return True
 
     def remove_location(self, name: str) -> bool:
         """Remove a location. Cannot remove Nationwide location.
