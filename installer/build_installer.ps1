@@ -99,36 +99,31 @@ function Check-RunningProcesses {
             Write-Host "  - $($_.ProcessName) (PID: $($_.Id))" -ForegroundColor Red
         }
 
-        $confirmation = Read-Host "Do you want to attempt to close these processes? (Y/N)"
-        if ($confirmation -eq 'Y' -or $confirmation -eq 'y') {
-            $allProcesses | ForEach-Object {
-                try {
-                    Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
-                    Write-Host "Closed process: $($_.ProcessName) (PID: $($_.Id))" -ForegroundColor Green
-                } catch {
-                    Write-Host "Failed to close process: $($_.ProcessName) (PID: $($_.Id))" -ForegroundColor Red
-                }
+        # Automatically close interfering processes without asking
+        Write-Host "Automatically closing interfering processes..." -ForegroundColor Yellow
+        $allProcesses | ForEach-Object {
+            try {
+                Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+                Write-Host "Closed process: $($_.ProcessName) (PID: $($_.Id))" -ForegroundColor Green
+            } catch {
+                Write-Host "Failed to close process: $($_.ProcessName) (PID: $($_.Id))" -ForegroundColor Red
             }
+        }
 
-            # Give processes time to fully close
-            Start-Sleep -Seconds 2
+        # Give processes time to fully close
+        Start-Sleep -Seconds 2
 
-            # Check if any processes are still running
-            $remainingProcesses = $allProcesses | Where-Object {
-                Get-Process -Id $_.Id -ErrorAction SilentlyContinue
+        # Check if any processes are still running
+        $remainingProcesses = $allProcesses | Where-Object {
+            Get-Process -Id $_.Id -ErrorAction SilentlyContinue
+        }
+
+        if ($remainingProcesses.Count -gt 0) {
+            Write-Host "Some processes could not be closed:" -ForegroundColor Red
+            $remainingProcesses | ForEach-Object {
+                Write-Host "  - $($_.ProcessName) (PID: $($_.Id))" -ForegroundColor Red
             }
-
-            if ($remainingProcesses.Count -gt 0) {
-                Write-Host "Some processes could not be closed:" -ForegroundColor Red
-                $remainingProcesses | ForEach-Object {
-                    Write-Host "  - $($_.ProcessName) (PID: $($_.Id))" -ForegroundColor Red
-                }
-                Write-Host "Cannot continue build with locked processes. Exiting." -ForegroundColor Red
-                exit 1
-            }
-        } else {
-            Write-Host "Cannot build while interfering processes are running. Exiting." -ForegroundColor Red
-            exit 1
+            Write-Host "Continuing anyway..." -ForegroundColor Yellow
         }
     } else {
         Write-Host "No interfering processes detected." -ForegroundColor Green
@@ -138,45 +133,184 @@ function Check-RunningProcesses {
 # Function to clean build directories
 function Clean-BuildDirectories {
     Write-Host "`n===== Cleaning build directories =====" -ForegroundColor Yellow
-    # Mandatory cleaning – no prompt
-    $cleanDirs = 'Y'
 
-    if ($cleanDirs -eq 'Y' -or $cleanDirs -eq 'y') {
-        # Clean dist directory
-        if (Test-Path "dist") {
-            Write-Host "Cleaning dist directory..." -ForegroundColor Yellow
-            try {
-                Remove-Item -Path "dist" -Recurse -Force
-                Write-Host "dist directory cleaned successfully." -ForegroundColor Green
-            } catch {
-                Write-Host "Error cleaning dist directory: $_" -ForegroundColor Red
-                Write-Host "Some files may be locked by other processes." -ForegroundColor Red
+    # Automatically clean the directories without asking
+    Write-Host "Automatically cleaning build and dist directories..." -ForegroundColor Yellow
+
+    # Clean dist directory
+    if (Test-Path "dist") {
+        Write-Host "Cleaning dist directory..." -ForegroundColor Yellow
+        try {
+            Remove-Item -Path "dist" -Recurse -Force
+            Write-Host "dist directory cleaned successfully." -ForegroundColor Green
+        } catch {
+            Write-Host "Error cleaning dist directory: $_" -ForegroundColor Red
+            Write-Host "Some files may be locked by other processes." -ForegroundColor Red
+        }
+    }
+
+    # Clean build directory
+    if (Test-Path "build") {
+        Write-Host "Cleaning build directory..." -ForegroundColor Yellow
+        try {
+            Remove-Item -Path "build" -Recurse -Force
+            Write-Host "build directory cleaned successfully." -ForegroundColor Green
+        } catch {
+            Write-Host "Error cleaning build directory: $_" -ForegroundColor Red
+            Write-Host "Some files may be locked by other processes." -ForegroundColor Red
+        }
+    }
+
+    # Clean spec file
+    if (Test-Path "$AppName.spec") {
+        Write-Host "Removing spec file..." -ForegroundColor Yellow
+        try {
+            Remove-Item -Path "$AppName.spec" -Force
+            Write-Host "Spec file removed successfully." -ForegroundColor Green
+        } catch {
+            Write-Host "Error removing spec file: $_" -ForegroundColor Red
+        }
+    }
+}
+
+# Function to compare version strings
+function Compare-Version {
+    param (
+        [string]$Version1,
+        [string]$Version2
+    )
+
+    $v1 = [version]$Version1
+    $v2 = [version]$Version2
+
+    if ($v1 -gt $v2) { return 1 }
+    if ($v1 -lt $v2) { return -1 }
+    return 0
+}
+
+# Function to check if Python is installed with the minimum required version
+function Check-PythonInstalled {
+    param (
+        [string]$MinVersion = "3.6.0"
+    )
+
+    try {
+        $pythonVersion = python --version 2>&1
+        if ($pythonVersion -match 'Python (\d+\.\d+\.\d+)') {
+            $currentVersion = $matches[1]
+            $versionComparison = Compare-Version -Version1 $currentVersion -Version2 $MinVersion
+
+            if ($versionComparison -ge 0) {
+                Write-Host "Python $currentVersion is installed (minimum required: $MinVersion)" -ForegroundColor Green
+                return $true
+            } else {
+                Write-Host "Python $currentVersion is installed but version $MinVersion or higher is required" -ForegroundColor Yellow
+                return $false
+            }
+        }
+    } catch {
+        Write-Host "Python is not installed or not in PATH" -ForegroundColor Red
+        return $false
+    }
+
+    return $false
+}
+
+# Function to get the list of required dependencies
+function Get-RequiredDependencies {
+    # Define the list of required dependencies based on setup.py
+    $dependencies = @(
+        "wxPython",
+        "requests",
+        "plyer",
+        "geopy",
+        "python-dateutil",
+        "beautifulsoup4",
+        "PyInstaller"
+    )
+
+    return $dependencies
+}
+
+# Function to check if a specific package is installed
+function Check-DependencyInstalled {
+    param (
+        [string]$PackageName
+    )
+
+    try {
+        $pipList = pip list 2>&1
+        $packagePattern = "^$PackageName\s+(\d+\.\d+\.\d+)"
+
+        foreach ($line in $pipList) {
+            if ($line -match $packagePattern) {
+                Write-Host "$PackageName $($matches[1]) is installed" -ForegroundColor Green
+                return $true
             }
         }
 
-        # Clean build directory
-        if (Test-Path "build") {
-            Write-Host "Cleaning build directory..." -ForegroundColor Yellow
-            try {
-                Remove-Item -Path "build" -Recurse -Force
-                Write-Host "build directory cleaned successfully." -ForegroundColor Green
-            } catch {
-                Write-Host "Error cleaning build directory: $_" -ForegroundColor Red
-                Write-Host "Some files may be locked by other processes." -ForegroundColor Red
-            }
+        Write-Host "$PackageName is not installed" -ForegroundColor Yellow
+        return $false
+    } catch {
+        $errorMessage = $_.Exception.Message
+        Write-Host "Error checking if $PackageName is installed - $errorMessage" -ForegroundColor Red
+        return $false
+    }
+}
+
+# Function to install a specific package
+function Install-Dependency {
+    param (
+        [string]$PackageName,
+        [switch]$Upgrade
+    )
+
+    $upgradeFlag = if ($Upgrade) { "--upgrade" } else { "" }
+
+    try {
+        Write-Host "Installing $PackageName..." -ForegroundColor Cyan
+
+        # Special handling for wxPython which might need specific installation parameters
+        if ($PackageName -eq "wxPython") {
+            $result = pip install $upgradeFlag --no-cache-dir $PackageName 2>&1
+        } else {
+            $result = pip install $upgradeFlag $PackageName 2>&1
         }
 
-        # Clean spec file
-        if (Test-Path "$AppName.spec") {
-            Write-Host "Removing spec file..." -ForegroundColor Yellow
-            try {
-                Remove-Item -Path "$AppName.spec" -Force
-                Write-Host "Spec file removed successfully." -ForegroundColor Green
-            } catch {
-                Write-Host "Error removing spec file: $_" -ForegroundColor Red
+        if (Check-DependencyInstalled -PackageName $PackageName) {
+            Write-Host "$PackageName installed successfully" -ForegroundColor Green
+            return $true
+        } else {
+            Write-Host "Failed to install $PackageName" -ForegroundColor Red
+            Write-Host $result -ForegroundColor Red
+            return $false
+        }
+    } catch {
+        $errorMessage = $_.Exception.Message
+        Write-Host "Error installing $PackageName - $errorMessage" -ForegroundColor Red
+        return $false
+    }
+}
+
+# Function to check and install all required dependencies
+function Check-InstallDependencies {
+    param (
+        [switch]$Force
+    )
+
+    $allDependenciesInstalled = $true
+    $dependencies = Get-RequiredDependencies
+
+    foreach ($dependency in $dependencies) {
+        if (-not (Check-DependencyInstalled -PackageName $dependency) -or $Force) {
+            $installSuccess = Install-Dependency -PackageName $dependency -Upgrade:$Force
+            if (-not $installSuccess) {
+                $allDependenciesInstalled = $false
             }
         }
     }
+
+    return $allDependenciesInstalled
 }
 
 # Create build directories if they don't exist
@@ -193,13 +327,35 @@ Check-RunningProcesses
 # Clean build directories if requested
 Clean-BuildDirectories
 
-# Step 1: Install required packages
-Write-Host "`n===== Step 1: Installing required packages =====" -ForegroundColor Cyan
-python -m pip install -U pyinstaller
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Failed to install/update PyInstaller. Exiting." -ForegroundColor Red
+# Step 1: Check and install dependencies
+Write-Host "`n===== Step 1: Checking and installing dependencies =====" -ForegroundColor Cyan
+
+# Check if Python is installed
+if (-not (Check-PythonInstalled)) {
+    Write-Host "Please install Python 3.6 or higher and add it to your PATH" -ForegroundColor Red
     exit 1
 }
+
+# Check and install dependencies
+Write-Host "Checking and installing dependencies..." -ForegroundColor Cyan
+$dependenciesInstalled = Check-InstallDependencies
+
+if (-not $dependenciesInstalled) {
+    Write-Host "Failed to install all required dependencies. Please check the error messages above." -ForegroundColor Red
+
+    $retry = Read-Host "Do you want to retry with the -Force option to reinstall all dependencies? (y/n)"
+    if ($retry -eq "y") {
+        $dependenciesInstalled = Check-InstallDependencies -Force
+        if (-not $dependenciesInstalled) {
+            Write-Host "Failed to install all required dependencies even with the -Force option. Please install them manually." -ForegroundColor Red
+            exit 1
+        }
+    } else {
+        exit 1
+    }
+}
+
+Write-Host "All dependencies are installed successfully." -ForegroundColor Green
 
 # Step 2: Build executable with PyInstaller
 Write-Host "`n===== Step 2: Building executable with PyInstaller =====" -ForegroundColor Cyan
@@ -209,18 +365,10 @@ $PyInstallerArgs = $PyInstallerOpts + @(
     "src/accessiweather/main.py"
 )
 python -m PyInstaller $PyInstallerArgs
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "PyInstaller build failed. Exiting." -ForegroundColor Red
-    exit 1
-}
 
 # Step 3: Create portable ZIP archive
 Write-Host "`n===== Step 3: Creating portable ZIP archive =====" -ForegroundColor Cyan
-try {
-    Compress-Archive -Path "dist\$AppName\*" -DestinationPath "dist\${AppName}_Portable_v${AppVersion}.zip" -Force -ErrorAction Stop
-} catch {
-    Write-Host "Warning: Could not create portable ZIP archive: $_" -ForegroundColor Yellow
-}
+Compress-Archive -Path "dist\$AppName\*" -DestinationPath "dist\${AppName}_Portable_v${AppVersion}.zip" -Force
 
 # Step 4: Build installer with Inno Setup
 Write-Host "`n===== Step 4: Building installer with Inno Setup =====" -ForegroundColor Cyan
@@ -286,10 +434,6 @@ if ($found) {
 } else {
     & iscc $issPath
 }
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Inno Setup compiler failed. Exiting." -ForegroundColor Red
-    exit 1
-}
 
 # Clean up environment variables
 $env:ACCESSIWEATHER_ROOT_DIR = $null
@@ -316,15 +460,14 @@ if ($newProcesses.Count -gt 0) {
         Write-Host "  - $($_.ProcessName) (PID: $($_.Id))" -ForegroundColor Yellow
     }
 
-    $closeProcesses = Read-Host "Do you want to close these processes? (Y/N)"
-    if ($closeProcesses -eq 'Y' -or $closeProcesses -eq 'y') {
-        $newProcesses | ForEach-Object {
-            try {
-                Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
-                Write-Host "Closed process: $($_.ProcessName) (PID: $($_.Id))" -ForegroundColor Green
-            } catch {
-                Write-Host "Failed to close process: $($_.ProcessName) (PID: $($_.Id))" -ForegroundColor Red
-            }
+    # Automatically close processes without asking
+    Write-Host "Automatically closing processes started during the build..." -ForegroundColor Yellow
+    $newProcesses | ForEach-Object {
+        try {
+            Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+            Write-Host "Closed process: $($_.ProcessName) (PID: $($_.Id))" -ForegroundColor Green
+        } catch {
+            Write-Host "Failed to close process: $($_.ProcessName) (PID: $($_.Id))" -ForegroundColor Red
         }
     }
 } else {

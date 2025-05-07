@@ -23,12 +23,20 @@ class NotificationService:
         """
         self.notifier = notifier
 
-    def notify_alerts(self, alerts: List[Dict], count: Optional[int] = None) -> None:
+    def notify_alerts(
+        self,
+        alerts: List[Dict],
+        count: Optional[int] = None,
+        new_count: int = 0,
+        updated_count: int = 0,
+    ) -> None:
         """Notify the user of weather alerts.
 
         Args:
             alerts: List of alert objects.
             count: Optional count of alerts to notify about. If None, all alerts are notified.
+            new_count: Number of new alerts (default: 0)
+            updated_count: Number of updated alerts (default: 0)
         """
         if not alerts:
             logger.info("No alerts to notify about")
@@ -37,19 +45,28 @@ class NotificationService:
         if count is None:
             count = len(alerts)
 
-        logger.info(f"Notifying about {count} alerts")
-        self.notifier.notify_alerts(count)
+        logger.info(f"Notifying about {count} alerts (new: {new_count}, updated: {updated_count})")
+        self.notifier.notify_alerts(count, new_count, updated_count)
 
-    def process_alerts(self, alerts_data: Dict) -> List[Dict]:
+    def process_alerts(self, alerts_data: Dict) -> tuple[List[Dict], int, int]:
         """Process alerts data and notify the user.
 
         Args:
             alerts_data: Raw alerts data from the API.
 
         Returns:
-            List of processed alert objects.
+            Tuple containing:
+            - List of processed alert objects
+            - Number of new alerts
+            - Number of updated alerts
         """
-        return self.notifier.process_alerts(alerts_data)
+        processed_alerts, new_count, updated_count = self.notifier.process_alerts(alerts_data)
+
+        # If there are new or updated alerts, notify the user
+        if new_count > 0 or updated_count > 0:
+            self.notify_alerts(processed_alerts, len(processed_alerts), new_count, updated_count)
+
+        return processed_alerts, new_count, updated_count
 
     def get_sorted_alerts(self) -> List[Dict]:
         """Get a sorted list of active alerts.
