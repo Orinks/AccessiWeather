@@ -41,11 +41,22 @@ class WeatherAppMenuHandlers(WeatherAppHandlerBase):
         menu.AppendSeparator()
         refresh_item = menu.Append(wx.ID_REFRESH, "Refresh Weather")
         settings_item = menu.Append(wx.ID_PREFERENCES, "Settings")
+
+        # Add debug menu items if debug_alerts is enabled
+        debug_items = []
+        if hasattr(self, "debug_alerts") and self.debug_alerts:
+            menu.AppendSeparator()
+            debug_menu = wx.Menu()
+            test_alerts_item = debug_menu.Append(wx.ID_ANY, "Test Alert Update")
+            verify_interval_item = debug_menu.Append(wx.ID_ANY, "Verify Alert Interval")
+            menu.AppendSubMenu(debug_menu, "Debug")
+            debug_items = [test_alerts_item, verify_interval_item]
+
         menu.AppendSeparator()
         exit_item = menu.Append(wx.ID_EXIT, "Exit AccessiWeather")
 
         # Return the menu and items for binding in the TaskBarIcon class
-        return menu, (show_hide_item, refresh_item, settings_item, exit_item)
+        return menu, (show_hide_item, refresh_item, settings_item, exit_item, *debug_items)
 
     def OnTaskBarShowHide(self, event):  # event is required by wx
         """Handle show/hide menu item from taskbar.
