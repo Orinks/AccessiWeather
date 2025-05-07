@@ -29,7 +29,6 @@ class WeatherAppHandlerBase:
     current_alerts: List[Dict[str, Any]]
     updating: bool
     last_update: float
-    last_alerts_update: float
     config: Dict[str, Any]
     _config_path: str
     api_client: Any

@@ -148,9 +148,8 @@ class WeatherApp(
 
         self.timer.Start(1000)  # Check every 1 second for updates
 
-        # Last update timestamps
+        # Last update timestamp
         self.last_update: float = 0.0
-        self.last_alerts_update: float = 0.0
 
         # Create system tray icon
         self.taskbar_icon = TaskBarIcon(self)
@@ -186,10 +185,14 @@ class WeatherApp(
         Returns:
             Dict containing configuration or empty dict if not found
         """
+        from accessiweather.config_utils import migrate_config
+
         if os.path.exists(self._config_path):
             try:
                 with open(self._config_path, "r") as f:
-                    return json.load(f)
+                    config = json.load(f)
+                    # Migrate config to remove obsolete settings
+                    return migrate_config(config)
             except Exception as e:
                 logger.error(f"Failed to load config: {str(e)}")
 
@@ -375,9 +378,6 @@ class WeatherApp(
         # Mark alerts as complete
         self._alerts_complete = True
 
-        # Update the last alerts update timestamp
-        self.last_alerts_update = time.time()
-
         # Check overall completion
         self._check_update_complete()
 
@@ -398,9 +398,6 @@ class WeatherApp(
 
         # Mark alerts as complete and check overall completion
         self._alerts_complete = True
-
-        # Update the last alerts update timestamp
-        self.last_alerts_update = time.time()
 
         self._check_update_complete()
 
