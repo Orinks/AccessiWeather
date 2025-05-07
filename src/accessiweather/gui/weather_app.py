@@ -32,7 +32,6 @@ from .handlers import (
 from .hourly_forecast_fetcher import HourlyForecastFetcher
 from .settings_dialog import (
     ALERT_RADIUS_KEY,
-    ALERT_UPDATE_INTERVAL_KEY,
     API_CONTACT_KEY,
     MINIMIZE_TO_TRAY_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
@@ -136,11 +135,9 @@ class WeatherApp(
         self.CreateStatusBar()
         self.SetStatusText("Ready")
 
-        # Start update timers
+        # Start update timer
         self.timer = wx.Timer(self)
-        self.alerts_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.OnTimer, self.timer)
-        self.Bind(wx.EVT_TIMER, self.OnAlertsTimer, self.alerts_timer)
         # Bind Close event here as it's frame-level, not UI-element specific
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.Bind(wx.EVT_ICONIZE, self.OnMinimize)
@@ -150,11 +147,9 @@ class WeatherApp(
         logger.debug(f"Starting timer with update interval: {update_interval} minutes")
 
         self.timer.Start(1000)  # Check every 1 second for updates
-        self.alerts_timer.Start(1000)  # Check every 1 second for alert updates
 
-        # Last update timestamps
+        # Last update timestamp
         self.last_update: float = 0.0
-        self.last_alerts_update: float = 0.0
 
         # Create system tray icon
         self.taskbar_icon = TaskBarIcon(self)
@@ -190,10 +185,14 @@ class WeatherApp(
         Returns:
             Dict containing configuration or empty dict if not found
         """
+        from accessiweather.config_utils import migrate_config
+
         if os.path.exists(self._config_path):
             try:
                 with open(self._config_path, "r") as f:
-                    return json.load(f)
+                    config = json.load(f)
+                    # Migrate config to remove obsolete settings
+                    return migrate_config(config)
             except Exception as e:
                 logger.error(f"Failed to load config: {str(e)}")
 
@@ -203,7 +202,6 @@ class WeatherApp(
             "current": None,
             "settings": {
                 UPDATE_INTERVAL_KEY: 30,
-                ALERT_UPDATE_INTERVAL_KEY: 1,  # Default to 1 minute for alert updates
                 ALERT_RADIUS_KEY: 25,
                 PRECISE_LOCATION_ALERTS_KEY: True,  # Default to precise location alerts
                 MINIMIZE_TO_TRAY_KEY: True,  # Default to minimize to tray when closing
@@ -380,9 +378,6 @@ class WeatherApp(
         # Mark alerts as complete
         self._alerts_complete = True
 
-        # Update the last alerts update timestamp
-        self.last_alerts_update = time.time()
-
         # Check overall completion
         self._check_update_complete()
 
@@ -403,9 +398,6 @@ class WeatherApp(
 
         # Mark alerts as complete and check overall completion
         self._alerts_complete = True
-
-        # Update the last alerts update timestamp
-        self.last_alerts_update = time.time()
 
         self._check_update_complete()
 
@@ -562,27 +554,6 @@ class WeatherApp(
                 self.UpdateWeatherData()
             else:
                 logger.debug("Timer skipped update: already updating.")
-
-    def OnAlertsTimer(self, event):  # event is required by wx
-        """Handle timer event for alert updates
-
-        Args:
-            event: Timer event
-        """
-        # Get alert update interval from config (default to 5 minutes)
-        settings = self.config.get("settings", {})
-        alert_update_interval_minutes = settings.get(ALERT_UPDATE_INTERVAL_KEY, 5)
-        alert_update_interval_seconds = alert_update_interval_minutes * 60
-
-        # Check if it's time to update alerts
-        now = time.time()
-        if (now - self.last_alerts_update) >= alert_update_interval_seconds:
-            # Check if alerts are already being updated (using the alerts_complete flag)
-            if self._alerts_complete:
-                logger.info("Timer triggered alerts update.")
-                self.UpdateAlerts()
-            else:
-                logger.debug("Timer skipped alerts update: alerts already being updated.")
 
     # For backward compatibility with WeatherAppHandlers
     @property

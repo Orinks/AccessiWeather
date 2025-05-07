@@ -21,7 +21,7 @@ class WeatherAppHandlerBase:
 
     # Type annotations for attributes that will be provided by WeatherApp
     timer: wx.Timer
-    alerts_timer: wx.Timer
+    # alerts_timer has been removed in favor of unified update mechanism
     location_choice: wx.Choice
     location_service: Any
     forecast_text: wx.TextCtrl
@@ -29,7 +29,6 @@ class WeatherAppHandlerBase:
     current_alerts: List[Dict[str, Any]]
     updating: bool
     last_update: float
-    last_alerts_update: float
     config: Dict[str, Any]
     _config_path: str
     api_client: Any
