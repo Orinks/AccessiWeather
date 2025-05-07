@@ -270,13 +270,17 @@ class UIManager:
         wpc_data = summaries.get("wpc", {})
         if wpc_data:
             text += "Weather Prediction Center (WPC) Summary:\n"
-            text += (wpc_data.get("short_range_summary") or "No WPC summary available") + "\n\n"
+            # Check for both "summary" and "short_range_summary" keys
+            wpc_summary = wpc_data.get("summary") or wpc_data.get("short_range_summary")
+            text += (wpc_summary or "No WPC summary available") + "\n\n"
 
         # Add SPC summary if available
         spc_data = summaries.get("spc", {})
         if spc_data:
             text += "Storm Prediction Center (SPC) Summary:\n"
-            text += (spc_data.get("day1_summary") or "No SPC summary available") + "\n\n"
+            # Check for both "summary" and "day1_summary" keys
+            spc_summary = spc_data.get("summary") or spc_data.get("day1_summary")
+            text += (spc_summary or "No SPC summary available") + "\n\n"
 
         # Add attribution
         attribution = summaries.get("attribution", "")

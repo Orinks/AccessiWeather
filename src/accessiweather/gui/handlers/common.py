@@ -48,10 +48,6 @@ class WeatherAppHandlerBase:
     _discussion_timer: Optional[wx.Timer]
 
     # Methods that will be provided by WeatherApp
-    def Destroy(self) -> None:
-        """Placeholder for wx.Frame.Destroy method"""
-        pass
-
     def UpdateWeatherData(self) -> None:
         """Placeholder for WeatherApp.UpdateWeatherData method"""
         pass

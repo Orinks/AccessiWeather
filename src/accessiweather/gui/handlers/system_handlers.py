@@ -63,63 +63,44 @@ class WeatherAppSystemHandlers(WeatherAppHandlerBase):
         try:
             logger.debug("OnClose called with force_close=%s", force_close)
 
-            # Stop all fetcher threads first to avoid deadlocks
-            self._stop_fetcher_threads()
-            logger.debug("Fetcher threads stop requested.")
-
             # Check for force close flag on the instance or parameter
+            is_forced_close = force_close
             if hasattr(self, "_force_close"):
-                force_close = force_close or self._force_close
+                is_forced_close = is_forced_close or self._force_close
                 logger.debug("Instance _force_close flag: %s", self._force_close)
 
             # Get minimize_to_tray setting
             minimize_to_tray = self.config.get("settings", {}).get("minimize_to_tray", True)
             logger.debug("minimize_to_tray setting: %s", minimize_to_tray)
 
-            # If minimize_to_tray is enabled, we have a taskbar icon, and we're not force closing
             if (
                 minimize_to_tray
                 and hasattr(self, "taskbar_icon")
                 and self.taskbar_icon
-                and not force_close
+                and not is_forced_close
             ):
                 logger.debug("Minimizing to tray instead of closing")
 
-                # Stop the timer when hiding to prevent unnecessary updates
                 if hasattr(self, "timer") and self.timer.IsRunning():
                     logger.debug("Stopping timer before hiding")
                     self.timer.Stop()
 
-                # Hide the window
                 self.Hide()
 
-                # Show notification if configured
-                if self.taskbar_icon:
-                    # Create a popup menu for the taskbar icon if it doesn't exist
-                    logger.debug("Showing notification about minimizing to tray")
-                    # We could show a balloon notification here, but it's not necessary
-                    # and might be annoying to users
-
-                # Prevent the default close behavior
-                event.Veto()
-
-                # Restart the timer after hiding to continue background updates
-                if hasattr(self, "timer"):
+                if hasattr(self, "timer"):  # Check if timer exists before trying to Start
                     logger.debug("Restarting timer after hiding")
-                    self.timer.Start()
+                    self.timer.Start()  # Restart after hide, as per original logic
 
+                event.Veto()  # Prevent the window from closing
                 logger.debug("Hide/Veto called.")
-                return
+                return True  # Return True after Veto
 
-            # Actually closing the application
+            # Proceeding with actual application close
             logger.info("Proceeding with application close")
 
-            # Stop timers
-            if hasattr(self, "timer") and self.timer.IsRunning():
-                logger.debug("Stopping main timer for force close")
-                self.timer.Stop()
-
-            # Alerts timer has been removed in favor of unified update mechanism
+            # Stop fetchers and timers here, before saving config and destroying UI elements
+            self._stop_fetcher_threads()  # Moved here
+            logger.debug("Fetcher threads and timers stopped for close.")
 
             # Save configuration
             logger.debug("Saving configuration before closing")
@@ -129,29 +110,29 @@ class WeatherAppSystemHandlers(WeatherAppHandlerBase):
             if hasattr(self, "taskbar_icon") and self.taskbar_icon:
                 logger.debug("Removing taskbar icon")
                 try:
-                    if hasattr(self.taskbar_icon, "RemoveIcon"):
+                    # Check if RemoveIcon is available and if the icon is still ok
+                    if self.taskbar_icon.IsOk() and hasattr(self.taskbar_icon, "RemoveIcon"):
                         self.taskbar_icon.RemoveIcon()
-                    self.taskbar_icon.Destroy()
-                except Exception as e:
+                    # Check if Destroy is available
+                    if hasattr(self.taskbar_icon, "Destroy"):
+                        self.taskbar_icon.Destroy()
+                except Exception as e:  # Catch specific wx errors if possible
                     logger.error("Error removing taskbar icon: %s", e)
+                finally:
+                    # Ensure reference is cleared
+                    self.taskbar_icon = None
 
-            # Allow the close event to proceed
+            # Allow the default close behavior to proceed
             event.Skip()
-
-            # Proceed with destroying the window to trigger App.OnExit cleanup
-            logger.info("Initiating shutdown by calling self.Destroy()...")
-            self.Destroy()
-            logger.info("self.Destroy() called. App.OnExit should now handle cleanup.")
-
-            # Now it's safe to set taskbar_icon to None after all operations are complete
-            if hasattr(self, "taskbar_icon"):
-                self.taskbar_icon = None
+            logger.debug("event.Skip() called, allowing default close.")
+            return True  # Return True after Skip to avoid TypeError
 
         except Exception as e:
             logger.error(f"Error during window close: {e}", exc_info=True)
             # Ensure window closes even if there's an error
-            event.Skip()
-            self.Destroy()
+            if event:  # Check if event is not None
+                event.Skip()  # Allow default closing
+            return True  # Return True to avoid TypeError
 
     def _stop_fetcher_threads(self):
         """Stop all fetcher threads"""

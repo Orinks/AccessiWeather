@@ -240,8 +240,8 @@ class WeatherApp(
             spc_data = summaries.get("spc", {})
 
             # Store full discussions from scraper data
-            self._nationwide_wpc_full = wpc_data.get("short_range_full")
-            self._nationwide_spc_full = spc_data.get("day1_full")
+            self._nationwide_wpc_full = wpc_data.get("full")
+            self._nationwide_spc_full = spc_data.get("full")
 
             wpc_len = len(self._nationwide_wpc_full) if self._nationwide_wpc_full else 0
             spc_len = len(self._nationwide_spc_full) if self._nationwide_spc_full else 0
