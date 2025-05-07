@@ -65,6 +65,16 @@ class TestNationalDiscussionScraper(unittest.TestCase):
             self.assertIn("Short-Range Forecast Discussion", result["summary"])
             self.assertIn("Snow is possible", result["full"])
 
+            # Verify summary is first 150 chars of full text
+            expected_summary = (
+                result["full"][:150] + "..." if len(result["full"]) > 150 else result["full"]
+            )
+            self.assertEqual(result["summary"], expected_summary)
+
+            # Verify summary includes important header lines
+            self.assertIn("Weather Prediction Center", result["summary"])
+            self.assertIn("EDT", result["summary"])
+
     def test_fetch_wpc_discussion_error(self):
         """Test WPC discussion fetching with error."""
         with requests_mock.Mocker() as m:
@@ -114,6 +124,20 @@ class TestNationalDiscussionScraper(unittest.TestCase):
             self.assertIn("potent upper-level system", result["summary"])
             self.assertIn("TORNADO", result["full"])
 
+            # Verify text is extracted after "...SUMMARY..."
+            self.assertNotIn("Day 1 Convective Outlook", result["full"])
+            self.assertIn("A potent upper-level system", result["full"])
+
+            # Verify summary is first 150 chars of full text
+            expected_summary = (
+                result["full"][:150] + "..." if len(result["full"]) > 150 else result["full"]
+            )
+            self.assertEqual(result["summary"], expected_summary)
+
+            # Verify regional details are included in full text
+            self.assertIn("...REGIONAL DETAIL...", result["full"])
+            self.assertIn("cold front", result["full"])
+
     def test_fetch_spc_discussion_error(self):
         """Test SPC discussion fetching with error."""
         with requests_mock.Mocker() as m:
@@ -143,6 +167,22 @@ class TestNationalDiscussionScraper(unittest.TestCase):
             self.assertEqual("SPC discussion unavailable", result["summary"])
             self.assertEqual("", result["full"])
 
+    def test_fetch_spc_discussion_no_summary_marker(self):
+        """Test SPC discussion fetching without ...SUMMARY... marker."""
+        with requests_mock.Mocker() as m:
+            m.get(
+                "https://www.spc.noaa.gov/products/outlook/day1otlk.html",
+                text="<html><body><pre>Full text without marker</pre></body></html>",
+            )
+
+            result = self.scraper.fetch_spc_discussion()
+
+            # Verify result uses full text when no marker found
+            self.assertIn("summary", result)
+            self.assertIn("full", result)
+            self.assertEqual("Full text without marker", result["full"])
+            self.assertEqual("Full text without marker", result["summary"])
+
     def test_fetch_all_discussions(self):
         """Test fetching all discussions."""
         with requests_mock.Mocker() as m:
@@ -164,7 +204,9 @@ class TestNationalDiscussionScraper(unittest.TestCase):
 
             # Verify content
             self.assertIn("Short-Range Forecast Discussion", result["wpc"]["summary"])
+            self.assertIn("Snow is possible", result["wpc"]["full"])
             self.assertIn("potent upper-level system", result["spc"]["summary"])
+            self.assertIn("TORNADO", result["spc"]["full"])
 
     def test_fetch_all_discussions_partial_failure(self):
         """Test fetching all discussions with one service failing."""

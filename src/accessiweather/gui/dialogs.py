@@ -739,7 +739,9 @@ class NationalDiscussionDialog(wx.Dialog):
             wpc_sizer = wx.BoxSizer(wx.VERTICAL)
 
             wpc_text = wx.TextCtrl(
-                wpc_panel, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH, size=(-1, 500)
+                wpc_panel,
+                style=wx.TE_MULTILINE | wx.TE_READONLY,
+                size=(-1, 500),  # Removed wx.TE_RICH
             )
 
             # Set monospace font for better readability of forecast discussions
@@ -763,7 +765,9 @@ class NationalDiscussionDialog(wx.Dialog):
             spc_sizer = wx.BoxSizer(wx.VERTICAL)
 
             spc_text = wx.TextCtrl(
-                spc_panel, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH, size=(-1, 500)
+                spc_panel,
+                style=wx.TE_MULTILINE | wx.TE_READONLY,
+                size=(-1, 500),  # Removed wx.TE_RICH
             )
 
             spc_text.SetFont(font)  # Same monospace font

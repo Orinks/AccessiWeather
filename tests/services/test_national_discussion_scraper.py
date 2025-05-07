@@ -37,11 +37,16 @@ Day 1 Convective Outlook
 NWS Storm Prediction Center Norman OK
 1030 AM EDT Thu Apr 18 2024
 
-...DISCUSSION...
+...THERE IS A SLIGHT RISK OF SEVERE THUNDERSTORMS ACROSS PORTIONS OF
+THE EASTERN U.S...
 
+...SUMMARY...
 A potent upper-level system will support severe thunderstorms.
 Large hail and damaging winds are the primary threats.
 Isolated tornadoes are also possible in some areas.
+
+...REGIONAL DETAIL...
+More details for a specific region.
 
 ...MAX PROBS...
 </pre>
@@ -68,11 +73,16 @@ SAMPLE_SPC_PRE_TEXT = """Day 1 Convective Outlook
 NWS Storm Prediction Center Norman OK
 1030 AM EDT Thu Apr 18 2024
 
-...DISCUSSION...
+...THERE IS A SLIGHT RISK OF SEVERE THUNDERSTORMS ACROSS PORTIONS OF
+THE EASTERN U.S...
 
+...SUMMARY...
 A potent upper-level system will support severe thunderstorms.
 Large hail and damaging winds are the primary threats.
 Isolated tornadoes are also possible in some areas.
+
+...REGIONAL DETAIL...
+More details for a specific region.
 
 ...MAX PROBS..."""
 
@@ -80,11 +90,16 @@ SAMPLE_SPC_TEXT = """A potent upper-level system will support severe thunderstor
 Large hail and damaging winds are the primary threats.
 Isolated tornadoes are also possible in some areas.
 
+...REGIONAL DETAIL...
+More details for a specific region.
+
 ...MAX PROBS..."""
 
 EXPECTED_SPC_SUMMARY = """A potent upper-level system will support severe thunderstorms.
 Large hail and damaging winds are the primary threats.
 Isolated tornadoes are also possible in some areas.
+...REGIONAL DETAIL...
+More details for a specific region.
 ...MAX PROBS..."""
 
 # --- Fixtures ---
@@ -191,8 +206,8 @@ def test_fetch_wpc_rate_limit(
 # --- SPC Tests ---
 
 
-def test_fetch_spc_success_with_discussion(mock_requests, mock_bs4, mock_sleep):  # noqa: ARG001
-    """Test successful SPC discussion fetch with ...DISCUSSION... marker."""
+def test_fetch_spc_success_with_summary(mock_requests, mock_bs4, mock_sleep):  # noqa: ARG001
+    """Test successful SPC discussion fetch with ...SUMMARY... marker."""
     mock_requests.return_value.text = SAMPLE_SPC_HTML
     pre_mock = MagicMock()
     pre_mock.get_text.return_value = SAMPLE_SPC_PRE_TEXT
@@ -210,10 +225,8 @@ def test_fetch_spc_success_with_discussion(mock_requests, mock_bs4, mock_sleep):
     )
 
 
-def test_fetch_spc_success_no_discussion_marker(
-    mock_requests, mock_bs4, mock_sleep
-):  # noqa: ARG001
-    """Test successful SPC discussion fetch without ...DISCUSSION... marker."""
+def test_fetch_spc_success_no_summary_marker(mock_requests, mock_bs4, mock_sleep):  # noqa: ARG001
+    """Test successful SPC discussion fetch without ...SUMMARY... marker."""
     mock_requests.return_value.text = (
         "<html><body><pre>Full text without marker</pre></body></html>"
     )
