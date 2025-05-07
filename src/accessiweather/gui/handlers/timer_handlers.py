@@ -59,9 +59,11 @@ class WeatherAppTimerHandlers(WeatherAppHandlerBase):
 
                 # If auto-refresh for national data is enabled and we're on the nationwide view, update that too
                 current_location = self.location_service.get_current_location_name()
-                if (current_location and
-                    self.location_service.is_nationwide_location(current_location) and
-                    settings.get("auto_refresh_national", True)):
+                if (
+                    current_location
+                    and self.location_service.is_nationwide_location(current_location)
+                    and settings.get("auto_refresh_national", True)
+                ):
                     logger.info("Timer triggered national data update for nationwide view")
                     self.UpdateNationalData()
             else:

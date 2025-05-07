@@ -7,7 +7,7 @@ import logging
 import os
 import platform
 import sys
-from typing import Dict, Optional, Any
+from typing import Any, Dict, Optional
 
 # Get logger
 logger = logging.getLogger(__name__)
