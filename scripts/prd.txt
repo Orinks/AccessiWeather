@@ -1,0 +1,225 @@
+PRD: AccessiWeather Codebase Enhancement & Nationwide View Integration
+
+# Overview
+
+AccessiWeather is a desktop application designed to provide accessible weather information from the National Oceanic and Atmospheric Administration (NOAA), with a strong focus on screen reader compatibility and keyboard navigation. This document outlines the requirements for enhancing the existing AccessiWeather Beta (v0.9.0) codebase. The primary goals are to improve application stability (particularly during exit), integrate the planned "Nationwide" weather view feature, refine error handling, enhance test coverage, and improve overall code quality and maintainability. This effort aims to move the application closer to a robust 1.0 release by addressing identified technical debt and completing core feature integrations.
+
+# Core Features
+
+Integrated Nationwide Weather View
+
+What it does: Provides users with a consolidated view of national weather summaries and forecast discussions from key NOAA/NWS centers (WPC, SPC) when the "Nationwide" location is selected.
+
+Why it's important: Offers a broader weather context beyond specific user-added locations, enhancing the application's utility for understanding large-scale weather patterns. Crucial for accessibility as it focuses on text-based products.
+
+How it works: A new web scraping service (NationalDiscussionScraper) will fetch text-based discussions from WPC/SPC websites. The WeatherService will orchestrate calls to this scraper when the Nationwide location is active. The UIManager and WeatherApp will display summarized information in the main forecast area, and a dedicated NationalDiscussionDialog (or similar mechanism) will allow users to view the full, detailed text discussions.
+
+Enhanced Stability & Exit Handling
+
+What it does: Improves the application's shutdown process to prevent crashes, hangs, or resource leaks. Ensures background threads (data fetchers, timers) are reliably terminated.
+
+Why it's important: Critical for user experience and application reliability. Prevents zombie processes or configuration corruption upon closing the application.
+
+How it works: A centralized ThreadManager utility will track all background threads and their stop events. The complex ExitHandler utility will be removed. The AccessiWeatherApp.OnExit method will be refactored to use the ThreadManager for graceful thread termination. WeatherApp.OnClose logic will be clarified to handle hiding-to-tray vs. force-closing cleanly, ensuring resources like timers and the taskbar icon are managed correctly in both scenarios before triggering the application exit process.
+
+Improved Error Handling & User Feedback
+
+What it does: Provides more specific and user-friendly feedback when errors occur, particularly during API interactions or background data fetching. Logs errors more effectively for debugging.
+
+Why it's important: Improves the user experience by clearly communicating issues (e.g., network problems, API errors, data not found) instead of generic failures or silent errors. Aids developers in diagnosing problems.
+
+How it works: The NoaaApiClient will be enhanced to better classify HTTP errors and network exceptions, providing more context. Services will consistently handle or propagate errors. The GUI layer will use safe_call_after for all background callbacks and display user-friendly messages via the UIManager or wx.MessageBox upon failure. Logging will be refined for clarity.
+
+Refined UI/UX for Nationwide View & Handlers
+
+What it does: Integrates the display of Nationwide forecast summaries into the main UI and provides access to detailed national discussions. Refactors UI event handling for better organization.
+
+Why it's important: Makes the Nationwide feature accessible to the user and ensures the UI remains responsive and well-organized internally.
+
+How it works: The UIManager will be updated to format and display the summarized national data (fetched via the WeatherService and scraper) in the main forecast text area. The OnViewDiscussion handler in WeatherApp will be modified to detect the Nationwide location and trigger the display of the full scraped discussions (potentially via a new NationalDiscussionDialog). Event handlers will be fully consolidated into the gui/handlers/ structure.
+
+# User Experience
+
+User Personas:
+
+Primary: Desktop computer users who need reliable, up-to-date weather information from NOAA.
+
+Accessibility Focus: Users relying on screen readers (NVDA, JAWS, VoiceOver) or keyboard-only navigation.
+
+Secondary: Users interested in broader, national weather trends in addition to local forecasts.
+
+Key User Flows:
+
+Viewing Nationwide Summary: User selects "Nationwide" location -> Main forecast area updates with WPC/SPC text summaries -> User clicks "View Forecast Discussion".
+
+Viewing Nationwide Detailed Discussion: (Continuing from above) User is presented with full text discussions from WPC/SPC (e.g., in a tabbed dialog) -> User reads discussion -> User closes discussion view.
+
+Closing Application: User clicks the 'X' button -> App hides to system tray (default) OR User selects "Exit" from tray menu / force closes -> App saves config, cleanly stops all background tasks, and exits without error.
+
+Encountering API Error: User attempts to refresh data during network outage -> App displays a clear message like "Network error: Unable to fetch weather data. Please check your connection." instead of crashing or showing raw errors.
+
+UI/UX Considerations:
+
+The Nationwide view presentation must prioritize text accessibility. Summaries should be concise and informative. Detailed discussions should be presented in a readable format (e.g., using monospace font in a TextCtrl).
+
+Error messages must be clear, non-technical, and actionable where possible.
+
+The exit process should feel smooth and reliable, whether hiding or closing.
+
+Loading states should clearly indicate when national vs. local data is being fetched.
+
+# Technical Architecture
+
+System Components:
+
+NoaaApiClient: Remains responsible for core NOAA API interactions. Will have enhanced error handling and timeout usage.
+
+NationalDiscussionScraper (New): A new service in src/accessiweather/services/ responsible for scraping WPC/SPC websites using requests and BeautifulSoup4. Includes rate limiting.
+
+WeatherService: Modified to call NationalDiscussionScraper for the nationwide summary data instead of the API client for that specific view. Continues to use NoaaApiClient for other weather data.
+
+LocationService, NotificationService: Largely unchanged, interact with their respective managers/notifiers.
+
+LocationManager, WeatherNotifier: Core logic remains.
+
+ThreadManager (Enhanced): Central utility in src/accessiweather/utils/ for tracking all background threads and stop events. Replaces ExitHandler.
+
+Async Fetchers (Updated): All fetcher classes (ForecastFetcher, AlertsFetcher, DiscussionFetcher, CurrentConditionsFetcher, HourlyForecastFetcher, NationalForecastFetcher) will be updated to register/unregister their threads with the ThreadManager.
+
+GUI Layer (gui/):
+
+AccessiWeatherApp: OnExit refactored for cleanup using ThreadManager.
+
+WeatherApp: OnClose refactored. Handlers moved to gui/handlers/. Logic updated to display nationwide data via UIManager.
+
+UIManager: Updated to format and display nationwide summaries.
+
+gui/handlers/: Consolidated event handlers. DiscussionHandlers updated for nationwide view.
+
+NationalDiscussionDialog (Potential New): A dialog in gui/dialogs.py to display full scraped national discussions.
+
+ExitHandler (Removed): This utility will be removed.
+
+Data Models:
+
+Configuration: config.json structure remains largely the same.
+
+API Data: Follows NOAA API schema.
+
+Scraped Data: A dictionary structure containing WPC/SPC summaries and full text (e.g., {"wpc": {"summary": "...", "full": "..."}, "spc": {"summary": "...", "full": "..."}}).
+
+APIs and Integrations:
+
+NOAA Weather API (api.weather.gov)
+
+WPC/SPC Websites (for scraping)
+
+Infrastructure Requirements: Desktop environment (Windows primary, Linux experimental), Python 3.7+, Internet connection.
+
+# Development Roadmap
+
+Phase 1: Foundation & Stability
+
+Implement/Enhance ThreadManager utility.
+
+Integrate ThreadManager registration/unregistration into all async fetcher classes (_fetch_thread methods).
+
+Refactor AccessiWeatherApp.OnExit to use ThreadManager.stop_all_threads.
+
+Refactor WeatherApp.OnClose to correctly handle hide-to-tray vs. force-close scenarios and trigger self.Destroy().
+
+Remove the ExitHandler utility.
+
+Enhance NoaaApiClient._make_request error handling (timeouts, specific HTTP errors, network errors).
+
+Add foundational unit tests for ThreadManager.
+
+Goal: Achieve a demonstrably more stable application exit process.
+
+Phase 2: Nationwide View - Backend & Integration
+
+Implement NationalDiscussionScraper service with rate limiting to fetch WPC/SPC discussions.
+
+Implement unit tests for the scraper service (mocking web requests).
+
+Modify WeatherService.get_national_forecast_data to use the scraper service instead of the API client.
+
+Update NationalForecastFetcher to use the modified WeatherService method.
+
+Add/update unit tests for WeatherService focusing on the nationwide data path.
+
+Goal: Data for the Nationwide view can be successfully fetched and is available within the service layer.
+
+Phase 3: Nationwide View - Frontend & Refinement
+
+Update WeatherApp._FetchWeatherData and _on_national_forecast_fetched to handle the data structure from the scraper service.
+
+Update UIManager.display_forecast and add/refine _format_national_forecast to display the summarized WPC/SPC data in the main forecast area.
+
+Modify WeatherAppDiscussionHandlers.OnViewDiscussion to detect the Nationwide location.
+
+Implement NationalDiscussionDialog (or adapt existing discussion dialog) to display the full scraped WPC/SPC discussions when triggered for the Nationwide location.
+
+Refine UI presentation for Nationwide summaries and discussions for clarity and accessibility.
+
+Consolidate any remaining event handlers into the gui/handlers/ structure.
+
+Goal: Users can select the Nationwide location, see summaries, and view detailed national discussions.
+
+Phase 4: Testing & Polish
+
+Write/improve unit tests for API client error conditions, services, fetcher cancellation, and location manager edge cases.
+
+Write integration tests (if feasible within the test setup) for key user flows like fetching data, changing locations, and viewing discussions (including Nationwide).
+
+Perform thorough manual testing, focusing on Nationwide view, application exit under various conditions, error handling scenarios, and accessibility (screen reader, keyboard nav).
+
+Address code quality issues: Run mypy, flake8, black, isort, and fix reported problems. Add missing type hints and docstrings.
+
+Update README.md and docs/ files to reflect the Nationwide view feature and any significant architectural changes.
+
+Goal: A well-tested, stable, and polished application version with the Nationwide view fully integrated.
+
+# Logical Dependency Chain
+
+Stability First (Phase 1): The core threading and exit handling issues must be addressed first. Without a stable base, adding new features is risky. ThreadManager integration and the OnExit/OnClose refactoring are foundational. Improved API client error handling also belongs here.
+
+Data Acquisition (Phase 2): Once the app is stable, the backend for the Nationwide view (scraper, service integration) can be built. This ensures the necessary data is available before attempting UI work.
+
+User Interface (Phase 3): With the data flowing, the UI can be implemented to display the Nationwide summaries and provide access to the detailed discussions. Handler consolidation can happen alongside UI work.
+
+Testing and Polish (Phase 4): Comprehensive testing and quality improvements are performed last, leveraging the stable foundation and completed features. This ensures the final product is robust.
+
+Getting to usable/visible quickly: Phase 1 delivers immediate user benefit through stability. Phase 3 delivers the visible Nationwide feature. Each phase builds upon the previous one.
+
+# Risks and Mitigations
+
+Risk: Complexity of wxPython threading and event loop leading to subtle bugs or deadlocks during exit/cleanup.
+
+Mitigation: Implement robust ThreadManager. Centralize thread stopping logic in App.OnExit. Use safe_call_after consistently. Perform extensive manual testing of exit scenarios. Reduce timeouts in stop_all_threads for faster exit attempts.
+
+Risk: Reliance on web scraping for Nationwide discussions; website structure changes could break the scraper.
+
+Mitigation: Implement robust error handling in the scraper. Clearly indicate in the UI if scraped data is unavailable. Log scraping errors effectively. Regularly check if WPC/SPC offer official text product APIs as alternatives.
+
+Risk: Difficulty in writing comprehensive tests for GUI interactions and multi-threaded components.
+
+Mitigation: Focus unit tests on services, API client, scraper, and utility logic. Test fetchers by mocking safe_call_after. Use manual testing and logging extensively for GUI and threading issues. Consider simple integration tests for key flows if possible.
+
+Risk: Defining the right MVP/scope for each phase.
+
+Mitigation: Strictly follow the phased roadmap. Prioritize stability (Phase 1) before major feature work (Phase 2/3). Defer unrelated enhancements.
+
+Risk: Uncovering further architectural issues during refactoring.
+
+Mitigation: Address critical issues as they arise within the scope of the current phase if possible. Log less critical issues for future iterations. Maintain clear communication if significant unexpected work is required.
+
+# Appendix
+
+Detailed codebase analysis and initial improvement suggestions are available in the preceding technical review document.
+
+Existing documentation (README.md, docs/developer_guide.md, etc.) provides further context on the current architecture.
+
+NOAA API Terms of Service must be adhered to, particularly regarding user-agent identification and rate limiting.
+
+WPC/SPC website terms of use should be reviewed regarding scraping, although fetching public forecast discussions is generally acceptable practice for non-commercial use with proper attribution and rate limiting.

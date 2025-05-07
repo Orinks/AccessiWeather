@@ -23,7 +23,27 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=("AccessiWeather - An accessible weather " "application using NOAA data")
     )
-    parser.add_argument("-d", "--debug", action="store_true", help="Enable debug logging")
+
+    # Debug mode options
+    debug_group = parser.add_argument_group("Debug Options")
+    debug_group.add_argument("-d", "--debug", action="store_true", help="Enable debug logging")
+    debug_group.add_argument(
+        "--debug-mode",
+        choices=["test-alert", "verify-interval"],
+        help="Run in specific debug mode: test-alert to trigger test alerts, "
+        "verify-interval to verify alert update intervals",
+    )
+    debug_group.add_argument(
+        "--alert-severity",
+        choices=["Extreme", "Severe", "Moderate", "Minor"],
+        default="Moderate",
+        help="Severity level for test alerts",
+    )
+    debug_group.add_argument(
+        "--alert-event", default="Test Alert", help="Event name for test alerts"
+    )
+
+    # General options
     parser.add_argument("-c", "--config", help="Path to configuration directory")
     parser.add_argument("--no-cache", action="store_true", help="Disable API response caching")
 
@@ -41,8 +61,24 @@ def main() -> int:
     # Logging setup is now handled in main.py
 
     try:
+        # Create debug options dictionary
+        debug_options = (
+            {
+                "debug_mode": args.debug_mode,
+                "alert_severity": args.alert_severity,
+                "alert_event": args.alert_event,
+            }
+            if args.debug_mode
+            else None
+        )
+
         # Pass arguments to main application entry point
-        app_main(config_dir=args.config, debug_mode=args.debug, enable_caching=not args.no_cache)
+        app_main(
+            config_dir=args.config,
+            debug_mode=args.debug,
+            enable_caching=not args.no_cache,
+            debug_options=debug_options,
+        )
         return 0
     except Exception as e:
         logging.error(f"Error running application: {str(e)}")

@@ -21,13 +21,19 @@ from accessiweather.utils.single_instance import SingleInstanceChecker
 # Add blank line before function definition
 
 
-def main(config_dir: Optional[str] = None, debug_mode: bool = False, enable_caching: bool = True):
+def main(
+    config_dir: Optional[str] = None,
+    debug_mode: bool = False,
+    enable_caching: bool = True,
+    debug_options: Optional[dict] = None,
+):
     """Main entry point for the application
 
     Args:
         config_dir: Configuration directory, defaults to ~/.accessiweather
         debug_mode: Whether to enable debug logging
         enable_caching: Whether to enable API response caching
+        debug_options: Dictionary of debug options for testing features
     """
     # Set up logging using the root config
     log_level = logging.DEBUG if debug_mode else logging.INFO
@@ -101,6 +107,7 @@ def main(config_dir: Optional[str] = None, debug_mode: bool = False, enable_cach
             config_path=config_file_path,
             enable_caching=enable_caching,
             cache_ttl=300,  # 5 minutes default TTL
+            debug_options=debug_options,
         )
 
         # Store a reference to the frame in the app

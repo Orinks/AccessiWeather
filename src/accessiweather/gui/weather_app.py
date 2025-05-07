@@ -73,6 +73,7 @@ class WeatherApp(
         api_client=None,  # For backward compatibility
         config=None,
         config_path=None,
+        debug_options=None,
     ):
         """Initialize the weather app
 
@@ -84,6 +85,7 @@ class WeatherApp(
             api_client: NoaaApiClient instance (for backward compatibility)
             config: Configuration dictionary (optional)
             config_path: Custom path to config file (optional)
+            debug_options: Dictionary of debug options for testing features (optional)
         """
         super().__init__(parent, title="AccessiWeather", size=(800, 600))
 
@@ -100,6 +102,15 @@ class WeatherApp(
 
         # For backward compatibility
         self.api_client = api_client
+
+        # Store debug options
+        self.debug_options = debug_options
+
+        # Initialize debug mode state
+        self._in_debug_mode = debug_options is not None
+        if self._in_debug_mode:
+            logger.info(f"Running in debug mode with options: {debug_options}")
+            self._setup_debug_mode()
 
         # Validate required services
         if not all([self.weather_service, self.location_service, self.notification_service]):
@@ -183,6 +194,96 @@ class WeatherApp(
 
         # Add force close flag
         self._force_close = True  # Default to force close when clicking X
+
+    def _setup_debug_mode(self):
+        """Set up debug mode based on debug options"""
+        if not self.debug_options:
+            return
+
+        debug_mode = self.debug_options.get("debug_mode")
+
+        if debug_mode == "test-alert":
+            # Schedule a test alert to be triggered after the app is fully initialized
+            wx.CallAfter(self._trigger_test_alert)
+        elif debug_mode == "verify-interval":
+            # Set up interval verification
+            wx.CallAfter(self._setup_interval_verification)
+
+        # Log that debug mode is active
+        logger.info(f"Debug mode '{debug_mode}' activated")
+
+    def _trigger_test_alert(self):
+        """Trigger a test alert for debugging purposes"""
+        import datetime
+
+        # Get alert parameters from debug options
+        severity = self.debug_options.get("alert_severity", "Moderate")
+        event_name = self.debug_options.get("alert_event", "Test Alert")
+
+        # Create a test alert
+        test_alert = {
+            "id": f"test-alert-{int(time.time())}",
+            "event": event_name,
+            "headline": f"DEBUG TEST: {event_name}",
+            "description": f"This is a test alert generated in debug mode. Severity: {severity}",
+            "severity": severity,
+            "urgency": "Expected",
+            "sent": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "effective": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "expires": (
+                datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=30)
+            ).isoformat(),
+            "status": "Test",
+            "messageType": "Alert",
+            "category": "Met",
+            "response": "None",
+            "instruction": "This is a test alert. No action is required.",
+        }
+
+        # Create a mock alerts data structure
+        test_alerts_data = {"features": [{"properties": test_alert}]}
+
+        # Process the test alert
+        logger.info(f"Triggering test alert: {event_name} ({severity})")
+        self._on_alerts_fetched(test_alerts_data)
+
+        # Show a message to the user
+        wx.MessageBox(
+            f"Test alert '{event_name}' with severity '{severity}' has been triggered.\n\n"
+            f"Check the Alerts tab to view the test alert.",
+            "Test Alert Triggered",
+            wx.OK | wx.ICON_INFORMATION,
+        )
+
+    def _setup_interval_verification(self):
+        """Set up verification of alert update intervals"""
+        # Override the alert update interval to a small value for testing
+        settings = self.config.get("settings", {})
+        original_interval = settings.get(ALERT_UPDATE_INTERVAL_KEY, 1)
+
+        # Set to a small value (10 seconds) for testing
+        test_interval = 1 / 6  # 10 seconds in minutes
+
+        # Update the config
+        if "settings" not in self.config:
+            self.config["settings"] = {}
+        self.config["settings"][ALERT_UPDATE_INTERVAL_KEY] = test_interval
+
+        # Log the change
+        logger.info(
+            f"Alert update interval changed from {original_interval} to {test_interval} minutes for testing"
+        )
+
+        # Show a message to the user
+        wx.MessageBox(
+            f"Alert update interval has been set to {test_interval} minutes (10 seconds) for testing.\n\n"
+            f"The next alert update will occur in approximately 10 seconds.",
+            "Interval Verification Mode",
+            wx.OK | wx.ICON_INFORMATION,
+        )
+
+        # Trigger an initial test alert
+        wx.CallAfter(self._trigger_test_alert)
 
     def _load_config(self):
         """Load configuration from file
@@ -576,10 +677,25 @@ class WeatherApp(
 
         # Check if it's time to update alerts
         now = time.time()
-        if (now - self.last_alerts_update) >= alert_update_interval_seconds:
+        time_since_last_update = now - self.last_alerts_update
+        next_update_in = alert_update_interval_seconds - time_since_last_update
+
+        # Enhanced logging for debug mode
+        if hasattr(self, "_in_debug_mode") and self._in_debug_mode:
+            logger.debug(
+                f"Alerts timer check: interval={alert_update_interval_minutes}min, "
+                f"time_since_last={time_since_last_update:.1f}s, "
+                f"next_update_in={next_update_in:.1f}s"
+            )
+
+        if time_since_last_update >= alert_update_interval_seconds:
             # Check if alerts are already being updated (using the alerts_complete flag)
             if self._alerts_complete:
-                logger.info("Timer triggered alerts update.")
+                logger.info(
+                    f"Timer triggered alerts update. "
+                    f"Interval: {alert_update_interval_minutes} minutes, "
+                    f"Time since last update: {time_since_last_update:.1f} seconds"
+                )
                 self.UpdateAlerts()
             else:
                 logger.debug("Timer skipped alerts update: alerts already being updated.")

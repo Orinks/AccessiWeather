@@ -1,0 +1,238 @@
+
+PRD: AccessiWeather - Stability & Refinement (Post-Beta Enhancement)
+
+# Overview
+
+AccessiWeather is an accessible desktop weather application providing NOAA data with a focus on screen reader compatibility and keyboard navigation. This document outlines requirements for enhancing the AccessiWeather Beta (v0.9.0) codebase. The primary goals are to:
+
+Resolve Critical Update Issues: Address the conflicting timer behavior for weather and alert updates to ensure reliable and predictable data refreshes.
+
+Improve Application Stability: Particularly during application exit, by refining thread management and cleanup processes.
+
+Finalize Nationwide View Integration: Ensure all backend and frontend components for the Nationwide weather view are robust and user-friendly.
+
+Enhance Code Quality & Maintainability: By removing obsolete code, improving error handling, and ensuring consistency.
+
+Increase Test Coverage: To solidify the application's reliability.
+
+This phase focuses on maturing the application from its beta state towards a stable 1.0 release by addressing known issues and refining existing features.
+
+# Core Features
+
+Unified and Reliable Data Update Mechanism
+
+What it does: Consolidates the application's data refresh logic to a single, primary timer. This timer will manage the periodic fetching of all weather data, including forecasts and alerts. The separate, conflicting alert-specific update timer will be removed.
+
+Why it's important: Fixes a critical bug where alerts might not update as intended due to conflicting timer logic. Simplifies the update process, making it more reliable and easier to debug. Ensures users receive timely updates for all weather information consistently.
+
+How it works at a high level: The WeatherApp will use a single wx.Timer (self.timer) configured by UPDATE_INTERVAL_KEY. The OnTimer event handler will trigger UpdateWeatherData. UpdateWeatherData (via _FetchWeatherData) will be responsible for fetching both forecast data and alert data. The ALERT_UPDATE_INTERVAL_KEY setting and the associated alerts_timer and OnAlertsTimer method will be removed.
+
+Robust Application Exit & Resource Cleanup
+
+What it does: Ensures AccessiWeather closes cleanly and reliably, whether hidden to the system tray, closed via the 'X' button, or exited through the tray menu. All background threads (data fetchers) and system resources (timers, tray icon) will be properly terminated and released.
+
+Why it's important: Prevents application hangs, crashes on exit, zombie processes, and potential data corruption. Improves user trust and overall system stability.
+
+How it works at a high level: The ThreadManager utility will be the central point for tracking and managing all background threads. The AccessiWeatherApp.OnExit method will be the primary cleanup point, invoking ThreadManager.stop_all_threads() before other cleanup actions. WeatherApp.OnClose logic will be refined to correctly distinguish between hiding to tray (vetoing the close) and initiating a full application shutdown (which then triggers App.OnExit). The obsolete ExitHandler utility will be removed.
+
+Streamlined Codebase and Enhanced Maintainability
+
+What it does: Removes obsolete code files and consolidates event handling logic for better organization and easier future development.
+
+Why it's important: Reduces code clutter, makes the codebase easier to understand and maintain, and lowers the risk of bugs arising from outdated or conflicting code.
+
+How it works at a high level: Obsolete handler files (src/accessiweather/gui/weather_app_handlers.py and src/accessiweather/gui/weather_app_handlers_refactored.py) will be deleted. All event handling logic will reside within the src/accessiweather/gui/handlers/ package structure.
+
+(Baseline Feature) Nationwide Weather View
+
+What it does: Provides users with a consolidated view of national weather summaries and forecast discussions from key NOAA/NWS centers (WPC, SPC) when the "Nationwide" location is selected.
+
+Why it's important: Offers a broader weather context, crucial for accessibility as it focuses on text-based products.
+
+How it works at a high level: NationalDiscussionScraper fetches data, WeatherService orchestrates, and the UI displays summaries and full discussions. (This feature is largely implemented but its stability and integration are confirmed and polished in this phase).
+
+(Baseline Feature) Refined Error Reporting
+
+What it does: Provides more specific and user-friendly feedback when errors occur.
+
+Why it's important: Improves user experience by clearly communicating issues.
+
+How it works at a high level: The NoaaApiClient uses NoaaApiError for detailed error context. The GUI layer uses safe_call_after and UIManager/wx.MessageBox for user-facing error messages. (This feature is largely implemented but its robustness is confirmed and polished in this phase).
+
+# User Experience
+
+User Personas:
+
+Primary: Desktop users requiring reliable, accessible NOAA weather data.
+
+Accessibility Focus: Users of screen readers or keyboard-only navigation.
+
+Key User Flows Affected by this Enhancement:
+
+Application Startup/Exit: Users will experience smoother, error-free application closure. Hiding to tray vs. exiting will be consistent.
+
+Automatic Data Refresh: Weather data (forecasts and alerts) will update consistently based on the single configured "Update Interval", eliminating confusion from potentially conflicting timers.
+
+Error Scenarios: Users will see clearer, more informative error messages if data fetching fails, rather than unexpected behavior or crashes.
+
+UI/UX Considerations:
+
+The primary UX change visible to the user will be the removal of the "Alert Update Interval" from the Settings dialog, simplifying configuration.
+
+The application's stability during refresh cycles and on exit will be noticeably improved.
+
+Feedback for loading states and errors will be consistent.
+
+# Technical Architecture
+
+System Components (Changes & Removals):
+
+Removed:
+
+alerts_timer (attribute in WeatherApp).
+
+OnAlertsTimer method (from gui/handlers/timer_handlers.py).
+
+UpdateAlerts method (from gui/handlers/refresh_handlers.py).
+
+ExitHandler utility (src/accessiweather/utils/exit_handler.py).
+
+Obsolete handler files: src/accessiweather/gui/weather_app_handlers.py, src/accessiweather/gui/weather_app_handlers_refactored.py.
+
+Modified:
+
+gui/app.py (AccessiWeatherApp.OnExit): Will be the primary cleanup orchestrator, using ThreadManager to stop all threads after attempting config save.
+
+gui/handlers/system_handlers.py (WeatherApp.OnClose): Logic refined to handle hiding to tray (and stopping/restarting the main timer appropriately) vs. initiating a full shutdown by calling self.Destroy().
+
+gui/handlers/timer_handlers.py (OnTimer): Will be the sole trigger for periodic calls to UpdateWeatherData.
+
+gui/handlers/refresh_handlers.py (UpdateWeatherData & _FetchWeatherData): Will ensure both forecast and alert data are fetched.
+
+gui/settings_dialog.py: ALERT_UPDATE_INTERVAL_KEY and its associated UI elements removed.
+
+All Async Fetchers (async_fetchers.py, current_conditions_fetcher.py, etc.): Ensure robust registration/unregistration with the ThreadManager.
+
+Data Models:
+
+config.json: The ALERT_UPDATE_INTERVAL_KEY will no longer be used or stored.
+
+APIs and Integrations: No changes to external APIs. Internal component interactions related to updates and exit will be modified.
+
+Infrastructure Requirements: No change.
+
+# Development Roadmap
+
+Phase 1: Critical Update & Stability Fixes (MVP for this Enhancement)
+
+Unified Update Mechanism:
+
+Remove alerts_timer from WeatherApp initialization.
+
+Delete OnAlertsTimer method from timer_handlers.py.
+
+Delete UpdateAlerts method from refresh_handlers.py.
+
+Remove ALERT_UPDATE_INTERVAL_KEY constant, UI elements (SpinCtrl in SettingsDialog), and config loading/saving logic related to it.
+
+Ensure UpdateWeatherData (triggered by the main OnTimer) correctly fetches both forecast and alerts.
+
+Verify last_update timestamp is correctly managed by _check_update_complete after both forecast and alerts are fetched.
+
+Robust Exit Handling:
+
+Refactor AccessiWeatherApp.OnExit to:
+
+Attempt asynchronous configuration save (if WeatherApp frame exists).
+
+Call ThreadManager.instance().stop_all_threads() with an appropriate timeout (e.g., 3 seconds).
+
+Log any threads that fail to stop.
+
+Call super().OnExit().
+
+Refactor WeatherAppSystemHandlers.OnClose to:
+
+Correctly identify if a force close is requested or if the "minimize to tray on close" setting is active.
+
+If minimizing: Stop main timer, hide window, event.Veto(), restart main timer.
+
+If force closing: Stop main timer, remove/destroy taskbar icon, save config (non-blocking if possible), then call self.Destroy() (allowing event.Skip() if event is not None).
+
+Delete src/accessiweather/utils/exit_handler.py.
+
+Thread Management:
+
+Verify all async fetcher classes correctly register their threads with ThreadManager.instance() upon starting and unregister in a finally block of their _fetch_thread method.
+
+Phase 2: Code Cleanup & Documentation
+
+Delete obsolete handler files: src/accessiweather/gui/weather_app_handlers.py and src/accessiweather/gui/weather_app_handlers_refactored.py.
+
+Review and ensure docstrings are updated for modified components (especially OnExit, OnClose, OnTimer, and services interacting with nationwide scraper).
+
+Update user manual (docs/user_manual.md) and settings documentation (docs/nationwide_settings.md) to remove mention of the separate alert update interval.
+
+Run linters (flake8), formatters (black, isort), and type checkers (mypy) and address reported issues.
+
+Phase 3: Testing & Verification
+
+Add/update unit tests for:
+
+WeatherAppTimerHandlers.OnTimer to ensure it triggers updates correctly based on the single interval.
+
+AccessiWeatherApp.OnExit to mock and verify the sequence of operations (config save attempt, thread stopping).
+
+WeatherAppSystemHandlers.OnClose for both minimize-to-tray and force-close scenarios.
+
+WeatherService.get_national_forecast_data caching logic.
+
+Perform thorough manual testing:
+
+Verify data updates (forecasts and alerts) occur at the configured UPDATE_INTERVAL_KEY.
+
+Test all application exit scenarios: closing via 'X' (with minimize setting on/off), exiting from tray menu, force closing.
+
+Test Nationwide view functionality.
+
+Confirm stability under various network conditions (e.g., temporary loss of internet).
+
+# Logical Dependency Chain
+
+Unified Update Mechanism (Phase 1): This is the highest priority as it fixes a functional bug. It must be completed first.
+
+Robust Exit Handling (Phase 1): Dependent on ThreadManager and affects overall stability. Should be done concurrently or immediately after the timer fix.
+
+Code Cleanup (Phase 2): Can be done once the core functional fixes from Phase 1 are stable. This improves maintainability.
+
+Testing & Verification (Phase 3): Follows the implementation of fixes and cleanups to ensure correctness and prevent regressions.
+
+Getting to usable/visible quickly: Phase 1 provides the most immediate user-visible benefit by ensuring reliable updates and a stable exit. Subsequent phases enhance internal quality and robustness.
+
+# Risks and Mitigations
+
+Risk: Introducing regressions in update logic or exit behavior during refactoring.
+
+Mitigation: Implement changes incrementally. Conduct thorough manual testing of data refresh cycles, various application exit methods (close button with/without "minimize to tray" enabled, tray menu exit), and thread behavior during these operations. Add targeted unit tests for the new timer and exit logic.
+
+Risk: ThreadManager or wxPython event loop interactions leading to unexpected behavior during shutdown, especially if threads don't terminate cleanly within timeouts.
+
+Mitigation: Keep ThreadManager.stop_all_threads logic clear. Ensure fetcher threads are daemonic and respond promptly to their stop events. Log any threads that don't terminate. The App.OnExit includes a final super().OnExit() which allows wxPython to do its own cleanup.
+
+Risk (Carry-over): Web scraper for Nationwide discussions (NationalDiscussionScraper) might break if NOAA changes website structures.
+
+Mitigation: (Existing mitigation) The scraper includes error handling. The UI should gracefully handle cases where scraped data is unavailable. Consider periodic manual checks of scraper validity.
+
+Risk: Incomplete removal of old timer logic leading to lingering issues.
+
+Mitigation: Systematically search for and remove all references to alerts_timer, OnAlertsTimer, UpdateAlerts method, and ALERT_UPDATE_INTERVAL_KEY. Review diffs carefully.
+
+# Appendix
+
+Previous PRD for "AccessiWeather Codebase Enhancement & Nationwide View Integration" provides context for features now considered baseline.
+
+The technical review that led to these specific improvements.
+
+NOAA API Terms of Service.
+
+WPC/SPC website terms of use regarding scraping.
