@@ -271,3 +271,91 @@ def test_load_locations_handles_error(mock_config_dir):
     # Check that default values were used
     assert NATIONWIDE_LOCATION_NAME in manager.saved_locations
     assert manager.current_location is None
+
+
+def test_load_locations_filters_non_us_locations(mock_config_dir):
+    """Test that loading locations filters out non-US locations."""
+    # Create a locations file with both US and non-US locations
+    locations_file = os.path.join(mock_config_dir, "locations.json")
+
+    # Sample data with US and non-US locations
+    sample_data = {
+        "locations": {
+            "US City": {"lat": 40.0, "lon": -75.0},  # US location
+            "London": {"lat": 51.5074, "lon": -0.1278},  # UK location
+            "Toronto": {"lat": 43.6532, "lon": -79.3832},  # Canada location
+            NATIONWIDE_LOCATION_NAME: {"lat": NATIONWIDE_LAT, "lon": NATIONWIDE_LON},
+        },
+        "current": "US City",
+    }
+
+    with open(locations_file, "w") as f:
+        json.dump(sample_data, f)
+
+    # Mock the validate_coordinates method to simulate validation
+    with patch("accessiweather.geocoding.GeocodingService.validate_coordinates") as mock_validate:
+        # Set up the mock to return True for US locations and False for non-US
+        def validate_side_effect(lat, lon):
+            # Return True for US City and Nationwide, False for others
+            if (lat == 40.0 and lon == -75.0) or (lat == NATIONWIDE_LAT and lon == NATIONWIDE_LON):
+                return True
+            return False
+
+        mock_validate.side_effect = validate_side_effect
+
+        # Initialize LocationManager which will load and validate locations
+        manager = LocationManager(config_dir=mock_config_dir)
+
+        # Check that only US locations were kept
+        assert "US City" in manager.saved_locations
+        assert NATIONWIDE_LOCATION_NAME in manager.saved_locations
+        assert "London" not in manager.saved_locations
+        assert "Toronto" not in manager.saved_locations
+
+        # Check that current location is still set to the US location
+        assert manager.current_location == "US City"
+
+        # Verify the validate_coordinates method was called for each location
+        assert mock_validate.call_count == 3  # Called for all except Nationwide
+
+
+def test_load_locations_resets_current_if_non_us(mock_config_dir):
+    """Test that loading locations resets current location if it's non-US."""
+    # Create a locations file with a non-US current location
+    locations_file = os.path.join(mock_config_dir, "locations.json")
+
+    # Sample data with US and non-US locations, current set to non-US
+    sample_data = {
+        "locations": {
+            "US City": {"lat": 40.0, "lon": -75.0},  # US location
+            "London": {"lat": 51.5074, "lon": -0.1278},  # UK location (current)
+            NATIONWIDE_LOCATION_NAME: {"lat": NATIONWIDE_LAT, "lon": NATIONWIDE_LON},
+        },
+        "current": "London",
+    }
+
+    with open(locations_file, "w") as f:
+        json.dump(sample_data, f)
+
+    # Mock the validate_coordinates method
+    with patch("accessiweather.geocoding.GeocodingService.validate_coordinates") as mock_validate:
+        # Set up the mock to return True for US locations and False for non-US
+        def validate_side_effect(lat, lon):
+            # Return True for US City and Nationwide, False for others
+            if (lat == 40.0 and lon == -75.0) or (lat == NATIONWIDE_LAT and lon == NATIONWIDE_LON):
+                return True
+            return False
+
+        mock_validate.side_effect = validate_side_effect
+
+        # Initialize LocationManager which will load and validate locations
+        manager = LocationManager(config_dir=mock_config_dir)
+
+        # Check that only US locations were kept
+        assert "US City" in manager.saved_locations
+        assert NATIONWIDE_LOCATION_NAME in manager.saved_locations
+        assert "London" not in manager.saved_locations
+
+        # Check that current location was reset to a valid location
+        # When current is invalid, it defaults to Nationwide first
+        assert manager.current_location == NATIONWIDE_LOCATION_NAME
