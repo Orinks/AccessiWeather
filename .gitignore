@@ -59,13 +59,20 @@ dmypy.json
 .pyre/
 .pytype/
 
-# Tool-specific files (Aider, Roo, act)
+# Tool-specific files (Aider, Roo, act, etc.)
 .aider.chat.history.md
 .aider.input.history
 .aider.tags.cache.v4/
 .roo/
 .roomodes
 .rooignore
+.docs/
+.kilocodemodes
+.serena/
+.specs/
+project_state.json
+fix_imports.py
+*.code-workspace
 
 # act CLI tool files
 .secrets
@@ -108,3 +115,25 @@ docs/source/conf.py.bak
 *.tmp
 *.bak
 *.py,cover
+
+# Added by Claude Task Master
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+# Dependency directories
+node_modules/
+# Environment variables
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+# Task files
+tasks.json
+tasks/

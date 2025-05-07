@@ -69,15 +69,37 @@ class WeatherNotifier:
         self.toaster = SafeToastNotifier()
         self.active_alerts = {}
 
-    def notify_alerts(self, alert_count):
+    def notify_alerts(self, alert_count, new_count=0, updated_count=0):
         """Notify the user about new alerts
 
         Args:
             alert_count: Number of active alerts
+            new_count: Number of new alerts (default: 0)
+            updated_count: Number of updated alerts (default: 0)
         """
         if alert_count > 0:
             title = "Weather Alerts"
-            message = f"{alert_count} active weather {'alert' if alert_count == 1 else 'alerts'} in your area"
+
+            # Create a more detailed message if we have information about new/updated alerts
+            if new_count > 0 or updated_count > 0:
+                parts = []
+                if new_count > 0:
+                    new_plural = "alert" if new_count == 1 else "alerts"
+                    parts.append(f"{new_count} new {new_plural}")
+                if updated_count > 0:
+                    updated_plural = "alert" if updated_count == 1 else "alerts"
+                    parts.append(f"{updated_count} updated {updated_plural}")
+
+                if parts:
+                    message = f"{', '.join(parts)} in your area"
+                else:
+                    # Fallback to the original message
+                    plural = "alert" if alert_count == 1 else "alerts"
+                    message = f"{alert_count} active weather {plural} in your area"
+            else:
+                # Use the original message format if no new/updated counts provided
+                plural = "alert" if alert_count == 1 else "alerts"
+                message = f"{alert_count} active weather {plural} in your area"
 
             # Show notification
             self.toaster.show_toast(
@@ -87,22 +109,29 @@ class WeatherNotifier:
                 app_name="AccessiWeather",
             )
 
-            logger.info(f"Displayed notification for {alert_count} active alerts")
+            logger.info(f"Displayed summary notification: {message}")
 
-    def process_alerts(self, alerts_data: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Process alerts data from NOAA API
+    def process_alerts(self, alerts_data: Dict[str, Any]) -> tuple[List[Dict[str, Any]], int, int]:
+        """Process alerts data from NOAA API with change detection
 
         Args:
             alerts_data: Dictionary containing alerts data from NOAA API
 
         Returns:
-            List of processed alerts
+            Tuple containing:
+            - List of processed alerts
+            - Number of new alerts
+            - Number of updated alerts
         """
         # Clear expired alerts before processing new ones
-        self.clear_expired_alerts()  # Added this line
+        self.clear_expired_alerts()
 
         features = alerts_data.get("features", [])
         processed_alerts = []
+
+        # Track new and updated alerts for summary notification
+        new_alerts_count = 0
+        updated_alerts_count = 0
 
         for feature in features:
             properties = feature.get("properties", {})
@@ -121,27 +150,80 @@ class WeatherNotifier:
                 "messageType": properties.get("messageType"),
                 "category": properties.get("category"),
                 "response": properties.get("response"),
+                "parameters": properties.get(
+                    "parameters", {}
+                ),  # Add parameters field for NWSheadline
+                "instruction": properties.get("instruction", ""),  # Add instruction field
             }
 
             processed_alerts.append(alert)
 
             # Update our active alerts dictionary
             alert_id = alert["id"]
-            # Only add/notify if it's a new alert (after clearing expired ones)
-            if alert_id and alert_id not in self.active_alerts:
-                self.active_alerts[alert_id] = alert
-                self.show_notification(alert)
 
-        return processed_alerts
+            if alert_id:
+                # Check if this is a new alert or an update to an existing alert
+                if alert_id not in self.active_alerts:
+                    # New alert
+                    self.active_alerts[alert_id] = alert
+                    self.show_notification(alert, is_update=False)
+                    new_alerts_count += 1
+                    logger.info(f"New alert detected: {alert['event']}")
+                else:
+                    # Existing alert - check if it's been updated
+                    existing_alert = self.active_alerts[alert_id]
+                    if self._is_alert_updated(existing_alert, alert):
+                        # Alert has been updated
+                        self.active_alerts[alert_id] = alert
+                        self.show_notification(alert, is_update=True)
+                        updated_alerts_count += 1
+                        logger.info(f"Updated alert detected: {alert['event']}")
+                    else:
+                        # Alert exists but hasn't changed
+                        logger.debug(f"Existing alert unchanged: {alert['event']}")
 
-    def show_notification(self, alert: Dict[str, Any]) -> None:
+        # Log summary of changes
+        if new_alerts_count > 0 or updated_alerts_count > 0:
+            logger.info(
+                f"Alert processing complete: {new_alerts_count} new, {updated_alerts_count} updated"
+            )
+
+        return processed_alerts, new_alerts_count, updated_alerts_count
+
+    def _is_alert_updated(self, old_alert: Dict[str, Any], new_alert: Dict[str, Any]) -> bool:
+        """Check if an alert has been updated by comparing key fields
+
+        Args:
+            old_alert: The existing alert in our active alerts dictionary
+            new_alert: The newly received alert with the same ID
+
+        Returns:
+            True if the alert has been meaningfully updated, False otherwise
+        """
+        # Fields to check for changes (these would indicate a meaningful update)
+        key_fields = ["headline", "description", "instruction", "severity", "urgency", "expires"]
+
+        for field in key_fields:
+            if old_alert.get(field) != new_alert.get(field):
+                logger.debug(f"Alert updated: Field '{field}' changed")
+                return True
+
+        return False
+
+    def show_notification(self, alert: Dict[str, Any], is_update: bool = False) -> None:
         """Show a desktop notification for an alert
 
         Args:
             alert: Dictionary containing alert information
+            is_update: Whether this is an update to an existing alert (default: False)
         """
         try:
-            title = f"Weather {alert['event']}"
+            # Customize title based on whether this is a new alert or an update
+            if is_update:
+                title = f"Updated: Weather {alert['event']}"
+            else:
+                title = f"Weather {alert['event']}"
+
             message = alert.get("headline", "Weather alert in your area")
 
             # Show notification
@@ -154,7 +236,10 @@ class WeatherNotifier:
                 app_name="AccessiWeather",
             )
 
-            logger.info(f"Displayed notification for {alert['event']}")
+            if is_update:
+                logger.info(f"Displayed notification for updated alert: {alert['event']}")
+            else:
+                logger.info(f"Displayed notification for new alert: {alert['event']}")
         except Exception as e:
             logger.error(f"Failed to show notification: {str(e)}")
 

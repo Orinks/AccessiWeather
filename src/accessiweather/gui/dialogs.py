@@ -12,6 +12,7 @@ from accessiweather.geocoding import GeocodingService
 
 from .ui_components import (
     AccessibleButton,
+    AccessibleComboBox,
     AccessibleListCtrl,
     AccessibleStaticText,
     AccessibleTextCtrl,
@@ -175,10 +176,10 @@ class LocationDialog(wx.Dialog):
         name_sizer.Add(self.name_ctrl, 1, wx.ALL | wx.EXPAND, 5)
         sizer.Add(name_sizer, 0, wx.EXPAND | wx.ALL, 5)
 
-        # Location search (address or zip code) with text control
+        # Location search (address or zip code) with combo box for history
         search_sizer = wx.BoxSizer(wx.HORIZONTAL)
         search_label = AccessibleStaticText(panel, label="Search Location:")
-        self.search_field = AccessibleTextCtrl(panel, label="Search by Address or ZIP Code")
+        self.search_field = AccessibleComboBox(panel, label="Search by Address or ZIP Code")
         search_sizer.Add(search_label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
         search_sizer.Add(self.search_field, 1, wx.ALL | wx.EXPAND, 5)
         sizer.Add(search_sizer, 0, wx.EXPAND | wx.ALL, 5)
@@ -209,7 +210,7 @@ class LocationDialog(wx.Dialog):
         self.result_text = AccessibleTextCtrl(
             panel, value="", style=wx.TE_MULTILINE | wx.TE_READONLY, size=(-1, 60)
         )
-        self.result_text.SetLabel("Search Result")
+        self.result_text.set_label("Search Result")  # Use set_label instead of SetLabel
         sizer.Add(self.result_text, 0, wx.ALL | wx.EXPAND, 5)
 
         # Description for screen readers
@@ -250,6 +251,10 @@ class LocationDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.OnOK, id=wx.ID_OK)
         self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self.OnSearchResultSelected, self.search_results_list)
         self.Bind(wx.EVT_CLOSE, self.OnClose)
+
+        # Bind combobox selection event
+        self.search_field.Bind(wx.EVT_COMBOBOX, self._on_combobox_select)
+        self._combobox_event_bound = True
 
     def OnSearchResultSelected(self, event):  # event is required by wx
         """Handle search result selection event
@@ -294,6 +299,10 @@ class LocationDialog(wx.Dialog):
         """
         # Update UI to show searching state
         self.result_text.SetValue(f"Searching for {query}...")
+
+        # Add to search history immediately to update the combobox
+        # This will be called again if the search is successful, but that's OK
+        self._add_to_search_history(query)
 
         # Cancel any existing search
         if self.search_thread is not None and self.search_thread.is_alive():
@@ -407,8 +416,8 @@ class LocationDialog(wx.Dialog):
         # Check if it's a timeout error
         if "timeout" in str(error_msg).lower():
             self.result_text.SetValue(
-                f"Search timed out. The geocoding service may be busy.\n"
-                f"Please try again in a moment or try a more specific search term."
+                "Search timed out. The geocoding service may be busy.\n"
+                "Please try again in a moment or try a more specific search term."
             )
         else:
             self.result_text.SetValue(f"Error during search: {error_msg}")
@@ -468,6 +477,31 @@ class LocationDialog(wx.Dialog):
         # Limit the size of history
         if len(self.search_history) > self.MAX_HISTORY_ITEMS:
             self.search_history = self.search_history[: self.MAX_HISTORY_ITEMS]
+
+        # Update the combobox with the current history
+        self._update_search_field_choices()
+
+    def _update_search_field_choices(self):
+        """Update the search field combobox with the current search history"""
+        # Clear the combobox
+        self.search_field.Clear()
+
+        # Add the search history items
+        if self.search_history:
+            self.search_field.Append(self.search_history)
+
+    def _on_combobox_select(self, event):  # noqa: F841
+        """Handle combobox selection event
+
+        Args:
+            event: Combobox event
+        """
+        # Get the selected item
+        selection = self.search_field.GetSelection()
+        if selection != wx.NOT_FOUND:
+            selected_text = self.search_field.GetString(selection)
+            # Perform search with the selected text
+            self._perform_search(selected_text)
 
     def OnAdvanced(self, event):  # event is required by wx
         """Handle advanced button click to open manual lat/lon dialog
@@ -656,6 +690,129 @@ class WeatherDiscussionDialog(wx.Dialog):
 
     def OnClose(self, event):  # event is required by wx
         """Handle close button event
+
+        Args:
+            event: Button event
+        """
+        logger.debug("Close button clicked, ending modal dialog")
+        try:
+            self.EndModal(wx.ID_CLOSE)
+            logger.debug("Dialog closed successfully")
+        except Exception as e:
+            logger.error(f"Error closing dialog: {e}")
+
+
+class NationalDiscussionDialog(wx.Dialog):
+    """Dialog for displaying national forecast discussions in a tabbed interface."""
+
+    def __init__(self, parent, national_data):
+        """Initialize the dialog.
+
+        Args:
+            parent: Parent window
+            national_data: Dictionary with national forecast data containing WPC and SPC discussions
+        """
+        super().__init__(
+            parent,
+            title="National Weather Discussions",
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
+            size=(800, 600),
+        )
+
+        self.national_data = national_data
+        self._init_ui()
+        self.Center()
+
+    def _init_ui(self):
+        """Initialize the dialog UI."""
+        logger.debug("Initializing NationalDiscussionDialog UI")
+
+        try:
+            panel = wx.Panel(self)
+            main_sizer = wx.BoxSizer(wx.VERTICAL)
+
+            # Create a notebook for tabbed discussions
+            notebook = wx.Notebook(panel)
+
+            # WPC Tab
+            wpc_panel = wx.Panel(notebook)
+            wpc_sizer = wx.BoxSizer(wx.VERTICAL)
+
+            wpc_text = wx.TextCtrl(
+                wpc_panel, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH, size=(-1, 500)
+            )
+
+            # Set monospace font for better readability of forecast discussions
+            font = wx.Font(10, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
+            wpc_text.SetFont(font)
+
+            # Fill with WPC discussion text
+            summaries = self.national_data.get("national_discussion_summaries", {})
+            wpc_data = summaries.get("wpc", {})
+            wpc_full_text = wpc_data.get("short_range_full", "WPC discussion unavailable")
+            wpc_text.SetValue(wpc_full_text)
+
+            # Set accessible name
+            wpc_text.SetName("Weather Prediction Center Discussion")
+
+            wpc_sizer.Add(wpc_text, 1, wx.EXPAND | wx.ALL, 5)
+            wpc_panel.SetSizer(wpc_sizer)
+
+            # SPC Tab
+            spc_panel = wx.Panel(notebook)
+            spc_sizer = wx.BoxSizer(wx.VERTICAL)
+
+            spc_text = wx.TextCtrl(
+                spc_panel, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH, size=(-1, 500)
+            )
+
+            spc_text.SetFont(font)  # Same monospace font
+
+            # Fill with SPC discussion text
+            spc_data = summaries.get("spc", {})
+            spc_full_text = spc_data.get("day1_full", "SPC discussion unavailable")
+            spc_text.SetValue(spc_full_text)
+
+            # Set accessible name
+            spc_text.SetName("Storm Prediction Center Discussion")
+
+            spc_sizer.Add(spc_text, 1, wx.EXPAND | wx.ALL, 5)
+            spc_panel.SetSizer(spc_sizer)
+
+            # Add tabs to notebook
+            notebook.AddPage(wpc_panel, "Weather Prediction Center")
+            notebook.AddPage(spc_panel, "Storm Prediction Center")
+
+            # Add notebook to main sizer
+            main_sizer.Add(notebook, 1, wx.EXPAND | wx.ALL, 5)
+
+            # Add close button
+            btn_sizer = wx.StdDialogButtonSizer()
+            close_btn = wx.Button(panel, wx.ID_CLOSE)
+            close_btn.Bind(wx.EVT_BUTTON, self.on_close)
+            btn_sizer.AddButton(close_btn)
+            btn_sizer.Realize()
+
+            main_sizer.Add(btn_sizer, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+
+            panel.SetSizer(main_sizer)
+            main_sizer.Fit(self)
+
+            # Set initial focus to the notebook for accessibility
+            notebook.SetFocus()
+
+            logger.debug("NationalDiscussionDialog UI initialization complete")
+        except Exception as e:
+            logger.error(f"Error initializing NationalDiscussionDialog UI: {e}")
+            wx.MessageBox(
+                f"Error creating national discussion dialog: {e}",
+                "Dialog Error",
+                wx.OK | wx.ICON_ERROR,
+            )
+            raise
+
+    def on_close(self, event):  # event is required by wx
+        """Handle close button event.
 
         Args:
             event: Button event
