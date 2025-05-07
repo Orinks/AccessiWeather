@@ -1,194 +1,276 @@
-"""Tests for the geocoding service"""
+"""Tests for geocoding service."""
 
 from unittest.mock import MagicMock, patch
 
+import pytest
 from geopy.exc import GeocoderServiceError, GeocoderTimedOut
 
 from accessiweather.geocoding import GeocodingService
 
+# --- Test Data ---
 
-class TestGeocodingService:
-    """Test suite for GeocodingService"""
+SAMPLE_ADDRESS = "123 Main St, Anytown, USA"
+SAMPLE_ZIP_5 = "12345"
+SAMPLE_ZIP_4 = "12345-6789"
+SAMPLE_LAT = 35.123
+SAMPLE_LON = -80.456
+SAMPLE_DISPLAY_NAME = "123 Main Street, Anytown, State 12345, USA"
 
-    @patch("accessiweather.geocoding.Nominatim")
-    def test_init(self, mock_nominatim):
-        """Test initialization"""
-        # Create a service
-        service = GeocodingService(user_agent="Test App", timeout=20)
+# --- Fixtures ---
 
-        # Check that Nominatim was initialized correctly
-        mock_nominatim.assert_called_once_with(user_agent="Test App", timeout=20)
-        assert service.geolocator == mock_nominatim.return_value
 
-    @patch("accessiweather.geocoding.Nominatim")
-    def test_geocode_address_success(self, mock_nominatim):
-        """Test successful geocoding of an address"""
-        # Set up mock
-        mock_location = MagicMock()
-        mock_location.latitude = 35.0
-        mock_location.longitude = -80.0
-        mock_location.address = "123 Main St, City, State"
+@pytest.fixture
+def mock_location():
+    """Create a mock location object with required attributes."""
+    location = MagicMock()
+    location.latitude = SAMPLE_LAT
+    location.longitude = SAMPLE_LON
+    location.address = SAMPLE_DISPLAY_NAME
+    return location
 
-        mock_geolocator = MagicMock()
-        mock_geolocator.geocode.return_value = mock_location
-        mock_nominatim.return_value = mock_geolocator
 
-        # Create a service and geocode an address
-        service = GeocodingService()
-        result = service.geocode_address("123 Main St")
+@pytest.fixture
+def mock_nominatim_instance():
+    """Create a mock Nominatim instance."""
+    instance = MagicMock()
+    # Pre-configure the geocode method
+    instance.geocode = MagicMock()
+    return instance
 
-        # Check that geocode was called
-        mock_geolocator.geocode.assert_called_once_with("123 Main St")
 
-        # Check result
-        assert result == (35.0, -80.0, "123 Main St, City, State")
+@pytest.fixture
+def geocoding_service(mock_nominatim_instance):
+    """Create a GeocodingService instance with mocked Nominatim."""
+    # Patch Nominatim where it's used, not where it's defined
+    with patch(
+        "accessiweather.geocoding.Nominatim", return_value=mock_nominatim_instance
+    ) as mock_nominatim_class:
+        service = GeocodingService(user_agent="TestApp", timeout=5)
+        # Store mocks for assertions as attributes for testing
+        # We're adding these attributes just for testing purposes
+        # They don't exist in the actual class
+        setattr(service, "_mock_nominatim_class", mock_nominatim_class)
+        setattr(service, "_mock_geolocator_instance", mock_nominatim_instance)
+        yield service
 
-    def test_is_zip_code(self):
-        """Test ZIP code detection"""
-        service = GeocodingService()
 
-        # Test valid ZIP codes
-        assert service.is_zip_code("12345") is True
-        assert service.is_zip_code("12345-6789") is True
+# --- Tests ---
 
-        # Test invalid ZIP codes
-        assert service.is_zip_code("1234") is False  # Too short
-        assert service.is_zip_code("123456") is False  # Too long
-        assert service.is_zip_code("abcde") is False  # Not digits
-        assert service.is_zip_code("12345-") is False  # Incomplete ZIP+4
-        assert service.is_zip_code("12345-67") is False  # Incomplete ZIP+4
-        assert service.is_zip_code("New York") is False  # Not a ZIP code
 
-    def test_format_zip_code(self):
-        """Test ZIP code formatting"""
-        service = GeocodingService()
+def test_init_mock_call():
+    """Test that Nominatim is called with correct arguments during initialization."""
+    with patch("accessiweather.geocoding.Nominatim") as mock_nominatim_class:
+        service = GeocodingService(user_agent="TestApp", timeout=5)  # noqa: F841
+        mock_nominatim_class.assert_called_once_with(user_agent="TestApp", timeout=5)
 
-        # Test 5-digit ZIP code
-        assert service.format_zip_code("12345") == "12345, USA"
 
-        # Test ZIP+4 code (should extract the 5-digit base)
-        assert service.format_zip_code("12345-6789") == "12345, USA"
+def test_init_instance_type():
+    """Test that geolocator is assigned the mock instance."""
+    with patch("accessiweather.geocoding.Nominatim") as mock_nominatim_class:
+        service = GeocodingService(user_agent="TestApp", timeout=5)
+        assert service.geolocator is mock_nominatim_class.return_value
 
-    @patch("accessiweather.geocoding.Nominatim")
-    def test_geocode_zip_code(self, mock_nominatim):
-        """Test geocoding a zip code"""
-        # Set up mock
-        mock_location = MagicMock()
-        mock_location.latitude = 35.0
-        mock_location.longitude = -80.0
-        mock_location.address = "City, State 12345, USA"
 
-        mock_geolocator = MagicMock()
-        mock_geolocator.geocode.return_value = mock_location
-        mock_nominatim.return_value = mock_geolocator
+def test_is_zip_code_valid_5digit():
+    """Test ZIP code validation with 5-digit code."""
+    service = GeocodingService()
+    assert service.is_zip_code("12345") is True
 
-        # Create a service and geocode a zip code
-        service = GeocodingService()
-        result = service.geocode_address("12345")
 
-        # Check that geocode was called with USA suffix for zip codes
-        mock_geolocator.geocode.assert_called_once_with("12345, USA")
+def test_is_zip_code_valid_zip4():
+    """Test ZIP code validation with ZIP+4 code."""
+    service = GeocodingService()
+    assert service.is_zip_code("12345-6789") is True
 
-        # Check result
-        assert result == (35.0, -80.0, "City, State 12345, USA")
 
-    @patch("accessiweather.geocoding.Nominatim")
-    def test_geocode_address_not_found(self, mock_nominatim):
-        """Test geocoding an address that isn't found"""
-        # Set up mock
-        mock_geolocator = MagicMock()
-        mock_geolocator.geocode.return_value = None
-        mock_nominatim.return_value = mock_geolocator
+def test_is_zip_code_invalid_formats():
+    """Test ZIP code validation with invalid formats."""
+    service = GeocodingService()
+    invalid_zips = [
+        "1234",  # Too short
+        "123456",  # Too long
+        "12345-",  # Incomplete ZIP+4
+        "12345-678",  # Invalid ZIP+4
+        "12345-67890",  # ZIP+4 too long
+        "abcde",  # Non-numeric
+        "12345-abcd",  # Non-numeric ZIP+4
+        "",  # Empty string
+        "  12345  ",  # Whitespace
+    ]
+    for zip_code in invalid_zips:
+        assert service.is_zip_code(zip_code) is False
 
-        # Create a service and try to geocode a nonexistent address
-        service = GeocodingService()
-        result = service.geocode_address("Nonexistent Address")
 
-        # Check that geocode was called
-        mock_geolocator.geocode.assert_called_once_with("Nonexistent Address")
+def test_format_zip_code_5digit():
+    """Test ZIP code formatting with 5-digit code."""
+    service = GeocodingService()
+    assert service.format_zip_code("12345") == "12345, USA"
 
-        # Check result
-        assert result is None
 
-    @patch("accessiweather.geocoding.Nominatim")
-    def test_geocode_address_timeout(self, mock_nominatim):
-        """Test handling of geocoder timeout"""
-        # Set up mock
-        mock_geolocator = MagicMock()
-        mock_geolocator.geocode.side_effect = GeocoderTimedOut("Timeout")
-        mock_nominatim.return_value = mock_geolocator
+def test_format_zip_code_zip4():
+    """Test ZIP code formatting with ZIP+4 code."""
+    service = GeocodingService()
+    assert service.format_zip_code("12345-6789") == "12345, USA"
 
-        # Create a service and try to geocode an address
-        service = GeocodingService()
-        result = service.geocode_address("123 Main St")
 
-        # Check that geocode was called
-        mock_geolocator.geocode.assert_called_once_with("123 Main St")
+def test_geocode_address_success(geocoding_service, mock_location):
+    """Test successful address geocoding."""
+    geocoding_service._mock_geolocator_instance.geocode.return_value = mock_location
 
-        # Check result
-        assert result is None
+    result = geocoding_service.geocode_address(SAMPLE_ADDRESS)
 
-    @patch("accessiweather.geocoding.Nominatim")
-    def test_geocode_address_service_error(self, mock_nominatim):
-        """Test handling of geocoder service error"""
-        # Set up mock
-        mock_geolocator = MagicMock()
-        mock_geolocator.geocode.side_effect = GeocoderServiceError("Service Error")
-        mock_nominatim.return_value = mock_geolocator
+    assert result == (SAMPLE_LAT, SAMPLE_LON, SAMPLE_DISPLAY_NAME)
+    geocoding_service._mock_geolocator_instance.geocode.assert_called_once_with(SAMPLE_ADDRESS)
 
-        # Create a service and try to geocode an address
-        service = GeocodingService()
-        result = service.geocode_address("123 Main St")
 
-        # Check that geocode was called
-        mock_geolocator.geocode.assert_called_once_with("123 Main St")
+def test_geocode_address_zip5(geocoding_service, mock_location):
+    """Test successful ZIP code geocoding (5-digit)."""
+    geocoding_service._mock_geolocator_instance.geocode.return_value = mock_location
 
-        # Check result
-        assert result is None
+    result = geocoding_service.geocode_address(SAMPLE_ZIP_5)
 
-    @patch("accessiweather.geocoding.Nominatim")
-    def test_geocode_zip_plus_4(self, mock_nominatim):
-        """Test geocoding a ZIP+4 code"""
-        # Set up mock
-        mock_location = MagicMock()
-        mock_location.latitude = 35.0
-        mock_location.longitude = -80.0
-        mock_location.address = "City, State 12345, USA"
+    assert result == (SAMPLE_LAT, SAMPLE_LON, SAMPLE_DISPLAY_NAME)
+    geocoding_service._mock_geolocator_instance.geocode.assert_called_once_with(
+        f"{SAMPLE_ZIP_5}, USA"
+    )
 
-        mock_geolocator = MagicMock()
-        mock_geolocator.geocode.return_value = mock_location
-        mock_nominatim.return_value = mock_geolocator
 
-        # Create a service and geocode a ZIP+4 code
-        service = GeocodingService()
-        result = service.geocode_address("12345-6789")
+def test_geocode_address_zip4(geocoding_service, mock_location):
+    """Test successful ZIP code geocoding (ZIP+4)."""
+    geocoding_service._mock_geolocator_instance.geocode.return_value = mock_location
 
-        # Check that geocode was called with just the 5-digit base and USA suffix
-        mock_geolocator.geocode.assert_called_once_with("12345, USA")
+    result = geocoding_service.geocode_address(SAMPLE_ZIP_4)
 
-        # Check result
-        assert result == (35.0, -80.0, "City, State 12345, USA")
+    assert result == (SAMPLE_LAT, SAMPLE_LON, SAMPLE_DISPLAY_NAME)
+    # Should use just the 5-digit part
+    geocoding_service._mock_geolocator_instance.geocode.assert_called_once_with("12345, USA")
 
-    @patch("accessiweather.geocoding.Nominatim")
-    def test_suggest_locations_with_zip_code(self, mock_nominatim):
-        """Test location suggestions with a ZIP code"""
-        # Set up mock locations
-        mock_location1 = MagicMock()
-        mock_location1.address = "City1, State 12345, USA"
 
-        mock_location2 = MagicMock()
-        mock_location2.address = "City2, State 12345, USA"
+def test_geocode_address_not_found(geocoding_service):
+    """Test address geocoding when no results are found."""
+    geocoding_service._mock_geolocator_instance.geocode.return_value = None
 
-        mock_geolocator = MagicMock()
-        mock_geolocator.geocode.return_value = [mock_location1, mock_location2]
-        mock_nominatim.return_value = mock_geolocator
+    result = geocoding_service.geocode_address(SAMPLE_ADDRESS)
 
-        # Create a service and get suggestions for a ZIP code
-        service = GeocodingService()
-        suggestions = service.suggest_locations("12345")
+    assert result is None
+    geocoding_service._mock_geolocator_instance.geocode.assert_called_once_with(SAMPLE_ADDRESS)
 
-        # Check that geocode was called with USA suffix for ZIP codes
-        mock_geolocator.geocode.assert_called_once_with("12345, USA", exactly_one=False, limit=5)
 
-        # Check suggestions
-        assert suggestions == ["City1, State 12345, USA", "City2, State 12345, USA"]
+def test_geocode_address_timeout(geocoding_service):
+    """Test address geocoding when timeout occurs."""
+    geocoding_service._mock_geolocator_instance.geocode.side_effect = GeocoderTimedOut("Timeout")
+
+    result = geocoding_service.geocode_address(SAMPLE_ADDRESS)
+
+    assert result is None
+    geocoding_service._mock_geolocator_instance.geocode.assert_called_once_with(SAMPLE_ADDRESS)
+
+
+def test_geocode_address_service_error(geocoding_service):
+    """Test address geocoding when service error occurs."""
+    geocoding_service._mock_geolocator_instance.geocode.side_effect = GeocoderServiceError(
+        "Service Error"
+    )
+
+    result = geocoding_service.geocode_address(SAMPLE_ADDRESS)
+
+    assert result is None
+    geocoding_service._mock_geolocator_instance.geocode.assert_called_once_with(SAMPLE_ADDRESS)
+
+
+def test_geocode_address_unexpected_error(geocoding_service):
+    """Test address geocoding when unexpected error occurs."""
+    geocoding_service._mock_geolocator_instance.geocode.side_effect = Exception("Unexpected Error")
+
+    result = geocoding_service.geocode_address(SAMPLE_ADDRESS)
+
+    assert result is None
+    geocoding_service._mock_geolocator_instance.geocode.assert_called_once_with(SAMPLE_ADDRESS)
+
+
+def test_suggest_locations_success(geocoding_service):
+    """Test successful location suggestions."""
+    mock_locations = [
+        MagicMock(address="Location 1"),
+        MagicMock(address="Location 2"),
+        MagicMock(address="Location 3"),
+    ]
+    geocoding_service._mock_geolocator_instance.geocode.return_value = mock_locations
+
+    result = geocoding_service.suggest_locations("test query")
+
+    assert result == ["Location 1", "Location 2", "Location 3"]
+    geocoding_service._mock_geolocator_instance.geocode.assert_called_once_with(
+        "test query", exactly_one=False, limit=5
+    )
+
+
+def test_suggest_locations_zip(geocoding_service):
+    """Test location suggestions with ZIP code."""
+    mock_locations = [MagicMock(address="ZIP Location")]
+    geocoding_service._mock_geolocator_instance.geocode.return_value = mock_locations
+
+    result = geocoding_service.suggest_locations(SAMPLE_ZIP_5)
+
+    assert result == ["ZIP Location"]
+    geocoding_service._mock_geolocator_instance.geocode.assert_called_once_with(
+        f"{SAMPLE_ZIP_5}, USA", exactly_one=False, limit=5
+    )
+
+
+def test_suggest_locations_short_query(geocoding_service):
+    """Test location suggestions with short query."""
+    result = geocoding_service.suggest_locations("a")
+
+    assert result == []
+    geocoding_service._mock_geolocator_instance.geocode.assert_not_called()
+
+
+def test_suggest_locations_none_found(geocoding_service):
+    """Test location suggestions when none are found."""
+    geocoding_service._mock_geolocator_instance.geocode.return_value = None
+
+    result = geocoding_service.suggest_locations("test query")
+
+    assert result == []
+    geocoding_service._mock_geolocator_instance.geocode.assert_called_once_with(
+        "test query", exactly_one=False, limit=5
+    )
+
+
+def test_suggest_locations_timeout(geocoding_service):
+    """Test location suggestions when timeout occurs."""
+    geocoding_service._mock_geolocator_instance.geocode.side_effect = GeocoderTimedOut("Timeout")
+
+    result = geocoding_service.suggest_locations("test query")
+
+    assert result == []
+    geocoding_service._mock_geolocator_instance.geocode.assert_called_once_with(
+        "test query", exactly_one=False, limit=5
+    )
+
+
+def test_suggest_locations_service_error(geocoding_service):
+    """Test location suggestions when service error occurs."""
+    geocoding_service._mock_geolocator_instance.geocode.side_effect = GeocoderServiceError(
+        "Service Error"
+    )
+
+    result = geocoding_service.suggest_locations("test query")
+
+    assert result == []
+    geocoding_service._mock_geolocator_instance.geocode.assert_called_once_with(
+        "test query", exactly_one=False, limit=5
+    )
+
+
+def test_suggest_locations_unexpected_error(geocoding_service):
+    """Test location suggestions when unexpected error occurs."""
+    geocoding_service._mock_geolocator_instance.geocode.side_effect = Exception("Unexpected Error")
+
+    result = geocoding_service.suggest_locations("test query")
+
+    assert result == []
+    geocoding_service._mock_geolocator_instance.geocode.assert_called_once_with(
+        "test query", exactly_one=False, limit=5
+    )

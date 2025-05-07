@@ -9,6 +9,7 @@ __all__ = [
     "AdvancedLocationDialog",
     "LocationDialog",
     "WeatherDiscussionDialog",
+    "NationalDiscussionDialog",
     "AlertDetailsDialog",
     "AccessibleStaticText",
     "AccessibleTextCtrl",
@@ -19,12 +20,18 @@ __all__ = [
     "AccessiWeatherApp",
 ]
 
+from .alert_dialog import AlertDetailsDialog
+
 # Import app classes last to avoid circular import issues
 from .app import AccessiWeatherApp
 
 # Import dialog classes
-from .dialogs import AdvancedLocationDialog, LocationDialog, WeatherDiscussionDialog
-from .alert_dialog import AlertDetailsDialog
+from .dialogs import (
+    AdvancedLocationDialog,
+    LocationDialog,
+    NationalDiscussionDialog,
+    WeatherDiscussionDialog,
+)
 
 # Import UI components
 from .ui_components import (

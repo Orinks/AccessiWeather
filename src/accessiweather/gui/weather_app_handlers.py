@@ -8,8 +8,10 @@ import json
 import logging
 import os
 import time
-from typing import Any, Optional
+from typing import Any
+
 import wx
+
 from .alert_dialog import AlertDetailsDialog
 from .dialogs import LocationDialog
 from .settings_dialog import (
@@ -62,15 +64,15 @@ class WeatherAppHandlers:
         """Placeholder for WeatherApp.UpdateLocationDropdown method"""
         pass
 
-    def SetStatusText(self, text: str) -> None:
+    def SetStatusText(self, text: str) -> None:  # noqa: F841 - text is required by wx
         """Placeholder for wx.Frame.SetStatusText method"""
         pass
 
-    def Bind(self, *args, **kwargs) -> None:
+    def Bind(self, *args, **kwargs) -> None:  # noqa: F841 - args/kwargs are required by wx
         """Placeholder for wx.Frame.Bind method"""
         pass
 
-    def Unbind(self, *args, **kwargs) -> None:
+    def Unbind(self, *args, **kwargs) -> None:  # noqa: F841 - args/kwargs are required by wx
         """Placeholder for wx.Frame.Unbind method"""
         pass
 
@@ -97,19 +99,20 @@ class WeatherAppHandlers:
         logger.info("OnClose called: Stopping fetcher threads immediately...")
         self._stop_fetcher_threads()
         logger.debug("Fetcher threads stop requested.")
-        
+
         # If we have a taskbar icon and we're not force closing, just hide the window
         if hasattr(self, "taskbar_icon") and self.taskbar_icon and not force_close:
             logger.debug("Hiding window instead of closing")
-            self.Hide()
+            # Hide method is available in the actual wx.Frame class
+            # This is a mixin class, so the method will be available in the actual instance
+            self.Hide()  # type: ignore # noqa: E1101
             event.Veto()
             logger.debug("Hide/Veto called.")
- 
+
         # Not hiding, proceed with destroying the window to trigger App.OnExit cleanup
         logger.info("Initiating shutdown by calling self.Destroy()...")
         self.Destroy()
         logger.info("self.Destroy() called. App.OnExit should now handle cleanup.")
-
 
     def _stop_fetcher_threads(self):
         """Stop all fetcher threads directly.
@@ -133,7 +136,7 @@ class WeatherAppHandlers:
                 logger.debug("Stopping discussion fetcher...")
                 if hasattr(self.discussion_fetcher, "_stop_event"):
                     self.discussion_fetcher._stop_event.set()
-                    
+
             # Stop the national forecast fetcher
             if hasattr(self, "national_forecast_fetcher") and self.national_forecast_fetcher:
                 logger.debug("Stopping national forecast fetcher...")
@@ -144,8 +147,7 @@ class WeatherAppHandlers:
         except Exception as e:
             logger.error(f"Error stopping fetcher threads: {e}", exc_info=True)
 
-
-    def OnLocationChange(self, event):  # event is required by wx
+    def OnLocationChange(self, event):  # noqa: F841 - event is required by wx
         """Handle location change event
 
         Args:
@@ -163,7 +165,7 @@ class WeatherAppHandlers:
             self.remove_btn.SetHelpText("Remove button is disabled for nationwide location")
             self.remove_btn.SetToolTip("Cannot remove nationwide location")
             # Set nationwide mode flag if not already set
-            if hasattr(self, '_in_nationwide_mode'):
+            if hasattr(self, "_in_nationwide_mode"):
                 self._in_nationwide_mode = True
         elif hasattr(self, "remove_btn"):
             self.remove_btn.Enable()
@@ -171,7 +173,7 @@ class WeatherAppHandlers:
             self.remove_btn.SetHelpText("Remove the selected location")
             self.remove_btn.SetToolTip("Remove the selected location")
             # Reset nationwide mode flag if set
-            if hasattr(self, '_in_nationwide_mode'):
+            if hasattr(self, "_in_nationwide_mode"):
                 self._in_nationwide_mode = False
                 self._nationwide_wpc_full = None
                 self._nationwide_spc_full = None
@@ -189,7 +191,7 @@ class WeatherAppHandlers:
             self.alerts_list.DeleteAllItems()
             self.alert_btn.Disable()
 
-    def OnAddLocation(self, event):  # event is required by wx
+    def OnAddLocation(self, event):  # noqa: F841 - event is required by wx
         """Handle add location button click
 
         Args:
@@ -221,7 +223,7 @@ class WeatherAppHandlers:
 
         dialog.Destroy()
 
-    def OnRemoveLocation(self, event):  # event is required by wx
+    def OnRemoveLocation(self, event):  # noqa: F841 - event is required by wx
         """Handle remove location button click
 
         Args:
@@ -240,10 +242,10 @@ class WeatherAppHandlers:
             wx.MessageBox(
                 "The Nationwide location cannot be removed.",
                 "Cannot Remove",
-                wx.OK | wx.ICON_INFORMATION
+                wx.OK | wx.ICON_INFORMATION,
             )
             # Accessibility: announce for screen readers
-            if hasattr(self, 'AnnounceForScreenReader'):
+            if hasattr(self, "AnnounceForScreenReader"):
                 self.AnnounceForScreenReader("The Nationwide location cannot be removed.")
             return
 
@@ -259,11 +261,7 @@ class WeatherAppHandlers:
             removed = self.location_service.remove_location(selected)
 
             if not removed:
-                wx.MessageBox(
-                    f"Could not remove {selected}.",
-                    "Error",
-                    wx.OK | wx.ICON_ERROR
-                )
+                wx.MessageBox(f"Could not remove {selected}.", "Error", wx.OK | wx.ICON_ERROR)
                 return
 
             # Update dropdown
@@ -279,7 +277,7 @@ class WeatherAppHandlers:
                 # If another location is now current, update data
                 self.UpdateWeatherData()
 
-    def OnRefresh(self, event):  # event is required by wx
+    def OnRefresh(self, event):  # noqa: F841 - event is required by wx
         """Handle refresh button click
 
         Args:
@@ -288,17 +286,17 @@ class WeatherAppHandlers:
         # Trigger weather data update
         self.UpdateWeatherData()
 
-    def OnViewDiscussion(self, event):  # event is required by wx
+    def OnViewDiscussion(self, event):  # noqa: F841 - event is required by wx
         """Handle view discussion button click
 
         Args:
             event: Button event
         """
         # Check if we're in nationwide view mode
-        if hasattr(self, '_in_nationwide_mode') and self._in_nationwide_mode:
+        if hasattr(self, "_in_nationwide_mode") and self._in_nationwide_mode:
             self._handle_nationwide_discussion()
             return
-            
+
         # Get current location from the location service
         location = self.location_service.get_current_location()
         if location is None:
@@ -340,7 +338,7 @@ class WeatherAppHandlers:
             ),
         )
 
-    def _on_discussion_timer(self, event):  # event is required by wx
+    def _on_discussion_timer(self, event):  # noqa: F841 - event is required by wx
         """Handle timer events for the discussion loading dialog
 
         Args:
@@ -435,7 +433,7 @@ class WeatherAppHandlers:
                 except Exception as unbind_e:
                     logger.error(f"Error unbinding timer event: {unbind_e}")
 
-    def OnViewAlert(self, event):  # event is required by wx
+    def OnViewAlert(self, event):  # noqa: F841 - event is required by wx
         """Handle view alert button click
 
         Args:
@@ -474,16 +472,18 @@ class WeatherAppHandlers:
         # Just call the view alert handler
         self.OnViewAlert(event)
 
-    def OnMinimizeToTray(self, event):  # event is required by wx
+    def OnMinimizeToTray(self, event):  # noqa: F841 - event is required by wx
         """Handle minimize to tray button click
 
         Args:
             event: Button event
         """
         logger.debug("Minimizing to tray")
-        self.Hide()
+        # Hide method is available in the actual wx.Frame class
+        # This is a mixin class, so the method will be available in the actual instance
+        self.Hide()  # type: ignore # noqa: E1101
 
-    def OnSettings(self, event):  # event is required by wx
+    def OnSettings(self, event):  # noqa: F841 - event is required by wx
         """Handle settings button click
 
         Args:
@@ -558,7 +558,7 @@ class WeatherAppHandlers:
 
         dialog.Destroy()
 
-    def OnTimer(self, event):  # event is required by wx
+    def OnTimer(self, event):  # noqa: F841 - event is required by wx
         """Handle timer event for periodic updates
 
         Args:
@@ -579,10 +579,10 @@ class WeatherAppHandlers:
 
     def _save_config(self, show_errors=True):
         """Save configuration to file
-        
+
         Args:
             show_errors: Whether to show error message boxes (default: True)
-            
+
         Returns:
             bool: True if save was successful, False otherwise
         """
@@ -594,13 +594,15 @@ class WeatherAppHandlers:
             # Save config
             with open(self._config_path, "w") as f:
                 json.dump(self.config, f, indent=2)
-                
+
             elapsed = time.time() - start_time
             logger.debug(f"[EXIT OPTIMIZATION] Configuration saved in {elapsed:.3f}s")
             return True
         except Exception as e:
             elapsed = time.time() - start_time
-            logger.error(f"[EXIT OPTIMIZATION] Failed to save config after {elapsed:.3f}s: {str(e)}")
+            logger.error(
+                f"[EXIT OPTIMIZATION] Failed to save config after {elapsed:.3f}s: {str(e)}"
+            )
             if show_errors:
                 wx.MessageBox(
                     f"Failed to save configuration: {str(e)}",
@@ -611,19 +613,21 @@ class WeatherAppHandlers:
 
     def _save_config_async(self):
         """Save configuration in a separate thread to avoid blocking the UI
-        
+
         Returns:
             thread: The started thread object, which can be joined if needed
         """
         import threading
-        logger.debug(f"[EXIT OPTIMIZATION] Starting async config save thread")
+
+        logger.debug("Starting async config save thread")
         # Create a unique thread name with timestamp for easier tracking
         thread_name = f"ConfigSaveThread-{int(time.time())}"
         thread = threading.Thread(target=self._save_config_thread, daemon=True, name=thread_name)
         thread.start()
-        
+
         # Register with thread manager for proper cleanup
         from accessiweather.utils.thread_manager import register_thread
+
         stop_event = threading.Event()
         register_thread(thread, stop_event, name=thread_name)
         return thread
@@ -633,36 +637,54 @@ class WeatherAppHandlers:
         This is called by _save_config_async.
         """
         import threading
+
         thread_id = threading.get_ident()
         thread_name = threading.current_thread().name
-        
+
         try:
             start_time = time.time()
             logger.debug(f"[EXIT OPTIMIZATION] Config save thread {thread_name} started")
-            
+
             # Quick check if we should abort (app might be closing)
             from accessiweather.utils.thread_manager import get_thread_manager
+
             manager = get_thread_manager()
-            thread_info = next((t for t in manager._threads.values() if t.get('thread') == threading.current_thread()), None)
-            
-            if thread_info and hasattr(thread_info.get('stop_event', None), 'is_set') and thread_info.get('stop_event').is_set():
-                logger.debug(f"[EXIT OPTIMIZATION] Config save thread {thread_name} aborting due to stop event")
+            thread_info = next(
+                (
+                    t
+                    for t in manager._threads.values()
+                    if t.get("thread") == threading.current_thread()
+                ),
+                None,
+            )
+
+            if (
+                thread_info
+                and hasattr(thread_info.get("stop_event", None), "is_set")
+                and thread_info.get("stop_event").is_set()
+            ):
+                logger.debug(
+                    f"[EXIT OPTIMIZATION] Config save thread {thread_name} aborting due to stop event"
+                )
                 return
-            
+
             # Do the actual config save
             success = self._save_config(show_errors=False)
             elapsed = time.time() - start_time
-            
+
             if success:
                 logger.debug(f"[EXIT OPTIMIZATION] Async config save completed in {elapsed:.3f}s")
             else:
                 logger.error(f"[EXIT OPTIMIZATION] Async config save failed after {elapsed:.3f}s")
         except Exception as e:
-            logger.error(f"[EXIT OPTIMIZATION] Unexpected error in config save thread: {e}", exc_info=True)
+            logger.error(
+                f"[EXIT OPTIMIZATION] Unexpected error in config save thread: {e}", exc_info=True
+            )
         finally:
             # Always unregister thread when done for proper cleanup
             try:
                 from accessiweather.utils.thread_manager import unregister_thread
+
                 logger.debug(f"[EXIT OPTIMIZATION] Unregistering config save thread {thread_name}")
                 unregister_thread(thread_id)
             except Exception as e:
@@ -670,65 +692,65 @@ class WeatherAppHandlers:
 
     def _handle_nationwide_discussion(self):
         """Handle nationwide discussion view
-        
-        This method shows a dialog allowing the user to select which nationwide discussion to view,
-{{ ... }}
+
+                This method shows a dialog allowing the user to select which nationwide discussion to view,
+        {{ ... }}
         """
         logger.debug("Handling nationwide discussion view")
-        
+
         # Check if we have the full discussion data
-        if not hasattr(self, '_nationwide_wpc_full') and not hasattr(self, '_nationwide_spc_full'):
+        if not hasattr(self, "_nationwide_wpc_full") and not hasattr(self, "_nationwide_spc_full"):
             wx.MessageBox(
                 "No nationwide discussions available", "No Data", wx.OK | wx.ICON_INFORMATION
             )
             return
-        
+
         # Create a dialog to select which discussion to view
         choices = []
-        if hasattr(self, '_nationwide_wpc_full') and self._nationwide_wpc_full:
+        if hasattr(self, "_nationwide_wpc_full") and self._nationwide_wpc_full:
             choices.append("Weather Prediction Center (WPC) Discussion")
-        if hasattr(self, '_nationwide_spc_full') and self._nationwide_spc_full:
+        if hasattr(self, "_nationwide_spc_full") and self._nationwide_spc_full:
             choices.append("Storm Prediction Center (SPC) Discussion")
-            
+
         # If only one choice, just show that one
         if len(choices) == 1:
             self._show_nationwide_discussion(0)
             return
-            
+
         dialog = wx.SingleChoiceDialog(
             self, "Select a discussion to view:", "Nationwide Discussions", choices
         )
         result = dialog.ShowModal()
         selection = dialog.GetSelection()
         dialog.Destroy()
-        
+
         if result == wx.ID_OK:
             self._show_nationwide_discussion(selection)
-            
+
     def _show_nationwide_discussion(self, selection):
         """Show the selected nationwide discussion
-        
+
         Args:
             selection: Index of the selected discussion (0 for WPC, 1 for SPC)
         """
         from .dialogs import WeatherDiscussionDialog
-        
-        if selection == 0 and hasattr(self, '_nationwide_wpc_full') and self._nationwide_wpc_full:
+
+        if selection == 0 and hasattr(self, "_nationwide_wpc_full") and self._nationwide_wpc_full:
             # Show WPC discussion
             title = "Weather Prediction Center (WPC) Discussion"
             text = self._nationwide_wpc_full
-        elif selection == 1 and hasattr(self, '_nationwide_spc_full') and self._nationwide_spc_full:
+        elif selection == 1 and hasattr(self, "_nationwide_spc_full") and self._nationwide_spc_full:
             # Show SPC discussion
             title = "Storm Prediction Center (SPC) Discussion"
             text = self._nationwide_spc_full
         else:
             logger.error(f"Invalid nationwide discussion selection: {selection}")
             return
-            
+
         discussion_dialog = WeatherDiscussionDialog(self, title, text)
         discussion_dialog.ShowModal()
         discussion_dialog.Destroy()
-        
+
     def _check_api_contact_configured(self):
         """Check if API contact information is configured and prompt if not"""
         # Check if api_settings section exists

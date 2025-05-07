@@ -10,10 +10,12 @@ A desktop application to check NOAA weather with robust accessibility features b
   - Search by address or ZIP code
   - Manual coordinate entry support
   - Automatic location persistence
+  - Nationwide view for national weather outlook
 - Comprehensive weather information:
   - Detailed forecasts with temperature and conditions
   - Active weather alerts, watches, and warnings
   - Weather discussion reader for in-depth analysis
+  - National forecast discussions from WPC and SPC
   - Auto-refresh every 15 minutes
 - Full accessibility support:
   - Screen reader compatibility
@@ -50,6 +52,7 @@ pip install -e .
      - Update interval (minutes)
      - Alert notification duration (seconds)
      - Alert radius (miles)
+     - Show/hide Nationwide view
 
 ## Building Binaries
 
@@ -108,6 +111,7 @@ AccessiWeather includes a PowerShell script to build Windows binaries and instal
 
 - The geocoding service may find locations outside the United States that the National Weather Service does not support
 - The application has been primarily tested on Windows; Linux support is experimental
+- National forecast discussions may occasionally be unavailable due to NOAA server maintenance
 
 ## Reporting Issues
 
