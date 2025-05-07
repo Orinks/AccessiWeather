@@ -59,7 +59,9 @@ def test_on_timer_no_update_needed(mock_handler):
     update_interval_seconds = update_interval_minutes * 60
 
     # Set last_update to a time that won't trigger an update
-    mock_handler.last_update = mock_time - update_interval_seconds + 60  # 1 minute before update is due
+    mock_handler.last_update = (
+        mock_time - update_interval_seconds + 60
+    )  # 1 minute before update is due
 
     # Call OnTimer with a mock event
     with patch("time.time", return_value=mock_time):

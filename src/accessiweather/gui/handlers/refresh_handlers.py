@@ -152,7 +152,9 @@ class WeatherAppRefreshHandlers(WeatherAppHandlerBase):
         """
         # Check if current location is Nationwide
         current_location = self.location_service.get_current_location_name()
-        if not current_location or not self.location_service.is_nationwide_location(current_location):
+        if not current_location or not self.location_service.is_nationwide_location(
+            current_location
+        ):
             logger.debug("UpdateNationalData called but current location is not Nationwide")
             return
 
@@ -171,7 +173,7 @@ class WeatherAppRefreshHandlers(WeatherAppHandlerBase):
         self.national_forecast_fetcher.fetch(
             on_success=self._on_national_forecast_fetched,
             on_error=self._on_forecast_error,
-            force_refresh=True  # Force refresh to get the latest data
+            force_refresh=True,  # Force refresh to get the latest data
         )
 
     def _check_update_complete(self):
