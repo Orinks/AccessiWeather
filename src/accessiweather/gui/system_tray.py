@@ -5,12 +5,9 @@ This module provides the TaskBarIcon class for system tray integration.
 
 import logging
 import os
-from typing import Optional
 
 import wx
 import wx.adv
-
-from accessiweather.config_utils import get_config_dir
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +41,9 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
     def set_icon(self):
         """Set the taskbar icon."""
         # Try to load the icon from the application's resources
-        icon_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "resources", "icon.ico")
+        icon_path = os.path.join(
+            os.path.dirname(__file__), "..", "..", "..", "resources", "icon.ico"
+        )
 
         if not os.path.exists(icon_path):
             # If the icon doesn't exist, use a default icon
@@ -80,17 +79,22 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         Returns:
             wx.Menu: The popup menu
         """
-        menu = wx.Menu()
+        # Use the menu handler from the frame to create the menu
+        menu, items = self.frame.CreateTaskBarMenu()
 
-        # Add menu items
-        show_hide_item = menu.Append(wx.ID_ANY, "Show/Hide AccessiWeather")
-        menu.AppendSeparator()
-        refresh_item = menu.Append(wx.ID_REFRESH, "Refresh Weather")
-        settings_item = menu.Append(wx.ID_PREFERENCES, "Settings")
-        menu.AppendSeparator()
-        exit_item = menu.Append(wx.ID_EXIT, "Exit AccessiWeather")
+        # Check if we have debug items
+        if len(items) > 4:
+            show_hide_item, refresh_item, settings_item, exit_item, *debug_items = items
 
-        # Bind menu events
+            # Bind debug menu events if present
+            if debug_items:
+                test_alerts_item, verify_interval_item = debug_items
+                self.Bind(wx.EVT_MENU, self.on_test_alerts, test_alerts_item)
+                self.Bind(wx.EVT_MENU, self.on_verify_interval, verify_interval_item)
+        else:
+            show_hide_item, refresh_item, settings_item, exit_item = items
+
+        # Bind standard menu events
         self.Bind(wx.EVT_MENU, self.on_show_hide, show_hide_item)
         self.Bind(wx.EVT_MENU, self.on_refresh, refresh_item)
         self.Bind(wx.EVT_MENU, self.on_settings, settings_item)
@@ -104,11 +108,8 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         Args:
             event: The event object
         """
-        if self.frame.IsShown():
-            self.frame.Hide()
-        else:
-            self.frame.Show()
-            self.frame.Raise()
+        # Use the menu handler from the frame
+        self.frame.OnTaskBarShowHide(event)
 
     def on_refresh(self, event):
         """Handle refresh menu item.
@@ -134,5 +135,29 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         Args:
             event: The event object
         """
-        # Call the frame's Close method with force=True
-        self.frame.Close(force=True)
+        # Use the menu handler from the frame
+        self.frame.OnTaskBarExit(event)
+
+    def on_test_alerts(self, event):
+        """Handle test alerts menu item.
+
+        Args:
+            event: The event object
+        """
+        # Call the frame's test_alert_update method
+        if hasattr(self.frame, "test_alert_update"):
+            self.frame.test_alert_update()
+        else:
+            logger.error("Frame does not have test_alert_update method")
+
+    def on_verify_interval(self, event):
+        """Handle verify interval menu item.
+
+        Args:
+            event: The event object
+        """
+        # Call the frame's verify_alert_interval method
+        if hasattr(self.frame, "verify_alert_interval"):
+            self.frame.verify_alert_interval()
+        else:
+            logger.error("Frame does not have verify_alert_interval method")

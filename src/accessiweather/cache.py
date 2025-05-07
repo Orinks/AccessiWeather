@@ -113,12 +113,10 @@ class Cache:
     def cleanup(self) -> None:
         """Remove all expired entries from the cache."""
         current_time = time.time()
-        expired_keys = [
-            key for key, entry in self.data.items() if entry.expiration < current_time
-        ]
-        
+        expired_keys = [key for key, entry in self.data.items() if entry.expiration < current_time]
+
         for key in expired_keys:
             del self.data[key]
-            
+
         if expired_keys:
             logger.debug(f"Cleaned up {len(expired_keys)} expired cache entries")
