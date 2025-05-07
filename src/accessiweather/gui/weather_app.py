@@ -14,6 +14,7 @@ import wx.adv
 
 from accessiweather.config_utils import get_config_dir
 from accessiweather.national_forecast_fetcher import NationalForecastFetcher
+from accessiweather.version import __version__
 
 from .async_fetchers import AlertsFetcher, DiscussionFetcher, ForecastFetcher
 from .current_conditions_fetcher import CurrentConditionsFetcher
@@ -692,7 +693,7 @@ class WeatherApp(
         """
         info = wx.adv.AboutDialogInfo()
         info.SetName("AccessiWeather")
-        info.SetVersion("1.0")
+        info.SetVersion(__version__)
         info.SetDescription("An accessible weather application using NOAA data")
         info.SetCopyright("(C) 2023")
         info.SetWebSite("https://github.com/Orinks/AccessiWeather")

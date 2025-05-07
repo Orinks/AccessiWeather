@@ -1,2 +1,2 @@
 # AccessiWeather
-# Version 0.9.0
+from accessiweather.version import __version__
