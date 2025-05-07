@@ -2,7 +2,7 @@
 
 All notable changes to AccessiWeather will be documented in this file.
 
-## [0.9.1] - 2024-06-15
+## [0.9.1] - 2025-05-07
 
 ### Added
 - System tray functionality with minimize to tray option
@@ -24,8 +24,8 @@ All notable changes to AccessiWeather will be documented in this file.
 
 ### Known Issues
 - Screen readers parse Nationwide discussions oddly and read them incorrectly, even though the data is being fetched correctly
-
-## [0.9.0] - 2024-06-01 (Beta Release)
+- Escape key for minimizing is currently busted.
+## [0.9.0] - 2025-04-14 (Beta Release)
 
 ### Added
 - Complete NOAA weather API integration
