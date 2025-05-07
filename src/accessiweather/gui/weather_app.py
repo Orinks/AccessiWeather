@@ -8,22 +8,37 @@ import json
 import logging
 import os
 import time
+
 import wx
 
 from accessiweather.config_utils import get_config_dir
+from accessiweather.national_forecast_fetcher import NationalForecastFetcher
 
 from .async_fetchers import AlertsFetcher, DiscussionFetcher, ForecastFetcher
-from .dialogs import WeatherDiscussionDialog
-from accessiweather.national_forecast_fetcher import NationalForecastFetcher
+from .current_conditions_fetcher import CurrentConditionsFetcher
+from .handlers import (
+    WeatherAppAlertHandlers,
+    WeatherAppBaseHandlers,
+    WeatherAppConfigHandlers,
+    WeatherAppDialogHandlers,
+    WeatherAppDiscussionHandlers,
+    WeatherAppLocationHandlers,
+    WeatherAppMenuHandlers,
+    WeatherAppRefreshHandlers,
+    WeatherAppSettingsHandlers,
+    WeatherAppSystemHandlers,
+    WeatherAppTimerHandlers,
+)
+from .hourly_forecast_fetcher import HourlyForecastFetcher
 from .settings_dialog import (
     ALERT_RADIUS_KEY,
     API_CONTACT_KEY,
+    MINIMIZE_TO_TRAY_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
     UPDATE_INTERVAL_KEY,
 )
 from .system_tray import TaskBarIcon
 from .ui_manager import UIManager
-from .weather_app_handlers import WeatherAppHandlers
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +47,20 @@ CONFIG_DIR = get_config_dir()
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
 
 
-class WeatherApp(wx.Frame, WeatherAppHandlers):
+class WeatherApp(
+    wx.Frame,
+    WeatherAppBaseHandlers,
+    WeatherAppLocationHandlers,
+    WeatherAppAlertHandlers,
+    WeatherAppDialogHandlers,
+    WeatherAppDiscussionHandlers,
+    WeatherAppMenuHandlers,
+    WeatherAppRefreshHandlers,
+    WeatherAppSettingsHandlers,
+    WeatherAppSystemHandlers,
+    WeatherAppTimerHandlers,
+    WeatherAppConfigHandlers,
+):
     """Main application window for AccessiWeather."""
 
     def __init__(
@@ -44,6 +72,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         api_client=None,  # For backward compatibility
         config=None,
         config_path=None,
+        debug_alerts=False,
     ):
         """Initialize the weather app
 
@@ -55,6 +84,7 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             api_client: NoaaApiClient instance (for backward compatibility)
             config: Configuration dictionary (optional)
             config_path: Custom path to config file (optional)
+            debug_alerts: Whether to enable debug mode for alerts testing (default: False)
         """
         super().__init__(parent, title="AccessiWeather", size=(800, 600))
 
@@ -72,6 +102,11 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         # For backward compatibility
         self.api_client = api_client
 
+        # Debug mode for alerts testing
+        self.debug_alerts = debug_alerts
+        if self.debug_alerts:
+            logger.info("Alert testing debug mode enabled")
+
         # Validate required services
         if not all([self.weather_service, self.location_service, self.notification_service]):
             raise ValueError(
@@ -83,6 +118,8 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         self.forecast_fetcher = ForecastFetcher(self.api_client)
         self.alerts_fetcher = AlertsFetcher(self.api_client)
         self.discussion_fetcher = DiscussionFetcher(self.api_client)
+        self.current_conditions_fetcher = CurrentConditionsFetcher(self.api_client)
+        self.hourly_forecast_fetcher = HourlyForecastFetcher(self.api_client)
         self.national_forecast_fetcher = NationalForecastFetcher(self.weather_service)
 
         # State variables
@@ -110,6 +147,12 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         self.Bind(wx.EVT_TIMER, self.OnTimer, self.timer)
         # Bind Close event here as it's frame-level, not UI-element specific
         self.Bind(wx.EVT_CLOSE, self.OnClose)
+        self.Bind(wx.EVT_ICONIZE, self.OnMinimize)
+
+        # Log the update interval from config
+        update_interval = self.config.get("settings", {}).get(UPDATE_INTERVAL_KEY, 30)
+        logger.debug(f"Starting timer with update interval: {update_interval} minutes")
+
         self.timer.Start(1000)  # Check every 1 second for updates
 
         # Last update timestamp
@@ -140,16 +183,23 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         # Check if API contact is configured
         self._check_api_contact_configured()
 
+        # Add force close flag
+        self._force_close = True  # Default to force close when clicking X
+
     def _load_config(self):
         """Load configuration from file
 
         Returns:
             Dict containing configuration or empty dict if not found
         """
+        from accessiweather.config_utils import migrate_config
+
         if os.path.exists(self._config_path):
             try:
                 with open(self._config_path, "r") as f:
-                    return json.load(f)
+                    config = json.load(f)
+                    # Migrate config to remove obsolete settings
+                    return migrate_config(config)
             except Exception as e:
                 logger.error(f"Failed to load config: {str(e)}")
 
@@ -161,109 +211,103 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
                 UPDATE_INTERVAL_KEY: 30,
                 ALERT_RADIUS_KEY: 25,
                 PRECISE_LOCATION_ALERTS_KEY: True,  # Default to precise location alerts
+                MINIMIZE_TO_TRAY_KEY: True,  # Default to minimize to tray when closing
             },
             "api_settings": {API_CONTACT_KEY: ""},  # Added default
         }
 
-    def UpdateLocationDropdown(self):
-        """Update the location dropdown with saved locations"""
-        # Get all locations from the location service
-        locations = self.location_service.get_all_locations()
-        current = self.location_service.get_current_location_name()
+    # UpdateLocationDropdown is now implemented in WeatherAppLocationHandlers
 
-        # Update dropdown
-        self.location_choice.Clear()
+    # UpdateWeatherData, UpdateAlerts, _FetchWeatherData, and _check_update_complete
+    # are now implemented in WeatherAppRefreshHandlers
 
-        # Check if the selected location is the Nationwide location
-        selected_is_nationwide = current and self.location_service.is_nationwide_location(current)
+    # OnClose, OnMinimize, and _stop_fetcher_threads are now implemented in WeatherAppSystemHandlers
 
-        for location in locations:
-            self.location_choice.Append(location)
-
-            # If this is the Nationwide location and it's selected, disable the remove button
-            is_nationwide = self.location_service.is_nationwide_location(location)
-            if hasattr(self, "remove_btn") and is_nationwide and selected_is_nationwide:
-                self.remove_btn.Disable()
-
-        # Set current selection
-        if current and current in locations:
-            self.location_choice.SetStringSelection(current)
-
-    def UpdateWeatherData(self):
-        """Update weather data in a separate thread"""
-        # Even if updating is true, we still want to proceed if this is a
-        # location change
-        # This is to ensure that location changes always trigger a data refresh
-
-        # Get current location from the location service
-        location = self.location_service.get_current_location()
-        if location is None:
-            self.SetStatusText("No location selected")
-            return
-
-        # Always reset updating flag to ensure we can fetch for a new location
-        # This is critical for location changes to work properly
-        self.updating = True
-        self._FetchWeatherData(location)
-
-    def _FetchWeatherData(self, location):
-        """Fetch weather data using the weather service
+    def _on_national_forecast_fetched(self, forecast_data):
+        """Handle the fetched national forecast in the main thread
 
         Args:
-            location: Tuple of (name, lat, lon)
+            forecast_data: Dictionary with national forecast data
         """
-        name, lat, lon = location
-        self.SetStatusText(f"Updating weather data for {name}...")
+        logger.debug("National forecast fetch callback received data")
+        # Save forecast data
+        self.current_forecast = forecast_data
 
-        # --- Start Loading State ---
-        self.refresh_btn.Disable()  # Disable refresh button
-        # Show loading message
-        self.forecast_text.SetValue("Loading forecast...")
-        self.alerts_list.DeleteAllItems()  # Clear previous alerts
-        # --- End Loading State ---
+        # Extract and store full discussions for WPC and SPC
+        try:
+            summaries = forecast_data.get("national_discussion_summaries", {})
+            wpc_data = summaries.get("wpc", {})
+            spc_data = summaries.get("spc", {})
 
-        # Reset completion flags for this fetch cycle
-        self._forecast_complete = False
-        self._alerts_complete = False
+            # Store full discussions from scraper data
+            self._nationwide_wpc_full = wpc_data.get("short_range_full")
+            self._nationwide_spc_full = spc_data.get("day1_full")
 
-        # Check if this is the nationwide location
-        if self.location_service.is_nationwide_location(name):
-            # Nationwide: Use the dedicated async fetcher
-            logger.info("Initiating nationwide forecast fetch using NationalForecastFetcher")
-            self.national_forecast_fetcher.fetch(
-                on_success=self._on_forecast_fetched,
-                on_error=self._on_forecast_error
-            )
-            # Note: Status updates and button enabling will happen in the callbacks
-            return # Return after initiating the fetch
+            wpc_len = len(self._nationwide_wpc_full) if self._nationwide_wpc_full else 0
+            spc_len = len(self._nationwide_spc_full) if self._nationwide_spc_full else 0
+            logger.debug(f"Stored WPC discussion (length: {wpc_len})")
+            logger.debug(f"Stored SPC discussion (length: {spc_len})")
+        except Exception as e:
+            logger.error(f"Error extracting national discussions: {e}")
+            self._nationwide_wpc_full = None
+            self._nationwide_spc_full = None
 
-        # Start forecast fetching thread
-        self.forecast_fetcher.fetch(
-            lat, lon, on_success=self._on_forecast_fetched, on_error=self._on_forecast_error
-        )
+        # Update the UI
+        self.ui_manager.display_forecast(forecast_data)
 
-        # Get precise location setting from config
-        precise_location = self.config.get("settings", {}).get(PRECISE_LOCATION_ALERTS_KEY, True)
-        alert_radius = self.config.get("settings", {}).get(ALERT_RADIUS_KEY, 25)
+        # Update timestamp
+        self.last_update = time.time()
 
-        # Start alerts fetching thread with precise location setting
-        self.alerts_fetcher.fetch(
-            lat,
-            lon,
-            on_success=self._on_alerts_fetched,
-            on_error=self._on_alerts_error,
-            precise_location=precise_location,
-            radius=alert_radius,
-        )
+        # Mark both forecast and alerts as complete for nationwide view
+        self._forecast_complete = True
+        self._alerts_complete = True  # No alerts for nationwide view
 
-    def _check_update_complete(self):
-        """Check if both forecast and alerts fetches are complete."""
-        if self._forecast_complete and self._alerts_complete:
-            self.updating = False
-            self.SetStatusText("Ready")  # Set final status only when both done
-            self.refresh_btn.Enable()  # Re-enable refresh button
-            log_msg = "Both forecast and alerts fetch complete. Refresh button re-enabled."
-            logger.debug(log_msg)
+        # Check overall completion
+        self._check_update_complete()
+
+        # Notify testing framework if hook is set
+        if self._testing_forecast_callback:
+            self._testing_forecast_callback(forecast_data)
+
+    def _on_current_conditions_fetched(self, conditions_data):
+        """Handle the fetched current conditions in the main thread
+
+        Args:
+            conditions_data: Dictionary with current conditions data
+        """
+        logger.debug("_on_current_conditions_fetched received data")
+
+        # Update the UI
+        self.ui_manager.display_current_conditions(conditions_data)
+
+    def _on_current_conditions_error(self, error):
+        """Handle current conditions fetch error
+
+        Args:
+            error: Error message
+        """
+        logger.error(f"Current conditions fetch error: {error}")
+
+        # Update the UI - use ui_manager to ensure proper error handling
+        try:
+            self.ui_manager.display_forecast_error(error)
+        except Exception as e:
+            logger.error(f"Error updating UI with current conditions error: {e}")
+
+    def _on_hourly_forecast_fetched(self, hourly_forecast_data):
+        """Handle the fetched hourly forecast in the main thread
+
+        Args:
+            hourly_forecast_data: Dictionary with hourly forecast data
+        """
+        logger.debug("_on_hourly_forecast_fetched received data")
+
+        # Store the hourly forecast data to be used when displaying the regular forecast
+        self.hourly_forecast_data = hourly_forecast_data
+
+        # If we already have the regular forecast data, update the display
+        if hasattr(self, "current_forecast") and self.current_forecast:
+            self.ui_manager.display_forecast(self.current_forecast, hourly_forecast_data)
 
     def _on_forecast_fetched(self, forecast_data):
         """Handle the fetched forecast in the main thread
@@ -271,12 +315,13 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         Args:
             forecast_data: Dictionary with forecast data
         """
-        print("[DEBUG] _on_forecast_fetched received:", forecast_data)
+        logger.debug("_on_forecast_fetched received data")
         # Save forecast data
         self.current_forecast = forecast_data
 
-        # Update display using UIManager
-        self.ui_manager._UpdateForecastDisplay(forecast_data)
+        # Update the UI with both forecast and hourly forecast if available
+        hourly_data = getattr(self, "hourly_forecast_data", None)
+        self.ui_manager.display_forecast(forecast_data, hourly_data)
 
         # Update timestamp
         self.last_update = time.time()
@@ -302,201 +347,17 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
             error: Error message
         """
         logger.error(f"Forecast fetch error: {error}")
-        self.forecast_text.SetValue(f"Error fetching forecast: {error}")
+
+        # Update the UI
+        self.ui_manager.display_forecast_error(error)
 
         # Mark forecast as complete and check overall completion
         self._forecast_complete = True
         self._check_update_complete()
 
-    def _format_national_forecast(self, national_data):
-        """Format national forecast data for display."""
-        lines = []
-
-        # Check if data is nested in national_discussion_summaries
-        if "national_discussion_summaries" in national_data:
-            # Extract the actual data from the wrapper
-            forecast_data = national_data["national_discussion_summaries"]
-        else:
-            # Use the data as is if not wrapped
-            forecast_data = national_data
-
-        # Log the structure to help debug
-        logger.debug(f"Formatting national forecast with data structure: {forecast_data.keys() if isinstance(forecast_data, dict) else 'not a dict'}")
-
-        # WPC
-        wpc_data = forecast_data.get("wpc", {})
-        if wpc_data and wpc_data.get("short_range_summary"):
-            lines.append("=== WEATHER PREDICTION CENTER (WPC) ===")
-            lines.append(wpc_data["short_range_summary"])
-
-            # Store the full text for button clicks
-            if wpc_data.get("short_range_full"):
-                self._nationwide_wpc_full = wpc_data["short_range_full"]
-            else:
-                self._nationwide_wpc_full = None
-
-        # SPC
-        spc_data = forecast_data.get("spc", {})
-        if spc_data and spc_data.get("day1_summary"):
-            lines.append("\n=== STORM PREDICTION CENTER (SPC) ===")
-            lines.append(spc_data["day1_summary"])
-
-            # Store the full text for button clicks
-            if spc_data.get("day1_full"):
-                self._nationwide_spc_full = spc_data["day1_full"]
-            else:
-                self._nationwide_spc_full = None
-
-        # Set flag to indicate we're in nationwide mode
-        self._in_nationwide_mode = True
-
-        # Attribution
-        attribution = forecast_data.get("attribution")
-        if attribution:
-            lines.append(f"\nSource: {attribution}")
-
-        if not lines:
-            lines.append("No data available for national forecast.")
-
-        return "\n".join(lines)
-
-    def _on_discussion_fetched(self, discussion_text, name=None, loading_dialog=None):
-        """Handle the fetched discussion in the main thread
-
-        Args:
-            discussion_text: Fetched discussion text
-            name: Location name (optional)
-            loading_dialog: Progress dialog instance (optional)
-        """
-        logger.debug("Discussion fetched successfully, handling in main thread")
-
-        # Make sure we clean up properly before showing the discussion dialog
-        self._cleanup_discussion_loading(loading_dialog)
-
-        # Show discussion in a dialog
-        discussion_dialog = WeatherDiscussionDialog(
-            self, "Weather Discussion", text=discussion_text
-        )
-        discussion_dialog.ShowModal()
-        discussion_dialog.Destroy()
-
-        # Re-enable button if it exists
-        if hasattr(self, "discussion_btn") and self.discussion_btn:
-            self.discussion_btn.Enable()
-
         # Notify testing framework if hook is set
-        if self._testing_discussion_callback:
-            self._testing_discussion_callback(discussion_text)
-
-    def _on_nationwide_discussion_fetched(self, discussion_text, name=None, loading_dialog=None):
-        """Handle the fetched nationwide discussion in the main thread
-
-        Args:
-            discussion_text: Fetched discussion text
-            name: Location name (optional)
-            loading_dialog: Progress dialog instance (optional)
-        """
-        logger.debug("Nationwide discussion fetched successfully, handling in main thread")
-
-        # --- Stop Timer --- (if applicable)
-        if hasattr(self, "_discussion_timer") and self._discussion_timer:
-            logger.debug("Stopping discussion timer")
-            self._discussion_timer.Stop()
-            self._discussion_timer = None
-
-        # --- Close Dialog --- Determine which dialog instance to close
-        dialog_to_close = loading_dialog
-        if not dialog_to_close and hasattr(self, "_discussion_loading_dialog"):
-            dialog_to_close = self._discussion_loading_dialog
-
-        if dialog_to_close:
-            try:
-                # Check if it's a valid wx window instance before proceeding
-                if isinstance(dialog_to_close, wx.Window) and dialog_to_close.IsShown():
-                    logger.debug("Hiding loading dialog")
-                    dialog_to_close.Hide()
-                    wx.SafeYield()  # Give UI a chance to process Hide
-                    logger.debug("Destroying loading dialog")
-                    dialog_to_close.Destroy()
-                    wx.SafeYield()  # Give UI a chance to process Destroy
-                elif isinstance(dialog_to_close, wx.Window):
-                    logger.debug(
-                        "Loading dialog exists but is not shown, attempting destroy anyway."
-                    )
-                    # Attempt destroy even if not shown, might already be destroyed
-                    try:
-                        dialog_to_close.Destroy()
-                        wx.SafeYield()
-                    except wx.wxAssertionError:
-                        logger.debug("Dialog likely already destroyed.")  # Expected if already gone
-                    except Exception as destroy_e:
-                        logger.error(
-                            f"Error destroying hidden/non-window dialog: {destroy_e}", exc_info=True
-                        )
-                else:
-                    logger.warning(
-                        f"Item to close is not a valid wx.Window: {type(dialog_to_close)}"
-                    )
-
-            except wx.wxAssertionError:
-                # This often happens if the dialog is already destroyed (e.g., by Cancel)
-                logger.debug("Loading dialog was likely already destroyed.")
-            except Exception as e:
-                logger.error(f"Error closing loading dialog: {e}", exc_info=True)
-
-        # --- Clear Reference --- Always clear the instance variable
-        if hasattr(self, "_discussion_loading_dialog"):
-            logger.debug("Clearing discussion loading dialog reference")
-            self._discussion_loading_dialog = None
-
-        # --- Force UI Update ---
-        logger.debug("Processing pending events after cleanup")
-        wx.GetApp().ProcessPendingEvents()
-        wx.SafeYield()
-        logger.debug("Cleanup processing complete")
-
-    def _on_discussion_error(self, error, name=None, loading_dialog=None):
-        """Handle discussion fetch error
-
-        Args:
-            error: Error message
-            name: Location name (optional)
-            loading_dialog: Progress dialog instance (optional)
-        """
-        location_str = name if name else "unknown location"
-        logger.debug(f"Discussion fetch error for {location_str}, handling in main thread")
-
-        # Make sure we clean up properly before showing the error message
-        self._cleanup_discussion_loading(loading_dialog)
-
-        logger.error(f"Discussion fetch error: {error}")
-
-        # Create a more informative error message if we have the location name
-        location_info = f" for {name}" if name else ""
-        wx.MessageBox(
-            f"Error fetching forecast discussion{location_info}: {error}",
-            "Fetch Error",
-            wx.OK | wx.ICON_ERROR,
-        )
-
-        # Re-enable button if it exists
-        if hasattr(self, "discussion_btn") and self.discussion_btn:
-            self.discussion_btn.Enable()
-
-        # Notify testing framework if hook is set
-        if self._testing_discussion_error_callback:
-            self._testing_discussion_error_callback(error)
-
-    # For backward compatibility with WeatherAppHandlers
-    @property
-    def location_manager(self):
-        """Provide backward compatibility with the location_manager property."""
-        return self.location_service.location_manager
-
-    @property
-    def notifier(self):
-        """Provide backward compatibility with the notifier property."""
-        return self.notification_service.notifier
+        if self._testing_forecast_error_callback:
+            self._testing_forecast_error_callback(error)
 
     def _on_alerts_fetched(self, alerts_data):
         """Handle the fetched alerts in the main thread
@@ -507,16 +368,19 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         logger.debug("Alerts fetched successfully, handling in main thread")
 
         # Process alerts through notification service
-        processed_alerts = self.notification_service.process_alerts(alerts_data)
+        # The notification service will handle notifications for new/updated alerts
+        # Note: process_alerts returns a tuple of (processed_alerts, new_count, updated_count)
+        result = self.notification_service.process_alerts(alerts_data)
+        processed_alerts = result[0]  # We only need the first item
 
         # Save processed alerts
         self.current_alerts = processed_alerts
 
-        # Update display using UIManager
-        self.ui_manager._UpdateAlertsDisplay(alerts_data)
+        # Update the UI with the processed alerts
+        self.ui_manager.display_alerts_processed(processed_alerts)
 
-        # Notify user about alerts
-        self.notification_service.notify_alerts(processed_alerts)
+        # Notify about alerts
+        self.notification_service.notify_alerts(processed_alerts, len(processed_alerts))
 
         # Mark alerts as complete
         self._alerts_complete = True
@@ -536,20 +400,69 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         """
         logger.error(f"Alerts fetch error: {error}")
 
-        # Clear alerts list
-        self.alerts_list.DeleteAllItems()
-
-        # Add error message to alerts list
-        index = self.alerts_list.InsertItem(0, "Error")
-        self.alerts_list.SetItem(index, 1, f"Error fetching alerts: {error}")
+        # Update the UI
+        self.ui_manager.display_alerts_error(error)
 
         # Mark alerts as complete and check overall completion
         self._alerts_complete = True
+
         self._check_update_complete()
 
         # Notify testing framework if hook is set
         if self._testing_alerts_error_callback:
             self._testing_alerts_error_callback(error)
+
+    def _on_discussion_fetched(self, discussion_text, name, loading_dialog):
+        """Handle the fetched discussion in the main thread
+
+        Args:
+            discussion_text: The discussion text
+            name: Location name
+            loading_dialog: Progress dialog to close
+        """
+        logger.debug(f"Discussion fetch callback received for {name}")
+
+        # Clean up loading state
+        self._cleanup_discussion_loading(loading_dialog)
+
+        # Re-enable discussion button
+        if hasattr(self, "discussion_btn") and self.discussion_btn:
+            self.discussion_btn.Enable()
+
+        # Show discussion dialog
+        if discussion_text:
+            title = f"Forecast Discussion for {name}"
+            self.ShowWeatherDiscussionDialog(title, discussion_text)
+        else:
+            self.ShowMessageDialog(
+                f"No forecast discussion available for {name}",
+                "No Discussion Available",
+                wx.OK | wx.ICON_INFORMATION,
+            )
+
+    def _on_discussion_error(self, error_message, name, loading_dialog):
+        """Handle discussion fetch error in the main thread
+
+        Args:
+            error_message: Error message
+            name: Location name
+            loading_dialog: Progress dialog to close
+        """
+        logger.error(f"Discussion fetch error for {name}: {error_message}")
+
+        # Clean up loading state
+        self._cleanup_discussion_loading(loading_dialog)
+
+        # Re-enable discussion button
+        if hasattr(self, "discussion_btn") and self.discussion_btn:
+            self.discussion_btn.Enable()
+
+        # Show error message
+        self.ShowMessageDialog(
+            f"Error fetching forecast discussion for {name}: {error_message}",
+            "Discussion Error",
+            wx.OK | wx.ICON_ERROR,
+        )
 
     def _cleanup_discussion_loading(self, loading_dialog=None):
         """Clean up resources related to discussion loading
@@ -613,3 +526,128 @@ class WeatherApp(wx.Frame, WeatherAppHandlers):
         wx.GetApp().ProcessPendingEvents()
         wx.SafeYield()
         logger.debug("Cleanup processing complete")
+
+    def OnTimer(self, event):  # event is required by wx
+        """Handle timer event for periodic updates
+
+        Args:
+            event: Timer event
+        """
+        # Get update interval from config (default to 30 minutes)
+        settings = self.config.get("settings", {})
+        update_interval_minutes = settings.get(UPDATE_INTERVAL_KEY, 30)
+        update_interval_seconds = update_interval_minutes * 60
+
+        # Calculate time since last update
+        now = time.time()
+        time_since_last_update = now - self.last_update
+        next_update_in = update_interval_seconds - time_since_last_update
+
+        # Enhanced logging in debug_alerts mode
+        if self.debug_alerts:
+            logger.info(
+                f"[DEBUG ALERTS] Timer check: interval={update_interval_minutes}min, "
+                f"time_since_last={time_since_last_update:.1f}s, "
+                f"next_update_in={next_update_in:.1f}s"
+            )
+        else:
+            # Regular debug logging
+            logger.debug(
+                f"Timer check: interval={update_interval_minutes}min, "
+                f"time_since_last={time_since_last_update:.1f}s, "
+                f"next_update_in={next_update_in:.1f}s"
+            )
+
+        # Check if it's time to update
+        if time_since_last_update >= update_interval_seconds:
+            if not self.updating:
+                logger.info(
+                    f"Timer triggered weather update. "
+                    f"Interval: {update_interval_minutes} minutes, "
+                    f"Time since last update: {time_since_last_update:.1f} seconds"
+                )
+                self.UpdateWeatherData()
+            else:
+                logger.debug("Timer skipped update: already updating.")
+
+    # For backward compatibility with WeatherAppHandlers
+    @property
+    def location_manager(self):
+        """Provide backward compatibility with the location_manager property."""
+        return self.location_service.location_manager
+
+    @property
+    def notifier(self):
+        """Provide backward compatibility with the notifier property."""
+        return self.notification_service.notifier
+
+    def test_alert_update(self):
+        """Manually trigger an alert update for testing purposes.
+
+        This method is only available in debug_alerts mode.
+        """
+        if not self.debug_alerts:
+            logger.warning("test_alert_update called but debug_alerts mode is not enabled")
+            return
+
+        logger.info("[DEBUG ALERTS] Manually triggering alert update")
+
+        # Get current location
+        location = self.location_service.get_current_location()
+        if not location:
+            logger.error("[DEBUG ALERTS] No location selected for alert testing")
+            return
+
+        # Extract coordinates
+        _, lat, lon = location
+
+        # Get alert settings from config
+        settings = self.config.get("settings", {})
+        precise_location = settings.get(PRECISE_LOCATION_ALERTS_KEY, True)
+        alert_radius = settings.get(ALERT_RADIUS_KEY, 25)
+
+        # Log the alert fetch parameters
+        logger.info(
+            f"[DEBUG ALERTS] Fetching alerts for coordinates ({lat}, {lon}), "
+            f"precise_location={precise_location}, radius={alert_radius}"
+        )
+
+        # Start alerts fetching thread
+        self.alerts_fetcher.fetch(
+            lat,
+            lon,
+            on_success=self._on_alerts_fetched,
+            on_error=self._on_alerts_error,
+            precise_location=precise_location,
+            radius=alert_radius,
+        )
+
+    def verify_alert_interval(self):
+        """Verify the alert update interval by logging detailed information.
+
+        This method is only available in debug_alerts mode.
+        """
+        if not self.debug_alerts:
+            logger.warning("verify_alert_interval called but debug_alerts mode is not enabled")
+            return
+
+        # Get update interval from config
+        settings = self.config.get("settings", {})
+        update_interval_minutes = settings.get(UPDATE_INTERVAL_KEY, 30)
+        update_interval_seconds = update_interval_minutes * 60
+
+        # Calculate time since last update
+        now = time.time()
+        time_since_last_update = now - self.last_update
+        next_update_in = update_interval_seconds - time_since_last_update
+
+        # Log detailed information
+        logger.info(
+            f"[DEBUG ALERTS] Alert interval verification:\n"
+            f"  - Configured interval: {update_interval_minutes} minutes ({update_interval_seconds} seconds)\n"
+            f"  - Last update timestamp: {self.last_update} ({time.ctime(self.last_update)})\n"
+            f"  - Current timestamp: {now} ({time.ctime(now)})\n"
+            f"  - Time since last update: {time_since_last_update:.1f} seconds\n"
+            f"  - Next update in: {next_update_in:.1f} seconds\n"
+            f"  - Update due: {'Yes' if time_since_last_update >= update_interval_seconds else 'No'}"
+        )

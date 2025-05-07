@@ -5,23 +5,17 @@ separating business logic from UI concerns.
 """
 
 import logging
+import time
 from typing import Any, Dict, List, Optional
 
 from accessiweather.api_client import ApiClientError, NoaaApiClient
+from accessiweather.services.national_discussion_scraper import NationalDiscussionScraper
 
 logger = logging.getLogger(__name__)
 
 
 class WeatherService:
     """Service for weather-related operations."""
-
-    def get_national_discussion_summary(self, force_refresh: bool = False) -> dict:
-        """
-        Fetch and summarize the latest WPC Short Range and SPC Day 1 discussions for nationwide view.
-        Returns:
-            dict: {"wpc": {"short_range_summary": str}, "spc": {"day1_summary": str}}
-        """
-        return self.api_client.get_national_discussion_summary(force_refresh=force_refresh)
 
     def __init__(self, api_client: NoaaApiClient):
         """Initialize the weather service.
@@ -30,18 +24,66 @@ class WeatherService:
             api_client: The API client to use for weather data retrieval.
         """
         self.api_client = api_client
+        self.national_scraper = NationalDiscussionScraper(request_delay=1.0)
+        self.national_data_cache: Optional[Dict[str, Dict[str, str]]] = None
+        self.national_data_timestamp: float = 0.0
+        self.cache_expiry = 3600  # 1 hour in seconds
 
     def get_national_forecast_data(self, force_refresh: bool = False) -> dict:
-        """Get nationwide forecast data, including national discussion summaries."""
-        try:
-            logger.info("Getting nationwide forecast data (with scraper summaries)")
-            from accessiweather.services import national_discussion_scraper
-            summaries = national_discussion_scraper.get_national_discussion_summaries()
-            return {
-                "national_discussion_summaries": summaries
+        """Get nationwide forecast data, including national discussion summaries.
+
+        Args:
+            force_refresh: Whether to force a refresh of the data
+
+        Returns:
+            Dictionary containing national forecast data with structure:
+            {
+                "national_discussion_summaries": {
+                    "wpc": {
+                        "short_range_summary": str,
+                        "short_range_full": str
+                    },
+                    "spc": {
+                        "day1_summary": str,
+                        "day1_full": str
+                    },
+                    "attribution": str
+                }
             }
+
+        Raises:
+            ApiClientError: If there was an error retrieving the data
+        """
+        current_time = time.time()
+
+        # Check if we have cached data that's still valid and not forcing refresh
+        if (
+            not force_refresh
+            and self.national_data_cache
+            and current_time - self.national_data_timestamp < self.cache_expiry
+        ):
+            logger.info("Using cached nationwide forecast data")
+            return {"national_discussion_summaries": self.national_data_cache}
+
+        try:
+            logger.info("Getting nationwide forecast data from scraper")
+            # Fetch fresh data from the scraper
+            national_data = self.national_scraper.fetch_all_discussions()
+
+            # Update cache
+            self.national_data_cache = national_data
+            self.national_data_timestamp = current_time
+
+            return {"national_discussion_summaries": national_data}
         except Exception as e:
             logger.error(f"Error getting nationwide forecast data: {str(e)}")
+
+            # If we have cached data, return it even if expired
+            if self.national_data_cache:
+                logger.info("Returning cached national data due to fetch error")
+                return {"national_discussion_summaries": self.national_data_cache}
+
+            # Otherwise, raise an error
             raise ApiClientError(f"Unable to retrieve nationwide forecast data: {str(e)}")
 
     def get_forecast(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
@@ -65,6 +107,76 @@ class WeatherService:
         except Exception as e:
             logger.error(f"Error getting forecast: {str(e)}")
             raise ApiClientError(f"Unable to retrieve forecast data: {str(e)}")
+
+    def get_hourly_forecast(
+        self, lat: float, lon: float, force_refresh: bool = False
+    ) -> Dict[str, Any]:
+        """Get hourly forecast data for a location.
+
+        Args:
+            lat: Latitude of the location.
+            lon: Longitude of the location.
+            force_refresh: Whether to force a refresh of the data from the API
+                instead of using cache.
+
+        Returns:
+            Dictionary containing hourly forecast data.
+
+        Raises:
+            ApiClientError: If there was an error retrieving the hourly forecast.
+        """
+        try:
+            logger.info(f"Getting hourly forecast for coordinates: ({lat}, {lon})")
+            return self.api_client.get_hourly_forecast(lat, lon, force_refresh=force_refresh)
+        except Exception as e:
+            logger.error(f"Error getting hourly forecast: {str(e)}")
+            raise ApiClientError(f"Unable to retrieve hourly forecast data: {str(e)}")
+
+    def get_stations(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
+        """Get observation stations for a location.
+
+        Args:
+            lat: Latitude of the location.
+            lon: Longitude of the location.
+            force_refresh: Whether to force a refresh of the data from the API
+                instead of using cache.
+
+        Returns:
+            Dictionary containing observation stations data.
+
+        Raises:
+            ApiClientError: If there was an error retrieving the stations.
+        """
+        try:
+            logger.info(f"Getting observation stations for coordinates: ({lat}, {lon})")
+            return self.api_client.get_stations(lat, lon, force_refresh=force_refresh)
+        except Exception as e:
+            logger.error(f"Error getting observation stations: {str(e)}")
+            raise ApiClientError(f"Unable to retrieve observation stations data: {str(e)}")
+
+    def get_current_conditions(
+        self, lat: float, lon: float, force_refresh: bool = False
+    ) -> Dict[str, Any]:
+        """Get current weather conditions for a location.
+
+        Args:
+            lat: Latitude of the location.
+            lon: Longitude of the location.
+            force_refresh: Whether to force a refresh of the data from the API
+                instead of using cache.
+
+        Returns:
+            Dictionary containing current weather conditions.
+
+        Raises:
+            ApiClientError: If there was an error retrieving the current conditions.
+        """
+        try:
+            logger.info(f"Getting current conditions for coordinates: ({lat}, {lon})")
+            return self.api_client.get_current_conditions(lat, lon, force_refresh=force_refresh)
+        except Exception as e:
+            logger.error(f"Error getting current conditions: {str(e)}")
+            raise ApiClientError(f"Unable to retrieve current conditions data: {str(e)}")
 
     def get_alerts(
         self,
@@ -161,6 +273,7 @@ class WeatherService:
                 "status": properties.get("status", ""),
                 "messageType": properties.get("messageType", ""),
                 "areaDesc": properties.get("areaDesc", "Unknown Area"),
+                "parameters": properties.get("parameters", {}),  # For NWSheadline
             }
 
             processed_alerts.append(alert)
