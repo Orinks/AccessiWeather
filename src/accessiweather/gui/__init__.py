@@ -20,6 +20,9 @@ __all__ = [
     "AccessiWeatherApp",
 ]
 
+# Import version from the central version module
+from accessiweather.version import __version__
+
 from .alert_dialog import AlertDetailsDialog
 
 # Import app classes last to avoid circular import issues
@@ -44,6 +47,3 @@ from .ui_components import (
 from .weather_app import WeatherApp
 
 # Constants (UPDATE_INTERVAL moved to accessiweather.constants)
-
-# Version
-__version__ = "0.9.0"
