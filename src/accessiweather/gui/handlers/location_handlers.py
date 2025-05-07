@@ -81,8 +81,20 @@ class WeatherAppLocationHandlers(WeatherAppHandlerBase):
         if result == wx.ID_OK and location_data:
             name, lat, lon = location_data
             # Add location to service
-            self.location_service.add_location(name, lat, lon)
+            add_result = self.location_service.add_location(name, lat, lon)
 
+            if not add_result:
+                # Location was outside the US NWS coverage area
+                wx.MessageBox(
+                    f"Cannot add location '{name}' with coordinates ({lat}, {lon}):\n"
+                    f"Location is outside the US NWS coverage area.\n\n"
+                    f"This application only supports locations within the United States.",
+                    "Location Not Supported",
+                    wx.OK | wx.ICON_ERROR,
+                )
+                return
+
+            # Location was added successfully
             # Update dropdown and select new location
             self.UpdateLocationDropdown()
             self.location_choice.SetStringSelection(name)
