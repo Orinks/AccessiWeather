@@ -46,6 +46,8 @@ class WeatherAppHandlerBase:
     discussion_btn: wx.Button
     _discussion_loading_dialog: Optional[wx.ProgressDialog]
     _discussion_timer: Optional[wx.Timer]
+    debug_mode: bool
+    debug_alerts: bool
 
     # Methods that will be provided by WeatherApp
     def UpdateWeatherData(self) -> None:

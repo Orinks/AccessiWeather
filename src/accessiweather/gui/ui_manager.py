@@ -120,7 +120,22 @@ class UIManager:
         # Bind events to methods defined in WeatherApp
         self.frame.Bind(wx.EVT_CHOICE, self.frame.OnLocationChange, self.frame.location_choice)
         self.frame.Bind(wx.EVT_BUTTON, self.frame.OnAddLocation, self.frame.add_btn)
-        self.frame.Bind(wx.EVT_BUTTON, self.frame.OnRemoveLocation, self.frame.remove_btn)
+
+        # Add a direct handler for the remove button that respects debug_mode
+        def on_remove_test(event):
+            # Only show debug message if debug_mode is enabled
+            if hasattr(self.frame, "debug_mode") and self.frame.debug_mode:
+                wx.MessageBox(
+                    "Remove button clicked - Direct handler",
+                    "Debug Info",
+                    wx.OK | wx.ICON_INFORMATION,
+                )
+            # Now call the actual handler
+            self.frame.OnRemoveLocation(event)
+
+        # Bind the test handler to the remove button
+        self.frame.Bind(wx.EVT_BUTTON, on_remove_test, self.frame.remove_btn)
+
         self.frame.Bind(wx.EVT_BUTTON, self.frame.OnRefresh, self.frame.refresh_btn)
         self.frame.Bind(wx.EVT_BUTTON, self.frame.OnViewDiscussion, self.frame.discussion_btn)
         self.frame.Bind(wx.EVT_BUTTON, self.frame.OnViewAlert, self.frame.alert_btn)

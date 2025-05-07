@@ -10,6 +10,7 @@ import os
 import time
 
 import wx
+import wx.adv
 
 from accessiweather.config_utils import get_config_dir
 from accessiweather.national_forecast_fetcher import NationalForecastFetcher
@@ -20,6 +21,7 @@ from .handlers import (
     WeatherAppAlertHandlers,
     WeatherAppBaseHandlers,
     WeatherAppConfigHandlers,
+    WeatherAppDebugHandlers,
     WeatherAppDialogHandlers,
     WeatherAppDiscussionHandlers,
     WeatherAppLocationHandlers,
@@ -52,6 +54,7 @@ class WeatherApp(
     WeatherAppBaseHandlers,
     WeatherAppLocationHandlers,
     WeatherAppAlertHandlers,
+    WeatherAppDebugHandlers,
     WeatherAppDialogHandlers,
     WeatherAppDiscussionHandlers,
     WeatherAppMenuHandlers,
@@ -72,7 +75,7 @@ class WeatherApp(
         api_client=None,  # For backward compatibility
         config=None,
         config_path=None,
-        debug_alerts=False,
+        debug_mode=False,
     ):
         """Initialize the weather app
 
@@ -84,7 +87,7 @@ class WeatherApp(
             api_client: NoaaApiClient instance (for backward compatibility)
             config: Configuration dictionary (optional)
             config_path: Custom path to config file (optional)
-            debug_alerts: Whether to enable debug mode for alerts testing (default: False)
+            debug_mode: Whether to enable debug mode with additional logging and alert testing features (default: False)
         """
         super().__init__(parent, title="AccessiWeather", size=(800, 600))
 
@@ -102,10 +105,16 @@ class WeatherApp(
         # For backward compatibility
         self.api_client = api_client
 
-        # Debug mode for alerts testing
-        self.debug_alerts = debug_alerts
-        if self.debug_alerts:
-            logger.info("Alert testing debug mode enabled")
+        # Debug mode
+        self.debug_mode = debug_mode
+        # For backward compatibility, debug_alerts is now the same as debug_mode
+        self.debug_alerts = debug_mode
+
+        # Always log debug mode status
+        logger.info(f"Debug mode status: debug_mode={self.debug_mode}")
+
+        if self.debug_mode:
+            logger.info("Debug mode enabled for additional debug information and alert testing")
 
         # Validate required services
         if not all([self.weather_service, self.location_service, self.notification_service]):
@@ -139,7 +148,16 @@ class WeatherApp(
         self.ui_manager = UIManager(self, self.notification_service.notifier)
 
         # Set up status bar
-        self.CreateStatusBar()
+        if self.debug_mode:
+            # Use the debug status bar in debug mode
+            from .debug_status_bar import DebugStatusBar
+
+            self.status_bar = DebugStatusBar(self, UPDATE_INTERVAL_KEY)
+            self.SetStatusBar(self.status_bar)
+        else:
+            # Use the standard status bar
+            self.CreateStatusBar()
+
         self.SetStatusText("Ready")
 
         # Start update timer
@@ -167,6 +185,9 @@ class WeatherApp(
         if accessible:
             accessible.SetName("AccessiWeather")
             accessible.SetRole(wx.ACC_ROLE_WINDOW)
+
+        # Create menu bar
+        self._create_menu_bar()
 
         # Test hooks for async tests
         self._testing_forecast_callback = None
@@ -543,10 +564,10 @@ class WeatherApp(
         time_since_last_update = now - self.last_update
         next_update_in = update_interval_seconds - time_since_last_update
 
-        # Enhanced logging in debug_alerts mode
-        if self.debug_alerts:
+        # Enhanced logging in debug mode
+        if self.debug_mode:
             logger.info(
-                f"[DEBUG ALERTS] Timer check: interval={update_interval_minutes}min, "
+                f"[DEBUG] Timer check: interval={update_interval_minutes}min, "
                 f"time_since_last={time_since_last_update:.1f}s, "
                 f"next_update_in={next_update_in:.1f}s"
             )
@@ -584,13 +605,13 @@ class WeatherApp(
     def test_alert_update(self):
         """Manually trigger an alert update for testing purposes.
 
-        This method is only available in debug_alerts mode.
+        This method is only available in debug mode.
         """
-        if not self.debug_alerts:
-            logger.warning("test_alert_update called but debug_alerts mode is not enabled")
+        if not self.debug_mode:
+            logger.warning("test_alert_update called but debug mode is not enabled")
             return
 
-        logger.info("[DEBUG ALERTS] Manually triggering alert update")
+        logger.info("[DEBUG] Manually triggering alert update")
 
         # Get current location
         location = self.location_service.get_current_location()
@@ -622,13 +643,69 @@ class WeatherApp(
             radius=alert_radius,
         )
 
+    def _create_menu_bar(self):
+        """Create the menu bar for the application.
+
+        This method creates a menu bar with File and Help menus.
+        If debug_mode or debug_alerts is enabled, it also adds a Debug menu.
+        """
+        # Create menu bar
+        menu_bar = wx.MenuBar()
+
+        # Create File menu
+        file_menu = wx.Menu()
+        refresh_item = file_menu.Append(wx.ID_REFRESH, "&Refresh\tF5", "Refresh weather data")
+        file_menu.AppendSeparator()
+        settings_item = file_menu.Append(wx.ID_PREFERENCES, "&Settings...", "Open settings dialog")
+        file_menu.AppendSeparator()
+        exit_item = file_menu.Append(wx.ID_EXIT, "E&xit", "Exit the application")
+
+        # Add File menu to menu bar
+        menu_bar.Append(file_menu, "&File")
+
+        # Add Debug menu if debug_mode is enabled
+        if self.debug_mode:
+            debug_menu = self.CreateDebugMenu()
+            menu_bar.Append(debug_menu, "&Debug")
+
+        # Create Help menu
+        help_menu = wx.Menu()
+        about_item = help_menu.Append(wx.ID_ABOUT, "&About", "About AccessiWeather")
+
+        # Add Help menu to menu bar
+        menu_bar.Append(help_menu, "&Help")
+
+        # Set the menu bar
+        self.SetMenuBar(menu_bar)
+
+        # Bind events
+        self.Bind(wx.EVT_MENU, self.OnRefresh, refresh_item)
+        self.Bind(wx.EVT_MENU, self.OnSettings, settings_item)
+        self.Bind(wx.EVT_MENU, lambda e: self.Close(True), exit_item)
+        self.Bind(wx.EVT_MENU, self.OnAbout, about_item)
+
+    def OnAbout(self, event):  # event is required by wx
+        """Show the about dialog.
+
+        Args:
+            event: Menu event
+        """
+        info = wx.adv.AboutDialogInfo()
+        info.SetName("AccessiWeather")
+        info.SetVersion("1.0")
+        info.SetDescription("An accessible weather application using NOAA data")
+        info.SetCopyright("(C) 2023")
+        info.SetWebSite("https://github.com/Orinks/AccessiWeather")
+
+        wx.adv.AboutBox(info)
+
     def verify_alert_interval(self):
         """Verify the alert update interval by logging detailed information.
 
-        This method is only available in debug_alerts mode.
+        This method is only available in debug mode.
         """
-        if not self.debug_alerts:
-            logger.warning("verify_alert_interval called but debug_alerts mode is not enabled")
+        if not self.debug_mode:
+            logger.warning("verify_alert_interval called but debug mode is not enabled")
             return
 
         # Get update interval from config
@@ -643,7 +720,7 @@ class WeatherApp(
 
         # Log detailed information
         logger.info(
-            f"[DEBUG ALERTS] Alert interval verification:\n"
+            f"[DEBUG] Alert interval verification:\n"
             f"  - Configured interval: {update_interval_minutes} minutes ({update_interval_seconds} seconds)\n"
             f"  - Last update timestamp: {self.last_update} ({time.ctime(self.last_update)})\n"
             f"  - Current timestamp: {now} ({time.ctime(now)})\n"
