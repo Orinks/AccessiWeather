@@ -81,9 +81,20 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         """
         # Use the menu handler from the frame to create the menu
         menu, items = self.frame.CreateTaskBarMenu()
-        show_hide_item, refresh_item, settings_item, exit_item = items
 
-        # Bind menu events
+        # Check if we have debug items
+        if len(items) > 4:
+            show_hide_item, refresh_item, settings_item, exit_item, *debug_items = items
+
+            # Bind debug menu events if present
+            if debug_items:
+                test_alerts_item, verify_interval_item = debug_items
+                self.Bind(wx.EVT_MENU, self.on_test_alerts, test_alerts_item)
+                self.Bind(wx.EVT_MENU, self.on_verify_interval, verify_interval_item)
+        else:
+            show_hide_item, refresh_item, settings_item, exit_item = items
+
+        # Bind standard menu events
         self.Bind(wx.EVT_MENU, self.on_show_hide, show_hide_item)
         self.Bind(wx.EVT_MENU, self.on_refresh, refresh_item)
         self.Bind(wx.EVT_MENU, self.on_settings, settings_item)
@@ -126,3 +137,27 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         """
         # Use the menu handler from the frame
         self.frame.OnTaskBarExit(event)
+
+    def on_test_alerts(self, event):
+        """Handle test alerts menu item.
+
+        Args:
+            event: The event object
+        """
+        # Call the frame's test_alert_update method
+        if hasattr(self.frame, "test_alert_update"):
+            self.frame.test_alert_update()
+        else:
+            logger.error("Frame does not have test_alert_update method")
+
+    def on_verify_interval(self, event):
+        """Handle verify interval menu item.
+
+        Args:
+            event: The event object
+        """
+        # Call the frame's verify_alert_interval method
+        if hasattr(self.frame, "verify_alert_interval"):
+            self.frame.verify_alert_interval()
+        else:
+            logger.error("Frame does not have verify_alert_interval method")

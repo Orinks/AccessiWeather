@@ -72,6 +72,7 @@ class WeatherApp(
         api_client=None,  # For backward compatibility
         config=None,
         config_path=None,
+        debug_alerts=False,
     ):
         """Initialize the weather app
 
@@ -83,6 +84,7 @@ class WeatherApp(
             api_client: NoaaApiClient instance (for backward compatibility)
             config: Configuration dictionary (optional)
             config_path: Custom path to config file (optional)
+            debug_alerts: Whether to enable debug mode for alerts testing (default: False)
         """
         super().__init__(parent, title="AccessiWeather", size=(800, 600))
 
@@ -99,6 +101,11 @@ class WeatherApp(
 
         # For backward compatibility
         self.api_client = api_client
+
+        # Debug mode for alerts testing
+        self.debug_alerts = debug_alerts
+        if self.debug_alerts:
+            logger.info("Alert testing debug mode enabled")
 
         # Validate required services
         if not all([self.weather_service, self.location_service, self.notification_service]):
@@ -536,12 +543,20 @@ class WeatherApp(
         time_since_last_update = now - self.last_update
         next_update_in = update_interval_seconds - time_since_last_update
 
-        # Log timer status at debug level
-        logger.debug(
-            f"Timer check: interval={update_interval_minutes}min, "
-            f"time_since_last={time_since_last_update:.1f}s, "
-            f"next_update_in={next_update_in:.1f}s"
-        )
+        # Enhanced logging in debug_alerts mode
+        if self.debug_alerts:
+            logger.info(
+                f"[DEBUG ALERTS] Timer check: interval={update_interval_minutes}min, "
+                f"time_since_last={time_since_last_update:.1f}s, "
+                f"next_update_in={next_update_in:.1f}s"
+            )
+        else:
+            # Regular debug logging
+            logger.debug(
+                f"Timer check: interval={update_interval_minutes}min, "
+                f"time_since_last={time_since_last_update:.1f}s, "
+                f"next_update_in={next_update_in:.1f}s"
+            )
 
         # Check if it's time to update
         if time_since_last_update >= update_interval_seconds:
@@ -565,3 +580,74 @@ class WeatherApp(
     def notifier(self):
         """Provide backward compatibility with the notifier property."""
         return self.notification_service.notifier
+
+    def test_alert_update(self):
+        """Manually trigger an alert update for testing purposes.
+
+        This method is only available in debug_alerts mode.
+        """
+        if not self.debug_alerts:
+            logger.warning("test_alert_update called but debug_alerts mode is not enabled")
+            return
+
+        logger.info("[DEBUG ALERTS] Manually triggering alert update")
+
+        # Get current location
+        location = self.location_service.get_current_location()
+        if not location:
+            logger.error("[DEBUG ALERTS] No location selected for alert testing")
+            return
+
+        # Extract coordinates
+        _, lat, lon = location
+
+        # Get alert settings from config
+        settings = self.config.get("settings", {})
+        precise_location = settings.get(PRECISE_LOCATION_ALERTS_KEY, True)
+        alert_radius = settings.get(ALERT_RADIUS_KEY, 25)
+
+        # Log the alert fetch parameters
+        logger.info(
+            f"[DEBUG ALERTS] Fetching alerts for coordinates ({lat}, {lon}), "
+            f"precise_location={precise_location}, radius={alert_radius}"
+        )
+
+        # Start alerts fetching thread
+        self.alerts_fetcher.fetch(
+            lat,
+            lon,
+            on_success=self._on_alerts_fetched,
+            on_error=self._on_alerts_error,
+            precise_location=precise_location,
+            radius=alert_radius,
+        )
+
+    def verify_alert_interval(self):
+        """Verify the alert update interval by logging detailed information.
+
+        This method is only available in debug_alerts mode.
+        """
+        if not self.debug_alerts:
+            logger.warning("verify_alert_interval called but debug_alerts mode is not enabled")
+            return
+
+        # Get update interval from config
+        settings = self.config.get("settings", {})
+        update_interval_minutes = settings.get(UPDATE_INTERVAL_KEY, 30)
+        update_interval_seconds = update_interval_minutes * 60
+
+        # Calculate time since last update
+        now = time.time()
+        time_since_last_update = now - self.last_update
+        next_update_in = update_interval_seconds - time_since_last_update
+
+        # Log detailed information
+        logger.info(
+            f"[DEBUG ALERTS] Alert interval verification:\n"
+            f"  - Configured interval: {update_interval_minutes} minutes ({update_interval_seconds} seconds)\n"
+            f"  - Last update timestamp: {self.last_update} ({time.ctime(self.last_update)})\n"
+            f"  - Current timestamp: {now} ({time.ctime(now)})\n"
+            f"  - Time since last update: {time_since_last_update:.1f} seconds\n"
+            f"  - Next update in: {next_update_in:.1f} seconds\n"
+            f"  - Update due: {'Yes' if time_since_last_update >= update_interval_seconds else 'No'}"
+        )
