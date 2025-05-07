@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
 import pytest
-from dateutil.parser import isoparse
+from dateutil.parser import isoparse  # type: ignore # requires python-dateutil
 
 from accessiweather.notifications import SafeToastNotifier, WeatherNotifier
 

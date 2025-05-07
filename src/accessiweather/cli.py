@@ -23,11 +23,11 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=("AccessiWeather - An accessible weather " "application using NOAA data")
     )
-    parser.add_argument("-d", "--debug", action="store_true", help="Enable debug logging")
     parser.add_argument(
-        "--debug-alerts",
+        "-d",
+        "--debug",
         action="store_true",
-        help="Enable debug mode for alerts testing and interval verification",
+        help="Enable debug mode with additional logging and alert testing features",
     )
     parser.add_argument("-c", "--config", help="Path to configuration directory")
     parser.add_argument("--no-cache", action="store_true", help="Disable API response caching")
@@ -50,7 +50,6 @@ def main() -> int:
         app_main(
             config_dir=args.config,
             debug_mode=args.debug,
-            debug_alerts=args.debug_alerts,
             enable_caching=not args.no_cache,
         )
         return 0

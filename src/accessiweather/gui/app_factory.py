@@ -26,7 +26,7 @@ def create_weather_app(
     config_path: Optional[str] = None,
     enable_caching: bool = True,
     cache_ttl: int = 300,
-    debug_alerts: bool = False,
+    debug_mode: bool = False,
 ) -> WeatherApp:
     """Create a WeatherApp instance with the service layer.
 
@@ -36,7 +36,7 @@ def create_weather_app(
         config_path: Custom path to config file (optional)
         enable_caching: Whether to enable API response caching (default: True)
         cache_ttl: Time-to-live for cached responses in seconds (default: 5 minutes)
-        debug_alerts: Whether to enable debug mode for alerts testing (default: False)
+        debug_mode: Whether to enable debug mode with additional logging and alert testing features (default: False)
 
     Returns:
         WeatherApp instance
@@ -80,7 +80,7 @@ def create_weather_app(
         api_client=api_client,  # For backward compatibility
         config=config,
         config_path=config_path,
-        debug_alerts=debug_alerts,
+        debug_mode=debug_mode,
     )
 
     return app

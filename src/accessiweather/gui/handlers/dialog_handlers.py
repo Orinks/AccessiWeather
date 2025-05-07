@@ -55,7 +55,12 @@ class WeatherAppDialogHandlers(WeatherAppHandlerBase):
         """
         logger.debug(f"Showing confirmation dialog: {title} - {message}")
         result = wx.MessageBox(message, title, style, self)
-        return result in (wx.ID_YES, wx.ID_OK)
+        logger.debug(
+            f"Confirmation dialog result: {result} (wx.ID_YES={wx.ID_YES}, wx.ID_OK={wx.ID_OK})"
+        )
+        is_confirmed = result in (wx.ID_YES, wx.ID_OK)
+        logger.debug(f"Confirmation dialog interpreted result: {is_confirmed}")
+        return is_confirmed
 
     def ShowProgressDialog(
         self,

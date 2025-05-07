@@ -179,25 +179,51 @@ class LocationManager:
             logger.warning(f"Cannot remove the {NATIONWIDE_LOCATION_NAME} location")
             return False
 
+        # Log the current state before removal
+        logger.debug(f"remove_location: Current locations: {list(self.saved_locations.keys())}")
+        logger.debug(f"remove_location: Current location: '{self.current_location}'")
+        logger.debug(f"remove_location: Attempting to remove: '{name}'")
+
         if name in self.saved_locations:
+            # Remove the location from saved_locations
             del self.saved_locations[name]
+            logger.debug(f"remove_location: Location '{name}' removed from saved_locations")
+            logger.debug(
+                f"remove_location: Locations after removal: {list(self.saved_locations.keys())}"
+            )
 
             # If we removed the current location, update it
             if self.current_location == name:
+                logger.debug("remove_location: Removed current location, need to update it")
                 # Try to set to another non-Nationwide location first
                 non_nationwide = [
                     loc for loc in self.saved_locations if loc != NATIONWIDE_LOCATION_NAME
                 ]
+                logger.debug(
+                    f"remove_location: Non-nationwide locations available: {non_nationwide}"
+                )
+
                 if non_nationwide:
                     self.current_location = non_nationwide[0]
+                    logger.debug(f"remove_location: Set current location to '{non_nationwide[0]}'")
                 else:
                     self.current_location = NATIONWIDE_LOCATION_NAME
+                    logger.debug(
+                        f"remove_location: Set current location to '{NATIONWIDE_LOCATION_NAME}'"
+                    )
 
+            # Ensure Nationwide location exists
             self._ensure_nationwide_location()
-            self._save_locations()
-            return True
 
-        return False
+            # Save the updated locations to file
+            self._save_locations()
+            logger.debug("remove_location: Saved updated locations to file")
+            logger.debug(f"remove_location: Final current location: '{self.current_location}'")
+
+            return True
+        else:
+            logger.warning(f"remove_location: Location '{name}' not found in saved_locations")
+            return False
 
     def set_current_location(self, name: str) -> bool:
         """Set the current location
