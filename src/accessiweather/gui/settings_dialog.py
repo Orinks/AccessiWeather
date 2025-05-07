@@ -11,10 +11,10 @@ logger = logging.getLogger(__name__)
 # Define constants for settings keys if needed, or use strings directly
 API_CONTACT_KEY = "api_contact"
 UPDATE_INTERVAL_KEY = "update_interval_minutes"
-ALERT_UPDATE_INTERVAL_KEY = "alert_update_interval_minutes"
 ALERT_RADIUS_KEY = "alert_radius_miles"
 PRECISE_LOCATION_ALERTS_KEY = "precise_location_alerts"
 SHOW_NATIONWIDE_KEY = "show_nationwide_location"
+AUTO_REFRESH_NATIONAL_KEY = "auto_refresh_national"
 
 # Advanced settings keys
 CACHE_ENABLED_KEY = "cache_enabled"
@@ -94,7 +94,7 @@ class SettingsDialog(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         # --- Input Fields ---
-        grid_sizer = wx.FlexGridSizer(rows=6, cols=2, vgap=10, hgap=5)  # Increased rows to 6
+        grid_sizer = wx.FlexGridSizer(rows=6, cols=2, vgap=10, hgap=5)  # 6 rows
         grid_sizer.AddGrowableCol(1, 1)  # Make the input column growable
 
         # API Contact
@@ -114,16 +114,6 @@ class SettingsDialog(wx.Dialog):
         self.update_interval_ctrl.SetToolTip(tooltip_interval)
         grid_sizer.Add(update_interval_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         grid_sizer.Add(self.update_interval_ctrl, 0, wx.ALL, 5)
-
-        # Alert Update Interval
-        alert_update_interval_label = wx.StaticText(panel, label="Alert Update Interval (minutes):")
-        self.alert_update_interval_ctrl = wx.SpinCtrl(
-            panel, min=1, max=1440, initial=1, name="Alert Update Interval"
-        )
-        tooltip_alert_interval = "How often to check for new weather alerts (in minutes)."
-        self.alert_update_interval_ctrl.SetToolTip(tooltip_alert_interval)
-        grid_sizer.Add(alert_update_interval_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
-        grid_sizer.Add(self.alert_update_interval_ctrl, 0, wx.ALL, 5)
 
         # Alert Radius
         alert_radius_label = wx.StaticText(panel, label="Alert Radius (miles):")
@@ -158,6 +148,19 @@ class SettingsDialog(wx.Dialog):
         self.show_nationwide_ctrl.SetToolTip(tooltip_nationwide)
         grid_sizer.Add((1, 1), 0, wx.ALL, 5)
         grid_sizer.Add(self.show_nationwide_ctrl, 0, wx.ALL, 5)
+
+        # Auto-Refresh National Data Toggle
+        auto_refresh_national_label = "Auto-refresh national data"
+        self.auto_refresh_national_ctrl = wx.CheckBox(
+            panel, label=auto_refresh_national_label, name="Auto-Refresh National Data"
+        )
+        tooltip_auto_refresh = (
+            "When checked, national data will be automatically refreshed when the timer fires. "
+            "When unchecked, you must manually refresh national data."
+        )
+        self.auto_refresh_national_ctrl.SetToolTip(tooltip_auto_refresh)
+        grid_sizer.Add((1, 1), 0, wx.ALL, 5)
+        grid_sizer.Add(self.auto_refresh_national_ctrl, 0, wx.ALL, 5)
 
         sizer.Add(grid_sizer, 1, wx.EXPAND | wx.ALL, 10)
         panel.SetSizer(sizer)
@@ -217,17 +220,17 @@ class SettingsDialog(wx.Dialog):
             # Load general settings
             api_contact = self.current_settings.get(API_CONTACT_KEY, "")
             update_interval = self.current_settings.get(UPDATE_INTERVAL_KEY, 30)
-            alert_update_interval = self.current_settings.get(ALERT_UPDATE_INTERVAL_KEY, 1)
             alert_radius = self.current_settings.get(ALERT_RADIUS_KEY, 25)
             precise_alerts = self.current_settings.get(PRECISE_LOCATION_ALERTS_KEY, True)
             show_nationwide = self.current_settings.get(SHOW_NATIONWIDE_KEY, True)
+            auto_refresh_national = self.current_settings.get(AUTO_REFRESH_NATIONAL_KEY, True)
 
             self.api_contact_ctrl.SetValue(api_contact)
             self.update_interval_ctrl.SetValue(update_interval)
-            self.alert_update_interval_ctrl.SetValue(alert_update_interval)
             self.alert_radius_ctrl.SetValue(alert_radius)
             self.precise_alerts_ctrl.SetValue(precise_alerts)
             self.show_nationwide_ctrl.SetValue(show_nationwide)
+            self.auto_refresh_national_ctrl.SetValue(auto_refresh_national)
 
             # Load advanced settings
             minimize_to_tray = self.current_settings.get(MINIMIZE_TO_TRAY_KEY, True)
@@ -247,7 +250,6 @@ class SettingsDialog(wx.Dialog):
         """Handle OK button click: Validate and signal success."""
         # Basic validation (more can be added)
         interval = self.update_interval_ctrl.GetValue()
-        alert_interval = self.alert_update_interval_ctrl.GetValue()
         radius = self.alert_radius_ctrl.GetValue()
         cache_ttl = self.cache_ttl_ctrl.GetValue()
 
@@ -260,17 +262,6 @@ class SettingsDialog(wx.Dialog):
             )
             self.notebook.SetSelection(0)  # Switch to General tab
             self.update_interval_ctrl.SetFocus()
-            return  # Prevent dialog closing
-
-        if alert_interval < 1:
-            wx.MessageBox(
-                "Alert update interval must be at least 1 minute.",
-                "Invalid Setting",
-                wx.OK | wx.ICON_WARNING,
-                self,
-            )
-            self.notebook.SetSelection(0)  # Switch to General tab
-            self.alert_update_interval_ctrl.SetFocus()
             return  # Prevent dialog closing
 
         if radius < 1:
@@ -310,10 +301,10 @@ class SettingsDialog(wx.Dialog):
         return {
             # General settings
             UPDATE_INTERVAL_KEY: self.update_interval_ctrl.GetValue(),
-            ALERT_UPDATE_INTERVAL_KEY: self.alert_update_interval_ctrl.GetValue(),
             ALERT_RADIUS_KEY: self.alert_radius_ctrl.GetValue(),
             PRECISE_LOCATION_ALERTS_KEY: self.precise_alerts_ctrl.GetValue(),
             SHOW_NATIONWIDE_KEY: self.show_nationwide_ctrl.GetValue(),
+            AUTO_REFRESH_NATIONAL_KEY: self.auto_refresh_national_ctrl.GetValue(),
             # Advanced settings
             MINIMIZE_TO_TRAY_KEY: self.minimize_to_tray_ctrl.GetValue(),
             CACHE_ENABLED_KEY: self.cache_enabled_ctrl.GetValue(),

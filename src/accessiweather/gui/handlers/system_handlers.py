@@ -119,9 +119,7 @@ class WeatherAppSystemHandlers(WeatherAppHandlerBase):
                 logger.debug("Stopping main timer for force close")
                 self.timer.Stop()
 
-            if hasattr(self, "alerts_timer") and self.alerts_timer.IsRunning():
-                logger.debug("Stopping alerts timer for force close")
-                self.alerts_timer.Stop()
+            # Alerts timer has been removed in favor of unified update mechanism
 
             # Save configuration
             logger.debug("Saving configuration before closing")
@@ -179,9 +177,7 @@ class WeatherAppSystemHandlers(WeatherAppHandlerBase):
                 logger.debug("Stopping timer")
                 self.timer.Stop()
 
-            if hasattr(self, "alerts_timer") and self.alerts_timer.IsRunning():
-                logger.debug("Stopping alerts timer")
-                self.alerts_timer.Stop()
+            # Alerts timer has been removed in favor of unified update mechanism
 
         except Exception as e:
             logger.error("Error stopping fetcher threads: %s", e, exc_info=True)

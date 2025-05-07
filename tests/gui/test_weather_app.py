@@ -6,7 +6,7 @@ import pytest
 
 from accessiweather.gui.settings_dialog import UPDATE_INTERVAL_KEY
 from accessiweather.gui.weather_app import WeatherApp
-from accessiweather.gui.weather_app_handlers import WeatherAppHandlers
+from accessiweather.gui.handlers.timer_handlers import WeatherAppTimerHandlers
 
 
 @pytest.fixture
@@ -46,8 +46,8 @@ def mock_app(mock_services, mock_config):
     app.updating = False
     app.last_update = 0.0
 
-    # Add the OnTimer method from WeatherAppHandlers
-    app.OnTimer = WeatherAppHandlers.OnTimer.__get__(app)
+    # Add the OnTimer method from WeatherAppTimerHandlers
+    app.OnTimer = WeatherAppTimerHandlers.OnTimer.__get__(app)
 
     return app
 
