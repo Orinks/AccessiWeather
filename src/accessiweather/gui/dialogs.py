@@ -400,7 +400,9 @@ class LocationDialog(wx.Dialog):
                         f"Try adding city or state (e.g., '{query}, NY' or '{query}, Chicago')"
                     )
                 else:
-                    self.result_text.SetValue("No results found for the given address")
+                    self.result_text.SetValue(
+                        f"No results found for '{query}' or location is outside the US NWS coverage area."
+                    )
                 self.latitude = None
                 self.longitude = None
         except Exception as e:

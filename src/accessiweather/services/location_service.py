@@ -47,16 +47,19 @@ class LocationService:
         """
         return self.location_manager.get_all_locations()
 
-    def add_location(self, name: str, lat: float, lon: float) -> None:
+    def add_location(self, name: str, lat: float, lon: float) -> bool:
         """Add a new location.
 
         Args:
             name: Name of the location.
             lat: Latitude of the location.
             lon: Longitude of the location.
+
+        Returns:
+            True if the location was added successfully, False if it's outside the US NWS coverage area.
         """
         logger.info(f"Adding location: {name} ({lat}, {lon})")
-        self.location_manager.add_location(name, lat, lon)
+        return self.location_manager.add_location(name, lat, lon)
 
     def remove_location(self, name: str) -> bool:
         """Remove a location.
