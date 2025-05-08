@@ -168,6 +168,9 @@ class WeatherApp(
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.Bind(wx.EVT_ICONIZE, self.OnMinimize)
 
+        # Bind character hook for global keyboard shortcuts
+        self.Bind(wx.EVT_CHAR_HOOK, self.OnCharHook)
+
         # Log the update interval from config
         update_interval = self.config.get("settings", {}).get(UPDATE_INTERVAL_KEY, 30)
         logger.debug(f"Starting timer with update interval: {update_interval} minutes")
@@ -602,6 +605,28 @@ class WeatherApp(
     def notifier(self):
         """Provide backward compatibility with the notifier property."""
         return self.notification_service.notifier
+
+    def OnCharHook(self, event):
+        """Handle character hook events for global keyboard shortcuts.
+
+        This is a higher-level event handler that will catch keyboard events
+        before they reach individual controls.
+
+        Args:
+            event: Character hook event
+        """
+        key_code = event.GetKeyCode()
+
+        if key_code == wx.WXK_ESCAPE:
+            # Escape key to minimize to system tray
+            logger.info("Escape key pressed in CharHook, hiding to system tray")
+            if hasattr(self, "taskbar_icon") and self.taskbar_icon:
+                logger.info("Hiding app to system tray from CharHook")
+                self.Hide()
+                return  # Don't skip the event - we've handled it
+
+        # For all other keys, allow normal processing
+        event.Skip()
 
     def test_alert_update(self):
         """Manually trigger an alert update for testing purposes.

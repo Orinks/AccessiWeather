@@ -31,6 +31,14 @@ class WeatherAppBaseHandlers(WeatherAppHandlerBase):
         if key_code == wx.WXK_F5:
             # F5 to refresh
             self.OnRefresh(event)
+        elif key_code == wx.WXK_ESCAPE:
+            # Escape to hide to system tray
+            logger.info("Escape key pressed in BaseHandlers, hiding to system tray")
+            if hasattr(self, "taskbar_icon") and self.taskbar_icon:
+                logger.info("Hiding app to system tray from BaseHandlers")
+                self.Hide()
+            else:
+                event.Skip()
         else:
             # Other key events are handled by WeatherAppSystemHandlers.OnKeyDown
             event.Skip()
