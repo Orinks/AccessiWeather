@@ -57,13 +57,21 @@ class WeatherAppSystemHandlers(WeatherAppHandlerBase):
     def OnClose(self, event, force_close=False):
         """Handle window close event.
 
+        This method handles the window close event, either by minimizing to the system tray
+        or by proceeding with the actual application close. It ensures proper cleanup of
+        resources in all cases.
+
         Args:
             event: The close event
             force_close: If True, force the window to close instead of minimizing
-        """
-        try:
-            logger.debug("OnClose called with force_close=%s", force_close)
 
+        Returns:
+            bool: True to indicate successful handling of the event
+        """
+        close_successful = True
+        logger.debug("OnClose called with force_close=%s", force_close)
+
+        try:
             # Check for force close flag on the instance or parameter
             is_forced_close = force_close
             if hasattr(self, "_force_close"):
@@ -74,6 +82,7 @@ class WeatherAppSystemHandlers(WeatherAppHandlerBase):
             minimize_to_tray = self.config.get("settings", {}).get("minimize_to_tray", True)
             logger.debug("minimize_to_tray setting: %s", minimize_to_tray)
 
+            # Check if we should minimize to tray instead of closing
             if (
                 minimize_to_tray
                 and hasattr(self, "taskbar_icon")
@@ -82,84 +91,150 @@ class WeatherAppSystemHandlers(WeatherAppHandlerBase):
             ):
                 logger.debug("Minimizing to tray instead of closing")
 
-                if hasattr(self, "timer") and self.timer.IsRunning():
-                    logger.debug("Stopping timer before hiding")
-                    self.timer.Stop()
+                try:
+                    # Stop timer before hiding if it's running
+                    if hasattr(self, "timer") and self.timer.IsRunning():
+                        logger.debug("Stopping timer before hiding")
+                        self.timer.Stop()
 
-                self.Hide()
+                    # Hide the window
+                    self.Hide()
 
-                if hasattr(self, "timer"):  # Check if timer exists before trying to Start
-                    logger.debug("Restarting timer after hiding")
-                    self.timer.Start()  # Restart after hide, as per original logic
+                    # Restart timer after hiding
+                    if hasattr(self, "timer"):
+                        logger.debug("Restarting timer after hiding")
+                        self.timer.Start()
 
-                event.Veto()  # Prevent the window from closing
-                logger.debug("Hide/Veto called.")
-                return True  # Return True after Veto
+                    # Prevent the window from closing
+                    event.Veto()
+                    logger.debug("Window hidden and close event vetoed")
+                    return True
+                except Exception as e:
+                    logger.error(f"Error during minimize to tray: {e}", exc_info=True)
+                    close_successful = False
+                    # If minimizing fails, proceed with normal close
 
             # Proceeding with actual application close
             logger.info("Proceeding with application close")
 
-            # Stop fetchers and timers here, before saving config and destroying UI elements
-            self._stop_fetcher_threads()  # Moved here
-            logger.debug("Fetcher threads and timers stopped for close.")
+            try:
+                # Stop fetchers and timers
+                logger.debug("Stopping fetcher threads and timers")
+                self._stop_fetcher_threads()
+                logger.debug("Fetcher threads and timers stopped successfully")
+            except Exception as e:
+                logger.error(f"Error stopping fetcher threads: {e}", exc_info=True)
+                close_successful = False
+                # Continue with close process even if thread stopping fails
 
-            # Save configuration
-            logger.debug("Saving configuration before closing")
-            self._save_config(show_errors=False)
+            try:
+                # Save configuration
+                logger.debug("Saving configuration before closing")
+                self._save_config(show_errors=False)
+                logger.debug("Configuration saved successfully")
+            except Exception as e:
+                logger.error(f"Error saving configuration during close: {e}", exc_info=True)
+                close_successful = False
+                # Continue with close process even if config save fails
 
-            # Remove taskbar icon if it exists
-            if hasattr(self, "taskbar_icon") and self.taskbar_icon:
-                logger.debug("Removing taskbar icon")
-                try:
-                    # Check if RemoveIcon is available and if the icon is still ok
-                    if self.taskbar_icon.IsOk() and hasattr(self.taskbar_icon, "RemoveIcon"):
-                        self.taskbar_icon.RemoveIcon()
-                    # Check if Destroy is available
-                    if hasattr(self.taskbar_icon, "Destroy"):
-                        self.taskbar_icon.Destroy()
-                except Exception as e:  # Catch specific wx errors if possible
-                    logger.error("Error removing taskbar icon: %s", e)
-                finally:
-                    # Ensure reference is cleared
-                    self.taskbar_icon = None
+            try:
+                # Remove taskbar icon if it exists
+                if hasattr(self, "taskbar_icon") and self.taskbar_icon:
+                    logger.debug("Removing taskbar icon")
+                    try:
+                        # Check if RemoveIcon is available and if the icon is still ok
+                        if self.taskbar_icon.IsOk() and hasattr(self.taskbar_icon, "RemoveIcon"):
+                            self.taskbar_icon.RemoveIcon()
+                        # Check if Destroy is available
+                        if hasattr(self.taskbar_icon, "Destroy"):
+                            self.taskbar_icon.Destroy()
+                    except Exception as e:
+                        logger.error(f"Error removing taskbar icon: {e}", exc_info=True)
+                        close_successful = False
+                    finally:
+                        # Always ensure reference is cleared
+                        self.taskbar_icon = None
+            except Exception as e:
+                logger.error(f"Unexpected error handling taskbar icon: {e}", exc_info=True)
+                close_successful = False
+                # Continue with close process even if taskbar icon cleanup fails
 
-            # Allow the default close behavior to proceed
+            # Log close status
+            if close_successful:
+                logger.info("Application close process completed successfully")
+            else:
+                logger.warning("Application close process completed with some errors")
+
+            # Always allow the default close behavior to proceed
             event.Skip()
-            logger.debug("event.Skip() called, allowing default close.")
-            return True  # Return True after Skip to avoid TypeError
+            logger.debug("Default close behavior allowed to proceed")
+            return True
 
         except Exception as e:
-            logger.error(f"Error during window close: {e}", exc_info=True)
+            logger.error(f"Unexpected error during window close: {e}", exc_info=True)
             # Ensure window closes even if there's an error
-            if event:  # Check if event is not None
-                event.Skip()  # Allow default closing
-            return True  # Return True to avoid TypeError
+            if event:
+                event.Skip()
+            return True
 
     def _stop_fetcher_threads(self):
-        """Stop all fetcher threads"""
-        try:
-            logger.debug("Stopping fetcher threads")
-            # Stop all fetcher threads
-            for fetcher_attr in [
-                "forecast_fetcher",
-                "alerts_fetcher",
-                "discussion_fetcher",
-                "current_conditions_fetcher",
-                "hourly_forecast_fetcher",
-                "national_forecast_fetcher",
-            ]:
+        """Stop all fetcher threads and timers.
+
+        This method ensures all fetcher threads and timers are properly stopped
+        during application shutdown. It handles each fetcher independently to
+        ensure that failures in one don't prevent others from being stopped.
+        """
+        fetcher_errors = []
+
+        logger.debug("Beginning fetcher thread shutdown sequence")
+
+        # List of all fetcher attributes to check
+        fetcher_attrs = [
+            "forecast_fetcher",
+            "alerts_fetcher",
+            "discussion_fetcher",
+            "current_conditions_fetcher",
+            "hourly_forecast_fetcher",
+            "national_forecast_fetcher",
+        ]
+
+        # Stop each fetcher independently
+        for fetcher_attr in fetcher_attrs:
+            try:
                 if hasattr(self, fetcher_attr):
                     fetcher = getattr(self, fetcher_attr)
                     if fetcher and hasattr(fetcher, "stop"):
                         logger.debug(f"Stopping {fetcher_attr}")
                         fetcher.stop()
+                        logger.debug(f"{fetcher_attr} stopped successfully")
+                    else:
+                        logger.debug(f"{fetcher_attr} exists but has no stop method or is None")
+                else:
+                    logger.debug(f"{fetcher_attr} not found in instance")
+            except Exception as e:
+                error_msg = f"Error stopping {fetcher_attr}: {e}"
+                logger.error(error_msg, exc_info=True)
+                fetcher_errors.append(error_msg)
+                # Continue with other fetchers even if this one fails
 
-            # Stop timers
-            if hasattr(self, "timer") and self.timer.IsRunning():
-                logger.debug("Stopping timer")
-                self.timer.Stop()
-
-            # Alerts timer has been removed in favor of unified update mechanism
-
+        # Stop timer separately from fetchers
+        try:
+            if hasattr(self, "timer"):
+                if self.timer.IsRunning():
+                    logger.debug("Stopping main timer")
+                    self.timer.Stop()
+                    logger.debug("Main timer stopped successfully")
+                else:
+                    logger.debug("Main timer exists but is not running")
+            else:
+                logger.debug("No main timer found in instance")
         except Exception as e:
-            logger.error("Error stopping fetcher threads: %s", e, exc_info=True)
+            error_msg = f"Error stopping main timer: {e}"
+            logger.error(error_msg, exc_info=True)
+            fetcher_errors.append(error_msg)
+
+        # Log summary of fetcher shutdown
+        if fetcher_errors:
+            logger.warning(f"Completed fetcher shutdown with {len(fetcher_errors)} errors")
+        else:
+            logger.debug("All fetchers and timers stopped successfully")
