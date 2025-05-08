@@ -79,8 +79,8 @@ class DebugStatusBar(wx.StatusBar):
         """
         if hasattr(self.parent, "config"):
             settings = self.parent.config.get("settings", {})
-            return int(settings.get(self.update_interval_key, 30))
-        return 30
+            return int(settings.get(self.update_interval_key, 10))
+        return 10
 
     def _get_time_since_last_update(self) -> float:
         """Get the time since the last update.

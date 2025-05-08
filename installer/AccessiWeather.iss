@@ -96,7 +96,7 @@ begin
                           '    "contact_info": ""' + #13#10 +
                           '  },' + #13#10 +
                           '  "settings": {' + #13#10 +
-                          '    "update_interval_minutes": 30,' + #13#10 +
+                          '    "update_interval_minutes": 10,' + #13#10 +
                           '    "alert_radius_miles": 25,' + #13#10 +
                           '    "precise_location_alerts": true,' + #13#10 +
                           '    "show_nationwide_location": true,' + #13#10 +

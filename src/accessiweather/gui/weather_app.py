@@ -172,7 +172,7 @@ class WeatherApp(
         self.Bind(wx.EVT_CHAR_HOOK, self.OnCharHook)
 
         # Log the update interval from config
-        update_interval = self.config.get("settings", {}).get(UPDATE_INTERVAL_KEY, 30)
+        update_interval = self.config.get("settings", {}).get(UPDATE_INTERVAL_KEY, 10)
         logger.debug(f"Starting timer with update interval: {update_interval} minutes")
 
         self.timer.Start(1000)  # Check every 1 second for updates
@@ -233,7 +233,7 @@ class WeatherApp(
             "locations": {},
             "current": None,
             "settings": {
-                UPDATE_INTERVAL_KEY: 30,
+                UPDATE_INTERVAL_KEY: 10,
                 ALERT_RADIUS_KEY: 25,
                 PRECISE_LOCATION_ALERTS_KEY: True,  # Default to precise location alerts
                 MINIMIZE_TO_TRAY_KEY: True,  # Default to minimize to tray when closing
@@ -558,9 +558,9 @@ class WeatherApp(
         Args:
             event: Timer event
         """
-        # Get update interval from config (default to 30 minutes)
+        # Get update interval from config (default to 10 minutes)
         settings = self.config.get("settings", {})
-        update_interval_minutes = settings.get(UPDATE_INTERVAL_KEY, 30)
+        update_interval_minutes = settings.get(UPDATE_INTERVAL_KEY, 10)
         update_interval_seconds = update_interval_minutes * 60
 
         # Calculate time since last update
@@ -736,7 +736,7 @@ class WeatherApp(
 
         # Get update interval from config
         settings = self.config.get("settings", {})
-        update_interval_minutes = settings.get(UPDATE_INTERVAL_KEY, 30)
+        update_interval_minutes = settings.get(UPDATE_INTERVAL_KEY, 10)
         update_interval_seconds = update_interval_minutes * 60
 
         # Calculate time since last update
