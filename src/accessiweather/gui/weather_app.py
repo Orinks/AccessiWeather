@@ -495,62 +495,112 @@ class WeatherApp(
         Args:
             loading_dialog: Progress dialog instance (optional)
         """
-        # --- Stop Timer --- (if applicable)
-        if hasattr(self, "_discussion_timer") and self._discussion_timer:
-            logger.debug("Stopping discussion timer")
-            self._discussion_timer.Stop()
-            self._discussion_timer = None
+        timer_id = None
 
-        # --- Close Dialog --- Determine which dialog instance to close
-        dialog_to_close = loading_dialog
-        if not dialog_to_close and hasattr(self, "_discussion_loading_dialog"):
-            dialog_to_close = self._discussion_loading_dialog
+        try:
+            # --- Stop Timer --- (if applicable)
+            if hasattr(self, "_discussion_timer") and self._discussion_timer:
+                logger.debug("Stopping discussion timer")
+                try:
+                    # Store timer ID before stopping for unbinding
+                    if hasattr(self._discussion_timer, "GetId"):
+                        timer_id = self._discussion_timer.GetId()
 
-        if dialog_to_close:
-            try:
-                # Check if it's a valid wx window instance before proceeding
-                if isinstance(dialog_to_close, wx.Window) and dialog_to_close.IsShown():
-                    logger.debug("Hiding loading dialog")
-                    dialog_to_close.Hide()
-                    wx.SafeYield()  # Give UI a chance to process Hide
-                    logger.debug("Destroying loading dialog")
-                    dialog_to_close.Destroy()
-                    wx.SafeYield()  # Give UI a chance to process Destroy
-                elif isinstance(dialog_to_close, wx.Window):
-                    logger.debug(
-                        "Loading dialog exists but is not shown, attempting destroy anyway."
-                    )
-                    # Attempt destroy even if not shown, might already be destroyed
-                    try:
+                    # Stop the timer if it's running
+                    if self._discussion_timer.IsRunning():
+                        self._discussion_timer.Stop()
+                except Exception as timer_e:
+                    logger.error(f"Error stopping discussion timer: {timer_e}", exc_info=True)
+
+            # --- Close Dialog --- Determine which dialog instance to close
+            dialog_to_close = loading_dialog
+            if not dialog_to_close and hasattr(self, "_discussion_loading_dialog"):
+                dialog_to_close = self._discussion_loading_dialog
+
+            if dialog_to_close:
+                try:
+                    # Check if it's a valid wx window instance before proceeding
+                    if isinstance(dialog_to_close, wx.Window) and dialog_to_close.IsShown():
+                        logger.debug("Hiding loading dialog")
+                        dialog_to_close.Hide()
+                        wx.SafeYield()  # Give UI a chance to process Hide
+                        logger.debug("Destroying loading dialog")
                         dialog_to_close.Destroy()
-                        wx.SafeYield()
-                    except wx.wxAssertionError:
-                        logger.debug("Dialog likely already destroyed.")  # Expected if already gone
-                    except Exception as destroy_e:
-                        logger.error(
-                            f"Error destroying hidden/non-window dialog: {destroy_e}", exc_info=True
+                        wx.SafeYield()  # Give UI a chance to process Destroy
+                    elif isinstance(dialog_to_close, wx.Window):
+                        logger.debug(
+                            "Loading dialog exists but is not shown, attempting destroy anyway."
                         )
-                else:
-                    logger.warning(
-                        f"Item to close is not a valid wx.Window: {type(dialog_to_close)}"
-                    )
+                        # Attempt destroy even if not shown, might already be destroyed
+                        try:
+                            dialog_to_close.Destroy()
+                            wx.SafeYield()
+                        except wx.wxAssertionError:
+                            logger.debug(
+                                "Dialog likely already destroyed."
+                            )  # Expected if already gone
+                        except Exception as destroy_e:
+                            logger.error(
+                                f"Error destroying hidden/non-window dialog: {destroy_e}",
+                                exc_info=True,
+                            )
+                    else:
+                        logger.warning(
+                            f"Item to close is not a valid wx.Window: {type(dialog_to_close)}"
+                        )
 
-            except wx.wxAssertionError:
-                # This often happens if the dialog is already destroyed (e.g., by Cancel)
-                logger.debug("Loading dialog was likely already destroyed.")
-            except Exception as e:
-                logger.error(f"Error closing loading dialog: {e}", exc_info=True)
+                except wx.wxAssertionError:
+                    # This often happens if the dialog is already destroyed (e.g., by Cancel)
+                    logger.debug("Loading dialog was likely already destroyed.")
+                except Exception as e:
+                    logger.error(f"Error closing loading dialog: {e}", exc_info=True)
+        finally:
+            # --- Always unbind the timer event to prevent memory leaks ---
+            try:
+                if hasattr(self, "_discussion_timer") and self._discussion_timer:
+                    # Try to unbind using the handler and source
+                    try:
+                        self.Unbind(
+                            wx.EVT_TIMER,
+                            handler=self._on_discussion_timer,
+                            source=self._discussion_timer,
+                        )
+                        logger.debug("Unbound discussion timer event using handler and source")
+                    except Exception as unbind_e:
+                        logger.debug(f"Could not unbind timer with handler and source: {unbind_e}")
 
-        # --- Clear Reference --- Always clear the instance variable
-        if hasattr(self, "_discussion_loading_dialog"):
-            logger.debug("Clearing discussion loading dialog reference")
-            self._discussion_loading_dialog = None
+                        # Fall back to unbinding by ID if we have it
+                        if timer_id is not None:
+                            try:
+                                self.Unbind(wx.EVT_TIMER, id=timer_id)
+                                logger.debug(f"Unbound discussion timer event using ID: {timer_id}")
+                            except Exception as id_unbind_e:
+                                logger.error(
+                                    f"Error unbinding timer event by ID: {id_unbind_e}",
+                                    exc_info=True,
+                                )
+            except Exception as unbind_e:
+                logger.error(f"Error during timer unbinding: {unbind_e}", exc_info=True)
 
-        # --- Force UI Update ---
-        logger.debug("Processing pending events after cleanup")
-        wx.GetApp().ProcessPendingEvents()
-        wx.SafeYield()
-        logger.debug("Cleanup processing complete")
+            # --- Always clear references ---
+            try:
+                # Clear timer reference
+                if hasattr(self, "_discussion_timer"):
+                    self._discussion_timer = None
+
+                # Clear dialog reference
+                if hasattr(self, "_discussion_loading_dialog"):
+                    logger.debug("Clearing discussion loading dialog reference")
+                    self._discussion_loading_dialog = None
+
+                # --- Force UI Update ---
+                logger.debug("Processing pending events after cleanup")
+                wx.GetApp().ProcessPendingEvents()
+                wx.SafeYield()
+            except Exception as cleanup_e:
+                logger.error(f"Error during final cleanup: {cleanup_e}", exc_info=True)
+
+            logger.debug("Discussion timer cleanup complete")
 
     def OnTimer(self, event):  # event is required by wx
         """Handle timer event for periodic updates
@@ -725,13 +775,13 @@ class WeatherApp(
 
         wx.adv.AboutBox(info)
 
-    def verify_alert_interval(self):
-        """Verify the alert update interval by logging detailed information.
+    def verify_update_interval(self):
+        """Verify the unified update interval by logging detailed information.
 
         This method is only available in debug mode.
         """
         if not self.debug_mode:
-            logger.warning("verify_alert_interval called but debug mode is not enabled")
+            logger.warning("verify_update_interval called but debug mode is not enabled")
             return
 
         # Get update interval from config
@@ -746,7 +796,7 @@ class WeatherApp(
 
         # Log detailed information
         logger.info(
-            f"[DEBUG] Alert interval verification:\n"
+            f"[DEBUG] Update interval verification:\n"
             f"  - Configured interval: {update_interval_minutes} minutes ({update_interval_seconds} seconds)\n"
             f"  - Last update timestamp: {self.last_update} ({time.ctime(self.last_update)})\n"
             f"  - Current timestamp: {now} ({time.ctime(now)})\n"
