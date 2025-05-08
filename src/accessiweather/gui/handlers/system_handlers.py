@@ -45,8 +45,9 @@ class WeatherAppSystemHandlers(WeatherAppHandlerBase):
             self.OnRefresh(event)
         elif key_code == wx.WXK_ESCAPE:
             # Escape to hide to system tray
-            logger.debug("Escape key pressed, hiding to system tray")
+            logger.info("Escape key pressed in SystemHandlers, hiding to system tray")
             if hasattr(self, "taskbar_icon") and self.taskbar_icon:
+                logger.info("Hiding app to system tray from SystemHandlers")
                 self.Hide()
             else:
                 event.Skip()
