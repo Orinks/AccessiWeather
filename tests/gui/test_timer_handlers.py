@@ -17,7 +17,7 @@ def mock_handler():
     # Set up required attributes and methods
     handler.config = {
         "settings": {
-            UPDATE_INTERVAL_KEY: 30,  # 30 minutes
+            UPDATE_INTERVAL_KEY: 10,  # 10 minutes
             AUTO_REFRESH_NATIONAL_KEY: True,
         }
     }

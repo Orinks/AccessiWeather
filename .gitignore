@@ -142,3 +142,11 @@ node_modules/
 *.sln
 *.sw?
 # OS specific
+
+# Added by Claude Task Master
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+# Task files

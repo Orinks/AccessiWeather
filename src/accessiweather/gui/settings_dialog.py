@@ -108,9 +108,9 @@ class SettingsDialog(wx.Dialog):
         # Update Interval
         update_interval_label = wx.StaticText(panel, label="Update Interval (minutes):")
         self.update_interval_ctrl = wx.SpinCtrl(
-            panel, min=1, max=1440, initial=30, name="Update Interval"
+            panel, min=1, max=1440, initial=10, name="Update Interval"
         )
-        tooltip_interval = "How often to automatically refresh weather data (in minutes)."
+        tooltip_interval = "How often to automatically refresh all weather data including forecasts and alerts (in minutes)."
         self.update_interval_ctrl.SetToolTip(tooltip_interval)
         grid_sizer.Add(update_interval_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         grid_sizer.Add(self.update_interval_ctrl, 0, wx.ALL, 5)
@@ -219,7 +219,7 @@ class SettingsDialog(wx.Dialog):
         try:
             # Load general settings
             api_contact = self.current_settings.get(API_CONTACT_KEY, "")
-            update_interval = self.current_settings.get(UPDATE_INTERVAL_KEY, 30)
+            update_interval = self.current_settings.get(UPDATE_INTERVAL_KEY, 10)
             alert_radius = self.current_settings.get(ALERT_RADIUS_KEY, 25)
             precise_alerts = self.current_settings.get(PRECISE_LOCATION_ALERTS_KEY, True)
             show_nationwide = self.current_settings.get(SHOW_NATIONWIDE_KEY, True)
