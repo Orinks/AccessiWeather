@@ -78,8 +78,21 @@ class TestNationalDiscussionScraper(unittest.TestCase):
     def test_fetch_wpc_discussion_error(self):
         """Test WPC discussion fetching with error."""
         with requests_mock.Mocker() as m:
+            # Mock all possible URLs that the scraper might try
             m.get(
                 "https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdspd",
+                status_code=404,
+            )
+            m.get(
+                "https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdepd",
+                status_code=404,
+            )
+            m.get(
+                "https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdhi",
+                status_code=404,
+            )
+            m.get(
+                "https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdak",
                 status_code=404,
             )
 
@@ -88,14 +101,27 @@ class TestNationalDiscussionScraper(unittest.TestCase):
             # Verify error result
             self.assertIn("summary", result)
             self.assertIn("full", result)
-            self.assertIn("Error", result["summary"])
+            self.assertEqual("No discussion found. (WPC)", result["summary"])
             self.assertEqual("", result["full"])
 
     def test_fetch_wpc_discussion_no_pre_tag(self):
         """Test WPC discussion fetching with missing pre tag."""
         with requests_mock.Mocker() as m:
+            # Mock all possible URLs that the scraper might try
             m.get(
                 "https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdspd",
+                text="<html><body>No pre tag here</body></html>",
+            )
+            m.get(
+                "https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdepd",
+                text="<html><body>No pre tag here</body></html>",
+            )
+            m.get(
+                "https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdhi",
+                text="<html><body>No pre tag here</body></html>",
+            )
+            m.get(
+                "https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdak",
                 text="<html><body>No pre tag here</body></html>",
             )
 
@@ -104,7 +130,7 @@ class TestNationalDiscussionScraper(unittest.TestCase):
             # Verify error result
             self.assertIn("summary", result)
             self.assertIn("full", result)
-            self.assertEqual("WPC discussion unavailable", result["summary"])
+            self.assertEqual("No discussion found. (WPC)", result["summary"])
             self.assertEqual("", result["full"])
 
     def test_fetch_spc_discussion_success(self):
@@ -141,21 +167,38 @@ class TestNationalDiscussionScraper(unittest.TestCase):
     def test_fetch_spc_discussion_error(self):
         """Test SPC discussion fetching with error."""
         with requests_mock.Mocker() as m:
+            # Mock all possible URLs that the scraper might try
             m.get("https://www.spc.noaa.gov/products/outlook/day1otlk.html", status_code=500)
+            m.get("https://www.spc.noaa.gov/products/outlook/day1otlk_1300.html", status_code=500)
+            m.get("https://www.spc.noaa.gov/products/outlook/day1otlk_1630.html", status_code=500)
+            m.get("https://www.spc.noaa.gov/products/outlook/day1otlk_2000.html", status_code=500)
 
             result = self.scraper.fetch_spc_discussion()
 
             # Verify error result
             self.assertIn("summary", result)
             self.assertIn("full", result)
-            self.assertIn("Error", result["summary"])
+            self.assertEqual("No discussion found. (SPC)", result["summary"])
             self.assertEqual("", result["full"])
 
     def test_fetch_spc_discussion_no_pre_tag(self):
         """Test SPC discussion fetching with missing pre tag."""
         with requests_mock.Mocker() as m:
+            # Mock all possible URLs that the scraper might try
             m.get(
                 "https://www.spc.noaa.gov/products/outlook/day1otlk.html",
+                text="<html><body>No pre tag here</body></html>",
+            )
+            m.get(
+                "https://www.spc.noaa.gov/products/outlook/day1otlk_1300.html",
+                text="<html><body>No pre tag here</body></html>",
+            )
+            m.get(
+                "https://www.spc.noaa.gov/products/outlook/day1otlk_1630.html",
+                text="<html><body>No pre tag here</body></html>",
+            )
+            m.get(
+                "https://www.spc.noaa.gov/products/outlook/day1otlk_2000.html",
                 text="<html><body>No pre tag here</body></html>",
             )
 
@@ -164,7 +207,7 @@ class TestNationalDiscussionScraper(unittest.TestCase):
             # Verify error result
             self.assertIn("summary", result)
             self.assertIn("full", result)
-            self.assertEqual("SPC discussion unavailable", result["summary"])
+            self.assertEqual("No discussion found. (SPC)", result["summary"])
             self.assertEqual("", result["full"])
 
     def test_fetch_spc_discussion_no_summary_marker(self):
@@ -211,11 +254,17 @@ class TestNationalDiscussionScraper(unittest.TestCase):
     def test_fetch_all_discussions_partial_failure(self):
         """Test fetching all discussions with one service failing."""
         with requests_mock.Mocker() as m:
+            # Mock WPC URLs
             m.get(
                 "https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdspd",
                 text=self.wpc_html,
             )
+
+            # Mock SPC URLs with failure status
             m.get("https://www.spc.noaa.gov/products/outlook/day1otlk.html", status_code=404)
+            m.get("https://www.spc.noaa.gov/products/outlook/day1otlk_1300.html", status_code=404)
+            m.get("https://www.spc.noaa.gov/products/outlook/day1otlk_1630.html", status_code=404)
+            m.get("https://www.spc.noaa.gov/products/outlook/day1otlk_2000.html", status_code=404)
 
             result = self.scraper.fetch_all_discussions()
 
@@ -227,7 +276,7 @@ class TestNationalDiscussionScraper(unittest.TestCase):
             self.assertIn("Short-Range Forecast Discussion", result["wpc"]["summary"])
 
             # SPC should fail gracefully
-            self.assertIn("Error", result["spc"]["summary"])
+            self.assertEqual("No discussion found. (SPC)", result["spc"]["summary"])
             self.assertEqual("", result["spc"]["full"])
 
 
