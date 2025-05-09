@@ -50,7 +50,7 @@ class WeatherAppDebugHandlers(WeatherAppHandlerBase):
             wx.ID_ANY, "Test Alert Update", "Manually trigger an alert update"
         )
         self.debug_verify_interval_item = debug_menu.Append(
-            wx.ID_ANY, "Verify Alert Interval", "Verify the alert update interval"
+            wx.ID_ANY, "Verify Update Interval", "Verify the unified update interval"
         )
         debug_menu.AppendSeparator()
 
@@ -209,12 +209,12 @@ class WeatherAppDebugHandlers(WeatherAppHandlerBase):
         self.test_alert_update()
 
     def OnVerifyInterval(self, event):  # event is required by wx
-        """Verify the alert update interval.
+        """Verify the unified update interval.
 
         Args:
             event: Menu event
         """
-        self.verify_alert_interval()
+        self.verify_update_interval()
 
     def OnToggleDebugMessages(self, event):  # event is required by wx
         """Toggle display of debug message boxes.

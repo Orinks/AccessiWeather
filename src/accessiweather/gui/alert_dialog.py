@@ -100,7 +100,7 @@ class AlertDetailsDialog(wx.Dialog):
             self.statement_text = wx.TextCtrl(
                 statement_panel,
                 value=statement,
-                style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
+                style=wx.TE_MULTILINE | wx.TE_READONLY,  # Removed wx.TE_RICH2
                 size=(-1, 200),
             )
 
@@ -121,7 +121,7 @@ class AlertDetailsDialog(wx.Dialog):
             self.description_text = wx.TextCtrl(
                 description_panel,
                 value=description,
-                style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
+                style=wx.TE_MULTILINE | wx.TE_READONLY,  # Removed wx.TE_RICH2
                 size=(-1, 200),
             )
 
@@ -141,7 +141,7 @@ class AlertDetailsDialog(wx.Dialog):
             self.instruction_text = wx.TextCtrl(
                 instruction_panel,
                 value=instruction,
-                style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
+                style=wx.TE_MULTILINE | wx.TE_READONLY,  # Removed wx.TE_RICH2
                 size=(-1, 200),
             )
 

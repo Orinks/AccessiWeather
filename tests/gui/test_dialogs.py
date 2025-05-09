@@ -463,48 +463,6 @@ def test_national_discussion_dialog_init(setup_mock_components):
     assert setup_mock_components["button"].call_count >= 1  # Close button
 
 
-def test_national_discussion_dialog_format_text():
-    """Test text formatting for screen readers."""
-    # Import the class directly to access its methods
-    from accessiweather.gui.dialogs import NationalDiscussionDialog
-
-    # Test with sample text
-    sample_text = """
-    SHORT RANGE FORECAST DISCUSSION
-    NWS WEATHER PREDICTION CENTER COLLEGE PARK MD
-    300 AM EDT THU APR 18 2024
-
-    VALID 12Z THU APR 18 2024 - 12Z SAT APR 20 2024
-
-    ...WEATHER SUMMARY...
-    A strong cold front will move through the eastern U.S. today.
-    """
-
-    title = "TEST TITLE"
-
-    # Create a test instance with a direct call to the method
-    # We need to use a static method approach since we're not initializing the class
-    formatted_text = NationalDiscussionDialog._format_text_for_screen_readers(
-        None, sample_text, title
-    )
-
-    # Verify formatting
-    assert title in formatted_text
-    assert "=" * len(title) in formatted_text  # Title underline
-    assert "SHORT RANGE FORECAST DISCUSSION" in formatted_text
-    assert (
-        "-" * len("SHORT RANGE FORECAST DISCUSSION") in formatted_text
-    )  # Section header underline
-    assert "...WEATHER SUMMARY..." in formatted_text
-
-    # Test with empty text
-    empty_text = ""
-    formatted_empty = NationalDiscussionDialog._format_text_for_screen_readers(
-        None, empty_text, title
-    )
-    assert "No discussion available" in formatted_empty
-
-
 def test_national_discussion_dialog_close():
     """Test national discussion dialog close."""
     # Create a mock for the NationalDiscussionDialog class that doesn't call __init__

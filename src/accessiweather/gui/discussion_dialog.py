@@ -45,7 +45,7 @@ class WeatherDiscussionDialog(wx.Dialog):
             logger.debug("Creating text control for discussion dialog")
             self.text_ctrl = wx.TextCtrl(
                 panel,
-                style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
+                style=wx.TE_MULTILINE | wx.TE_READONLY,  # Removed wx.TE_RICH2
                 size=(780, 500),  # Set a fixed size for the text control
             )
 
@@ -53,6 +53,10 @@ class WeatherDiscussionDialog(wx.Dialog):
             logger.debug("Setting font for text control")
             font = wx.Font(10, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
             self.text_ctrl.SetFont(font)
+
+            # Normalize line endings for consistent screen reader behavior
+            if isinstance(text, str):
+                text = text.replace("\r\n", "\n").replace("\r", "\n")
 
             # Set the text after setting the font
             logger.debug(f"Setting text value (length: {len(text)})")
