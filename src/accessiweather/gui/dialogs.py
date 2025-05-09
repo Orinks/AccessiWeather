@@ -736,28 +736,35 @@ class NationalDiscussionDialog(wx.Dialog):
             # Create a notebook for tabbed discussions
             notebook = wx.Notebook(panel)
 
+            # Set accessible name for the notebook
+            notebook.SetName("National Weather Discussions Notebook")
+
             # WPC Tab
             wpc_panel = wx.Panel(notebook)
             wpc_sizer = wx.BoxSizer(wx.VERTICAL)
 
-            wpc_text = wx.TextCtrl(
+            # Use AccessibleTextCtrl for better screen reader compatibility
+            wpc_text = AccessibleTextCtrl(
                 wpc_panel,
-                style=wx.TE_MULTILINE | wx.TE_READONLY,
-                size=(-1, 500),  # Removed wx.TE_RICH
+                style=wx.TE_MULTILINE | wx.TE_READONLY,  # Removed wx.TE_RICH
+                size=(-1, 500),
+                label="Weather Prediction Center Discussion",
             )
 
             # Set monospace font for better readability of forecast discussions
             font = wx.Font(10, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
             wpc_text.SetFont(font)
 
-            # Fill with WPC discussion text
+            # Format WPC discussion text for better screen reader compatibility
             summaries = self.national_data.get("national_discussion_summaries", {})
             wpc_data = summaries.get("wpc", {})
             wpc_full_text = wpc_data.get("short_range_full", "WPC discussion unavailable")
-            wpc_text.SetValue(wpc_full_text)
 
-            # Set accessible name
-            wpc_text.SetName("Weather Prediction Center Discussion")
+            # Format the text for better screen reader parsing
+            formatted_wpc_text = self._format_text_for_screen_readers(
+                wpc_full_text, "WEATHER PREDICTION CENTER DISCUSSION"
+            )
+            wpc_text.SetValue(formatted_wpc_text)
 
             wpc_sizer.Add(wpc_text, 1, wx.EXPAND | wx.ALL, 5)
             wpc_panel.SetSizer(wpc_sizer)
@@ -766,35 +773,39 @@ class NationalDiscussionDialog(wx.Dialog):
             spc_panel = wx.Panel(notebook)
             spc_sizer = wx.BoxSizer(wx.VERTICAL)
 
-            spc_text = wx.TextCtrl(
+            # Use AccessibleTextCtrl for better screen reader compatibility
+            spc_text = AccessibleTextCtrl(
                 spc_panel,
-                style=wx.TE_MULTILINE | wx.TE_READONLY,
-                size=(-1, 500),  # Removed wx.TE_RICH
+                style=wx.TE_MULTILINE | wx.TE_READONLY,  # Removed wx.TE_RICH
+                size=(-1, 500),
+                label="Storm Prediction Center Discussion",
             )
 
             spc_text.SetFont(font)  # Same monospace font
 
-            # Fill with SPC discussion text
+            # Format SPC discussion text for better screen reader compatibility
             spc_data = summaries.get("spc", {})
             spc_full_text = spc_data.get("day1_full", "SPC discussion unavailable")
-            spc_text.SetValue(spc_full_text)
 
-            # Set accessible name
-            spc_text.SetName("Storm Prediction Center Discussion")
+            # Format the text for better screen reader parsing
+            formatted_spc_text = self._format_text_for_screen_readers(
+                spc_full_text, "STORM PREDICTION CENTER DISCUSSION"
+            )
+            spc_text.SetValue(formatted_spc_text)
 
             spc_sizer.Add(spc_text, 1, wx.EXPAND | wx.ALL, 5)
             spc_panel.SetSizer(spc_sizer)
 
-            # Add tabs to notebook
+            # Add tabs to notebook with accessible labels
             notebook.AddPage(wpc_panel, "Weather Prediction Center")
             notebook.AddPage(spc_panel, "Storm Prediction Center")
 
             # Add notebook to main sizer
             main_sizer.Add(notebook, 1, wx.EXPAND | wx.ALL, 5)
 
-            # Add close button
+            # Add close button with accessibility support
             btn_sizer = wx.StdDialogButtonSizer()
-            close_btn = wx.Button(panel, wx.ID_CLOSE)
+            close_btn = AccessibleButton(panel, wx.ID_CLOSE, "Close")
             close_btn.Bind(wx.EVT_BUTTON, self.on_close)
             btn_sizer.AddButton(close_btn)
             btn_sizer.Realize()
@@ -807,6 +818,9 @@ class NationalDiscussionDialog(wx.Dialog):
             # Set initial focus to the notebook for accessibility
             notebook.SetFocus()
 
+            # Bind keyboard events for better accessibility
+            self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
+
             logger.debug("NationalDiscussionDialog UI initialization complete")
         except Exception as e:
             logger.error(f"Error initializing NationalDiscussionDialog UI: {e}")
@@ -816,6 +830,94 @@ class NationalDiscussionDialog(wx.Dialog):
                 wx.OK | wx.ICON_ERROR,
             )
             raise
+
+    def _format_text_for_screen_readers(self, text, title):
+        """Format text for better screen reader compatibility
+
+        Args:
+            text: The original text to format
+            title: The title to prepend to the text
+
+        Returns:
+            Formatted text optimized for screen readers
+        """
+        if not text or text.strip() == "":
+            return f"{title}\n\nNo discussion available."
+
+        # Split into lines and remove excessive whitespace
+        lines = [line.strip() for line in text.splitlines()]
+
+        # Remove empty lines at the beginning and end
+        while lines and not lines[0]:
+            lines.pop(0)
+        while lines and not lines[-1]:
+            lines.pop()
+
+        # Add proper section headers with clear separation
+        formatted_text = f"{title}\n{'=' * len(title)}\n\n"
+
+        # Join the lines with single newlines, avoiding multiple consecutive newlines
+        current_section = ""
+        for line in lines:
+            # If we encounter a line that looks like a section header (all caps, not too long)
+            if line.isupper() and len(line) < 50 and line.strip():
+                # Add the previous section if it exists
+                if current_section:
+                    formatted_text += current_section + "\n\n"
+                    current_section = ""
+
+                # Add the section header with proper formatting
+                formatted_text += f"{line}\n{'-' * len(line)}\n"
+            else:
+                # Add to the current section, handling paragraph breaks
+                if not line.strip():
+                    # Empty line indicates paragraph break
+                    current_section += "\n\n"
+                else:
+                    # Add the line with proper spacing
+                    if current_section and not current_section.endswith("\n"):
+                        current_section += " "
+                    current_section += line
+
+        # Add the last section if it exists
+        if current_section:
+            formatted_text += current_section
+
+        return formatted_text
+
+    def _on_char_hook(self, event):
+        """Handle character hook events for better keyboard navigation
+
+        Args:
+            event: Character hook event
+        """
+        key_code = event.GetKeyCode()
+
+        # Handle Tab key for navigating between tabs
+        if key_code == wx.WXK_TAB:
+            # Find the notebook control
+            notebook = self.FindWindowByName("National Weather Discussions Notebook")
+            if notebook:
+                # If Shift is pressed, go to previous tab
+                if event.ShiftDown():
+                    current_page = notebook.GetSelection()
+                    if current_page > 0:
+                        notebook.SetSelection(current_page - 1)
+                    else:
+                        notebook.SetSelection(notebook.GetPageCount() - 1)
+                # Otherwise go to next tab
+                else:
+                    current_page = notebook.GetSelection()
+                    if current_page < notebook.GetPageCount() - 1:
+                        notebook.SetSelection(current_page + 1)
+                    else:
+                        notebook.SetSelection(0)
+
+                # Skip further processing
+                return
+
+        # Allow default handling for other keys
+        event.Skip()
 
     def on_close(self, event):  # event is required by wx
         """Handle close button event.
