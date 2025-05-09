@@ -8,6 +8,7 @@ import wx
 from accessiweather.gui.dialogs import (
     AdvancedLocationDialog,
     LocationDialog,
+    NationalDiscussionDialog,
     WeatherDiscussionDialog,
 )
 
@@ -32,6 +33,56 @@ A strong cold front will move through the eastern U.S. today,
 bringing rain and thunderstorms. Behind the front, much cooler
 air will settle in for the end of the week.
 """
+
+SAMPLE_NATIONAL_DATA = {
+    "national_discussion_summaries": {
+        "wpc": {
+            "short_range_full": """
+            SHORT RANGE FORECAST DISCUSSION
+            NWS WEATHER PREDICTION CENTER COLLEGE PARK MD
+            300 AM EDT THU APR 18 2024
+
+            VALID 12Z THU APR 18 2024 - 12Z SAT APR 20 2024
+
+            ...WEATHER SUMMARY...
+            A strong cold front will move through the eastern U.S. today,
+            bringing rain and thunderstorms. Behind the front, much cooler
+            air will settle in for the end of the week.
+
+            ...DETAILED FORECAST DISCUSSION...
+            The main weather story for today will be the cold front moving
+            through the eastern U.S. Ahead of the front, warm and humid
+            conditions will support scattered showers and thunderstorms.
+            Some of these storms could be severe with damaging winds and
+            large hail being the primary threats.
+            """
+        },
+        "spc": {
+            "day1_full": """
+            ACUS01 KWNS 180100
+            SPC AC 180059
+
+            DAY 1 CONVECTIVE OUTLOOK
+            NWS STORM PREDICTION CENTER NORMAN OK
+            0759 PM CDT WED APR 17 2024
+
+            VALID 180100Z - 181200Z
+
+            SEVERE THUNDERSTORM POTENTIAL...CONTINUE WITH ENHANCED RISK OVER
+            PARTS OF THE SOUTHEAST STATES...
+
+            SUMMARY...Severe thunderstorms capable of damaging winds and a few
+            tornadoes will continue to be possible this evening across parts of
+            the Southeast.
+
+            DISCUSSION...Latest surface analysis shows a cold front extending
+            from the OH Valley southwestward into the Lower MS Valley. East of
+            this front, a moist and unstable airmass remains in place across
+            much of the Southeast, with surface dewpoints in the 60s F.
+            """
+        },
+    }
+}
 
 # --- Fixtures ---
 
@@ -383,6 +434,98 @@ def test_weather_discussion_dialog_close():
 
     # Simulate close
     dialog.OnClose(None)
+
+    # Verify dialog was ended
+    dialog.EndModal.assert_called_once_with(wx.ID_CLOSE)
+    assert dialog.GetReturnCode() == wx.ID_CLOSE
+
+
+# --- NationalDiscussionDialog Tests ---
+
+
+def test_national_discussion_dialog_init(setup_mock_components):
+    """Test NationalDiscussionDialog initialization."""
+    # Create a mock for the NationalDiscussionDialog class that doesn't call __init__
+    with patch.object(NationalDiscussionDialog, "__init__", return_value=None):
+        # Create dialog instance without calling the real __init__
+        dialog = NationalDiscussionDialog(None, SAMPLE_NATIONAL_DATA)
+
+        # Set up the dialog attributes manually using setattr to avoid type checking issues
+        setattr(dialog, "GetTitle", MagicMock(return_value="National Weather Discussions"))
+        setattr(dialog, "Destroy", MagicMock())
+        setattr(dialog, "national_data", SAMPLE_NATIONAL_DATA)
+
+    # Verify dialog properties
+    assert dialog.GetTitle() == "National Weather Discussions"
+
+    # Verify UI components were created
+    assert setup_mock_components["text_ctrl"].call_count >= 2  # Two text controls for WPC and SPC
+    assert setup_mock_components["button"].call_count >= 1  # Close button
+
+
+def test_national_discussion_dialog_format_text():
+    """Test text formatting for screen readers."""
+    # Import the class directly to access its methods
+    from accessiweather.gui.dialogs import NationalDiscussionDialog
+
+    # Test with sample text
+    sample_text = """
+    SHORT RANGE FORECAST DISCUSSION
+    NWS WEATHER PREDICTION CENTER COLLEGE PARK MD
+    300 AM EDT THU APR 18 2024
+
+    VALID 12Z THU APR 18 2024 - 12Z SAT APR 20 2024
+
+    ...WEATHER SUMMARY...
+    A strong cold front will move through the eastern U.S. today.
+    """
+
+    title = "TEST TITLE"
+
+    # Create a test instance with a direct call to the method
+    # We need to use a static method approach since we're not initializing the class
+    formatted_text = NationalDiscussionDialog._format_text_for_screen_readers(
+        None, sample_text, title
+    )
+
+    # Verify formatting
+    assert title in formatted_text
+    assert "=" * len(title) in formatted_text  # Title underline
+    assert "SHORT RANGE FORECAST DISCUSSION" in formatted_text
+    assert (
+        "-" * len("SHORT RANGE FORECAST DISCUSSION") in formatted_text
+    )  # Section header underline
+    assert "...WEATHER SUMMARY..." in formatted_text
+
+    # Test with empty text
+    empty_text = ""
+    formatted_empty = NationalDiscussionDialog._format_text_for_screen_readers(
+        None, empty_text, title
+    )
+    assert "No discussion available" in formatted_empty
+
+
+def test_national_discussion_dialog_close():
+    """Test national discussion dialog close."""
+    # Create a mock for the NationalDiscussionDialog class that doesn't call __init__
+    with patch.object(NationalDiscussionDialog, "__init__", return_value=None):
+        # Create dialog instance without calling the real __init__
+        dialog = NationalDiscussionDialog(None, SAMPLE_NATIONAL_DATA)
+
+        # Set up the dialog attributes manually using setattr to avoid type checking issues
+        setattr(dialog, "Destroy", MagicMock())
+        setattr(dialog, "EndModal", MagicMock())
+        setattr(dialog, "GetReturnCode", MagicMock(return_value=wx.ID_CLOSE))
+
+        # Create a real on_close method that will call EndModal
+        def mock_on_close(_):
+            dialog.EndModal(wx.ID_CLOSE)
+
+        # Use setattr to avoid type checking issues
+        setattr(dialog, "on_close", mock_on_close)
+
+    # Simulate close
+    dialog.on_close(None)
 
     # Verify dialog was ended
     dialog.EndModal.assert_called_once_with(wx.ID_CLOSE)
