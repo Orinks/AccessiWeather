@@ -133,6 +133,7 @@ tasks/*.txt
 # Dependency directories
 node_modules/
 # Environment variables
+.env.example
 # Editor directories and files
 .idea
 .vscode

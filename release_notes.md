@@ -1,22 +1,12 @@
-# AccessiWeather v0.9.1
-
-## Added
-- System tray functionality with minimize to tray option
-- Escape key shortcut to hide app to system tray
-- Extended 7-day forecast display (all 14 periods)
-- Current conditions integration with temperature, humidity, wind, and pressure
-- Hourly forecast integration for detailed short-term predictions
-- Debug mode CLI flag for testing and development
-
-## Changed
-- Consolidated update mechanism for better performance
-- Enhanced weather discussion reader with improved formatting
+# AccessiWeather v0.9.2
 
 ## Fixed
-- Alert update interval setting issues
-- Weather discussion fetching and display problems
-- Loading dialog cleanup
-- Various accessibility improvements for screen readers
+- Improved Nationwide view formatting for better screen reader compatibility
+- Enhanced US-only location validation to filter out non-US locations
+- Fixed dialog focus issues in Nationwide discussion view
+- Improved timer cleanup for better application stability
 
 ## Known Issues
-- Screen readers parse Nationwide discussions oddly and read them incorrectly, even though the data is being fetched correctly
+- Escape key for minimizing is currently busted
+- Alerts and regular weather data share the same timer, causing alert notifications to be pushed when the regular update interval is reached (will be fixed in v0.9.3)
+- Developer will be on vacation for approximately one week; expect v0.9.3 after return
