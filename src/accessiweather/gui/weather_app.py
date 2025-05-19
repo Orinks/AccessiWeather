@@ -394,18 +394,21 @@ class WeatherApp(
 
         # Process alerts through notification service
         # The notification service will handle notifications for new/updated alerts
-        # Note: process_alerts returns a tuple of (processed_alerts, new_count, updated_count)
-        result = self.notification_service.process_alerts(alerts_data)
-        processed_alerts = result[0]  # We only need the first item
+        # Unpack all three return values from process_alerts
+        processed_alerts, new_count, updated_count = self.notification_service.process_alerts(
+            alerts_data
+        )
+
+        # Log notification status
+        logger.info(
+            f"Alert processing complete: {len(processed_alerts)} total, {new_count} new, {updated_count} updated"
+        )
 
         # Save processed alerts
         self.current_alerts = processed_alerts
 
         # Update the UI with the processed alerts
         self.ui_manager.display_alerts_processed(processed_alerts)
-
-        # Notify about alerts
-        self.notification_service.notify_alerts(processed_alerts, len(processed_alerts))
 
         # Mark alerts as complete
         self._alerts_complete = True
