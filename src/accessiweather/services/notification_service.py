@@ -64,7 +64,12 @@ class NotificationService:
 
         # If there are new or updated alerts, notify the user
         if new_count > 0 or updated_count > 0:
+            logger.info(
+                f"Sending notifications for {new_count} new and {updated_count} updated alerts"
+            )
             self.notify_alerts(processed_alerts, len(processed_alerts), new_count, updated_count)
+        else:
+            logger.info("No new or updated alerts to notify about")
 
         return processed_alerts, new_count, updated_count
 

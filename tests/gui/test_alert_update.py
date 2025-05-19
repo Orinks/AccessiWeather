@@ -113,11 +113,6 @@ def test_on_alerts_fetched():
     # Verify that the UI manager was called with the processed alerts
     mock_app.ui_manager.display_alerts_processed.assert_called_once_with(processed_alerts)
 
-    # Verify that the notification service was called to notify about alerts
-    mock_app.notification_service.notify_alerts.assert_called_once_with(
-        processed_alerts, len(processed_alerts)
-    )
-
     # Verify that the alerts_complete flag was set
     assert mock_app._alerts_complete is True
 

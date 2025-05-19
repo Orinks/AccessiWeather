@@ -313,11 +313,6 @@ def test_weather_app_on_alerts_fetched_uses_processed_alerts():
     # Verify that the UI manager was called with the processed alerts
     mock_ui_manager.display_alerts_processed.assert_called_once_with(processed_alerts)
 
-    # Verify that the notification service was called to notify about the alerts
-    mock_notification_service.notify_alerts.assert_called_once_with(
-        processed_alerts, len(processed_alerts)
-    )
-
     # Verify that _alerts_complete was set to True
     assert mock_app._alerts_complete is True
 

@@ -183,10 +183,14 @@ class WeatherNotifier:
                         logger.debug(f"Existing alert unchanged: {alert['event']}")
 
         # Log summary of changes
+        total_alerts = len(processed_alerts)
         if new_alerts_count > 0 or updated_alerts_count > 0:
             logger.info(
-                f"Alert processing complete: {new_alerts_count} new, {updated_alerts_count} updated"
+                f"Alert processing complete: {total_alerts} total, {new_alerts_count} new, "
+                f"{updated_alerts_count} updated, {total_alerts - new_alerts_count - updated_alerts_count} unchanged"
             )
+        else:
+            logger.info(f"Alert processing complete: {total_alerts} total alerts, all unchanged")
 
         return processed_alerts, new_alerts_count, updated_alerts_count
 
