@@ -9,11 +9,16 @@ import os
 from typing import Any, Dict, Optional
 
 from accessiweather.api_client import NoaaApiClient
+
+# NoaaApiWrapper is used in create_app
+from accessiweather.api_wrapper import NoaaApiWrapper  # noqa: F401
+from accessiweather.gui.settings_dialog import API_KEYS_SECTION, WEATHERAPI_KEY
 from accessiweather.location import LocationManager
 from accessiweather.notifications import WeatherNotifier
 from accessiweather.services.location_service import LocationService
 from accessiweather.services.notification_service import NotificationService
 from accessiweather.services.weather_service import WeatherService
+from accessiweather.weatherapi_wrapper import WeatherApiWrapper
 
 from .weather_app import WeatherApp
 
@@ -41,16 +46,37 @@ def create_weather_app(
     Returns:
         WeatherApp instance
     """
-    # Create the API client with caching enabled
-    api_settings = config.get("api_settings", {}) if config else {}
+    # Initialize configuration
+    config = config or {}
+
+    # Create the NWS API client with caching enabled
+    api_settings = config.get("api_settings", {})
     contact_info = api_settings.get("contact_info")
 
-    api_client = NoaaApiClient(
+    nws_client = NoaaApiClient(
         user_agent="AccessiWeather",
         contact_info=contact_info,
         enable_caching=enable_caching,
         cache_ttl=cache_ttl,
     )
+
+    # Create the WeatherAPI.com client if API key is available
+    weatherapi_wrapper = None
+    api_keys = config.get(API_KEYS_SECTION, {})
+    weatherapi_key = api_keys.get(WEATHERAPI_KEY)
+
+    if weatherapi_key:
+        logger.info("Initializing WeatherAPI.com client with provided API key")
+        weatherapi_wrapper = WeatherApiWrapper(
+            api_key=weatherapi_key,
+            user_agent="AccessiWeather",
+            enable_caching=enable_caching,
+            cache_ttl=cache_ttl,
+        )
+    else:
+        logger.info(
+            "No WeatherAPI.com API key provided, WeatherAPI.com client will not be available"
+        )
 
     # Create the location manager
     # Extract config_dir from config_path if available
@@ -58,16 +84,25 @@ def create_weather_app(
 
     # Get show_nationwide setting from config, default to True if not found
     show_nationwide = True
-    if config and "settings" in config:
+    if "settings" in config:
         show_nationwide = config["settings"].get("show_nationwide_location", True)
 
-    location_manager = LocationManager(config_dir, show_nationwide=show_nationwide)
+    # Get data source setting from config, default to "nws" if not found
+    data_source = "nws"
+    if "settings" in config:
+        data_source = config["settings"].get("data_source", "nws")
+
+    location_manager = LocationManager(
+        config_dir, show_nationwide=show_nationwide, data_source=data_source
+    )
 
     # Create the notifier
     notifier = WeatherNotifier()
 
     # Create the services
-    weather_service = WeatherService(api_client)
+    weather_service = WeatherService(
+        nws_client=nws_client, weatherapi_wrapper=weatherapi_wrapper, config=config
+    )
     location_service = LocationService(location_manager)
     notification_service = NotificationService(notifier)
 
@@ -77,7 +112,7 @@ def create_weather_app(
         weather_service=weather_service,
         location_service=location_service,
         notification_service=notification_service,
-        api_client=api_client,  # For backward compatibility
+        api_client=nws_client,  # For backward compatibility
         config=config,
         config_path=config_path,
         debug_mode=debug_mode,

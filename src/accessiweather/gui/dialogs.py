@@ -142,7 +142,9 @@ class LocationDialog(wx.Dialog):
     # Maximum number of items to keep in search history
     MAX_HISTORY_ITEMS = 10
 
-    def __init__(self, parent, title="Add Location", location_name="", lat=None, lon=None):
+    def __init__(
+        self, parent, title="Add Location", location_name="", lat=None, lon=None, data_source="nws"
+    ):
         """Initialize the location dialog
 
         Args:
@@ -151,11 +153,14 @@ class LocationDialog(wx.Dialog):
             location_name: Initial location name
             lat: Initial latitude
             lon: Initial longitude
+            data_source: The data source to use ('nws', 'weatherapi', or 'auto')
         """
         super().__init__(parent, title=title, style=wx.DEFAULT_DIALOG_STYLE)
 
-        # Initialize geocoding service with increased timeout
-        self.geocoding_service = GeocodingService(timeout=15)  # Increase timeout to 15 seconds
+        # Initialize geocoding service with increased timeout and data source
+        self.geocoding_service = GeocodingService(
+            timeout=15, data_source=data_source
+        )  # Increase timeout to 15 seconds
         self.latitude = lat
         self.longitude = lon
         self.search_history = []
@@ -399,9 +404,13 @@ class LocationDialog(wx.Dialog):
                         f"No results found for ZIP code: {query}\n\n"
                         f"Try adding city or state (e.g., '{query}, NY' or '{query}, Chicago')"
                     )
-                else:
+                elif self.geocoding_service.data_source == "nws":
                     self.result_text.SetValue(
                         f"No results found for '{query}' or location is outside the US NWS coverage area."
+                    )
+                else:
+                    self.result_text.SetValue(
+                        f"No results found for '{query}'. Please try a different search term."
                     )
                 self.latitude = None
                 self.longitude = None

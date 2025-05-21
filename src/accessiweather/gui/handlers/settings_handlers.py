@@ -9,11 +9,15 @@ import wx
 
 from ..settings_dialog import (
     API_CONTACT_KEY,
+    API_KEYS_SECTION,
     CACHE_ENABLED_KEY,
     CACHE_TTL_KEY,
+    DATA_SOURCE_KEY,
+    DATA_SOURCE_NWS,
     MINIMIZE_ON_STARTUP_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
     SHOW_NATIONWIDE_KEY,
+    WEATHERAPI_KEY,
 )
 from .common import WeatherAppHandlerBase
 
@@ -36,18 +40,38 @@ class WeatherAppSettingsHandlers(WeatherAppHandlerBase):
         # Get current settings
         settings = self.config.get("settings", {})
         api_settings = self.config.get("api_settings", {})
+        api_keys = self.config.get(API_KEYS_SECTION, {})
 
-        # Combine settings and api_settings for the dialog
+        # Combine settings, api_settings, and api_keys for the dialog
         combined_settings = settings.copy()
         combined_settings.update(api_settings)
+        combined_settings.update(api_keys)
 
         # Use ShowSettingsDialog from DialogHandlers
         result, updated_settings, updated_api_settings = self.ShowSettingsDialog(combined_settings)
 
         if result == wx.ID_OK and updated_settings and updated_api_settings:
+            # Get API keys from dialog
+            updated_api_keys = {}
+            if hasattr(self, "_last_settings_dialog") and hasattr(
+                self._last_settings_dialog, "get_api_keys"
+            ):
+                updated_api_keys = self._last_settings_dialog.get_api_keys()
+                # Clean up the reference
+                self._last_settings_dialog.Destroy()
+                del self._last_settings_dialog
+
             # Update config
             self.config["settings"] = updated_settings
             self.config["api_settings"] = updated_api_settings
+
+            # Ensure API keys section exists
+            if API_KEYS_SECTION not in self.config:
+                self.config[API_KEYS_SECTION] = {}
+
+            # Update API keys
+            if updated_api_keys:
+                self.config[API_KEYS_SECTION].update(updated_api_keys)
 
             # Save config
             self._save_config()
@@ -83,6 +107,19 @@ class WeatherAppSettingsHandlers(WeatherAppHandlerBase):
                 )
                 # Refresh weather data to apply new setting
                 self.UpdateWeatherData()
+
+            # Check if data source or WeatherAPI key changed
+            old_data_source = settings.get(DATA_SOURCE_KEY, DATA_SOURCE_NWS)
+            new_data_source = updated_settings.get(DATA_SOURCE_KEY, DATA_SOURCE_NWS)
+            old_weatherapi_key = self.config.get(API_KEYS_SECTION, {}).get(WEATHERAPI_KEY, "")
+            new_weatherapi_key = updated_api_keys.get(WEATHERAPI_KEY, "")
+
+            if old_data_source != new_data_source or old_weatherapi_key != new_weatherapi_key:
+                logger.info(
+                    f"Data source or WeatherAPI key changed. Data source: {old_data_source} -> {new_data_source}"
+                )
+                # Handle data source and API key changes
+                self._handle_data_source_change()
 
             # If minimize on startup setting changed, log it
             old_minimize_setting = settings.get(MINIMIZE_ON_STARTUP_KEY, False)

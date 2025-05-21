@@ -8,6 +8,9 @@ from typing import Any, Dict, List, Optional
 
 import wx
 
+from accessiweather.api_client import ApiClientError, NoaaApiError
+from accessiweather.weatherapi_wrapper import WeatherApiError
+
 from .ui_components import (
     AccessibleButton,
     AccessibleChoice,
@@ -207,7 +210,18 @@ class UIManager:
                 self.frame.forecast_text.SetValue(f"Error formatting national forecast: {e}")
             return
 
-        # Handle regular location forecast data
+        # Check if this is WeatherAPI.com data
+        if self._is_weatherapi_data(forecast_data):
+            try:
+                formatted = self._format_weatherapi_forecast(forecast_data, hourly_forecast_data)
+                self.frame.forecast_text.SetValue(formatted)
+                return
+            except Exception as e:
+                logger.exception("Error formatting WeatherAPI.com forecast")
+                self.frame.forecast_text.SetValue(f"Error formatting forecast: {e}")
+                return
+
+        # Handle NWS API location forecast data
         if not forecast_data or "properties" not in forecast_data:
             self.frame.forecast_text.SetValue("No forecast data available")
             return
@@ -304,6 +318,112 @@ class UIManager:
 
         return text
 
+    def _format_weatherapi_forecast(self, forecast_data, hourly_forecast_data=None):
+        """Format WeatherAPI.com forecast data for display.
+
+        Args:
+            forecast_data: Dictionary with WeatherAPI.com forecast data
+            hourly_forecast_data: Optional dictionary with hourly forecast data
+
+        Returns:
+            str: Formatted forecast text
+        """
+        if not forecast_data:
+            return "No forecast data available"
+
+        # Get the forecast data
+        forecast_days = forecast_data.get("forecast", [])
+        if not forecast_days:
+            return "No forecast periods available"
+
+        # Format forecast text
+        text = ""
+
+        # Add location information if available
+        location = forecast_data.get("location", {})
+        if location:
+            location_name = location.get("name", "")
+            region = location.get("region", "")
+            country = location.get("country", "")
+            if location_name and country:
+                if region:
+                    text += f"Forecast for {location_name}, {region}, {country}\n\n"
+                else:
+                    text += f"Forecast for {location_name}, {country}\n\n"
+
+        # Add hourly forecast if available
+        hourly_data = forecast_data.get("hourly", []) or (hourly_forecast_data or {}).get(
+            "hourly", []
+        )
+        if hourly_data:
+            text += "Next 6 Hours:\n"
+            for hour in hourly_data[:6]:  # Show next 6 hours
+                time_str = hour.get("time", "Unknown")
+                # Format time string (e.g., "2023-01-01 12:00")
+                try:
+                    # Extract just the time portion (HH:MM)
+                    time_parts = time_str.split(" ")
+                    if len(time_parts) > 1:
+                        time_part = time_parts[1]
+                        hour_val = int(time_part.split(":")[0])
+                        am_pm = "AM" if hour_val < 12 else "PM"
+                        if hour_val == 0:
+                            hour_val = 12
+                        elif hour_val > 12:
+                            hour_val -= 12
+                        formatted_time = f"{hour_val}:{time_part.split(':')[1]} {am_pm}"
+                    else:
+                        formatted_time = time_str
+                except (IndexError, ValueError):
+                    formatted_time = time_str
+
+                temp = hour.get("temperature", hour.get("temp_f", "?"))
+                condition = hour.get("condition", "")
+                if isinstance(condition, dict):
+                    condition = condition.get("text", "")
+
+                text += f"{formatted_time}: {temp}°F, {condition}\n"
+
+            text += "\n"
+
+        # Add daily forecast
+        text += "Extended Forecast:\n"
+        for day in forecast_days:
+            date = day.get("date", "Unknown")
+            high = day.get("high", day.get("maxtemp_f", "?"))
+            low = day.get("low", day.get("mintemp_f", "?"))
+            condition = day.get("condition", "")
+            if isinstance(condition, dict):
+                condition = condition.get("text", "")
+
+            # Format date (e.g., "2023-01-01" to "Monday, January 1")
+            try:
+                from datetime import datetime
+
+                date_obj = datetime.strptime(date, "%Y-%m-%d")
+                formatted_date = date_obj.strftime("%A, %B %d")
+            except (ValueError, TypeError):
+                formatted_date = date
+
+            text += f"{formatted_date}: High {high}°F, Low {low}°F\n"
+            text += f"{condition}\n"
+
+            # Add precipitation chance if available
+            precip_chance = day.get(
+                "precipitation_probability", day.get("daily_chance_of_rain", "")
+            )
+            if precip_chance:
+                text += f"Chance of precipitation: {precip_chance}%\n"
+
+            # Add wind information if available
+            wind_speed = day.get("max_wind_speed", day.get("maxwind_mph", ""))
+            if wind_speed:
+                text += f"Wind: {wind_speed} mph\n"
+
+            text += "\n"
+
+        return text
+
     def display_alerts(self, alerts_data: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Display alerts data in the UI and return processed alerts.
 
@@ -318,6 +438,19 @@ class UIManager:
         alerts_list_ctrl.DeleteAllItems()
         processed_alerts: List[Dict[str, Any]] = []  # List to store alert properties
 
+        # Check if this is WeatherAPI.com data
+        if alerts_data and self._is_weatherapi_data(alerts_data):
+            try:
+                return self._display_weatherapi_alerts(alerts_data)
+            except Exception as e:
+                logger.exception("Error displaying WeatherAPI.com alerts")
+                # Add error message to alerts list
+                index = alerts_list_ctrl.InsertItem(0, "Error")
+                alerts_list_ctrl.SetItem(index, 1, "")  # Empty severity
+                alerts_list_ctrl.SetItem(index, 2, f"Error displaying alerts: {str(e)}")
+                return []
+
+        # Handle NWS API alerts
         if not alerts_data or "features" not in alerts_data:
             # Disable the alert button if there are no alerts
             if hasattr(self.frame, "alert_btn"):
@@ -338,6 +471,46 @@ class UIManager:
 
         # Enable the alert button if there are alerts
         if features and hasattr(self.frame, "alert_btn"):
+            self.frame.alert_btn.Enable()
+            # Set accessibility properties to ensure it's in the tab order
+            self.frame.alert_btn.SetHelpText("View details for the selected alert")
+            self.frame.alert_btn.SetToolTip("View details for the selected alert")
+
+        return processed_alerts
+
+    def _display_weatherapi_alerts(self, alerts_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Display WeatherAPI.com alerts data in the UI.
+
+        Args:
+            alerts_data: Dictionary with WeatherAPI.com alerts data
+
+        Returns:
+            List of processed alert dictionaries
+        """
+        alerts_list_ctrl = self.frame.alerts_list
+        processed_alerts: List[Dict[str, Any]] = []
+
+        # Get alerts from the data
+        alerts = alerts_data.get("alerts", [])
+        if not alerts:
+            # Disable the alert button if there are no alerts
+            if hasattr(self.frame, "alert_btn"):
+                self.frame.alert_btn.Disable()
+            return processed_alerts
+
+        # Process each alert
+        for alert in alerts:
+            event = alert.get("event", "Unknown")
+            severity = alert.get("severity", "Unknown")
+            headline = alert.get("headline", "No headline")
+
+            index = alerts_list_ctrl.InsertItem(alerts_list_ctrl.GetItemCount(), event)
+            alerts_list_ctrl.SetItem(index, 1, severity)
+            alerts_list_ctrl.SetItem(index, 2, headline)
+            processed_alerts.append(alert)  # Save alert data
+
+        # Enable the alert button if there are alerts
+        if alerts and hasattr(self.frame, "alert_btn"):
             self.frame.alert_btn.Enable()
             # Set accessibility properties to ensure it's in the tab order
             self.frame.alert_btn.SetHelpText("View details for the selected alert")
@@ -385,6 +558,20 @@ class UIManager:
         """
         logger.debug(f"display_current_conditions received: {conditions_data}")
 
+        # Check if this is WeatherAPI.com data
+        if self._is_weatherapi_data(conditions_data):
+            try:
+                text = self._format_weatherapi_current_conditions(conditions_data)
+                self.frame.current_conditions_text.SetValue(text)
+                return
+            except Exception as e:
+                logger.exception("Error formatting WeatherAPI.com current conditions")
+                self.frame.current_conditions_text.SetValue(
+                    f"Error formatting current conditions: {e}"
+                )
+                return
+
+        # Handle NWS API data
         if not conditions_data or "properties" not in conditions_data:
             self.frame.current_conditions_text.SetValue("No current conditions data available")
             return
@@ -470,6 +657,88 @@ class UIManager:
 
         self.frame.current_conditions_text.SetValue(text)
 
+    def _format_weatherapi_current_conditions(self, conditions_data):
+        """Format WeatherAPI.com current conditions data for display.
+
+        Args:
+            conditions_data: Dictionary with WeatherAPI.com current conditions data
+
+        Returns:
+            str: Formatted current conditions text
+        """
+        if not conditions_data:
+            return "No current conditions data available"
+
+        # Extract key weather data
+        temperature = conditions_data.get("temperature")
+        temperature_c = conditions_data.get("temperature_c")
+        humidity = conditions_data.get("humidity")
+        wind_speed = conditions_data.get("wind_speed")
+        wind_speed_kph = conditions_data.get("wind_speed_kph")
+        wind_direction = conditions_data.get("wind_direction")
+        pressure = conditions_data.get("pressure")
+        pressure_mb = conditions_data.get("pressure_mb")
+        condition = conditions_data.get("condition", "")
+        feelslike = conditions_data.get("feelslike")
+        feelslike_c = conditions_data.get("feelslike_c")
+
+        # Format temperature
+        if temperature is not None and temperature_c is not None:
+            temperature_str = f"{temperature}°F ({temperature_c}°C)"
+        elif temperature is not None:
+            temperature_str = f"{temperature}°F"
+        elif temperature_c is not None:
+            temperature_f = (temperature_c * 9 / 5) + 32
+            temperature_str = f"{temperature_f:.1f}°F ({temperature_c}°C)"
+        else:
+            temperature_str = "N/A"
+
+        # Format humidity
+        humidity_str = f"{humidity}%" if humidity is not None else "N/A"
+
+        # Format wind
+        if wind_speed is not None and wind_speed_kph is not None:
+            wind_speed_str = f"{wind_speed} mph ({wind_speed_kph} km/h)"
+        elif wind_speed is not None:
+            wind_speed_str = f"{wind_speed} mph"
+        elif wind_speed_kph is not None:
+            wind_speed_mph = wind_speed_kph * 0.621371
+            wind_speed_str = f"{wind_speed_mph:.1f} mph ({wind_speed_kph} km/h)"
+        else:
+            wind_speed_str = "N/A"
+
+        # Format pressure
+        if pressure is not None and pressure_mb is not None:
+            pressure_str = f"{pressure} inHg ({pressure_mb} mb)"
+        elif pressure is not None:
+            pressure_str = f"{pressure} inHg"
+        elif pressure_mb is not None:
+            pressure_inhg = pressure_mb / 33.8639
+            pressure_str = f"{pressure_inhg:.2f} inHg ({pressure_mb} mb)"
+        else:
+            pressure_str = "N/A"
+
+        # Format feels like
+        if feelslike is not None and feelslike_c is not None:
+            feelslike_str = f"{feelslike}°F ({feelslike_c}°C)"
+        elif feelslike is not None:
+            feelslike_str = f"{feelslike}°F"
+        elif feelslike_c is not None:
+            feelslike_f = (feelslike_c * 9 / 5) + 32
+            feelslike_str = f"{feelslike_f:.1f}°F ({feelslike_c}°C)"
+        else:
+            feelslike_str = "N/A"
+
+        # Format the text
+        text = f"Current Conditions: {condition}\n"
+        text += f"Temperature: {temperature_str}\n"
+        text += f"Feels Like: {feelslike_str}\n"
+        text += f"Humidity: {humidity_str}\n"
+        text += f"Wind: {wind_direction} at {wind_speed_str}\n"
+        text += f"Pressure: {pressure_str}"
+
+        return text
+
     def display_hourly_forecast(self, hourly_data):
         """Display hourly forecast data in the UI.
 
@@ -480,23 +749,27 @@ class UIManager:
         # The hourly forecast data is incorporated into the main forecast display
         pass
 
-    def display_forecast_error(self, error_msg):
+    def display_forecast_error(self, error):
         """Display forecast error in the UI.
 
         Args:
-            error_msg: Error message to display
+            error: Error message or exception object
         """
+        error_msg = self._format_error_message(error)
         self.frame.forecast_text.SetValue(f"Error fetching forecast: {error_msg}")
         self.frame.current_conditions_text.SetValue("Error fetching current conditions")
 
-    def display_alerts_error(self, error_msg):
+    def display_alerts_error(self, error):
         """Display alerts error in the UI.
 
         Args:
-            error_msg: Error message to display
+            error: Error message or exception object
         """
         # Clear alerts list
         self.frame.alerts_list.DeleteAllItems()
+
+        # Format the error message
+        error_msg = self._format_error_message(error)
 
         # Add error message to alerts list
         index = self.frame.alerts_list.InsertItem(0, "Error")
@@ -506,6 +779,88 @@ class UIManager:
         # Disable the alert button since there are no valid alerts
         if hasattr(self.frame, "alert_btn"):
             self.frame.alert_btn.Disable()
+
+    def _is_weatherapi_data(self, data):
+        """Detect if the data is from WeatherAPI.com based on its structure.
+
+        Args:
+            data: Weather data dictionary to check
+
+        Returns:
+            bool: True if the data is from WeatherAPI.com, False otherwise
+        """
+        if not data or not isinstance(data, dict):
+            return False
+
+        # WeatherAPI data has 'forecast' as a list, not under 'properties'
+        if "forecast" in data and isinstance(data["forecast"], list):
+            return True
+
+        # WeatherAPI current conditions data has specific fields
+        if "temperature" in data and "condition" in data:
+            return True
+
+        # WeatherAPI hourly data is in a list under 'hourly' key
+        if "hourly" in data and isinstance(data["hourly"], list):
+            return True
+
+        # WeatherAPI alerts are in a list
+        if "alerts" in data and isinstance(data["alerts"], list):
+            return True
+
+        # WeatherAPI location data has specific fields
+        if "location" in data and isinstance(data["location"], dict):
+            if "name" in data["location"] and "country" in data["location"]:
+                return True
+
+        # Not WeatherAPI data
+        return False
+
+    def _format_error_message(self, error):
+        """Format an error message based on the error type.
+
+        Args:
+            error: Error message or exception object
+
+        Returns:
+            Formatted error message string
+        """
+        # If it's already a string, just return it
+        if isinstance(error, str):
+            return error
+
+        # Handle WeatherAPI.com specific errors
+        if isinstance(error, WeatherApiError):
+            if error.error_type == WeatherApiError.API_KEY_INVALID:
+                return "Invalid WeatherAPI.com API key. Please check your settings."
+            elif error.error_type == WeatherApiError.QUOTA_EXCEEDED:
+                return "WeatherAPI.com rate limit exceeded. Please try again later or switch to NWS/NOAA."
+            elif error.error_type == WeatherApiError.NOT_FOUND:
+                return "Location not found. Please try a different location."
+            elif error.error_type == WeatherApiError.CONNECTION_ERROR:
+                return "Connection error. Please check your internet connection."
+            elif error.error_type == WeatherApiError.TIMEOUT_ERROR:
+                return "Request timed out. Please try again later."
+            else:
+                return f"WeatherAPI.com error: {str(error)}"
+
+        # Handle NOAA API specific errors
+        elif isinstance(error, NoaaApiError):
+            if error.error_type == NoaaApiError.RATE_LIMIT_ERROR:
+                return "NWS API rate limit exceeded. Please try again later."
+            elif error.error_type == NoaaApiError.TIMEOUT_ERROR:
+                return "NWS API request timed out. Please try again later."
+            elif error.error_type == NoaaApiError.CONNECTION_ERROR:
+                return "Connection error. Please check your internet connection."
+            else:
+                return f"NWS API error: {str(error)}"
+
+        # Handle generic API client errors
+        elif isinstance(error, ApiClientError):
+            return f"API error: {str(error)}"
+
+        # For any other exception, just convert to string
+        return str(error)
 
     def display_ready_state(self):
         """Display ready state in the UI."""

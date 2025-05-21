@@ -84,14 +84,28 @@ class WeatherAppLocationHandlers(WeatherAppHandlerBase):
             add_result = self.location_service.add_location(name, lat, lon)
 
             if not add_result:
-                # Location was outside the US NWS coverage area
-                wx.MessageBox(
-                    f"Cannot add location '{name}' with coordinates ({lat}, {lon}):\n"
-                    f"Location is outside the US NWS coverage area.\n\n"
-                    f"This application only supports locations within the United States.",
-                    "Location Not Supported",
-                    wx.OK | wx.ICON_ERROR,
-                )
+                # Location was invalid for the current data source
+                from ...gui.settings_dialog import DATA_SOURCE_KEY
+
+                # Get the current data source
+                data_source = self.config.get("settings", {}).get(DATA_SOURCE_KEY, "nws")
+
+                if data_source == "nws":
+                    wx.MessageBox(
+                        f"Cannot add location '{name}' with coordinates ({lat}, {lon}):\n"
+                        f"Location is outside the US NWS coverage area.\n\n"
+                        f"When using the National Weather Service data source, only US locations are supported.",
+                        "Location Not Supported",
+                        wx.OK | wx.ICON_ERROR,
+                    )
+                else:
+                    wx.MessageBox(
+                        f"Cannot add location '{name}' with coordinates ({lat}, {lon}):\n"
+                        f"The coordinates are invalid.\n\n"
+                        f"Please check the location and try again.",
+                        "Invalid Location",
+                        wx.OK | wx.ICON_ERROR,
+                    )
                 return
 
             # Location was added successfully
