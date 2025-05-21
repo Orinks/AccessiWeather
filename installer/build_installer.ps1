@@ -33,8 +33,8 @@ $PyInstallerOpts = "--clean", "--noconfirm", "--onedir", "--windowed", "--name",
 
 Write-Host "Building $AppName version $AppVersion" -ForegroundColor Cyan
 
-# Function to check for running processes that might interfere with the build
-function Check-RunningProcesses {
+# Function to test for running processes that might interfere with the build
+function Test-RunningProcesses {
     Write-Host "`n===== Checking for processes that might interfere with the build =====" -ForegroundColor Yellow
 
     # Check if the application is running
@@ -84,14 +84,15 @@ function Check-RunningProcesses {
             Rename-Item -Path $exePath -NewName $tempPath -ErrorAction Stop
             Rename-Item -Path $tempPath -NewName $exePath -ErrorAction Stop
             Write-Host "Executable file is not locked." -ForegroundColor Green
-        } catch {
+        }
+        catch {
             Write-Host "Executable file appears to be locked by a process." -ForegroundColor Yellow
         }
     }
 
     # Combine all detected processes
     $allProcesses = @($appProcesses) + @($pythonProcesses) + $processesLockingFiles |
-                    Select-Object -Property Id, ProcessName, Path -Unique
+    Select-Object -Property Id, ProcessName, Path -Unique
 
     if ($allProcesses.Count -gt 0) {
         Write-Host "The following processes might interfere with the build process:" -ForegroundColor Red
@@ -105,7 +106,8 @@ function Check-RunningProcesses {
             try {
                 Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
                 Write-Host "Closed process: $($_.ProcessName) (PID: $($_.Id))" -ForegroundColor Green
-            } catch {
+            }
+            catch {
                 Write-Host "Failed to close process: $($_.ProcessName) (PID: $($_.Id))" -ForegroundColor Red
             }
         }
@@ -125,13 +127,14 @@ function Check-RunningProcesses {
             }
             Write-Host "Continuing anyway..." -ForegroundColor Yellow
         }
-    } else {
+    }
+    else {
         Write-Host "No interfering processes detected." -ForegroundColor Green
     }
 }
 
-# Function to clean build directories
-function Clean-BuildDirectories {
+# Function to remove build directories
+function Remove-BuildDirectories {
     Write-Host "`n===== Cleaning build directories =====" -ForegroundColor Yellow
 
     # Automatically clean the directories without asking
@@ -143,7 +146,8 @@ function Clean-BuildDirectories {
         try {
             Remove-Item -Path "dist" -Recurse -Force
             Write-Host "dist directory cleaned successfully." -ForegroundColor Green
-        } catch {
+        }
+        catch {
             Write-Host "Error cleaning dist directory: $_" -ForegroundColor Red
             Write-Host "Some files may be locked by other processes." -ForegroundColor Red
         }
@@ -155,7 +159,8 @@ function Clean-BuildDirectories {
         try {
             Remove-Item -Path "build" -Recurse -Force
             Write-Host "build directory cleaned successfully." -ForegroundColor Green
-        } catch {
+        }
+        catch {
             Write-Host "Error cleaning build directory: $_" -ForegroundColor Red
             Write-Host "Some files may be locked by other processes." -ForegroundColor Red
         }
@@ -167,7 +172,8 @@ function Clean-BuildDirectories {
         try {
             Remove-Item -Path "$AppName.spec" -Force
             Write-Host "Spec file removed successfully." -ForegroundColor Green
-        } catch {
+        }
+        catch {
             Write-Host "Error removing spec file: $_" -ForegroundColor Red
         }
     }
@@ -188,8 +194,8 @@ function Compare-Version {
     return 0
 }
 
-# Function to check if Python is installed with the minimum required version
-function Check-PythonInstalled {
+# Function to test if Python is installed with the minimum required version
+function Test-PythonInstalled {
     param (
         [string]$MinVersion = "3.6.0"
     )
@@ -203,12 +209,14 @@ function Check-PythonInstalled {
             if ($versionComparison -ge 0) {
                 Write-Host "Python $currentVersion is installed (minimum required: $MinVersion)" -ForegroundColor Green
                 return $true
-            } else {
+            }
+            else {
                 Write-Host "Python $currentVersion is installed but version $MinVersion or higher is required" -ForegroundColor Yellow
                 return $false
             }
         }
-    } catch {
+    }
+    catch {
         Write-Host "Python is not installed or not in PATH" -ForegroundColor Red
         return $false
     }
@@ -232,8 +240,8 @@ function Get-RequiredDependencies {
     return $dependencies
 }
 
-# Function to check if a specific package is installed
-function Check-DependencyInstalled {
+# Function to test if a specific package is installed
+function Test-DependencyInstalled {
     param (
         [string]$PackageName
     )
@@ -251,7 +259,8 @@ function Check-DependencyInstalled {
 
         Write-Host "$PackageName is not installed" -ForegroundColor Yellow
         return $false
-    } catch {
+    }
+    catch {
         $errorMessage = $_.Exception.Message
         Write-Host "Error checking if $PackageName is installed - $errorMessage" -ForegroundColor Red
         return $false
@@ -273,27 +282,30 @@ function Install-Dependency {
         # Special handling for wxPython which might need specific installation parameters
         if ($PackageName -eq "wxPython") {
             $result = pip install $upgradeFlag --no-cache-dir $PackageName 2>&1
-        } else {
+        }
+        else {
             $result = pip install $upgradeFlag $PackageName 2>&1
         }
 
-        if (Check-DependencyInstalled -PackageName $PackageName) {
+        if (Test-DependencyInstalled -PackageName $PackageName) {
             Write-Host "$PackageName installed successfully" -ForegroundColor Green
             return $true
-        } else {
+        }
+        else {
             Write-Host "Failed to install $PackageName" -ForegroundColor Red
             Write-Host $result -ForegroundColor Red
             return $false
         }
-    } catch {
+    }
+    catch {
         $errorMessage = $_.Exception.Message
         Write-Host "Error installing $PackageName - $errorMessage" -ForegroundColor Red
         return $false
     }
 }
 
-# Function to check and install all required dependencies
-function Check-InstallDependencies {
+# Function to test and install all required dependencies
+function Test-InstallDependencies {
     param (
         [switch]$Force
     )
@@ -322,35 +334,36 @@ if (-not (Test-Path "build")) {
 }
 
 # Check for running processes
-Check-RunningProcesses
+Test-RunningProcesses
 
 # Clean build directories if requested
-Clean-BuildDirectories
+Remove-BuildDirectories
 
 # Step 1: Check and install dependencies
 Write-Host "`n===== Step 1: Checking and installing dependencies =====" -ForegroundColor Cyan
 
 # Check if Python is installed
-if (-not (Check-PythonInstalled)) {
+if (-not (Test-PythonInstalled)) {
     Write-Host "Please install Python 3.6 or higher and add it to your PATH" -ForegroundColor Red
     exit 1
 }
 
 # Check and install dependencies
 Write-Host "Checking and installing dependencies..." -ForegroundColor Cyan
-$dependenciesInstalled = Check-InstallDependencies
+$dependenciesInstalled = Test-InstallDependencies
 
 if (-not $dependenciesInstalled) {
     Write-Host "Failed to install all required dependencies. Please check the error messages above." -ForegroundColor Red
 
     $retry = Read-Host "Do you want to retry with the -Force option to reinstall all dependencies? (y/n)"
     if ($retry -eq "y") {
-        $dependenciesInstalled = Check-InstallDependencies -Force
+        $dependenciesInstalled = Test-InstallDependencies -Force
         if (-not $dependenciesInstalled) {
             Write-Host "Failed to install all required dependencies even with the -Force option. Please install them manually." -ForegroundColor Red
             exit 1
         }
-    } else {
+    }
+    else {
         exit 1
     }
 }
@@ -378,7 +391,8 @@ Write-Host "Checking for Inno Setup..." -ForegroundColor Yellow
 try {
     $isccPath = (Get-Command "iscc" -ErrorAction Stop).Source
     Write-Host "Found Inno Setup at: $isccPath" -ForegroundColor Green
-} catch {
+}
+catch {
     # Try common installation paths
     $commonPaths = @(
         "C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
@@ -431,7 +445,8 @@ Write-Host "  ACCESSIWEATHER_VERSION = $($env:ACCESSIWEATHER_VERSION)" -Foregrou
 
 if ($found) {
     & $isccPath $issPath
-} else {
+}
+else {
     & iscc $issPath
 }
 
@@ -466,11 +481,13 @@ if ($newProcesses.Count -gt 0) {
         try {
             Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
             Write-Host "Closed process: $($_.ProcessName) (PID: $($_.Id))" -ForegroundColor Green
-        } catch {
+        }
+        catch {
             Write-Host "Failed to close process: $($_.ProcessName) (PID: $($_.Id))" -ForegroundColor Red
         }
     }
-} else {
+}
+else {
     Write-Host "No new processes were detected." -ForegroundColor Green
 }
 
@@ -484,7 +501,8 @@ $allFilesExist = $true
 
 if (Test-Path $executablePath) {
     Write-Host "✓ Executable created successfully: $executablePath" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "✗ Executable was not created: $executablePath" -ForegroundColor Red
     $allFilesExist = $false
 }
@@ -492,7 +510,8 @@ if (Test-Path $executablePath) {
 if (Test-Path $installerPath) {
     $installerSize = (Get-Item $installerPath).Length / 1MB
     Write-Host "✓ Installer created successfully: $installerPath (Size: $($installerSize.ToString("0.00")) MB)" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "✗ Installer was not created: $installerPath" -ForegroundColor Red
     $allFilesExist = $false
 }
@@ -500,13 +519,15 @@ if (Test-Path $installerPath) {
 if (Test-Path $portablePath) {
     $portableSize = (Get-Item $portablePath).Length / 1MB
     Write-Host "✓ Portable ZIP created successfully: $portablePath (Size: $($portableSize.ToString("0.00")) MB)" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "✗ Portable ZIP was not created: $portablePath" -ForegroundColor Red
     $allFilesExist = $false
 }
 
 if ($allFilesExist) {
     Write-Host "`nBuild process completed successfully!" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "`nBuild process completed with errors. Some output files are missing." -ForegroundColor Red
 }

@@ -64,6 +64,62 @@ SAMPLE_ALERTS_DATA = {
     ]
 }
 
+# Sample WeatherAPI.com data
+SAMPLE_WEATHERAPI_FORECAST_DATA = {
+    "forecast": [
+        {
+            "date": "2023-06-01",
+            "high": 75,
+            "low": 60,
+            "condition": "Sunny",
+            "precipitation_probability": 10,
+            "max_wind_speed": 15,
+        },
+        {
+            "date": "2023-06-02",
+            "high": 80,
+            "low": 65,
+            "condition": "Partly cloudy",
+            "precipitation_probability": 20,
+            "max_wind_speed": 12,
+        },
+    ],
+    "location": {"name": "London", "region": "City of London", "country": "United Kingdom"},
+    "hourly": [
+        {"time": "2023-06-01 12:00", "temperature": 72, "condition": "Sunny"},
+        {"time": "2023-06-01 13:00", "temperature": 74, "condition": "Sunny"},
+    ],
+}
+
+SAMPLE_WEATHERAPI_CURRENT_DATA = {
+    "temperature": 72,
+    "temperature_c": 22.2,
+    "condition": "Sunny",
+    "humidity": 45,
+    "wind_speed": 10,
+    "wind_speed_kph": 16.1,
+    "wind_direction": "NW",
+    "pressure": 30.1,
+    "pressure_mb": 1019,
+    "feelslike": 70,
+    "feelslike_c": 21.1,
+}
+
+SAMPLE_WEATHERAPI_ALERTS_DATA = {
+    "alerts": [
+        {
+            "event": "Flood Warning",
+            "severity": "Moderate",
+            "headline": "Flood warning for London area",
+        },
+        {
+            "event": "Wind Advisory",
+            "severity": "Minor",
+            "headline": "Wind advisory in effect until evening",
+        },
+    ]
+}
+
 # --- Fixtures ---
 
 
@@ -248,3 +304,81 @@ def test_display_ready_state(mock_ui_manager):
     mock_ui_manager.display_ready_state()
     mock_ui_manager.mock_frame.refresh_btn.Enable.assert_called_once()
     mock_ui_manager.mock_frame.SetStatusText.assert_called_with("Ready")
+
+
+def test_is_weatherapi_data(mock_ui_manager):
+    """Test WeatherAPI.com data detection."""
+    # Test with WeatherAPI forecast data
+    assert mock_ui_manager._is_weatherapi_data(SAMPLE_WEATHERAPI_FORECAST_DATA) is True
+
+    # Test with WeatherAPI current conditions data
+    assert mock_ui_manager._is_weatherapi_data(SAMPLE_WEATHERAPI_CURRENT_DATA) is True
+
+    # Test with WeatherAPI alerts data
+    assert mock_ui_manager._is_weatherapi_data(SAMPLE_WEATHERAPI_ALERTS_DATA) is True
+
+    # Test with NWS API data
+    assert mock_ui_manager._is_weatherapi_data(SAMPLE_FORECAST_DATA) is False
+
+    # Test with empty data
+    assert mock_ui_manager._is_weatherapi_data({}) is False
+    assert mock_ui_manager._is_weatherapi_data(None) is False
+
+
+def test_display_weatherapi_forecast(mock_ui_manager):
+    """Test WeatherAPI.com forecast display."""
+    # Test with WeatherAPI.com forecast data
+    mock_ui_manager.display_forecast(SAMPLE_WEATHERAPI_FORECAST_DATA)
+    forecast_text = mock_ui_manager.mock_frame.forecast_text.SetValue.call_args[0][0]
+
+    # Check for location info
+    assert "Forecast for London, City of London, United Kingdom" in forecast_text
+
+    # Check for hourly data
+    assert "Next 6 Hours:" in forecast_text
+    assert "12:00 PM: 72°F, Sunny" in forecast_text
+
+    # Check for daily forecast
+    assert "Extended Forecast:" in forecast_text
+    assert "High 75°F, Low 60°F" in forecast_text
+    assert "Sunny" in forecast_text
+    assert "Chance of precipitation: 10%" in forecast_text
+    assert "Wind: 15 mph" in forecast_text
+
+
+def test_display_weatherapi_current_conditions(mock_ui_manager):
+    """Test WeatherAPI.com current conditions display."""
+    # Test with WeatherAPI.com current conditions data
+    mock_ui_manager.display_current_conditions(SAMPLE_WEATHERAPI_CURRENT_DATA)
+    conditions_text = mock_ui_manager.mock_frame.current_conditions_text.SetValue.call_args[0][0]
+
+    # Check for key elements
+    assert "Current Conditions: Sunny" in conditions_text
+    assert "Temperature: 72°F (22.2°C)" in conditions_text
+    assert "Feels Like: 70°F (21.1°C)" in conditions_text
+    assert "Humidity: 45%" in conditions_text
+    assert "Wind: NW at 10 mph (16.1 km/h)" in conditions_text
+    assert "Pressure: 30.1 inHg (1019 mb)" in conditions_text
+
+
+def test_display_weatherapi_alerts(mock_ui_manager):
+    """Test WeatherAPI.com alerts display."""
+    # Test with WeatherAPI.com alerts data
+    processed_alerts = mock_ui_manager.display_alerts(SAMPLE_WEATHERAPI_ALERTS_DATA)
+
+    # Check that alerts were processed correctly
+    assert len(processed_alerts) == 2
+    assert mock_ui_manager.mock_frame.alerts_list.InsertItem.call_count == 2
+
+    # Check that the alert button was enabled
+    mock_ui_manager.mock_frame.alert_btn.Enable.assert_called_once()
+
+    # Test with empty alerts
+    mock_ui_manager.mock_frame.reset_mock()
+    mock_ui_manager.mock_frame.alerts_list.reset_mock()
+    mock_ui_manager.mock_frame.alerts_list.InsertItem.return_value = 0
+
+    empty_alerts = {"alerts": []}
+    processed_alerts = mock_ui_manager.display_alerts(empty_alerts)
+    assert len(processed_alerts) == 0
+    mock_ui_manager.mock_frame.alert_btn.Disable.assert_called_once()
