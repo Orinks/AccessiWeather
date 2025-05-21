@@ -23,22 +23,31 @@ NATIONWIDE_LON = -98.5795
 class LocationManager:
     """Manager for handling saved locations"""
 
-    def __init__(self, config_dir: Optional[str] = None, show_nationwide: bool = True):
+    def __init__(
+        self,
+        config_dir: Optional[str] = None,
+        show_nationwide: bool = True,
+        data_source: str = "nws",
+    ):
         """Initialize the location manager
 
         Args:
             config_dir: Directory for config files, defaults to user's home directory
             show_nationwide: Whether to show the Nationwide location
+            data_source: The data source to use ('nws' or 'weatherapi')
         """
         self.config_dir = get_config_dir(config_dir)
         self.show_nationwide = show_nationwide
+        self.data_source = data_source
 
         self.locations_file = os.path.join(self.config_dir, "locations.json")
         self.current_location: Optional[str] = None
         self.saved_locations: Dict[str, Dict[str, float]] = {}
 
         # Initialize geocoding service for location validation
-        self.geocoding_service = GeocodingService(user_agent="AccessiWeather-LocationManager")
+        self.geocoding_service = GeocodingService(
+            user_agent="AccessiWeather-LocationManager", data_source=data_source
+        )
 
         # Ensure config directory exists
         os.makedirs(self.config_dir, exist_ok=True)
@@ -78,12 +87,28 @@ class LocationManager:
 
                         # Validate coordinates
                         if lat is not None and lon is not None:
-                            # Check if location is within US
-                            if not self.geocoding_service.validate_coordinates(lat, lon):
+                            # Basic validation for all data sources
+                            if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
                                 logger.warning(
-                                    f"Location '{name}' with coordinates ({lat}, {lon}) "
-                                    f"is outside the US NWS coverage area. Removing from saved locations."
+                                    f"Location '{name}' has coordinates ({lat}, {lon}) "
+                                    f"outside valid range. Removing from saved locations."
                                 )
+                                invalid_locations.append(name)
+                                del locations[name]
+                            # Validate based on data source (us_only=None will use the data_source)
+                            elif not self.geocoding_service.validate_coordinates(
+                                lat, lon, us_only=None
+                            ):
+                                if self.data_source == "nws":
+                                    logger.warning(
+                                        f"Location '{name}' with coordinates ({lat}, {lon}) "
+                                        f"is outside the US NWS coverage area. Removing from saved locations."
+                                    )
+                                else:
+                                    logger.warning(
+                                        f"Location '{name}' with coordinates ({lat}, {lon}) "
+                                        f"is invalid for the current data source. Removing from saved locations."
+                                    )
                                 invalid_locations.append(name)
                                 del locations[name]
                         else:
@@ -96,10 +121,16 @@ class LocationManager:
 
                     # If any locations were removed, log a summary
                     if invalid_locations:
-                        logger.info(
-                            f"Removed {len(invalid_locations)} location(s) outside the US NWS coverage area: "
-                            f"{', '.join(invalid_locations)}"
-                        )
+                        if self.data_source == "nws":
+                            logger.info(
+                                f"Removed {len(invalid_locations)} location(s) outside the US NWS coverage area: "
+                                f"{', '.join(invalid_locations)}"
+                            )
+                        else:
+                            logger.info(
+                                f"Removed {len(invalid_locations)} invalid location(s): "
+                                f"{', '.join(invalid_locations)}"
+                            )
 
                     # If show_nationwide is False, filter out the Nationwide location
                     if not self.show_nationwide and NATIONWIDE_LOCATION_NAME in locations:
@@ -218,7 +249,8 @@ class LocationManager:
 
     def add_location(self, name: str, lat: float, lon: float) -> bool:
         """Add a new location. Cannot overwrite Nationwide location.
-        Validates that the location is within the US NWS coverage area.
+        Validates that the location is within the US NWS coverage area when using NWS data source.
+        When using WeatherAPI, allows locations worldwide.
 
         Args:
             name: Location name
@@ -233,12 +265,18 @@ class LocationManager:
             logger.warning(f"Cannot overwrite the {NATIONWIDE_LOCATION_NAME} location")
             return False
 
-        # Validate coordinates are within US
-        if not self.geocoding_service.validate_coordinates(lat, lon):
-            logger.warning(
-                f"Cannot add location '{name}' with coordinates ({lat}, {lon}): "
-                f"Location is outside the US NWS coverage area."
-            )
+        # Validate coordinates based on data source (us_only=None will use the data_source)
+        if not self.geocoding_service.validate_coordinates(lat, lon, us_only=None):
+            if self.data_source == "nws":
+                logger.warning(
+                    f"Cannot add location '{name}' with coordinates ({lat}, {lon}): "
+                    f"Location is outside the US NWS coverage area."
+                )
+            else:
+                logger.warning(
+                    f"Cannot add location '{name}' with coordinates ({lat}, {lon}): "
+                    f"Coordinates are outside valid range."
+                )
             return False
 
         # Add the validated location

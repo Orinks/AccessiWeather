@@ -110,4 +110,19 @@ def migrate_config(config: Dict[str, Any]) -> Dict[str, Any]:
             logger.info("Removing obsolete alert_update_interval setting")
             del settings["alert_update_interval"]
 
+        # Add WeatherAPI data source setting if not present
+        if "data_source" not in settings:
+            from accessiweather.gui.settings_dialog import DEFAULT_DATA_SOURCE
+
+            logger.info(f"Adding default data_source setting: {DEFAULT_DATA_SOURCE}")
+            settings["data_source"] = DEFAULT_DATA_SOURCE
+
+    # Ensure api_keys section exists
+    if "api_keys" not in migrated_config:
+        logger.info("Adding api_keys section to config")
+        migrated_config["api_keys"] = {}
+
+        # Add default WeatherAPI key
+        migrated_config["api_keys"]["weatherapi"] = ""
+
     return migrated_config
