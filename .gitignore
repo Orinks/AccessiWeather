@@ -90,6 +90,12 @@ secrets.yaml
 *.env
 .*_env
 
+# API-related files
+*_swagger.json
+*_openapi.json
+*_api_spec.json
+api_keys.txt
+
 # User-specific directories (Generally better in global gitignore)
 # ~/.noaa_weather_app/
 # ~/.accessiweather/

@@ -146,10 +146,16 @@ class WeatherAppDialogHandlers(WeatherAppHandlerBase):
             Tuple of (dialog result, location data or None)
             Location data is a tuple of (name, latitude, longitude)
         """
+        from ...gui.settings_dialog import DATA_SOURCE_KEY
         from ..dialogs import LocationDialog
 
-        logger.debug("Showing location dialog")
-        dialog = LocationDialog(self)
+        # Get the current data source from config
+        data_source = "nws"  # Default
+        if hasattr(self, "config") and self.config:
+            data_source = self.config.get("settings", {}).get(DATA_SOURCE_KEY, "nws")
+
+        logger.debug(f"Showing location dialog with data source: {data_source}")
+        dialog = LocationDialog(self, data_source=data_source)
         result = dialog.ShowModal()
 
         location_data = None
@@ -184,7 +190,12 @@ class WeatherAppDialogHandlers(WeatherAppHandlerBase):
             updated_settings = dialog.get_settings()
             updated_api_settings = dialog.get_api_settings()
 
-        dialog.Destroy()
+            # Store the dialog reference so settings_handlers can access it
+            self._last_settings_dialog = dialog
+
+        else:
+            dialog.Destroy()
+
         return result, updated_settings, updated_api_settings
 
     def ShowAlertDetailsDialog(self, alert: Dict[str, Any]) -> None:

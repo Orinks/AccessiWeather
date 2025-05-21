@@ -295,7 +295,7 @@ def test_load_locations_filters_non_us_locations(mock_config_dir):
     # Mock the validate_coordinates method to simulate validation
     with patch("accessiweather.geocoding.GeocodingService.validate_coordinates") as mock_validate:
         # Set up the mock to return True for US locations and False for non-US
-        def validate_side_effect(lat, lon):
+        def validate_side_effect(lat, lon, us_only=True):
             # Return True for US City and Nationwide, False for others
             if (lat == 40.0 and lon == -75.0) or (lat == NATIONWIDE_LAT and lon == NATIONWIDE_LON):
                 return True
@@ -340,7 +340,7 @@ def test_load_locations_resets_current_if_non_us(mock_config_dir):
     # Mock the validate_coordinates method
     with patch("accessiweather.geocoding.GeocodingService.validate_coordinates") as mock_validate:
         # Set up the mock to return True for US locations and False for non-US
-        def validate_side_effect(lat, lon):
+        def validate_side_effect(lat, lon, us_only=True):
             # Return True for US City and Nationwide, False for others
             if (lat == 40.0 and lon == -75.0) or (lat == NATIONWIDE_LAT and lon == NATIONWIDE_LON):
                 return True
