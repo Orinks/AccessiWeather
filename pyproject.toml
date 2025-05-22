@@ -17,7 +17,9 @@ dependencies = [
     "plyer",
     "geopy",
     "python-dateutil",
-    "beautifulsoup4"
+    "beautifulsoup4",
+    "httpx>=0.20.0",
+    "attrs>=22.2.0"
 ]
 readme = "README.md"
 classifiers = [
@@ -30,7 +32,8 @@ classifiers = [
 dev = [
     "pytest",
     "pytest-mock",
-    "requests-mock"
+    "requests-mock",
+    "PyInstaller"
 ]
 
 [project.scripts]
