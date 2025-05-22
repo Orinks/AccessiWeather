@@ -76,6 +76,9 @@ class TestSettingsChangeHandling:
             # Verify that the weather service was updated
             assert mock_app.weather_service == mock_new_weather_service
 
+            # Verify that the location service data source was updated
+            mock_location_service.update_data_source.assert_called_once_with(DATA_SOURCE_NWS)
+
             # Verify that the fetchers were updated
             assert mock_forecast_fetcher.service == mock_new_weather_service
             assert mock_alerts_fetcher.service == mock_new_weather_service
@@ -155,6 +158,9 @@ class TestSettingsChangeHandling:
 
             # Verify that the weather service was updated
             assert mock_app.weather_service == mock_new_weather_service
+
+            # Verify that the location service data source was updated
+            mock_location_service.update_data_source.assert_called_once_with(DATA_SOURCE_WEATHERAPI)
 
             # Verify that the fetchers were updated
             assert mock_forecast_fetcher.service == mock_new_weather_service

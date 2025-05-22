@@ -251,6 +251,32 @@ def test_save_and_load_locations(mock_config_dir):
     assert new_manager.current_location == manager.current_location
 
 
+def test_update_data_source():
+    """Test updating the data source and geocoding service."""
+    from unittest.mock import patch
+
+    # Create a manager with NWS data source
+    manager = LocationManager(data_source="nws")
+    assert manager.data_source == "nws"
+
+    # Update to WeatherAPI data source
+    with patch("accessiweather.location.GeocodingService") as mock_geocoding_service:
+        mock_new_service = mock_geocoding_service.return_value
+
+        manager.update_data_source("weatherapi")
+
+        # Verify data source was updated
+        assert manager.data_source == "weatherapi"
+
+        # Verify new geocoding service was created with correct parameters
+        mock_geocoding_service.assert_called_once_with(
+            user_agent="AccessiWeather-LocationManager", data_source="weatherapi"
+        )
+
+        # Verify the geocoding service was replaced
+        assert manager.geocoding_service == mock_new_service
+
+
 def test_save_locations_handles_error(location_manager):
     """Test that saving locations handles file write errors gracefully."""
     with patch("builtins.open", side_effect=IOError("Test error")):

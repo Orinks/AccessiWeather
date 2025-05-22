@@ -366,6 +366,22 @@ class LocationManager:
 
         return False
 
+    def update_data_source(self, data_source: str) -> None:
+        """Update the data source and reinitialize the geocoding service.
+
+        Args:
+            data_source: The new data source to use ('nws', 'weatherapi', or 'auto')
+        """
+        logger.info(
+            f"Updating LocationManager data source from '{self.data_source}' to '{data_source}'"
+        )
+        self.data_source = data_source
+
+        # Reinitialize the geocoding service with the new data source
+        self.geocoding_service = GeocodingService(
+            user_agent="AccessiWeather-LocationManager", data_source=data_source
+        )
+
     def get_current_location(self) -> Optional[Tuple[str, float, float]]:
         """Get the current location
 
