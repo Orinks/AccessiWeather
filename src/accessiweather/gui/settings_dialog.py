@@ -255,18 +255,18 @@ class SettingsDialog(wx.Dialog):
         grid_sizer = wx.FlexGridSizer(rows=4, cols=2, vgap=10, hgap=5)
         grid_sizer.AddGrowableCol(1, 1)  # Make the input column growable
 
-        # Temperature Unit Selection
-        temp_unit_label = wx.StaticText(panel, label="Temperature Units:")
-        self.temp_unit_ctrl = wx.RadioBox(
+        # Measurement Unit System Selection
+        temp_unit_label = wx.StaticText(panel, label="Measurement Units:")
+        from .ui_components import AccessibleChoice
+
+        self.temp_unit_ctrl = AccessibleChoice(
             panel,
-            label="",
-            choices=["Fahrenheit", "Celsius", "Both"],
-            majorDimension=1,
-            style=wx.RA_SPECIFY_COLS,
-            name="Temperature Units",
+            choices=["Imperial (Fahrenheit)", "Metric (Celsius)", "Both"],
+            label="Measurement Units",
         )
         tooltip_temp_unit = (
-            "Select your preferred temperature unit for display. "
+            "Select your preferred measurement unit system. "
+            "Affects temperature, pressure, wind speed, and other measurements. "
             "'Both' will show temperatures in both Fahrenheit and Celsius."
         )
         self.temp_unit_ctrl.SetToolTip(tooltip_temp_unit)
@@ -435,11 +435,11 @@ class SettingsDialog(wx.Dialog):
             temperature_unit = self.current_settings.get(
                 TEMPERATURE_UNIT_KEY, DEFAULT_TEMPERATURE_UNIT
             )
-            # Set temperature unit radio box
+            # Set temperature unit dropdown
             if temperature_unit == TemperatureUnit.FAHRENHEIT.value:
-                self.temp_unit_ctrl.SetSelection(0)  # Fahrenheit
+                self.temp_unit_ctrl.SetSelection(0)  # Imperial (Fahrenheit)
             elif temperature_unit == TemperatureUnit.CELSIUS.value:
-                self.temp_unit_ctrl.SetSelection(1)  # Celsius
+                self.temp_unit_ctrl.SetSelection(1)  # Metric (Celsius)
             elif temperature_unit == TemperatureUnit.BOTH.value:
                 self.temp_unit_ctrl.SetSelection(2)  # Both
             else:
