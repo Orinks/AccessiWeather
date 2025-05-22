@@ -59,6 +59,7 @@ class TestAlertNotificationsFix:
             "response": "Shelter",
             "parameters": {},
             "instruction": "Take shelter immediately",
+            "areaDesc": "",  # Add areaDesc field for deduplication
         }
 
     def create_alerts_data(self, alerts):
@@ -213,3 +214,66 @@ class TestAlertNotificationsFix:
             assert updated_count2 == 0
             assert len(processed_alerts2) == 2
             mock_show2.assert_not_called()
+
+    def test_alert_deduplication_same_event_different_offices(self):
+        """Test that alerts from different offices for the same event are deduplicated."""
+        notifier = WeatherNotifier(config_dir=self.temp_dir, enable_persistence=True)
+
+        # Create duplicate alerts from different offices (same event, time, area)
+        base_time = datetime.now(timezone.utc)
+        expires_time = base_time + timedelta(hours=2)
+
+        alert1 = {
+            "id": "office1_alert_123",
+            "event": "Tornado Warning",
+            "headline": "Tornado Warning in effect",
+            "description": "A tornado warning has been issued",
+            "severity": "Extreme",
+            "urgency": "Immediate",
+            "expires": expires_time.isoformat(),
+            "sent": base_time.isoformat(),
+            "effective": base_time.isoformat(),
+            "status": "Actual",
+            "messageType": "Alert",
+            "category": "Met",
+            "response": "Shelter",
+            "parameters": {},
+            "instruction": "Take shelter immediately",
+            "areaDesc": "Smith County"
+        }
+
+        alert2 = {
+            "id": "office2_alert_456",  # Different ID from different office
+            "event": "Tornado Warning",  # Same event
+            "headline": "Tornado Warning in effect",
+            "description": "A tornado warning has been issued",
+            "severity": "Extreme",
+            "urgency": "Immediate",
+            "expires": expires_time.isoformat(),  # Same expiration
+            "sent": base_time.isoformat(),  # Same time
+            "effective": base_time.isoformat(),  # Same effective time
+            "status": "Actual",
+            "messageType": "Alert",
+            "category": "Met",
+            "response": "Shelter",
+            "parameters": {},
+            "instruction": "Take shelter immediately",
+            "areaDesc": "Smith County"  # Same area
+        }
+
+        alerts_data = self.create_alerts_data([alert1, alert2])
+
+        # Process alerts
+        with patch.object(notifier, 'show_notification') as mock_show:
+            processed_alerts, new_count, updated_count = notifier.process_alerts(alerts_data)
+
+            # Should only show ONE notification despite having 2 alerts
+            assert new_count == 1, f"Expected 1 new alert, got {new_count}"
+            assert updated_count == 0
+            assert len(processed_alerts) == 1, f"Expected 1 processed alert, got {len(processed_alerts)}"
+            assert mock_show.call_count == 1, f"Expected 1 notification, got {mock_show.call_count}"
+
+            # The processed alert should be one of the original alerts
+            processed_alert = processed_alerts[0]
+            assert processed_alert["event"] == "Tornado Warning"
+            assert processed_alert["severity"] == "Extreme"

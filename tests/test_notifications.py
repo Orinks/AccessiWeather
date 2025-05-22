@@ -151,7 +151,8 @@ def test_process_alerts_new(notifier, mock_toaster, mock_datetime):
     assert processed_alerts[0]["id"] == SAMPLE_ALERT["id"]
     assert new_count == 1
     assert updated_count == 0
-    assert SAMPLE_ALERT["id"] in notifier.active_alerts
+    # Check that the alert is tracked (now using deduplication keys)
+    assert len(notifier.active_alerts) == 1
     mock_toaster.show_toast.assert_called_once_with(
         title=f"Weather {SAMPLE_ALERT['event']}",
         msg=SAMPLE_ALERT["headline"],
@@ -176,7 +177,8 @@ def test_process_alerts_existing(notifier, mock_toaster, mock_datetime):
     assert processed_alerts[0]["id"] == SAMPLE_ALERT["id"]
     assert new_count == 0
     assert updated_count == 0
-    assert SAMPLE_ALERT["id"] in notifier.active_alerts
+    # Check that the alert is still tracked (now using deduplication keys)
+    assert len(notifier.active_alerts) == 1
     mock_toaster.show_toast.assert_not_called()  # No notification for existing alert
 
 
@@ -245,45 +247,55 @@ def test_show_notification_no_headline(notifier, mock_toaster):
 
 def test_clear_expired_alerts(notifier, mock_datetime):
     """Test clearing expired alerts."""
-    # Add one expired and one active alert
+    # Add one expired and one active alert using deduplication keys
     expired_alert = dict(SAMPLE_ALERT)
     expired_alert["id"] = "expired"
     expired_alert["expires"] = "2024-04-16T09:00:00Z"  # Before mock now (10:00)
+    expired_alert["areaDesc"] = ""
 
     active_alert = dict(SAMPLE_ALERT)
     active_alert["id"] = "active"
     active_alert["expires"] = "2024-04-16T11:00:00Z"  # After mock now (10:00)
+    active_alert["areaDesc"] = ""
 
-    notifier.active_alerts = {"expired": expired_alert, "active": active_alert}
+    # Use deduplication keys as the new system does
+    expired_key = "dedup:Test Event|2024-04-16T08:00:00Z|2024-04-16T09:00:00Z"
+    active_key = "dedup:Test Event|2024-04-16T08:00:00Z|2024-04-16T11:00:00Z"
+
+    notifier.active_alerts = {expired_key: expired_alert, active_key: active_alert}
 
     notifier.clear_expired_alerts()
 
-    assert "expired" not in notifier.active_alerts
-    assert "active" in notifier.active_alerts
+    assert expired_key not in notifier.active_alerts
+    assert active_key in notifier.active_alerts
 
 
 def test_clear_expired_alerts_invalid_timestamp(notifier, mock_datetime):
     """Test clearing alerts with invalid timestamp."""
     alert = dict(SAMPLE_ALERT)
     alert["expires"] = "invalid-timestamp"
-    notifier.active_alerts = {"test": alert}
+    alert["areaDesc"] = ""
+    test_key = "dedup:test_key"
+    notifier.active_alerts = {test_key: alert}
 
     notifier.clear_expired_alerts()
 
     # Alert should remain since we couldn't parse its timestamp
-    assert "test" in notifier.active_alerts
+    assert test_key in notifier.active_alerts
 
 
 def test_clear_expired_alerts_missing_expires(notifier, mock_datetime):
     """Test clearing alerts with missing expires field."""
     alert = dict(SAMPLE_ALERT)
     del alert["expires"]
-    notifier.active_alerts = {"test": alert}
+    alert["areaDesc"] = ""
+    test_key = "dedup:test_key"
+    notifier.active_alerts = {test_key: alert}
 
     notifier.clear_expired_alerts()
 
     # Alert should remain since it has no expires field
-    assert "test" in notifier.active_alerts
+    assert test_key in notifier.active_alerts
 
 
 def test_get_sorted_alerts(notifier):
