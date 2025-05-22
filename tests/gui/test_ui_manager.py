@@ -198,9 +198,9 @@ def test_display_forecast(mock_ui_manager):
     # Test with regular forecast data
     mock_ui_manager.display_forecast(SAMPLE_FORECAST_DATA)
     forecast_text = mock_ui_manager.mock_frame.forecast_text.SetValue.call_args[0][0]
-    assert "Today: 75°F" in forecast_text
+    assert "Today: 75.0°F" in forecast_text
     assert "Sunny with a high near 75" in forecast_text
-    assert "Tonight: 60°F" in forecast_text
+    assert "Tonight: 60.0°F" in forecast_text
     assert "Clear with a low around 60" in forecast_text
 
     # Test with empty data
@@ -336,11 +336,11 @@ def test_display_weatherapi_forecast(mock_ui_manager):
 
     # Check for hourly data
     assert "Next 6 Hours:" in forecast_text
-    assert "12:00 PM: 72°F, Sunny" in forecast_text
+    assert "12:00 PM: 72.0°F, Sunny" in forecast_text
 
     # Check for daily forecast
     assert "Extended Forecast:" in forecast_text
-    assert "High 75°F, Low 60°F" in forecast_text
+    assert "High 75.0°F, Low 60.0°F" in forecast_text
     assert "Sunny" in forecast_text
     assert "Chance of precipitation: 10%" in forecast_text
     assert "Wind: 15 mph" in forecast_text
@@ -354,11 +354,11 @@ def test_display_weatherapi_current_conditions(mock_ui_manager):
 
     # Check for key elements
     assert "Current Conditions: Sunny" in conditions_text
-    assert "Temperature: 72°F (22.2°C)" in conditions_text
-    assert "Feels Like: 70°F (21.1°C)" in conditions_text
+    assert "Temperature: 72.0°F" in conditions_text
+    assert "Feels Like: 70.0°F" in conditions_text
     assert "Humidity: 45%" in conditions_text
-    assert "Wind: NW at 10 mph (16.1 km/h)" in conditions_text
-    assert "Pressure: 30.1 inHg (1019 mb)" in conditions_text
+    assert "Wind: NW at 10.0 mph" in conditions_text
+    assert "Pressure: 30.10 inHg" in conditions_text
 
 
 def test_display_weatherapi_alerts(mock_ui_manager):

@@ -9,6 +9,9 @@ from typing import Any, Dict, List, Optional
 import wx
 
 from accessiweather.api_client import ApiClientError, NoaaApiError
+from accessiweather.gui.settings_dialog import DEFAULT_TEMPERATURE_UNIT, TEMPERATURE_UNIT_KEY
+from accessiweather.utils.temperature_utils import TemperatureUnit, format_temperature
+from accessiweather.utils.unit_utils import format_pressure, format_wind_speed
 from accessiweather.weatherapi_wrapper import WeatherApiError
 
 from .ui_components import (
@@ -36,6 +39,28 @@ class UIManager:
         self.notifier = notifier  # Store notifier instance
         self._setup_ui()
         self._bind_events()
+
+    def _get_temperature_unit_preference(self):
+        """Get the user's temperature unit preference from config.
+
+        Returns:
+            TemperatureUnit: The user's temperature unit preference
+        """
+        if not hasattr(self.frame, "config"):
+            return TemperatureUnit.FAHRENHEIT
+
+        settings = self.frame.config.get("settings", {})
+        unit_pref = settings.get(TEMPERATURE_UNIT_KEY, DEFAULT_TEMPERATURE_UNIT)
+
+        # Convert string to enum
+        if unit_pref == TemperatureUnit.FAHRENHEIT.value:
+            return TemperatureUnit.FAHRENHEIT
+        elif unit_pref == TemperatureUnit.CELSIUS.value:
+            return TemperatureUnit.CELSIUS
+        elif unit_pref == TemperatureUnit.BOTH.value:
+            return TemperatureUnit.BOTH
+        else:
+            return TemperatureUnit.FAHRENHEIT
 
     def _setup_ui(self):
         """Initialize the user interface components."""
@@ -262,7 +287,23 @@ class UIManager:
                     unit = period.get("temperatureUnit", "F")
                     short_forecast = period.get("shortForecast", "")
 
-                    text += f"{formatted_time}: {temp}°{unit}, {short_forecast}\n"
+                    # Convert temperature if needed
+                    if unit == "F" and isinstance(temp, (int, float)):
+                        temp_f = temp
+                        temp_c = (temp - 32) * 5 / 9
+                    elif unit == "C" and isinstance(temp, (int, float)):
+                        temp_c = temp
+                        temp_f = (temp * 9 / 5) + 32
+                    else:
+                        temp_f = temp
+                        temp_c = None
+
+                    # Format temperature based on user preference
+                    temp_str = format_temperature(
+                        temp_f, self._get_temperature_unit_preference(), temperature_c=temp_c
+                    )
+
+                    text += f"{formatted_time}: {temp_str}, {short_forecast}\n"
 
                 text += "\n"
 
@@ -274,7 +315,23 @@ class UIManager:
             unit = period.get("temperatureUnit", "F")
             details = period.get("detailedForecast", "No details available")
 
-            text += f"{name}: {temp}°{unit}\n"
+            # Convert temperature if needed
+            if unit == "F" and isinstance(temp, (int, float)):
+                temp_f = temp
+                temp_c = (temp - 32) * 5 / 9
+            elif unit == "C" and isinstance(temp, (int, float)):
+                temp_c = temp
+                temp_f = (temp * 9 / 5) + 32
+            else:
+                temp_f = temp
+                temp_c = None
+
+            # Format temperature based on user preference
+            temp_str = format_temperature(
+                temp_f, self._get_temperature_unit_preference(), temperature_c=temp_c
+            )
+
+            text += f"{name}: {temp_str}\n"
             text += f"{details}\n\n"
 
         self.frame.forecast_text.SetValue(text)
@@ -377,12 +434,18 @@ class UIManager:
                 except (IndexError, ValueError):
                     formatted_time = time_str
 
-                temp = hour.get("temperature", hour.get("temp_f", "?"))
+                temp_f = hour.get("temperature", hour.get("temp_f", "?"))
+                temp_c = hour.get("temp_c", None)
                 condition = hour.get("condition", "")
                 if isinstance(condition, dict):
                     condition = condition.get("text", "")
 
-                text += f"{formatted_time}: {temp}°F, {condition}\n"
+                # Format temperature based on user preference
+                temp_str = format_temperature(
+                    temp_f, self._get_temperature_unit_preference(), temperature_c=temp_c
+                )
+
+                text += f"{formatted_time}: {temp_str}, {condition}\n"
 
             text += "\n"
 
@@ -405,7 +468,18 @@ class UIManager:
             except (ValueError, TypeError):
                 formatted_date = date
 
-            text += f"{formatted_date}: High {high}°F, Low {low}°F\n"
+            # Get high and low temperatures in both units if available
+            high_f = high
+            high_c = day.get("maxtemp_c", None)
+            low_f = low
+            low_c = day.get("mintemp_c", None)
+
+            # Format temperatures based on user preference
+            unit_pref = self._get_temperature_unit_preference()
+            high_str = format_temperature(high_f, unit_pref, temperature_c=high_c)
+            low_str = format_temperature(low_f, unit_pref, temperature_c=low_c)
+
+            text += f"{formatted_date}: High {high_str}, Low {low_str}\n"
             text += f"{condition}\n"
 
             # Add precipitation chance if available
@@ -558,11 +632,22 @@ class UIManager:
         """
         logger.debug(f"display_current_conditions received: {conditions_data}")
 
+        # Create a dictionary for taskbar icon data
+        taskbar_data = {}
+
         # Check if this is WeatherAPI.com data
         if self._is_weatherapi_data(conditions_data):
             try:
                 text = self._format_weatherapi_current_conditions(conditions_data)
                 self.frame.current_conditions_text.SetValue(text)
+
+                # Extract data for taskbar icon
+                taskbar_data = self._extract_weatherapi_data_for_taskbar(conditions_data)
+
+                # Update taskbar icon with weather data
+                if hasattr(self.frame, "taskbar_icon") and self.frame.taskbar_icon:
+                    self.frame.taskbar_icon.update_weather_data(taskbar_data)
+
                 return
             except Exception as e:
                 logger.exception("Error formatting WeatherAPI.com current conditions")
@@ -587,32 +672,54 @@ class UIManager:
         relative_humidity = properties.get("relativeHumidity", {}).get("value")
         description = properties.get("textDescription", "No description available")
 
+        # Get user's temperature unit preference
+        unit_pref = self._get_temperature_unit_preference()
+
+        # Extract data for taskbar icon
+        taskbar_data = self._extract_nws_data_for_taskbar(conditions_data)
+
+        # Update taskbar icon with weather data
+        if hasattr(self.frame, "taskbar_icon") and self.frame.taskbar_icon:
+            self.frame.taskbar_icon.update_weather_data(taskbar_data)
+
         # Convert units if needed
         if temperature is not None:
             # Convert from Celsius to Fahrenheit
             temperature_f = (temperature * 9 / 5) + 32
-            temperature_str = f"{temperature_f:.1f}°F ({temperature:.1f}°C)"
+            # Format based on user preference
+            temperature_str = format_temperature(
+                temperature_f, unit_pref, temperature_c=temperature, precision=1
+            )
         else:
             temperature_str = "N/A"
 
         if dewpoint is not None:
             # Convert from Celsius to Fahrenheit
             dewpoint_f = (dewpoint * 9 / 5) + 32
-            dewpoint_str = f"{dewpoint_f:.1f}°F ({dewpoint:.1f}°C)"
+            # Format based on user preference
+            dewpoint_str = format_temperature(
+                dewpoint_f, unit_pref, temperature_c=dewpoint, precision=1
+            )
         else:
             dewpoint_str = "N/A"
 
         if wind_speed is not None:
             # Convert from km/h to mph
             wind_speed_mph = wind_speed * 0.621371
-            wind_speed_str = f"{wind_speed_mph:.1f} mph ({wind_speed:.1f} km/h)"
+            wind_speed_str = format_wind_speed(
+                wind_speed_mph, unit_pref, wind_speed_kph=wind_speed, precision=1
+            )
         else:
             wind_speed_str = "N/A"
 
         if barometric_pressure is not None:
             # Convert from Pa to inHg
             pressure_inhg = barometric_pressure / 3386.39
-            pressure_str = f"{pressure_inhg:.2f} inHg"
+            # Convert from Pa to mb (hPa)
+            pressure_mb = barometric_pressure / 100
+            pressure_str = format_pressure(
+                pressure_inhg, unit_pref, pressure_mb=pressure_mb, precision=2
+            )
         else:
             pressure_str = "N/A"
 
@@ -682,52 +789,29 @@ class UIManager:
         feelslike = conditions_data.get("feelslike")
         feelslike_c = conditions_data.get("feelslike_c")
 
+        # Get user's temperature unit preference
+        unit_pref = self._get_temperature_unit_preference()
+
         # Format temperature
-        if temperature is not None and temperature_c is not None:
-            temperature_str = f"{temperature}°F ({temperature_c}°C)"
-        elif temperature is not None:
-            temperature_str = f"{temperature}°F"
-        elif temperature_c is not None:
-            temperature_f = (temperature_c * 9 / 5) + 32
-            temperature_str = f"{temperature_f:.1f}°F ({temperature_c}°C)"
-        else:
-            temperature_str = "N/A"
+        temperature_str = format_temperature(
+            temperature, unit_pref, temperature_c=temperature_c, precision=1
+        )
 
         # Format humidity
         humidity_str = f"{humidity}%" if humidity is not None else "N/A"
 
         # Format wind
-        if wind_speed is not None and wind_speed_kph is not None:
-            wind_speed_str = f"{wind_speed} mph ({wind_speed_kph} km/h)"
-        elif wind_speed is not None:
-            wind_speed_str = f"{wind_speed} mph"
-        elif wind_speed_kph is not None:
-            wind_speed_mph = wind_speed_kph * 0.621371
-            wind_speed_str = f"{wind_speed_mph:.1f} mph ({wind_speed_kph} km/h)"
-        else:
-            wind_speed_str = "N/A"
+        wind_speed_str = format_wind_speed(
+            wind_speed, unit_pref, wind_speed_kph=wind_speed_kph, precision=1
+        )
 
         # Format pressure
-        if pressure is not None and pressure_mb is not None:
-            pressure_str = f"{pressure} inHg ({pressure_mb} mb)"
-        elif pressure is not None:
-            pressure_str = f"{pressure} inHg"
-        elif pressure_mb is not None:
-            pressure_inhg = pressure_mb / 33.8639
-            pressure_str = f"{pressure_inhg:.2f} inHg ({pressure_mb} mb)"
-        else:
-            pressure_str = "N/A"
+        pressure_str = format_pressure(pressure, unit_pref, pressure_mb=pressure_mb, precision=2)
 
         # Format feels like
-        if feelslike is not None and feelslike_c is not None:
-            feelslike_str = f"{feelslike}°F ({feelslike_c}°C)"
-        elif feelslike is not None:
-            feelslike_str = f"{feelslike}°F"
-        elif feelslike_c is not None:
-            feelslike_f = (feelslike_c * 9 / 5) + 32
-            feelslike_str = f"{feelslike_f:.1f}°F ({feelslike_c}°C)"
-        else:
-            feelslike_str = "N/A"
+        feelslike_str = format_temperature(
+            feelslike, unit_pref, temperature_c=feelslike_c, precision=1
+        )
 
         # Format the text
         text = f"Current Conditions: {condition}\n"
@@ -738,6 +822,120 @@ class UIManager:
         text += f"Pressure: {pressure_str}"
 
         return text
+
+    def _extract_weatherapi_data_for_taskbar(self, conditions_data):
+        """Extract relevant data from WeatherAPI.com conditions for the taskbar icon.
+
+        Args:
+            conditions_data: Dictionary with WeatherAPI.com current conditions data
+
+        Returns:
+            dict: Dictionary with extracted data for taskbar icon
+        """
+        if not conditions_data:
+            return {}
+
+        # Extract the current conditions
+        current = conditions_data.get("current", {})
+        condition = current.get("condition", {})
+
+        # Create a dictionary with the data we want to display in the taskbar
+        data = {
+            "temp": current.get("temp_f"),
+            "temp_f": current.get("temp_f"),
+            "temp_c": current.get("temp_c"),
+            "condition": condition.get("text", ""),
+            "humidity": current.get("humidity"),
+            "wind_speed": current.get("wind_mph"),
+            "wind_dir": current.get("wind_dir"),
+            "pressure": current.get("pressure_in"),
+            "feels_like": current.get("feelslike_f"),
+            "uv": current.get("uv"),
+            "visibility": current.get("vis_miles"),
+            "precip": current.get("precip_in"),
+        }
+
+        # Add location information if available
+        location = conditions_data.get("location", {})
+        if location:
+            data["location"] = location.get("name", "")
+
+        return data
+
+    def _extract_nws_data_for_taskbar(self, conditions_data):
+        """Extract relevant data from NWS API conditions for the taskbar icon.
+
+        Args:
+            conditions_data: Dictionary with NWS API current conditions data
+
+        Returns:
+            dict: Dictionary with extracted data for taskbar icon
+        """
+        if not conditions_data or "properties" not in conditions_data:
+            return {}
+
+        properties = conditions_data.get("properties", {})
+
+        # Extract temperature (convert from C to F)
+        temperature_c = properties.get("temperature", {}).get("value")
+        temperature_f = None
+        if temperature_c is not None:
+            temperature_f = (temperature_c * 9 / 5) + 32
+
+        # Extract humidity
+        humidity = properties.get("relativeHumidity", {}).get("value")
+
+        # Extract wind speed (convert from km/h to mph)
+        wind_speed_kph = properties.get("windSpeed", {}).get("value")
+        wind_speed_mph = None
+        if wind_speed_kph is not None:
+            wind_speed_mph = wind_speed_kph * 0.621371
+
+        # Extract wind direction
+        wind_direction_degrees = properties.get("windDirection", {}).get("value")
+        wind_dir = None
+        if wind_direction_degrees is not None:
+            # Convert degrees to cardinal direction
+            directions = [
+                "N",
+                "NNE",
+                "NE",
+                "ENE",
+                "E",
+                "ESE",
+                "SE",
+                "SSE",
+                "S",
+                "SSW",
+                "SW",
+                "WSW",
+                "W",
+                "WNW",
+                "NW",
+                "NNW",
+            ]
+            index = round(wind_direction_degrees / 22.5) % 16
+            wind_dir = directions[index]
+
+        # Extract barometric pressure (convert from Pa to inHg)
+        pressure_pa = properties.get("barometricPressure", {}).get("value")
+        pressure_inhg = None
+        if pressure_pa is not None:
+            pressure_inhg = pressure_pa / 3386.39
+
+        # Create a dictionary with the data we want to display in the taskbar
+        data = {
+            "temp": temperature_f,
+            "temp_f": temperature_f,
+            "temp_c": temperature_c,
+            "condition": properties.get("textDescription", ""),
+            "humidity": humidity,
+            "wind_speed": wind_speed_mph,
+            "wind_dir": wind_dir,
+            "pressure": pressure_inhg,
+        }
+
+        return data
 
     def display_hourly_forecast(self, hourly_data):
         """Display hourly forecast data in the UI.
