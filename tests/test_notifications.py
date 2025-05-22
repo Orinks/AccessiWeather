@@ -57,8 +57,8 @@ SAMPLE_ALERTS_DATA_MULTIPLE = {
 
 @pytest.fixture
 def notifier():
-    """Create a WeatherNotifier instance."""
-    return WeatherNotifier()
+    """Create a WeatherNotifier instance with persistence disabled for testing."""
+    return WeatherNotifier(enable_persistence=False)
 
 
 @pytest.fixture
@@ -104,7 +104,7 @@ def mock_datetime():
 
 def test_init():
     """Test WeatherNotifier initialization."""
-    notifier = WeatherNotifier()
+    notifier = WeatherNotifier(enable_persistence=False)
     assert isinstance(notifier.toaster, SafeToastNotifier)
     assert notifier.active_alerts == {}
 

@@ -96,8 +96,8 @@ def create_weather_app(
         config_dir, show_nationwide=show_nationwide, data_source=data_source
     )
 
-    # Create the notifier
-    notifier = WeatherNotifier()
+    # Create the notifier with persistent storage
+    notifier = WeatherNotifier(config_dir=config_dir, enable_persistence=True)
 
     # Create the services
     weather_service = WeatherService(
