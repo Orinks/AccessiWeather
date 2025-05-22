@@ -4,15 +4,19 @@ This module provides functionality to display desktop notifications
 for weather alerts.
 """
 
+import json
 import logging
+import os
 import sys
 from datetime import datetime, timezone  # Added
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from dateutil.parser import isoparse  # type: ignore # requires python-dateutil
 
 # Type checking will report this as missing, but it's a runtime dependency
 from plyer import notification  # type: ignore
+
+from accessiweather.config_utils import get_config_dir
 
 logger = logging.getLogger(__name__)
 
@@ -64,10 +68,26 @@ class WeatherNotifier:
     # Alert priority levels
     PRIORITY = {"Extreme": 3, "Severe": 2, "Moderate": 1, "Minor": 0, "Unknown": -1}
 
-    def __init__(self):
-        """Initialize the weather notifier"""
+    def __init__(self, config_dir: Optional[str] = None, enable_persistence: bool = True):
+        """Initialize the weather notifier
+
+        Args:
+            config_dir: Directory for storing alert state (optional)
+            enable_persistence: Whether to enable persistent storage of alert state (default: True)
+        """
         self.toaster = SafeToastNotifier()
-        self.active_alerts = {}
+        self.active_alerts: Dict[str, Dict[str, Any]] = {}
+        self.enable_persistence = enable_persistence
+
+        # Set up persistent storage path
+        if self.enable_persistence:
+            self.config_dir: Optional[str] = config_dir or get_config_dir()
+            self.alerts_state_file: Optional[str] = os.path.join(self.config_dir, "alert_state.json")
+            # Load existing alert state
+            self._load_alert_state()
+        else:
+            self.config_dir = None
+            self.alerts_state_file = None
 
     def notify_alerts(self, alert_count, new_count=0, updated_count=0):
         """Notify the user about new alerts
@@ -192,6 +212,10 @@ class WeatherNotifier:
         else:
             logger.info(f"Alert processing complete: {total_alerts} total alerts, all unchanged")
 
+        # Save alert state to persistent storage if there were any changes
+        if new_alerts_count > 0 or updated_alerts_count > 0:
+            self._save_alert_state()
+
         return processed_alerts, new_alerts_count, updated_alerts_count
 
     def _is_alert_updated(self, old_alert: Dict[str, Any], new_alert: Dict[str, Any]) -> bool:
@@ -295,6 +319,10 @@ class WeatherNotifier:
             if alert_id in self.active_alerts:
                 del self.active_alerts[alert_id]
 
+        # Save alert state if any alerts were removed
+        if expired_alert_ids:
+            self._save_alert_state()
+
     def get_sorted_alerts(self) -> List[Dict[str, Any]]:
         """Get all active alerts sorted by priority
 
@@ -309,3 +337,84 @@ class WeatherNotifier:
             key=lambda x: self.PRIORITY.get(x.get("severity", "Unknown"), self.PRIORITY["Unknown"]),
             reverse=True,
         )
+
+    def _load_alert_state(self) -> None:
+        """Load alert state from persistent storage"""
+        if not self.enable_persistence or not self.alerts_state_file:
+            return
+
+        try:
+            if os.path.exists(self.alerts_state_file):
+                with open(self.alerts_state_file, "r") as f:
+                    data = json.load(f)
+
+                # Validate the loaded data structure
+                if isinstance(data, dict) and "active_alerts" in data:
+                    loaded_alerts = data["active_alerts"]
+                    if isinstance(loaded_alerts, dict):
+                        # Filter out expired alerts during load
+                        now = datetime.now(timezone.utc)
+                        valid_alerts = {}
+
+                        for alert_id, alert_data in loaded_alerts.items():
+                            expires_str = alert_data.get("expires")
+                            if expires_str:
+                                try:
+                                    expiration_time = isoparse(expires_str)
+                                    if expiration_time.tzinfo is None:
+                                        expiration_time = expiration_time.replace(
+                                            tzinfo=timezone.utc
+                                        )
+
+                                    # Only keep non-expired alerts
+                                    if expiration_time >= now:
+                                        valid_alerts[alert_id] = alert_data
+                                    else:
+                                        logger.debug(
+                                            f"Filtered out expired alert during load: {alert_id}"
+                                        )
+                                except Exception as e:
+                                    logger.warning(
+                                        f"Error parsing expiration for alert {alert_id}: {e}"
+                                    )
+                            else:
+                                # Keep alerts without expiration (shouldn't happen with NWS data)
+                                valid_alerts[alert_id] = alert_data
+
+                        self.active_alerts = valid_alerts
+                        logger.info(
+                            f"Loaded {len(valid_alerts)} active alerts from persistent storage"
+                        )
+                    else:
+                        logger.warning("Invalid alert state format in storage file")
+                else:
+                    logger.warning("Invalid alert state file format")
+        except Exception as e:
+            logger.error(f"Failed to load alert state: {str(e)}")
+            # Continue with empty alerts if loading fails
+            self.active_alerts = {}
+
+    def _save_alert_state(self) -> None:
+        """Save alert state to persistent storage"""
+        if not self.enable_persistence or not self.alerts_state_file:
+            return
+
+        try:
+            # Ensure config directory exists
+            if self.config_dir:
+                os.makedirs(self.config_dir, exist_ok=True)
+
+            # Prepare data to save
+            data = {
+                "active_alerts": self.active_alerts,
+                "last_updated": datetime.now(timezone.utc).isoformat(),
+                "version": "1.0",
+            }
+
+            # Write to file
+            with open(self.alerts_state_file, "w") as f:
+                json.dump(data, f, indent=2)
+
+            logger.debug(f"Saved {len(self.active_alerts)} active alerts to persistent storage")
+        except Exception as e:
+            logger.error(f"Failed to save alert state: {str(e)}")
