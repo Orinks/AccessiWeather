@@ -354,6 +354,7 @@ echo -e "${GREEN}All dependencies are installed successfully.${NC}"
 
 # Step 2: Build executable with PyInstaller
 echo -e "\n${CYAN}===== Step 2: Building executable with PyInstaller =====${NC}"
+echo -e "${YELLOW}Using spec file to exclude unnecessary packages (Django, IPython, etc.)${NC}"
 
 if command -v python3 &>/dev/null; then
     PYTHON_CMD="python3"
@@ -361,13 +362,29 @@ else
     PYTHON_CMD="python"
 fi
 
-$PYTHON_CMD -m PyInstaller $PYINSTALLER_OPTS \
-    --hidden-import=plyer.platforms.linux.notification \
-    --hidden-import=plyer.platforms.macosx.notification \
-    --hidden-import=dateutil.parser \
-    --hidden-import=httpx \
-    --hidden-import=attrs \
-    "src/accessiweather/main.py"
+# Check if spec file exists
+SPEC_FILE="$PROJECT_ROOT/AccessiWeather.spec"
+if [ -f "$SPEC_FILE" ]; then
+    echo -e "${GREEN}Using spec file: $SPEC_FILE${NC}"
+    $PYTHON_CMD -m PyInstaller --clean --noconfirm "$SPEC_FILE"
+else
+    echo -e "${YELLOW}Warning: Spec file not found, falling back to command line arguments${NC}"
+    $PYTHON_CMD -m PyInstaller $PYINSTALLER_OPTS \
+        --hidden-import=plyer.platforms.linux.notification \
+        --hidden-import=plyer.platforms.macosx.notification \
+        --hidden-import=dateutil.parser \
+        --hidden-import=httpx \
+        --hidden-import=attrs \
+        --exclude-module=IPython \
+        --exclude-module=jedi \
+        --exclude-module=parso \
+        --exclude-module=black \
+        --exclude-module=mypy \
+        --exclude-module=django \
+        --exclude-module=Django \
+        --exclude-module=rapidfuzz \
+        "src/accessiweather/main.py"
+fi
 
 # Step 3: Create portable ZIP archive
 echo -e "\n${CYAN}===== Step 3: Creating portable ZIP archive =====${NC}"

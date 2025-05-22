@@ -136,6 +136,10 @@ tasks.json.bak
 tasks/*.txt
 .cursor/rules/taskmaster.mdc
 .roo/rules/taskmaster.md
+
+# Build test scripts (temporary)
+test_build.py
+test_build_exclusions.py
 # Dependency directories
 node_modules/
 # Environment variables

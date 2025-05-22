@@ -727,6 +727,9 @@ class WeatherApp(
             nws_client=nws_client, weatherapi_wrapper=weatherapi_wrapper, config=self.config
         )
 
+        # Update the location service with the new data source
+        self.location_service.update_data_source(data_source)
+
         # Update the fetchers to use the new service
         self.forecast_fetcher.service = self.weather_service
         self.alerts_fetcher.service = self.weather_service

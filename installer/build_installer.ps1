@@ -374,14 +374,44 @@ Write-Host "All dependencies are installed successfully." -ForegroundColor Green
 
 # Step 2: Build executable with PyInstaller
 Write-Host "`n===== Step 2: Building executable with PyInstaller =====" -ForegroundColor Cyan
-$PyInstallerArgs = $PyInstallerOpts + @(
-    "--hidden-import=plyer.platforms.win.notification",
-    "--hidden-import=dateutil.parser",
-    "--hidden-import=httpx",
-    "--hidden-import=attrs",
-    "src/accessiweather/main.py"
-)
-python -m PyInstaller $PyInstallerArgs
+Write-Host "Using spec file to exclude unnecessary packages (Django, IPython, etc.)" -ForegroundColor Yellow
+
+# Check if spec file exists
+$SpecFile = Join-Path $ProjectRoot "AccessiWeather.spec"
+if (Test-Path $SpecFile) {
+    Write-Host "Using spec file: $SpecFile" -ForegroundColor Green
+    $pyinstallerProcess = Start-Process -FilePath "python" -ArgumentList "-m", "PyInstaller", "--clean", "--noconfirm", $SpecFile -Wait -PassThru -NoNewWindow
+    if ($pyinstallerProcess.ExitCode -ne 0) {
+        Write-Host "PyInstaller failed with exit code: $($pyinstallerProcess.ExitCode)" -ForegroundColor Red
+        exit 1
+    }
+}
+else {
+    Write-Host "Warning: Spec file not found, falling back to command line arguments" -ForegroundColor Yellow
+    $PyInstallerArgs = @("-m", "PyInstaller") + $PyInstallerOpts + @(
+        "--hidden-import=plyer.platforms.win.notification",
+        "--hidden-import=dateutil.parser",
+        "--hidden-import=httpx",
+        "--hidden-import=attrs",
+        "--exclude-module=IPython",
+        "--exclude-module=jedi",
+        "--exclude-module=parso",
+        "--exclude-module=black",
+        "--exclude-module=mypy",
+        "--exclude-module=django",
+        "--exclude-module=Django",
+        "--exclude-module=rapidfuzz",
+        "src/accessiweather/main.py"
+    )
+    $pyinstallerProcess = Start-Process -FilePath "python" -ArgumentList $PyInstallerArgs -Wait -PassThru -NoNewWindow
+    if ($pyinstallerProcess.ExitCode -ne 0) {
+        Write-Host "PyInstaller failed with exit code: $($pyinstallerProcess.ExitCode)" -ForegroundColor Red
+        exit 1
+    }
+}
+
+Write-Host "PyInstaller completed successfully." -ForegroundColor Green
+Start-Sleep -Seconds 2
 
 # Step 3: Create portable ZIP archive
 Write-Host "`n===== Step 3: Creating portable ZIP archive =====" -ForegroundColor Cyan
@@ -447,12 +477,19 @@ Write-Host "  ACCESSIWEATHER_ROOT_DIR = $($env:ACCESSIWEATHER_ROOT_DIR)" -Foregr
 Write-Host "  ACCESSIWEATHER_DIST_DIR = $($env:ACCESSIWEATHER_DIST_DIR)" -ForegroundColor Yellow
 Write-Host "  ACCESSIWEATHER_VERSION = $($env:ACCESSIWEATHER_VERSION)" -ForegroundColor Yellow
 
+Write-Host "Starting InnoSetup compilation..." -ForegroundColor Yellow
 if ($found) {
-    & $isccPath $issPath
+    $innoProcess = Start-Process -FilePath $isccPath -ArgumentList $issPath -Wait -PassThru -NoNewWindow
 }
 else {
-    & iscc $issPath
+    $innoProcess = Start-Process -FilePath "iscc" -ArgumentList $issPath -Wait -PassThru -NoNewWindow
 }
+
+if ($innoProcess.ExitCode -ne 0) {
+    Write-Host "InnoSetup compilation failed with exit code: $($innoProcess.ExitCode)" -ForegroundColor Red
+    exit 1
+}
+Write-Host "InnoSetup compilation completed successfully." -ForegroundColor Green
 
 # Clean up environment variables
 $env:ACCESSIWEATHER_ROOT_DIR = $null

@@ -27,9 +27,9 @@ class LocationService:
         """Update the data source used by the location manager.
 
         Args:
-            data_source: The data source to use ('nws' or 'weatherapi')
+            data_source: The data source to use ('nws', 'weatherapi', or 'auto')
         """
-        self.location_manager.data_source = data_source
+        self.location_manager.update_data_source(data_source)
 
     def get_current_location(self) -> Optional[Tuple[str, float, float]]:
         """Get the current location.
