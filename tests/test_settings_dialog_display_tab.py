@@ -48,18 +48,18 @@ class TestSettingsDialogDisplayTab:
         # Get the index of the Display tab
         display_tab_index = page_names.index("Display")
 
-        # Check that the Display tab has the temperature unit control
+        # Check that the Display tab has the measurement unit control
         display_panel = settings_dialog.notebook.GetPage(display_tab_index)
         temp_unit_ctrl = None
         for child in display_panel.GetChildren():
-            if isinstance(child, wx.RadioBox) and child.GetName() == "Temperature Units":
+            if isinstance(child, wx.Choice) and child.GetName() == "Measurement Units":
                 temp_unit_ctrl = child
                 break
 
         assert temp_unit_ctrl is not None
         assert temp_unit_ctrl.GetCount() == 3
-        assert temp_unit_ctrl.GetString(0) == "Fahrenheit"
-        assert temp_unit_ctrl.GetString(1) == "Celsius"
+        assert temp_unit_ctrl.GetString(0) == "Imperial (Fahrenheit)"
+        assert temp_unit_ctrl.GetString(1) == "Metric (Celsius)"
         assert temp_unit_ctrl.GetString(2) == "Both"
 
     def test_load_fahrenheit_setting(self, settings_dialog):
