@@ -1,6 +1,6 @@
 [flake8]
 max-line-length = 100
-exclude = .git,__pycache__,build,dist,openapi_generator_evaluation,**/weather_gov_api_client/**
+exclude = .git,__pycache__,build,dist,**/weather_gov_api_client/**
 ignore = E203, W503, E501, F541
 per-file-ignores =
     # Allow imports in __init__.py files
@@ -14,4 +14,3 @@ per-file-ignores =
     tests/test_weatherapi_error_handling.py:F401
     tests/test_weatherapi_location.py:F401
     tests/test_weatherapi_mapper.py:F401
-    openapi_generator_evaluation/**:F401,F541,F811,E741

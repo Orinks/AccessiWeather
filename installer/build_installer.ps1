@@ -234,6 +234,8 @@ function Get-RequiredDependencies {
         "geopy",
         "python-dateutil",
         "beautifulsoup4",
+        "httpx",
+        "attrs",
         "PyInstaller"
     )
 
@@ -375,6 +377,8 @@ Write-Host "`n===== Step 2: Building executable with PyInstaller =====" -Foregro
 $PyInstallerArgs = $PyInstallerOpts + @(
     "--hidden-import=plyer.platforms.win.notification",
     "--hidden-import=dateutil.parser",
+    "--hidden-import=httpx",
+    "--hidden-import=attrs",
     "src/accessiweather/main.py"
 )
 python -m PyInstaller $PyInstallerArgs

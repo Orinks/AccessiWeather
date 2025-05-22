@@ -222,6 +222,8 @@ get_required_dependencies() {
         "geopy"
         "python-dateutil"
         "beautifulsoup4"
+        "httpx"
+        "attrs"
         "PyInstaller"
     )
 
@@ -363,6 +365,8 @@ $PYTHON_CMD -m PyInstaller $PYINSTALLER_OPTS \
     --hidden-import=plyer.platforms.linux.notification \
     --hidden-import=plyer.platforms.macosx.notification \
     --hidden-import=dateutil.parser \
+    --hidden-import=httpx \
+    --hidden-import=attrs \
     "src/accessiweather/main.py"
 
 # Step 3: Create portable ZIP archive
