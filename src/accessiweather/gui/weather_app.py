@@ -36,8 +36,10 @@ from .hourly_forecast_fetcher import HourlyForecastFetcher
 from .settings_dialog import (
     ALERT_RADIUS_KEY,
     API_CONTACT_KEY,
+    DEFAULT_TEMPERATURE_UNIT,
     MINIMIZE_TO_TRAY_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
+    TEMPERATURE_UNIT_KEY,
     UPDATE_INTERVAL_KEY,
 )
 from .system_tray import TaskBarIcon
@@ -245,6 +247,7 @@ class WeatherApp(
                 PRECISE_LOCATION_ALERTS_KEY: True,  # Default to precise location alerts
                 MINIMIZE_TO_TRAY_KEY: True,  # Default to minimize to tray when closing
                 DATA_SOURCE_KEY: DEFAULT_DATA_SOURCE,  # Default to NWS
+                TEMPERATURE_UNIT_KEY: DEFAULT_TEMPERATURE_UNIT,  # Default to Fahrenheit
             },
             "api_settings": {API_CONTACT_KEY: ""},  # Added default
             API_KEYS_SECTION: {WEATHERAPI_KEY: ""},  # Default empty WeatherAPI key
