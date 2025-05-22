@@ -82,7 +82,9 @@ class WeatherNotifier:
         # Set up persistent storage path
         if self.enable_persistence:
             self.config_dir: Optional[str] = config_dir or get_config_dir()
-            self.alerts_state_file: Optional[str] = os.path.join(self.config_dir, "alert_state.json")
+            self.alerts_state_file: Optional[str] = os.path.join(
+                self.config_dir, "alert_state.json"
+            )
             # Load existing alert state
             self._load_alert_state()
         else:
@@ -132,7 +134,7 @@ class WeatherNotifier:
             logger.info(f"Displayed summary notification: {message}")
 
     def process_alerts(self, alerts_data: Dict[str, Any]) -> tuple[List[Dict[str, Any]], int, int]:
-        """Process alerts data from NOAA API with change detection
+        """Process alerts data from NOAA API with change detection and deduplication
 
         Args:
             alerts_data: Dictionary containing alerts data from NOAA API
@@ -147,12 +149,16 @@ class WeatherNotifier:
         self.clear_expired_alerts()
 
         features = alerts_data.get("features", [])
-        processed_alerts = []
+        processed_alerts: List[Dict[str, Any]] = []
 
         # Track new and updated alerts for summary notification
         new_alerts_count = 0
         updated_alerts_count = 0
 
+        # Group alerts by deduplication key to handle multiple offices issuing the same alert
+        alert_groups: Dict[str, List[Dict[str, Any]]] = {}
+
+        # First pass: group alerts by deduplication key
         for feature in features:
             properties = feature.get("properties", {})
 
@@ -174,33 +180,45 @@ class WeatherNotifier:
                     "parameters", {}
                 ),  # Add parameters field for NWSheadline
                 "instruction": properties.get("instruction", ""),  # Add instruction field
+                "areaDesc": properties.get("areaDesc", ""),  # Add area description for deduplication
             }
 
-            processed_alerts.append(alert)
+            # Generate deduplication key
+            dedup_key = self._generate_deduplication_key(alert)
 
-            # Update our active alerts dictionary
-            alert_id = alert["id"]
+            # Group alerts by deduplication key
+            if dedup_key not in alert_groups:
+                alert_groups[dedup_key] = []
+            alert_groups[dedup_key].append(alert)
 
-            if alert_id:
-                # Check if this is a new alert or an update to an existing alert
-                if alert_id not in self.active_alerts:
-                    # New alert
-                    self.active_alerts[alert_id] = alert
-                    self.show_notification(alert, is_update=False)
-                    new_alerts_count += 1
-                    logger.info(f"New alert detected: {alert['event']}")
+        # Second pass: process deduplicated alerts
+        for dedup_key, alerts_in_group in alert_groups.items():
+            # Choose the "best" alert from the group (highest severity, most recent)
+            representative_alert = self._choose_representative_alert(alerts_in_group)
+            processed_alerts.append(representative_alert)
+
+            # Use deduplication key as the tracking ID instead of the original alert ID
+            tracking_id = f"dedup:{dedup_key}"
+
+            # Check if this is a new alert or an update to an existing alert
+            if tracking_id not in self.active_alerts:
+                # New alert (or new weather event)
+                self.active_alerts[tracking_id] = representative_alert
+                self.show_notification(representative_alert, is_update=False)
+                new_alerts_count += 1
+                logger.info(f"New weather event detected: {representative_alert['event']} (deduplicated from {len(alerts_in_group)} alerts)")
+            else:
+                # Existing alert - check if it's been updated
+                existing_alert = self.active_alerts[tracking_id]
+                if self._is_alert_updated(existing_alert, representative_alert):
+                    # Alert has been updated
+                    self.active_alerts[tracking_id] = representative_alert
+                    self.show_notification(representative_alert, is_update=True)
+                    updated_alerts_count += 1
+                    logger.info(f"Updated weather event detected: {representative_alert['event']} (deduplicated from {len(alerts_in_group)} alerts)")
                 else:
-                    # Existing alert - check if it's been updated
-                    existing_alert = self.active_alerts[alert_id]
-                    if self._is_alert_updated(existing_alert, alert):
-                        # Alert has been updated
-                        self.active_alerts[alert_id] = alert
-                        self.show_notification(alert, is_update=True)
-                        updated_alerts_count += 1
-                        logger.info(f"Updated alert detected: {alert['event']}")
-                    else:
-                        # Alert exists but hasn't changed
-                        logger.debug(f"Existing alert unchanged: {alert['event']}")
+                    # Alert exists but hasn't changed
+                    logger.debug(f"Existing weather event unchanged: {representative_alert['event']} (deduplicated from {len(alerts_in_group)} alerts)")
 
         # Log summary of changes
         total_alerts = len(processed_alerts)
@@ -237,6 +255,68 @@ class WeatherNotifier:
                 return True
 
         return False
+
+    def _generate_deduplication_key(self, alert: Dict[str, Any]) -> str:
+        """Generate a deduplication key for an alert to identify duplicate alerts from different offices
+
+        Args:
+            alert: Alert dictionary
+
+        Returns:
+            String key that uniquely identifies the weather event (not the specific alert)
+        """
+        # Use event type, effective time, expires time, and a simplified area description
+        # to create a key that identifies the same weather phenomenon
+        event = alert.get("event", "").strip()
+        effective = alert.get("effective", "").strip()
+        expires = alert.get("expires", "").strip()
+
+        # Simplify area description by removing office-specific details
+        area_desc = alert.get("areaDesc", "").strip()
+        # Remove common office identifiers and normalize
+        area_simplified = area_desc.replace(" County", "").replace(" Parish", "").replace(" Borough", "")
+
+        # Create a normalized key
+        key_parts = [event, effective, expires, area_simplified]
+        dedup_key = "|".join(part for part in key_parts if part)
+
+        logger.debug(f"Generated deduplication key for alert {alert.get('id', 'unknown')}: {dedup_key}")
+        return dedup_key
+
+    def _choose_representative_alert(self, alerts: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Choose the best representative alert from a group of duplicate alerts
+
+        Args:
+            alerts: List of alerts that represent the same weather event
+
+        Returns:
+            The alert that should be used as the representative for the group
+        """
+        if len(alerts) == 1:
+            return alerts[0]
+
+        # Sort by priority: severity first, then by sent time (most recent)
+        def alert_priority(alert):
+            severity = alert.get("severity", "Unknown")
+            severity_score = self.PRIORITY.get(severity, self.PRIORITY["Unknown"])
+
+            # Parse sent time for secondary sorting
+            sent_str = alert.get("sent", "")
+            try:
+                sent_time = isoparse(sent_str) if sent_str else datetime.min.replace(tzinfo=timezone.utc)
+            except Exception:
+                sent_time = datetime.min.replace(tzinfo=timezone.utc)
+
+            # Return tuple for sorting: (severity_score, sent_time)
+            # Higher severity score and more recent time are preferred
+            return (severity_score, sent_time)
+
+        # Sort alerts by priority (highest severity and most recent first)
+        sorted_alerts = sorted(alerts, key=alert_priority, reverse=True)
+        representative = sorted_alerts[0]
+
+        logger.debug(f"Chose representative alert {representative.get('id', 'unknown')} from {len(alerts)} duplicates")
+        return representative
 
     def show_notification(self, alert: Dict[str, Any], is_update: bool = False) -> None:
         """Show a desktop notification for an alert
