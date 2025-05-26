@@ -2,7 +2,7 @@ name: Continuous Integration
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ main, dev, feature/cicd-pipeline ]
   pull_request:
     branches: [ main, dev ]
   workflow_dispatch:
