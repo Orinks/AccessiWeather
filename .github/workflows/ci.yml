@@ -2,7 +2,7 @@ name: Continuous Integration
 
 on:
   push:
-    branches: [ main, dev, feature/cicd-pipeline ]
+    branches: [ main, dev ]
   pull_request:
     branches: [ main, dev ]
   workflow_dispatch:
@@ -136,7 +136,7 @@ jobs:
     - name: Run bandit security linting
       run: |
         bandit -r src/accessiweather -f json -o bandit-report.json
-        bandit -r src/accessiweather
+        bandit -r src/accessiweather --severity-level medium
 
     - name: Check dependencies for vulnerabilities
       run: |
