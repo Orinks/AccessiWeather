@@ -5,7 +5,7 @@ focusing on the interaction between the WeatherService and WeatherApiWrapper.
 """
 
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from accessiweather.api_client import NoaaApiClient
 from accessiweather.gui.settings_dialog import DATA_SOURCE_WEATHERAPI

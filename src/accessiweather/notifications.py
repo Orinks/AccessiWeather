@@ -180,7 +180,9 @@ class WeatherNotifier:
                     "parameters", {}
                 ),  # Add parameters field for NWSheadline
                 "instruction": properties.get("instruction", ""),  # Add instruction field
-                "areaDesc": properties.get("areaDesc", ""),  # Add area description for deduplication
+                "areaDesc": properties.get(
+                    "areaDesc", ""
+                ),  # Add area description for deduplication
             }
 
             # Generate deduplication key
@@ -206,7 +208,9 @@ class WeatherNotifier:
                 self.active_alerts[tracking_id] = representative_alert
                 self.show_notification(representative_alert, is_update=False)
                 new_alerts_count += 1
-                logger.info(f"New weather event detected: {representative_alert['event']} (deduplicated from {len(alerts_in_group)} alerts)")
+                logger.info(
+                    f"New weather event detected: {representative_alert['event']} (deduplicated from {len(alerts_in_group)} alerts)"
+                )
             else:
                 # Existing alert - check if it's been updated
                 existing_alert = self.active_alerts[tracking_id]
@@ -215,10 +219,14 @@ class WeatherNotifier:
                     self.active_alerts[tracking_id] = representative_alert
                     self.show_notification(representative_alert, is_update=True)
                     updated_alerts_count += 1
-                    logger.info(f"Updated weather event detected: {representative_alert['event']} (deduplicated from {len(alerts_in_group)} alerts)")
+                    logger.info(
+                        f"Updated weather event detected: {representative_alert['event']} (deduplicated from {len(alerts_in_group)} alerts)"
+                    )
                 else:
                     # Alert exists but hasn't changed
-                    logger.debug(f"Existing weather event unchanged: {representative_alert['event']} (deduplicated from {len(alerts_in_group)} alerts)")
+                    logger.debug(
+                        f"Existing weather event unchanged: {representative_alert['event']} (deduplicated from {len(alerts_in_group)} alerts)"
+                    )
 
         # Log summary of changes
         total_alerts = len(processed_alerts)
@@ -274,13 +282,17 @@ class WeatherNotifier:
         # Simplify area description by removing office-specific details
         area_desc = alert.get("areaDesc", "").strip()
         # Remove common office identifiers and normalize
-        area_simplified = area_desc.replace(" County", "").replace(" Parish", "").replace(" Borough", "")
+        area_simplified = (
+            area_desc.replace(" County", "").replace(" Parish", "").replace(" Borough", "")
+        )
 
         # Create a normalized key
         key_parts = [event, effective, expires, area_simplified]
         dedup_key = "|".join(part for part in key_parts if part)
 
-        logger.debug(f"Generated deduplication key for alert {alert.get('id', 'unknown')}: {dedup_key}")
+        logger.debug(
+            f"Generated deduplication key for alert {alert.get('id', 'unknown')}: {dedup_key}"
+        )
         return dedup_key
 
     def _choose_representative_alert(self, alerts: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -303,7 +315,9 @@ class WeatherNotifier:
             # Parse sent time for secondary sorting
             sent_str = alert.get("sent", "")
             try:
-                sent_time = isoparse(sent_str) if sent_str else datetime.min.replace(tzinfo=timezone.utc)
+                sent_time = (
+                    isoparse(sent_str) if sent_str else datetime.min.replace(tzinfo=timezone.utc)
+                )
             except Exception:
                 sent_time = datetime.min.replace(tzinfo=timezone.utc)
 
@@ -315,7 +329,9 @@ class WeatherNotifier:
         sorted_alerts = sorted(alerts, key=alert_priority, reverse=True)
         representative = sorted_alerts[0]
 
-        logger.debug(f"Chose representative alert {representative.get('id', 'unknown')} from {len(alerts)} duplicates")
+        logger.debug(
+            f"Chose representative alert {representative.get('id', 'unknown')} from {len(alerts)} duplicates"
+        )
         return representative
 
     def show_notification(self, alert: Dict[str, Any], is_update: bool = False) -> None:

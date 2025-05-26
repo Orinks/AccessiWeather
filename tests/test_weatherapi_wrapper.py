@@ -5,18 +5,8 @@ including error handling, rate limiting, caching, and data mapping.
 """
 
 import unittest
-from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import pytest
-
-from accessiweather.weatherapi_mapper import (
-    map_alerts,
-    map_current_conditions,
-    map_forecast,
-    map_hourly_forecast,
-    map_location,
-)
 from accessiweather.weatherapi_wrapper import WeatherApiError, WeatherApiWrapper
 
 
@@ -75,7 +65,7 @@ class TestWeatherApiWrapperCore(unittest.TestCase):
 
         # Check the request
         mock_request.assert_called_once()
-        args, kwargs = mock_request.call_args
+        args, _ = mock_request.call_args
         self.assertEqual(args[0], "current.json")
         self.assertEqual(args[1]["q"], "London")
 
@@ -90,11 +80,11 @@ class TestWeatherApiWrapperCore(unittest.TestCase):
         mock_request.return_value = mock_response
 
         # Call the method with coordinates
-        result = self.wrapper.get_current_conditions(51.5, -0.1)
+        self.wrapper.get_current_conditions(51.5, -0.1)
 
         # Check the request formatting
         mock_request.assert_called_once()
-        args, kwargs = mock_request.call_args
+        args, _ = mock_request.call_args
         self.assertEqual(args[0], "current.json")
         self.assertEqual(args[1]["q"], "51.5,-0.1")
 
@@ -138,7 +128,7 @@ class TestWeatherApiWrapperCore(unittest.TestCase):
 
         # Check the request
         mock_request.assert_called_once()
-        args, kwargs = mock_request.call_args
+        args, _ = mock_request.call_args
         self.assertEqual(args[0], "forecast.json")
         self.assertEqual(args[1]["q"], "London")
         self.assertEqual(args[1]["days"], 3)
@@ -182,7 +172,7 @@ class TestWeatherApiWrapperCore(unittest.TestCase):
 
         # Check the request
         mock_request.assert_called_once()
-        args, kwargs = mock_request.call_args
+        args, _ = mock_request.call_args
         self.assertEqual(args[0], "forecast.json")
         self.assertEqual(args[1]["q"], "London")
         self.assertEqual(args[1]["days"], 1)
@@ -225,7 +215,7 @@ class TestWeatherApiWrapperCore(unittest.TestCase):
 
         # Check the request
         mock_request.assert_called_once()
-        args, kwargs = mock_request.call_args
+        args, _ = mock_request.call_args
         self.assertEqual(args[0], "forecast.json")
         self.assertEqual(args[1]["q"], "51.5,-0.1")
         self.assertEqual(args[1]["alerts"], "yes")
@@ -254,7 +244,7 @@ class TestWeatherApiWrapperCore(unittest.TestCase):
 
         # Check the request
         mock_request.assert_called_once()
-        args, kwargs = mock_request.call_args
+        args, _ = mock_request.call_args
         self.assertEqual(args[0], "search.json")
         self.assertEqual(args[1]["q"], "London")
 
