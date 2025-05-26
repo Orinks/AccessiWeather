@@ -194,6 +194,7 @@ def cached_api_client():
     )
 
 
+@pytest.mark.unit
 def test_init_basic():
     """Test basic initialization without caching."""
     client = NoaaApiClient(user_agent="TestClient")
@@ -203,6 +204,7 @@ def test_init_basic():
     assert client.cache is None
 
 
+@pytest.mark.unit
 def test_init_with_contact():
     """Test initialization with contact info."""
     client = NoaaApiClient(user_agent="TestClient", contact_info="test@example.com")
@@ -210,6 +212,7 @@ def test_init_with_contact():
     assert client.headers["User-Agent"] == "TestClient (test@example.com)"
 
 
+@pytest.mark.unit
 def test_init_with_caching():
     """Test initialization with caching enabled."""
     client = NoaaApiClient(user_agent="TestClient", enable_caching=True, cache_ttl=300)
@@ -218,6 +221,8 @@ def test_init_with_caching():
     assert client.cache.default_ttl == 300
 
 
+@pytest.mark.unit
+@pytest.mark.api
 def test_get_point_data_success(api_client):
     """Test getting point data successfully."""
     lat, lon = 40.0, -75.0
@@ -232,6 +237,8 @@ def test_get_point_data_success(api_client):
         assert f"points/{lat},{lon}" in mock_get.call_args[0][0]
 
 
+@pytest.mark.unit
+@pytest.mark.api
 def test_get_point_data_cached(cached_api_client):
     """Test that point data is cached."""
     lat, lon = 40.0, -75.0
