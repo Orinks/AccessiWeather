@@ -1,0 +1,240 @@
+name: Build and Package
+
+on:
+  push:
+    branches: [ main, dev ]
+  workflow_dispatch:
+    inputs:
+      version_override:
+        description: 'Override version (optional)'
+        required: false
+        type: string
+  workflow_run:
+    workflows: ["Continuous Integration"]
+    types:
+      - completed
+    branches: [ main, dev ]
+
+jobs:
+  build:
+    name: Build Windows Application
+    runs-on: windows-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') || github.event_name == 'push' }}
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.12"
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~\AppData\Local\pip\Cache
+        key: ${{ runner.os }}-build-pip-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-build-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev]
+        pip install PyInstaller
+
+    - name: Extract version
+      id: version
+      run: |
+        if [ -n "${{ github.event.inputs.version_override }}" ]; then
+          VERSION="${{ github.event.inputs.version_override }}"
+        else
+          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Building version: $VERSION"
+      shell: bash
+
+    - name: Update version files
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        # Update setup.py
+        sed -i "s/version=\"[^\"]*\"/version=\"$VERSION\"/" setup.py
+        # Update version.py
+        sed -i "s/__version__ = \"[^\"]*\"/__version__ = \"$VERSION\"/" src/accessiweather/version.py
+        echo "Updated version to: $VERSION"
+      shell: bash
+
+    - name: Build with PyInstaller
+      run: |
+        if (Test-Path "AccessiWeather.spec") {
+          Write-Host "Using spec file: AccessiWeather.spec"
+          python -m PyInstaller --clean --noconfirm AccessiWeather.spec
+        } else {
+          Write-Host "Building with command line arguments"
+          python -m PyInstaller --clean --noconfirm --onedir --windowed --name AccessiWeather `
+            --hidden-import=plyer.platforms.win.notification `
+            --hidden-import=dateutil.parser `
+            --hidden-import=httpx `
+            --hidden-import=attrs `
+            --exclude-module=IPython `
+            --exclude-module=jedi `
+            --exclude-module=parso `
+            --exclude-module=black `
+            --exclude-module=mypy `
+            --exclude-module=django `
+            --exclude-module=Django `
+            --exclude-module=rapidfuzz `
+            src/accessiweather/main.py
+        }
+
+    - name: Verify build
+      run: |
+        if (Test-Path "dist/AccessiWeather/AccessiWeather.exe") {
+          Write-Host "Build successful - executable found"
+          Get-ChildItem "dist/AccessiWeather" | Select-Object Name, Length
+        } else {
+          Write-Host "Build failed - executable not found"
+          exit 1
+        }
+
+    - name: Create portable ZIP
+      run: |
+        $VERSION = "${{ steps.version.outputs.version }}"
+        $ZipName = "AccessiWeather_Portable_v$VERSION.zip"
+        Compress-Archive -Path "dist/AccessiWeather/*" -DestinationPath "dist/$ZipName" -Force
+        Write-Host "Created portable archive: $ZipName"
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: windows-build-${{ steps.version.outputs.version }}
+        path: |
+          dist/AccessiWeather/
+          dist/AccessiWeather_Portable_v${{ steps.version.outputs.version }}.zip
+        retention-days: 30
+
+  installer:
+    name: Create Windows Installer
+    runs-on: windows-latest
+    needs: build
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: windows-build-${{ needs.build.outputs.version }}
+        path: dist/
+
+    - name: Install Inno Setup
+      run: |
+        # Download and install Inno Setup
+        $InnoSetupUrl = "https://jrsoftware.org/download.php/is.exe"
+        $InnoSetupInstaller = "innosetup.exe"
+        Invoke-WebRequest -Uri $InnoSetupUrl -OutFile $InnoSetupInstaller
+        Start-Process -FilePath $InnoSetupInstaller -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
+
+        # Add Inno Setup to PATH
+        $InnoSetupPath = "${env:ProgramFiles(x86)}\Inno Setup 6"
+        if (Test-Path $InnoSetupPath) {
+          $env:PATH += ";$InnoSetupPath"
+          echo "$InnoSetupPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        }
+
+    - name: Verify Inno Setup installation
+      run: |
+        iscc.exe /?
+
+    - name: Update installer script version
+      run: |
+        $VERSION = "${{ needs.build.outputs.version }}"
+        $IssFile = "installer/AccessiWeather.iss"
+
+        if (Test-Path $IssFile) {
+          (Get-Content $IssFile) -replace '#define MyAppVersion ".*"', "#define MyAppVersion `"$VERSION`"" | Set-Content $IssFile
+          Write-Host "Updated installer version to: $VERSION"
+        } else {
+          Write-Host "Warning: Installer script not found at $IssFile"
+        }
+
+    - name: Build installer
+      run: |
+        $VERSION = "${{ needs.build.outputs.version }}"
+        $IssFile = "installer/AccessiWeather.iss"
+
+        if (Test-Path $IssFile) {
+          iscc.exe $IssFile
+          Write-Host "Installer build completed"
+
+          # Check if installer was created
+          $InstallerPath = "installer/dist/AccessiWeather_Setup_v$VERSION.exe"
+          if (Test-Path $InstallerPath) {
+            Write-Host "Installer created successfully: $InstallerPath"
+            # Move to main dist directory
+            Move-Item $InstallerPath "dist/AccessiWeather_Setup_v$VERSION.exe"
+          } else {
+            Write-Host "Warning: Installer not found at expected location"
+            Get-ChildItem "installer/" -Recurse -Filter "*.exe"
+          }
+        } else {
+          Write-Host "Skipping installer build - no Inno Setup script found"
+        }
+
+    - name: Upload installer artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: windows-installer-${{ needs.build.outputs.version }}
+        path: |
+          dist/AccessiWeather_Setup_v${{ needs.build.outputs.version }}.exe
+          dist/AccessiWeather_Portable_v${{ needs.build.outputs.version }}.zip
+        retention-days: 90
+
+  validate:
+    name: Validate Build
+    runs-on: windows-latest
+    needs: [build, installer]
+
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: windows-installer-${{ needs.build.outputs.version }}
+        path: artifacts/
+
+    - name: Validate artifacts
+      run: |
+        $VERSION = "${{ needs.build.outputs.version }}"
+
+        Write-Host "Validating build artifacts for version: $VERSION"
+        Get-ChildItem "artifacts/" -Recurse
+
+        # Check for required files
+        $RequiredFiles = @(
+          "AccessiWeather_Setup_v$VERSION.exe",
+          "AccessiWeather_Portable_v$VERSION.zip"
+        )
+
+        $AllFilesPresent = $true
+        foreach ($File in $RequiredFiles) {
+          if (Test-Path "artifacts/$File") {
+            $FileSize = (Get-Item "artifacts/$File").Length
+            Write-Host "✓ $File ($FileSize bytes)"
+          } else {
+            Write-Host "✗ Missing: $File"
+            $AllFilesPresent = $false
+          }
+        }
+
+        if (-not $AllFilesPresent) {
+          Write-Host "Build validation failed - missing required artifacts"
+          exit 1
+        }
+
+        Write-Host "Build validation successful - all artifacts present"

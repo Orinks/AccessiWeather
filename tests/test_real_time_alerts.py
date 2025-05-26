@@ -122,7 +122,11 @@ def test_process_alerts_detects_new_alerts(mock_notifier):
     # Check that the alert is tracked using deduplication key format
     assert len(notifier.active_alerts) == 1
     # The key should start with "dedup:" and contain the event name
-    dedup_keys = [key for key in notifier.active_alerts.keys() if key.startswith("dedup:") and "Test Event" in key]
+    dedup_keys = [
+        key
+        for key in notifier.active_alerts.keys()
+        if key.startswith("dedup:") and "Test Event" in key
+    ]
     assert len(dedup_keys) == 1
 
 

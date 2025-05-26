@@ -239,7 +239,7 @@ class TestAlertNotificationsFix:
             "response": "Shelter",
             "parameters": {},
             "instruction": "Take shelter immediately",
-            "areaDesc": "Smith County"
+            "areaDesc": "Smith County",
         }
 
         alert2 = {
@@ -258,19 +258,21 @@ class TestAlertNotificationsFix:
             "response": "Shelter",
             "parameters": {},
             "instruction": "Take shelter immediately",
-            "areaDesc": "Smith County"  # Same area
+            "areaDesc": "Smith County",  # Same area
         }
 
         alerts_data = self.create_alerts_data([alert1, alert2])
 
         # Process alerts
-        with patch.object(notifier, 'show_notification') as mock_show:
+        with patch.object(notifier, "show_notification") as mock_show:
             processed_alerts, new_count, updated_count = notifier.process_alerts(alerts_data)
 
             # Should only show ONE notification despite having 2 alerts
             assert new_count == 1, f"Expected 1 new alert, got {new_count}"
             assert updated_count == 0
-            assert len(processed_alerts) == 1, f"Expected 1 processed alert, got {len(processed_alerts)}"
+            assert (
+                len(processed_alerts) == 1
+            ), f"Expected 1 processed alert, got {len(processed_alerts)}"
             assert mock_show.call_count == 1, f"Expected 1 notification, got {mock_show.call_count}"
 
             # The processed alert should be one of the original alerts
