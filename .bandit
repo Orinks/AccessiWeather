@@ -1,0 +1,15 @@
+# Bandit configuration file for AccessiWeather
+# https://bandit.readthedocs.io/en/latest/config.html
+
+[bandit]
+# Exclude test files and generated API clients
+exclude_dirs = ['tests', 'src/accessiweather/weather_gov_api_client', 'src/accessiweather/weatherapi_client']
+
+# Skip specific test IDs that are not relevant for this project
+skips = ['B101']  # Skip assert_used test (asserts are OK in our codebase)
+
+# Set confidence levels
+confidence = ['medium', 'high']
+
+# Set severity levels
+severity = ['medium', 'high']
