@@ -34,16 +34,16 @@ TASKBAR_ICON_TEXT_FORMAT_KEY = "taskbar_icon_text_format"
 TEMPERATURE_UNIT_KEY = "temperature_unit"
 DEFAULT_TEMPERATURE_UNIT = TemperatureUnit.FAHRENHEIT.value
 
-# WeatherAPI integration constants
+# OpenWeatherMap integration constants (migrated from WeatherAPI)
 DATA_SOURCE_KEY = "data_source"
 API_KEYS_SECTION = "api_keys"
-WEATHERAPI_KEY = "weatherapi"
+OPENWEATHERMAP_KEY = "openweathermap"
 
 # Valid data source values
 DATA_SOURCE_NWS = "nws"
-DATA_SOURCE_WEATHERAPI = "weatherapi"
+DATA_SOURCE_OPENWEATHERMAP = "openweathermap"
 DATA_SOURCE_AUTO = "auto"
-VALID_DATA_SOURCES = [DATA_SOURCE_NWS, DATA_SOURCE_WEATHERAPI, DATA_SOURCE_AUTO]
+VALID_DATA_SOURCES = [DATA_SOURCE_NWS, DATA_SOURCE_OPENWEATHERMAP, DATA_SOURCE_AUTO]
 
 # Default values
 DEFAULT_DATA_SOURCE = DATA_SOURCE_NWS
@@ -134,29 +134,31 @@ class SettingsDialog(wx.Dialog):
         self.data_source_ctrl.AppendItems(
             [
                 "National Weather Service (NWS)",
-                "WeatherAPI.com",
-                "Automatic (NWS for US, WeatherAPI for non-US)",
+                "OpenWeatherMap",
+                "Automatic (NWS for US, OpenWeatherMap for non-US)",
             ]
         )
         tooltip_data_source = (
             "Select which weather data provider to use. "
-            "Automatic option uses NWS for US locations and WeatherAPI for non-US locations."
+            "Automatic option uses NWS for US locations and OpenWeatherMap for non-US locations."
         )
         self.data_source_ctrl.SetToolTip(tooltip_data_source)
         grid_sizer.Add(data_source_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         grid_sizer.Add(self.data_source_ctrl, 0, wx.EXPAND | wx.ALL, 5)
 
-        # WeatherAPI Key
-        weatherapi_key_label = wx.StaticText(panel, label="WeatherAPI.com API Key:")
+        # OpenWeatherMap Key
+        openweathermap_key_label = wx.StaticText(panel, label="OpenWeatherMap API Key:")
 
         # Create a horizontal sizer for the key field and validate button
         key_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.weatherapi_key_ctrl = wx.TextCtrl(panel, name="WeatherAPI Key", style=wx.TE_PASSWORD)
-        tooltip_weatherapi = (
-            "Enter your WeatherAPI.com API key (required when using WeatherAPI.com)."
+        self.openweathermap_key_ctrl = wx.TextCtrl(
+            panel, name="OpenWeatherMap Key", style=wx.TE_PASSWORD
         )
-        self.weatherapi_key_ctrl.SetToolTip(tooltip_weatherapi)
+        tooltip_openweathermap = (
+            "Enter your OpenWeatherMap API key (required when using OpenWeatherMap)."
+        )
+        self.openweathermap_key_ctrl.SetToolTip(tooltip_openweathermap)
 
         # Add validate button
         self.validate_key_btn = wx.Button(panel, label="Validate", size=(80, -1))
@@ -164,17 +166,17 @@ class SettingsDialog(wx.Dialog):
         self.validate_key_btn.Bind(wx.EVT_BUTTON, self._on_validate_key)
 
         # Add controls to the key sizer
-        key_sizer.Add(self.weatherapi_key_ctrl, 1, wx.EXPAND | wx.RIGHT, 5)
+        key_sizer.Add(self.openweathermap_key_ctrl, 1, wx.EXPAND | wx.RIGHT, 5)
         key_sizer.Add(self.validate_key_btn, 0, wx.ALIGN_CENTER_VERTICAL)
 
-        grid_sizer.Add(weatherapi_key_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+        grid_sizer.Add(openweathermap_key_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         grid_sizer.Add(key_sizer, 1, wx.EXPAND | wx.ALL, 5)
 
-        # Add hyperlink to get a WeatherAPI key
+        # Add hyperlink to get an OpenWeatherMap key
         self.signup_link = wx.adv.HyperlinkCtrl(
-            panel, wx.ID_ANY, "Get a free API key", "https://www.weatherapi.com/signup.aspx"
+            panel, wx.ID_ANY, "Get a free API key", "https://openweathermap.org/api"
         )
-        self.signup_link.SetName("Get WeatherAPI Key Link")  # For accessibility
+        self.signup_link.SetName("Get OpenWeatherMap Key Link")  # For accessibility
         grid_sizer.Add((1, 1), 0, wx.ALL, 5)  # Empty cell for alignment
         grid_sizer.Add(self.signup_link, 0, wx.ALL, 5)
 
@@ -390,20 +392,20 @@ class SettingsDialog(wx.Dialog):
             show_nationwide = self.current_settings.get(SHOW_NATIONWIDE_KEY, True)
             auto_refresh_national = self.current_settings.get(AUTO_REFRESH_NATIONAL_KEY, True)
 
-            # Load WeatherAPI settings
+            # Load OpenWeatherMap settings
             data_source = self.current_settings.get(DATA_SOURCE_KEY, DEFAULT_DATA_SOURCE)
-            weatherapi_key = self.current_settings.get(WEATHERAPI_KEY, "")
+            openweathermap_key = self.current_settings.get(OPENWEATHERMAP_KEY, "")
 
             # Set data source dropdown
-            if data_source == DATA_SOURCE_WEATHERAPI:
-                self.data_source_ctrl.SetSelection(1)  # WeatherAPI.com
+            if data_source == DATA_SOURCE_OPENWEATHERMAP:
+                self.data_source_ctrl.SetSelection(1)  # OpenWeatherMap
             elif data_source == DATA_SOURCE_AUTO:
                 self.data_source_ctrl.SetSelection(2)  # Automatic
             else:
                 self.data_source_ctrl.SetSelection(0)  # NWS (default)
 
-            # Set WeatherAPI key
-            self.weatherapi_key_ctrl.SetValue(weatherapi_key)
+            # Set OpenWeatherMap key
+            self.openweathermap_key_ctrl.SetValue(openweathermap_key)
 
             self.api_contact_ctrl.SetValue(api_contact)
             self.update_interval_ctrl.SetValue(update_interval)
@@ -466,39 +468,39 @@ class SettingsDialog(wx.Dialog):
         # Get the selected data source
         selection = self.data_source_ctrl.GetSelection()
 
-        if selection == 1:  # WeatherAPI.com
-            # Enable WeatherAPI key field, validate button, and signup link
-            self.weatherapi_key_ctrl.Enable(True)
+        if selection == 1:  # OpenWeatherMap
+            # Enable OpenWeatherMap key field, validate button, and signup link
+            self.openweathermap_key_ctrl.Enable(True)
             self.validate_key_btn.Enable(True)
             self.signup_link.Enable(True)
             # Disable NWS API contact field
             self.api_contact_ctrl.Enable(False)
         elif selection == 2:  # Automatic
-            # Enable WeatherAPI key field, validate button, and signup link
-            # since WeatherAPI will be used for non-US locations
-            self.weatherapi_key_ctrl.Enable(True)
+            # Enable OpenWeatherMap key field, validate button, and signup link
+            # since OpenWeatherMap will be used for non-US locations
+            self.openweathermap_key_ctrl.Enable(True)
             self.validate_key_btn.Enable(True)
             self.signup_link.Enable(True)
             # Enable NWS API contact field since NWS will be used for US locations
             self.api_contact_ctrl.Enable(True)
         else:  # NWS
-            # Disable WeatherAPI key field, validate button, and signup link
-            self.weatherapi_key_ctrl.Enable(False)
+            # Disable OpenWeatherMap key field, validate button, and signup link
+            self.openweathermap_key_ctrl.Enable(False)
             self.validate_key_btn.Enable(False)
             self.signup_link.Enable(False)
             # Enable NWS API contact field
             self.api_contact_ctrl.Enable(True)
 
     def _on_validate_key(self, event):
-        """Handle validate button click to test the WeatherAPI key."""
-        api_key = self.weatherapi_key_ctrl.GetValue().strip()
+        """Handle validate button click to test the OpenWeatherMap key."""
+        api_key = self.openweathermap_key_ctrl.GetValue().strip()
 
         # Show a busy cursor
         wx.BeginBusyCursor()
 
         try:
             # Validate the API key
-            is_valid, message = self._validate_weatherapi_key(api_key)
+            is_valid, message = self._validate_openweathermap_key(api_key)
 
             # Show the result
             if is_valid:
@@ -529,17 +531,17 @@ class SettingsDialog(wx.Dialog):
 
         # Get data source selection
         data_source_idx = self.data_source_ctrl.GetSelection()
-        is_weatherapi = data_source_idx == 1
+        is_openweathermap = data_source_idx == 1
         is_automatic = data_source_idx == 2
 
-        # Validate WeatherAPI key if WeatherAPI or Automatic is selected
-        if is_weatherapi or is_automatic:
-            weatherapi_key = self.weatherapi_key_ctrl.GetValue().strip()
-            if not weatherapi_key:
+        # Validate OpenWeatherMap key if OpenWeatherMap or Automatic is selected
+        if is_openweathermap or is_automatic:
+            openweathermap_key = self.openweathermap_key_ctrl.GetValue().strip()
+            if not openweathermap_key:
                 message = (
-                    "WeatherAPI.com API key is required when using WeatherAPI.com as the data source."
-                    if is_weatherapi
-                    else "WeatherAPI.com API key is required for the Automatic option to handle non-US locations."
+                    "OpenWeatherMap API key is required when using OpenWeatherMap as the data source."
+                    if is_openweathermap
+                    else "OpenWeatherMap API key is required for the Automatic option to handle non-US locations."
                 )
                 wx.MessageBox(
                     message,
@@ -548,7 +550,7 @@ class SettingsDialog(wx.Dialog):
                     self,
                 )
                 self.notebook.SetSelection(0)  # Switch to General tab
-                self.weatherapi_key_ctrl.SetFocus()
+                self.openweathermap_key_ctrl.SetFocus()
                 return  # Prevent dialog closing
         else:
             # Validate NWS API contact if NWS is selected
@@ -615,7 +617,7 @@ class SettingsDialog(wx.Dialog):
         # Determine data source
         selection = self.data_source_ctrl.GetSelection()
         if selection == 1:
-            data_source = DATA_SOURCE_WEATHERAPI
+            data_source = DATA_SOURCE_OPENWEATHERMAP
         elif selection == 2:
             data_source = DATA_SOURCE_AUTO
         else:
@@ -687,12 +689,31 @@ class SettingsDialog(wx.Dialog):
             dict: A dictionary containing the updated API keys.
         """
         return {
-            WEATHERAPI_KEY: self.weatherapi_key_ctrl.GetValue().strip(),
+            OPENWEATHERMAP_KEY: self.openweathermap_key_ctrl.GetValue().strip(),
         }
 
-    def _validate_weatherapi_key(self, api_key):
+    def _is_valid_openweathermap_key_format(self, api_key):
         """
-        Validate a WeatherAPI.com API key by making a test API call.
+        Validate OpenWeatherMap API key format (32-character hexadecimal string).
+
+        Args:
+            api_key: The API key to validate
+
+        Returns:
+            bool: True if the format is valid, False otherwise
+        """
+        import re
+
+        if not api_key:
+            return False
+
+        # OpenWeatherMap API keys are 32-character hexadecimal strings (lowercase)
+        pattern = r"^[a-f0-9]{32}$"
+        return bool(re.match(pattern, api_key))
+
+    def _validate_openweathermap_key(self, api_key):
+        """
+        Validate an OpenWeatherMap API key by making a test API call.
 
         Args:
             api_key: The API key to validate
@@ -706,10 +727,14 @@ class SettingsDialog(wx.Dialog):
         if not api_key:
             return False, "API key cannot be empty"
 
+        # First check the format
+        if not self._is_valid_openweathermap_key_format(api_key):
+            return False, "API key must be a 32-character hexadecimal string"
+
         # Make a simple API call to validate the key
-        url = "https://api.weatherapi.com/v1/current.json"
+        url = "https://api.openweathermap.org/data/2.5/weather"
         params = {
-            "key": api_key,
+            "appid": api_key,
             "q": "London",  # Use a well-known location for validation
         }
         headers = {
@@ -724,14 +749,17 @@ class SettingsDialog(wx.Dialog):
                 # Check if the request was successful
                 if response.status_code == 200:
                     data = response.json()
-                    if "location" in data and "current" in data:
+                    if "coord" in data and "weather" in data:
                         return True, "API key is valid"
                     else:
-                        return False, "Invalid response format from WeatherAPI.com"
+                        return False, "Invalid response format from OpenWeatherMap"
                 elif response.status_code == 401:
                     # Authentication error
-                    data = response.json()
-                    error_msg = data.get("error", {}).get("message", "Invalid API key")
+                    try:
+                        data = response.json()
+                        error_msg = data.get("message", "Invalid API key")
+                    except Exception:
+                        error_msg = "Invalid API key"
                     return False, f"Authentication error: {error_msg}"
                 else:
                     # Other errors

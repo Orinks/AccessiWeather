@@ -12,7 +12,7 @@ from accessiweather.api_client import NoaaApiClient
 
 # NoaaApiWrapper is used in create_app
 from accessiweather.api_wrapper import NoaaApiWrapper  # noqa: F401
-from accessiweather.gui.settings_dialog import API_KEYS_SECTION, WEATHERAPI_KEY
+from accessiweather.gui.settings_dialog import API_KEYS_SECTION, OPENWEATHERMAP_KEY
 from accessiweather.location import LocationManager
 from accessiweather.notifications import WeatherNotifier
 from accessiweather.services.location_service import LocationService
@@ -60,22 +60,22 @@ def create_weather_app(
         cache_ttl=cache_ttl,
     )
 
-    # Create the WeatherAPI.com client if API key is available
+    # Create the OpenWeatherMap client if API key is available
     weatherapi_wrapper = None
     api_keys = config.get(API_KEYS_SECTION, {})
-    weatherapi_key = api_keys.get(WEATHERAPI_KEY)
+    openweathermap_key = api_keys.get(OPENWEATHERMAP_KEY)
 
-    if weatherapi_key:
-        logger.info("Initializing WeatherAPI.com client with provided API key")
+    if openweathermap_key:
+        logger.info("Initializing OpenWeatherMap client with provided API key")
         weatherapi_wrapper = WeatherApiWrapper(
-            api_key=weatherapi_key,
+            api_key=openweathermap_key,
             user_agent="AccessiWeather",
             enable_caching=enable_caching,
             cache_ttl=cache_ttl,
         )
     else:
         logger.info(
-            "No WeatherAPI.com API key provided, WeatherAPI.com client will not be available"
+            "No OpenWeatherMap API key provided, OpenWeatherMap client will not be available"
         )
 
     # Create the location manager

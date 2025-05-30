@@ -88,41 +88,44 @@ def get_config_dir(custom_dir: Optional[str] = None) -> str:
     return os.path.expanduser("~/.accessiweather")
 
 
-def migrate_config(config: Dict[str, Any]) -> Dict[str, Any]:
-    """Migrate configuration to the latest format
+def ensure_config_defaults(config: Dict[str, Any]) -> Dict[str, Any]:
+    """Ensure configuration has all required default settings
 
-    This function removes obsolete settings and adds new default settings
-    as needed when the configuration format changes.
+    This function adds missing default settings to the configuration
+    without performing any migration logic.
 
     Args:
-        config: Configuration dictionary to migrate
+        config: Configuration dictionary to update
 
     Returns:
-        Migrated configuration dictionary
+        Dict: Configuration dictionary with defaults added
     """
     # Make a copy of the config to avoid modifying the original
-    migrated_config = config.copy()
+    updated_config = config.copy()
 
-    # Remove obsolete alert_update_interval if present
-    if "settings" in migrated_config:
-        settings = migrated_config["settings"]
-        if "alert_update_interval" in settings:
-            logger.info("Removing obsolete alert_update_interval setting")
-            del settings["alert_update_interval"]
+    # Ensure settings section exists
+    if "settings" not in updated_config:
+        updated_config["settings"] = {}
 
-        # Add WeatherAPI data source setting if not present
-        if "data_source" not in settings:
-            from accessiweather.gui.settings_dialog import DEFAULT_DATA_SOURCE
+    settings = updated_config["settings"]
 
-            logger.info(f"Adding default data_source setting: {DEFAULT_DATA_SOURCE}")
-            settings["data_source"] = DEFAULT_DATA_SOURCE
+    # Add data source setting if not present
+    if "data_source" not in settings:
+        from accessiweather.gui.settings_dialog import DEFAULT_DATA_SOURCE
+
+        logger.info(f"Adding default data_source setting: {DEFAULT_DATA_SOURCE}")
+        settings["data_source"] = DEFAULT_DATA_SOURCE
 
     # Ensure api_keys section exists
-    if "api_keys" not in migrated_config:
+    if "api_keys" not in updated_config:
         logger.info("Adding api_keys section to config")
-        migrated_config["api_keys"] = {}
+        updated_config["api_keys"] = {}
 
-        # Add default WeatherAPI key
-        migrated_config["api_keys"]["weatherapi"] = ""
+    api_keys = updated_config["api_keys"]
 
-    return migrated_config
+    # Add default OpenWeatherMap key if not present
+    if "openweathermap" not in api_keys:
+        logger.info("Adding default OpenWeatherMap key to config")
+        api_keys["openweathermap"] = ""
+
+    return updated_config

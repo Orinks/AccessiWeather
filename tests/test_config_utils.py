@@ -4,13 +4,7 @@ import os
 import sys
 from unittest.mock import mock_open, patch
 
-from accessiweather.config_utils import get_config_dir, is_portable_mode, migrate_config
-from accessiweather.gui.settings_dialog import (
-    API_KEYS_SECTION,
-    DATA_SOURCE_KEY,
-    DEFAULT_DATA_SOURCE,
-    WEATHERAPI_KEY,
-)
+from accessiweather.config_utils import get_config_dir, is_portable_mode
 
 # --- Tests for is_portable_mode ---
 
@@ -107,71 +101,3 @@ def test_get_config_dir_windows_no_appdata():
                     mock_expanduser.return_value = r"C:\Users\Test\.accessiweather"
                     assert get_config_dir() == r"C:\Users\Test\.accessiweather"
                     mock_expanduser.assert_called_once_with("~/.accessiweather")
-
-
-# --- Tests for migrate_config ---
-
-
-def test_migrate_config_adds_weatherapi_fields():
-    """Test that migrate_config adds WeatherAPI fields to the configuration."""
-    # Create a config without WeatherAPI fields
-    config = {
-        "settings": {
-            "update_interval_minutes": 10,
-            "alert_radius_miles": 25,
-            "precise_location_alerts": True,
-        },
-        "api_settings": {"api_contact": "test@example.com"},
-    }
-
-    # Migrate the config
-    migrated = migrate_config(config)
-
-    # Check that WeatherAPI fields were added
-    assert DATA_SOURCE_KEY in migrated["settings"]
-    assert migrated["settings"][DATA_SOURCE_KEY] == DEFAULT_DATA_SOURCE
-    assert API_KEYS_SECTION in migrated
-    assert WEATHERAPI_KEY in migrated[API_KEYS_SECTION]
-    assert migrated[API_KEYS_SECTION][WEATHERAPI_KEY] == ""
-
-
-def test_migrate_config_preserves_existing_values():
-    """Test that migrate_config preserves existing WeatherAPI values."""
-    # Create a config with existing WeatherAPI fields
-    config = {
-        "settings": {
-            "update_interval_minutes": 10,
-            "alert_radius_miles": 25,
-            "precise_location_alerts": True,
-            DATA_SOURCE_KEY: "weatherapi",
-        },
-        "api_settings": {"api_contact": "test@example.com"},
-        API_KEYS_SECTION: {WEATHERAPI_KEY: "existing-api-key"},
-    }
-
-    # Migrate the config
-    migrated = migrate_config(config)
-
-    # Check that existing values were preserved
-    assert migrated["settings"][DATA_SOURCE_KEY] == "weatherapi"
-    assert migrated[API_KEYS_SECTION][WEATHERAPI_KEY] == "existing-api-key"
-
-
-def test_migrate_config_removes_obsolete_settings():
-    """Test that migrate_config removes obsolete settings."""
-    # Create a config with obsolete alert_update_interval
-    config = {
-        "settings": {
-            "update_interval_minutes": 10,
-            "alert_radius_miles": 25,
-            "precise_location_alerts": True,
-            "alert_update_interval": 15,  # Obsolete setting
-        },
-        "api_settings": {"api_contact": "test@example.com"},
-    }
-
-    # Migrate the config
-    migrated = migrate_config(config)
-
-    # Check that obsolete setting was removed
-    assert "alert_update_interval" not in migrated["settings"]
