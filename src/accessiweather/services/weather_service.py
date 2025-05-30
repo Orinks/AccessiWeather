@@ -13,7 +13,7 @@ from accessiweather.api_wrapper import NoaaApiWrapper
 from accessiweather.gui.settings_dialog import (
     DATA_SOURCE_AUTO,
     DATA_SOURCE_NWS,
-    DATA_SOURCE_WEATHERAPI,
+    DATA_SOURCE_OPENWEATHERMAP,
 )
 from accessiweather.services.national_discussion_scraper import NationalDiscussionScraper
 from accessiweather.weatherapi_wrapper import WeatherApiError, WeatherApiWrapper
@@ -186,8 +186,8 @@ class WeatherService:
         data_source = self._get_data_source()
         logger.debug(f"_is_weatherapi_available: data_source={data_source}")
 
-        # Check if WeatherAPI.com is selected as the data source
-        if data_source != DATA_SOURCE_WEATHERAPI and data_source != DATA_SOURCE_AUTO:
+        # Check if OpenWeatherMap is selected as the data source
+        if data_source != DATA_SOURCE_OPENWEATHERMAP and data_source != DATA_SOURCE_AUTO:
             logger.debug(
                 f"_is_weatherapi_available: data_source is not weatherapi or auto, returning False"
             )
@@ -216,8 +216,8 @@ class WeatherService:
         data_source = self._get_data_source()
         logger.debug(f"_should_use_weatherapi: data_source={data_source}, lat={lat}, lon={lon}")
 
-        # If WeatherAPI.com is explicitly selected, always use it
-        if data_source == DATA_SOURCE_WEATHERAPI:
+        # If OpenWeatherMap is explicitly selected, always use it
+        if data_source == DATA_SOURCE_OPENWEATHERMAP:
             logger.debug("_should_use_weatherapi: WeatherAPI.com explicitly selected")
             return True
 
@@ -257,8 +257,8 @@ class WeatherService:
             # Determine which API to use
             use_weatherapi = False
 
-            # If WeatherAPI.com is explicitly selected, always use it
-            if data_source == DATA_SOURCE_WEATHERAPI:
+            # If OpenWeatherMap is explicitly selected, always use it
+            if data_source == DATA_SOURCE_OPENWEATHERMAP:
                 use_weatherapi = True
                 logger.info("Using WeatherAPI.com for forecast (explicitly selected)")
             # If Automatic mode is selected, use WeatherAPI.com for non-US locations
@@ -342,8 +342,8 @@ class WeatherService:
             # Determine which API to use
             use_weatherapi = False
 
-            # If WeatherAPI.com is explicitly selected, always use it
-            if data_source == DATA_SOURCE_WEATHERAPI:
+            # If OpenWeatherMap is explicitly selected, always use it
+            if data_source == DATA_SOURCE_OPENWEATHERMAP:
                 use_weatherapi = True
                 logger.info("Using WeatherAPI.com for hourly forecast (explicitly selected)")
             # If Automatic mode is selected, use WeatherAPI.com for non-US locations
@@ -422,7 +422,7 @@ class WeatherService:
 
             # Stations are only available from NWS
             data_source = self._get_data_source()
-            if data_source == DATA_SOURCE_WEATHERAPI or data_source == DATA_SOURCE_AUTO:
+            if data_source == DATA_SOURCE_OPENWEATHERMAP or data_source == DATA_SOURCE_AUTO:
                 logger.warning(
                     "Observation stations are not available from WeatherAPI.com, using NWS instead"
                 )
@@ -460,8 +460,8 @@ class WeatherService:
             # Determine which API to use
             use_weatherapi = False
 
-            # If WeatherAPI.com is explicitly selected, always use it
-            if data_source == DATA_SOURCE_WEATHERAPI:
+            # If OpenWeatherMap is explicitly selected, always use it
+            if data_source == DATA_SOURCE_OPENWEATHERMAP:
                 use_weatherapi = True
                 logger.info("Using WeatherAPI.com for current conditions (explicitly selected)")
             # If Automatic mode is selected, use WeatherAPI.com for non-US locations
@@ -556,8 +556,8 @@ class WeatherService:
             # Determine which API to use
             use_weatherapi = False
 
-            # If WeatherAPI.com is explicitly selected, always use it
-            if data_source == DATA_SOURCE_WEATHERAPI:
+            # If OpenWeatherMap is explicitly selected, always use it
+            if data_source == DATA_SOURCE_OPENWEATHERMAP:
                 use_weatherapi = True
                 logger.info("Using WeatherAPI.com for alerts (explicitly selected)")
             # If Automatic mode is selected, use WeatherAPI.com for non-US locations
@@ -643,7 +643,7 @@ class WeatherService:
 
             # Discussions are only available from NWS
             data_source = self._get_data_source()
-            if data_source == DATA_SOURCE_WEATHERAPI or data_source == DATA_SOURCE_AUTO:
+            if data_source == DATA_SOURCE_OPENWEATHERMAP or data_source == DATA_SOURCE_AUTO:
                 logger.warning(
                     "Forecast discussions are not available from WeatherAPI.com, using NWS instead"
                 )

@@ -6,8 +6,8 @@ from accessiweather.gui.settings_dialog import (
     API_KEYS_SECTION,
     DATA_SOURCE_KEY,
     DATA_SOURCE_NWS,
-    DATA_SOURCE_WEATHERAPI,
-    WEATHERAPI_KEY,
+    DATA_SOURCE_OPENWEATHERMAP,
+    OPENWEATHERMAP_KEY,
 )
 
 
@@ -34,7 +34,7 @@ class TestSettingsChangeHandling:
                 DATA_SOURCE_KEY: DATA_SOURCE_NWS,
             },
             "api_settings": {"api_contact": "test@example.com"},
-            API_KEYS_SECTION: {WEATHERAPI_KEY: ""},
+            API_KEYS_SECTION: {OPENWEATHERMAP_KEY: ""},
         }
 
         # Create mock NoaaApiClient and WeatherService
@@ -48,7 +48,7 @@ class TestSettingsChangeHandling:
                 "accessiweather.services.weather_service.WeatherService",
                 return_value=mock_new_weather_service,
             ),
-            patch("accessiweather.weatherapi_wrapper.WeatherApiWrapper") as mock_weatherapi_wrapper,
+            patch("accessiweather.openweathermap_wrapper.OpenWeatherMapWrapper") as mock_openweathermap_wrapper,
         ):
 
             # Create a mock WeatherApp
@@ -70,8 +70,8 @@ class TestSettingsChangeHandling:
             # Call the method
             WeatherApp._handle_data_source_change(mock_app)
 
-            # Verify that WeatherApiWrapper was not created (no API key)
-            mock_weatherapi_wrapper.assert_not_called()
+            # Verify that OpenWeatherMapWrapper was not created (no API key)
+            mock_openweathermap_wrapper.assert_not_called()
 
             # Verify that the weather service was updated
             assert mock_app.weather_service == mock_new_weather_service
@@ -90,8 +90,8 @@ class TestSettingsChangeHandling:
             # Verify that weather data was refreshed
             mock_app.UpdateWeatherData.assert_called_once()
 
-    def test_handle_data_source_change_weatherapi(self):
-        """Test handling data source change to WeatherAPI.com."""
+    def test_handle_data_source_change_openweathermap(self):
+        """Test handling data source change to OpenWeatherMap."""
         # Create mocks
         mock_weather_service = MagicMock()
         mock_location_service = MagicMock()
@@ -104,18 +104,18 @@ class TestSettingsChangeHandling:
         mock_hourly_forecast_fetcher = MagicMock()
         mock_national_forecast_fetcher = MagicMock()
 
-        # Create config for WeatherAPI
+        # Create config for OpenWeatherMap
         mock_config = {
             "settings": {
-                DATA_SOURCE_KEY: DATA_SOURCE_WEATHERAPI,
+                DATA_SOURCE_KEY: DATA_SOURCE_OPENWEATHERMAP,
             },
             "api_settings": {"api_contact": "test@example.com"},
-            API_KEYS_SECTION: {WEATHERAPI_KEY: "test_api_key"},
+            API_KEYS_SECTION: {OPENWEATHERMAP_KEY: "test_api_key"},
         }
 
         # Create mock clients and service
         mock_nws_client = MagicMock()
-        mock_weatherapi_wrapper_instance = MagicMock()
+        mock_openweathermap_wrapper_instance = MagicMock()
         mock_new_weather_service = MagicMock()
 
         # Set up patches
@@ -126,9 +126,9 @@ class TestSettingsChangeHandling:
                 return_value=mock_new_weather_service,
             ),
             patch(
-                "accessiweather.weatherapi_wrapper.WeatherApiWrapper",
-                return_value=mock_weatherapi_wrapper_instance,
-            ) as mock_weatherapi_wrapper,
+                "accessiweather.openweathermap_wrapper.OpenWeatherMapWrapper",
+                return_value=mock_openweathermap_wrapper_instance,
+            ) as mock_openweathermap_wrapper,
         ):
 
             # Create a mock WeatherApp
@@ -150,9 +150,9 @@ class TestSettingsChangeHandling:
             # Call the method
             WeatherApp._handle_data_source_change(mock_app)
 
-            # Verify that WeatherApiWrapper was created with the right parameters
-            mock_weatherapi_wrapper.assert_called_once()
-            _, kwargs = mock_weatherapi_wrapper.call_args
+            # Verify that OpenWeatherMapWrapper was created with the right parameters
+            mock_openweathermap_wrapper.assert_called_once()
+            _, kwargs = mock_openweathermap_wrapper.call_args
             assert kwargs["api_key"] == "test_api_key"
             assert kwargs["user_agent"] == "AccessiWeather"
 
@@ -160,7 +160,7 @@ class TestSettingsChangeHandling:
             assert mock_app.weather_service == mock_new_weather_service
 
             # Verify that the location service data source was updated
-            mock_location_service.update_data_source.assert_called_once_with(DATA_SOURCE_WEATHERAPI)
+            mock_location_service.update_data_source.assert_called_once_with(DATA_SOURCE_OPENWEATHERMAP)
 
             # Verify that the fetchers were updated
             assert mock_forecast_fetcher.service == mock_new_weather_service

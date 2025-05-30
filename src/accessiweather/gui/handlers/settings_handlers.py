@@ -15,9 +15,9 @@ from ..settings_dialog import (
     DATA_SOURCE_KEY,
     DATA_SOURCE_NWS,
     MINIMIZE_ON_STARTUP_KEY,
+    OPENWEATHERMAP_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
     SHOW_NATIONWIDE_KEY,
-    WEATHERAPI_KEY,
 )
 from .common import WeatherAppHandlerBase
 
@@ -108,15 +108,20 @@ class WeatherAppSettingsHandlers(WeatherAppHandlerBase):
                 # Refresh weather data to apply new setting
                 self.UpdateWeatherData()
 
-            # Check if data source or WeatherAPI key changed
+            # Check if data source or OpenWeatherMap key changed
             old_data_source = settings.get(DATA_SOURCE_KEY, DATA_SOURCE_NWS)
             new_data_source = updated_settings.get(DATA_SOURCE_KEY, DATA_SOURCE_NWS)
-            old_weatherapi_key = self.config.get(API_KEYS_SECTION, {}).get(WEATHERAPI_KEY, "")
-            new_weatherapi_key = updated_api_keys.get(WEATHERAPI_KEY, "")
+            old_openweathermap_key = self.config.get(API_KEYS_SECTION, {}).get(
+                OPENWEATHERMAP_KEY, ""
+            )
+            new_openweathermap_key = updated_api_keys.get(OPENWEATHERMAP_KEY, "")
 
-            if old_data_source != new_data_source or old_weatherapi_key != new_weatherapi_key:
+            if (
+                old_data_source != new_data_source
+                or old_openweathermap_key != new_openweathermap_key
+            ):
                 logger.info(
-                    f"Data source or WeatherAPI key changed. Data source: {old_data_source} -> {new_data_source}"
+                    f"Data source or OpenWeatherMap key changed. Data source: {old_data_source} -> {new_data_source}"
                 )
                 # Handle data source and API key changes
                 self._handle_data_source_change()
