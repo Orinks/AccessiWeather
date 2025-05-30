@@ -202,7 +202,20 @@ jobs:
 
     - name: Verify Inno Setup installation
       run: |
-        iscc.exe /?
+        # Check if iscc.exe is available (help command returns exit code 1, which is normal)
+        try {
+          $output = & iscc.exe /? 2>&1
+          if ($output -match "Inno Setup.*Command-Line Compiler") {
+            Write-Host "✓ Inno Setup compiler verified successfully"
+            Write-Host "Version info: $($output | Select-String 'Inno Setup.*Command-Line Compiler')"
+          } else {
+            Write-Host "✗ Inno Setup verification failed"
+            exit 1
+          }
+        } catch {
+          Write-Host "✗ Inno Setup not found or not accessible"
+          exit 1
+        }
 
     - name: Update installer script version
       run: |
