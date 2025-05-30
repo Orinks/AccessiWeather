@@ -121,11 +121,4 @@ def ensure_config_defaults(config: Dict[str, Any]) -> Dict[str, Any]:
         logger.info("Adding api_keys section to config")
         updated_config["api_keys"] = {}
 
-    api_keys = updated_config["api_keys"]
-
-    # Add default OpenWeatherMap key if not present
-    if "openweathermap" not in api_keys:
-        logger.info("Adding default OpenWeatherMap key to config")
-        api_keys["openweathermap"] = ""
-
     return updated_config

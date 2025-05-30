@@ -225,7 +225,6 @@ class WeatherApp(
             API_KEYS_SECTION,
             DATA_SOURCE_KEY,
             DEFAULT_DATA_SOURCE,
-            OPENWEATHERMAP_KEY,
         )
 
         if os.path.exists(self._config_path):
@@ -251,7 +250,7 @@ class WeatherApp(
                 TEMPERATURE_UNIT_KEY: DEFAULT_TEMPERATURE_UNIT,  # Default to Fahrenheit
             },
             "api_settings": {API_CONTACT_KEY: ""},  # Added default
-            API_KEYS_SECTION: {OPENWEATHERMAP_KEY: ""},  # Default empty OpenWeatherMap key
+            API_KEYS_SECTION: {},  # Default empty API keys
         }
 
     # UpdateLocationDropdown is now implemented in WeatherAppLocationHandlers
@@ -680,26 +679,19 @@ class WeatherApp(
         settings and updates the fetchers to use the new service.
         """
         from accessiweather.api_client import NoaaApiClient
-        from accessiweather.gui.settings_dialog import API_KEYS_SECTION, OPENWEATHERMAP_KEY
         from accessiweather.services.weather_service import WeatherService
-        from accessiweather.weatherapi_wrapper import WeatherApiWrapper
 
         logger.info("Reinitializing WeatherService due to data source or API key change")
 
         # Get current settings
         api_settings = self.config.get("api_settings", {})
         contact_info = api_settings.get("contact_info")
-        api_keys = self.config.get(API_KEYS_SECTION, {})
-        openweathermap_key = api_keys.get(OPENWEATHERMAP_KEY)
 
         # Log the current settings
         from accessiweather.gui.settings_dialog import DATA_SOURCE_KEY
 
         data_source = self.config.get("settings", {}).get(DATA_SOURCE_KEY, "nws")
         logger.info(f"Current data source: {data_source}")
-        logger.info(
-            f"OpenWeatherMap key: {'configured' if openweathermap_key else 'not configured'}"
-        )
         logger.info(f"Full config: {self.config}")
 
         # Create the NWS API client (always needed)
@@ -710,24 +702,12 @@ class WeatherApp(
             cache_ttl=300,  # Default to 5 minutes
         )
 
-        # Create the OpenWeatherMap client if API key is available
-        openweathermap_wrapper = None
-        if openweathermap_key:
-            logger.info("Initializing OpenWeatherMap client with provided API key")
-            openweathermap_wrapper = WeatherApiWrapper(
-                api_key=openweathermap_key,
-                user_agent="AccessiWeather",
-                enable_caching=True,  # Default to enabled
-                cache_ttl=300,  # Default to 5 minutes
-            )
-        else:
-            logger.info(
-                "No OpenWeatherMap API key provided, OpenWeatherMap client will not be available"
-            )
+        # Placeholder for future weather API wrapper
+        weatherapi_wrapper = None
 
         # Create the new WeatherService
         self.weather_service = WeatherService(
-            nws_client=nws_client, weatherapi_wrapper=openweathermap_wrapper, config=self.config
+            nws_client=nws_client, weatherapi_wrapper=weatherapi_wrapper, config=self.config
         )
 
         # Update the location service with the new data source

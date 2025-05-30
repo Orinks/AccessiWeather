@@ -9,8 +9,7 @@ from accessiweather.gui.settings_dialog import (
     API_CONTACT_KEY,
     DATA_SOURCE_KEY,
     DATA_SOURCE_NWS,
-    DATA_SOURCE_OPENWEATHERMAP,
-    OPENWEATHERMAP_KEY,
+    DATA_SOURCE_AUTO,
     SettingsDialog,
 )
 
