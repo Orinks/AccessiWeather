@@ -24,20 +24,18 @@ class OpenWeatherMapClient:
     """Client for the OpenWeatherMap One Call API 3.0."""
 
     BASE_URL = "https://api.openweathermap.org"
-    
+
     # API endpoints
     CURRENT_WEATHER_ENDPOINT = "/data/2.5/weather"
     ONE_CALL_ENDPOINT = "/data/3.0/onecall"
-    
+
     # Supported units
     UNITS_METRIC = "metric"
     UNITS_IMPERIAL = "imperial"
     UNITS_STANDARD = "standard"
-    
+
     # Supported languages (subset of commonly used ones)
-    SUPPORTED_LANGUAGES = {
-        "en", "es", "fr", "de", "it", "pt", "ru", "ja", "zh_cn", "zh_tw"
-    }
+    SUPPORTED_LANGUAGES = {"en", "es", "fr", "de", "it", "pt", "ru", "ja", "zh_cn", "zh_tw"}
 
     def __init__(
         self,
@@ -59,7 +57,11 @@ class OpenWeatherMapClient:
         self.api_key = api_key
         self.user_agent = user_agent
         self.timeout = timeout
-        self.units = units if units in [self.UNITS_METRIC, self.UNITS_IMPERIAL, self.UNITS_STANDARD] else self.UNITS_IMPERIAL
+        self.units = (
+            units
+            if units in [self.UNITS_METRIC, self.UNITS_IMPERIAL, self.UNITS_STANDARD]
+            else self.UNITS_IMPERIAL
+        )
         self.language = language if language in self.SUPPORTED_LANGUAGES else "en"
 
     def _get_headers(self) -> Dict[str, str]:
@@ -85,7 +87,9 @@ class OpenWeatherMapClient:
             "lang": self.language,
         }
 
-    def _make_request(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def _make_request(
+        self, endpoint: str, params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Make an HTTP request to the OpenWeatherMap API.
 
         Args:
@@ -99,7 +103,7 @@ class OpenWeatherMapClient:
             OpenWeatherMapError: If the request fails
         """
         url = f"{self.BASE_URL}{endpoint}"
-        
+
         # Combine base params with additional params
         request_params = self._get_base_params()
         if params:
@@ -111,7 +115,7 @@ class OpenWeatherMapClient:
             with httpx.Client(timeout=self.timeout) as client:
                 logger.debug(f"Making request to {url} with params: {request_params}")
                 response = client.get(url, headers=headers, params=request_params)
-                
+
                 # Handle different HTTP status codes
                 if response.status_code == 200:
                     return response.json()
@@ -135,14 +139,14 @@ class OpenWeatherMapClient:
                         error_msg = error_data.get("message", f"HTTP {response.status_code}")
                     except Exception:
                         error_msg = f"HTTP {response.status_code}"
-                    
+
                     if 400 <= response.status_code < 500:
                         error_type = OpenWeatherMapError.CLIENT_ERROR
                     elif 500 <= response.status_code < 600:
                         error_type = OpenWeatherMapError.SERVER_ERROR
                     else:
                         error_type = OpenWeatherMapError.UNKNOWN_ERROR
-                    
+
                     raise OpenWeatherMapError(
                         message=error_msg,
                         status_code=response.status_code,
@@ -196,15 +200,12 @@ class OpenWeatherMapClient:
             "lat": lat,
             "lon": lon,
         }
-        
+
         logger.info(f"Getting current weather for coordinates: ({lat}, {lon})")
         return self._make_request(self.CURRENT_WEATHER_ENDPOINT, params)
 
     def get_one_call_data(
-        self, 
-        lat: float, 
-        lon: float, 
-        exclude: Optional[str] = None
+        self, lat: float, lon: float, exclude: Optional[str] = None
     ) -> Dict[str, Any]:
         """Get comprehensive weather data using One Call API 3.0.
 
@@ -227,6 +228,6 @@ class OpenWeatherMapClient:
 
         if exclude:
             params["exclude"] = exclude
-        
+
         logger.info(f"Getting One Call data for coordinates: ({lat}, {lon})")
         return self._make_request(self.ONE_CALL_ENDPOINT, params)

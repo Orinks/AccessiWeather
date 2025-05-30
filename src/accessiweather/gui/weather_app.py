@@ -681,8 +681,8 @@ class WeatherApp(
         """
         from accessiweather.api_client import NoaaApiClient
         from accessiweather.gui.settings_dialog import API_KEYS_SECTION, OPENWEATHERMAP_KEY
-        from accessiweather.services.weather_service import WeatherService
         from accessiweather.openweathermap_wrapper import OpenWeatherMapWrapper
+        from accessiweather.services.weather_service import WeatherService
 
         logger.info("Reinitializing WeatherService due to data source or API key change")
 

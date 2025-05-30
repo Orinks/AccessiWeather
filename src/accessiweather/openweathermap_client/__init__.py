@@ -6,17 +6,17 @@ with support for current weather, forecasts, and weather alerts.
 
 from .client import OpenWeatherMapClient
 from .exceptions import (
-    OpenWeatherMapError,
     AuthenticationError,
-    RateLimitError,
     NotFoundError,
+    OpenWeatherMapError,
+    RateLimitError,
     ValidationError,
 )
 
 __all__ = [
     "OpenWeatherMapClient",
     "OpenWeatherMapError",
-    "AuthenticationError", 
+    "AuthenticationError",
     "RateLimitError",
     "NotFoundError",
     "ValidationError",

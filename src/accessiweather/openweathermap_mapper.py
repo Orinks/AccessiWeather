@@ -81,7 +81,7 @@ def map_forecast(owm_data: Dict[str, Any], days: int = 7) -> Dict[str, Any]:
     try:
         daily_data = owm_data.get("daily", [])
         current_data = owm_data.get("current", {})
-        
+
         # Limit to requested number of days
         daily_data = daily_data[:days]
 
@@ -93,9 +93,9 @@ def map_forecast(owm_data: Dict[str, Any], days: int = 7) -> Dict[str, Any]:
             wind_deg = day_data.get("wind_deg", 0)
 
             forecast_day = {
-                "date": datetime.fromtimestamp(
-                    day_data.get("dt", 0), tz=timezone.utc
-                ).date().isoformat(),
+                "date": datetime.fromtimestamp(day_data.get("dt", 0), tz=timezone.utc)
+                .date()
+                .isoformat(),
                 "temperature": {
                     "high": temp.get("max"),
                     "low": temp.get("min"),
@@ -158,7 +158,7 @@ def map_hourly_forecast(owm_data: Dict[str, Any], hours: int = 48) -> Dict[str, 
     try:
         hourly_data = owm_data.get("hourly", [])
         current_data = owm_data.get("current", {})
-        
+
         # Limit to requested number of hours
         hourly_data = hourly_data[:hours]
 
@@ -227,7 +227,7 @@ def map_alerts(owm_data: Dict[str, Any]) -> List[Dict[str, Any]]:
     """
     try:
         alerts_data = owm_data.get("alerts", [])
-        
+
         mapped_alerts = []
         for alert_data in alerts_data:
             mapped_alert = {
@@ -268,15 +268,15 @@ def _map_alert_severity(tags: List[str]) -> str:
     # OpenWeatherMap doesn't provide explicit severity, so we infer from tags
     severe_keywords = ["extreme", "severe", "major", "dangerous"]
     moderate_keywords = ["moderate", "watch", "advisory"]
-    
+
     tags_lower = [tag.lower() for tag in tags]
-    
+
     for keyword in severe_keywords:
         if any(keyword in tag for tag in tags_lower):
             return "severe"
-    
+
     for keyword in moderate_keywords:
         if any(keyword in tag for tag in tags_lower):
             return "moderate"
-    
+
     return "minor"

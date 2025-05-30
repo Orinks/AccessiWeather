@@ -15,10 +15,10 @@ from accessiweather.api_wrapper import NoaaApiWrapper  # noqa: F401
 from accessiweather.gui.settings_dialog import API_KEYS_SECTION, OPENWEATHERMAP_KEY
 from accessiweather.location import LocationManager
 from accessiweather.notifications import WeatherNotifier
+from accessiweather.openweathermap_wrapper import OpenWeatherMapWrapper
 from accessiweather.services.location_service import LocationService
 from accessiweather.services.notification_service import NotificationService
 from accessiweather.services.weather_service import WeatherService
-from accessiweather.openweathermap_wrapper import OpenWeatherMapWrapper
 
 from .weather_app import WeatherApp
 

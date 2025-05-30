@@ -15,9 +15,9 @@ from accessiweather.gui.settings_dialog import (
     DATA_SOURCE_NWS,
     DATA_SOURCE_OPENWEATHERMAP,
 )
-from accessiweather.services.national_discussion_scraper import NationalDiscussionScraper
-from accessiweather.openweathermap_wrapper import OpenWeatherMapWrapper
 from accessiweather.openweathermap_client.exceptions import OpenWeatherMapError
+from accessiweather.openweathermap_wrapper import OpenWeatherMapWrapper
+from accessiweather.services.national_discussion_scraper import NationalDiscussionScraper
 
 logger = logging.getLogger(__name__)
 
@@ -366,7 +366,9 @@ class WeatherService:
                 if self.openweathermap_wrapper is not None:
                     # Use OpenWeatherMap
                     wrapper = cast(OpenWeatherMapWrapper, self.openweathermap_wrapper)
-                    return wrapper.get_hourly_forecast(lat, lon, hours=48, force_refresh=force_refresh)
+                    return wrapper.get_hourly_forecast(
+                        lat, lon, hours=48, force_refresh=force_refresh
+                    )
                 else:
                     # OpenWeatherMap not available, but needed
                     if data_source == DATA_SOURCE_AUTO:

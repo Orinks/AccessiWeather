@@ -91,12 +91,12 @@ class OpenWeatherMapWrapper:
         with self.request_lock:
             current_time = time.time()
             time_since_last_request = current_time - self.last_request_time
-            
+
             if time_since_last_request < self.min_request_interval:
                 sleep_time = self.min_request_interval - time_since_last_request
                 logger.debug(f"Rate limiting: sleeping for {sleep_time:.2f} seconds")
                 time.sleep(sleep_time)
-            
+
             self.last_request_time = time.time()
 
     def _get_cache_key(self, method: str, **kwargs) -> str:
@@ -171,7 +171,7 @@ class OpenWeatherMapWrapper:
                 raise
             except (RateLimitError, OpenWeatherMapError) as e:
                 last_exception = e
-                
+
                 if attempt < self.max_retries:
                     logger.warning(
                         f"Request failed (attempt {attempt + 1}/{self.max_retries + 1}): {str(e)}. "
@@ -206,7 +206,7 @@ class OpenWeatherMapWrapper:
             OpenWeatherMapError: If there was an error retrieving the data
         """
         cache_key = self._get_cache_key("current_conditions", lat=lat, lon=lon)
-        
+
         if force_refresh and self.cache:
             logger.debug(f"Force refresh: invalidating cache for key {cache_key}")
             self.cache.invalidate(cache_key)
@@ -235,7 +235,7 @@ class OpenWeatherMapWrapper:
             OpenWeatherMapError: If there was an error retrieving the data
         """
         cache_key = self._get_cache_key("forecast", lat=lat, lon=lon, days=days)
-        
+
         if force_refresh and self.cache:
             logger.debug(f"Force refresh: invalidating cache for key {cache_key}")
             self.cache.invalidate(cache_key)
@@ -301,7 +301,9 @@ class OpenWeatherMapWrapper:
 
         def request_func():
             # Use One Call API to get alerts
-            raw_data = self.client.get_one_call_data(lat, lon, exclude="minutely,hourly,daily,current")
+            raw_data = self.client.get_one_call_data(
+                lat, lon, exclude="minutely,hourly,daily,current"
+            )
             return map_alerts(raw_data)
 
         return self._cached_request(cache_key, request_func)
@@ -339,6 +341,6 @@ class OpenWeatherMapWrapper:
             return {
                 "enabled": True,
                 "ttl": self.cache_ttl,
-                "size": len(self.cache.data) if hasattr(self.cache, 'data') else 0,
+                "size": len(self.cache.data) if hasattr(self.cache, "data") else 0,
             }
         return {"enabled": False}
