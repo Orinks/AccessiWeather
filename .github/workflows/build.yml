@@ -208,6 +208,7 @@ jobs:
           if ($output -match "Inno Setup.*Command-Line Compiler") {
             Write-Host "✓ Inno Setup compiler verified successfully"
             Write-Host "Version info: $($output | Select-String 'Inno Setup.*Command-Line Compiler')"
+            exit 0  # Explicitly set success exit code
           } else {
             Write-Host "✗ Inno Setup verification failed"
             exit 1
