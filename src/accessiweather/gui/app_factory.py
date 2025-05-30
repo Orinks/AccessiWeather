@@ -18,7 +18,7 @@ from accessiweather.notifications import WeatherNotifier
 from accessiweather.services.location_service import LocationService
 from accessiweather.services.notification_service import NotificationService
 from accessiweather.services.weather_service import WeatherService
-from accessiweather.weatherapi_wrapper import WeatherApiWrapper
+from accessiweather.openweathermap_wrapper import OpenWeatherMapWrapper
 
 from .weather_app import WeatherApp
 
@@ -61,13 +61,13 @@ def create_weather_app(
     )
 
     # Create the OpenWeatherMap client if API key is available
-    weatherapi_wrapper = None
+    openweathermap_wrapper = None
     api_keys = config.get(API_KEYS_SECTION, {})
     openweathermap_key = api_keys.get(OPENWEATHERMAP_KEY)
 
     if openweathermap_key:
         logger.info("Initializing OpenWeatherMap client with provided API key")
-        weatherapi_wrapper = WeatherApiWrapper(
+        openweathermap_wrapper = OpenWeatherMapWrapper(
             api_key=openweathermap_key,
             user_agent="AccessiWeather",
             enable_caching=enable_caching,
@@ -101,7 +101,7 @@ def create_weather_app(
 
     # Create the services
     weather_service = WeatherService(
-        nws_client=nws_client, weatherapi_wrapper=weatherapi_wrapper, config=config
+        nws_client=nws_client, openweathermap_wrapper=openweathermap_wrapper, config=config
     )
     location_service = LocationService(location_manager)
     notification_service = NotificationService(notifier)

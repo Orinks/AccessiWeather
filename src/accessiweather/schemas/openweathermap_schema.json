@@ -1,0 +1,497 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OpenWeatherMap API Response Schema",
+  "description": "JSON schema for OpenWeatherMap API responses",
+  "oneOf": [
+    {
+      "$ref": "#/definitions/CurrentWeatherResponse"
+    },
+    {
+      "$ref": "#/definitions/OneCallResponse"
+    }
+  ],
+  "definitions": {
+    "CurrentWeatherResponse": {
+      "type": "object",
+      "description": "Current weather response from OpenWeatherMap",
+      "required": ["coord", "weather", "main", "name", "dt"],
+      "properties": {
+        "coord": {
+          "$ref": "#/definitions/Coordinates"
+        },
+        "weather": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Weather"
+          }
+        },
+        "main": {
+          "$ref": "#/definitions/Main"
+        },
+        "wind": {
+          "$ref": "#/definitions/Wind"
+        },
+        "clouds": {
+          "$ref": "#/definitions/Clouds"
+        },
+        "sys": {
+          "$ref": "#/definitions/Sys"
+        },
+        "name": {
+          "type": "string",
+          "description": "City name"
+        },
+        "dt": {
+          "type": "integer",
+          "description": "Time of data calculation, unix timestamp"
+        },
+        "timezone": {
+          "type": "integer",
+          "description": "Shift in seconds from UTC"
+        },
+        "visibility": {
+          "type": "integer",
+          "description": "Visibility in meters"
+        }
+      }
+    },
+    "OneCallResponse": {
+      "type": "object",
+      "description": "One Call API response from OpenWeatherMap",
+      "required": ["lat", "lon", "timezone"],
+      "properties": {
+        "lat": {
+          "type": "number",
+          "description": "Latitude"
+        },
+        "lon": {
+          "type": "number",
+          "description": "Longitude"
+        },
+        "timezone": {
+          "type": "string",
+          "description": "Timezone name"
+        },
+        "timezone_offset": {
+          "type": "integer",
+          "description": "Shift in seconds from UTC"
+        },
+        "current": {
+          "$ref": "#/definitions/CurrentWeather"
+        },
+        "minutely": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MinutelyWeather"
+          }
+        },
+        "hourly": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/HourlyWeather"
+          }
+        },
+        "daily": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DailyWeather"
+          }
+        },
+        "alerts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Alert"
+          }
+        }
+      }
+    },
+    "Coordinates": {
+      "type": "object",
+      "required": ["lat", "lon"],
+      "properties": {
+        "lat": {
+          "type": "number",
+          "description": "Latitude"
+        },
+        "lon": {
+          "type": "number",
+          "description": "Longitude"
+        }
+      }
+    },
+    "Weather": {
+      "type": "object",
+      "required": ["id", "main", "description", "icon"],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "Weather condition id"
+        },
+        "main": {
+          "type": "string",
+          "description": "Group of weather parameters"
+        },
+        "description": {
+          "type": "string",
+          "description": "Weather condition description"
+        },
+        "icon": {
+          "type": "string",
+          "description": "Weather icon id"
+        }
+      }
+    },
+    "Main": {
+      "type": "object",
+      "required": ["temp", "humidity", "pressure"],
+      "properties": {
+        "temp": {
+          "type": "number",
+          "description": "Temperature"
+        },
+        "feels_like": {
+          "type": "number",
+          "description": "Temperature feels like"
+        },
+        "temp_min": {
+          "type": "number",
+          "description": "Minimum temperature"
+        },
+        "temp_max": {
+          "type": "number",
+          "description": "Maximum temperature"
+        },
+        "pressure": {
+          "type": "number",
+          "description": "Atmospheric pressure in hPa"
+        },
+        "humidity": {
+          "type": "integer",
+          "description": "Humidity percentage"
+        },
+        "sea_level": {
+          "type": "number",
+          "description": "Atmospheric pressure on sea level in hPa"
+        },
+        "grnd_level": {
+          "type": "number",
+          "description": "Atmospheric pressure on ground level in hPa"
+        }
+      }
+    },
+    "Wind": {
+      "type": "object",
+      "properties": {
+        "speed": {
+          "type": "number",
+          "description": "Wind speed"
+        },
+        "deg": {
+          "type": "number",
+          "description": "Wind direction in degrees"
+        },
+        "gust": {
+          "type": "number",
+          "description": "Wind gust speed"
+        }
+      }
+    },
+    "Clouds": {
+      "type": "object",
+      "properties": {
+        "all": {
+          "type": "integer",
+          "description": "Cloudiness percentage"
+        }
+      }
+    },
+    "Sys": {
+      "type": "object",
+      "properties": {
+        "country": {
+          "type": "string",
+          "description": "Country code"
+        },
+        "sunrise": {
+          "type": "integer",
+          "description": "Sunrise time, unix timestamp"
+        },
+        "sunset": {
+          "type": "integer",
+          "description": "Sunset time, unix timestamp"
+        }
+      }
+    },
+    "CurrentWeather": {
+      "type": "object",
+      "required": ["dt", "temp", "humidity", "pressure", "weather"],
+      "properties": {
+        "dt": {
+          "type": "integer",
+          "description": "Current time, unix timestamp"
+        },
+        "sunrise": {
+          "type": "integer",
+          "description": "Sunrise time, unix timestamp"
+        },
+        "sunset": {
+          "type": "integer",
+          "description": "Sunset time, unix timestamp"
+        },
+        "temp": {
+          "type": "number",
+          "description": "Temperature"
+        },
+        "feels_like": {
+          "type": "number",
+          "description": "Temperature feels like"
+        },
+        "pressure": {
+          "type": "number",
+          "description": "Atmospheric pressure in hPa"
+        },
+        "humidity": {
+          "type": "integer",
+          "description": "Humidity percentage"
+        },
+        "dew_point": {
+          "type": "number",
+          "description": "Dew point temperature"
+        },
+        "uvi": {
+          "type": "number",
+          "description": "UV index"
+        },
+        "clouds": {
+          "type": "integer",
+          "description": "Cloudiness percentage"
+        },
+        "visibility": {
+          "type": "integer",
+          "description": "Visibility in meters"
+        },
+        "wind_speed": {
+          "type": "number",
+          "description": "Wind speed"
+        },
+        "wind_deg": {
+          "type": "number",
+          "description": "Wind direction in degrees"
+        },
+        "wind_gust": {
+          "type": "number",
+          "description": "Wind gust speed"
+        },
+        "weather": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Weather"
+          }
+        }
+      }
+    },
+    "MinutelyWeather": {
+      "type": "object",
+      "required": ["dt", "precipitation"],
+      "properties": {
+        "dt": {
+          "type": "integer",
+          "description": "Time, unix timestamp"
+        },
+        "precipitation": {
+          "type": "number",
+          "description": "Precipitation volume in mm"
+        }
+      }
+    },
+    "HourlyWeather": {
+      "type": "object",
+      "required": ["dt", "temp", "humidity", "pressure", "weather"],
+      "properties": {
+        "dt": {
+          "type": "integer",
+          "description": "Time, unix timestamp"
+        },
+        "temp": {
+          "type": "number",
+          "description": "Temperature"
+        },
+        "feels_like": {
+          "type": "number",
+          "description": "Temperature feels like"
+        },
+        "pressure": {
+          "type": "number",
+          "description": "Atmospheric pressure in hPa"
+        },
+        "humidity": {
+          "type": "integer",
+          "description": "Humidity percentage"
+        },
+        "dew_point": {
+          "type": "number",
+          "description": "Dew point temperature"
+        },
+        "uvi": {
+          "type": "number",
+          "description": "UV index"
+        },
+        "clouds": {
+          "type": "integer",
+          "description": "Cloudiness percentage"
+        },
+        "visibility": {
+          "type": "integer",
+          "description": "Visibility in meters"
+        },
+        "wind_speed": {
+          "type": "number",
+          "description": "Wind speed"
+        },
+        "wind_deg": {
+          "type": "number",
+          "description": "Wind direction in degrees"
+        },
+        "wind_gust": {
+          "type": "number",
+          "description": "Wind gust speed"
+        },
+        "weather": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Weather"
+          }
+        },
+        "pop": {
+          "type": "number",
+          "description": "Probability of precipitation"
+        }
+      }
+    },
+    "DailyWeather": {
+      "type": "object",
+      "required": ["dt", "temp", "humidity", "pressure", "weather"],
+      "properties": {
+        "dt": {
+          "type": "integer",
+          "description": "Time, unix timestamp"
+        },
+        "sunrise": {
+          "type": "integer",
+          "description": "Sunrise time, unix timestamp"
+        },
+        "sunset": {
+          "type": "integer",
+          "description": "Sunset time, unix timestamp"
+        },
+        "moonrise": {
+          "type": "integer",
+          "description": "Moonrise time, unix timestamp"
+        },
+        "moonset": {
+          "type": "integer",
+          "description": "Moonset time, unix timestamp"
+        },
+        "moon_phase": {
+          "type": "number",
+          "description": "Moon phase"
+        },
+        "temp": {
+          "type": "object",
+          "properties": {
+            "day": {"type": "number"},
+            "min": {"type": "number"},
+            "max": {"type": "number"},
+            "night": {"type": "number"},
+            "eve": {"type": "number"},
+            "morn": {"type": "number"}
+          }
+        },
+        "feels_like": {
+          "type": "object",
+          "properties": {
+            "day": {"type": "number"},
+            "night": {"type": "number"},
+            "eve": {"type": "number"},
+            "morn": {"type": "number"}
+          }
+        },
+        "pressure": {
+          "type": "number",
+          "description": "Atmospheric pressure in hPa"
+        },
+        "humidity": {
+          "type": "integer",
+          "description": "Humidity percentage"
+        },
+        "dew_point": {
+          "type": "number",
+          "description": "Dew point temperature"
+        },
+        "wind_speed": {
+          "type": "number",
+          "description": "Wind speed"
+        },
+        "wind_deg": {
+          "type": "number",
+          "description": "Wind direction in degrees"
+        },
+        "wind_gust": {
+          "type": "number",
+          "description": "Wind gust speed"
+        },
+        "weather": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Weather"
+          }
+        },
+        "clouds": {
+          "type": "integer",
+          "description": "Cloudiness percentage"
+        },
+        "pop": {
+          "type": "number",
+          "description": "Probability of precipitation"
+        },
+        "uvi": {
+          "type": "number",
+          "description": "UV index"
+        }
+      }
+    },
+    "Alert": {
+      "type": "object",
+      "required": ["sender_name", "event", "start", "end", "description"],
+      "properties": {
+        "sender_name": {
+          "type": "string",
+          "description": "Name of the alert source"
+        },
+        "event": {
+          "type": "string",
+          "description": "Alert event name"
+        },
+        "start": {
+          "type": "integer",
+          "description": "Date and time of the start of the alert, unix timestamp"
+        },
+        "end": {
+          "type": "integer",
+          "description": "Date and time of the end of the alert, unix timestamp"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the alert"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Type of severe weather"
+        }
+      }
+    }
+  }
+}

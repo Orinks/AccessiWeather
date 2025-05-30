@@ -682,7 +682,7 @@ class WeatherApp(
         from accessiweather.api_client import NoaaApiClient
         from accessiweather.gui.settings_dialog import API_KEYS_SECTION, OPENWEATHERMAP_KEY
         from accessiweather.services.weather_service import WeatherService
-        from accessiweather.weatherapi_wrapper import WeatherApiWrapper
+        from accessiweather.openweathermap_wrapper import OpenWeatherMapWrapper
 
         logger.info("Reinitializing WeatherService due to data source or API key change")
 
@@ -714,7 +714,7 @@ class WeatherApp(
         openweathermap_wrapper = None
         if openweathermap_key:
             logger.info("Initializing OpenWeatherMap client with provided API key")
-            openweathermap_wrapper = WeatherApiWrapper(
+            openweathermap_wrapper = OpenWeatherMapWrapper(
                 api_key=openweathermap_key,
                 user_agent="AccessiWeather",
                 enable_caching=True,  # Default to enabled
@@ -727,7 +727,7 @@ class WeatherApp(
 
         # Create the new WeatherService
         self.weather_service = WeatherService(
-            nws_client=nws_client, weatherapi_wrapper=openweathermap_wrapper, config=self.config
+            nws_client=nws_client, openweathermap_wrapper=openweathermap_wrapper, config=self.config
         )
 
         # Update the location service with the new data source

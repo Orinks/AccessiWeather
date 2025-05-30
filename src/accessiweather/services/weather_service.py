@@ -16,7 +16,8 @@ from accessiweather.gui.settings_dialog import (
     DATA_SOURCE_OPENWEATHERMAP,
 )
 from accessiweather.services.national_discussion_scraper import NationalDiscussionScraper
-from accessiweather.weatherapi_wrapper import WeatherApiError, WeatherApiWrapper
+from accessiweather.openweathermap_wrapper import OpenWeatherMapWrapper
+from accessiweather.openweathermap_client.exceptions import OpenWeatherMapError
 
 logger = logging.getLogger(__name__)
 
@@ -33,18 +34,18 @@ class WeatherService:
     def __init__(
         self,
         nws_client: Union[NoaaApiClient, NoaaApiWrapper],
-        weatherapi_wrapper: Optional[WeatherApiWrapper] = None,
+        openweathermap_wrapper: Optional[OpenWeatherMapWrapper] = None,
         config: Optional[Dict[str, Any]] = None,
     ):
         """Initialize the weather service.
 
         Args:
             nws_client: The NWS API client to use for weather data retrieval.
-            weatherapi_wrapper: The WeatherAPI.com wrapper to use for weather data retrieval.
+            openweathermap_wrapper: The OpenWeatherMap wrapper to use for weather data retrieval.
             config: Configuration dictionary containing settings like data_source.
         """
         self.nws_client = nws_client
-        self.weatherapi_wrapper = weatherapi_wrapper
+        self.openweathermap_wrapper = openweathermap_wrapper
         self.config = config or {}
         self.national_scraper = NationalDiscussionScraper(request_delay=1.0)
         self.national_data_cache: Optional[Dict[str, Dict[str, str]]] = None
@@ -193,12 +194,12 @@ class WeatherService:
             )
             return False
 
-        # Check if WeatherAPI.com wrapper is initialized
-        if self.weatherapi_wrapper is None:
+        # Check if OpenWeatherMap wrapper is initialized
+        if self.openweathermap_wrapper is None:
             logger.warning(
-                "WeatherAPI.com is selected as the data source, but the wrapper is not initialized"
+                "OpenWeatherMap is selected as the data source, but the wrapper is not initialized"
             )
-            raise ConfigurationError("WeatherAPI.com wrapper is not initialized")
+            raise ConfigurationError("OpenWeatherMap wrapper is not initialized")
 
         logger.debug(f"_is_weatherapi_available: WeatherAPI.com is available, returning True")
         return True
@@ -279,23 +280,20 @@ class WeatherService:
             )
 
             if use_weatherapi:
-                # Check if WeatherAPI.com is available
-                if self.weatherapi_wrapper is not None:
-                    # Use WeatherAPI
-                    weatherapi_location = self._convert_location_for_weatherapi(lat, lon)
-                    wrapper = cast(WeatherApiWrapper, self.weatherapi_wrapper)
-                    return wrapper.get_forecast(
-                        weatherapi_location, days=7, alerts=True, force_refresh=force_refresh
-                    )
+                # Check if OpenWeatherMap is available
+                if self.openweathermap_wrapper is not None:
+                    # Use OpenWeatherMap
+                    wrapper = cast(OpenWeatherMapWrapper, self.openweathermap_wrapper)
+                    return wrapper.get_forecast(lat, lon, days=7, force_refresh=force_refresh)
                 else:
-                    # WeatherAPI not available, but needed
+                    # OpenWeatherMap not available, but needed
                     if data_source == DATA_SOURCE_AUTO:
                         raise ConfigurationError(
-                            "WeatherAPI.com is required for non-US locations in Automatic mode"
+                            "OpenWeatherMap is required for non-US locations in Automatic mode"
                         )
                     else:
                         raise ConfigurationError(
-                            "WeatherAPI.com is required when using WeatherAPI.com as the data source"
+                            "OpenWeatherMap is required when using OpenWeatherMap as the data source"
                         )
             else:
                 # Use NWS API
@@ -303,9 +301,9 @@ class WeatherService:
         except ConfigurationError:
             # Re-raise configuration errors
             raise
-        except WeatherApiError as e:
-            # Re-raise WeatherAPI.com errors directly for specific handling
-            logger.error(f"WeatherAPI.com error getting forecast: {str(e)}")
+        except OpenWeatherMapError as e:
+            # Re-raise OpenWeatherMap errors directly for specific handling
+            logger.error(f"OpenWeatherMap error getting forecast: {str(e)}")
             raise
         except NoaaApiError as e:
             # Re-raise NOAA API errors directly for specific handling
@@ -364,24 +362,20 @@ class WeatherService:
             )
 
             if use_weatherapi:
-                # Check if WeatherAPI.com is available
-                if self.weatherapi_wrapper is not None:
-                    # Use WeatherAPI
-                    weatherapi_location = self._convert_location_for_weatherapi(lat, lon)
-                    wrapper = cast(WeatherApiWrapper, self.weatherapi_wrapper)
-                    hourly_data = wrapper.get_hourly_forecast(
-                        weatherapi_location, days=2, force_refresh=force_refresh
-                    )
-                    return {"hourly": hourly_data}
+                # Check if OpenWeatherMap is available
+                if self.openweathermap_wrapper is not None:
+                    # Use OpenWeatherMap
+                    wrapper = cast(OpenWeatherMapWrapper, self.openweathermap_wrapper)
+                    return wrapper.get_hourly_forecast(lat, lon, hours=48, force_refresh=force_refresh)
                 else:
-                    # WeatherAPI not available, but needed
+                    # OpenWeatherMap not available, but needed
                     if data_source == DATA_SOURCE_AUTO:
                         raise ConfigurationError(
-                            "WeatherAPI.com is required for non-US locations in Automatic mode"
+                            "OpenWeatherMap is required for non-US locations in Automatic mode"
                         )
                     else:
                         raise ConfigurationError(
-                            "WeatherAPI.com is required when using WeatherAPI.com as the data source"
+                            "OpenWeatherMap is required when using OpenWeatherMap as the data source"
                         )
             else:
                 # Use NWS API
@@ -389,9 +383,9 @@ class WeatherService:
         except ConfigurationError:
             # Re-raise configuration errors
             raise
-        except WeatherApiError as e:
-            # Re-raise WeatherAPI.com errors directly for specific handling
-            logger.error(f"WeatherAPI.com error getting hourly forecast: {str(e)}")
+        except OpenWeatherMapError as e:
+            # Re-raise OpenWeatherMap errors directly for specific handling
+            logger.error(f"OpenWeatherMap error getting hourly forecast: {str(e)}")
             raise
         except NoaaApiError as e:
             # Re-raise NOAA API errors directly for specific handling
@@ -482,23 +476,20 @@ class WeatherService:
             )
 
             if use_weatherapi:
-                # Check if WeatherAPI.com is available
-                if self.weatherapi_wrapper is not None:
-                    # Use WeatherAPI
-                    weatherapi_location = self._convert_location_for_weatherapi(lat, lon)
-                    wrapper = cast(WeatherApiWrapper, self.weatherapi_wrapper)
-                    return wrapper.get_current_conditions(
-                        weatherapi_location, force_refresh=force_refresh
-                    )
+                # Check if OpenWeatherMap is available
+                if self.openweathermap_wrapper is not None:
+                    # Use OpenWeatherMap
+                    wrapper = cast(OpenWeatherMapWrapper, self.openweathermap_wrapper)
+                    return wrapper.get_current_conditions(lat, lon, force_refresh=force_refresh)
                 else:
-                    # WeatherAPI not available, but needed
+                    # OpenWeatherMap not available, but needed
                     if data_source == DATA_SOURCE_AUTO:
                         raise ConfigurationError(
-                            "WeatherAPI.com is required for non-US locations in Automatic mode"
+                            "OpenWeatherMap is required for non-US locations in Automatic mode"
                         )
                     else:
                         raise ConfigurationError(
-                            "WeatherAPI.com is required when using WeatherAPI.com as the data source"
+                            "OpenWeatherMap is required when using OpenWeatherMap as the data source"
                         )
             else:
                 # Use NWS API
@@ -506,9 +497,9 @@ class WeatherService:
         except ConfigurationError:
             # Re-raise configuration errors
             raise
-        except WeatherApiError as e:
-            # Re-raise WeatherAPI.com errors directly for specific handling
-            logger.error(f"WeatherAPI.com error getting current conditions: {str(e)}")
+        except OpenWeatherMapError as e:
+            # Re-raise OpenWeatherMap errors directly for specific handling
+            logger.error(f"OpenWeatherMap error getting current conditions: {str(e)}")
             raise
         except NoaaApiError as e:
             # Re-raise NOAA API errors directly for specific handling
@@ -578,26 +569,21 @@ class WeatherService:
             )
 
             if use_weatherapi:
-                # Check if WeatherAPI.com is available
-                if self.weatherapi_wrapper is not None:
-                    # Use WeatherAPI
-                    weatherapi_location = self._convert_location_for_weatherapi(lat, lon)
-                    wrapper = cast(WeatherApiWrapper, self.weatherapi_wrapper)
-                    forecast_data = wrapper.get_forecast(
-                        weatherapi_location, days=1, alerts=True, force_refresh=force_refresh
-                    )
-                    if "alerts" in forecast_data:
-                        return {"alerts": forecast_data["alerts"]}
-                    return {"alerts": []}
+                # Check if OpenWeatherMap is available
+                if self.openweathermap_wrapper is not None:
+                    # Use OpenWeatherMap
+                    wrapper = cast(OpenWeatherMapWrapper, self.openweathermap_wrapper)
+                    alerts = wrapper.get_alerts(lat, lon, force_refresh=force_refresh)
+                    return {"alerts": alerts}
                 else:
-                    # WeatherAPI not available, but needed
+                    # OpenWeatherMap not available, but needed
                     if data_source == DATA_SOURCE_AUTO:
                         raise ConfigurationError(
-                            "WeatherAPI.com is required for non-US locations in Automatic mode"
+                            "OpenWeatherMap is required for non-US locations in Automatic mode"
                         )
                     else:
                         raise ConfigurationError(
-                            "WeatherAPI.com is required when using WeatherAPI.com as the data source"
+                            "OpenWeatherMap is required when using OpenWeatherMap as the data source"
                         )
             else:
                 # Use NWS API
@@ -611,9 +597,9 @@ class WeatherService:
         except ConfigurationError:
             # Re-raise configuration errors
             raise
-        except WeatherApiError as e:
-            # Re-raise WeatherAPI.com errors directly for specific handling
-            logger.error(f"WeatherAPI.com error getting alerts: {str(e)}")
+        except OpenWeatherMapError as e:
+            # Re-raise OpenWeatherMap errors directly for specific handling
+            logger.error(f"OpenWeatherMap error getting alerts: {str(e)}")
             raise
         except NoaaApiError as e:
             # Re-raise NOAA API errors directly for specific handling
