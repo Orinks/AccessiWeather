@@ -9,11 +9,21 @@ on:
         description: 'Override version (optional)'
         required: false
         type: string
+      skip_cache:
+        description: 'Skip build cache'
+        required: false
+        type: boolean
+        default: false
   workflow_run:
     workflows: ["Continuous Integration"]
     types:
       - completed
     branches: [ main, dev ]
+
+env:
+  # Build configuration
+  PYTHON_VERSION: "3.12"
+  PYINSTALLER_CACHE_DIR: "~/.cache/pyinstaller"
 
 jobs:
   build:
@@ -27,11 +37,13 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history for build metadata
 
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: "3.12"
+        python-version: ${{ env.PYTHON_VERSION }}
 
     - name: Cache pip dependencies
       uses: actions/cache@v3
@@ -40,6 +52,18 @@ jobs:
         key: ${{ runner.os }}-build-pip-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml') }}
         restore-keys: |
           ${{ runner.os }}-build-pip-
+
+    - name: Cache PyInstaller build cache
+      uses: actions/cache@v3
+      if: ${{ !github.event.inputs.skip_cache }}
+      with:
+        path: |
+          ${{ env.PYINSTALLER_CACHE_DIR }}
+          build/
+          *.toc
+        key: ${{ runner.os }}-pyinstaller-${{ hashFiles('src/**/*.py', 'AccessiWeather.spec') }}
+        restore-keys: |
+          ${{ runner.os }}-pyinstaller-
 
     - name: Install dependencies
       run: |
@@ -52,9 +76,12 @@ jobs:
       run: |
         if [ -n "${{ github.event.inputs.version_override }}" ]; then
           VERSION="${{ github.event.inputs.version_override }}"
+          # Remove 'v' prefix if present
+          VERSION=${VERSION#v}
         else
           VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
         fi
+
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "Building version: $VERSION"
       shell: bash
@@ -62,10 +89,10 @@ jobs:
     - name: Update version files
       run: |
         VERSION="${{ steps.version.outputs.version }}"
-        # Update setup.py
-        sed -i "s/version=\"[^\"]*\"/version=\"$VERSION\"/" setup.py
-        # Update version.py
+
+        # Update version.py with current version
         sed -i "s/__version__ = \"[^\"]*\"/__version__ = \"$VERSION\"/" src/accessiweather/version.py
+
         echo "Updated version to: $VERSION"
       shell: bash
 
@@ -109,13 +136,37 @@ jobs:
         Compress-Archive -Path "dist/AccessiWeather/*" -DestinationPath "dist/$ZipName" -Force
         Write-Host "Created portable archive: $ZipName"
 
+    - name: Generate checksums
+      run: |
+        $VERSION = "${{ steps.version.outputs.version }}"
+
+        # Generate checksums for artifacts
+        $ExePath = "dist/AccessiWeather/AccessiWeather.exe"
+        $ZipPath = "dist/AccessiWeather_Portable_v$VERSION.zip"
+
+        if (Test-Path $ExePath) {
+          $ExeHash = (Get-FileHash $ExePath -Algorithm SHA256).Hash
+          Write-Host "Executable SHA256: $($ExeHash.Substring(0,16))..."
+        }
+
+        if (Test-Path $ZipPath) {
+          $ZipHash = (Get-FileHash $ZipPath -Algorithm SHA256).Hash
+          Write-Host "Portable ZIP SHA256: $($ZipHash.Substring(0,16))..."
+        }
+
+        # Create simple checksums file
+        $ChecksumsContent = "AccessiWeather v$VERSION - Build Checksums`n`n$ExeHash  AccessiWeather.exe`n$ZipHash  AccessiWeather_Portable_v$VERSION.zip"
+        $ChecksumsContent | Out-File -FilePath "dist/checksums.txt" -Encoding UTF8
+        Write-Host "Checksums saved to checksums.txt"
+
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: windows-build-${{ steps.version.outputs.version }}
         path: |
           dist/AccessiWeather/
           dist/AccessiWeather_Portable_v${{ steps.version.outputs.version }}.zip
+          dist/checksums.txt
         retention-days: 30
 
   installer:
@@ -187,13 +238,28 @@ jobs:
           Write-Host "Skipping installer build - no Inno Setup script found"
         }
 
+    - name: Generate installer checksum
+      run: |
+        $VERSION = "${{ needs.build.outputs.version }}"
+        $InstallerPath = "dist/AccessiWeather_Setup_v$VERSION.exe"
+
+        if (Test-Path $InstallerPath) {
+          $InstallerHash = (Get-FileHash $InstallerPath -Algorithm SHA256).Hash
+
+          # Add installer checksum to file
+          Add-Content "dist/checksums.txt" "$InstallerHash  AccessiWeather_Setup_v$VERSION.exe"
+
+          Write-Host "Installer checksum added: $($InstallerHash.Substring(0,16))..."
+        }
+
     - name: Upload installer artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: windows-installer-${{ needs.build.outputs.version }}
         path: |
           dist/AccessiWeather_Setup_v${{ needs.build.outputs.version }}.exe
           dist/AccessiWeather_Portable_v${{ needs.build.outputs.version }}.zip
+          dist/checksums.txt
         retention-days: 90
 
   validate:
@@ -208,33 +274,35 @@ jobs:
         name: windows-installer-${{ needs.build.outputs.version }}
         path: artifacts/
 
-    - name: Validate artifacts
+    - name: Validate build artifacts
       run: |
         $VERSION = "${{ needs.build.outputs.version }}"
 
-        Write-Host "Validating build artifacts for version: $VERSION"
-        Get-ChildItem "artifacts/" -Recurse
+        Write-Host "=== Build Validation ==="
+        Write-Host "Version: $VERSION"
 
         # Check for required files
         $RequiredFiles = @(
           "AccessiWeather_Setup_v$VERSION.exe",
-          "AccessiWeather_Portable_v$VERSION.zip"
+          "AccessiWeather_Portable_v$VERSION.zip",
+          "checksums.txt"
         )
 
         $AllFilesPresent = $true
         foreach ($File in $RequiredFiles) {
           if (Test-Path "artifacts/$File") {
             $FileSize = (Get-Item "artifacts/$File").Length
-            Write-Host "✓ $File ($FileSize bytes)"
+            $FileSizeMB = [math]::Round($FileSize / 1MB, 2)
+            Write-Host "✓ $File ($FileSizeMB MB)"
           } else {
             Write-Host "✗ Missing: $File"
             $AllFilesPresent = $false
           }
         }
 
-        if (-not $AllFilesPresent) {
-          Write-Host "Build validation failed - missing required artifacts"
+        if ($AllFilesPresent) {
+          Write-Host "✅ Build validation successful"
+        } else {
+          Write-Host "❌ Build validation failed"
           exit 1
         }
-
-        Write-Host "Build validation successful - all artifacts present"
