@@ -218,17 +218,19 @@ jobs:
           exit 1
         }
 
-    - name: Update installer script version
+    - name: Set installer environment variables
       run: |
         $VERSION = "${{ needs.build.outputs.version }}"
-        $IssFile = "installer/AccessiWeather.iss"
 
-        if (Test-Path $IssFile) {
-          (Get-Content $IssFile) -replace '#define MyAppVersion ".*"', "#define MyAppVersion `"$VERSION`"" | Set-Content $IssFile
-          Write-Host "Updated installer version to: $VERSION"
-        } else {
-          Write-Host "Warning: Installer script not found at $IssFile"
-        }
+        # Set environment variables that the Inno Setup script expects
+        echo "ACCESSIWEATHER_VERSION=$VERSION" >> $env:GITHUB_ENV
+        echo "ACCESSIWEATHER_ROOT_DIR=$PWD" >> $env:GITHUB_ENV
+        echo "ACCESSIWEATHER_DIST_DIR=$PWD\dist" >> $env:GITHUB_ENV
+
+        Write-Host "Set installer environment variables:"
+        Write-Host "  ACCESSIWEATHER_VERSION=$VERSION"
+        Write-Host "  ACCESSIWEATHER_ROOT_DIR=$PWD"
+        Write-Host "  ACCESSIWEATHER_DIST_DIR=$PWD\dist"
 
     - name: Build installer
       run: |
