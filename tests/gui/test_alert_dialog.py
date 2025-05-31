@@ -108,7 +108,9 @@ def test_process_alerts_preserves_parameters():
     weather_service = WeatherService(mock_api_client)
 
     # Process the sample alert data
-    processed_alerts, new_count, updated_count = weather_service.process_alerts(SAMPLE_ALERT_WITH_HEADLINE)
+    processed_alerts, new_count, updated_count = weather_service.process_alerts(
+        SAMPLE_ALERT_WITH_HEADLINE
+    )
 
     # Verify that the parameters field is preserved
     assert len(processed_alerts) == 1
@@ -125,7 +127,9 @@ def test_alert_details_dialog_with_nwsheadline():
     weather_service = WeatherService(mock_api_client)
 
     # Process the sample alert data
-    processed_alerts, new_count, updated_count = weather_service.process_alerts(SAMPLE_ALERT_WITH_HEADLINE)
+    processed_alerts, new_count, updated_count = weather_service.process_alerts(
+        SAMPLE_ALERT_WITH_HEADLINE
+    )
 
     # Create a mock for the AlertDetailsDialog class that doesn't call __init__
     with patch.object(AlertDetailsDialog, "__init__", return_value=None):
@@ -160,7 +164,9 @@ def test_alert_details_dialog_without_nwsheadline():
     weather_service = WeatherService(mock_api_client)
 
     # Process the sample alert data
-    processed_alerts, new_count, updated_count = weather_service.process_alerts(SAMPLE_ALERT_WITHOUT_HEADLINE)
+    processed_alerts, new_count, updated_count = weather_service.process_alerts(
+        SAMPLE_ALERT_WITHOUT_HEADLINE
+    )
 
     # Create a mock for the AlertDetailsDialog class that doesn't call __init__
     with patch.object(AlertDetailsDialog, "__init__", return_value=None):

@@ -114,7 +114,7 @@ class NoaaApiWrapper:
 
         # Create a hash of the key parts
         key_string = "|".join(key_parts)
-        return hashlib.md5(key_string.encode()).hexdigest()
+        return hashlib.md5(key_string.encode(), usedforsecurity=False).hexdigest()
 
     def _rate_limit(self) -> None:
         """Apply rate limiting to avoid overwhelming the API.

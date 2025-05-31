@@ -179,9 +179,7 @@ def test_map_forecast_success(mapper):
     day_period = periods[0]
     assert day_period["isDaytime"] is True
     assert day_period["temperature"] == 75  # Fahrenheit temperature from test data
-    assert (
-        day_period["temperatureUnit"] == "F"
-    )  # Fixed: now correctly recognizes "°F"
+    assert day_period["temperatureUnit"] == "F"  # Fixed: now correctly recognizes "°F"
     assert "Monday" in day_period["name"] or "Sunday" in day_period["name"]  # Depends on date
 
     # Check first night period

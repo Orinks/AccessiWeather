@@ -39,10 +39,6 @@ class WeatherAppDebugHandlers(WeatherAppHandlerBase):
             wx.ID_ANY, "Open Log Viewer", "Open a window to view the application log"
         )
 
-        self.debug_console_item = debug_menu.Append(
-            wx.ID_ANY, "Open Debug Console", "Open a Python console for debugging"
-        )
-
         debug_menu.AppendSeparator()
 
         # Add alert testing items (now part of regular debug mode)
@@ -63,7 +59,6 @@ class WeatherAppDebugHandlers(WeatherAppHandlerBase):
         self.Bind(wx.EVT_MENU, self.OnShowConfig, self.debug_show_config_item)
         self.Bind(wx.EVT_MENU, self.OnShowApiData, self.debug_show_api_data_item)
         self.Bind(wx.EVT_MENU, self.OnOpenLogViewer, self.debug_log_viewer_item)
-        self.Bind(wx.EVT_MENU, self.OnOpenDebugConsole, self.debug_console_item)
         self.Bind(wx.EVT_MENU, self.OnToggleDebugMessages, self.debug_toggle_debug_msgs_item)
         self.Bind(wx.EVT_MENU, self.OnTestAlerts, self.debug_test_alerts_item)
         self.Bind(wx.EVT_MENU, self.OnVerifyInterval, self.debug_verify_interval_item)
@@ -179,26 +174,19 @@ class WeatherAppDebugHandlers(WeatherAppHandlerBase):
         self._debug_log_window.Show()
         self._debug_log_window.Raise()
 
-    def OnOpenDebugConsole(self, event):  # event is required by wx
-        """Open a Python console for debugging.
-
-        Args:
-            event: Menu event
-        """
-        from ..debug_console import DebugConsole
-
-        # Create the console window if it doesn't exist
-        if not hasattr(self, "_debug_console") or self._debug_console is None:
-            # Create a context dictionary with useful variables
-            context = {
-                "app": self,
-                "wx": wx,
-            }
-            self._debug_console = DebugConsole(self, context)
-
-        # Show the console window
-        self._debug_console.Show()
-        self._debug_console.Raise()
+    # Debug console functionality removed due to security concerns
+    # def OnOpenDebugConsole(self, event):  # event is required by wx
+    #     """Open a Python console for debugging.
+    #
+    #     Args:
+    #         event: Menu event
+    #     """
+    #     # Debug console temporarily disabled
+    #     wx.MessageBox(
+    #         "Debug console is temporarily disabled for security reasons.",
+    #         "Debug Console",
+    #         wx.OK | wx.ICON_INFORMATION,
+    #     )
 
     def OnTestAlerts(self, event):  # event is required by wx
         """Manually trigger an alert update.

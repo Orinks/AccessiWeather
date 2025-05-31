@@ -4,9 +4,9 @@ from unittest.mock import MagicMock, patch
 
 from accessiweather.gui.settings_dialog import (
     API_KEYS_SECTION,
+    DATA_SOURCE_AUTO,
     DATA_SOURCE_KEY,
     DATA_SOURCE_NWS,
-    DATA_SOURCE_AUTO,
 )
 
 

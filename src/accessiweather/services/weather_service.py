@@ -591,11 +591,12 @@ class WeatherService:
             - Number of updated alerts
         """
         # Import here to avoid circular imports
-        from ..notifications import WeatherNotifier
-
         # Create a temporary notifier for processing
         # Use the same config directory as the main app would use
         import tempfile
+
+        from ..notifications import WeatherNotifier
+
         temp_dir = tempfile.gettempdir()
         notifier = WeatherNotifier(config_dir=temp_dir, enable_persistence=False)
 

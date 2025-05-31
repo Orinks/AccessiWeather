@@ -100,7 +100,7 @@ def test_get_forecast_error(weather_service, mock_api_client):
     mock_api_client.get_forecast.side_effect = Exception("API Error")
 
     # Also mock the OpenMeteo client to fail so fallback doesn't work
-    with patch.object(weather_service.openmeteo_client, 'get_forecast') as mock_openmeteo:
+    with patch.object(weather_service.openmeteo_client, "get_forecast") as mock_openmeteo:
         mock_openmeteo.side_effect = Exception("OpenMeteo Error")
 
         with pytest.raises(ApiClientError) as exc_info:
