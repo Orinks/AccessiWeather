@@ -60,9 +60,6 @@ def create_weather_app(
         cache_ttl=cache_ttl,
     )
 
-    # WeatherAPI wrapper placeholder for future integration
-    weatherapi_wrapper = None
-
     # Create the location manager
     # Extract config_dir from config_path if available
     config_dir = os.path.dirname(config_path) if config_path else None
@@ -85,9 +82,7 @@ def create_weather_app(
     notifier = WeatherNotifier(config_dir=config_dir, enable_persistence=True)
 
     # Create the services
-    weather_service = WeatherService(
-        nws_client=nws_client, weatherapi_wrapper=weatherapi_wrapper, config=config
-    )
+    weather_service = WeatherService(nws_client=nws_client, config=config)
     location_service = LocationService(location_manager)
     notification_service = NotificationService(notifier)
 

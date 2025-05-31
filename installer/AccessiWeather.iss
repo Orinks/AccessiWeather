@@ -105,9 +105,6 @@ begin
                           '    "cache_ttl": 300,' + #13#10 +
                           '    "auto_refresh_national": true,' + #13#10 +
                           '    "data_source": "nws"' + #13#10 +
-                          '  },' + #13#10 +
-                          '  "api_keys": {' + #13#10 +
-                          '    "weatherapi": ""' + #13#10 +
                           '  }' + #13#10 +
                           '}';
 

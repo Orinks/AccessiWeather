@@ -30,7 +30,7 @@ class GeocodingService:
         Args:
             user_agent: User agent string for API requests
             timeout: Timeout in seconds for geocoding requests
-            data_source: The data source to use ('nws', 'weatherapi', or 'auto')
+            data_source: The data source to use ('nws' or 'auto')
         """
         self.geolocator = Nominatim(user_agent=user_agent, timeout=timeout)
         self.data_source = data_source

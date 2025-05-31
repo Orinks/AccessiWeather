@@ -44,14 +44,11 @@ class TestSettingsDialogAuto(unittest.TestCase):
         self.assertEqual(dialog.data_source_ctrl.GetSelection(), 0)  # NWS selected
 
         # Switch to Automatic
-        dialog.data_source_ctrl.SetSelection(2)  # Select Automatic
-        dialog._on_data_source_changed(None)  # Simulate selection change
+        dialog.data_source_ctrl.SetSelection(1)  # Select Automatic (index 1, not 2)
+        dialog._update_ui_for_data_source()  # Update UI
 
-        # Both NWS and WeatherAPI fields should be enabled for Automatic
+        # NWS field should be enabled for Automatic
         self.assertTrue(dialog.api_contact_ctrl.IsEnabled())
-        self.assertTrue(dialog.weatherapi_key_ctrl.IsEnabled())
-        self.assertTrue(dialog.validate_key_btn.IsEnabled())
-        self.assertTrue(dialog.signup_link.IsEnabled())
 
         dialog.Destroy()
 
@@ -62,14 +59,11 @@ class TestSettingsDialogAuto(unittest.TestCase):
         settings["data_source"] = DATA_SOURCE_AUTO
         dialog = SettingsDialog(self.frame, settings)
 
-        # Verify Automatic is selected
-        self.assertEqual(dialog.data_source_ctrl.GetSelection(), 2)  # Automatic selected
+        # Verify Automatic is selected (index 1, not 2)
+        self.assertEqual(dialog.data_source_ctrl.GetSelection(), 1)  # Automatic selected
 
-        # Both NWS and WeatherAPI fields should be enabled
+        # NWS field should be enabled
         self.assertTrue(dialog.api_contact_ctrl.IsEnabled())
-        self.assertTrue(dialog.weatherapi_key_ctrl.IsEnabled())
-        self.assertTrue(dialog.validate_key_btn.IsEnabled())
-        self.assertTrue(dialog.signup_link.IsEnabled())
 
         dialog.Destroy()
 
@@ -78,11 +72,10 @@ class TestSettingsDialogAuto(unittest.TestCase):
         dialog = SettingsDialog(self.frame, self.current_settings)
 
         # Select Automatic
-        dialog.data_source_ctrl.SetSelection(2)  # Select Automatic
+        dialog.data_source_ctrl.SetSelection(1)  # Select Automatic
 
         # Set some values
         dialog.api_contact_ctrl.SetValue("auto_test@example.com")
-        dialog.weatherapi_key_ctrl.SetValue("auto_test_key")
 
         # Get settings
         settings = dialog.get_settings()
@@ -91,31 +84,24 @@ class TestSettingsDialogAuto(unittest.TestCase):
         print("Settings:", settings)
 
         # Verify data source is set to Automatic
-        # The API contact and WeatherAPI key are handled separately in the dialog's _on_ok method
-        # and are not directly included in the settings dictionary returned by get_settings
         self.assertEqual(settings["data_source"], DATA_SOURCE_AUTO)
 
         dialog.Destroy()
 
-    def test_validate_auto_missing_weatherapi_key(self):
-        """Test validation when Automatic is selected but WeatherAPI key is missing."""
+    def test_validate_auto_valid(self):
+        """Test validation when Automatic is selected with valid settings."""
         dialog = SettingsDialog(self.frame, self.current_settings)
 
         # Select Automatic
-        dialog.data_source_ctrl.SetSelection(2)  # Select Automatic
+        dialog.data_source_ctrl.SetSelection(1)  # Select Automatic
 
-        # Set NWS contact but leave WeatherAPI key empty
+        # Set NWS contact
         dialog.api_contact_ctrl.SetValue("auto_test@example.com")
-        dialog.weatherapi_key_ctrl.SetValue("")
 
-        # Mock wx.MessageBox to capture the message
-        with patch("wx.MessageBox") as mock_message_box:
-            # Trigger validation
+        # Mock EndModal to avoid actual dialog closing
+        with patch.object(dialog, "EndModal") as mock_end_modal:
             dialog._on_ok(None)
-
-            # Verify error message
-            mock_message_box.assert_called_once()
-            args = mock_message_box.call_args[0]  # Get positional arguments
-            self.assertIn("WeatherAPI.com API key is required for the Automatic option", args[0])
+            # Dialog should close with OK result
+            mock_end_modal.assert_called_once_with(wx.ID_OK)
 
         dialog.Destroy()

@@ -12,7 +12,6 @@ from accessiweather.api_client import ApiClientError, NoaaApiError
 from accessiweather.gui.settings_dialog import DEFAULT_TEMPERATURE_UNIT, TEMPERATURE_UNIT_KEY
 from accessiweather.utils.temperature_utils import TemperatureUnit, format_temperature
 from accessiweather.utils.unit_utils import format_pressure, format_wind_speed
-from accessiweather.weatherapi_wrapper import WeatherApiError
 
 from .ui_components import (
     AccessibleButton,
@@ -1027,20 +1026,7 @@ class UIManager:
         if isinstance(error, str):
             return error
 
-        # Handle WeatherAPI.com specific errors
-        if isinstance(error, WeatherApiError):
-            if error.error_type == WeatherApiError.API_KEY_INVALID:
-                return "Invalid WeatherAPI.com API key. Please check your settings."
-            elif error.error_type == WeatherApiError.QUOTA_EXCEEDED:
-                return "WeatherAPI.com rate limit exceeded. Please try again later or switch to NWS/NOAA."
-            elif error.error_type == WeatherApiError.NOT_FOUND:
-                return "Location not found. Please try a different location."
-            elif error.error_type == WeatherApiError.CONNECTION_ERROR:
-                return "Connection error. Please check your internet connection."
-            elif error.error_type == WeatherApiError.TIMEOUT_ERROR:
-                return "Request timed out. Please try again later."
-            else:
-                return f"WeatherAPI.com error: {str(error)}"
+        # WeatherAPI.com error handling removed (no longer supported)
 
         # Handle NOAA API specific errors
         elif isinstance(error, NoaaApiError):

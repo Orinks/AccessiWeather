@@ -34,7 +34,7 @@ class LocationManager:
         Args:
             config_dir: Directory for config files, defaults to user's home directory
             show_nationwide: Whether to show the Nationwide location
-            data_source: The data source to use ('nws' or 'weatherapi')
+            data_source: The data source to use ('nws' or 'auto')
         """
         self.config_dir = get_config_dir(config_dir)
         self.show_nationwide = show_nationwide
@@ -370,7 +370,7 @@ class LocationManager:
         """Update the data source and reinitialize the geocoding service.
 
         Args:
-            data_source: The new data source to use ('nws', 'weatherapi', or 'auto')
+            data_source: The new data source to use ('nws' or 'auto')
         """
         logger.info(
             f"Updating LocationManager data source from '{self.data_source}' to '{data_source}'"

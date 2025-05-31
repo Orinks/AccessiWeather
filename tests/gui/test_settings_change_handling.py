@@ -47,7 +47,6 @@ class TestSettingsChangeHandling:
                 "accessiweather.services.weather_service.WeatherService",
                 return_value=mock_new_weather_service,
             ),
-            patch("accessiweather.openweathermap_wrapper.OpenWeatherMapWrapper") as mock_openweathermap_wrapper,
         ):
 
             # Create a mock WeatherApp
@@ -68,9 +67,6 @@ class TestSettingsChangeHandling:
 
             # Call the method
             WeatherApp._handle_data_source_change(mock_app)
-
-            # Verify that OpenWeatherMapWrapper was not created (no API key)
-            mock_openweathermap_wrapper.assert_not_called()
 
             # Verify that the weather service was updated
             assert mock_app.weather_service == mock_new_weather_service
@@ -114,7 +110,6 @@ class TestSettingsChangeHandling:
 
         # Create mock clients and service
         mock_nws_client = MagicMock()
-        mock_openweathermap_wrapper_instance = MagicMock()
         mock_new_weather_service = MagicMock()
 
         # Set up patches
@@ -124,10 +119,6 @@ class TestSettingsChangeHandling:
                 "accessiweather.services.weather_service.WeatherService",
                 return_value=mock_new_weather_service,
             ),
-            patch(
-                "accessiweather.openweathermap_wrapper.OpenWeatherMapWrapper",
-                return_value=mock_openweathermap_wrapper_instance,
-            ) as mock_openweathermap_wrapper,
         ):
 
             # Create a mock WeatherApp
@@ -148,12 +139,6 @@ class TestSettingsChangeHandling:
 
             # Call the method
             WeatherApp._handle_data_source_change(mock_app)
-
-            # Verify that OpenWeatherMapWrapper was created with the right parameters
-            mock_openweathermap_wrapper.assert_called_once()
-            _, kwargs = mock_openweathermap_wrapper.call_args
-            assert kwargs["api_key"] == "test_api_key"
-            assert kwargs["user_agent"] == "AccessiWeather"
 
             # Verify that the weather service was updated
             assert mock_app.weather_service == mock_new_weather_service
