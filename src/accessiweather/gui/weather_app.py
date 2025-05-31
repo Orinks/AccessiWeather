@@ -672,9 +672,9 @@ class WeatherApp(
         return self.notification_service.notifier
 
     def _handle_data_source_change(self):
-        """Handle changes to the data source or WeatherAPI key.
+        """Handle changes to the data source or API settings.
 
-        This method is called when the data source or WeatherAPI key is changed
+        This method is called when the data source or API settings are changed
         in the settings dialog. It reinitializes the WeatherService with the new
         settings and updates the fetchers to use the new service.
         """
@@ -702,13 +702,8 @@ class WeatherApp(
             cache_ttl=300,  # Default to 5 minutes
         )
 
-        # Placeholder for future weather API wrapper
-        weatherapi_wrapper = None
-
         # Create the new WeatherService
-        self.weather_service = WeatherService(
-            nws_client=nws_client, weatherapi_wrapper=weatherapi_wrapper, config=self.config
-        )
+        self.weather_service = WeatherService(nws_client=nws_client, config=self.config)
 
         # Update the location service with the new data source
         self.location_service.update_data_source(data_source)

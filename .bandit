@@ -3,7 +3,7 @@
 
 [bandit]
 # Exclude test files and generated API clients
-exclude_dirs = ['tests', 'src/accessiweather/weather_gov_api_client', 'src/accessiweather/weatherapi_client']
+exclude_dirs = ['tests', 'src/accessiweather/weather_gov_api_client']
 
 # Skip specific test IDs that are not relevant for this project
 skips = ['B101']  # Skip assert_used test (asserts are OK in our codebase)
