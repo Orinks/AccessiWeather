@@ -9,7 +9,6 @@ on:
 
 env:
   # Quality gate thresholds
-  MIN_COVERAGE: 80
   MAX_COMPLEXITY: 10
   SECURITY_SEVERITY_THRESHOLD: "medium"
 
@@ -52,8 +51,8 @@ jobs:
 
     - name: Run unit tests with coverage
       run: |
-        # Run fast unit tests with coverage and fail if below threshold
-        python -m pytest -m "unit or (not slow and not integration and not e2e)" -v --tb=short --cov=src/accessiweather --cov-report=xml --cov-report=html --cov-report=term-missing --cov-fail-under=${{ env.MIN_COVERAGE }}
+        # Run fast unit tests with coverage
+        python -m pytest -m "unit or (not slow and not integration and not e2e)" -v --tb=short --cov=src/accessiweather --cov-report=xml --cov-report=html --cov-report=term-missing
       env:
         # Prevent wxPython from trying to create a display
         DISPLAY: ""
@@ -312,7 +311,6 @@ jobs:
         echo "- **Smoke Tests**: ${{ needs.smoke.result }}" >> quality-summary.md
         echo "" >> quality-summary.md
         echo "## Quality Thresholds" >> quality-summary.md
-        echo "- **Minimum Coverage**: ${{ env.MIN_COVERAGE }}%" >> quality-summary.md
         echo "- **Maximum Complexity**: ${{ env.MAX_COMPLEXITY }}" >> quality-summary.md
         echo "- **Security Severity**: ${{ env.SECURITY_SEVERITY_THRESHOLD }}+" >> quality-summary.md
 

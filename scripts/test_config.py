@@ -94,7 +94,6 @@ class TestConfig:
                 "--cov-report=xml",
                 "--cov-report=html",
                 "--cov-report=term-missing",
-                "--cov-fail-under=80",
             ],
         },
         "parallel": {

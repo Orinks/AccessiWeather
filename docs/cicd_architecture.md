@@ -218,7 +218,7 @@ release.yml (Deploy/Release)
 
 - **Build Success Rate**: >95%
 - **Build Time**: <15 minutes for full pipeline
-- **Test Coverage**: >80%
+- **Test Coverage**: Reported for informational purposes
 - **Security Scan Pass Rate**: 100%
 - **Deployment Success Rate**: >98%
 
