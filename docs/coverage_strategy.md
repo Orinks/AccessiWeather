@@ -125,7 +125,7 @@ open htmlcov/index.html
 ### Coverage Analysis
 
 1. **Review uncovered lines** in coverage reports
-2. **Identify high-value missing tests** 
+2. **Identify high-value missing tests**
 3. **Add `pragma: no cover` for untestable code**
 4. **Focus on business logic over boilerplate**
 
