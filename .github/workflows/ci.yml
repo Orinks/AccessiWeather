@@ -237,9 +237,9 @@ jobs:
         os.environ['DISPLAY'] = ''
         try:
             import src.accessiweather.main
-            print('✓ Application imports successfully')
+            print('[OK] Application imports successfully')
         except Exception as e:
-            print(f'✗ Import failed: {e}')
+            print(f'[ERROR] Import failed: {e}')
             raise
         "
       env:
