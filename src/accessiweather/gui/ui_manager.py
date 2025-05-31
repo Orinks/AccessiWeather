@@ -525,6 +525,16 @@ class UIManager:
 
         # Handle NWS API alerts
         if not alerts_data or "features" not in alerts_data:
+            # Check if this is an Open-Meteo location (no alerts available)
+            generator = alerts_data.get("generator", "") if alerts_data else ""
+            if "Open-Meteo" in generator:
+                # Show informative message for Open-Meteo locations
+                index = alerts_list_ctrl.InsertItem(0, "No Alerts Available")
+                alerts_list_ctrl.SetItem(index, 1, "Info")
+                alerts_list_ctrl.SetItem(
+                    index, 2, "Weather alerts are not available for international locations"
+                )
+
             # Disable the alert button if there are no alerts
             if hasattr(self.frame, "alert_btn"):
                 self.frame.alert_btn.Disable()
@@ -681,23 +691,39 @@ class UIManager:
         if hasattr(self.frame, "taskbar_icon") and self.frame.taskbar_icon:
             self.frame.taskbar_icon.update_weather_data(taskbar_data)
 
-        # Convert units if needed
+        # Convert units if needed - check the actual unit codes from the API
         if temperature is not None:
-            # Convert from Celsius to Fahrenheit
-            temperature_f = (temperature * 9 / 5) + 32
+            temp_unit_code = properties.get("temperature", {}).get("unitCode", "")
+            if "degF" in temp_unit_code:
+                # Temperature is already in Fahrenheit
+                temperature_f = temperature
+                temperature_c = (temperature - 32) * 5 / 9
+            else:
+                # Temperature is in Celsius, convert to Fahrenheit
+                temperature_f = (temperature * 9 / 5) + 32
+                temperature_c = temperature
+
             # Format based on user preference
             temperature_str = format_temperature(
-                temperature_f, unit_pref, temperature_c=temperature, precision=1
+                temperature_f, unit_pref, temperature_c=temperature_c, precision=1
             )
         else:
             temperature_str = "N/A"
 
         if dewpoint is not None:
-            # Convert from Celsius to Fahrenheit
-            dewpoint_f = (dewpoint * 9 / 5) + 32
+            dewpoint_unit_code = properties.get("dewpoint", {}).get("unitCode", "")
+            if "degF" in dewpoint_unit_code:
+                # Dewpoint is already in Fahrenheit
+                dewpoint_f = dewpoint
+                dewpoint_c = (dewpoint - 32) * 5 / 9
+            else:
+                # Dewpoint is in Celsius, convert to Fahrenheit
+                dewpoint_f = (dewpoint * 9 / 5) + 32
+                dewpoint_c = dewpoint
+
             # Format based on user preference
             dewpoint_str = format_temperature(
-                dewpoint_f, unit_pref, temperature_c=dewpoint, precision=1
+                dewpoint_f, unit_pref, temperature_c=dewpoint_c, precision=1
             )
         else:
             dewpoint_str = "N/A"
@@ -875,11 +901,21 @@ class UIManager:
 
         properties = conditions_data.get("properties", {})
 
-        # Extract temperature (convert from C to F)
-        temperature_c = properties.get("temperature", {}).get("value")
+        # Extract temperature (check unit code to determine if conversion is needed)
+        temperature_value = properties.get("temperature", {}).get("value")
+        temp_unit_code = properties.get("temperature", {}).get("unitCode", "")
         temperature_f = None
-        if temperature_c is not None:
-            temperature_f = (temperature_c * 9 / 5) + 32
+        temperature_c = None
+
+        if temperature_value is not None:
+            if "degF" in temp_unit_code:
+                # Temperature is already in Fahrenheit
+                temperature_f = temperature_value
+                temperature_c = (temperature_value - 32) * 5 / 9
+            else:
+                # Temperature is in Celsius, convert to Fahrenheit
+                temperature_c = temperature_value
+                temperature_f = (temperature_value * 9 / 5) + 32
 
         # Extract humidity
         humidity = properties.get("relativeHumidity", {}).get("value")
