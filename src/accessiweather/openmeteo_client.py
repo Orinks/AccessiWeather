@@ -111,7 +111,7 @@ class OpenMeteoApiClient:
                 response.raise_for_status()
 
                 # Parse JSON response
-                data = response.json()
+                data: Dict[str, Any] = response.json()
                 logger.debug(f"Received response with keys: {list(data.keys())}")
                 return data
 

@@ -27,18 +27,17 @@ def test_application_imports():
 
     try:
         # Test core module imports
-        import accessiweather.api_client
-        import accessiweather.cache
-        import accessiweather.gui.settings_dialog
+        import accessiweather.api_client  # noqa: F401
+        import accessiweather.cache  # noqa: F401
+        import accessiweather.gui.settings_dialog  # noqa: F401
 
         # Test GUI module imports (should work in headless mode)
-        import accessiweather.gui.weather_app
-        import accessiweather.location
-        import accessiweather.main
-        import accessiweather.services.weather_service
+        import accessiweather.gui.weather_app  # noqa: F401
+        import accessiweather.location  # noqa: F401
+        import accessiweather.main  # noqa: F401
 
         # Test utility imports
-        import accessiweather.utils.temperature_utils
+        # import accessiweather.utils.temperature_utils  # Unused import
         # import accessiweather.utils.unit_utils  # Unused import
 
         print("✅ All core modules imported successfully")

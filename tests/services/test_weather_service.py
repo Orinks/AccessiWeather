@@ -359,3 +359,262 @@ def test_process_alerts_missing_properties(weather_service):
     assert processed_alerts[0]["instruction"] == ""
     assert processed_alerts[0]["severity"] == "Unknown"
     assert processed_alerts[0]["event"] == "Unknown Event"
+
+
+@pytest.mark.unit
+def test_weather_service_initialization_with_config():
+    """Test WeatherService initialization with different configurations."""
+    config = {
+        "settings": {"data_source": "nws"},
+        "api_settings": {"api_contact": "test@example.com"},
+    }
+
+    mock_nws_client = MagicMock()
+    service = WeatherService(nws_client=mock_nws_client, config=config)
+
+    assert service.config == config
+    assert service.nws_client == mock_nws_client
+    assert service.openmeteo_client is not None
+
+
+@pytest.mark.unit
+def test_weather_service_initialization_with_clients():
+    """Test WeatherService initialization with provided clients."""
+    mock_nws_client = MagicMock()
+    mock_openmeteo_client = MagicMock()
+
+    service = WeatherService(nws_client=mock_nws_client, openmeteo_client=mock_openmeteo_client)
+
+    assert service.nws_client == mock_nws_client
+    assert service.openmeteo_client == mock_openmeteo_client
+
+
+@pytest.mark.unit
+def test_should_use_openmeteo_us_location(weather_service):
+    """Test that NWS is preferred for US locations."""
+    # Set the data source to auto for this test
+    weather_service.config = {"settings": {"data_source": "auto"}}
+
+    # US coordinates (New York)
+    lat, lon = 40.7128, -74.0060
+
+    # Mock the geocoding service to return True for US location
+    with patch("accessiweather.geocoding.GeocodingService") as mock_geocoding_class:
+        mock_geocoding_instance = mock_geocoding_class.return_value
+        mock_geocoding_instance.validate_coordinates.return_value = True
+
+        result = weather_service._should_use_openmeteo(lat, lon)
+
+    assert result is False
+
+
+@pytest.mark.unit
+def test_should_use_openmeteo_non_us_location(weather_service):
+    """Test that Open-Meteo is used for non-US locations."""
+    # Set the data source to auto for this test
+    weather_service.config = {"settings": {"data_source": "auto"}}
+
+    # London coordinates
+    lat, lon = 51.5074, -0.1278
+
+    # Mock the geocoding service to return False for non-US location
+    with patch("accessiweather.geocoding.GeocodingService") as mock_geocoding_class:
+        mock_geocoding_instance = mock_geocoding_class.return_value
+        mock_geocoding_instance.validate_coordinates.return_value = False
+
+        result = weather_service._should_use_openmeteo(lat, lon)
+
+    assert result is True
+
+
+@pytest.mark.unit
+def test_should_use_openmeteo_edge_cases(weather_service):
+    """Test edge cases for location detection."""
+    # Set the data source to auto for this test
+    weather_service.config = {"settings": {"data_source": "auto"}}
+
+    # Test coordinates at US borders
+    test_cases = [
+        (49.0, -125.0, True),  # Canada (north of US)
+        (25.0, -80.0, False),  # Florida (US)
+        (32.0, -117.0, False),  # California (US)
+        (19.0, -155.0, False),  # Hawaii (US)
+        (64.0, -153.0, False),  # Alaska (US)
+    ]
+
+    # Mock the geocoding service to return appropriate values
+    with patch("accessiweather.geocoding.GeocodingService") as mock_geocoding_class:
+        mock_geocoding_instance = mock_geocoding_class.return_value
+
+        for lat, lon, expected in test_cases:
+            # Set the mock to return False for non-US (expected=True) and True for US (expected=False)
+            mock_geocoding_instance.validate_coordinates.return_value = not expected
+
+            result = weather_service._should_use_openmeteo(lat, lon)
+            assert result == expected, f"Failed for coordinates ({lat}, {lon})"
+
+
+@pytest.mark.unit
+def test_get_forecast_nws_success(weather_service):
+    """Test successful forecast retrieval using NWS."""
+    lat, lon = 40.0, -75.0
+
+    with patch.object(weather_service, "_should_use_openmeteo", return_value=False):
+        with patch.object(
+            weather_service.nws_client, "get_forecast", return_value=SAMPLE_FORECAST_DATA
+        ):
+            result = weather_service.get_forecast(lat, lon)
+
+            assert result == SAMPLE_FORECAST_DATA
+            weather_service.nws_client.get_forecast.assert_called_once_with(
+                lat, lon, force_refresh=False
+            )
+
+
+@pytest.mark.unit
+def test_get_forecast_openmeteo_success(weather_service):
+    """Test successful forecast retrieval using Open-Meteo."""
+    lat, lon = 51.5074, -0.1278  # London
+
+    with patch.object(weather_service, "_should_use_openmeteo", return_value=True):
+        with patch.object(
+            weather_service.openmeteo_client, "get_forecast", return_value={"test": "data"}
+        ):
+            with patch.object(
+                weather_service.openmeteo_mapper, "map_forecast", return_value=SAMPLE_FORECAST_DATA
+            ):
+                result = weather_service.get_forecast(lat, lon)
+
+                assert result == SAMPLE_FORECAST_DATA
+                weather_service.openmeteo_client.get_forecast.assert_called_once()
+                weather_service.openmeteo_mapper.map_forecast.assert_called_once()
+
+
+@pytest.mark.unit
+def test_get_hourly_forecast_nws_success(weather_service):
+    """Test successful hourly forecast retrieval using NWS."""
+    lat, lon = 40.0, -75.0
+
+    with patch.object(weather_service, "_should_use_openmeteo", return_value=False):
+        with patch.object(
+            weather_service.nws_client, "get_hourly_forecast", return_value=SAMPLE_FORECAST_DATA
+        ):
+            result = weather_service.get_hourly_forecast(lat, lon)
+
+            assert result == SAMPLE_FORECAST_DATA
+            weather_service.nws_client.get_hourly_forecast.assert_called_once_with(
+                lat, lon, force_refresh=False
+            )
+
+
+@pytest.mark.unit
+def test_get_hourly_forecast_openmeteo_success(weather_service):
+    """Test successful hourly forecast retrieval using Open-Meteo."""
+    lat, lon = 51.5074, -0.1278  # London
+
+    with patch.object(weather_service, "_should_use_openmeteo", return_value=True):
+        with patch.object(
+            weather_service.openmeteo_client, "get_hourly_forecast", return_value={"test": "data"}
+        ):
+            with patch.object(
+                weather_service.openmeteo_mapper,
+                "map_hourly_forecast",
+                return_value=SAMPLE_FORECAST_DATA,
+            ):
+                result = weather_service.get_hourly_forecast(lat, lon)
+
+                assert result == SAMPLE_FORECAST_DATA
+                weather_service.openmeteo_client.get_hourly_forecast.assert_called_once()
+                weather_service.openmeteo_mapper.map_hourly_forecast.assert_called_once()
+
+
+@pytest.mark.unit
+def test_get_current_conditions_nws_success(weather_service):
+    """Test successful current conditions retrieval using NWS."""
+    lat, lon = 40.0, -75.0
+
+    with patch.object(weather_service, "_should_use_openmeteo", return_value=False):
+        with patch.object(
+            weather_service.nws_client, "get_current_conditions", return_value=SAMPLE_FORECAST_DATA
+        ):
+            result = weather_service.get_current_conditions(lat, lon)
+
+            assert result == SAMPLE_FORECAST_DATA
+            weather_service.nws_client.get_current_conditions.assert_called_once_with(
+                lat, lon, force_refresh=False
+            )
+
+
+@pytest.mark.unit
+def test_get_current_conditions_openmeteo_success(weather_service):
+    """Test successful current conditions retrieval using Open-Meteo."""
+    lat, lon = 51.5074, -0.1278  # London
+
+    with patch.object(weather_service, "_should_use_openmeteo", return_value=True):
+        with patch.object(
+            weather_service.openmeteo_client, "get_current_weather", return_value={"test": "data"}
+        ):
+            with patch.object(
+                weather_service.openmeteo_mapper,
+                "map_current_conditions",
+                return_value=SAMPLE_FORECAST_DATA,
+            ):
+                result = weather_service.get_current_conditions(lat, lon)
+
+                assert result == SAMPLE_FORECAST_DATA
+                weather_service.openmeteo_client.get_current_weather.assert_called_once()
+                weather_service.openmeteo_mapper.map_current_conditions.assert_called_once()
+
+
+@pytest.mark.unit
+def test_get_temperature_unit_preference_celsius(weather_service):
+    """Test getting temperature unit preference for Celsius."""
+    weather_service.config = {"settings": {"temperature_unit": "celsius"}}
+
+    result = weather_service._get_temperature_unit_preference()
+    assert result == "celsius"
+
+
+@pytest.mark.unit
+def test_get_temperature_unit_preference_fahrenheit(weather_service):
+    """Test getting temperature unit preference for Fahrenheit."""
+    weather_service.config = {"settings": {"temperature_unit": "fahrenheit"}}
+
+    result = weather_service._get_temperature_unit_preference()
+    assert result == "fahrenheit"
+
+
+@pytest.mark.unit
+def test_get_temperature_unit_preference_both(weather_service):
+    """Test getting temperature unit preference for both (defaults to fahrenheit)."""
+    weather_service.config = {"settings": {"temperature_unit": "both"}}
+
+    result = weather_service._get_temperature_unit_preference()
+    assert result == "fahrenheit"
+
+
+@pytest.mark.unit
+def test_get_data_source_nws(weather_service):
+    """Test getting data source configuration for NWS."""
+    weather_service.config = {"settings": {"data_source": "nws"}}
+
+    result = weather_service._get_data_source()
+    assert result == "nws"
+
+
+@pytest.mark.unit
+def test_get_data_source_auto(weather_service):
+    """Test getting data source configuration for auto."""
+    weather_service.config = {"settings": {"data_source": "auto"}}
+
+    result = weather_service._get_data_source()
+    assert result == "auto"
+
+
+@pytest.mark.unit
+def test_get_data_source_default(weather_service):
+    """Test getting data source configuration with default."""
+    weather_service.config = {"settings": {}}
+
+    result = weather_service._get_data_source()
+    assert result == "nws"

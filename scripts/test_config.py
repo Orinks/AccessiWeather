@@ -6,7 +6,7 @@ performance optimization settings, and test environment setup.
 """
 
 import os
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 
 class TestConfig:
@@ -107,8 +107,8 @@ class TestConfig:
     def get_test_command(
         cls,
         category: str,
-        coverage: bool = None,
-        parallel: bool = None,
+        coverage: Optional[bool] = None,
+        parallel: Optional[bool] = None,
         fast: bool = False,
         paths: Optional[List[str]] = None,
     ) -> List[str]:
@@ -132,38 +132,46 @@ class TestConfig:
         cmd = ["python", "-m", "pytest"]
 
         # Add markers
-        if config["markers"]:
-            marker_expr = " or ".join(config["markers"])
+        markers = cast(List[str], config["markers"])
+        if markers:
+            marker_expr = " or ".join(markers)
             cmd.extend(["-m", marker_expr])
 
         # Add base arguments
-        cmd.extend(cls.PERFORMANCE_SETTINGS["pytest_args"]["base"])
+        pytest_args = cast(Dict[str, Any], cls.PERFORMANCE_SETTINGS["pytest_args"])
+        base_args = cast(List[str], pytest_args["base"])
+        cmd.extend(base_args)
 
         # Add fast mode arguments
         if fast:
-            cmd.extend(cls.PERFORMANCE_SETTINGS["pytest_args"]["fast"])
+            fast_args = cast(List[str], pytest_args["fast"])
+            cmd.extend(fast_args)
         else:
-            cmd.extend(cls.PERFORMANCE_SETTINGS["pytest_args"]["thorough"])
+            thorough_args = cast(List[str], pytest_args["thorough"])
+            cmd.extend(thorough_args)
 
         # Add coverage if enabled
         use_coverage = coverage if coverage is not None else config["coverage"]
         if use_coverage:
-            cmd.extend(cls.PERFORMANCE_SETTINGS["pytest_args"]["coverage"])
+            coverage_args = cast(List[str], pytest_args["coverage"])
+            cmd.extend(coverage_args)
 
         # Add parallel execution if enabled
         use_parallel = parallel if parallel is not None else config["parallel"]
-        if use_parallel and cls.PERFORMANCE_SETTINGS["parallel"]["enabled"]:
+        parallel_settings = cast(Dict[str, Any], cls.PERFORMANCE_SETTINGS["parallel"])
+        if use_parallel and parallel_settings["enabled"]:
             cmd.extend(
                 [
                     "-n",
-                    cls.PERFORMANCE_SETTINGS["parallel"]["workers"],
+                    str(parallel_settings["workers"]),
                     "--dist",
-                    cls.PERFORMANCE_SETTINGS["parallel"]["dist"],
+                    str(parallel_settings["dist"]),
                 ]
             )
 
         # Add timeout
-        cmd.extend(["--timeout", str(config["timeout"])])
+        timeout_val = config["timeout"]
+        cmd.extend(["--timeout", str(timeout_val)])
 
         # Add test paths
         if paths:
@@ -231,13 +239,17 @@ def get_smoke_test_command(fast: bool = True) -> List[str]:
 def get_all_test_command(coverage: bool = True, fast: bool = False) -> List[str]:
     """Get command for running all tests."""
     cmd = ["python", "-m", "pytest"]
-    cmd.extend(TestConfig.PERFORMANCE_SETTINGS["pytest_args"]["base"])
+    pytest_args = cast(Dict[str, Any], TestConfig.PERFORMANCE_SETTINGS["pytest_args"])
+    base_args = cast(List[str], pytest_args["base"])
+    cmd.extend(base_args)
 
     if fast:
-        cmd.extend(TestConfig.PERFORMANCE_SETTINGS["pytest_args"]["fast"])
+        fast_args = cast(List[str], pytest_args["fast"])
+        cmd.extend(fast_args)
 
     if coverage:
-        cmd.extend(TestConfig.PERFORMANCE_SETTINGS["pytest_args"]["coverage"])
+        coverage_args = cast(List[str], pytest_args["coverage"])
+        cmd.extend(coverage_args)
 
     cmd.append("tests/")
     return cmd
