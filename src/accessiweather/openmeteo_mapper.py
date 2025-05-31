@@ -222,7 +222,7 @@ class OpenMeteoMapper:
                 "properties": {
                     "updated": datetime.now(timezone.utc).isoformat(),
                     "units": {
-                        "temperature": "F" if "fahrenheit" in str(daily_units).lower() else "C",
+                        "temperature": "F" if ("fahrenheit" in str(daily_units).lower() or "°f" in str(daily_units).lower()) else "C",
                         "windSpeed": daily_units.get("wind_speed_10m_max", "mph"),
                         "precipitation": daily_units.get("precipitation_sum", "in"),
                     },
@@ -307,7 +307,7 @@ class OpenMeteoMapper:
                 "properties": {
                     "updated": datetime.now(timezone.utc).isoformat(),
                     "units": {
-                        "temperature": "F" if "fahrenheit" in str(hourly_units).lower() else "C",
+                        "temperature": "F" if ("fahrenheit" in str(hourly_units).lower() or "°f" in str(hourly_units).lower()) else "C",
                         "windSpeed": hourly_units.get("wind_speed_10m", "mph"),
                         "precipitation": hourly_units.get("precipitation", "in"),
                     },

@@ -6,7 +6,7 @@ separating business logic from UI concerns.
 
 import logging
 import time
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from accessiweather.api_client import ApiClientError, NoaaApiClient, NoaaApiError
 from accessiweather.api_wrapper import NoaaApiWrapper
@@ -575,3 +575,28 @@ class WeatherService:
         except Exception as e:
             logger.error(f"Error getting forecast discussion: {str(e)}")
             raise ApiClientError(f"Unable to retrieve forecast discussion data: {str(e)}")
+
+    def process_alerts(self, alerts_data: Dict[str, Any]) -> tuple[List[Dict[str, Any]], int, int]:
+        """Process alerts data and return processed alerts with counts.
+
+        This method delegates to the WeatherNotifier for processing.
+
+        Args:
+            alerts_data: Raw alerts data from the API.
+
+        Returns:
+            Tuple containing:
+            - List of processed alert objects
+            - Number of new alerts
+            - Number of updated alerts
+        """
+        # Import here to avoid circular imports
+        from ..notifications import WeatherNotifier
+
+        # Create a temporary notifier for processing
+        # Use the same config directory as the main app would use
+        import tempfile
+        temp_dir = tempfile.gettempdir()
+        notifier = WeatherNotifier(config_dir=temp_dir, enable_persistence=False)
+
+        return notifier.process_alerts(alerts_data)

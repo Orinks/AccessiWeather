@@ -99,41 +99,35 @@ def test_get_forecast_error(weather_service, mock_api_client):
     lat, lon = 40.0, -75.0
     mock_api_client.get_forecast.side_effect = Exception("API Error")
 
-    with pytest.raises(ApiClientError) as exc_info:
-        weather_service.get_forecast(lat, lon)
+    # Also mock the OpenMeteo client to fail so fallback doesn't work
+    with patch.object(weather_service.openmeteo_client, 'get_forecast') as mock_openmeteo:
+        mock_openmeteo.side_effect = Exception("OpenMeteo Error")
 
-    assert "Unable to retrieve forecast data" in str(exc_info.value)
-    mock_api_client.get_forecast.assert_called_once_with(lat, lon, force_refresh=False)
+        with pytest.raises(ApiClientError) as exc_info:
+            weather_service.get_forecast(lat, lon)
+
+        assert "NWS failed and Open-Meteo fallback failed" in str(exc_info.value)
+        mock_api_client.get_forecast.assert_called_once_with(lat, lon, force_refresh=False)
 
 
 def test_get_alerts_success(weather_service, mock_api_client):
     """Test getting alerts data successfully."""
     lat, lon = 40.0, -75.0
-    radius = 25
-    precise_location = True
 
-    result = weather_service.get_alerts(lat, lon, radius=radius, precise_location=precise_location)
+    result = weather_service.get_alerts(lat, lon)
 
     assert result == SAMPLE_ALERTS_DATA
-    mock_api_client.get_alerts.assert_called_once_with(
-        lat, lon, radius=radius, precise_location=precise_location, force_refresh=False
-    )
+    mock_api_client.get_alerts.assert_called_once_with(lat, lon, force_refresh=False)
 
 
 def test_get_alerts_with_force_refresh(weather_service, mock_api_client):
     """Test getting alerts data with force_refresh=True."""
     lat, lon = 40.0, -75.0
-    radius = 25
-    precise_location = True
 
-    result = weather_service.get_alerts(
-        lat, lon, radius=radius, precise_location=precise_location, force_refresh=True
-    )
+    result = weather_service.get_alerts(lat, lon, force_refresh=True)
 
     assert result == SAMPLE_ALERTS_DATA
-    mock_api_client.get_alerts.assert_called_once_with(
-        lat, lon, radius=radius, precise_location=precise_location, force_refresh=True
-    )
+    mock_api_client.get_alerts.assert_called_once_with(lat, lon, force_refresh=True)
 
 
 def test_get_alerts_error(weather_service, mock_api_client):
@@ -176,7 +170,7 @@ def test_get_discussion_error(weather_service, mock_api_client):
     with pytest.raises(ApiClientError) as exc_info:
         weather_service.get_discussion(lat, lon)
 
-    assert "Unable to retrieve discussion data" in str(exc_info.value)
+    assert "Unable to retrieve forecast discussion data" in str(exc_info.value)
     mock_api_client.get_discussion.assert_called_once()
 
 
@@ -318,9 +312,11 @@ def test_process_alerts(weather_service):
         ]
     }
 
-    processed_alerts = weather_service.process_alerts(alerts_data)
+    processed_alerts, new_count, updated_count = weather_service.process_alerts(alerts_data)
 
     assert len(processed_alerts) == 2
+    assert new_count == 2  # Both alerts are new
+    assert updated_count == 0  # No alerts were updated
     assert processed_alerts[0]["headline"] == "Test Alert 1"
     assert processed_alerts[0]["severity"] == "Moderate"
     assert processed_alerts[1]["headline"] == "Test Alert 2"
@@ -331,9 +327,11 @@ def test_process_alerts_empty(weather_service):
     """Test processing empty alerts data."""
     alerts_data: dict = {"features": []}
 
-    processed_alerts = weather_service.process_alerts(alerts_data)
+    processed_alerts, new_count, updated_count = weather_service.process_alerts(alerts_data)
 
     assert len(processed_alerts) == 0
+    assert new_count == 0
+    assert updated_count == 0
 
 
 def test_process_alerts_missing_properties(weather_service):
@@ -350,9 +348,11 @@ def test_process_alerts_missing_properties(weather_service):
         ]
     }
 
-    processed_alerts = weather_service.process_alerts(alerts_data)
+    processed_alerts, new_count, updated_count = weather_service.process_alerts(alerts_data)
 
     assert len(processed_alerts) == 1
+    assert new_count == 1
+    assert updated_count == 0
     assert processed_alerts[0]["headline"] == "Test Alert"
     # Check default values for missing properties
     assert processed_alerts[0]["description"] == "No description available"
