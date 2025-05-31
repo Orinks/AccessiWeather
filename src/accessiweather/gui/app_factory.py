@@ -12,13 +12,12 @@ from accessiweather.api_client import NoaaApiClient
 
 # NoaaApiWrapper is used in create_app
 from accessiweather.api_wrapper import NoaaApiWrapper  # noqa: F401
-
 from accessiweather.location import LocationManager
 from accessiweather.notifications import WeatherNotifier
+from accessiweather.openmeteo_client import OpenMeteoApiClient
 from accessiweather.services.location_service import LocationService
 from accessiweather.services.notification_service import NotificationService
 from accessiweather.services.weather_service import WeatherService
-
 
 from .weather_app import WeatherApp
 
@@ -81,8 +80,13 @@ def create_weather_app(
     # Create the notifier with persistent storage
     notifier = WeatherNotifier(config_dir=config_dir, enable_persistence=True)
 
+    # Create the Open-Meteo API client
+    openmeteo_client = OpenMeteoApiClient(user_agent="AccessiWeather")
+
     # Create the services
-    weather_service = WeatherService(nws_client=nws_client, config=config)
+    weather_service = WeatherService(
+        nws_client=nws_client, openmeteo_client=openmeteo_client, config=config
+    )
     location_service = LocationService(location_manager)
     notification_service = NotificationService(notifier)
 

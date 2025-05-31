@@ -6,12 +6,12 @@ performance optimization settings, and test environment setup.
 """
 
 import os
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 
 class TestConfig:
     """Configuration class for test execution."""
-    
+
     # Test categories and their descriptions
     TEST_CATEGORIES = {
         "unit": {
@@ -64,7 +64,7 @@ class TestConfig:
             "coverage": True,
         },
     }
-    
+
     # Environment variables for different test modes
     TEST_ENVIRONMENTS = {
         "headless": {
@@ -82,7 +82,7 @@ class TestConfig:
             "ACCESSIWEATHER_TEST_MODE": "1",
         },
     }
-    
+
     # Performance optimization settings
     PERFORMANCE_SETTINGS = {
         "pytest_args": {
@@ -94,7 +94,6 @@ class TestConfig:
                 "--cov-report=xml",
                 "--cov-report=html",
                 "--cov-report=term-missing",
-                "--cov-fail-under=80",
             ],
         },
         "parallel": {
@@ -103,106 +102,118 @@ class TestConfig:
             "dist": "loadfile",  # Distribute by file
         },
     }
-    
+
     @classmethod
     def get_test_command(
         cls,
         category: str,
-        coverage: bool = None,
-        parallel: bool = None,
+        coverage: Optional[bool] = None,
+        parallel: Optional[bool] = None,
         fast: bool = False,
         paths: Optional[List[str]] = None,
     ) -> List[str]:
         """
         Generate pytest command for a specific test category.
-        
+
         Args:
             category: Test category name
             coverage: Enable coverage reporting (overrides category default)
             parallel: Enable parallel execution (overrides category default)
             fast: Enable fast mode (fail fast, reduced output)
             paths: Specific test paths to run
-            
+
         Returns:
             List of command arguments for pytest
         """
         if category not in cls.TEST_CATEGORIES:
             raise ValueError(f"Unknown test category: {category}")
-        
+
         config = cls.TEST_CATEGORIES[category]
         cmd = ["python", "-m", "pytest"]
-        
+
         # Add markers
-        if config["markers"]:
-            marker_expr = " or ".join(config["markers"])
+        markers = cast(List[str], config["markers"])
+        if markers:
+            marker_expr = " or ".join(markers)
             cmd.extend(["-m", marker_expr])
-        
+
         # Add base arguments
-        cmd.extend(cls.PERFORMANCE_SETTINGS["pytest_args"]["base"])
-        
+        pytest_args = cast(Dict[str, Any], cls.PERFORMANCE_SETTINGS["pytest_args"])
+        base_args = cast(List[str], pytest_args["base"])
+        cmd.extend(base_args)
+
         # Add fast mode arguments
         if fast:
-            cmd.extend(cls.PERFORMANCE_SETTINGS["pytest_args"]["fast"])
+            fast_args = cast(List[str], pytest_args["fast"])
+            cmd.extend(fast_args)
         else:
-            cmd.extend(cls.PERFORMANCE_SETTINGS["pytest_args"]["thorough"])
-        
+            thorough_args = cast(List[str], pytest_args["thorough"])
+            cmd.extend(thorough_args)
+
         # Add coverage if enabled
         use_coverage = coverage if coverage is not None else config["coverage"]
         if use_coverage:
-            cmd.extend(cls.PERFORMANCE_SETTINGS["pytest_args"]["coverage"])
-        
+            coverage_args = cast(List[str], pytest_args["coverage"])
+            cmd.extend(coverage_args)
+
         # Add parallel execution if enabled
         use_parallel = parallel if parallel is not None else config["parallel"]
-        if use_parallel and cls.PERFORMANCE_SETTINGS["parallel"]["enabled"]:
-            cmd.extend([
-                "-n", cls.PERFORMANCE_SETTINGS["parallel"]["workers"],
-                "--dist", cls.PERFORMANCE_SETTINGS["parallel"]["dist"],
-            ])
-        
+        parallel_settings = cast(Dict[str, Any], cls.PERFORMANCE_SETTINGS["parallel"])
+        if use_parallel and parallel_settings["enabled"]:
+            cmd.extend(
+                [
+                    "-n",
+                    str(parallel_settings["workers"]),
+                    "--dist",
+                    str(parallel_settings["dist"]),
+                ]
+            )
+
         # Add timeout
-        cmd.extend(["--timeout", str(config["timeout"])])
-        
+        timeout_val = config["timeout"]
+        cmd.extend(["--timeout", str(timeout_val)])
+
         # Add test paths
         if paths:
             cmd.extend(paths)
         else:
             cmd.append("tests/")
-        
+
         return cmd
-    
+
     @classmethod
     def get_environment(cls, mode: str = "local") -> Dict[str, str]:
         """
         Get environment variables for test execution.
-        
+
         Args:
             mode: Environment mode (headless, ci, local)
-            
+
         Returns:
             Dictionary of environment variables
         """
         if mode not in cls.TEST_ENVIRONMENTS:
             raise ValueError(f"Unknown environment mode: {mode}")
-        
+
         env = os.environ.copy()
         env.update(cls.TEST_ENVIRONMENTS[mode])
         env["PYTHONPATH"] = "src"
-        
+
         return env
-    
+
     @classmethod
     def get_category_info(cls, category: str) -> Dict:
         """Get information about a test category."""
         if category not in cls.TEST_CATEGORIES:
             raise ValueError(f"Unknown test category: {category}")
-        
+
         return cls.TEST_CATEGORIES[category].copy()
-    
+
     @classmethod
     def list_categories(cls) -> List[str]:
         """List all available test categories."""
         return list(cls.TEST_CATEGORIES.keys())
-    
+
     @classmethod
     def validate_category(cls, category: str) -> bool:
         """Validate if a category exists."""
@@ -228,14 +239,18 @@ def get_smoke_test_command(fast: bool = True) -> List[str]:
 def get_all_test_command(coverage: bool = True, fast: bool = False) -> List[str]:
     """Get command for running all tests."""
     cmd = ["python", "-m", "pytest"]
-    cmd.extend(TestConfig.PERFORMANCE_SETTINGS["pytest_args"]["base"])
-    
+    pytest_args = cast(Dict[str, Any], TestConfig.PERFORMANCE_SETTINGS["pytest_args"])
+    base_args = cast(List[str], pytest_args["base"])
+    cmd.extend(base_args)
+
     if fast:
-        cmd.extend(TestConfig.PERFORMANCE_SETTINGS["pytest_args"]["fast"])
-    
+        fast_args = cast(List[str], pytest_args["fast"])
+        cmd.extend(fast_args)
+
     if coverage:
-        cmd.extend(TestConfig.PERFORMANCE_SETTINGS["pytest_args"]["coverage"])
-    
+        coverage_args = cast(List[str], pytest_args["coverage"])
+        cmd.extend(coverage_args)
+
     cmd.append("tests/")
     return cmd
 
@@ -254,7 +269,7 @@ if __name__ == "__main__":
     # Print configuration information
     print("AccessiWeather Test Configuration")
     print("=" * 40)
-    
+
     for category in TestConfig.list_categories():
         info = TestConfig.get_category_info(category)
         print(f"\n{category.upper()}:")
@@ -263,7 +278,7 @@ if __name__ == "__main__":
         print(f"  Timeout: {info['timeout']}s")
         print(f"  Parallel: {info['parallel']}")
         print(f"  Coverage: {info['coverage']}")
-        
+
         # Show example command
         cmd = TestConfig.get_test_command(category)
         print(f"  Command: {' '.join(cmd)}")

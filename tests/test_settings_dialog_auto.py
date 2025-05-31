@@ -59,8 +59,8 @@ class TestSettingsDialogAuto(unittest.TestCase):
         settings["data_source"] = DATA_SOURCE_AUTO
         dialog = SettingsDialog(self.frame, settings)
 
-        # Verify Automatic is selected (index 1, not 2)
-        self.assertEqual(dialog.data_source_ctrl.GetSelection(), 1)  # Automatic selected
+        # Verify Automatic is selected (index 2)
+        self.assertEqual(dialog.data_source_ctrl.GetSelection(), 2)  # Automatic selected
 
         # NWS field should be enabled
         self.assertTrue(dialog.api_contact_ctrl.IsEnabled())
@@ -72,7 +72,7 @@ class TestSettingsDialogAuto(unittest.TestCase):
         dialog = SettingsDialog(self.frame, self.current_settings)
 
         # Select Automatic
-        dialog.data_source_ctrl.SetSelection(1)  # Select Automatic
+        dialog.data_source_ctrl.SetSelection(2)  # Select Automatic
 
         # Set some values
         dialog.api_contact_ctrl.SetValue("auto_test@example.com")
@@ -93,7 +93,7 @@ class TestSettingsDialogAuto(unittest.TestCase):
         dialog = SettingsDialog(self.frame, self.current_settings)
 
         # Select Automatic
-        dialog.data_source_ctrl.SetSelection(1)  # Select Automatic
+        dialog.data_source_ctrl.SetSelection(2)  # Select Automatic
 
         # Set NWS contact
         dialog.api_contact_ctrl.SetValue("auto_test@example.com")
