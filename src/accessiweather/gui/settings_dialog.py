@@ -40,8 +40,9 @@ API_KEYS_SECTION = "api_keys"
 
 # Valid data source values
 DATA_SOURCE_NWS = "nws"
+DATA_SOURCE_OPENMETEO = "openmeteo"
 DATA_SOURCE_AUTO = "auto"
-VALID_DATA_SOURCES = [DATA_SOURCE_NWS, DATA_SOURCE_AUTO]
+VALID_DATA_SOURCES = [DATA_SOURCE_NWS, DATA_SOURCE_OPENMETEO, DATA_SOURCE_AUTO]
 
 # Default values
 DEFAULT_DATA_SOURCE = DATA_SOURCE_NWS
@@ -132,12 +133,15 @@ class SettingsDialog(wx.Dialog):
         self.data_source_ctrl.AppendItems(
             [
                 "National Weather Service (NWS)",
-                "Automatic (NWS for US, alternative for non-US)",
+                "Open-Meteo (International)",
+                "Automatic (NWS for US, Open-Meteo for non-US)",
             ]
         )
         tooltip_data_source = (
             "Select which weather data provider to use. "
-            "Automatic option uses NWS for US locations and an alternative provider for non-US locations."
+            "NWS provides data for US locations only (includes weather alerts). "
+            "Open-Meteo provides free weather data for international locations (no alerts available). "
+            "Automatic option uses NWS for US locations and Open-Meteo for non-US locations."
         )
         self.data_source_ctrl.SetToolTip(tooltip_data_source)
         grid_sizer.Add(data_source_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
@@ -361,8 +365,10 @@ class SettingsDialog(wx.Dialog):
             data_source = self.current_settings.get(DATA_SOURCE_KEY, DEFAULT_DATA_SOURCE)
 
             # Set data source dropdown
-            if data_source == DATA_SOURCE_AUTO:
-                self.data_source_ctrl.SetSelection(1)  # Automatic
+            if data_source == DATA_SOURCE_OPENMETEO:
+                self.data_source_ctrl.SetSelection(1)  # Open-Meteo
+            elif data_source == DATA_SOURCE_AUTO:
+                self.data_source_ctrl.SetSelection(2)  # Automatic
             else:
                 self.data_source_ctrl.SetSelection(0)  # NWS (default)
 
@@ -427,12 +433,17 @@ class SettingsDialog(wx.Dialog):
         # Get the selected data source
         selection = self.data_source_ctrl.GetSelection()
 
-        if selection == 1:  # Automatic
-            # Enable NWS API contact field since NWS will be used for US locations
-            # Future: Enable alternative weather API fields for non-US locations
-            self.api_contact_ctrl.Enable(True)
-        else:  # NWS
+        if selection == 0:  # NWS
             # Enable NWS API contact field
+            self.api_contact_ctrl.Enable(True)
+        elif selection == 1:  # Open-Meteo
+            # Open-Meteo doesn't require API contact, but we can still allow it for NWS fallback
+            self.api_contact_ctrl.Enable(True)
+        elif selection == 2:  # Automatic
+            # Enable NWS API contact field since NWS will be used for US locations
+            self.api_contact_ctrl.Enable(True)
+        else:
+            # Default to enabling NWS API contact field
             self.api_contact_ctrl.Enable(True)
 
     def _on_ok(self, event):  # event is required by wx
@@ -506,6 +517,8 @@ class SettingsDialog(wx.Dialog):
         # Determine data source
         selection = self.data_source_ctrl.GetSelection()
         if selection == 1:
+            data_source = DATA_SOURCE_OPENMETEO
+        elif selection == 2:
             data_source = DATA_SOURCE_AUTO
         else:
             data_source = DATA_SOURCE_NWS

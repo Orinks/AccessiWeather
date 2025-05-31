@@ -664,7 +664,7 @@ class NoaaApiClient:
 
                 # Create a hash of the key parts
                 key_string = "|".join(key_parts)
-                cache_key = hashlib.md5(key_string.encode()).hexdigest()
+                cache_key = hashlib.md5(key_string.encode(), usedforsecurity=False).hexdigest()
 
                 # Check if we have a cached response
                 cached_data = self.cache.get(cache_key)

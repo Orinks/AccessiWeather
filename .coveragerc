@@ -1,0 +1,33 @@
+[run]
+source = src/accessiweather
+omit =
+    */weather_gov_api_client/*
+    */tests/*
+    */test_*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if self.debug:
+    if settings.DEBUG
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if __name__ == .__main__.:
+    class .*\bProtocol\):
+    @(abc\.)?abstractmethod
+    # Type checking imports
+    if TYPE_CHECKING:
+    # Import error handling
+    except ImportError:
+    except ModuleNotFoundError:
+    # Platform-specific code that can't be tested in CI
+    if sys.platform
+    if platform.system
+    # Defensive programming - should never happen
+    else:.*# pragma: no cover
+    # GUI event handlers that are hard to test
+    def on_.*\(self, event\):
+    # Cleanup/destructor methods
+    def __del__

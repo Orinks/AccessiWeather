@@ -9,6 +9,7 @@ import pytest
 import wx
 
 from accessiweather.gui.ui_manager import UIManager
+from accessiweather.utils.temperature_utils import TemperatureUnit
 
 # --- Test Data ---
 
@@ -382,3 +383,138 @@ def test_display_weatherapi_alerts(mock_ui_manager):
     processed_alerts = mock_ui_manager.display_alerts(empty_alerts)
     assert len(processed_alerts) == 0
     mock_ui_manager.mock_frame.alert_btn.Disable.assert_called_once()
+
+
+@pytest.mark.unit
+def test_get_temperature_unit_preference_celsius(mock_ui_manager):
+    """Test getting temperature unit preference for Celsius."""
+    mock_ui_manager.frame.config = {"settings": {"temperature_unit": "celsius"}}
+
+    result = mock_ui_manager._get_temperature_unit_preference()
+    assert result == TemperatureUnit.CELSIUS
+
+
+@pytest.mark.unit
+def test_get_temperature_unit_preference_fahrenheit(mock_ui_manager):
+    """Test getting temperature unit preference for Fahrenheit."""
+    mock_ui_manager.frame.config = {"settings": {"temperature_unit": "fahrenheit"}}
+
+    result = mock_ui_manager._get_temperature_unit_preference()
+    assert result == TemperatureUnit.FAHRENHEIT
+
+
+@pytest.mark.unit
+def test_get_temperature_unit_preference_both(mock_ui_manager):
+    """Test getting temperature unit preference for both."""
+    mock_ui_manager.frame.config = {"settings": {"temperature_unit": "both"}}
+
+    result = mock_ui_manager._get_temperature_unit_preference()
+    assert result == TemperatureUnit.BOTH
+
+
+@pytest.mark.unit
+def test_get_temperature_unit_preference_default(mock_ui_manager):
+    """Test getting temperature unit preference with default."""
+    mock_ui_manager.frame.config = {"settings": {}}
+
+    result = mock_ui_manager._get_temperature_unit_preference()
+    assert result == TemperatureUnit.FAHRENHEIT
+
+
+@pytest.mark.unit
+def test_format_weatherapi_forecast_basic(mock_ui_manager):
+    """Test basic WeatherAPI forecast formatting."""
+    forecast_data = {
+        "location": {"name": "Test City", "region": "Test Region", "country": "Test Country"},
+        "forecast": [
+            {
+                "date": "2024-01-15",
+                "maxtemp_f": 75.0,
+                "maxtemp_c": 23.9,
+                "mintemp_f": 60.0,
+                "mintemp_c": 15.6,
+                "condition": {"text": "Sunny"},
+                "daily_chance_of_rain": 10,
+                "maxwind_mph": 15.0,
+            }
+        ],
+    }
+
+    result = mock_ui_manager._format_weatherapi_forecast(forecast_data, None)
+
+    assert "Test City, Test Region, Test Country" in result
+    assert "High" in result and "Low" in result
+    assert "Sunny" in result
+
+
+@pytest.mark.unit
+def test_format_weatherapi_current_conditions_basic(mock_ui_manager):
+    """Test basic WeatherAPI current conditions formatting."""
+    conditions_data = {
+        "temperature": 72.0,
+        "temperature_c": 22.2,
+        "condition": "Sunny",
+        "humidity": 45,
+        "wind_direction": "NW",
+        "wind_speed": 10.0,
+        "wind_speed_kph": 16.1,
+        "pressure": 30.10,
+        "pressure_mb": 1019.0,
+        "feelslike": 70.0,
+        "feelslike_c": 21.1,
+    }
+
+    result = mock_ui_manager._format_weatherapi_current_conditions(conditions_data)
+
+    assert "Current Conditions: Sunny" in result
+    assert "Temperature:" in result
+    assert "Humidity: 45%" in result
+    assert "Wind: NW at" in result
+    assert "Pressure:" in result
+
+
+@pytest.mark.unit
+def test_extract_weatherapi_data_for_taskbar(mock_ui_manager):
+    """Test extracting WeatherAPI data for taskbar."""
+    conditions_data = {
+        "current": {
+            "temp_f": 72.0,
+            "temp_c": 22.2,
+            "condition": {"text": "Sunny"},
+            "humidity": 45,
+            "wind_mph": 10.0,
+        },
+        "location": {"name": "Test City"},
+    }
+
+    result = mock_ui_manager._extract_weatherapi_data_for_taskbar(conditions_data)
+
+    assert result["temp"] == 72.0
+    assert result["temp_f"] == 72.0
+    assert result["temp_c"] == 22.2
+    assert result["condition"] == "Sunny"
+    assert result["humidity"] == 45
+    assert result["wind_speed"] == 10.0
+    assert result["location"] == "Test City"
+
+
+@pytest.mark.unit
+def test_extract_nws_data_for_taskbar(mock_ui_manager):
+    """Test extracting NWS data for taskbar."""
+    conditions_data = {
+        "properties": {
+            "temperature": {"value": 22.2, "unitCode": "degC"},
+            "textDescription": "Sunny",
+            "relativeHumidity": {"value": 45},
+            "windSpeed": {"value": 16.1},
+        }
+    }
+
+    result = mock_ui_manager._extract_nws_data_for_taskbar(conditions_data)
+
+    assert "temp" in result
+    assert result["temp_f"] is not None  # Should be converted from Celsius
+    assert result["temp_c"] == 22.2
+    assert result["condition"] == "Sunny"
+    assert result["humidity"] == 45
+    assert "wind_speed" in result

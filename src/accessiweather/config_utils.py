@@ -121,4 +121,9 @@ def ensure_config_defaults(config: Dict[str, Any]) -> Dict[str, Any]:
         logger.info("Adding api_keys section to config")
         updated_config["api_keys"] = {}
 
+    # Ensure api_settings section exists
+    if "api_settings" not in updated_config:
+        logger.info("Adding api_settings section to config")
+        updated_config["api_settings"] = {}
+
     return updated_config

@@ -702,8 +702,15 @@ class WeatherApp(
             cache_ttl=300,  # Default to 5 minutes
         )
 
+        # Create the Open-Meteo API client
+        from accessiweather.openmeteo_client import OpenMeteoApiClient
+
+        openmeteo_client = OpenMeteoApiClient(user_agent="AccessiWeather")
+
         # Create the new WeatherService
-        self.weather_service = WeatherService(nws_client=nws_client, config=self.config)
+        self.weather_service = WeatherService(
+            nws_client=nws_client, openmeteo_client=openmeteo_client, config=self.config
+        )
 
         # Update the location service with the new data source
         self.location_service.update_data_source(data_source)
