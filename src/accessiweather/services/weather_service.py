@@ -6,7 +6,7 @@ separating business logic from UI concerns.
 
 import logging
 import time
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union, cast
 
 from accessiweather.api_client import ApiClientError, NoaaApiClient, NoaaApiError
 from accessiweather.api_wrapper import NoaaApiWrapper
@@ -223,7 +223,8 @@ class WeatherService:
                     logger.info(f"Open-Meteo failed, trying NWS fallback for {method_name}")
                     method = getattr(self.nws_client, method_name, None)
                     if method:
-                        return method(lat, lon, *args, **kwargs)
+                        result = method(lat, lon, *args, **kwargs)
+                        return cast(Dict[str, Any], result)
                     else:
                         logger.warning(f"NWS client does not have method {method_name}")
                         return None
@@ -549,7 +550,7 @@ class WeatherService:
             logger.error(f"Error getting alerts: {str(e)}")
             raise ApiClientError(f"Unable to retrieve alerts data: {str(e)}")
 
-    def get_discussion(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
+    def get_discussion(self, lat: float, lon: float, force_refresh: bool = False) -> Optional[str]:
         """Get forecast discussion for a location.
 
         Args:
@@ -559,7 +560,7 @@ class WeatherService:
                 instead of using cache.
 
         Returns:
-            Dictionary containing forecast discussion.
+            String containing forecast discussion text, or None if not available.
 
         Raises:
             ApiClientError: If there was an error retrieving the discussion.
@@ -575,3 +576,29 @@ class WeatherService:
         except Exception as e:
             logger.error(f"Error getting forecast discussion: {str(e)}")
             raise ApiClientError(f"Unable to retrieve forecast discussion data: {str(e)}")
+
+    def process_alerts(self, alerts_data: Dict[str, Any]) -> tuple[List[Dict[str, Any]], int, int]:
+        """Process alerts data and return processed alerts with counts.
+
+        This method delegates to the WeatherNotifier for processing.
+
+        Args:
+            alerts_data: Raw alerts data from the API.
+
+        Returns:
+            Tuple containing:
+            - List of processed alert objects
+            - Number of new alerts
+            - Number of updated alerts
+        """
+        # Import here to avoid circular imports
+        # Create a temporary notifier for processing
+        # Use the same config directory as the main app would use
+        import tempfile
+
+        from ..notifications import WeatherNotifier
+
+        temp_dir = tempfile.gettempdir()
+        notifier = WeatherNotifier(config_dir=temp_dir, enable_persistence=False)
+
+        return notifier.process_alerts(alerts_data)

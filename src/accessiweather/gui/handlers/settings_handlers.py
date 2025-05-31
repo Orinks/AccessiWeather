@@ -15,7 +15,6 @@ from ..settings_dialog import (
     DATA_SOURCE_KEY,
     DATA_SOURCE_NWS,
     MINIMIZE_ON_STARTUP_KEY,
-
     PRECISE_LOCATION_ALERTS_KEY,
     SHOW_NATIONWIDE_KEY,
 )
@@ -113,9 +112,7 @@ class WeatherAppSettingsHandlers(WeatherAppHandlerBase):
             new_data_source = updated_settings.get(DATA_SOURCE_KEY, DATA_SOURCE_NWS)
 
             if old_data_source != new_data_source:
-                logger.info(
-                    f"Data source changed: {old_data_source} -> {new_data_source}"
-                )
+                logger.info(f"Data source changed: {old_data_source} -> {new_data_source}")
                 # Handle data source changes
                 self._handle_data_source_change()
 

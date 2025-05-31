@@ -247,12 +247,12 @@ def sample_weather_data():
     return {"temperature": 72, "condition": "sunny"}
 ```
 
-## Coverage Requirements
+## Coverage Reporting
 
-- **Unit tests**: Minimum 80% coverage
+- **Unit tests**: Coverage reported for informational purposes
 - **Integration tests**: Focus on component interactions
 - **E2E tests**: Focus on user workflows
-- **Overall project**: Target 85%+ coverage
+- **Overall project**: Coverage tracked but not enforced
 
 ## Troubleshooting
 

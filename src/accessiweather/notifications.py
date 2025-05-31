@@ -164,10 +164,10 @@ class WeatherNotifier:
 
             alert = {
                 "id": properties.get("id"),
-                "event": properties.get("event"),
+                "event": properties.get("event", "Unknown Event"),
                 "headline": properties.get("headline"),
-                "description": properties.get("description"),
-                "severity": properties.get("severity"),
+                "description": properties.get("description", "No description available"),
+                "severity": properties.get("severity", "Unknown"),
                 "urgency": properties.get("urgency"),
                 "sent": properties.get("sent"),
                 "effective": properties.get("effective"),
@@ -275,12 +275,12 @@ class WeatherNotifier:
         """
         # Use event type, effective time, expires time, and a simplified area description
         # to create a key that identifies the same weather phenomenon
-        event = alert.get("event", "").strip()
-        effective = alert.get("effective", "").strip()
-        expires = alert.get("expires", "").strip()
+        event = (alert.get("event") or "").strip()
+        effective = (alert.get("effective") or "").strip()
+        expires = (alert.get("expires") or "").strip()
 
         # Simplify area description by removing office-specific details
-        area_desc = alert.get("areaDesc", "").strip()
+        area_desc = (alert.get("areaDesc") or "").strip()
         # Remove common office identifiers and normalize
         area_simplified = (
             area_desc.replace(" County", "").replace(" Parish", "").replace(" Borough", "")

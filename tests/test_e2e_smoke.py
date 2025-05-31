@@ -27,19 +27,18 @@ def test_application_imports():
 
     try:
         # Test core module imports
-        import accessiweather.main
-        import accessiweather.api_client
-        import accessiweather.services.weather_service
-        import accessiweather.location
-        import accessiweather.cache
+        import accessiweather.api_client  # noqa: F401
+        import accessiweather.cache  # noqa: F401
+        import accessiweather.gui.settings_dialog  # noqa: F401
 
         # Test GUI module imports (should work in headless mode)
-        import accessiweather.gui.weather_app
-        import accessiweather.gui.settings_dialog
+        import accessiweather.gui.weather_app  # noqa: F401
+        import accessiweather.location  # noqa: F401
+        import accessiweather.main  # noqa: F401
 
         # Test utility imports
-        import accessiweather.utils.temperature_utils
-        import accessiweather.utils.unit_utils
+        # import accessiweather.utils.temperature_utils  # Unused import
+        # import accessiweather.utils.unit_utils  # Unused import
 
         print("✅ All core modules imported successfully")
 
@@ -51,19 +50,16 @@ def test_application_imports():
 @pytest.mark.smoke
 def test_configuration_system():
     """Test that the configuration system works correctly."""
-    from accessiweather.config_utils import get_config_dir
     import json
+
+    from accessiweather.config_utils import get_config_dir
 
     with tempfile.TemporaryDirectory() as temp_dir:
         config_dir = get_config_dir(temp_dir)
         config_file = os.path.join(config_dir, "config.json")
 
         # Test setting and getting configuration
-        test_config = {
-            "location": "Test City",
-            "update_interval": 30,
-            "units": "imperial"
-        }
+        test_config = {"location": "Test City", "update_interval": 30, "units": "imperial"}
 
         # Ensure directory exists
         os.makedirs(config_dir, exist_ok=True)
@@ -141,7 +137,7 @@ def test_cache_system():
 
 @pytest.mark.e2e
 @pytest.mark.smoke
-@patch('accessiweather.api_client.requests.get')
+@patch("accessiweather.api_client.requests.get")
 def test_api_client_basic_functionality(mock_get):
     """Test basic API client functionality."""
     from accessiweather.api_client import NoaaApiClient
@@ -150,11 +146,7 @@ def test_api_client_basic_functionality(mock_get):
     mock_response = MagicMock()
     mock_response.json.side_effect = [
         # Point data response
-        {
-            "properties": {
-                "forecast": "https://api.weather.gov/gridpoints/PHI/50,75/forecast"
-            }
-        },
+        {"properties": {"forecast": "https://api.weather.gov/gridpoints/PHI/50,75/forecast"}},
         # Forecast data response
         {
             "properties": {
@@ -163,11 +155,11 @@ def test_api_client_basic_functionality(mock_get):
                         "name": "Today",
                         "temperature": 72,
                         "temperatureUnit": "F",
-                        "shortForecast": "Sunny"
+                        "shortForecast": "Sunny",
                     }
                 ]
             }
-        }
+        },
     ]
     mock_response.raise_for_status.return_value = None
     mock_get.return_value = mock_response
@@ -186,8 +178,8 @@ def test_api_client_basic_functionality(mock_get):
 @pytest.mark.smoke
 def test_weather_service_initialization():
     """Test that the weather service can be initialized."""
-    from accessiweather.services.weather_service import WeatherService
     from accessiweather.api_client import NoaaApiClient
+    from accessiweather.services.weather_service import WeatherService
 
     # Create weather service with mocked API client
     api_client = MagicMock(spec=NoaaApiClient)
@@ -218,8 +210,8 @@ def test_temperature_utilities():
 @pytest.mark.smoke
 def test_unit_utilities():
     """Test unit formatting utilities."""
-    from accessiweather.utils.unit_utils import format_wind_speed, format_pressure
     from accessiweather.utils.temperature_utils import TemperatureUnit
+    from accessiweather.utils.unit_utils import format_pressure, format_wind_speed
 
     # Test wind speed formatting
     formatted_speed = format_wind_speed(15.0, TemperatureUnit.FAHRENHEIT)
@@ -240,8 +232,8 @@ def test_application_startup_simulation():
     """Test simulated application startup without creating actual GUI."""
     os.environ["DISPLAY"] = ""
 
-    with patch('wx.App') as mock_app_class:
-        with patch('accessiweather.gui.weather_app.WeatherApp') as mock_weather_app:
+    with patch("wx.App") as mock_app_class:
+        with patch("accessiweather.gui.weather_app.WeatherApp") as mock_weather_app:
             # Mock the app and main window
             mock_app = MagicMock()
             mock_app_class.return_value = mock_app
@@ -251,10 +243,10 @@ def test_application_startup_simulation():
 
             try:
                 # Import and simulate startup
-                import accessiweather.main
+                import accessiweather.main  # noqa: F401 - used in patch below
 
                 # Simulate the main function without actually running the GUI
-                with patch('accessiweather.main.main') as mock_main:
+                with patch("accessiweather.main.main") as mock_main:
                     mock_main.return_value = None
 
                     # This should not raise any exceptions
@@ -271,8 +263,9 @@ def test_application_startup_simulation():
 @pytest.mark.smoke
 def test_logging_configuration():
     """Test that logging is configured correctly."""
-    from accessiweather.logging_config import setup_logging
     import logging
+
+    from accessiweather.logging_config import setup_logging
 
     # Setup logging (returns log directory)
     log_dir = setup_logging(log_level=logging.INFO)

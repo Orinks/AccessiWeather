@@ -4,7 +4,9 @@ import os
 import sys
 from unittest.mock import mock_open, patch
 
-from accessiweather.config_utils import get_config_dir, is_portable_mode
+import pytest
+
+from accessiweather.config_utils import ensure_config_defaults, get_config_dir, is_portable_mode
 
 # --- Tests for is_portable_mode ---
 
@@ -101,3 +103,83 @@ def test_get_config_dir_windows_no_appdata():
                     mock_expanduser.return_value = r"C:\Users\Test\.accessiweather"
                     assert get_config_dir() == r"C:\Users\Test\.accessiweather"
                     mock_expanduser.assert_called_once_with("~/.accessiweather")
+
+
+# --- Tests for ensure_config_defaults ---
+
+
+@pytest.mark.unit
+def test_ensure_config_defaults_empty_config():
+    """Test ensure_config_defaults with empty config."""
+    config = {}
+
+    with patch("accessiweather.gui.settings_dialog.DEFAULT_DATA_SOURCE", "nws"):
+        result = ensure_config_defaults(config)
+
+    expected = {"settings": {"data_source": "nws"}, "api_keys": {}, "api_settings": {}}
+    assert result == expected
+    # Ensure original config is not modified
+    assert config == {}
+
+
+@pytest.mark.unit
+def test_ensure_config_defaults_existing_settings():
+    """Test ensure_config_defaults with existing settings."""
+    config = {"settings": {"update_interval": 10, "data_source": "openmeteo"}}
+
+    result = ensure_config_defaults(config)
+
+    expected = {
+        "settings": {"update_interval": 10, "data_source": "openmeteo"},
+        "api_keys": {},
+        "api_settings": {},
+    }
+    assert result == expected
+
+
+@pytest.mark.unit
+def test_ensure_config_defaults_missing_data_source():
+    """Test ensure_config_defaults adds missing data_source."""
+    config = {"settings": {"update_interval": 10}}
+
+    with patch("accessiweather.gui.settings_dialog.DEFAULT_DATA_SOURCE", "auto"):
+        result = ensure_config_defaults(config)
+
+    expected = {
+        "settings": {"update_interval": 10, "data_source": "auto"},
+        "api_keys": {},
+        "api_settings": {},
+    }
+    assert result == expected
+
+
+@pytest.mark.unit
+def test_ensure_config_defaults_existing_api_keys():
+    """Test ensure_config_defaults preserves existing api_keys."""
+    config = {"settings": {"data_source": "weatherapi"}, "api_keys": {"weatherapi": "test_key"}}
+
+    result = ensure_config_defaults(config)
+
+    expected = {
+        "settings": {"data_source": "weatherapi"},
+        "api_keys": {"weatherapi": "test_key"},
+        "api_settings": {},
+    }
+    assert result == expected
+
+
+@pytest.mark.unit
+def test_ensure_config_defaults_no_settings_section():
+    """Test ensure_config_defaults creates settings section when missing."""
+    config = {"other_section": {"some_key": "some_value"}}
+
+    with patch("accessiweather.gui.settings_dialog.DEFAULT_DATA_SOURCE", "nws"):
+        result = ensure_config_defaults(config)
+
+    expected = {
+        "other_section": {"some_key": "some_value"},
+        "settings": {"data_source": "nws"},
+        "api_keys": {},
+        "api_settings": {},
+    }
+    assert result == expected

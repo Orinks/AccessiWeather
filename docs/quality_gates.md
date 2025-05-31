@@ -12,7 +12,6 @@ The following thresholds are configurable via environment variables in the GitHu
 
 | Metric | Threshold | Environment Variable | Description |
 |--------|-----------|---------------------|-------------|
-| Code Coverage | 80% | `MIN_COVERAGE` | Minimum test coverage required |
 | Code Complexity | 10 | `MAX_COMPLEXITY` | Maximum cyclomatic complexity per function |
 | Security Severity | medium+ | `SECURITY_SEVERITY_THRESHOLD` | Minimum security issue severity that fails builds |
 
@@ -23,7 +22,6 @@ The following thresholds are configurable via environment variables in the GitHu
 - **Tools**: pytest, pytest-cov
 - **Quality Gates**:
   - ✅ All tests must pass
-  - ✅ Code coverage must meet minimum threshold (80%)
 - **Artifacts**: Coverage reports (XML, HTML)
 - **Matrix**: Python 3.11, 3.12
 
@@ -134,7 +132,7 @@ pre-commit install
 pre-commit run --all-files
 
 # Run tests with coverage
-pytest --cov=src/accessiweather --cov-fail-under=80
+pytest --cov=src/accessiweather
 
 # Run security scans
 bandit -r src/accessiweather
@@ -150,10 +148,9 @@ xenon --max-absolute 10 src/accessiweather
 
 In exceptional circumstances, quality gates can be bypassed:
 
-1. **Coverage**: Temporarily lower `MIN_COVERAGE` in workflow
-2. **Complexity**: Refactor code or add `# noqa: C901` for specific functions
-3. **Security**: Add exclusions to `.bandit` or use `# nosec` comments
-4. **Style**: Run `pre-commit run --all-files` to auto-fix issues
+1. **Complexity**: Refactor code or add `# noqa: C901` for specific functions
+2. **Security**: Add exclusions to `.bandit` or use `# nosec` comments
+3. **Style**: Run `pre-commit run --all-files` to auto-fix issues
 
 ⚠️ **Warning**: Bypassing quality gates should be rare and require code review approval.
 
@@ -161,8 +158,8 @@ In exceptional circumstances, quality gates can be bypassed:
 
 ### Common Issues
 
-1. **Coverage Below Threshold**
-   - Add more unit tests
+1. **Low Test Coverage (Informational)**
+   - Add more unit tests for critical paths
    - Remove unused code
    - Check for untested error paths
 

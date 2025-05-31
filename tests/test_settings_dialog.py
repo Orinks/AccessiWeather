@@ -7,9 +7,9 @@ import wx
 
 from accessiweather.gui.settings_dialog import (
     API_CONTACT_KEY,
+    DATA_SOURCE_AUTO,
     DATA_SOURCE_KEY,
     DATA_SOURCE_NWS,
-    DATA_SOURCE_AUTO,
     SettingsDialog,
 )
 
@@ -53,7 +53,7 @@ class TestSettingsDialog(unittest.TestCase):
         settings = self.current_settings.copy()
         settings[DATA_SOURCE_KEY] = DATA_SOURCE_AUTO
         dialog = SettingsDialog(self.frame, settings)
-        self.assertEqual(dialog.data_source_ctrl.GetSelection(), 1)  # Automatic selected
+        self.assertEqual(dialog.data_source_ctrl.GetSelection(), 2)  # Automatic selected
 
         # Switch to NWS
         dialog.data_source_ctrl.SetSelection(0)  # Select NWS
