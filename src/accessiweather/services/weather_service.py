@@ -503,6 +503,8 @@ class WeatherService:
         lon: float,
         force_refresh: bool = False,
         include_forecast_alerts: bool = False,
+        radius: float = 50,
+        precise_location: bool = True,
     ) -> Dict[str, Any]:
         """Get weather alerts for a location.
 
@@ -512,6 +514,9 @@ class WeatherService:
             force_refresh: Whether to force a refresh of the data from the API
                 instead of using cache.
             include_forecast_alerts: Whether to include alerts from forecast data.
+            radius: Radius in miles to search for alerts (used for point-radius search).
+            precise_location: Whether to get alerts for the precise location (county/zone)
+                             or for the entire state.
 
         Returns:
             Dictionary containing weather alerts.
@@ -540,7 +545,13 @@ class WeatherService:
                 }
             else:
                 logger.info("Using NWS API for alerts")
-                return self.nws_client.get_alerts(lat, lon, force_refresh=force_refresh)
+                return self.nws_client.get_alerts(
+                    lat,
+                    lon,
+                    radius=radius,
+                    precise_location=precise_location,
+                    force_refresh=force_refresh,
+                )
 
         except NoaaApiError as e:
             # Re-raise NOAA API errors directly for specific handling

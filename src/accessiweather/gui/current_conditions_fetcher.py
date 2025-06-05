@@ -88,15 +88,8 @@ class CurrentConditionsFetcher:
                 logger.debug("Current conditions fetch cancelled before API call")
                 return
 
-            # Get current conditions data from API or service
-            if hasattr(self.service, "get_current_conditions"):
-                current_conditions = self.service.get_current_conditions(lat, lon)
-            else:
-                # Fallback for backward compatibility
-                logger.warning(
-                    "Service does not have get_current_conditions method, using direct API call"
-                )
-                current_conditions = self.service.get_current_conditions(lat, lon)
+            # Get current conditions data from the service
+            current_conditions = self.service.get_current_conditions(lat, lon)
 
             # Check again if we've been asked to stop before delivering results
             if self._stop_event.is_set():

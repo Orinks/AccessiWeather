@@ -678,7 +678,7 @@ class WeatherApp(
         in the settings dialog. It reinitializes the WeatherService with the new
         settings and updates the fetchers to use the new service.
         """
-        from accessiweather.api_client import NoaaApiClient
+        from accessiweather.api_wrapper import NoaaApiWrapper
         from accessiweather.services.weather_service import WeatherService
 
         logger.info("Reinitializing WeatherService due to data source or API key change")
@@ -695,7 +695,7 @@ class WeatherApp(
         logger.info(f"Full config: {self.config}")
 
         # Create the NWS API client (always needed)
-        nws_client = NoaaApiClient(
+        nws_client = NoaaApiWrapper(
             user_agent="AccessiWeather",
             contact_info=contact_info,
             enable_caching=True,  # Default to enabled
