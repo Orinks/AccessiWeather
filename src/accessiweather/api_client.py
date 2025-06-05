@@ -198,18 +198,16 @@ class NoaaApiClient:
         Args:
             user_agent: User agent string for API requests
             contact_info: Optional contact information (website or email)
-                          for API identification
+                          for API identification. If None, uses the app name.
             enable_caching: Whether to enable caching of API responses
             cache_ttl: Time-to-live for cached responses in seconds (default: 5 minutes)
         """
         self.user_agent = user_agent
-        self.contact_info = contact_info
+        # Use app name as default contact info if none provided
+        self.contact_info = contact_info or user_agent
 
         # Build user agent string according to NOAA API recommendations
-        if contact_info:
-            user_agent_string = f"{user_agent} ({contact_info})"
-        else:
-            user_agent_string = user_agent
+        user_agent_string = f"{user_agent} ({self.contact_info})"
 
         self.headers = {"User-Agent": user_agent_string, "Accept": "application/geo+json"}
 
@@ -664,7 +662,7 @@ class NoaaApiClient:
 
                 # Create a hash of the key parts
                 key_string = "|".join(key_parts)
-                cache_key = hashlib.md5(key_string.encode()).hexdigest()
+                cache_key = hashlib.md5(key_string.encode(), usedforsecurity=False).hexdigest()
 
                 # Check if we have a cached response
                 cached_data = self.cache.get(cache_key)

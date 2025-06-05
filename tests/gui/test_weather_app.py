@@ -52,6 +52,8 @@ def mock_app(mock_services, mock_config):
     return app
 
 
+@pytest.mark.gui
+@pytest.mark.unit
 def test_on_timer_update_interval(mock_app):
     """Test that OnTimer uses the correct update interval from config."""
     # Set up the test
@@ -70,6 +72,8 @@ def test_on_timer_update_interval(mock_app):
     mock_app.UpdateWeatherData.assert_called_once()
 
 
+@pytest.mark.gui
+@pytest.mark.unit
 def test_on_timer_no_update_needed(mock_app):
     """Test that OnTimer doesn't update when the interval hasn't elapsed."""
     # Set up the test

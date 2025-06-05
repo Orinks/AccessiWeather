@@ -12,7 +12,6 @@ from typing import Optional
 import wx
 
 from accessiweather.config_utils import get_config_dir
-from accessiweather.data_migration import migrate_config_directory
 from accessiweather.gui.app import AccessiWeatherApp
 from accessiweather.gui.app_factory import create_weather_app
 from accessiweather.logging_config import setup_logging as setup_root_logging
@@ -25,6 +24,7 @@ def main(
     config_dir: Optional[str] = None,
     debug_mode: bool = False,
     enable_caching: bool = True,
+    portable_mode: bool = False,
 ):
     """Main entry point for the application
 
@@ -32,13 +32,24 @@ def main(
         config_dir: Configuration directory, defaults to ~/.accessiweather
         debug_mode: Whether to enable debug mode with additional logging and alert testing features
         enable_caching: Whether to enable API response caching
+        portable_mode: Whether to run in portable mode (saves config to local directory)
     """
+    # Set portable mode environment variable if requested
+    if portable_mode:
+        os.environ["ACCESSIWEATHER_FORCE_PORTABLE"] = "1"
+
     # Set up logging using the root config
     log_level = logging.DEBUG if debug_mode else logging.INFO
     setup_root_logging(log_level=log_level)
 
     # Get logger
     logger = logging.getLogger(__name__)
+
+    # Log the mode we're running in
+    if portable_mode:
+        logger.info("Running in portable mode")
+    else:
+        logger.info("Running in standard mode")
 
     # Create a minimal wx.App instance first
     # This is required for both wx.SingleInstanceChecker and wx.MessageBox
@@ -72,16 +83,6 @@ def main(
         os.makedirs(config_dir, exist_ok=True)
 
         logger.info(f"Using config directory: {config_dir}")
-
-        # Migrate data from old config directory if needed
-        old_config_dir = os.path.expanduser("~/.noaa_weather_app")
-        if os.path.exists(old_config_dir):
-            logger.info(f"Found old config directory: {old_config_dir}")
-            migration_result = migrate_config_directory(old_config_dir, config_dir)
-            if migration_result:
-                logger.info("Successfully migrated data from old config directory")
-            else:
-                logger.warning("Failed to migrate data from old config directory")
 
         # Load configuration
         config_file = os.path.join(config_dir, "config.json")

@@ -22,14 +22,18 @@ class GeocodingService:
     # Nominatim often returns 'us' even for territories like PR, GU.
     ALLOWED_COUNTRY_CODES = ["us"]
 
-    def __init__(self, user_agent: str = "AccessiWeather", timeout: int = 10):
+    def __init__(
+        self, user_agent: str = "AccessiWeather", timeout: int = 10, data_source: str = "nws"
+    ):
         """Initialize the geocoding service
 
         Args:
             user_agent: User agent string for API requests
             timeout: Timeout in seconds for geocoding requests
+            data_source: The data source to use ('nws' or 'auto')
         """
         self.geolocator = Nominatim(user_agent=user_agent, timeout=timeout)
+        self.data_source = data_source
 
     def is_zip_code(self, text: str) -> bool:
         """Check if the given text is a valid US ZIP code
@@ -88,23 +92,26 @@ class GeocodingService:
                 logger.warning(f"No results found for address: {original_query}")
                 return None
 
-            # --- Filter for US NWS Coverage Area ---
+            # --- Filter for US NWS Coverage Area if using NWS data source ---
             if hasattr(location, "raw") and isinstance(location.raw, dict):
                 address_details = location.raw.get("address", {})
-                country_code = address_details.get("country_code")
+                country_code = address_details.get("country_code", "").lower()
 
-                if country_code and country_code.lower() in self.ALLOWED_COUNTRY_CODES:
-                    logger.info(
-                        f"Successfully geocoded '{original_query}' to: {location.address} (country_code: {country_code})"
-                    )
-                    return location.latitude, location.longitude, location.address
-                else:
+                # Only filter for US locations if using NWS data source
+                if self.data_source == "nws" and country_code not in self.ALLOWED_COUNTRY_CODES:
                     logger.warning(
                         f"Location '{location.address}' found for query '{original_query}', "
                         f"but filtered out due to unsupported country_code: '{country_code}'. "
-                        f"Only {self.ALLOWED_COUNTRY_CODES} are supported."
+                        f"Only {self.ALLOWED_COUNTRY_CODES} are supported with NWS data source."
                     )
                     return None  # Location outside coverage area
+
+                # For WeatherAPI or Automatic, allow any location
+                logger.info(
+                    f"Successfully geocoded '{original_query}' to: {location.address} "
+                    f"(country_code: {country_code})"
+                )
+                return location.latitude, location.longitude, location.address
             else:
                 logger.warning(
                     f"Geocoding result for '{original_query}' lacks detailed address information "
@@ -120,21 +127,43 @@ class GeocodingService:
             logger.error(f"Unexpected geocoding error for '{original_query}': {str(e)}")
             return None
 
-    def validate_coordinates(self, lat: float, lon: float) -> bool:
-        """Validate if coordinates are within the US NWS coverage area.
+    def validate_coordinates(self, lat: float, lon: float, us_only: Optional[bool] = None) -> bool:
+        """Validate if coordinates are within the US NWS coverage area or globally valid.
 
         This method performs a reverse geocoding lookup to determine if the
-        given coordinates are within the US.
+        given coordinates are within the US (when us_only=True) or are valid
+        coordinates anywhere in the world (when us_only=False).
+
+        If us_only is None, the method will use the data_source to determine whether
+        to restrict validation to US locations (True for 'nws', False for others).
 
         Args:
             lat: Latitude
             lon: Longitude
+            us_only: Whether to restrict validation to US locations only
+                     If None, uses data_source to determine (default: None)
 
         Returns:
-            True if coordinates are within the US NWS coverage area, False otherwise
+            True if coordinates are valid according to the criteria, False otherwise
         """
+        # If us_only is not specified, determine based on data source
+        if us_only is None:
+            us_only = self.data_source == "nws"
+        # Basic validation for all cases
+        if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
+            logger.warning(
+                f"Coordinates ({lat}, {lon}) are outside valid range "
+                f"(latitude: -90 to 90, longitude: -180 to 180)"
+            )
+            return False
+
+        # If not US-only, we've already validated the basic range
+        if not us_only:
+            logger.debug(f"Coordinates ({lat}, {lon}) are within valid global range")
+            return True
+
         try:
-            logger.debug(f"Validating coordinates: ({lat}, {lon})")
+            logger.debug(f"Validating coordinates: ({lat}, {lon}) for US location")
             # Perform reverse geocoding with address details
             location = self.geolocator.reverse((lat, lon), addressdetails=True)
 
@@ -212,26 +241,39 @@ class GeocodingService:
                 logger.debug(f"No suggestions found for query: {query}")
                 return []
 
-            # Filter for US locations only
-            us_locations = []
-            for location in locations:
-                if hasattr(location, "raw") and isinstance(location.raw, dict):
-                    address_details = location.raw.get("address", {})
-                    country_code = address_details.get("country_code", "").lower()
+            # Filter locations based on data source
+            filtered_locations = []
 
-                    if country_code in self.ALLOWED_COUNTRY_CODES:
-                        us_locations.append(location)
-                        if len(us_locations) >= limit:
-                            break
+            if self.data_source == "nws":
+                # Filter for US locations only when using NWS
+                for location in locations:
+                    if hasattr(location, "raw") and isinstance(location.raw, dict):
+                        address_details = location.raw.get("address", {})
+                        country_code = address_details.get("country_code", "").lower()
 
-            if us_locations:
-                # Extract the display names from US locations only
-                suggestions = [location.address for location in us_locations]
-                logger.debug(f"Found {len(suggestions)} US location suggestions")
-                return suggestions
+                        if country_code in self.ALLOWED_COUNTRY_CODES:
+                            filtered_locations.append(location)
+                            if len(filtered_locations) >= limit:
+                                break
+
+                if filtered_locations:
+                    # Extract the display names from US locations only
+                    suggestions = [location.address for location in filtered_locations]
+                    logger.debug(
+                        f"Found {len(suggestions)} US location suggestions for NWS data source"
+                    )
+                    return suggestions
+                else:
+                    logger.debug(f"No US location suggestions found for query: {query}")
+                    return []
             else:
-                logger.debug(f"No US location suggestions found for query: {query}")
-                return []
+                # For WeatherAPI or Automatic, allow any location worldwide
+                filtered_locations = locations[:limit]  # Just take the first 'limit' locations
+                suggestions = [location.address for location in filtered_locations]
+                logger.debug(
+                    f"Found {len(suggestions)} worldwide location suggestions for non-NWS data source"
+                )
+                return suggestions
 
         except (GeocoderTimedOut, GeocoderServiceError) as e:
             logger.error(f"Location suggestion error for '{query}': {str(e)}")

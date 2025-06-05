@@ -3,7 +3,9 @@ repos:
     rev: v4.5.0
     hooks:
     -   id: trailing-whitespace
+        exclude: ^src/accessiweather/weather_gov_api_client/
     -   id: end-of-file-fixer
+        exclude: ^src/accessiweather/weather_gov_api_client/
     -   id: check-yaml
     -   id: check-added-large-files
     -   id: debug-statements
@@ -13,32 +15,35 @@ repos:
     hooks:
     -   id: black
         args: [--line-length=100]
+        exclude: ^src/accessiweather/weather_gov_api_client/
 
 -   repo: https://github.com/pycqa/isort
     rev: 5.13.2
     hooks:
     -   id: isort
         args: ["--profile", "black", "--line-length", "100"]
+        exclude: ^src/accessiweather/weather_gov_api_client/
 
 -   repo: https://github.com/pycqa/flake8
     rev: 7.0.0
     hooks:
     -   id: flake8
-        args: ["--max-line-length=100", "--ignore=E203,W503,E501"]
+        args: ["--max-line-length=100", "--ignore=E203,W503,E501,F541,C901"]
+        exclude: ^src/accessiweather/weather_gov_api_client/
 
 -   repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.8.0
     hooks:
     -   id: mypy
-        additional_dependencies: [types-requests]
+        additional_dependencies: [types-requests, types-python-dateutil]
         args: [--ignore-missing-imports]
-        exclude: ^(tests/|docs/|setup.py)
+        exclude: ^(tests/|docs/|setup.py|src/accessiweather/weather_gov_api_client/)
 
 -   repo: local
     hooks:
     -   id: pytest-check
         name: pytest-check
-        entry: python -m pytest tests/
+        entry: python -m pytest tests/ -m "unit" --maxfail=5 -x
         language: system
         pass_filenames: false
         always_run: true

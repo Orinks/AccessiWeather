@@ -140,16 +140,12 @@ class WeatherAppSystemHandlers(WeatherAppHandlerBase):
             try:
                 # Remove taskbar icon if it exists
                 if hasattr(self, "taskbar_icon") and self.taskbar_icon:
-                    logger.debug("Removing taskbar icon")
+                    logger.debug("Cleaning up taskbar icon")
                     try:
-                        # Check if RemoveIcon is available and if the icon is still ok
-                        if self.taskbar_icon.IsOk() and hasattr(self.taskbar_icon, "RemoveIcon"):
-                            self.taskbar_icon.RemoveIcon()
-                        # Check if Destroy is available
-                        if hasattr(self.taskbar_icon, "Destroy"):
-                            self.taskbar_icon.Destroy()
+                        # Use the improved cleanup method
+                        self.taskbar_icon.cleanup()
                     except Exception as e:
-                        logger.error(f"Error removing taskbar icon: {e}", exc_info=True)
+                        logger.error(f"Error cleaning up taskbar icon: {e}", exc_info=True)
                         close_successful = False
                     finally:
                         # Always ensure reference is cleared

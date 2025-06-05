@@ -52,7 +52,17 @@ class LogWatcher(threading.Thread):
 
                         # Call the callback with the new content
                         if new_content:
-                            wx.CallAfter(self.callback, new_content)
+                            # Only use wx.CallAfter if there's a wx.App instance
+                            try:
+                                app = wx.GetApp()
+                                if app:
+                                    wx.CallAfter(self.callback, new_content)
+                                else:
+                                    # No wx.App, call directly (for tests)
+                                    self.callback(new_content)
+                            except Exception:
+                                # Fallback to direct call if wx.GetApp() fails
+                                self.callback(new_content)
             except Exception as e:
                 logger.error(f"Error in log watcher: {e}")
 
@@ -64,7 +74,7 @@ class LogWatcher(threading.Thread):
         self.running = False
 
 
-class DebugLogWindow(wx.Frame):
+class DebugLogWindow(wx.Dialog):
     """Window for viewing and filtering the application log."""
 
     def __init__(self, parent=None):
@@ -77,7 +87,7 @@ class DebugLogWindow(wx.Frame):
             parent,
             title="AccessiWeather Debug Log",
             size=(800, 600),
-            style=wx.DEFAULT_FRAME_STYLE | wx.RESIZE_BORDER,
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
 
         # Set up the UI
@@ -95,67 +105,64 @@ class DebugLogWindow(wx.Frame):
 
     def _create_ui(self):
         """Create the UI components."""
-        # Create the main panel
-        panel = wx.Panel(self)
+        # Create the main sizer directly on the dialog
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
         # Create the filter controls
         filter_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         # Log level filter
-        level_label = wx.StaticText(panel, label="Log Level:")
+        level_label = wx.StaticText(self, label="Log Level:")
         filter_sizer.Add(level_label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
 
         self.level_choice = wx.Choice(
-            panel, choices=["All", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+            self, choices=["All", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
         )
         self.level_choice.SetSelection(0)  # Default to "All"
         filter_sizer.Add(self.level_choice, 0, wx.ALL, 5)
 
         # Text filter
-        filter_label = wx.StaticText(panel, label="Filter:")
+        filter_label = wx.StaticText(self, label="Filter:")
         filter_sizer.Add(filter_label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
 
-        self.filter_text = wx.TextCtrl(panel)
+        self.filter_text = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER)
         filter_sizer.Add(self.filter_text, 1, wx.ALL | wx.EXPAND, 5)
 
         # Apply filter button
-        self.apply_btn = wx.Button(panel, label="Apply Filter")
+        self.apply_btn = wx.Button(self, label="Apply Filter")
         filter_sizer.Add(self.apply_btn, 0, wx.ALL, 5)
 
         # Clear filter button
-        self.clear_btn = wx.Button(panel, label="Clear Filter")
+        self.clear_btn = wx.Button(self, label="Clear Filter")
         filter_sizer.Add(self.clear_btn, 0, wx.ALL, 5)
 
         main_sizer.Add(filter_sizer, 0, wx.ALL | wx.EXPAND, 5)
 
         # Create the log text control
-        self.log_text = wx.TextCtrl(
-            panel, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.HSCROLL | wx.TE_RICH
-        )
+        self.log_text = wx.TextCtrl(self, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.HSCROLL)
         main_sizer.Add(self.log_text, 1, wx.ALL | wx.EXPAND, 5)
 
         # Create the button sizer
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         # Clear log button
-        self.clear_log_btn = wx.Button(panel, label="Clear Log")
+        self.clear_log_btn = wx.Button(self, label="Clear Log")
         button_sizer.Add(self.clear_log_btn, 0, wx.ALL, 5)
 
         # Reload log button
-        self.reload_btn = wx.Button(panel, label="Reload Log")
+        self.reload_btn = wx.Button(self, label="Reload Log")
         button_sizer.Add(self.reload_btn, 0, wx.ALL, 5)
 
         # Auto-scroll checkbox
-        self.auto_scroll = wx.CheckBox(panel, label="Auto-scroll")
+        self.auto_scroll = wx.CheckBox(self, label="Auto-scroll")
         self.auto_scroll.SetValue(True)
         button_sizer.Add(self.auto_scroll, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
 
         # Add button sizer to main sizer
         main_sizer.Add(button_sizer, 0, wx.ALL | wx.ALIGN_CENTER, 5)
 
-        # Set the sizer for the panel
-        panel.SetSizer(main_sizer)
+        # Set the sizer for the dialog
+        self.SetSizer(main_sizer)
 
         # Bind events
         self.apply_btn.Bind(wx.EVT_BUTTON, self.OnApplyFilter)

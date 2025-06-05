@@ -1,0 +1,187 @@
+name: Release
+
+on:
+  push:
+    branches: [ main ]  # Releases only from main branch
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - '.gitignore'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.0.0 - without v prefix)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write      # Required to create releases and upload assets
+  actions: read        # Required to read workflow artifacts
+
+jobs:
+  release:
+    name: Build and Release
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.12"
+
+    - name: Get version
+      id: version
+      run: |
+        if [ -n "${{ github.event.inputs.version }}" ]; then
+          VERSION="${{ github.event.inputs.version }}"
+        else
+          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Version: $VERSION"
+      shell: bash
+
+    - name: Check if release exists
+      id: check_release
+      run: |
+        $VERSION = "${{ steps.version.outputs.version }}"
+
+        # Reset error action preference to continue on errors
+        $ErrorActionPreference = "Continue"
+
+        # Check if release exists
+        $result = gh release view "v$VERSION" 2>&1
+        $exitCode = $LASTEXITCODE
+
+        if ($exitCode -eq 0) {
+          Write-Host "Release v$VERSION already exists, skipping..."
+          "exists=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+        } else {
+          Write-Host "Release v$VERSION does not exist, proceeding..."
+          "exists=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+        }
+
+        # Ensure we exit with success
+        exit 0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Install dependencies
+      if: steps.check_release.outputs.exists == 'false'
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev]
+        pip install PyInstaller
+
+    - name: Build application
+      if: steps.check_release.outputs.exists == 'false'
+      run: |
+        # Use the build script to create both installer and portable versions
+        powershell -ExecutionPolicy Bypass -File installer/build_installer.ps1
+
+    - name: Prepare release assets
+      if: steps.check_release.outputs.exists == 'false'
+      run: |
+        $VERSION = "${{ steps.version.outputs.version }}"
+
+        # Create release directory
+        New-Item -ItemType Directory -Force -Path "release-assets"
+
+        # Copy installer
+        $InstallerSource = "installer/dist/AccessiWeather_Setup_v$VERSION.exe"
+        if (Test-Path $InstallerSource) {
+          Copy-Item $InstallerSource "release-assets/"
+          Write-Host "✓ Copied installer"
+        } else {
+          Write-Host "✗ Installer not found at: $InstallerSource"
+          exit 1
+        }
+
+        # Copy portable ZIP
+        $PortableSource = "dist/AccessiWeather_Portable_v$VERSION.zip"
+        if (Test-Path $PortableSource) {
+          Copy-Item $PortableSource "release-assets/"
+          Write-Host "✓ Copied portable ZIP"
+        } else {
+          Write-Host "✗ Portable ZIP not found at: $PortableSource"
+          exit 1
+        }
+
+        # Generate checksums
+        $ChecksumFile = "release-assets/checksums.txt"
+        "AccessiWeather v$VERSION - Release Checksums`n" | Out-File $ChecksumFile -Encoding UTF8
+
+        # Get all .exe and .zip files in release-assets directory
+        $releaseFiles = Get-ChildItem "release-assets" | Where-Object { $_.Extension -in @('.exe', '.zip') }
+        foreach ($file in $releaseFiles) {
+          $Hash = Get-FileHash -Path $file.FullName -Algorithm SHA256
+          $FileSize = [math]::Round($file.Length / 1MB, 2)
+          "$($Hash.Hash)  $($file.Name) ($FileSize MB)" | Add-Content $ChecksumFile -Encoding UTF8
+        }
+
+        Write-Host "✓ Generated checksums"
+        Get-Content $ChecksumFile
+
+    - name: Create release notes
+      if: steps.check_release.outputs.exists == 'false'
+      run: |
+        $VERSION = "${{ steps.version.outputs.version }}"
+
+        # Create release notes content
+        $Content = "# AccessiWeather v$VERSION`n`n"
+        $Content += "## What's New`n`n"
+        $Content += "This release includes improvements and bug fixes for AccessiWeather.`n`n"
+        $Content += "## Downloads`n`n"
+        $Content += "- **Windows Installer**: ``AccessiWeather_Setup_v$VERSION.exe```n"
+        $Content += "- **Portable Version**: ``AccessiWeather_Portable_v$VERSION.zip```n`n"
+        $Content += "## Installation`n`n"
+        $Content += "### Windows Installer`n"
+        $Content += "1. Download ``AccessiWeather_Setup_v$VERSION.exe```n"
+        $Content += "2. Run the installer and follow the setup wizard`n"
+        $Content += "3. Launch AccessiWeather from the Start Menu`n`n"
+        $Content += "### Portable Version`n"
+        $Content += "1. Download ``AccessiWeather_Portable_v$VERSION.zip```n"
+        $Content += "2. Extract to your desired location`n"
+        $Content += "3. Run ``AccessiWeather.exe`` from the extracted folder`n`n"
+        $Content += "## Checksums`n`n"
+        $Content += "``````n"
+        $Content += (Get-Content "release-assets/checksums.txt" -Raw)
+        $Content += "``````n`n"
+        $Content += "## System Requirements`n`n"
+        $Content += "- Windows 10 or later`n"
+        $Content += "- Internet connection for weather data`n`n"
+        $Content += "---`n`n"
+        $Content += "For support and documentation, visit the [AccessiWeather repository](https://github.com/Orinks/AccessiWeather).`n"
+
+        $Content | Out-File -FilePath "release-notes.md" -Encoding UTF8 -NoNewline
+        Write-Host "✓ Generated release notes"
+
+    - name: Create GitHub Release
+      if: steps.check_release.outputs.exists == 'false'
+      uses: ncipollo/release-action@v1
+      with:
+        tag: v${{ steps.version.outputs.version }}
+        name: AccessiWeather v${{ steps.version.outputs.version }}
+        bodyFile: release-notes.md
+        artifacts: "release-assets/*"
+        draft: true
+        prerelease: ${{ github.event.inputs.prerelease || false }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Release summary
+      if: steps.check_release.outputs.exists == 'false'
+      run: |
+        $VERSION = "${{ steps.version.outputs.version }}"
+        Write-Host "✅ Successfully created draft release v$VERSION"
+        Write-Host "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/v$VERSION"
+        Write-Host "📝 Edit the release notes and publish when ready!"

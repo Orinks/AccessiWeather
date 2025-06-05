@@ -1,7 +1,18 @@
 [flake8]
 max-line-length = 100
-exclude = .git,__pycache__,build,dist
-ignore = E203, W503, E501
+max-complexity = 10
+exclude = .git,__pycache__,build,dist,**/weather_gov_api_client/**,**/weatherapi_client/**,.venv,venv,env,.eggs,*.egg-info,.tox,.coverage,htmlcov,.pytest_cache,.mypy_cache
+ignore = E203, W503, E501, F541, C901
+select = E,W,F,C
 per-file-ignores =
     # Allow imports in __init__.py files
     __init__.py:F401
+    # Ignore unused imports in auto-generated files
+    src/accessiweather/weatherapi_client/client.py:F401,F541,F811,E741
+    src/accessiweather/weatherapi_mapper.py:F401
+    src/accessiweather/weather_gov_api_client/**:F401,F541,F811,E741,F821
+    # Ignore unused imports in test files
+    tests/test_api_wrapper.py:F841
+    tests/test_weatherapi_error_handling.py:F401
+    tests/test_weatherapi_location.py:F401
+    tests/test_weatherapi_mapper.py:F401

@@ -11,6 +11,7 @@
 ; Get absolute paths from environment variables
 #define RootDir GetEnv("ACCESSIWEATHER_ROOT_DIR")
 #define DistDir GetEnv("ACCESSIWEATHER_DIST_DIR")
+#define InstallerOutputDir RootDir + "\installer\dist"
 
 [Setup]
 ; Basic Setup Information
@@ -28,7 +29,7 @@ AllowNoIcons=yes
 Compression=lzma
 SolidCompression=yes
 ; Output settings
-OutputDir={#DistDir}
+OutputDir={#InstallerOutputDir}
 OutputBaseFilename={#MyAppName}_Setup_v{#MyAppVersion}
 ; Installer appearance
 ; No icon file found in the project
@@ -92,9 +93,7 @@ begin
   if not FileExists(ConfigFile) then
   begin
     SampleConfigContent := '{ ' + #13#10 +
-                          '  "api_settings": {' + #13#10 +
-                          '    "contact_info": ""' + #13#10 +
-                          '  },' + #13#10 +
+                          '  "api_settings": {},' + #13#10 +
                           '  "settings": {' + #13#10 +
                           '    "update_interval_minutes": 10,' + #13#10 +
                           '    "alert_radius_miles": 25,' + #13#10 +
@@ -103,7 +102,8 @@ begin
                           '    "minimize_to_tray": true,' + #13#10 +
                           '    "cache_enabled": true,' + #13#10 +
                           '    "cache_ttl": 300,' + #13#10 +
-                          '    "auto_refresh_national": true' + #13#10 +
+                          '    "auto_refresh_national": true,' + #13#10 +
+                          '    "data_source": "auto"' + #13#10 +
                           '  }' + #13#10 +
                           '}';
 

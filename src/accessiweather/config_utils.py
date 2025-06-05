@@ -19,11 +19,21 @@ def is_portable_mode() -> bool:
     Portable mode is detected by checking if the executable is running from a
     non-standard location (not Program Files) and if the directory is writable.
 
+    For testing purposes, portable mode can be forced by setting the
+    ACCESSIWEATHER_FORCE_PORTABLE environment variable to "1" or "true".
+
     Returns:
         True if running in portable mode, False otherwise
     """
-    # If running from source code, not portable
+    # Check for testing override first
+    force_portable = os.environ.get("ACCESSIWEATHER_FORCE_PORTABLE", "").lower()
+    if force_portable in ("1", "true", "yes"):
+        logger.debug("Portable mode forced via ACCESSIWEATHER_FORCE_PORTABLE environment variable")
+        return True
+
+    # If running from source code, not portable (unless forced)
     if not getattr(sys, "frozen", False):
+        logger.debug("Not in portable mode: running from source code")
         return False
 
     # Get the directory of the executable
@@ -32,13 +42,26 @@ def is_portable_mode() -> bool:
     else:
         app_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # Check if we're running from Program Files (standard installation)
-    program_files = os.environ.get("PROGRAMFILES", "Program Files")
-    program_files_x86 = os.environ.get("PROGRAMFILES(X86)", "Program Files (x86)")
+    logger.debug(f"Checking portable mode for app directory: {app_dir}")
 
-    # If we're in Program Files, we're not portable
-    if program_files in app_dir or program_files_x86 in app_dir:
-        return False
+    # Check if we're running from Program Files (standard installation)
+    program_files = os.environ.get("PROGRAMFILES", "")
+    program_files_x86 = os.environ.get("PROGRAMFILES(X86)", "")
+
+    # Normalize paths for comparison (handle case sensitivity and path separators)
+    app_dir_normalized = os.path.normpath(app_dir).lower()
+
+    # Check if app_dir starts with any Program Files path
+    program_files_paths = []
+    if program_files:
+        program_files_paths.append(os.path.normpath(program_files).lower())
+    if program_files_x86:
+        program_files_paths.append(os.path.normpath(program_files_x86).lower())
+
+    for pf_path in program_files_paths:
+        if app_dir_normalized.startswith(pf_path + os.sep) or app_dir_normalized == pf_path:
+            logger.debug(f"Not in portable mode: app directory is under Program Files ({pf_path})")
+            return False
 
     # Check if the directory is writable (portable installations should be)
     try:
@@ -46,9 +69,11 @@ def is_portable_mode() -> bool:
         with open(test_file, "w") as f:
             f.write("test")
         os.remove(test_file)
+        logger.debug(f"Portable mode detected: directory {app_dir} is writable")
         return True
-    except (IOError, PermissionError):
+    except (IOError, PermissionError) as e:
         # If we can't write to the directory, assume it's not portable
+        logger.debug(f"Not in portable mode: directory {app_dir} is not writable ({e})")
         return False
 
 
@@ -62,15 +87,27 @@ def get_config_dir(custom_dir: Optional[str] = None) -> str:
         Path to the configuration directory
     """
     if custom_dir is not None:
+        logger.debug(f"Using custom config directory: {custom_dir}")
         return custom_dir
 
     # Check if we're running in portable mode
-    if is_portable_mode():
-        # Get the directory of the executable
+    portable_mode = is_portable_mode()
+    logger.debug(f"Portable mode check result: {portable_mode}")
+
+    if portable_mode:
+        # Get the directory of the executable or source code
         if getattr(sys, "frozen", False):
             app_dir = os.path.dirname(sys.executable)
         else:
-            app_dir = os.path.dirname(os.path.abspath(__file__))
+            # When running from source in forced portable mode, use the project root
+            # Find the project root by looking for pyproject.toml
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            project_root = current_dir
+            while project_root != os.path.dirname(project_root):  # Stop at filesystem root
+                if os.path.exists(os.path.join(project_root, "pyproject.toml")):
+                    break
+                project_root = os.path.dirname(project_root)
+            app_dir = project_root
 
         # Use a 'config' directory in the application directory
         config_dir = os.path.join(app_dir, "config")
@@ -82,32 +119,54 @@ def get_config_dir(custom_dir: Optional[str] = None) -> str:
         # Use %APPDATA%\.accessiweather on Windows
         appdata = os.environ.get("APPDATA")
         if appdata:
-            return os.path.join(appdata, ".accessiweather")
+            config_dir = os.path.join(appdata, ".accessiweather")
+            logger.info(
+                f"Running in standard mode on Windows, using config directory: {config_dir}"
+            )
+            return config_dir
 
     # Default to ~/.accessiweather for all other cases
-    return os.path.expanduser("~/.accessiweather")
+    config_dir = os.path.expanduser("~/.accessiweather")
+    logger.info(f"Using default config directory: {config_dir}")
+    return config_dir
 
 
-def migrate_config(config: Dict[str, Any]) -> Dict[str, Any]:
-    """Migrate configuration to the latest format
+def ensure_config_defaults(config: Dict[str, Any]) -> Dict[str, Any]:
+    """Ensure configuration has all required default settings
 
-    This function removes obsolete settings and adds new default settings
-    as needed when the configuration format changes.
+    This function adds missing default settings to the configuration
+    without performing any migration logic.
 
     Args:
-        config: Configuration dictionary to migrate
+        config: Configuration dictionary to update
 
     Returns:
-        Migrated configuration dictionary
+        Dict: Configuration dictionary with defaults added
     """
     # Make a copy of the config to avoid modifying the original
-    migrated_config = config.copy()
+    updated_config = config.copy()
 
-    # Remove obsolete alert_update_interval if present
-    if "settings" in migrated_config:
-        settings = migrated_config["settings"]
-        if "alert_update_interval" in settings:
-            logger.info("Removing obsolete alert_update_interval setting")
-            del settings["alert_update_interval"]
+    # Ensure settings section exists
+    if "settings" not in updated_config:
+        updated_config["settings"] = {}
 
-    return migrated_config
+    settings = updated_config["settings"]
+
+    # Add data source setting if not present
+    if "data_source" not in settings:
+        from accessiweather.gui.settings_dialog import DEFAULT_DATA_SOURCE
+
+        logger.info(f"Adding default data_source setting: {DEFAULT_DATA_SOURCE}")
+        settings["data_source"] = DEFAULT_DATA_SOURCE
+
+    # Ensure api_keys section exists
+    if "api_keys" not in updated_config:
+        logger.info("Adding api_keys section to config")
+        updated_config["api_keys"] = {}
+
+    # Ensure api_settings section exists
+    if "api_settings" not in updated_config:
+        logger.info("Adding api_settings section to config")
+        updated_config["api_settings"] = {}
+
+    return updated_config

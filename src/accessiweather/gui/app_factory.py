@@ -8,9 +8,11 @@ import logging
 import os
 from typing import Any, Dict, Optional
 
-from accessiweather.api_client import NoaaApiClient
+# NoaaApiWrapper is used in create_app
+from accessiweather.api_wrapper import NoaaApiWrapper
 from accessiweather.location import LocationManager
 from accessiweather.notifications import WeatherNotifier
+from accessiweather.openmeteo_client import OpenMeteoApiClient
 from accessiweather.services.location_service import LocationService
 from accessiweather.services.notification_service import NotificationService
 from accessiweather.services.weather_service import WeatherService
@@ -41,13 +43,12 @@ def create_weather_app(
     Returns:
         WeatherApp instance
     """
-    # Create the API client with caching enabled
-    api_settings = config.get("api_settings", {}) if config else {}
-    contact_info = api_settings.get("contact_info")
+    # Initialize configuration
+    config = config or {}
 
-    api_client = NoaaApiClient(
+    # Create the NWS API client with caching enabled
+    nws_client = NoaaApiWrapper(
         user_agent="AccessiWeather",
-        contact_info=contact_info,
         enable_caching=enable_caching,
         cache_ttl=cache_ttl,
     )
@@ -58,16 +59,28 @@ def create_weather_app(
 
     # Get show_nationwide setting from config, default to True if not found
     show_nationwide = True
-    if config and "settings" in config:
+    if "settings" in config:
         show_nationwide = config["settings"].get("show_nationwide_location", True)
 
-    location_manager = LocationManager(config_dir, show_nationwide=show_nationwide)
+    # Get data source setting from config, default to "auto" if not found
+    data_source = "auto"
+    if "settings" in config:
+        data_source = config["settings"].get("data_source", "auto")
 
-    # Create the notifier
-    notifier = WeatherNotifier()
+    location_manager = LocationManager(
+        config_dir, show_nationwide=show_nationwide, data_source=data_source
+    )
+
+    # Create the notifier with persistent storage
+    notifier = WeatherNotifier(config_dir=config_dir, enable_persistence=True)
+
+    # Create the Open-Meteo API client
+    openmeteo_client = OpenMeteoApiClient(user_agent="AccessiWeather")
 
     # Create the services
-    weather_service = WeatherService(api_client)
+    weather_service = WeatherService(
+        nws_client=nws_client, openmeteo_client=openmeteo_client, config=config
+    )
     location_service = LocationService(location_manager)
     notification_service = NotificationService(notifier)
 
@@ -77,10 +90,14 @@ def create_weather_app(
         weather_service=weather_service,
         location_service=location_service,
         notification_service=notification_service,
-        api_client=api_client,  # For backward compatibility
+        api_client=nws_client,  # For backward compatibility
         config=config,
         config_path=config_path,
         debug_mode=debug_mode,
     )
 
     return app
+
+
+# Alias for backward compatibility with tests
+create_app = create_weather_app
