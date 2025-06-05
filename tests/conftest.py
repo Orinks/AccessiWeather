@@ -11,15 +11,16 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+# Add src to path before importing project modules
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from accessiweather.api_client import NoaaApiClient
-from accessiweather.api_wrapper import NoaaApiWrapper
-from accessiweather.location import LocationManager
-from accessiweather.notifications import WeatherNotifier
-from accessiweather.openmeteo_client import OpenMeteoApiClient
-from accessiweather.services.weather_service import WeatherService
-from accessiweather.utils.temperature_utils import TemperatureUnit
+from accessiweather.api_client import NoaaApiClient  # noqa: E402
+from accessiweather.api_wrapper import NoaaApiWrapper  # noqa: E402
+from accessiweather.location import LocationManager  # noqa: E402
+from accessiweather.notifications import WeatherNotifier  # noqa: E402
+from accessiweather.openmeteo_client import OpenMeteoApiClient  # noqa: E402
+from accessiweather.services.weather_service import WeatherService  # noqa: E402
+from accessiweather.utils.temperature_utils import TemperatureUnit  # noqa: E402
 
 
 @pytest.fixture

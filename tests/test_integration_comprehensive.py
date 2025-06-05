@@ -6,17 +6,11 @@ covering the key user flows identified in the integration test plan.
 
 import json
 import os
-import tempfile
-import time
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from accessiweather.api_wrapper import NoaaApiWrapper
-from accessiweather.config_utils import get_config_dir
 from accessiweather.location import LocationManager
-from accessiweather.notifications import WeatherNotifier
-from accessiweather.openmeteo_client import OpenMeteoApiClient
 from accessiweather.services.weather_service import WeatherService
 from accessiweather.utils.temperature_utils import TemperatureUnit
 
