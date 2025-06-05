@@ -88,15 +88,8 @@ class HourlyForecastFetcher:
                 logger.debug("Hourly forecast fetch cancelled before API call")
                 return
 
-            # Get hourly forecast data from API or service
-            if hasattr(self.service, "get_hourly_forecast"):
-                hourly_forecast = self.service.get_hourly_forecast(lat, lon)
-            else:
-                # Fallback for backward compatibility
-                logger.warning(
-                    "Service does not have get_hourly_forecast method, using direct API call"
-                )
-                hourly_forecast = self.service.get_hourly_forecast(lat, lon)
+            # Get hourly forecast data from the service
+            hourly_forecast = self.service.get_hourly_forecast(lat, lon)
 
             # Check again if we've been asked to stop before delivering results
             if self._stop_event.is_set():

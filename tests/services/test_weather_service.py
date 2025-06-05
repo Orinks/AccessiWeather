@@ -117,7 +117,9 @@ def test_get_alerts_success(weather_service, mock_api_client):
     result = weather_service.get_alerts(lat, lon)
 
     assert result == SAMPLE_ALERTS_DATA
-    mock_api_client.get_alerts.assert_called_once_with(lat, lon, force_refresh=False)
+    mock_api_client.get_alerts.assert_called_once_with(
+        lat, lon, radius=50, precise_location=True, force_refresh=False
+    )
 
 
 def test_get_alerts_with_force_refresh(weather_service, mock_api_client):
@@ -127,7 +129,9 @@ def test_get_alerts_with_force_refresh(weather_service, mock_api_client):
     result = weather_service.get_alerts(lat, lon, force_refresh=True)
 
     assert result == SAMPLE_ALERTS_DATA
-    mock_api_client.get_alerts.assert_called_once_with(lat, lon, force_refresh=True)
+    mock_api_client.get_alerts.assert_called_once_with(
+        lat, lon, radius=50, precise_location=True, force_refresh=True
+    )
 
 
 def test_get_alerts_error(weather_service, mock_api_client):

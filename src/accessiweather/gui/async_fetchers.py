@@ -135,13 +135,8 @@ class ForecastFetcher:
                 logger.debug("Forecast fetch cancelled before API call")
                 return
 
-            # Get forecast data from API or service
-            if hasattr(self.service, "get_forecast"):
-                forecast_data = self.service.get_forecast(lat, lon)
-            else:
-                # Fallback for backward compatibility
-                logger.warning("Service does not have get_forecast method, using direct API call")
-                forecast_data = self.service.get_forecast(lat, lon)
+            # Get forecast data from the service
+            forecast_data = self.service.get_forecast(lat, lon)
 
             # Check again if we've been asked to stop before delivering results
             if self._stop_event.is_set():
@@ -254,17 +249,10 @@ class AlertsFetcher:
                 f"Fetching alerts with precise_location={precise_location}, radius={radius}"
             )
 
-            # Use the appropriate method based on the service type
-            if hasattr(self.service, "get_alerts"):
-                alerts_data = self.service.get_alerts(
-                    lat, lon, radius=radius, precise_location=precise_location
-                )
-            else:
-                # Fallback for backward compatibility
-                logger.warning("Service does not have get_alerts method, using direct API call")
-                alerts_data = self.service.get_alerts(
-                    lat, lon, radius=radius, precise_location=precise_location
-                )
+            # Get alerts data from the service
+            alerts_data = self.service.get_alerts(
+                lat, lon, radius=radius, precise_location=precise_location
+            )
 
             # Check again if we've been asked to stop before delivering results
             if self._stop_event.is_set():
@@ -372,17 +360,10 @@ class DiscussionFetcher:
             # Get discussion text from API or service
             logger.debug(f"Calling get_discussion with coordinates: ({lat}, {lon})")
             try:
-                # Use the appropriate method based on the service type
-                if hasattr(self.service, "get_discussion"):
-                    logger.debug("About to call service.get_discussion")
-                    discussion_text = self.service.get_discussion(lat, lon)
-                    logger.debug("Returned from service.get_discussion call")
-                else:
-                    # Fallback for backward compatibility
-                    logger.warning(
-                        "Service does not have get_discussion method, using direct API call"
-                    )
-                    discussion_text = self.service.get_discussion(lat, lon)
+                # Get discussion text from the service
+                logger.debug("About to call service.get_discussion")
+                discussion_text = self.service.get_discussion(lat, lon)
+                logger.debug("Returned from service.get_discussion call")
 
                 # Log the discussion text
                 if discussion_text is None:

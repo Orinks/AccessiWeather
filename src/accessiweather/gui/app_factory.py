@@ -8,10 +8,8 @@ import logging
 import os
 from typing import Any, Dict, Optional
 
-from accessiweather.api_client import NoaaApiClient
-
 # NoaaApiWrapper is used in create_app
-from accessiweather.api_wrapper import NoaaApiWrapper  # noqa: F401
+from accessiweather.api_wrapper import NoaaApiWrapper
 from accessiweather.location import LocationManager
 from accessiweather.notifications import WeatherNotifier
 from accessiweather.openmeteo_client import OpenMeteoApiClient
@@ -52,7 +50,7 @@ def create_weather_app(
     api_settings = config.get("api_settings", {})
     contact_info = api_settings.get("contact_info")
 
-    nws_client = NoaaApiClient(
+    nws_client = NoaaApiWrapper(
         user_agent="AccessiWeather",
         contact_info=contact_info,
         enable_caching=enable_caching,
