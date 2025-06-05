@@ -5,14 +5,12 @@ and handles load appropriately.
 """
 
 import concurrent.futures
-import threading
 import time
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from accessiweather.cache import Cache
-from accessiweather.services.weather_service import WeatherService
 
 
 @pytest.mark.integration
@@ -127,7 +125,6 @@ class TestMemoryPerformance:
     def test_memory_usage_under_load(self, weather_service, sample_nws_current_response):
         """Test memory usage remains stable under load."""
         import gc
-        import sys
 
         # Mock API response
         weather_service.nws_client.get_current_conditions.return_value = sample_nws_current_response
@@ -197,8 +194,6 @@ class TestResponseTimePerformance:
             performance_timer.start()
 
             # Simulate app startup
-            from accessiweather.gui.app_factory import create_app
-
             app = mock_create_app(config=sample_config)
 
             performance_timer.stop()
@@ -386,7 +381,7 @@ class TestResourceUsagePerformance:
         process = psutil.Process(os.getpid())
 
         # Measure CPU usage during intensive operations
-        cpu_percent_before = process.cpu_percent()
+        process.cpu_percent()  # Initialize CPU measurement
 
         # Perform intensive operations
         for _ in range(100):

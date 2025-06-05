@@ -43,7 +43,7 @@ repos:
     hooks:
     -   id: pytest-check
         name: pytest-check
-        entry: python -m pytest tests/
+        entry: python -m pytest tests/ -m "unit" --maxfail=5 -x
         language: system
         pass_filenames: false
         always_run: true

@@ -5,7 +5,6 @@ and handle user interactions properly.
 """
 
 import os
-import tempfile
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -52,7 +51,7 @@ class TestWeatherAppIntegration:
     ):
         """Test settings dialog integration with configuration system."""
         with (
-            patch("wx.Dialog") as mock_dialog,
+            patch("wx.Dialog"),
             patch("accessiweather.gui.settings_dialog.SettingsDialog") as mock_settings,
         ):
 
@@ -67,8 +66,6 @@ class TestWeatherAppIntegration:
             mock_dialog_instance.get_update_interval.return_value = 30
 
             # Test settings dialog creation and interaction
-            from accessiweather.gui.settings_dialog import SettingsDialog
-
             # This would normally create the dialog
             dialog = mock_settings(None, sample_config)
             result = dialog.ShowModal()
@@ -104,7 +101,7 @@ class TestWeatherAppIntegration:
     def test_system_tray_integration(self, headless_environment, sample_config):
         """Test system tray integration with main application."""
         with (
-            patch("wx.adv.TaskBarIcon") as mock_taskbar,
+            patch("wx.adv.TaskBarIcon"),
             patch("accessiweather.gui.system_tray.TaskBarIcon") as mock_tray_icon,
         ):
 
@@ -113,8 +110,6 @@ class TestWeatherAppIntegration:
             mock_tray_icon.return_value = mock_icon_instance
 
             # Test tray icon creation
-            from accessiweather.gui.system_tray import TaskBarIcon
-
             tray_icon = mock_tray_icon(None, sample_config)
             assert tray_icon is not None
             mock_tray_icon.assert_called_once()
@@ -136,7 +131,7 @@ class TestDialogIntegration:
     def test_location_dialog_integration(self, headless_environment, temp_config_dir):
         """Test location dialog integration with location manager."""
         with (
-            patch("wx.Dialog") as mock_dialog,
+            patch("wx.Dialog"),
             patch("accessiweather.gui.dialogs.LocationDialog") as mock_location_dialog,
         ):
 
@@ -168,7 +163,7 @@ class TestDialogIntegration:
     def test_alert_dialog_integration(self, headless_environment, sample_nws_alerts_response):
         """Test alert dialog integration with alert data."""
         with (
-            patch("wx.Dialog") as mock_dialog,
+            patch("wx.Dialog"),
             patch("accessiweather.gui.alert_dialog.AlertDetailsDialog") as mock_alert_dialog,
         ):
 
@@ -186,7 +181,7 @@ class TestDialogIntegration:
     def test_discussion_dialog_integration(self, headless_environment):
         """Test discussion dialog integration with discussion data."""
         with (
-            patch("wx.Dialog") as mock_dialog,
+            patch("wx.Dialog"),
             patch("accessiweather.gui.dialogs.WeatherDiscussionDialog") as mock_discussion_dialog,
         ):
 
@@ -391,7 +386,6 @@ class TestPerformanceIntegration:
     def test_memory_usage_stability(self, headless_environment):
         """Test memory usage remains stable during extended operation."""
         import gc
-        import sys
 
         with patch("accessiweather.gui.weather_app.WeatherApp") as mock_weather_app:
 

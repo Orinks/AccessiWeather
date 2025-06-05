@@ -123,7 +123,7 @@ def generate_test_report(results):
     print(f"Total test suites: {total_tests}")
     print(f"Passed: {passed_tests}")
     print(f"Failed: {failed_tests}")
-    print(f"Success rate: {(passed_tests/total_tests)*100:.1f}%")
+    print(f"Success rate: {(passed_tests / total_tests) * 100:.1f}%")
 
     print("\nTest Suite Results:")
     for test_name, (success, stdout, stderr) in results.items():
