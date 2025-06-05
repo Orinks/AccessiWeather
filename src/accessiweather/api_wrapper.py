@@ -774,6 +774,71 @@ class NoaaApiWrapper:
             return cast(Dict[str, Any], observation_data.to_dict())
         return cast(Dict[str, Any], observation_data)
 
+    def identify_location_type(
+        self, lat: float, lon: float, force_refresh: bool = False
+    ) -> tuple[Optional[str], Optional[str]]:
+        """Identify the type of location (county, state, etc.) for the given coordinates.
+
+        Args:
+            lat: Latitude of the location
+            lon: Longitude of the location
+            force_refresh: Whether to force a refresh of the data from the API
+                instead of using cache
+
+        Returns:
+            Tuple of (location_type, location_id) where location_type is one of
+            'county', 'forecast', 'fire', or None if the type cannot be determined.
+            location_id is the UGC code for the location or None.
+        """
+        try:
+            # Get point data for the coordinates
+            point_data = self.get_point_data(lat, lon, force_refresh=force_refresh)
+            properties = point_data.get("properties", {})
+
+            # Check for county zone
+            county_url = properties.get("county")
+            if county_url and isinstance(county_url, str) and "/county/" in county_url:
+                # Extract county code (format: .../zones/county/XXC###)
+                county_id = county_url.split("/county/")[1]
+                logger.info(f"Identified location as county: {county_id}")
+                return "county", county_id
+
+            # Check for forecast zone
+            forecast_zone_url = properties.get("forecastZone")
+            if (
+                forecast_zone_url
+                and isinstance(forecast_zone_url, str)
+                and "/forecast/" in forecast_zone_url
+            ):
+                # Extract forecast zone code (format: .../zones/forecast/XXZ###)
+                forecast_id = forecast_zone_url.split("/forecast/")[1]
+                logger.info(f"Identified location as forecast zone: {forecast_id}")
+                return "forecast", forecast_id
+
+            # Check for fire weather zone
+            fire_zone_url = properties.get("fireWeatherZone")
+            if fire_zone_url and isinstance(fire_zone_url, str) and "/fire/" in fire_zone_url:
+                # Extract fire zone code (format: .../zones/fire/XXZ###)
+                fire_id = fire_zone_url.split("/fire/")[1]
+                logger.info(f"Identified location as fire zone: {fire_id}")
+                return "fire", fire_id
+
+            # If we can't determine a specific zone, try to get the state
+            try:
+                state = properties.get("relativeLocation", {}).get("properties", {}).get("state")
+                if state:
+                    logger.info(f"Could only identify location at state level: {state}")
+                    return "state", state
+            except (KeyError, TypeError):
+                pass
+
+            logger.warning(f"Could not identify location type for coordinates: ({lat}, {lon})")
+            return None, None
+
+        except Exception as e:
+            logger.error(f"Error identifying location type: {str(e)}")
+            return None, None
+
     def get_alerts(
         self,
         lat: float,
@@ -801,50 +866,95 @@ class NoaaApiWrapper:
                 f"precise_location={precise_location}, force_refresh={force_refresh}"
             )
 
-            if precise_location:
-                # Get the county/zone for the location
-                point_data = self.get_point_data(lat, lon, force_refresh=force_refresh)
-                county_url = point_data.get("properties", {}).get("county")
+            # Identify the location type
+            location_type, location_id = self.identify_location_type(
+                lat, lon, force_refresh=force_refresh
+            )
 
-                if not county_url:
-                    logger.warning("No county URL found in point data, falling back to all alerts")
-                    precise_location = False
-                else:
-                    # Extract the zone ID from the county URL
-                    # Example URL: https://api.weather.gov/zones/county/ALC001
-                    zone_id = county_url.split("/")[-1]
+            if precise_location and location_type in ("county", "forecast", "fire") and location_id:
+                # Get alerts for the specific zone
+                logger.info(f"Fetching alerts for {location_type} zone: {location_id}")
+                cache_key = self._generate_cache_key("alerts_zone", {"zone_id": location_id})
 
-                    # Generate cache key for the alerts
-                    cache_key = self._generate_cache_key(f"alerts/active/zone/{zone_id}")
+                def fetch_data() -> Dict[str, Any]:
+                    self._rate_limit()
+                    try:
+                        # Use the new _make_api_request method to handle errors consistently
+                        response = self._make_api_request(
+                            alerts_active_zone.sync, zone_id=location_id
+                        )
+                        # Transform the response to match the format expected by the application
+                        return self._transform_alerts_data(response)
+                    except NoaaApiError:
+                        # Re-raise NoaaApiErrors directly
+                        raise
+                    except Exception as e:
+                        # For any other exceptions, wrap them in a NoaaApiError
+                        logger.error(f"Error getting alerts for zone {location_id}: {str(e)}")
+                        url = f"{self.BASE_URL}/alerts/active/zone/{location_id}"
+                        error_msg = f"Unexpected error getting alerts for zone: {e}"
+                        raise NoaaApiError(
+                            message=error_msg, error_type=NoaaApiError.UNKNOWN_ERROR, url=url
+                        )
 
-                    def fetch_data() -> Dict[str, Any]:
-                        self._rate_limit()
-                        try:
-                            # Use the new _make_api_request method to handle errors consistently
-                            response = self._make_api_request(
-                                alerts_active_zone.sync, zone_id=zone_id
-                            )
-                            # Transform the response to match the format expected by the application
-                            return self._transform_alerts_data(response)
-                        except NoaaApiError:
-                            # Re-raise NoaaApiErrors directly
-                            raise
-                        except Exception as e:
-                            # For any other exceptions, wrap them in a NoaaApiError
-                            logger.error(f"Error getting alerts for zone {zone_id}: {str(e)}")
-                            url = f"{self.BASE_URL}/alerts/active/zone/{zone_id}"
-                            error_msg = f"Unexpected error getting alerts for zone: {e}"
-                            raise NoaaApiError(
-                                message=error_msg, error_type=NoaaApiError.UNKNOWN_ERROR, url=url
-                            )
+                return cast(
+                    Dict[str, Any], self._get_cached_or_fetch(cache_key, fetch_data, force_refresh)
+                )
 
-                    return cast(
-                        Dict[str, Any],
-                        self._get_cached_or_fetch(cache_key, fetch_data, force_refresh),
-                    )
+            # If we have a state but not precise location, get state alerts
+            if not precise_location and location_type == "state" and location_id:
+                logger.info(f"Fetching alerts for state: {location_id}")
+                cache_key = self._generate_cache_key("alerts_state", {"state": location_id})
 
-            # If not precise_location or no county URL found, get all active alerts
-            cache_key = self._generate_cache_key("alerts/active")
+                def fetch_data() -> Dict[str, Any]:
+                    self._rate_limit()
+                    try:
+                        # Use _fetch_url for state-based alerts
+                        url = f"{self.BASE_URL}/alerts/active?area={location_id}"
+                        response = self._fetch_url(url)
+                        return self._transform_alerts_data(response)
+                    except Exception as e:
+                        logger.error(f"Error getting alerts for state {location_id}: {str(e)}")
+                        error_msg = f"Unexpected error getting alerts for state: {e}"
+                        raise NoaaApiError(
+                            message=error_msg, error_type=NoaaApiError.UNKNOWN_ERROR, url=url
+                        )
+
+                return cast(
+                    Dict[str, Any], self._get_cached_or_fetch(cache_key, fetch_data, force_refresh)
+                )
+
+            # If we couldn't determine location or state, fall back to point-radius search
+            if location_type is None or location_id is None:
+                logger.info(
+                    "Using point-radius search for alerts since location could not "
+                    f"be determined: ({lat}, {lon}) with radius {radius} miles"
+                )
+                cache_key = self._generate_cache_key(
+                    "alerts_point", {"lat": lat, "lon": lon, "radius": radius}
+                )
+
+                def fetch_data() -> Dict[str, Any]:
+                    self._rate_limit()
+                    try:
+                        # Use _fetch_url for point-radius alerts
+                        url = f"{self.BASE_URL}/alerts/active?point={lat},{lon}&radius={radius}"
+                        response = self._fetch_url(url)
+                        return self._transform_alerts_data(response)
+                    except Exception as e:
+                        logger.error(f"Error getting alerts for point ({lat}, {lon}): {str(e)}")
+                        error_msg = f"Unexpected error getting alerts for point: {e}"
+                        raise NoaaApiError(
+                            message=error_msg, error_type=NoaaApiError.UNKNOWN_ERROR, url=url
+                        )
+
+                return cast(
+                    Dict[str, Any], self._get_cached_or_fetch(cache_key, fetch_data, force_refresh)
+                )
+
+            # Final fallback: get all active alerts
+            logger.info("Falling back to all active alerts")
+            cache_key = self._generate_cache_key("alerts_all", {})
 
             def fetch_data() -> Dict[str, Any]:
                 self._rate_limit()
@@ -888,6 +998,44 @@ class NoaaApiWrapper:
         if hasattr(alerts_data, "to_dict"):
             return cast(Dict[str, Any], alerts_data.to_dict())
         return cast(Dict[str, Any], alerts_data)
+
+    def get_alerts_direct(self, url: str, force_refresh: bool = False) -> Dict[str, Any]:
+        """Get active weather alerts directly from a provided URL.
+
+        Args:
+            url: Full URL to the alerts endpoint
+            force_refresh: Whether to force a refresh of the data
+
+        Returns:
+            Dictionary containing alert data
+        """
+        try:
+            logger.info(f"Fetching alerts directly from URL: {url}")
+
+            # Generate cache key for the URL
+            cache_key = self._generate_cache_key("alerts_direct", {"url": url})
+
+            def fetch_data() -> Dict[str, Any]:
+                self._rate_limit()
+                try:
+                    # Use _fetch_url for direct URL access
+                    response = self._fetch_url(url)
+                    # Transform the response to match the format expected by the application
+                    return self._transform_alerts_data(response)
+                except Exception as e:
+                    # For any exceptions, wrap them in a NoaaApiError
+                    logger.error(f"Error getting alerts from URL {url}: {str(e)}")
+                    error_msg = f"Unexpected error getting alerts from URL: {e}"
+                    raise NoaaApiError(
+                        message=error_msg, error_type=NoaaApiError.UNKNOWN_ERROR, url=url
+                    )
+
+            return cast(
+                Dict[str, Any], self._get_cached_or_fetch(cache_key, fetch_data, force_refresh)
+            )
+        except Exception as e:
+            logger.error(f"Error getting alerts from URL: {str(e)}")
+            raise ApiClientError(f"Unable to retrieve alerts from URL: {str(e)}")
 
     def get_discussion(self, lat: float, lon: float, force_refresh: bool = False) -> Optional[str]:
         """Get forecast discussion for a location.

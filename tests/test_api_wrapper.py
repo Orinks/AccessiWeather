@@ -762,3 +762,247 @@ def test_make_api_request_timeout(api_wrapper):
     # Verify the exception
     assert "Request timed out" in str(excinfo.value)
     mock_func.assert_called_once_with(arg1="value1", client=api_wrapper.client)
+
+
+@pytest.mark.unit
+def test_identify_location_type_county(api_wrapper):
+    """Test identifying county location type."""
+    lat, lon = 40.0, -75.0
+
+    with patch.object(api_wrapper, "get_point_data") as mock_get_point:
+        mock_get_point.return_value = {
+            "properties": {
+                "county": "https://api.weather.gov/zones/county/PAC101",
+                "forecastZone": "https://api.weather.gov/zones/forecast/PAZ103",
+                "fireWeatherZone": "https://api.weather.gov/zones/fire/PAZ103",
+            }
+        }
+
+        location_type, location_id = api_wrapper.identify_location_type(lat, lon)
+
+        assert location_type == "county"
+        assert location_id == "PAC101"
+        mock_get_point.assert_called_once_with(lat, lon, force_refresh=False)
+
+
+@pytest.mark.unit
+def test_identify_location_type_forecast_zone(api_wrapper):
+    """Test identifying forecast zone location type."""
+    lat, lon = 40.0, -75.0
+
+    with patch.object(api_wrapper, "get_point_data") as mock_get_point:
+        mock_get_point.return_value = {
+            "properties": {
+                "forecastZone": "https://api.weather.gov/zones/forecast/PAZ103",
+                "fireWeatherZone": "https://api.weather.gov/zones/fire/PAZ103",
+            }
+        }
+
+        location_type, location_id = api_wrapper.identify_location_type(lat, lon)
+
+        assert location_type == "forecast"
+        assert location_id == "PAZ103"
+
+
+@pytest.mark.unit
+def test_identify_location_type_fire_zone(api_wrapper):
+    """Test identifying fire weather zone location type."""
+    lat, lon = 40.0, -75.0
+
+    with patch.object(api_wrapper, "get_point_data") as mock_get_point:
+        mock_get_point.return_value = {
+            "properties": {
+                "fireWeatherZone": "https://api.weather.gov/zones/fire/PAZ103",
+            }
+        }
+
+        location_type, location_id = api_wrapper.identify_location_type(lat, lon)
+
+        assert location_type == "fire"
+        assert location_id == "PAZ103"
+
+
+@pytest.mark.unit
+def test_identify_location_type_state_fallback(api_wrapper):
+    """Test falling back to state when no specific zone is found."""
+    lat, lon = 40.0, -75.0
+
+    with patch.object(api_wrapper, "get_point_data") as mock_get_point:
+        mock_get_point.return_value = {
+            "properties": {"relativeLocation": {"properties": {"state": "PA"}}}
+        }
+
+        location_type, location_id = api_wrapper.identify_location_type(lat, lon)
+
+        assert location_type == "state"
+        assert location_id == "PA"
+
+
+@pytest.mark.unit
+def test_identify_location_type_none(api_wrapper):
+    """Test when location type cannot be determined."""
+    lat, lon = 40.0, -75.0
+
+    with patch.object(api_wrapper, "get_point_data") as mock_get_point:
+        mock_get_point.return_value = {"properties": {}}
+
+        location_type, location_id = api_wrapper.identify_location_type(lat, lon)
+
+        assert location_type is None
+        assert location_id is None
+
+
+@pytest.mark.unit
+def test_identify_location_type_error_handling(api_wrapper):
+    """Test error handling in identify_location_type."""
+    lat, lon = 40.0, -75.0
+
+    with patch.object(api_wrapper, "get_point_data") as mock_get_point:
+        mock_get_point.side_effect = Exception("API error")
+
+        location_type, location_id = api_wrapper.identify_location_type(lat, lon)
+
+        assert location_type is None
+        assert location_id is None
+
+
+@pytest.mark.unit
+def test_get_alerts_direct_success(api_wrapper):
+    """Test successful direct alerts retrieval."""
+    url = "https://api.weather.gov/alerts/active?zone=PAC101"
+    mock_response = {
+        "features": [
+            {
+                "id": "alert1",
+                "properties": {"headline": "Test Alert", "description": "Test alert description"},
+            }
+        ]
+    }
+
+    with patch.object(api_wrapper, "_fetch_url") as mock_fetch:
+        mock_fetch.return_value = mock_response
+
+        result = api_wrapper.get_alerts_direct(url)
+
+        assert result == mock_response
+        mock_fetch.assert_called_once_with(url)
+
+
+@pytest.mark.unit
+def test_get_alerts_direct_with_caching(cached_api_wrapper):
+    """Test direct alerts retrieval with caching."""
+    url = "https://api.weather.gov/alerts/active?zone=PAC101"
+    mock_response = {
+        "features": [
+            {
+                "id": "alert1",
+                "properties": {"headline": "Test Alert", "description": "Test alert description"},
+            }
+        ]
+    }
+
+    with patch.object(cached_api_wrapper, "_fetch_url") as mock_fetch:
+        mock_fetch.return_value = mock_response
+
+        # First call should fetch
+        result1 = cached_api_wrapper.get_alerts_direct(url)
+        assert result1 == mock_response
+        mock_fetch.assert_called_once_with(url)
+
+        # Second call should use cache
+        mock_fetch.reset_mock()
+        result2 = cached_api_wrapper.get_alerts_direct(url)
+        assert result2 == mock_response
+        mock_fetch.assert_not_called()
+
+
+@pytest.mark.unit
+def test_get_alerts_direct_error_handling(api_wrapper):
+    """Test error handling in get_alerts_direct."""
+    url = "https://api.weather.gov/alerts/active?zone=PAC101"
+
+    with patch.object(api_wrapper, "_fetch_url") as mock_fetch:
+        mock_fetch.side_effect = Exception("Network error")
+
+        with pytest.raises(Exception) as excinfo:
+            api_wrapper.get_alerts_direct(url)
+
+        assert "Unable to retrieve alerts from URL" in str(excinfo.value)
+
+
+@pytest.mark.unit
+def test_get_alerts_with_county_zone(api_wrapper):
+    """Test get_alerts with county zone identification."""
+    lat, lon = 40.0, -75.0
+    mock_response = {
+        "features": [
+            {
+                "id": "alert1",
+                "properties": {"headline": "Test Alert", "description": "Test alert description"},
+            }
+        ]
+    }
+
+    with patch.object(api_wrapper, "identify_location_type") as mock_identify:
+        with patch.object(api_wrapper, "_make_api_request") as mock_request:
+            mock_identify.return_value = ("county", "PAC101")
+            mock_request.return_value = mock_response
+
+            result = api_wrapper.get_alerts(lat, lon, precise_location=True)
+
+            assert result == mock_response
+            mock_identify.assert_called_once_with(lat, lon, force_refresh=False)
+            mock_request.assert_called_once()
+
+
+@pytest.mark.unit
+def test_get_alerts_with_state_fallback(api_wrapper):
+    """Test get_alerts with state fallback when precise_location=False."""
+    lat, lon = 40.0, -75.0
+    mock_response = {
+        "features": [
+            {
+                "id": "alert1",
+                "properties": {"headline": "Test Alert", "description": "Test alert description"},
+            }
+        ]
+    }
+
+    with patch.object(api_wrapper, "identify_location_type") as mock_identify:
+        with patch.object(api_wrapper, "_fetch_url") as mock_fetch:
+            mock_identify.return_value = ("state", "PA")
+            mock_fetch.return_value = mock_response
+
+            result = api_wrapper.get_alerts(lat, lon, precise_location=False)
+
+            assert result == mock_response
+            mock_identify.assert_called_once_with(lat, lon, force_refresh=False)
+            expected_url = f"{api_wrapper.BASE_URL}/alerts/active?area=PA"
+            mock_fetch.assert_called_once_with(expected_url)
+
+
+@pytest.mark.unit
+def test_get_alerts_with_point_radius_fallback(api_wrapper):
+    """Test get_alerts with point-radius fallback when location cannot be determined."""
+    lat, lon = 40.0, -75.0
+    radius = 50
+    mock_response = {
+        "features": [
+            {
+                "id": "alert1",
+                "properties": {"headline": "Test Alert", "description": "Test alert description"},
+            }
+        ]
+    }
+
+    with patch.object(api_wrapper, "identify_location_type") as mock_identify:
+        with patch.object(api_wrapper, "_fetch_url") as mock_fetch:
+            mock_identify.return_value = (None, None)
+            mock_fetch.return_value = mock_response
+
+            result = api_wrapper.get_alerts(lat, lon, radius=radius)
+
+            assert result == mock_response
+            mock_identify.assert_called_once_with(lat, lon, force_refresh=False)
+            expected_url = f"{api_wrapper.BASE_URL}/alerts/active?point={lat},{lon}&radius={radius}"
+            mock_fetch.assert_called_once_with(expected_url)
