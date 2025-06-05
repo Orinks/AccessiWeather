@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="accessiweather",
-    version="0.9.2",
+    version="0.9.3",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     install_requires=[
@@ -12,6 +12,8 @@ setup(
         "geopy",  # For geocoding addresses and zip codes
         "python-dateutil",  # For parsing ISO timestamps
         "beautifulsoup4",  # For parsing HTML in the scraper
+        "httpx>=0.20.0",  # For HTTP requests in API clients
+        "attrs>=22.2.0",  # For data classes in generated API client
     ],
     extras_require={"dev": ["pytest", "pytest-mock", "requests-mock"]},
     description=(

@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
-HEADERS = {"User-Agent": "AccessiWeatherBot/1.0 (contact: youremail@example.com)"}
+HEADERS = {"User-Agent": "AccessiWeather/1.0 (AccessiWeather)"}
 
 # Rate limit: minimum seconds between requests to the same domain
 MIN_REQUEST_INTERVAL = 10  # seconds

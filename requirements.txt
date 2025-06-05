@@ -1,2 +1,8 @@
+wxPython
 requests>=2.0
+plyer
+geopy
+python-dateutil
 beautifulsoup4>=4.0
+httpx>=0.20.0
+attrs>=22.2.0

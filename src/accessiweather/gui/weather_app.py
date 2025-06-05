@@ -35,9 +35,10 @@ from .handlers import (
 from .hourly_forecast_fetcher import HourlyForecastFetcher
 from .settings_dialog import (
     ALERT_RADIUS_KEY,
-    API_CONTACT_KEY,
+    DEFAULT_TEMPERATURE_UNIT,
     MINIMIZE_TO_TRAY_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
+    TEMPERATURE_UNIT_KEY,
     UPDATE_INTERVAL_KEY,
 )
 from .system_tray import TaskBarIcon
@@ -124,12 +125,13 @@ class WeatherApp(
                 "must be provided"
             )
 
-        # Initialize async fetchers (using the weather service)
-        self.forecast_fetcher = ForecastFetcher(self.api_client)
-        self.alerts_fetcher = AlertsFetcher(self.api_client)
-        self.discussion_fetcher = DiscussionFetcher(self.api_client)
-        self.current_conditions_fetcher = CurrentConditionsFetcher(self.api_client)
-        self.hourly_forecast_fetcher = HourlyForecastFetcher(self.api_client)
+        # Initialize async fetchers (always using the weather service)
+        # This ensures that the WeatherService's logic for choosing between NWS and WeatherAPI is used
+        self.forecast_fetcher = ForecastFetcher(self.weather_service)
+        self.alerts_fetcher = AlertsFetcher(self.weather_service)
+        self.discussion_fetcher = DiscussionFetcher(self.weather_service)
+        self.current_conditions_fetcher = CurrentConditionsFetcher(self.weather_service)
+        self.hourly_forecast_fetcher = HourlyForecastFetcher(self.weather_service)
         self.national_forecast_fetcher = NationalForecastFetcher(self.weather_service)
 
         # State variables
@@ -180,7 +182,8 @@ class WeatherApp(
         # Last update timestamp
         self.last_update: float = 0.0
 
-        # Create system tray icon
+        # Create system tray icon - cleanup any existing instance first
+        TaskBarIcon.cleanup_existing_instance()
         self.taskbar_icon = TaskBarIcon(self)
 
         # Register with accessibility system
@@ -205,9 +208,6 @@ class WeatherApp(
         self.UpdateLocationDropdown()
         self.UpdateWeatherData()
 
-        # Check if API contact is configured
-        self._check_api_contact_configured()
-
         # Add force close flag
         self._force_close = True  # Default to force close when clicking X
 
@@ -217,14 +217,20 @@ class WeatherApp(
         Returns:
             Dict containing configuration or empty dict if not found
         """
-        from accessiweather.config_utils import migrate_config
+        from accessiweather.config_utils import ensure_config_defaults
+        from accessiweather.gui.settings_dialog import (
+            API_KEYS_SECTION,
+            DATA_SOURCE_KEY,
+            DEFAULT_DATA_SOURCE,
+        )
 
         if os.path.exists(self._config_path):
             try:
                 with open(self._config_path, "r") as f:
                     config = json.load(f)
-                    # Migrate config to remove obsolete settings
-                    return migrate_config(config)
+                    # Ensure config has all required defaults
+                    updated_config = ensure_config_defaults(config)
+                    return updated_config
             except Exception as e:
                 logger.error(f"Failed to load config: {str(e)}")
 
@@ -237,8 +243,11 @@ class WeatherApp(
                 ALERT_RADIUS_KEY: 25,
                 PRECISE_LOCATION_ALERTS_KEY: True,  # Default to precise location alerts
                 MINIMIZE_TO_TRAY_KEY: True,  # Default to minimize to tray when closing
+                DATA_SOURCE_KEY: DEFAULT_DATA_SOURCE,  # Default to NWS
+                TEMPERATURE_UNIT_KEY: DEFAULT_TEMPERATURE_UNIT,  # Default to Fahrenheit
             },
-            "api_settings": {API_CONTACT_KEY: ""},  # Added default
+            "api_settings": {},  # Default empty API settings
+            API_KEYS_SECTION: {},  # Default empty API keys
         }
 
     # UpdateLocationDropdown is now implemented in WeatherAppLocationHandlers
@@ -394,18 +403,21 @@ class WeatherApp(
 
         # Process alerts through notification service
         # The notification service will handle notifications for new/updated alerts
-        # Note: process_alerts returns a tuple of (processed_alerts, new_count, updated_count)
-        result = self.notification_service.process_alerts(alerts_data)
-        processed_alerts = result[0]  # We only need the first item
+        # Unpack all three return values from process_alerts
+        processed_alerts, new_count, updated_count = self.notification_service.process_alerts(
+            alerts_data
+        )
+
+        # Log notification status
+        logger.info(
+            f"Alert processing complete: {len(processed_alerts)} total, {new_count} new, {updated_count} updated"
+        )
 
         # Save processed alerts
         self.current_alerts = processed_alerts
 
         # Update the UI with the processed alerts
         self.ui_manager.display_alerts_processed(processed_alerts)
-
-        # Notify about alerts
-        self.notification_service.notify_alerts(processed_alerts, len(processed_alerts))
 
         # Mark alerts as complete
         self._alerts_complete = True
@@ -655,6 +667,59 @@ class WeatherApp(
     def notifier(self):
         """Provide backward compatibility with the notifier property."""
         return self.notification_service.notifier
+
+    def _handle_data_source_change(self):
+        """Handle changes to the data source or API settings.
+
+        This method is called when the data source or API settings are changed
+        in the settings dialog. It reinitializes the WeatherService with the new
+        settings and updates the fetchers to use the new service.
+        """
+        from accessiweather.api_wrapper import NoaaApiWrapper
+        from accessiweather.services.weather_service import WeatherService
+
+        logger.info("Reinitializing WeatherService due to data source or API key change")
+
+        # Log the current settings
+        from accessiweather.gui.settings_dialog import DATA_SOURCE_KEY
+
+        data_source = self.config.get("settings", {}).get(DATA_SOURCE_KEY, "nws")
+        logger.info(f"Current data source: {data_source}")
+        logger.info(f"Full config: {self.config}")
+
+        # Create the NWS API client (always needed)
+        nws_client = NoaaApiWrapper(
+            user_agent="AccessiWeather",
+            enable_caching=True,  # Default to enabled
+            cache_ttl=300,  # Default to 5 minutes
+        )
+
+        # Create the Open-Meteo API client
+        from accessiweather.openmeteo_client import OpenMeteoApiClient
+
+        openmeteo_client = OpenMeteoApiClient(user_agent="AccessiWeather")
+
+        # Create the new WeatherService
+        self.weather_service = WeatherService(
+            nws_client=nws_client, openmeteo_client=openmeteo_client, config=self.config
+        )
+
+        # Update the location service with the new data source
+        self.location_service.update_data_source(data_source)
+
+        # Update the fetchers to use the new service
+        self.forecast_fetcher.service = self.weather_service
+        self.alerts_fetcher.service = self.weather_service
+        self.discussion_fetcher.service = self.weather_service
+        self.current_conditions_fetcher.service = self.weather_service
+        self.hourly_forecast_fetcher.service = self.weather_service
+        self.national_forecast_fetcher.service = self.weather_service
+
+        # For backward compatibility
+        self.api_client = nws_client
+
+        # Refresh weather data to apply new settings
+        self.UpdateWeatherData()
 
     def OnCharHook(self, event):
         """Handle character hook events for global keyboard shortcuts.

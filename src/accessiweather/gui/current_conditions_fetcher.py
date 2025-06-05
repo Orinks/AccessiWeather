@@ -17,18 +17,18 @@ logger = logging.getLogger(__name__)
 class CurrentConditionsFetcher:
     """Handles asynchronous fetching of current weather conditions data.
 
-    This class fetches current weather conditions from the NOAA API in a background thread,
+    This class fetches current weather conditions from the weather service in a background thread,
     with proper thread registration, cancellation support, and error handling.
     It ensures callbacks are executed on the main thread for thread safety.
     """
 
-    def __init__(self, api_client):
+    def __init__(self, service):
         """Initialize current conditions fetcher
 
         Args:
-            api_client: NoaaApiClient instance
+            service: NoaaApiClient or WeatherService instance
         """
-        self.api_client = api_client
+        self.service = service
         self.thread = None
         self._stop_event = threading.Event()
 
@@ -88,8 +88,8 @@ class CurrentConditionsFetcher:
                 logger.debug("Current conditions fetch cancelled before API call")
                 return
 
-            # Get current conditions data from API
-            current_conditions = self.api_client.get_current_conditions(lat, lon)
+            # Get current conditions data from the service
+            current_conditions = self.service.get_current_conditions(lat, lon)
 
             # Check again if we've been asked to stop before delivering results
             if self._stop_event.is_set():

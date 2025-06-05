@@ -1,0 +1,329 @@
+name: Build and Package
+
+on:
+  push:
+    branches: [ main, dev ]  # Build on main and dev branch pushes
+  workflow_dispatch:
+    inputs:
+      version_override:
+        description: 'Override version (optional)'
+        required: false
+        type: string
+      skip_cache:
+        description: 'Skip build cache'
+        required: false
+        type: boolean
+        default: false
+  workflow_run:
+    workflows: ["Continuous Integration"]
+    types:
+      - completed
+    branches: [ main, dev ]  # Only trigger after CI on main and dev branches
+
+permissions:
+  contents: read      # Read repository contents
+  actions: write      # Trigger repository dispatch events
+  packages: read      # Read packages (for caching)
+
+env:
+  # Build configuration
+  PYTHON_VERSION: "3.12"
+  PYINSTALLER_CACHE_DIR: "~/.cache/pyinstaller"
+
+jobs:
+  build:
+    name: Build Windows Application
+    runs-on: windows-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history for build metadata
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~\AppData\Local\pip\Cache
+        key: ${{ runner.os }}-build-pip-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-build-pip-
+
+    - name: Cache PyInstaller build cache
+      uses: actions/cache@v3
+      if: ${{ !github.event.inputs.skip_cache }}
+      with:
+        path: |
+          ${{ env.PYINSTALLER_CACHE_DIR }}
+          build/
+          *.toc
+        key: ${{ runner.os }}-pyinstaller-${{ hashFiles('src/**/*.py', 'AccessiWeather.spec') }}
+        restore-keys: |
+          ${{ runner.os }}-pyinstaller-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev]
+        pip install PyInstaller
+
+    - name: Extract version
+      id: version
+      run: |
+        if [ -n "${{ github.event.inputs.version_override }}" ]; then
+          VERSION="${{ github.event.inputs.version_override }}"
+          # Remove 'v' prefix if present
+          VERSION=${VERSION#v}
+        else
+          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+        fi
+
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Building version: $VERSION"
+      shell: bash
+
+    - name: Update version files
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+
+        # Update version.py with current version
+        sed -i "s/__version__ = \"[^\"]*\"/__version__ = \"$VERSION\"/" src/accessiweather/version.py
+
+        echo "Updated version to: $VERSION"
+      shell: bash
+
+    - name: Install Inno Setup
+      run: |
+        # Download and install Inno Setup
+        $InnoSetupUrl = "https://jrsoftware.org/download.php/is.exe"
+        $InnoSetupInstaller = "$env:TEMP\innosetup.exe"
+
+        Write-Host "Downloading Inno Setup..."
+        Invoke-WebRequest -Uri $InnoSetupUrl -OutFile $InnoSetupInstaller
+
+        Write-Host "Installing Inno Setup..."
+        Start-Process -FilePath $InnoSetupInstaller -ArgumentList "/VERYSILENT", "/NORESTART", "/ALLUSERS" -Wait
+
+        # Add Inno Setup to PATH for this session
+        $InnoSetupPath = "C:\Program Files (x86)\Inno Setup 6"
+        if (Test-Path $InnoSetupPath) {
+          $env:PATH += ";$InnoSetupPath"
+          Write-Host "Added Inno Setup to PATH: $InnoSetupPath"
+
+          # Also set for subsequent steps
+          echo "$InnoSetupPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        } else {
+          Write-Host "Warning: Inno Setup installation path not found"
+          # Try alternative path
+          $InnoSetupPath = "C:\Program Files\Inno Setup 6"
+          if (Test-Path $InnoSetupPath) {
+            $env:PATH += ";$InnoSetupPath"
+            Write-Host "Found Inno Setup at alternative path: $InnoSetupPath"
+            echo "$InnoSetupPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          }
+        }
+
+        # Verify installation by checking if iscc.exe exists
+        $isccPath = Get-Command "iscc.exe" -ErrorAction SilentlyContinue
+        if ($isccPath) {
+          Write-Host "Inno Setup installed and verified successfully at: $($isccPath.Source)"
+        } else {
+          Write-Host "Error: Could not find Inno Setup executable in PATH"
+          Write-Host "PATH: $env:PATH"
+          exit 1
+        }
+
+    - name: Build with installer script
+      run: |
+        # Set working directory and run the installer script
+        Write-Host "Current directory: $(Get-Location)"
+        Write-Host "PATH: $env:PATH"
+        Write-Host "Checking for required tools..."
+
+        # Verify Python
+        try {
+          $pythonVersion = python --version
+          Write-Host "Python: $pythonVersion"
+        } catch {
+          Write-Host "Warning: Python not found in PATH"
+        }
+
+        # Verify Inno Setup
+        try {
+          $isccVersion = iscc.exe 2>&1 | Select-Object -First 1
+          Write-Host "Inno Setup: $isccVersion"
+        } catch {
+          Write-Host "Warning: Inno Setup not found in PATH"
+        }
+
+        # Ensure we're in the project root
+        if (-not (Test-Path "installer/build_installer.ps1")) {
+          Write-Host "Error: installer/build_installer.ps1 not found in current directory"
+          Write-Host "Directory contents:"
+          Get-ChildItem | ForEach-Object { Write-Host "  - $($_.Name)" }
+          exit 1
+        }
+
+        Write-Host "Running installer build script..."
+
+        # Run the script with proper error handling
+        try {
+          & powershell -ExecutionPolicy Bypass -File "installer/build_installer.ps1"
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "Installer script failed with exit code: $LASTEXITCODE"
+            exit 1
+          }
+        } catch {
+          Write-Host "Error running installer script: $_"
+          exit 1
+        }
+
+        Write-Host "Installer script completed successfully"
+
+    - name: Verify build outputs and generate checksums
+      run: |
+        $VERSION = "${{ steps.version.outputs.version }}"
+        Write-Host "Verifying build outputs for version: $VERSION"
+
+        # Check required paths
+        $ExePath = "dist/AccessiWeather/AccessiWeather.exe"
+        $ZipPath = "dist/AccessiWeather_Portable_v$VERSION.zip"
+        $InstallerPath = "installer/dist/AccessiWeather_Setup_v$VERSION.exe"
+
+        $BuildSuccess = $true
+
+        # Verify executable
+        if (Test-Path $ExePath) {
+          $ExeSize = (Get-Item $ExePath).Length / 1MB
+          $ExeHash = (Get-FileHash $ExePath -Algorithm SHA256).Hash
+          Write-Host "✓ Executable: $ExePath ($($ExeSize.ToString('0.00')) MB)"
+          Write-Host "  SHA256: $($ExeHash.Substring(0,16))..."
+        } else {
+          Write-Host "✗ Missing executable: $ExePath"
+          $BuildSuccess = $false
+        }
+
+        # Verify portable ZIP
+        if (Test-Path $ZipPath) {
+          $ZipSize = (Get-Item $ZipPath).Length / 1MB
+          $ZipHash = (Get-FileHash $ZipPath -Algorithm SHA256).Hash
+          Write-Host "✓ Portable ZIP: $ZipPath ($($ZipSize.ToString('0.00')) MB)"
+          Write-Host "  SHA256: $($ZipHash.Substring(0,16))..."
+        } else {
+          Write-Host "✗ Missing portable ZIP: $ZipPath"
+          $BuildSuccess = $false
+        }
+
+        # Verify installer
+        if (Test-Path $InstallerPath) {
+          $InstallerSize = (Get-Item $InstallerPath).Length / 1MB
+          $InstallerHash = (Get-FileHash $InstallerPath -Algorithm SHA256).Hash
+          Write-Host "✓ Installer: $InstallerPath ($($InstallerSize.ToString('0.00')) MB)"
+          Write-Host "  SHA256: $($InstallerHash.Substring(0,16))..."
+        } else {
+          Write-Host "✗ Missing installer: $InstallerPath"
+          Write-Host "Checking installer directory contents:"
+          if (Test-Path "installer/dist") {
+            Get-ChildItem "installer/dist" | ForEach-Object { Write-Host "  - $($_.Name)" }
+          } else {
+            Write-Host "  installer/dist directory does not exist"
+          }
+          $BuildSuccess = $false
+        }
+
+        if (-not $BuildSuccess) {
+          Write-Host "Build verification failed - missing required files"
+          exit 1
+        }
+
+        # Generate checksums file
+        $ChecksumsContent = "AccessiWeather v$VERSION - Build Checksums`n`n$ExeHash  AccessiWeather.exe`n$ZipHash  AccessiWeather_Portable_v$VERSION.zip`n$InstallerHash  AccessiWeather_Setup_v$VERSION.exe"
+        $ChecksumsContent | Out-File -FilePath "dist/checksums.txt" -Encoding UTF8
+        Write-Host "✓ Checksums saved to dist/checksums.txt"
+
+    - name: Upload portable build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-portable-${{ steps.version.outputs.version }}
+        path: |
+          dist/AccessiWeather_Portable_v${{ steps.version.outputs.version }}.zip
+          dist/checksums.txt
+        retention-days: 30
+
+    - name: Upload installer artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-installer-${{ steps.version.outputs.version }}
+        path: |
+          installer/dist/AccessiWeather_Setup_v${{ steps.version.outputs.version }}.exe
+        retention-days: 90
+
+  validate:
+    name: Validate Build
+    runs-on: windows-latest
+    needs: build
+
+    steps:
+    - name: Download installer artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: windows-installer-${{ needs.build.outputs.version }}
+        path: artifacts/installer/
+
+    - name: Download portable artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: windows-portable-${{ needs.build.outputs.version }}
+        path: artifacts/portable/
+
+    - name: Validate build artifacts
+      run: |
+        $VERSION = "${{ needs.build.outputs.version }}"
+
+        Write-Host "=== Build Validation ==="
+        Write-Host "Version: $VERSION"
+
+        # Check installer artifacts
+        $InstallerFile = "artifacts/installer/AccessiWeather_Setup_v$VERSION.exe"
+
+        # Check portable artifacts
+        $PortableFile = "artifacts/portable/AccessiWeather_Portable_v$VERSION.zip"
+        $PortableChecksums = "artifacts/portable/checksums.txt"
+
+        $AllFilesPresent = $true
+
+        Write-Host "Checking installer artifacts:"
+        if (Test-Path $InstallerFile) {
+          $FileSize = (Get-Item $InstallerFile).Length
+          $FileSizeMB = [math]::Round($FileSize / 1MB, 2)
+          Write-Host "✓ AccessiWeather_Setup_v$VERSION.exe ($FileSizeMB MB)"
+        } else {
+          Write-Host "✗ Missing: AccessiWeather_Setup_v$VERSION.exe"
+          $AllFilesPresent = $false
+        }
+
+        Write-Host "Checking portable artifacts:"
+        if (Test-Path $PortableFile) {
+          $FileSize = (Get-Item $PortableFile).Length
+          $FileSizeMB = [math]::Round($FileSize / 1MB, 2)
+          Write-Host "✓ AccessiWeather_Portable_v$VERSION.zip ($FileSizeMB MB)"
+        } else {
+          Write-Host "✗ Missing: AccessiWeather_Portable_v$VERSION.zip"
+          $AllFilesPresent = $false
+        }
+
+        if ($AllFilesPresent) {
+          Write-Host "✅ Build validation successful - separate artifacts created"
+        } else {
+          Write-Host "❌ Build validation failed"
+          exit 1
+        }

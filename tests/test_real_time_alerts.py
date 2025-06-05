@@ -107,8 +107,8 @@ def mock_notifier():
 
 def test_process_alerts_detects_new_alerts(mock_notifier):
     """Test that process_alerts detects new alerts."""
-    # Set up the notifier
-    notifier = WeatherNotifier()
+    # Set up the notifier with persistence disabled to avoid loading existing alerts
+    notifier = WeatherNotifier(enable_persistence=False)
     notifier.toaster = mock_notifier
 
     # Process alerts for the first time
@@ -119,7 +119,15 @@ def test_process_alerts_detects_new_alerts(mock_notifier):
     assert len(processed_alerts) == 1
     assert new_count == 1
     assert updated_count == 0
-    assert SAMPLE_ALERT["id"] in notifier.active_alerts
+    # Check that the alert is tracked using deduplication key format
+    assert len(notifier.active_alerts) == 1
+    # The key should start with "dedup:" and contain the event name
+    dedup_keys = [
+        key
+        for key in notifier.active_alerts.keys()
+        if key.startswith("dedup:") and "Test Event" in key
+    ]
+    assert len(dedup_keys) == 1
 
 
 def test_process_alerts_detects_updated_alerts():

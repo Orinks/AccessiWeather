@@ -17,18 +17,18 @@ logger = logging.getLogger(__name__)
 class HourlyForecastFetcher:
     """Handles asynchronous fetching of hourly forecast data.
 
-    This class fetches hourly forecast data from the NOAA API in a background thread,
+    This class fetches hourly forecast data from the weather service in a background thread,
     with proper thread registration, cancellation support, and error handling.
     It ensures callbacks are executed on the main thread for thread safety.
     """
 
-    def __init__(self, api_client):
+    def __init__(self, service):
         """Initialize hourly forecast fetcher
 
         Args:
-            api_client: NoaaApiClient instance
+            service: NoaaApiClient or WeatherService instance
         """
-        self.api_client = api_client
+        self.service = service
         self.thread = None
         self._stop_event = threading.Event()
 
@@ -88,8 +88,8 @@ class HourlyForecastFetcher:
                 logger.debug("Hourly forecast fetch cancelled before API call")
                 return
 
-            # Get hourly forecast data from API
-            hourly_forecast = self.api_client.get_hourly_forecast(lat, lon)
+            # Get hourly forecast data from the service
+            hourly_forecast = self.service.get_hourly_forecast(lat, lon)
 
             # Check again if we've been asked to stop before delivering results
             if self._stop_event.is_set():

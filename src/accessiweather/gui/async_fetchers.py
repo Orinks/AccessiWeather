@@ -64,18 +64,18 @@ def safe_call_after(callback, *args, **kwargs):
 class ForecastFetcher:
     """Handles asynchronous fetching of forecast data.
 
-    This class fetches forecast data from the NOAA API in a background thread,
+    This class fetches forecast data from the weather service in a background thread,
     with proper thread registration, cancellation support, and error handling.
     It ensures callbacks are executed on the main thread for thread safety.
     """
 
-    def __init__(self, api_client):
+    def __init__(self, service):
         """Initialize forecast fetcher
 
         Args:
-            api_client: NoaaApiClient instance
+            service: NoaaApiClient or WeatherService instance
         """
-        self.api_client = api_client
+        self.service = service
         self.thread = None
         self._stop_event = threading.Event()
 
@@ -135,8 +135,8 @@ class ForecastFetcher:
                 logger.debug("Forecast fetch cancelled before API call")
                 return
 
-            # Get forecast data from API
-            forecast_data = self.api_client.get_forecast(lat, lon)
+            # Get forecast data from the service
+            forecast_data = self.service.get_forecast(lat, lon)
 
             # Check again if we've been asked to stop before delivering results
             if self._stop_event.is_set():
@@ -169,18 +169,18 @@ class ForecastFetcher:
 class AlertsFetcher:
     """Handles asynchronous fetching of weather alerts data.
 
-    This class fetches weather alerts from the NOAA API in a background thread,
+    This class fetches weather alerts from the weather service in a background thread,
     with proper thread registration, cancellation support, and error handling.
     It supports configurable alert radius and precise location settings.
     """
 
-    def __init__(self, api_client):
+    def __init__(self, service):
         """Initialize alerts fetcher
 
         Args:
-            api_client: NoaaApiClient instance
+            service: NoaaApiClient or WeatherService instance
         """
-        self.api_client = api_client
+        self.service = service
         self.thread = None
         self._stop_event = threading.Event()
 
@@ -244,11 +244,13 @@ class AlertsFetcher:
                 logger.debug("Alerts fetch cancelled before API call")
                 return
 
-            # Get alerts data from API with precise location setting
+            # Get alerts data from API or service with precise location setting
             logger.debug(
                 f"Fetching alerts with precise_location={precise_location}, radius={radius}"
             )
-            alerts_data = self.api_client.get_alerts(
+
+            # Get alerts data from the service
+            alerts_data = self.service.get_alerts(
                 lat, lon, radius=radius, precise_location=precise_location
             )
 
@@ -281,19 +283,19 @@ class AlertsFetcher:
 class DiscussionFetcher:
     """Handles asynchronous fetching of weather discussion data.
 
-    This class fetches forecast discussion text from the NOAA API in a background thread,
+    This class fetches forecast discussion text from the weather service in a background thread,
     with proper thread registration, cancellation support, and error handling.
     It supports passing additional data to callbacks and has enhanced logging
     for troubleshooting discussion fetching issues.
     """
 
-    def __init__(self, api_client):
+    def __init__(self, service):
         """Initialize discussion fetcher
 
         Args:
-            api_client: NoaaApiClient instance
+            service: NoaaApiClient or WeatherService instance
         """
-        self.api_client = api_client
+        self.service = service
         self.thread = None
         self._stop_event = threading.Event()
 
@@ -355,12 +357,13 @@ class DiscussionFetcher:
                 logger.debug("Discussion fetch cancelled before API call")
                 return
 
-            # Get discussion text from API
+            # Get discussion text from API or service
             logger.debug(f"Calling get_discussion with coordinates: ({lat}, {lon})")
             try:
-                logger.debug("About to call api_client.get_discussion")
-                discussion_text = self.api_client.get_discussion(lat, lon)
-                logger.debug("Returned from api_client.get_discussion call")
+                # Get discussion text from the service
+                logger.debug("About to call service.get_discussion")
+                discussion_text = self.service.get_discussion(lat, lon)
+                logger.debug("Returned from service.get_discussion call")
 
                 # Log the discussion text
                 if discussion_text is None:

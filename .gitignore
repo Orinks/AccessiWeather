@@ -86,9 +86,16 @@ logs/
 # Local configuration (secrets, API keys, etc.)
 # IMPORTANT: Ensure config.sample.json or similar is checked in
 config.json
+alert_state.json
 secrets.yaml
 *.env
 .*_env
+
+# API-related files
+*_swagger.json
+*_openapi.json
+*_api_spec.json
+api_keys.txt
 
 # User-specific directories (Generally better in global gitignore)
 # ~/.noaa_weather_app/
@@ -130,6 +137,10 @@ tasks.json.bak
 tasks/*.txt
 .cursor/rules/taskmaster.mdc
 .roo/rules/taskmaster.md
+
+# Build test scripts (temporary)
+test_build.py
+test_build_exclusions.py
 # Dependency directories
 node_modules/
 # Environment variables

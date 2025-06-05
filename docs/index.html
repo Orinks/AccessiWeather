@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AccessiWeather - Download</title>
+    <meta name="description"
+        content="Download AccessiWeather - An accessible weather application with screen reader support and NOAA weather data">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .download-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .download-section h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .download-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .download-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .download-btn.secondary {
+            background: #718096;
+        }
+
+        .download-btn.secondary:hover {
+            background: #4a5568;
+        }
+
+        .version-info {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .version-info h4 {
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .version-info p {
+            color: #4a5568;
+            font-size: 0.9rem;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-card h3 {
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            color: #718096;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            opacity: 0.8;
+        }
+
+        .footer a {
+            color: white;
+            text-decoration: underline;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-stable {
+            background: #48bb78;
+        }
+
+        .status-dev {
+            background: #ed8936;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .download-buttons {
+                flex-direction: column;
+            }
+
+            .download-btn {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>AccessiWeather</h1>
+            <p>Accessible weather application with international support and screen reader compatibility</p>
+        </header>
+
+        <main>
+            <!-- Stable Release Section -->
+            <section class="download-section">
+                <h2><span class="status-indicator status-stable"></span>Stable Release (Main Branch)</h2>
+                <p>Recommended for most users. Stable, tested releases with full features.</p>
+
+                <div class="download-buttons">
+                    <a href="#" class="download-btn" id="main-installer">
+                        📦 Download Installer
+                    </a>
+                    <a href="#" class="download-btn secondary" id="main-portable">
+                        💼 Download Portable
+                    </a>
+                </div>
+
+                <div class="version-info">
+                    <h4>Latest Stable Version</h4>
+                    <p id="main-version">Loading version information...</p>
+                    <p><strong>Build Date:</strong> <span id="main-date">Loading...</span></p>
+                </div>
+            </section>
+
+            <!-- Development Release Section -->
+            <section class="download-section">
+                <h2><span class="status-indicator status-dev"></span>Development Release (Dev Branch)</h2>
+                <p>Latest features and improvements. May contain experimental features.</p>
+
+                <div class="download-buttons">
+                    <a href="#" class="download-btn" id="dev-installer">
+                        📦 Download Installer (Dev)
+                    </a>
+                    <a href="#" class="download-btn secondary" id="dev-portable">
+                        💼 Download Portable (Dev)
+                    </a>
+                </div>
+
+                <div class="version-info">
+                    <h4>Latest Development Version</h4>
+                    <p id="dev-version">Loading version information...</p>
+                    <p><strong>Build Date:</strong> <span id="dev-date">Loading...</span></p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Features Section -->
+        <section class="features">
+            <div class="feature-card">
+                <h3>🔊 Screen Reader Friendly</h3>
+                <p>Designed with accessibility in mind, fully compatible with NVDA, JAWS, and other screen readers.
+                    Complete keyboard navigation support.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🌍 International Weather Data</h3>
+                <p>Multiple weather sources: NOAA/NWS for US locations with alerts, Open-Meteo for worldwide coverage,
+                    or automatic selection.</p>
+            </div>
+            <div class="feature-card">
+                <h3>⚡ Real-time Alerts & Notifications</h3>
+                <p>Desktop notifications for severe weather alerts (US locations). System tray integration with
+                    customizable behavior.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🎯 Smart Location Management</h3>
+                <p>Save multiple locations, search by address or coordinates. Automatic weather provider selection based
+                    on location.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🌡️ Flexible Display Options</h3>
+                <p>Choose temperature units (Fahrenheit, Celsius, or both). Customizable taskbar icons and update
+                    intervals.</p>
+            </div>
+            <div class="feature-card">
+                <h3>💼 Portable & Installed Modes</h3>
+                <p>Run as portable application or install system-wide. Automatic detection with appropriate
+                    configuration storage.</p>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <p>
+                <a href="https://github.com/Orinks/AccessiWeather">View on GitHub</a> |
+                <a href="https://github.com/Orinks/AccessiWeather/issues">Report Issues</a> |
+                <a href="https://github.com/Orinks/AccessiWeather/blob/main/docs/user_manual.md">User Manual</a> |
+                <a href="https://github.com/Orinks/AccessiWeather/blob/main/README.md">Documentation</a>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Build info configuration - values will be substituted by GitHub Actions
+        const buildInfo = {
+            main: {
+                version: '{{MAIN_VERSION}}',
+                date: '{{MAIN_DATE}}',
+                commit: '{{MAIN_COMMIT}}',
+                // Will be dynamically updated with actual asset URLs from GitHub API
+                installerUrl: 'https://github.com/Orinks/AccessiWeather/releases/latest',
+                portableUrl: 'https://github.com/Orinks/AccessiWeather/releases/latest'
+            },
+            dev: {
+                version: '{{DEV_VERSION}}',
+                date: '{{DEV_DATE}}',
+                commit: '{{DEV_COMMIT}}',
+                // Keep using nightly.link for dev builds
+                installerUrl: 'https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-installer-{{DEV_VERSION}}.zip',
+                portableUrl: 'https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-portable-{{DEV_VERSION}}.zip'
+            },
+            lastUpdated: '{{LAST_UPDATED}}'
+        };
+
+        // Update download links and version info
+        function updateDownloadInfo() {
+            console.log('Updating download info with:', buildInfo);
+
+            // Check if elements exist
+            const mainDateEl = document.getElementById('main-date');
+            const devDateEl = document.getElementById('dev-date');
+            console.log('DOM elements found:', {
+                mainDate: mainDateEl,
+                devDate: devDateEl
+            });
+
+            // Main branch
+            document.getElementById('main-installer').href = buildInfo.main.installerUrl;
+            document.getElementById('main-portable').href = buildInfo.main.portableUrl;
+            document.getElementById('main-version').textContent = buildInfo.main.version;
+            if (mainDateEl) {
+                mainDateEl.textContent = buildInfo.main.date;
+                console.log('Set main date to:', buildInfo.main.date);
+            }
+
+            // Dev branch
+            document.getElementById('dev-installer').href = buildInfo.dev.installerUrl;
+            document.getElementById('dev-portable').href = buildInfo.dev.portableUrl;
+            document.getElementById('dev-version').textContent = buildInfo.dev.version;
+            if (devDateEl) {
+                devDateEl.textContent = buildInfo.dev.date;
+                console.log('Set dev date to:', buildInfo.dev.date);
+            }
+
+            console.log('Page updated successfully');
+        }
+
+        // Handle download link clicks - let them work naturally
+        // The stable links go directly to GitHub's latest release downloads
+        // The dev links go to nightly.link for development builds
+
+        // Fetch latest release info from GitHub API for stable releases
+        async function fetchLatestRelease() {
+            try {
+                console.log('Fetching latest release...');
+                const response = await fetch('https://api.github.com/repos/Orinks/AccessiWeather/releases/latest');
+                console.log('Release response status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const release = await response.json();
+                console.log('Release data:', release);
+
+                // Update main branch info with latest release
+                buildInfo.main.version = release.tag_name || release.name;
+                buildInfo.main.date = new Date(release.published_at).toLocaleDateString();
+
+                console.log('Updated main build info:', {
+                    version: buildInfo.main.version,
+                    date: buildInfo.main.date
+                });
+
+                // Look for assets and update URLs if found
+                if (release.assets && release.assets.length > 0) {
+                    // Find installer asset (contains "Setup" or "Installer")
+                    const installerAsset = release.assets.find(asset =>
+                        asset.name.toLowerCase().includes('setup') ||
+                        asset.name.toLowerCase().includes('installer')
+                    );
+
+                    // Find portable asset (contains "Portable")
+                    const portableAsset = release.assets.find(asset =>
+                        asset.name.toLowerCase().includes('portable')
+                    );
+
+                    if (installerAsset) {
+                        // Use GitHub's latest release download URL pattern
+                        buildInfo.main.installerUrl = `https://github.com/Orinks/AccessiWeather/releases/latest/download/${installerAsset.name}`;
+                    }
+                    if (portableAsset) {
+                        buildInfo.main.portableUrl = `https://github.com/Orinks/AccessiWeather/releases/latest/download/${portableAsset.name}`;
+                    }
+
+                    console.log('Latest release assets found:', {
+                        installer: installerAsset?.name,
+                        portable: portableAsset?.name,
+                        installerUrl: buildInfo.main.installerUrl,
+                        portableUrl: buildInfo.main.portableUrl
+                    });
+                } else {
+                    console.log('No assets found in latest release, using release page');
+                }
+
+            } catch (error) {
+                console.log('Could not fetch latest release info:', error);
+                buildInfo.main.version = 'Latest Release';
+                buildInfo.main.date = 'Check GitHub for details';
+            }
+        }
+
+        // Fetch dev build info from GitHub Actions workflow runs
+        async function fetchDevBuildInfo() {
+            try {
+                console.log('Fetching dev build info...');
+                const response = await fetch('https://api.github.com/repos/Orinks/AccessiWeather/actions/runs?branch=dev&status=success&per_page=1');
+                console.log('Dev build response status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Dev build data:', data);
+
+                if (data.workflow_runs && data.workflow_runs.length > 0) {
+                    const latestRun = data.workflow_runs[0];
+                    buildInfo.dev.date = new Date(latestRun.updated_at).toLocaleDateString();
+                    console.log('Latest dev build info:', {
+                        date: buildInfo.dev.date,
+                        runId: latestRun.id
+                    });
+                } else {
+                    console.log('No workflow runs found');
+                    buildInfo.dev.date = 'No recent builds';
+                }
+
+            } catch (error) {
+                console.log('Could not fetch dev build info:', error);
+                buildInfo.dev.date = 'Check nightly.link';
+            }
+        }
+
+        // Initialize the page immediately with template-substituted values
+        console.log('Starting page initialization...');
+        console.log('Build info from template substitution:', buildInfo);
+
+        // Check if template substitution worked (values don't contain {{}} anymore)
+        const hasTemplateValues = buildInfo.main.version.includes('{{') || buildInfo.dev.version.includes('{{');
+
+        if (hasTemplateValues) {
+            console.log('Template values not substituted, using fallback defaults');
+            // Fallback to default values if template substitution didn't work
+            buildInfo.main.version = 'Loading...';
+            buildInfo.main.date = 'Loading...';
+            buildInfo.dev.version = '0.9.3';
+            buildInfo.dev.date = 'Loading...';
+        }
+
+        updateDownloadInfo();
+
+        // Fetch additional info from GitHub API to enhance/verify the data
+        Promise.all([
+            fetchLatestRelease(),
+            fetchDevBuildInfo()
+        ]).then(() => {
+            console.log('All API calls completed, updating page with latest info');
+            updateDownloadInfo();
+        }).catch(error => {
+            console.error('Error fetching additional build info:', error);
+            // Page will still work with template-substituted values
+            updateDownloadInfo();
+        });
+    </script>
+</body>
+
+</html>

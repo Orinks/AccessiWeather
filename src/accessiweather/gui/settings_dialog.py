@@ -5,11 +5,14 @@ Dialog for configuring AccessiWeather settings.
 import logging
 
 import wx
+import wx.adv
+
+from accessiweather.format_string_parser import FormatStringParser
+from accessiweather.utils.temperature_utils import TemperatureUnit
 
 logger = logging.getLogger(__name__)
 
 # Define constants for settings keys if needed, or use strings directly
-API_CONTACT_KEY = "api_contact"
 UPDATE_INTERVAL_KEY = "update_interval_minutes"
 ALERT_RADIUS_KEY = "alert_radius_miles"
 PRECISE_LOCATION_ALERTS_KEY = "precise_location_alerts"
@@ -23,6 +26,25 @@ CACHE_TTL_KEY = "cache_ttl"
 # System tray settings
 MINIMIZE_ON_STARTUP_KEY = "minimize_on_startup"
 MINIMIZE_TO_TRAY_KEY = "minimize_to_tray"
+
+# Display settings keys
+TASKBAR_ICON_TEXT_ENABLED_KEY = "taskbar_icon_text_enabled"
+TASKBAR_ICON_TEXT_FORMAT_KEY = "taskbar_icon_text_format"
+TEMPERATURE_UNIT_KEY = "temperature_unit"
+DEFAULT_TEMPERATURE_UNIT = TemperatureUnit.FAHRENHEIT.value
+
+# Data source constants
+DATA_SOURCE_KEY = "data_source"
+API_KEYS_SECTION = "api_keys"
+
+# Valid data source values
+DATA_SOURCE_NWS = "nws"
+DATA_SOURCE_OPENMETEO = "openmeteo"
+DATA_SOURCE_AUTO = "auto"
+VALID_DATA_SOURCES = [DATA_SOURCE_NWS, DATA_SOURCE_OPENMETEO, DATA_SOURCE_AUTO]
+
+# Default values
+DEFAULT_DATA_SOURCE = DATA_SOURCE_AUTO
 
 
 class SettingsDialog(wx.Dialog):
@@ -65,6 +87,11 @@ class SettingsDialog(wx.Dialog):
         self.notebook.AddPage(self.general_panel, "General")
         self._init_general_tab()
 
+        # Create Display tab
+        self.display_panel = wx.Panel(self.notebook)
+        self.notebook.AddPage(self.display_panel, "Display")
+        self._init_display_tab()
+
         # Create Advanced tab
         self.advanced_panel = wx.Panel(self.notebook)
         self.notebook.AddPage(self.advanced_panel, "Advanced")
@@ -94,16 +121,32 @@ class SettingsDialog(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         # --- Input Fields ---
-        grid_sizer = wx.FlexGridSizer(rows=6, cols=2, vgap=10, hgap=5)  # 6 rows
+        grid_sizer = wx.FlexGridSizer(
+            rows=9, cols=2, vgap=10, hgap=5
+        )  # 9 rows (increased for hyperlink)
         grid_sizer.AddGrowableCol(1, 1)  # Make the input column growable
 
-        # API Contact
-        api_contact_label = wx.StaticText(panel, label="API Contact (Email/Website):")
-        self.api_contact_ctrl = wx.TextCtrl(panel, name="API Contact")
-        tooltip_api = "Enter the email or website required by the weather API provider."
-        self.api_contact_ctrl.SetToolTip(tooltip_api)
-        grid_sizer.Add(api_contact_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
-        grid_sizer.Add(self.api_contact_ctrl, 1, wx.EXPAND | wx.ALL, 5)
+        # Data Source Selection
+        data_source_label = wx.StaticText(panel, label="Weather Data Source:")
+        self.data_source_ctrl = wx.Choice(panel, name="Data Source")
+        self.data_source_ctrl.AppendItems(
+            [
+                "National Weather Service (NWS)",
+                "Open-Meteo (International)",
+                "Automatic (NWS for US, Open-Meteo for non-US)",
+            ]
+        )
+        tooltip_data_source = (
+            "Select which weather data provider to use. "
+            "NWS provides data for US locations only (includes weather alerts). "
+            "Open-Meteo provides free weather data for international locations (no alerts available). "
+            "Automatic option uses NWS for US locations and Open-Meteo for non-US locations."
+        )
+        self.data_source_ctrl.SetToolTip(tooltip_data_source)
+        grid_sizer.Add(data_source_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+        grid_sizer.Add(self.data_source_ctrl, 0, wx.EXPAND | wx.ALL, 5)
+
+        # Placeholder for future weather API integration
 
         # Update Interval
         update_interval_label = wx.StaticText(panel, label="Update Interval (minutes):")
@@ -165,6 +208,85 @@ class SettingsDialog(wx.Dialog):
         sizer.Add(grid_sizer, 1, wx.EXPAND | wx.ALL, 10)
         panel.SetSizer(sizer)
 
+    def _init_display_tab(self):
+        """Initialize the Display tab controls."""
+        panel = self.display_panel
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # --- Input Fields ---
+        grid_sizer = wx.FlexGridSizer(rows=4, cols=2, vgap=10, hgap=5)
+        grid_sizer.AddGrowableCol(1, 1)  # Make the input column growable
+
+        # Measurement Unit System Selection
+        temp_unit_label = wx.StaticText(panel, label="Measurement Units:")
+        from .ui_components import AccessibleChoice
+
+        self.temp_unit_ctrl = AccessibleChoice(
+            panel,
+            choices=["Imperial (Fahrenheit)", "Metric (Celsius)", "Both"],
+            label="Measurement Units",
+        )
+        tooltip_temp_unit = (
+            "Select your preferred measurement unit system. "
+            "Affects temperature, pressure, wind speed, and other measurements. "
+            "'Both' will show temperatures in both Fahrenheit and Celsius."
+        )
+        self.temp_unit_ctrl.SetToolTip(tooltip_temp_unit)
+        grid_sizer.Add(temp_unit_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+        grid_sizer.Add(self.temp_unit_ctrl, 0, wx.EXPAND | wx.ALL, 5)
+
+        # Taskbar Icon Text Toggle
+        taskbar_text_label = "Show weather information in taskbar icon"
+        self.taskbar_text_ctrl = wx.CheckBox(
+            panel, label=taskbar_text_label, name="Taskbar Icon Text"
+        )
+        tooltip_taskbar = (
+            "When checked, the taskbar icon will display weather information "
+            "according to the format string below."
+        )
+        self.taskbar_text_ctrl.SetToolTip(tooltip_taskbar)
+        grid_sizer.Add((1, 1), 0, wx.ALL, 5)  # Empty cell for alignment
+        grid_sizer.Add(self.taskbar_text_ctrl, 0, wx.ALL, 5)
+
+        # Taskbar Icon Text Format
+        taskbar_format_label = wx.StaticText(panel, label="Taskbar Icon Text Format:")
+        self.taskbar_format_ctrl = wx.TextCtrl(panel, name="Taskbar Format")
+        tooltip_format = (
+            "Enter a format string with placeholders like {temp}, {condition}, etc. "
+            "These will be replaced with actual weather data."
+        )
+        self.taskbar_format_ctrl.SetToolTip(tooltip_format)
+        grid_sizer.Add(taskbar_format_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+        grid_sizer.Add(self.taskbar_format_ctrl, 1, wx.EXPAND | wx.ALL, 5)
+
+        # Add the grid sizer to the main sizer
+        sizer.Add(grid_sizer, 0, wx.EXPAND | wx.ALL, 10)
+
+        # Add help text for placeholders
+        help_label = wx.StaticText(panel, label="Available Placeholders:")
+        sizer.Add(help_label, 0, wx.LEFT | wx.TOP, 15)
+
+        # Create a read-only text control for the placeholder help
+        self.placeholder_help_ctrl = wx.TextCtrl(
+            panel,
+            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_DONTWRAP,
+            size=(-1, 150),
+            name="Placeholder Help",
+        )
+
+        # Get the help text from the FormatStringParser
+        help_text = FormatStringParser.get_supported_placeholders_help()
+        self.placeholder_help_ctrl.SetValue(help_text)
+
+        # Add the help text control to the sizer
+        sizer.Add(self.placeholder_help_ctrl, 1, wx.EXPAND | wx.ALL, 10)
+
+        # Set the sizer for the panel
+        panel.SetSizer(sizer)
+
+        # Bind events
+        self.taskbar_text_ctrl.Bind(wx.EVT_CHECKBOX, self._on_taskbar_text_toggle)
+
     def _init_advanced_tab(self):
         """Initialize the Advanced tab controls."""
         panel = self.advanced_panel
@@ -214,23 +336,47 @@ class SettingsDialog(wx.Dialog):
         sizer.Add(grid_sizer, 1, wx.EXPAND | wx.ALL, 10)
         panel.SetSizer(sizer)
 
+    def _on_taskbar_text_toggle(self, event):
+        """Handle taskbar text toggle checkbox."""
+        enabled = self.taskbar_text_ctrl.GetValue()
+        self.taskbar_format_ctrl.Enable(enabled)
+
     def _load_settings(self):
         """Load current settings into the UI controls."""
         try:
             # Load general settings
-            api_contact = self.current_settings.get(API_CONTACT_KEY, "")
             update_interval = self.current_settings.get(UPDATE_INTERVAL_KEY, 10)
             alert_radius = self.current_settings.get(ALERT_RADIUS_KEY, 25)
             precise_alerts = self.current_settings.get(PRECISE_LOCATION_ALERTS_KEY, True)
             show_nationwide = self.current_settings.get(SHOW_NATIONWIDE_KEY, True)
             auto_refresh_national = self.current_settings.get(AUTO_REFRESH_NATIONAL_KEY, True)
 
-            self.api_contact_ctrl.SetValue(api_contact)
+            # Load data source settings
+            data_source = self.current_settings.get(DATA_SOURCE_KEY, DEFAULT_DATA_SOURCE)
+
+            # Set data source dropdown
+            if data_source == DATA_SOURCE_OPENMETEO:
+                self.data_source_ctrl.SetSelection(1)  # Open-Meteo
+            elif data_source == DATA_SOURCE_AUTO:
+                self.data_source_ctrl.SetSelection(2)  # Automatic
+            else:
+                self.data_source_ctrl.SetSelection(0)  # NWS (default)
+
             self.update_interval_ctrl.SetValue(update_interval)
             self.alert_radius_ctrl.SetValue(alert_radius)
             self.precise_alerts_ctrl.SetValue(precise_alerts)
             self.show_nationwide_ctrl.SetValue(show_nationwide)
             self.auto_refresh_national_ctrl.SetValue(auto_refresh_national)
+
+            # Load display settings
+            taskbar_text_enabled = self.current_settings.get(TASKBAR_ICON_TEXT_ENABLED_KEY, False)
+            taskbar_text_format = self.current_settings.get(
+                TASKBAR_ICON_TEXT_FORMAT_KEY, "{temp} {condition}"
+            )
+
+            self.taskbar_text_ctrl.SetValue(taskbar_text_enabled)
+            self.taskbar_format_ctrl.SetValue(taskbar_text_format)
+            self.taskbar_format_ctrl.Enable(taskbar_text_enabled)
 
             # Load advanced settings
             minimize_to_tray = self.current_settings.get(MINIMIZE_TO_TRAY_KEY, True)
@@ -240,6 +386,21 @@ class SettingsDialog(wx.Dialog):
             self.minimize_to_tray_ctrl.SetValue(minimize_to_tray)
             self.cache_enabled_ctrl.SetValue(cache_enabled)
             self.cache_ttl_ctrl.SetValue(cache_ttl)
+
+            # Load temperature unit setting
+            temperature_unit = self.current_settings.get(
+                TEMPERATURE_UNIT_KEY, DEFAULT_TEMPERATURE_UNIT
+            )
+            # Set temperature unit dropdown
+            if temperature_unit == TemperatureUnit.FAHRENHEIT.value:
+                self.temp_unit_ctrl.SetSelection(0)  # Imperial (Fahrenheit)
+            elif temperature_unit == TemperatureUnit.CELSIUS.value:
+                self.temp_unit_ctrl.SetSelection(1)  # Metric (Celsius)
+            elif temperature_unit == TemperatureUnit.BOTH.value:
+                self.temp_unit_ctrl.SetSelection(2)  # Both
+            else:
+                # Default to Fahrenheit for unknown values
+                self.temp_unit_ctrl.SetSelection(0)
 
             logger.debug("Settings loaded into dialog.")
         except Exception as e:
@@ -298,13 +459,52 @@ class SettingsDialog(wx.Dialog):
         Returns:
             dict: A dictionary containing the updated settings.
         """
+        # Determine data source
+        selection = self.data_source_ctrl.GetSelection()
+        if selection == 1:
+            data_source = DATA_SOURCE_OPENMETEO
+        elif selection == 2:
+            data_source = DATA_SOURCE_AUTO
+        else:
+            data_source = DATA_SOURCE_NWS
+
+        # Get temperature unit selection
+        temp_unit_idx = self.temp_unit_ctrl.GetSelection()
+        if temp_unit_idx == 0:
+            temperature_unit = TemperatureUnit.FAHRENHEIT.value
+        elif temp_unit_idx == 1:
+            temperature_unit = TemperatureUnit.CELSIUS.value
+        elif temp_unit_idx == 2:
+            temperature_unit = TemperatureUnit.BOTH.value
+        else:
+            temperature_unit = DEFAULT_TEMPERATURE_UNIT
+
+        # Validate taskbar format string if enabled
+        taskbar_text_enabled = self.taskbar_text_ctrl.GetValue()
+        taskbar_text_format = self.taskbar_format_ctrl.GetValue()
+
+        if taskbar_text_enabled and taskbar_text_format:
+            # Validate the format string
+            parser = FormatStringParser()
+            is_valid, error = parser.validate_format_string(taskbar_text_format)
+            if not is_valid:
+                # If invalid, log the error but still save (will use default format)
+                logger.warning(f"Invalid taskbar format string: {error}")
+                # We could show a message box here, but for now we'll just log it
+
         return {
+            # Data source setting
+            DATA_SOURCE_KEY: data_source,
             # General settings
             UPDATE_INTERVAL_KEY: self.update_interval_ctrl.GetValue(),
             ALERT_RADIUS_KEY: self.alert_radius_ctrl.GetValue(),
             PRECISE_LOCATION_ALERTS_KEY: self.precise_alerts_ctrl.GetValue(),
             SHOW_NATIONWIDE_KEY: self.show_nationwide_ctrl.GetValue(),
             AUTO_REFRESH_NATIONAL_KEY: self.auto_refresh_national_ctrl.GetValue(),
+            # Display settings
+            TEMPERATURE_UNIT_KEY: temperature_unit,
+            TASKBAR_ICON_TEXT_ENABLED_KEY: taskbar_text_enabled,
+            TASKBAR_ICON_TEXT_FORMAT_KEY: taskbar_text_format,
             # Advanced settings
             MINIMIZE_TO_TRAY_KEY: self.minimize_to_tray_ctrl.GetValue(),
             CACHE_ENABLED_KEY: self.cache_enabled_ctrl.GetValue(),
@@ -320,6 +520,15 @@ class SettingsDialog(wx.Dialog):
         Returns:
             dict: A dictionary containing the updated API settings.
         """
-        return {
-            API_CONTACT_KEY: self.api_contact_ctrl.GetValue(),
-        }
+        return {}
+
+    def get_api_keys(self):
+        """
+        Retrieve the API keys from the UI controls.
+
+        Should only be called after the dialog returns wx.ID_OK.
+
+        Returns:
+            dict: A dictionary containing the updated API keys.
+        """
+        return {}
