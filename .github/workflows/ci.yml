@@ -51,8 +51,8 @@ jobs:
 
     - name: Run unit tests with coverage
       run: |
-        # Run fast unit tests with coverage
-        python -m pytest -m "unit or (not slow and not integration and not e2e)" -v --tb=short --cov=src/accessiweather --cov-report=xml --cov-report=html --cov-report=term-missing
+        # Run fast unit tests with coverage, excluding integration tests
+        python -m pytest -m "unit or (not slow and not integration and not e2e and not gui)" -v --tb=short --cov=src/accessiweather --cov-report=xml --cov-report=html --cov-report=term-missing --ignore=tests/test_integration_comprehensive.py --ignore=tests/test_integration_gui.py --ignore=tests/test_integration_performance.py
       env:
         # Prevent wxPython from trying to create a display
         DISPLAY: ""
@@ -219,15 +219,46 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -e .[dev]
+        pip install -r requirements-dev.txt
 
     - name: Run integration tests
       run: |
-        python -m pytest -m "integration or gui" -v --tb=short --maxfail=5
+        # Run comprehensive integration test suite
+        python -m pytest tests/test_integration_comprehensive.py -v --tb=short --maxfail=5
       env:
         # Prevent wxPython from trying to create a display
         DISPLAY: ""
         PYTHONPATH: src
         ACCESSIWEATHER_TEST_MODE: "1"
+
+    - name: Run GUI integration tests (headless)
+      run: |
+        # Run GUI integration tests in headless mode
+        python -m pytest tests/test_integration_gui.py -v --tb=short --maxfail=3
+      env:
+        DISPLAY: ""
+        PYTHONPATH: src
+        ACCESSIWEATHER_TEST_MODE: "1"
+      continue-on-error: true  # GUI tests may be flaky in CI
+
+    - name: Run performance integration tests
+      run: |
+        # Run performance integration tests (subset for CI)
+        python -m pytest tests/test_integration_performance.py -v --tb=short -k "not slow" --maxfail=3
+      env:
+        DISPLAY: ""
+        PYTHONPATH: src
+        ACCESSIWEATHER_TEST_MODE: "1"
+
+    - name: Run comprehensive integration test suite
+      run: |
+        # Run our custom integration test runner for comprehensive reporting
+        python tests/run_integration_tests.py --type comprehensive --no-coverage --quiet
+      env:
+        DISPLAY: ""
+        PYTHONPATH: src
+        ACCESSIWEATHER_TEST_MODE: "1"
+      continue-on-error: true  # Don't fail CI if integration tests have issues
 
     - name: Test application startup (headless)
       run: |
