@@ -244,7 +244,7 @@ jobs:
     - name: Run performance integration tests
       run: |
         # Run performance integration tests (subset for CI)
-        python -m pytest tests/test_integration_performance.py -v --tb=short -k "not slow" --maxfail=3
+        python -m pytest tests/test_integration_performance.py -v --tb=short --maxfail=3
       env:
         DISPLAY: ""
         PYTHONPATH: src
