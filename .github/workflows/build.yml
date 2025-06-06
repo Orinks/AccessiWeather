@@ -159,14 +159,21 @@ jobs:
         $ChecksumsContent | Out-File -FilePath "dist/checksums.txt" -Encoding UTF8
         Write-Host "Checksums saved to checksums.txt"
 
-    - name: Upload build artifacts
+    - name: Upload portable build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-portable-${{ steps.version.outputs.version }}
+        path: |
+          dist/AccessiWeather_Portable_v${{ steps.version.outputs.version }}.zip
+          dist/checksums.txt
+        retention-days: 30
+
+    - name: Upload application files for installer
       uses: actions/upload-artifact@v4
       with:
         name: windows-build-${{ steps.version.outputs.version }}
         path: |
           dist/AccessiWeather/
-          dist/AccessiWeather_Portable_v${{ steps.version.outputs.version }}.zip
-          dist/checksums.txt
         retention-days: 30
 
   installer:
@@ -178,11 +185,28 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Download build artifacts
+    - name: Download portable build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: windows-portable-${{ needs.build.outputs.version }}
+        path: dist/
+
+    - name: Download application files for installer
       uses: actions/download-artifact@v4
       with:
         name: windows-build-${{ needs.build.outputs.version }}
-        path: dist/
+        path: build-files/
+
+    - name: Copy application files to dist
+      run: |
+        # Copy the application directory for installer creation
+        if (Test-Path "build-files/AccessiWeather") {
+          Copy-Item -Path "build-files/AccessiWeather" -Destination "dist/" -Recurse -Force
+          Write-Host "Copied application files for installer"
+        } else {
+          Write-Host "Warning: Application files not found"
+          Get-ChildItem "build-files/" -Recurse
+        }
 
     - name: Install Inno Setup
       run: |
@@ -275,7 +299,6 @@ jobs:
         name: windows-installer-${{ needs.build.outputs.version }}
         path: |
           dist/AccessiWeather_Setup_v${{ needs.build.outputs.version }}.exe
-          dist/AccessiWeather_Portable_v${{ needs.build.outputs.version }}.zip
           dist/checksums.txt
         retention-days: 90
 
@@ -285,11 +308,17 @@ jobs:
     needs: [build, installer]
 
     steps:
-    - name: Download all artifacts
+    - name: Download installer artifacts
       uses: actions/download-artifact@v4
       with:
         name: windows-installer-${{ needs.build.outputs.version }}
-        path: artifacts/
+        path: artifacts/installer/
+
+    - name: Download portable artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: windows-portable-${{ needs.build.outputs.version }}
+        path: artifacts/portable/
 
     - name: Validate build artifacts
       run: |
@@ -298,27 +327,38 @@ jobs:
         Write-Host "=== Build Validation ==="
         Write-Host "Version: $VERSION"
 
-        # Check for required files
-        $RequiredFiles = @(
-          "AccessiWeather_Setup_v$VERSION.exe",
-          "AccessiWeather_Portable_v$VERSION.zip",
-          "checksums.txt"
-        )
+        # Check installer artifacts
+        $InstallerFile = "artifacts/installer/AccessiWeather_Setup_v$VERSION.exe"
+        $InstallerChecksums = "artifacts/installer/checksums.txt"
+
+        # Check portable artifacts
+        $PortableFile = "artifacts/portable/AccessiWeather_Portable_v$VERSION.zip"
+        $PortableChecksums = "artifacts/portable/checksums.txt"
 
         $AllFilesPresent = $true
-        foreach ($File in $RequiredFiles) {
-          if (Test-Path "artifacts/$File") {
-            $FileSize = (Get-Item "artifacts/$File").Length
-            $FileSizeMB = [math]::Round($FileSize / 1MB, 2)
-            Write-Host "✓ $File ($FileSizeMB MB)"
-          } else {
-            Write-Host "✗ Missing: $File"
-            $AllFilesPresent = $false
-          }
+
+        Write-Host "Checking installer artifacts:"
+        if (Test-Path $InstallerFile) {
+          $FileSize = (Get-Item $InstallerFile).Length
+          $FileSizeMB = [math]::Round($FileSize / 1MB, 2)
+          Write-Host "✓ AccessiWeather_Setup_v$VERSION.exe ($FileSizeMB MB)"
+        } else {
+          Write-Host "✗ Missing: AccessiWeather_Setup_v$VERSION.exe"
+          $AllFilesPresent = $false
+        }
+
+        Write-Host "Checking portable artifacts:"
+        if (Test-Path $PortableFile) {
+          $FileSize = (Get-Item $PortableFile).Length
+          $FileSizeMB = [math]::Round($FileSize / 1MB, 2)
+          Write-Host "✓ AccessiWeather_Portable_v$VERSION.zip ($FileSizeMB MB)"
+        } else {
+          Write-Host "✗ Missing: AccessiWeather_Portable_v$VERSION.zip"
+          $AllFilesPresent = $false
         }
 
         if ($AllFilesPresent) {
-          Write-Host "✅ Build validation successful"
+          Write-Host "✅ Build validation successful - separate artifacts created"
         } else {
           Write-Host "❌ Build validation failed"
           exit 1

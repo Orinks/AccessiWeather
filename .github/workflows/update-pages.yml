@@ -97,13 +97,15 @@ jobs:
             "version": "${{ steps.build-info.outputs.main_version }}",
             "date": "${{ steps.build-info.outputs.main_date }}",
             "commit": "${{ steps.build-info.outputs.main_commit }}",
-            "downloadUrl": "https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-installer-${{ steps.build-info.outputs.main_version }}.zip"
+            "installerUrl": "https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-installer-${{ steps.build-info.outputs.main_version }}.zip",
+            "portableUrl": "https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-portable-${{ steps.build-info.outputs.main_version }}.zip"
           },
           "dev": {
             "version": "${{ steps.build-info.outputs.dev_version }}",
             "date": "${{ steps.build-info.outputs.dev_date }}",
             "commit": "${{ steps.build-info.outputs.dev_commit }}",
-            "downloadUrl": "https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-installer-${{ steps.build-info.outputs.dev_version }}.zip"
+            "installerUrl": "https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-installer-${{ steps.build-info.outputs.dev_version }}.zip",
+            "portableUrl": "https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-portable-${{ steps.build-info.outputs.dev_version }}.zip"
           },
           "lastUpdated": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
         }
@@ -119,33 +121,24 @@ jobs:
 
         ## Stable Release (Main Branch)
 
-        ### Build Package Download:
-        - **Complete Package**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-installer-${{ steps.build-info.outputs.main_version }}.zip
-
-        **Package Contents:**
-        - AccessiWeather_Setup_v${{ steps.build-info.outputs.main_version }}.exe (Installer)
-        - AccessiWeather_Portable_v${{ steps.build-info.outputs.main_version }}.zip (Portable)
-        - checksums.txt (File verification)
+        ### Direct Downloads:
+        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-installer-${{ steps.build-info.outputs.main_version }}.zip
+        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-portable-${{ steps.build-info.outputs.main_version }}.zip
 
         ## Development Release (Dev Branch)
 
-        ### Build Package Download:
-        - **Complete Package**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-installer-${{ steps.build-info.outputs.dev_version }}.zip
-
-        **Package Contents:**
-        - AccessiWeather_Setup_v${{ steps.build-info.outputs.dev_version }}.exe (Installer)
-        - AccessiWeather_Portable_v${{ steps.build-info.outputs.dev_version }}.zip (Portable)
-        - checksums.txt (File verification)
+        ### Direct Downloads:
+        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-installer-${{ steps.build-info.outputs.dev_version }}.zip
+        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-portable-${{ steps.build-info.outputs.dev_version }}.zip
 
         ## How to Use
 
-        1. Click the "Complete Package" link to download the latest build
-        2. Extract the ZIP file to access both installer and portable versions
-        3. Choose your preferred installation method:
-           - Run the .exe file for guided installation
-           - Extract the portable ZIP for no-install usage
-        4. No GitHub login required for public downloads
-        5. Links always point to the latest successful build
+        1. Choose your preferred download:
+           - **Installer**: Download and run for guided installation
+           - **Portable**: Download and extract for no-install usage
+        2. No GitHub login required for public downloads
+        3. Links always point to the latest successful build
+        4. Each download is a separate, focused package
 
         ## Build Information
 
