@@ -47,12 +47,8 @@ def create_weather_app(
     config = config or {}
 
     # Create the NWS API client with caching enabled
-    api_settings = config.get("api_settings", {})
-    contact_info = api_settings.get("contact_info")
-
     nws_client = NoaaApiWrapper(
         user_agent="AccessiWeather",
-        contact_info=contact_info,
         enable_caching=enable_caching,
         cache_ttl=cache_ttl,
     )

@@ -200,7 +200,7 @@ def test_init_basic():
     client = NoaaApiClient(user_agent="TestClient")
 
     assert client.user_agent == "TestClient"
-    assert client.headers["User-Agent"] == "TestClient"
+    assert client.headers["User-Agent"] == "TestClient (TestClient)"
     assert client.cache is None
 
 

@@ -48,7 +48,7 @@ class NoaaApiWrapper:
         Args:
             user_agent: User agent string for API requests
             contact_info: Optional contact information (website or email)
-                          for API identification
+                          for API identification. If None, uses the app name.
             enable_caching: Whether to enable caching of API responses
             cache_ttl: Time-to-live for cached responses in seconds (default: 5 minutes)
             min_request_interval: Minimum interval between requests in seconds (default: 0.5)
@@ -57,13 +57,11 @@ class NoaaApiWrapper:
             retry_initial_wait: Initial wait time in seconds after a rate limit error (default: 5.0)
         """
         self.user_agent = user_agent
-        self.contact_info = contact_info
+        # Use app name as default contact info if none provided
+        self.contact_info = contact_info or user_agent
 
         # Build user agent string according to NOAA API recommendations
-        if contact_info:
-            user_agent_string = f"{user_agent} ({contact_info})"
-        else:
-            user_agent_string = user_agent
+        user_agent_string = f"{user_agent} ({self.contact_info})"
 
         # Initialize the generated client
         self.client = Client(
