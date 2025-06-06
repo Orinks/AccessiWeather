@@ -199,10 +199,21 @@ jobs:
 
     - name: Copy application files to dist
       run: |
-        # Copy the application directory for installer creation
-        if (Test-Path "build-files/AccessiWeather") {
-          Copy-Item -Path "build-files/AccessiWeather" -Destination "dist/" -Recurse -Force
+        # Create AccessiWeather directory in dist
+        $AppDir = "dist/AccessiWeather"
+        if (-not (Test-Path $AppDir)) {
+          New-Item -ItemType Directory -Path $AppDir -Force
+          Write-Host "Created application directory: $AppDir"
+        }
+
+        # Copy all application files from build-files to dist/AccessiWeather
+        if (Test-Path "build-files/AccessiWeather.exe") {
+          Copy-Item -Path "build-files/*" -Destination $AppDir -Recurse -Force
           Write-Host "Copied application files for installer"
+
+          # Verify files were copied
+          Write-Host "Files in $AppDir:"
+          Get-ChildItem $AppDir -Recurse | Select-Object FullName | Format-Table -AutoSize
         } else {
           Write-Host "Warning: Application files not found"
           Get-ChildItem "build-files/" -Recurse
