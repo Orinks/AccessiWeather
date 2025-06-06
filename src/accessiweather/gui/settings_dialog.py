@@ -264,9 +264,9 @@ class SettingsDialog(wx.Dialog):
             panel, label=dynamic_format_label, name="Dynamic Format Switching"
         )
         tooltip_dynamic = (
-            "When checked, the taskbar icon format will automatically change based on "
-            "weather conditions, alerts, and severity. When unchecked, your custom format "
-            "string below will always be used."
+            "When ENABLED: Format automatically changes for severe weather and alerts "
+            "(e.g., '⚠️ Tornado Warning: Severe'). "
+            "When DISABLED: Your custom format below is always used, regardless of conditions."
         )
         self.dynamic_format_ctrl.SetToolTip(tooltip_dynamic)
         grid_sizer.Add((1, 1), 0, wx.ALL, 5)  # Empty cell for alignment
@@ -276,9 +276,10 @@ class SettingsDialog(wx.Dialog):
         taskbar_format_label = wx.StaticText(panel, label="Taskbar Icon Text Format:")
         self.taskbar_format_ctrl = wx.TextCtrl(panel, name="Taskbar Format")
         tooltip_format = (
-            "Enter a format string with placeholders like {temp}, {condition}, etc. "
-            "These will be replaced with actual weather data. This format is used as the "
-            "base format when dynamic switching is disabled, or as a fallback when enabled."
+            "Enter your preferred format with placeholders like {temp}, {condition}, etc. "
+            "When dynamic switching is OFF, this format is always used. "
+            "When dynamic switching is ON, this serves as the default format for normal conditions "
+            "and as a fallback for severe weather/alerts."
         )
         self.taskbar_format_ctrl.SetToolTip(tooltip_format)
         grid_sizer.Add(taskbar_format_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)

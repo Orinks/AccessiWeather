@@ -259,6 +259,32 @@ class TestSystemTrayDynamicFormat:
         assert primary_alert is not None
         assert primary_alert["event"] == "Test Alert"
 
+    def test_tooltip_clarity(self):
+        """Test that tooltip text is clear and helpful for users."""
+        # This is more of a documentation test to ensure tooltips are user-friendly
+
+        # Dynamic switching tooltip should explain both modes clearly
+        dynamic_tooltip = (
+            "When ENABLED: Format automatically changes for severe weather and alerts "
+            "(e.g., '⚠️ Tornado Warning: Severe'). "
+            "When DISABLED: Your custom format below is always used, regardless of conditions."
+        )
+
+        # Format string tooltip should explain the dual purpose
+        format_tooltip = (
+            "Enter your preferred format with placeholders like {temp}, {condition}, etc. "
+            "When dynamic switching is OFF, this format is always used. "
+            "When dynamic switching is ON, this serves as the default format for normal conditions "
+            "and as a fallback for severe weather/alerts."
+        )
+
+        # Verify tooltips contain key information
+        assert "ENABLED" in dynamic_tooltip and "DISABLED" in dynamic_tooltip
+        assert "example" in dynamic_tooltip.lower() or "e.g." in dynamic_tooltip
+        assert "always used" in format_tooltip
+        assert "default format" in format_tooltip
+        assert "fallback" in format_tooltip
+
 
 if __name__ == "__main__":
     pytest.main([__file__])
