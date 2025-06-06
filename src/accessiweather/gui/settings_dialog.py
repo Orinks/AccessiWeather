@@ -31,6 +31,7 @@ MINIMIZE_TO_TRAY_KEY = "minimize_to_tray"
 # Display settings keys
 TASKBAR_ICON_TEXT_ENABLED_KEY = "taskbar_icon_text_enabled"
 TASKBAR_ICON_TEXT_FORMAT_KEY = "taskbar_icon_text_format"
+TASKBAR_ICON_DYNAMIC_ENABLED_KEY = "taskbar_icon_dynamic_enabled"
 TEMPERATURE_UNIT_KEY = "temperature_unit"
 DEFAULT_TEMPERATURE_UNIT = TemperatureUnit.FAHRENHEIT.value
 
@@ -257,12 +258,27 @@ class SettingsDialog(wx.Dialog):
         grid_sizer.Add((1, 1), 0, wx.ALL, 5)  # Empty cell for alignment
         grid_sizer.Add(self.taskbar_text_ctrl, 0, wx.ALL, 5)
 
+        # Dynamic Format Switching Toggle
+        dynamic_format_label = "Enable dynamic format switching"
+        self.dynamic_format_ctrl = wx.CheckBox(
+            panel, label=dynamic_format_label, name="Dynamic Format Switching"
+        )
+        tooltip_dynamic = (
+            "When checked, the taskbar icon format will automatically change based on "
+            "weather conditions, alerts, and severity. When unchecked, your custom format "
+            "string below will always be used."
+        )
+        self.dynamic_format_ctrl.SetToolTip(tooltip_dynamic)
+        grid_sizer.Add((1, 1), 0, wx.ALL, 5)  # Empty cell for alignment
+        grid_sizer.Add(self.dynamic_format_ctrl, 0, wx.ALL, 5)
+
         # Taskbar Icon Text Format
         taskbar_format_label = wx.StaticText(panel, label="Taskbar Icon Text Format:")
         self.taskbar_format_ctrl = wx.TextCtrl(panel, name="Taskbar Format")
         tooltip_format = (
             "Enter a format string with placeholders like {temp}, {condition}, etc. "
-            "These will be replaced with actual weather data."
+            "These will be replaced with actual weather data. This format is used as the "
+            "base format when dynamic switching is disabled, or as a fallback when enabled."
         )
         self.taskbar_format_ctrl.SetToolTip(tooltip_format)
         grid_sizer.Add(taskbar_format_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
@@ -349,6 +365,7 @@ class SettingsDialog(wx.Dialog):
         """Handle taskbar text toggle checkbox."""
         enabled = self.taskbar_text_ctrl.GetValue()
         self.taskbar_format_ctrl.Enable(enabled)
+        self.dynamic_format_ctrl.Enable(enabled)
 
     def _load_settings(self):
         """Load current settings into the UI controls."""
@@ -384,10 +401,15 @@ class SettingsDialog(wx.Dialog):
             taskbar_text_format = self.current_settings.get(
                 TASKBAR_ICON_TEXT_FORMAT_KEY, "{temp}°F {condition}"
             )
+            taskbar_dynamic_enabled = self.current_settings.get(
+                TASKBAR_ICON_DYNAMIC_ENABLED_KEY, True
+            )
 
             self.taskbar_text_ctrl.SetValue(taskbar_text_enabled)
             self.taskbar_format_ctrl.SetValue(taskbar_text_format)
+            self.dynamic_format_ctrl.SetValue(taskbar_dynamic_enabled)
             self.taskbar_format_ctrl.Enable(taskbar_text_enabled)
+            self.dynamic_format_ctrl.Enable(taskbar_text_enabled)
 
             # Load advanced settings
             minimize_to_tray = self.current_settings.get(MINIMIZE_TO_TRAY_KEY, True)
@@ -537,6 +559,7 @@ class SettingsDialog(wx.Dialog):
         # Validate taskbar format string if enabled
         taskbar_text_enabled = self.taskbar_text_ctrl.GetValue()
         taskbar_text_format = self.taskbar_format_ctrl.GetValue()
+        taskbar_dynamic_enabled = self.dynamic_format_ctrl.GetValue()
 
         if taskbar_text_enabled and taskbar_text_format:
             # Validate the format string
@@ -560,6 +583,7 @@ class SettingsDialog(wx.Dialog):
             TEMPERATURE_UNIT_KEY: temperature_unit,
             TASKBAR_ICON_TEXT_ENABLED_KEY: taskbar_text_enabled,
             TASKBAR_ICON_TEXT_FORMAT_KEY: taskbar_text_format,
+            TASKBAR_ICON_DYNAMIC_ENABLED_KEY: taskbar_dynamic_enabled,
             # Advanced settings
             MINIMIZE_TO_TRAY_KEY: self.minimize_to_tray_ctrl.GetValue(),
             CACHE_ENABLED_KEY: self.cache_enabled_ctrl.GetValue(),

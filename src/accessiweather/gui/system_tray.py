@@ -14,6 +14,7 @@ from accessiweather.dynamic_format_manager import DynamicFormatManager
 from accessiweather.format_string_parser import FormatStringParser
 from accessiweather.gui.settings_dialog import (
     DEFAULT_TEMPERATURE_UNIT,
+    TASKBAR_ICON_DYNAMIC_ENABLED_KEY,
     TASKBAR_ICON_TEXT_ENABLED_KEY,
     TASKBAR_ICON_TEXT_FORMAT_KEY,
     TEMPERATURE_UNIT_KEY,
@@ -219,8 +220,9 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
             self.set_icon()
             return
 
-        # Get the user's base format string and temperature unit preference
+        # Get the user's base format string, dynamic setting, and temperature unit preference
         user_format_string = settings.get(TASKBAR_ICON_TEXT_FORMAT_KEY, "{temp}°F {condition}")
+        dynamic_enabled = settings.get(TASKBAR_ICON_DYNAMIC_ENABLED_KEY, True)
         unit_pref_str = settings.get(TEMPERATURE_UNIT_KEY, DEFAULT_TEMPERATURE_UNIT)
 
         # Convert string to enum
@@ -272,10 +274,17 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
             )
 
         try:
-            # Get dynamic format string based on current conditions
-            dynamic_format_string = self.dynamic_format_manager.get_dynamic_format_string(
-                self.current_weather_data, self.current_alerts_data, user_format=user_format_string
-            )
+            # Determine which format string to use
+            if dynamic_enabled:
+                # Get dynamic format string based on current conditions
+                format_string = self.dynamic_format_manager.get_dynamic_format_string(
+                    self.current_weather_data,
+                    self.current_alerts_data,
+                    user_format=user_format_string,
+                )
+            else:
+                # Use the user's static format string
+                format_string = user_format_string
 
             # Add alert data to formatted_data if we have alerts
             if self.current_alerts_data:
@@ -290,7 +299,7 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
                     )
 
             # Format the string with formatted weather data
-            formatted_text = self.format_parser.format_string(dynamic_format_string, formatted_data)
+            formatted_text = self.format_parser.format_string(format_string, formatted_data)
 
             # Update the icon with the new text
             self.set_icon(formatted_text)
