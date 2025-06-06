@@ -1068,16 +1068,16 @@ class NoaaApiWrapper:
                 try:
                     # Get the list of products
                     # Since product_locations doesn't support these parameters, use a direct API call
-                    products_url = f"{self.BASE_URL}/products/locations/AFD/{office_id}"
+                    products_url = f"{self.BASE_URL}/products/types/AFD/locations/{office_id}"
                     products_response = self._fetch_url(products_url)
 
-                    # Check if the response has a graph property
-                    if not products_response.get("graph") or not products_response["graph"]:
+                    # Check if the response has a @graph property
+                    if not products_response.get("@graph") or not products_response["@graph"]:
                         logger.warning(f"No AFD products found for {office_id}")
                         return None
 
                     # Get the latest product
-                    latest_product = products_response["graph"][0]
+                    latest_product = products_response["@graph"][0]
                     latest_product_id = latest_product.get("id")
 
                     # Get the product text
@@ -1134,16 +1134,18 @@ class NoaaApiWrapper:
                 try:
                     # Get the list of products
                     # Since product_locations doesn't support these parameters, use a direct API call
-                    products_url = f"{self.BASE_URL}/products/locations/{product_type}/{location}"
+                    products_url = (
+                        f"{self.BASE_URL}/products/types/{product_type}/locations/{location}"
+                    )
                     products_response = self._fetch_url(products_url)
 
-                    # Check if the response has a graph property
-                    if not products_response.get("graph") or not products_response["graph"]:
+                    # Check if the response has a @graph property
+                    if not products_response.get("@graph") or not products_response["@graph"]:
                         logger.warning(f"No products found for {product_type}/{location}")
                         return None
 
                     # Get the latest product
-                    latest_product = products_response["graph"][0]
+                    latest_product = products_response["@graph"][0]
                     latest_product_id = latest_product.get("id")
 
                     # Get the product text
