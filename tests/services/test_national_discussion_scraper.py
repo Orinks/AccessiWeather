@@ -161,7 +161,7 @@ def test_fetch_wpc_success(mock_requests, mock_bs4, mock_sleep):  # noqa: ARG001
     assert result == SAMPLE_WPC_TEXT
     mock_requests.assert_called_once_with(
         "https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdspd",
-        headers={"User-Agent": "AccessiWeatherBot/1.0 (contact: youremail@example.com)"},
+        headers={"User-Agent": "AccessiWeather/1.0 (AccessiWeather)"},
         timeout=10,
     )
 
@@ -220,7 +220,7 @@ def test_fetch_spc_success_with_summary(mock_requests, mock_bs4, mock_sleep):  #
     assert result == SAMPLE_SPC_TEXT
     mock_requests.assert_called_once_with(
         "https://www.spc.noaa.gov/products/outlook/day1otlk.html",
-        headers={"User-Agent": "AccessiWeatherBot/1.0 (contact: youremail@example.com)"},
+        headers={"User-Agent": "AccessiWeather/1.0 (AccessiWeather)"},
         timeout=10,
     )
 

@@ -92,7 +92,7 @@ def test_init_basic():
     assert wrapper.user_agent == "TestClient"
     # Access headers through the private attribute
     assert "User-Agent" in wrapper.client._headers
-    assert wrapper.client._headers["User-Agent"] == "TestClient"
+    assert wrapper.client._headers["User-Agent"] == "TestClient (TestClient)"
     assert wrapper.cache is None
 
 
