@@ -195,15 +195,11 @@
 
                 <div class="download-buttons">
                     <a href="#" class="download-btn" id="main-installer">
-                        📦 Download Build Package
+                        📦 Download Installer
                     </a>
-                </div>
-
-                <div class="version-info">
-                    <h4>What's Included</h4>
-                    <p>• Installer executable (AccessiWeather_Setup_v[version].exe)</p>
-                    <p>• Portable ZIP (AccessiWeather_Portable_v[version].zip)</p>
-                    <p>• Checksums for verification</p>
+                    <a href="#" class="download-btn secondary" id="main-portable">
+                        💼 Download Portable
+                    </a>
                 </div>
 
                 <div class="version-info">
@@ -220,15 +216,11 @@
 
                 <div class="download-buttons">
                     <a href="#" class="download-btn" id="dev-installer">
-                        📦 Download Build Package (Dev)
+                        📦 Download Installer (Dev)
                     </a>
-                </div>
-
-                <div class="version-info">
-                    <h4>What's Included</h4>
-                    <p>• Installer executable (AccessiWeather_Setup_v[version].exe)</p>
-                    <p>• Portable ZIP (AccessiWeather_Portable_v[version].zip)</p>
-                    <p>• Checksums for verification</p>
+                    <a href="#" class="download-btn secondary" id="dev-portable">
+                        💼 Download Portable (Dev)
+                    </a>
                 </div>
 
                 <div class="version-info">
@@ -274,24 +266,28 @@
             main: {
                 version: 'Loading...',
                 date: 'Loading...',
-                downloadUrl: 'https://nightly.link/Orinks/AccessiWeather/workflows/build/main?preview'
+                installerUrl: 'https://nightly.link/Orinks/AccessiWeather/workflows/build/main?preview',
+                portableUrl: 'https://nightly.link/Orinks/AccessiWeather/workflows/build/main?preview'
             },
             dev: {
                 version: '0.9.3',
                 date: 'Loading...',
-                downloadUrl: 'https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-installer-0.9.3.zip'
+                installerUrl: 'https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-installer-0.9.3.zip',
+                portableUrl: 'https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-portable-0.9.3.zip'
             }
         };
 
         // Update download links and version info
         function updateDownloadInfo() {
             // Main branch
-            document.getElementById('main-installer').href = buildInfo.main.downloadUrl;
+            document.getElementById('main-installer').href = buildInfo.main.installerUrl;
+            document.getElementById('main-portable').href = buildInfo.main.portableUrl;
             document.getElementById('main-version').textContent = buildInfo.main.version;
             document.getElementById('main-date').textContent = buildInfo.main.date;
 
             // Dev branch
-            document.getElementById('dev-installer').href = buildInfo.dev.downloadUrl;
+            document.getElementById('dev-installer').href = buildInfo.dev.installerUrl;
+            document.getElementById('dev-portable').href = buildInfo.dev.portableUrl;
             document.getElementById('dev-version').textContent = buildInfo.dev.version;
             document.getElementById('dev-date').textContent = buildInfo.dev.date;
         }
