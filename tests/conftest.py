@@ -16,11 +16,97 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from accessiweather.api_client import NoaaApiClient  # noqa: E402
 from accessiweather.api_wrapper import NoaaApiWrapper  # noqa: E402
+from accessiweather.geocoding import GeocodingService  # noqa: E402
 from accessiweather.location import LocationManager  # noqa: E402
 from accessiweather.notifications import WeatherNotifier  # noqa: E402
 from accessiweather.openmeteo_client import OpenMeteoApiClient  # noqa: E402
 from accessiweather.services.weather_service import WeatherService  # noqa: E402
 from accessiweather.utils.temperature_utils import TemperatureUnit  # noqa: E402
+
+# Import mock data - using relative imports
+try:
+    from .mock_data import (  # noqa: E402
+        MOCK_NWS_ALERTS_DATA,
+        MOCK_NWS_CURRENT_CONDITIONS,
+        MOCK_NWS_FORECAST_DATA,
+        MOCK_NWS_POINT_DATA,
+        MOCK_OPENMETEO_CURRENT_WEATHER,
+        MOCK_OPENMETEO_FORECAST,
+    )
+except ImportError:
+    # Fallback to inline mock data if import fails
+    MOCK_NWS_CURRENT_CONDITIONS = {
+        "properties": {
+            "temperature": {"value": 20.0, "unitCode": "wmoUnit:degC"},
+            "textDescription": "Partly Cloudy",
+            "relativeHumidity": {"value": 65},
+            "windSpeed": {"value": 10, "unitCode": "wmoUnit:km_h-1"},
+            "windDirection": {"value": 180},
+            "barometricPressure": {"value": 101325, "unitCode": "wmoUnit:Pa"},
+        }
+    }
+
+    MOCK_NWS_FORECAST_DATA = {
+        "properties": {
+            "periods": [
+                {
+                    "name": "Today",
+                    "temperature": 75,
+                    "temperatureUnit": "F",
+                    "shortForecast": "Sunny",
+                    "detailedForecast": "Sunny with a high near 75.",
+                    "windSpeed": "10 mph",
+                    "windDirection": "SW",
+                }
+            ]
+        }
+    }
+
+    MOCK_NWS_ALERTS_DATA = {
+        "features": [
+            {
+                "properties": {
+                    "headline": "Heat Advisory",
+                    "description": "Dangerous heat conditions expected.",
+                    "instruction": "Stay hydrated and avoid prolonged sun exposure.",
+                    "severity": "Moderate",
+                    "event": "Heat Advisory",
+                    "urgency": "Expected",
+                    "certainty": "Likely",
+                }
+            }
+        ]
+    }
+
+    MOCK_NWS_POINT_DATA = {
+        "properties": {
+            "gridId": "PHI",
+            "gridX": 50,
+            "gridY": 75,
+            "forecast": "https://api.weather.gov/gridpoints/PHI/50,75/forecast",
+            "county": "https://api.weather.gov/zones/county/PAC091",
+        }
+    }
+
+    MOCK_OPENMETEO_CURRENT_WEATHER = {
+        "current": {
+            "temperature_2m": 68.0,
+            "weather_code": 2,
+            "relative_humidity_2m": 65,
+            "wind_speed_10m": 8.5,
+            "wind_direction_10m": 180,
+            "pressure_msl": 1013.2,
+        }
+    }
+
+    MOCK_OPENMETEO_FORECAST = {
+        "daily": {
+            "time": ["2024-01-01", "2024-01-02", "2024-01-03"],
+            "weather_code": [1, 2, 3],
+            "temperature_2m_max": [75.0, 78.0, 72.0],
+            "temperature_2m_min": [55.0, 58.0, 52.0],
+        }
+    }
 
 
 @pytest.fixture
@@ -79,8 +165,110 @@ def mock_openmeteo_client():
 
 
 @pytest.fixture
+def mock_geocoding_location():
+    """Create a mock location object for geocoding responses."""
+    location = MagicMock()
+    location.latitude = 40.7128
+    location.longitude = -74.0060
+    location.address = "New York, NY, USA"
+    location.raw = {"address": {"country_code": "us"}}
+    return location
+
+
+@pytest.fixture
+def mock_geocoding_service():
+    """Mock GeocodingService with common responses."""
+    mock_service = MagicMock(spec=GeocodingService)
+
+    # Mock geocode_address to return US coordinates
+    mock_service.geocode_address.return_value = (40.7128, -74.0060, "New York, NY, USA")
+
+    # Mock validate_coordinates to return True for US locations, False for others
+    def validate_coordinates_side_effect(lat, lon, us_only=None):
+        # US coordinates (rough bounds)
+        if 24.0 <= lat <= 49.0 and -125.0 <= lon <= -66.0:
+            return True
+        # Special case for test coordinates
+        if lat == 40.7128 and lon == -74.0060:  # NYC
+            return True
+        if lat == 34.0522 and lon == -118.2437:  # LA
+            return True
+        return False
+
+    mock_service.validate_coordinates.side_effect = validate_coordinates_side_effect
+
+    # Mock suggest_locations to return sample suggestions
+    mock_service.suggest_locations.return_value = [
+        "New York, NY, USA",
+        "Newark, NJ, USA",
+        "New Haven, CT, USA",
+    ]
+
+    # Mock utility methods
+    mock_service.is_zip_code.return_value = False
+    mock_service.format_zip_code.return_value = "12345, USA"
+
+    return mock_service
+
+
+@pytest.fixture
+def mock_nominatim():
+    """Mock Nominatim geocoder for direct usage."""
+    mock_nominatim = MagicMock()
+
+    # Create a mock location for geocode responses
+    mock_location = MagicMock()
+    mock_location.latitude = 40.7128
+    mock_location.longitude = -74.0060
+    mock_location.address = "New York, NY, USA"
+    mock_location.raw = {"address": {"country_code": "us"}}
+
+    mock_nominatim.geocode.return_value = mock_location
+    mock_nominatim.reverse.return_value = mock_location
+
+    return mock_nominatim
+
+
+@pytest.fixture(autouse=True)
+def mock_all_geocoding():
+    """Automatically mock all geocoding API calls across all tests."""
+    with patch("accessiweather.geocoding.Nominatim") as mock_nominatim_class:
+        # Create mock instance
+        mock_nominatim_instance = MagicMock()
+        mock_nominatim_class.return_value = mock_nominatim_instance
+
+        # Create mock location response
+        mock_location = MagicMock()
+        mock_location.latitude = 40.7128
+        mock_location.longitude = -74.0060
+        mock_location.address = "New York, NY, USA"
+        mock_location.raw = {"address": {"country_code": "us"}}
+
+        # Configure geocode method
+        mock_nominatim_instance.geocode.return_value = mock_location
+
+        # Configure reverse method for coordinate validation
+        def reverse_side_effect(coords, **kwargs):
+            lat, lon = coords
+            # Return US location for US coordinates, non-US for others
+            if 24.0 <= lat <= 49.0 and -125.0 <= lon <= -66.0:
+                mock_us_location = MagicMock()
+                mock_us_location.raw = {"address": {"country_code": "us"}}
+                return mock_us_location
+            else:
+                mock_intl_location = MagicMock()
+                mock_intl_location.raw = {"address": {"country_code": "gb"}}
+                return mock_intl_location
+
+        mock_nominatim_instance.reverse.side_effect = reverse_side_effect
+
+        yield mock_nominatim_instance
+
+
+@pytest.fixture
 def location_manager(temp_config_dir):
-    """Create a LocationManager with temp config directory."""
+    """Create a LocationManager with temp config directory and mocked geocoding."""
+    # The geocoding is already mocked by the autouse fixture
     return LocationManager(config_dir=temp_config_dir)
 
 
@@ -369,3 +557,139 @@ def performance_timer():
             return None
 
     return Timer()
+
+
+# Test to verify geocoding is mocked
+@pytest.fixture
+def verify_no_real_geocoding_calls():
+    """Verify that no real geocoding API calls are made during tests."""
+    # This fixture can be used to ensure tests don't make real API calls
+    # The autouse mock_all_geocoding fixture should prevent any real calls
+    pass
+
+
+@pytest.fixture
+def mock_weather_apis():
+    """Mock all weather API calls for unit tests with comprehensive responses."""
+    with (
+        patch("accessiweather.api_wrapper.NoaaApiWrapper") as mock_nws,
+        patch("accessiweather.openmeteo_client.OpenMeteoApiClient") as mock_openmeteo,
+        patch("accessiweather.api_client.NoaaApiClient") as mock_nws_client,
+    ):
+        # Configure NWS wrapper mock
+        nws_instance = MagicMock()
+        mock_nws.return_value = nws_instance
+
+        # Configure NWS client mock
+        nws_client_instance = MagicMock()
+        mock_nws_client.return_value = nws_client_instance
+
+        # Configure Open-Meteo mock
+        openmeteo_instance = MagicMock()
+        mock_openmeteo.return_value = openmeteo_instance
+
+        # Set up comprehensive NWS responses using mock data
+        nws_instance.get_current_conditions.return_value = MOCK_NWS_CURRENT_CONDITIONS
+        nws_instance.get_forecast.return_value = MOCK_NWS_FORECAST_DATA
+        nws_instance.get_alerts.return_value = MOCK_NWS_ALERTS_DATA
+        nws_instance.get_point_data.return_value = MOCK_NWS_POINT_DATA
+
+        # Set up NWS client responses
+        nws_client_instance.get_current_conditions.return_value = MOCK_NWS_CURRENT_CONDITIONS
+        nws_client_instance.get_forecast.return_value = MOCK_NWS_FORECAST_DATA
+        nws_client_instance.get_alerts.return_value = MOCK_NWS_ALERTS_DATA
+        nws_client_instance.get_point_data.return_value = MOCK_NWS_POINT_DATA
+
+        # Set up comprehensive Open-Meteo responses using mock data
+        openmeteo_instance.get_current_weather.return_value = MOCK_OPENMETEO_CURRENT_WEATHER
+        openmeteo_instance.get_forecast.return_value = MOCK_OPENMETEO_FORECAST
+
+        yield {
+            "nws": nws_instance,
+            "nws_client": nws_client_instance,
+            "openmeteo": openmeteo_instance,
+        }
+
+
+@pytest.fixture
+def mock_web_scraping():
+    """Mock web scraping for national discussion data."""
+    with patch("requests.get") as mock_get:
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.text = "<html><body>Mock weather discussion</body></html>"
+        mock_response.raise_for_status = MagicMock()
+        mock_get.return_value = mock_response
+        yield mock_get
+
+
+@pytest.fixture
+def mock_weather_apis_error():
+    """Mock weather APIs to simulate error conditions."""
+    with (
+        patch("accessiweather.api_wrapper.NoaaApiWrapper") as mock_nws,
+        patch("accessiweather.openmeteo_client.OpenMeteoApiClient") as mock_openmeteo,
+    ):
+        # Configure NWS mock to raise errors
+        nws_instance = MagicMock()
+        mock_nws.return_value = nws_instance
+        nws_instance.get_current_conditions.side_effect = Exception("NWS API Error")
+        nws_instance.get_forecast.side_effect = Exception("NWS API Error")
+        nws_instance.get_alerts.side_effect = Exception("NWS API Error")
+
+        # Configure Open-Meteo mock to raise errors
+        openmeteo_instance = MagicMock()
+        mock_openmeteo.return_value = openmeteo_instance
+        openmeteo_instance.get_current_weather.side_effect = Exception("Open-Meteo API Error")
+        openmeteo_instance.get_forecast.side_effect = Exception("Open-Meteo API Error")
+
+        yield {"nws": nws_instance, "openmeteo": openmeteo_instance}
+
+
+@pytest.fixture
+def mock_weather_apis_timeout():
+    """Mock weather APIs to simulate timeout conditions."""
+    with (
+        patch("accessiweather.api_wrapper.NoaaApiWrapper") as mock_nws,
+        patch("accessiweather.openmeteo_client.OpenMeteoApiClient") as mock_openmeteo,
+    ):
+        from requests.exceptions import Timeout
+
+        from accessiweather.openmeteo_client import OpenMeteoNetworkError
+
+        # Configure NWS mock to raise timeout
+        nws_instance = MagicMock()
+        mock_nws.return_value = nws_instance
+        nws_instance.get_current_conditions.side_effect = Timeout("Request timed out")
+        nws_instance.get_forecast.side_effect = Timeout("Request timed out")
+        nws_instance.get_alerts.side_effect = Timeout("Request timed out")
+
+        # Configure Open-Meteo mock to raise timeout
+        openmeteo_instance = MagicMock()
+        mock_openmeteo.return_value = openmeteo_instance
+        openmeteo_instance.get_current_weather.side_effect = OpenMeteoNetworkError(
+            "Request timed out"
+        )
+        openmeteo_instance.get_forecast.side_effect = OpenMeteoNetworkError("Request timed out")
+
+        yield {"nws": nws_instance, "openmeteo": openmeteo_instance}
+
+
+@pytest.fixture
+def verify_no_real_api_calls():
+    """Verify that no real API calls are made during tests."""
+    with (
+        patch("requests.get") as mock_requests_get,
+        patch("httpx.get") as mock_httpx_get,
+        patch("httpx.Client.get") as mock_httpx_client_get,
+    ):
+        # Configure mocks to raise if called
+        mock_requests_get.side_effect = AssertionError("Real requests.get call detected!")
+        mock_httpx_get.side_effect = AssertionError("Real httpx.get call detected!")
+        mock_httpx_client_get.side_effect = AssertionError("Real httpx.Client.get call detected!")
+
+        yield {
+            "requests_get": mock_requests_get,
+            "httpx_get": mock_httpx_get,
+            "httpx_client_get": mock_httpx_client_get,
+        }
