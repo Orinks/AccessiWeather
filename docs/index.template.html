@@ -4,9 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AccessiWeather - Download</title>
-    <meta name="description"
-        content="Download AccessiWeather - An accessible weather application with screen reader support and NOAA weather data">
+    <title>AccessiWeather Downloads</title>
     <style>
         * {
             margin: 0;
@@ -15,7 +13,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             color: #333;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -47,121 +45,134 @@
 
         .download-section {
             background: white;
-            border-radius: 12px;
+            border-radius: 15px;
             padding: 30px;
             margin-bottom: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
         }
 
-        .download-section h2 {
+        .download-section:hover {
+            transform: translateY(-5px);
+        }
+
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 15px;
             color: #4a5568;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .stable {
+            border-left: 5px solid #48bb78;
+        }
+
+        .dev {
+            border-left: 5px solid #ed8936;
+        }
+
+        .version-info {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
             margin-bottom: 20px;
-            font-size: 1.8rem;
+            border-left: 4px solid #667eea;
+        }
+
+        .version-info h3 {
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .version-info p {
+            color: #4a5568;
+            margin: 5px 0;
         }
 
         .download-buttons {
             display: flex;
             gap: 15px;
             flex-wrap: wrap;
-            margin-bottom: 20px;
         }
 
         .download-btn {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
             padding: 12px 24px;
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             text-decoration: none;
             border-radius: 8px;
             font-weight: 600;
             transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
 
         .download-btn:hover {
-            background: #5a6fd8;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .download-btn:active {
+            transform: translateY(0);
         }
 
         .download-btn.secondary {
-            background: #718096;
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            box-shadow: 0 4px 15px rgba(74, 85, 104, 0.4);
         }
 
         .download-btn.secondary:hover {
-            background: #4a5568;
+            box-shadow: 0 6px 20px rgba(74, 85, 104, 0.6);
         }
 
-        .version-info {
-            background: #f7fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 15px;
-            margin-top: 15px;
+        .download-btn svg {
+            margin-right: 8px;
         }
 
-        .version-info h4 {
-            color: #2d3748;
-            margin-bottom: 8px;
+        .info-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
-        .version-info p {
-            color: #4a5568;
-            font-size: 0.9rem;
-        }
-
-        .features {
+        .info-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 40px;
+            gap: 30px;
+            margin-top: 20px;
         }
 
-        .feature-card {
-            background: white;
-            border-radius: 8px;
+        .info-card {
+            background: #f7fafc;
             padding: 20px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
         }
 
-        .feature-card h3 {
-            color: #4a5568;
+        .info-card h3 {
+            color: #2d3748;
             margin-bottom: 10px;
         }
 
-        .feature-card p {
-            color: #718096;
+        .info-card p {
+            color: #4a5568;
+            line-height: 1.6;
         }
 
         .footer {
             text-align: center;
             color: white;
-            margin-top: 40px;
             opacity: 0.8;
+            margin-top: 40px;
         }
 
         .footer a {
             color: white;
             text-decoration: underline;
-        }
-
-        .status-indicator {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-
-        .status-stable {
-            background: #48bb78;
-        }
-
-        .status-dev {
-            background: #ed8936;
         }
 
         @media (max-width: 768px) {
@@ -176,6 +187,34 @@
             .download-btn {
                 justify-content: center;
             }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .badge.stable {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .badge.dev {
+            background: #fed7cc;
+            color: #9c4221;
+        }
+
+        .loading {
+            opacity: 0.6;
+            font-style: italic;
         }
     </style>
 </head>
@@ -184,78 +223,103 @@
     <div class="container">
         <header class="header">
             <h1>AccessiWeather</h1>
-            <p>Accessible weather application with screen reader support</p>
+            <p>Accessible Weather Information for Everyone</p>
         </header>
 
-        <main>
-            <!-- Stable Release Section -->
-            <section class="download-section">
-                <h2><span class="status-indicator status-stable"></span>Stable Release (Main Branch)</h2>
-                <p>Recommended for most users. Stable, tested releases with full features.</p>
+        <!-- Stable Release Section -->
+        <section class="download-section stable">
+            <h2 class="section-title">
+                Stable Release
+                <span class="badge stable">Recommended</span>
+            </h2>
 
-                <div class="download-buttons">
-                    <a href="#" class="download-btn" id="main-installer">
-                        📦 Download Installer
-                    </a>
-                    <a href="#" class="download-btn secondary" id="main-portable">
-                        💼 Download Portable
-                    </a>
-                </div>
-
-                <div class="version-info">
-                    <h4>Latest Stable Version</h4>
-                    <p id="main-version">Loading version information...</p>
-                    <p><strong>Build Date:</strong> <span id="main-date">Loading...</span></p>
-                </div>
-            </section>
-
-            <!-- Development Release Section -->
-            <section class="download-section">
-                <h2><span class="status-indicator status-dev"></span>Development Release (Dev Branch)</h2>
-                <p>Latest features and improvements. May contain experimental features.</p>
-
-                <div class="download-buttons">
-                    <a href="#" class="download-btn" id="dev-installer">
-                        📦 Download Installer (Dev)
-                    </a>
-                    <a href="#" class="download-btn secondary" id="dev-portable">
-                        💼 Download Portable (Dev)
-                    </a>
-                </div>
-
-                <div class="version-info">
-                    <h4>Latest Development Version</h4>
-                    <p id="dev-version">Loading version information...</p>
-                    <p><strong>Build Date:</strong> <span id="dev-date">Loading...</span></p>
-                </div>
-            </section>
-        </main>
-
-        <!-- Features Section -->
-        <section class="features">
-            <div class="feature-card">
-                <h3>🔊 Screen Reader Friendly</h3>
-                <p>Designed with accessibility in mind, fully compatible with NVDA, JAWS, and other screen readers.</p>
+            <div class="version-info">
+                <h3>Version <span id="main-version">{{MAIN_VERSION}}</span></h3>
+                <p><strong>Released:</strong> <span id="main-date">{{MAIN_DATE}}</span></p>
+                <p><strong>Commit:</strong> <span id="main-commit">{{MAIN_COMMIT}}</span></p>
             </div>
-            <div class="feature-card">
-                <h3>🌦️ NOAA Weather Data</h3>
-                <p>Uses official National Weather Service data for accurate, reliable weather information.</p>
+
+            <div class="download-buttons">
+                <a href="#" id="main-installer" class="download-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                    </svg>
+                    Download Installer
+                </a>
+                <a href="#" id="main-portable" class="download-btn secondary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M12,17.5L10.25,16H13.75L12,17.5M10,4.5C10,3.67 10.67,3 11.5,3H12.5C13.33,3 14,3.67 14,4.5V5.5H10V4.5M4,7V6H20V7H19V19A2,2 0 0,1 17,21H7A2,2 0 0,1 5,19V7H4Z" />
+                    </svg>
+                    Download Portable
+                </a>
             </div>
-            <div class="feature-card">
-                <h3>⚡ Real-time Alerts</h3>
-                <p>Get notified about severe weather conditions and important weather alerts in your area.</p>
+        </section>
+
+        <!-- Development Build Section -->
+        <section class="download-section dev">
+            <h2 class="section-title">
+                Development Build
+                <span class="badge dev">Latest Features</span>
+            </h2>
+
+            <div class="version-info">
+                <h3>Version <span id="dev-version">{{DEV_VERSION}}</span></h3>
+                <p><strong>Built:</strong> <span id="dev-date">{{DEV_DATE}}</span></p>
+                <p><strong>Commit:</strong> <span id="dev-commit">{{DEV_COMMIT}}</span></p>
             </div>
-            <div class="feature-card">
-                <h3>🎯 Location-based</h3>
-                <p>Automatic location detection or manual location entry for personalized weather data.</p>
+
+            <div class="download-buttons">
+                <a href="#" id="dev-installer" class="download-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                    </svg>
+                    Download Installer
+                </a>
+                <a href="#" id="dev-portable" class="download-btn secondary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M12,17.5L10.25,16H13.75L12,17.5M10,4.5C10,3.67 10.67,3 11.5,3H12.5C13.33,3 14,3.67 14,4.5V5.5H10V4.5M4,7V6H20V7H19V19A2,2 0 0,1 17,21H7A2,2 0 0,1 5,19V7H4Z" />
+                    </svg>
+                    Download Portable
+                </a>
+            </div>
+        </section>
+
+        <!-- Information Section -->
+        <section class="info-section">
+            <h2 class="section-title">Download Information</h2>
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>🛡️ Installer Version</h3>
+                    <p>Full installation package that integrates with Windows. Includes automatic updates and system
+                        integration. Recommended for most users.</p>
+                </div>
+                <div class="info-card">
+                    <h3>📦 Portable Version</h3>
+                    <p>Standalone executable that doesn't require installation. Perfect for USB drives or temporary use.
+                        Settings are saved locally.</p>
+                </div>
+                <div class="info-card">
+                    <h3>🔄 Stable vs Development</h3>
+                    <p>Stable releases are thoroughly tested and recommended for daily use. Development builds contain
+                        the latest features but may have bugs.</p>
+                </div>
+                <div class="info-card">
+                    <h3>💻 System Requirements</h3>
+                    <p>Windows 10 or later (64-bit). Requires internet connection for weather data. Screen reader
+                        compatible for accessibility.</p>
+                </div>
             </div>
         </section>
 
         <footer class="footer">
             <p>
-                <a href="https://github.com/Orinks/AccessiWeather">View on GitHub</a> |
-                <a href="https://github.com/Orinks/AccessiWeather/issues">Report Issues</a> |
-                <a href="user_manual.html">User Manual</a>
+                Last updated: <span id="last-updated">{{LAST_UPDATED}}</span> |
+                <a href="https://github.com/Orinks/AccessiWeather" target="_blank">View on GitHub</a> |
+                <a href="https://github.com/Orinks/AccessiWeather/issues" target="_blank">Report Issues</a>
             </p>
         </footer>
     </div>
@@ -289,9 +353,16 @@
             // Check if elements exist
             const mainDateEl = document.getElementById('main-date');
             const devDateEl = document.getElementById('dev-date');
+            const mainCommitEl = document.getElementById('main-commit');
+            const devCommitEl = document.getElementById('dev-commit');
+            const lastUpdatedEl = document.getElementById('last-updated');
+
             console.log('DOM elements found:', {
                 mainDate: mainDateEl,
-                devDate: devDateEl
+                devDate: devDateEl,
+                mainCommit: mainCommitEl,
+                devCommit: devCommitEl,
+                lastUpdated: lastUpdatedEl
             });
 
             // Main branch
@@ -302,6 +373,9 @@
                 mainDateEl.textContent = buildInfo.main.date;
                 console.log('Set main date to:', buildInfo.main.date);
             }
+            if (mainCommitEl) {
+                mainCommitEl.textContent = buildInfo.main.commit ? buildInfo.main.commit.substring(0, 7) : 'N/A';
+            }
 
             // Dev branch
             document.getElementById('dev-installer').href = buildInfo.dev.installerUrl;
@@ -311,13 +385,17 @@
                 devDateEl.textContent = buildInfo.dev.date;
                 console.log('Set dev date to:', buildInfo.dev.date);
             }
+            if (devCommitEl) {
+                devCommitEl.textContent = buildInfo.dev.commit ? buildInfo.dev.commit.substring(0, 7) : 'N/A';
+            }
+
+            // Last updated
+            if (lastUpdatedEl) {
+                lastUpdatedEl.textContent = buildInfo.lastUpdated;
+            }
 
             console.log('Page updated successfully');
         }
-
-        // Handle download link clicks - let them work naturally
-        // The stable links go directly to GitHub's latest release downloads
-        // The dev links go to nightly.link for development builds
 
         // Fetch latest release info from GitHub API for stable releases
         async function fetchLatestRelease() {
@@ -426,6 +504,7 @@
             buildInfo.main.date = 'Loading...';
             buildInfo.dev.version = '0.9.3';
             buildInfo.dev.date = 'Loading...';
+            buildInfo.lastUpdated = new Date().toISOString();
         }
 
         updateDownloadInfo();
