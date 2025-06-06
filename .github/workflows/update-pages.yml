@@ -88,31 +88,27 @@ jobs:
         get_build_info "main" >> $GITHUB_OUTPUT
         get_build_info "dev" >> $GITHUB_OUTPUT
 
-    - name: Generate build info JSON
+    - name: Generate HTML from template
       run: |
-        # Create build-info.json for the website
-        cat > docs/build-info.json << EOF
-        {
-          "main": {
-            "version": "${{ steps.build-info.outputs.main_version }}",
-            "date": "${{ steps.build-info.outputs.main_date }}",
-            "commit": "${{ steps.build-info.outputs.main_commit }}",
-            "installerUrl": "https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-installer-${{ steps.build-info.outputs.main_version }}.zip",
-            "portableUrl": "https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-portable-${{ steps.build-info.outputs.main_version }}.zip"
-          },
-          "dev": {
-            "version": "${{ steps.build-info.outputs.dev_version }}",
-            "date": "${{ steps.build-info.outputs.dev_date }}",
-            "commit": "${{ steps.build-info.outputs.dev_commit }}",
-            "installerUrl": "https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-installer-${{ steps.build-info.outputs.dev_version }}.zip",
-            "portableUrl": "https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-portable-${{ steps.build-info.outputs.dev_version }}.zip"
-          },
-          "lastUpdated": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-        }
-        EOF
+        # Copy template to index.html and substitute values
+        cp docs/index.template.html docs/index.html
 
-        echo "Generated build-info.json:"
-        cat docs/build-info.json
+        # Get current timestamp
+        LAST_UPDATED=$(date -u +"%Y-%m-%d %H:%M UTC")
+
+        # Substitute template variables with actual values
+        sed -i "s/{{MAIN_VERSION}}/${{ steps.build-info.outputs.main_version }}/g" docs/index.html
+        sed -i "s/{{MAIN_DATE}}/${{ steps.build-info.outputs.main_date }}/g" docs/index.html
+        sed -i "s/{{MAIN_COMMIT}}/${{ steps.build-info.outputs.main_commit }}/g" docs/index.html
+        sed -i "s/{{DEV_VERSION}}/${{ steps.build-info.outputs.dev_version }}/g" docs/index.html
+        sed -i "s/{{DEV_DATE}}/${{ steps.build-info.outputs.dev_date }}/g" docs/index.html
+        sed -i "s/{{DEV_COMMIT}}/${{ steps.build-info.outputs.dev_commit }}/g" docs/index.html
+        sed -i "s/{{LAST_UPDATED}}/$LAST_UPDATED/g" docs/index.html
+
+        echo "Generated index.html from template with build info:"
+        echo "Main: ${{ steps.build-info.outputs.main_version }} (${{ steps.build-info.outputs.main_date }})"
+        echo "Dev: ${{ steps.build-info.outputs.dev_version }} (${{ steps.build-info.outputs.dev_date }})"
+        echo "Last updated: $LAST_UPDATED"
 
     - name: Create nightly.link URLs documentation
       run: |
@@ -156,11 +152,11 @@ jobs:
         git config --local user.name "GitHub Action"
 
         # Check if there are changes to commit
-        if git diff --quiet docs/build-info.json docs/download-links.md; then
+        if git diff --quiet docs/index.html docs/download-links.md; then
           echo "No changes to commit"
         else
-          git add docs/build-info.json docs/download-links.md
-          git commit -m "Update build information and download links
+          git add docs/index.html docs/download-links.md
+          git commit -m "Update build information and download page
 
           - Main: ${{ steps.build-info.outputs.main_version }} (${{ steps.build-info.outputs.main_date }})
           - Dev: ${{ steps.build-info.outputs.dev_version }} (${{ steps.build-info.outputs.dev_date }})"
