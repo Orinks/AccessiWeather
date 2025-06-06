@@ -98,14 +98,18 @@ jobs:
             "date": "${{ steps.build-info.outputs.main_date }}",
             "commit": "${{ steps.build-info.outputs.main_commit }}",
             "installerUrl": "https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-installer-${{ steps.build-info.outputs.main_version }}.zip",
-            "portableUrl": "https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-build-${{ steps.build-info.outputs.main_version }}.zip"
+            "portableUrl": "https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-build-${{ steps.build-info.outputs.main_version }}.zip",
+            "installerUrlGeneric": "https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-installer.zip",
+            "portableUrlGeneric": "https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-build.zip"
           },
           "dev": {
             "version": "${{ steps.build-info.outputs.dev_version }}",
             "date": "${{ steps.build-info.outputs.dev_date }}",
             "commit": "${{ steps.build-info.outputs.dev_commit }}",
             "installerUrl": "https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-installer-${{ steps.build-info.outputs.dev_version }}.zip",
-            "portableUrl": "https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-build-${{ steps.build-info.outputs.dev_version }}.zip"
+            "portableUrl": "https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-build-${{ steps.build-info.outputs.dev_version }}.zip",
+            "installerUrlGeneric": "https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-installer.zip",
+            "portableUrlGeneric": "https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-build.zip"
           },
           "lastUpdated": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
         }
@@ -121,21 +125,21 @@ jobs:
 
         ## Stable Release (Main Branch)
 
-        ### Direct nightly.link URLs:
-        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main
-        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main
+        ### Direct download URLs (latest build):
+        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-installer.zip
+        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-build.zip
 
-        ### Specific artifact URLs:
+        ### Specific version URLs:
         - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-installer-${{ steps.build-info.outputs.main_version }}.zip
         - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-build-${{ steps.build-info.outputs.main_version }}.zip
 
         ## Development Release (Dev Branch)
 
-        ### Direct nightly.link URLs:
-        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev
-        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev
+        ### Direct download URLs (latest build):
+        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-installer.zip
+        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-build.zip
 
-        ### Specific artifact URLs:
+        ### Specific version URLs:
         - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-installer-${{ steps.build-info.outputs.dev_version }}.zip
         - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-build-${{ steps.build-info.outputs.dev_version }}.zip
 
