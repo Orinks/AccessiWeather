@@ -97,10 +97,8 @@ class TestWeatherAppInitialization:
     @patch("accessiweather.gui.weather_app.WeatherApp._create_menu_bar")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateLocationDropdown")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateWeatherData")
-    @patch("accessiweather.gui.weather_app.WeatherApp._check_api_contact_configured")
     def test_init_with_all_services(
         self,
-        mock_check_api,
         mock_update_weather,
         mock_update_dropdown,
         mock_create_menu,
@@ -144,16 +142,13 @@ class TestWeatherAppInitialization:
             mock_create_menu.assert_called_once()
             mock_update_dropdown.assert_called_once()
             mock_update_weather.assert_called_once()
-            mock_check_api.assert_called_once()
 
     @patch("wx.Frame.__init__", return_value=None)
     @patch("accessiweather.gui.weather_app.WeatherApp._create_menu_bar")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateLocationDropdown")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateWeatherData")
-    @patch("accessiweather.gui.weather_app.WeatherApp._check_api_contact_configured")
     def test_init_with_debug_mode(
         self,
-        mock_check_api,
         mock_update_weather,
         mock_update_dropdown,
         mock_create_menu,
@@ -184,10 +179,8 @@ class TestWeatherAppInitialization:
     @patch("accessiweather.gui.weather_app.WeatherApp._create_menu_bar")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateLocationDropdown")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateWeatherData")
-    @patch("accessiweather.gui.weather_app.WeatherApp._check_api_contact_configured")
     def test_init_with_custom_config_path(
         self,
-        mock_check_api,
         mock_update_weather,
         mock_update_dropdown,
         mock_create_menu,
@@ -217,10 +210,8 @@ class TestWeatherAppInitialization:
     @patch("accessiweather.gui.weather_app.WeatherApp._create_menu_bar")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateLocationDropdown")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateWeatherData")
-    @patch("accessiweather.gui.weather_app.WeatherApp._check_api_contact_configured")
     def test_init_sets_default_attributes(
         self,
-        mock_check_api,
         mock_update_weather,
         mock_update_dropdown,
         mock_create_menu,
@@ -261,10 +252,8 @@ class TestWeatherAppInitialization:
     @patch("accessiweather.gui.weather_app.WeatherApp._create_menu_bar")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateLocationDropdown")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateWeatherData")
-    @patch("accessiweather.gui.weather_app.WeatherApp._check_api_contact_configured")
     def test_init_with_backward_compatibility_api_client(
         self,
-        mock_check_api,
         mock_update_weather,
         mock_update_dropdown,
         mock_create_menu,

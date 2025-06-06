@@ -13,7 +13,6 @@ from accessiweather.utils.temperature_utils import TemperatureUnit
 logger = logging.getLogger(__name__)
 
 # Define constants for settings keys if needed, or use strings directly
-API_CONTACT_KEY = "api_contact"
 UPDATE_INTERVAL_KEY = "update_interval_minutes"
 ALERT_RADIUS_KEY = "alert_radius_miles"
 PRECISE_LOCATION_ALERTS_KEY = "precise_location_alerts"
@@ -148,14 +147,6 @@ class SettingsDialog(wx.Dialog):
         grid_sizer.Add(self.data_source_ctrl, 0, wx.EXPAND | wx.ALL, 5)
 
         # Placeholder for future weather API integration
-
-        # API Contact
-        api_contact_label = wx.StaticText(panel, label="NWS API Contact (Email/Website):")
-        self.api_contact_ctrl = wx.TextCtrl(panel, name="API Contact")
-        tooltip_api = "Enter the email or website required by the National Weather Service API."
-        self.api_contact_ctrl.SetToolTip(tooltip_api)
-        grid_sizer.Add(api_contact_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
-        grid_sizer.Add(self.api_contact_ctrl, 1, wx.EXPAND | wx.ALL, 5)
 
         # Update Interval
         update_interval_label = wx.StaticText(panel, label="Update Interval (minutes):")
@@ -354,7 +345,6 @@ class SettingsDialog(wx.Dialog):
         """Load current settings into the UI controls."""
         try:
             # Load general settings
-            api_contact = self.current_settings.get(API_CONTACT_KEY, "")
             update_interval = self.current_settings.get(UPDATE_INTERVAL_KEY, 10)
             alert_radius = self.current_settings.get(ALERT_RADIUS_KEY, 25)
             precise_alerts = self.current_settings.get(PRECISE_LOCATION_ALERTS_KEY, True)
@@ -372,7 +362,6 @@ class SettingsDialog(wx.Dialog):
             else:
                 self.data_source_ctrl.SetSelection(0)  # NWS (default)
 
-            self.api_contact_ctrl.SetValue(api_contact)
             self.update_interval_ctrl.SetValue(update_interval)
             self.alert_radius_ctrl.SetValue(alert_radius)
             self.precise_alerts_ctrl.SetValue(precise_alerts)
@@ -413,38 +402,10 @@ class SettingsDialog(wx.Dialog):
                 # Default to Fahrenheit for unknown values
                 self.temp_unit_ctrl.SetSelection(0)
 
-            # Update UI state based on data source
-            self._update_ui_for_data_source()
-
-            # Bind data source change event
-            self.data_source_ctrl.Bind(wx.EVT_CHOICE, self._on_data_source_changed)
-
             logger.debug("Settings loaded into dialog.")
         except Exception as e:
             logger.error(f"Error loading settings into dialog: {e}")
             wx.MessageBox(f"Error loading settings: {e}", "Error", wx.OK | wx.ICON_ERROR, self)
-
-    def _on_data_source_changed(self, event):
-        """Handle data source selection change."""
-        self._update_ui_for_data_source()
-
-    def _update_ui_for_data_source(self):
-        """Update UI elements based on selected data source."""
-        # Get the selected data source
-        selection = self.data_source_ctrl.GetSelection()
-
-        if selection == 0:  # NWS
-            # Enable NWS API contact field
-            self.api_contact_ctrl.Enable(True)
-        elif selection == 1:  # Open-Meteo
-            # Open-Meteo doesn't require API contact, but we can still allow it for NWS fallback
-            self.api_contact_ctrl.Enable(True)
-        elif selection == 2:  # Automatic
-            # Enable NWS API contact field since NWS will be used for US locations
-            self.api_contact_ctrl.Enable(True)
-        else:
-            # Default to enabling NWS API contact field
-            self.api_contact_ctrl.Enable(True)
 
     def _on_ok(self, event):  # event is required by wx
         """Handle OK button click: Validate and signal success."""
@@ -452,22 +413,6 @@ class SettingsDialog(wx.Dialog):
         interval = self.update_interval_ctrl.GetValue()
         radius = self.alert_radius_ctrl.GetValue()
         cache_ttl = self.cache_ttl_ctrl.GetValue()
-
-        # Validate NWS API contact (recommended for all data sources)
-        api_contact = self.api_contact_ctrl.GetValue().strip()
-        if not api_contact:
-            # Just show a warning but allow to proceed
-            result = wx.MessageBox(
-                "NWS API contact information is recommended when using NWS as the data source. "
-                "Continue without providing contact information?",
-                "Missing Recommended Setting",
-                wx.YES_NO | wx.ICON_WARNING,
-                self,
-            )
-            if result != wx.YES:
-                self.notebook.SetSelection(0)  # Switch to General tab
-                self.api_contact_ctrl.SetFocus()
-                return  # Prevent dialog closing
 
         if interval < 1:
             wx.MessageBox(
@@ -575,9 +520,7 @@ class SettingsDialog(wx.Dialog):
         Returns:
             dict: A dictionary containing the updated API settings.
         """
-        return {
-            API_CONTACT_KEY: self.api_contact_ctrl.GetValue(),
-        }
+        return {}
 
     def get_api_keys(self):
         """

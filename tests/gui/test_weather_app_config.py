@@ -101,10 +101,8 @@ class TestWeatherAppConfig:
     @patch("accessiweather.gui.weather_app.WeatherApp._create_menu_bar")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateLocationDropdown")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateWeatherData")
-    @patch("accessiweather.gui.weather_app.WeatherApp._check_api_contact_configured")
     def test_load_config_from_file(
         self,
-        mock_check_api,
         mock_update_weather,
         mock_update_dropdown,
         mock_create_menu,
@@ -138,16 +136,13 @@ class TestWeatherAppConfig:
                 # Verify config is loaded correctly
                 assert app.config["settings"]["temperature_unit"] == "celsius"
                 assert app.config["settings"]["update_interval_minutes"] == 15
-                assert app.config["api_settings"]["api_contact"] == "user@example.com"
 
     @patch("wx.Frame.__init__", return_value=None)
     @patch("accessiweather.gui.weather_app.WeatherApp._create_menu_bar")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateLocationDropdown")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateWeatherData")
-    @patch("accessiweather.gui.weather_app.WeatherApp._check_api_contact_configured")
     def test_save_config_to_file(
         self,
-        mock_check_api,
         mock_update_weather,
         mock_update_dropdown,
         mock_create_menu,
@@ -183,16 +178,13 @@ class TestWeatherAppConfig:
                 saved_config = json.load(f)
 
             assert saved_config["settings"]["temperature_unit"] == "celsius"
-            assert saved_config["api_settings"]["api_contact"] == "user@example.com"
 
     @patch("wx.Frame.__init__", return_value=None)
     @patch("accessiweather.gui.weather_app.WeatherApp._create_menu_bar")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateLocationDropdown")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateWeatherData")
-    @patch("accessiweather.gui.weather_app.WeatherApp._check_api_contact_configured")
     def test_config_defaults_when_file_missing(
         self,
-        mock_check_api,
         mock_update_weather,
         mock_update_dropdown,
         mock_create_menu,
@@ -226,10 +218,8 @@ class TestWeatherAppConfig:
     @patch("accessiweather.gui.weather_app.WeatherApp._create_menu_bar")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateLocationDropdown")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateWeatherData")
-    @patch("accessiweather.gui.weather_app.WeatherApp._check_api_contact_configured")
     def test_config_validation_and_migration(
         self,
-        mock_check_api,
         mock_update_weather,
         mock_update_dropdown,
         mock_create_menu,
@@ -270,43 +260,8 @@ class TestWeatherAppConfig:
     @patch("accessiweather.gui.weather_app.WeatherApp._create_menu_bar")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateLocationDropdown")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateWeatherData")
-    @patch("accessiweather.gui.weather_app.WeatherApp._check_api_contact_configured")
-    def test_api_contact_check_configured(
-        self,
-        mock_check_api,
-        mock_update_weather,
-        mock_update_dropdown,
-        mock_create_menu,
-        mock_frame_init,
-        mock_services,
-        sample_config,
-    ):
-        """Test API contact configuration check."""
-        with mock_wx_components():
-            with patch("accessiweather.gui.weather_app.TaskBarIcon") as mock_taskbar:
-                # Configure the mock TaskBarIcon
-                mock_instance = MagicMock()
-                mock_instance.cleanup = MagicMock()
-                mock_taskbar.return_value = mock_instance
-
-                app = WeatherApp(  # noqa: F841
-                    weather_service=mock_services["weather_service"],
-                    location_service=mock_services["location_service"],
-                    notification_service=mock_services["notification_service"],
-                    config=sample_config,
-                )
-
-            # Verify the check was called during initialization
-            mock_check_api.assert_called_once()
-
-    @patch("wx.Frame.__init__", return_value=None)
-    @patch("accessiweather.gui.weather_app.WeatherApp._create_menu_bar")
-    @patch("accessiweather.gui.weather_app.WeatherApp.UpdateLocationDropdown")
-    @patch("accessiweather.gui.weather_app.WeatherApp.UpdateWeatherData")
-    @patch("accessiweather.gui.weather_app.WeatherApp._check_api_contact_configured")
     def test_config_error_handling(
         self,
-        mock_check_api,
         mock_update_weather,
         mock_update_dropdown,
         mock_create_menu,

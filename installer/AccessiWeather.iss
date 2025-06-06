@@ -92,9 +92,7 @@ begin
   if not FileExists(ConfigFile) then
   begin
     SampleConfigContent := '{ ' + #13#10 +
-                          '  "api_settings": {' + #13#10 +
-                          '    "contact_info": ""' + #13#10 +
-                          '  },' + #13#10 +
+                          '  "api_settings": {},' + #13#10 +
                           '  "settings": {' + #13#10 +
                           '    "update_interval_minutes": 10,' + #13#10 +
                           '    "alert_radius_miles": 25,' + #13#10 +

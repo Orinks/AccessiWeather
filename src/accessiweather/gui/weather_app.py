@@ -35,7 +35,6 @@ from .handlers import (
 from .hourly_forecast_fetcher import HourlyForecastFetcher
 from .settings_dialog import (
     ALERT_RADIUS_KEY,
-    API_CONTACT_KEY,
     DEFAULT_TEMPERATURE_UNIT,
     MINIMIZE_TO_TRAY_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
@@ -209,9 +208,6 @@ class WeatherApp(
         self.UpdateLocationDropdown()
         self.UpdateWeatherData()
 
-        # Check if API contact is configured
-        self._check_api_contact_configured()
-
         # Add force close flag
         self._force_close = True  # Default to force close when clicking X
 
@@ -250,7 +246,7 @@ class WeatherApp(
                 DATA_SOURCE_KEY: DEFAULT_DATA_SOURCE,  # Default to NWS
                 TEMPERATURE_UNIT_KEY: DEFAULT_TEMPERATURE_UNIT,  # Default to Fahrenheit
             },
-            "api_settings": {API_CONTACT_KEY: ""},  # Added default
+            "api_settings": {},  # Default empty API settings
             API_KEYS_SECTION: {},  # Default empty API keys
         }
 
@@ -684,10 +680,6 @@ class WeatherApp(
 
         logger.info("Reinitializing WeatherService due to data source or API key change")
 
-        # Get current settings
-        api_settings = self.config.get("api_settings", {})
-        contact_info = api_settings.get("contact_info")
-
         # Log the current settings
         from accessiweather.gui.settings_dialog import DATA_SOURCE_KEY
 
@@ -698,7 +690,6 @@ class WeatherApp(
         # Create the NWS API client (always needed)
         nws_client = NoaaApiWrapper(
             user_agent="AccessiWeather",
-            contact_info=contact_info,
             enable_caching=True,  # Default to enabled
             cache_ttl=300,  # Default to 5 minutes
         )

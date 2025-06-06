@@ -16,7 +16,6 @@ class TestSettingsDialogAuto(unittest.TestCase):
         self.app = wx.App()
         self.frame = wx.Frame(None)
         self.current_settings = {
-            "api_contact": "test@example.com",
             "update_interval": 15,
             "alert_radius": 25,
             "precise_location_alerts": True,
@@ -45,10 +44,9 @@ class TestSettingsDialogAuto(unittest.TestCase):
 
         # Switch to Automatic
         dialog.data_source_ctrl.SetSelection(1)  # Select Automatic (index 1, not 2)
-        dialog._update_ui_for_data_source()  # Update UI
 
-        # NWS field should be enabled for Automatic
-        self.assertTrue(dialog.api_contact_ctrl.IsEnabled())
+        # Just verify the selection was set correctly
+        self.assertEqual(dialog.data_source_ctrl.GetSelection(), 1)
 
         dialog.Destroy()
 
@@ -62,9 +60,6 @@ class TestSettingsDialogAuto(unittest.TestCase):
         # Verify Automatic is selected (index 2)
         self.assertEqual(dialog.data_source_ctrl.GetSelection(), 2)  # Automatic selected
 
-        # NWS field should be enabled
-        self.assertTrue(dialog.api_contact_ctrl.IsEnabled())
-
         dialog.Destroy()
 
     def test_get_settings_auto(self):
@@ -73,9 +68,6 @@ class TestSettingsDialogAuto(unittest.TestCase):
 
         # Select Automatic
         dialog.data_source_ctrl.SetSelection(2)  # Select Automatic
-
-        # Set some values
-        dialog.api_contact_ctrl.SetValue("auto_test@example.com")
 
         # Get settings
         settings = dialog.get_settings()
@@ -94,9 +86,6 @@ class TestSettingsDialogAuto(unittest.TestCase):
 
         # Select Automatic
         dialog.data_source_ctrl.SetSelection(2)  # Select Automatic
-
-        # Set NWS contact
-        dialog.api_contact_ctrl.SetValue("auto_test@example.com")
 
         # Mock EndModal to avoid actual dialog closing
         with patch.object(dialog, "EndModal") as mock_end_modal:

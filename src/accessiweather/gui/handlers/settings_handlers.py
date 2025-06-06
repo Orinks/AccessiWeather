@@ -8,7 +8,6 @@ import logging
 import wx
 
 from ..settings_dialog import (
-    API_CONTACT_KEY,
     API_KEYS_SECTION,
     CACHE_ENABLED_KEY,
     CACHE_TTL_KEY,
@@ -139,26 +138,3 @@ class WeatherAppSettingsHandlers(WeatherAppHandlerBase):
                 # Note: We can't update the cache settings directly in the API client
                 # as it doesn't have setter methods. The cache settings will be used
                 # the next time the app is started.
-
-    def _check_api_contact_configured(self):
-        """Check if API contact information is configured and prompt if not"""
-        # Check if api_settings section exists
-        if "api_settings" not in self.config:
-            logger.warning("API settings section missing from config")
-            self.config["api_settings"] = {}
-
-        # Check if api_contact is set
-        api_contact = self.config.get("api_settings", {}).get(API_CONTACT_KEY, "")
-        if not api_contact:
-            logger.warning("API contact information not configured")
-
-            # Use ShowConfirmDialog from DialogHandlers
-            confirmed = self.ShowConfirmDialog(
-                "API contact information is required for NOAA API access. "
-                "Would you like to configure it now?",
-                "API Configuration Required",
-            )
-
-            if confirmed:
-                # Open settings dialog
-                self.OnSettings(None)
