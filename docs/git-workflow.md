@@ -36,7 +36,7 @@
 ## 🌐 **GitHub Pages Setup**
 
 **Current Configuration:**
-- **Source Branch**: `dev` 
+- **Source Branch**: `dev`
 - **Path**: `/docs`
 - **URL**: https://orinks.github.io/AccessiWeather/
 - **Updates**: Automatically when `dev` branch changes
@@ -48,7 +48,7 @@
 - **Purpose**: Tests, linting, security scans
 - **Runs**: On every dev branch change
 
-### **build.yml** - Build Artifacts  
+### **build.yml** - Build Artifacts
 - **Triggers**: Push to `dev` branch (after CI passes)
 - **Purpose**: Creates installer and portable artifacts
 - **Artifacts**: Available via nightly.link
@@ -128,7 +128,7 @@ git merge hotfix/critical-fix
 git tag v1.0.1
 git push origin main --tags
 
-git checkout dev  
+git checkout dev
 git merge hotfix/critical-fix
 git push origin dev
 
