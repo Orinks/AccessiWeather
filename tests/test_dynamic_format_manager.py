@@ -339,6 +339,75 @@ class TestDynamicFormatManager:
         format_manager.get_dynamic_format_string(severe_data)
         assert format_manager.update_count == 2  # No change
 
+    def test_nws_data_format_support(self, format_manager):
+        """Test that NWS/Open-Meteo data format is supported."""
+        # Simulate NWS/Open-Meteo data format (after mapping)
+        nws_data = {
+            "temp": 72.0,
+            "temp_f": 72.0,
+            "temp_c": 22.2,
+            "condition": "Partly Cloudy",
+            "humidity": 45,
+            "wind_speed": 10.0,
+            "wind_dir": "NW",
+            "pressure": 29.92,
+            "weather_code": 2,  # Open-Meteo weather code
+        }
+
+        result = format_manager.get_dynamic_format_string(nws_data)
+
+        # Should work with Open-Meteo weather codes
+        assert result == "{temp}°F {condition}"  # Default template
+        assert format_manager.current_template_name == "default"
+
+    def test_weatherapi_data_format_support(self, format_manager):
+        """Test that WeatherAPI data format is supported."""
+        # Simulate WeatherAPI data format
+        weatherapi_data = {
+            "temp": 72.0,
+            "temp_f": 72.0,
+            "temp_c": 22.2,
+            "condition": "Partly Cloudy",
+            "humidity": 45,
+            "wind_speed": 10.0,
+            "wind_dir": "NW",
+            "pressure": 29.92,
+            "weather_code": 1003,  # WeatherAPI condition code
+        }
+
+        result = format_manager.get_dynamic_format_string(weatherapi_data)
+
+        # Should work even with different weather code systems
+        assert result == "{temp}°F {condition}"  # Default template
+        assert format_manager.current_template_name == "default"
+
+    def test_automatic_weather_source_support(self, format_manager):
+        """Test that automatic weather source selection is supported."""
+        # Test US location data (would use NWS)
+        us_data = {
+            "temp": 72.0,
+            "temp_f": 72.0,
+            "condition": "Clear sky",
+            "weather_code": 0,  # Open-Meteo clear sky
+            "wind_speed": 5.0,
+        }
+
+        # Test international location data (would use Open-Meteo)
+        intl_data = {
+            "temp": 22.0,
+            "temp_c": 22.0,
+            "condition": "Partly cloudy",
+            "weather_code": 2,  # Open-Meteo partly cloudy
+            "wind_speed": 8.0,
+        }
+
+        # Both should work with the dynamic format manager
+        us_result = format_manager.get_dynamic_format_string(us_data)
+        intl_result = format_manager.get_dynamic_format_string(intl_data)
+
+        assert us_result == "{temp}°F {condition}"
+        assert intl_result == "{temp}°F {condition}"
+
 
 if __name__ == "__main__":
     pytest.main([__file__])

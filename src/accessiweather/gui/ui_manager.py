@@ -878,6 +878,7 @@ class UIManager:
             "uv": current.get("uv"),
             "visibility": current.get("vis_miles"),
             "precip": current.get("precip_in"),
+            "weather_code": condition.get("code"),  # WeatherAPI condition code
         }
 
         # Add location information if available
@@ -958,6 +959,15 @@ class UIManager:
         if pressure_pa is not None:
             pressure_inhg = pressure_pa / 3386.39
 
+        # Extract weather code for dynamic format management
+        weather_code = None
+        # Check if this is Open-Meteo data mapped to NWS format
+        present_weather = properties.get("presentWeather", [])
+        if present_weather and len(present_weather) > 0:
+            raw_string = present_weather[0].get("rawString")
+            if raw_string and raw_string.isdigit():
+                weather_code = int(raw_string)
+
         # Create a dictionary with the data we want to display in the taskbar
         data = {
             "temp": temperature_f,
@@ -968,6 +978,7 @@ class UIManager:
             "wind_speed": wind_speed_mph,
             "wind_dir": wind_dir,
             "pressure": pressure_inhg,
+            "weather_code": weather_code,
         }
 
         return data
