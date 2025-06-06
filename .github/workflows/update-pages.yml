@@ -5,7 +5,7 @@ on:
     workflows: ["Build and Package"]
     types:
       - completed
-    branches: [ main, dev ]
+    branches: [ dev ]  # Only trigger on dev branch builds
   workflow_dispatch:
     inputs:
       force_update:

@@ -2,7 +2,7 @@ name: Build and Package
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ dev ]  # Only build on dev branch pushes
   workflow_dispatch:
     inputs:
       version_override:
@@ -18,7 +18,7 @@ on:
     workflows: ["Continuous Integration"]
     types:
       - completed
-    branches: [ main, dev ]
+    branches: [ dev ]  # Only trigger after CI on dev branch
 
 env:
   # Build configuration
