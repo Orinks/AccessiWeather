@@ -24,8 +24,17 @@ def mock_wx_components():
                     with patch.object(WeatherApp, "Bind"):
                         with patch.object(WeatherApp, "SetName"):
                             with patch.object(WeatherApp, "GetAccessible", return_value=None):
-                                with patch("accessiweather.gui.system_tray.TaskBarIcon"):
-                                    yield
+                                # Mock wx.App.Get() to return a mock app instance
+                                mock_app = MagicMock()
+                                with patch("wx.App.Get", return_value=mock_app):
+                                    # Mock the entire TaskBarIcon class and its methods
+                                    with patch("accessiweather.gui.system_tray.TaskBarIcon") as mock_taskbar:
+                                        # Configure the mock to have the methods we need
+                                        mock_instance = MagicMock()
+                                        mock_instance.cleanup = MagicMock()
+                                        mock_taskbar.return_value = mock_instance
+                                        mock_taskbar.cleanup_existing_instance = MagicMock()
+                                        yield
 
 
 @pytest.fixture
@@ -110,12 +119,19 @@ class TestWeatherAppConfig:
 
         with mock_wx_components():
             with patch("accessiweather.gui.weather_app.CONFIG_PATH", config_path):
-                app = WeatherApp(
-                    weather_service=mock_services["weather_service"],
-                    location_service=mock_services["location_service"],
-                    notification_service=mock_services["notification_service"],
-                    config_path=config_path,
-                )
+                with patch("accessiweather.gui.weather_app.TaskBarIcon") as mock_taskbar:
+                    # Configure the mock TaskBarIcon
+                    mock_instance = MagicMock()
+                    mock_instance.cleanup = MagicMock()
+                    mock_taskbar.return_value = mock_instance
+                    mock_taskbar.cleanup_existing_instance = MagicMock()
+
+                    app = WeatherApp(
+                        weather_service=mock_services["weather_service"],
+                        location_service=mock_services["location_service"],
+                        notification_service=mock_services["notification_service"],
+                        config_path=config_path,
+                    )
 
                 # Verify config is loaded correctly
                 assert app.config["settings"]["temperature_unit"] == "celsius"
@@ -142,13 +158,19 @@ class TestWeatherAppConfig:
         config_path = os.path.join(temp_config_dir, "config.json")
 
         with mock_wx_components():
-            app = WeatherApp(
-                weather_service=mock_services["weather_service"],
-                location_service=mock_services["location_service"],
-                notification_service=mock_services["notification_service"],
-                config=sample_config,
-                config_path=config_path,
-            )
+            with patch("accessiweather.gui.weather_app.TaskBarIcon") as mock_taskbar:
+                # Configure the mock TaskBarIcon
+                mock_instance = MagicMock()
+                mock_instance.cleanup = MagicMock()
+                mock_taskbar.return_value = mock_instance
+
+                app = WeatherApp(
+                    weather_service=mock_services["weather_service"],
+                    location_service=mock_services["location_service"],
+                    notification_service=mock_services["notification_service"],
+                    config=sample_config,
+                    config_path=config_path,
+                )
 
             # Save config
             app._save_config()
@@ -180,12 +202,18 @@ class TestWeatherAppConfig:
         config_path = os.path.join(temp_config_dir, "nonexistent_config.json")
 
         with mock_wx_components():
-            app = WeatherApp(
-                weather_service=mock_services["weather_service"],
-                location_service=mock_services["location_service"],
-                notification_service=mock_services["notification_service"],
-                config_path=config_path,
-            )
+            with patch("accessiweather.gui.weather_app.TaskBarIcon") as mock_taskbar:
+                # Configure the mock TaskBarIcon
+                mock_instance = MagicMock()
+                mock_instance.cleanup = MagicMock()
+                mock_taskbar.return_value = mock_instance
+
+                app = WeatherApp(
+                    weather_service=mock_services["weather_service"],
+                    location_service=mock_services["location_service"],
+                    notification_service=mock_services["notification_service"],
+                    config_path=config_path,
+                )
 
             # Verify default config is used
             assert "settings" in app.config
@@ -219,12 +247,18 @@ class TestWeatherAppConfig:
             json.dump(old_config, f)
 
         with mock_wx_components():
-            app = WeatherApp(
-                weather_service=mock_services["weather_service"],
-                location_service=mock_services["location_service"],
-                notification_service=mock_services["notification_service"],
-                config_path=config_path,
-            )
+            with patch("accessiweather.gui.weather_app.TaskBarIcon") as mock_taskbar:
+                # Configure the mock TaskBarIcon
+                mock_instance = MagicMock()
+                mock_instance.cleanup = MagicMock()
+                mock_taskbar.return_value = mock_instance
+
+                app = WeatherApp(
+                    weather_service=mock_services["weather_service"],
+                    location_service=mock_services["location_service"],
+                    notification_service=mock_services["notification_service"],
+                    config_path=config_path,
+                )
 
             # Verify config is migrated to new format
             assert "settings" in app.config
@@ -247,12 +281,18 @@ class TestWeatherAppConfig:
     ):
         """Test API contact configuration check."""
         with mock_wx_components():
-            app = WeatherApp(  # noqa: F841
-                weather_service=mock_services["weather_service"],
-                location_service=mock_services["location_service"],
-                notification_service=mock_services["notification_service"],
-                config=sample_config,
-            )
+            with patch("accessiweather.gui.weather_app.TaskBarIcon") as mock_taskbar:
+                # Configure the mock TaskBarIcon
+                mock_instance = MagicMock()
+                mock_instance.cleanup = MagicMock()
+                mock_taskbar.return_value = mock_instance
+
+                app = WeatherApp(  # noqa: F841
+                    weather_service=mock_services["weather_service"],
+                    location_service=mock_services["location_service"],
+                    notification_service=mock_services["notification_service"],
+                    config=sample_config,
+                )
 
             # Verify the check was called during initialization
             mock_check_api.assert_called_once()
@@ -279,13 +319,19 @@ class TestWeatherAppConfig:
             f.write("invalid json content {")
 
         with mock_wx_components():
-            # Should not raise exception, should use defaults
-            app = WeatherApp(
-                weather_service=mock_services["weather_service"],
-                location_service=mock_services["location_service"],
-                notification_service=mock_services["notification_service"],
-                config_path=config_path,
-            )
+            with patch("accessiweather.gui.weather_app.TaskBarIcon") as mock_taskbar:
+                # Configure the mock TaskBarIcon
+                mock_instance = MagicMock()
+                mock_instance.cleanup = MagicMock()
+                mock_taskbar.return_value = mock_instance
+
+                # Should not raise exception, should use defaults
+                app = WeatherApp(
+                    weather_service=mock_services["weather_service"],
+                    location_service=mock_services["location_service"],
+                    notification_service=mock_services["notification_service"],
+                    config_path=config_path,
+                )
 
             # Verify default config is used when file is corrupted
             assert "settings" in app.config
