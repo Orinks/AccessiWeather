@@ -256,24 +256,54 @@ jobs:
         Write-Host "  ACCESSIWEATHER_ROOT_DIR=$PWD"
         Write-Host "  ACCESSIWEATHER_DIST_DIR=$PWD\dist"
 
+        # Debug: Show current directory structure
+        Write-Host "Current directory structure:"
+        Get-ChildItem -Recurse | Select-Object FullName | Format-Table -AutoSize
+
     - name: Build installer
       run: |
         $VERSION = "${{ needs.build.outputs.version }}"
         $IssFile = "installer/AccessiWeather.iss"
 
         if (Test-Path $IssFile) {
-          iscc.exe $IssFile
-          Write-Host "Installer build completed"
+          # Create installer output directory
+          $InstallerOutputDir = "installer\dist"
+          if (-not (Test-Path $InstallerOutputDir)) {
+            New-Item -ItemType Directory -Path $InstallerOutputDir -Force
+            Write-Host "Created installer output directory: $InstallerOutputDir"
+          }
 
-          # Check if installer was created
-          $InstallerPath = "installer/dist/AccessiWeather_Setup_v$VERSION.exe"
-          if (Test-Path $InstallerPath) {
-            Write-Host "Installer created successfully: $InstallerPath"
-            # Move to main dist directory
-            Move-Item $InstallerPath "dist/AccessiWeather_Setup_v$VERSION.exe"
+          # Debug: Show environment variables
+          Write-Host "Environment variables:"
+          Write-Host "  ACCESSIWEATHER_VERSION=$env:ACCESSIWEATHER_VERSION"
+          Write-Host "  ACCESSIWEATHER_ROOT_DIR=$env:ACCESSIWEATHER_ROOT_DIR"
+          Write-Host "  ACCESSIWEATHER_DIST_DIR=$env:ACCESSIWEATHER_DIST_DIR"
+
+          # Run Inno Setup compiler
+          Write-Host "Running Inno Setup compiler..."
+          $result = & iscc.exe $IssFile 2>&1
+          $exitCode = $LASTEXITCODE
+
+          Write-Host "Inno Setup output:"
+          Write-Host $result
+          Write-Host "Exit code: $exitCode"
+
+          if ($exitCode -eq 0) {
+            Write-Host "Installer build completed successfully"
+
+            # Check if installer was created
+            $InstallerPath = "installer/dist/AccessiWeather_Setup_v$VERSION.exe"
+            if (Test-Path $InstallerPath) {
+              Write-Host "Installer created successfully: $InstallerPath"
+              # Move to main dist directory
+              Move-Item $InstallerPath "dist/AccessiWeather_Setup_v$VERSION.exe"
+            } else {
+              Write-Host "Warning: Installer not found at expected location"
+              Get-ChildItem "installer/" -Recurse -Filter "*.exe"
+            }
           } else {
-            Write-Host "Warning: Installer not found at expected location"
-            Get-ChildItem "installer/" -Recurse -Filter "*.exe"
+            Write-Host "Installer build failed with exit code: $exitCode"
+            exit 1
           }
         } else {
           Write-Host "Skipping installer build - no Inno Setup script found"
