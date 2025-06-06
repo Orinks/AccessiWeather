@@ -97,19 +97,13 @@ jobs:
             "version": "${{ steps.build-info.outputs.main_version }}",
             "date": "${{ steps.build-info.outputs.main_date }}",
             "commit": "${{ steps.build-info.outputs.main_commit }}",
-            "installerUrl": "https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-installer-${{ steps.build-info.outputs.main_version }}.zip",
-            "portableUrl": "https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-build-${{ steps.build-info.outputs.main_version }}.zip",
-            "installerUrlGeneric": "https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-installer.zip",
-            "portableUrlGeneric": "https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-build.zip"
+            "downloadUrl": "https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-installer-${{ steps.build-info.outputs.main_version }}.zip"
           },
           "dev": {
             "version": "${{ steps.build-info.outputs.dev_version }}",
             "date": "${{ steps.build-info.outputs.dev_date }}",
             "commit": "${{ steps.build-info.outputs.dev_commit }}",
-            "installerUrl": "https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-installer-${{ steps.build-info.outputs.dev_version }}.zip",
-            "portableUrl": "https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-build-${{ steps.build-info.outputs.dev_version }}.zip",
-            "installerUrlGeneric": "https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-installer.zip",
-            "portableUrlGeneric": "https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-build.zip"
+            "downloadUrl": "https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-installer-${{ steps.build-info.outputs.dev_version }}.zip"
           },
           "lastUpdated": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
         }
@@ -125,31 +119,33 @@ jobs:
 
         ## Stable Release (Main Branch)
 
-        ### Direct download URLs (latest build):
-        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-installer.zip
-        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-build.zip
+        ### Build Package Download:
+        - **Complete Package**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-installer-${{ steps.build-info.outputs.main_version }}.zip
 
-        ### Specific version URLs:
-        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-installer-${{ steps.build-info.outputs.main_version }}.zip
-        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-build-${{ steps.build-info.outputs.main_version }}.zip
+        **Package Contents:**
+        - AccessiWeather_Setup_v${{ steps.build-info.outputs.main_version }}.exe (Installer)
+        - AccessiWeather_Portable_v${{ steps.build-info.outputs.main_version }}.zip (Portable)
+        - checksums.txt (File verification)
 
         ## Development Release (Dev Branch)
 
-        ### Direct download URLs (latest build):
-        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-installer.zip
-        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-build.zip
+        ### Build Package Download:
+        - **Complete Package**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-installer-${{ steps.build-info.outputs.dev_version }}.zip
 
-        ### Specific version URLs:
-        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-installer-${{ steps.build-info.outputs.dev_version }}.zip
-        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-build-${{ steps.build-info.outputs.dev_version }}.zip
+        **Package Contents:**
+        - AccessiWeather_Setup_v${{ steps.build-info.outputs.dev_version }}.exe (Installer)
+        - AccessiWeather_Portable_v${{ steps.build-info.outputs.dev_version }}.zip (Portable)
+        - checksums.txt (File verification)
 
         ## How to Use
 
-        1. Click any of the above links to download the latest build
-        2. No GitHub login required for public downloads
-        3. Links always point to the latest successful build
-        4. Installer version includes setup wizard
-        5. Portable version runs without installation
+        1. Click the "Complete Package" link to download the latest build
+        2. Extract the ZIP file to access both installer and portable versions
+        3. Choose your preferred installation method:
+           - Run the .exe file for guided installation
+           - Extract the portable ZIP for no-install usage
+        4. No GitHub login required for public downloads
+        5. Links always point to the latest successful build
 
         ## Build Information
 
