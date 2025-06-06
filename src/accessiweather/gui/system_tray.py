@@ -5,6 +5,7 @@ This module provides the TaskBarIcon class for system tray integration.
 
 import logging
 import os
+import platform
 from typing import Any, Dict
 
 import wx
@@ -22,9 +23,51 @@ from accessiweather.utils.unit_utils import format_pressure, format_visibility, 
 
 logger = logging.getLogger(__name__)
 
+# Note: We rely on Windows' built-in system tray accessibility instead of global hotkeys
+# This provides better compatibility with screen readers and system navigation
+
+
+def _get_windows_version():
+    """Get Windows version information for system tray compatibility.
+
+    Returns:
+        tuple: (major_version, minor_version, build_number) or None if not Windows
+    """
+    try:
+        if platform.system() != "Windows":
+            return None
+
+        # Get Windows version
+        version = platform.version().split(".")
+        if len(version) >= 3:
+            return (int(version[0]), int(version[1]), int(version[2]))
+        return None
+    except Exception as e:
+        logger.warning(f"Could not determine Windows version: {e}")
+        return None
+
+
+def _is_windows_11():
+    """Check if running on Windows 11.
+
+    Returns:
+        bool: True if Windows 11, False otherwise
+    """
+    version = _get_windows_version()
+    if version is None:
+        return False
+
+    # Windows 11 is build 22000 and above
+    major, minor, build = version
+    return major >= 10 and build >= 22000
+
 
 class TaskBarIcon(wx.adv.TaskBarIcon):
     """System tray icon for AccessiWeather."""
+
+    # Class variable to track if an instance already exists
+    _instance = None
+    _instance_count = 0
 
     def __init__(self, frame):
         """Initialize the TaskBarIcon.
@@ -32,17 +75,28 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         Args:
             frame: The main application frame (WeatherApp)
         """
-        # Ensure we have a wx.App instance before initializing
-        if not wx.App.Get():
-            logger.warning("No wx.App instance found when creating TaskBarIcon. Creating one.")
-            self._app = wx.App()
-        else:
-            self._app = wx.App.Get()
+        # Check if we already have an instance
+        if TaskBarIcon._instance is not None:
+            logger.warning(
+                "TaskBarIcon instance already exists. This may cause multiple tray icons."
+            )
+
+        # Ensure we have a wx.App instance
+        app = wx.App.Get()
+        if not app:
+            raise RuntimeError("No wx.App instance found. TaskBarIcon requires an active wx.App.")
 
         super().__init__()
+
+        # Track this instance
+        TaskBarIcon._instance = self
+        TaskBarIcon._instance_count += 1
+        logger.debug(f"Creating TaskBarIcon instance #{TaskBarIcon._instance_count}")
+
         self.frame = frame
         self.format_parser = FormatStringParser()
         self.current_weather_data = {}
+        self._is_destroyed = False
 
         # Set the icon
         self.set_icon()
@@ -50,6 +104,103 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         # Bind events
         self.Bind(wx.adv.EVT_TASKBAR_LEFT_DCLICK, self.on_left_dclick)
         self.Bind(wx.adv.EVT_TASKBAR_RIGHT_UP, self.on_right_click)
+
+        # Bind additional events for better accessibility
+        # These events are sent by Windows when users access the tray icon via keyboard
+        self.Bind(wx.adv.EVT_TASKBAR_LEFT_UP, self.on_left_click)
+        self.Bind(wx.adv.EVT_TASKBAR_RIGHT_DOWN, self.on_right_down)
+
+        # Note: We no longer register global hotkeys as they interfere with
+        # Windows' built-in system tray accessibility (Windows+B navigation)
+
+        logger.debug("TaskBarIcon initialized successfully")
+
+    def on_left_click(self, event):
+        """Handle left click event (including keyboard activation).
+
+        This event is triggered when users activate the tray icon via keyboard
+        (e.g., pressing Enter when the icon is selected in system tray navigation).
+
+        Args:
+            event: The event object
+        """
+        # For keyboard accessibility, left click should show/hide the main window
+        logger.debug("Tray icon activated (left click or keyboard Enter)")
+        self.on_show_hide(event)
+
+    def on_right_down(self, event):
+        """Handle right mouse button down event.
+
+        This can be triggered by keyboard (Applications key) when the tray icon is focused.
+
+        Args:
+            event: The event object
+        """
+        # This event can be triggered by Applications key for accessibility
+        logger.debug("Right mouse down event (may be from Applications key)")
+        # Let the event continue to be processed normally
+        event.Skip()
+
+
+
+
+
+    def cleanup(self):
+        """Properly cleanup the TaskBarIcon to prevent multiple icons."""
+        if self._is_destroyed:
+            logger.debug("TaskBarIcon already cleaned up")
+            return
+
+        logger.debug("Cleaning up TaskBarIcon")
+
+        # Check Windows version for compatibility
+        windows_version = _get_windows_version()
+        is_win11 = _is_windows_11()
+        logger.debug(f"Windows version: {windows_version}, Windows 11: {is_win11}")
+
+        try:
+            # First, remove the icon from the system tray
+            if self.IsOk():
+                logger.debug("Removing icon from system tray")
+                self.RemoveIcon()
+
+                # On Windows 10, sometimes we need a small delay for proper cleanup
+                if not is_win11:
+                    import time
+
+                    time.sleep(0.1)  # 100ms delay for Windows 10
+
+            else:
+                logger.warning("TaskBarIcon is not OK, cannot remove icon")
+        except Exception as e:
+            logger.error(f"Error removing taskbar icon: {e}", exc_info=True)
+
+        try:
+            # Then destroy the TaskBarIcon object
+            logger.debug("Destroying TaskBarIcon object")
+            self.Destroy()
+        except Exception as e:
+            logger.error(f"Error destroying taskbar icon: {e}", exc_info=True)
+        finally:
+            # Mark as destroyed and clear class reference
+            self._is_destroyed = True
+            if TaskBarIcon._instance is self:
+                TaskBarIcon._instance = None
+            logger.debug("TaskBarIcon cleanup completed")
+
+    @classmethod
+    def get_instance(cls):
+        """Get the current TaskBarIcon instance if it exists."""
+        return cls._instance
+
+    @classmethod
+    def cleanup_existing_instance(cls):
+        """Cleanup any existing TaskBarIcon instance."""
+        if cls._instance is not None:
+            logger.debug("Cleaning up existing TaskBarIcon instance")
+            cls._instance.cleanup()
+
+
 
     def set_icon(self, tooltip_text=None):
         """Set the taskbar icon.
@@ -87,9 +238,11 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         Args:
             event: The event object
         """
-        # Create and show the popup menu
+        # Create and show the popup menu with proper accessibility focus
         menu = self.CreatePopupMenu()
         if menu:
+            # Use PopupMenu which properly handles focus for screen readers
+            # This ensures the menu gets keyboard focus and is accessible
             self.PopupMenu(menu)
             menu.Destroy()
 

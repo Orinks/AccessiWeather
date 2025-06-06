@@ -183,7 +183,8 @@ class WeatherApp(
         # Last update timestamp
         self.last_update: float = 0.0
 
-        # Create system tray icon
+        # Create system tray icon - cleanup any existing instance first
+        TaskBarIcon.cleanup_existing_instance()
         self.taskbar_icon = TaskBarIcon(self)
 
         # Register with accessibility system
