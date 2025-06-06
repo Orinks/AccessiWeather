@@ -9,7 +9,7 @@ import pytest
 
 # Import the module that will be tested
 # We need to import this after setting up the mocks but before they're used
-from accessiweather.api_client import NoaaApiError
+from accessiweather.api_client import ApiClientError, NoaaApiError
 from accessiweather.api_wrapper import NoaaApiWrapper
 
 # Create mock modules
@@ -783,6 +783,152 @@ def test_identify_location_type_county(api_wrapper):
         assert location_type == "county"
         assert location_id == "PAC101"
         mock_get_point.assert_called_once_with(lat, lon, force_refresh=False)
+
+
+@pytest.mark.unit
+def test_get_forecast_success(api_wrapper):
+    """Test getting forecast data successfully."""
+    lat, lon = 40.0, -75.0
+
+    # Sample forecast data that would be returned from the forecast URL
+    sample_forecast_data = {
+        "properties": {
+            "periods": [
+                {
+                    "number": 1,
+                    "name": "Tonight",
+                    "temperature": 45,
+                    "temperatureUnit": "F",
+                    "windSpeed": "5 mph",
+                    "windDirection": "NW",
+                    "shortForecast": "Clear",
+                    "detailedForecast": "Clear skies tonight.",
+                }
+            ]
+        }
+    }
+
+    with patch.object(api_wrapper, "get_point_data") as mock_get_point:
+        with patch.object(api_wrapper, "_fetch_url") as mock_fetch_url:
+            # Mock point data with forecast URL
+            mock_get_point.return_value = {
+                "properties": {
+                    "forecast": "https://api.weather.gov/gridpoints/PHI/31,70/forecast",
+                    "gridId": "PHI",
+                    "gridX": 31,
+                    "gridY": 70,
+                }
+            }
+
+            # Mock forecast data fetch
+            mock_fetch_url.return_value = sample_forecast_data
+
+            result = api_wrapper.get_forecast(lat, lon)
+
+            assert result == sample_forecast_data
+            mock_get_point.assert_called_once_with(lat, lon, force_refresh=False)
+            mock_fetch_url.assert_called_once_with(
+                "https://api.weather.gov/gridpoints/PHI/31,70/forecast"
+            )
+
+
+@pytest.mark.unit
+def test_get_hourly_forecast_success(api_wrapper):
+    """Test getting hourly forecast data successfully."""
+    lat, lon = 40.0, -75.0
+
+    # Sample hourly forecast data that would be returned from the hourly forecast URL
+    sample_hourly_forecast_data = {
+        "properties": {
+            "periods": [
+                {
+                    "number": 1,
+                    "startTime": "2024-01-15T18:00:00-05:00",
+                    "temperature": 45,
+                    "temperatureUnit": "F",
+                    "windSpeed": "5 mph",
+                    "windDirection": "NW",
+                    "shortForecast": "Clear",
+                }
+            ]
+        }
+    }
+
+    with patch.object(api_wrapper, "get_point_data") as mock_get_point:
+        with patch.object(api_wrapper, "_fetch_url") as mock_fetch_url:
+            # Mock point data with hourly forecast URL
+            mock_get_point.return_value = {
+                "properties": {
+                    "forecastHourly": "https://api.weather.gov/gridpoints/PHI/31,70/forecast/hourly",
+                    "gridId": "PHI",
+                    "gridX": 31,
+                    "gridY": 70,
+                }
+            }
+
+            # Mock hourly forecast data fetch
+            mock_fetch_url.return_value = sample_hourly_forecast_data
+
+            result = api_wrapper.get_hourly_forecast(lat, lon)
+
+            assert result == sample_hourly_forecast_data
+            mock_get_point.assert_called_once_with(lat, lon, force_refresh=False)
+            mock_fetch_url.assert_called_once_with(
+                "https://api.weather.gov/gridpoints/PHI/31,70/forecast/hourly"
+            )
+
+
+@pytest.mark.unit
+def test_get_forecast_error_handling(api_wrapper):
+    """Test error handling in get_forecast method."""
+    lat, lon = 40.0, -75.0
+
+    with patch.object(api_wrapper, "get_point_data") as mock_get_point:
+        with patch.object(api_wrapper, "_fetch_url") as mock_fetch_url:
+            # Mock point data with forecast URL
+            mock_get_point.return_value = {
+                "properties": {
+                    "forecast": "https://api.weather.gov/gridpoints/PHI/31,70/forecast",
+                    "gridId": "PHI",
+                    "gridX": 31,
+                    "gridY": 70,
+                }
+            }
+
+            # Mock fetch URL to raise an exception
+            mock_fetch_url.side_effect = Exception("Network error")
+
+            with pytest.raises(NoaaApiError) as exc_info:
+                api_wrapper.get_forecast(lat, lon)
+
+            assert "Unexpected error getting forecast" in str(exc_info.value)
+            assert exc_info.value.url == "https://api.weather.gov/gridpoints/PHI/31,70/forecast"
+
+
+@pytest.mark.unit
+def test_get_hourly_forecast_error_handling(api_wrapper):
+    """Test error handling in get_hourly_forecast method."""
+    lat, lon = 40.0, -75.0
+
+    with patch.object(api_wrapper, "get_point_data") as mock_get_point:
+        with patch.object(api_wrapper, "_fetch_url") as mock_fetch_url:
+            # Mock point data with hourly forecast URL
+            mock_get_point.return_value = {
+                "properties": {
+                    "forecastHourly": "https://api.weather.gov/gridpoints/PHI/31,70/forecast/hourly",
+                    "gridId": "PHI",
+                    "gridX": 31,
+                    "gridY": 70,
+                }
+            }
+
+            # Mock fetch URL to raise an exception
+            mock_fetch_url.side_effect = Exception("Network error")
+
+            with pytest.raises(ApiClientError) as exc_info:
+                api_wrapper.get_hourly_forecast(lat, lon)
+
+            assert "Unable to retrieve hourly forecast data" in str(exc_info.value)
 
 
 @pytest.mark.unit

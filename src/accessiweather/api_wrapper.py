@@ -18,7 +18,6 @@ from accessiweather.cache import Cache
 from accessiweather.weather_gov_api_client.api.default import (
     alerts_active,
     alerts_active_zone,
-    gridpoint,
     point,
     station_observation_latest,
 )
@@ -522,10 +521,8 @@ class NoaaApiWrapper:
             def fetch_data() -> Dict[str, Any]:
                 self._rate_limit()
                 try:
-                    # Use the new _make_api_request method to handle errors consistently
-                    response = self._make_api_request(
-                        gridpoint.sync, wfo=office_id, x=int(grid_x), y=int(grid_y)
-                    )
+                    # Use direct URL fetch instead of gridpoint.sync to get formatted forecast data
+                    response = self._fetch_url(forecast_url)
                     # Transform the response to match the format expected by the application
                     return self._transform_forecast_data(response)
                 except NoaaApiError:
@@ -605,10 +602,8 @@ class NoaaApiWrapper:
             def fetch_data() -> Dict[str, Any]:
                 self._rate_limit()
                 try:
-                    # Use the new _make_api_request method to handle errors consistently
-                    response = self._make_api_request(
-                        gridpoint.sync, wfo=office_id, x=int(grid_x), y=int(grid_y)
-                    )
+                    # Use direct URL fetch instead of gridpoint.sync to get formatted hourly forecast data
+                    response = self._fetch_url(forecast_hourly_url)
                     # Transform the response to match the format expected by the application
                     return self._transform_forecast_data(response)
                 except NoaaApiError:
