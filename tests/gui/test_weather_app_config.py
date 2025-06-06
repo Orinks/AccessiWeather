@@ -28,7 +28,9 @@ def mock_wx_components():
                                 mock_app = MagicMock()
                                 with patch("wx.App.Get", return_value=mock_app):
                                     # Mock the entire TaskBarIcon class and its methods
-                                    with patch("accessiweather.gui.system_tray.TaskBarIcon") as mock_taskbar:
+                                    with patch(
+                                        "accessiweather.gui.system_tray.TaskBarIcon"
+                                    ) as mock_taskbar:
                                         # Configure the mock to have the methods we need
                                         mock_instance = MagicMock()
                                         mock_instance.cleanup = MagicMock()

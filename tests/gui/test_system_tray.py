@@ -179,8 +179,8 @@ class TestSystemTray(unittest.TestCase):
 
             # Verify that additional accessibility events are bound
             # These events help with keyboard navigation of the system tray
-            self.assertTrue(hasattr(icon, 'on_left_click'))
-            self.assertTrue(hasattr(icon, 'on_right_down'))
+            self.assertTrue(hasattr(icon, "on_left_click"))
+            self.assertTrue(hasattr(icon, "on_right_down"))
 
     def test_accessibility_event_handling(self):
         """Test that accessibility events are handled properly."""

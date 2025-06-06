@@ -111,12 +111,18 @@ class TestWeatherAppInitialization:
         """Test WeatherApp initialization with all services provided."""
         with mock_wx_components():
             with patch("accessiweather.gui.weather_app.UIManager") as mock_ui_manager:
-                app = WeatherApp(
-                    weather_service=mock_services["weather_service"],
-                    location_service=mock_services["location_service"],
-                    notification_service=mock_services["notification_service"],
-                    config=mock_config,
-                )
+                with patch("accessiweather.gui.weather_app.TaskBarIcon") as mock_taskbar:
+                    # Configure the mock TaskBarIcon
+                    mock_instance = MagicMock()
+                    mock_instance.cleanup = MagicMock()
+                    mock_taskbar.return_value = mock_instance
+
+                    app = WeatherApp(
+                        weather_service=mock_services["weather_service"],
+                        location_service=mock_services["location_service"],
+                        notification_service=mock_services["notification_service"],
+                        config=mock_config,
+                    )
 
             # Verify Frame initialization
             mock_frame_init.assert_called_once()
@@ -157,13 +163,19 @@ class TestWeatherAppInitialization:
     ):
         """Test WeatherApp initialization with debug mode enabled."""
         with mock_wx_components():
-            app = WeatherApp(
-                weather_service=mock_services["weather_service"],
-                location_service=mock_services["location_service"],
-                notification_service=mock_services["notification_service"],
-                config=mock_config,
-                debug_mode=True,
-            )
+            with patch("accessiweather.gui.weather_app.TaskBarIcon") as mock_taskbar:
+                # Configure the mock TaskBarIcon
+                mock_instance = MagicMock()
+                mock_instance.cleanup = MagicMock()
+                mock_taskbar.return_value = mock_instance
+
+                app = WeatherApp(
+                    weather_service=mock_services["weather_service"],
+                    location_service=mock_services["location_service"],
+                    notification_service=mock_services["notification_service"],
+                    config=mock_config,
+                    debug_mode=True,
+                )
 
             # Verify debug mode is set
             assert app.debug_mode is True
@@ -185,12 +197,18 @@ class TestWeatherAppInitialization:
     ):
         """Test WeatherApp initialization with custom config path."""
         with mock_wx_components():
-            app = WeatherApp(
-                weather_service=mock_services["weather_service"],
-                location_service=mock_services["location_service"],
-                notification_service=mock_services["notification_service"],
-                config_path=temp_config_file,
-            )
+            with patch("accessiweather.gui.weather_app.TaskBarIcon") as mock_taskbar:
+                # Configure the mock TaskBarIcon
+                mock_instance = MagicMock()
+                mock_instance.cleanup = MagicMock()
+                mock_taskbar.return_value = mock_instance
+
+                app = WeatherApp(
+                    weather_service=mock_services["weather_service"],
+                    location_service=mock_services["location_service"],
+                    notification_service=mock_services["notification_service"],
+                    config_path=temp_config_file,
+                )
 
             # Verify config path is set
             assert app._config_path == temp_config_file
@@ -212,12 +230,18 @@ class TestWeatherAppInitialization:
     ):
         """Test that WeatherApp initialization sets default attributes correctly."""
         with mock_wx_components():
-            app = WeatherApp(
-                weather_service=mock_services["weather_service"],
-                location_service=mock_services["location_service"],
-                notification_service=mock_services["notification_service"],
-                config=mock_config,
-            )
+            with patch("accessiweather.gui.weather_app.TaskBarIcon") as mock_taskbar:
+                # Configure the mock TaskBarIcon
+                mock_instance = MagicMock()
+                mock_instance.cleanup = MagicMock()
+                mock_taskbar.return_value = mock_instance
+
+                app = WeatherApp(
+                    weather_service=mock_services["weather_service"],
+                    location_service=mock_services["location_service"],
+                    notification_service=mock_services["notification_service"],
+                    config=mock_config,
+                )
 
             # Verify default attributes
             assert app.updating is False
@@ -252,13 +276,19 @@ class TestWeatherAppInitialization:
         mock_api_client = MagicMock()
 
         with mock_wx_components():
-            app = WeatherApp(
-                weather_service=mock_services["weather_service"],
-                location_service=mock_services["location_service"],
-                notification_service=mock_services["notification_service"],
-                api_client=mock_api_client,
-                config=mock_config,
-            )
+            with patch("accessiweather.gui.weather_app.TaskBarIcon") as mock_taskbar:
+                # Configure the mock TaskBarIcon
+                mock_instance = MagicMock()
+                mock_instance.cleanup = MagicMock()
+                mock_taskbar.return_value = mock_instance
+
+                app = WeatherApp(
+                    weather_service=mock_services["weather_service"],
+                    location_service=mock_services["location_service"],
+                    notification_service=mock_services["notification_service"],
+                    api_client=mock_api_client,
+                    config=mock_config,
+                )
 
             # Verify the app initializes without error
             assert app.weather_service == mock_services["weather_service"]

@@ -141,10 +141,6 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         # Let the event continue to be processed normally
         event.Skip()
 
-
-
-
-
     def cleanup(self):
         """Properly cleanup the TaskBarIcon to prevent multiple icons."""
         if self._is_destroyed:
@@ -199,8 +195,6 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         if cls._instance is not None:
             logger.debug("Cleaning up existing TaskBarIcon instance")
             cls._instance.cleanup()
-
-
 
     def set_icon(self, tooltip_text=None):
         """Set the taskbar icon.
