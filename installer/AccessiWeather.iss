@@ -11,6 +11,7 @@
 ; Get absolute paths from environment variables
 #define RootDir GetEnv("ACCESSIWEATHER_ROOT_DIR")
 #define DistDir GetEnv("ACCESSIWEATHER_DIST_DIR")
+#define InstallerOutputDir RootDir + "\installer\dist"
 
 [Setup]
 ; Basic Setup Information
@@ -28,7 +29,7 @@ AllowNoIcons=yes
 Compression=lzma
 SolidCompression=yes
 ; Output settings
-OutputDir={#DistDir}
+OutputDir={#InstallerOutputDir}
 OutputBaseFilename={#MyAppName}_Setup_v{#MyAppVersion}
 ; Installer appearance
 ; No icon file found in the project
