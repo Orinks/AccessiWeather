@@ -229,15 +229,18 @@ class TestTimerIntegration:
             mock_weather_service.get_current_conditions.return_value = sample_nws_current_response
             mock_app_instance.weather_service = mock_weather_service
 
+            # Actually create a timer instance to trigger the constructor
+            timer = mock_timer(mock_app_instance)
+
             # Test timer setup
             update_interval = sample_config["settings"]["update_interval"]
-            mock_timer_instance.Start(update_interval * 60 * 1000)  # Convert to milliseconds
+            timer.Start(update_interval * 60 * 1000)  # Convert to milliseconds
 
             # Simulate timer event
             mock_app_instance.on_refresh_timer(None)
 
             # Verify timer was configured
-            mock_timer.assert_called()
+            mock_timer.assert_called_once_with(mock_app_instance)
 
     def test_alert_refresh_timer(
         self, headless_environment, sample_config, sample_nws_alerts_response
@@ -261,14 +264,17 @@ class TestTimerIntegration:
             mock_weather_service.get_alerts.return_value = sample_nws_alerts_response
             mock_app_instance.weather_service = mock_weather_service
 
+            # Actually create a timer instance to trigger the constructor
+            timer = mock_timer(mock_app_instance)
+
             # Test alert timer setup
-            mock_timer_instance.Start(300000)  # 5 minutes in milliseconds
+            timer.Start(300000)  # 5 minutes in milliseconds
 
             # Simulate alert timer event
             mock_app_instance.on_alert_timer(None)
 
             # Verify timer was configured
-            mock_timer.assert_called()
+            mock_timer.assert_called_once_with(mock_app_instance)
 
 
 @pytest.mark.integration
