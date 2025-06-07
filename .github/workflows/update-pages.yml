@@ -1,5 +1,9 @@
 name: Update GitHub Pages
 
+# NOTE: GitHub Pages content is ONLY deployed from the dev branch.
+# The main branch contains no Pages content - all Pages files exist only on dev.
+# This workflow always checks out dev branch regardless of trigger source.
+
 on:
   # Direct trigger on dev branch pushes (primary trigger)
   push:
