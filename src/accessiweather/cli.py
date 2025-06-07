@@ -31,6 +31,11 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
     )
     parser.add_argument("-c", "--config", help="Path to configuration directory")
     parser.add_argument("--no-cache", action="store_true", help="Disable API response caching")
+    parser.add_argument(
+        "--portable",
+        action="store_true",
+        help="Run in portable mode (saves configuration to local directory instead of user directory)",
+    )
 
     return parser.parse_args(args)
 
@@ -51,6 +56,7 @@ def main() -> int:
             config_dir=args.config,
             debug_mode=args.debug,
             enable_caching=not args.no_cache,
+            portable_mode=args.portable,
         )
         return 0
     except Exception as e:
