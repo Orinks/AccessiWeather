@@ -48,7 +48,7 @@ class WeatherAppSettingsHandlers(WeatherAppHandlerBase):
         # Use ShowSettingsDialog from DialogHandlers
         result, updated_settings, updated_api_settings = self.ShowSettingsDialog(combined_settings)
 
-        if result == wx.ID_OK and updated_settings and updated_api_settings:
+        if result == wx.ID_OK and updated_settings is not None and updated_api_settings is not None:
             # Get API keys from dialog
             updated_api_keys = {}
             if hasattr(self, "_last_settings_dialog") and hasattr(
