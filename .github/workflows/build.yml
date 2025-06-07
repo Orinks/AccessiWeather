@@ -132,12 +132,12 @@ jobs:
           }
         }
 
-        # Verify installation
-        try {
-          $isccVersion = & iscc.exe 2>&1
-          Write-Host "Inno Setup installed and verified successfully"
-        } catch {
-          Write-Host "Error: Could not verify Inno Setup installation"
+        # Verify installation by checking if iscc.exe exists
+        $isccPath = Get-Command "iscc.exe" -ErrorAction SilentlyContinue
+        if ($isccPath) {
+          Write-Host "Inno Setup installed and verified successfully at: $($isccPath.Source)"
+        } else {
+          Write-Host "Error: Could not find Inno Setup executable in PATH"
           Write-Host "PATH: $env:PATH"
           exit 1
         }
