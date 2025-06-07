@@ -219,6 +219,13 @@ jobs:
 
         echo "✓ Created download links documentation"
 
+    - name: Disable Jekyll processing
+      run: |
+        # Create .nojekyll file to disable Jekyll processing
+        # This ensures our static HTML is served as-is without Jekyll interference
+        touch docs/.nojekyll
+        echo "✓ Created .nojekyll file to disable Jekyll processing"
+
     - name: Validate generated files
       run: |
         echo "📋 Validating generated files..."
