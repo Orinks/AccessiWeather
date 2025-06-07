@@ -20,6 +20,11 @@ on:
       - completed
     branches: [ dev ]  # Only trigger after CI on dev branch
 
+permissions:
+  contents: read      # Read repository contents
+  actions: write      # Trigger repository dispatch events
+  packages: read      # Read packages (for caching)
+
 env:
   # Build configuration
   PYTHON_VERSION: "3.12"
