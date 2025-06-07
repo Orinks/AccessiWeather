@@ -16,6 +16,7 @@ def test_parse_args_default():
         assert args.config is None
         assert args.debug is False
         assert args.no_cache is False
+        assert args.portable is False
 
 
 @pytest.mark.unit
@@ -26,6 +27,7 @@ def test_parse_args_with_config():
         assert args.config == "/path/to/config"
         assert args.debug is False
         assert args.no_cache is False
+        assert args.portable is False
 
 
 @pytest.mark.unit
@@ -36,6 +38,7 @@ def test_parse_args_with_debug():
         assert args.config is None
         assert args.debug is True
         assert args.no_cache is False
+        assert args.portable is False
 
 
 @pytest.mark.unit
@@ -46,18 +49,31 @@ def test_parse_args_with_no_cache():
         assert args.config is None
         assert args.debug is False
         assert args.no_cache is True
+        assert args.portable is False
+
+
+@pytest.mark.unit
+def test_parse_args_with_portable():
+    """Test parse_args with portable flag."""
+    with patch.object(sys, "argv", ["accessiweather", "--portable"]):
+        args = parse_args()
+        assert args.config is None
+        assert args.debug is False
+        assert args.no_cache is False
+        assert args.portable is True
 
 
 @pytest.mark.unit
 def test_parse_args_all_flags():
     """Test parse_args with all flags."""
     with patch.object(
-        sys, "argv", ["accessiweather", "--config", "/test", "--debug", "--no-cache"]
+        sys, "argv", ["accessiweather", "--config", "/test", "--debug", "--no-cache", "--portable"]
     ):
         args = parse_args()
         assert args.config == "/test"
         assert args.debug is True
         assert args.no_cache is True
+        assert args.portable is True
 
 
 @pytest.mark.unit
@@ -70,7 +86,9 @@ def test_main_success(mock_app_main):
         result = main()
 
     assert result == 0
-    mock_app_main.assert_called_once_with(config_dir=None, debug_mode=False, enable_caching=True)
+    mock_app_main.assert_called_once_with(
+        config_dir=None, debug_mode=False, enable_caching=True, portable_mode=False
+    )
 
 
 @pytest.mark.unit
@@ -80,12 +98,14 @@ def test_main_with_arguments(mock_app_main):
     mock_app_main.return_value = None
 
     with patch.object(
-        sys, "argv", ["accessiweather", "--config", "/test", "--debug", "--no-cache"]
+        sys, "argv", ["accessiweather", "--config", "/test", "--debug", "--no-cache", "--portable"]
     ):
         result = main()
 
     assert result == 0
-    mock_app_main.assert_called_once_with(config_dir="/test", debug_mode=True, enable_caching=False)
+    mock_app_main.assert_called_once_with(
+        config_dir="/test", debug_mode=True, enable_caching=False, portable_mode=True
+    )
 
 
 @pytest.mark.unit
