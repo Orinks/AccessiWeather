@@ -8,12 +8,12 @@ name: Update GitHub Pages
 # This prevents duplicate runs and ensures build artifacts are available when updating pages.
 
 on:
-  # Trigger when build workflow completes successfully on dev branch (primary trigger)
+  # Trigger when build workflow completes successfully on main branch (primary trigger)
   workflow_run:
     workflows: ["Build and Package"]
     types:
       - completed
-    branches: [dev]
+    branches: [main]
   # Trigger when releases are published/edited
   release:
     types:
@@ -100,8 +100,8 @@ jobs:
         if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.target_branch }}" != "both" ]; then
           FETCH_BRANCHES="${{ inputs.target_branch }}"
         elif [ "${{ github.event_name }}" = "workflow_run" ]; then
-          # For workflow_run events (build completed), only update dev branch
-          FETCH_BRANCHES="dev"
+          # For workflow_run events (build completed), only update main branch
+          FETCH_BRANCHES="main"
         elif [ "${{ github.event_name }}" = "release" ]; then
           # For release events, update both branches (release affects main, but we want both updated)
           FETCH_BRANCHES="main dev"
