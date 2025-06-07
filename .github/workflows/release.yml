@@ -83,84 +83,64 @@ jobs:
         pip install -e .[dev]
         pip install PyInstaller
 
-    - name: Build application
+    - name: Update version files
       run: |
         VERSION="${{ needs.check-version.outputs.version }}"
 
-        # Update version in files
+        # Update version in files (pyproject.toml is the source of truth)
+        sed -i "s/version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml
         sed -i "s/version=\"[^\"]*\"/version=\"$VERSION\"/" setup.py
         sed -i "s/__version__ = \"[^\"]*\"/__version__ = \"$VERSION\"/" src/accessiweather/version.py
 
-        # Build with PyInstaller
-        if (Test-Path "AccessiWeather.spec") {
-          python -m PyInstaller --clean --noconfirm AccessiWeather.spec
+        echo "Updated version to: $VERSION"
+      shell: bash
+
+    - name: Build with installer script
+      run: |
+        # Use the same build script as local development and CI
+        powershell -ExecutionPolicy Bypass -File installer/build_installer.ps1
+
+    - name: Move installer to dist directory
+      run: |
+        $VERSION = "${{ needs.check-version.outputs.version }}"
+        $InstallerSource = "installer/dist/AccessiWeather_Setup_v$VERSION.exe"
+        $InstallerDest = "dist/AccessiWeather_Setup_v$VERSION.exe"
+
+        if (Test-Path $InstallerSource) {
+          Move-Item $InstallerSource $InstallerDest
+          Write-Host "Moved installer to: $InstallerDest"
         } else {
-          python -m PyInstaller --clean --noconfirm --onedir --windowed --name AccessiWeather `
-            --hidden-import=plyer.platforms.win.notification `
-            --hidden-import=dateutil.parser `
-            --hidden-import=httpx `
-            --hidden-import=attrs `
-            --exclude-module=IPython `
-            --exclude-module=jedi `
-            --exclude-module=parso `
-            --exclude-module=black `
-            --exclude-module=mypy `
-            --exclude-module=django `
-            --exclude-module=Django `
-            --exclude-module=rapidfuzz `
-            src/accessiweather/main.py
+          Write-Host "Warning: Installer not found at: $InstallerSource"
+          Get-ChildItem "installer/dist/" -Filter "*.exe" -ErrorAction SilentlyContinue
+          exit 1
         }
 
-        # Create portable ZIP
-        Compress-Archive -Path "dist/AccessiWeather/*" -DestinationPath "dist/AccessiWeather_Portable_v$VERSION.zip" -Force
-      shell: pwsh
-
-    - name: Install Inno Setup and build installer
-      run: |
-        # Install Inno Setup
-        $InnoSetupUrl = "https://jrsoftware.org/download.php/is.exe"
-        Invoke-WebRequest -Uri $InnoSetupUrl -OutFile "innosetup.exe"
-        Start-Process -FilePath "innosetup.exe" -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
-
-        # Add to PATH
-        $InnoSetupPath = "${env:ProgramFiles(x86)}\Inno Setup 6"
-        $env:PATH += ";$InnoSetupPath"
-
-        # Build installer
-        $VERSION = "${{ needs.check-version.outputs.version }}"
-        $IssFile = "installer/AccessiWeather.iss"
-
-        if (Test-Path $IssFile) {
-          (Get-Content $IssFile) -replace '#define MyAppVersion ".*"', "#define MyAppVersion `"$VERSION`"" | Set-Content $IssFile
-          & "$InnoSetupPath\iscc.exe" $IssFile
-
-          # Move installer to dist directory
-          $InstallerSource = "installer/dist/AccessiWeather_Setup_v$VERSION.exe"
-          if (Test-Path $InstallerSource) {
-            Move-Item $InstallerSource "dist/AccessiWeather_Setup_v$VERSION.exe"
-          }
-        }
-
-    - name: Generate checksums
+    - name: Generate release checksums
       run: |
         $VERSION = "${{ needs.check-version.outputs.version }}"
 
-        # Generate SHA256 checksums
+        # Generate SHA256 checksums for release files
         $Files = @(
           "dist/AccessiWeather_Setup_v$VERSION.exe",
           "dist/AccessiWeather_Portable_v$VERSION.zip"
         )
 
-        $ChecksumFile = "dist/checksums.txt"
+        $ChecksumFile = "dist/release_checksums.txt"
+        "AccessiWeather v$VERSION - Release Checksums`n" | Out-File $ChecksumFile -Encoding UTF8
+
         foreach ($File in $Files) {
           if (Test-Path $File) {
             $Hash = Get-FileHash -Path $File -Algorithm SHA256
             $FileName = Split-Path $File -Leaf
-            "$($Hash.Hash)  $FileName" | Add-Content $ChecksumFile
+            $FileSize = (Get-Item $File).Length
+            $FileSizeMB = [math]::Round($FileSize / 1MB, 2)
+            "$($Hash.Hash)  $FileName ($FileSizeMB MB)" | Add-Content $ChecksumFile -Encoding UTF8
+          } else {
+            Write-Host "Warning: File not found: $File"
           }
         }
 
-        Write-Host "Generated checksums:"
+        Write-Host "Generated release checksums:"
         Get-Content $ChecksumFile
 
     - name: Upload release artifacts
@@ -170,7 +150,7 @@ jobs:
         path: |
           dist/AccessiWeather_Setup_v${{ needs.check-version.outputs.version }}.exe
           dist/AccessiWeather_Portable_v${{ needs.check-version.outputs.version }}.zip
-          dist/checksums.txt
+          dist/release_checksums.txt
         retention-days: 365
 
   create-release:
@@ -224,7 +204,7 @@ jobs:
         ## Checksums
 
         \`\`\`
-        $(cat release-assets/checksums.txt)
+        $(cat release-assets/release_checksums.txt)
         \`\`\`
 
         ## System Requirements
@@ -250,7 +230,7 @@ jobs:
         files: |
           release-assets/AccessiWeather_Setup_v${{ needs.check-version.outputs.version }}.exe
           release-assets/AccessiWeather_Portable_v${{ needs.check-version.outputs.version }}.zip
-          release-assets/checksums.txt
+          release-assets/release_checksums.txt
         prerelease: ${{ github.event.inputs.prerelease || false }}
         draft: false
       env:

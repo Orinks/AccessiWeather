@@ -13,16 +13,16 @@ if ($CurrentDir -eq $ScriptDir) {
     Write-Host "Working directory set to: $ProjectRoot" -ForegroundColor Green
 }
 
-# Function to extract version from setup.py
+# Function to extract version from pyproject.toml
 function Get-AppVersion {
-    $setupPath = Join-Path $ProjectRoot "setup.py"
-    if (Test-Path $setupPath) {
-        $versionLine = Get-Content $setupPath | Where-Object { $_ -match 'version\s*=\s*"([0-9\.]+)"' }
+    $pyprojectPath = Join-Path $ProjectRoot "pyproject.toml"
+    if (Test-Path $pyprojectPath) {
+        $versionLine = Get-Content $pyprojectPath | Where-Object { $_ -match 'version\s*=\s*"([0-9\.]+)"' }
         if ($versionLine -match 'version\s*=\s*"([0-9\.]+)"') {
             return $matches[1]
         }
     }
-    Write-Host "Warning: Could not extract version from setup.py. Using default version." -ForegroundColor Yellow
+    Write-Host "Warning: Could not extract version from pyproject.toml. Using default version." -ForegroundColor Yellow
     return "0.0.0"
 }
 
@@ -316,7 +316,7 @@ function Test-InstallDependencies {
     $dependencies = Get-RequiredDependencies
 
     foreach ($dependency in $dependencies) {
-        if (-not (Check-DependencyInstalled -PackageName $dependency) -or $Force) {
+        if (-not (Test-DependencyInstalled -PackageName $dependency) -or $Force) {
             $installSuccess = Install-Dependency -PackageName $dependency -Upgrade:$Force
             if (-not $installSuccess) {
                 $allDependenciesInstalled = $false
@@ -403,9 +403,13 @@ else {
         "--exclude-module=rapidfuzz",
         "src/accessiweather/main.py"
     )
-    $pyinstallerProcess = Start-Process -FilePath "python" -ArgumentList $PyInstallerArgs -Wait -PassThru -NoNewWindow
-    if ($pyinstallerProcess.ExitCode -ne 0) {
-        Write-Host "PyInstaller failed with exit code: $($pyinstallerProcess.ExitCode)" -ForegroundColor Red
+    # Use Invoke-Expression to avoid environment variable conflicts
+    $pyinstallerCommand = "python " + ($PyInstallerArgs -join " ")
+    Write-Host "Running: $pyinstallerCommand" -ForegroundColor Yellow
+    $pyinstallerResult = Invoke-Expression $pyinstallerCommand
+    $pyinstallerExitCode = $LASTEXITCODE
+    if ($pyinstallerExitCode -ne 0) {
+        Write-Host "PyInstaller failed with exit code: $pyinstallerExitCode" -ForegroundColor Red
         exit 1
     }
 }
@@ -451,8 +455,7 @@ catch {
         Write-Host "Inno Setup Compiler (iscc) not found in PATH or common locations." -ForegroundColor Red
         Write-Host "Please install Inno Setup from https://jrsoftware.org/isdl.php" -ForegroundColor Red
         Write-Host "and make sure it's added to your PATH." -ForegroundColor Red
-        Write-Host "
-To add Inno Setup to PATH permanently:" -ForegroundColor Cyan
+        Write-Host "`nTo add Inno Setup to PATH permanently:" -ForegroundColor Cyan
         Write-Host "1. Press Win + X and select 'System'" -ForegroundColor Cyan
         Write-Host "2. Click on 'Advanced system settings'" -ForegroundColor Cyan
         Write-Host "3. Click the 'Environment Variables' button" -ForegroundColor Cyan
@@ -479,14 +482,17 @@ Write-Host "  ACCESSIWEATHER_VERSION = $($env:ACCESSIWEATHER_VERSION)" -Foregrou
 
 Write-Host "Starting InnoSetup compilation..." -ForegroundColor Yellow
 if ($found) {
-    $innoProcess = Start-Process -FilePath $isccPath -ArgumentList $issPath -Wait -PassThru -NoNewWindow
+    $innoCommand = "`"$isccPath`" `"$issPath`""
 }
 else {
-    $innoProcess = Start-Process -FilePath "iscc" -ArgumentList $issPath -Wait -PassThru -NoNewWindow
+    $innoCommand = "iscc `"$issPath`""
 }
+Write-Host "Running: $innoCommand" -ForegroundColor Yellow
+$innoResult = Invoke-Expression $innoCommand
+$innoExitCode = $LASTEXITCODE
 
-if ($innoProcess.ExitCode -ne 0) {
-    Write-Host "InnoSetup compilation failed with exit code: $($innoProcess.ExitCode)" -ForegroundColor Red
+if ($innoExitCode -ne 0) {
+    Write-Host "InnoSetup compilation failed with exit code: $innoExitCode" -ForegroundColor Red
     exit 1
 }
 Write-Host "InnoSetup compilation completed successfully." -ForegroundColor Green
@@ -498,7 +504,7 @@ $env:ACCESSIWEATHER_VERSION = $null
 
 # Final message
 Write-Host "`n===== Build Complete =====" -ForegroundColor Green
-Write-Host "Installer: dist\${AppName}_Setup_v${AppVersion}.exe" -ForegroundColor Cyan
+Write-Host "Installer: installer\dist\${AppName}_Setup_v${AppVersion}.exe" -ForegroundColor Cyan
 Write-Host "Portable: dist\${AppName}_Portable_v${AppVersion}.zip" -ForegroundColor Cyan
 
 # Check for any processes that might have been started during the build
@@ -534,35 +540,35 @@ else {
 
 # Verify output files
 Write-Host "`n===== Verifying output files =====" -ForegroundColor Yellow
-$installerPath = "dist\${AppName}_Setup_v${AppVersion}.exe"
+$installerPath = "installer\dist\${AppName}_Setup_v${AppVersion}.exe"
 $portablePath = "dist\${AppName}_Portable_v${AppVersion}.zip"
 $executablePath = "dist\$AppName\$AppName.exe"
 
 $allFilesExist = $true
 
 if (Test-Path $executablePath) {
-    Write-Host "✓ Executable created successfully: $executablePath" -ForegroundColor Green
+    Write-Host "[OK] Executable created successfully: $executablePath" -ForegroundColor Green
 }
 else {
-    Write-Host "✗ Executable was not created: $executablePath" -ForegroundColor Red
+    Write-Host "[ERROR] Executable was not created: $executablePath" -ForegroundColor Red
     $allFilesExist = $false
 }
 
 if (Test-Path $installerPath) {
     $installerSize = (Get-Item $installerPath).Length / 1MB
-    Write-Host "✓ Installer created successfully: $installerPath (Size: $($installerSize.ToString("0.00")) MB)" -ForegroundColor Green
+    Write-Host "[OK] Installer created successfully: $installerPath (Size: $($installerSize.ToString("0.00")) MB)" -ForegroundColor Green
 }
 else {
-    Write-Host "✗ Installer was not created: $installerPath" -ForegroundColor Red
+    Write-Host "[ERROR] Installer was not created: $installerPath" -ForegroundColor Red
     $allFilesExist = $false
 }
 
 if (Test-Path $portablePath) {
     $portableSize = (Get-Item $portablePath).Length / 1MB
-    Write-Host "✓ Portable ZIP created successfully: $portablePath (Size: $($portableSize.ToString("0.00")) MB)" -ForegroundColor Green
+    Write-Host "[OK] Portable ZIP created successfully: $portablePath (Size: $($portableSize.ToString("0.00")) MB)" -ForegroundColor Green
 }
 else {
-    Write-Host "✗ Portable ZIP was not created: $portablePath" -ForegroundColor Red
+    Write-Host "[ERROR] Portable ZIP was not created: $portablePath" -ForegroundColor Red
     $allFilesExist = $false
 }
 
