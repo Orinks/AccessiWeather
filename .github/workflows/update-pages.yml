@@ -15,7 +15,7 @@ on:
         default: false
 
 permissions:
-  contents: read
+  contents: write  # Need write permission to commit changes
   pages: write
   id-token: write
 
