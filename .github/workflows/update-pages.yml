@@ -146,22 +146,10 @@ jobs:
 
         EOF
 
-    - name: Commit and push changes
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-
-        # Check if there are changes to commit
-        if git diff --quiet docs/index.html docs/download-links.md; then
-          echo "No changes to commit"
-        else
-          git add docs/index.html docs/download-links.md
-          git commit -m "Update build information and download page
-
-          - Main: ${{ steps.build-info.outputs.main_version }} (${{ steps.build-info.outputs.main_date }})
-          - Dev: ${{ steps.build-info.outputs.dev_version }} (${{ steps.build-info.outputs.dev_date }})"
-          git push
-        fi
+    - name: Upload Pages artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: docs/
 
   deploy-pages:
     name: Deploy to GitHub Pages
@@ -172,19 +160,6 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        ref: ${{ github.ref }}
-
-    - name: Setup Pages
-      uses: actions/configure-pages@v4
-
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: './docs'
-
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4
