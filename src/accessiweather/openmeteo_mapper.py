@@ -34,6 +34,9 @@ class OpenMeteoMapper:
             current = openmeteo_data.get("current", {})
             current_units = openmeteo_data.get("current_units", {})
 
+            logger.debug(f"Open-Meteo current data keys: {list(current.keys())}")
+            logger.debug(f"Open-Meteo current units: {current_units}")
+
             # Map the data to NWS-like structure
             mapped_data = {
                 "properties": {
@@ -52,6 +55,13 @@ class OpenMeteoMapper:
                         ),
                         "unitCode": self._get_temperature_unit_code(
                             current_units.get("temperature_2m", "°F")
+                        ),
+                        "qualityControl": "qc:V",
+                    },
+                    "apparentTemperature": {
+                        "value": current.get("apparent_temperature"),
+                        "unitCode": self._get_temperature_unit_code(
+                            current_units.get("apparent_temperature", "°F")
                         ),
                         "qualityControl": "qc:V",
                     },
