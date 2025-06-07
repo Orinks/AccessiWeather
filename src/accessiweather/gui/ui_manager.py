@@ -24,6 +24,164 @@ from .ui_components import (
 logger = logging.getLogger(__name__)
 
 
+# Shared utility functions for consistent data extraction
+def _convert_wind_direction_to_cardinal(degrees):
+    """Convert wind direction from degrees to cardinal direction.
+
+    Args:
+        degrees: Wind direction in degrees (0-360)
+
+    Returns:
+        str: Cardinal direction (N, NE, E, SE, S, SW, W, NW)
+    """
+    if degrees is None:
+        logger.debug("Wind direction conversion: degrees is None")
+        return ""
+
+    try:
+        degrees = float(degrees)
+        logger.debug(f"Wind direction conversion: input {degrees}°")
+
+        # Normalize to 0-360 range
+        degrees = degrees % 360
+
+        # Define cardinal directions with their degree ranges
+        directions = [
+            "N",
+            "NNE",
+            "NE",
+            "ENE",
+            "E",
+            "ESE",
+            "SE",
+            "SSE",
+            "S",
+            "SSW",
+            "SW",
+            "WSW",
+            "W",
+            "WNW",
+            "NW",
+            "NNW",
+        ]
+
+        # Each direction covers 22.5 degrees (360/16)
+        index = int((degrees + 11.25) / 22.5) % 16
+        cardinal = directions[index]
+        logger.debug(f"Wind direction conversion: {degrees}° -> {cardinal}")
+        return cardinal
+    except (ValueError, TypeError) as e:
+        logger.warning(f"Wind direction conversion failed for value '{degrees}': {e}")
+        return ""
+
+
+def _format_combined_wind(wind_speed, wind_direction, speed_unit="mph"):
+    """Format combined wind speed and direction for display.
+
+    Args:
+        wind_speed: Wind speed value
+        wind_direction: Wind direction (degrees or cardinal)
+        speed_unit: Unit for wind speed display
+
+    Returns:
+        str: Formatted wind string (e.g., "15 mph NW")
+    """
+    logger.debug(
+        f"Wind formatting: speed={wind_speed}, direction={wind_direction}, unit={speed_unit}"
+    )
+
+    if wind_speed is None:
+        logger.debug("Wind formatting: speed is None, returning empty string")
+        return ""
+
+    try:
+        speed_val = float(wind_speed)
+        logger.debug(f"Wind formatting: parsed speed value {speed_val}")
+
+        if speed_val == 0:
+            logger.debug("Wind formatting: speed is 0, returning 'Calm'")
+            return "Calm"
+
+        # Format speed to whole number
+        speed_str = f"{int(round(speed_val))} {speed_unit}"
+        logger.debug(f"Wind formatting: formatted speed '{speed_str}'")
+
+        # Handle direction
+        if isinstance(wind_direction, (int, float)):
+            direction = _convert_wind_direction_to_cardinal(wind_direction)
+        else:
+            direction = str(wind_direction) if wind_direction else ""
+
+        logger.debug(f"Wind formatting: processed direction '{direction}'")
+
+        if direction:
+            result = f"{speed_str} {direction}"
+        else:
+            result = speed_str
+
+        logger.debug(f"Wind formatting: final result '{result}'")
+        return result
+    except (ValueError, TypeError) as e:
+        logger.warning(
+            f"Wind formatting failed for speed='{wind_speed}', direction='{wind_direction}': {e}"
+        )
+        return ""
+
+
+def _safe_get_location_name(location_service=None, fallback=""):
+    """Safely get location name with thread safety.
+
+    Args:
+        location_service: Location service instance
+        fallback: Fallback value if location cannot be retrieved
+
+    Returns:
+        str: Location name or fallback value
+    """
+    logger.debug(
+        f"Location name retrieval: service={location_service is not None}, fallback='{fallback}'"
+    )
+
+    if not location_service:
+        logger.debug("Location name retrieval: no location service provided")
+        return fallback
+
+    try:
+        # Thread-safe access to location service
+        if hasattr(location_service, "_lock"):
+            logger.debug("Location name retrieval: using thread-safe access with lock")
+            with location_service._lock:
+                current_location = getattr(location_service, "current_location", None)
+        else:
+            logger.debug("Location name retrieval: direct access (no lock found)")
+            current_location = getattr(location_service, "current_location", None)
+
+        logger.debug(f"Location name retrieval: current_location type={type(current_location)}")
+
+        if current_location and hasattr(current_location, "name"):
+            location_name = current_location.name
+            logger.debug(f"Location name retrieval: extracted name '{location_name}' from object")
+            return location_name
+        elif isinstance(current_location, dict):
+            location_name = current_location.get("name", fallback)
+            logger.debug(f"Location name retrieval: extracted name '{location_name}' from dict")
+            return location_name
+        elif isinstance(current_location, (list, tuple)) and len(current_location) > 0:
+            location_name = str(current_location[0])
+            logger.debug(
+                f"Location name retrieval: extracted name '{location_name}' from list/tuple"
+            )
+            return location_name
+        else:
+            logger.debug(
+                f"Location name retrieval: no valid location found, using fallback '{fallback}'"
+            )
+            return fallback
+    except Exception as e:
+        logger.error(f"Location name retrieval failed: {e}")
+        return fallback
+
+
 class UIManager:
     """Manages the UI setup and event bindings for the WeatherApp frame."""
 
@@ -38,6 +196,52 @@ class UIManager:
         self.notifier = notifier  # Store notifier instance
         self._setup_ui()
         self._bind_events()
+
+    def _create_standardized_taskbar_data(self, **kwargs):
+        """Create a standardized dictionary structure for taskbar data.
+
+        This ensures all API extraction methods return the same keys with consistent data types.
+
+        Args:
+            **kwargs: Key-value pairs for weather data
+
+        Returns:
+            dict: Standardized dictionary with all expected keys
+        """
+        # Define the standard structure with default values
+        standard_data = {
+            # Temperature data
+            "temp": None,
+            "temp_f": None,
+            "temp_c": None,
+            "feels_like": None,
+            "feels_like_f": None,
+            "feels_like_c": None,
+            # Weather condition
+            "condition": "",
+            # Wind data
+            "wind_speed": None,
+            "wind_dir": "",
+            "wind": "",  # Combined wind placeholder
+            # Other weather data
+            "humidity": None,
+            "pressure": None,
+            "uv": None,
+            "visibility": None,
+            "precip": None,
+            # Location
+            "location": "",
+        }
+
+        # Update with provided values
+        for key, value in kwargs.items():
+            if key in standard_data:
+                standard_data[key] = value
+            else:
+                # Log unexpected keys for debugging
+                logger.debug(f"Unexpected key in taskbar data: {key}")
+
+        return standard_data
 
     def _get_temperature_unit_preference(self):
         """Get the user's temperature unit preference from config.
@@ -896,81 +1100,128 @@ class UIManager:
         Returns:
             dict: Dictionary with extracted data for taskbar icon
         """
-        if not conditions_data or "properties" not in conditions_data:
-            return {}
+        try:
+            if not conditions_data or "properties" not in conditions_data:
+                logger.warning("NWS data extraction: Invalid or missing conditions data")
+                return self._create_standardized_taskbar_data()
 
-        properties = conditions_data.get("properties", {})
+            properties = conditions_data.get("properties", {})
+            logger.debug(
+                f"NWS data extraction: Processing properties with keys: {list(properties.keys())}"
+            )
 
-        # Extract temperature (check unit code to determine if conversion is needed)
-        temperature_value = properties.get("temperature", {}).get("value")
-        temp_unit_code = properties.get("temperature", {}).get("unitCode", "")
-        temperature_f = None
-        temperature_c = None
+            # Extract temperature with error handling
+            temperature_f = None
+            temperature_c = None
+            try:
+                temperature_value = properties.get("temperature", {}).get("value")
+                temp_unit_code = properties.get("temperature", {}).get("unitCode", "")
 
-        if temperature_value is not None:
-            if "degF" in temp_unit_code:
-                # Temperature is already in Fahrenheit
-                temperature_f = temperature_value
-                temperature_c = (temperature_value - 32) * 5 / 9
-            else:
-                # Temperature is in Celsius, convert to Fahrenheit
-                temperature_c = temperature_value
-                temperature_f = (temperature_value * 9 / 5) + 32
+                if temperature_value is not None:
+                    if "degF" in temp_unit_code:
+                        temperature_f = float(temperature_value)
+                        temperature_c = (temperature_f - 32) * 5 / 9
+                    else:
+                        temperature_c = float(temperature_value)
+                        temperature_f = (temperature_c * 9 / 5) + 32
+                    logger.debug(
+                        f"NWS temperature extracted: {temperature_f}°F / {temperature_c}°C"
+                    )
+                else:
+                    logger.warning("NWS data extraction: No temperature value found")
+            except (ValueError, TypeError, KeyError) as e:
+                logger.error(f"NWS data extraction: Error processing temperature: {e}")
 
-        # Extract humidity
-        humidity = properties.get("relativeHumidity", {}).get("value")
+            # Extract humidity with error handling
+            humidity = None
+            try:
+                humidity_value = properties.get("relativeHumidity", {}).get("value")
+                if humidity_value is not None:
+                    humidity = float(humidity_value)
+                    logger.debug(f"NWS humidity extracted: {humidity}%")
+            except (ValueError, TypeError, KeyError) as e:
+                logger.error(f"NWS data extraction: Error processing humidity: {e}")
 
-        # Extract wind speed (convert from km/h to mph)
-        wind_speed_kph = properties.get("windSpeed", {}).get("value")
-        wind_speed_mph = None
-        if wind_speed_kph is not None:
-            wind_speed_mph = wind_speed_kph * 0.621371
+            # Extract wind data with error handling
+            wind_speed_mph = None
+            wind_dir = ""
+            try:
+                wind_speed_kph = properties.get("windSpeed", {}).get("value")
+                if wind_speed_kph is not None:
+                    wind_speed_mph = float(wind_speed_kph) * 0.621371
+                    logger.debug(f"NWS wind speed extracted: {wind_speed_mph} mph")
 
-        # Extract wind direction
-        wind_direction_degrees = properties.get("windDirection", {}).get("value")
-        wind_dir = None
-        if wind_direction_degrees is not None:
-            # Convert degrees to cardinal direction
-            directions = [
-                "N",
-                "NNE",
-                "NE",
-                "ENE",
-                "E",
-                "ESE",
-                "SE",
-                "SSE",
-                "S",
-                "SSW",
-                "SW",
-                "WSW",
-                "W",
-                "WNW",
-                "NW",
-                "NNW",
-            ]
-            index = round(wind_direction_degrees / 22.5) % 16
-            wind_dir = directions[index]
+                wind_direction_degrees = properties.get("windDirection", {}).get("value")
+                if wind_direction_degrees is not None:
+                    wind_dir = _convert_wind_direction_to_cardinal(wind_direction_degrees)
+                    logger.debug(
+                        f"NWS wind direction extracted: {wind_direction_degrees}° -> {wind_dir}"
+                    )
+            except (ValueError, TypeError, KeyError) as e:
+                logger.error(f"NWS data extraction: Error processing wind data: {e}")
 
-        # Extract barometric pressure (convert from Pa to inHg)
-        pressure_pa = properties.get("barometricPressure", {}).get("value")
-        pressure_inhg = None
-        if pressure_pa is not None:
-            pressure_inhg = pressure_pa / 3386.39
+            # Extract barometric pressure with error handling
+            pressure_inhg = None
+            try:
+                pressure_pa = properties.get("barometricPressure", {}).get("value")
+                if pressure_pa is not None:
+                    pressure_inhg = float(pressure_pa) / 3386.39
+                    logger.debug(f"NWS pressure extracted: {pressure_inhg} inHg")
+            except (ValueError, TypeError, KeyError) as e:
+                logger.error(f"NWS data extraction: Error processing pressure: {e}")
 
-        # Create a dictionary with the data we want to display in the taskbar
-        data = {
-            "temp": temperature_f,
-            "temp_f": temperature_f,
-            "temp_c": temperature_c,
-            "condition": properties.get("textDescription", ""),
-            "humidity": humidity,
-            "wind_speed": wind_speed_mph,
-            "wind_dir": wind_dir,
-            "pressure": pressure_inhg,
-        }
+            # Extract feels like temperature with error handling
+            feels_like_f = None
+            feels_like_c = None
+            try:
+                apparent_temp_value = properties.get("apparentTemperature", {}).get("value")
+                apparent_temp_unit_code = properties.get("apparentTemperature", {}).get(
+                    "unitCode", ""
+                )
 
-        return data
+                if apparent_temp_value is not None:
+                    if "degF" in apparent_temp_unit_code:
+                        feels_like_f = float(apparent_temp_value)
+                        feels_like_c = (feels_like_f - 32) * 5 / 9
+                    else:
+                        feels_like_c = float(apparent_temp_value)
+                        feels_like_f = (feels_like_c * 9 / 5) + 32
+                    logger.debug(f"NWS feels like extracted: {feels_like_f}°F / {feels_like_c}°C")
+            except (ValueError, TypeError, KeyError) as e:
+                logger.error(f"NWS data extraction: Error processing feels like temperature: {e}")
+
+            # Get location information with thread safety
+            location_name = _safe_get_location_name(
+                getattr(self.frame, "location_service", None), fallback=""
+            )
+
+            # Create combined wind placeholder using utility function
+            wind_combined = _format_combined_wind(wind_speed_mph, wind_dir, "mph")
+
+            # Get weather condition
+            condition = properties.get("textDescription", "")
+            logger.debug(f"NWS condition extracted: {condition}")
+
+            # Create standardized data structure
+            return self._create_standardized_taskbar_data(
+                temp=temperature_f,
+                temp_f=temperature_f,
+                temp_c=temperature_c,
+                condition=condition,
+                humidity=humidity,
+                wind_speed=wind_speed_mph,
+                wind_dir=wind_dir,
+                wind=wind_combined,
+                pressure=pressure_inhg,
+                feels_like=feels_like_f,
+                feels_like_f=feels_like_f,
+                feels_like_c=feels_like_c,
+                location=location_name,
+            )
+
+        except Exception as e:
+            logger.error(f"NWS data extraction: Unexpected error: {e}")
+            return self._create_standardized_taskbar_data()
 
     def display_hourly_forecast(self, hourly_data):
         """Display hourly forecast data in the UI.

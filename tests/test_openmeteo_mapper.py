@@ -123,6 +123,12 @@ def test_map_current_conditions_success(mapper):
     assert temp["unitCode"] == "wmoUnit:degF"
     assert temp["qualityControl"] == "qc:V"
 
+    # Check apparent temperature mapping
+    apparent_temp = properties["apparentTemperature"]
+    assert apparent_temp["value"] == 75.2
+    assert apparent_temp["unitCode"] == "wmoUnit:degF"
+    assert apparent_temp["qualityControl"] == "qc:V"
+
     # Check wind mapping
     wind_speed = properties["windSpeed"]
     assert wind_speed["value"] == 8.5
@@ -156,6 +162,7 @@ def test_map_current_conditions_with_missing_data(mapper):
     # Missing fields should have None values
     assert properties["windSpeed"]["value"] is None
     assert properties["relativeHumidity"]["value"] is None
+    assert properties["apparentTemperature"]["value"] is None
 
 
 @pytest.mark.unit
