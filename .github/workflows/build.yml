@@ -343,6 +343,23 @@ jobs:
           dist/checksums.txt
         retention-days: 90
 
+    - name: Trigger pages update
+      if: success()
+      run: |
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/${{ github.repository }}/dispatches" \
+          -d '{
+            "event_type": "build-completed",
+            "client_payload": {
+              "version": "${{ needs.build.outputs.version }}",
+              "branch": "${{ github.ref_name }}",
+              "run_id": "${{ github.run_id }}"
+            }
+          }'
+        echo "✓ Triggered pages update workflow"
+
   validate:
     name: Validate Build
     runs-on: windows-latest
