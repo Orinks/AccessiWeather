@@ -355,7 +355,7 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
             return
 
         # Get the format string and temperature unit preference
-        format_string = settings.get(TASKBAR_ICON_TEXT_FORMAT_KEY, "{temp}°F {condition}")
+        format_string = settings.get(TASKBAR_ICON_TEXT_FORMAT_KEY, "{temp} {condition}")
         unit_pref_str = settings.get(TEMPERATURE_UNIT_KEY, DEFAULT_TEMPERATURE_UNIT)
 
         # Convert string to enum
@@ -376,11 +376,9 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
             temp_f = formatted_data.get("temp_f")
             temp_c = formatted_data.get("temp_c")
             if temp_f is not None:
-                formatted_data["temp"] = (
-                    format_temperature(temp_f, unit_pref, temperature_c=temp_c, precision=1)
-                    .replace("°F", "")
-                    .replace("°C", "")
-                )  # Remove unit symbols for cleaner display
+                formatted_data["temp"] = format_temperature(
+                    temp_f, unit_pref, temperature_c=temp_c, precision=1, smart_precision=True
+                )
 
         # Format wind speed if available
         if "wind_speed" in formatted_data:

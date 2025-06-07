@@ -28,42 +28,59 @@ class TestTemperatureUtils:
 
     def test_format_temperature_fahrenheit(self):
         """Test format_temperature function with Fahrenheit preference."""
-        # Test with Fahrenheit preference
-        assert format_temperature(32, TemperatureUnit.FAHRENHEIT) == "32.0°F"
+        # Test with Fahrenheit preference - smart precision removes decimals for whole numbers
+        assert format_temperature(32, TemperatureUnit.FAHRENHEIT) == "32°F"
         assert format_temperature(68.5, TemperatureUnit.FAHRENHEIT) == "68.5°F"
         assert format_temperature(None, TemperatureUnit.FAHRENHEIT) == "N/A"
 
         # Test with Fahrenheit preference but providing Celsius value
-        assert format_temperature(None, TemperatureUnit.FAHRENHEIT, temperature_c=0) == "32.0°F"
-        assert format_temperature(None, TemperatureUnit.FAHRENHEIT, temperature_c=20) == "68.0°F"
+        assert format_temperature(None, TemperatureUnit.FAHRENHEIT, temperature_c=0) == "32°F"
+        assert format_temperature(None, TemperatureUnit.FAHRENHEIT, temperature_c=20) == "68°F"
 
     def test_format_temperature_celsius(self):
         """Test format_temperature function with Celsius preference."""
-        # Test with Celsius preference
-        assert format_temperature(32, TemperatureUnit.CELSIUS) == "0.0°C"
-        assert format_temperature(68, TemperatureUnit.CELSIUS) == "20.0°C"
+        # Test with Celsius preference - smart precision removes decimals for whole numbers
+        assert format_temperature(32, TemperatureUnit.CELSIUS) == "0°C"
+        assert format_temperature(68, TemperatureUnit.CELSIUS) == "20°C"
         assert format_temperature(None, TemperatureUnit.CELSIUS) == "N/A"
 
         # Test with Celsius preference but providing Celsius value
-        assert format_temperature(None, TemperatureUnit.CELSIUS, temperature_c=0) == "0.0°C"
-        assert format_temperature(None, TemperatureUnit.CELSIUS, temperature_c=20) == "20.0°C"
+        assert format_temperature(None, TemperatureUnit.CELSIUS, temperature_c=0) == "0°C"
+        assert format_temperature(None, TemperatureUnit.CELSIUS, temperature_c=20) == "20°C"
 
     def test_format_temperature_both(self):
         """Test format_temperature function with Both preference."""
-        # Test with Both preference
-        assert format_temperature(32, TemperatureUnit.BOTH) == "32.0°F (0.0°C)"
-        assert format_temperature(68, TemperatureUnit.BOTH) == "68.0°F (20.0°C)"
+        # Test with Both preference - smart precision removes decimals for whole numbers
+        assert format_temperature(32, TemperatureUnit.BOTH) == "32°F (0°C)"
+        assert format_temperature(68, TemperatureUnit.BOTH) == "68°F (20°C)"
         assert format_temperature(None, TemperatureUnit.BOTH) == "N/A"
 
         # Test with Both preference but providing Celsius value
-        assert format_temperature(None, TemperatureUnit.BOTH, temperature_c=0) == "32.0°F (0.0°C)"
-        assert format_temperature(None, TemperatureUnit.BOTH, temperature_c=20) == "68.0°F (20.0°C)"
+        assert format_temperature(None, TemperatureUnit.BOTH, temperature_c=0) == "32°F (0°C)"
+        assert format_temperature(None, TemperatureUnit.BOTH, temperature_c=20) == "68°F (20°C)"
 
     def test_format_temperature_precision(self):
         """Test format_temperature function with different precision."""
         assert format_temperature(68.5, TemperatureUnit.FAHRENHEIT, precision=0) == "68°F"
         assert format_temperature(68.5, TemperatureUnit.FAHRENHEIT, precision=2) == "68.50°F"
         assert format_temperature(68.5, TemperatureUnit.BOTH, precision=2) == "68.50°F (20.28°C)"
+
+    def test_format_temperature_smart_precision(self):
+        """Test format_temperature function with smart precision."""
+        # Smart precision should remove decimals for whole numbers
+        assert format_temperature(70.0, TemperatureUnit.FAHRENHEIT, smart_precision=True) == "70°F"
+        assert (
+            format_temperature(70.5, TemperatureUnit.FAHRENHEIT, smart_precision=True) == "70.5°F"
+        )
+        assert format_temperature(70.0, TemperatureUnit.BOTH, smart_precision=True) == "70°F (21°C)"
+
+        # Disabled smart precision should keep decimals
+        assert (
+            format_temperature(70.0, TemperatureUnit.FAHRENHEIT, smart_precision=False) == "70.0°F"
+        )
+        assert (
+            format_temperature(70.5, TemperatureUnit.FAHRENHEIT, smart_precision=False) == "70.5°F"
+        )
 
     def test_get_temperature_values(self):
         """Test get_temperature_values function."""
