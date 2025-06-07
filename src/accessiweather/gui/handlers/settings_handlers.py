@@ -16,6 +16,8 @@ from ..settings_dialog import (
     MINIMIZE_ON_STARTUP_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
     SHOW_NATIONWIDE_KEY,
+    TASKBAR_ICON_TEXT_ENABLED_KEY,
+    TASKBAR_ICON_TEXT_FORMAT_KEY,
 )
 from .common import WeatherAppHandlerBase
 
@@ -138,3 +140,26 @@ class WeatherAppSettingsHandlers(WeatherAppHandlerBase):
                 # Note: We can't update the cache settings directly in the API client
                 # as it doesn't have setter methods. The cache settings will be used
                 # the next time the app is started.
+
+            # If taskbar settings changed, update taskbar icon immediately
+            old_taskbar_enabled = settings.get(TASKBAR_ICON_TEXT_ENABLED_KEY, False)
+            new_taskbar_enabled = updated_settings.get(TASKBAR_ICON_TEXT_ENABLED_KEY, False)
+            old_taskbar_format = settings.get(TASKBAR_ICON_TEXT_FORMAT_KEY, "{temp} {condition}")
+            new_taskbar_format = updated_settings.get(
+                TASKBAR_ICON_TEXT_FORMAT_KEY, "{temp} {condition}"
+            )
+
+            if (
+                old_taskbar_enabled != new_taskbar_enabled
+                or old_taskbar_format != new_taskbar_format
+            ):
+                logger.info(
+                    f"Taskbar settings changed: enabled {old_taskbar_enabled} -> {new_taskbar_enabled}, "
+                    f"format '{old_taskbar_format}' -> '{new_taskbar_format}'"
+                )
+                # Update taskbar icon immediately if it exists
+                if hasattr(self, "taskbar_icon") and self.taskbar_icon:
+                    logger.debug("Updating taskbar icon with new settings")
+                    self.taskbar_icon.update_icon_text()
+                else:
+                    logger.debug("No taskbar icon found to update")

@@ -147,34 +147,16 @@ def _safe_get_location_name(location_service=None, fallback=""):
         return fallback
 
     try:
-        # Thread-safe access to location service
-        if hasattr(location_service, "_lock"):
-            logger.debug("Location name retrieval: using thread-safe access with lock")
-            with location_service._lock:
-                current_location = getattr(location_service, "current_location", None)
-        else:
-            logger.debug("Location name retrieval: direct access (no lock found)")
-            current_location = getattr(location_service, "current_location", None)
-
-        logger.debug(f"Location name retrieval: current_location type={type(current_location)}")
-
-        if current_location and hasattr(current_location, "name"):
-            location_name = current_location.name
-            logger.debug(f"Location name retrieval: extracted name '{location_name}' from object")
-            return location_name
-        elif isinstance(current_location, dict):
-            location_name = current_location.get("name", fallback)
-            logger.debug(f"Location name retrieval: extracted name '{location_name}' from dict")
-            return location_name
-        elif isinstance(current_location, (list, tuple)) and len(current_location) > 0:
-            location_name = str(current_location[0])
+        # Use the proper method to get current location name
+        if hasattr(location_service, "get_current_location_name"):
+            location_name = location_service.get_current_location_name()
             logger.debug(
-                f"Location name retrieval: extracted name '{location_name}' from list/tuple"
+                f"Location name retrieval: got '{location_name}' from get_current_location_name()"
             )
-            return location_name
+            return location_name if location_name is not None else fallback
         else:
             logger.debug(
-                f"Location name retrieval: no valid location found, using fallback '{fallback}'"
+                "Location name retrieval: location service has no get_current_location_name method"
             )
             return fallback
     except Exception as e:
@@ -264,6 +246,17 @@ class UIManager:
             return TemperatureUnit.BOTH
         else:
             return TemperatureUnit.FAHRENHEIT
+
+    def _get_temperature_precision(self, unit_pref: TemperatureUnit) -> int:
+        """Get the appropriate precision for temperature formatting.
+
+        Args:
+            unit_pref: The temperature unit preference
+
+        Returns:
+            int: Precision (0 for whole numbers when 'both', 1 otherwise)
+        """
+        return 0 if unit_pref == TemperatureUnit.BOTH else 1
 
     def _setup_ui(self):
         """Initialize the user interface components."""
@@ -502,8 +495,12 @@ class UIManager:
                         temp_c = None
 
                     # Format temperature based on user preference
+                    unit_pref = self._get_temperature_unit_preference()
                     temp_str = format_temperature(
-                        temp_f, self._get_temperature_unit_preference(), temperature_c=temp_c
+                        temp_f,
+                        unit_pref,
+                        temperature_c=temp_c,
+                        precision=self._get_temperature_precision(unit_pref),
                     )
 
                     text += f"{formatted_time}: {temp_str}, {short_forecast}\n"
@@ -530,8 +527,12 @@ class UIManager:
                 temp_c = None
 
             # Format temperature based on user preference
+            unit_pref = self._get_temperature_unit_preference()
             temp_str = format_temperature(
-                temp_f, self._get_temperature_unit_preference(), temperature_c=temp_c
+                temp_f,
+                unit_pref,
+                temperature_c=temp_c,
+                precision=self._get_temperature_precision(unit_pref),
             )
 
             text += f"{name}: {temp_str}\n"
@@ -644,8 +645,12 @@ class UIManager:
                     condition = condition.get("text", "")
 
                 # Format temperature based on user preference
+                unit_pref = self._get_temperature_unit_preference()
                 temp_str = format_temperature(
-                    temp_f, self._get_temperature_unit_preference(), temperature_c=temp_c
+                    temp_f,
+                    unit_pref,
+                    temperature_c=temp_c,
+                    precision=self._get_temperature_precision(unit_pref),
                 )
 
                 text += f"{formatted_time}: {temp_str}, {condition}\n"
@@ -679,8 +684,11 @@ class UIManager:
 
             # Format temperatures based on user preference
             unit_pref = self._get_temperature_unit_preference()
-            high_str = format_temperature(high_f, unit_pref, temperature_c=high_c)
-            low_str = format_temperature(low_f, unit_pref, temperature_c=low_c)
+            precision = self._get_temperature_precision(unit_pref)
+            high_str = format_temperature(
+                high_f, unit_pref, temperature_c=high_c, precision=precision
+            )
+            low_str = format_temperature(low_f, unit_pref, temperature_c=low_c, precision=precision)
 
             text += f"{formatted_date}: High {high_str}, Low {low_str}\n"
             text += f"{condition}\n"
@@ -909,7 +917,10 @@ class UIManager:
 
             # Format based on user preference
             temperature_str = format_temperature(
-                temperature_f, unit_pref, temperature_c=temperature_c, precision=1
+                temperature_f,
+                unit_pref,
+                temperature_c=temperature_c,
+                precision=self._get_temperature_precision(unit_pref),
             )
         else:
             temperature_str = "N/A"
@@ -927,7 +938,10 @@ class UIManager:
 
             # Format based on user preference
             dewpoint_str = format_temperature(
-                dewpoint_f, unit_pref, temperature_c=dewpoint_c, precision=1
+                dewpoint_f,
+                unit_pref,
+                temperature_c=dewpoint_c,
+                precision=self._get_temperature_precision(unit_pref),
             )
         else:
             dewpoint_str = "N/A"
@@ -1023,7 +1037,10 @@ class UIManager:
 
         # Format temperature
         temperature_str = format_temperature(
-            temperature, unit_pref, temperature_c=temperature_c, precision=1
+            temperature,
+            unit_pref,
+            temperature_c=temperature_c,
+            precision=self._get_temperature_precision(unit_pref),
         )
 
         # Format humidity
@@ -1039,7 +1056,10 @@ class UIManager:
 
         # Format feels like
         feelslike_str = format_temperature(
-            feelslike, unit_pref, temperature_c=feelslike_c, precision=1
+            feelslike,
+            unit_pref,
+            temperature_c=feelslike_c,
+            precision=self._get_temperature_precision(unit_pref),
         )
 
         # Format the text
