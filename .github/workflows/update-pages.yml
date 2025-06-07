@@ -5,7 +5,7 @@ on:
     workflows: ["Build and Package"]
     types:
       - completed
-    branches: [ dev ]  # Only trigger on dev branch builds
+    branches: [ main, dev ]  # Trigger on both main and dev branch builds
   workflow_dispatch:
     inputs:
       force_update:
@@ -13,9 +13,18 @@ on:
         required: false
         type: boolean
         default: false
+      target_branch:
+        description: 'Target branch for build info (main/dev/both)'
+        required: false
+        type: choice
+        options:
+          - both
+          - main
+          - dev
+        default: both
 
 permissions:
-  contents: write  # Need write permission to commit changes
+  contents: read   # Only need read permission since we're not committing back
   pages: write
   id-token: write
 
@@ -35,6 +44,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
+        ref: dev  # Always checkout dev branch since that's where GitHub Pages deploys from
         token: ${{ secrets.GITHUB_TOKEN }}
         fetch-depth: 0
 
@@ -49,9 +59,19 @@ jobs:
         # Get latest successful workflow runs for main and dev branches
         echo "Fetching build information..."
 
+        # Determine which branches to fetch based on input or trigger
+        FETCH_BRANCHES="main dev"
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.target_branch }}" != "both" ]; then
+          FETCH_BRANCHES="${{ inputs.target_branch }}"
+        fi
+
+        echo "Fetching build info for branches: $FETCH_BRANCHES"
+
         # Function to get latest successful run info
         get_build_info() {
           local branch=$1
+          echo "Fetching build info for branch: $branch"
+
           local run_info=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/actions/workflows/build.yml/runs?branch=${branch}&status=success&per_page=1")
 
@@ -59,34 +79,41 @@ jobs:
           local run_date=$(echo "$run_info" | jq -r '.workflow_runs[0].created_at // empty')
           local commit_sha=$(echo "$run_info" | jq -r '.workflow_runs[0].head_sha // empty')
 
-          if [ -n "$run_id" ] && [ "$run_id" != "null" ]; then
+          if [ -n "$run_id" ] && [ "$run_id" != "null" ] && [ "$run_id" != "empty" ]; then
             # Get artifacts for this run
             local artifacts=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               "https://api.github.com/repos/${{ github.repository }}/actions/runs/${run_id}/artifacts")
 
             # Extract version from artifact name (assumes format: windows-installer-X.Y.Z)
-            local version=$(echo "$artifacts" | jq -r '.artifacts[] | select(.name | startswith("windows-installer-")) | .name' | sed 's/windows-installer-//')
+            local version=$(echo "$artifacts" | jq -r '.artifacts[] | select(.name | startswith("windows-installer-")) | .name' | sed 's/windows-installer-//' | head -1)
 
-            if [ -z "$version" ] || [ "$version" = "null" ]; then
+            if [ -z "$version" ] || [ "$version" = "null" ] || [ "$version" = "" ]; then
               # Fallback: try to get version from pyproject.toml
               version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])" 2>/dev/null || echo "unknown")
             fi
 
+            # Format the date nicely
+            local formatted_date=$(date -d "$run_date" "+%Y-%m-%d %H:%M UTC" 2>/dev/null || echo "$run_date")
+
             echo "${branch}_version=${version}"
-            echo "${branch}_date=${run_date}"
+            echo "${branch}_date=${formatted_date}"
             echo "${branch}_run_id=${run_id}"
             echo "${branch}_commit=${commit_sha}"
+
+            echo "✓ Found build for $branch: version=$version, date=$formatted_date"
           else
             echo "${branch}_version=No builds available"
             echo "${branch}_date=N/A"
             echo "${branch}_run_id="
             echo "${branch}_commit="
+            echo "⚠ No successful builds found for $branch"
           fi
         }
 
-        # Get info for both branches
-        get_build_info "main" >> $GITHUB_OUTPUT
-        get_build_info "dev" >> $GITHUB_OUTPUT
+        # Get info for specified branches
+        for branch in $FETCH_BRANCHES; do
+          get_build_info "$branch" >> $GITHUB_OUTPUT
+        done
 
     - name: Generate HTML from template
       run: |
@@ -96,36 +123,80 @@ jobs:
         # Get current timestamp
         LAST_UPDATED=$(date -u +"%Y-%m-%d %H:%M UTC")
 
-        # Substitute template variables with actual values
-        sed -i "s/{{MAIN_VERSION}}/${{ steps.build-info.outputs.main_version }}/g" docs/index.html
-        sed -i "s/{{MAIN_DATE}}/${{ steps.build-info.outputs.main_date }}/g" docs/index.html
-        sed -i "s/{{MAIN_COMMIT}}/${{ steps.build-info.outputs.main_commit }}/g" docs/index.html
-        sed -i "s/{{DEV_VERSION}}/${{ steps.build-info.outputs.dev_version }}/g" docs/index.html
-        sed -i "s/{{DEV_DATE}}/${{ steps.build-info.outputs.dev_date }}/g" docs/index.html
-        sed -i "s/{{DEV_COMMIT}}/${{ steps.build-info.outputs.dev_commit }}/g" docs/index.html
-        sed -i "s/{{LAST_UPDATED}}/$LAST_UPDATED/g" docs/index.html
+        # Get build info values with fallbacks
+        MAIN_VERSION="${{ steps.build-info.outputs.main_version }}"
+        MAIN_DATE="${{ steps.build-info.outputs.main_date }}"
+        MAIN_COMMIT="${{ steps.build-info.outputs.main_commit }}"
+        DEV_VERSION="${{ steps.build-info.outputs.dev_version }}"
+        DEV_DATE="${{ steps.build-info.outputs.dev_date }}"
+        DEV_COMMIT="${{ steps.build-info.outputs.dev_commit }}"
 
-        echo "Generated index.html from template with build info:"
-        echo "Main: ${{ steps.build-info.outputs.main_version }} (${{ steps.build-info.outputs.main_date }})"
-        echo "Dev: ${{ steps.build-info.outputs.dev_version }} (${{ steps.build-info.outputs.dev_date }})"
-        echo "Last updated: $LAST_UPDATED"
+        # Apply fallbacks if values are empty
+        [ -z "$MAIN_VERSION" ] && MAIN_VERSION="Latest Release"
+        [ -z "$MAIN_DATE" ] && MAIN_DATE="Check GitHub"
+        [ -z "$MAIN_COMMIT" ] && MAIN_COMMIT=""
+        [ -z "$DEV_VERSION" ] && DEV_VERSION="Development"
+        [ -z "$DEV_DATE" ] && DEV_DATE="Check nightly.link"
+        [ -z "$DEV_COMMIT" ] && DEV_COMMIT=""
+
+        # Escape special characters for sed
+        MAIN_VERSION=$(echo "$MAIN_VERSION" | sed 's/[[\.*^$()+?{|]/\\&/g')
+        MAIN_DATE=$(echo "$MAIN_DATE" | sed 's/[[\.*^$()+?{|]/\\&/g')
+        MAIN_COMMIT=$(echo "$MAIN_COMMIT" | sed 's/[[\.*^$()+?{|]/\\&/g')
+        DEV_VERSION=$(echo "$DEV_VERSION" | sed 's/[[\.*^$()+?{|]/\\&/g')
+        DEV_DATE=$(echo "$DEV_DATE" | sed 's/[[\.*^$()+?{|]/\\&/g')
+        DEV_COMMIT=$(echo "$DEV_COMMIT" | sed 's/[[\.*^$()+?{|]/\\&/g')
+        LAST_UPDATED_ESCAPED=$(echo "$LAST_UPDATED" | sed 's/[[\.*^$()+?{|]/\\&/g')
+
+        # Substitute template variables with actual values
+        sed -i "s/{{MAIN_VERSION}}/$MAIN_VERSION/g" docs/index.html
+        sed -i "s/{{MAIN_DATE}}/$MAIN_DATE/g" docs/index.html
+        sed -i "s/{{MAIN_COMMIT}}/$MAIN_COMMIT/g" docs/index.html
+        sed -i "s/{{DEV_VERSION}}/$DEV_VERSION/g" docs/index.html
+        sed -i "s/{{DEV_DATE}}/$DEV_DATE/g" docs/index.html
+        sed -i "s/{{DEV_COMMIT}}/$DEV_COMMIT/g" docs/index.html
+        sed -i "s/{{LAST_UPDATED}}/$LAST_UPDATED_ESCAPED/g" docs/index.html
+
+        echo "✓ Generated index.html from template with build info:"
+        echo "  Main: ${{ steps.build-info.outputs.main_version }} (${{ steps.build-info.outputs.main_date }})"
+        echo "  Dev: ${{ steps.build-info.outputs.dev_version }} (${{ steps.build-info.outputs.dev_date }})"
+        echo "  Last updated: $LAST_UPDATED"
+
+        # Verify substitution worked
+        if grep -q "{{" docs/index.html; then
+          echo "⚠ Warning: Some template variables may not have been substituted:"
+          grep -o "{{[^}]*}}" docs/index.html || true
+        else
+          echo "✓ All template variables successfully substituted"
+        fi
 
     - name: Create nightly.link URLs documentation
       run: |
-        cat > docs/download-links.md << 'EOF'
+        # Get build info with fallbacks
+        MAIN_VERSION="${{ steps.build-info.outputs.main_version }}"
+        MAIN_DATE="${{ steps.build-info.outputs.main_date }}"
+        DEV_VERSION="${{ steps.build-info.outputs.dev_version }}"
+        DEV_DATE="${{ steps.build-info.outputs.dev_date }}"
+
+        [ -z "$MAIN_VERSION" ] && MAIN_VERSION="latest"
+        [ -z "$MAIN_DATE" ] && MAIN_DATE="Check GitHub"
+        [ -z "$DEV_VERSION" ] && DEV_VERSION="latest"
+        [ -z "$DEV_DATE" ] && DEV_DATE="Check nightly.link"
+
+        cat > docs/download-links.md << EOF
         # AccessiWeather Download Links
 
         ## Stable Release (Main Branch)
 
         ### Direct Downloads:
-        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-installer-${{ steps.build-info.outputs.main_version }}.zip
-        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-portable-${{ steps.build-info.outputs.main_version }}.zip
+        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-installer-${MAIN_VERSION}.zip
+        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-portable-${MAIN_VERSION}.zip
 
         ## Development Release (Dev Branch)
 
         ### Direct Downloads:
-        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-installer-${{ steps.build-info.outputs.dev_version }}.zip
-        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-portable-${{ steps.build-info.outputs.dev_version }}.zip
+        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-installer-${DEV_VERSION}.zip
+        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-portable-${DEV_VERSION}.zip
 
         ## How to Use
 
@@ -138,13 +209,51 @@ jobs:
 
         ## Build Information
 
-        - **Main Version**: ${{ steps.build-info.outputs.main_version }}
-        - **Main Build Date**: ${{ steps.build-info.outputs.main_date }}
-        - **Dev Version**: ${{ steps.build-info.outputs.dev_version }}
-        - **Dev Build Date**: ${{ steps.build-info.outputs.dev_date }}
+        - **Main Version**: ${MAIN_VERSION}
+        - **Main Build Date**: ${MAIN_DATE}
+        - **Dev Version**: ${DEV_VERSION}
+        - **Dev Build Date**: ${DEV_DATE}
         - **Last Updated**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
 
         EOF
+
+        echo "✓ Created download links documentation"
+
+    - name: Validate generated files
+      run: |
+        echo "📋 Validating generated files..."
+
+        # Check if index.html exists and has content
+        if [ -f "docs/index.html" ]; then
+          echo "✓ index.html exists ($(wc -l < docs/index.html) lines)"
+
+          # Check for remaining template variables
+          if grep -q "{{" docs/index.html; then
+            echo "⚠ Warning: Found remaining template variables:"
+            grep -n "{{[^}]*}}" docs/index.html || true
+          else
+            echo "✓ No template variables remaining"
+          fi
+
+          # Check for key content
+          if grep -q "AccessiWeather" docs/index.html; then
+            echo "✓ Contains expected content"
+          else
+            echo "❌ Missing expected content"
+          fi
+        else
+          echo "❌ index.html not found!"
+          exit 1
+        fi
+
+        # Check download-links.md
+        if [ -f "docs/download-links.md" ]; then
+          echo "✓ download-links.md exists ($(wc -l < docs/download-links.md) lines)"
+        else
+          echo "⚠ download-links.md not found"
+        fi
+
+        echo "📋 File validation complete"
 
     - name: Upload Pages artifact
       uses: actions/upload-pages-artifact@v3
