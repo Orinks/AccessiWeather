@@ -19,10 +19,19 @@ def is_portable_mode() -> bool:
     Portable mode is detected by checking if the executable is running from a
     non-standard location (not Program Files) and if the directory is writable.
 
+    For testing purposes, portable mode can be forced by setting the
+    ACCESSIWEATHER_FORCE_PORTABLE environment variable to "1" or "true".
+
     Returns:
         True if running in portable mode, False otherwise
     """
-    # If running from source code, not portable
+    # Check for testing override first
+    force_portable = os.environ.get("ACCESSIWEATHER_FORCE_PORTABLE", "").lower()
+    if force_portable in ("1", "true", "yes"):
+        logger.debug("Portable mode forced via ACCESSIWEATHER_FORCE_PORTABLE environment variable")
+        return True
+
+    # If running from source code, not portable (unless forced)
     if not getattr(sys, "frozen", False):
         logger.debug("Not in portable mode: running from source code")
         return False
@@ -86,11 +95,19 @@ def get_config_dir(custom_dir: Optional[str] = None) -> str:
     logger.debug(f"Portable mode check result: {portable_mode}")
 
     if portable_mode:
-        # Get the directory of the executable
+        # Get the directory of the executable or source code
         if getattr(sys, "frozen", False):
             app_dir = os.path.dirname(sys.executable)
         else:
-            app_dir = os.path.dirname(os.path.abspath(__file__))
+            # When running from source in forced portable mode, use the project root
+            # Find the project root by looking for pyproject.toml
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            project_root = current_dir
+            while project_root != os.path.dirname(project_root):  # Stop at filesystem root
+                if os.path.exists(os.path.join(project_root, "pyproject.toml")):
+                    break
+                project_root = os.path.dirname(project_root)
+            app_dir = project_root
 
         # Use a 'config' directory in the application directory
         config_dir = os.path.join(app_dir, "config")
