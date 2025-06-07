@@ -12,11 +12,6 @@ on:
         required: false
         type: boolean
         default: false
-  workflow_run:
-    workflows: ["Continuous Integration"]
-    types:
-      - completed
-    branches: [ dev ]  # Only trigger after CI on dev branch
 
 permissions:
   contents: read      # Read repository contents
@@ -32,7 +27,7 @@ jobs:
   build:
     name: Build Windows Application
     runs-on: windows-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+    if: ${{ github.event_name == 'workflow_dispatch' }}
 
     outputs:
       version: ${{ steps.version.outputs.version }}
