@@ -101,45 +101,10 @@ jobs:
         echo "Updated version to: $VERSION"
       shell: bash
 
-    - name: Build with PyInstaller
+    - name: Build with installer script
       run: |
-        if (Test-Path "AccessiWeather.spec") {
-          Write-Host "Using spec file: AccessiWeather.spec"
-          python -m PyInstaller --clean --noconfirm AccessiWeather.spec
-        } else {
-          Write-Host "Building with command line arguments"
-          python -m PyInstaller --clean --noconfirm --onedir --windowed --name AccessiWeather `
-            --hidden-import=plyer.platforms.win.notification `
-            --hidden-import=dateutil.parser `
-            --hidden-import=httpx `
-            --hidden-import=attrs `
-            --exclude-module=IPython `
-            --exclude-module=jedi `
-            --exclude-module=parso `
-            --exclude-module=black `
-            --exclude-module=mypy `
-            --exclude-module=django `
-            --exclude-module=Django `
-            --exclude-module=rapidfuzz `
-            src/accessiweather/main.py
-        }
-
-    - name: Verify build
-      run: |
-        if (Test-Path "dist/AccessiWeather/AccessiWeather.exe") {
-          Write-Host "Build successful - executable found"
-          Get-ChildItem "dist/AccessiWeather" | Select-Object Name, Length
-        } else {
-          Write-Host "Build failed - executable not found"
-          exit 1
-        }
-
-    - name: Create portable ZIP
-      run: |
-        $VERSION = "${{ steps.version.outputs.version }}"
-        $ZipName = "AccessiWeather_Portable_v$VERSION.zip"
-        Compress-Archive -Path "dist/AccessiWeather/*" -DestinationPath "dist/$ZipName" -Force
-        Write-Host "Created portable archive: $ZipName"
+        # The script handles PyInstaller, portable ZIP, and verification
+        powershell -ExecutionPolicy Bypass -File installer/build_installer.ps1
 
     - name: Generate checksums
       run: |
@@ -173,191 +138,24 @@ jobs:
           dist/checksums.txt
         retention-days: 30
 
-    - name: Upload application files for installer
+    - name: Upload installer artifact
       uses: actions/upload-artifact@v4
       with:
-        name: windows-build-${{ steps.version.outputs.version }}
+        name: windows-installer-${{ steps.version.outputs.version }}
         path: |
-          dist/AccessiWeather/
-        retention-days: 30
-
-  installer:
-    name: Create Windows Installer
-    runs-on: windows-latest
-    needs: build
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Download portable build artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: windows-portable-${{ needs.build.outputs.version }}
-        path: dist/
-
-    - name: Download application files for installer
-      uses: actions/download-artifact@v4
-      with:
-        name: windows-build-${{ needs.build.outputs.version }}
-        path: build-files/
-
-    - name: Copy application files to dist
-      run: |
-        # Create AccessiWeather directory in dist
-        $AppDir = "dist/AccessiWeather"
-        if (-not (Test-Path $AppDir)) {
-          New-Item -ItemType Directory -Path $AppDir -Force
-          Write-Host "Created application directory: $AppDir"
-        }
-
-        # Copy all application files from build-files to dist/AccessiWeather
-        if (Test-Path "build-files/AccessiWeather.exe") {
-          Copy-Item -Path "build-files/*" -Destination $AppDir -Recurse -Force
-          Write-Host "Copied application files for installer"
-
-          # Verify files were copied
-          Write-Host "Files in ${AppDir}:"
-          Get-ChildItem $AppDir -Recurse | Select-Object FullName | Format-Table -AutoSize
-        } else {
-          Write-Host "Warning: Application files not found"
-          Get-ChildItem "build-files/" -Recurse
-        }
-
-    - name: Install Inno Setup
-      run: |
-        # Use chocolatey to install Inno Setup (more reliable)
-        choco install innosetup -y
-
-        # Add Inno Setup to PATH
-        $InnoSetupPath = "${env:ProgramFiles(x86)}\Inno Setup 6"
-        if (Test-Path $InnoSetupPath) {
-          $env:PATH += ";$InnoSetupPath"
-          echo "$InnoSetupPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          Write-Host "Inno Setup installed and added to PATH: $InnoSetupPath"
-        } else {
-          Write-Host "Warning: Inno Setup installation path not found"
-          Get-ChildItem "${env:ProgramFiles(x86)}" -Filter "*Inno*" -Directory
-        }
-
-    - name: Verify Inno Setup installation
-      run: |
-        # Check if iscc.exe is available (help command returns exit code 1, which is normal)
-        try {
-          $output = & iscc.exe /? 2>&1
-          if ($output -match "Inno Setup.*Command-Line Compiler") {
-            Write-Host "✓ Inno Setup compiler verified successfully"
-            Write-Host "Version info: $($output | Select-String 'Inno Setup.*Command-Line Compiler')"
-            exit 0  # Explicitly set success exit code
-          } else {
-            Write-Host "✗ Inno Setup verification failed"
-            exit 1
-          }
-        } catch {
-          Write-Host "✗ Inno Setup not found or not accessible"
-          exit 1
-        }
-
-    - name: Set installer environment variables
-      run: |
-        $VERSION = "${{ needs.build.outputs.version }}"
-
-        # Set environment variables that the Inno Setup script expects
-        echo "ACCESSIWEATHER_VERSION=$VERSION" >> $env:GITHUB_ENV
-        echo "ACCESSIWEATHER_ROOT_DIR=$PWD" >> $env:GITHUB_ENV
-        echo "ACCESSIWEATHER_DIST_DIR=$PWD\dist" >> $env:GITHUB_ENV
-
-        Write-Host "Set installer environment variables:"
-        Write-Host "  ACCESSIWEATHER_VERSION=$VERSION"
-        Write-Host "  ACCESSIWEATHER_ROOT_DIR=$PWD"
-        Write-Host "  ACCESSIWEATHER_DIST_DIR=$PWD\dist"
-
-        # Debug: Show current directory structure
-        Write-Host "Current directory structure:"
-        Get-ChildItem -Recurse | Select-Object FullName | Format-Table -AutoSize
-
-    - name: Build installer
-      run: |
-        $VERSION = "${{ needs.build.outputs.version }}"
-        $IssFile = "installer/AccessiWeather.iss"
-
-        if (Test-Path $IssFile) {
-          # Create installer output directory
-          $InstallerOutputDir = "installer\dist"
-          if (-not (Test-Path $InstallerOutputDir)) {
-            New-Item -ItemType Directory -Path $InstallerOutputDir -Force
-            Write-Host "Created installer output directory: $InstallerOutputDir"
-          }
-
-          # Debug: Show environment variables
-          Write-Host "Environment variables:"
-          Write-Host "  ACCESSIWEATHER_VERSION=$env:ACCESSIWEATHER_VERSION"
-          Write-Host "  ACCESSIWEATHER_ROOT_DIR=$env:ACCESSIWEATHER_ROOT_DIR"
-          Write-Host "  ACCESSIWEATHER_DIST_DIR=$env:ACCESSIWEATHER_DIST_DIR"
-
-          # Run Inno Setup compiler
-          Write-Host "Running Inno Setup compiler..."
-          $result = & iscc.exe $IssFile 2>&1
-          $exitCode = $LASTEXITCODE
-
-          Write-Host "Inno Setup output:"
-          Write-Host $result
-          Write-Host "Exit code: $exitCode"
-
-          if ($exitCode -eq 0) {
-            Write-Host "Installer build completed successfully"
-
-            # Check if installer was created
-            $InstallerPath = "installer/dist/AccessiWeather_Setup_v$VERSION.exe"
-            if (Test-Path $InstallerPath) {
-              Write-Host "Installer created successfully: $InstallerPath"
-              # Move to main dist directory
-              Move-Item $InstallerPath "dist/AccessiWeather_Setup_v$VERSION.exe"
-            } else {
-              Write-Host "Warning: Installer not found at expected location"
-              Get-ChildItem "installer/" -Recurse -Filter "*.exe"
-            }
-          } else {
-            Write-Host "Installer build failed with exit code: $exitCode"
-            exit 1
-          }
-        } else {
-          Write-Host "Skipping installer build - no Inno Setup script found"
-        }
-
-    - name: Generate installer checksum
-      run: |
-        $VERSION = "${{ needs.build.outputs.version }}"
-        $InstallerPath = "dist/AccessiWeather_Setup_v$VERSION.exe"
-
-        if (Test-Path $InstallerPath) {
-          $InstallerHash = (Get-FileHash $InstallerPath -Algorithm SHA256).Hash
-
-          # Add installer checksum to file
-          Add-Content "dist/checksums.txt" "$InstallerHash  AccessiWeather_Setup_v$VERSION.exe"
-
-          Write-Host "Installer checksum added: $($InstallerHash.Substring(0,16))..."
-        }
-
-    - name: Upload installer artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: windows-installer-${{ needs.build.outputs.version }}
-        path: |
-          dist/AccessiWeather_Setup_v${{ needs.build.outputs.version }}.exe
-          dist/checksums.txt
+          installer/dist/AccessiWeather_Setup_v${{ steps.version.outputs.version }}.exe
         retention-days: 90
 
     - name: Trigger pages update
       if: success()
       run: |
-        curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/${{ github.repository }}/dispatches" -d '{"event_type": "build-completed", "client_payload": {"version": "${{ needs.build.outputs.version }}", "branch": "${{ github.ref_name }}", "run_id": "${{ github.run_id }}"}}'
+        curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/${{ github.repository }}/dispatches" -d '{"event_type": "build-completed", "client_payload": {"version": "${{ steps.version.outputs.version }}", "branch": "${{ github.ref_name }}", "run_id": "${{ github.run_id }}"}}'
         echo "✓ Triggered pages update workflow"
 
   validate:
     name: Validate Build
     runs-on: windows-latest
-    needs: [build, installer]
+    needs: build
 
     steps:
     - name: Download installer artifacts
