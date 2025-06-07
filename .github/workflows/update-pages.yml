@@ -67,7 +67,40 @@ jobs:
 
         echo "Fetching build info for branches: $FETCH_BRANCHES"
 
-        # Function to get latest successful run info
+        # Function to get latest release info for main branch
+        get_release_info() {
+          echo "Fetching latest release info..." >&2
+
+          local release_info=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/latest")
+
+          local tag_name=$(echo "$release_info" | jq -r '.tag_name // empty')
+          local published_at=$(echo "$release_info" | jq -r '.published_at // empty')
+          local target_commitish=$(echo "$release_info" | jq -r '.target_commitish // empty')
+
+          if [ -n "$tag_name" ] && [ "$tag_name" != "null" ] && [ "$tag_name" != "empty" ]; then
+            # Remove 'v' prefix if present (e.g., v0.9.2 -> 0.9.2)
+            local version=$(echo "$tag_name" | sed 's/^v//')
+
+            # Format the date nicely
+            local formatted_date=$(date -d "$published_at" "+%Y-%m-%d %H:%M UTC" 2>/dev/null || echo "$published_at")
+
+            echo "main_version=${version}"
+            echo "main_date=${formatted_date}"
+            echo "main_run_id="
+            echo "main_commit=${target_commitish}"
+
+            echo "✓ Found release: version=$version, date=$formatted_date" >&2
+          else
+            echo "main_version=No releases available"
+            echo "main_date=N/A"
+            echo "main_run_id="
+            echo "main_commit="
+            echo "⚠ No releases found" >&2
+          fi
+        }
+
+        # Function to get latest successful run info for dev branch
         get_build_info() {
           local branch=$1
           echo "Fetching build info for branch: $branch" >&2
@@ -112,7 +145,13 @@ jobs:
 
         # Get info for specified branches
         for branch in $FETCH_BRANCHES; do
-          get_build_info "$branch" >> $GITHUB_OUTPUT
+          if [ "$branch" = "main" ]; then
+            # For main branch, get release info from GitHub releases
+            get_release_info >> $GITHUB_OUTPUT
+          else
+            # For other branches (dev), get build info from workflow runs
+            get_build_info "$branch" >> $GITHUB_OUTPUT
+          fi
         done
 
     - name: Generate HTML from template
