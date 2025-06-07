@@ -146,11 +146,17 @@ jobs:
           installer/dist/AccessiWeather_Setup_v${{ steps.version.outputs.version }}.exe
         retention-days: 90
 
-    - name: Trigger pages update
+    - name: Update GitHub Pages
       if: success()
       run: |
-        curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/${{ github.repository }}/dispatches" -d '{"event_type": "build-completed", "client_payload": {"version": "${{ steps.version.outputs.version }}", "branch": "${{ github.ref_name }}", "run_id": "${{ github.run_id }}"}}'
-        echo "✓ Triggered pages update workflow"
+        # Trigger the existing update-pages workflow using workflow_dispatch
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/${{ github.repository }}/actions/workflows/update-pages.yml/dispatches" \
+          -d '{"ref": "dev", "inputs": {"force_update": "true", "target_branch": "dev"}}'
+
+        echo "✓ Triggered GitHub Pages update workflow"
 
   validate:
     name: Validate Build
