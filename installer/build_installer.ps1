@@ -357,16 +357,27 @@ $dependenciesInstalled = Test-InstallDependencies
 if (-not $dependenciesInstalled) {
     Write-Host "Failed to install all required dependencies. Please check the error messages above." -ForegroundColor Red
 
-    $retry = Read-Host "Do you want to retry with the -Force option to reinstall all dependencies? (y/n)"
-    if ($retry -eq "y") {
+    # In non-interactive environments (like CI), automatically retry with -Force
+    if ($env:CI -eq "true" -or $env:GITHUB_ACTIONS -eq "true") {
+        Write-Host "Running in CI environment, automatically retrying with -Force option..." -ForegroundColor Yellow
         $dependenciesInstalled = Test-InstallDependencies -Force
         if (-not $dependenciesInstalled) {
-            Write-Host "Failed to install all required dependencies even with the -Force option. Please install them manually." -ForegroundColor Red
+            Write-Host "Failed to install all required dependencies even with the -Force option." -ForegroundColor Red
             exit 1
         }
     }
     else {
-        exit 1
+        $retry = Read-Host "Do you want to retry with the -Force option to reinstall all dependencies? (y/n)"
+        if ($retry -eq "y") {
+            $dependenciesInstalled = Test-InstallDependencies -Force
+            if (-not $dependenciesInstalled) {
+                Write-Host "Failed to install all required dependencies even with the -Force option. Please install them manually." -ForegroundColor Red
+                exit 1
+            }
+        }
+        else {
+            exit 1
+        }
     }
 }
 

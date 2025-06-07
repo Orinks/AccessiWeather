@@ -101,33 +101,154 @@ jobs:
         echo "Updated version to: $VERSION"
       shell: bash
 
+    - name: Install Inno Setup
+      run: |
+        # Download and install Inno Setup
+        $InnoSetupUrl = "https://jrsoftware.org/download.php/is.exe"
+        $InnoSetupInstaller = "$env:TEMP\innosetup.exe"
+
+        Write-Host "Downloading Inno Setup..."
+        Invoke-WebRequest -Uri $InnoSetupUrl -OutFile $InnoSetupInstaller
+
+        Write-Host "Installing Inno Setup..."
+        Start-Process -FilePath $InnoSetupInstaller -ArgumentList "/VERYSILENT", "/NORESTART", "/ALLUSERS" -Wait
+
+        # Add Inno Setup to PATH for this session
+        $InnoSetupPath = "C:\Program Files (x86)\Inno Setup 6"
+        if (Test-Path $InnoSetupPath) {
+          $env:PATH += ";$InnoSetupPath"
+          Write-Host "Added Inno Setup to PATH: $InnoSetupPath"
+
+          # Also set for subsequent steps
+          echo "$InnoSetupPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        } else {
+          Write-Host "Warning: Inno Setup installation path not found"
+          # Try alternative path
+          $InnoSetupPath = "C:\Program Files\Inno Setup 6"
+          if (Test-Path $InnoSetupPath) {
+            $env:PATH += ";$InnoSetupPath"
+            Write-Host "Found Inno Setup at alternative path: $InnoSetupPath"
+            echo "$InnoSetupPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          }
+        }
+
+        # Verify installation
+        try {
+          $isccVersion = & iscc.exe 2>&1
+          Write-Host "Inno Setup installed and verified successfully"
+        } catch {
+          Write-Host "Error: Could not verify Inno Setup installation"
+          Write-Host "PATH: $env:PATH"
+          exit 1
+        }
+
     - name: Build with installer script
       run: |
-        # The script handles PyInstaller, portable ZIP, and verification
-        powershell -ExecutionPolicy Bypass -File installer/build_installer.ps1
+        # Set working directory and run the installer script
+        Write-Host "Current directory: $(Get-Location)"
+        Write-Host "PATH: $env:PATH"
+        Write-Host "Checking for required tools..."
 
-    - name: Generate checksums
+        # Verify Python
+        try {
+          $pythonVersion = python --version
+          Write-Host "Python: $pythonVersion"
+        } catch {
+          Write-Host "Warning: Python not found in PATH"
+        }
+
+        # Verify Inno Setup
+        try {
+          $isccVersion = iscc.exe 2>&1 | Select-Object -First 1
+          Write-Host "Inno Setup: $isccVersion"
+        } catch {
+          Write-Host "Warning: Inno Setup not found in PATH"
+        }
+
+        # Ensure we're in the project root
+        if (-not (Test-Path "installer/build_installer.ps1")) {
+          Write-Host "Error: installer/build_installer.ps1 not found in current directory"
+          Write-Host "Directory contents:"
+          Get-ChildItem | ForEach-Object { Write-Host "  - $($_.Name)" }
+          exit 1
+        }
+
+        Write-Host "Running installer build script..."
+
+        # Run the script with proper error handling
+        try {
+          & powershell -ExecutionPolicy Bypass -File "installer/build_installer.ps1"
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "Installer script failed with exit code: $LASTEXITCODE"
+            exit 1
+          }
+        } catch {
+          Write-Host "Error running installer script: $_"
+          exit 1
+        }
+
+        Write-Host "Installer script completed successfully"
+
+    - name: Verify build outputs and generate checksums
       run: |
         $VERSION = "${{ steps.version.outputs.version }}"
+        Write-Host "Verifying build outputs for version: $VERSION"
 
-        # Generate checksums for artifacts
+        # Check required paths
         $ExePath = "dist/AccessiWeather/AccessiWeather.exe"
         $ZipPath = "dist/AccessiWeather_Portable_v$VERSION.zip"
+        $InstallerPath = "installer/dist/AccessiWeather_Setup_v$VERSION.exe"
 
+        $BuildSuccess = $true
+
+        # Verify executable
         if (Test-Path $ExePath) {
+          $ExeSize = (Get-Item $ExePath).Length / 1MB
           $ExeHash = (Get-FileHash $ExePath -Algorithm SHA256).Hash
-          Write-Host "Executable SHA256: $($ExeHash.Substring(0,16))..."
+          Write-Host "✓ Executable: $ExePath ($($ExeSize.ToString('0.00')) MB)"
+          Write-Host "  SHA256: $($ExeHash.Substring(0,16))..."
+        } else {
+          Write-Host "✗ Missing executable: $ExePath"
+          $BuildSuccess = $false
         }
 
+        # Verify portable ZIP
         if (Test-Path $ZipPath) {
+          $ZipSize = (Get-Item $ZipPath).Length / 1MB
           $ZipHash = (Get-FileHash $ZipPath -Algorithm SHA256).Hash
-          Write-Host "Portable ZIP SHA256: $($ZipHash.Substring(0,16))..."
+          Write-Host "✓ Portable ZIP: $ZipPath ($($ZipSize.ToString('0.00')) MB)"
+          Write-Host "  SHA256: $($ZipHash.Substring(0,16))..."
+        } else {
+          Write-Host "✗ Missing portable ZIP: $ZipPath"
+          $BuildSuccess = $false
         }
 
-        # Create simple checksums file
-        $ChecksumsContent = "AccessiWeather v$VERSION - Build Checksums`n`n$ExeHash  AccessiWeather.exe`n$ZipHash  AccessiWeather_Portable_v$VERSION.zip"
+        # Verify installer
+        if (Test-Path $InstallerPath) {
+          $InstallerSize = (Get-Item $InstallerPath).Length / 1MB
+          $InstallerHash = (Get-FileHash $InstallerPath -Algorithm SHA256).Hash
+          Write-Host "✓ Installer: $InstallerPath ($($InstallerSize.ToString('0.00')) MB)"
+          Write-Host "  SHA256: $($InstallerHash.Substring(0,16))..."
+        } else {
+          Write-Host "✗ Missing installer: $InstallerPath"
+          Write-Host "Checking installer directory contents:"
+          if (Test-Path "installer/dist") {
+            Get-ChildItem "installer/dist" | ForEach-Object { Write-Host "  - $($_.Name)" }
+          } else {
+            Write-Host "  installer/dist directory does not exist"
+          }
+          $BuildSuccess = $false
+        }
+
+        if (-not $BuildSuccess) {
+          Write-Host "Build verification failed - missing required files"
+          exit 1
+        }
+
+        # Generate checksums file
+        $ChecksumsContent = "AccessiWeather v$VERSION - Build Checksums`n`n$ExeHash  AccessiWeather.exe`n$ZipHash  AccessiWeather_Portable_v$VERSION.zip`n$InstallerHash  AccessiWeather_Setup_v$VERSION.exe"
         $ChecksumsContent | Out-File -FilePath "dist/checksums.txt" -Encoding UTF8
-        Write-Host "Checksums saved to checksums.txt"
+        Write-Host "✓ Checksums saved to dist/checksums.txt"
 
     - name: Upload portable build artifact
       uses: actions/upload-artifact@v4
@@ -175,7 +296,6 @@ jobs:
 
         # Check installer artifacts
         $InstallerFile = "artifacts/installer/AccessiWeather_Setup_v$VERSION.exe"
-        $InstallerChecksums = "artifacts/installer/checksums.txt"
 
         # Check portable artifacts
         $PortableFile = "artifacts/portable/AccessiWeather_Portable_v$VERSION.zip"
