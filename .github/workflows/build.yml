@@ -12,6 +12,8 @@ on:
         required: false
         type: boolean
         default: false
+  repository_dispatch:
+    types: [ci_completed]
 
 permissions:
   contents: read      # Read repository contents
@@ -27,7 +29,7 @@ jobs:
   build:
     name: Build Windows Application
     runs-on: windows-latest
-    if: ${{ github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch' }}
 
     outputs:
       version: ${{ steps.version.outputs.version }}
