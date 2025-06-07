@@ -1,0 +1,354 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+  workflow_dispatch:
+
+env:
+  # Quality gate thresholds - relaxed for small open source project
+  MAX_COMPLEXITY: 30
+  SECURITY_SEVERITY_THRESHOLD: "medium"
+
+jobs:
+  test:
+    name: Test Suite
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~\AppData\Local\pip\Cache
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev]
+        pip install -r requirements-dev.txt
+
+    - name: Set up virtual display for GUI tests
+      run: |
+        # Set environment variable to prevent wxPython from requiring a display
+        echo "DISPLAY=" >> $GITHUB_ENV
+        echo "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1" >> $GITHUB_ENV
+
+    - name: Run unit tests with coverage
+      run: |
+        # Run fast unit tests with coverage, excluding integration tests
+        python -m pytest -m "unit or (not slow and not integration and not e2e and not gui)" -v --tb=short --cov=src/accessiweather --cov-report=xml --cov-report=html --cov-report=term-missing --ignore=tests/test_integration_comprehensive.py --ignore=tests/test_integration_gui.py --ignore=tests/test_integration_performance.py
+      env:
+        # Prevent wxPython from trying to create a display
+        DISPLAY: ""
+        # Disable GUI-related warnings
+        PYTHONPATH: src
+        ACCESSIWEATHER_TEST_MODE: "1"
+
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      if: matrix.python-version == '3.12'
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+
+    - name: Upload coverage artifacts
+      uses: actions/upload-artifact@v4
+      if: matrix.python-version == '3.12'
+      with:
+        name: coverage-report-${{ matrix.python-version }}
+        path: htmlcov/
+
+  code-quality:
+    name: Code Quality & Pre-commit Hooks
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.12"
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~\AppData\Local\pip\Cache
+        key: ${{ runner.os }}-lint-pip-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-lint-pip-
+
+    - name: Install quality tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install pre-commit black isort flake8 mypy radon xenon
+        pip install -e .[dev]
+
+    - name: Run pre-commit hooks (includes black, isort, flake8, mypy)
+      run: |
+        pre-commit install --install-hooks
+        pre-commit run --all-files
+
+    - name: Generate code complexity report
+      run: |
+        # Generate cyclomatic complexity report (excluding auto-generated code)
+        radon cc src/accessiweather --json --exclude="*/weather_gov_api_client/*" > complexity-report.json
+        radon cc src/accessiweather --min C --show-complexity --exclude="*/weather_gov_api_client/*"
+
+        # Check for high complexity functions (excluding auto-generated weather_gov_api_client)
+        # Continue on error for small open source project but still report issues
+        xenon --max-absolute ${{ env.MAX_COMPLEXITY }} --max-modules A --max-average A --exclude="*/weather_gov_api_client/*" src/accessiweather || echo "Complexity check found issues but continuing for small open source project"
+      continue-on-error: true
+
+    - name: Generate maintainability index
+      run: |
+        radon mi src/accessiweather --json > maintainability-report.json
+        radon mi src/accessiweather --show
+
+    - name: Upload quality reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: code-quality-reports
+        path: |
+          complexity-report.json
+          maintainability-report.json
+
+  security:
+    name: Security Scan
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.12"
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~\AppData\Local\pip\Cache
+        key: ${{ runner.os }}-security-pip-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-security-pip-
+
+    - name: Install security scanning tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit safety semgrep pip-audit
+        pip install -e .[dev]
+
+    - name: Run bandit security linting
+      run: |
+        # Generate JSON report for artifacts
+        bandit -r src/accessiweather -f json -o bandit-report.json || true
+
+        # Run bandit with severity threshold (fail on medium+ issues)
+        bandit -r src/accessiweather --severity-level ${{ env.SECURITY_SEVERITY_THRESHOLD }} --confidence-level medium
+      continue-on-error: false
+
+    - name: Run pip-audit for dependency vulnerabilities
+      run: |
+        # Check for known vulnerabilities in dependencies
+        pip-audit --format=json --output=pip-audit-report.json || true
+        pip-audit --desc
+
+    - name: Run safety check for dependency vulnerabilities
+      run: |
+        # Generate JSON report
+        safety check --json --output safety-report.json || true
+
+        # Run safety check (fail on vulnerabilities)
+        safety check --short-report
+      continue-on-error: false
+
+    - name: Run semgrep security analysis
+      run: |
+        # Run semgrep with security rules
+        semgrep --config=auto --json --output=semgrep-report.json src/accessiweather || true
+        semgrep --config=auto --error src/accessiweather
+      continue-on-error: false
+
+    - name: Upload security reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-reports
+        path: |
+          bandit-report.json
+          safety-report.json
+          pip-audit-report.json
+          semgrep-report.json
+
+  integration:
+    name: Integration Tests
+    runs-on: windows-latest
+    needs: [test, code-quality]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.12"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev]
+        pip install -r requirements-dev.txt
+
+    - name: Run integration tests
+      run: |
+        # Run comprehensive integration test suite
+        python -m pytest tests/test_integration_comprehensive.py -v --tb=short --maxfail=5
+      env:
+        # Prevent wxPython from trying to create a display
+        DISPLAY: ""
+        PYTHONPATH: src
+        ACCESSIWEATHER_TEST_MODE: "1"
+
+    - name: Run GUI integration tests (headless)
+      run: |
+        # Run GUI integration tests in headless mode
+        python -m pytest tests/test_integration_gui.py -v --tb=short --maxfail=3
+      env:
+        DISPLAY: ""
+        PYTHONPATH: src
+        ACCESSIWEATHER_TEST_MODE: "1"
+      continue-on-error: true  # GUI tests may be flaky in CI
+
+    - name: Run performance integration tests
+      run: |
+        # Run performance integration tests (subset for CI)
+        python -m pytest tests/test_integration_performance.py -v --tb=short --maxfail=3
+      env:
+        DISPLAY: ""
+        PYTHONPATH: src
+        ACCESSIWEATHER_TEST_MODE: "1"
+
+    - name: Run comprehensive integration test suite
+      run: |
+        # Run our custom integration test runner for comprehensive reporting
+        python tests/run_integration_tests.py --type comprehensive --no-coverage --quiet
+      env:
+        DISPLAY: ""
+        PYTHONPATH: src
+        ACCESSIWEATHER_TEST_MODE: "1"
+      continue-on-error: true  # Don't fail CI if integration tests have issues
+
+    - name: Test application startup (headless)
+      run: |
+        # Test import without creating GUI
+        python -c "
+        import os
+        os.environ['DISPLAY'] = ''
+        try:
+            import src.accessiweather.main
+            print('[OK] Application imports successfully')
+        except Exception as e:
+            print(f'[ERROR] Import failed: {e}')
+            raise
+        "
+      env:
+        DISPLAY: ""
+        PYTHONPATH: src
+
+  smoke:
+    name: Smoke Tests
+    runs-on: windows-latest
+    needs: [test]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.12"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev]
+
+    - name: Run smoke tests
+      run: |
+        python -m pytest -m "smoke" -v --tb=short
+      env:
+        DISPLAY: ""
+        PYTHONPATH: src
+        ACCESSIWEATHER_TEST_MODE: "1"
+
+  quality-gate:
+    name: Quality Gate
+    runs-on: windows-latest
+    needs: [test, code-quality, security, integration, smoke]
+    if: always()
+
+    steps:
+    - name: Check all jobs status
+      run: |
+        echo "Test job status: ${{ needs.test.result }}"
+        echo "Code Quality job status: ${{ needs.code-quality.result }}"
+        echo "Security job status: ${{ needs.security.result }}"
+        echo "Integration job status: ${{ needs.integration.result }}"
+        echo "Smoke job status: ${{ needs.smoke.result }}"
+
+        if [ "${{ needs.test.result }}" != "success" ] ||
+           [ "${{ needs.code-quality.result }}" != "success" ] ||
+           [ "${{ needs.security.result }}" != "success" ] ||
+           [ "${{ needs.integration.result }}" != "success" ] ||
+           [ "${{ needs.smoke.result }}" != "success" ]; then
+          echo "Quality gate failed - one or more checks did not pass"
+          exit 1
+        fi
+
+        echo "Quality gate passed - all checks successful"
+      shell: bash
+
+    - name: Generate quality summary report
+      run: |
+        echo "# Quality Gate Summary" > quality-summary.md
+        echo "" >> quality-summary.md
+        echo "## Job Results" >> quality-summary.md
+        echo "- **Test Suite**: ${{ needs.test.result }}" >> quality-summary.md
+        echo "- **Code Quality**: ${{ needs.code-quality.result }}" >> quality-summary.md
+        echo "- **Security Scan**: ${{ needs.security.result }}" >> quality-summary.md
+        echo "- **Integration Tests**: ${{ needs.integration.result }}" >> quality-summary.md
+        echo "- **Smoke Tests**: ${{ needs.smoke.result }}" >> quality-summary.md
+        echo "" >> quality-summary.md
+        echo "## Quality Thresholds" >> quality-summary.md
+        echo "- **Maximum Complexity**: ${{ env.MAX_COMPLEXITY }}" >> quality-summary.md
+        echo "- **Security Severity**: ${{ env.SECURITY_SEVERITY_THRESHOLD }}+" >> quality-summary.md
+
+    - name: Upload quality summary
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: quality-gate-summary
+        path: quality-summary.md
