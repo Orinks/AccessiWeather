@@ -621,4 +621,4 @@ def test_get_data_source_default(weather_service):
     weather_service.config = {"settings": {}}
 
     result = weather_service._get_data_source()
-    assert result == "nws"
+    assert result == "auto"

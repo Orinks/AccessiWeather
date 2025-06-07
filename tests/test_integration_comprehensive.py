@@ -354,7 +354,10 @@ class TestConfigurationIntegration:
 
         # Create initial configuration
         initial_config = {
-            "settings": {"temperature_unit": TemperatureUnit.FAHRENHEIT.value, "data_source": "nws"}
+            "settings": {
+                "temperature_unit": TemperatureUnit.FAHRENHEIT.value,
+                "data_source": "auto",
+            }
         }
 
         os.makedirs(temp_config_dir, exist_ok=True)

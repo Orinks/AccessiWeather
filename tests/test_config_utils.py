@@ -142,10 +142,10 @@ def test_ensure_config_defaults_empty_config():
     """Test ensure_config_defaults with empty config."""
     config = {}
 
-    with patch("accessiweather.gui.settings_dialog.DEFAULT_DATA_SOURCE", "nws"):
+    with patch("accessiweather.gui.settings_dialog.DEFAULT_DATA_SOURCE", "auto"):
         result = ensure_config_defaults(config)
 
-    expected = {"settings": {"data_source": "nws"}, "api_keys": {}, "api_settings": {}}
+    expected = {"settings": {"data_source": "auto"}, "api_keys": {}, "api_settings": {}}
     assert result == expected
     # Ensure original config is not modified
     assert config == {}
@@ -202,12 +202,12 @@ def test_ensure_config_defaults_no_settings_section():
     """Test ensure_config_defaults creates settings section when missing."""
     config = {"other_section": {"some_key": "some_value"}}
 
-    with patch("accessiweather.gui.settings_dialog.DEFAULT_DATA_SOURCE", "nws"):
+    with patch("accessiweather.gui.settings_dialog.DEFAULT_DATA_SOURCE", "auto"):
         result = ensure_config_defaults(config)
 
     expected = {
         "other_section": {"some_key": "some_value"},
-        "settings": {"data_source": "nws"},
+        "settings": {"data_source": "auto"},
         "api_keys": {},
         "api_settings": {},
     }

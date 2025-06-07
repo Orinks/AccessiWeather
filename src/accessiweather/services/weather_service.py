@@ -10,11 +10,7 @@ from typing import Any, Dict, List, Optional, Union, cast
 
 from accessiweather.api_client import ApiClientError, NoaaApiClient, NoaaApiError
 from accessiweather.api_wrapper import NoaaApiWrapper
-from accessiweather.gui.settings_dialog import (
-    DATA_SOURCE_AUTO,
-    DATA_SOURCE_NWS,
-    DATA_SOURCE_OPENMETEO,
-)
+from accessiweather.gui.settings_dialog import DATA_SOURCE_AUTO, DATA_SOURCE_OPENMETEO
 from accessiweather.openmeteo_client import OpenMeteoApiClient, OpenMeteoError
 from accessiweather.openmeteo_mapper import OpenMeteoMapper
 from accessiweather.services.national_discussion_scraper import NationalDiscussionScraper
@@ -138,7 +134,7 @@ class WeatherService:
         Returns:
             String indicating which data source to use ('nws', 'openmeteo', or 'auto')
         """
-        data_source = self.config.get("settings", {}).get("data_source", DATA_SOURCE_NWS)
+        data_source = self.config.get("settings", {}).get("data_source", DATA_SOURCE_AUTO)
         logger.debug(
             f"_get_data_source: config={self.config.get('settings', {})}, data_source={data_source}"
         )

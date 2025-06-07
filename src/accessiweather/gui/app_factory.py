@@ -62,10 +62,10 @@ def create_weather_app(
     if "settings" in config:
         show_nationwide = config["settings"].get("show_nationwide_location", True)
 
-    # Get data source setting from config, default to "nws" if not found
-    data_source = "nws"
+    # Get data source setting from config, default to "auto" if not found
+    data_source = "auto"
     if "settings" in config:
-        data_source = config["settings"].get("data_source", "nws")
+        data_source = config["settings"].get("data_source", "auto")
 
     location_manager = LocationManager(
         config_dir, show_nationwide=show_nationwide, data_source=data_source

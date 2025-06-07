@@ -78,7 +78,7 @@ def mock_config():
             "temperature_unit": "fahrenheit",
             "update_interval_minutes": 10,
             "minimize_to_tray": False,
-            "data_source": "nws",
+            "data_source": "auto",
             "alert_radius": 50,
             "precise_location_alerts": False,
         },
