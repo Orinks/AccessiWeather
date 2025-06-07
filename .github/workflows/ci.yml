@@ -311,6 +311,9 @@ jobs:
     if: always()
 
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
     - name: Check all jobs status
       run: |
         echo "Test job status: ${{ needs.test.result }}"
