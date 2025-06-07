@@ -58,6 +58,35 @@ def test_is_portable_mode_not_writable():
                 assert is_portable_mode() is False
 
 
+def test_is_portable_mode_substring_false_positive():
+    """Test that is_portable_mode correctly handles paths containing 'Program Files' as substring."""
+    # This tests the fix for the bug where substring matching would incorrectly
+    # identify portable apps as standard installations
+    with patch.multiple(
+        sys, frozen=True, executable=r"D:\My Program Files App\AccessiWeather\app.exe", create=True
+    ):
+        with patch.dict(
+            os.environ,
+            {"PROGRAMFILES": r"C:\Program Files", "PROGRAMFILES(X86)": r"C:\Program Files (x86)"},
+        ):
+            with patch("builtins.open", mock_open()) as mock_file:
+                with patch("os.remove") as mock_remove:
+                    # Should return True because it's not actually in Program Files
+                    assert is_portable_mode() is True
+                    mock_file.assert_called_once()
+                    mock_remove.assert_called_once()
+
+
+def test_is_portable_mode_exact_program_files_match():
+    """Test that is_portable_mode correctly identifies when app is exactly in Program Files root."""
+    with patch.multiple(sys, frozen=True, executable=r"C:\Program Files\app.exe", create=True):
+        with patch.dict(
+            os.environ,
+            {"PROGRAMFILES": r"C:\Program Files", "PROGRAMFILES(X86)": r"C:\Program Files (x86)"},
+        ):
+            assert is_portable_mode() is False
+
+
 # --- Tests for get_config_dir ---
 
 
