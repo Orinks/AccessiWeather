@@ -376,8 +376,14 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
             temp_f = formatted_data.get("temp_f")
             temp_c = formatted_data.get("temp_c")
             if temp_f is not None:
+                # Use whole numbers (precision=0) when unit preference is 'both'
+                precision = 0 if unit_pref == TemperatureUnit.BOTH else 1
                 formatted_data["temp"] = format_temperature(
-                    temp_f, unit_pref, temperature_c=temp_c, precision=1, smart_precision=True
+                    temp_f,
+                    unit_pref,
+                    temperature_c=temp_c,
+                    precision=precision,
+                    smart_precision=True,
                 )
 
         # Format wind speed if available
@@ -403,6 +409,45 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
             formatted_data["visibility"] = format_visibility(
                 visibility, unit_pref, visibility_km=visibility_km, precision=1
             )
+
+        # Format humidity if available
+        if "humidity" in formatted_data:
+            humidity = formatted_data.get("humidity")
+            if humidity is not None:
+                formatted_data["humidity"] = f"{humidity:.0f}%"
+
+        # Format feels like temperature if available
+        if "feels_like_f" in formatted_data and "feels_like_c" in formatted_data:
+            feels_like_f = formatted_data.get("feels_like_f")
+            feels_like_c = formatted_data.get("feels_like_c")
+            if feels_like_f is not None:
+                # Use whole numbers (precision=0) when unit preference is 'both'
+                precision = 0 if unit_pref == TemperatureUnit.BOTH else 1
+                formatted_data["feels_like"] = format_temperature(
+                    feels_like_f,
+                    unit_pref,
+                    temperature_c=feels_like_c,
+                    precision=precision,
+                    smart_precision=True,
+                )
+
+        # Format UV index if available
+        if "uv" in formatted_data:
+            uv = formatted_data.get("uv")
+            if uv is not None:
+                formatted_data["uv"] = f"{uv:.0f}"
+
+        # Format precipitation if available
+        if "precip" in formatted_data:
+            precip = formatted_data.get("precip")
+            if precip is not None:
+                formatted_data["precip"] = f"{precip:.1f} in"
+
+        # Format precipitation chance if available
+        if "precip_chance" in formatted_data:
+            precip_chance = formatted_data.get("precip_chance")
+            if precip_chance is not None:
+                formatted_data["precip_chance"] = f"{precip_chance:.0f}%"
 
         try:
             # Format the string with formatted weather data
