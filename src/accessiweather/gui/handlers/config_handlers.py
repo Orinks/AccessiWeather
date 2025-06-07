@@ -33,20 +33,27 @@ class WeatherAppConfigHandlers(WeatherAppHandlerBase):
         """
         start_time = time.time()
         try:
+            config_dir = os.path.dirname(self._config_path)
+            logger.debug(f"Saving configuration to: {self._config_path}")
+            logger.debug(f"Config directory: {config_dir}")
+
             # Ensure directory exists
-            os.makedirs(os.path.dirname(self._config_path), exist_ok=True)
+            os.makedirs(config_dir, exist_ok=True)
+            logger.debug(f"Config directory created/verified: {config_dir}")
 
             # Save config
             with open(self._config_path, "w") as f:
                 json.dump(self.config, f, indent=2)
 
             elapsed = time.time() - start_time
-            logger.debug(f"[EXIT OPTIMIZATION] Configuration saved in {elapsed:.3f}s")
+            logger.info(
+                f"Configuration saved successfully to {self._config_path} in {elapsed:.3f}s"
+            )
             return True
         except Exception as e:
             elapsed = time.time() - start_time
             logger.error(
-                f"[EXIT OPTIMIZATION] Failed to save config after {elapsed:.3f}s: {str(e)}"
+                f"Failed to save config to {self._config_path} after {elapsed:.3f}s: {str(e)}"
             )
             if show_errors:
                 wx.MessageBox(

@@ -24,6 +24,7 @@ def is_portable_mode() -> bool:
     """
     # If running from source code, not portable
     if not getattr(sys, "frozen", False):
+        logger.debug("Not in portable mode: running from source code")
         return False
 
     # Get the directory of the executable
@@ -32,13 +33,26 @@ def is_portable_mode() -> bool:
     else:
         app_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # Check if we're running from Program Files (standard installation)
-    program_files = os.environ.get("PROGRAMFILES", "Program Files")
-    program_files_x86 = os.environ.get("PROGRAMFILES(X86)", "Program Files (x86)")
+    logger.debug(f"Checking portable mode for app directory: {app_dir}")
 
-    # If we're in Program Files, we're not portable
-    if program_files in app_dir or program_files_x86 in app_dir:
-        return False
+    # Check if we're running from Program Files (standard installation)
+    program_files = os.environ.get("PROGRAMFILES", "")
+    program_files_x86 = os.environ.get("PROGRAMFILES(X86)", "")
+
+    # Normalize paths for comparison (handle case sensitivity and path separators)
+    app_dir_normalized = os.path.normpath(app_dir).lower()
+
+    # Check if app_dir starts with any Program Files path
+    program_files_paths = []
+    if program_files:
+        program_files_paths.append(os.path.normpath(program_files).lower())
+    if program_files_x86:
+        program_files_paths.append(os.path.normpath(program_files_x86).lower())
+
+    for pf_path in program_files_paths:
+        if app_dir_normalized.startswith(pf_path + os.sep) or app_dir_normalized == pf_path:
+            logger.debug(f"Not in portable mode: app directory is under Program Files ({pf_path})")
+            return False
 
     # Check if the directory is writable (portable installations should be)
     try:
@@ -46,9 +60,11 @@ def is_portable_mode() -> bool:
         with open(test_file, "w") as f:
             f.write("test")
         os.remove(test_file)
+        logger.debug(f"Portable mode detected: directory {app_dir} is writable")
         return True
-    except (IOError, PermissionError):
+    except (IOError, PermissionError) as e:
         # If we can't write to the directory, assume it's not portable
+        logger.debug(f"Not in portable mode: directory {app_dir} is not writable ({e})")
         return False
 
 
@@ -62,10 +78,14 @@ def get_config_dir(custom_dir: Optional[str] = None) -> str:
         Path to the configuration directory
     """
     if custom_dir is not None:
+        logger.debug(f"Using custom config directory: {custom_dir}")
         return custom_dir
 
     # Check if we're running in portable mode
-    if is_portable_mode():
+    portable_mode = is_portable_mode()
+    logger.debug(f"Portable mode check result: {portable_mode}")
+
+    if portable_mode:
         # Get the directory of the executable
         if getattr(sys, "frozen", False):
             app_dir = os.path.dirname(sys.executable)
@@ -82,10 +102,16 @@ def get_config_dir(custom_dir: Optional[str] = None) -> str:
         # Use %APPDATA%\.accessiweather on Windows
         appdata = os.environ.get("APPDATA")
         if appdata:
-            return os.path.join(appdata, ".accessiweather")
+            config_dir = os.path.join(appdata, ".accessiweather")
+            logger.info(
+                f"Running in standard mode on Windows, using config directory: {config_dir}"
+            )
+            return config_dir
 
     # Default to ~/.accessiweather for all other cases
-    return os.path.expanduser("~/.accessiweather")
+    config_dir = os.path.expanduser("~/.accessiweather")
+    logger.info(f"Using default config directory: {config_dir}")
+    return config_dir
 
 
 def ensure_config_defaults(config: Dict[str, Any]) -> Dict[str, Any]:
