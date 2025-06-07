@@ -1,9 +1,19 @@
 name: Update GitHub Pages
 
 on:
-  # Trigger when builds complete (using repository_dispatch from build workflow)
-  repository_dispatch:
-    types: [build-completed]
+  # Direct trigger on dev branch pushes (primary trigger)
+  push:
+    branches: [dev]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '!docs/index.template.html'  # Still trigger if template changes
+  # Trigger when build workflow completes successfully on dev branch (backup)
+  workflow_run:
+    workflows: ["Build and Package"]
+    types:
+      - completed
+    branches: [dev]
   # Trigger when releases are published/edited
   release:
     types:
@@ -42,14 +52,14 @@ jobs:
   update-build-info:
     name: Update Build Information
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch' || github.event_name == 'release' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         ref: dev  # Always checkout dev branch since that's where GitHub Pages deploys from
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ github.token }}
         fetch-depth: 0
 
     - name: Set up Python
@@ -63,9 +73,12 @@ jobs:
         echo "Event name: ${{ github.event_name }}"
         echo "Repository: ${{ github.repository }}"
         echo "Ref: ${{ github.ref }}"
-        if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
-          echo "Dispatch type: ${{ github.event.action }}"
-          echo "Client payload: ${{ toJson(github.event.client_payload) }}"
+        if [ "${{ github.event_name }}" = "push" ]; then
+          echo "Push to branch: ${{ github.ref_name }}"
+          echo "Commit SHA: ${{ github.sha }}"
+        elif [ "${{ github.event_name }}" = "workflow_run" ]; then
+          echo "Triggered by workflow: ${{ github.event.workflow_run.name }}"
+          echo "Workflow conclusion: ${{ github.event.workflow_run.conclusion }}"
         elif [ "${{ github.event_name }}" = "release" ]; then
           echo "Release action: ${{ github.event.action }}"
           echo "Release tag: ${{ github.event.release.tag_name }}"
@@ -83,8 +96,8 @@ jobs:
         FETCH_BRANCHES="main dev"
         if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.target_branch }}" != "both" ]; then
           FETCH_BRANCHES="${{ inputs.target_branch }}"
-        elif [ "${{ github.event_name }}" = "repository_dispatch" ]; then
-          # For repository_dispatch events (build completed), only update dev branch
+        elif [ "${{ github.event_name }}" = "push" ] || [ "${{ github.event_name }}" = "workflow_run" ]; then
+          # For push or workflow_run events (build completed), only update dev branch
           FETCH_BRANCHES="dev"
         elif [ "${{ github.event_name }}" = "release" ]; then
           # For release events, update both branches (release affects main, but we want both updated)
@@ -97,7 +110,7 @@ jobs:
         get_release_info() {
           echo "Fetching latest release info..." >&2
 
-          local release_info=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          local release_info=$(curl -s -H "Authorization: token ${{ github.token }}" \
             "https://api.github.com/repos/${{ github.repository }}/releases/latest")
 
           local tag_name=$(echo "$release_info" | jq -r '.tag_name // empty')
@@ -131,7 +144,7 @@ jobs:
           local branch=$1
           echo "Fetching build info for branch: $branch" >&2
 
-          local run_info=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          local run_info=$(curl -s -H "Authorization: token ${{ github.token }}" \
             "https://api.github.com/repos/${{ github.repository }}/actions/workflows/build.yml/runs?branch=${branch}&status=success&per_page=1")
 
           local run_id=$(echo "$run_info" | jq -r '.workflow_runs[0].id // empty')
@@ -140,7 +153,7 @@ jobs:
 
           if [ -n "$run_id" ] && [ "$run_id" != "null" ] && [ "$run_id" != "empty" ]; then
             # Get artifacts for this run
-            local artifacts=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            local artifacts=$(curl -s -H "Authorization: token ${{ github.token }}" \
               "https://api.github.com/repos/${{ github.repository }}/actions/runs/${run_id}/artifacts")
 
             # Extract version from artifact name (assumes format: windows-installer-X.Y.Z)
