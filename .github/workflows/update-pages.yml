@@ -1,11 +1,15 @@
 name: Update GitHub Pages
 
 on:
-  workflow_run:
-    workflows: ["Build and Package"]
+  # Trigger when builds complete (using repository_dispatch from build workflow)
+  repository_dispatch:
+    types: [build-completed]
+  # Trigger when releases are published/edited
+  release:
     types:
-      - completed
-    branches: [ main, dev ]  # Trigger on both main and dev branch builds
+      - published
+      - edited
+  # Manual trigger
   workflow_dispatch:
     inputs:
       force_update:
@@ -38,7 +42,7 @@ jobs:
   update-build-info:
     name: Update Build Information
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch' || github.event_name == 'release' }}
 
     steps:
     - name: Checkout repository
@@ -53,6 +57,22 @@ jobs:
       with:
         python-version: "3.12"
 
+    - name: Log trigger information
+      run: |
+        echo "=== Workflow Trigger Information ==="
+        echo "Event name: ${{ github.event_name }}"
+        echo "Repository: ${{ github.repository }}"
+        echo "Ref: ${{ github.ref }}"
+        if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+          echo "Dispatch type: ${{ github.event.action }}"
+          echo "Client payload: ${{ toJson(github.event.client_payload) }}"
+        elif [ "${{ github.event_name }}" = "release" ]; then
+          echo "Release action: ${{ github.event.action }}"
+          echo "Release tag: ${{ github.event.release.tag_name }}"
+          echo "Release name: ${{ github.event.release.name }}"
+        fi
+        echo "=================================="
+
     - name: Get latest build information
       id: build-info
       run: |
@@ -63,6 +83,12 @@ jobs:
         FETCH_BRANCHES="main dev"
         if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.target_branch }}" != "both" ]; then
           FETCH_BRANCHES="${{ inputs.target_branch }}"
+        elif [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+          # For repository_dispatch events (build completed), only update dev branch
+          FETCH_BRANCHES="dev"
+        elif [ "${{ github.event_name }}" = "release" ]; then
+          # For release events, update both branches (release affects main, but we want both updated)
+          FETCH_BRANCHES="main dev"
         fi
 
         echo "Fetching build info for branches: $FETCH_BRANCHES"
@@ -200,6 +226,7 @@ jobs:
         echo "  Main: ${{ steps.build-info.outputs.main_version }} (${{ steps.build-info.outputs.main_date }})"
         echo "  Dev: ${{ steps.build-info.outputs.dev_version }} (${{ steps.build-info.outputs.dev_date }})"
         echo "  Last updated: $LAST_UPDATED"
+        echo "  Triggered by: ${{ github.event_name }}"
 
         # Verify substitution worked
         if grep -q "{{" index.html; then
