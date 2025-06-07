@@ -117,8 +117,8 @@ jobs:
 
     - name: Generate HTML from template
       run: |
-        # Copy template to index.html and substitute values
-        cp docs/index.template.html docs/index.html
+        # Copy template to root directory and substitute values
+        cp docs/index.template.html index.html
 
         # Get current timestamp
         LAST_UPDATED=$(date -u +"%Y-%m-%d %H:%M UTC")
@@ -149,13 +149,13 @@ jobs:
         LAST_UPDATED_ESCAPED=$(echo "$LAST_UPDATED" | sed 's/[[\.*^$()+?{|]/\\&/g')
 
         # Substitute template variables with actual values
-        sed -i "s/{{MAIN_VERSION}}/$MAIN_VERSION/g" docs/index.html
-        sed -i "s/{{MAIN_DATE}}/$MAIN_DATE/g" docs/index.html
-        sed -i "s/{{MAIN_COMMIT}}/$MAIN_COMMIT/g" docs/index.html
-        sed -i "s/{{DEV_VERSION}}/$DEV_VERSION/g" docs/index.html
-        sed -i "s/{{DEV_DATE}}/$DEV_DATE/g" docs/index.html
-        sed -i "s/{{DEV_COMMIT}}/$DEV_COMMIT/g" docs/index.html
-        sed -i "s/{{LAST_UPDATED}}/$LAST_UPDATED_ESCAPED/g" docs/index.html
+        sed -i "s/{{MAIN_VERSION}}/$MAIN_VERSION/g" index.html
+        sed -i "s/{{MAIN_DATE}}/$MAIN_DATE/g" index.html
+        sed -i "s/{{MAIN_COMMIT}}/$MAIN_COMMIT/g" index.html
+        sed -i "s/{{DEV_VERSION}}/$DEV_VERSION/g" index.html
+        sed -i "s/{{DEV_DATE}}/$DEV_DATE/g" index.html
+        sed -i "s/{{DEV_COMMIT}}/$DEV_COMMIT/g" index.html
+        sed -i "s/{{LAST_UPDATED}}/$LAST_UPDATED_ESCAPED/g" index.html
 
         echo "✓ Generated index.html from template with build info:"
         echo "  Main: ${{ steps.build-info.outputs.main_version }} (${{ steps.build-info.outputs.main_date }})"
@@ -163,9 +163,9 @@ jobs:
         echo "  Last updated: $LAST_UPDATED"
 
         # Verify substitution worked
-        if grep -q "{{" docs/index.html; then
+        if grep -q "{{" index.html; then
           echo "⚠ Warning: Some template variables may not have been substituted:"
-          grep -o "{{[^}]*}}" docs/index.html || true
+          grep -o "{{[^}]*}}" index.html || true
         else
           echo "✓ All template variables successfully substituted"
         fi
@@ -223,7 +223,7 @@ jobs:
       run: |
         # Create .nojekyll file to disable Jekyll processing
         # This ensures our static HTML is served as-is without Jekyll interference
-        touch docs/.nojekyll
+        touch .nojekyll
         echo "✓ Created .nojekyll file to disable Jekyll processing"
 
     - name: Validate generated files
@@ -231,19 +231,19 @@ jobs:
         echo "📋 Validating generated files..."
 
         # Check if index.html exists and has content
-        if [ -f "docs/index.html" ]; then
-          echo "✓ index.html exists ($(wc -l < docs/index.html) lines)"
+        if [ -f "index.html" ]; then
+          echo "✓ index.html exists ($(wc -l < index.html) lines)"
 
           # Check for remaining template variables
-          if grep -q "{{" docs/index.html; then
+          if grep -q "{{" index.html; then
             echo "⚠ Warning: Found remaining template variables:"
-            grep -n "{{[^}]*}}" docs/index.html || true
+            grep -n "{{[^}]*}}" index.html || true
           else
             echo "✓ No template variables remaining"
           fi
 
           # Check for key content
-          if grep -q "AccessiWeather" docs/index.html; then
+          if grep -q "AccessiWeather" index.html; then
             echo "✓ Contains expected content"
           else
             echo "❌ Missing expected content"
@@ -265,7 +265,7 @@ jobs:
     - name: Upload Pages artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        path: docs/
+        path: ./
 
   deploy-pages:
     name: Deploy to GitHub Pages
