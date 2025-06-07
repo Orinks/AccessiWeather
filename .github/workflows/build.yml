@@ -1,8 +1,6 @@
 name: Build and Package
 
 on:
-  push:
-    branches: [ dev ]  # Only build on dev branch pushes
   workflow_dispatch:
     inputs:
       version_override:
@@ -34,7 +32,7 @@ jobs:
   build:
     name: Build Windows Application
     runs-on: windows-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') || github.event_name == 'push' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
 
     outputs:
       version: ${{ steps.version.outputs.version }}
