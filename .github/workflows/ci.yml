@@ -352,3 +352,11 @@ jobs:
       with:
         name: quality-gate-summary
         path: quality-summary.md
+
+    - name: Trigger Build Workflow
+      if: github.ref == 'refs/heads/dev' && success()
+      run: |
+        echo "Triggering build workflow after successful CI completion"
+        gh workflow run build.yml --ref dev
+      env:
+        GH_TOKEN: ${{ github.token }}
