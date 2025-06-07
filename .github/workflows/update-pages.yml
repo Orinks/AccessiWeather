@@ -70,7 +70,7 @@ jobs:
         # Function to get latest successful run info
         get_build_info() {
           local branch=$1
-          echo "Fetching build info for branch: $branch"
+          echo "Fetching build info for branch: $branch" >&2
 
           local run_info=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/actions/workflows/build.yml/runs?branch=${branch}&status=success&per_page=1")
@@ -100,13 +100,13 @@ jobs:
             echo "${branch}_run_id=${run_id}"
             echo "${branch}_commit=${commit_sha}"
 
-            echo "✓ Found build for $branch: version=$version, date=$formatted_date"
+            echo "✓ Found build for $branch: version=$version, date=$formatted_date" >&2
           else
             echo "${branch}_version=No builds available"
             echo "${branch}_date=N/A"
             echo "${branch}_run_id="
             echo "${branch}_commit="
-            echo "⚠ No successful builds found for $branch"
+            echo "⚠ No successful builds found for $branch" >&2
           fi
         }
 
