@@ -371,7 +371,7 @@ class SettingsDialog(wx.Dialog):
             # Load display settings
             taskbar_text_enabled = self.current_settings.get(TASKBAR_ICON_TEXT_ENABLED_KEY, False)
             taskbar_text_format = self.current_settings.get(
-                TASKBAR_ICON_TEXT_FORMAT_KEY, "{temp}°F {condition}"
+                TASKBAR_ICON_TEXT_FORMAT_KEY, "{temp} {condition}"
             )
 
             self.taskbar_text_ctrl.SetValue(taskbar_text_enabled)

@@ -55,6 +55,7 @@ def format_temperature(
     unit: TemperatureUnit = TemperatureUnit.FAHRENHEIT,
     temperature_c: Optional[Union[int, float]] = None,
     precision: int = 1,
+    smart_precision: bool = True,
 ) -> str:
     """Format temperature for display based on user preference.
 
@@ -63,6 +64,7 @@ def format_temperature(
         unit: Temperature unit preference
         temperature_c: Temperature in Celsius (if available)
         precision: Number of decimal places to display
+        smart_precision: If True, use 0 decimals for whole numbers
 
     Returns:
         Formatted temperature string
@@ -76,13 +78,25 @@ def format_temperature(
     elif temperature is not None and temperature_c is None:
         temperature_c = fahrenheit_to_celsius(temperature)
 
+    # Determine precision for each temperature
+    if smart_precision:
+        f_precision = (
+            0 if temperature is not None and temperature == int(temperature) else precision
+        )
+        c_precision = (
+            0 if temperature_c is not None and temperature_c == int(temperature_c) else precision
+        )
+    else:
+        f_precision = precision
+        c_precision = precision
+
     # Format based on user preference
     if unit == TemperatureUnit.FAHRENHEIT:
-        return f"{temperature:.{precision}f}°{TEMP_UNIT_FAHRENHEIT}"
+        return f"{temperature:.{f_precision}f}°{TEMP_UNIT_FAHRENHEIT}"
     elif unit == TemperatureUnit.CELSIUS:
-        return f"{temperature_c:.{precision}f}°{TEMP_UNIT_CELSIUS}"
+        return f"{temperature_c:.{c_precision}f}°{TEMP_UNIT_CELSIUS}"
     else:  # BOTH
-        return f"{temperature:.{precision}f}°{TEMP_UNIT_FAHRENHEIT} ({temperature_c:.{precision}f}°{TEMP_UNIT_CELSIUS})"
+        return f"{temperature:.{f_precision}f}°{TEMP_UNIT_FAHRENHEIT} ({temperature_c:.{c_precision}f}°{TEMP_UNIT_CELSIUS})"
 
 
 def get_temperature_values(
