@@ -72,7 +72,10 @@ class TestTemperatureUtils:
         assert (
             format_temperature(70.5, TemperatureUnit.FAHRENHEIT, smart_precision=True) == "70.5°F"
         )
-        assert format_temperature(70.0, TemperatureUnit.BOTH, smart_precision=True) == "70°F (21°C)"
+        # 70°F = 21.11111°C, which with precision=1 becomes 21.1°C (not a whole number)
+        assert (
+            format_temperature(70.0, TemperatureUnit.BOTH, smart_precision=True) == "70°F (21.1°C)"
+        )
 
         # Disabled smart precision should keep decimals
         assert (

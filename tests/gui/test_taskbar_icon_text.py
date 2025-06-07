@@ -71,7 +71,8 @@ class TestTaskBarIconText(unittest.TestCase):
         self.taskbar_icon.update_icon_text()
 
         # Verify that SetIcon was called with the formatted text
-        expected_text = "73°F Partly Cloudy"
+        # Test data has temp: 72.5°F which is not a whole number, so decimal is preserved
+        expected_text = "72.5°F Partly Cloudy"
         # Check that the second argument (tooltip text) matches our expected text
         self.assertEqual(self.taskbar_icon.SetIcon.call_args[0][1], expected_text)
 
@@ -114,7 +115,8 @@ class TestTaskBarIconText(unittest.TestCase):
         self.taskbar_icon.update_icon_text()
 
         # Verify that SetIcon was called with the formatted text
-        expected_text = "New York: 73°F, NW 10.0 mph"
+        # Test data has temp: 72.5°F which is not a whole number, so decimal is preserved
+        expected_text = "New York: 72.5°F, NW 10.0 mph"
         # Check that the second argument (tooltip text) matches our expected text
         self.assertEqual(self.taskbar_icon.SetIcon.call_args[0][1], expected_text)
 

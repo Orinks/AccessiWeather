@@ -97,3 +97,7 @@ def create_weather_app(
     )
 
     return app
+
+
+# Alias for backward compatibility with tests
+create_app = create_weather_app
