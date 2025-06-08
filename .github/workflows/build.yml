@@ -2,7 +2,7 @@ name: Build and Package
 
 on:
   push:
-    branches: [ main ]  # Build on main branch pushes
+    branches: [ main, dev ]  # Build on main and dev branch pushes
   workflow_dispatch:
     inputs:
       version_override:
@@ -18,7 +18,7 @@ on:
     workflows: ["Continuous Integration"]
     types:
       - completed
-    branches: [ main ]  # Only trigger after CI on main branch
+    branches: [ main, dev ]  # Trigger after CI on main or dev branch
 
 permissions:
   contents: read      # Read repository contents
