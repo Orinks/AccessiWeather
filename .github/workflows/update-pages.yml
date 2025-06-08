@@ -126,23 +126,10 @@ jobs:
 
         if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.target_branch }}" != "both" ]; then
           FETCH_BRANCHES="${{ inputs.target_branch }}"
-        elif [ "${{ github.event_name }}" = "workflow_run" ]; then
-          # For workflow_run events (build completed), fetch the source branch
-          FETCH_BRANCHES="$TARGET_BRANCH"
-        elif [ "${{ github.event_name }}" = "release" ]; then
-          # For release events, fetch both main and the target branch
-          if [ "$TARGET_BRANCH" = "main" ]; then
-            FETCH_BRANCHES="main"
-          else
-            FETCH_BRANCHES="main $TARGET_BRANCH"
-          fi
         else
-          # Default: fetch main and current target branch
-          if [ "$TARGET_BRANCH" = "main" ]; then
-            FETCH_BRANCHES="main"
-          else
-            FETCH_BRANCHES="main $TARGET_BRANCH"
-          fi
+          # Always fetch both main and dev branches to show different information in each section
+          # This ensures stable release shows GitHub releases and dev shows latest dev builds
+          FETCH_BRANCHES="main dev"
         fi
 
         echo "Fetching build info for branches: $FETCH_BRANCHES"
@@ -248,31 +235,27 @@ jobs:
         MAIN_DATE="${{ steps.build-info.outputs.main_date }}"
         MAIN_COMMIT="${{ steps.build-info.outputs.main_commit }}"
 
-        # Get target branch values using case statement for known branches
-        case "$TARGET_BRANCH" in
-          "main")
-            DEV_VERSION="$MAIN_VERSION"
-            DEV_DATE="$MAIN_DATE"
-            DEV_COMMIT="$MAIN_COMMIT"
-            ;;
-          "dev")
-            DEV_VERSION="${{ steps.build-info.outputs.dev_version }}"
-            DEV_DATE="${{ steps.build-info.outputs.dev_date }}"
-            DEV_COMMIT="${{ steps.build-info.outputs.dev_commit }}"
-            ;;
-          "workflow-testing")
-            DEV_VERSION="${{ steps.build-info.outputs.workflow_testing_version }}"
-            DEV_DATE="${{ steps.build-info.outputs.workflow_testing_date }}"
-            DEV_COMMIT="${{ steps.build-info.outputs.workflow_testing_commit }}"
-            ;;
-          *)
-            # For any other branch, use generic fallback values
-            DEV_VERSION="Development ($TARGET_BRANCH)"
-            DEV_DATE="Check nightly.link"
-            DEV_COMMIT=""
-            echo "⚠ Warning: Unknown branch '$TARGET_BRANCH', using fallback values"
-            ;;
-        esac
+        # Always use dev branch information for development section when available
+        # This ensures we show different versions: stable release vs latest dev build
+        DEV_VERSION="${{ steps.build-info.outputs.dev_version }}"
+        DEV_DATE="${{ steps.build-info.outputs.dev_date }}"
+        DEV_COMMIT="${{ steps.build-info.outputs.dev_commit }}"
+
+        # If dev branch info is not available, fall back to target branch or generic values
+        if [ -z "$DEV_VERSION" ] || [ "$DEV_VERSION" = "No builds available" ]; then
+          case "$TARGET_BRANCH" in
+            "main")
+              DEV_VERSION="Development (latest)"
+              DEV_DATE="Check nightly.link"
+              DEV_COMMIT=""
+              ;;
+            *)
+              DEV_VERSION="Development ($TARGET_BRANCH)"
+              DEV_DATE="Check nightly.link"
+              DEV_COMMIT=""
+              ;;
+          esac
+        fi
 
         # Apply fallbacks if values are empty
         [ -z "$MAIN_VERSION" ] && MAIN_VERSION="Latest Release"
@@ -301,8 +284,8 @@ jobs:
         sed -i "s/{{LAST_UPDATED}}/$LAST_UPDATED_ESCAPED/g" index.html
 
         echo "✓ Generated index.html from template with build info:"
-        echo "  Main: ${{ steps.build-info.outputs.main_version }} (${{ steps.build-info.outputs.main_date }})"
-        echo "  Target Branch ($TARGET_BRANCH): $DEV_VERSION ($DEV_DATE)"
+        echo "  Stable Release (main): ${{ steps.build-info.outputs.main_version }} (${{ steps.build-info.outputs.main_date }})"
+        echo "  Development Build (dev): $DEV_VERSION ($DEV_DATE)"
         echo "  Last updated: $LAST_UPDATED"
         echo "  Triggered by: ${{ github.event_name }}"
         echo "  Source branch: $TARGET_BRANCH"
@@ -329,12 +312,8 @@ jobs:
         [ -z "$DEV_VERSION" ] && DEV_VERSION="latest"
         [ -z "$DEV_DATE" ] && DEV_DATE="Check nightly.link"
 
-        # Determine the development branch name for URLs
-        if [ "$TARGET_BRANCH" = "main" ]; then
-          DEV_BRANCH_NAME="dev"
-        else
-          DEV_BRANCH_NAME="$TARGET_BRANCH"
-        fi
+        # Always use dev branch for development URLs since we always fetch dev info
+        DEV_BRANCH_NAME="dev"
 
         cat > docs/download-links.md << EOF
         # AccessiWeather Download Links
