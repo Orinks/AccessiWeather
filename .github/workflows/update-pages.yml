@@ -1,11 +1,26 @@
 name: Update GitHub Pages
 
+# NOTE: This workflow dynamically determines which branch to checkout based on the trigger.
+# For workflow_run events, it checks out the source branch that triggered the build.
+# For manual triggers, it uses the specified branch or defaults to the current branch.
+# For release events, it checks out the target branch of the release.
+#
+# IMPORTANT: This workflow runs AFTER the build workflow completes, not on direct pushes.
+# This prevents duplicate runs and ensures build artifacts are available when updating pages.
+
 on:
+  # Trigger when build workflow completes successfully on main or dev branches
   workflow_run:
     workflows: ["Build and Package"]
     types:
       - completed
-    branches: [ main, dev ]  # Trigger on both main and dev branch builds
+    branches: [main, dev]
+  # Trigger when releases are published/edited
+  release:
+    types:
+      - published
+      - edited
+  # Manual trigger
   workflow_dispatch:
     inputs:
       force_update:
@@ -38,20 +53,67 @@ jobs:
   update-build-info:
     name: Update Build Information
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'release' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
 
     steps:
+    - name: Determine target branch
+      id: target-branch
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_run" ]; then
+          # For workflow_run events, use the source branch that triggered the build
+          TARGET_BRANCH="${{ github.event.workflow_run.head_branch }}"
+          echo "Using source branch from workflow_run: $TARGET_BRANCH"
+        elif [ "${{ github.event_name }}" = "release" ]; then
+          # For release events, use the target branch of the release
+          TARGET_BRANCH="${{ github.event.release.target_commitish }}"
+          echo "Using target branch from release: $TARGET_BRANCH"
+        elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          # For manual triggers, use the current branch
+          TARGET_BRANCH="${{ github.ref_name }}"
+          echo "Using current branch from manual trigger: $TARGET_BRANCH"
+        else
+          # Fallback to current branch
+          TARGET_BRANCH="${{ github.ref_name }}"
+          echo "Using fallback current branch: $TARGET_BRANCH"
+        fi
+
+        echo "target_branch=$TARGET_BRANCH" >> $GITHUB_OUTPUT
+        echo "Final target branch: $TARGET_BRANCH"
+
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        ref: dev  # Always checkout dev branch since that's where GitHub Pages deploys from
-        token: ${{ secrets.GITHUB_TOKEN }}
+        ref: ${{ steps.target-branch.outputs.target_branch }}
+        token: ${{ github.token }}
         fetch-depth: 0
 
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: "3.12"
+
+    - name: Log trigger information
+      run: |
+        echo "=== Workflow Trigger Information ==="
+        echo "Event name: ${{ github.event_name }}"
+        echo "Repository: ${{ github.repository }}"
+        echo "Ref: ${{ github.ref }}"
+        echo "Target branch: ${{ steps.target-branch.outputs.target_branch }}"
+        if [ "${{ github.event_name }}" = "workflow_run" ]; then
+          echo "Triggered by workflow: ${{ github.event.workflow_run.name }}"
+          echo "Workflow conclusion: ${{ github.event.workflow_run.conclusion }}"
+          echo "Source branch: ${{ github.event.workflow_run.head_branch }}"
+          echo "Source commit: ${{ github.event.workflow_run.head_sha }}"
+        elif [ "${{ github.event_name }}" = "release" ]; then
+          echo "Release action: ${{ github.event.action }}"
+          echo "Release tag: ${{ github.event.release.tag_name }}"
+          echo "Release name: ${{ github.event.release.name }}"
+        elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "Manual trigger"
+          echo "Target branch input: ${{ inputs.target_branch }}"
+          echo "Force update: ${{ inputs.force_update }}"
+        fi
+        echo "=================================="
 
     - name: Get latest build information
       id: build-info
@@ -60,9 +122,27 @@ jobs:
         echo "Fetching build information..."
 
         # Determine which branches to fetch based on input or trigger
-        FETCH_BRANCHES="main dev"
+        TARGET_BRANCH="${{ steps.target-branch.outputs.target_branch }}"
+
         if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.target_branch }}" != "both" ]; then
           FETCH_BRANCHES="${{ inputs.target_branch }}"
+        elif [ "${{ github.event_name }}" = "workflow_run" ]; then
+          # For workflow_run events (build completed), fetch the source branch
+          FETCH_BRANCHES="$TARGET_BRANCH"
+        elif [ "${{ github.event_name }}" = "release" ]; then
+          # For release events, fetch both main and the target branch
+          if [ "$TARGET_BRANCH" = "main" ]; then
+            FETCH_BRANCHES="main"
+          else
+            FETCH_BRANCHES="main $TARGET_BRANCH"
+          fi
+        else
+          # Default: fetch main and current target branch
+          if [ "$TARGET_BRANCH" = "main" ]; then
+            FETCH_BRANCHES="main"
+          else
+            FETCH_BRANCHES="main $TARGET_BRANCH"
+          fi
         fi
 
         echo "Fetching build info for branches: $FETCH_BRANCHES"
@@ -71,7 +151,7 @@ jobs:
         get_release_info() {
           echo "Fetching latest release info..." >&2
 
-          local release_info=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          local release_info=$(curl -s -H "Authorization: token ${{ github.token }}" \
             "https://api.github.com/repos/${{ github.repository }}/releases/latest")
 
           local tag_name=$(echo "$release_info" | jq -r '.tag_name // empty')
@@ -105,7 +185,7 @@ jobs:
           local branch=$1
           echo "Fetching build info for branch: $branch" >&2
 
-          local run_info=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          local run_info=$(curl -s -H "Authorization: token ${{ github.token }}" \
             "https://api.github.com/repos/${{ github.repository }}/actions/workflows/build.yml/runs?branch=${branch}&status=success&per_page=1")
 
           local run_id=$(echo "$run_info" | jq -r '.workflow_runs[0].id // empty')
@@ -114,7 +194,7 @@ jobs:
 
           if [ -n "$run_id" ] && [ "$run_id" != "null" ] && [ "$run_id" != "empty" ]; then
             # Get artifacts for this run
-            local artifacts=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            local artifacts=$(curl -s -H "Authorization: token ${{ github.token }}" \
               "https://api.github.com/repos/${{ github.repository }}/actions/runs/${run_id}/artifacts")
 
             # Extract version from artifact name (assumes format: windows-installer-X.Y.Z)
@@ -149,7 +229,7 @@ jobs:
             # For main branch, get release info from GitHub releases
             get_release_info >> $GITHUB_OUTPUT
           else
-            # For other branches (dev), get build info from workflow runs
+            # For other branches (dev, workflow-testing), get build info from workflow runs
             get_build_info "$branch" >> $GITHUB_OUTPUT
           fi
         done
@@ -163,18 +243,42 @@ jobs:
         LAST_UPDATED=$(date -u +"%Y-%m-%d %H:%M UTC")
 
         # Get build info values with fallbacks
+        TARGET_BRANCH="${{ steps.target-branch.outputs.target_branch }}"
         MAIN_VERSION="${{ steps.build-info.outputs.main_version }}"
         MAIN_DATE="${{ steps.build-info.outputs.main_date }}"
         MAIN_COMMIT="${{ steps.build-info.outputs.main_commit }}"
-        DEV_VERSION="${{ steps.build-info.outputs.dev_version }}"
-        DEV_DATE="${{ steps.build-info.outputs.dev_date }}"
-        DEV_COMMIT="${{ steps.build-info.outputs.dev_commit }}"
+
+        # Get target branch values using case statement for known branches
+        case "$TARGET_BRANCH" in
+          "main")
+            DEV_VERSION="$MAIN_VERSION"
+            DEV_DATE="$MAIN_DATE"
+            DEV_COMMIT="$MAIN_COMMIT"
+            ;;
+          "dev")
+            DEV_VERSION="${{ steps.build-info.outputs.dev_version }}"
+            DEV_DATE="${{ steps.build-info.outputs.dev_date }}"
+            DEV_COMMIT="${{ steps.build-info.outputs.dev_commit }}"
+            ;;
+          "workflow-testing")
+            DEV_VERSION="${{ steps.build-info.outputs.workflow_testing_version }}"
+            DEV_DATE="${{ steps.build-info.outputs.workflow_testing_date }}"
+            DEV_COMMIT="${{ steps.build-info.outputs.workflow_testing_commit }}"
+            ;;
+          *)
+            # For any other branch, use generic fallback values
+            DEV_VERSION="Development ($TARGET_BRANCH)"
+            DEV_DATE="Check nightly.link"
+            DEV_COMMIT=""
+            echo "⚠ Warning: Unknown branch '$TARGET_BRANCH', using fallback values"
+            ;;
+        esac
 
         # Apply fallbacks if values are empty
         [ -z "$MAIN_VERSION" ] && MAIN_VERSION="Latest Release"
         [ -z "$MAIN_DATE" ] && MAIN_DATE="Check GitHub"
         [ -z "$MAIN_COMMIT" ] && MAIN_COMMIT=""
-        [ -z "$DEV_VERSION" ] && DEV_VERSION="Development"
+        [ -z "$DEV_VERSION" ] && DEV_VERSION="Development ($TARGET_BRANCH)"
         [ -z "$DEV_DATE" ] && DEV_DATE="Check nightly.link"
         [ -z "$DEV_COMMIT" ] && DEV_COMMIT=""
 
@@ -198,8 +302,10 @@ jobs:
 
         echo "✓ Generated index.html from template with build info:"
         echo "  Main: ${{ steps.build-info.outputs.main_version }} (${{ steps.build-info.outputs.main_date }})"
-        echo "  Dev: ${{ steps.build-info.outputs.dev_version }} (${{ steps.build-info.outputs.dev_date }})"
+        echo "  Target Branch ($TARGET_BRANCH): $DEV_VERSION ($DEV_DATE)"
         echo "  Last updated: $LAST_UPDATED"
+        echo "  Triggered by: ${{ github.event_name }}"
+        echo "  Source branch: $TARGET_BRANCH"
 
         # Verify substitution worked
         if grep -q "{{" index.html; then
@@ -212,6 +318,7 @@ jobs:
     - name: Create nightly.link URLs documentation
       run: |
         # Get build info with fallbacks
+        TARGET_BRANCH="${{ steps.target-branch.outputs.target_branch }}"
         MAIN_VERSION="${{ steps.build-info.outputs.main_version }}"
         MAIN_DATE="${{ steps.build-info.outputs.main_date }}"
         DEV_VERSION="${{ steps.build-info.outputs.dev_version }}"
@@ -222,6 +329,13 @@ jobs:
         [ -z "$DEV_VERSION" ] && DEV_VERSION="latest"
         [ -z "$DEV_DATE" ] && DEV_DATE="Check nightly.link"
 
+        # Determine the development branch name for URLs
+        if [ "$TARGET_BRANCH" = "main" ]; then
+          DEV_BRANCH_NAME="dev"
+        else
+          DEV_BRANCH_NAME="$TARGET_BRANCH"
+        fi
+
         cat > docs/download-links.md << EOF
         # AccessiWeather Download Links
 
@@ -231,11 +345,11 @@ jobs:
         - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-installer-${MAIN_VERSION}.zip
         - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-portable-${MAIN_VERSION}.zip
 
-        ## Development Release (Dev Branch)
+        ## Development Release (${DEV_BRANCH_NAME^} Branch)
 
         ### Direct Downloads:
-        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-installer-${DEV_VERSION}.zip
-        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-portable-${DEV_VERSION}.zip
+        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/${DEV_BRANCH_NAME}/windows-installer-${DEV_VERSION}.zip
+        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/${DEV_BRANCH_NAME}/windows-portable-${DEV_VERSION}.zip
 
         ## How to Use
 
@@ -250,13 +364,13 @@ jobs:
 
         - **Main Version**: ${MAIN_VERSION}
         - **Main Build Date**: ${MAIN_DATE}
-        - **Dev Version**: ${DEV_VERSION}
-        - **Dev Build Date**: ${DEV_DATE}
+        - **${DEV_BRANCH_NAME^} Version**: ${DEV_VERSION}
+        - **${DEV_BRANCH_NAME^} Build Date**: ${DEV_DATE}
         - **Last Updated**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
 
         EOF
 
-        echo "✓ Created download links documentation"
+        echo "✓ Created download links documentation for main and $DEV_BRANCH_NAME branches"
 
     - name: Disable Jekyll processing
       run: |

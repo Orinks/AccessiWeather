@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main ]  # Releases only from main branch
     paths-ignore:
       - 'docs/**'
       - '*.md'
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version (e.g., v1.0.0)'
+        description: 'Release version (e.g., 1.0.0 - without v prefix)'
         required: true
         type: string
       prerelease:
@@ -19,145 +19,14 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: write      # Required to create releases and upload assets
+  actions: read        # Required to read workflow artifacts
+
 jobs:
-  check-version:
-    name: Check Version
+  release:
+    name: Build and Release
     runs-on: windows-latest
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-      should_release: ${{ steps.check.outputs.should_release }}
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0  # Fetch all history for version comparison
-
-    - name: Extract version
-      id: version
-      run: |
-        if [ -n "${{ github.event.inputs.version }}" ]; then
-          VERSION="${{ github.event.inputs.version }}"
-          # Remove 'v' prefix if present
-          VERSION=${VERSION#v}
-        else
-          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
-        fi
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
-        echo "Detected version: $VERSION"
-      shell: bash
-
-    - name: Check if version already released
-      id: check
-      run: |
-        VERSION="${{ steps.version.outputs.version }}"
-
-        # Check if tag already exists
-        if git tag -l | grep -q "^v$VERSION$"; then
-          echo "Version v$VERSION already exists as a tag"
-          echo "should_release=false" >> $GITHUB_OUTPUT
-        else
-          echo "Version v$VERSION is new"
-          echo "should_release=true" >> $GITHUB_OUTPUT
-        fi
-      shell: bash
-
-  build-for-release:
-    name: Build Release Artifacts
-    runs-on: windows-latest
-    needs: check-version
-    if: needs.check-version.outputs.should_release == 'true'
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.12"
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e .[dev]
-        pip install PyInstaller
-
-    - name: Update version files
-      run: |
-        VERSION="${{ needs.check-version.outputs.version }}"
-
-        # Update version in files (pyproject.toml is the source of truth)
-        sed -i "s/version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml
-        sed -i "s/version=\"[^\"]*\"/version=\"$VERSION\"/" setup.py
-        sed -i "s/__version__ = \"[^\"]*\"/__version__ = \"$VERSION\"/" src/accessiweather/version.py
-
-        echo "Updated version to: $VERSION"
-      shell: bash
-
-    - name: Build with installer script
-      run: |
-        # Use the same build script as local development and CI
-        powershell -ExecutionPolicy Bypass -File installer/build_installer.ps1
-
-    - name: Move installer to dist directory
-      run: |
-        $VERSION = "${{ needs.check-version.outputs.version }}"
-        $InstallerSource = "installer/dist/AccessiWeather_Setup_v$VERSION.exe"
-        $InstallerDest = "dist/AccessiWeather_Setup_v$VERSION.exe"
-
-        if (Test-Path $InstallerSource) {
-          Move-Item $InstallerSource $InstallerDest
-          Write-Host "Moved installer to: $InstallerDest"
-        } else {
-          Write-Host "Warning: Installer not found at: $InstallerSource"
-          Get-ChildItem "installer/dist/" -Filter "*.exe" -ErrorAction SilentlyContinue
-          exit 1
-        }
-
-    - name: Generate release checksums
-      run: |
-        $VERSION = "${{ needs.check-version.outputs.version }}"
-
-        # Generate SHA256 checksums for release files
-        $Files = @(
-          "dist/AccessiWeather_Setup_v$VERSION.exe",
-          "dist/AccessiWeather_Portable_v$VERSION.zip"
-        )
-
-        $ChecksumFile = "dist/release_checksums.txt"
-        "AccessiWeather v$VERSION - Release Checksums`n" | Out-File $ChecksumFile -Encoding UTF8
-
-        foreach ($File in $Files) {
-          if (Test-Path $File) {
-            $Hash = Get-FileHash -Path $File -Algorithm SHA256
-            $FileName = Split-Path $File -Leaf
-            $FileSize = (Get-Item $File).Length
-            $FileSizeMB = [math]::Round($FileSize / 1MB, 2)
-            "$($Hash.Hash)  $FileName ($FileSizeMB MB)" | Add-Content $ChecksumFile -Encoding UTF8
-          } else {
-            Write-Host "Warning: File not found: $File"
-          }
-        }
-
-        Write-Host "Generated release checksums:"
-        Get-Content $ChecksumFile
-
-    - name: Upload release artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: release-artifacts-${{ needs.check-version.outputs.version }}
-        path: |
-          dist/AccessiWeather_Setup_v${{ needs.check-version.outputs.version }}.exe
-          dist/AccessiWeather_Portable_v${{ needs.check-version.outputs.version }}.zip
-          dist/release_checksums.txt
-        retention-days: 365
-
-  create-release:
-    name: Create GitHub Release
-    runs-on: windows-latest
-    needs: [check-version, build-for-release]
-    if: needs.check-version.outputs.should_release == 'true'
 
     steps:
     - name: Checkout code
@@ -165,79 +34,154 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Download release artifacts
-      uses: actions/download-artifact@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
       with:
-        name: release-artifacts-${{ needs.check-version.outputs.version }}
-        path: release-assets/
+        python-version: "3.12"
 
-    - name: Generate release notes
-      id: release_notes
+    - name: Get version
+      id: version
       run: |
-        VERSION="${{ needs.check-version.outputs.version }}"
-
-        # Create release notes
-        cat > release_notes.md << EOF
-        # AccessiWeather v$VERSION
-
-        ## What's New
-
-        This release includes improvements and bug fixes for AccessiWeather.
-
-        ## Downloads
-
-        - **Windows Installer**: \`AccessiWeather_Setup_v$VERSION.exe\`
-        - **Portable Version**: \`AccessiWeather_Portable_v$VERSION.zip\`
-
-        ## Installation
-
-        ### Windows Installer
-        1. Download \`AccessiWeather_Setup_v$VERSION.exe\`
-        2. Run the installer and follow the setup wizard
-        3. Launch AccessiWeather from the Start Menu
-
-        ### Portable Version
-        1. Download \`AccessiWeather_Portable_v$VERSION.zip\`
-        2. Extract to your desired location
-        3. Run \`AccessiWeather.exe\` from the extracted folder
-
-        ## Checksums
-
-        \`\`\`
-        $(cat release-assets/release_checksums.txt)
-        \`\`\`
-
-        ## System Requirements
-
-        - Windows 10 or later
-        - Internet connection for weather data
-
-        ---
-
-        For support and documentation, visit the [AccessiWeather repository](https://github.com/Orinks/AccessiWeather).
-        EOF
-
-        echo "Generated release notes:"
-        cat release_notes.md
+        if [ -n "${{ github.event.inputs.version }}" ]; then
+          VERSION="${{ github.event.inputs.version }}"
+        else
+          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Version: $VERSION"
       shell: bash
 
-    - name: Create GitHub Release
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: v${{ needs.check-version.outputs.version }}
-        name: AccessiWeather v${{ needs.check-version.outputs.version }}
-        body_path: release_notes.md
-        files: |
-          release-assets/AccessiWeather_Setup_v${{ needs.check-version.outputs.version }}.exe
-          release-assets/AccessiWeather_Portable_v${{ needs.check-version.outputs.version }}.zip
-          release-assets/release_checksums.txt
-        prerelease: ${{ github.event.inputs.prerelease || false }}
-        draft: false
+    - name: Check if release exists
+      id: check_release
+      run: |
+        $VERSION = "${{ steps.version.outputs.version }}"
+
+        # Reset error action preference to continue on errors
+        $ErrorActionPreference = "Continue"
+
+        # Check if release exists
+        $result = gh release view "v$VERSION" 2>&1
+        $exitCode = $LASTEXITCODE
+
+        if ($exitCode -eq 0) {
+          Write-Host "Release v$VERSION already exists, skipping..."
+          "exists=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+        } else {
+          Write-Host "Release v$VERSION does not exist, proceeding..."
+          "exists=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+        }
+
+        # Ensure we exit with success
+        exit 0
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Notify release completion
+    - name: Install dependencies
+      if: steps.check_release.outputs.exists == 'false'
       run: |
-        VERSION="${{ needs.check-version.outputs.version }}"
-        echo "✅ Successfully created release v$VERSION"
-        echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/v$VERSION"
+        python -m pip install --upgrade pip
+        pip install -e .[dev]
+        pip install PyInstaller
+
+    - name: Build application
+      if: steps.check_release.outputs.exists == 'false'
+      run: |
+        # Use the build script to create both installer and portable versions
+        powershell -ExecutionPolicy Bypass -File installer/build_installer.ps1
+
+    - name: Prepare release assets
+      if: steps.check_release.outputs.exists == 'false'
+      run: |
+        $VERSION = "${{ steps.version.outputs.version }}"
+
+        # Create release directory
+        New-Item -ItemType Directory -Force -Path "release-assets"
+
+        # Copy installer
+        $InstallerSource = "installer/dist/AccessiWeather_Setup_v$VERSION.exe"
+        if (Test-Path $InstallerSource) {
+          Copy-Item $InstallerSource "release-assets/"
+          Write-Host "✓ Copied installer"
+        } else {
+          Write-Host "✗ Installer not found at: $InstallerSource"
+          exit 1
+        }
+
+        # Copy portable ZIP
+        $PortableSource = "dist/AccessiWeather_Portable_v$VERSION.zip"
+        if (Test-Path $PortableSource) {
+          Copy-Item $PortableSource "release-assets/"
+          Write-Host "✓ Copied portable ZIP"
+        } else {
+          Write-Host "✗ Portable ZIP not found at: $PortableSource"
+          exit 1
+        }
+
+        # Generate checksums
+        $ChecksumFile = "release-assets/checksums.txt"
+        "AccessiWeather v$VERSION - Release Checksums`n" | Out-File $ChecksumFile -Encoding UTF8
+
+        # Get all .exe and .zip files in release-assets directory
+        $releaseFiles = Get-ChildItem "release-assets" | Where-Object { $_.Extension -in @('.exe', '.zip') }
+        foreach ($file in $releaseFiles) {
+          $Hash = Get-FileHash -Path $file.FullName -Algorithm SHA256
+          $FileSize = [math]::Round($file.Length / 1MB, 2)
+          "$($Hash.Hash)  $($file.Name) ($FileSize MB)" | Add-Content $ChecksumFile -Encoding UTF8
+        }
+
+        Write-Host "✓ Generated checksums"
+        Get-Content $ChecksumFile
+
+    - name: Create release notes
+      if: steps.check_release.outputs.exists == 'false'
+      run: |
+        $VERSION = "${{ steps.version.outputs.version }}"
+
+        # Create release notes content
+        $Content = "# AccessiWeather v$VERSION`n`n"
+        $Content += "## What's New`n`n"
+        $Content += "This release includes improvements and bug fixes for AccessiWeather.`n`n"
+        $Content += "## Downloads`n`n"
+        $Content += "- **Windows Installer**: ``AccessiWeather_Setup_v$VERSION.exe```n"
+        $Content += "- **Portable Version**: ``AccessiWeather_Portable_v$VERSION.zip```n`n"
+        $Content += "## Installation`n`n"
+        $Content += "### Windows Installer`n"
+        $Content += "1. Download ``AccessiWeather_Setup_v$VERSION.exe```n"
+        $Content += "2. Run the installer and follow the setup wizard`n"
+        $Content += "3. Launch AccessiWeather from the Start Menu`n`n"
+        $Content += "### Portable Version`n"
+        $Content += "1. Download ``AccessiWeather_Portable_v$VERSION.zip```n"
+        $Content += "2. Extract to your desired location`n"
+        $Content += "3. Run ``AccessiWeather.exe`` from the extracted folder`n`n"
+        $Content += "## Checksums`n`n"
+        $Content += "``````n"
+        $Content += (Get-Content "release-assets/checksums.txt" -Raw)
+        $Content += "``````n`n"
+        $Content += "## System Requirements`n`n"
+        $Content += "- Windows 10 or later`n"
+        $Content += "- Internet connection for weather data`n`n"
+        $Content += "---`n`n"
+        $Content += "For support and documentation, visit the [AccessiWeather repository](https://github.com/Orinks/AccessiWeather).`n"
+
+        $Content | Out-File -FilePath "release-notes.md" -Encoding UTF8 -NoNewline
+        Write-Host "✓ Generated release notes"
+
+    - name: Create GitHub Release
+      if: steps.check_release.outputs.exists == 'false'
+      uses: ncipollo/release-action@v1
+      with:
+        tag: v${{ steps.version.outputs.version }}
+        name: AccessiWeather v${{ steps.version.outputs.version }}
+        bodyFile: release-notes.md
+        artifacts: "release-assets/*"
+        draft: true
+        prerelease: ${{ github.event.inputs.prerelease || false }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Release summary
+      if: steps.check_release.outputs.exists == 'false'
+      run: |
+        $VERSION = "${{ steps.version.outputs.version }}"
+        Write-Host "✅ Successfully created draft release v$VERSION"
+        Write-Host "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/v$VERSION"
+        Write-Host "📝 Edit the release notes and publish when ready!"

@@ -2,9 +2,9 @@ name: Continuous Integration
 
 on:
   push:
-    branches: [ dev ]  # Focus on dev branch for active development
+    branches: [ main, dev ]  # CI runs on main and dev branches
   pull_request:
-    branches: [ dev ]  # PRs should target dev branch
+    branches: [ main, dev ]  # PRs can target main or dev branches
   workflow_dispatch:
 
 env:
