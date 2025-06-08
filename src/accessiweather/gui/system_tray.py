@@ -6,20 +6,27 @@ This module provides the TaskBarIcon class for system tray integration.
 import logging
 import os
 import platform
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 
 import wx
 import wx.adv
 
+from accessiweather.dynamic_format_manager import DynamicFormatManager
 from accessiweather.format_string_parser import FormatStringParser
 from accessiweather.gui.settings_dialog import (
     DEFAULT_TEMPERATURE_UNIT,
+    TASKBAR_ICON_DYNAMIC_ENABLED_KEY,
     TASKBAR_ICON_TEXT_ENABLED_KEY,
     TASKBAR_ICON_TEXT_FORMAT_KEY,
     TEMPERATURE_UNIT_KEY,
 )
 from accessiweather.utils.temperature_utils import TemperatureUnit, format_temperature
-from accessiweather.utils.unit_utils import format_pressure, format_visibility, format_wind_speed
+from accessiweather.utils.unit_utils import (
+    format_precipitation,
+    format_pressure,
+    format_visibility,
+    format_wind_speed,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +102,9 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
 
         self.frame = frame
         self.format_parser = FormatStringParser()
+        self.dynamic_format_manager = DynamicFormatManager()
         self.current_weather_data = {}
+        self.current_alerts_data: Optional[List[Dict[str, Any]]] = None
         self._is_destroyed = False
 
         # Set the icon
@@ -338,6 +347,15 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         self.current_weather_data = weather_data
         self.update_icon_text()
 
+    def update_alerts_data(self, alerts_data: Optional[List[Dict[str, Any]]]):
+        """Update the current alerts data and refresh the taskbar icon text.
+
+        Args:
+            alerts_data: List of current weather alerts or None
+        """
+        self.current_alerts_data = alerts_data
+        self.update_icon_text()
+
     def update_icon_text(self):
         """Update the taskbar icon text based on current settings and weather data."""
         # Check if we have weather data
@@ -354,8 +372,11 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
             self.set_icon()
             return
 
-        # Get the format string and temperature unit preference
-        format_string = settings.get(TASKBAR_ICON_TEXT_FORMAT_KEY, "{temp} {condition}")
+        # Get the user's base format string, dynamic setting, and temperature unit preference
+        user_format_string = settings.get(
+            TASKBAR_ICON_TEXT_FORMAT_KEY, "{location} {temp} {condition}"
+        )
+        dynamic_enabled = settings.get(TASKBAR_ICON_DYNAMIC_ENABLED_KEY, True)
         unit_pref_str = settings.get(TEMPERATURE_UNIT_KEY, DEFAULT_TEMPERATURE_UNIT)
 
         # Convert string to enum
@@ -414,7 +435,7 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         if "humidity" in formatted_data:
             humidity = formatted_data.get("humidity")
             if humidity is not None:
-                formatted_data["humidity"] = f"{humidity:.0f}%"
+                formatted_data["humidity"] = f"{humidity:.0f}"
 
         # Format feels like temperature if available
         if "feels_like_f" in formatted_data and "feels_like_c" in formatted_data:
@@ -441,15 +462,40 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         if "precip" in formatted_data:
             precip = formatted_data.get("precip")
             if precip is not None:
-                formatted_data["precip"] = f"{precip:.1f} in"
+                # Use format_precipitation function to handle units based on user preference
+                formatted_data["precip"] = format_precipitation(precip, unit_pref, precision=1)
 
         # Format precipitation chance if available
         if "precip_chance" in formatted_data:
             precip_chance = formatted_data.get("precip_chance")
             if precip_chance is not None:
-                formatted_data["precip_chance"] = f"{precip_chance:.0f}%"
+                formatted_data["precip_chance"] = f"{precip_chance:.0f}"
 
         try:
+            # Determine which format string to use
+            if dynamic_enabled:
+                # Get dynamic format string based on current conditions
+                format_string = self.dynamic_format_manager.get_dynamic_format_string(
+                    self.current_weather_data,
+                    self.current_alerts_data,
+                    user_format=user_format_string,
+                )
+            else:
+                # Use the user's static format string
+                format_string = user_format_string
+
+            # Add alert data to formatted_data if we have alerts
+            if self.current_alerts_data:
+                primary_alert = self._get_primary_alert(self.current_alerts_data)
+                if primary_alert:
+                    formatted_data.update(
+                        {
+                            "event": primary_alert.get("event", "Weather Alert"),
+                            "severity": primary_alert.get("severity", "Unknown"),
+                            "headline": primary_alert.get("headline", ""),
+                        }
+                    )
+
             # Format the string with formatted weather data
             formatted_text = self.format_parser.format_string(format_string, formatted_data)
 
@@ -460,3 +506,37 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
             logger.error(f"Error updating taskbar icon text: {e}")
             # Fall back to default icon
             self.set_icon()
+
+    def _get_primary_alert(self, alerts_data: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """Get the primary (highest severity) alert from alerts data.
+
+        Args:
+            alerts_data: List of alert dictionaries
+
+        Returns:
+            Primary alert dictionary or None if no alerts
+        """
+        if not alerts_data:
+            return None
+
+        # Priority mapping for alert severities
+        severity_priority = {
+            "Extreme": 4,
+            "Severe": 3,
+            "Moderate": 2,
+            "Minor": 1,
+            "Unknown": 0,
+        }
+
+        primary_alert = None
+        max_priority = -1
+
+        for alert in alerts_data:
+            severity = alert.get("severity", "Unknown")
+            priority = severity_priority.get(severity, 0)
+
+            if priority > max_priority:
+                max_priority = priority
+                primary_alert = alert
+
+        return primary_alert
