@@ -8,12 +8,12 @@ name: Update GitHub Pages
 # This prevents duplicate runs and ensures build artifacts are available when updating pages.
 
 on:
-  # Trigger when build workflow completes successfully on main or dev branch (primary trigger)
+  # Trigger when build workflow completes successfully on main branch (primary trigger)
   workflow_run:
     workflows: ["Build and Package"]
     types:
       - completed
-    branches: [main, dev]
+    branches: [main]
   # Trigger when releases are published/edited
   release:
     types:
@@ -52,7 +52,7 @@ jobs:
   update-build-info:
     name: Update Build Information
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'release' || (github.event_name == 'workflow_run' && (github.event.workflow_run.conclusion == 'success' || github.event.workflow_run.conclusion == 'failure')) }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'release' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
 
     steps:
     - name: Checkout repository
@@ -100,12 +100,8 @@ jobs:
         if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.target_branch }}" != "both" ]; then
           FETCH_BRANCHES="${{ inputs.target_branch }}"
         elif [ "${{ github.event_name }}" = "workflow_run" ]; then
-          # For workflow_run events (build completed), update the branch that triggered the build
-          if [ "${{ github.event.workflow_run.head_branch }}" = "dev" ]; then
-            FETCH_BRANCHES="dev"
-          else
-            FETCH_BRANCHES="main"
-          fi
+          # For workflow_run events (build completed), only update main branch
+          FETCH_BRANCHES="main"
         elif [ "${{ github.event_name }}" = "release" ]; then
           # For release events, update both branches (release affects main, but we want both updated)
           FETCH_BRANCHES="main dev"
