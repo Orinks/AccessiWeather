@@ -17,8 +17,8 @@ if ($CurrentDir -eq $ScriptDir) {
 function Get-AppVersion {
     $pyprojectPath = Join-Path $ProjectRoot "pyproject.toml"
     if (Test-Path $pyprojectPath) {
-        $versionLine = Get-Content $pyprojectPath | Where-Object { $_ -match 'version\s*=\s*"([0-9\.]+)"' }
-        if ($versionLine -match 'version\s*=\s*"([0-9\.]+)"') {
+        $versionLine = Get-Content $pyprojectPath | Where-Object { $_ -match 'version\s*=\s*"([0-9\.\-\w]+)"' }
+        if ($versionLine -match 'version\s*=\s*"([0-9\.\-\w]+)"') {
             return $matches[1]
         }
     }
