@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "accessiweather"
-version = "0.9.4-test"
-description = "AccessiWeather: An accessible weather application using NOAA data with focus on screen reader compatibility"
+version = "0.9.3-rc"
+description = "AccessiWeather: An accessible weather application that includes NOAA and Open-Meteo support with focus on screen reader compatibility"
 authors = [
-    { name = "User" }
+    { name = "Orinks" }
 ]
 license = {text = "MIT"}
 requires-python = ">=3.7"
