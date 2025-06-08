@@ -1,4 +1,4 @@
-# AccessiWeather (v0.9.3) - Test Workflow
+# AccessiWeather (v0.9.3)
 
 A desktop weather application with robust accessibility features and international weather support. Built using wxPython with a focus on screen reader compatibility and keyboard navigation.
 

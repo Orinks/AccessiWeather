@@ -136,15 +136,23 @@ AccessiWeather offers advanced system tray integration:
 - **Keyboard Accessibility**: Full keyboard support for tray icon interaction
 
 #### Taskbar Icon Customization
-AccessiWeather's standout feature is dynamic taskbar icon text customization:
+AccessiWeather's standout feature is intelligent taskbar icon text customization with dynamic format switching:
 
+- **Dynamic Format Switching**: Automatically changes display format based on weather conditions
 - **Custom Text Display**: Show weather information directly in the taskbar
-- **Format Strings**: Use variables like `{temp}`, `{condition}`, `{humidity}`
+- **Format Strings**: Use variables like `{temp}`, `{condition}`, `{location}`, `{humidity}`
 - **Real-time Updates**: Taskbar text updates automatically with weather data
-- **Examples**:
-  - `{temp}°F {condition}` → "72°F Sunny"
-  - `{temp}° {humidity}%` → "72° 45%"
-  - `{location}: {temp}°` → "New York: 72°"
+- **Weather-Aware Display**: Different formats for normal, severe, and extreme conditions
+
+#### Dynamic Format Examples
+When dynamic switching is enabled, the taskbar automatically shows contextually relevant information:
+
+- **Normal conditions**: `"San Francisco, CA 72°F Clear • 55%"`
+- **Severe weather**: `"🌩️ New York, NY Thunderstorms 68°F • NW 25.0 mph"`
+- **Temperature extremes**: `"🌡️ Phoenix, AZ 105°F (feels 115°F) • Sunny"`
+- **High winds**: `"💨 Chicago, IL NW 35.0 mph • Partly Cloudy 45°F"`
+- **Precipitation expected**: `"🌧️ Seattle, WA Cloudy 58°F • 80% chance"`
+- **Low visibility**: `"🌫️ San Francisco, CA Fog 55°F • Visibility 0.5 mi"`
 
 #### System Tray Keyboard Shortcuts
 - **Enter**: Focus application or show context menu
@@ -179,14 +187,42 @@ AccessiWeather provides extensive customization through a three-tab settings dia
 
 #### Taskbar Icon Customization
 - **Enable Taskbar Text**: Show weather information in the taskbar icon
-- **Custom Format String**: Define what information to display
-- **Available Variables**:
-  - `{temp}` - Current temperature
-  - `{condition}` - Weather condition (e.g., "Sunny", "Cloudy")
-  - `{humidity}` - Humidity percentage
-  - `{location}` - Location name
-  - `{wind_speed}` - Wind speed
-  - `{pressure}` - Atmospheric pressure
+- **Dynamic Format Switching**: Automatically adapt display format based on weather conditions
+- **Custom Format String**: Define what information to display (used as default/fallback when dynamic switching is enabled)
+
+#### Dynamic Format Switching
+When enabled, AccessiWeather intelligently selects the most appropriate format based on current conditions:
+
+- **Automatic Context Switching**: Changes format based on weather severity and type
+- **Visual Weather Indicators**: Uses emojis (🌩️, 🌡️, 💨, 🌧️, 🌫️) to quickly identify conditions
+- **Relevant Information Priority**: Shows the most important data for each weather scenario
+- **Fallback Protection**: Uses your custom format if dynamic switching encounters issues
+
+#### Available Format Variables
+All variables respect your temperature unit preference (Imperial/Metric/Both):
+
+- `{temp}` - Current temperature (formatted with units)
+- `{temp_f}` - Temperature in Fahrenheit only
+- `{temp_c}` - Temperature in Celsius only
+- `{condition}` - Weather condition (e.g., "Sunny", "Partly Cloudy")
+- `{location}` - Location name
+- `{humidity}` - Humidity percentage (number only, % symbol added by template)
+- `{wind_speed}` - Wind speed (formatted with units)
+- `{wind_dir}` - Wind direction (e.g., "NW", "SE")
+- `{feels_like}` - Feels-like temperature (formatted with units)
+- `{pressure}` - Atmospheric pressure (formatted with units)
+- `{visibility}` - Visibility distance (formatted with units)
+- `{precip}` - Precipitation amount (formatted with units)
+- `{precip_chance}` - Chance of precipitation (number only, % symbol added by template)
+- `{uv}` - UV index
+- `{high}` - Today's high temperature (formatted with units)
+- `{low}` - Today's low temperature (formatted with units)
+
+#### Custom Format Examples
+- `{location} {temp} {condition}` → "New York, NY 72°F Sunny"
+- `{temp} • {humidity}% humidity` → "72°F • 45% humidity"
+- `{location}: {temp} (feels {feels_like})` → "Phoenix: 95°F (feels 105°F)"
+- `{condition} {temp} • {wind_dir} {wind_speed}` → "Partly Cloudy 68°F • NW 12.0 mph"
 
 ### Advanced Tab
 
@@ -194,6 +230,64 @@ AccessiWeather provides extensive customization through a three-tab settings dia
 - **Minimize to Tray**: Hide to system tray instead of closing when X is clicked
 - **Cache Settings**: Enable/disable API response caching
 - **Cache TTL**: How long to cache weather data (60-3600 seconds)
+
+## Understanding Dynamic Format Switching
+
+Dynamic format switching is AccessiWeather's intelligent feature that automatically adapts the taskbar display based on current weather conditions. This ensures you always see the most relevant information at a glance.
+
+### How Dynamic Switching Works
+
+The system analyzes current weather data and selects the most appropriate format template:
+
+1. **Weather Condition Analysis**: Evaluates temperature, wind speed, precipitation, visibility, and alerts
+2. **Priority Assessment**: Determines which weather factors are most important to display
+3. **Format Selection**: Chooses the best template for the current conditions
+4. **Automatic Updates**: Switches formats as weather conditions change throughout the day
+
+### Dynamic Format Types
+
+#### Default Format
+**Used for**: Normal, pleasant weather conditions
+**Shows**: Location, temperature, condition, and humidity
+**Example**: `"San Francisco, CA 75°F Partly Cloudy • 68%"`
+
+#### Severe Weather Format
+**Used for**: Thunderstorms, severe weather warnings
+**Shows**: Storm emoji, location, condition, temperature, and wind information
+**Example**: `"🌩️ Miami, FL Thunderstorms 82°F • SW 28.0 mph"`
+
+#### Temperature Extreme Format
+**Used for**: Very hot or very cold conditions (based on feels-like temperature)
+**Shows**: Temperature emoji, location, actual and feels-like temperatures
+**Example**: `"🌡️ Phoenix, AZ 108°F (feels 118°F) • Sunny"`
+
+#### Wind Warning Format
+**Used for**: High wind conditions
+**Shows**: Wind emoji, location, wind details, condition, and temperature
+**Example**: `"💨 Chicago, IL NW 42.0 mph • Clear 38°F"`
+
+#### Precipitation Format
+**Used for**: When rain, snow, or other precipitation is likely
+**Shows**: Rain emoji, location, condition, temperature, and precipitation chance
+**Example**: `"🌧️ Seattle, WA Overcast 52°F • 85% chance"`
+
+#### Fog/Low Visibility Format
+**Used for**: Foggy conditions or low visibility
+**Shows**: Fog emoji, location, condition, temperature, and visibility distance
+**Example**: `"🌫️ San Francisco, CA Fog 58°F • Visibility 0.3 mi"`
+
+#### Alert Format
+**Used for**: Active weather alerts and warnings
+**Shows**: Warning emoji, location, alert type, and severity
+**Example**: `"⚠️ Dallas, TX: Tornado Warning (Extreme)"`
+
+### Benefits of Dynamic Switching
+
+- **Contextual Relevance**: Always shows the most important information for current conditions
+- **Quick Recognition**: Visual emojis help identify weather situations at a glance
+- **Automatic Adaptation**: No manual configuration needed as weather changes
+- **Comprehensive Coverage**: Handles all types of weather scenarios intelligently
+- **Accessibility**: Maintains screen reader compatibility while providing rich visual information
 
 ## Accessibility Features
 
@@ -246,8 +340,16 @@ AccessiWeather is designed with comprehensive accessibility support:
 ### Getting Started
 1. **Start with Automatic Data Source**: The automatic weather source selection provides the best experience
 2. **Add Local Location First**: Add your primary location before exploring other features
-3. **Configure Alerts**: Set appropriate alert radius and precision for your needs
-4. **Enable System Tray**: Use minimize to tray for convenient background operation
+3. **Enable Dynamic Format Switching**: Turn on dynamic format switching for the best taskbar experience
+4. **Configure Alerts**: Set appropriate alert radius and precision for your needs
+5. **Enable System Tray**: Use minimize to tray for convenient background operation
+
+### Taskbar Customization Tips
+- **Try Dynamic Switching First**: Enable dynamic format switching to see intelligent format changes
+- **Create Custom Fallback**: Design a custom format string as backup when dynamic switching is enabled
+- **Test Different Conditions**: Observe how the format changes during different weather conditions
+- **Consider Screen Space**: Longer formats may be truncated on smaller screens
+- **Use Relevant Variables**: Include variables that matter most for your location and preferences
 
 ### Optimizing Performance
 - **Reasonable Update Intervals**: Use 10-15 minute intervals for active monitoring, longer for background use
@@ -324,6 +426,13 @@ accessiweather --portable
 - **Enable Feature**: Ensure taskbar text is enabled in Display settings
 - **Format String**: Verify the format string syntax is correct
 - **Data Availability**: Some variables may not be available for all locations
+- **Dynamic Switching**: If enabled, format changes automatically based on weather conditions
+
+#### Dynamic Format Issues
+- **Format Not Changing**: Dynamic switching requires varying weather conditions to demonstrate different formats
+- **Missing Emojis**: Ensure your system supports Unicode emoji display
+- **Unexpected Format**: Dynamic switching overrides custom format; disable it to use only your custom format
+- **Fallback Behavior**: If dynamic switching fails, it automatically uses your custom format string
 
 ### Performance Issues
 
