@@ -47,7 +47,7 @@ class TestDynamicFormatManager:
     def test_init_default(self, format_manager):
         """Test default initialization."""
         assert format_manager.current_template_name == "default"
-        assert format_manager.current_format_string == "{temp} {condition}"
+        assert format_manager.current_format_string == "{location} {temp} {condition} • {humidity}%"
         assert format_manager.update_count == 0
         assert format_manager.last_analysis is None
 
@@ -67,7 +67,7 @@ class TestDynamicFormatManager:
         """Test getting format string for default conditions."""
         result = format_manager.get_dynamic_format_string(sample_weather_data)
 
-        assert result == "{temp} {condition}"
+        assert result == "{location} {temp} {condition} • {humidity}%"
         assert format_manager.current_template_name == "default"
         assert format_manager.update_count == 1
 
@@ -92,7 +92,7 @@ class TestDynamicFormatManager:
 
         result = format_manager.get_dynamic_format_string(severe_weather_data)
 
-        assert "⚠️" in result
+        assert "🌩️" in result
         assert format_manager.current_template_name == "severe_weather"
 
     def test_get_dynamic_format_string_temperature_extreme(self, format_manager):
@@ -266,7 +266,7 @@ class TestDynamicFormatManager:
         format_manager.reset_to_default()
 
         assert format_manager.current_template_name == "default"
-        assert format_manager.current_format_string == "{temp} {condition}"
+        assert format_manager.current_format_string == "{location} {temp} {condition} • {humidity}%"
         assert format_manager.last_analysis is None
         assert format_manager.update_count == 0
 
@@ -286,7 +286,7 @@ class TestDynamicFormatManager:
 
         assert result is True
         assert format_manager.current_template_name == "alert"
-        assert format_manager.current_format_string == "{event}: {severity}"
+        assert format_manager.current_format_string == "⚠️ {location}: {event} ({severity})"
 
     def test_force_template_not_found(self, format_manager):
         """Test forcing a non-existent template."""
@@ -306,7 +306,7 @@ class TestDynamicFormatManager:
             result = format_manager.get_dynamic_format_string({"invalid": "data"})
 
             # Should fall back to default template
-            assert result == "{temp}°F {condition}"
+            assert result == "{location} {temp} {condition} • {humidity}%"
 
     def test_user_format_fallback(self, format_manager):
         """Test fallback to user format when errors occur."""
@@ -357,7 +357,7 @@ class TestDynamicFormatManager:
         result = format_manager.get_dynamic_format_string(nws_data)
 
         # Should work with Open-Meteo weather codes
-        assert result == "{temp}°F {condition}"  # Default template
+        assert result == "{location} {temp} {condition} • {humidity}%"  # Default template
         assert format_manager.current_template_name == "default"
 
     def test_weatherapi_data_format_support(self, format_manager):
@@ -378,7 +378,7 @@ class TestDynamicFormatManager:
         result = format_manager.get_dynamic_format_string(weatherapi_data)
 
         # Should work even with different weather code systems
-        assert result == "{temp}°F {condition}"  # Default template
+        assert result == "{location} {temp} {condition} • {humidity}%"  # Default template
         assert format_manager.current_template_name == "default"
 
     def test_automatic_weather_source_support(self, format_manager):
@@ -405,8 +405,8 @@ class TestDynamicFormatManager:
         us_result = format_manager.get_dynamic_format_string(us_data)
         intl_result = format_manager.get_dynamic_format_string(intl_data)
 
-        assert us_result == "{temp}°F {condition}"
-        assert intl_result == "{temp}°F {condition}"
+        assert us_result == "{location} {temp} {condition} • {humidity}%"
+        assert intl_result == "{location} {temp} {condition} • {humidity}%"
 
     def test_dynamic_switching_control(self, format_manager):
         """Test that dynamic switching can be controlled via settings."""
@@ -420,7 +420,7 @@ class TestDynamicFormatManager:
 
         # With dynamic switching enabled (default behavior)
         result_dynamic = format_manager.get_dynamic_format_string(severe_data)
-        assert "⚠️" in result_dynamic  # Should use severe weather template
+        assert "🌩️" in result_dynamic  # Should use severe weather template
         assert format_manager.current_template_name == "severe_weather"
 
         # Reset the manager
@@ -435,7 +435,7 @@ class TestDynamicFormatManager:
         # When dynamic is enabled, it should still use dynamic templates
         # The control happens at the UI level, not in the format manager itself
         # The format manager always provides dynamic suggestions
-        assert "⚠️" in result_static  # Still uses dynamic template
+        assert "🌩️" in result_static  # Still uses dynamic template
 
         # The actual control is in the system_tray.py where it chooses
         # between dynamic_format_string and user_format_string
