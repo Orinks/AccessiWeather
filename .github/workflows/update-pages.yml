@@ -331,10 +331,7 @@ jobs:
         DEV_COMMIT=$(echo "$DEV_COMMIT" | sed 's/[[\.*^$()+?{|]/\\&/g')
         LAST_UPDATED_ESCAPED=$(echo "$LAST_UPDATED" | sed 's/[[\.*^$()+?{|]/\\&/g')
 
-        # For release notes and commits, escape only the most problematic characters for sed
-        # but preserve HTML tags and basic formatting
-        RELEASE_NOTES_ESCAPED=$(echo "$RELEASE_NOTES" | sed 's/[[\.*^$]/\\&/g')
-        DEV_COMMITS_ESCAPED=$(echo "$DEV_COMMITS" | sed 's/[[\.*^$]/\\&/g')
+
 
         # Substitute template variables with actual values
         sed -i "s/{{MAIN_VERSION}}/$MAIN_VERSION/g" index.html
@@ -345,9 +342,29 @@ jobs:
         sed -i "s/{{DEV_COMMIT}}/$DEV_COMMIT/g" index.html
         sed -i "s/{{LAST_UPDATED}}/$LAST_UPDATED_ESCAPED/g" index.html
 
-        # Substitute release notes and commits (using different delimiter to avoid conflicts with HTML)
-        sed -i "s|{{MAIN_RELEASE_NOTES}}|$RELEASE_NOTES_ESCAPED|g" index.html
-        sed -i "s|{{DEV_RECENT_COMMITS}}|$DEV_COMMITS_ESCAPED|g" index.html
+        # Substitute release notes and commits using a more robust method
+        # Create temporary files to handle multiline content safely
+        echo "$RELEASE_NOTES" > /tmp/release_notes.txt
+        echo "$DEV_COMMITS" > /tmp/dev_commits.txt
+
+        # Use awk to replace the placeholders with file content
+        awk '
+        /{{MAIN_RELEASE_NOTES}}/ {
+            while ((getline line < "/tmp/release_notes.txt") > 0) {
+                print line
+            }
+            close("/tmp/release_notes.txt")
+            next
+        }
+        /{{DEV_RECENT_COMMITS}}/ {
+            while ((getline line < "/tmp/dev_commits.txt") > 0) {
+                print line
+            }
+            close("/tmp/dev_commits.txt")
+            next
+        }
+        { print }
+        ' index.html > index_tmp.html && mv index_tmp.html index.html
 
         echo "✓ Generated index.html from template with build info:"
         echo "  Stable Release (main): ${{ steps.build-info.outputs.main_version }} (${{ steps.build-info.outputs.main_date }})"
