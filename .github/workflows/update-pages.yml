@@ -221,6 +221,63 @@ jobs:
           fi
         done
 
+    - name: Fetch release notes and recent commits
+      run: |
+        echo "📝 Fetching release notes and recent commits..."
+
+        # Fetch latest release notes
+        echo "Fetching latest release notes..."
+        RELEASE_NOTES=""
+        if curl -s "https://api.github.com/repos/Orinks/AccessiWeather/releases/latest" | jq -e '.body' > /dev/null 2>&1; then
+          RELEASE_NOTES=$(curl -s "https://api.github.com/repos/Orinks/AccessiWeather/releases/latest" | jq -r '.body // "No release notes available."')
+
+          # Convert markdown to basic HTML for better display
+          # Replace markdown headers with HTML headers
+          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | sed 's/^### \(.*\)/<h5>\1<\/h5>/g')
+          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | sed 's/^## \(.*\)/<h4>\1<\/h4>/g')
+          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | sed 's/^# \(.*\)/<h3>\1<\/h3>/g')
+
+          # Replace markdown lists with HTML lists
+          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | sed 's/^- \(.*\)/<li>\1<\/li>/g')
+          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | sed 's/^\* \(.*\)/<li>\1<\/li>/g')
+
+          # Wrap consecutive list items in ul tags
+          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | sed ':a;N;$!ba;s/<li>\([^<]*\)<\/li>\n<li>/<ul><li>\1<\/li>\n<li>/g')
+          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | sed 's/<\/li>\n\([^<]*\)$/<\/li><\/ul>\n\1/g')
+          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | sed 's/<\/li>$/<\/li><\/ul>/g')
+
+          # Replace newlines with <br> for proper HTML display
+          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | sed ':a;N;$!ba;s/\n\([^<]\)/<br>\1/g')
+
+          echo "✓ Fetched release notes (${#RELEASE_NOTES} characters)"
+        else
+          RELEASE_NOTES="<p>No release notes available. <a href=\"https://github.com/Orinks/AccessiWeather/releases/latest\" target=\"_blank\">View on GitHub</a></p>"
+          echo "⚠ No release found, using fallback message"
+        fi
+
+        # Fetch recent commits from dev branch
+        echo "Fetching recent commits from dev branch..."
+        DEV_COMMITS=""
+        if curl -s "https://api.github.com/repos/Orinks/AccessiWeather/commits?sha=dev&per_page=3" | jq -e '.[0]' > /dev/null 2>&1; then
+          DEV_COMMITS=$(curl -s "https://api.github.com/repos/Orinks/AccessiWeather/commits?sha=dev&per_page=3" | jq -r '.[] | "<li>" + .commit.message + "</li>"' | tr '\n' ' ')
+          echo "✓ Fetched recent commits (${#DEV_COMMITS} characters)"
+        else
+          DEV_COMMITS="<li>Unable to fetch recent commits. <a href=\"https://github.com/Orinks/AccessiWeather/commits/dev\" target=\"_blank\">View on GitHub</a></li>"
+          echo "⚠ Failed to fetch commits, using fallback message"
+        fi
+
+        # Save to environment for next step
+        {
+          echo "RELEASE_NOTES<<EOF"
+          echo "$RELEASE_NOTES"
+          echo "EOF"
+          echo "DEV_COMMITS<<EOF"
+          echo "$DEV_COMMITS"
+          echo "EOF"
+        } >> $GITHUB_ENV
+
+        echo "✓ Release notes and commits data prepared"
+
     - name: Generate HTML from template
       run: |
         # Copy template to root directory and substitute values
@@ -265,7 +322,7 @@ jobs:
         [ -z "$DEV_DATE" ] && DEV_DATE="Check nightly.link"
         [ -z "$DEV_COMMIT" ] && DEV_COMMIT=""
 
-        # Escape special characters for sed
+        # Escape special characters for sed (but preserve HTML in release notes)
         MAIN_VERSION=$(echo "$MAIN_VERSION" | sed 's/[[\.*^$()+?{|]/\\&/g')
         MAIN_DATE=$(echo "$MAIN_DATE" | sed 's/[[\.*^$()+?{|]/\\&/g')
         MAIN_COMMIT=$(echo "$MAIN_COMMIT" | sed 's/[[\.*^$()+?{|]/\\&/g')
@@ -273,6 +330,11 @@ jobs:
         DEV_DATE=$(echo "$DEV_DATE" | sed 's/[[\.*^$()+?{|]/\\&/g')
         DEV_COMMIT=$(echo "$DEV_COMMIT" | sed 's/[[\.*^$()+?{|]/\\&/g')
         LAST_UPDATED_ESCAPED=$(echo "$LAST_UPDATED" | sed 's/[[\.*^$()+?{|]/\\&/g')
+
+        # For release notes and commits, escape only the most problematic characters for sed
+        # but preserve HTML tags and basic formatting
+        RELEASE_NOTES_ESCAPED=$(echo "$RELEASE_NOTES" | sed 's/[[\.*^$]/\\&/g')
+        DEV_COMMITS_ESCAPED=$(echo "$DEV_COMMITS" | sed 's/[[\.*^$]/\\&/g')
 
         # Substitute template variables with actual values
         sed -i "s/{{MAIN_VERSION}}/$MAIN_VERSION/g" index.html
@@ -283,9 +345,15 @@ jobs:
         sed -i "s/{{DEV_COMMIT}}/$DEV_COMMIT/g" index.html
         sed -i "s/{{LAST_UPDATED}}/$LAST_UPDATED_ESCAPED/g" index.html
 
+        # Substitute release notes and commits (using different delimiter to avoid conflicts with HTML)
+        sed -i "s|{{MAIN_RELEASE_NOTES}}|$RELEASE_NOTES_ESCAPED|g" index.html
+        sed -i "s|{{DEV_RECENT_COMMITS}}|$DEV_COMMITS_ESCAPED|g" index.html
+
         echo "✓ Generated index.html from template with build info:"
         echo "  Stable Release (main): ${{ steps.build-info.outputs.main_version }} (${{ steps.build-info.outputs.main_date }})"
         echo "  Development Build (dev): $DEV_VERSION ($DEV_DATE)"
+        echo "  Release notes: ${#RELEASE_NOTES} characters"
+        echo "  Recent commits: ${#DEV_COMMITS} characters"
         echo "  Last updated: $LAST_UPDATED"
         echo "  Triggered by: ${{ github.event_name }}"
         echo "  Source branch: $TARGET_BRANCH"
@@ -296,6 +364,21 @@ jobs:
           grep -o "{{[^}]*}}" index.html || true
         else
           echo "✓ All template variables successfully substituted"
+        fi
+
+        # Check if release notes and commits were added
+        if grep -q "release-notes" index.html; then
+          echo "✓ Release notes sections found in generated HTML"
+        else
+          echo "⚠ Release notes sections not found"
+        fi
+
+        # Check for specific content
+        if grep -q "Recent Changes" index.html; then
+          echo "✓ Recent changes section found"
+        fi
+        if grep -q "Release Notes" index.html; then
+          echo "✓ Release notes section found"
         fi
 
     - name: Create nightly.link URLs documentation
