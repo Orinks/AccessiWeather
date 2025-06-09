@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 import wx
 
 from accessiweather.gui.settings_dialog import (
+    TASKBAR_ICON_DYNAMIC_ENABLED_KEY,
     TASKBAR_ICON_TEXT_ENABLED_KEY,
     TASKBAR_ICON_TEXT_FORMAT_KEY,
 )
@@ -27,7 +28,7 @@ class TestTaskBarIconText(unittest.TestCase):
         self.frame.config = {
             "settings": {
                 TASKBAR_ICON_TEXT_ENABLED_KEY: True,
-                TASKBAR_ICON_TEXT_FORMAT_KEY: "{temp} {condition}",
+                TASKBAR_ICON_TEXT_FORMAT_KEY: "{location} {temp} {condition}",
             }
         }
 
@@ -72,7 +73,8 @@ class TestTaskBarIconText(unittest.TestCase):
 
         # Verify that SetIcon was called with the formatted text
         # Test data has temp: 72.5°F which is not a whole number, so decimal is preserved
-        expected_text = "72.5°F Partly Cloudy"
+        # New enhanced format includes humidity
+        expected_text = "New York 72.5°F Partly Cloudy • 45%"
         # Check that the second argument (tooltip text) matches our expected text
         self.assertEqual(self.taskbar_icon.SetIcon.call_args[0][1], expected_text)
 
@@ -110,6 +112,9 @@ class TestTaskBarIconText(unittest.TestCase):
         self.frame.config["settings"][
             TASKBAR_ICON_TEXT_FORMAT_KEY
         ] = "{location}: {temp}, {wind_dir} {wind_speed}"
+
+        # Disable dynamic formatting to use the custom format string
+        self.frame.config["settings"][TASKBAR_ICON_DYNAMIC_ENABLED_KEY] = False
 
         # Call update_icon_text
         self.taskbar_icon.update_icon_text()
