@@ -201,6 +201,7 @@ class UIManager:
             "feels_like_c": None,
             # Weather condition
             "condition": "",
+            "weather_code": None,  # Weather code for dynamic format management
             # Wind data
             "wind_speed": None,
             "wind_dir": "",
@@ -1102,6 +1103,7 @@ class UIManager:
             "uv": current.get("uv"),
             "visibility": current.get("vis_miles"),
             "precip": current.get("precip_in"),
+            "weather_code": condition.get("code"),  # WeatherAPI condition code
         }
 
         # Add location information if available
@@ -1218,6 +1220,15 @@ class UIManager:
             # Create combined wind placeholder using utility function
             wind_combined = _format_combined_wind(wind_speed_mph, wind_dir, "mph")
 
+            # Extract weather code for dynamic format management
+            weather_code = None
+            # Check if this is Open-Meteo data mapped to NWS format
+            present_weather = properties.get("presentWeather", [])
+            if present_weather and len(present_weather) > 0:
+                raw_string = present_weather[0].get("rawString")
+                if raw_string and raw_string.isdigit():
+                    weather_code = int(raw_string)
+
             # Get weather condition
             condition = properties.get("textDescription", "")
             logger.debug(f"NWS condition extracted: {condition}")
@@ -1237,6 +1248,7 @@ class UIManager:
                 feels_like_f=feels_like_f,
                 feels_like_c=feels_like_c,
                 location=location_name,
+                weather_code=weather_code,
             )
 
         except Exception as e:

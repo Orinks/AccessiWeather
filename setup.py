@@ -14,6 +14,7 @@ setup(
         "beautifulsoup4",  # For parsing HTML in the scraper
         "httpx>=0.20.0",  # For HTTP requests in API clients
         "attrs>=22.2.0",  # For data classes in generated API client
+        "psutil",  # For memory usage monitoring in debug mode
     ],
     extras_require={"dev": ["pytest", "pytest-mock", "requests-mock"]},
     description=(
