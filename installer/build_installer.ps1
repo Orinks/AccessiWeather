@@ -236,6 +236,7 @@ function Get-RequiredDependencies {
         "beautifulsoup4",
         "httpx",
         "attrs",
+        "psutil",
         "PyInstaller"
     )
 
@@ -404,6 +405,7 @@ else {
         "--hidden-import=dateutil.parser",
         "--hidden-import=httpx",
         "--hidden-import=attrs",
+        "--hidden-import=psutil",
         "--exclude-module=IPython",
         "--exclude-module=jedi",
         "--exclude-module=parso",
