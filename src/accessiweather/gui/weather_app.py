@@ -31,6 +31,7 @@ from .handlers import (
     WeatherAppSettingsHandlers,
     WeatherAppSystemHandlers,
     WeatherAppTimerHandlers,
+    WeatherAppUpdateHandlers,
 )
 from .hourly_forecast_fetcher import HourlyForecastFetcher
 from .settings_dialog import (
@@ -65,6 +66,7 @@ class WeatherApp(
     WeatherAppSystemHandlers,
     WeatherAppTimerHandlers,
     WeatherAppConfigHandlers,
+    WeatherAppUpdateHandlers,
 ):
     """Main application window for AccessiWeather."""
 
@@ -820,6 +822,10 @@ class WeatherApp(
 
         # Create Help menu
         help_menu = wx.Menu()
+        check_updates_item = help_menu.Append(
+            wx.ID_ANY, "Check for &Updates...", "Check for application updates"
+        )
+        help_menu.AppendSeparator()
         about_item = help_menu.Append(wx.ID_ABOUT, "&About", "About AccessiWeather")
 
         # Add Help menu to menu bar
@@ -832,6 +838,7 @@ class WeatherApp(
         self.Bind(wx.EVT_MENU, self.OnRefresh, refresh_item)
         self.Bind(wx.EVT_MENU, self.OnSettings, settings_item)
         self.Bind(wx.EVT_MENU, lambda e: self.Close(True), exit_item)
+        self.Bind(wx.EVT_MENU, self.OnCheckForUpdates, check_updates_item)
         self.Bind(wx.EVT_MENU, self.OnAbout, about_item)
 
     def OnAbout(self, event):  # event is required by wx
