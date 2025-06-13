@@ -82,6 +82,102 @@ class TestSettingsDialog(unittest.TestCase):
         self.assertEqual(api_keys, {})
         dialog.Destroy()
 
+    def test_check_now_button_with_update_handler(self):
+        """Test check now button when parent has OnCheckForUpdates method."""
+        # Add OnCheckForUpdates method to the frame
+        self.frame.OnCheckForUpdates = MagicMock()
+
+        dialog = SettingsDialog(self.frame, self.current_settings)
+
+        # Simulate clicking the check now button
+        event = wx.CommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED)
+        dialog._on_check_now(event)
+
+        # Verify that OnCheckForUpdates was called on the parent
+        self.frame.OnCheckForUpdates.assert_called_once()
+
+        dialog.Destroy()
+
+    @patch('wx.MessageBox')
+    def test_check_now_button_without_update_handler(self, mock_message_box):
+        """Test check now button when parent doesn't have OnCheckForUpdates method."""
+        # Ensure the frame doesn't have OnCheckForUpdates method
+        if hasattr(self.frame, 'OnCheckForUpdates'):
+            delattr(self.frame, 'OnCheckForUpdates')
+
+        dialog = SettingsDialog(self.frame, self.current_settings)
+
+        # Simulate clicking the check now button
+        event = wx.CommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED)
+        dialog._on_check_now(event)
+
+        # Verify that a message box was shown
+        mock_message_box.assert_called_once_with(
+            "Update checking is not available at this time.",
+            "Check for Updates",
+            wx.OK | wx.ICON_INFORMATION,
+            dialog,
+        )
+
+        dialog.Destroy()
+
+    @patch('wx.MessageBox')
+    def test_check_now_button_no_update_available_flow(self, mock_message_box):
+        """Test the full flow when check now button is clicked and no update is available."""
+        # Create a mock update service that returns None (no update available)
+        mock_update_service = MagicMock()
+        mock_update_service.check_for_updates.return_value = None
+
+        # Create a mock parent with update handling capabilities
+        self.frame.update_service = mock_update_service
+
+        def mock_on_check_for_updates(event):
+            """Mock implementation of OnCheckForUpdates that simulates the real flow."""
+            # This simulates the real OnCheckForUpdates method behavior
+            if not self.frame.update_service:
+                mock_message_box(
+                    "Update service is not available.",
+                    "Update Check Failed",
+                    wx.OK | wx.ICON_ERROR,
+                    self.frame,
+                )
+                return
+
+            # Simulate the background check completing with no update
+            update_info = self.frame.update_service.check_for_updates()
+            if update_info:
+                # Would show update available dialog (not tested here)
+                pass
+            else:
+                # No update available - this is what we're testing
+                mock_message_box(
+                    "You are running the latest version of AccessiWeather.",
+                    "No Updates Available",
+                    wx.OK | wx.ICON_INFORMATION,
+                    self.frame,
+                )
+
+        self.frame.OnCheckForUpdates = mock_on_check_for_updates
+
+        dialog = SettingsDialog(self.frame, self.current_settings)
+
+        # Simulate clicking the check now button
+        event = wx.CommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED)
+        dialog._on_check_now(event)
+
+        # Verify that the update service was called
+        mock_update_service.check_for_updates.assert_called_once()
+
+        # Verify that the "no update available" message was shown
+        mock_message_box.assert_called_once_with(
+            "You are running the latest version of AccessiWeather.",
+            "No Updates Available",
+            wx.OK | wx.ICON_INFORMATION,
+            self.frame,
+        )
+
+        dialog.Destroy()
+
 
 class MockWeatherApp(
     WeatherAppSettingsHandlers, WeatherAppConfigHandlers, WeatherAppDialogHandlers

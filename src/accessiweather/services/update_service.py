@@ -26,6 +26,10 @@ REPO_OWNER = "Orinks"
 REPO_NAME = "AccessiWeather"
 RELEASES_URL = f"{GITHUB_API_BASE}/repos/{REPO_OWNER}/{REPO_NAME}/releases"
 
+# GitHub Pages configuration for dev builds
+GITHUB_PAGES_URL = "https://orinks.github.io/AccessiWeather/"
+DEV_BUILD_BASE_URL = "https://nightly.link/Orinks/AccessiWeather/workflows/build/dev"
+
 # Update channels
 UPDATE_CHANNEL_STABLE = "stable"
 UPDATE_CHANNEL_DEV = "dev"
@@ -35,7 +39,6 @@ VALID_UPDATE_CHANNELS = [UPDATE_CHANNEL_STABLE, UPDATE_CHANNEL_DEV]
 DEFAULT_CHECK_INTERVAL_HOURS = 24
 DEFAULT_AUTO_CHECK_ENABLED = True
 DEFAULT_UPDATE_CHANNEL = UPDATE_CHANNEL_STABLE
-DEFAULT_AUTO_INSTALL_ENABLED = False
 
 
 class UpdateInfo:
@@ -113,7 +116,6 @@ class UpdateService:
             "auto_check_enabled": DEFAULT_AUTO_CHECK_ENABLED,
             "check_interval_hours": DEFAULT_CHECK_INTERVAL_HOURS,
             "update_channel": DEFAULT_UPDATE_CHANNEL,
-            "auto_install_enabled": DEFAULT_AUTO_INSTALL_ENABLED,
         }
 
     def _save_update_state(self):
@@ -186,6 +188,75 @@ class UpdateService:
 
         return False
 
+    def _check_dev_builds(self) -> Optional[UpdateInfo]:
+        """Check for dev builds from GitHub Pages.
+
+        Returns:
+            UpdateInfo if dev build is available, None otherwise
+        """
+        try:
+            logger.info("Checking for dev builds from GitHub Pages...")
+
+            # Fetch the GitHub Pages content
+            response = requests.get(GITHUB_PAGES_URL, timeout=10)
+            response.raise_for_status()
+
+            content = response.text
+            current_version = __version__
+
+            # Parse dev build information from the HTML
+            # Look for the development build section
+            import re
+
+            # Extract dev version - look for pattern in span with id="dev-version"
+            dev_version_match = re.search(r'<span id="dev-version">([^<]+)</span>', content)
+            if not dev_version_match:
+                # Fallback: look for any dev version pattern
+                dev_version_match = re.search(r'([0-9]+\.[0-9]+\.[0-9]+[^\s<]*-dev)', content)
+                if not dev_version_match:
+                    logger.info("No dev build version found on GitHub Pages")
+                    return None
+
+            dev_version = dev_version_match.group(1).strip()
+
+            # Extract build date - look for span with id="dev-date"
+            dev_date_match = re.search(r'<span id="dev-date">([^<]+)</span>', content)
+            dev_date = dev_date_match.group(1).strip() if dev_date_match else ""
+
+            # Extract commit hash - look for span with id="dev-commit"
+            dev_commit_match = re.search(r'<span id="dev-commit">([a-f0-9]+)', content)
+            dev_commit = dev_commit_match.group(1).strip() if dev_commit_match else ""
+
+            # Check if this dev version is newer than current
+            if self._is_newer_version(current_version, dev_version, UPDATE_CHANNEL_DEV):
+                # Create dev build assets
+                dev_assets = [
+                    {
+                        "name": f"AccessiWeather-{dev_version}-Setup.exe",
+                        "browser_download_url": f"{DEV_BUILD_BASE_URL}/windows-installer-{dev_version}.zip",
+                    },
+                    {
+                        "name": f"AccessiWeather-{dev_version}-Portable.zip",
+                        "browser_download_url": f"{DEV_BUILD_BASE_URL}/windows-portable-{dev_version}.zip",
+                    },
+                ]
+
+                return UpdateInfo(
+                    version=dev_version,
+                    release_url=GITHUB_PAGES_URL,
+                    release_notes=f"Development build {dev_version}\nBuilt: {dev_date}\nCommit: {dev_commit[:8] if dev_commit else 'unknown'}",
+                    assets=dev_assets,
+                    published_date=dev_date,
+                    is_prerelease=True,
+                )
+            else:
+                logger.info(f"Dev build {dev_version} is not newer than current {current_version}")
+                return None
+
+        except Exception as e:
+            logger.error(f"Failed to check dev builds: {e}")
+            return None
+
     def check_for_updates(self, channel: Optional[str] = None) -> Optional[UpdateInfo]:
         """Check for available updates.
 
@@ -201,7 +272,22 @@ class UpdateService:
         try:
             logger.info(f"Checking for updates on {channel} channel...")
 
-            # Make API request
+            # For dev channel, check GitHub Pages for dev builds
+            if channel == UPDATE_CHANNEL_DEV:
+                latest_update = self._check_dev_builds()
+
+                # Update last check time
+                self.update_state["last_check"] = datetime.now(timezone.utc).isoformat()
+                self._save_update_state()
+
+                if latest_update:
+                    logger.info(f"Dev build available: {latest_update.version}")
+                else:
+                    logger.info("No dev builds available")
+
+                return latest_update
+
+            # For stable channel, check GitHub releases
             response = requests.get(RELEASES_URL, timeout=10)
             response.raise_for_status()
 
@@ -410,9 +496,6 @@ class UpdateService:
                 "check_interval_hours", DEFAULT_CHECK_INTERVAL_HOURS
             ),
             "update_channel": self.update_state.get("update_channel", DEFAULT_UPDATE_CHANNEL),
-            "auto_install_enabled": self.update_state.get(
-                "auto_install_enabled", DEFAULT_AUTO_INSTALL_ENABLED
-            ),
         }
 
     def update_settings(self, settings: Dict):

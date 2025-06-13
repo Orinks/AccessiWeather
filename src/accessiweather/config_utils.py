@@ -161,9 +161,7 @@ def ensure_config_defaults(config: Dict[str, Any]) -> Dict[str, Any]:
 
     # Add update settings if not present
     from accessiweather.gui.settings_dialog import (
-        AUTO_INSTALL_KEY,
         AUTO_UPDATE_CHECK_KEY,
-        DEFAULT_AUTO_INSTALL,
         DEFAULT_AUTO_UPDATE_CHECK,
         DEFAULT_UPDATE_CHANNEL,
         DEFAULT_UPDATE_CHECK_INTERVAL,
@@ -184,10 +182,6 @@ def ensure_config_defaults(config: Dict[str, Any]) -> Dict[str, Any]:
     if UPDATE_CHANNEL_KEY not in settings:
         logger.info(f"Adding default {UPDATE_CHANNEL_KEY} setting: {DEFAULT_UPDATE_CHANNEL}")
         settings[UPDATE_CHANNEL_KEY] = DEFAULT_UPDATE_CHANNEL
-
-    if AUTO_INSTALL_KEY not in settings:
-        logger.info(f"Adding default {AUTO_INSTALL_KEY} setting: {DEFAULT_AUTO_INSTALL}")
-        settings[AUTO_INSTALL_KEY] = DEFAULT_AUTO_INSTALL
 
     # Ensure api_keys section exists
     if "api_keys" not in updated_config:

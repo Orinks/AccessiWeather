@@ -76,7 +76,6 @@ class WeatherAppUpdateHandlers(WeatherAppHandlerBase):
                 "auto_check_enabled": settings.get("auto_update_check_enabled", True),
                 "check_interval_hours": settings.get("update_check_interval_hours", 24),
                 "update_channel": settings.get("update_channel", "stable"),
-                "auto_install_enabled": settings.get("auto_install_enabled", False),
             }
 
             # Update the service settings
@@ -148,7 +147,10 @@ class WeatherAppUpdateHandlers(WeatherAppHandlerBase):
         Args:
             event: The menu event
         """
+        logger.info("OnCheckForUpdates called - starting manual update check")
+
         if not self.update_service:
+            logger.error("Update service is not available")
             wx.MessageBox(
                 "Update service is not available.",
                 "Update Check Failed",
@@ -157,6 +159,7 @@ class WeatherAppUpdateHandlers(WeatherAppHandlerBase):
             )
             return
 
+        logger.debug("Update service is available, showing progress dialog")
         # Show progress dialog
         progress_dialog = UpdateProgressDialog(self, "Checking for Updates")
         progress_dialog.Show()
@@ -164,13 +167,17 @@ class WeatherAppUpdateHandlers(WeatherAppHandlerBase):
         # Start check in background thread
         def check_updates():
             try:
+                logger.info("Background thread: Starting update check")
                 update_info = self.update_service.check_for_updates()
+                logger.info(f"Background thread: Update check completed, result: {update_info is not None}")
                 wx.CallAfter(self._on_manual_check_complete, progress_dialog, update_info)
             except Exception as e:
+                logger.error(f"Background thread: Update check failed with error: {e}")
                 wx.CallAfter(self._on_manual_check_error, progress_dialog, str(e))
 
         thread = threading.Thread(target=check_updates, daemon=True)
         thread.start()
+        logger.debug("Background update check thread started")
 
     def _on_manual_check_complete(self, progress_dialog, update_info):
         """Handle manual update check completion.
@@ -180,12 +187,16 @@ class WeatherAppUpdateHandlers(WeatherAppHandlerBase):
             update_info: UpdateInfo object or None if no update available
         """
         try:
+            logger.info("Manual update check completed, processing results")
             progress_dialog.Destroy()
+            logger.debug("Progress dialog destroyed")
 
             if update_info:
+                logger.info(f"Update available: version {update_info.version}")
                 # Show update available dialog
                 self._show_update_notification(update_info)
             else:
+                logger.info("No update available, showing 'up to date' message")
                 # No update available
                 wx.MessageBox(
                     "You are running the latest version of AccessiWeather.",
@@ -193,6 +204,7 @@ class WeatherAppUpdateHandlers(WeatherAppHandlerBase):
                     wx.OK | wx.ICON_INFORMATION,
                     self,
                 )
+                logger.debug("'No Updates Available' message box displayed")
 
         except Exception as e:
             logger.error(f"Error handling manual check completion: {e}")
@@ -205,7 +217,9 @@ class WeatherAppUpdateHandlers(WeatherAppHandlerBase):
             error_message: Error message string
         """
         try:
+            logger.error(f"Manual update check failed: {error_message}")
             progress_dialog.Destroy()
+            logger.debug("Progress dialog destroyed after error")
 
             wx.MessageBox(
                 f"Failed to check for updates:\n\n{error_message}",
@@ -213,6 +227,7 @@ class WeatherAppUpdateHandlers(WeatherAppHandlerBase):
                 wx.OK | wx.ICON_ERROR,
                 self,
             )
+            logger.debug("Error message box displayed")
 
         except Exception as e:
             logger.error(f"Error handling manual check error: {e}")
@@ -240,9 +255,6 @@ class WeatherAppUpdateHandlers(WeatherAppHandlerBase):
 
             if "update_channel" in new_settings:
                 update_settings["update_channel"] = new_settings["update_channel"]
-
-            if "auto_install_enabled" in new_settings:
-                update_settings["auto_install_enabled"] = new_settings["auto_install_enabled"]
 
             if update_settings:
                 self.update_service.update_settings(update_settings)

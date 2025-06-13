@@ -72,36 +72,69 @@ class TestUpdateIntegration(unittest.TestCase):
 
         dialog.Destroy()
 
-    def test_update_dialog_with_auto_install_disabled(self):
-        """Test update dialog when auto-install is disabled."""
-        # Disable auto-install in service settings
-        self.update_service.update_settings({"auto_install_enabled": False})
-
+    def test_update_dialog_with_installer_asset(self):
+        """Test update dialog when installer asset is available."""
         dialog = UpdateNotificationDialog(self.parent, self.update_info, self.update_service)
 
-        # Should not have auto-install radio button
-        self.assertIsNone(dialog.auto_install_radio)
+        # Should have installation method combo box
+        self.assertIsNotNone(dialog.install_method_combo)
 
-        # Should have manual download radio button
-        self.assertIsNotNone(dialog.manual_download_radio)
-        self.assertTrue(dialog.manual_download_radio.GetValue())
+        # Should have both auto-install and manual download options (non-portable mode)
+        self.assertEqual(dialog.install_method_combo.GetCount(), 2)
+        self.assertEqual(dialog.install_method_combo.GetString(0), "Download and install automatically")
+        self.assertEqual(dialog.install_method_combo.GetString(1), "Open release page in browser")
+
+        # Should have auto-install selected by default when installer is available
+        self.assertEqual(dialog._get_selected_method(), "auto_install")
 
         dialog.Destroy()
 
-    def test_update_dialog_with_auto_install_enabled(self):
-        """Test update dialog when auto-install is enabled."""
-        # Enable auto-install in service settings
-        self.update_service.update_settings({"auto_install_enabled": True})
+    @patch('accessiweather.gui.update_dialog.is_portable_mode')
+    def test_update_dialog_portable_mode(self, mock_portable):
+        """Test update dialog when running in portable mode."""
+        mock_portable.return_value = True
 
         dialog = UpdateNotificationDialog(self.parent, self.update_info, self.update_service)
 
-        # Should have auto-install radio button
-        self.assertIsNotNone(dialog.auto_install_radio)
-        self.assertTrue(dialog.auto_install_radio.GetValue())
+        # Should detect portable mode
+        self.assertTrue(dialog.is_portable)
 
-        # Should have manual download radio button
-        self.assertIsNotNone(dialog.manual_download_radio)
-        self.assertFalse(dialog.manual_download_radio.GetValue())
+        # Should have installation method combo box
+        self.assertIsNotNone(dialog.install_method_combo)
+
+        # Should have portable-specific options
+        self.assertEqual(dialog.install_method_combo.GetCount(), 3)
+        self.assertEqual(dialog.install_method_combo.GetString(0), "Download and extract portable update automatically")
+        self.assertEqual(dialog.install_method_combo.GetString(1), "Download portable ZIP directly")
+        self.assertEqual(dialog.install_method_combo.GetString(2), "Open release page in browser")
+
+        # Should have auto-portable selected by default when portable asset is available
+        self.assertEqual(dialog._get_selected_method(), "auto_portable")
+
+        dialog.Destroy()
+
+    def test_update_dialog_without_installer_asset(self):
+        """Test update dialog when no installer asset is available."""
+        # Create update info without installer asset
+        update_info_no_installer = UpdateInfo(
+            version="1.0.1",
+            release_url="https://github.com/test/test/releases/tag/v1.0.1",
+            release_notes="Test release notes",
+            assets=[],  # No assets available
+            published_date="2024-01-01T00:00:00Z",
+        )
+
+        dialog = UpdateNotificationDialog(self.parent, update_info_no_installer, self.update_service)
+
+        # Should have installation method combo box
+        self.assertIsNotNone(dialog.install_method_combo)
+
+        # Should only have manual download option when no installer is available
+        self.assertEqual(dialog.install_method_combo.GetCount(), 1)
+        self.assertEqual(dialog.install_method_combo.GetString(0), "Open release page in browser")
+
+        # Should have manual download selected by default
+        self.assertEqual(dialog._get_selected_method(), "manual_download")
 
         dialog.Destroy()
 
@@ -131,7 +164,13 @@ class TestUpdateIntegration(unittest.TestCase):
         dialog = UpdateNotificationDialog(self.parent, self.update_info, self.update_service)
 
         # Ensure manual download is selected
-        dialog.manual_download_radio.SetValue(True)
+        manual_index = None
+        for index, method in dialog.choice_mapping.items():
+            if method == "manual_download":
+                manual_index = index
+                break
+        self.assertIsNotNone(manual_index, "Manual download option not found")
+        dialog.install_method_combo.SetSelection(manual_index)
 
         # Mock EndModal to prevent modal dialog issues in tests
         with patch.object(dialog, "EndModal") as mock_end_modal:
@@ -193,14 +232,12 @@ class TestUpdateIntegration(unittest.TestCase):
         self.assertIn("auto_check_enabled", settings)
         self.assertIn("check_interval_hours", settings)
         self.assertIn("update_channel", settings)
-        self.assertIn("auto_install_enabled", settings)
 
         # Test updating settings
         new_settings = {
             "auto_check_enabled": False,
             "check_interval_hours": 48,
             "update_channel": "dev",
-            "auto_install_enabled": True,
         }
 
         self.update_service.update_settings(new_settings)

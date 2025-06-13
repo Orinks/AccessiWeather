@@ -158,7 +158,6 @@ class TestUpdateService(unittest.TestCase):
             "auto_check_enabled": False,
             "check_interval_hours": 48,
             "update_channel": "dev",
-            "auto_install_enabled": True,
         }
 
         self.update_service.update_settings(new_settings)
@@ -195,6 +194,90 @@ class TestUpdateService(unittest.TestCase):
 
         self.assertIsNotNone(update_info.portable_asset)
         self.assertEqual(update_info.portable_asset["name"], "AccessiWeather-0.9.5-Portable.zip")
+
+    @patch('accessiweather.services.update_service.requests.get')
+    def test_check_dev_builds_success(self, mock_get):
+        """Test successful dev build checking."""
+        # Mock GitHub Pages response
+        mock_response = Mock()
+        mock_response.raise_for_status.return_value = None
+        mock_response.text = """
+        <html>
+        <body>
+            <h2>Development Build Latest Features</h2>
+            <h3>Version 0.9.4-dev</h3>
+            <p><strong>Built:</strong> 2025-06-13 03:37 UTC</p>
+            <p><strong>Commit:</strong> 5af005349b3db55f78e86c16eadf622e4ffdba2e</p>
+        </body>
+        </html>
+        """
+        mock_get.return_value = mock_response
+
+        # Test with current version 0.9.3 (should find update)
+        with patch('accessiweather.services.update_service.__version__', '0.9.3'):
+            update_info = self.update_service._check_dev_builds()
+
+        self.assertIsNotNone(update_info)
+        assert update_info is not None  # Type hint for mypy
+        self.assertEqual(update_info.version, "0.9.4-dev")
+        self.assertTrue(update_info.is_prerelease)
+        self.assertIn("Development build", update_info.release_notes)
+        self.assertEqual(len(update_info.assets), 2)
+
+        # Check assets
+        self.assertIsNotNone(update_info.installer_asset)
+        self.assertIsNotNone(update_info.portable_asset)
+        assert update_info.installer_asset is not None  # Type hint for mypy
+        self.assertIn("nightly.link", update_info.installer_asset["browser_download_url"])
+
+    @patch('accessiweather.services.update_service.requests.get')
+    def test_check_dev_builds_no_update(self, mock_get):
+        """Test dev build checking when no update is available."""
+        # Mock GitHub Pages response
+        mock_response = Mock()
+        mock_response.raise_for_status.return_value = None
+        mock_response.text = """
+        <html>
+        <body>
+            <h2>Development Build Latest Features</h2>
+            <h3>Version 0.9.2-dev</h3>
+            <p><strong>Built:</strong> 2025-06-13 03:37 UTC</p>
+        </body>
+        </html>
+        """
+        mock_get.return_value = mock_response
+
+        # Test with current version 0.9.3 (should not find update)
+        with patch('accessiweather.services.update_service.__version__', '0.9.3'):
+            update_info = self.update_service._check_dev_builds()
+
+        self.assertIsNone(update_info)
+
+    @patch('accessiweather.services.update_service.requests.get')
+    def test_check_for_updates_dev_channel(self, mock_get):
+        """Test update checking on dev channel."""
+        # Mock GitHub Pages response
+        mock_response = Mock()
+        mock_response.raise_for_status.return_value = None
+        mock_response.text = """
+        <html>
+        <body>
+            <h2>Development Build Latest Features</h2>
+            <h3>Version 0.9.4-dev</h3>
+            <p><strong>Built:</strong> 2025-06-13 03:37 UTC</p>
+        </body>
+        </html>
+        """
+        mock_get.return_value = mock_response
+
+        # Test with current version 0.9.3 (should find update)
+        with patch('accessiweather.services.update_service.__version__', '0.9.3'):
+            update_info = self.update_service.check_for_updates(channel="dev")
+
+        self.assertIsNotNone(update_info)
+        assert update_info is not None  # Type hint for mypy
+        self.assertEqual(update_info.version, "0.9.4-dev")
+        self.assertTrue(update_info.is_prerelease)
 
 
 class TestUpdateInfo(unittest.TestCase):

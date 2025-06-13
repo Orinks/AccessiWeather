@@ -10,6 +10,7 @@ import webbrowser
 
 import wx
 
+from accessiweather.config_utils import is_portable_mode
 from accessiweather.services.update_service import UpdateInfo, UpdateService
 from accessiweather.version import __version__
 
@@ -36,6 +37,10 @@ class UpdateNotificationDialog(wx.Dialog):
         self.update_info = update_info
         self.update_service = update_service
         self.download_thread = None
+
+        # Detect if running in portable mode
+        self.is_portable = is_portable_mode()
+        logger.debug(f"Update dialog initialized - portable mode: {self.is_portable}")
 
         self._init_ui()
         self.SetSizerAndFit(self.main_sizer)
@@ -86,50 +91,65 @@ class UpdateNotificationDialog(wx.Dialog):
         # Installation options
         options_box = wx.StaticBoxSizer(wx.VERTICAL, self, "Installation Options")
 
-        # Auto-install option (if available)
-        settings = self.update_service.get_settings()
-        auto_install_enabled = settings.get("auto_install_enabled", False)
+        # Installation method dropdown
+        method_label = wx.StaticText(self, label="Installation method:")
+        options_box.Add(method_label, 0, wx.ALL, 5)
 
-        if auto_install_enabled and self.update_info.installer_asset:
-            self.auto_install_radio = wx.RadioButton(
-                self,
-                label="Download and install automatically",
-                style=wx.RB_GROUP,
-                name="Auto Install Option",
-            )
-            options_box.Add(self.auto_install_radio, 0, wx.ALL, 5)
+        # Build choices based on available options and current installation type
+        choices = []
+        self.choice_mapping = {}  # Map choice index to method type
 
-            auto_install_note = wx.StaticText(
-                self,
-                label="The installer will be downloaded and run automatically. You may need to confirm UAC prompts.",
-            )
-            auto_install_note.SetFont(auto_install_note.GetFont().Smaller())
-            options_box.Add(auto_install_note, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
+        if self.is_portable:
+            # Portable mode options
+            if self.update_info.portable_asset:
+                choices.append("Download and extract portable update automatically")
+                self.choice_mapping[len(choices) - 1] = "auto_portable"
+
+            choices.append("Download portable ZIP directly")
+            self.choice_mapping[len(choices) - 1] = "manual_portable"
         else:
-            self.auto_install_radio = None
+            # Installer mode options
+            if self.update_info.installer_asset:
+                choices.append("Download and install automatically")
+                self.choice_mapping[len(choices) - 1] = "auto_install"
 
-        # Manual download option
-        manual_label = "Download manually" if self.auto_install_radio else "Download update"
-        self.manual_download_radio = wx.RadioButton(
+        # Always add manual download option (opens release page)
+        choices.append("Open release page in browser")
+        self.choice_mapping[len(choices) - 1] = "manual_download"
+
+        self.install_method_combo = wx.ComboBox(
             self,
-            label=manual_label,
-            style=wx.RB_GROUP if not self.auto_install_radio else 0,
-            name="Manual Download Option",
+            choices=choices,
+            style=wx.CB_READONLY,
+            name="Installation Method"
         )
-        options_box.Add(self.manual_download_radio, 0, wx.ALL, 5)
 
-        manual_note = wx.StaticText(
-            self,
-            label="Open the download page in your web browser to manually download and install the update.",
-        )
-        manual_note.SetFont(manual_note.GetFont().Smaller())
-        options_box.Add(manual_note, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
-
-        # Set default selection
-        if self.auto_install_radio:
-            self.auto_install_radio.SetValue(True)
+        # Set default selection based on mode and available assets
+        default_index = 0
+        if self.is_portable:
+            # For portable, prefer auto-portable if available, otherwise manual portable
+            if not self.update_info.portable_asset:
+                # No portable asset, default to manual portable
+                for index, method in self.choice_mapping.items():
+                    if method == "manual_portable":
+                        default_index = index
+                        break
         else:
-            self.manual_download_radio.SetValue(True)
+            # For installer, prefer auto-install if available, otherwise manual
+            if not self.update_info.installer_asset:
+                default_index = len(choices) - 1
+
+        self.install_method_combo.SetSelection(default_index)
+
+        options_box.Add(self.install_method_combo, 0, wx.ALL | wx.EXPAND, 5)
+
+        # Description text that changes based on selection
+        self.method_description = wx.StaticText(self, label="")
+        self.method_description.SetFont(self.method_description.GetFont().Smaller())
+        options_box.Add(self.method_description, 0, wx.ALL, 10)
+
+        # Update description for initial selection
+        self._update_method_description()
 
         self.main_sizer.Add(options_box, 0, wx.ALL | wx.EXPAND, 10)
 
@@ -171,17 +191,42 @@ class UpdateNotificationDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.OnInstallUpdate, self.install_button)
         self.Bind(wx.EVT_BUTTON, self.OnCancel, self.cancel_button)
 
-        # Update button label based on selection
-        if self.auto_install_radio:
-            self.Bind(wx.EVT_RADIOBUTTON, self.OnInstallOptionChanged, self.auto_install_radio)
-        self.Bind(wx.EVT_RADIOBUTTON, self.OnInstallOptionChanged, self.manual_download_radio)
+        # Update button label and description based on selection
+        self.Bind(wx.EVT_COMBOBOX, self.OnInstallOptionChanged, self.install_method_combo)
 
     def OnInstallOptionChanged(self, event):
         """Handle installation option change."""
-        if self.auto_install_radio and self.auto_install_radio.GetValue():
+        self._update_method_description()
+
+        # Update button label based on selection
+        selected_method = self._get_selected_method()
+        if selected_method == "auto_install":
             self.install_button.SetLabel("Install Update")
+        elif selected_method == "auto_portable":
+            self.install_button.SetLabel("Update Portable")
         else:
             self.install_button.SetLabel("Download Update")
+
+    def _get_selected_method(self):
+        """Get the currently selected installation method."""
+        selection = self.install_method_combo.GetSelection()
+        return self.choice_mapping.get(selection, "manual_download")
+
+    def _update_method_description(self):
+        """Update the description text based on the selected method."""
+        selected_method = self._get_selected_method()
+
+        if selected_method == "auto_install":
+            description = "The installer will be downloaded and run automatically. You may need to confirm UAC prompts."
+        elif selected_method == "auto_portable":
+            description = "The portable ZIP will be downloaded and extracted. You'll receive instructions on how to complete the update."
+        elif selected_method == "manual_portable":
+            description = "Opens a direct download link for the portable ZIP file in your browser."
+        else:
+            description = "Opens the GitHub release page where you can see all available download options."
+
+        self.method_description.SetLabel(description)
+        self.Layout()  # Refresh layout to accommodate text changes
 
     def OnSkipVersion(self, event):
         """Handle skip version button."""
@@ -202,9 +247,25 @@ class UpdateNotificationDialog(wx.Dialog):
 
     def OnInstallUpdate(self, event):
         """Handle install/download update button."""
-        if self.auto_install_radio and self.auto_install_radio.GetValue():
+        selected_method = self._get_selected_method()
+
+        if selected_method == "auto_install":
             # Auto install
             self._start_auto_install()
+        elif selected_method == "auto_portable":
+            # Auto portable update
+            self._start_auto_portable()
+        elif selected_method == "manual_portable":
+            # Manual portable download - open specific asset URL
+            if self.update_info.portable_asset:
+                download_url = self.update_info.portable_asset.get("browser_download_url")
+                if download_url:
+                    webbrowser.open(download_url)
+                else:
+                    webbrowser.open(self.update_info.release_url)
+            else:
+                webbrowser.open(self.update_info.release_url)
+            self.EndModal(wx.ID_OK)
         else:
             # Manual download - open browser
             webbrowser.open(self.update_info.release_url)
@@ -224,6 +285,22 @@ class UpdateNotificationDialog(wx.Dialog):
 
         # Start download in background thread
         self.download_thread = threading.Thread(target=self._download_and_install, daemon=True)
+        self.download_thread.start()
+
+    def _start_auto_portable(self):
+        """Start automatic portable update process."""
+        # Disable buttons and show progress
+        self.install_button.Enable(False)
+        self.skip_button.Enable(False)
+        self.remind_button.Enable(False)
+
+        self.progress_label.SetLabel("Downloading portable update...")
+        self.progress_label.Show()
+        self.progress_gauge.Show()
+        self.Layout()
+
+        # Start download in background thread
+        self.download_thread = threading.Thread(target=self._download_and_extract_portable, daemon=True)
         self.download_thread.start()
 
     def _download_and_install(self):
@@ -249,6 +326,30 @@ class UpdateNotificationDialog(wx.Dialog):
             if "original_callback" in locals():
                 self.update_service.progress_callback = original_callback
             wx.CallAfter(self._on_download_complete, False)
+
+    def _download_and_extract_portable(self):
+        """Download and extract portable update in background thread."""
+        try:
+            # Set up progress callback for this download
+            original_callback = self.update_service.progress_callback
+            self.update_service.progress_callback = self._on_progress_update
+
+            success = self.update_service.download_and_install_update(
+                self.update_info, install_type="portable"
+            )
+
+            # Restore original callback
+            self.update_service.progress_callback = original_callback
+
+            # Update UI on main thread
+            wx.CallAfter(self._on_portable_download_complete, success)
+
+        except Exception as e:
+            logger.error(f"Error during portable update: {e}")
+            # Restore original callback
+            if "original_callback" in locals():
+                self.update_service.progress_callback = original_callback
+            wx.CallAfter(self._on_portable_download_complete, False)
 
     def _on_download_complete(self, success: bool):
         """Handle download completion on main thread."""
@@ -276,8 +377,63 @@ class UpdateNotificationDialog(wx.Dialog):
             self.remind_button.Enable(True)
 
             # Switch to manual download option
-            self.manual_download_radio.SetValue(True)
-            self.install_button.SetLabel("Download Update")
+            manual_index = None
+            for index, method in self.choice_mapping.items():
+                if method == "manual_download":
+                    manual_index = index
+                    break
+
+            if manual_index is not None:
+                self.install_method_combo.SetSelection(manual_index)
+                self._update_method_description()
+                self.install_button.SetLabel("Download Update")
+
+    def _on_portable_download_complete(self, success: bool):
+        """Handle portable download completion on main thread."""
+        if success:
+            self.progress_label.SetLabel("Download complete! Portable update ready.")
+            self.progress_gauge.SetValue(100)
+
+            # Show completion message with instructions
+            message = (
+                "The portable update has been downloaded successfully.\n\n"
+                "To complete the update:\n"
+                "1. Close AccessiWeather\n"
+                "2. Extract the downloaded ZIP file\n"
+                "3. Replace your current AccessiWeather files with the new ones\n"
+                "4. Restart AccessiWeather\n\n"
+                "The downloaded file is in your Downloads folder."
+            )
+
+            wx.MessageBox(
+                message,
+                "Portable Update Ready",
+                wx.OK | wx.ICON_INFORMATION,
+                self,
+            )
+
+            # Close the dialog
+            self.EndModal(wx.ID_OK)
+
+        else:
+            self.progress_label.SetLabel("Download failed. Please try manual download.")
+
+            # Re-enable buttons
+            self.install_button.Enable(True)
+            self.skip_button.Enable(True)
+            self.remind_button.Enable(True)
+
+            # Switch to manual portable download option
+            manual_index = None
+            for index, method in self.choice_mapping.items():
+                if method == "manual_portable":
+                    manual_index = index
+                    break
+
+            if manual_index is not None:
+                self.install_method_combo.SetSelection(manual_index)
+                self._update_method_description()
+                self.install_button.SetLabel("Download Update")
 
     def _on_progress_update(self, progress: float):
         """Handle progress updates from download."""

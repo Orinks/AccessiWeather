@@ -218,6 +218,49 @@ class WeatherApp(
         # Add force close flag
         self._force_close = True  # Default to force close when clicking X
 
+        # Initialize update service (from WeatherAppUpdateHandlers)
+        self._init_update_service_manually()
+
+    def _init_update_service_manually(self):
+        """Manually initialize the update service since multiple inheritance doesn't call handler __init__."""
+        try:
+            from accessiweather.services.update_service import UpdateService
+
+            # Get config directory from the config path
+            import os
+            config_dir = os.path.dirname(self._config_path)
+
+            # Initialize update service
+            self.update_service = UpdateService(
+                config_dir=config_dir,
+                notification_callback=self._on_update_available,
+                progress_callback=self._on_update_progress,
+            )
+
+            # Load settings and start background checking if enabled
+            self._load_update_settings()
+
+            logger.info("Update service initialized manually")
+
+        except Exception as e:
+            logger.error(f"Failed to initialize update service manually: {e}")
+            self.update_service = None
+
+    def _on_update_available(self, update_info):
+        """Handle update available notification - delegate to update handlers."""
+        from .handlers.update_handlers import WeatherAppUpdateHandlers
+        WeatherAppUpdateHandlers._on_update_available(self, update_info)
+
+    def _on_update_progress(self, progress):
+        """Handle update progress - delegate to update handlers."""
+        from .handlers.update_handlers import WeatherAppUpdateHandlers
+        WeatherAppUpdateHandlers._on_update_progress(self, progress)
+
+    def _load_update_settings(self):
+        """Load update settings - delegate to update handlers."""
+        from .handlers.update_handlers import WeatherAppUpdateHandlers
+        WeatherAppUpdateHandlers._load_update_settings(self)
+
     def _load_config(self):
         """Load configuration from file
 

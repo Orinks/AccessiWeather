@@ -31,13 +31,11 @@ MINIMIZE_TO_TRAY_KEY = "minimize_to_tray"
 AUTO_UPDATE_CHECK_KEY = "auto_update_check_enabled"
 UPDATE_CHECK_INTERVAL_KEY = "update_check_interval_hours"
 UPDATE_CHANNEL_KEY = "update_channel"
-AUTO_INSTALL_KEY = "auto_install_enabled"
 
 # Update defaults
 DEFAULT_AUTO_UPDATE_CHECK = True
 DEFAULT_UPDATE_CHECK_INTERVAL = 24
 DEFAULT_UPDATE_CHANNEL = "stable"
-DEFAULT_AUTO_INSTALL = False
 
 # Display settings keys
 TASKBAR_ICON_TEXT_ENABLED_KEY = "taskbar_icon_text_enabled"
@@ -376,7 +374,7 @@ class SettingsDialog(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         # --- Input Fields ---
-        grid_sizer = wx.FlexGridSizer(rows=5, cols=2, vgap=10, hgap=5)
+        grid_sizer = wx.FlexGridSizer(rows=4, cols=2, vgap=10, hgap=5)
         grid_sizer.AddGrowableCol(1, 1)  # Make the input column growable
 
         # Auto-check for updates toggle
@@ -419,20 +417,6 @@ class SettingsDialog(wx.Dialog):
         grid_sizer.Add(channel_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         grid_sizer.Add(self.update_channel_ctrl, 0, wx.EXPAND | wx.ALL, 5)
 
-        # Auto-install updates toggle
-        auto_install_label = "Automatically install updates"
-        self.auto_install_ctrl = wx.CheckBox(
-            panel, label=auto_install_label, name="Auto Install Updates"
-        )
-        tooltip_auto_install = (
-            "When checked, updates will be downloaded and installed automatically. "
-            "When unchecked, you'll be prompted to download updates manually. "
-            "Note: You may still need to confirm UAC prompts during installation."
-        )
-        self.auto_install_ctrl.SetToolTip(tooltip_auto_install)
-        grid_sizer.Add((1, 1), 0, wx.ALL, 5)  # Empty cell for alignment
-        grid_sizer.Add(self.auto_install_ctrl, 0, wx.ALL, 5)
-
         # Manual check button
         check_now_label = wx.StaticText(panel, label="Manual check:")
         self.check_now_button = wx.Button(panel, label="Check for Updates Now", name="Check Now")
@@ -448,8 +432,8 @@ class SettingsDialog(wx.Dialog):
             "Update Information:\n\n"
             "• Stable releases are thoroughly tested and recommended for daily use\n"
             "• Development builds include the latest features and bug fixes\n"
-            "• Automatic installation requires administrator privileges\n"
-            "• You can always download updates manually from the GitHub releases page"
+            "• When updates are available, you can choose to download manually or install automatically\n"
+            "• Automatic installation requires administrator privileges and UAC confirmation"
         )
         info_label = wx.StaticText(panel, label=info_text)
         info_label.SetFont(info_label.GetFont().Smaller())
@@ -468,13 +452,20 @@ class SettingsDialog(wx.Dialog):
 
     def _on_check_now(self, event):
         """Handle check for updates now button."""
+        logger.info("Check for Updates Now button clicked in settings dialog")
+
         # Get the parent window (should be the main WeatherApp)
         parent = self.GetParent()
+        logger.debug(f"Parent window type: {type(parent).__name__}")
+
         if hasattr(parent, "OnCheckForUpdates"):
+            logger.info("Parent has OnCheckForUpdates method, calling it")
             # Create a fake event to pass to the handler
             fake_event = wx.CommandEvent(wx.wxEVT_COMMAND_MENU_SELECTED)
             parent.OnCheckForUpdates(fake_event)
+            logger.debug("OnCheckForUpdates method called successfully")
         else:
+            logger.warning("Parent does not have OnCheckForUpdates method")
             wx.MessageBox(
                 "Update checking is not available at this time.",
                 "Check for Updates",
@@ -562,7 +553,6 @@ class SettingsDialog(wx.Dialog):
                 UPDATE_CHECK_INTERVAL_KEY, DEFAULT_UPDATE_CHECK_INTERVAL
             )
             update_channel = self.current_settings.get(UPDATE_CHANNEL_KEY, DEFAULT_UPDATE_CHANNEL)
-            auto_install = self.current_settings.get(AUTO_INSTALL_KEY, DEFAULT_AUTO_INSTALL)
 
             self.auto_update_check_ctrl.SetValue(auto_update_check)
             self.update_check_interval_ctrl.SetValue(update_check_interval)
@@ -573,8 +563,6 @@ class SettingsDialog(wx.Dialog):
                 self.update_channel_ctrl.SetSelection(1)  # Development builds
             else:
                 self.update_channel_ctrl.SetSelection(0)  # Stable releases (default)
-
-            self.auto_install_ctrl.SetValue(auto_install)
 
             logger.debug("Settings loaded into dialog.")
         except Exception as e:
@@ -689,7 +677,7 @@ class SettingsDialog(wx.Dialog):
             AUTO_UPDATE_CHECK_KEY: self.auto_update_check_ctrl.GetValue(),
             UPDATE_CHECK_INTERVAL_KEY: self.update_check_interval_ctrl.GetValue(),
             UPDATE_CHANNEL_KEY: "dev" if self.update_channel_ctrl.GetSelection() == 1 else "stable",
-            AUTO_INSTALL_KEY: self.auto_install_ctrl.GetValue(),
+
         }
 
     def get_api_settings(self):
