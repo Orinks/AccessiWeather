@@ -155,6 +155,17 @@ class WeatherAppSystemHandlers(WeatherAppHandlerBase):
                 close_successful = False
                 # Continue with close process even if taskbar icon cleanup fails
 
+            try:
+                # Clean up update service if it exists
+                if hasattr(self, "cleanup_update_service"):
+                    logger.debug("Cleaning up update service")
+                    self.cleanup_update_service()
+                    logger.debug("Update service cleaned up successfully")
+            except Exception as e:
+                logger.error(f"Error cleaning up update service: {e}", exc_info=True)
+                close_successful = False
+                # Continue with close process even if update service cleanup fails
+
             # Log close status
             if close_successful:
                 logger.info("Application close process completed successfully")

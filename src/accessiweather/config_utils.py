@@ -159,6 +159,30 @@ def ensure_config_defaults(config: Dict[str, Any]) -> Dict[str, Any]:
         logger.info(f"Adding default data_source setting: {DEFAULT_DATA_SOURCE}")
         settings["data_source"] = DEFAULT_DATA_SOURCE
 
+    # Add update settings if not present
+    from accessiweather.gui.settings_dialog import (
+        AUTO_UPDATE_CHECK_KEY,
+        DEFAULT_AUTO_UPDATE_CHECK,
+        DEFAULT_UPDATE_CHANNEL,
+        DEFAULT_UPDATE_CHECK_INTERVAL,
+        UPDATE_CHANNEL_KEY,
+        UPDATE_CHECK_INTERVAL_KEY,
+    )
+
+    if AUTO_UPDATE_CHECK_KEY not in settings:
+        logger.info(f"Adding default {AUTO_UPDATE_CHECK_KEY} setting: {DEFAULT_AUTO_UPDATE_CHECK}")
+        settings[AUTO_UPDATE_CHECK_KEY] = DEFAULT_AUTO_UPDATE_CHECK
+
+    if UPDATE_CHECK_INTERVAL_KEY not in settings:
+        logger.info(
+            f"Adding default {UPDATE_CHECK_INTERVAL_KEY} setting: {DEFAULT_UPDATE_CHECK_INTERVAL}"
+        )
+        settings[UPDATE_CHECK_INTERVAL_KEY] = DEFAULT_UPDATE_CHECK_INTERVAL
+
+    if UPDATE_CHANNEL_KEY not in settings:
+        logger.info(f"Adding default {UPDATE_CHANNEL_KEY} setting: {DEFAULT_UPDATE_CHANNEL}")
+        settings[UPDATE_CHANNEL_KEY] = DEFAULT_UPDATE_CHANNEL
+
     # Ensure api_keys section exists
     if "api_keys" not in updated_config:
         logger.info("Adding api_keys section to config")

@@ -87,6 +87,7 @@ logs/
 # IMPORTANT: Ensure config.sample.json or similar is checked in
 config.json
 alert_state.json
+update_state.json
 secrets.yaml
 *.env
 .*_env
