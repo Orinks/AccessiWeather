@@ -204,7 +204,7 @@ def test_map_forecast_success(mapper):
 @pytest.mark.unit
 def test_map_forecast_empty_data(mapper):
     """Test mapping forecast with empty data."""
-    empty_data = {"daily": {}}
+    empty_data: dict = {"daily": {}}
 
     result = mapper.map_forecast(empty_data)
 
@@ -243,7 +243,7 @@ def test_map_hourly_forecast_success(mapper):
 @pytest.mark.unit
 def test_map_hourly_forecast_empty_data(mapper):
     """Test mapping hourly forecast with empty data."""
-    empty_data = {"hourly": {}}
+    empty_data: dict = {"hourly": {}}
 
     result = mapper.map_hourly_forecast(empty_data)
 

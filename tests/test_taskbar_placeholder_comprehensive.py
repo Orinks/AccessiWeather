@@ -366,7 +366,7 @@ class TestTaskbarPlaceholderComprehensive(unittest.TestCase):
     def test_error_handling_malformed_data(self):
         """Test error handling with malformed API data."""
         # Test with completely invalid data
-        malformed_data_cases = [
+        malformed_data_cases: list = [
             None,
             {},
             {"properties": None},

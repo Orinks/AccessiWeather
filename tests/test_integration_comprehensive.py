@@ -180,6 +180,7 @@ class TestLocationChangeFlow:
         # Set initial location
         location_manager.set_current_location("New York")
         current = location_manager.get_current_location()
+        assert current is not None
         assert current[0] == "New York"
 
         # Create weather service with mocked clients
@@ -209,6 +210,7 @@ class TestLocationChangeFlow:
             # Change to Los Angeles
             location_manager.set_current_location("Los Angeles")
             current = location_manager.get_current_location()
+            assert current is not None
             assert current[0] == "Los Angeles"
 
             # Get weather for Los Angeles (should also use NWS)
