@@ -348,6 +348,14 @@ class UIManager:
         panel.SetSizer(main_sizer)
         self.frame.panel = panel  # Store panel reference if needed
 
+        # Store references to UI elements that may need to be hidden for Open-Meteo
+        self.openmeteo_hidden_elements = [
+            (self.frame.discussion_btn, "discussion_btn"),
+            (alerts_label, "alerts_label"),
+            (self.frame.alerts_list, "alerts_list"),
+            (self.frame.alert_btn, "alert_btn"),
+        ]
+
     def _bind_events(self):
         """Bind UI events to their handlers in the main frame."""
         # Bind events to methods defined in WeatherApp
@@ -1377,6 +1385,79 @@ class UIManager:
         """Display ready state in the UI."""
         self.frame.refresh_btn.Enable()
         self.frame.SetStatusText("Ready")
+
+    def _is_using_openmeteo(self) -> bool:
+        """Determine if the current location is using Open-Meteo as the weather source.
+
+        Returns:
+            bool: True if Open-Meteo is being used, False otherwise
+        """
+        try:
+            # Get the current location coordinates
+            if not hasattr(self.frame, "location_service") or not self.frame.location_service:
+                return False
+
+            current_location = self.frame.location_service.get_current_location()
+            if not current_location or current_location == "Nationwide":
+                return False
+
+            coords = self.frame.location_service.get_location_coordinates(current_location)
+            if not coords:
+                return False
+
+            lat, lon = coords
+
+            # Check if we have a weather service to determine the source
+            if hasattr(self.frame, "weather_service") and self.frame.weather_service:
+                # Use the weather service's logic to determine if Open-Meteo should be used
+                return bool(self.frame.weather_service._should_use_openmeteo(lat, lon))
+
+            # Fallback: check config directly
+            from accessiweather.gui.settings_dialog import DATA_SOURCE_AUTO, DATA_SOURCE_OPENMETEO
+
+            data_source = self.frame.config.get("settings", {}).get("data_source", "nws")
+
+            if data_source == DATA_SOURCE_OPENMETEO:
+                return True
+            elif data_source == DATA_SOURCE_AUTO:
+                # For auto mode, check if location is outside US
+                from accessiweather.geocoding import GeocodingService
+
+                geocoding_service = GeocodingService(
+                    user_agent="AccessiWeather-UIManager", data_source="auto"
+                )
+                is_us = geocoding_service.validate_coordinates(lat, lon, us_only=True)
+                return not is_us
+
+            return False
+
+        except Exception as e:
+            logger.warning(f"Error determining weather source: {e}")
+            return False
+
+    def _update_ui_for_weather_source(self):
+        """Update UI elements based on the current weather source (show/hide Open-Meteo incompatible elements)."""
+        try:
+            is_openmeteo = self._is_using_openmeteo()
+            logger.debug(f"Updating UI for weather source, is_openmeteo: {is_openmeteo}")
+
+            # Show or hide elements based on weather source
+            if hasattr(self, "openmeteo_hidden_elements"):
+                for element, name in self.openmeteo_hidden_elements:
+                    if element and hasattr(element, "Show"):
+                        element.Show(not is_openmeteo)
+                        logger.debug(f"{'Hiding' if is_openmeteo else 'Showing'} {name}")
+
+            # Force layout update
+            if hasattr(self.frame, "panel") and self.frame.panel:
+                self.frame.panel.Layout()
+
+        except Exception as e:
+            logger.error(f"Error updating UI for weather source: {e}")
+
+    def update_ui_for_location_change(self):
+        """Update UI elements when the location changes (called from location handlers)."""
+        self._update_ui_for_weather_source()
 
     def OnAlertSelected(self, event):
         """Handle alert list item selection event.
