@@ -66,7 +66,7 @@ class TestUpdateHandlers(unittest.TestCase):
             self.mock_weather_app,
         )
 
-    @patch("accessiweather.gui.update_dialog.UpdateProgressDialog")
+    @patch("accessiweather.gui.handlers.update_handlers.UpdateProgressDialog")
     @patch("wx.MessageBox")
     def test_on_check_for_updates_no_update_available(self, mock_message_box, mock_progress_dialog):
         """Test OnCheckForUpdates when no update is available."""
@@ -109,7 +109,7 @@ class TestUpdateHandlers(unittest.TestCase):
             self.mock_weather_app,
         )
 
-    @patch("accessiweather.gui.update_dialog.UpdateProgressDialog")
+    @patch("accessiweather.gui.handlers.update_handlers.UpdateProgressDialog")
     @patch("wx.MessageBox")
     def test_on_check_for_updates_error(self, mock_message_box, mock_progress_dialog):
         """Test OnCheckForUpdates when an error occurs during check."""

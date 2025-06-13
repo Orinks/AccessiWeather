@@ -76,6 +76,8 @@ class TestFormatStringParser(unittest.TestCase):
         format_string = "Temperature: {temp}°F, Condition: {unknown}"
         is_valid, error = self.parser.validate_format_string(format_string)
         self.assertFalse(is_valid)
+        self.assertIsNotNone(error)
+        assert error is not None  # Type hint for mypy
         self.assertTrue("Unsupported placeholder(s): unknown" in error)
 
     def test_format_string(self):

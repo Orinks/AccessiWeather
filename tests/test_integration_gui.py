@@ -22,14 +22,12 @@ class TestWeatherAppIntegration:
     ):
         """Test WeatherApp initializes correctly with service layer."""
         with (
-            patch("wx.App"),
-            patch("accessiweather.gui.weather_app.WeatherApp") as mock_weather_app,
+            patch("accessiweather.gui.app_factory.WeatherApp") as mock_weather_app,
             patch("accessiweather.api_wrapper.NoaaApiWrapper") as mock_wrapper,
         ):
-
             # Mock the weather app instance
-            mock_app_instance = MagicMock()
-            mock_weather_app.return_value = mock_app_instance
+            mock_weather_app_instance = MagicMock()
+            mock_weather_app.return_value = mock_weather_app_instance
 
             # Mock API wrapper
             mock_client = MagicMock()

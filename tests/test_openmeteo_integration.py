@@ -525,17 +525,17 @@ def test_ui_temperature_unit_code_handling():
     ui_manager.display_current_conditions(fahrenheit_data)
     fahrenheit_result = mock_frame.current_conditions_text.SetValue.call_args[0][0]
 
-    # Should show 56.6°F, not 133.9°F (which would be double conversion)
-    assert "56.6°F" in fahrenheit_result, f"Expected 56.6°F in result: {fahrenheit_result}"
+    # Should show 57°F (rounded from 56.6°F due to BOTH unit preference using precision 0), not 133.9°F (which would be double conversion)
+    assert "57°F" in fahrenheit_result, f"Expected 57°F in result: {fahrenheit_result}"
     assert (
         "133" not in fahrenheit_result
     ), f"Found double conversion (133°F) in result: {fahrenheit_result}"
-    assert "13." in fahrenheit_result, f"Expected ~13°C conversion in result: {fahrenheit_result}"
+    assert "14°C" in fahrenheit_result, f"Expected ~14°C conversion in result: {fahrenheit_result}"
 
     # Test Celsius data (should convert)
     ui_manager.display_current_conditions(celsius_data)
     celsius_result = mock_frame.current_conditions_text.SetValue.call_args[0][0]
 
-    # Should convert 13.6°C to ~56.5°F
-    assert "56." in celsius_result, f"Expected ~56°F conversion in result: {celsius_result}"
-    assert "13.6°C" in celsius_result, f"Expected 13.6°C in result: {celsius_result}"
+    # Should convert 13.6°C to ~56°F (rounded due to BOTH unit preference using precision 0)
+    assert "56°F" in celsius_result, f"Expected ~56°F conversion in result: {celsius_result}"
+    assert "14°C" in celsius_result, f"Expected ~14°C conversion in result: {celsius_result}"

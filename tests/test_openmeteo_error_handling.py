@@ -177,7 +177,7 @@ def test_mapper_invalid_data_structure(mapper):
 @pytest.mark.unit
 def test_mapper_missing_required_fields(mapper):
     """Test mapper handling of missing required fields."""
-    incomplete_data = {"current": {}, "current_units": {}}  # Empty current data
+    incomplete_data: dict = {"current": {}, "current_units": {}}  # Empty current data
 
     # Should not raise an error, but handle gracefully
     result = mapper.map_current_conditions(incomplete_data)

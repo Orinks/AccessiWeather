@@ -140,12 +140,21 @@ def test_get_config_dir_windows_no_appdata():
 @pytest.mark.unit
 def test_ensure_config_defaults_empty_config():
     """Test ensure_config_defaults with empty config."""
-    config = {}
+    config: dict = {}
 
     with patch("accessiweather.gui.settings_dialog.DEFAULT_DATA_SOURCE", "auto"):
         result = ensure_config_defaults(config)
 
-    expected = {"settings": {"data_source": "auto"}, "api_keys": {}, "api_settings": {}}
+    expected = {
+        "settings": {
+            "data_source": "auto",
+            "auto_update_check_enabled": True,
+            "update_check_interval_hours": 24,
+            "update_channel": "stable",
+        },
+        "api_keys": {},
+        "api_settings": {},
+    }
     assert result == expected
     # Ensure original config is not modified
     assert config == {}
@@ -159,7 +168,13 @@ def test_ensure_config_defaults_existing_settings():
     result = ensure_config_defaults(config)
 
     expected = {
-        "settings": {"update_interval": 10, "data_source": "openmeteo"},
+        "settings": {
+            "update_interval": 10,
+            "data_source": "openmeteo",
+            "auto_update_check_enabled": True,
+            "update_check_interval_hours": 24,
+            "update_channel": "stable",
+        },
         "api_keys": {},
         "api_settings": {},
     }
@@ -175,7 +190,13 @@ def test_ensure_config_defaults_missing_data_source():
         result = ensure_config_defaults(config)
 
     expected = {
-        "settings": {"update_interval": 10, "data_source": "auto"},
+        "settings": {
+            "update_interval": 10,
+            "data_source": "auto",
+            "auto_update_check_enabled": True,
+            "update_check_interval_hours": 24,
+            "update_channel": "stable",
+        },
         "api_keys": {},
         "api_settings": {},
     }
@@ -190,7 +211,12 @@ def test_ensure_config_defaults_existing_api_keys():
     result = ensure_config_defaults(config)
 
     expected = {
-        "settings": {"data_source": "weatherapi"},
+        "settings": {
+            "data_source": "weatherapi",
+            "auto_update_check_enabled": True,
+            "update_check_interval_hours": 24,
+            "update_channel": "stable",
+        },
         "api_keys": {"weatherapi": "test_key"},
         "api_settings": {},
     }
@@ -207,7 +233,12 @@ def test_ensure_config_defaults_no_settings_section():
 
     expected = {
         "other_section": {"some_key": "some_value"},
-        "settings": {"data_source": "auto"},
+        "settings": {
+            "data_source": "auto",
+            "auto_update_check_enabled": True,
+            "update_check_interval_hours": 24,
+            "update_channel": "stable",
+        },
         "api_keys": {},
         "api_settings": {},
     }

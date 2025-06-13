@@ -73,7 +73,7 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
     """System tray icon for AccessiWeather."""
 
     # Class variable to track if an instance already exists
-    _instance = None
+    _instance: Optional["TaskBarIcon"] = None
     _instance_count = 0
 
     def __init__(self, frame):
