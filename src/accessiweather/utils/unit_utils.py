@@ -57,7 +57,7 @@ def format_pressure(
     Args:
         pressure_inhg: Pressure in inches of mercury
         unit: Temperature unit preference (used to determine display format)
-        pressure_mb: Pressure in millibars (if available)
+        pressure_mb: Pressure in millibars/hPa (if available)
         precision: Number of decimal places to display
 
     Returns:
@@ -76,9 +76,9 @@ def format_pressure(
     if unit == TemperatureUnit.FAHRENHEIT:
         return f"{pressure_inhg:.{precision}f} inHg"
     elif unit == TemperatureUnit.CELSIUS:
-        return f"{pressure_mb:.{precision}f} mb"
+        return f"{pressure_mb:.{precision}f} hPa"
     else:  # BOTH
-        return f"{pressure_inhg:.{precision}f} inHg ({pressure_mb:.{precision}f} mb)"
+        return f"{pressure_inhg:.{precision}f} inHg ({pressure_mb:.{precision}f} hPa)"
 
 
 def format_visibility(
