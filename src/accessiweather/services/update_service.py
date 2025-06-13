@@ -361,7 +361,10 @@ class UpdateService:
                         # Report progress
                         if self.progress_callback and total_size > 0:
                             progress = (downloaded / total_size) * 100
-                            self.progress_callback(progress)
+                            try:
+                                self.progress_callback(progress)
+                            except Exception as e:
+                                logger.warning(f"Progress callback failed: {e}")
 
             logger.info(f"Download completed: {download_path}")
 

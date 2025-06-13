@@ -229,15 +229,25 @@ class UpdateNotificationDialog(wx.Dialog):
     def _download_and_install(self):
         """Download and install update in background thread."""
         try:
+            # Set up progress callback for this download
+            original_callback = self.update_service.progress_callback
+            self.update_service.progress_callback = self._on_progress_update
+
             success = self.update_service.download_and_install_update(
                 self.update_info, install_type="installer"
             )
+
+            # Restore original callback
+            self.update_service.progress_callback = original_callback
 
             # Update UI on main thread
             wx.CallAfter(self._on_download_complete, success)
 
         except Exception as e:
             logger.error(f"Error during auto-install: {e}")
+            # Restore original callback
+            if "original_callback" in locals():
+                self.update_service.progress_callback = original_callback
             wx.CallAfter(self._on_download_complete, False)
 
     def _on_download_complete(self, success: bool):

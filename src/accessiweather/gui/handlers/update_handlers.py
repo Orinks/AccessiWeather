@@ -42,8 +42,11 @@ class WeatherAppUpdateHandlers(WeatherAppHandlerBase):
                 if config_path:
                     config_dir = os.path.dirname(config_path)
                 else:
-                    logger.warning("Could not determine config directory for update service")
-                    return
+                    # Final fallback - use default config directory
+                    from accessiweather.config_utils import get_config_dir
+
+                    config_dir = get_config_dir()
+                    logger.info(f"Using default config directory for update service: {config_dir}")
 
             # Initialize update service
             self.update_service = UpdateService(
