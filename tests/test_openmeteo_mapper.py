@@ -138,6 +138,11 @@ def test_map_current_conditions_success(mapper):
     assert wind_direction["value"] == 180
     assert wind_direction["unitCode"] == "wmoUnit:degree_(angle)"
 
+    # Check pressure mapping (Open-Meteo returns hPa, should be converted to Pa)
+    pressure = properties["barometricPressure"]
+    assert pressure["value"] == 101320.0  # 1013.2 hPa * 100 = 101320 Pa
+    assert pressure["unitCode"] == "wmoUnit:Pa"
+
 
 @pytest.mark.unit
 def test_map_current_conditions_with_missing_data(mapper):

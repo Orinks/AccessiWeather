@@ -85,7 +85,11 @@ class OpenMeteoMapper:
                         "qualityControl": "qc:V",
                     },
                     "barometricPressure": {
-                        "value": current.get("pressure_msl"),
+                        "value": (
+                            current.get("pressure_msl") * 100
+                            if current.get("pressure_msl") is not None
+                            else None
+                        ),
                         "unitCode": "wmoUnit:Pa",
                         "qualityControl": "qc:V",
                     },
