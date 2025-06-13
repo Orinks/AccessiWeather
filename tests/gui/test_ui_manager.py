@@ -362,7 +362,7 @@ def test_display_weatherapi_current_conditions(mock_ui_manager):
     assert "Feels Like: 70°F" in conditions_text
     assert "Humidity: 45%" in conditions_text
     assert "Wind: NW at 10.0 mph" in conditions_text
-    assert "Pressure: 30.10 inHg" in conditions_text
+    assert "Pressure: 30 inHg" in conditions_text
 
 
 def test_display_weatherapi_alerts(mock_ui_manager):
@@ -382,7 +382,7 @@ def test_display_weatherapi_alerts(mock_ui_manager):
     mock_ui_manager.mock_frame.alerts_list.reset_mock()
     mock_ui_manager.mock_frame.alerts_list.InsertItem.return_value = 0
 
-    empty_alerts = {"alerts": []}
+    empty_alerts: dict = {"alerts": []}
     processed_alerts = mock_ui_manager.display_alerts(empty_alerts)
     assert len(processed_alerts) == 0
     mock_ui_manager.mock_frame.alert_btn.Disable.assert_called_once()

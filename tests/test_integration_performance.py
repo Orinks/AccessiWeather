@@ -252,7 +252,9 @@ class TestResponseTimePerformance:
 
         # Should meet < 5 seconds requirement
         assert performance_timer.elapsed < 5.0
+        assert current1 is not None
         assert current1[0] == "New York"
+        assert current2 is not None
         assert current2[0] == "Los Angeles"
 
     def test_ui_update_response_time(
