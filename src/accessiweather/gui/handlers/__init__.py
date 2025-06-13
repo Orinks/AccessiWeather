@@ -15,6 +15,7 @@ from .refresh_handlers import WeatherAppRefreshHandlers
 from .settings_handlers import WeatherAppSettingsHandlers
 from .system_handlers import WeatherAppSystemHandlers
 from .timer_handlers import WeatherAppTimerHandlers
+from .update_handlers import WeatherAppUpdateHandlers
 
 __all__ = [
     "WeatherAppBaseHandlers",
@@ -29,4 +30,5 @@ __all__ = [
     "WeatherAppSystemHandlers",
     "WeatherAppTimerHandlers",
     "WeatherAppConfigHandlers",
+    "WeatherAppUpdateHandlers",
 ]

@@ -31,6 +31,7 @@ from .handlers import (
     WeatherAppSettingsHandlers,
     WeatherAppSystemHandlers,
     WeatherAppTimerHandlers,
+    WeatherAppUpdateHandlers,
 )
 from .hourly_forecast_fetcher import HourlyForecastFetcher
 from .settings_dialog import (
@@ -65,6 +66,7 @@ class WeatherApp(
     WeatherAppSystemHandlers,
     WeatherAppTimerHandlers,
     WeatherAppConfigHandlers,
+    WeatherAppUpdateHandlers,
 ):
     """Main application window for AccessiWeather."""
 
@@ -215,6 +217,53 @@ class WeatherApp(
 
         # Add force close flag
         self._force_close = True  # Default to force close when clicking X
+
+        # Initialize update service (from WeatherAppUpdateHandlers)
+        self._init_update_service_manually()
+
+    def _init_update_service_manually(self):
+        """Manually initialize the update service since multiple inheritance doesn't call handler __init__."""
+        try:
+            # Get config directory from the config path
+            import os
+
+            from accessiweather.services.update_service import UpdateService
+
+            config_dir = os.path.dirname(self._config_path)
+
+            # Initialize update service
+            self.update_service = UpdateService(
+                config_dir=config_dir,
+                notification_callback=self._on_update_available,
+                progress_callback=self._on_update_progress,
+            )
+
+            # Load settings and start background checking if enabled
+            self._load_update_settings()
+
+            logger.info("Update service initialized manually")
+
+        except Exception as e:
+            logger.error(f"Failed to initialize update service manually: {e}")
+            self.update_service = None
+
+    def _on_update_available(self, update_info):
+        """Handle update available notification - delegate to update handlers."""
+        from .handlers.update_handlers import WeatherAppUpdateHandlers
+
+        WeatherAppUpdateHandlers._on_update_available(self, update_info)
+
+    def _on_update_progress(self, progress):
+        """Handle update progress - delegate to update handlers."""
+        from .handlers.update_handlers import WeatherAppUpdateHandlers
+
+        WeatherAppUpdateHandlers._on_update_progress(self, progress)
+
+    def _load_update_settings(self):
+        """Load update settings - delegate to update handlers."""
+        from .handlers.update_handlers import WeatherAppUpdateHandlers
+
+        WeatherAppUpdateHandlers._load_update_settings(self)
 
     def _load_config(self):
         """Load configuration from file
@@ -820,6 +869,10 @@ class WeatherApp(
 
         # Create Help menu
         help_menu = wx.Menu()
+        check_updates_item = help_menu.Append(
+            wx.ID_ANY, "Check for &Updates...", "Check for application updates"
+        )
+        help_menu.AppendSeparator()
         about_item = help_menu.Append(wx.ID_ABOUT, "&About", "About AccessiWeather")
 
         # Add Help menu to menu bar
@@ -832,6 +885,7 @@ class WeatherApp(
         self.Bind(wx.EVT_MENU, self.OnRefresh, refresh_item)
         self.Bind(wx.EVT_MENU, self.OnSettings, settings_item)
         self.Bind(wx.EVT_MENU, lambda e: self.Close(True), exit_item)
+        self.Bind(wx.EVT_MENU, self.OnCheckForUpdates, check_updates_item)
         self.Bind(wx.EVT_MENU, self.OnAbout, about_item)
 
     def OnAbout(self, event):  # event is required by wx

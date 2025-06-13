@@ -27,6 +27,16 @@ CACHE_TTL_KEY = "cache_ttl"
 MINIMIZE_ON_STARTUP_KEY = "minimize_on_startup"
 MINIMIZE_TO_TRAY_KEY = "minimize_to_tray"
 
+# Update settings keys
+AUTO_UPDATE_CHECK_KEY = "auto_update_check_enabled"
+UPDATE_CHECK_INTERVAL_KEY = "update_check_interval_hours"
+UPDATE_CHANNEL_KEY = "update_channel"
+
+# Update defaults
+DEFAULT_AUTO_UPDATE_CHECK = True
+DEFAULT_UPDATE_CHECK_INTERVAL = 24
+DEFAULT_UPDATE_CHANNEL = "stable"
+
 # Display settings keys
 TASKBAR_ICON_TEXT_ENABLED_KEY = "taskbar_icon_text_enabled"
 TASKBAR_ICON_TEXT_FORMAT_KEY = "taskbar_icon_text_format"
@@ -97,6 +107,11 @@ class SettingsDialog(wx.Dialog):
         self.advanced_panel = wx.Panel(self.notebook)
         self.notebook.AddPage(self.advanced_panel, "Advanced")
         self._init_advanced_tab()
+
+        # Create Updates tab
+        self.updates_panel = wx.Panel(self.notebook)
+        self.notebook.AddPage(self.updates_panel, "Updates")
+        self._init_updates_tab()
 
         # --- Buttons ---
         button_sizer = wx.StdDialogButtonSizer()
@@ -353,6 +368,111 @@ class SettingsDialog(wx.Dialog):
         sizer.Add(grid_sizer, 1, wx.EXPAND | wx.ALL, 10)
         panel.SetSizer(sizer)
 
+    def _init_updates_tab(self):
+        """Initialize the Updates tab controls."""
+        panel = self.updates_panel
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # --- Input Fields ---
+        grid_sizer = wx.FlexGridSizer(rows=4, cols=2, vgap=10, hgap=5)
+        grid_sizer.AddGrowableCol(1, 1)  # Make the input column growable
+
+        # Auto-check for updates toggle
+        auto_check_label = "Automatically check for updates"
+        self.auto_update_check_ctrl = wx.CheckBox(
+            panel, label=auto_check_label, name="Auto Check Updates"
+        )
+        tooltip_auto_check = (
+            "When checked, AccessiWeather will automatically check for updates "
+            "in the background according to the interval below."
+        )
+        self.auto_update_check_ctrl.SetToolTip(tooltip_auto_check)
+        grid_sizer.Add((1, 1), 0, wx.ALL, 5)  # Empty cell for alignment
+        grid_sizer.Add(self.auto_update_check_ctrl, 0, wx.ALL, 5)
+
+        # Update check interval
+        interval_label = wx.StaticText(panel, label="Check interval (hours):")
+        self.update_check_interval_ctrl = wx.SpinCtrl(
+            panel, min=1, max=168, initial=24, name="Update Check Interval"
+        )
+        tooltip_interval = (
+            "How often to check for updates (in hours). Minimum 1 hour, maximum 1 week."
+        )
+        self.update_check_interval_ctrl.SetToolTip(tooltip_interval)
+        grid_sizer.Add(interval_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+        grid_sizer.Add(self.update_check_interval_ctrl, 0, wx.ALL, 5)
+
+        # Update channel selection
+        channel_label = wx.StaticText(panel, label="Update channel:")
+        self.update_channel_ctrl = wx.Choice(panel, name="Update Channel")
+        self.update_channel_ctrl.AppendItems(
+            ["Stable releases only", "Development builds (includes pre-releases)"]
+        )
+        tooltip_channel = (
+            "Choose which type of updates to receive. "
+            "Stable releases are tested and recommended for most users. "
+            "Development builds include the latest features but may be less stable."
+        )
+        self.update_channel_ctrl.SetToolTip(tooltip_channel)
+        grid_sizer.Add(channel_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+        grid_sizer.Add(self.update_channel_ctrl, 0, wx.EXPAND | wx.ALL, 5)
+
+        # Manual check button
+        check_now_label = wx.StaticText(panel, label="Manual check:")
+        self.check_now_button = wx.Button(panel, label="Check for Updates Now", name="Check Now")
+        tooltip_check_now = "Click to immediately check for available updates."
+        self.check_now_button.SetToolTip(tooltip_check_now)
+        grid_sizer.Add(check_now_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+        grid_sizer.Add(self.check_now_button, 0, wx.ALL, 5)
+
+        sizer.Add(grid_sizer, 0, wx.EXPAND | wx.ALL, 10)
+
+        # Add informational text
+        info_text = (
+            "Update Information:\n\n"
+            "• Stable releases are thoroughly tested and recommended for daily use\n"
+            "• Development builds include the latest features and bug fixes\n"
+            "• When updates are available, you can choose to download manually or install automatically\n"
+            "• Automatic installation requires administrator privileges and UAC confirmation"
+        )
+        info_label = wx.StaticText(panel, label=info_text)
+        info_label.SetFont(info_label.GetFont().Smaller())
+        sizer.Add(info_label, 0, wx.ALL, 15)
+
+        panel.SetSizer(sizer)
+
+        # Bind events
+        self.auto_update_check_ctrl.Bind(wx.EVT_CHECKBOX, self._on_auto_update_toggle)
+        self.check_now_button.Bind(wx.EVT_BUTTON, self._on_check_now)
+
+    def _on_auto_update_toggle(self, event):
+        """Handle auto-update checkbox toggle."""
+        enabled = self.auto_update_check_ctrl.GetValue()
+        self.update_check_interval_ctrl.Enable(enabled)
+
+    def _on_check_now(self, event):
+        """Handle check for updates now button."""
+        logger.info("Check for Updates Now button clicked in settings dialog")
+
+        # Get the parent window (should be the main WeatherApp)
+        parent = self.GetParent()
+        logger.debug(f"Parent window type: {type(parent).__name__}")
+
+        if hasattr(parent, "OnCheckForUpdates"):
+            logger.info("Parent has OnCheckForUpdates method, calling it")
+            # Create a fake event to pass to the handler
+            fake_event = wx.CommandEvent(wx.wxEVT_COMMAND_MENU_SELECTED)
+            parent.OnCheckForUpdates(fake_event)
+            logger.debug("OnCheckForUpdates method called successfully")
+        else:
+            logger.warning("Parent does not have OnCheckForUpdates method")
+            wx.MessageBox(
+                "Update checking is not available at this time.",
+                "Check for Updates",
+                wx.OK | wx.ICON_INFORMATION,
+                self,
+            )
+
     def _on_taskbar_text_toggle(self, event):
         """Handle taskbar text toggle checkbox."""
         enabled = self.taskbar_text_ctrl.GetValue()
@@ -424,6 +544,25 @@ class SettingsDialog(wx.Dialog):
             else:
                 # Default to Fahrenheit for unknown values
                 self.temp_unit_ctrl.SetSelection(0)
+
+            # Load update settings
+            auto_update_check = self.current_settings.get(
+                AUTO_UPDATE_CHECK_KEY, DEFAULT_AUTO_UPDATE_CHECK
+            )
+            update_check_interval = self.current_settings.get(
+                UPDATE_CHECK_INTERVAL_KEY, DEFAULT_UPDATE_CHECK_INTERVAL
+            )
+            update_channel = self.current_settings.get(UPDATE_CHANNEL_KEY, DEFAULT_UPDATE_CHANNEL)
+
+            self.auto_update_check_ctrl.SetValue(auto_update_check)
+            self.update_check_interval_ctrl.SetValue(update_check_interval)
+            self.update_check_interval_ctrl.Enable(auto_update_check)
+
+            # Set update channel dropdown
+            if update_channel == "dev":
+                self.update_channel_ctrl.SetSelection(1)  # Development builds
+            else:
+                self.update_channel_ctrl.SetSelection(0)  # Stable releases (default)
 
             logger.debug("Settings loaded into dialog.")
         except Exception as e:
@@ -534,6 +673,10 @@ class SettingsDialog(wx.Dialog):
             MINIMIZE_TO_TRAY_KEY: self.minimize_to_tray_ctrl.GetValue(),
             CACHE_ENABLED_KEY: self.cache_enabled_ctrl.GetValue(),
             CACHE_TTL_KEY: self.cache_ttl_ctrl.GetValue(),
+            # Update settings
+            AUTO_UPDATE_CHECK_KEY: self.auto_update_check_ctrl.GetValue(),
+            UPDATE_CHECK_INTERVAL_KEY: self.update_check_interval_ctrl.GetValue(),
+            UPDATE_CHANNEL_KEY: "dev" if self.update_channel_ctrl.GetSelection() == 1 else "stable",
         }
 
     def get_api_settings(self):

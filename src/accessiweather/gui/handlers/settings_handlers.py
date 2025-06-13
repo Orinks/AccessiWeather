@@ -163,3 +163,7 @@ class WeatherAppSettingsHandlers(WeatherAppHandlerBase):
                     self.taskbar_icon.update_icon_text()
                 else:
                     logger.debug("No taskbar icon found to update")
+
+            # If update settings changed, update the update service
+            if hasattr(self, "_update_update_settings"):
+                self._update_update_settings(updated_settings)
