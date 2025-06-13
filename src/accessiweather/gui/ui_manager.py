@@ -1392,25 +1392,42 @@ class UIManager:
         Returns:
             bool: True if Open-Meteo is being used, False otherwise
         """
+        logger.debug("_is_using_openmeteo: Starting weather source detection")
         try:
             # Get the current location coordinates
             if not hasattr(self.frame, "location_service") or not self.frame.location_service:
+                logger.debug("_is_using_openmeteo: No location service available")
                 return False
 
             current_location = self.frame.location_service.get_current_location()
-            if not current_location or current_location == "Nationwide":
+            logger.debug(f"_is_using_openmeteo: current_location = {current_location}")
+            if not current_location:
+                logger.debug("_is_using_openmeteo: No current location")
                 return False
 
-            coords = self.frame.location_service.get_location_coordinates(current_location)
-            if not coords:
+            # Extract coordinates from the current location tuple (name, lat, lon)
+            if len(current_location) == 3:
+                location_name, lat, lon = current_location
+                logger.debug(
+                    f"_is_using_openmeteo: extracted from current_location - name={location_name}, lat={lat}, lon={lon}"
+                )
+            else:
+                logger.debug("_is_using_openmeteo: Invalid current_location format")
                 return False
-
-            lat, lon = coords
 
             # Check if we have a weather service to determine the source
             if hasattr(self.frame, "weather_service") and self.frame.weather_service:
+                logger.debug(
+                    "_is_using_openmeteo: Weather service available, calling _should_use_openmeteo"
+                )
                 # Use the weather service's logic to determine if Open-Meteo should be used
-                return bool(self.frame.weather_service._should_use_openmeteo(lat, lon))
+                result = bool(self.frame.weather_service._should_use_openmeteo(lat, lon))
+                logger.debug(
+                    f"_is_using_openmeteo: weather_service._should_use_openmeteo returned {result}"
+                )
+                return result
+            else:
+                logger.debug("_is_using_openmeteo: No weather service available, using fallback")
 
             # Fallback: check config directly
             from accessiweather.gui.settings_dialog import DATA_SOURCE_AUTO, DATA_SOURCE_OPENMETEO
@@ -1457,6 +1474,7 @@ class UIManager:
 
     def update_ui_for_location_change(self):
         """Update UI elements when the location changes (called from location handlers)."""
+        logger.debug("update_ui_for_location_change: Called from location handlers")
         self._update_ui_for_weather_source()
 
     def OnAlertSelected(self, event):
