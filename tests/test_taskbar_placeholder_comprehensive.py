@@ -54,7 +54,7 @@ class TestTaskbarPlaceholderComprehensive(unittest.TestCase):
                 "dewpoint": {"value": 68.0, "unitCode": "degF"},
                 "windSpeed": {"value": 12.0},  # km/h
                 "windDirection": {"value": 180},  # degrees
-                "barometricPressure": {"value": 102000, "unitCode": "Pa"},
+                "barometricPressure": {"value": 102000, "unitCode": "Pa"},  # Already in Pa
                 "relativeHumidity": {"value": 70, "unitCode": "percent"},
                 "textDescription": "Clear Sky",
                 "visibility": {
