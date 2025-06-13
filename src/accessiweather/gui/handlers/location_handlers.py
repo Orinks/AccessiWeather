@@ -63,6 +63,10 @@ class WeatherAppLocationHandlers(WeatherAppHandlerBase):
                 else:
                     self.discussion_btn.Disable()
 
+        # Update UI elements based on weather source (show/hide Open-Meteo incompatible elements)
+        if hasattr(self, "ui_manager") and self.ui_manager:
+            self.ui_manager.update_ui_for_location_change()
+
         # Update weather data for the new location
         self.UpdateWeatherData()
 
@@ -368,6 +372,10 @@ class WeatherAppLocationHandlers(WeatherAppHandlerBase):
                 # For regular locations, ensure remove button is enabled if a location is selected
                 if hasattr(self, "remove_btn"):
                     self.remove_btn.Enable()
+
+            # Update UI elements based on weather source after location dropdown update
+            if hasattr(self, "ui_manager") and self.ui_manager:
+                self.ui_manager.update_ui_for_location_change()
 
     def _select_nationwide_location(self):
         """Select the Nationwide location and update UI accordingly."""

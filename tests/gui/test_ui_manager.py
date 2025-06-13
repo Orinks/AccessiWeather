@@ -140,7 +140,6 @@ def mock_ui_manager():
         mock_frame.remove_btn = MagicMock()
         mock_frame.refresh_btn = MagicMock()
         mock_frame.settings_btn = MagicMock()
-        mock_frame.minimize_to_tray_btn = MagicMock()
         mock_frame.forecast_text = MagicMock()
         mock_frame.current_conditions_text = MagicMock()  # Add the current_conditions_text mock
         mock_frame.discussion_btn = MagicMock()
