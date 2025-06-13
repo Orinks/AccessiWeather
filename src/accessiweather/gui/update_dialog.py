@@ -118,10 +118,7 @@ class UpdateNotificationDialog(wx.Dialog):
         self.choice_mapping[len(choices) - 1] = "manual_download"
 
         self.install_method_combo = wx.ComboBox(
-            self,
-            choices=choices,
-            style=wx.CB_READONLY,
-            name="Installation Method"
+            self, choices=choices, style=wx.CB_READONLY, name="Installation Method"
         )
 
         # Set default selection based on mode and available assets
@@ -223,7 +220,9 @@ class UpdateNotificationDialog(wx.Dialog):
         elif selected_method == "manual_portable":
             description = "Opens a direct download link for the portable ZIP file in your browser."
         else:
-            description = "Opens the GitHub release page where you can see all available download options."
+            description = (
+                "Opens the GitHub release page where you can see all available download options."
+            )
 
         self.method_description.SetLabel(description)
         self.Layout()  # Refresh layout to accommodate text changes
@@ -300,7 +299,9 @@ class UpdateNotificationDialog(wx.Dialog):
         self.Layout()
 
         # Start download in background thread
-        self.download_thread = threading.Thread(target=self._download_and_extract_portable, daemon=True)
+        self.download_thread = threading.Thread(
+            target=self._download_and_extract_portable, daemon=True
+        )
         self.download_thread.start()
 
     def _download_and_install(self):

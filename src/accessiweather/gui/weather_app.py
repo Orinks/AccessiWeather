@@ -224,10 +224,11 @@ class WeatherApp(
     def _init_update_service_manually(self):
         """Manually initialize the update service since multiple inheritance doesn't call handler __init__."""
         try:
-            from accessiweather.services.update_service import UpdateService
-
             # Get config directory from the config path
             import os
+
+            from accessiweather.services.update_service import UpdateService
+
             config_dir = os.path.dirname(self._config_path)
 
             # Initialize update service
@@ -249,16 +250,19 @@ class WeatherApp(
     def _on_update_available(self, update_info):
         """Handle update available notification - delegate to update handlers."""
         from .handlers.update_handlers import WeatherAppUpdateHandlers
+
         WeatherAppUpdateHandlers._on_update_available(self, update_info)
 
     def _on_update_progress(self, progress):
         """Handle update progress - delegate to update handlers."""
         from .handlers.update_handlers import WeatherAppUpdateHandlers
+
         WeatherAppUpdateHandlers._on_update_progress(self, progress)
 
     def _load_update_settings(self):
         """Load update settings - delegate to update handlers."""
         from .handlers.update_handlers import WeatherAppUpdateHandlers
+
         WeatherAppUpdateHandlers._load_update_settings(self)
 
     def _load_config(self):

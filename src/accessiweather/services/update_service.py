@@ -212,7 +212,7 @@ class UpdateService:
             dev_version_match = re.search(r'<span id="dev-version">([^<]+)</span>', content)
             if not dev_version_match:
                 # Fallback: look for any dev version pattern
-                dev_version_match = re.search(r'([0-9]+\.[0-9]+\.[0-9]+[^\s<]*-dev)', content)
+                dev_version_match = re.search(r"([0-9]+\.[0-9]+\.[0-9]+[^\s<]*-dev)", content)
                 if not dev_version_match:
                     logger.info("No dev build version found on GitHub Pages")
                     return None

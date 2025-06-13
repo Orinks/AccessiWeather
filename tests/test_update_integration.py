@@ -81,7 +81,9 @@ class TestUpdateIntegration(unittest.TestCase):
 
         # Should have both auto-install and manual download options (non-portable mode)
         self.assertEqual(dialog.install_method_combo.GetCount(), 2)
-        self.assertEqual(dialog.install_method_combo.GetString(0), "Download and install automatically")
+        self.assertEqual(
+            dialog.install_method_combo.GetString(0), "Download and install automatically"
+        )
         self.assertEqual(dialog.install_method_combo.GetString(1), "Open release page in browser")
 
         # Should have auto-install selected by default when installer is available
@@ -89,7 +91,7 @@ class TestUpdateIntegration(unittest.TestCase):
 
         dialog.Destroy()
 
-    @patch('accessiweather.gui.update_dialog.is_portable_mode')
+    @patch("accessiweather.gui.update_dialog.is_portable_mode")
     def test_update_dialog_portable_mode(self, mock_portable):
         """Test update dialog when running in portable mode."""
         mock_portable.return_value = True
@@ -104,7 +106,10 @@ class TestUpdateIntegration(unittest.TestCase):
 
         # Should have portable-specific options
         self.assertEqual(dialog.install_method_combo.GetCount(), 3)
-        self.assertEqual(dialog.install_method_combo.GetString(0), "Download and extract portable update automatically")
+        self.assertEqual(
+            dialog.install_method_combo.GetString(0),
+            "Download and extract portable update automatically",
+        )
         self.assertEqual(dialog.install_method_combo.GetString(1), "Download portable ZIP directly")
         self.assertEqual(dialog.install_method_combo.GetString(2), "Open release page in browser")
 
@@ -124,7 +129,9 @@ class TestUpdateIntegration(unittest.TestCase):
             published_date="2024-01-01T00:00:00Z",
         )
 
-        dialog = UpdateNotificationDialog(self.parent, update_info_no_installer, self.update_service)
+        dialog = UpdateNotificationDialog(
+            self.parent, update_info_no_installer, self.update_service
+        )
 
         # Should have installation method combo box
         self.assertIsNotNone(dialog.install_method_combo)

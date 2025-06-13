@@ -169,7 +169,9 @@ class WeatherAppUpdateHandlers(WeatherAppHandlerBase):
             try:
                 logger.info("Background thread: Starting update check")
                 update_info = self.update_service.check_for_updates()
-                logger.info(f"Background thread: Update check completed, result: {update_info is not None}")
+                logger.info(
+                    f"Background thread: Update check completed, result: {update_info is not None}"
+                )
                 wx.CallAfter(self._on_manual_check_complete, progress_dialog, update_info)
             except Exception as e:
                 logger.error(f"Background thread: Update check failed with error: {e}")

@@ -98,12 +98,12 @@ class TestSettingsDialog(unittest.TestCase):
 
         dialog.Destroy()
 
-    @patch('wx.MessageBox')
+    @patch("wx.MessageBox")
     def test_check_now_button_without_update_handler(self, mock_message_box):
         """Test check now button when parent doesn't have OnCheckForUpdates method."""
         # Ensure the frame doesn't have OnCheckForUpdates method
-        if hasattr(self.frame, 'OnCheckForUpdates'):
-            delattr(self.frame, 'OnCheckForUpdates')
+        if hasattr(self.frame, "OnCheckForUpdates"):
+            delattr(self.frame, "OnCheckForUpdates")
 
         dialog = SettingsDialog(self.frame, self.current_settings)
 
@@ -121,7 +121,7 @@ class TestSettingsDialog(unittest.TestCase):
 
         dialog.Destroy()
 
-    @patch('wx.MessageBox')
+    @patch("wx.MessageBox")
     def test_check_now_button_no_update_available_flow(self, mock_message_box):
         """Test the full flow when check now button is clicked and no update is available."""
         # Create a mock update service that returns None (no update available)

@@ -677,7 +677,6 @@ class SettingsDialog(wx.Dialog):
             AUTO_UPDATE_CHECK_KEY: self.auto_update_check_ctrl.GetValue(),
             UPDATE_CHECK_INTERVAL_KEY: self.update_check_interval_ctrl.GetValue(),
             UPDATE_CHANNEL_KEY: "dev" if self.update_channel_ctrl.GetSelection() == 1 else "stable",
-
         }
 
     def get_api_settings(self):
