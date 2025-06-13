@@ -264,7 +264,7 @@ class UIManager:
         panel = wx.Panel(self.frame)
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # --- Location Controls ---
+        # --- Location Dropdown (separated from buttons) ---
         location_sizer = wx.BoxSizer(wx.HORIZONTAL)
         location_label = AccessibleStaticText(panel, label="Location:")
         location_sizer.Add(location_label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
@@ -272,18 +272,6 @@ class UIManager:
         # Store UI elements directly on the frame object for access by handlers
         self.frame.location_choice = AccessibleChoice(panel, choices=[], label="Location Selection")
         location_sizer.Add(self.frame.location_choice, 1, wx.ALL | wx.EXPAND, 5)
-
-        self.frame.add_btn = AccessibleButton(panel, wx.ID_ANY, "Add")
-        self.frame.remove_btn = AccessibleButton(panel, wx.ID_ANY, "Remove")
-        self.frame.refresh_btn = AccessibleButton(panel, wx.ID_ANY, "Refresh")
-        self.frame.settings_btn = AccessibleButton(panel, wx.ID_ANY, "Settings")
-        self.frame.minimize_to_tray_btn = AccessibleButton(panel, wx.ID_ANY, "Minimize to Tray")
-
-        location_sizer.Add(self.frame.add_btn, 0, wx.ALL, 5)
-        location_sizer.Add(self.frame.remove_btn, 0, wx.ALL, 5)
-        location_sizer.Add(self.frame.refresh_btn, 0, wx.ALL, 5)
-        location_sizer.Add(self.frame.settings_btn, 0, wx.ALL, 5)
-        location_sizer.Add(self.frame.minimize_to_tray_btn, 0, wx.ALL, 5)
         main_sizer.Add(location_sizer, 0, wx.EXPAND | wx.ALL, 10)
 
         # --- Current Conditions Panel ---
@@ -335,6 +323,26 @@ class UIManager:
         # --- Alert Details Button ---
         self.frame.alert_btn = AccessibleButton(panel, wx.ID_ANY, "View Alert Details")
         main_sizer.Add(self.frame.alert_btn, 0, wx.ALL | wx.ALIGN_CENTER, 5)
+
+        # --- Control Buttons (moved to bottom) ---
+        buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        # Create all the buttons
+        self.frame.add_btn = AccessibleButton(panel, wx.ID_ANY, "Add")
+        self.frame.remove_btn = AccessibleButton(panel, wx.ID_ANY, "Remove")
+        self.frame.refresh_btn = AccessibleButton(panel, wx.ID_ANY, "Refresh")
+        self.frame.settings_btn = AccessibleButton(panel, wx.ID_ANY, "Settings")
+        self.frame.minimize_to_tray_btn = AccessibleButton(panel, wx.ID_ANY, "Minimize to Tray")
+
+        # Add buttons to the horizontal sizer
+        buttons_sizer.Add(self.frame.add_btn, 0, wx.ALL, 5)
+        buttons_sizer.Add(self.frame.remove_btn, 0, wx.ALL, 5)
+        buttons_sizer.Add(self.frame.refresh_btn, 0, wx.ALL, 5)
+        buttons_sizer.Add(self.frame.settings_btn, 0, wx.ALL, 5)
+        buttons_sizer.Add(self.frame.minimize_to_tray_btn, 0, wx.ALL, 5)
+
+        # Add the buttons sizer to the main sizer
+        main_sizer.Add(buttons_sizer, 0, wx.ALIGN_CENTER | wx.ALL, 10)
 
         # --- Finalize Panel Setup ---
         panel.SetSizer(main_sizer)
