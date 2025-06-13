@@ -332,14 +332,12 @@ class UIManager:
         self.frame.remove_btn = AccessibleButton(panel, wx.ID_ANY, "Remove")
         self.frame.refresh_btn = AccessibleButton(panel, wx.ID_ANY, "Refresh")
         self.frame.settings_btn = AccessibleButton(panel, wx.ID_ANY, "Settings")
-        self.frame.minimize_to_tray_btn = AccessibleButton(panel, wx.ID_ANY, "Minimize to Tray")
 
         # Add buttons to the horizontal sizer
         buttons_sizer.Add(self.frame.add_btn, 0, wx.ALL, 5)
         buttons_sizer.Add(self.frame.remove_btn, 0, wx.ALL, 5)
         buttons_sizer.Add(self.frame.refresh_btn, 0, wx.ALL, 5)
         buttons_sizer.Add(self.frame.settings_btn, 0, wx.ALL, 5)
-        buttons_sizer.Add(self.frame.minimize_to_tray_btn, 0, wx.ALL, 5)
 
         # Add the buttons sizer to the main sizer
         main_sizer.Add(buttons_sizer, 0, wx.ALIGN_CENTER | wx.ALL, 10)
@@ -386,7 +384,6 @@ class UIManager:
         # Add binding for list item selection to enable the alert button
         self.frame.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnAlertSelected, self.frame.alerts_list)
         self.frame.Bind(wx.EVT_BUTTON, self.frame.OnSettings, self.frame.settings_btn)
-        self.frame.Bind(wx.EVT_BUTTON, self.frame.OnMinimizeToTray, self.frame.minimize_to_tray_btn)
         # KeyDown is bound here as it relates to general UI interaction
         self.frame.Bind(wx.EVT_KEY_DOWN, self.frame.OnKeyDown)
 
