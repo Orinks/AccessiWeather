@@ -1,0 +1,1603 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.4, pytest-8.3.5, pluggy-1.5.0 -- C:\Users\joshu\accessiweather\venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\joshu\accessiweather
+configfile: pytest.ini
+testpaths: tests
+plugins: anyio-4.9.0, cov-6.1.1, mock-3.14.0, timeout-2.3.1, requests-mock-1.12.1
+collecting ... collected 762 items
+
+tests/gui/test_alert_dialog.py::test_process_alerts_preserves_parameters
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.notifications:notifications.py:45 Toast notification: Weather Test Event - Test Alert
+INFO     accessiweather.notifications:notifications.py:366 Displayed notification for new alert: Test Event
+INFO     accessiweather.notifications:notifications.py:211 New weather event detected: Test Event (deduplicated from 1 alerts)
+INFO     accessiweather.notifications:notifications.py:234 Alert processing complete: 1 total, 1 new, 0 updated, 0 unchanged
+PASSED                                                                   [  0%]
+tests/gui/test_alert_dialog.py::test_alert_details_dialog_with_nwsheadline
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.notifications:notifications.py:45 Toast notification: Weather Test Event - Test Alert
+INFO     accessiweather.notifications:notifications.py:366 Displayed notification for new alert: Test Event
+INFO     accessiweather.notifications:notifications.py:211 New weather event detected: Test Event (deduplicated from 1 alerts)
+INFO     accessiweather.notifications:notifications.py:234 Alert processing complete: 1 total, 1 new, 0 updated, 0 unchanged
+PASSED                                                                   [  0%]
+tests/gui/test_alert_dialog.py::test_alert_details_dialog_without_nwsheadline
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.notifications:notifications.py:45 Toast notification: Weather Test Event - Test Alert
+INFO     accessiweather.notifications:notifications.py:366 Displayed notification for new alert: Test Event
+INFO     accessiweather.notifications:notifications.py:211 New weather event detected: Test Event (deduplicated from 1 alerts)
+INFO     accessiweather.notifications:notifications.py:234 Alert processing complete: 1 total, 1 new, 0 updated, 0 unchanged
+PASSED                                                                   [  0%]
+tests/gui/test_alert_dialog.py::test_alert_details_dialog_with_empty_parameters PASSED [  0%]
+tests/gui/test_alert_dialog.py::test_alert_details_dialog_with_missing_parameters PASSED [  0%]
+tests/gui/test_alert_dialog.py::test_weather_app_on_alerts_fetched_uses_processed_alerts
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.gui.weather_app:weather_app.py:412 Alert processing complete: 1 total, 1 new, 0 updated
+PASSED                                                                   [  0%]
+tests/gui/test_alert_update.py::test_on_alerts_fetched
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.gui.weather_app:weather_app.py:412 Alert processing complete: 1 total, 1 new, 0 updated
+PASSED                                                                   [  0%]
+tests/gui/test_alert_update.py::test_alert_update_interval
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.gui.handlers.timer_handlers:timer_handlers.py:52 Timer triggered weather update. Interval: 5 minutes, Time since last update: 301.0 seconds
+INFO     accessiweather.gui.handlers.timer_handlers:timer_handlers.py:67 Timer triggered national data update for nationwide view
+PASSED                                                                   [  1%]
+tests/gui/test_alert_update.py::test_update_weather_data_includes_alerts PASSED [  1%]
+tests/gui/test_app_exit.py::TestAccessiWeatherAppExit::test_onexit_calls_thread_manager PASSED [  1%]
+tests/gui/test_app_exit.py::TestAccessiWeatherAppExit::test_onexit_handles_config_save_exception PASSED [  1%]
+tests/gui/test_app_exit.py::TestAccessiWeatherAppExit::test_onexit_handles_exceptions PASSED [  1%]
+tests/gui/test_app_exit.py::TestAccessiWeatherAppExit::test_onexit_handles_remaining_threads PASSED [  1%]
+tests/gui/test_app_exit.py::TestAccessiWeatherAppExit::test_onexit_saves_configuration PASSED [  1%]
+tests/gui/test_dialog_handlers.py::TestWeatherAppDialogHandlers::test_show_confirm_dialog PASSED [  1%]
+tests/gui/test_dialog_handlers.py::TestWeatherAppDialogHandlers::test_show_message_dialog PASSED [  2%]
+tests/gui/test_dialog_handlers.py::TestWeatherAppDialogHandlers::test_show_progress_dialog PASSED [  2%]
+tests/gui/test_dialog_handlers.py::TestWeatherAppDialogHandlers::test_show_single_choice_dialog PASSED [  2%]
+tests/gui/test_dialog_handlers.py::TestWeatherAppDialogHandlers::test_show_text_entry_dialog PASSED [  2%]
+tests/gui/test_dialogs.py::test_location_dialog_init PASSED              [  2%]
+tests/gui/test_dialogs.py::test_location_dialog_search PASSED            [  2%]
+tests/gui/test_dialogs.py::test_location_dialog_select_location PASSED   [  2%]
+tests/gui/test_dialogs.py::test_location_dialog_cancel PASSED            [  3%]
+tests/gui/test_dialogs.py::test_advanced_location_dialog_init PASSED     [  3%]
+tests/gui/test_dialogs.py::test_advanced_location_dialog_validation PASSED [  3%]
+tests/gui/test_dialogs.py::test_advanced_location_dialog_ok PASSED       [  3%]
+tests/gui/test_dialogs.py::test_weather_discussion_dialog_init PASSED    [  3%]
+tests/gui/test_dialogs.py::test_weather_discussion_dialog_close PASSED   [  3%]
+tests/gui/test_dialogs.py::test_national_discussion_dialog_init PASSED   [  3%]
+tests/gui/test_dialogs.py::test_national_discussion_dialog_close PASSED  [  3%]
+tests/gui/test_discussion_timer_cleanup.py::TestDiscussionTimerCleanup::test_cleanup_discussion_loading_dialog_exception
+-------------------------------- live log call --------------------------------
+ERROR    accessiweather.gui.weather_app:weather_app.py:568 Error closing loading dialog: Dialog destroy error
+Traceback (most recent call last):
+  File "C:\Users\joshu\accessiweather\src\accessiweather\gui\weather_app.py", line 540, in _cleanup_discussion_loading
+    dialog_to_close.Destroy()
+  File "C:\Program Files\Python312\Lib\unittest\mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\unittest\mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\unittest\mock.py", line 1193, in _execute_mock_call
+    raise effect
+Exception: Dialog destroy error
+PASSED                                                                   [  4%]
+tests/gui/test_discussion_timer_cleanup.py::TestDiscussionTimerCleanup::test_cleanup_discussion_loading_dialog_not_shown PASSED [  4%]
+tests/gui/test_discussion_timer_cleanup.py::TestDiscussionTimerCleanup::test_cleanup_discussion_loading_normal_case PASSED [  4%]
+tests/gui/test_discussion_timer_cleanup.py::TestDiscussionTimerCleanup::test_cleanup_discussion_loading_timer_exception
+-------------------------------- live log call --------------------------------
+ERROR    accessiweather.gui.weather_app:weather_app.py:525 Error stopping discussion timer: Timer stop error
+Traceback (most recent call last):
+  File "C:\Users\joshu\accessiweather\src\accessiweather\gui\weather_app.py", line 523, in _cleanup_discussion_loading
+    self._discussion_timer.Stop()
+  File "C:\Program Files\Python312\Lib\unittest\mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\unittest\mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\unittest\mock.py", line 1193, in _execute_mock_call
+    raise effect
+Exception: Timer stop error
+PASSED                                                                   [  4%]
+tests/gui/test_discussion_timer_cleanup.py::TestDiscussionTimerCleanup::test_cleanup_discussion_loading_timer_not_running PASSED [  4%]
+tests/gui/test_discussion_timer_cleanup.py::TestDiscussionTimerCleanup::test_cleanup_discussion_loading_with_external_dialog PASSED [  4%]
+tests/gui/test_exit_integration.py::TestExitIntegration::test_close_then_exit_with_minimize_to_tray PASSED [  4%]
+tests/gui/test_exit_integration.py::TestExitIntegration::test_close_then_exit_without_minimize_to_tray PASSED [  4%]
+tests/gui/test_exit_integration.py::TestExitIntegration::test_force_close_then_exit PASSED [  5%]
+tests/gui/test_settings_change_handling.py::TestSettingsChangeHandling::test_handle_data_source_change_nws
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.gui.weather_app:weather_app.py:681 Reinitializing WeatherService due to data source or API key change
+INFO     accessiweather.gui.weather_app:weather_app.py:687 Current data source: nws
+INFO     accessiweather.gui.weather_app:weather_app.py:688 Full config: {'settings': {'data_source': 'nws'}, 'api_settings': {'api_contact': 'test@example.com'}, 'api_keys': {}}
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: AccessiWeather (AccessiWeather)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+INFO     accessiweather.api_wrapper:api_wrapper.py:93 Caching enabled with TTL of 300 seconds
+PASSED                                                                   [  5%]
+tests/gui/test_settings_change_handling.py::TestSettingsChangeHandling::test_handle_data_source_change_auto
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.gui.weather_app:weather_app.py:681 Reinitializing WeatherService due to data source or API key change
+INFO     accessiweather.gui.weather_app:weather_app.py:687 Current data source: auto
+INFO     accessiweather.gui.weather_app:weather_app.py:688 Full config: {'settings': {'data_source': 'auto'}, 'api_settings': {'api_contact': 'test@example.com'}, 'api_keys': {}}
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: AccessiWeather (AccessiWeather)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+INFO     accessiweather.api_wrapper:api_wrapper.py:93 Caching enabled with TTL of 300 seconds
+PASSED                                                                   [  5%]
+tests/gui/test_stop_fetcher_threads.py::TestStopFetcherThreads::test_stop_fetcher_threads_all_present PASSED [  5%]
+tests/gui/test_stop_fetcher_threads.py::TestStopFetcherThreads::test_stop_fetcher_threads_fetcher_exception PASSED [  5%]
+tests/gui/test_stop_fetcher_threads.py::TestStopFetcherThreads::test_stop_fetcher_threads_no_timer PASSED [  5%]
+tests/gui/test_stop_fetcher_threads.py::TestStopFetcherThreads::test_stop_fetcher_threads_some_missing PASSED [  5%]
+tests/gui/test_stop_fetcher_threads.py::TestStopFetcherThreads::test_stop_fetcher_threads_timer_exception PASSED [  6%]
+tests/gui/test_system_handlers_close.py::TestWeatherAppSystemHandlersClose::test_onclose_force_close PASSED [  6%]
+tests/gui/test_system_handlers_close.py::TestWeatherAppSystemHandlersClose::test_onclose_minimize_to_tray PASSED [  6%]
+tests/gui/test_system_handlers_close.py::TestWeatherAppSystemHandlersClose::test_onclose_no_minimize_to_tray PASSED [  6%]
+tests/gui/test_system_handlers_close.py::TestWeatherAppSystemHandlersClose::test_onclose_no_taskbar_icon PASSED [  6%]
+tests/gui/test_system_tray.py::TestSystemTray::test_accessibility_event_handling PASSED [  6%]
+tests/gui/test_system_tray.py::TestSystemTray::test_accessibility_keyboard_events PASSED [  6%]
+tests/gui/test_system_tray.py::TestSystemTray::test_cleanup_existing_instance PASSED [  6%]
+tests/gui/test_system_tray.py::TestSystemTray::test_cleanup_method PASSED [  7%]
+tests/gui/test_system_tray.py::TestSystemTray::test_cleanup_when_not_ok PASSED [  7%]
+tests/gui/test_system_tray.py::TestSystemTray::test_context_menu_accessibility PASSED [  7%]
+tests/gui/test_system_tray.py::TestSystemTray::test_double_cleanup PASSED [  7%]
+tests/gui/test_system_tray.py::TestSystemTray::test_single_instance_creation PASSED [  7%]
+tests/gui/test_system_tray.py::TestSystemTray::test_windows_10_cleanup_delay PASSED [  7%]
+tests/gui/test_system_tray.py::TestSystemTray::test_windows_11_no_cleanup_delay PASSED [  7%]
+tests/gui/test_taskbar_icon_text.py::TestTaskBarIconText::test_update_icon_text_custom_format PASSED [  8%]
+tests/gui/test_taskbar_icon_text.py::TestTaskBarIconText::test_update_icon_text_disabled
+-------------------------------- live log call --------------------------------
+WARNING  accessiweather.gui.system_tray:system_tray.py:87 TaskBarIcon instance already exists. This may cause multiple tray icons.
+PASSED                                                                   [  8%]
+tests/gui/test_taskbar_icon_text.py::TestTaskBarIconText::test_update_icon_text_enabled
+-------------------------------- live log call --------------------------------
+WARNING  accessiweather.gui.system_tray:system_tray.py:87 TaskBarIcon instance already exists. This may cause multiple tray icons.
+PASSED                                                                   [  8%]
+tests/gui/test_taskbar_icon_text.py::TestTaskBarIconText::test_update_icon_text_no_weather_data
+-------------------------------- live log call --------------------------------
+WARNING  accessiweather.gui.system_tray:system_tray.py:87 TaskBarIcon instance already exists. This may cause multiple tray icons.
+PASSED                                                                   [  8%]
+tests/gui/test_taskbar_icon_text.py::TestTaskBarIconText::test_update_weather_data
+-------------------------------- live log call --------------------------------
+WARNING  accessiweather.gui.system_tray:system_tray.py:87 TaskBarIcon instance already exists. This may cause multiple tray icons.
+PASSED                                                                   [  8%]
+tests/gui/test_timer_handlers.py::test_on_timer_calls_update_weather_data
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.gui.handlers.timer_handlers:timer_handlers.py:52 Timer triggered weather update. Interval: 10 minutes, Time since last update: 601.0 seconds
+INFO     accessiweather.gui.handlers.timer_handlers:timer_handlers.py:67 Timer triggered national data update for nationwide view
+PASSED                                                                   [  8%]
+tests/gui/test_timer_handlers.py::test_on_timer_no_update_needed PASSED  [  8%]
+tests/gui/test_timer_handlers.py::test_on_timer_already_updating PASSED  [  8%]
+tests/gui/test_timer_handlers.py::test_on_timer_updates_national_data_when_nationwide_selected
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.gui.handlers.timer_handlers:timer_handlers.py:52 Timer triggered weather update. Interval: 10 minutes, Time since last update: 601.0 seconds
+INFO     accessiweather.gui.handlers.timer_handlers:timer_handlers.py:67 Timer triggered national data update for nationwide view
+PASSED                                                                   [  9%]
+tests/gui/test_timer_handlers.py::test_on_timer_does_not_update_national_data_when_not_nationwide
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.gui.handlers.timer_handlers:timer_handlers.py:52 Timer triggered weather update. Interval: 10 minutes, Time since last update: 601.0 seconds
+PASSED                                                                   [  9%]
+tests/gui/test_timer_handlers.py::test_on_timer_respects_auto_refresh_national_setting
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.gui.handlers.timer_handlers:timer_handlers.py:52 Timer triggered weather update. Interval: 10 minutes, Time since last update: 601.0 seconds
+PASSED                                                                   [  9%]
+tests/gui/test_ui_manager.py::test_display_loading_state PASSED          [  9%]
+tests/gui/test_ui_manager.py::test_display_forecast PASSED               [  9%]
+tests/gui/test_ui_manager.py::test_display_national_forecast PASSED      [  9%]
+tests/gui/test_ui_manager.py::test_format_national_forecast PASSED       [  9%]
+tests/gui/test_ui_manager.py::test_display_alerts PASSED                 [  9%]
+tests/gui/test_ui_manager.py::test_display_forecast_error PASSED         [ 10%]
+tests/gui/test_ui_manager.py::test_display_alerts_error PASSED           [ 10%]
+tests/gui/test_ui_manager.py::test_display_ready_state PASSED            [ 10%]
+tests/gui/test_ui_manager.py::test_is_weatherapi_data PASSED             [ 10%]
+tests/gui/test_ui_manager.py::test_display_weatherapi_forecast PASSED    [ 10%]
+tests/gui/test_ui_manager.py::test_display_weatherapi_current_conditions PASSED [ 10%]
+tests/gui/test_ui_manager.py::test_display_weatherapi_alerts PASSED      [ 10%]
+tests/gui/test_ui_manager.py::test_get_temperature_unit_preference_celsius PASSED [ 11%]
+tests/gui/test_ui_manager.py::test_get_temperature_unit_preference_fahrenheit PASSED [ 11%]
+tests/gui/test_ui_manager.py::test_get_temperature_unit_preference_both PASSED [ 11%]
+tests/gui/test_ui_manager.py::test_get_temperature_unit_preference_default PASSED [ 11%]
+tests/gui/test_ui_manager.py::test_format_weatherapi_forecast_basic PASSED [ 11%]
+tests/gui/test_ui_manager.py::test_format_weatherapi_current_conditions_basic PASSED [ 11%]
+tests/gui/test_ui_manager.py::test_extract_weatherapi_data_for_taskbar PASSED [ 11%]
+tests/gui/test_ui_manager.py::test_extract_nws_data_for_taskbar PASSED   [ 11%]
+tests/gui/test_ui_manager.py::test_extract_nws_data_for_taskbar_with_wind_combination PASSED [ 12%]
+tests/gui/test_ui_manager.py::test_extract_nws_data_for_taskbar_missing_apparent_temperature PASSED [ 12%]
+tests/gui/test_ui_manager.py::test_extract_nws_data_for_taskbar_malformed_data
+-------------------------------- live log call --------------------------------
+WARNING  accessiweather.gui.ui_manager:ui_manager.py:1127 NWS data extraction: Invalid or missing conditions data
+WARNING  accessiweather.gui.ui_manager:ui_manager.py:1127 NWS data extraction: Invalid or missing conditions data
+ERROR    accessiweather.gui.ui_manager:ui_manager.py:1155 NWS data extraction: Error processing temperature: could not convert string to float: 'invalid'
+PASSED                                                                   [ 12%]
+tests/gui/test_ui_manager.py::test_extract_nws_data_for_taskbar_error_handling
+-------------------------------- live log call --------------------------------
+WARNING  accessiweather.gui.ui_manager:ui_manager.py:1153 NWS data extraction: No temperature value found
+ERROR    accessiweather.gui.ui_manager:ui_manager.py:1165 NWS data extraction: Error processing humidity: could not convert string to float: 'invalid_humidity'
+ERROR    accessiweather.gui.ui_manager:ui_manager.py:1183 NWS data extraction: Error processing wind data: could not convert string to float: 'not_a_number'
+ERROR    accessiweather.gui.ui_manager:ui_manager.py:1193 NWS data extraction: Error processing pressure: could not convert string to float: 'invalid_pressure'
+PASSED                                                                   [ 12%]
+tests/gui/test_ui_manager.py::test_wind_direction_conversion_utility
+-------------------------------- live log call --------------------------------
+WARNING  accessiweather.gui.ui_manager:ui_manager.py:74 Wind direction conversion failed for value 'invalid': could not convert string to float: 'invalid'
+PASSED                                                                   [ 12%]
+tests/gui/test_ui_manager.py::test_wind_formatting_utility
+-------------------------------- live log call --------------------------------
+WARNING  accessiweather.gui.ui_manager:ui_manager.py:125 Wind formatting failed for speed='invalid', direction='180': could not convert string to float: 'invalid'
+PASSED                                                                   [ 12%]
+tests/gui/test_weather_app.py::test_on_timer_update_interval
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.gui.handlers.timer_handlers:timer_handlers.py:52 Timer triggered weather update. Interval: 5 minutes, Time since last update: 301.0 seconds
+INFO     accessiweather.gui.handlers.timer_handlers:timer_handlers.py:67 Timer triggered national data update for nationwide view
+PASSED                                                                   [ 12%]
+tests/gui/test_weather_app.py::test_on_timer_no_update_needed PASSED     [ 12%]
+tests/gui/test_weather_app.py::test_on_timer_already_updating PASSED     [ 13%]
+tests/gui/test_weather_app.py::test_on_timer_uses_update_interval_key_constant
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.gui.handlers.timer_handlers:timer_handlers.py:52 Timer triggered weather update. Interval: 5 minutes, Time since last update: 301.0 seconds
+INFO     accessiweather.gui.handlers.timer_handlers:timer_handlers.py:67 Timer triggered national data update for nationwide view
+PASSED                                                                   [ 13%]
+tests/gui/test_weather_app.py::test_weather_app_timer_initialization PASSED [ 13%]
+tests/gui/test_weather_app_close.py::TestWeatherAppClose::test_error_handling PASSED [ 13%]
+tests/gui/test_weather_app_close.py::TestWeatherAppClose::test_force_close_overrides_minimize_to_tray PASSED [ 13%]
+tests/gui/test_weather_app_close.py::TestWeatherAppClose::test_minimize_to_tray_when_disabled PASSED [ 13%]
+tests/gui/test_weather_app_close.py::TestWeatherAppClose::test_minimize_to_tray_when_enabled PASSED [ 13%]
+tests/gui/test_weather_app_close.py::TestWeatherAppClose::test_no_taskbar_icon PASSED [ 14%]
+tests/gui/test_weather_app_config.py::TestWeatherAppConfig::test_load_config_from_file
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.gui.weather_app:weather_app.py:116 Debug mode status: debug_mode=False
+PASSED                                                                   [ 14%]
+tests/gui/test_weather_app_config.py::TestWeatherAppConfig::test_save_config_to_file
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.gui.weather_app:weather_app.py:116 Debug mode status: debug_mode=False
+INFO     accessiweather.gui.handlers.config_handlers:config_handlers.py:49 Configuration saved successfully to C:\Users\joshu\AppData\Local\Temp\tmpxyxhdhwr\config.json in 0.000s
+PASSED                                                                   [ 14%]
+tests/gui/test_weather_app_config.py::TestWeatherAppConfig::test_config_defaults_when_file_missing
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.gui.weather_app:weather_app.py:116 Debug mode status: debug_mode=False
+PASSED                                                                   [ 14%]
+tests/gui/test_weather_app_config.py::TestWeatherAppConfig::test_config_validation_and_migration
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.config_utils:config_utils.py:159 Adding default data_source setting: auto
+INFO     accessiweather.config_utils:config_utils.py:164 Adding api_keys section to config
+INFO     accessiweather.config_utils:config_utils.py:169 Adding api_settings section to config
+INFO     accessiweather.gui.weather_app:weather_app.py:116 Debug mode status: debug_mode=False
+PASSED                                                                   [ 14%]
+tests/gui/test_weather_app_config.py::TestWeatherAppConfig::test_config_error_handling
+-------------------------------- live log call --------------------------------
+ERROR    accessiweather.gui.weather_app:weather_app.py:235 Failed to load config: Expecting value: line 1 column 1 (char 0)
+INFO     accessiweather.gui.weather_app:weather_app.py:116 Debug mode status: debug_mode=False
+PASSED                                                                   [ 14%]
+tests/gui/test_weather_app_initialization.py::TestWeatherAppInitialization::test_init_with_all_services
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.gui.weather_app:weather_app.py:116 Debug mode status: debug_mode=False
+PASSED                                                                   [ 14%]
+tests/gui/test_weather_app_initialization.py::TestWeatherAppInitialization::test_init_with_debug_mode
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.gui.weather_app:weather_app.py:116 Debug mode status: debug_mode=True
+INFO     accessiweather.gui.weather_app:weather_app.py:119 Debug mode enabled for additional debug information and alert testing
+PASSED                                                                   [ 14%]
+tests/gui/test_weather_app_initialization.py::TestWeatherAppInitialization::test_init_with_custom_config_path
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.config_utils:config_utils.py:159 Adding default data_source setting: auto
+INFO     accessiweather.config_utils:config_utils.py:164 Adding api_keys section to config
+INFO     accessiweather.config_utils:config_utils.py:169 Adding api_settings section to config
+INFO     accessiweather.gui.weather_app:weather_app.py:116 Debug mode status: debug_mode=False
+PASSED                                                                   [ 15%]
+tests/gui/test_weather_app_initialization.py::TestWeatherAppInitialization::test_init_sets_default_attributes
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.gui.weather_app:weather_app.py:116 Debug mode status: debug_mode=False
+PASSED                                                                   [ 15%]
+tests/gui/test_weather_app_initialization.py::TestWeatherAppInitialization::test_init_with_backward_compatibility_api_client
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.gui.weather_app:weather_app.py:116 Debug mode status: debug_mode=False
+PASSED                                                                   [ 15%]
+tests/services/test_location_service.py::test_get_current_location PASSED [ 15%]
+tests/services/test_location_service.py::test_get_current_location_name PASSED [ 15%]
+tests/services/test_location_service.py::test_get_all_locations PASSED   [ 15%]
+tests/services/test_location_service.py::test_add_location
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.location_service:location_service.py:69 Adding location: New Place (35.0, -80.0)
+PASSED                                                                   [ 15%]
+tests/services/test_location_service.py::test_remove_location
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.location_service:location_service.py:81 Removing location: Test City
+PASSED                                                                   [ 16%]
+tests/services/test_location_service.py::test_remove_location_nationwide
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.location_service:location_service.py:81 Removing location: Nationwide
+PASSED                                                                   [ 16%]
+tests/services/test_location_service.py::test_set_current_location
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.location_service:location_service.py:90 Setting current location: Test City
+PASSED                                                                   [ 16%]
+tests/services/test_location_service.py::test_get_location_coordinates_found PASSED [ 16%]
+tests/services/test_location_service.py::test_get_location_coordinates_not_found PASSED [ 16%]
+tests/services/test_location_service.py::test_get_nationwide_location PASSED [ 16%]
+tests/services/test_location_service.py::test_is_nationwide_location_true PASSED [ 16%]
+tests/services/test_location_service.py::test_is_nationwide_location_false PASSED [ 16%]
+tests/services/test_national_discussion_scraper.py::test_fetch_wpc_success
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:247 Successfully fetched WPC discussion from https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdspd
+PASSED                                                                   [ 17%]
+tests/services/test_national_discussion_scraper.py::test_fetch_wpc_no_pre_tag
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 10.0 seconds before next request to wpc.ncep.noaa.gov
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:180 Could not find WPC discussion text using any selector
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:252 WPC discussion fetch attempt 1 failed: Unknown error
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:229 Retrying WPC discussion fetch (attempt 2/3)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:233 Backing off for 10.0 seconds
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 10.0 seconds before next request to wpc.ncep.noaa.gov
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:180 Could not find WPC discussion text using any selector
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:252 WPC discussion fetch attempt 2 failed: Unknown error
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:229 Retrying WPC discussion fetch (attempt 3/3)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:233 Backing off for 15.0 seconds
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 10.0 seconds before next request to wpc.ncep.noaa.gov
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:180 Could not find WPC discussion text using any selector
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:252 WPC discussion fetch attempt 3 failed: Unknown error
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:255 Failed to fetch WPC discussion after 3 attempts
+PASSED                                                                   [ 17%]
+tests/services/test_national_discussion_scraper.py::test_fetch_wpc_request_error
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 10.0 seconds before next request to wpc.ncep.noaa.gov
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:122 Request exception for https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdspd: Connection error
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:252 WPC discussion fetch attempt 1 failed: Request error: Connection error
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:229 Retrying WPC discussion fetch (attempt 2/3)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:233 Backing off for 10.0 seconds
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 10.0 seconds before next request to wpc.ncep.noaa.gov
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:122 Request exception for https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdepd: Connection error
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:252 WPC discussion fetch attempt 2 failed: Request error: Connection error
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:229 Retrying WPC discussion fetch (attempt 3/3)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:233 Backing off for 15.0 seconds
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 10.0 seconds before next request to wpc.ncep.noaa.gov
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:122 Request exception for https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdspd: Connection error
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:252 WPC discussion fetch attempt 3 failed: Request error: Connection error
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:255 Failed to fetch WPC discussion after 3 attempts
+PASSED                                                                   [ 17%]
+tests/services/test_national_discussion_scraper.py::test_fetch_wpc_rate_limit
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:247 Successfully fetched WPC discussion from https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdspd
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 9.0 seconds before next request to wpc.ncep.noaa.gov
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:247 Successfully fetched WPC discussion from https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdspd
+PASSED                                                                   [ 17%]
+tests/services/test_national_discussion_scraper.py::test_fetch_spc_success_with_summary
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:296 Successfully fetched SPC discussion from https://www.spc.noaa.gov/products/outlook/day1otlk.html
+PASSED                                                                   [ 17%]
+tests/services/test_national_discussion_scraper.py::test_fetch_spc_success_no_summary_marker
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 10.0 seconds before next request to spc.noaa.gov
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:296 Successfully fetched SPC discussion from https://www.spc.noaa.gov/products/outlook/day1otlk.html
+PASSED                                                                   [ 17%]
+tests/services/test_national_discussion_scraper.py::test_fetch_spc_no_pre_tag
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 10.0 seconds before next request to spc.noaa.gov
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:180 Could not find SPC discussion text using any selector
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:301 SPC discussion fetch attempt 1 failed: Unknown error
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:278 Retrying SPC discussion fetch (attempt 2/3)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:282 Backing off for 10.0 seconds
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 10.0 seconds before next request to spc.noaa.gov
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:180 Could not find SPC discussion text using any selector
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:301 SPC discussion fetch attempt 2 failed: Unknown error
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:278 Retrying SPC discussion fetch (attempt 3/3)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:282 Backing off for 15.0 seconds
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 10.0 seconds before next request to spc.noaa.gov
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:180 Could not find SPC discussion text using any selector
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:301 SPC discussion fetch attempt 3 failed: Unknown error
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:304 Failed to fetch SPC discussion after 3 attempts
+PASSED                                                                   [ 17%]
+tests/services/test_national_discussion_scraper.py::test_fetch_spc_request_error
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 10.0 seconds before next request to spc.noaa.gov
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:122 Request exception for https://www.spc.noaa.gov/products/outlook/day1otlk.html: Connection error
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:301 SPC discussion fetch attempt 1 failed: Request error: Connection error
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:278 Retrying SPC discussion fetch (attempt 2/3)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:282 Backing off for 10.0 seconds
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 10.0 seconds before next request to spc.noaa.gov
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:122 Request exception for https://www.spc.noaa.gov/products/outlook/day1otlk_1300.html: Connection error
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:301 SPC discussion fetch attempt 2 failed: Request error: Connection error
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:278 Retrying SPC discussion fetch (attempt 3/3)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:282 Backing off for 15.0 seconds
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 10.0 seconds before next request to spc.noaa.gov
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:122 Request exception for https://www.spc.noaa.gov/products/outlook/day1otlk.html: Connection error
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:301 SPC discussion fetch attempt 3 failed: Request error: Connection error
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:304 Failed to fetch SPC discussion after 3 attempts
+PASSED                                                                   [ 17%]
+tests/services/test_national_discussion_scraper.py::test_fetch_spc_rate_limit
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:296 Successfully fetched SPC discussion from https://www.spc.noaa.gov/products/outlook/day1otlk.html
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 9.0 seconds before next request to spc.noaa.gov
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:296 Successfully fetched SPC discussion from https://www.spc.noaa.gov/products/outlook/day1otlk.html
+PASSED                                                                   [ 18%]
+tests/services/test_national_discussion_scraper.py::test_get_national_discussion_summaries_success PASSED [ 18%]
+tests/services/test_national_discussion_scraper.py::test_get_national_discussion_summaries_wpc_error PASSED [ 18%]
+tests/services/test_national_discussion_scraper.py::test_get_national_discussion_summaries_spc_error PASSED [ 18%]
+tests/services/test_national_discussion_scraper.py::test_get_national_discussion_summaries_both_error PASSED [ 18%]
+tests/services/test_national_discussion_scraper_class.py::TestNationalDiscussionScraper::test_fetch_all_discussions
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:247 Successfully fetched WPC discussion from https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdspd
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:296 Successfully fetched SPC discussion from https://www.spc.noaa.gov/products/outlook/day1otlk.html
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:329 Successfully fetched WPC discussion
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:334 Successfully fetched SPC discussion
+PASSED                                                                   [ 18%]
+tests/services/test_national_discussion_scraper_class.py::TestNationalDiscussionScraper::test_fetch_all_discussions_partial_failure
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 0.0 seconds before next request to wpc.ncep.noaa.gov
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:247 Successfully fetched WPC discussion from https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdspd
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 0.0 seconds before next request to spc.noaa.gov
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:111 HTTP error for https://www.spc.noaa.gov/products/outlook/day1otlk.html: 404 Client Error: None for url: https://www.spc.noaa.gov/products/outlook/day1otlk.html
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:301 SPC discussion fetch attempt 1 failed: HTTP error: 404 Client Error: None for url: https://www.spc.noaa.gov/products/outlook/day1otlk.html
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:278 Retrying SPC discussion fetch (attempt 2/4)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:282 Backing off for 0.0 seconds
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:111 HTTP error for https://www.spc.noaa.gov/products/outlook/day1otlk_1300.html: 404 Client Error: None for url: https://www.spc.noaa.gov/products/outlook/day1otlk_1300.html
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:301 SPC discussion fetch attempt 2 failed: HTTP error: 404 Client Error: None for url: https://www.spc.noaa.gov/products/outlook/day1otlk_1300.html
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:278 Retrying SPC discussion fetch (attempt 3/4)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:282 Backing off for 0.0 seconds
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:111 HTTP error for https://www.spc.noaa.gov/products/outlook/day1otlk.html: 404 Client Error: None for url: https://www.spc.noaa.gov/products/outlook/day1otlk.html
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:301 SPC discussion fetch attempt 3 failed: HTTP error: 404 Client Error: None for url: https://www.spc.noaa.gov/products/outlook/day1otlk.html
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:278 Retrying SPC discussion fetch (attempt 4/4)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:282 Backing off for 0.0 seconds
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:111 HTTP error for https://www.spc.noaa.gov/products/outlook/day1otlk_1300.html: 404 Client Error: None for url: https://www.spc.noaa.gov/products/outlook/day1otlk_1300.html
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:301 SPC discussion fetch attempt 4 failed: HTTP error: 404 Client Error: None for url: https://www.spc.noaa.gov/products/outlook/day1otlk_1300.html
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:304 Failed to fetch SPC discussion after 4 attempts
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:329 Successfully fetched WPC discussion
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:336 Failed to fetch SPC discussion
+PASSED                                                                   [ 18%]
+tests/services/test_national_discussion_scraper_class.py::TestNationalDiscussionScraper::test_fetch_spc_discussion_error
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 0.0 seconds before next request to spc.noaa.gov
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:111 HTTP error for https://www.spc.noaa.gov/products/outlook/day1otlk.html: 500 Server Error: None for url: https://www.spc.noaa.gov/products/outlook/day1otlk.html
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:301 SPC discussion fetch attempt 1 failed: HTTP error: 500 Server Error: None for url: https://www.spc.noaa.gov/products/outlook/day1otlk.html
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:278 Retrying SPC discussion fetch (attempt 2/4)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:282 Backing off for 0.0 seconds
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:111 HTTP error for https://www.spc.noaa.gov/products/outlook/day1otlk_1300.html: 500 Server Error: None for url: https://www.spc.noaa.gov/products/outlook/day1otlk_1300.html
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:301 SPC discussion fetch attempt 2 failed: HTTP error: 500 Server Error: None for url: https://www.spc.noaa.gov/products/outlook/day1otlk_1300.html
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:278 Retrying SPC discussion fetch (attempt 3/4)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:282 Backing off for 0.0 seconds
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:111 HTTP error for https://www.spc.noaa.gov/products/outlook/day1otlk.html: 500 Server Error: None for url: https://www.spc.noaa.gov/products/outlook/day1otlk.html
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:301 SPC discussion fetch attempt 3 failed: HTTP error: 500 Server Error: None for url: https://www.spc.noaa.gov/products/outlook/day1otlk.html
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:278 Retrying SPC discussion fetch (attempt 4/4)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:282 Backing off for 0.0 seconds
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:111 HTTP error for https://www.spc.noaa.gov/products/outlook/day1otlk_1300.html: 500 Server Error: None for url: https://www.spc.noaa.gov/products/outlook/day1otlk_1300.html
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:301 SPC discussion fetch attempt 4 failed: HTTP error: 500 Server Error: None for url: https://www.spc.noaa.gov/products/outlook/day1otlk_1300.html
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:304 Failed to fetch SPC discussion after 4 attempts
+PASSED                                                                   [ 19%]
+tests/services/test_national_discussion_scraper_class.py::TestNationalDiscussionScraper::test_fetch_spc_discussion_no_pre_tag
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 0.0 seconds before next request to spc.noaa.gov
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:180 Could not find SPC discussion text using any selector
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:301 SPC discussion fetch attempt 1 failed: Unknown error
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:278 Retrying SPC discussion fetch (attempt 2/4)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:282 Backing off for 0.0 seconds
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:180 Could not find SPC discussion text using any selector
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:301 SPC discussion fetch attempt 2 failed: Unknown error
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:278 Retrying SPC discussion fetch (attempt 3/4)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:282 Backing off for 0.0 seconds
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:180 Could not find SPC discussion text using any selector
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:301 SPC discussion fetch attempt 3 failed: Unknown error
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:278 Retrying SPC discussion fetch (attempt 4/4)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:282 Backing off for 0.0 seconds
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:180 Could not find SPC discussion text using any selector
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:301 SPC discussion fetch attempt 4 failed: Unknown error
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:304 Failed to fetch SPC discussion after 4 attempts
+PASSED                                                                   [ 19%]
+tests/services/test_national_discussion_scraper_class.py::TestNationalDiscussionScraper::test_fetch_spc_discussion_no_summary_marker
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 0.0 seconds before next request to spc.noaa.gov
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:296 Successfully fetched SPC discussion from https://www.spc.noaa.gov/products/outlook/day1otlk.html
+PASSED                                                                   [ 19%]
+tests/services/test_national_discussion_scraper_class.py::TestNationalDiscussionScraper::test_fetch_spc_discussion_success
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 0.0 seconds before next request to spc.noaa.gov
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:296 Successfully fetched SPC discussion from https://www.spc.noaa.gov/products/outlook/day1otlk.html
+PASSED                                                                   [ 19%]
+tests/services/test_national_discussion_scraper_class.py::TestNationalDiscussionScraper::test_fetch_wpc_discussion_error
+-------------------------------- live log call --------------------------------
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:111 HTTP error for https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdspd: 404 Client Error: None for url: https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdspd
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:252 WPC discussion fetch attempt 1 failed: HTTP error: 404 Client Error: None for url: https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdspd
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:229 Retrying WPC discussion fetch (attempt 2/4)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:233 Backing off for 0.0 seconds
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:111 HTTP error for https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdepd: 404 Client Error: None for url: https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdepd
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:252 WPC discussion fetch attempt 2 failed: HTTP error: 404 Client Error: None for url: https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdepd
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:229 Retrying WPC discussion fetch (attempt 3/4)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:233 Backing off for 0.0 seconds
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:111 HTTP error for https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdspd: 404 Client Error: None for url: https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdspd
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:252 WPC discussion fetch attempt 3 failed: HTTP error: 404 Client Error: None for url: https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdspd
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:229 Retrying WPC discussion fetch (attempt 4/4)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:233 Backing off for 0.0 seconds
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:111 HTTP error for https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdepd: 404 Client Error: None for url: https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdepd
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:252 WPC discussion fetch attempt 4 failed: HTTP error: 404 Client Error: None for url: https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdepd
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:255 Failed to fetch WPC discussion after 4 attempts
+PASSED                                                                   [ 19%]
+tests/services/test_national_discussion_scraper_class.py::TestNationalDiscussionScraper::test_fetch_wpc_discussion_no_pre_tag
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 0.0 seconds before next request to wpc.ncep.noaa.gov
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:180 Could not find WPC discussion text using any selector
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:252 WPC discussion fetch attempt 1 failed: Unknown error
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:229 Retrying WPC discussion fetch (attempt 2/4)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:233 Backing off for 0.0 seconds
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:180 Could not find WPC discussion text using any selector
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:252 WPC discussion fetch attempt 2 failed: Unknown error
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:229 Retrying WPC discussion fetch (attempt 3/4)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:233 Backing off for 0.0 seconds
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:180 Could not find WPC discussion text using any selector
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:252 WPC discussion fetch attempt 3 failed: Unknown error
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:229 Retrying WPC discussion fetch (attempt 4/4)
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:233 Backing off for 0.0 seconds
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:180 Could not find WPC discussion text using any selector
+WARNING  accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:252 WPC discussion fetch attempt 4 failed: Unknown error
+ERROR    accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:255 Failed to fetch WPC discussion after 4 attempts
+PASSED                                                                   [ 19%]
+tests/services/test_national_discussion_scraper_class.py::TestNationalDiscussionScraper::test_fetch_wpc_discussion_success
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 0.0 seconds before next request to wpc.ncep.noaa.gov
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:247 Successfully fetched WPC discussion from https://www.wpc.ncep.noaa.gov/discussions/hpcdiscussions.php?disc=pmdspd
+PASSED                                                                   [ 19%]
+tests/services/test_national_discussion_scraper_class.py::TestNationalDiscussionScraper::test_rate_limiting
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.national_discussion_scraper:national_discussion_scraper.py:77 Rate limiting: sleeping for 0.2 seconds before next request to test.domain
+PASSED                                                                   [ 19%]
+tests/services/test_notification_service.py::test_notify_alerts_with_alerts
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.notification_service:notification_service.py:48 Notifying about 2 alerts (new: 0, updated: 0)
+PASSED                                                                   [ 20%]
+tests/services/test_notification_service.py::test_notify_alerts_no_alerts
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.notification_service:notification_service.py:42 No alerts to notify about
+PASSED                                                                   [ 20%]
+tests/services/test_notification_service.py::test_notify_alerts_with_custom_count
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.notification_service:notification_service.py:48 Notifying about 1 alerts (new: 0, updated: 0)
+PASSED                                                                   [ 20%]
+tests/services/test_notification_service.py::test_process_alerts
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.notification_service:notification_service.py:67 Sending notifications for 2 new and 0 updated alerts
+INFO     accessiweather.services.notification_service:notification_service.py:48 Notifying about 2 alerts (new: 2, updated: 0)
+PASSED                                                                   [ 20%]
+tests/services/test_notification_service.py::test_get_sorted_alerts PASSED [ 20%]
+tests/services/test_notification_service.py::test_clear_expired_alerts PASSED [ 20%]
+tests/services/test_weather_service.py::test_get_forecast_success
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.weather_service:weather_service.py:277 Getting forecast for coordinates: (40.0, -75.0)
+INFO     accessiweather.geocoding:geocoding.py:180 Coordinates (40.0, -75.0) validated as within US (country_code: us)
+INFO     accessiweather.services.weather_service:weather_service.py:304 Using NWS API for forecast
+PASSED                                                                   [ 20%]
+tests/services/test_weather_service.py::test_get_forecast_with_force_refresh
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.weather_service:weather_service.py:277 Getting forecast for coordinates: (40.0, -75.0)
+INFO     accessiweather.geocoding:geocoding.py:180 Coordinates (40.0, -75.0) validated as within US (country_code: us)
+INFO     accessiweather.services.weather_service:weather_service.py:304 Using NWS API for forecast
+PASSED                                                                   [ 20%]
+tests/services/test_weather_service.py::test_get_forecast_error
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.weather_service:weather_service.py:277 Getting forecast for coordinates: (40.0, -75.0)
+INFO     accessiweather.geocoding:geocoding.py:180 Coordinates (40.0, -75.0) validated as within US (country_code: us)
+INFO     accessiweather.services.weather_service:weather_service.py:304 Using NWS API for forecast
+WARNING  accessiweather.services.weather_service:weather_service.py:308 NWS API failed for forecast: API Error
+INFO     accessiweather.geocoding:geocoding.py:180 Coordinates (40.0, -75.0) validated as within US (country_code: us)
+INFO     accessiweather.services.weather_service:weather_service.py:234 NWS failed, trying Open-Meteo fallback for get_forecast
+ERROR    accessiweather.services.weather_service:weather_service.py:258 Fallback API also failed for get_forecast: OpenMeteo Error
+PASSED                                                                   [ 21%]
+tests/services/test_weather_service.py::test_get_alerts_success
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.weather_service:weather_service.py:524 Getting alerts for coordinates: (40.0, -75.0)
+INFO     accessiweather.geocoding:geocoding.py:180 Coordinates (40.0, -75.0) validated as within US (country_code: us)
+INFO     accessiweather.services.weather_service:weather_service.py:543 Using NWS API for alerts
+PASSED                                                                   [ 21%]
+tests/services/test_weather_service.py::test_get_alerts_with_force_refresh
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.weather_service:weather_service.py:524 Getting alerts for coordinates: (40.0, -75.0)
+INFO     accessiweather.geocoding:geocoding.py:180 Coordinates (40.0, -75.0) validated as within US (country_code: us)
+INFO     accessiweather.services.weather_service:weather_service.py:543 Using NWS API for alerts
+PASSED                                                                   [ 21%]
+tests/services/test_weather_service.py::test_get_alerts_error
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.weather_service:weather_service.py:524 Getting alerts for coordinates: (40.0, -75.0)
+INFO     accessiweather.geocoding:geocoding.py:180 Coordinates (40.0, -75.0) validated as within US (country_code: us)
+INFO     accessiweather.services.weather_service:weather_service.py:543 Using NWS API for alerts
+ERROR    accessiweather.services.weather_service:weather_service.py:557 Error getting alerts: API Error
+PASSED                                                                   [ 21%]
+tests/services/test_weather_service.py::test_get_discussion_success
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.weather_service:weather_service.py:576 Getting forecast discussion for coordinates: (40.0, -75.0)
+PASSED                                                                   [ 21%]
+tests/services/test_weather_service.py::test_get_discussion_with_force_refresh
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.weather_service:weather_service.py:576 Getting forecast discussion for coordinates: (40.0, -75.0)
+PASSED                                                                   [ 21%]
+tests/services/test_weather_service.py::test_get_discussion_error
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.weather_service:weather_service.py:576 Getting forecast discussion for coordinates: (40.0, -75.0)
+ERROR    accessiweather.services.weather_service:weather_service.py:584 Error getting forecast discussion: API Error
+PASSED                                                                   [ 21%]
+tests/services/test_weather_service.py::test_get_national_forecast_data_success
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.weather_service:weather_service.py:111 Getting nationwide forecast data from scraper
+PASSED                                                                   [ 22%]
+tests/services/test_weather_service.py::test_get_national_forecast_data_with_cache
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.weather_service:weather_service.py:107 Using cached nationwide forecast data
+PASSED                                                                   [ 22%]
+tests/services/test_weather_service.py::test_get_national_forecast_data_with_force_refresh
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.weather_service:weather_service.py:111 Getting nationwide forecast data from scraper
+PASSED                                                                   [ 22%]
+tests/services/test_weather_service.py::test_get_national_forecast_data_with_expired_cache
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.weather_service:weather_service.py:111 Getting nationwide forecast data from scraper
+PASSED                                                                   [ 22%]
+tests/services/test_weather_service.py::test_get_national_forecast_data_error_no_cache
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.weather_service:weather_service.py:111 Getting nationwide forecast data from scraper
+ERROR    accessiweather.services.weather_service:weather_service.py:121 Error getting nationwide forecast data: Scraper Error
+PASSED                                                                   [ 22%]
+tests/services/test_weather_service.py::test_get_national_forecast_data_error_with_cache
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.weather_service:weather_service.py:111 Getting nationwide forecast data from scraper
+ERROR    accessiweather.services.weather_service:weather_service.py:121 Error getting nationwide forecast data: Scraper Error
+INFO     accessiweather.services.weather_service:weather_service.py:125 Returning cached national data due to fetch error
+PASSED                                                                   [ 22%]
+tests/services/test_weather_service.py::test_process_alerts
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.notifications:notifications.py:45 Toast notification: Weather Test Event 1 - Test Alert 1
+INFO     accessiweather.notifications:notifications.py:366 Displayed notification for new alert: Test Event 1
+INFO     accessiweather.notifications:notifications.py:211 New weather event detected: Test Event 1 (deduplicated from 1 alerts)
+INFO     accessiweather.notifications:notifications.py:45 Toast notification: Weather Test Event 2 - Test Alert 2
+INFO     accessiweather.notifications:notifications.py:366 Displayed notification for new alert: Test Event 2
+INFO     accessiweather.notifications:notifications.py:211 New weather event detected: Test Event 2 (deduplicated from 1 alerts)
+INFO     accessiweather.notifications:notifications.py:234 Alert processing complete: 2 total, 2 new, 0 updated, 0 unchanged
+PASSED                                                                   [ 22%]
+tests/services/test_weather_service.py::test_process_alerts_empty
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.notifications:notifications.py:239 Alert processing complete: 0 total alerts, all unchanged
+PASSED                                                                   [ 22%]
+tests/services/test_weather_service.py::test_process_alerts_missing_properties
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.notifications:notifications.py:45 Toast notification: Weather Unknown Event - Test Alert
+INFO     accessiweather.notifications:notifications.py:366 Displayed notification for new alert: Unknown Event
+INFO     accessiweather.notifications:notifications.py:211 New weather event detected: Unknown Event (deduplicated from 1 alerts)
+INFO     accessiweather.notifications:notifications.py:234 Alert processing complete: 1 total, 1 new, 0 updated, 0 unchanged
+PASSED                                                                   [ 23%]
+tests/services/test_weather_service.py::test_weather_service_initialization_with_config PASSED [ 23%]
+tests/services/test_weather_service.py::test_weather_service_initialization_with_clients PASSED [ 23%]
+tests/services/test_weather_service.py::test_should_use_openmeteo_us_location PASSED [ 23%]
+tests/services/test_weather_service.py::test_should_use_openmeteo_non_us_location PASSED [ 23%]
+tests/services/test_weather_service.py::test_should_use_openmeteo_edge_cases PASSED [ 23%]
+tests/services/test_weather_service.py::test_get_forecast_nws_success
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.weather_service:weather_service.py:277 Getting forecast for coordinates: (40.0, -75.0)
+INFO     accessiweather.services.weather_service:weather_service.py:304 Using NWS API for forecast
+PASSED                                                                   [ 23%]
+tests/services/test_weather_service.py::test_get_forecast_openmeteo_success
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.weather_service:weather_service.py:277 Getting forecast for coordinates: (51.5074, -0.1278)
+INFO     accessiweather.services.weather_service:weather_service.py:281 Using Open-Meteo API for forecast
+PASSED                                                                   [ 24%]
+tests/services/test_weather_service.py::test_get_hourly_forecast_nws_success
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.weather_service:weather_service.py:347 Getting hourly forecast for coordinates: (40.0, -75.0)
+INFO     accessiweather.services.weather_service:weather_service.py:374 Using NWS API for hourly forecast
+PASSED                                                                   [ 24%]
+tests/services/test_weather_service.py::test_get_hourly_forecast_openmeteo_success
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.weather_service:weather_service.py:347 Getting hourly forecast for coordinates: (51.5074, -0.1278)
+INFO     accessiweather.services.weather_service:weather_service.py:351 Using Open-Meteo API for hourly forecast
+PASSED                                                                   [ 24%]
+tests/services/test_weather_service.py::test_get_current_conditions_nws_success
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.weather_service:weather_service.py:442 Getting current conditions for coordinates: (40.0, -75.0)
+INFO     accessiweather.services.weather_service:weather_service.py:469 Using NWS API for current conditions
+PASSED                                                                   [ 24%]
+tests/services/test_weather_service.py::test_get_current_conditions_openmeteo_success
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.services.weather_service:weather_service.py:442 Getting current conditions for coordinates: (51.5074, -0.1278)
+INFO     accessiweather.services.weather_service:weather_service.py:446 Using Open-Meteo API for current conditions
+PASSED                                                                   [ 24%]
+tests/services/test_weather_service.py::test_get_temperature_unit_preference_celsius PASSED [ 24%]
+tests/services/test_weather_service.py::test_get_temperature_unit_preference_fahrenheit PASSED [ 24%]
+tests/services/test_weather_service.py::test_get_temperature_unit_preference_both PASSED [ 24%]
+tests/services/test_weather_service.py::test_get_data_source_nws PASSED  [ 25%]
+tests/services/test_weather_service.py::test_get_data_source_auto PASSED [ 25%]
+tests/services/test_weather_service.py::test_get_data_source_default PASSED [ 25%]
+tests/test_alert_notifications_fix.py::TestAlertNotificationsFix::test_persistent_storage_prevents_duplicate_notifications
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.notifications:notifications.py:211 New weather event detected: Tornado Warning (deduplicated from 1 alerts)
+INFO     accessiweather.notifications:notifications.py:234 Alert processing complete: 1 total, 1 new, 0 updated, 0 unchanged
+INFO     accessiweather.notifications:notifications.py:481 Loaded 1 active alerts from persistent storage
+INFO     accessiweather.notifications:notifications.py:239 Alert processing complete: 1 total alerts, all unchanged
+PASSED                                                                   [ 25%]
+tests/test_alert_notifications_fix.py::TestAlertNotificationsFix::test_expired_alerts_filtered_on_load
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.notifications:notifications.py:481 Loaded 0 active alerts from persistent storage
+PASSED                                                                   [ 25%]
+tests/test_alert_notifications_fix.py::TestAlertNotificationsFix::test_alert_updates_trigger_notifications
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.notifications:notifications.py:211 New weather event detected: Tornado Warning (deduplicated from 1 alerts)
+INFO     accessiweather.notifications:notifications.py:234 Alert processing complete: 1 total, 1 new, 0 updated, 0 unchanged
+INFO     accessiweather.notifications:notifications.py:222 Updated weather event detected: Tornado Warning (deduplicated from 1 alerts)
+INFO     accessiweather.notifications:notifications.py:234 Alert processing complete: 1 total, 0 new, 1 updated, 0 unchanged
+PASSED                                                                   [ 25%]
+tests/test_alert_notifications_fix.py::TestAlertNotificationsFix::test_persistence_disabled_works_normally
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.notifications:notifications.py:211 New weather event detected: Tornado Warning (deduplicated from 1 alerts)
+INFO     accessiweather.notifications:notifications.py:234 Alert processing complete: 1 total, 1 new, 0 updated, 0 unchanged
+PASSED                                                                   [ 25%]
+tests/test_alert_notifications_fix.py::TestAlertNotificationsFix::test_multiple_alerts_processing
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.notifications:notifications.py:211 New weather event detected: Tornado Warning (deduplicated from 1 alerts)
+INFO     accessiweather.notifications:notifications.py:211 New weather event detected: Severe Thunderstorm Warning (deduplicated from 1 alerts)
+INFO     accessiweather.notifications:notifications.py:234 Alert processing complete: 2 total, 2 new, 0 updated, 0 unchanged
+INFO     accessiweather.notifications:notifications.py:239 Alert processing complete: 2 total alerts, all unchanged
+PASSED                                                                   [ 25%]
+tests/test_alert_notifications_fix.py::TestAlertNotificationsFix::test_alert_deduplication_same_event_different_offices
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.notifications:notifications.py:211 New weather event detected: Tornado Warning (deduplicated from 2 alerts)
+INFO     accessiweather.notifications:notifications.py:234 Alert processing complete: 1 total, 1 new, 0 updated, 0 unchanged
+PASSED                                                                   [ 26%]
+tests/test_api_client.py::test_init_basic
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (TestClient)
+PASSED                                                                   [ 26%]
+tests/test_api_client.py::test_init_with_contact
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+PASSED                                                                   [ 26%]
+tests/test_api_client.py::test_init_with_caching
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (TestClient)
+INFO     accessiweather.api_client:api_client.py:227 Caching enabled with TTL of 300 seconds
+PASSED                                                                   [ 26%]
+tests/test_api_client.py::test_get_point_data_success
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+PASSED                                                                   [ 26%]
+tests/test_api_client.py::test_get_point_data_cached
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_client:api_client.py:227 Caching enabled with TTL of 300 seconds
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+PASSED                                                                   [ 26%]
+tests/test_api_client.py::test_get_point_data_force_refresh
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_client:api_client.py:227 Caching enabled with TTL of 300 seconds
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+PASSED                                                                   [ 26%]
+tests/test_api_client.py::test_get_forecast_success
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:256 Getting forecast for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:272 Retrieved forecast URL: https://api.weather.gov/gridpoints/PHI/50,75/forecast
+PASSED                                                                   [ 27%]
+tests/test_api_client.py::test_get_forecast_no_url
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:256 Getting forecast for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+ERROR    accessiweather.api_client:api_client.py:266 Could not find forecast URL in point data. Available properties: ['@id', 'gridId', 'gridX', 'gridY', 'forecastHourly', 'forecastGridData', 'observationStations', 'relativeLocation', 'forecastZone', 'county', 'fireWeatherZone']
+ERROR    accessiweather.api_client:api_client.py:275 Error getting forecast: Could not find forecast URL in point data
+PASSED                                                                   [ 27%]
+tests/test_api_client.py::test_identify_location_type_county
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:422 Identified location as county: PAC091
+PASSED                                                                   [ 27%]
+tests/test_api_client.py::test_get_alerts_precise_location
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:482 Getting alerts for coordinates: (40.0, -75.0) with radius 50 miles, precise_location=True
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:422 Identified location as county: PAC091
+INFO     accessiweather.api_client:api_client.py:494 Fetching alerts for county zone: PAC091
+PASSED                                                                   [ 27%]
+tests/test_api_client.py::test_get_alerts_state_fallback
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:482 Getting alerts for coordinates: (40.0, -75.0) with radius 50 miles, precise_location=True
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:449 Could only identify location at state level: PA
+INFO     accessiweather.api_client:api_client.py:511 Fetching alerts for state: PA
+PASSED                                                                   [ 27%]
+tests/test_api_client.py::test_get_discussion_success
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:558 Getting forecast discussion for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:576 Fetching products for office: PHI
+INFO     accessiweather.api_client:api_client.py:598 Fetching product text for: AFD-PHI-202401010000
+PASSED                                                                   [ 27%]
+tests/test_api_client.py::test_get_national_product_success
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+PASSED                                                                   [ 27%]
+tests/test_api_client.py::test_rate_limiting
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+PASSED                                                                   [ 27%]
+tests/test_api_client.py::test_http_error_handling_404
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+WARNING  accessiweather.api_client:api_client.py:752 Resource not found: Response body: Not Found
+PASSED                                                                   [ 28%]
+tests/test_api_client.py::test_http_error_handling_429
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+WARNING  accessiweather.api_client:api_client.py:756 Rate limit exceeded: Response body: Too Many Requests
+PASSED                                                                   [ 28%]
+tests/test_api_client.py::test_http_error_handling_500
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+ERROR    accessiweather.api_client:api_client.py:764 Server error (500): Response body: Internal Server Error
+PASSED                                                                   [ 28%]
+tests/test_api_client.py::test_json_decode_error_handling
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+ERROR    accessiweather.api_client:api_client.py:797 Failed to decode JSON response from https://api.weather.gov/points/40.0,-75.0. Error: Invalid JSON: line 1 column 1 (char 0). Response text: Invalid JSON response
+Traceback (most recent call last):
+  File "C:\Users\joshu\accessiweather\src\accessiweather\api_client.py", line 779, in _make_request
+    json_data = response.json()  # type: ignore
+                ^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\unittest\mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\unittest\mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\unittest\mock.py", line 1193, in _execute_mock_call
+    raise effect
+requests.exceptions.JSONDecodeError: Invalid JSON: line 1 column 1 (char 0)
+PASSED                                                                   [ 28%]
+tests/test_api_client.py::test_request_exception_handling
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+ERROR    accessiweather.api_client:api_client.py:711 Exception during GET request to https://api.weather.gov/points/40.0,-75.0: Connection error
+ERROR    accessiweather.api_client:api_client.py:823 Network error during API request to https://api.weather.gov/points/40.0,-75.0: Connection error
+PASSED                                                                   [ 28%]
+tests/test_api_client.py::test_timeout_error_handling
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+ERROR    accessiweather.api_client:api_client.py:711 Exception during GET request to https://api.weather.gov/points/40.0,-75.0: Request timed out
+ERROR    accessiweather.api_client:api_client.py:808 Request timed out during API request to https://api.weather.gov/points/40.0,-75.0: Request timed out
+PASSED                                                                   [ 28%]
+tests/test_api_client.py::test_connection_error_handling
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+ERROR    accessiweather.api_client:api_client.py:711 Exception during GET request to https://api.weather.gov/points/40.0,-75.0: Connection refused
+ERROR    accessiweather.api_client:api_client.py:815 Connection error during API request to https://api.weather.gov/points/40.0,-75.0: Connection refused
+PASSED                                                                   [ 28%]
+tests/test_api_client.py::test_thread_safety
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+PASSED                                                                   [ 29%]
+tests/test_api_client.py::test_get_stations_success
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:331 Getting observation stations for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:347 Retrieved observation stations URL: https://api.weather.gov/gridpoints/PHI/50,75/stations
+PASSED                                                                   [ 29%]
+tests/test_api_client.py::test_get_stations_no_url
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:331 Getting observation stations for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+ERROR    accessiweather.api_client:api_client.py:341 Could not find observation stations URL in point data. Available properties: ['@id', 'gridId', 'gridX', 'gridY', 'forecast', 'forecastHourly', 'forecastGridData', 'relativeLocation', 'forecastZone', 'county', 'fireWeatherZone']
+ERROR    accessiweather.api_client:api_client.py:350 Error getting observation stations: Could not find observation stations URL in point data
+PASSED                                                                   [ 29%]
+tests/test_api_client.py::test_get_current_conditions_success
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:368 Getting current conditions for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:331 Getting observation stations for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:347 Retrieved observation stations URL: https://api.weather.gov/gridpoints/PHI/50,75/stations
+INFO     accessiweather.api_client:api_client.py:382 Using station KXYZ for current conditions
+INFO     accessiweather.api_client:api_client.py:386 Fetching current conditions from: https://api.weather.gov/stations/KXYZ/observations/latest
+PASSED                                                                   [ 29%]
+tests/test_api_client.py::test_get_current_conditions_no_stations
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:368 Getting current conditions for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:331 Getting observation stations for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:347 Retrieved observation stations URL: https://api.weather.gov/gridpoints/PHI/50,75/stations
+ERROR    accessiweather.api_client:api_client.py:375 No observation stations found for the given coordinates
+ERROR    accessiweather.api_client:api_client.py:392 Error getting current conditions: No observation stations found for the given coordinates
+PASSED                                                                   [ 29%]
+tests/test_api_client.py::test_get_hourly_forecast_success
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:294 Getting hourly forecast for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:310 Retrieved hourly forecast URL: https://api.weather.gov/gridpoints/PHI/50,75/forecast/hourly
+PASSED                                                                   [ 29%]
+tests/test_api_client.py::test_get_hourly_forecast_no_url
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:294 Getting hourly forecast for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+ERROR    accessiweather.api_client:api_client.py:304 Could not find hourly forecast URL in point data. Available properties: ['@id', 'gridId', 'gridX', 'gridY', 'forecast', 'forecastGridData', 'observationStations', 'relativeLocation', 'forecastZone', 'county', 'fireWeatherZone']
+ERROR    accessiweather.api_client:api_client.py:315 Error getting hourly forecast: Could not find hourly forecast URL in point data
+PASSED                                                                   [ 29%]
+tests/test_api_client.py::test_rate_limiting_multiple_endpoints
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: TestClient (test@example.com)
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+PASSED                                                                   [ 29%]
+tests/test_api_wrapper.py::test_init_basic
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (TestClient)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+PASSED                                                                   [ 30%]
+tests/test_api_wrapper.py::test_init_with_contact
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+PASSED                                                                   [ 30%]
+tests/test_api_wrapper.py::test_init_with_caching
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (TestClient)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+INFO     accessiweather.api_wrapper:api_wrapper.py:93 Caching enabled with TTL of 300 seconds
+PASSED                                                                   [ 30%]
+tests/test_api_wrapper.py::test_generate_cache_key
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: AccessiWeather (AccessiWeather)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+PASSED                                                                   [ 30%]
+tests/test_api_wrapper.py::test_get_cached_or_fetch_no_cache
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+PASSED                                                                   [ 30%]
+tests/test_api_wrapper.py::test_get_cached_or_fetch_with_cache
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+INFO     accessiweather.api_wrapper:api_wrapper.py:93 Caching enabled with TTL of 300 seconds
+PASSED                                                                   [ 30%]
+tests/test_api_wrapper.py::test_get_cached_or_fetch_force_refresh
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+INFO     accessiweather.api_wrapper:api_wrapper.py:93 Caching enabled with TTL of 300 seconds
+PASSED                                                                   [ 30%]
+tests/test_api_wrapper.py::test_get_point_data_caching_original
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+INFO     accessiweather.api_wrapper:api_wrapper.py:93 Caching enabled with TTL of 300 seconds
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:384 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_wrapper:api_wrapper.py:384 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_wrapper:api_wrapper.py:384 Fetching point data for coordinates: (40.0, -75.0)
+PASSED                                                                   [ 30%]
+tests/test_api_wrapper.py::test_rate_limiting_enforcement
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:384 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_wrapper:api_wrapper.py:384 Fetching point data for coordinates: (40.1, -75.1)
+PASSED                                                                   [ 31%]
+tests/test_api_wrapper.py::test_retry_mechanism_with_backoff
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:384 Fetching point data for coordinates: (40.0, -75.0)
+ERROR    accessiweather.api_wrapper:api_wrapper.py:303 Unexpected error: Unexpected status code: 429
+Traceback (most recent call last):
+  File "C:\Users\joshu\accessiweather\src\accessiweather\api_wrapper.py", line 232, in _make_api_request
+    return module_func(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\unittest\mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\unittest\mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\unittest\mock.py", line 1197, in _execute_mock_call
+    raise result
+test_api_wrapper.MockUnexpectedStatus: Unexpected status code: 429
+PASSED                                                                   [ 31%]
+tests/test_api_wrapper.py::test_cache_hit_and_miss_scenarios
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+INFO     accessiweather.api_wrapper:api_wrapper.py:93 Caching enabled with TTL of 300 seconds
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:384 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_wrapper:api_wrapper.py:384 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_wrapper:api_wrapper.py:384 Fetching point data for coordinates: (40.0, -75.0)
+PASSED                                                                   [ 31%]
+tests/test_api_wrapper.py::test_error_handling_for_http_errors
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:384 Fetching point data for coordinates: (40.0, -75.0)
+ERROR    accessiweather.api_wrapper:api_wrapper.py:399 Error getting point data for 40.0,-75.0: Unexpected status code: 404
+INFO     accessiweather.api_wrapper:api_wrapper.py:384 Fetching point data for coordinates: (40.0, -75.0)
+ERROR    accessiweather.api_wrapper:api_wrapper.py:399 Error getting point data for 40.0,-75.0: Unexpected status code: 429
+INFO     accessiweather.api_wrapper:api_wrapper.py:384 Fetching point data for coordinates: (40.0, -75.0)
+ERROR    accessiweather.api_wrapper:api_wrapper.py:399 Error getting point data for 40.0,-75.0: Unexpected status code: 500
+INFO     accessiweather.api_wrapper:api_wrapper.py:384 Fetching point data for coordinates: (40.0, -75.0)
+ERROR    accessiweather.api_wrapper:api_wrapper.py:399 Error getting point data for 40.0,-75.0: Unexpected status code: 503
+PASSED                                                                   [ 31%]
+tests/test_api_wrapper.py::test_request_transformation_point_data
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+PASSED                                                                   [ 31%]
+tests/test_api_wrapper.py::test_handle_rate_limit_max_retries_exceeded
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+ERROR    accessiweather.api_wrapper:api_wrapper.py:166 Rate limit exceeded for https://api.weather.gov/test after 3 retries. Please try again later.
+PASSED                                                                   [ 31%]
+tests/test_api_wrapper.py::test_handle_rate_limit_with_backoff
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+WARNING  accessiweather.api_wrapper:api_wrapper.py:172 Rate limit exceeded for https://api.weather.gov/test. Retrying in 10.0s (attempt 2/3)
+PASSED                                                                   [ 31%]
+tests/test_api_wrapper.py::test_handle_client_error_timeout
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+PASSED                                                                   [ 32%]
+tests/test_api_wrapper.py::test_handle_client_error_connection
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+PASSED                                                                   [ 32%]
+tests/test_api_wrapper.py::test_handle_client_error_network
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+PASSED                                                                   [ 32%]
+tests/test_api_wrapper.py::test_handle_client_error_unknown
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+PASSED                                                                   [ 32%]
+tests/test_api_wrapper.py::test_transform_point_data_dict_format
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+PASSED                                                                   [ 32%]
+tests/test_api_wrapper.py::test_transform_point_data_object_with_additional_properties
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+PASSED                                                                   [ 32%]
+tests/test_api_wrapper.py::test_transform_point_data_object_without_additional_properties
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+PASSED                                                                   [ 32%]
+tests/test_api_wrapper.py::test_transform_point_data_fallback
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+PASSED                                                                   [ 32%]
+tests/test_api_wrapper.py::test_rate_limiting
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+PASSED                                                                   [ 33%]
+tests/test_api_wrapper.py::test_handle_rate_limit
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+WARNING  accessiweather.api_wrapper:api_wrapper.py:172 Rate limit exceeded for https://api.weather.gov/test. Retrying in 5.0s (attempt 1/3)
+WARNING  accessiweather.api_wrapper:api_wrapper.py:172 Rate limit exceeded for https://api.weather.gov/test. Retrying in 10.0s (attempt 2/3)
+WARNING  accessiweather.api_wrapper:api_wrapper.py:172 Rate limit exceeded for https://api.weather.gov/test. Retrying in 20.0s (attempt 3/3)
+ERROR    accessiweather.api_wrapper:api_wrapper.py:166 Rate limit exceeded for https://api.weather.gov/test after 3 retries. Please try again later.
+PASSED                                                                   [ 33%]
+tests/test_api_wrapper.py::test_rate_limit_retry_mechanism
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+PASSED                                                                   [ 33%]
+tests/test_api_wrapper.py::test_cache_performance
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+INFO     accessiweather.api_wrapper:api_wrapper.py:93 Caching enabled with TTL of 300 seconds
+PASSED                                                                   [ 33%]
+tests/test_api_wrapper.py::test_make_api_request_success
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+PASSED                                                                   [ 33%]
+tests/test_api_wrapper.py::test_make_api_request_unexpected_status
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+ERROR    accessiweather.api_wrapper:api_wrapper.py:303 Unexpected error: Unexpected status code: 404
+Traceback (most recent call last):
+  File "C:\Users\joshu\accessiweather\src\accessiweather\api_wrapper.py", line 232, in _make_api_request
+    return module_func(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\unittest\mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\unittest\mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\unittest\mock.py", line 1193, in _execute_mock_call
+    raise effect
+test_api_wrapper.MockUnexpectedStatus: Unexpected status code: 404
+PASSED                                                                   [ 33%]
+tests/test_api_wrapper.py::test_make_api_request_rate_limit
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+ERROR    accessiweather.api_wrapper:api_wrapper.py:303 Unexpected error: Unexpected status code: 429
+Traceback (most recent call last):
+  File "C:\Users\joshu\accessiweather\src\accessiweather\api_wrapper.py", line 232, in _make_api_request
+    return module_func(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\unittest\mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\unittest\mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\unittest\mock.py", line 1193, in _execute_mock_call
+    raise effect
+test_api_wrapper.MockUnexpectedStatus: Unexpected status code: 429
+PASSED                                                                   [ 33%]
+tests/test_api_wrapper.py::test_make_api_request_server_error
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+ERROR    accessiweather.api_wrapper:api_wrapper.py:303 Unexpected error: Unexpected status code: 500
+Traceback (most recent call last):
+  File "C:\Users\joshu\accessiweather\src\accessiweather\api_wrapper.py", line 232, in _make_api_request
+    return module_func(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\unittest\mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\unittest\mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\unittest\mock.py", line 1193, in _execute_mock_call
+    raise effect
+test_api_wrapper.MockUnexpectedStatus: Unexpected status code: 500
+PASSED                                                                   [ 33%]
+tests/test_api_wrapper.py::test_make_api_request_network_error
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+ERROR    accessiweather.api_wrapper:api_wrapper.py:298 Network error: Connection failed
+PASSED                                                                   [ 34%]
+tests/test_api_wrapper.py::test_make_api_request_timeout
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+ERROR    accessiweather.api_wrapper:api_wrapper.py:288 Request timed out: Request timed out
+PASSED                                                                   [ 34%]
+tests/test_api_wrapper.py::test_identify_location_type_county
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:796 Identified location as county: PAC101
+PASSED                                                                   [ 34%]
+tests/test_api_wrapper.py::test_get_forecast_success
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:492 Getting forecast for coordinates: (40.0, -75.0)
+PASSED                                                                   [ 34%]
+tests/test_api_wrapper.py::test_get_hourly_forecast_success
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:576 Getting hourly forecast for coordinates: (40.0, -75.0)
+PASSED                                                                   [ 34%]
+tests/test_api_wrapper.py::test_get_forecast_error_handling
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:492 Getting forecast for coordinates: (40.0, -75.0)
+ERROR    accessiweather.api_wrapper:api_wrapper.py:531 Error getting forecast for 40.0,-75.0: Network error
+PASSED                                                                   [ 34%]
+tests/test_api_wrapper.py::test_get_hourly_forecast_error_handling
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:576 Getting hourly forecast for coordinates: (40.0, -75.0)
+ERROR    accessiweather.api_wrapper:api_wrapper.py:612 Error getting hourly forecast for 40.0,-75.0: Network error
+ERROR    accessiweather.api_wrapper:api_wrapper.py:624 Error getting hourly forecast: Unexpected error getting hourly forecast: Network error | Error type: unknown | URL: https://api.weather.gov/gridpoints/PHI/31,70/forecast/hourly
+PASSED                                                                   [ 34%]
+tests/test_api_wrapper.py::test_identify_location_type_forecast_zone
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:808 Identified location as forecast zone: PAZ103
+PASSED                                                                   [ 35%]
+tests/test_api_wrapper.py::test_identify_location_type_fire_zone
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:816 Identified location as fire zone: PAZ103
+PASSED                                                                   [ 35%]
+tests/test_api_wrapper.py::test_identify_location_type_state_fallback
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:823 Could only identify location at state level: PA
+PASSED                                                                   [ 35%]
+tests/test_api_wrapper.py::test_identify_location_type_none
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+WARNING  accessiweather.api_wrapper:api_wrapper.py:828 Could not identify location type for coordinates: (40.0, -75.0)
+PASSED                                                                   [ 35%]
+tests/test_api_wrapper.py::test_identify_location_type_error_handling
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+ERROR    accessiweather.api_wrapper:api_wrapper.py:832 Error identifying location type: API error
+PASSED                                                                   [ 35%]
+tests/test_api_wrapper.py::test_get_alerts_direct_success
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:1006 Fetching alerts directly from URL: https://api.weather.gov/alerts/active?zone=PAC101
+PASSED                                                                   [ 35%]
+tests/test_api_wrapper.py::test_get_alerts_direct_with_caching
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+INFO     accessiweather.api_wrapper:api_wrapper.py:93 Caching enabled with TTL of 300 seconds
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:1006 Fetching alerts directly from URL: https://api.weather.gov/alerts/active?zone=PAC101
+INFO     accessiweather.api_wrapper:api_wrapper.py:1006 Fetching alerts directly from URL: https://api.weather.gov/alerts/active?zone=PAC101
+PASSED                                                                   [ 35%]
+tests/test_api_wrapper.py::test_get_alerts_direct_error_handling
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:1006 Fetching alerts directly from URL: https://api.weather.gov/alerts/active?zone=PAC101
+ERROR    accessiweather.api_wrapper:api_wrapper.py:1020 Error getting alerts from URL https://api.weather.gov/alerts/active?zone=PAC101: Network error
+ERROR    accessiweather.api_wrapper:api_wrapper.py:1030 Error getting alerts from URL: Unexpected error getting alerts from URL: Network error | Error type: unknown | URL: https://api.weather.gov/alerts/active?zone=PAC101
+PASSED                                                                   [ 35%]
+tests/test_api_wrapper.py::test_get_alerts_with_county_zone
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:857 Getting alerts for coordinates: (40.0, -75.0) with radius 50 miles, precise_location=True, force_refresh=False
+INFO     accessiweather.api_wrapper:api_wrapper.py:869 Fetching alerts for county zone: PAC101
+PASSED                                                                   [ 36%]
+tests/test_api_wrapper.py::test_get_alerts_with_state_fallback
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:857 Getting alerts for coordinates: (40.0, -75.0) with radius 50 miles, precise_location=False, force_refresh=False
+INFO     accessiweather.api_wrapper:api_wrapper.py:899 Fetching alerts for state: PA
+PASSED                                                                   [ 36%]
+tests/test_api_wrapper.py::test_get_alerts_with_point_radius_fallback
+------------------------------- live log setup --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:87 Initialized NOAA API wrapper with User-Agent: TestClient (test@example.com)
+INFO     accessiweather.api_wrapper:api_wrapper.py:88 Rate limiting: 0.5s between requests, max 3 retries with 2.0x backoff
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_wrapper:api_wrapper.py:857 Getting alerts for coordinates: (40.0, -75.0) with radius 50 miles, precise_location=True, force_refresh=False
+INFO     accessiweather.api_wrapper:api_wrapper.py:922 Using point-radius search for alerts since location could not be determined: (40.0, -75.0) with radius 50 miles
+PASSED                                                                   [ 36%]
+tests/test_cache.py::test_init_default_ttl PASSED                        [ 36%]
+tests/test_cache.py::test_init_custom_ttl PASSED                         [ 36%]
+tests/test_cache.py::test_set_get_basic PASSED                           [ 36%]
+tests/test_cache.py::test_get_nonexistent PASSED                         [ 36%]
+tests/test_cache.py::test_set_get_with_ttl PASSED                        [ 37%]
+tests/test_cache.py::test_get_expired PASSED                             [ 37%]
+tests/test_cache.py::test_has_key_exists PASSED                          [ 37%]
+tests/test_cache.py::test_has_key_not_exists PASSED                      [ 37%]
+tests/test_cache.py::test_has_key_expired PASSED                         [ 37%]
+tests/test_cache.py::test_invalidate PASSED                              [ 37%]
+tests/test_cache.py::test_invalidate_nonexistent PASSED                  [ 37%]
+tests/test_cache.py::test_clear PASSED                                   [ 37%]
+tests/test_cache.py::test_cleanup PASSED                                 [ 38%]
+tests/test_cache.py::test_cleanup_no_expired PASSED                      [ 38%]
+tests/test_cache.py::test_cleanup_all_expired PASSED                     [ 38%]
+tests/test_cli.py::test_parse_args_default PASSED                        [ 38%]
+tests/test_cli.py::test_parse_args_with_config PASSED                    [ 38%]
+tests/test_cli.py::test_parse_args_with_debug PASSED                     [ 38%]
+tests/test_cli.py::test_parse_args_with_no_cache PASSED                  [ 38%]
+tests/test_cli.py::test_parse_args_with_portable PASSED                  [ 38%]
+tests/test_cli.py::test_parse_args_all_flags PASSED                      [ 39%]
+tests/test_cli.py::test_main_success PASSED                              [ 39%]
+tests/test_cli.py::test_main_with_arguments PASSED                       [ 39%]
+tests/test_cli.py::test_main_exception PASSED                            [ 39%]
+tests/test_cli.py::test_main_entry_point PASSED                          [ 39%]
+tests/test_config_utils.py::test_is_portable_mode_not_frozen PASSED      [ 39%]
+tests/test_config_utils.py::test_is_portable_mode_in_program_files PASSED [ 39%]
+tests/test_config_utils.py::test_is_portable_mode_in_program_files_x86 PASSED [ 40%]
+tests/test_config_utils.py::test_is_portable_mode_writable PASSED        [ 40%]
+tests/test_config_utils.py::test_is_portable_mode_not_writable PASSED    [ 40%]
+tests/test_config_utils.py::test_is_portable_mode_substring_false_positive PASSED [ 40%]
+tests/test_config_utils.py::test_is_portable_mode_exact_program_files_match PASSED [ 40%]
+tests/test_config_utils.py::test_get_config_dir_custom PASSED            [ 40%]
+tests/test_config_utils.py::test_get_config_dir_portable
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.config_utils:config_utils.py:114 Running in portable mode, using config directory: D:\Portable\App\config
+PASSED                                                                   [ 40%]
+tests/test_config_utils.py::test_get_config_dir_windows
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.config_utils:config_utils.py:123 Running in standard mode on Windows, using config directory: C:\Users\Test\AppData\Roaming\.accessiweather
+PASSED                                                                   [ 40%]
+tests/test_config_utils.py::test_get_config_dir_non_windows
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.config_utils:config_utils.py:130 Using default config directory: /home/user/.accessiweather
+PASSED                                                                   [ 41%]
+tests/test_config_utils.py::test_get_config_dir_windows_no_appdata
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.config_utils:config_utils.py:130 Using default config directory: C:\Users\Test\.accessiweather
+PASSED                                                                   [ 41%]
+tests/test_config_utils.py::test_ensure_config_defaults_empty_config
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.config_utils:config_utils.py:159 Adding default data_source setting: auto
+INFO     accessiweather.config_utils:config_utils.py:164 Adding api_keys section to config
+INFO     accessiweather.config_utils:config_utils.py:169 Adding api_settings section to config
+PASSED                                                                   [ 41%]
+tests/test_config_utils.py::test_ensure_config_defaults_existing_settings
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.config_utils:config_utils.py:164 Adding api_keys section to config
+INFO     accessiweather.config_utils:config_utils.py:169 Adding api_settings section to config
+PASSED                                                                   [ 41%]
+tests/test_config_utils.py::test_ensure_config_defaults_missing_data_source
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.config_utils:config_utils.py:159 Adding default data_source setting: auto
+INFO     accessiweather.config_utils:config_utils.py:164 Adding api_keys section to config
+INFO     accessiweather.config_utils:config_utils.py:169 Adding api_settings section to config
+PASSED                                                                   [ 41%]
+tests/test_config_utils.py::test_ensure_config_defaults_existing_api_keys
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.config_utils:config_utils.py:169 Adding api_settings section to config
+PASSED                                                                   [ 41%]
+tests/test_config_utils.py::test_ensure_config_defaults_no_settings_section
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.config_utils:config_utils.py:159 Adding default data_source setting: auto
+INFO     accessiweather.config_utils:config_utils.py:164 Adding api_keys section to config
+INFO     accessiweather.config_utils:config_utils.py:169 Adding api_settings section to config
+PASSED                                                                   [ 41%]
+tests/test_constants.py::test_constants_import PASSED                    [ 41%]
+tests/test_constants.py::test_constants_has_update_interval PASSED       [ 42%]
+tests/test_debug_log_window.py::test_debug_log_window_init PASSED        [ 42%]
+tests/test_debug_log_window.py::test_debug_log_window_title PASSED       [ 42%]
+tests/test_debug_log_window.py::test_debug_log_window_has_text_control PASSED [ 42%]
+tests/test_debug_log_window.py::test_debug_log_window_has_buttons PASSED [ 42%]
+tests/test_debug_log_window.py::test_debug_log_window_modal PASSED       [ 42%]
+tests/test_debug_log_window.py::test_debug_log_window_close PASSED       [ 42%]
+tests/test_debug_log_window.py::test_debug_log_window_destroy PASSED     [ 43%]
+tests/test_debug_log_window.py::test_debug_log_window_mock_init PASSED   [ 43%]
+tests/test_debug_log_window.py::test_debug_log_window_module_import PASSED [ 43%]
+tests/test_debug_log_window.py::test_debug_log_window_class_exists PASSED [ 43%]
+tests/test_debug_log_window.py::test_debug_log_window_size PASSED        [ 43%]
+tests/test_debug_log_window.py::test_debug_log_window_sizer PASSED       [ 43%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_init_default PASSED [ 43%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_init_with_custom_templates PASSED [ 43%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_get_dynamic_format_string_default PASSED [ 44%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_get_dynamic_format_string_with_alerts PASSED [ 44%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_get_dynamic_format_string_severe_weather PASSED [ 44%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_get_dynamic_format_string_temperature_extreme PASSED [ 44%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_get_dynamic_format_string_wind_warning PASSED [ 44%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_get_dynamic_format_string_precipitation PASSED [ 44%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_get_dynamic_format_string_fog PASSED [ 44%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_should_update_format_first_time PASSED [ 45%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_should_update_format_template_change PASSED [ 45%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_should_update_format_alert_change PASSED [ 45%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_should_not_update_format_no_change PASSED [ 45%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_customize_alert_format_severe PASSED [ 45%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_add_custom_template PASSED [ 45%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_remove_custom_template PASSED [ 45%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_remove_default_template_fails
+-------------------------------- live log call --------------------------------
+WARNING  accessiweather.dynamic_format_manager:dynamic_format_manager.py:252 Cannot remove default template: default
+PASSED                                                                   [ 45%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_get_available_templates PASSED [ 46%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_reset_to_default PASSED [ 46%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_get_current_state PASSED [ 46%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_force_template PASSED [ 46%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_force_template_not_found
+-------------------------------- live log call --------------------------------
+WARNING  accessiweather.dynamic_format_manager:dynamic_format_manager.py:302 Template not found: nonexistent
+PASSED                                                                   [ 46%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_error_handling
+-------------------------------- live log call --------------------------------
+ERROR    accessiweather.dynamic_format_manager:dynamic_format_manager.py:85 Error getting dynamic format string: Test error
+PASSED                                                                   [ 46%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_user_format_fallback
+-------------------------------- live log call --------------------------------
+ERROR    accessiweather.dynamic_format_manager:dynamic_format_manager.py:85 Error getting dynamic format string: Test error
+PASSED                                                                   [ 46%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_multiple_updates_tracking PASSED [ 46%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_nws_data_format_support PASSED [ 47%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_weatherapi_data_format_support PASSED [ 47%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_automatic_weather_source_support PASSED [ 47%]
+tests/test_dynamic_format_manager.py::TestDynamicFormatManager::test_dynamic_switching_control PASSED [ 47%]
+tests/test_e2e_smoke.py::test_application_imports PASSED                 [ 47%]
+tests/test_e2e_smoke.py::test_configuration_system PASSED                [ 47%]
+tests/test_e2e_smoke.py::test_location_manager
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.location:location.py:419 Adding Nationwide location
+INFO     accessiweather.geocoding:geocoding.py:180 Coordinates (40.0, -75.0) validated as within US (country_code: us)
+PASSED                                                                   [ 47%]
+tests/test_e2e_smoke.py::test_cache_system PASSED                        [ 48%]
+tests/test_e2e_smoke.py::test_api_client_basic_functionality
+-------------------------------- live log call --------------------------------
+INFO     accessiweather.api_client:api_client.py:225 Initialized NOAA API client with User-Agent: AccessiWeather (AccessiWeather)
+INFO     accessiweather.api_client:api_client.py:256 Getting forecast for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:240 Fetching point data for coordinates: (40.0, -75.0)
+INFO     accessiweather.api_client:api_client.py:272 Retrieved forecast URL: https://api.weather.gov/gridpoints/PHI/50,75/forecast
+PASSED                                                                   [ 48%]
+tests/test_e2e_smoke.py::test_weather_service_initialization PASSED      [ 48%]
+tests/test_e2e_smoke.py::test_temperature_utilities PASSED               [ 48%]
+tests/test_e2e_smoke.py::test_unit_utilities PASSED                      [ 48%]
+tests/test_e2e_smoke.py::test_application_startup_simulation PASSED      [ 48%]
+tests/test_e2e_smoke.py::test_logging_configuration PASSED               [ 48%]
+tests/test_faulthandler_simple.py::test_enable_faulthandler_default PASSED [ 48%]
+tests/test_faulthandler_simple.py::test_enable_faulthandler_with_file PASSED [ 49%]
+tests/test_faulthandler_simple.py::test_enable_faulthandler_file_error PASSED [ 49%]
+tests/test_faulthandler_simple.py::test_disable_faulthandler PASSED      [ 49%]
+tests/test_faulthandler_simple.py::test_dump_traceback_default PASSED    [ 49%]
+tests/test_faulthandler_simple.py::test_dump_traceback_all_threads_false PASSED [ 49%]
+tests/test_faulthandler_simple.py::test_register_signal_handler PASSED   [ 49%]
+tests/test_faulthandler_simple.py::test_register_signal_handler_error PASSED [ 49%]
+tests/test_faulthandler_simple.py::test_faulthandler_utils_module_import PASSED [ 50%]
+tests/test_faulthandler_simple.py::test_enable_faulthandler_creates_directory PASSED [ 50%]
+tests/test_faulthandler_simple.py::test_enable_faulthandler_all_threads_false PASSED [ 50%]
+tests/test_faulthandler_simple.py::test_enable_faulthandler_register_signals PASSED [ 50%]
+tests/test_format_string_parser.py::TestFormatStringParser::test_format_string PASSED [ 50%]
+tests/test_format_string_parser.py::TestFormatStringParser::test_format_string_empty PASSED [ 50%]
+tests/test_format_string_parser.py::TestFormatStringParser::test_format_string_missing_data PASSED [ 50%]
+tests/test_format_string_parser.py::TestFormatStringParser::test_format_string_no_placeholders PASSED [ 50%]
+tests/test_format_string_parser.py::TestFormatStringParser::test_get_placeholders PASSED [ 51%]
+tests/test_format_string_parser.py::TestFormatStringParser::test_get_placeholders_empty_string PASSED [ 51%]
+tests/test_format_string_parser.py::TestFormatStringParser::test_get_placeholders_no_placeholders PASSED [ 51%]
+tests/test_format_string_parser.py::TestFormatStringParser::test_get_supported_placeholders_help PASSED [ 51%]
+tests/test_format_string_parser.py::TestFormatStringParser::test_validate_format_string_empty PASSED [ 51%]
+tests/test_format_string_parser.py::TestFormatStringParser::test_validate_format_string_unbalanced_braces PASSED [ 51%]
+tests/test_format_string_parser.py::TestFormatStringParser::test_validate_format_string_unsupported_placeholder PASSED [ 51%]
+tests/test_format_string_parser.py::TestFormatStringParser::test_validate_format_string_valid PASSED [ 51%]
+tests/test_geocoding.py::test_init_mock_call PASSED                      [ 52%]
+tests/test_geocoding.py::test_init_instance_type PASSED                  [ 52%]
+tests/test_geocoding.py::test_is_zip_code_valid_5digit PASSED            [ 52%]
+tests/test_geocoding.py::test_is_zip_code_valid_zip4 PASSED              [ 52%]
+tests/test_geocoding.py::test_is_zip_code_invalid_formats PASSED         [ 52%]
+tests/test_geocoding.py::test_format_zip_code_5digit PASSED              [ 52%]
+tests/test_geocoding.py::test_format_zip_code_zip4 PASSED                [ 52%]
+tests/test_geocoding.py::test_geocode_address_success PASSED             [ 53%]
+tests/test_geocoding.py::test_geocode_address_zip5 PASSED                [ 53%]
+tests/test_geocoding.py::test_geocode_address_zip4 PASSED                [ 53%]
+tests/test_geocoding.py::test_geocode_address_not_found PASSED           [ 53%]
+tests/test_geocoding.py::test_geocode_address_timeout PASSED             [ 53%]
+tests/test_geocoding.py::test_geocode_address_service_error PASSED       [ 53%]
+tests/test_geocoding.py::test_geocode_address_unexpected_error PASSED    [ 53%]
+tests/test_geocoding.py::test_suggest_locations_success PASSED           [ 53%]
+tests/test_geocoding.py::test_suggest_locations_zip PASSED               [ 54%]
+tests/test_geocoding.py::test_suggest_locations_short_query PASSED       [ 54%]
+tests/test_geocoding.py::test_suggest_locations_none_found PASSED        [ 54%]
+tests/test_geocoding.py::test_suggest_locations_timeout PASSED           [ 54%]
+tests/test_geocoding.py::test_suggest_locations_service_error PASSED     [ 54%]
+tests/test_geocoding.py::test_suggest_locations_unexpected_error PASSED  [ 54%]
+tests/test_geocoding.py::test_geocode_address_filters_non_us PASSED      [ 54%]
+tests/test_geocoding.py::test_geocode_address_allows_us PASSED           [ 54%]
+tests/test_geocoding.py::test_geocode_address_missing_raw_data PASSED    [ 55%]
+tests/test_geocoding.py::test_geocode_address_missing_country_code PASSED [ 55%]
+tests/test_geocoding.py::test_suggest_locations_filters_non_us PASSED    [ 55%]
+tests/test_geocoding.py::test_validate_coordinates_us_location PASSED    [ 55%]
+tests/test_geocoding.py::test_validate_coordinates_non_us_location PASSED [ 55%]
+tests/test_geocoding.py::test_validate_coordinates_no_location_found PASSED [ 55%]
+tests/test_geocoding.py::test_validate_coordinates_missing_raw_data PASSED [ 55%]
+tests/test_geocoding.py::test_validate_coordinates_service_error PASSED  [ 56%]
+tests/test_geocoding_mocking_verification.py::test_geocoding_service_uses_mocked_nominatim PASSED [ 56%]
+tests/test_geocoding_mocking_verification.py::test_location_manager_uses_mocked_geocoding PASSED [ 56%]
+tests/test_geocoding_mocking_verification.py::test_no_real_nominatim_import PASSED [ 56%]
+tests/test_geocoding_mocking_verification.py::test_geocoding_mock_consistency PASSED [ 56%]
+tests/test_geocoding_mocking_verification.py::test_integration_with_mocked_geocoding PASSED [ 56%]
+tests/test_geocoding_mocking_verification.py::test_mock_handles_edge_cases PASSED [ 56%]
+tests/test_integration_comprehensive.py::TestApplicationStartupFlow::test_first_time_startup_flow PASSED [ 56%]
+tests/test_integration_comprehensive.py::TestApplicationStartupFlow::test_existing_user_startup_flow PASSED [ 57%]
+tests/test_integration_comprehensive.py::TestWeatherDataRefreshFlow::test_manual_refresh_flow PASSED [ 57%]
+tests/test_integration_comprehensive.py::TestWeatherDataRefreshFlow::test_automatic_refresh_with_cache PASSED [ 57%]
+tests/test_integration_comprehensive.py::TestLocationChangeFlow::test_location_change_triggers_data_refresh PASSED [ 57%]
+tests/test_integration_comprehensive.py::TestDataSourceSelectionFlow::test_auto_data_source_selection PASSED [ 57%]
+tests/test_integration_comprehensive.py::TestDataSourceSelectionFlow::test_manual_data_source_override PASSED [ 57%]
+tests/test_integration_comprehensive.py::TestErrorHandlingFlow::test_network_error_handling PASSED [ 57%]
+tests/test_integration_comprehensive.py::TestErrorHandlingFlow::test_api_fallback_mechanism PASSED [ 58%]
+tests/test_integration_comprehensive.py::TestConfigurationIntegration::test_configuration_persistence PASSED [ 58%]
+tests/test_integration_comprehensive.py::TestConfigurationIntegration::test_invalid_configuration_recovery PASSED [ 58%]
+tests/test_integration_gui.py::TestWeatherAppIntegration::test_weather_app_initialization FAILED [ 58%]
+tests/test_integration_gui.py::TestWeatherAppIntegration::test_settings_dialog_integration PASSED [ 58%]
+tests/test_integration_gui.py::TestWeatherAppIntegration::test_ui_manager_weather_data_display PASSED [ 58%]
+tests/test_integration_gui.py::TestWeatherAppIntegration::test_system_tray_integration PASSED [ 58%]
+tests/test_integration_gui.py::TestDialogIntegration::test_location_dialog_integration PASSED [ 58%]
+tests/test_integration_gui.py::TestDialogIntegration::test_alert_dialog_integration PASSED [ 59%]
+tests/test_integration_gui.py::TestDialogIntegration::test_discussion_dialog_integration PASSED [ 59%]
+tests/test_integration_gui.py::TestTimerIntegration::test_weather_refresh_timer PASSED [ 59%]
+tests/test_integration_gui.py::TestTimerIntegration::test_alert_refresh_timer PASSED [ 59%]
+tests/test_integration_gui.py::TestAccessibilityIntegration::test_screen_reader_announcements PASSED [ 59%]
+tests/test_integration_gui.py::TestAccessibilityIntegration::test_keyboard_navigation PASSED [ 59%]
+tests/test_integration_gui.py::TestAccessibilityIntegration::test_high_contrast_support PASSED [ 59%]
+tests/test_integration_gui.py::TestPerformanceIntegration::test_ui_responsiveness PASSED [ 59%]
+tests/test_integration_gui.py::TestPerformanceIntegration::test_memory_usage_stability PASSED [ 60%]
+tests/test_integration_performance.py::TestAPIPerformance::test_concurrent_api_requests PASSED [ 60%]
+tests/test_integration_performance.py::TestAPIPerformance::test_cache_performance_impact PASSED [ 60%]
+tests/test_integration_performance.py::TestAPIPerformance::test_api_rate_limiting_compliance PASSED [ 60%]
+tests/test_integration_performance.py::TestMemoryPerformance::test_memory_usage_under_load PASSED [ 60%]
+tests/test_integration_performance.py::TestMemoryPerformance::test_cache_memory_management PASSED [ 60%]
+tests/test_integration_performance.py::TestResponseTimePerformance::test_initial_app_startup_time PASSED [ 60%]
+tests/test_integration_performance.py::TestResponseTimePerformance::test_weather_data_refresh_time PASSED [ 61%]
+tests/test_integration_performance.py::TestResponseTimePerformance::test_location_change_response_time PASSED [ 61%]
+tests/test_integration_performance.py::TestResponseTimePerformance::test_ui_update_response_time PASSED [ 61%]
+tests/test_integration_performance.py::TestScalabilityPerformance::test_multiple_location_handling PASSED [ 61%]
+tests/test_integration_performance.py::TestScalabilityPerformance::test_concurrent_user_simulation PASSED [ 61%]
+tests/test_integration_performance.py::TestScalabilityPerformance::test_long_running_stability

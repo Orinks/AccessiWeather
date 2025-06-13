@@ -19,15 +19,6 @@ class WeatherAppMenuHandlers(WeatherAppHandlerBase):
     It provides menu-related event handlers for the WeatherApp class.
     """
 
-    def OnMinimizeToTray(self, event):  # event is required by wx
-        """Handle minimize to tray button click
-
-        Args:
-            event: Button event
-        """
-        logger.debug("Minimizing to tray")
-        self.Hide()
-
     def CreateTaskBarMenu(self):
         """Create the taskbar popup menu.
 

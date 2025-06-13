@@ -48,4 +48,3 @@ class WeatherAppBaseHandlers(WeatherAppHandlerBase):
     # _stop_fetcher_threads is now implemented in WeatherAppSystemHandlers
 
     # OnRefresh is now implemented in WeatherAppRefreshHandlers
-    # OnMinimizeToTray is now implemented in WeatherAppMenuHandlers

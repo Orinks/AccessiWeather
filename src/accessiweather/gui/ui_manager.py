@@ -264,7 +264,7 @@ class UIManager:
         panel = wx.Panel(self.frame)
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # --- Location Controls ---
+        # --- Location Dropdown (separated from buttons) ---
         location_sizer = wx.BoxSizer(wx.HORIZONTAL)
         location_label = AccessibleStaticText(panel, label="Location:")
         location_sizer.Add(location_label, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
@@ -272,18 +272,6 @@ class UIManager:
         # Store UI elements directly on the frame object for access by handlers
         self.frame.location_choice = AccessibleChoice(panel, choices=[], label="Location Selection")
         location_sizer.Add(self.frame.location_choice, 1, wx.ALL | wx.EXPAND, 5)
-
-        self.frame.add_btn = AccessibleButton(panel, wx.ID_ANY, "Add")
-        self.frame.remove_btn = AccessibleButton(panel, wx.ID_ANY, "Remove")
-        self.frame.refresh_btn = AccessibleButton(panel, wx.ID_ANY, "Refresh")
-        self.frame.settings_btn = AccessibleButton(panel, wx.ID_ANY, "Settings")
-        self.frame.minimize_to_tray_btn = AccessibleButton(panel, wx.ID_ANY, "Minimize to Tray")
-
-        location_sizer.Add(self.frame.add_btn, 0, wx.ALL, 5)
-        location_sizer.Add(self.frame.remove_btn, 0, wx.ALL, 5)
-        location_sizer.Add(self.frame.refresh_btn, 0, wx.ALL, 5)
-        location_sizer.Add(self.frame.settings_btn, 0, wx.ALL, 5)
-        location_sizer.Add(self.frame.minimize_to_tray_btn, 0, wx.ALL, 5)
         main_sizer.Add(location_sizer, 0, wx.EXPAND | wx.ALL, 10)
 
         # --- Current Conditions Panel ---
@@ -336,9 +324,35 @@ class UIManager:
         self.frame.alert_btn = AccessibleButton(panel, wx.ID_ANY, "View Alert Details")
         main_sizer.Add(self.frame.alert_btn, 0, wx.ALL | wx.ALIGN_CENTER, 5)
 
+        # --- Control Buttons (moved to bottom) ---
+        buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        # Create all the buttons
+        self.frame.add_btn = AccessibleButton(panel, wx.ID_ANY, "Add")
+        self.frame.remove_btn = AccessibleButton(panel, wx.ID_ANY, "Remove")
+        self.frame.refresh_btn = AccessibleButton(panel, wx.ID_ANY, "Refresh")
+        self.frame.settings_btn = AccessibleButton(panel, wx.ID_ANY, "Settings")
+
+        # Add buttons to the horizontal sizer
+        buttons_sizer.Add(self.frame.add_btn, 0, wx.ALL, 5)
+        buttons_sizer.Add(self.frame.remove_btn, 0, wx.ALL, 5)
+        buttons_sizer.Add(self.frame.refresh_btn, 0, wx.ALL, 5)
+        buttons_sizer.Add(self.frame.settings_btn, 0, wx.ALL, 5)
+
+        # Add the buttons sizer to the main sizer
+        main_sizer.Add(buttons_sizer, 0, wx.ALIGN_CENTER | wx.ALL, 10)
+
         # --- Finalize Panel Setup ---
         panel.SetSizer(main_sizer)
         self.frame.panel = panel  # Store panel reference if needed
+
+        # Store references to UI elements that may need to be hidden for Open-Meteo
+        self.openmeteo_hidden_elements = [
+            (self.frame.discussion_btn, "discussion_btn"),
+            (alerts_label, "alerts_label"),
+            (self.frame.alerts_list, "alerts_list"),
+            (self.frame.alert_btn, "alert_btn"),
+        ]
 
     def _bind_events(self):
         """Bind UI events to their handlers in the main frame."""
@@ -370,7 +384,6 @@ class UIManager:
         # Add binding for list item selection to enable the alert button
         self.frame.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnAlertSelected, self.frame.alerts_list)
         self.frame.Bind(wx.EVT_BUTTON, self.frame.OnSettings, self.frame.settings_btn)
-        self.frame.Bind(wx.EVT_BUTTON, self.frame.OnMinimizeToTray, self.frame.minimize_to_tray_btn)
         # KeyDown is bound here as it relates to general UI interaction
         self.frame.Bind(wx.EVT_KEY_DOWN, self.frame.OnKeyDown)
 
@@ -1369,6 +1382,97 @@ class UIManager:
         """Display ready state in the UI."""
         self.frame.refresh_btn.Enable()
         self.frame.SetStatusText("Ready")
+
+    def _is_using_openmeteo(self) -> bool:
+        """Determine if the current location is using Open-Meteo as the weather source.
+
+        Returns:
+            bool: True if Open-Meteo is being used, False otherwise
+        """
+        logger.debug("_is_using_openmeteo: Starting weather source detection")
+        try:
+            # Get the current location coordinates
+            if not hasattr(self.frame, "location_service") or not self.frame.location_service:
+                logger.debug("_is_using_openmeteo: No location service available")
+                return False
+
+            current_location = self.frame.location_service.get_current_location()
+            logger.debug(f"_is_using_openmeteo: current_location = {current_location}")
+            if not current_location:
+                logger.debug("_is_using_openmeteo: No current location")
+                return False
+
+            # Extract coordinates from the current location tuple (name, lat, lon)
+            if len(current_location) == 3:
+                location_name, lat, lon = current_location
+                logger.debug(
+                    f"_is_using_openmeteo: extracted from current_location - name={location_name}, lat={lat}, lon={lon}"
+                )
+            else:
+                logger.debug("_is_using_openmeteo: Invalid current_location format")
+                return False
+
+            # Check if we have a weather service to determine the source
+            if hasattr(self.frame, "weather_service") and self.frame.weather_service:
+                logger.debug(
+                    "_is_using_openmeteo: Weather service available, calling _should_use_openmeteo"
+                )
+                # Use the weather service's logic to determine if Open-Meteo should be used
+                result = bool(self.frame.weather_service._should_use_openmeteo(lat, lon))
+                logger.debug(
+                    f"_is_using_openmeteo: weather_service._should_use_openmeteo returned {result}"
+                )
+                return result
+            else:
+                logger.debug("_is_using_openmeteo: No weather service available, using fallback")
+
+            # Fallback: check config directly
+            from accessiweather.gui.settings_dialog import DATA_SOURCE_AUTO, DATA_SOURCE_OPENMETEO
+
+            data_source = self.frame.config.get("settings", {}).get("data_source", "nws")
+
+            if data_source == DATA_SOURCE_OPENMETEO:
+                return True
+            elif data_source == DATA_SOURCE_AUTO:
+                # For auto mode, check if location is outside US
+                from accessiweather.geocoding import GeocodingService
+
+                geocoding_service = GeocodingService(
+                    user_agent="AccessiWeather-UIManager", data_source="auto"
+                )
+                is_us = geocoding_service.validate_coordinates(lat, lon, us_only=True)
+                return not is_us
+
+            return False
+
+        except Exception as e:
+            logger.warning(f"Error determining weather source: {e}")
+            return False
+
+    def _update_ui_for_weather_source(self):
+        """Update UI elements based on the current weather source (show/hide Open-Meteo incompatible elements)."""
+        try:
+            is_openmeteo = self._is_using_openmeteo()
+            logger.debug(f"Updating UI for weather source, is_openmeteo: {is_openmeteo}")
+
+            # Show or hide elements based on weather source
+            if hasattr(self, "openmeteo_hidden_elements"):
+                for element, name in self.openmeteo_hidden_elements:
+                    if element and hasattr(element, "Show"):
+                        element.Show(not is_openmeteo)
+                        logger.debug(f"{'Hiding' if is_openmeteo else 'Showing'} {name}")
+
+            # Force layout update
+            if hasattr(self.frame, "panel") and self.frame.panel:
+                self.frame.panel.Layout()
+
+        except Exception as e:
+            logger.error(f"Error updating UI for weather source: {e}")
+
+    def update_ui_for_location_change(self):
+        """Update UI elements when the location changes (called from location handlers)."""
+        logger.debug("update_ui_for_location_change: Called from location handlers")
+        self._update_ui_for_weather_source()
 
     def OnAlertSelected(self, event):
         """Handle alert list item selection event.

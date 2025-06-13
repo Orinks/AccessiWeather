@@ -206,6 +206,11 @@ class WeatherApp(
 
         # Initialize UI with location data
         self.UpdateLocationDropdown()
+
+        # Update UI elements based on initial weather source (show/hide Open-Meteo incompatible elements)
+        if hasattr(self, "ui_manager") and self.ui_manager:
+            self.ui_manager.update_ui_for_location_change()
+
         self.UpdateWeatherData()
 
         # Add force close flag
@@ -717,6 +722,10 @@ class WeatherApp(
 
         # For backward compatibility
         self.api_client = nws_client
+
+        # Update UI elements based on new weather source (show/hide Open-Meteo incompatible elements)
+        if hasattr(self, "ui_manager") and self.ui_manager:
+            self.ui_manager.update_ui_for_location_change()
 
         # Refresh weather data to apply new settings
         self.UpdateWeatherData()
