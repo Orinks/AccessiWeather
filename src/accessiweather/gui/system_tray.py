@@ -420,7 +420,7 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
             pressure = formatted_data.get("pressure")
             pressure_mb = pressure * 33.8639 if pressure is not None else None
             formatted_data["pressure"] = format_pressure(
-                pressure, unit_pref, pressure_mb=pressure_mb, precision=2
+                pressure, unit_pref, pressure_mb=pressure_mb, precision=0
             )
 
         # Format visibility if available

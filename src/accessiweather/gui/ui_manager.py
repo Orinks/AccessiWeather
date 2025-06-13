@@ -972,10 +972,10 @@ class UIManager:
         if barometric_pressure is not None:
             # Convert from Pa to inHg
             pressure_inhg = barometric_pressure / 3386.39
-            # Convert from Pa to mb (hPa)
+            # Convert from Pa to hPa
             pressure_mb = barometric_pressure / 100
             pressure_str = format_pressure(
-                pressure_inhg, unit_pref, pressure_mb=pressure_mb, precision=2
+                pressure_inhg, unit_pref, pressure_mb=pressure_mb, precision=0
             )
         else:
             pressure_str = "N/A"
@@ -1066,7 +1066,7 @@ class UIManager:
         )
 
         # Format pressure
-        pressure_str = format_pressure(pressure, unit_pref, pressure_mb=pressure_mb, precision=2)
+        pressure_str = format_pressure(pressure, unit_pref, pressure_mb=pressure_mb, precision=0)
 
         # Format feels like
         feelslike_str = format_temperature(
