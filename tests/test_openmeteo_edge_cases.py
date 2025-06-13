@@ -336,7 +336,7 @@ def test_large_dataset_handling(mapper):
 @pytest.mark.unit
 def test_empty_arrays_handling(mapper):
     """Test handling of completely empty data arrays."""
-    empty_data = {
+    empty_data: dict = {
         "daily": {
             "time": [],
             "weather_code": [],

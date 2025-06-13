@@ -116,6 +116,7 @@ class TestUpdateService(unittest.TestCase):
             update_info = self.update_service.check_for_updates("stable")
 
         self.assertIsNotNone(update_info)
+        assert update_info is not None  # Type hint for mypy
         self.assertEqual(update_info.version, "0.9.5")
         self.assertIsNotNone(update_info.installer_asset)
 
@@ -190,9 +191,11 @@ class TestUpdateService(unittest.TestCase):
 
         # Check that assets were parsed correctly
         self.assertIsNotNone(update_info.installer_asset)
+        assert update_info.installer_asset is not None  # Type hint for mypy
         self.assertEqual(update_info.installer_asset["name"], "AccessiWeather-0.9.5-Setup.exe")
 
         self.assertIsNotNone(update_info.portable_asset)
+        assert update_info.portable_asset is not None  # Type hint for mypy
         self.assertEqual(update_info.portable_asset["name"], "AccessiWeather-0.9.5-Portable.zip")
 
     @patch("accessiweather.services.update_service.requests.get")

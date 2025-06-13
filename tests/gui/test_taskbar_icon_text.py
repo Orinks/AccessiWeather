@@ -46,8 +46,12 @@ class TestTaskBarIconText(unittest.TestCase):
         }
 
         # Create a TaskBarIcon instance with the mock frame
-        with patch("wx.adv.TaskBarIcon"):
+        with (
+            patch("wx.adv.TaskBarIcon"),
+            patch("accessiweather.gui.system_tray.TaskBarIcon.set_icon"),
+        ):
             self.taskbar_icon = TaskBarIcon(self.frame)
+            # Mock the SetIcon method to avoid type errors
             self.taskbar_icon.SetIcon = MagicMock()
 
     def tearDown(self):
@@ -63,8 +67,14 @@ class TestTaskBarIconText(unittest.TestCase):
         # Verify that the weather data was stored
         self.assertEqual(self.taskbar_icon.current_weather_data, self.weather_data)
 
-    def test_update_icon_text_enabled(self):
+    @patch("wx.ArtProvider.GetIcon")
+    @patch("wx.Icon")
+    def test_update_icon_text_enabled(self, mock_icon, mock_get_icon):
         """Test updating the taskbar icon text when enabled."""
+        # Mock the icon creation to avoid wx.App issues
+        mock_get_icon.return_value = MagicMock()
+        mock_icon.return_value = MagicMock()
+
         # Set up the taskbar icon with weather data
         self.taskbar_icon.current_weather_data = self.weather_data
 
@@ -78,8 +88,14 @@ class TestTaskBarIconText(unittest.TestCase):
         # Check that the second argument (tooltip text) matches our expected text
         self.assertEqual(self.taskbar_icon.SetIcon.call_args[0][1], expected_text)
 
-    def test_update_icon_text_disabled(self):
+    @patch("wx.ArtProvider.GetIcon")
+    @patch("wx.Icon")
+    def test_update_icon_text_disabled(self, mock_icon, mock_get_icon):
         """Test updating the taskbar icon text when disabled."""
+        # Mock the icon creation to avoid wx.App issues
+        mock_get_icon.return_value = MagicMock()
+        mock_icon.return_value = MagicMock()
+
         # Set up the taskbar icon with weather data
         self.taskbar_icon.current_weather_data = self.weather_data
 
@@ -103,8 +119,14 @@ class TestTaskBarIconText(unittest.TestCase):
         # Verify that SetIcon was not called
         self.taskbar_icon.SetIcon.assert_not_called()
 
-    def test_update_icon_text_custom_format(self):
+    @patch("wx.ArtProvider.GetIcon")
+    @patch("wx.Icon")
+    def test_update_icon_text_custom_format(self, mock_icon, mock_get_icon):
         """Test updating the taskbar icon text with a custom format string."""
+        # Mock the icon creation to avoid wx.App issues
+        mock_get_icon.return_value = MagicMock()
+        mock_icon.return_value = MagicMock()
+
         # Set up the taskbar icon with weather data
         self.taskbar_icon.current_weather_data = self.weather_data
 
