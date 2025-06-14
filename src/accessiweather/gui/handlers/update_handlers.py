@@ -15,6 +15,72 @@ from .common import WeatherAppHandlerBase
 
 logger = logging.getLogger(__name__)
 
+# Focus restoration delay for screen reader accessibility
+# 100ms provides sufficient time for screen readers (NVDA, JAWS) to process
+# message box dismissal before focus is returned to the parent window
+FOCUS_RESTORE_DELAY_MS = 100
+
+
+class SimpleMessageDialog(wx.Dialog):
+    """Simple modal message dialog that provides automatic focus handling."""
+
+    def __init__(self, parent, message, title="AccessiWeather", style=wx.OK | wx.ICON_INFORMATION):
+        """Initialize the simple message dialog.
+
+        Args:
+            parent: Parent window
+            message: Message to display
+            title: Dialog title
+            style: Dialog style (determines icon and buttons)
+        """
+        super().__init__(
+            parent,
+            title=title,
+            style=wx.DEFAULT_DIALOG_STYLE,
+        )
+
+        self.message = message
+        self.dialog_style = style
+        self._init_ui()
+
+    def _init_ui(self):
+        """Initialize the user interface."""
+        main_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Create message text
+        message_text = wx.StaticText(self, label=self.message)
+        message_text.SetName("Message")
+        main_sizer.Add(message_text, 0, wx.ALL | wx.EXPAND, 15)
+
+        # Create button sizer
+        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        # Determine which buttons to show based on style
+        if self.dialog_style & wx.OK:
+            ok_button = wx.Button(self, wx.ID_OK, "OK")
+            ok_button.SetDefault()
+            button_sizer.Add(ok_button, 0, wx.ALL, 5)
+            self.Bind(wx.EVT_BUTTON, self.OnOK, ok_button)
+
+        if self.dialog_style & wx.CANCEL:
+            cancel_button = wx.Button(self, wx.ID_CANCEL, "Cancel")
+            button_sizer.Add(cancel_button, 0, wx.ALL, 5)
+            self.Bind(wx.EVT_BUTTON, self.OnCancel, cancel_button)
+
+        main_sizer.Add(button_sizer, 0, wx.ALL | wx.CENTER, 10)
+
+        self.SetSizer(main_sizer)
+        self.Fit()
+        self.CenterOnParent()
+
+    def OnOK(self, event):  # event is required by wx
+        """Handle OK button."""
+        self.EndModal(wx.ID_OK)
+
+    def OnCancel(self, event):  # event is required by wx
+        """Handle Cancel button."""
+        self.EndModal(wx.ID_CANCEL)
+
 
 class WeatherAppUpdateHandlers(WeatherAppHandlerBase):
     """Update handlers for the WeatherApp class
@@ -199,14 +265,44 @@ class WeatherAppUpdateHandlers(WeatherAppHandlerBase):
                 self._show_update_notification(update_info)
             else:
                 logger.info("No update available, showing 'up to date' message")
-                # No update available
-                wx.MessageBox(
+                # No update available - use modal dialog for automatic focus handling
+                # Check if we have an active settings dialog to use as parent
+                parent = self
+
+                # Debug logging for settings dialog detection
+                logger.debug(f"Checking for settings dialog reference...")
+                logger.debug(
+                    f"hasattr(self, '_last_settings_dialog'): {hasattr(self, '_last_settings_dialog')}"
+                )
+
+                if hasattr(self, "_last_settings_dialog"):
+                    logger.debug(f"_last_settings_dialog value: {self._last_settings_dialog}")
+                    logger.debug(f"_last_settings_dialog type: {type(self._last_settings_dialog)}")
+
+                    if self._last_settings_dialog:
+                        logger.debug(f"Settings dialog exists, checking if shown...")
+                        logger.debug(
+                            f"Settings dialog IsShown(): {self._last_settings_dialog.IsShown()}"
+                        )
+                        parent = self._last_settings_dialog
+                        logger.info("Using settings dialog as parent for modal dialog")
+                    else:
+                        logger.debug("Settings dialog reference is None/False")
+                else:
+                    logger.debug("No _last_settings_dialog attribute found")
+
+                logger.debug(f"Final parent for modal dialog: {type(parent).__name__}")
+
+                # Use modal dialog for automatic focus handling
+                dialog = SimpleMessageDialog(
+                    parent,
                     "You are running the latest version of AccessiWeather.",
                     "No Updates Available",
                     wx.OK | wx.ICON_INFORMATION,
-                    self,
                 )
-                logger.debug("'No Updates Available' message box displayed")
+                dialog.ShowModal()
+                dialog.Destroy()
+                logger.debug("'No Updates Available' modal dialog displayed and closed")
 
         except Exception as e:
             logger.error(f"Error handling manual check completion: {e}")
@@ -223,13 +319,43 @@ class WeatherAppUpdateHandlers(WeatherAppHandlerBase):
             progress_dialog.Destroy()
             logger.debug("Progress dialog destroyed after error")
 
-            wx.MessageBox(
+            # Check if we have an active settings dialog to use as parent
+            parent = self
+
+            # Debug logging for settings dialog detection (error case)
+            logger.debug(f"Error case - Checking for settings dialog reference...")
+            logger.debug(
+                f"hasattr(self, '_last_settings_dialog'): {hasattr(self, '_last_settings_dialog')}"
+            )
+
+            if hasattr(self, "_last_settings_dialog"):
+                logger.debug(f"_last_settings_dialog value: {self._last_settings_dialog}")
+                logger.debug(f"_last_settings_dialog type: {type(self._last_settings_dialog)}")
+
+                if self._last_settings_dialog:
+                    logger.debug(f"Settings dialog exists, checking if shown...")
+                    logger.debug(
+                        f"Settings dialog IsShown(): {self._last_settings_dialog.IsShown()}"
+                    )
+                    parent = self._last_settings_dialog
+                    logger.info("Using settings dialog as parent for error modal dialog")
+                else:
+                    logger.debug("Settings dialog reference is None/False")
+            else:
+                logger.debug("No _last_settings_dialog attribute found")
+
+            logger.debug(f"Final parent for error modal dialog: {type(parent).__name__}")
+
+            # Use modal dialog for automatic focus handling
+            dialog = SimpleMessageDialog(
+                parent,
                 f"Failed to check for updates:\n\n{error_message}",
                 "Update Check Failed",
                 wx.OK | wx.ICON_ERROR,
-                self,
             )
-            logger.debug("Error message box displayed")
+            dialog.ShowModal()
+            dialog.Destroy()
+            logger.debug("Error modal dialog displayed and closed")
 
         except Exception as e:
             logger.error(f"Error handling manual check error: {e}")
