@@ -84,12 +84,12 @@ def extract_weatherapi_data_for_taskbar(conditions_data, frame):
     # Get location name
     location_name = location_data.get("name", "")
     if not location_name:
+        location_service = None
+        if hasattr(frame, "weather_service") and frame.weather_service:
+            location_service = getattr(frame.weather_service, "location_service", None)
+
         location_name = safe_get_location_name(
-            (
-                getattr(frame, "weather_service", {}).get("location_service")
-                if hasattr(frame, "weather_service")
-                else None
-            ),
+            location_service,
             fallback="Unknown Location",
         )
 
@@ -213,12 +213,12 @@ def extract_nws_data_for_taskbar(conditions_data, frame):
             visibility = visibility_raw
 
     # Get location name
+    location_service = None
+    if hasattr(frame, "weather_service") and frame.weather_service:
+        location_service = getattr(frame.weather_service, "location_service", None)
+
     location_name = safe_get_location_name(
-        (
-            getattr(frame, "weather_service", {}).get("location_service")
-            if hasattr(frame, "weather_service")
-            else None
-        ),
+        location_service,
         fallback="Unknown Location",
     )
 
