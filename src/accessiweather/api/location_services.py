@@ -6,7 +6,7 @@ This module handles location identification and point data retrieval.
 import logging
 from typing import Any, Dict, Optional, Tuple, cast
 
-from accessiweather.api_client import ApiClientError, NoaaApiError
+from accessiweather.api.exceptions import ApiClientError, NoaaApiError
 from accessiweather.weather_gov_api_client.api.default import point
 
 logger = logging.getLogger(__name__)

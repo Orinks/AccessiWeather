@@ -6,7 +6,7 @@ This module handles fetching weather alert data.
 import logging
 from typing import Any, Dict, cast
 
-from accessiweather.api_client import ApiClientError, NoaaApiError
+from accessiweather.api.exceptions import ApiClientError, NoaaApiError
 from accessiweather.weather_gov_api_client.api.default import alerts_active, alerts_active_zone
 
 logger = logging.getLogger(__name__)

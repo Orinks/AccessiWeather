@@ -6,7 +6,7 @@ This module handles fetching weather-related data including forecasts and curren
 import logging
 from typing import Any, Dict, cast
 
-from accessiweather.api_client import ApiClientError, NoaaApiError
+from accessiweather.api.exceptions import ApiClientError, NoaaApiError
 from accessiweather.weather_gov_api_client.api.default import station_observation_latest
 
 logger = logging.getLogger(__name__)
