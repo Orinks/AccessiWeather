@@ -9,7 +9,7 @@ from accessiweather.api.national_products_client import NationalProductsClient
 
 class NoaaApiClient(ForecastClient, AlertsClient, NationalProductsClient):
     """Unified NOAA API client with all functionality.
-    
+
     This class combines forecast, alerts, and national products functionality
     into a single client interface for backward compatibility.
     """

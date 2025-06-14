@@ -6,6 +6,9 @@ and formatting it for use in taskbar icons.
 
 import logging
 
+from accessiweather.utils.temperature_utils import format_temperature
+from accessiweather.utils.unit_utils import format_pressure, format_wind_speed
+
 from .weather_formatting import (
     convert_wind_direction_to_cardinal,
     create_standardized_taskbar_data,
@@ -13,8 +16,6 @@ from .weather_formatting import (
     safe_get_location_name,
 )
 from .weather_source_detection import get_temperature_unit_preference
-from accessiweather.utils.temperature_utils import format_temperature
-from accessiweather.utils.unit_utils import format_pressure, format_wind_speed
 
 logger = logging.getLogger(__name__)
 
@@ -84,8 +85,12 @@ def extract_weatherapi_data_for_taskbar(conditions_data, frame):
     location_name = location_data.get("name", "")
     if not location_name:
         location_name = safe_get_location_name(
-            getattr(frame, "weather_service", {}).get("location_service") if hasattr(frame, "weather_service") else None,
-            fallback="Unknown Location"
+            (
+                getattr(frame, "weather_service", {}).get("location_service")
+                if hasattr(frame, "weather_service")
+                else None
+            ),
+            fallback="Unknown Location",
         )
 
     return create_standardized_taskbar_data(
@@ -159,11 +164,11 @@ def extract_nws_data_for_taskbar(conditions_data, frame):
 
     # Extract other weather data
     condition = properties.get("textDescription", "")
-    
+
     # Wind data
     wind_speed_raw = properties.get("windSpeed", {}).get("value")
     wind_direction_raw = properties.get("windDirection", {}).get("value")
-    
+
     # Convert wind speed to mph if needed
     wind_speed = None
     if wind_speed_raw is not None:
@@ -184,7 +189,7 @@ def extract_nws_data_for_taskbar(conditions_data, frame):
     # Other weather data
     humidity = properties.get("relativeHumidity", {}).get("value")
     pressure_raw = properties.get("barometricPressure", {}).get("value")
-    
+
     # Convert pressure to inHg if needed
     pressure = None
     if pressure_raw is not None:
@@ -209,8 +214,12 @@ def extract_nws_data_for_taskbar(conditions_data, frame):
 
     # Get location name
     location_name = safe_get_location_name(
-        getattr(frame, "weather_service", {}).get("location_service") if hasattr(frame, "weather_service") else None,
-        fallback="Unknown Location"
+        (
+            getattr(frame, "weather_service", {}).get("location_service")
+            if hasattr(frame, "weather_service")
+            else None
+        ),
+        fallback="Unknown Location",
     )
 
     return create_standardized_taskbar_data(

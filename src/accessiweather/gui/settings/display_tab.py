@@ -23,7 +23,7 @@ class DisplayTab:
 
     def __init__(self, parent_panel):
         """Initialize the Display tab.
-        
+
         Args:
             parent_panel: The parent panel for this tab
         """
@@ -132,18 +132,14 @@ class DisplayTab:
 
     def load_settings(self, settings):
         """Load settings into the controls.
-        
+
         Args:
             settings: Dictionary containing current settings
         """
         # Load display settings
         taskbar_text_enabled = settings.get(TASKBAR_ICON_TEXT_ENABLED_KEY, False)
-        taskbar_text_format = settings.get(
-            TASKBAR_ICON_TEXT_FORMAT_KEY, "{temp} {condition}"
-        )
-        taskbar_dynamic_enabled = settings.get(
-            TASKBAR_ICON_DYNAMIC_ENABLED_KEY, True
-        )
+        taskbar_text_format = settings.get(TASKBAR_ICON_TEXT_FORMAT_KEY, "{temp} {condition}")
+        taskbar_dynamic_enabled = settings.get(TASKBAR_ICON_DYNAMIC_ENABLED_KEY, True)
 
         self.taskbar_text_ctrl.SetValue(taskbar_text_enabled)
         self.taskbar_format_ctrl.SetValue(taskbar_text_format)
@@ -152,9 +148,7 @@ class DisplayTab:
         self.dynamic_format_ctrl.Enable(taskbar_text_enabled)
 
         # Load temperature unit setting
-        temperature_unit = settings.get(
-            TEMPERATURE_UNIT_KEY, DEFAULT_TEMPERATURE_UNIT
-        )
+        temperature_unit = settings.get(TEMPERATURE_UNIT_KEY, DEFAULT_TEMPERATURE_UNIT)
         # Set temperature unit dropdown
         if temperature_unit == TemperatureUnit.FAHRENHEIT.value:
             self.temp_unit_ctrl.SetSelection(0)  # Imperial (Fahrenheit)
@@ -168,7 +162,7 @@ class DisplayTab:
 
     def get_settings(self):
         """Get settings from the controls.
-        
+
         Returns:
             Dictionary containing the settings from this tab
         """
@@ -206,7 +200,7 @@ class DisplayTab:
 
     def validate(self):
         """Validate the settings in this tab.
-        
+
         Returns:
             Tuple of (is_valid, error_message, focus_control)
         """

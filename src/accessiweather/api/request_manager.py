@@ -271,9 +271,7 @@ class ApiRequestManager:
             logger.error(error_msg, exc_info=True)
             raise NoaaApiError(message=error_msg, error_type=NoaaApiError.UNKNOWN_ERROR, url=url)
 
-    def handle_client_error(
-        self, error: Exception, url: str, retry_count: int = 0
-    ) -> NoaaApiError:
+    def handle_client_error(self, error: Exception, url: str, retry_count: int = 0) -> NoaaApiError:
         """Map client errors to NoaaApiError types.
 
         Args:

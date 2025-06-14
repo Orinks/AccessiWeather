@@ -2,11 +2,7 @@
 
 import wx
 
-from ..ui_components import (
-    AccessibleButton,
-    AccessibleStaticText,
-    AccessibleTextCtrl,
-)
+from ..ui_components import AccessibleButton, AccessibleStaticText, AccessibleTextCtrl
 
 
 class AdvancedLocationDialog(wx.Dialog):

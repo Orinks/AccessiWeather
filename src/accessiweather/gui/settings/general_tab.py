@@ -21,7 +21,7 @@ class GeneralTab:
 
     def __init__(self, parent_panel):
         """Initialize the General tab.
-        
+
         Args:
             parent_panel: The parent panel for this tab
         """
@@ -70,7 +70,9 @@ class GeneralTab:
 
         # Alert Radius
         alert_radius_label = wx.StaticText(self.panel, label="Alert Radius (miles):")
-        self.alert_radius_ctrl = wx.SpinCtrl(self.panel, min=1, max=500, initial=25, name="Alert Radius")
+        self.alert_radius_ctrl = wx.SpinCtrl(
+            self.panel, min=1, max=500, initial=25, name="Alert Radius"
+        )
         tooltip_radius = "Radius around location to check for alerts (in miles)."
         self.alert_radius_ctrl.SetToolTip(tooltip_radius)
         grid_sizer.Add(alert_radius_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
@@ -120,7 +122,7 @@ class GeneralTab:
 
     def load_settings(self, settings):
         """Load settings into the controls.
-        
+
         Args:
             settings: Dictionary containing current settings
         """
@@ -150,7 +152,7 @@ class GeneralTab:
 
     def get_settings(self):
         """Get settings from the controls.
-        
+
         Returns:
             Dictionary containing the settings from this tab
         """
@@ -174,7 +176,7 @@ class GeneralTab:
 
     def validate(self):
         """Validate the settings in this tab.
-        
+
         Returns:
             Tuple of (is_valid, error_message, focus_control)
         """

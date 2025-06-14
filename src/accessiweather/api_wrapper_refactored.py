@@ -10,9 +10,6 @@ from typing import Any, Dict, Optional, Tuple
 
 import httpx
 
-from accessiweather.cache import Cache
-from accessiweather.weather_gov_api_client.client import Client
-
 # Import the refactored modules
 from accessiweather.api.alert_fetchers import ApiAlertFetchers
 from accessiweather.api.data_transformers import ApiDataTransformers
@@ -20,6 +17,8 @@ from accessiweather.api.location_services import ApiLocationServices
 from accessiweather.api.product_services import ApiProductServices
 from accessiweather.api.request_manager import ApiRequestManager
 from accessiweather.api.weather_fetchers import ApiWeatherFetchers
+from accessiweather.cache import Cache
+from accessiweather.weather_gov_api_client.client import Client
 
 logger = logging.getLogger(__name__)
 

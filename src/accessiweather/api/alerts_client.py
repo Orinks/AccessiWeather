@@ -37,6 +37,7 @@ class AlertsClient(NoaaApiClient):
         try:
             # Get point data for the coordinates
             from accessiweather.api.forecast_client import ForecastClient
+
             forecast_client = ForecastClient()
             point_data = forecast_client.get_point_data(lat, lon, force_refresh=force_refresh)
             properties = point_data.get("properties", {})
@@ -117,7 +118,11 @@ class AlertsClient(NoaaApiClient):
             lat, lon, force_refresh=force_refresh
         )
 
-        if precise_location and location_type in (LOCATION_TYPE_COUNTY, LOCATION_TYPE_FORECAST, LOCATION_TYPE_FIRE) and location_id:
+        if (
+            precise_location
+            and location_type in (LOCATION_TYPE_COUNTY, LOCATION_TYPE_FORECAST, LOCATION_TYPE_FIRE)
+            and location_id
+        ):
             # Get alerts for the specific zone
             logger.info(f"Fetching alerts for {location_type} zone: {location_id}")
             return self._make_request(

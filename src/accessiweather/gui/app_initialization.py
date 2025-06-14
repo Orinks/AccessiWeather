@@ -43,22 +43,24 @@ class AppInitializer:
 
     def __init__(self, app_instance):
         """Initialize the AppInitializer.
-        
+
         Args:
             app_instance: The WeatherApp instance to initialize
         """
         self.app = app_instance
         self.logger = logger
 
-    def initialize_services(self, weather_service, location_service, notification_service, api_client):
+    def initialize_services(
+        self, weather_service, location_service, notification_service, api_client
+    ):
         """Initialize and validate required services.
-        
+
         Args:
             weather_service: WeatherService instance
-            location_service: LocationService instance  
+            location_service: LocationService instance
             notification_service: NotificationService instance
             api_client: NoaaApiClient instance (for backward compatibility)
-            
+
         Raises:
             ValueError: If required services are not provided
         """
@@ -78,7 +80,7 @@ class AppInitializer:
     def initialize_fetchers(self):
         """Initialize async fetchers using the weather service."""
         self.logger.debug("Initializing async fetchers")
-        
+
         # Initialize async fetchers (always using the weather service)
         # This ensures that the WeatherService's logic for choosing between NWS and WeatherAPI is used
         self.app.forecast_fetcher = ForecastFetcher(self.app.weather_service)
@@ -91,7 +93,7 @@ class AppInitializer:
     def initialize_state_variables(self):
         """Initialize application state variables."""
         self.logger.debug("Initializing state variables")
-        
+
         # State variables
         self.app.current_forecast = None
         self.app.current_alerts = []
@@ -113,19 +115,19 @@ class AppInitializer:
     def initialize_ui_manager(self):
         """Initialize the UI manager."""
         self.logger.debug("Initializing UI manager")
-        
+
         # Initialize UI using UIManager
         # UI elements are now attached to self.app by UIManager
         self.app.ui_manager = UIManager(self.app, self.app.notification_service.notifier)
 
     def setup_status_bar(self, debug_mode):
         """Set up the status bar based on debug mode.
-        
+
         Args:
             debug_mode: Whether debug mode is enabled
         """
         self.logger.debug(f"Setting up status bar (debug_mode={debug_mode})")
-        
+
         if debug_mode:
             # Use the debug status bar in debug mode
             from .debug_status_bar import DebugStatusBar
@@ -141,11 +143,11 @@ class AppInitializer:
     def setup_timer(self):
         """Set up the update timer."""
         self.logger.debug("Setting up update timer")
-        
+
         # Start update timer
         self.app.timer = wx.Timer(self.app)
         self.app.Bind(wx.EVT_TIMER, self.app.OnTimer, self.app.timer)
-        
+
         # Log the update interval from config
         update_interval = self.app.config.get("settings", {}).get(UPDATE_INTERVAL_KEY, 10)
         self.logger.debug(f"Starting timer with update interval: {update_interval} minutes")
@@ -155,7 +157,7 @@ class AppInitializer:
     def setup_event_bindings(self):
         """Set up event bindings for the application."""
         self.logger.debug("Setting up event bindings")
-        
+
         # Bind Close event here as it's frame-level, not UI-element specific
         self.app.Bind(wx.EVT_CLOSE, self.app.OnClose)
         self.app.Bind(wx.EVT_ICONIZE, self.app.OnMinimize)
@@ -166,7 +168,7 @@ class AppInitializer:
     def setup_system_tray(self):
         """Set up the system tray icon."""
         self.logger.debug("Setting up system tray")
-        
+
         # Create system tray icon - cleanup any existing instance first
         TaskBarIcon.cleanup_existing_instance()
         self.app.taskbar_icon = TaskBarIcon(self.app)
@@ -174,7 +176,7 @@ class AppInitializer:
     def setup_accessibility(self):
         """Set up accessibility features."""
         self.logger.debug("Setting up accessibility")
-        
+
         # Register with accessibility system
         self.app.SetName("AccessiWeather")
         accessible = self.app.GetAccessible()
@@ -185,7 +187,7 @@ class AppInitializer:
     def setup_testing_hooks(self):
         """Set up testing hooks for async tests."""
         self.logger.debug("Setting up testing hooks")
-        
+
         # Test hooks for async tests
         self.app._testing_forecast_callback = None
         self.app._testing_forecast_error_callback = None
@@ -196,12 +198,12 @@ class AppInitializer:
 
     def initialize_update_service(self, config_path):
         """Initialize the update service manually.
-        
+
         Args:
             config_path: Path to the configuration file
         """
         self.logger.debug("Initializing update service")
-        
+
         try:
             from accessiweather.services.update_service import UpdateService
 
@@ -225,10 +227,10 @@ class AppInitializer:
 
     def load_config(self, config_path):
         """Load configuration from file.
-        
+
         Args:
             config_path: Path to the configuration file
-            
+
         Returns:
             Dict containing configuration or empty dict if not found
         """
@@ -263,7 +265,7 @@ class AppInitializer:
     def finalize_initialization(self):
         """Finalize the initialization process."""
         self.logger.debug("Finalizing initialization")
-        
+
         # Initialize UI with location data
         self.app.UpdateLocationDropdown()
 

@@ -10,7 +10,7 @@ from .weather_discussion_dialog import WeatherDiscussionDialog
 
 __all__ = [
     "AdvancedLocationDialog",
-    "LocationDialog", 
+    "LocationDialog",
     "NationalDiscussionDialog",
     "WeatherDiscussionDialog",
 ]

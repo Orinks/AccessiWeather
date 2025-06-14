@@ -5,9 +5,10 @@ This module provides functions for displaying forecast data in the UI.
 
 import logging
 
+from accessiweather.utils.temperature_utils import format_temperature
+
 from .weather_formatting import get_temperature_precision, is_weatherapi_data
 from .weather_source_detection import get_temperature_unit_preference
-from accessiweather.utils.temperature_utils import format_temperature
 
 logger = logging.getLogger(__name__)
 

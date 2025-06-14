@@ -16,7 +16,7 @@ class TestingUtilities:
 
     def __init__(self, app_instance):
         """Initialize the TestingUtilities.
-        
+
         Args:
             app_instance: The WeatherApp instance
         """
@@ -74,14 +74,14 @@ class TestingUtilities:
             return
 
         # Delegate to timer manager for detailed verification
-        if hasattr(self.app, 'timer_manager') and self.app.timer_manager:
+        if hasattr(self.app, "timer_manager") and self.app.timer_manager:
             self.app.timer_manager.verify_update_interval()
         else:
             self.logger.error("Timer manager not available for update interval verification")
 
     def get_debug_info(self):
         """Get comprehensive debug information about the application state.
-        
+
         Returns:
             Dict containing debug information
         """
@@ -108,7 +108,7 @@ class TestingUtilities:
                 "current_conditions_fetcher": self.app.current_conditions_fetcher is not None,
                 "hourly_forecast_fetcher": self.app.hourly_forecast_fetcher is not None,
                 "national_forecast_fetcher": self.app.national_forecast_fetcher is not None,
-            }
+            },
         }
 
         # Get current location info
@@ -118,13 +118,13 @@ class TestingUtilities:
                 debug_info["current_location"] = {
                     "name": location[0],
                     "lat": location[1],
-                    "lon": location[2]
+                    "lon": location[2],
                 }
         except Exception as e:
             debug_info["current_location"] = f"Error getting location: {e}"
 
         # Get timer info if available
-        if hasattr(self.app, 'timer_manager') and self.app.timer_manager:
+        if hasattr(self.app, "timer_manager") and self.app.timer_manager:
             try:
                 debug_info["timer_info"] = self.app.timer_manager.get_update_interval_info()
             except Exception as e:
@@ -139,7 +139,7 @@ class TestingUtilities:
             return
 
         debug_info = self.get_debug_info()
-        
+
         self.logger.info("[DEBUG] Application State Information:")
         for key, value in debug_info.items():
             if isinstance(value, dict):

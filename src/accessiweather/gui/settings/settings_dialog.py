@@ -127,13 +127,13 @@ class SettingsDialog(wx.Dialog):
             dict: A dictionary containing the updated settings.
         """
         settings = {}
-        
+
         # Get settings from each tab
         settings.update(self.general_tab.get_settings())
         settings.update(self.display_tab.get_settings())
         settings.update(self.advanced_tab.get_settings())
         settings.update(self.updates_tab.get_settings())
-        
+
         return settings
 
     def get_api_settings(self):

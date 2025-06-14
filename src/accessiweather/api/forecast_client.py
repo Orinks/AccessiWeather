@@ -171,6 +171,7 @@ class ForecastClient(NoaaApiClient):
 
             # Get the latest observation from this station
             from accessiweather.api.constants import BASE_URL
+
             observation_url = f"{BASE_URL}/stations/{station_id}/observations/latest"
             logger.info(f"Fetching current conditions from: {observation_url}")
 

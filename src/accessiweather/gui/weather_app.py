@@ -101,10 +101,14 @@ class WeatherApp(
         self.app_initializer = AppInitializer(self)
 
         # Load or use provided config
-        self.config = config if config is not None else self.app_initializer.load_config(self._config_path)
+        self.config = (
+            config if config is not None else self.app_initializer.load_config(self._config_path)
+        )
 
         # Initialize services
-        self.app_initializer.initialize_services(weather_service, location_service, notification_service, api_client)
+        self.app_initializer.initialize_services(
+            weather_service, location_service, notification_service, api_client
+        )
 
         # Initialize fetchers
         self.app_initializer.initialize_fetchers()

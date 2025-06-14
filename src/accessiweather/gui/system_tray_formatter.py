@@ -26,7 +26,7 @@ class SystemTrayFormatter:
 
     def __init__(self, format_parser, dynamic_format_manager):
         """Initialize the formatter.
-        
+
         Args:
             format_parser: FormatStringParser instance
             dynamic_format_manager: DynamicFormatManager instance
@@ -38,15 +38,15 @@ class SystemTrayFormatter:
         self,
         weather_data: Dict[str, Any],
         alerts_data: Optional[List[Dict[str, Any]]],
-        settings: Dict[str, Any]
+        settings: Dict[str, Any],
     ) -> Optional[str]:
         """Format weather data for system tray display.
-        
+
         Args:
             weather_data: Current weather data
             alerts_data: Current alerts data
             settings: Application settings
-            
+
         Returns:
             Formatted text for tray icon or None if formatting fails
         """
@@ -86,11 +86,13 @@ class SystemTrayFormatter:
             if alerts_data:
                 primary_alert = self._get_primary_alert(alerts_data)
                 if primary_alert:
-                    formatted_data.update({
-                        "event": primary_alert.get("event", "Weather Alert"),
-                        "severity": primary_alert.get("severity", "Unknown"),
-                        "headline": primary_alert.get("headline", ""),
-                    })
+                    formatted_data.update(
+                        {
+                            "event": primary_alert.get("event", "Weather Alert"),
+                            "severity": primary_alert.get("severity", "Unknown"),
+                            "headline": primary_alert.get("headline", ""),
+                        }
+                    )
 
             # Format the string
             return self.format_parser.format_string(format_string, formatted_data)
@@ -101,10 +103,10 @@ class SystemTrayFormatter:
 
     def _get_temperature_unit(self, unit_pref_str: str) -> TemperatureUnit:
         """Convert temperature unit string to enum.
-        
+
         Args:
             unit_pref_str: Temperature unit preference string
-            
+
         Returns:
             TemperatureUnit enum value
         """
@@ -121,11 +123,11 @@ class SystemTrayFormatter:
         self, weather_data: Dict[str, Any], unit_pref: TemperatureUnit
     ) -> Dict[str, Any]:
         """Format weather values based on unit preference.
-        
+
         Args:
             weather_data: Raw weather data
             unit_pref: Temperature unit preference
-            
+
         Returns:
             Dictionary with formatted weather values
         """

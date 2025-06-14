@@ -270,9 +270,7 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
 
         # Use the formatter to get the formatted text
         formatted_text = self.formatter.format_weather_data_for_tray(
-            self.current_weather_data,
-            self.current_alerts_data,
-            settings
+            self.current_weather_data, self.current_alerts_data, settings
         )
 
         if formatted_text:

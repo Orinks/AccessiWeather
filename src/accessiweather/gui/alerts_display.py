@@ -42,7 +42,7 @@ def display_alerts(frame, alerts_data):
     processed_alerts = []
     for i, feature in enumerate(features):
         properties = feature.get("properties", {})
-        
+
         alert_type = properties.get("event", "Unknown")
         severity = properties.get("severity", "Unknown")
         headline = properties.get("headline", "No headline available")
@@ -138,7 +138,7 @@ def display_alerts_error(frame, error):
         error: Error message or exception object
     """
     from .weather_source_detection import format_error_message
-    
+
     # Clear alerts list
     frame.alerts_list.DeleteAllItems()
 

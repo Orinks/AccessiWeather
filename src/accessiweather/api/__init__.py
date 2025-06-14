@@ -8,8 +8,8 @@ from .alert_fetchers import ApiAlertFetchers
 from .constants import (
     BASE_URL,
     LOCATION_TYPE_COUNTY,
-    LOCATION_TYPE_FORECAST,
     LOCATION_TYPE_FIRE,
+    LOCATION_TYPE_FORECAST,
     LOCATION_TYPE_STATE,
 )
 from .data_transformers import ApiDataTransformers

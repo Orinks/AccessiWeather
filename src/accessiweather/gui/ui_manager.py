@@ -5,7 +5,7 @@ This module provides the UIManager class which handles UI setup and updates.
 
 import logging
 
-from .alerts_display import display_alerts, display_alerts_processed, display_alerts_error
+from .alerts_display import display_alerts, display_alerts_error, display_alerts_processed
 from .forecast_display import display_forecast, display_hourly_forecast
 from .ui_setup import bind_ui_events, setup_ui_components, update_ui_for_weather_source
 from .weather_display import (

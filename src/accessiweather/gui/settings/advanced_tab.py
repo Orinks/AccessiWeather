@@ -2,11 +2,7 @@
 
 import wx
 
-from .constants import (
-    CACHE_ENABLED_KEY,
-    CACHE_TTL_KEY,
-    MINIMIZE_TO_TRAY_KEY,
-)
+from .constants import CACHE_ENABLED_KEY, CACHE_TTL_KEY, MINIMIZE_TO_TRAY_KEY
 
 
 class AdvancedTab:
@@ -14,7 +10,7 @@ class AdvancedTab:
 
     def __init__(self, parent_panel):
         """Initialize the Advanced tab.
-        
+
         Args:
             parent_panel: The parent panel for this tab
         """
@@ -59,7 +55,9 @@ class AdvancedTab:
 
         # Cache TTL
         cache_ttl_label = wx.StaticText(self.panel, label="Cache Time-to-Live (seconds):")
-        self.cache_ttl_ctrl = wx.SpinCtrl(self.panel, min=60, max=3600, initial=300, name="Cache TTL")
+        self.cache_ttl_ctrl = wx.SpinCtrl(
+            self.panel, min=60, max=3600, initial=300, name="Cache TTL"
+        )
         tooltip_ttl = "How long cached data remains valid (in seconds)."
         self.cache_ttl_ctrl.SetToolTip(tooltip_ttl)
         grid_sizer.Add(cache_ttl_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
@@ -71,7 +69,7 @@ class AdvancedTab:
 
     def load_settings(self, settings):
         """Load settings into the controls.
-        
+
         Args:
             settings: Dictionary containing current settings
         """
@@ -86,7 +84,7 @@ class AdvancedTab:
 
     def get_settings(self):
         """Get settings from the controls.
-        
+
         Returns:
             Dictionary containing the settings from this tab
         """
@@ -98,7 +96,7 @@ class AdvancedTab:
 
     def validate(self):
         """Validate the settings in this tab.
-        
+
         Returns:
             Tuple of (is_valid, error_message, focus_control)
         """

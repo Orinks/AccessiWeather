@@ -7,8 +7,8 @@ import wx
 from .constants import (
     AUTO_UPDATE_CHECK_KEY,
     DEFAULT_AUTO_UPDATE_CHECK,
-    DEFAULT_UPDATE_CHECK_INTERVAL,
     DEFAULT_UPDATE_CHANNEL,
+    DEFAULT_UPDATE_CHECK_INTERVAL,
     UPDATE_CHANNEL_KEY,
     UPDATE_CHECK_INTERVAL_KEY,
 )
@@ -21,7 +21,7 @@ class UpdatesTab:
 
     def __init__(self, parent_panel, parent_dialog):
         """Initialize the Updates tab.
-        
+
         Args:
             parent_panel: The parent panel for this tab
             parent_dialog: The parent settings dialog (for accessing main app)
@@ -80,7 +80,9 @@ class UpdatesTab:
 
         # Manual check button
         check_now_label = wx.StaticText(self.panel, label="Manual check:")
-        self.check_now_button = wx.Button(self.panel, label="Check for Updates Now", name="Check Now")
+        self.check_now_button = wx.Button(
+            self.panel, label="Check for Updates Now", name="Check Now"
+        )
         tooltip_check_now = "Click to immediately check for available updates."
         self.check_now_button.SetToolTip(tooltip_check_now)
         grid_sizer.Add(check_now_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
@@ -136,14 +138,12 @@ class UpdatesTab:
 
     def load_settings(self, settings):
         """Load settings into the controls.
-        
+
         Args:
             settings: Dictionary containing current settings
         """
         # Load update settings
-        auto_update_check = settings.get(
-            AUTO_UPDATE_CHECK_KEY, DEFAULT_AUTO_UPDATE_CHECK
-        )
+        auto_update_check = settings.get(AUTO_UPDATE_CHECK_KEY, DEFAULT_AUTO_UPDATE_CHECK)
         update_check_interval = settings.get(
             UPDATE_CHECK_INTERVAL_KEY, DEFAULT_UPDATE_CHECK_INTERVAL
         )
@@ -161,7 +161,7 @@ class UpdatesTab:
 
     def get_settings(self):
         """Get settings from the controls.
-        
+
         Returns:
             Dictionary containing the settings from this tab
         """
@@ -173,7 +173,7 @@ class UpdatesTab:
 
     def validate(self):
         """Validate the settings in this tab.
-        
+
         Returns:
             Tuple of (is_valid, error_message, focus_control)
         """

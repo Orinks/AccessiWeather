@@ -21,10 +21,10 @@ logger = logging.getLogger(__name__)
 
 def setup_ui_components(frame):
     """Initialize the user interface components.
-    
+
     Args:
         frame: The main WeatherApp frame instance
-        
+
     Returns:
         tuple: (panel, openmeteo_hidden_elements) - The main panel and list of elements to hide for Open-Meteo
     """
@@ -120,13 +120,13 @@ def setup_ui_components(frame):
         (frame.alerts_list, "alerts_list"),
         (frame.alert_btn, "alert_btn"),
     ]
-    
+
     return panel, openmeteo_hidden_elements
 
 
 def bind_ui_events(frame, ui_manager):
     """Bind UI events to their handlers in the main frame.
-    
+
     Args:
         frame: The main WeatherApp frame instance
         ui_manager: The UIManager instance for event handling
@@ -153,9 +153,7 @@ def bind_ui_events(frame, ui_manager):
     frame.Bind(wx.EVT_BUTTON, frame.OnRefresh, frame.refresh_btn)
     frame.Bind(wx.EVT_BUTTON, frame.OnViewDiscussion, frame.discussion_btn)
     frame.Bind(wx.EVT_BUTTON, frame.OnViewAlert, frame.alert_btn)
-    frame.Bind(
-        wx.EVT_LIST_ITEM_ACTIVATED, frame.OnAlertActivated, frame.alerts_list
-    )
+    frame.Bind(wx.EVT_LIST_ITEM_ACTIVATED, frame.OnAlertActivated, frame.alerts_list)
     # Add binding for list item selection to enable the alert button
     frame.Bind(wx.EVT_LIST_ITEM_SELECTED, ui_manager.OnAlertSelected, frame.alerts_list)
     frame.Bind(wx.EVT_BUTTON, frame.OnSettings, frame.settings_btn)
@@ -165,7 +163,7 @@ def bind_ui_events(frame, ui_manager):
 
 def update_ui_for_weather_source(frame, openmeteo_hidden_elements, is_openmeteo):
     """Update UI elements based on the current weather source.
-    
+
     Args:
         frame: The main WeatherApp frame instance
         openmeteo_hidden_elements: List of UI elements to hide for Open-Meteo

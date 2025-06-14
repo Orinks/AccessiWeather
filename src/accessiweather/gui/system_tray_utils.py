@@ -46,14 +46,12 @@ def is_windows_11():
 
 def load_tray_icon():
     """Load the system tray icon.
-    
+
     Returns:
         wx.Icon: The loaded icon or a default icon if loading fails
     """
     # Try to load the icon from the application's resources
-    icon_path = os.path.join(
-        os.path.dirname(__file__), "..", "..", "..", "resources", "icon.ico"
-    )
+    icon_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "resources", "icon.ico")
 
     if not os.path.exists(icon_path):
         # If the icon doesn't exist, use a default icon
@@ -64,11 +62,11 @@ def load_tray_icon():
 
 def cleanup_taskbar_icon(taskbar_icon):
     """Properly cleanup a TaskBarIcon to prevent multiple icons.
-    
+
     Args:
         taskbar_icon: The TaskBarIcon instance to cleanup
     """
-    if getattr(taskbar_icon, '_is_destroyed', False):
+    if getattr(taskbar_icon, "_is_destroyed", False):
         logger.debug("TaskBarIcon already cleaned up")
         return
 
@@ -88,6 +86,7 @@ def cleanup_taskbar_icon(taskbar_icon):
             # On Windows 10, sometimes we need a small delay for proper cleanup
             if not is_win11:
                 import time
+
                 time.sleep(0.1)  # 100ms delay for Windows 10
 
         else:

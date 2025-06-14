@@ -53,12 +53,12 @@ def is_using_openmeteo(frame) -> bool:
             weather_service = frame.weather_service
             if hasattr(weather_service, "location_service") and weather_service.location_service:
                 location_service = weather_service.location_service
-                
+
                 # Get current location
                 current_location = location_service.get_current_location()
                 if current_location:
                     lat, lon = current_location
-                    
+
                     # Check the weather source for this location
                     if hasattr(weather_service, "get_weather_source_for_location"):
                         source = weather_service.get_weather_source_for_location(lat, lon)
@@ -79,12 +79,15 @@ def is_using_openmeteo(frame) -> bool:
             # Get current location
             if hasattr(frame, "weather_service") and frame.weather_service:
                 weather_service = frame.weather_service
-                if hasattr(weather_service, "location_service") and weather_service.location_service:
+                if (
+                    hasattr(weather_service, "location_service")
+                    and weather_service.location_service
+                ):
                     location_service = weather_service.location_service
                     current_location = location_service.get_current_location()
                     if current_location:
                         lat, lon = current_location
-                        
+
                         geocoding_service = GeocodingService(
                             user_agent="AccessiWeather-UIManager", data_source="auto"
                         )
@@ -108,7 +111,7 @@ def format_error_message(error):
         str: Formatted error message
     """
     from accessiweather.api_client import ApiClientError, NoaaApiError
-    
+
     if isinstance(error, NoaaApiError):
         if error.error_type == "rate_limit":
             return "Rate limit exceeded. Please try again in a few moments."

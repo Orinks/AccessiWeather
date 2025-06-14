@@ -49,7 +49,9 @@ class ApiWeatherFetchers:
         # First get the forecast URL from the point data
         try:
             logger.info(f"Getting forecast for coordinates: ({lat}, {lon})")
-            point_data = self.location_services.get_point_data(lat, lon, force_refresh=force_refresh)
+            point_data = self.location_services.get_point_data(
+                lat, lon, force_refresh=force_refresh
+            )
 
             # Debug log the point data structure
             logger.debug(f"Point data structure keys: {list(point_data.keys())}")
@@ -120,7 +122,9 @@ class ApiWeatherFetchers:
         # First get the forecast URL from the point data
         try:
             logger.info(f"Getting hourly forecast for coordinates: ({lat}, {lon})")
-            point_data = self.location_services.get_point_data(lat, lon, force_refresh=force_refresh)
+            point_data = self.location_services.get_point_data(
+                lat, lon, force_refresh=force_refresh
+            )
 
             forecast_hourly_url = point_data.get("properties", {}).get("forecastHourly")
 

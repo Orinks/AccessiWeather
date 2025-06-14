@@ -7,10 +7,14 @@ including formatting and presenting forecast, current conditions, and alerts.
 import logging
 from typing import Any, Dict, List, Optional
 
-from .taskbar_data_extraction import extract_nws_data_for_taskbar, extract_weatherapi_data_for_taskbar
+from accessiweather.utils.temperature_utils import format_temperature
+
+from .taskbar_data_extraction import (
+    extract_nws_data_for_taskbar,
+    extract_weatherapi_data_for_taskbar,
+)
 from .weather_formatting import format_combined_wind, get_temperature_precision, is_weatherapi_data
 from .weather_source_detection import format_error_message, get_temperature_unit_preference
-from accessiweather.utils.temperature_utils import format_temperature
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +58,7 @@ def display_loading_state(frame, location_name=None, is_nationwide=False):
 
 def display_ready_state(frame):
     """Display ready state in the UI.
-    
+
     Args:
         frame: The main WeatherApp frame instance
     """
@@ -72,9 +76,6 @@ def display_forecast_error(frame, error):
     error_msg = format_error_message(error)
     frame.forecast_text.SetValue(f"Error fetching forecast: {error_msg}")
     frame.current_conditions_text.SetValue("Error fetching current conditions")
-
-
-
 
 
 def display_current_conditions(frame, conditions_data):
@@ -106,9 +107,7 @@ def display_current_conditions(frame, conditions_data):
             return
         except Exception as e:
             logger.exception("Error formatting WeatherAPI.com current conditions")
-            frame.current_conditions_text.SetValue(
-                f"Error formatting current conditions: {e}"
-            )
+            frame.current_conditions_text.SetValue(f"Error formatting current conditions: {e}")
             return
 
     # Handle NWS API data
@@ -270,6 +269,3 @@ UV Index: {uv_str}
 Visibility: {visibility_str}"""
 
     return text
-
-
-

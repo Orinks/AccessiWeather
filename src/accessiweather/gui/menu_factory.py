@@ -19,7 +19,7 @@ class MenuFactory:
 
     def __init__(self, app_instance):
         """Initialize the MenuFactory.
-        
+
         Args:
             app_instance: The WeatherApp instance
         """
@@ -53,7 +53,7 @@ class MenuFactory:
 
     def _create_file_menu(self):
         """Create the File menu.
-        
+
         Returns:
             wx.Menu: The File menu
         """
@@ -73,7 +73,7 @@ class MenuFactory:
 
     def _create_help_menu(self):
         """Create the Help menu.
-        
+
         Returns:
             wx.Menu: The Help menu
         """

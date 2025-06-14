@@ -17,7 +17,7 @@ class CallbackHandlers:
 
     def __init__(self, app_instance):
         """Initialize the CallbackHandlers.
-        
+
         Args:
             app_instance: The WeatherApp instance
         """
@@ -346,13 +346,17 @@ class CallbackHandlers:
                         )
                         self.logger.debug("Unbound discussion timer event using handler and source")
                     except Exception as unbind_e:
-                        self.logger.debug(f"Could not unbind timer with handler and source: {unbind_e}")
+                        self.logger.debug(
+                            f"Could not unbind timer with handler and source: {unbind_e}"
+                        )
 
                         # Fall back to unbinding by ID if we have it
                         if timer_id is not None:
                             try:
                                 self.app.Unbind(wx.EVT_TIMER, id=timer_id)
-                                self.logger.debug(f"Unbound discussion timer event using ID: {timer_id}")
+                                self.logger.debug(
+                                    f"Unbound discussion timer event using ID: {timer_id}"
+                                )
                             except Exception as id_unbind_e:
                                 self.logger.error(
                                     f"Error unbinding timer event by ID: {id_unbind_e}",

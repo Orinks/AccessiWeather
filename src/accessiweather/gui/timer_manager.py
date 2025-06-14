@@ -17,7 +17,7 @@ class TimerManager:
 
     def __init__(self, app_instance):
         """Initialize the TimerManager.
-        
+
         Args:
             app_instance: The WeatherApp instance
         """
@@ -69,7 +69,7 @@ class TimerManager:
 
     def get_update_interval_info(self):
         """Get detailed information about the update interval.
-        
+
         Returns:
             Dict containing update interval information
         """
@@ -88,12 +88,12 @@ class TimerManager:
             "current_time": now,
             "time_since_last": time_since_last_update,
             "next_update_in": next_update_in,
-            "update_due": time_since_last_update >= update_interval_seconds
+            "update_due": time_since_last_update >= update_interval_seconds,
         }
 
     def verify_update_interval(self):
         """Verify the unified update interval by logging detailed information.
-        
+
         This method is only available in debug mode.
         """
         if not self.app.debug_mode:
