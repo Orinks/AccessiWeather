@@ -6,8 +6,6 @@ This module handles fetching discussion and national product data.
 import logging
 from typing import Any, Dict, Optional, cast
 
-from accessiweather.api.exceptions import ApiClientError
-
 logger = logging.getLogger(__name__)
 
 

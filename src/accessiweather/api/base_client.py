@@ -1,11 +1,9 @@
 """Base NOAA API client with core functionality."""
 
 import hashlib
-import json
 import logging
 import threading
 import time
-import traceback
 from typing import Any, Dict, Optional
 
 import requests

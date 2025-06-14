@@ -174,6 +174,7 @@ def test_ui_temperature_unit_code_handling():
 def mock_nws_client():
     """Create a mock NWS client."""
     from accessiweather.api_client import NoaaApiClient
+
     return MagicMock(spec=NoaaApiClient)
 
 
@@ -181,4 +182,5 @@ def mock_nws_client():
 def mock_openmeteo_client():
     """Create a mock Open-Meteo client."""
     from accessiweather.openmeteo_client import OpenMeteoApiClient
+
     return MagicMock(spec=OpenMeteoApiClient)

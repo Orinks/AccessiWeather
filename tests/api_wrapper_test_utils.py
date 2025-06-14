@@ -142,6 +142,7 @@ def cached_api_wrapper():
 
 class PointPropertiesSpec:
     """Spec class for mocking point properties."""
+
     forecast: str
     forecast_hourly: str
     forecast_grid_data: str

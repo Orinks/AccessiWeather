@@ -51,6 +51,7 @@ SAMPLE_NATIONAL_DISCUSSION_DATA = {
     "attribution": "Data from NOAA/NWS",
 }
 
+
 # Fixture to create a mocked NoaaApiClient
 @pytest.fixture
 def mock_api_client():

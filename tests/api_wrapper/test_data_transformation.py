@@ -154,7 +154,9 @@ def test_transform_point_data_with_nested_properties(api_wrapper):
     assert result["properties"]["county"] == input_data["properties"]["county"]
     # Nested properties should be preserved
     if "relativeLocation" in result["properties"]:
-        assert result["properties"]["relativeLocation"] == input_data["properties"]["relativeLocation"]
+        assert (
+            result["properties"]["relativeLocation"] == input_data["properties"]["relativeLocation"]
+        )
 
 
 @pytest.mark.unit

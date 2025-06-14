@@ -154,9 +154,9 @@ def test_http_error_with_json_response(api_client):
         mock_response.json.return_value = {
             "title": "Bad Request",
             "detail": "Invalid coordinates provided",
-            "status": 400
+            "status": 400,
         }
-        
+
         http_error = HTTPError("400 Client Error")
         http_error.response = mock_response
         mock_get.return_value.raise_for_status.side_effect = http_error
@@ -193,7 +193,7 @@ def test_http_error_without_response(api_client):
 def test_error_message_formatting(api_client):
     """Test that error messages are formatted correctly."""
     lat, lon = 40.0, -75.0
-    
+
     # Test different error scenarios
     error_scenarios = [
         (404, "Not Found", "Resource not found"),
@@ -201,14 +201,14 @@ def test_error_message_formatting(api_client):
         (500, "Internal Server Error", "Server error"),
         (503, "Service Unavailable", "Server error"),
     ]
-    
+
     for status_code, status_text, expected_message in error_scenarios:
         with patch("requests.get") as mock_get:
             mock_response = MagicMock()
             mock_response.status_code = status_code
             mock_response.text = status_text
             mock_response.json.side_effect = JSONDecodeError("Invalid JSON", "", 0)
-            
+
             http_error = HTTPError(f"{status_code} Error")
             http_error.response = mock_response
             mock_get.return_value.raise_for_status.side_effect = http_error
@@ -225,7 +225,7 @@ def test_error_message_formatting(api_client):
 def test_error_context_preservation(api_client):
     """Test that error context is preserved through the error handling chain."""
     lat, lon = 40.0, -75.0
-    
+
     with patch("requests.get") as mock_get:
         original_error = ConnectionError("DNS resolution failed")
         mock_get.side_effect = original_error
@@ -244,7 +244,7 @@ def test_error_context_preservation(api_client):
 def test_unknown_exception_handling(api_client):
     """Test handling of unknown/unexpected exceptions."""
     lat, lon = 40.0, -75.0
-    
+
     with patch("requests.get") as mock_get:
         # Raise an unexpected exception type
         mock_get.side_effect = ValueError("Unexpected error")
@@ -261,12 +261,12 @@ def test_unknown_exception_handling(api_client):
 def test_error_logging(api_client):
     """Test that errors are logged appropriately."""
     lat, lon = 40.0, -75.0
-    
+
     with patch("requests.get") as mock_get:
         with patch("logging.getLogger") as mock_logger:
             mock_log = MagicMock()
             mock_logger.return_value = mock_log
-            
+
             mock_get.side_effect = ConnectionError("Connection failed")
 
             with pytest.raises(NoaaApiError):

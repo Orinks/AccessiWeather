@@ -29,7 +29,6 @@ from .handlers import (
     WeatherAppUpdateHandlers,
 )
 from .menu_factory import MenuFactory
-from .settings_dialog import UPDATE_INTERVAL_KEY
 from .testing_utilities import TestingUtilities
 from .timer_manager import TimerManager
 

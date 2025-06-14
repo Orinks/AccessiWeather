@@ -119,6 +119,7 @@ SAMPLE_WEATHERAPI_ALERTS_DATA = {
 
 # --- Fixtures ---
 
+
 @pytest.fixture
 def mock_ui_manager():
     """Create a mock UIManager with patched methods."""

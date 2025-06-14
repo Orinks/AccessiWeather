@@ -5,7 +5,6 @@ including formatting and presenting forecast, current conditions, and alerts.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
 
 from accessiweather.utils.temperature_utils import format_temperature
 

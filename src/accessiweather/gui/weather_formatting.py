@@ -5,10 +5,8 @@ and converting between units and formats.
 """
 
 import logging
-from typing import Any, Dict, Optional
 
-from accessiweather.utils.temperature_utils import TemperatureUnit, format_temperature
-from accessiweather.utils.unit_utils import format_pressure, format_wind_speed
+from accessiweather.utils.temperature_utils import TemperatureUnit
 
 logger = logging.getLogger(__name__)
 

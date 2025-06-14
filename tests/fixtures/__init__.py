@@ -3,7 +3,7 @@
 This package contains organized test fixtures split into logical modules:
 
 - config_fixtures: Configuration and temporary directory fixtures
-- client_fixtures: Mock client fixtures for API testing  
+- client_fixtures: Mock client fixtures for API testing
 - geocoding_fixtures: Geocoding service mocks and location fixtures
 - service_fixtures: Service layer fixtures (LocationManager, WeatherService, etc.)
 - sample_data_fixtures: Sample API response data for testing

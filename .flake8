@@ -1,7 +1,7 @@
 [flake8]
 max-line-length = 100
 max-complexity = 10
-exclude = .git,__pycache__,build,dist,**/weather_gov_api_client/**,**/weatherapi_client/**,src/accessiweather/weather_gov_api_client/models/**,.venv,venv,env,.eggs,*.egg-info,.tox,.coverage,htmlcov,.pytest_cache,.mypy_cache,venv/**,build/**,dist/**,.*/**
+exclude = .git,__pycache__,build,dist,**/weather_gov_api_client/**,**/weatherapi_client/**,src/accessiweather/weather_gov_api_client/models/**,.venv,venv,env,.eggs,*.egg-info,.tox,.coverage,htmlcov,.pytest_cache,.mypy_cache,venv/**,build/**,dist/**,.*/**,docs/**,*.md,LICENSE,CHANGELOG.md,README.md,CONTRIBUTING.md,INSTALL.md,RELEASE_README.md,BETA_RELEASE.md,enhanced_release_notes.md,release_notes.md,knowledge.md
 ignore = E203, W503, E501, F541, C901
 select = E,W,F,C
 per-file-ignores =
@@ -11,7 +11,9 @@ per-file-ignores =
     src/accessiweather/weatherapi_client/client.py:F401,F541,F811,E741
     src/accessiweather/weatherapi_mapper.py:F401
     src/accessiweather/weather_gov_api_client/**:F401,F541,F811,E741,F821
-    # Ignore unused imports in test files
+    # Ignore pytest fixture issues in test files (F401=unused import, F811=redefinition)
+    tests/**:F401,F811,F841
+    # Specific test file overrides for other issues
     tests/test_api_wrapper.py:F841
     tests/test_weatherapi_error_handling.py:F401
     tests/test_weatherapi_location.py:F401

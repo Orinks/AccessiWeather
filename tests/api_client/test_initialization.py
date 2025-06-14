@@ -57,7 +57,7 @@ def test_init_with_all_parameters():
         enable_caching=True,
         cache_ttl=600,
         timeout=45,
-        min_request_interval=1.5
+        min_request_interval=1.5,
     )
 
     assert client.user_agent == "TestClient"
@@ -86,8 +86,7 @@ def test_init_headers_format():
     """Test that headers are formatted correctly."""
     # Test with contact info
     client_with_contact = NoaaApiClient(
-        user_agent="MyApp/1.0", 
-        contact_info="developer@example.com"
+        user_agent="MyApp/1.0", contact_info="developer@example.com"
     )
     expected_ua = "MyApp/1.0 (developer@example.com)"
     assert client_with_contact.headers["User-Agent"] == expected_ua
@@ -102,20 +101,15 @@ def test_init_headers_format():
 def test_init_cache_configuration():
     """Test cache configuration options."""
     # Test with default cache TTL
-    client_default_ttl = NoaaApiClient(
-        user_agent="TestClient", 
-        enable_caching=True
-    )
+    client_default_ttl = NoaaApiClient(user_agent="TestClient", enable_caching=True)
     assert client_default_ttl.cache is not None
     # Default TTL should be set (typically 300 seconds)
-    assert hasattr(client_default_ttl.cache, 'default_ttl')
+    assert hasattr(client_default_ttl.cache, "default_ttl")
 
     # Test with custom cache TTL
     custom_ttl = 1200
     client_custom_ttl = NoaaApiClient(
-        user_agent="TestClient", 
-        enable_caching=True, 
-        cache_ttl=custom_ttl
+        user_agent="TestClient", enable_caching=True, cache_ttl=custom_ttl
     )
     assert client_custom_ttl.cache is not None
     assert client_custom_ttl.cache.default_ttl == custom_ttl
@@ -155,7 +149,7 @@ def test_init_none_user_agent():
 def test_init_base_url_configuration():
     """Test that base URL is configured correctly."""
     client = NoaaApiClient(user_agent="TestClient")
-    
+
     assert client.base_url == "https://api.weather.gov"
     assert client.base_url.endswith("weather.gov")
     assert client.base_url.startswith("https://")
@@ -165,9 +159,9 @@ def test_init_base_url_configuration():
 def test_init_session_configuration():
     """Test that requests session is configured correctly."""
     client = NoaaApiClient(user_agent="TestClient", timeout=25)
-    
+
     # Session should be configured with the specified timeout
-    assert hasattr(client, 'session')
+    assert hasattr(client, "session")
     # Headers should be set on the session
     assert "User-Agent" in client.headers
 
@@ -177,7 +171,7 @@ def test_init_multiple_instances():
     """Test that multiple client instances are independent."""
     client1 = NoaaApiClient(user_agent="Client1", timeout=30)
     client2 = NoaaApiClient(user_agent="Client2", timeout=60, enable_caching=True)
-    
+
     # Instances should be independent
     assert client1.user_agent != client2.user_agent
     assert client1.timeout != client2.timeout

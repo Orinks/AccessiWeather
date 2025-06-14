@@ -7,7 +7,6 @@ and formatting it for use in taskbar icons.
 import logging
 
 from accessiweather.utils.temperature_utils import format_temperature
-from accessiweather.utils.unit_utils import format_pressure, format_wind_speed
 
 from .weather_formatting import (
     convert_wind_direction_to_cardinal,

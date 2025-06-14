@@ -4,11 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from tests.api_client_test_utils import (
-    SAMPLE_POINT_DATA,
-    api_client,
-    cached_api_client,
-)
+from tests.api_client_test_utils import SAMPLE_POINT_DATA, api_client, cached_api_client
 
 
 @pytest.mark.unit
@@ -86,17 +82,18 @@ def test_get_point_data_with_different_coordinates(api_client):
 def test_get_point_data_with_invalid_coordinates(api_client):
     """Test getting point data with invalid coordinates."""
     invalid_coordinates = [
-        (91.0, -75.0),    # Latitude too high
-        (-91.0, -75.0),   # Latitude too low
-        (40.0, 181.0),    # Longitude too high
-        (40.0, -181.0),   # Longitude too low
+        (91.0, -75.0),  # Latitude too high
+        (-91.0, -75.0),  # Latitude too low
+        (40.0, 181.0),  # Longitude too high
+        (40.0, -181.0),  # Longitude too low
     ]
 
     for lat, lon in invalid_coordinates:
         with patch("requests.get") as mock_get:
-            from requests.exceptions import HTTPError
             from unittest.mock import MagicMock
-            
+
+            from requests.exceptions import HTTPError
+
             # Mock a 400 Bad Request response
             mock_response = MagicMock()
             mock_response.status_code = 400
@@ -106,6 +103,7 @@ def test_get_point_data_with_invalid_coordinates(api_client):
             mock_get.return_value.raise_for_status.side_effect = http_error
 
             from accessiweather.api_client import NoaaApiError
+
             with pytest.raises(NoaaApiError) as exc_info:
                 api_client.get_point_data(lat, lon)
 
@@ -181,7 +179,7 @@ def test_get_point_data_response_structure(api_client):
         assert "properties" in result
         assert "geometry" in result
         assert "type" in result
-        
+
         properties = result["properties"]
         assert "gridId" in properties
         assert "gridX" in properties
@@ -236,11 +234,11 @@ def test_get_point_data_with_precision(api_client):
 def test_get_point_data_edge_coordinates(api_client):
     """Test point data requests with edge case coordinates."""
     edge_cases = [
-        (0.0, 0.0),        # Equator and Prime Meridian
-        (90.0, 180.0),     # North Pole area
-        (-90.0, -180.0),   # South Pole area
-        (49.0, -125.0),    # Northern US border
-        (25.0, -80.0),     # Southern US
+        (0.0, 0.0),  # Equator and Prime Meridian
+        (90.0, 180.0),  # North Pole area
+        (-90.0, -180.0),  # South Pole area
+        (49.0, -125.0),  # Northern US border
+        (25.0, -80.0),  # Southern US
     ]
 
     for lat, lon in edge_cases:

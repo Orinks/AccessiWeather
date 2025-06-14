@@ -6,9 +6,9 @@ from unittest.mock import patch
 import pytest
 
 from tests.api_client_test_utils import (
-    SAMPLE_POINT_DATA,
-    SAMPLE_FORECAST_DATA,
     SAMPLE_ALERTS_DATA,
+    SAMPLE_FORECAST_DATA,
+    SAMPLE_POINT_DATA,
     api_client,
 )
 
@@ -38,24 +38,24 @@ def test_rate_limiting_multiple_endpoints(api_client):
             url = args[0]
             mock_resp = mock_get.return_value
             mock_resp.raise_for_status.return_value = None
-            
+
             if "points" in url:
                 mock_resp.json.return_value = SAMPLE_POINT_DATA
             elif "forecast" in url:
                 mock_resp.json.return_value = SAMPLE_FORECAST_DATA
             elif "alerts" in url:
                 mock_resp.json.return_value = SAMPLE_ALERTS_DATA
-            
+
             return mock_resp
 
         mock_get.side_effect = mock_response
 
         start_time = time.time()
-        
+
         # Make requests to different endpoints
         api_client.get_point_data(lat, lon)
         api_client.get_alerts(lat, lon)
-        
+
         end_time = time.time()
 
         # Should have waited for rate limiting between requests
@@ -67,7 +67,7 @@ def test_rate_limiting_with_custom_interval(api_client):
     """Test rate limiting with custom interval."""
     # Set a custom rate limit interval
     api_client.min_request_interval = 2.0
-    
+
     lat, lon = 40.0, -75.0
     with patch("requests.get") as mock_get:
         mock_get.return_value.json.return_value = SAMPLE_POINT_DATA
@@ -102,25 +102,25 @@ def test_rate_limiting_first_request_no_delay(api_client):
 def test_rate_limiting_concurrent_clients():
     """Test that rate limiting is per-client instance."""
     from accessiweather.api_client import NoaaApiClient
-    
+
     client1 = NoaaApiClient(user_agent="Client1", min_request_interval=1.0)
     client2 = NoaaApiClient(user_agent="Client2", min_request_interval=1.0)
-    
+
     lat, lon = 40.0, -75.0
-    
+
     with patch("requests.get") as mock_get:
         mock_get.return_value.json.return_value = SAMPLE_POINT_DATA
         mock_get.return_value.raise_for_status.return_value = None
 
         start_time = time.time()
-        
+
         # Both clients should be able to make requests without interfering
         client1.get_point_data(lat, lon)
         client2.get_point_data(lat, lon)
-        
+
         # Second request from same client should be rate limited
         client1.get_point_data(lat + 0.1, lon + 0.1)
-        
+
         end_time = time.time()
 
         # Should have waited for rate limiting on client1's second request
@@ -131,17 +131,18 @@ def test_rate_limiting_concurrent_clients():
 def test_rate_limiting_with_errors(api_client):
     """Test that rate limiting still applies even when requests fail."""
     lat, lon = 40.0, -75.0
-    
+
     with patch("requests.get") as mock_get:
-        from requests.exceptions import HTTPError
         from unittest.mock import MagicMock
-        
+
+        from requests.exceptions import HTTPError
+
         # First request fails
         mock_response = MagicMock()
         mock_response.status_code = 500
         http_error = HTTPError("500 Server Error")
         http_error.response = mock_response
-        
+
         # Second request succeeds
         def side_effect(*args, **kwargs):
             if mock_get.call_count == 1:
@@ -151,19 +152,20 @@ def test_rate_limiting_with_errors(api_client):
                 resp.json.return_value = SAMPLE_POINT_DATA
                 resp.raise_for_status.return_value = None
                 return resp
-        
+
         mock_get.side_effect = side_effect
 
         start_time = time.time()
-        
+
         # First request fails
         from accessiweather.api_client import NoaaApiError
+
         with pytest.raises(NoaaApiError):
             api_client.get_point_data(lat, lon)
-        
+
         # Second request should still be rate limited
         api_client.get_point_data(lat + 0.1, lon + 0.1)
-        
+
         end_time = time.time()
 
         # Should have waited for rate limiting even after failed request
@@ -175,7 +177,7 @@ def test_rate_limiting_precision(api_client):
     """Test rate limiting precision and accuracy."""
     # Set a precise rate limit interval
     api_client.min_request_interval = 0.5
-    
+
     lat, lon = 40.0, -75.0
     with patch("requests.get") as mock_get:
         mock_get.return_value.json.return_value = SAMPLE_POINT_DATA
@@ -190,7 +192,7 @@ def test_rate_limiting_precision(api_client):
 
         # First request should be immediate
         assert times[0] < 0.1
-        
+
         # Subsequent requests should be rate limited
         for i in range(1, len(times)):
             # Allow for some timing variance but should be close to the interval
@@ -201,22 +203,22 @@ def test_rate_limiting_precision(api_client):
 @pytest.mark.unit
 def test_rate_limiting_thread_safety(api_client):
     """Test rate limiting behavior with concurrent requests."""
-    import threading
     import queue
-    
+    import threading
+
     lat, lon = 40.0, -75.0
     results = queue.Queue()
-    
+
     def make_request(client, lat_offset):
         try:
             with patch("requests.get") as mock_get:
                 mock_get.return_value.json.return_value = SAMPLE_POINT_DATA
                 mock_get.return_value.raise_for_status.return_value = None
-                
+
                 start_time = time.time()
                 client.get_point_data(lat + lat_offset, lon)
                 end_time = time.time()
-                
+
                 results.put(end_time - start_time)
         except Exception as e:
             results.put(e)
@@ -254,7 +256,7 @@ def test_rate_limiting_disabled(api_client):
     """Test behavior when rate limiting is disabled."""
     # Disable rate limiting
     api_client.min_request_interval = 0.0
-    
+
     lat, lon = 40.0, -75.0
     with patch("requests.get") as mock_get:
         mock_get.return_value.json.return_value = SAMPLE_POINT_DATA

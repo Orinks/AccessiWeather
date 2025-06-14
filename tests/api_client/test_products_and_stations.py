@@ -5,13 +5,13 @@ from unittest.mock import patch
 import pytest
 
 from tests.api_client_test_utils import (
-    SAMPLE_POINT_DATA,
     SAMPLE_DISCUSSION_PRODUCTS,
     SAMPLE_DISCUSSION_TEXT,
     SAMPLE_NATIONAL_PRODUCT,
     SAMPLE_NATIONAL_PRODUCT_TEXT,
-    SAMPLE_STATIONS_DATA,
     SAMPLE_OBSERVATION_DATA,
+    SAMPLE_POINT_DATA,
+    SAMPLE_STATIONS_DATA,
     api_client,
 )
 
@@ -123,7 +123,7 @@ def test_get_current_conditions_no_stations(api_client):
 def test_get_discussion_url_construction(api_client):
     """Test that discussion URLs are constructed correctly."""
     lat, lon = 40.0, -75.0
-    
+
     with patch("requests.get") as mock_get:
         mock_get.return_value.json.side_effect = [
             SAMPLE_POINT_DATA,
@@ -136,15 +136,15 @@ def test_get_discussion_url_construction(api_client):
 
         # Verify the correct sequence of calls
         assert mock_get.call_count == 3
-        
+
         # First call should be for point data
         point_call = mock_get.call_args_list[0]
         assert "points" in point_call[0][0]
-        
+
         # Second call should be for discussion products
         products_call = mock_get.call_args_list[1]
         assert "products" in products_call[0][0]
-        
+
         # Third call should be for specific discussion text
         text_call = mock_get.call_args_list[2]
         assert "AFD-PHI-202401010000" in text_call[0][0]
@@ -155,7 +155,7 @@ def test_get_national_product_url_construction(api_client):
     """Test that national product URLs are constructed correctly."""
     product_type = "FXUS01"
     location = "KWNH"
-    
+
     with patch("requests.get") as mock_get:
         mock_get.return_value.json.side_effect = [
             SAMPLE_NATIONAL_PRODUCT,
@@ -167,14 +167,14 @@ def test_get_national_product_url_construction(api_client):
 
         # Verify the correct sequence of calls
         assert mock_get.call_count == 2
-        
+
         # First call should be for product list
         products_call = mock_get.call_args_list[0]
         products_url = products_call[0][0]
         assert "products" in products_url
         assert product_type in products_url
         assert location in products_url
-        
+
         # Second call should be for specific product text
         text_call = mock_get.call_args_list[1]
         assert "FXUS01-KWNH-202401010000" in text_call[0][0]
@@ -184,7 +184,7 @@ def test_get_national_product_url_construction(api_client):
 def test_get_stations_url_extraction(api_client):
     """Test that stations URL is extracted correctly from point data."""
     lat, lon = 40.0, -75.0
-    
+
     with patch("requests.get") as mock_get:
         mock_get.return_value.json.side_effect = [SAMPLE_POINT_DATA, SAMPLE_STATIONS_DATA]
         mock_get.return_value.raise_for_status.return_value = None
@@ -203,7 +203,7 @@ def test_get_stations_url_extraction(api_client):
 def test_get_current_conditions_station_selection(api_client):
     """Test that the first available station is selected for current conditions."""
     lat, lon = 40.0, -75.0
-    
+
     with patch("requests.get") as mock_get:
         mock_get.return_value.json.side_effect = [
             SAMPLE_POINT_DATA,
@@ -218,7 +218,7 @@ def test_get_current_conditions_station_selection(api_client):
         assert mock_get.call_count == 3
         observation_call = mock_get.call_args_list[2]
         observation_url = observation_call[0][0]
-        
+
         # Should use the first station from SAMPLE_STATIONS_DATA
         first_station_id = SAMPLE_STATIONS_DATA["features"][0]["properties"]["stationIdentifier"]
         assert first_station_id in observation_url
@@ -229,7 +229,7 @@ def test_get_current_conditions_station_selection(api_client):
 def test_get_discussion_with_missing_products(api_client):
     """Test discussion retrieval when no products are found."""
     lat, lon = 40.0, -75.0
-    
+
     with patch("requests.get") as mock_get:
         empty_products = {"@graph": []}
         mock_get.return_value.json.side_effect = [SAMPLE_POINT_DATA, empty_products]
@@ -246,7 +246,7 @@ def test_get_national_product_with_missing_products(api_client):
     """Test national product retrieval when no products are found."""
     product_type = "FXUS01"
     location = "KWNH"
-    
+
     with patch("requests.get") as mock_get:
         empty_products = {"@graph": []}
         mock_get.return_value.json.return_value = empty_products
@@ -262,11 +262,12 @@ def test_get_national_product_with_missing_products(api_client):
 def test_get_current_conditions_with_observation_error(api_client):
     """Test current conditions when observation request fails."""
     lat, lon = 40.0, -75.0
-    
+
     with patch("requests.get") as mock_get:
-        from requests.exceptions import HTTPError
         from unittest.mock import MagicMock
-        
+
+        from requests.exceptions import HTTPError
+
         def side_effect(*args, **kwargs):
             if "points" in args[0]:
                 resp = MagicMock()
@@ -285,10 +286,11 @@ def test_get_current_conditions_with_observation_error(api_client):
                 http_error = HTTPError("404 Not Found")
                 http_error.response = mock_response
                 raise http_error
-        
+
         mock_get.side_effect = side_effect
 
         from accessiweather.api_client import NoaaApiError
+
         with pytest.raises(NoaaApiError):
             api_client.get_current_conditions(lat, lon)
 
@@ -298,7 +300,7 @@ def test_product_text_extraction(api_client):
     """Test that product text is extracted correctly from responses."""
     # Test discussion text extraction
     lat, lon = 40.0, -75.0
-    
+
     with patch("requests.get") as mock_get:
         mock_get.return_value.json.side_effect = [
             SAMPLE_POINT_DATA,
@@ -312,11 +314,11 @@ def test_product_text_extraction(api_client):
         # Should extract and clean the product text
         expected_text = SAMPLE_DISCUSSION_TEXT["productText"].strip()
         assert result.strip() == expected_text
-        
+
     # Test national product text extraction
     product_type = "FXUS01"
     location = "KWNH"
-    
+
     with patch("requests.get") as mock_get:
         mock_get.return_value.json.side_effect = [
             SAMPLE_NATIONAL_PRODUCT,

@@ -5,11 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from accessiweather.api_client import NoaaApiError
-from tests.api_wrapper_test_utils import (
-    SAMPLE_POINT_DATA,
-    MockUnexpectedStatus,
-    api_wrapper,
-)
+from tests.api_wrapper_test_utils import SAMPLE_POINT_DATA, MockUnexpectedStatus, api_wrapper
 
 
 def test_make_api_request_success(api_wrapper):

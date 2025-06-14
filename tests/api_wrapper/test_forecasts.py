@@ -107,7 +107,9 @@ def test_get_hourly_forecast_error_handling(api_wrapper):
         mock_get_point.return_value = SAMPLE_POINT_DATA
 
         with patch.object(api_wrapper, "_make_api_request") as mock_request:
-            mock_request.side_effect = NoaaApiError("Hourly forecast error", NoaaApiError.SERVER_ERROR)
+            mock_request.side_effect = NoaaApiError(
+                "Hourly forecast error", NoaaApiError.SERVER_ERROR
+            )
 
             with pytest.raises(NoaaApiError):
                 api_wrapper.get_hourly_forecast(lat, lon)

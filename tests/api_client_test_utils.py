@@ -189,7 +189,7 @@ def create_modified_point_data_without_zones():
     """Create point data without zone URLs for testing state fallback."""
     modified_point_data = dict(SAMPLE_POINT_DATA)
     properties = {}
-    
+
     # Copy all properties except the zone ones
     properties_dict = SAMPLE_POINT_DATA.get("properties", {})
     if isinstance(properties_dict, dict):
@@ -217,7 +217,7 @@ def create_modified_point_data_without_zones():
     rel_location["properties"] = rel_properties
     properties["relativeLocation"] = rel_location
     modified_point_data["properties"] = properties
-    
+
     return modified_point_data
 
 
@@ -225,13 +225,13 @@ def create_point_data_without_forecast():
     """Create point data without forecast URL for testing error handling."""
     bad_point_data = dict(SAMPLE_POINT_DATA)
     properties = {}
-    
+
     # Copy all properties except 'forecast'
     properties_dict = SAMPLE_POINT_DATA.get("properties", {})
     if isinstance(properties_dict, dict):
         for key in list(properties_dict.keys()):
             if key != "forecast":
                 properties[key] = properties_dict[key]
-    
+
     bad_point_data["properties"] = properties
     return bad_point_data

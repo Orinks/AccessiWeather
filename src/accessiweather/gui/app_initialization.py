@@ -7,7 +7,6 @@ including service setup, fetcher initialization, UI setup, and system tray creat
 import json
 import logging
 import os
-import time
 
 import wx
 

@@ -11,7 +11,19 @@
         "**/__pycache__",
         "**/*.egg-info",
         "src/accessiweather/weather_gov_api_client/models",
-        "src/accessiweather/weatherapi_client"
+        "src/accessiweather/weatherapi_client",
+        "docs",
+        "*.md",
+        "LICENSE",
+        "CHANGELOG.md",
+        "README.md",
+        "CONTRIBUTING.md",
+        "INSTALL.md",
+        "RELEASE_README.md",
+        "BETA_RELEASE.md",
+        "enhanced_release_notes.md",
+        "release_notes.md",
+        "knowledge.md"
     ],
     "ignore": [
         "venv/**",

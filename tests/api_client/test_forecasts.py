@@ -5,9 +5,9 @@ from unittest.mock import patch
 import pytest
 
 from tests.api_client_test_utils import (
-    SAMPLE_POINT_DATA,
     SAMPLE_FORECAST_DATA,
     SAMPLE_HOURLY_FORECAST_DATA,
+    SAMPLE_POINT_DATA,
     api_client,
     create_point_data_without_forecast,
 )
@@ -73,7 +73,7 @@ def test_get_hourly_forecast_no_url(api_client):
                 if key != "forecastHourly":
                     properties[key] = properties_dict[key]
         bad_point_data["properties"] = properties
-        
+
         mock_get.return_value.json.return_value = bad_point_data
         mock_get.return_value.raise_for_status.return_value = None
 
@@ -87,7 +87,7 @@ def test_get_hourly_forecast_no_url(api_client):
 def test_get_forecast_url_extraction(api_client):
     """Test that forecast URL is extracted correctly from point data."""
     lat, lon = 40.0, -75.0
-    
+
     with patch("requests.get") as mock_get:
         mock_get.return_value.json.side_effect = [
             SAMPLE_POINT_DATA,
@@ -109,7 +109,7 @@ def test_get_forecast_url_extraction(api_client):
 def test_get_hourly_forecast_url_extraction(api_client):
     """Test that hourly forecast URL is extracted correctly from point data."""
     lat, lon = 40.0, -75.0
-    
+
     with patch("requests.get") as mock_get:
         mock_get.return_value.json.side_effect = [
             SAMPLE_POINT_DATA,
@@ -131,7 +131,7 @@ def test_get_hourly_forecast_url_extraction(api_client):
 def test_get_forecast_with_force_refresh(api_client):
     """Test getting forecast with force_refresh parameter."""
     lat, lon = 40.0, -75.0
-    
+
     with patch("requests.get") as mock_get:
         mock_get.return_value.json.side_effect = [
             SAMPLE_POINT_DATA,
@@ -149,7 +149,7 @@ def test_get_forecast_with_force_refresh(api_client):
 def test_get_forecast_response_structure(api_client):
     """Test that forecast response has expected structure."""
     lat, lon = 40.0, -75.0
-    
+
     with patch("requests.get") as mock_get:
         mock_get.return_value.json.side_effect = [
             SAMPLE_POINT_DATA,
@@ -162,11 +162,11 @@ def test_get_forecast_response_structure(api_client):
         # Verify response structure
         assert isinstance(result, dict)
         assert "properties" in result
-        
+
         properties = result["properties"]
         assert "periods" in properties
         assert isinstance(properties["periods"], list)
-        
+
         if properties["periods"]:
             period = properties["periods"][0]
             assert "name" in period
@@ -178,7 +178,7 @@ def test_get_forecast_response_structure(api_client):
 def test_get_hourly_forecast_response_structure(api_client):
     """Test that hourly forecast response has expected structure."""
     lat, lon = 40.0, -75.0
-    
+
     with patch("requests.get") as mock_get:
         mock_get.return_value.json.side_effect = [
             SAMPLE_POINT_DATA,
@@ -191,11 +191,11 @@ def test_get_hourly_forecast_response_structure(api_client):
         # Verify response structure
         assert isinstance(result, dict)
         assert "properties" in result
-        
+
         properties = result["properties"]
         assert "periods" in properties
         assert isinstance(properties["periods"], list)
-        
+
         if properties["periods"]:
             period = properties["periods"][0]
             assert "number" in period
@@ -211,20 +211,22 @@ def test_get_forecast_with_different_grid_points(api_client):
     test_cases = [
         ("PHI", 50, 75),  # Philadelphia
         ("MLB", 30, 40),  # Melbourne, FL
-        ("SEW", 125, 67), # Seattle
+        ("SEW", 125, 67),  # Seattle
     ]
-    
+
     for grid_id, grid_x, grid_y in test_cases:
         lat, lon = 40.0, -75.0  # Coordinates don't matter for this test
-        
+
         # Create custom point data for this grid
         custom_point_data = dict(SAMPLE_POINT_DATA)
         custom_point_data["properties"] = dict(SAMPLE_POINT_DATA["properties"])
         custom_point_data["properties"]["gridId"] = grid_id
         custom_point_data["properties"]["gridX"] = grid_x
         custom_point_data["properties"]["gridY"] = grid_y
-        custom_point_data["properties"]["forecast"] = f"https://api.weather.gov/gridpoints/{grid_id}/{grid_x},{grid_y}/forecast"
-        
+        custom_point_data["properties"][
+            "forecast"
+        ] = f"https://api.weather.gov/gridpoints/{grid_id}/{grid_x},{grid_y}/forecast"
+
         with patch("requests.get") as mock_get:
             mock_get.return_value.json.side_effect = [
                 custom_point_data,
@@ -245,12 +247,13 @@ def test_get_forecast_with_different_grid_points(api_client):
 def test_forecast_error_propagation(api_client):
     """Test that forecast errors are properly propagated."""
     lat, lon = 40.0, -75.0
-    
+
     with patch("requests.get") as mock_get:
         # Point data succeeds, forecast fails
-        from requests.exceptions import HTTPError
         from unittest.mock import MagicMock
-        
+
+        from requests.exceptions import HTTPError
+
         def side_effect(*args, **kwargs):
             if "points" in args[0]:
                 # Return point data for first call
@@ -266,10 +269,11 @@ def test_forecast_error_propagation(api_client):
                 http_error = HTTPError("500 Server Error")
                 http_error.response = mock_response
                 raise http_error
-        
+
         mock_get.side_effect = side_effect
 
         from accessiweather.api_client import NoaaApiError
+
         with pytest.raises(NoaaApiError) as exc_info:
             api_client.get_forecast(lat, lon)
 

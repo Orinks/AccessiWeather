@@ -89,7 +89,7 @@ except ImportError:
 # Export all mock data
 __all__ = [
     "MOCK_NWS_CURRENT_CONDITIONS",
-    "MOCK_NWS_FORECAST_DATA", 
+    "MOCK_NWS_FORECAST_DATA",
     "MOCK_NWS_ALERTS_DATA",
     "MOCK_NWS_POINT_DATA",
     "MOCK_OPENMETEO_CURRENT_WEATHER",

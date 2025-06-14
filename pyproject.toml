@@ -58,14 +58,26 @@ exclude = '''
   | buck-out
   | build
   | dist
+  | docs
   | src/accessiweather/weather_gov_api_client/models
   | src/accessiweather/weatherapi_client
+  | .*\.md$
+  | LICENSE
+  | CHANGELOG\.md
+  | README\.md
+  | CONTRIBUTING\.md
+  | INSTALL\.md
+  | RELEASE_README\.md
+  | BETA_RELEASE\.md
+  | enhanced_release_notes\.md
+  | release_notes\.md
+  | knowledge\.md
 )/
 '''
 
 [tool.pyright]
 include = ["src", "tests"]
-exclude = ["venv", "build", "dist", "htmlcov", "**/__pycache__", "**/*.egg-info", "src/accessiweather/weather_gov_api_client/models", "src/accessiweather/weatherapi_client"]
+exclude = ["venv", "build", "dist", "htmlcov", "**/__pycache__", "**/*.egg-info", "src/accessiweather/weather_gov_api_client/models", "src/accessiweather/weatherapi_client", "docs", "*.md", "LICENSE", "CHANGELOG.md", "README.md", "CONTRIBUTING.md", "INSTALL.md", "RELEASE_README.md", "BETA_RELEASE.md", "enhanced_release_notes.md", "release_notes.md", "knowledge.md"]
 ignore = ["venv/**", "build/**", "dist/**"]
 reportMissingImports = true
 reportMissingTypeStubs = false
