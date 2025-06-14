@@ -58,12 +58,14 @@ exclude = '''
   | buck-out
   | build
   | dist
+  | src/accessiweather/weather_gov_api_client/models
+  | src/accessiweather/weatherapi_client
 )/
 '''
 
 [tool.pyright]
 include = ["src", "tests"]
-exclude = ["venv", "build", "dist", "htmlcov", "**/__pycache__", "**/*.egg-info"]
+exclude = ["venv", "build", "dist", "htmlcov", "**/__pycache__", "**/*.egg-info", "src/accessiweather/weather_gov_api_client/models", "src/accessiweather/weatherapi_client"]
 ignore = ["venv/**", "build/**", "dist/**"]
 reportMissingImports = true
 reportMissingTypeStubs = false

@@ -1,7 +1,7 @@
 [flake8]
 max-line-length = 100
 max-complexity = 10
-exclude = .git,__pycache__,build,dist,**/weather_gov_api_client/**,**/weatherapi_client/**,.venv,venv,env,.eggs,*.egg-info,.tox,.coverage,htmlcov,.pytest_cache,.mypy_cache,venv/**,build/**,dist/**,.*/**
+exclude = .git,__pycache__,build,dist,**/weather_gov_api_client/**,**/weatherapi_client/**,src/accessiweather/weather_gov_api_client/models/**,.venv,venv,env,.eggs,*.egg-info,.tox,.coverage,htmlcov,.pytest_cache,.mypy_cache,venv/**,build/**,dist/**,.*/**
 ignore = E203, W503, E501, F541, C901
 select = E,W,F,C
 per-file-ignores =

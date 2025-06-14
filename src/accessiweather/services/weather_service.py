@@ -6,14 +6,15 @@ separating business logic from UI concerns.
 
 import logging
 import time
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Optional, Union
 
 from accessiweather.api_client import ApiClientError, NoaaApiClient, NoaaApiError
 from accessiweather.api_wrapper import NoaaApiWrapper
-from accessiweather.gui.settings_dialog import DATA_SOURCE_AUTO, DATA_SOURCE_OPENMETEO
 from accessiweather.openmeteo_client import OpenMeteoApiClient, OpenMeteoError
 from accessiweather.openmeteo_mapper import OpenMeteoMapper
 from accessiweather.services.national_discussion_scraper import NationalDiscussionScraper
+from accessiweather.services.weather_service_config import WeatherServiceConfig
+from accessiweather.services.weather_service_fallback import WeatherServiceFallback
 
 logger = logging.getLogger(__name__)
 
@@ -49,27 +50,11 @@ class WeatherService:
         self.national_data_timestamp: float = 0.0
         self.cache_expiry = 3600  # 1 hour in seconds
 
-    def _get_temperature_unit_preference(self) -> str:
-        """Get the user's temperature unit preference for Open-Meteo API calls.
-
-        Returns:
-            str: "celsius" or "fahrenheit" for Open-Meteo API
-        """
-        from accessiweather.gui.settings_dialog import (
-            DEFAULT_TEMPERATURE_UNIT,
-            TEMPERATURE_UNIT_KEY,
+        # Initialize helper classes
+        self.config_helper = WeatherServiceConfig(self.config)
+        self.fallback_helper = WeatherServiceFallback(
+            self.nws_client, self.openmeteo_client, self.openmeteo_mapper, self.config_helper
         )
-        from accessiweather.utils.temperature_utils import TemperatureUnit
-
-        settings = self.config.get("settings", {})
-        unit_pref = settings.get(TEMPERATURE_UNIT_KEY, DEFAULT_TEMPERATURE_UNIT)
-
-        # Convert to Open-Meteo API format
-        if unit_pref == TemperatureUnit.CELSIUS.value:
-            return "celsius"
-        else:
-            # Default to fahrenheit for both "fahrenheit" and "both" preferences
-            return "fahrenheit"
 
     def get_national_forecast_data(self, force_refresh: bool = False) -> dict:
         """Get nationwide forecast data, including national discussion summaries.
@@ -128,136 +113,6 @@ class WeatherService:
             # Otherwise, raise an error
             raise ApiClientError(f"Unable to retrieve nationwide forecast data: {str(e)}")
 
-    def _get_data_source(self) -> str:
-        """Get the configured data source.
-
-        Returns:
-            String indicating which data source to use ('nws', 'openmeteo', or 'auto')
-        """
-        data_source = self.config.get("settings", {}).get("data_source", DATA_SOURCE_AUTO)
-        logger.debug(
-            f"_get_data_source: config={self.config.get('settings', {})}, data_source={data_source}"
-        )
-        return str(data_source)
-
-    def _is_location_in_us(self, lat: float, lon: float) -> bool:
-        """Check if a location is within the United States.
-
-        This method uses the geocoding service to determine if the given coordinates
-        are within the United States.
-
-        Args:
-            lat: Latitude
-            lon: Longitude
-
-        Returns:
-            True if the location is within the US, False otherwise
-        """
-        from accessiweather.geocoding import GeocodingService
-
-        # Create a geocoding service instance with the correct data source
-        # Using 'auto' as data source to ensure it doesn't filter based on data source
-        # but only on the explicit us_only parameter
-        geocoding_service = GeocodingService(
-            user_agent="AccessiWeather-WeatherService", data_source="auto"
-        )
-
-        # Use the validate_coordinates method to check if the location is in the US
-        # Explicitly set us_only=True to check for US location regardless of data source
-        is_us = geocoding_service.validate_coordinates(lat, lon, us_only=True)
-        logger.debug(f"Location ({lat}, {lon}) is {'in' if is_us else 'not in'} the US")
-        return is_us
-
-    def _should_use_openmeteo(self, lat: float, lon: float) -> bool:
-        """Determine if Open-Meteo should be used for the given location.
-
-        Args:
-            lat: Latitude of the location
-            lon: Longitude of the location
-
-        Returns:
-            True if Open-Meteo should be used, False if NWS should be used
-        """
-        data_source = self._get_data_source()
-        logger.debug(f"_should_use_openmeteo: data_source={data_source}, lat={lat}, lon={lon}")
-
-        # If Open-Meteo is explicitly selected, always use it
-        if data_source == DATA_SOURCE_OPENMETEO:
-            logger.debug("_should_use_openmeteo: Open-Meteo explicitly selected")
-            return True
-
-        # If Automatic mode is selected, use Open-Meteo for non-US locations
-        if data_source == DATA_SOURCE_AUTO:
-            # Check if location is in the US
-            is_us_location = self._is_location_in_us(lat, lon)
-            logger.debug(f"_should_use_openmeteo: Automatic mode, is_us_location={is_us_location}")
-            return not is_us_location
-
-        # Default to NWS
-        logger.debug("_should_use_openmeteo: Defaulting to NWS API")
-        return False
-
-    def _try_fallback_api(
-        self, lat: float, lon: float, method_name: str, *args, **kwargs
-    ) -> Optional[Dict[str, Any]]:
-        """Try fallback API when the primary API fails.
-
-        Args:
-            lat: Latitude of the location
-            lon: Longitude of the location
-            method_name: Name of the method to call on the fallback API
-            *args: Additional arguments to pass to the method
-            **kwargs: Additional keyword arguments to pass to the method
-
-        Returns:
-            Dictionary containing the fallback API response, or None if fallback fails
-        """
-        try:
-            # If we were using Open-Meteo and it failed, try NWS if location is in US
-            if self._should_use_openmeteo(lat, lon):
-                if self._is_location_in_us(lat, lon):
-                    logger.info(f"Open-Meteo failed, trying NWS fallback for {method_name}")
-                    method = getattr(self.nws_client, method_name, None)
-                    if method:
-                        result = method(lat, lon, *args, **kwargs)
-                        return cast(Dict[str, Any], result)
-                    else:
-                        logger.warning(f"NWS client does not have method {method_name}")
-                        return None
-                else:
-                    logger.warning(
-                        f"Open-Meteo failed for non-US location, no fallback available for {method_name}"
-                    )
-                    return None
-            else:
-                # If we were using NWS and it failed, try Open-Meteo as fallback
-                logger.info(f"NWS failed, trying Open-Meteo fallback for {method_name}")
-                if method_name == "get_forecast":
-                    temp_unit = self._get_temperature_unit_preference()
-                    openmeteo_data = self.openmeteo_client.get_forecast(
-                        lat, lon, temperature_unit=temp_unit
-                    )
-                    return self.openmeteo_mapper.map_forecast(openmeteo_data)
-                elif method_name == "get_hourly_forecast":
-                    temp_unit = self._get_temperature_unit_preference()
-                    openmeteo_data = self.openmeteo_client.get_hourly_forecast(
-                        lat, lon, temperature_unit=temp_unit
-                    )
-                    return self.openmeteo_mapper.map_hourly_forecast(openmeteo_data)
-                elif method_name == "get_current_conditions":
-                    temp_unit = self._get_temperature_unit_preference()
-                    openmeteo_data = self.openmeteo_client.get_current_weather(
-                        lat, lon, temperature_unit=temp_unit
-                    )
-                    return self.openmeteo_mapper.map_current_conditions(openmeteo_data)
-                else:
-                    logger.warning(f"No Open-Meteo fallback available for {method_name}")
-                    return None
-
-        except Exception as e:
-            logger.error(f"Fallback API also failed for {method_name}: {str(e)}")
-            return None
-
     def get_forecast(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
         """Get forecast data for a location.
 
@@ -277,11 +132,11 @@ class WeatherService:
             logger.info(f"Getting forecast for coordinates: ({lat}, {lon})")
 
             # Determine which API to use based on configuration and location
-            if self._should_use_openmeteo(lat, lon):
+            if self.config_helper.should_use_openmeteo(lat, lon):
                 logger.info("Using Open-Meteo API for forecast")
                 try:
                     # Get user's temperature preference
-                    temp_unit = self._get_temperature_unit_preference()
+                    temp_unit = self.config_helper.get_temperature_unit_preference()
                     # Get forecast from Open-Meteo with user's preferred units
                     openmeteo_data = self.openmeteo_client.get_forecast(
                         lat, lon, temperature_unit=temp_unit
@@ -291,7 +146,7 @@ class WeatherService:
                 except (OpenMeteoError, Exception) as e:
                     logger.warning(f"Open-Meteo API failed for forecast: {str(e)}")
                     # Try fallback to NWS if location is in US
-                    fallback_result = self._try_fallback_api(
+                    fallback_result = self.fallback_helper.try_fallback_api(
                         lat, lon, "get_forecast", force_refresh=force_refresh
                     )
                     if fallback_result:
@@ -307,7 +162,9 @@ class WeatherService:
                 except (NoaaApiError, Exception) as e:
                     logger.warning(f"NWS API failed for forecast: {str(e)}")
                     # Try fallback to Open-Meteo
-                    fallback_result = self._try_fallback_api(lat, lon, "get_forecast")
+                    fallback_result = self.fallback_helper.try_fallback_api(
+                        lat, lon, "get_forecast"
+                    )
                     if fallback_result:
                         return fallback_result
                     else:
@@ -347,11 +204,11 @@ class WeatherService:
             logger.info(f"Getting hourly forecast for coordinates: ({lat}, {lon})")
 
             # Determine which API to use based on configuration and location
-            if self._should_use_openmeteo(lat, lon):
+            if self.config_helper.should_use_openmeteo(lat, lon):
                 logger.info("Using Open-Meteo API for hourly forecast")
                 try:
                     # Get user's temperature preference
-                    temp_unit = self._get_temperature_unit_preference()
+                    temp_unit = self.config_helper.get_temperature_unit_preference()
                     # Get hourly forecast from Open-Meteo with user's preferred units
                     openmeteo_data = self.openmeteo_client.get_hourly_forecast(
                         lat, lon, temperature_unit=temp_unit
@@ -361,7 +218,7 @@ class WeatherService:
                 except (OpenMeteoError, Exception) as e:
                     logger.warning(f"Open-Meteo API failed for hourly forecast: {str(e)}")
                     # Try fallback to NWS if location is in US
-                    fallback_result = self._try_fallback_api(
+                    fallback_result = self.fallback_helper.try_fallback_api(
                         lat, lon, "get_hourly_forecast", force_refresh=force_refresh
                     )
                     if fallback_result:
@@ -379,7 +236,9 @@ class WeatherService:
                 except (NoaaApiError, Exception) as e:
                     logger.warning(f"NWS API failed for hourly forecast: {str(e)}")
                     # Try fallback to Open-Meteo
-                    fallback_result = self._try_fallback_api(lat, lon, "get_hourly_forecast")
+                    fallback_result = self.fallback_helper.try_fallback_api(
+                        lat, lon, "get_hourly_forecast"
+                    )
                     if fallback_result:
                         return fallback_result
                     else:
@@ -442,11 +301,11 @@ class WeatherService:
             logger.info(f"Getting current conditions for coordinates: ({lat}, {lon})")
 
             # Determine which API to use based on configuration and location
-            if self._should_use_openmeteo(lat, lon):
+            if self.config_helper.should_use_openmeteo(lat, lon):
                 logger.info("Using Open-Meteo API for current conditions")
                 try:
                     # Get user's temperature preference
-                    temp_unit = self._get_temperature_unit_preference()
+                    temp_unit = self.config_helper.get_temperature_unit_preference()
                     # Get current conditions from Open-Meteo with user's preferred units
                     openmeteo_data = self.openmeteo_client.get_current_weather(
                         lat, lon, temperature_unit=temp_unit
@@ -456,7 +315,7 @@ class WeatherService:
                 except (OpenMeteoError, Exception) as e:
                     logger.warning(f"Open-Meteo API failed for current conditions: {str(e)}")
                     # Try fallback to NWS if location is in US
-                    fallback_result = self._try_fallback_api(
+                    fallback_result = self.fallback_helper.try_fallback_api(
                         lat, lon, "get_current_conditions", force_refresh=force_refresh
                     )
                     if fallback_result:
@@ -474,7 +333,9 @@ class WeatherService:
                 except (NoaaApiError, Exception) as e:
                     logger.warning(f"NWS API failed for current conditions: {str(e)}")
                     # Try fallback to Open-Meteo
-                    fallback_result = self._try_fallback_api(lat, lon, "get_current_conditions")
+                    fallback_result = self.fallback_helper.try_fallback_api(
+                        lat, lon, "get_current_conditions"
+                    )
                     if fallback_result:
                         return fallback_result
                     else:
@@ -524,7 +385,7 @@ class WeatherService:
             logger.info(f"Getting alerts for coordinates: ({lat}, {lon})")
 
             # Check if this location would use Open-Meteo
-            if self._should_use_openmeteo(lat, lon):
+            if self.config_helper.should_use_openmeteo(lat, lon):
                 logger.info("Open-Meteo does not provide weather alerts - returning empty alerts")
                 # Return empty alerts structure for Open-Meteo locations
                 return {

@@ -1,29 +1,26 @@
-"""Update service for AccessiWeather.
+"""Updates package for AccessiWeather.
 
-This module provides backward compatibility imports for the refactored
-update system. The actual implementation has been moved to the
-updates package for better organization.
+This package provides functionality for checking, downloading, and installing
+application updates from GitHub releases and development builds.
 """
 
-# Import all classes from the new package structure for backward compatibility
-from .updates import (
+from .update_checker import UpdateChecker, UpdateScheduler
+from .update_info import (
     DEFAULT_AUTO_CHECK_ENABLED,
     DEFAULT_CHECK_INTERVAL_HOURS,
     DEFAULT_UPDATE_CHANNEL,
     UPDATE_CHANNEL_DEV,
     UPDATE_CHANNEL_STABLE,
     VALID_UPDATE_CHANNELS,
-    UpdateChecker,
-    UpdateDownloader,
+    UpdateAssetParser,
     UpdateInfo,
-    UpdateInstaller,
-    UpdateManager,
-    UpdateScheduler,
-    UpdateService,
     VersionUtils,
 )
+from .update_installer import UpdateDownloader, UpdateInstaller, UpdateManager
 
-# Re-export for backward compatibility
+# Re-export the main UpdateService class for backward compatibility
+from .update_service import UpdateService
+
 __all__ = [
     "UpdateService",
     "UpdateInfo",
@@ -33,6 +30,7 @@ __all__ = [
     "UpdateInstaller",
     "UpdateManager",
     "VersionUtils",
+    "UpdateAssetParser",
     "UPDATE_CHANNEL_STABLE",
     "UPDATE_CHANNEL_DEV",
     "VALID_UPDATE_CHANNELS",

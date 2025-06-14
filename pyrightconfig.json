@@ -9,7 +9,9 @@
         "dist",
         "htmlcov",
         "**/__pycache__",
-        "**/*.egg-info"
+        "**/*.egg-info",
+        "src/accessiweather/weather_gov_api_client/models",
+        "src/accessiweather/weatherapi_client"
     ],
     "ignore": [
         "venv/**",
