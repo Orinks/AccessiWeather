@@ -1,0 +1,23 @@
+{
+    "include": [
+        "src",
+        "tests"
+    ],
+    "exclude": [
+        "venv",
+        "build",
+        "dist",
+        "htmlcov",
+        "**/__pycache__",
+        "**/*.egg-info"
+    ],
+    "ignore": [
+        "venv/**",
+        "build/**",
+        "dist/**"
+    ],
+    "reportMissingImports": true,
+    "reportMissingTypeStubs": false,
+    "pythonVersion": "3.12",
+    "pythonPlatform": "Windows"
+}

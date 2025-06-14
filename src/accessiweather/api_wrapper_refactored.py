@@ -239,4 +239,3 @@ class NoaaApiWrapper:
     def _transform_alerts_data(self, alerts_data: Any) -> Dict[str, Any]:
         """Transform alerts data from the generated client format."""
         return self.data_transformers.transform_alerts_data(alerts_data)
-

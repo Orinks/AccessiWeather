@@ -54,7 +54,7 @@ class UpdateNotificationDialog(wx.Dialog):
         self.main_sizer = wx.BoxSizer(wx.VERTICAL)
 
         # Header
-        header_text = f"A new version of AccessiWeather is available!"
+        header_text = "A new version of AccessiWeather is available!"
         header_label = wx.StaticText(self, label=header_text)
         header_font = header_label.GetFont()
         header_font.SetWeight(wx.FONTWEIGHT_BOLD)

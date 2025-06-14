@@ -9,6 +9,7 @@ import sys
 from typing import List, Optional
 
 from accessiweather.main import main as app_main
+from accessiweather.version import __version__
 
 
 def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
@@ -22,6 +23,12 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
     """
     parser = argparse.ArgumentParser(
         description=("AccessiWeather - An accessible weather " "application using NOAA data")
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"AccessiWeather {__version__}",
+        help="Show version information and exit",
     )
     parser.add_argument(
         "-d",

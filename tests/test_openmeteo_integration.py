@@ -484,13 +484,14 @@ def test_ui_temperature_unit_code_handling():
     # Create UI manager with mocked dependencies
     ui_manager = UIManager.__new__(UIManager)  # Create without calling __init__
     ui_manager.frame = mock_frame
-    ui_manager.config = config
+    # Use setattr to avoid "UIManager has no attribute config" error
+    setattr(ui_manager, "config", config)
 
-    # Add the missing method
+    # Add the missing method using setattr to avoid "Cannot assign to a method" error
     def mock_get_temperature_unit_preference():
         return TemperatureUnit.BOTH
 
-    ui_manager._get_temperature_unit_preference = mock_get_temperature_unit_preference
+    setattr(ui_manager, "_get_temperature_unit_preference", mock_get_temperature_unit_preference)
 
     # Test data with Fahrenheit unit code (Open-Meteo with fahrenheit preference)
     fahrenheit_data = {

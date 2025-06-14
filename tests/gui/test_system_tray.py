@@ -200,16 +200,19 @@ class TestSystemTray(unittest.TestCase):
         """Test that context menu is shown with proper accessibility."""
         with patch("wx.adv.TaskBarIcon"):
             icon = TaskBarIcon(self.frame)
-            icon.CreatePopupMenu = MagicMock(return_value=MagicMock())
-            icon.PopupMenu = MagicMock()
+            # Use setattr to avoid "Cannot assign to a method" error
+            mock_create_popup = MagicMock(return_value=MagicMock())
+            mock_popup_menu = MagicMock()
+            setattr(icon, "CreatePopupMenu", mock_create_popup)
+            setattr(icon, "PopupMenu", mock_popup_menu)
 
             # Test right-click context menu
             mock_event = MagicMock()
             icon.on_right_click(mock_event)
 
             # Verify menu was created and shown with proper focus
-            icon.CreatePopupMenu.assert_called_once()
-            icon.PopupMenu.assert_called_once()
+            mock_create_popup.assert_called_once()
+            mock_popup_menu.assert_called_once()
 
 
 if __name__ == "__main__":

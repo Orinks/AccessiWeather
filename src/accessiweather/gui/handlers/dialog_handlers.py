@@ -182,19 +182,25 @@ class WeatherAppDialogHandlers(WeatherAppHandlerBase):
 
         logger.debug("Showing settings dialog")
         dialog = SettingsDialog(self, current_settings)
+
+        # Store the dialog reference immediately so update handlers can access it
+        self._last_settings_dialog = dialog
+        logger.debug(f"Settings dialog reference stored: {type(dialog).__name__}")
+
         result = dialog.ShowModal()
+        logger.debug(f"Settings dialog closed with result: {result}")
 
         updated_settings = None
         updated_api_settings = None
         if result == wx.ID_OK:
             updated_settings = dialog.get_settings()
             updated_api_settings = dialog.get_api_settings()
-
-            # Store the dialog reference so settings_handlers can access it
-            self._last_settings_dialog = dialog
-
+            logger.debug("Settings dialog accepted, keeping reference for cleanup")
         else:
+            logger.debug("Settings dialog cancelled, destroying immediately")
             dialog.Destroy()
+            self._last_settings_dialog = None
+            logger.debug("Settings dialog reference cleared")
 
         return result, updated_settings, updated_api_settings
 

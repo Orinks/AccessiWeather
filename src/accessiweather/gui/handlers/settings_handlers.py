@@ -56,10 +56,15 @@ class WeatherAppSettingsHandlers(WeatherAppHandlerBase):
             if hasattr(self, "_last_settings_dialog") and hasattr(
                 self._last_settings_dialog, "get_api_keys"
             ):
+                logger.debug("Getting API keys from settings dialog before cleanup")
                 updated_api_keys = self._last_settings_dialog.get_api_keys()
                 # Clean up the reference
+                logger.debug("Destroying settings dialog and clearing reference")
                 self._last_settings_dialog.Destroy()
                 del self._last_settings_dialog
+                logger.debug("Settings dialog reference cleaned up")
+            else:
+                logger.debug("No settings dialog reference found for cleanup")
 
             # Update config
             self.config["settings"] = updated_settings

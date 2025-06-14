@@ -196,7 +196,8 @@ class MockWeatherApp(
             "api_keys": {},
         }
         self.location_service = None
-        self._last_settings_dialog = None
+        # Create a mock SettingsDialog to satisfy type checker
+        self._last_settings_dialog = MagicMock(spec=SettingsDialog)
 
     def UpdateLocationDropdown(self):
         """Mock method."""
@@ -236,7 +237,8 @@ class TestSettingsBugFix(unittest.TestCase):
             updated_settings["alert_radius_miles"] = 30
             return wx.ID_OK, updated_settings, {}  # Empty api_settings
 
-        self.app.ShowSettingsDialog = mock_show_dialog
+        # Use setattr to avoid "Cannot assign to a method" error
+        setattr(self.app, "ShowSettingsDialog", mock_show_dialog)
 
         # Create a mock event
         mock_event = MagicMock()
@@ -267,7 +269,8 @@ class TestSettingsBugFix(unittest.TestCase):
         def mock_show_dialog(current_settings):  # noqa: ARG001
             return wx.ID_CANCEL, None, None
 
-        self.app.ShowSettingsDialog = mock_show_dialog
+        # Use setattr to avoid "Cannot assign to a method" error
+        setattr(self.app, "ShowSettingsDialog", mock_show_dialog)
 
         # Store original values
         original_interval = self.app.config["settings"]["update_interval_minutes"]

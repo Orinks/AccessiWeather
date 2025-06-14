@@ -67,12 +67,12 @@ class TestApplicationStartupFlow:
 
             # Test fetching weather data
             forecast = weather_service.get_forecast(40.7128, -74.0060)
-            current = weather_service.get_current_conditions(40.7128, -74.0060)
+            current_conditions = weather_service.get_current_conditions(40.7128, -74.0060)
 
             assert forecast is not None
-            assert current is not None
+            assert current_conditions is not None
             assert "properties" in forecast
-            assert "properties" in current
+            assert "properties" in current_conditions
 
     def test_existing_user_startup_flow(self, config_file, sample_config):
         """Test startup flow for existing user with saved configuration."""
