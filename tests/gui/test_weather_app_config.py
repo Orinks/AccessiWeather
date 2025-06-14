@@ -17,7 +17,7 @@ from accessiweather.services.weather_service import WeatherService
 @contextmanager
 def mock_wx_components():
     """Context manager to mock all wx components needed for WeatherApp initialization."""
-    with patch("accessiweather.gui.weather_app.UIManager"):
+    with patch("accessiweather.gui.app_initialization.UIManager"):
         with patch.object(WeatherApp, "CreateStatusBar"):
             with patch.object(WeatherApp, "SetStatusText"):
                 with patch("wx.Timer"):
@@ -119,7 +119,7 @@ class TestWeatherAppConfig:
 
         with mock_wx_components():
             with patch("accessiweather.gui.weather_app.CONFIG_PATH", config_path):
-                with patch("accessiweather.gui.weather_app.TaskBarIcon") as mock_taskbar:
+                with patch("accessiweather.gui.app_initialization.TaskBarIcon") as mock_taskbar:
                     # Configure the mock TaskBarIcon
                     mock_instance = MagicMock()
                     mock_instance.cleanup = MagicMock()
@@ -155,7 +155,7 @@ class TestWeatherAppConfig:
         config_path = os.path.join(temp_config_dir, "config.json")
 
         with mock_wx_components():
-            with patch("accessiweather.gui.weather_app.TaskBarIcon") as mock_taskbar:
+            with patch("accessiweather.gui.app_initialization.TaskBarIcon") as mock_taskbar:
                 # Configure the mock TaskBarIcon
                 mock_instance = MagicMock()
                 mock_instance.cleanup = MagicMock()
@@ -196,7 +196,7 @@ class TestWeatherAppConfig:
         config_path = os.path.join(temp_config_dir, "nonexistent_config.json")
 
         with mock_wx_components():
-            with patch("accessiweather.gui.weather_app.TaskBarIcon") as mock_taskbar:
+            with patch("accessiweather.gui.app_initialization.TaskBarIcon") as mock_taskbar:
                 # Configure the mock TaskBarIcon
                 mock_instance = MagicMock()
                 mock_instance.cleanup = MagicMock()
@@ -239,7 +239,7 @@ class TestWeatherAppConfig:
             json.dump(old_config, f)
 
         with mock_wx_components():
-            with patch("accessiweather.gui.weather_app.TaskBarIcon") as mock_taskbar:
+            with patch("accessiweather.gui.app_initialization.TaskBarIcon") as mock_taskbar:
                 # Configure the mock TaskBarIcon
                 mock_instance = MagicMock()
                 mock_instance.cleanup = MagicMock()
@@ -276,7 +276,7 @@ class TestWeatherAppConfig:
             f.write("invalid json content {")
 
         with mock_wx_components():
-            with patch("accessiweather.gui.weather_app.TaskBarIcon") as mock_taskbar:
+            with patch("accessiweather.gui.app_initialization.TaskBarIcon") as mock_taskbar:
                 # Configure the mock TaskBarIcon
                 mock_instance = MagicMock()
                 mock_instance.cleanup = MagicMock()

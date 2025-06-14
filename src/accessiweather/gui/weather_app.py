@@ -143,7 +143,7 @@ class WeatherApp(
         self.testing_utilities = TestingUtilities(self)
 
         # Create menu bar using menu factory
-        self.menu_factory.create_menu_bar()
+        self._create_menu_bar()
 
         # Initialize update service
         self.app_initializer.initialize_update_service(self._config_path)
@@ -396,6 +396,13 @@ class WeatherApp(
             event: Menu event
         """
         self.menu_factory.on_about(event)
+
+    def _create_menu_bar(self):
+        """Create the menu bar for the application.
+
+        This method delegates to the menu factory for actual menu creation.
+        """
+        self.menu_factory.create_menu_bar()
 
     def verify_update_interval(self):
         """Verify the unified update interval by logging detailed information.

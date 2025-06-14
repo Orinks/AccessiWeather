@@ -118,7 +118,7 @@ def test_notify_alerts_none(notifier, mock_toaster):
 
 def test_notify_alerts_single(notifier, mock_toaster):
     """Test notify_alerts with one alert."""
-    notifier.toaster = mock_toaster
+    notifier.display_manager.toaster = mock_toaster
     notifier.notify_alerts(1)
     mock_toaster.show_toast.assert_called_once_with(
         title="Weather Alerts",
@@ -130,7 +130,7 @@ def test_notify_alerts_single(notifier, mock_toaster):
 
 def test_notify_alerts_multiple(notifier, mock_toaster):
     """Test notify_alerts with multiple alerts."""
-    notifier.toaster = mock_toaster
+    notifier.display_manager.toaster = mock_toaster
     notifier.notify_alerts(3)
     mock_toaster.show_toast.assert_called_once_with(
         title="Weather Alerts",
@@ -142,7 +142,7 @@ def test_notify_alerts_multiple(notifier, mock_toaster):
 
 def test_process_alerts_new(notifier, mock_toaster, mock_datetime):
     """Test processing new alerts."""
-    notifier.toaster = mock_toaster
+    notifier.display_manager.toaster = mock_toaster
 
     result = notifier.process_alerts(SAMPLE_ALERTS_DATA)
     processed_alerts, new_count, updated_count = result
@@ -163,7 +163,7 @@ def test_process_alerts_new(notifier, mock_toaster, mock_datetime):
 
 def test_process_alerts_existing(notifier, mock_toaster, mock_datetime):
     """Test processing existing alerts."""
-    notifier.toaster = mock_toaster
+    notifier.display_manager.toaster = mock_toaster
 
     # First call to populate active_alerts
     notifier.process_alerts(SAMPLE_ALERTS_DATA)
@@ -184,7 +184,7 @@ def test_process_alerts_existing(notifier, mock_toaster, mock_datetime):
 
 def test_process_alerts_mixed(notifier, mock_toaster, mock_datetime):
     """Test processing mixed new and existing alerts."""
-    notifier.toaster = mock_toaster
+    notifier.display_manager.toaster = mock_toaster
 
     # First call with one alert
     notifier.process_alerts(SAMPLE_ALERTS_DATA)
@@ -217,7 +217,7 @@ def test_process_alerts_empty(notifier, mock_toaster):
 
 def test_show_notification(notifier, mock_toaster):
     """Test showing a notification."""
-    notifier.toaster = mock_toaster
+    notifier.display_manager.toaster = mock_toaster
 
     notifier.show_notification(SAMPLE_ALERT)
 
@@ -231,7 +231,7 @@ def test_show_notification(notifier, mock_toaster):
 
 def test_show_notification_no_headline(notifier, mock_toaster):
     """Test showing a notification without a headline."""
-    notifier.toaster = mock_toaster
+    notifier.display_manager.toaster = mock_toaster
     alert = dict(SAMPLE_ALERT)
     del alert["headline"]
 

@@ -61,6 +61,10 @@ def test_on_alerts_fetched():
     mock_app._check_update_complete = MagicMock()
     mock_app._testing_alerts_callback = None
 
+    # Create a mock callback handler
+    mock_callback_handlers = MagicMock()
+    mock_app.callback_handlers = mock_callback_handlers
+
     # Mock the notification service response
     processed_alerts = [
         {
@@ -104,20 +108,8 @@ def test_on_alerts_fetched():
     # Call the method directly
     WeatherApp._on_alerts_fetched(mock_app, mock_alerts_data)
 
-    # Verify that the notification service was called to process the alerts
-    mock_app.notification_service.process_alerts.assert_called_once_with(mock_alerts_data)
-
-    # Verify that the processed alerts were saved to current_alerts
-    assert mock_app.current_alerts == processed_alerts
-
-    # Verify that the UI manager was called with the processed alerts
-    mock_app.ui_manager.display_alerts_processed.assert_called_once_with(processed_alerts)
-
-    # Verify that the alerts_complete flag was set
-    assert mock_app._alerts_complete is True
-
-    # Verify that check_update_complete was called
-    mock_app._check_update_complete.assert_called_once()
+    # Verify that the callback handler was called
+    mock_callback_handlers.on_alerts_fetched.assert_called_once_with(mock_alerts_data)
 
 
 def test_alert_update_interval(mock_app):

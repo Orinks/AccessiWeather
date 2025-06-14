@@ -20,6 +20,8 @@ class NoaaApiClient(ForecastClient, AlertsClient, NationalProductsClient):
         contact_info: Optional[str] = None,
         enable_caching: bool = False,
         cache_ttl: int = 300,
+        timeout: int = 30,
+        min_request_interval: float = 1.0,
     ):
         """Initialize the unified NOAA API client.
 
@@ -29,6 +31,10 @@ class NoaaApiClient(ForecastClient, AlertsClient, NationalProductsClient):
                           for API identification. If None, uses the app name.
             enable_caching: Whether to enable caching of API responses
             cache_ttl: Time-to-live for cached responses in seconds (default: 5 minutes)
+            timeout: Request timeout in seconds (default: 30)
+            min_request_interval: Minimum interval between requests in seconds (default: 1.0)
         """
         # Initialize the base client (only need to call one parent's __init__)
-        ForecastClient.__init__(self, user_agent, contact_info, enable_caching, cache_ttl)
+        ForecastClient.__init__(
+            self, user_agent, contact_info, enable_caching, cache_ttl, timeout, min_request_interval
+        )

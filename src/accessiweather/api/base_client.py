@@ -25,6 +25,8 @@ class NoaaApiClient:
         contact_info: Optional[str] = None,
         enable_caching: bool = False,
         cache_ttl: int = 300,
+        timeout: int = 30,
+        min_request_interval: float = 1.0,
     ):
         """Initialize the NOAA API client.
 
@@ -34,10 +36,32 @@ class NoaaApiClient:
                           for API identification. If None, uses the app name.
             enable_caching: Whether to enable caching of API responses
             cache_ttl: Time-to-live for cached responses in seconds (default: 5 minutes)
+            timeout: Request timeout in seconds (default: 30)
+            min_request_interval: Minimum interval between requests in seconds (default: 1.0)
+
+        Raises:
+            ValueError: If user_agent is empty or parameters are invalid
+            TypeError: If user_agent is None
         """
+        # Validate parameters
+        if user_agent is None:
+            raise TypeError("user_agent cannot be None")
+        if not user_agent or not user_agent.strip():
+            raise ValueError("user_agent cannot be empty")
+        if timeout < 0:
+            raise ValueError("timeout cannot be negative")
+        if min_request_interval < 0:
+            raise ValueError("min_request_interval cannot be negative")
+        if cache_ttl < 0:
+            raise ValueError("cache_ttl cannot be negative")
+
         self.user_agent = user_agent
         # Use app name as default contact info if none provided
         self.contact_info = contact_info or user_agent
+
+        # Store configuration
+        self.timeout = timeout
+        self.base_url = BASE_URL
 
         # Build user agent string according to NOAA API recommendations
         user_agent_string = f"{user_agent} ({self.contact_info})"
@@ -46,8 +70,8 @@ class NoaaApiClient:
 
         # Add request tracking for rate limiting
         self.last_request_time: float = 0.0  # Ensure float type
-        # Half a second between requests to avoid rate limiting
-        self.min_request_interval: float = 0.5
+        # Store min_request_interval for rate limiting
+        self.min_request_interval: float = min_request_interval
 
         # Add thread lock for thread safety
         self.request_lock = threading.RLock()
@@ -130,11 +154,11 @@ class NoaaApiClient:
 
                 logger.debug(f"API request to: {request_url} with params: {params}")
                 # Make the request - keeping this inside the lock to avoid
-                # concurrent access. Added timeout.
+                # concurrent access. Use configurable timeout.
                 try:
                     logger.debug(f"Sending GET request to {request_url}")
                     response = requests.get(
-                        request_url, headers=self.headers, params=params, timeout=10
+                        request_url, headers=self.headers, params=params, timeout=self.timeout
                     )
                     logger.debug(
                         f"Received response from {request_url} with status code: "
@@ -150,6 +174,16 @@ class NoaaApiClient:
                     # Raises HTTPError for bad responses (4xx or 5xx)
                     response.raise_for_status()
                 except requests.exceptions.HTTPError as http_err:
+                    # Handle case where HTTPError doesn't have a response object
+                    if http_err.response is None:
+                        error_msg = f"HTTP error without response: {str(http_err)}"
+                        logger.error(error_msg)
+                        raise NoaaApiError(
+                            message=error_msg,
+                            error_type=NoaaApiError.UNKNOWN_ERROR,
+                            url=request_url,
+                        ) from http_err
+
                     status_code = http_err.response.status_code
                     error_detail = ""
                     error_type = NoaaApiError.UNKNOWN_ERROR

@@ -157,12 +157,12 @@ def test_init_base_url_configuration():
 
 @pytest.mark.unit
 def test_init_session_configuration():
-    """Test that requests session is configured correctly."""
+    """Test that client configuration is correct."""
     client = NoaaApiClient(user_agent="TestClient", timeout=25)
 
-    # Session should be configured with the specified timeout
-    assert hasattr(client, "session")
-    # Headers should be set on the session
+    # Client should have the correct timeout
+    assert client.timeout == 25
+    # Headers should be set correctly
     assert "User-Agent" in client.headers
 
 

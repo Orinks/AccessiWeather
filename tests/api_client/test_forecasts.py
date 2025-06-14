@@ -255,20 +255,28 @@ def test_forecast_error_propagation(api_client):
         from requests.exceptions import HTTPError
 
         def side_effect(*args, **kwargs):
-            if "points" in args[0]:
+            if "/points/" in args[0]:
                 # Return point data for first call
                 response = MagicMock()
                 response.json.return_value = SAMPLE_POINT_DATA
                 response.raise_for_status.return_value = None
                 return response
-            else:
-                # Raise error for forecast call
+            elif "/gridpoints/" in args[0] and "/forecast" in args[0]:
+                # Return a response that will raise HTTPError when raise_for_status is called
                 mock_response = MagicMock()
                 mock_response.status_code = 500
                 mock_response.text = "Internal Server Error"
+                mock_response.json.return_value = {"detail": "Internal Server Error"}
+
+                # Create HTTPError that will be raised by raise_for_status
                 http_error = HTTPError("500 Server Error")
                 http_error.response = mock_response
-                raise http_error
+                mock_response.raise_for_status.side_effect = http_error
+
+                return mock_response
+            else:
+                # Fallback - should not happen in this test
+                raise ValueError(f"Unexpected URL in test: {args[0]}")
 
         mock_get.side_effect = side_effect
 

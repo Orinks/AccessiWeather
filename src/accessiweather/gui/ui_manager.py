@@ -32,11 +32,26 @@ class UIManager:
         self.frame = frame  # Reference to the main WeatherApp frame
         self.notifier = notifier  # Store notifier instance
 
+        # Set up UI components
+        self._setup_ui()
+
+    def _setup_ui(self):
+        """Set up the UI components and event bindings.
+
+        This method is separated for easier testing.
+        """
         # Set up UI components and get references to elements that need to be hidden for Open-Meteo
-        panel, self.openmeteo_hidden_elements = setup_ui_components(frame)
+        panel, self.openmeteo_hidden_elements = setup_ui_components(self.frame)
 
         # Bind events
-        bind_ui_events(frame, self)
+        self._bind_events()
+
+    def _bind_events(self):
+        """Bind UI events to their handlers.
+
+        This method is separated for easier testing.
+        """
+        bind_ui_events(self.frame, self)
 
     # Delegate all display methods to the appropriate modules
     def display_loading_state(self, location_name=None, is_nationwide=False):

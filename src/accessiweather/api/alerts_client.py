@@ -113,34 +113,24 @@ class AlertsClient(NoaaApiClient):
             f"precise_location={precise_location}"
         )
 
-        # Identify the location type
-        location_type, location_id = self.identify_location_type(
-            lat, lon, force_refresh=force_refresh
-        )
-
-        if (
-            precise_location
-            and location_type in (LOCATION_TYPE_COUNTY, LOCATION_TYPE_FORECAST, LOCATION_TYPE_FIRE)
-            and location_id
-        ):
-            # Get alerts for the specific zone
-            logger.info(f"Fetching alerts for {location_type} zone: {location_id}")
-            return self._make_request(
-                "alerts/active", params={"zone": location_id}, force_refresh=force_refresh
+        if precise_location:
+            # Identify the location type only when precise location is requested
+            location_type, location_id = self.identify_location_type(
+                lat, lon, force_refresh=force_refresh
             )
-        elif location_type == LOCATION_TYPE_STATE or not precise_location:
-            # If we're not using precise location or we only have state info,
-            # get alerts for the entire state
-            if location_type == LOCATION_TYPE_STATE:
-                state = location_id
-            elif location_type == LOCATION_TYPE_COUNTY and location_id and len(location_id) >= 2:
-                # Extract state from county code (first two characters)
-                state = location_id[:2]
-            else:
-                # Try to extract state from the location ID (first two characters)
-                state = location_id[:2] if location_id else None
 
-            if state:
+            if (
+                location_type in (LOCATION_TYPE_COUNTY, LOCATION_TYPE_FORECAST, LOCATION_TYPE_FIRE)
+                and location_id
+            ):
+                # Get alerts for the specific zone
+                logger.info(f"Fetching alerts for {location_type} zone: {location_id}")
+                return self._make_request(
+                    "alerts/active", params={"zone": location_id}, force_refresh=force_refresh
+                )
+            elif location_type == LOCATION_TYPE_STATE and location_id:
+                # If we only have state info, get alerts for the entire state
+                state = location_id
                 logger.info(f"Fetching alerts for state: {state}")
                 # Use the full URL for the Michigan location test which mocks
                 # _make_request directly
@@ -154,10 +144,11 @@ class AlertsClient(NoaaApiClient):
                     "alerts/active", params={"area": state}, force_refresh=force_refresh
                 )
 
-        # If we couldn't determine location or state, fall back to point-radius search
+        # If precise_location=False or we couldn't determine location, use point-radius search
         logger.info(
-            "Using point-radius search for alerts since location could not "
-            f"be determined: ({lat}, {lon}) with radius {radius} miles"
+            "Using point-radius search for alerts since "
+            f"{'precise_location=False' if not precise_location else 'location could not be determined'}: "
+            f"({lat}, {lon}) with radius {radius} miles"
         )
         return self._make_request(
             "alerts/active",
