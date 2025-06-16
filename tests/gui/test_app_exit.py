@@ -16,7 +16,7 @@ class TestAccessiWeatherAppExit(unittest.TestCase):
     def tearDown(self):
         """Clean up after the test."""
         # Ensure we don't leave any references to the app
-        self.app = None  # type: ignore
+        self.app = None
 
     @patch("accessiweather.utils.thread_manager.ThreadManager.instance")
     @patch("accessiweather.gui.app.logging")

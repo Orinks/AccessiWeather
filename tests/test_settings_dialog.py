@@ -3,6 +3,7 @@
 import os
 import tempfile
 import unittest
+from typing import Any, Dict, Optional
 from unittest.mock import MagicMock, patch
 
 import wx
@@ -21,20 +22,20 @@ from accessiweather.gui.settings_dialog import (
 class TestSettingsDialog(unittest.TestCase):
     """Tests for the settings dialog."""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test fixtures."""
         self.app = wx.App()
         self.frame = wx.Frame(None)
-        self.current_settings = {
+        self.current_settings: Dict[str, Any] = {
             DATA_SOURCE_KEY: DATA_SOURCE_NWS,
         }
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """Tear down test fixtures."""
         self.frame.Destroy()
         self.app.Destroy()
 
-    def test_init(self):
+    def test_init(self) -> None:
         """Test initialization of the settings dialog."""
         dialog = SettingsDialog(self.frame, self.current_settings)
         self.assertEqual(dialog.data_source_ctrl.GetSelection(), 0)  # NWS selected
@@ -74,7 +75,7 @@ class TestSettingsDialog(unittest.TestCase):
             mock_end_modal.assert_called_once_with(wx.ID_OK)
         dialog.Destroy()
 
-    def test_get_api_keys(self):
+    def test_get_api_keys(self) -> None:
         """Test getting API keys from the dialog."""
         dialog = SettingsDialog(self.frame, self.current_settings)
         api_keys = dialog.get_api_keys()
@@ -82,7 +83,7 @@ class TestSettingsDialog(unittest.TestCase):
         self.assertEqual(api_keys, {})
         dialog.Destroy()
 
-    def test_check_now_button_with_update_handler(self):
+    def test_check_now_button_with_update_handler(self) -> None:
         """Test check now button when parent has OnCheckForUpdates method."""
         # Add OnCheckForUpdates method to the frame
         self.frame.OnCheckForUpdates = MagicMock()
@@ -184,9 +185,9 @@ class MockWeatherApp(
 ):
     """Mock WeatherApp for testing settings handlers."""
 
-    def __init__(self, config_path):
+    def __init__(self, config_path: str) -> None:
         self._config_path = config_path
-        self.config = {
+        self.config: Dict[str, Any] = {
             "settings": {
                 "update_interval_minutes": 10,
                 "alert_radius_miles": 25,
@@ -195,18 +196,18 @@ class MockWeatherApp(
             "api_settings": {},
             "api_keys": {},
         }
-        self.location_service = None
-        self._last_settings_dialog = None
+        self.location_service: Optional[Any] = None
+        self._last_settings_dialog: Optional[SettingsDialog] = None
 
-    def UpdateLocationDropdown(self):
+    def UpdateLocationDropdown(self) -> None:
         """Mock method."""
         pass
 
-    def UpdateWeatherData(self):
+    def UpdateWeatherData(self) -> None:
         """Mock method."""
         pass
 
-    def _handle_data_source_change(self):
+    def _handle_data_source_change(self) -> None:
         """Mock method."""
         pass
 
@@ -214,23 +215,25 @@ class MockWeatherApp(
 class TestSettingsBugFix(unittest.TestCase):
     """Test cases for the settings dialog bug fix."""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test fixtures."""
         self.temp_dir = tempfile.mkdtemp()
         self.config_path = os.path.join(self.temp_dir, "config.json")
         self.app = MockWeatherApp(self.config_path)
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """Clean up test fixtures."""
         import shutil
 
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
-    def test_settings_saved_with_empty_api_settings(self):
+    def test_settings_saved_with_empty_api_settings(self) -> None:
         """Test that settings are saved even when api_settings is empty."""
 
         # Mock the dialog to return empty api_settings (the bug condition)
-        def mock_show_dialog(current_settings):
+        def mock_show_dialog(
+            current_settings: Dict[str, Any],
+        ) -> tuple[int, Dict[str, Any], Dict[str, Any]]:
             updated_settings = current_settings.copy()
             updated_settings["update_interval_minutes"] = 15
             updated_settings["alert_radius_miles"] = 30
@@ -260,11 +263,13 @@ class TestSettingsBugFix(unittest.TestCase):
         self.assertEqual(saved_config["settings"]["update_interval_minutes"], 15)
         self.assertEqual(saved_config["settings"]["alert_radius_miles"], 30)
 
-    def test_settings_not_saved_when_dialog_cancelled(self):
+    def test_settings_not_saved_when_dialog_cancelled(self) -> None:
         """Test that settings are not saved when dialog is cancelled."""
 
         # Mock the dialog to return cancelled result
-        def mock_show_dialog(current_settings):  # noqa: ARG001
+        def mock_show_dialog(
+            current_settings: Dict[str, Any],
+        ) -> tuple[int, None, None]:  # noqa: ARG001
             return wx.ID_CANCEL, None, None
 
         self.app.ShowSettingsDialog = mock_show_dialog
@@ -286,12 +291,12 @@ class TestSettingsBugFix(unittest.TestCase):
         # Verify config file was not created
         self.assertFalse(os.path.exists(self.config_path))
 
-    def test_original_bug_condition(self):
+    def test_original_bug_condition(self) -> None:
         """Test that demonstrates the original bug condition."""
         # Simulate the original buggy condition
         result = wx.ID_OK
         updated_settings = {"update_interval_minutes": 15}
-        updated_api_settings: dict = {}  # Empty dict - the bug!
+        updated_api_settings: Dict[str, Any] = {}  # Empty dict - the bug!
 
         # Original condition (buggy) - would evaluate to False
         original_condition = result == wx.ID_OK and updated_settings and updated_api_settings

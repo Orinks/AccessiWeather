@@ -6,11 +6,14 @@ covering the key user flows identified in the integration test plan.
 
 import json
 import os
+from typing import cast
 from unittest.mock import MagicMock, patch
 
 import pytest
 
+from accessiweather.api_wrapper import NoaaApiWrapper
 from accessiweather.location import LocationManager
+from accessiweather.openmeteo_client import OpenMeteoApiClient
 from accessiweather.services.weather_service import WeatherService
 from accessiweather.utils.temperature_utils import TemperatureUnit
 
@@ -53,7 +56,7 @@ class TestApplicationStartupFlow:
 
         # Create weather service and test data fetching
         with patch("accessiweather.api_wrapper.NoaaApiWrapper") as mock_wrapper:
-            mock_client = MagicMock()
+            mock_client = MagicMock(spec=NoaaApiWrapper)
             mock_wrapper.return_value = mock_client
 
             # Mock API responses
@@ -63,7 +66,9 @@ class TestApplicationStartupFlow:
 
             # Create weather service
             config = {"settings": {"data_source": "nws"}}
-            weather_service = WeatherService(nws_client=mock_client, config=config)
+            weather_service = WeatherService(
+                nws_client=cast(NoaaApiWrapper, mock_client), config=config
+            )
 
             # Test fetching weather data
             forecast = weather_service.get_forecast(40.7128, -74.0060)
@@ -189,8 +194,8 @@ class TestLocationChangeFlow:
             patch("accessiweather.openmeteo_client.OpenMeteoApiClient") as mock_openmeteo,
         ):
 
-            nws_client = MagicMock()
-            openmeteo_client = MagicMock()
+            nws_client = MagicMock(spec=NoaaApiWrapper)
+            openmeteo_client = MagicMock(spec=OpenMeteoApiClient)
             mock_nws.return_value = nws_client
             mock_openmeteo.return_value = openmeteo_client
 
@@ -200,7 +205,9 @@ class TestLocationChangeFlow:
 
             config = {"settings": {"data_source": "auto"}}
             weather_service = WeatherService(
-                nws_client=nws_client, openmeteo_client=openmeteo_client, config=config
+                nws_client=cast(NoaaApiWrapper, nws_client),
+                openmeteo_client=cast(OpenMeteoApiClient, openmeteo_client),
+                config=config,
             )
 
             # Get weather for New York (should use NWS)
@@ -234,13 +241,15 @@ class TestDataSourceSelectionFlow:
             patch("accessiweather.openmeteo_client.OpenMeteoApiClient") as mock_openmeteo,
         ):
 
-            nws_client = MagicMock()
-            openmeteo_client = MagicMock()
+            nws_client = MagicMock(spec=NoaaApiWrapper)
+            openmeteo_client = MagicMock(spec=OpenMeteoApiClient)
             mock_nws.return_value = nws_client
             mock_openmeteo.return_value = openmeteo_client
 
             weather_service = WeatherService(
-                nws_client=nws_client, openmeteo_client=openmeteo_client, config=config
+                nws_client=cast(NoaaApiWrapper, nws_client),
+                openmeteo_client=cast(OpenMeteoApiClient, openmeteo_client),
+                config=config,
             )
 
             # Test US location - should prefer NWS
@@ -264,13 +273,15 @@ class TestDataSourceSelectionFlow:
             patch("accessiweather.openmeteo_client.OpenMeteoApiClient") as mock_openmeteo,
         ):
 
-            nws_client = MagicMock()
-            openmeteo_client = MagicMock()
+            nws_client = MagicMock(spec=NoaaApiWrapper)
+            openmeteo_client = MagicMock(spec=OpenMeteoApiClient)
             mock_nws.return_value = nws_client
             mock_openmeteo.return_value = openmeteo_client
 
             nws_service = WeatherService(
-                nws_client=nws_client, openmeteo_client=openmeteo_client, config=nws_config
+                nws_client=cast(NoaaApiWrapper, nws_client),
+                openmeteo_client=cast(OpenMeteoApiClient, openmeteo_client),
+                config=nws_config,
             )
 
             # Should always use NWS
@@ -283,13 +294,15 @@ class TestDataSourceSelectionFlow:
             patch("accessiweather.openmeteo_client.OpenMeteoApiClient") as mock_openmeteo,
         ):
 
-            nws_client = MagicMock()
-            openmeteo_client = MagicMock()
+            nws_client = MagicMock(spec=NoaaApiWrapper)
+            openmeteo_client = MagicMock(spec=OpenMeteoApiClient)
             mock_nws.return_value = nws_client
             mock_openmeteo.return_value = openmeteo_client
 
             openmeteo_service = WeatherService(
-                nws_client=nws_client, openmeteo_client=openmeteo_client, config=openmeteo_config
+                nws_client=cast(NoaaApiWrapper, nws_client),
+                openmeteo_client=cast(OpenMeteoApiClient, openmeteo_client),
+                config=openmeteo_config,
             )
 
             # Should always use Open-Meteo
@@ -324,13 +337,15 @@ class TestErrorHandlingFlow:
             patch("accessiweather.openmeteo_client.OpenMeteoApiClient") as mock_openmeteo,
         ):
 
-            nws_client = MagicMock()
-            openmeteo_client = MagicMock()
+            nws_client = MagicMock(spec=NoaaApiWrapper)
+            openmeteo_client = MagicMock(spec=OpenMeteoApiClient)
             mock_nws.return_value = nws_client
             mock_openmeteo.return_value = openmeteo_client
 
             weather_service = WeatherService(
-                nws_client=nws_client, openmeteo_client=openmeteo_client, config=config
+                nws_client=cast(NoaaApiWrapper, nws_client),
+                openmeteo_client=cast(OpenMeteoApiClient, openmeteo_client),
+                config=config,
             )
 
             # Mock NWS failure and Open-Meteo success
