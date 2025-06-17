@@ -197,7 +197,7 @@ class MockWeatherApp(
             "api_keys": {},
         }
         self.location_service: Optional[Any] = None
-        self._last_settings_dialog: Optional[SettingsDialog] = None
+        self._last_settings_dialog: Optional[SettingsDialog] = None  # type: ignore[assignment]
 
     def UpdateLocationDropdown(self) -> None:
         """Mock method."""
@@ -239,29 +239,29 @@ class TestSettingsBugFix(unittest.TestCase):
             updated_settings["alert_radius_miles"] = 30
             return wx.ID_OK, updated_settings, {}  # Empty api_settings
 
-        self.app.ShowSettingsDialog = mock_show_dialog
+        # Use patch.object for proper mocking instead of direct assignment
+        with patch.object(self.app, "ShowSettingsDialog", side_effect=mock_show_dialog):
+            # Create a mock event
+            mock_event = MagicMock()
 
-        # Create a mock event
-        mock_event = MagicMock()
+            # Call OnSettings
+            self.app.OnSettings(mock_event)
 
-        # Call OnSettings
-        self.app.OnSettings(mock_event)
+            # Verify settings were updated
+            self.assertEqual(self.app.config["settings"]["update_interval_minutes"], 15)
+            self.assertEqual(self.app.config["settings"]["alert_radius_miles"], 30)
 
-        # Verify settings were updated
-        self.assertEqual(self.app.config["settings"]["update_interval_minutes"], 15)
-        self.assertEqual(self.app.config["settings"]["alert_radius_miles"], 30)
+            # Verify config file was created and saved
+            self.assertTrue(os.path.exists(self.config_path))
 
-        # Verify config file was created and saved
-        self.assertTrue(os.path.exists(self.config_path))
+            # Read and verify the saved config
+            import json
 
-        # Read and verify the saved config
-        import json
+            with open(self.config_path, "r") as f:
+                saved_config = json.load(f)
 
-        with open(self.config_path, "r") as f:
-            saved_config = json.load(f)
-
-        self.assertEqual(saved_config["settings"]["update_interval_minutes"], 15)
-        self.assertEqual(saved_config["settings"]["alert_radius_miles"], 30)
+            self.assertEqual(saved_config["settings"]["update_interval_minutes"], 15)
+            self.assertEqual(saved_config["settings"]["alert_radius_miles"], 30)
 
     def test_settings_not_saved_when_dialog_cancelled(self) -> None:
         """Test that settings are not saved when dialog is cancelled."""
@@ -272,24 +272,26 @@ class TestSettingsBugFix(unittest.TestCase):
         ) -> tuple[int, None, None]:  # noqa: ARG001
             return wx.ID_CANCEL, None, None
 
-        self.app.ShowSettingsDialog = mock_show_dialog
+        # Use patch.object for proper mocking instead of direct assignment
+        with patch.object(self.app, "ShowSettingsDialog", side_effect=mock_show_dialog):
+            # Store original values
+            original_interval = self.app.config["settings"]["update_interval_minutes"]
+            original_radius = self.app.config["settings"]["alert_radius_miles"]
 
-        # Store original values
-        original_interval = self.app.config["settings"]["update_interval_minutes"]
-        original_radius = self.app.config["settings"]["alert_radius_miles"]
+            # Create a mock event
+            mock_event = MagicMock()
 
-        # Create a mock event
-        mock_event = MagicMock()
+            # Call OnSettings
+            self.app.OnSettings(mock_event)
 
-        # Call OnSettings
-        self.app.OnSettings(mock_event)
+            # Verify settings were not changed
+            self.assertEqual(
+                self.app.config["settings"]["update_interval_minutes"], original_interval
+            )
+            self.assertEqual(self.app.config["settings"]["alert_radius_miles"], original_radius)
 
-        # Verify settings were not changed
-        self.assertEqual(self.app.config["settings"]["update_interval_minutes"], original_interval)
-        self.assertEqual(self.app.config["settings"]["alert_radius_miles"], original_radius)
-
-        # Verify config file was not created
-        self.assertFalse(os.path.exists(self.config_path))
+            # Verify config file was not created
+            self.assertFalse(os.path.exists(self.config_path))
 
     def test_original_bug_condition(self) -> None:
         """Test that demonstrates the original bug condition."""

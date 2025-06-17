@@ -484,58 +484,67 @@ def test_ui_temperature_unit_code_handling():
     # Create UI manager with mocked dependencies
     ui_manager = UIManager.__new__(UIManager)  # Create without calling __init__
     ui_manager.frame = mock_frame
-    ui_manager.config = config
+    # UIManager accesses config through frame.config, not directly
+    mock_frame.config = config
 
-    # Add the missing method
+    # Use patch.object for proper mocking instead of direct assignment
     def mock_get_temperature_unit_preference():
         return TemperatureUnit.BOTH
 
-    ui_manager._get_temperature_unit_preference = mock_get_temperature_unit_preference
-
-    # Test data with Fahrenheit unit code (Open-Meteo with fahrenheit preference)
-    fahrenheit_data = {
-        "properties": {
-            "temperature": {
-                "value": 56.6,  # Should stay as 56.6°F, not convert to 133.9°F
-                "unitCode": "wmoUnit:degF",
-            },
-            "dewpoint": {"value": 51.8, "unitCode": "wmoUnit:degF"},
-            "relativeHumidity": {"value": 84},
-            "windSpeed": {"value": 3.2},
-            "windDirection": {"value": 153},
-            "barometricPressure": {"value": 101590},
-            "textDescription": "Partly cloudy",
+    with patch.object(
+        ui_manager,
+        "_get_temperature_unit_preference",
+        side_effect=mock_get_temperature_unit_preference,
+    ):
+        # Test data with Fahrenheit unit code (Open-Meteo with fahrenheit preference)
+        fahrenheit_data = {
+            "properties": {
+                "temperature": {
+                    "value": 56.6,  # Should stay as 56.6°F, not convert to 133.9°F
+                    "unitCode": "wmoUnit:degF",
+                },
+                "dewpoint": {"value": 51.8, "unitCode": "wmoUnit:degF"},
+                "relativeHumidity": {"value": 84},
+                "windSpeed": {"value": 3.2},
+                "windDirection": {"value": 153},
+                "barometricPressure": {"value": 101590},
+                "textDescription": "Partly cloudy",
+            }
         }
-    }
 
-    # Test data with Celsius unit code (NWS or Open-Meteo with celsius preference)
-    celsius_data = {
-        "properties": {
-            "temperature": {"value": 13.6, "unitCode": "wmoUnit:degC"},  # Should convert to ~56.5°F
-            "dewpoint": {"value": 10.8, "unitCode": "wmoUnit:degC"},
-            "relativeHumidity": {"value": 84},
-            "windSpeed": {"value": 3.2},
-            "windDirection": {"value": 153},
-            "barometricPressure": {"value": 101590},
-            "textDescription": "Partly cloudy",
+        # Test data with Celsius unit code (NWS or Open-Meteo with celsius preference)
+        celsius_data = {
+            "properties": {
+                "temperature": {
+                    "value": 13.6,
+                    "unitCode": "wmoUnit:degC",
+                },  # Should convert to ~56.5°F
+                "dewpoint": {"value": 10.8, "unitCode": "wmoUnit:degC"},
+                "relativeHumidity": {"value": 84},
+                "windSpeed": {"value": 3.2},
+                "windDirection": {"value": 153},
+                "barometricPressure": {"value": 101590},
+                "textDescription": "Partly cloudy",
+            }
         }
-    }
 
-    # Test Fahrenheit data (should NOT convert)
-    ui_manager.display_current_conditions(fahrenheit_data)
-    fahrenheit_result = mock_frame.current_conditions_text.SetValue.call_args[0][0]
+        # Test Fahrenheit data (should NOT convert)
+        ui_manager.display_current_conditions(fahrenheit_data)
+        fahrenheit_result = mock_frame.current_conditions_text.SetValue.call_args[0][0]
 
-    # Should show 57°F (rounded from 56.6°F due to BOTH unit preference using precision 0), not 133.9°F (which would be double conversion)
-    assert "57°F" in fahrenheit_result, f"Expected 57°F in result: {fahrenheit_result}"
-    assert (
-        "133" not in fahrenheit_result
-    ), f"Found double conversion (133°F) in result: {fahrenheit_result}"
-    assert "14°C" in fahrenheit_result, f"Expected ~14°C conversion in result: {fahrenheit_result}"
+        # Should show 57°F (rounded from 56.6°F due to BOTH unit preference using precision 0), not 133.9°F (which would be double conversion)
+        assert "57°F" in fahrenheit_result, f"Expected 57°F in result: {fahrenheit_result}"
+        assert (
+            "133" not in fahrenheit_result
+        ), f"Found double conversion (133°F) in result: {fahrenheit_result}"
+        assert (
+            "14°C" in fahrenheit_result
+        ), f"Expected ~14°C conversion in result: {fahrenheit_result}"
 
-    # Test Celsius data (should convert)
-    ui_manager.display_current_conditions(celsius_data)
-    celsius_result = mock_frame.current_conditions_text.SetValue.call_args[0][0]
+        # Test Celsius data (should convert)
+        ui_manager.display_current_conditions(celsius_data)
+        celsius_result = mock_frame.current_conditions_text.SetValue.call_args[0][0]
 
-    # Should convert 13.6°C to ~56°F (rounded due to BOTH unit preference using precision 0)
-    assert "56°F" in celsius_result, f"Expected ~56°F conversion in result: {celsius_result}"
-    assert "14°C" in celsius_result, f"Expected ~14°C conversion in result: {celsius_result}"
+        # Should convert 13.6°C to ~56°F (rounded due to BOTH unit preference using precision 0)
+        assert "56°F" in celsius_result, f"Expected ~56°F conversion in result: {celsius_result}"
+        assert "14°C" in celsius_result, f"Expected ~14°C conversion in result: {celsius_result}"

@@ -72,7 +72,7 @@ class TestApplicationStartupFlow:
 
             # Test fetching weather data
             forecast = weather_service.get_forecast(40.7128, -74.0060)
-            current = weather_service.get_current_conditions(40.7128, -74.0060)
+            current = weather_service.get_current_conditions(40.7128, -74.0060)  # type: ignore[assignment]
 
             assert forecast is not None
             assert current is not None
