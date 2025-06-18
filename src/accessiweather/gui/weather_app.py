@@ -4,7 +4,6 @@ This module provides the main application window and integrates all components
 using the service layer for business logic.
 """
 
-import json
 import logging
 import os
 import time
@@ -13,11 +12,6 @@ import wx
 import wx.adv
 
 from accessiweather.config_utils import get_config_dir
-from accessiweather.national_forecast_fetcher import NationalForecastFetcher
-from accessiweather.version import __version__
-
-from .async_fetchers import AlertsFetcher, DiscussionFetcher, ForecastFetcher
-from .current_conditions_fetcher import CurrentConditionsFetcher
 from .handlers import (
     WeatherAppAlertHandlers,
     WeatherAppBaseHandlers,
@@ -33,17 +27,15 @@ from .handlers import (
     WeatherAppTimerHandlers,
     WeatherAppUpdateHandlers,
 )
-from .hourly_forecast_fetcher import HourlyForecastFetcher
 from .settings_dialog import (
     ALERT_RADIUS_KEY,
-    DEFAULT_TEMPERATURE_UNIT,
-    MINIMIZE_TO_TRAY_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
-    TEMPERATURE_UNIT_KEY,
     UPDATE_INTERVAL_KEY,
 )
 from .system_tray import TaskBarIcon
 from .ui_manager import UIManager
+from .weather_app_modules.core import WeatherAppCore
+from .weather_app_modules.event_handlers import WeatherAppEventHandlers
 
 logger = logging.getLogger(__name__)
 
@@ -95,58 +87,21 @@ class WeatherApp(
         """
         super().__init__(parent, title="AccessiWeather", size=(800, 600))
 
-        # Set config path
-        self._config_path = config_path or CONFIG_PATH
+        # Initialize core module and delegate core initialization
+        self.core = WeatherAppCore(self)
+        self.core.initialize_app(
+            parent=parent,
+            weather_service=weather_service,
+            location_service=location_service,
+            notification_service=notification_service,
+            api_client=api_client,
+            config=config,
+            config_path=config_path,
+            debug_mode=debug_mode,
+        )
 
-        # Load or use provided config
-        self.config = config if config is not None else self._load_config()
-
-        # Store provided services
-        self.weather_service = weather_service
-        self.location_service = location_service
-        self.notification_service = notification_service
-
-        # For backward compatibility
-        self.api_client = api_client
-
-        # Debug mode
-        self.debug_mode = debug_mode
-        # For backward compatibility, debug_alerts is now the same as debug_mode
-        self.debug_alerts = debug_mode
-
-        # Always log debug mode status
-        logger.info(f"Debug mode status: debug_mode={self.debug_mode}")
-
-        if self.debug_mode:
-            logger.info("Debug mode enabled for additional debug information and alert testing")
-
-        # Validate required services
-        if not all([self.weather_service, self.location_service, self.notification_service]):
-            raise ValueError(
-                "Required services (weather_service, location_service, notification_service) "
-                "must be provided"
-            )
-
-        # Initialize async fetchers (always using the weather service)
-        # This ensures that the WeatherService's logic for choosing between NWS and WeatherAPI is used
-        self.forecast_fetcher = ForecastFetcher(self.weather_service)
-        self.alerts_fetcher = AlertsFetcher(self.weather_service)
-        self.discussion_fetcher = DiscussionFetcher(self.weather_service)
-        self.current_conditions_fetcher = CurrentConditionsFetcher(self.weather_service)
-        self.hourly_forecast_fetcher = HourlyForecastFetcher(self.weather_service)
-        self.national_forecast_fetcher = NationalForecastFetcher(self.weather_service)
-
-        # State variables
-        self.current_forecast = None
-        self.current_alerts = []
-        self.updating = False
-        self._forecast_complete = False  # Flag for forecast fetch completion
-        self._alerts_complete = False  # Flag for alerts fetch completion
-
-        # Nationwide discussion state
-        self._in_nationwide_mode = False
-        self._nationwide_wpc_full = None
-        self._nationwide_spc_full = None
+        # Initialize event handlers module
+        self.event_handlers = WeatherAppEventHandlers(self)
 
         # Initialize UI using UIManager
         # UI elements are now attached to self by UIManager
@@ -167,22 +122,19 @@ class WeatherApp(
 
         # Start update timer
         self.timer = wx.Timer(self)
-        self.Bind(wx.EVT_TIMER, self.OnTimer, self.timer)
+        self.Bind(wx.EVT_TIMER, self.event_handlers.OnTimer, self.timer)
         # Bind Close event here as it's frame-level, not UI-element specific
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.Bind(wx.EVT_ICONIZE, self.OnMinimize)
 
         # Bind character hook for global keyboard shortcuts
-        self.Bind(wx.EVT_CHAR_HOOK, self.OnCharHook)
+        self.Bind(wx.EVT_CHAR_HOOK, self.event_handlers.OnCharHook)
 
         # Log the update interval from config
         update_interval = self.config.get("settings", {}).get(UPDATE_INTERVAL_KEY, 10)
         logger.debug(f"Starting timer with update interval: {update_interval} minutes")
 
         self.timer.Start(1000)  # Check every 1 second for updates
-
-        # Last update timestamp
-        self.last_update: float = 0.0
 
         # Create system tray icon - cleanup any existing instance first
         TaskBarIcon.cleanup_existing_instance()
@@ -196,15 +148,7 @@ class WeatherApp(
             accessible.SetRole(wx.ACC_ROLE_WINDOW)
 
         # Create menu bar
-        self._create_menu_bar()
-
-        # Test hooks for async tests
-        self._testing_forecast_callback = None
-        self._testing_forecast_error_callback = None
-        self._testing_alerts_callback = None
-        self._testing_alerts_error_callback = None
-        self._testing_discussion_callback = None
-        self._testing_discussion_error_callback = None
+        self.event_handlers._create_menu_bar()
 
         # Initialize UI with location data
         self.UpdateLocationDropdown()
@@ -215,37 +159,8 @@ class WeatherApp(
 
         self.UpdateWeatherData()
 
-        # Add force close flag
-        self._force_close = True  # Default to force close when clicking X
-
         # Initialize update service (from WeatherAppUpdateHandlers)
-        self._init_update_service_manually()
-
-    def _init_update_service_manually(self):
-        """Manually initialize the update service since multiple inheritance doesn't call handler __init__."""
-        try:
-            # Get config directory from the config path
-            import os
-
-            from accessiweather.services.update_service import UpdateService
-
-            config_dir = os.path.dirname(self._config_path)
-
-            # Initialize update service
-            self.update_service = UpdateService(
-                config_dir=config_dir,
-                notification_callback=self._on_update_available,
-                progress_callback=self._on_update_progress,
-            )
-
-            # Load settings and start background checking if enabled
-            self._load_update_settings()
-
-            logger.info("Update service initialized manually")
-
-        except Exception as e:
-            logger.error(f"Failed to initialize update service manually: {e}")
-            self.update_service = None
+        self.core.initialize_update_service()
 
     def _on_update_available(self, update_info):
         """Handle update available notification - delegate to update handlers."""
@@ -264,45 +179,6 @@ class WeatherApp(
         from .handlers.update_handlers import WeatherAppUpdateHandlers
 
         WeatherAppUpdateHandlers._load_update_settings(self)
-
-    def _load_config(self):
-        """Load configuration from file
-
-        Returns:
-            Dict containing configuration or empty dict if not found
-        """
-        from accessiweather.config_utils import ensure_config_defaults
-        from accessiweather.gui.settings_dialog import (
-            API_KEYS_SECTION,
-            DATA_SOURCE_KEY,
-            DEFAULT_DATA_SOURCE,
-        )
-
-        if os.path.exists(self._config_path):
-            try:
-                with open(self._config_path, "r") as f:
-                    config = json.load(f)
-                    # Ensure config has all required defaults
-                    updated_config = ensure_config_defaults(config)
-                    return updated_config
-            except Exception as e:
-                logger.error(f"Failed to load config: {str(e)}")
-
-        # Return default config structure
-        return {
-            "locations": {},
-            "current": None,
-            "settings": {
-                UPDATE_INTERVAL_KEY: 10,
-                ALERT_RADIUS_KEY: 25,
-                PRECISE_LOCATION_ALERTS_KEY: True,  # Default to precise location alerts
-                MINIMIZE_TO_TRAY_KEY: True,  # Default to minimize to tray when closing
-                DATA_SOURCE_KEY: DEFAULT_DATA_SOURCE,  # Default to NWS
-                TEMPERATURE_UNIT_KEY: DEFAULT_TEMPERATURE_UNIT,  # Default to Fahrenheit
-            },
-            "api_settings": {},  # Default empty API settings
-            API_KEYS_SECTION: {},  # Default empty API keys
-        }
 
     # UpdateLocationDropdown is now implemented in WeatherAppLocationHandlers
 
@@ -668,138 +544,20 @@ class WeatherApp(
 
             logger.debug("Discussion timer cleanup complete")
 
-    def OnTimer(self, event):  # event is required by wx
-        """Handle timer event for periodic updates
-
-        Args:
-            event: Timer event
-        """
-        # Get update interval from config (default to 10 minutes)
-        settings = self.config.get("settings", {})
-        update_interval_minutes = settings.get(UPDATE_INTERVAL_KEY, 10)
-        update_interval_seconds = update_interval_minutes * 60
-
-        # Calculate time since last update
-        now = time.time()
-        time_since_last_update = now - self.last_update
-        next_update_in = update_interval_seconds - time_since_last_update
-
-        # Enhanced logging in debug mode
-        if self.debug_mode:
-            logger.info(
-                f"[DEBUG] Timer check: interval={update_interval_minutes}min, "
-                f"time_since_last={time_since_last_update:.1f}s, "
-                f"next_update_in={next_update_in:.1f}s"
-            )
-        else:
-            # Regular debug logging
-            logger.debug(
-                f"Timer check: interval={update_interval_minutes}min, "
-                f"time_since_last={time_since_last_update:.1f}s, "
-                f"next_update_in={next_update_in:.1f}s"
-            )
-
-        # Check if it's time to update
-        if time_since_last_update >= update_interval_seconds:
-            if not self.updating:
-                logger.info(
-                    f"Timer triggered weather update. "
-                    f"Interval: {update_interval_minutes} minutes, "
-                    f"Time since last update: {time_since_last_update:.1f} seconds"
-                )
-                self.UpdateWeatherData()
-            else:
-                logger.debug("Timer skipped update: already updating.")
-
     # For backward compatibility with WeatherAppHandlers
     @property
     def location_manager(self):
         """Provide backward compatibility with the location_manager property."""
-        return self.location_service.location_manager
+        return self.core.location_manager
 
     @property
     def notifier(self):
         """Provide backward compatibility with the notifier property."""
-        return self.notification_service.notifier
+        return self.core.notifier
 
     def _handle_data_source_change(self):
-        """Handle changes to the data source or API settings.
-
-        This method is called when the data source or API settings are changed
-        in the settings dialog. It reinitializes the WeatherService with the new
-        settings and updates the fetchers to use the new service.
-        """
-        from accessiweather.api_wrapper import NoaaApiWrapper
-        from accessiweather.services.weather_service import WeatherService
-
-        logger.info("Reinitializing WeatherService due to data source or API key change")
-
-        # Log the current settings
-        from accessiweather.gui.settings_dialog import DATA_SOURCE_KEY
-
-        data_source = self.config.get("settings", {}).get(DATA_SOURCE_KEY, "nws")
-        logger.info(f"Current data source: {data_source}")
-        logger.info(f"Full config: {self.config}")
-
-        # Create the NWS API client (always needed)
-        nws_client = NoaaApiWrapper(
-            user_agent="AccessiWeather",
-            enable_caching=True,  # Default to enabled
-            cache_ttl=300,  # Default to 5 minutes
-        )
-
-        # Create the Open-Meteo API client
-        from accessiweather.openmeteo_client import OpenMeteoApiClient
-
-        openmeteo_client = OpenMeteoApiClient(user_agent="AccessiWeather")
-
-        # Create the new WeatherService
-        self.weather_service = WeatherService(
-            nws_client=nws_client, openmeteo_client=openmeteo_client, config=self.config
-        )
-
-        # Update the location service with the new data source
-        self.location_service.update_data_source(data_source)
-
-        # Update the fetchers to use the new service
-        self.forecast_fetcher.service = self.weather_service
-        self.alerts_fetcher.service = self.weather_service
-        self.discussion_fetcher.service = self.weather_service
-        self.current_conditions_fetcher.service = self.weather_service
-        self.hourly_forecast_fetcher.service = self.weather_service
-        self.national_forecast_fetcher.service = self.weather_service
-
-        # For backward compatibility
-        self.api_client = nws_client
-
-        # Update UI elements based on new weather source (show/hide Open-Meteo incompatible elements)
-        if hasattr(self, "ui_manager") and self.ui_manager:
-            self.ui_manager.update_ui_for_location_change()
-
-        # Refresh weather data to apply new settings
-        self.UpdateWeatherData()
-
-    def OnCharHook(self, event):
-        """Handle character hook events for global keyboard shortcuts.
-
-        This is a higher-level event handler that will catch keyboard events
-        before they reach individual controls.
-
-        Args:
-            event: Character hook event
-        """
-        key_code = event.GetKeyCode()
-
-        if key_code == wx.WXK_ESCAPE:
-            # Escape key to minimize to system tray
-            logger.info("Escape key pressed in CharHook, hiding to system tray")
-            if hasattr(self, "taskbar_icon") and self.taskbar_icon:
-                logger.info("Hiding app to system tray from CharHook")
-                self.Hide()
-                return  # Don't skip the event - we've handled it
-
-        # For all other keys, allow normal processing
-        event.Skip()
+        """Handle changes to the data source or API settings - delegate to core module."""
+        self.core.handle_data_source_change()
 
     def test_alert_update(self):
         """Manually trigger an alert update for testing purposes.
@@ -841,67 +599,6 @@ class WeatherApp(
             precise_location=precise_location,
             radius=alert_radius,
         )
-
-    def _create_menu_bar(self):
-        """Create the menu bar for the application.
-
-        This method creates a menu bar with File and Help menus.
-        If debug_mode or debug_alerts is enabled, it also adds a Debug menu.
-        """
-        # Create menu bar
-        menu_bar = wx.MenuBar()
-
-        # Create File menu
-        file_menu = wx.Menu()
-        refresh_item = file_menu.Append(wx.ID_REFRESH, "&Refresh\tF5", "Refresh weather data")
-        file_menu.AppendSeparator()
-        settings_item = file_menu.Append(wx.ID_PREFERENCES, "&Settings...", "Open settings dialog")
-        file_menu.AppendSeparator()
-        exit_item = file_menu.Append(wx.ID_EXIT, "E&xit", "Exit the application")
-
-        # Add File menu to menu bar
-        menu_bar.Append(file_menu, "&File")
-
-        # Add Debug menu if debug_mode is enabled
-        if self.debug_mode:
-            debug_menu = self.CreateDebugMenu()
-            menu_bar.Append(debug_menu, "&Debug")
-
-        # Create Help menu
-        help_menu = wx.Menu()
-        check_updates_item = help_menu.Append(
-            wx.ID_ANY, "Check for &Updates...", "Check for application updates"
-        )
-        help_menu.AppendSeparator()
-        about_item = help_menu.Append(wx.ID_ABOUT, "&About", "About AccessiWeather")
-
-        # Add Help menu to menu bar
-        menu_bar.Append(help_menu, "&Help")
-
-        # Set the menu bar
-        self.SetMenuBar(menu_bar)
-
-        # Bind events
-        self.Bind(wx.EVT_MENU, self.OnRefresh, refresh_item)
-        self.Bind(wx.EVT_MENU, self.OnSettings, settings_item)
-        self.Bind(wx.EVT_MENU, lambda e: self.Close(True), exit_item)
-        self.Bind(wx.EVT_MENU, self.OnCheckForUpdates, check_updates_item)
-        self.Bind(wx.EVT_MENU, self.OnAbout, about_item)
-
-    def OnAbout(self, event):  # event is required by wx
-        """Show the about dialog.
-
-        Args:
-            event: Menu event
-        """
-        info = wx.adv.AboutDialogInfo()
-        info.SetName("AccessiWeather")
-        info.SetVersion(__version__)
-        info.SetDescription("An accessible weather application using NOAA data")
-        info.SetCopyright("(C) 2023")
-        info.SetWebSite("https://github.com/Orinks/AccessiWeather")
-
-        wx.adv.AboutBox(info)
 
     def verify_update_interval(self):
         """Verify the unified update interval by logging detailed information.
