@@ -224,5 +224,9 @@ def test_ui_temperature_unit_code_handling():
             celsius_result = mock_frame.current_conditions_text.SetValue.call_args[0][0]
 
             # Should convert 13.6°C to ~56°F (rounded due to BOTH unit preference using precision 0)
-            assert "56°F" in celsius_result, f"Expected ~56°F conversion in result: {celsius_result}"
-            assert "14°C" in celsius_result, f"Expected ~14°C conversion in result: {celsius_result}"
+            assert (
+                "56°F" in celsius_result
+            ), f"Expected ~56°F conversion in result: {celsius_result}"
+            assert (
+                "14°C" in celsius_result
+            ), f"Expected ~14°C conversion in result: {celsius_result}"
