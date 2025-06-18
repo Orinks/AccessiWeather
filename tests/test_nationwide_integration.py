@@ -13,7 +13,8 @@ import wx
 
 from accessiweather.national_forecast_fetcher import NationalForecastFetcher
 from accessiweather.services.national_discussion_scraper import NationalDiscussionScraper
-from accessiweather.services.weather_service import ApiClientError, WeatherService
+from accessiweather.api_client import ApiClientError
+from accessiweather.services.weather_service import WeatherService
 
 # Sample test data
 SAMPLE_NATIONAL_DATA = {

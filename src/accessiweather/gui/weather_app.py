@@ -211,7 +211,9 @@ class WeatherApp(
 
     def _on_discussion_fetched(self, discussion_text, name, loading_dialog):
         """Handle the fetched discussion in the main thread - delegate to service coordination."""
-        return self.service_coordination._on_discussion_fetched(discussion_text, name, loading_dialog)
+        return self.service_coordination._on_discussion_fetched(
+            discussion_text, name, loading_dialog
+        )
 
     def _on_discussion_error(self, error_message, name, loading_dialog):
         """Handle discussion fetch error in the main thread - delegate to service coordination."""
