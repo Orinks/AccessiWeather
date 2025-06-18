@@ -47,19 +47,11 @@ def api_client():
     )
 
 
-def test_http_error_handling_404(api_client):
+def test_http_error_handling_404(api_client, mock_http_response):
     """Test handling of 404 Not Found errors."""
     lat, lon = 40.0, -75.0
     with patch("requests.get") as mock_get:
-        # Create a proper mock response with status_code
-        mock_response = MagicMock()
-        mock_response.status_code = 404
-        mock_response.text = "Not Found"
-        mock_response.json.side_effect = JSONDecodeError("Invalid JSON", "", 0)
-        # Create a proper HTTPError with a response attribute
-        http_error = HTTPError("404 Client Error")
-        http_error.response = mock_response
-        mock_get.return_value.raise_for_status.side_effect = http_error
+        mock_get.return_value = mock_http_response(status_code=404, text_data="Not Found")
 
         with pytest.raises(NoaaApiError) as exc_info:
             api_client.get_point_data(lat, lon)
@@ -70,19 +62,11 @@ def test_http_error_handling_404(api_client):
         assert error.error_type == NoaaApiError.CLIENT_ERROR
 
 
-def test_http_error_handling_429(api_client):
+def test_http_error_handling_429(api_client, mock_http_response):
     """Test handling of 429 Rate Limit errors."""
     lat, lon = 40.0, -75.0
     with patch("requests.get") as mock_get:
-        # Create a proper mock response with status_code
-        mock_response = MagicMock()
-        mock_response.status_code = 429
-        mock_response.text = "Too Many Requests"
-        mock_response.json.side_effect = JSONDecodeError("Invalid JSON", "", 0)
-        # Create a proper HTTPError with a response attribute
-        http_error = HTTPError("429 Client Error")
-        http_error.response = mock_response
-        mock_get.return_value.raise_for_status.side_effect = http_error
+        mock_get.return_value = mock_http_response(status_code=429, text_data="Too Many Requests")
 
         with pytest.raises(NoaaApiError) as exc_info:
             api_client.get_point_data(lat, lon)
@@ -93,19 +77,13 @@ def test_http_error_handling_429(api_client):
         assert error.error_type == NoaaApiError.RATE_LIMIT_ERROR
 
 
-def test_http_error_handling_500(api_client):
+def test_http_error_handling_500(api_client, mock_http_response):
     """Test handling of 500 Server Error."""
     lat, lon = 40.0, -75.0
     with patch("requests.get") as mock_get:
-        # Create a proper mock response with status_code
-        mock_response = MagicMock()
-        mock_response.status_code = 500
-        mock_response.text = "Internal Server Error"
-        mock_response.json.side_effect = JSONDecodeError("Invalid JSON", "", 0)
-        # Create a proper HTTPError with a response attribute
-        http_error = HTTPError("500 Server Error")
-        http_error.response = mock_response
-        mock_get.return_value.raise_for_status.side_effect = http_error
+        mock_get.return_value = mock_http_response(
+            status_code=500, text_data="Internal Server Error"
+        )
 
         with pytest.raises(NoaaApiError) as exc_info:
             api_client.get_point_data(lat, lon)
@@ -116,20 +94,20 @@ def test_http_error_handling_500(api_client):
         assert error.error_type == NoaaApiError.SERVER_ERROR
 
 
-def test_json_decode_error_handling(api_client):
+def test_json_decode_error_handling(api_client, mock_http_response):
     """Test handling of JSON decode errors."""
     lat, lon = 40.0, -75.0
     with patch("requests.get") as mock_get:
-        mock_get.return_value.json.side_effect = JSONDecodeError("Invalid JSON", "", 0)
-        mock_get.return_value.text = "Invalid JSON response"
-        mock_get.return_value.status_code = 200
-        mock_get.return_value.raise_for_status.return_value = None
+        # Create a response that returns invalid JSON
+        mock_response = mock_http_response(status_code=200, text_data="Invalid JSON response")
+        mock_response.json.side_effect = JSONDecodeError("Invalid JSON", "", 0)
+        mock_get.return_value = mock_response
 
         with pytest.raises(NoaaApiError) as exc_info:
             api_client.get_point_data(lat, lon)
 
         error = exc_info.value
-        assert "Failed to decode JSON response" in str(error)
+        assert "Failed to parse JSON response" in str(error)
         assert error.status_code == 200
         assert error.error_type == NoaaApiError.PARSE_ERROR
 

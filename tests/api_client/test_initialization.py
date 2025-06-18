@@ -114,12 +114,11 @@ def test_init_with_caching():
 
 @pytest.mark.unit
 @pytest.mark.api
-def test_get_point_data_success(api_client):
+def test_get_point_data_success(api_client, mock_http_response):
     """Test getting point data successfully."""
     lat, lon = 40.0, -75.0
     with patch("requests.get") as mock_get:
-        mock_get.return_value.json.return_value = SAMPLE_POINT_DATA
-        mock_get.return_value.raise_for_status.return_value = None
+        mock_get.return_value = mock_http_response(status_code=200, json_data=SAMPLE_POINT_DATA)
 
         result = api_client.get_point_data(lat, lon)
 
@@ -130,12 +129,11 @@ def test_get_point_data_success(api_client):
 
 @pytest.mark.unit
 @pytest.mark.api
-def test_get_point_data_cached(cached_api_client):
+def test_get_point_data_cached(cached_api_client, mock_http_response):
     """Test that point data is cached."""
     lat, lon = 40.0, -75.0
     with patch("requests.get") as mock_get:
-        mock_get.return_value.json.return_value = SAMPLE_POINT_DATA
-        mock_get.return_value.raise_for_status.return_value = None
+        mock_get.return_value = mock_http_response(status_code=200, json_data=SAMPLE_POINT_DATA)
 
         # First call should hit the API
         result1 = cached_api_client.get_point_data(lat, lon)
@@ -146,12 +144,11 @@ def test_get_point_data_cached(cached_api_client):
         mock_get.assert_called_once()
 
 
-def test_get_point_data_force_refresh(cached_api_client):
+def test_get_point_data_force_refresh(cached_api_client, mock_http_response):
     """Test that force_refresh bypasses cache."""
     lat, lon = 40.0, -75.0
     with patch("requests.get") as mock_get:
-        mock_get.return_value.json.return_value = SAMPLE_POINT_DATA
-        mock_get.return_value.raise_for_status.return_value = None
+        mock_get.return_value = mock_http_response(status_code=200, json_data=SAMPLE_POINT_DATA)
 
         # First call
         cached_api_client.get_point_data(lat, lon)
@@ -161,12 +158,11 @@ def test_get_point_data_force_refresh(cached_api_client):
         assert mock_get.call_count == 2
 
 
-def test_identify_location_type_county(api_client):
+def test_identify_location_type_county(api_client, mock_http_response):
     """Test identifying county location type."""
     lat, lon = 40.0, -75.0
     with patch("requests.get") as mock_get:
-        mock_get.return_value.json.return_value = SAMPLE_POINT_DATA
-        mock_get.return_value.raise_for_status.return_value = None
+        mock_get.return_value = mock_http_response(status_code=200, json_data=SAMPLE_POINT_DATA)
 
         location_type, location_id = api_client.identify_location_type(lat, lon)
 
@@ -174,12 +170,11 @@ def test_identify_location_type_county(api_client):
         assert location_id == "PAC091"
 
 
-def test_rate_limiting(api_client):
+def test_rate_limiting(api_client, mock_http_response):
     """Test that requests are rate limited."""
     lat, lon = 40.0, -75.0
     with patch("requests.get") as mock_get:
-        mock_get.return_value.json.return_value = SAMPLE_POINT_DATA
-        mock_get.return_value.raise_for_status.return_value = None
+        mock_get.return_value = mock_http_response(status_code=200, json_data=SAMPLE_POINT_DATA)
 
         start_time = time.time()
         api_client.get_point_data(lat, lon)
@@ -190,7 +185,7 @@ def test_rate_limiting(api_client):
         assert end_time - start_time >= api_client.min_request_interval
 
 
-def test_thread_safety(api_client):
+def test_thread_safety(api_client, mock_http_response):
     """Test thread safety of request handling."""
     import threading
 
@@ -205,8 +200,7 @@ def test_thread_safety(api_client):
             errors.append(e)
 
     with patch("requests.get") as mock_get:
-        mock_get.return_value.json.return_value = SAMPLE_POINT_DATA
-        mock_get.return_value.raise_for_status.return_value = None
+        mock_get.return_value = mock_http_response(status_code=200, json_data=SAMPLE_POINT_DATA)
 
         # Create multiple threads making concurrent requests
         threads = [threading.Thread(target=make_request) for _ in range(5)]
@@ -226,13 +220,12 @@ def test_thread_safety(api_client):
         assert mock_get.call_count == 5
 
 
-def test_rate_limiting_multiple_endpoints(api_client):
+def test_rate_limiting_multiple_endpoints(api_client, mock_http_response):
     """Test that requests to multiple endpoints are rate limited."""
     lat, lon = 40.0, -75.0
     with patch("requests.get") as mock_get, patch("time.sleep") as mock_sleep:
         # Set up the mock response
-        mock_get.return_value.json.return_value = SAMPLE_POINT_DATA
-        mock_get.return_value.raise_for_status.return_value = None
+        mock_get.return_value = mock_http_response(status_code=200, json_data=SAMPLE_POINT_DATA)
 
         # Make multiple requests to the same endpoint
         api_client.get_point_data(lat, lon)

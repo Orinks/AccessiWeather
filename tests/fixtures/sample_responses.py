@@ -1,5 +1,7 @@
 """Sample API response fixtures for testing."""
 
+from unittest.mock import MagicMock
+
 import pytest
 
 
@@ -218,3 +220,25 @@ def sample_geocoding_response():
         "lon": -74.0060,
         "country_code": "us",
     }
+
+
+@pytest.fixture
+def mock_http_response():
+    """Create a properly configured mock HTTP response object."""
+
+    def _create_mock_response(status_code=200, json_data=None, text_data="", headers=None):
+        """Create a mock response with proper attributes."""
+        mock_response = MagicMock()
+        mock_response.status_code = status_code
+        mock_response.headers = headers or {}
+        mock_response.text = text_data
+
+        if json_data is not None:
+            mock_response.json.return_value = json_data
+        else:
+            mock_response.json.side_effect = ValueError("No JSON object could be decoded")
+
+        mock_response.raise_for_status.return_value = None
+        return mock_response
+
+    return _create_mock_response

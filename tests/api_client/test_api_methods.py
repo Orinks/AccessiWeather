@@ -177,16 +177,16 @@ def api_client():
     )
 
 
-def test_get_forecast_success(api_client):
+def test_get_forecast_success(api_client, mock_http_response):
     """Test getting forecast data successfully."""
     lat, lon = 40.0, -75.0
     with patch("requests.get") as mock_get:
-        # First call for point data
-        mock_get.return_value.json.side_effect = [
-            SAMPLE_POINT_DATA,  # First call returns point data
-            SAMPLE_FORECAST_DATA,  # Second call returns forecast data
+        # First call for point data, second for forecast data
+        responses = [
+            mock_http_response(status_code=200, json_data=SAMPLE_POINT_DATA),
+            mock_http_response(status_code=200, json_data=SAMPLE_FORECAST_DATA),
         ]
-        mock_get.return_value.raise_for_status.return_value = None
+        mock_get.side_effect = responses
 
         result = api_client.get_forecast(lat, lon)
 
@@ -194,7 +194,7 @@ def test_get_forecast_success(api_client):
         assert mock_get.call_count == 2
 
 
-def test_get_forecast_no_url(api_client):
+def test_get_forecast_no_url(api_client, mock_http_response):
     """Test getting forecast when point data doesn't contain forecast URL."""
     lat, lon = 40.0, -75.0
     with patch("requests.get") as mock_get:
@@ -208,8 +208,7 @@ def test_get_forecast_no_url(api_client):
                 if key != "forecast":
                     properties[key] = properties_dict[key]
         bad_point_data["properties"] = properties
-        mock_get.return_value.json.return_value = bad_point_data
-        mock_get.return_value.raise_for_status.return_value = None
+        mock_get.return_value = mock_http_response(status_code=200, json_data=bad_point_data)
 
         with pytest.raises(ValueError) as exc_info:
             api_client.get_forecast(lat, lon)
@@ -217,13 +216,16 @@ def test_get_forecast_no_url(api_client):
         assert "Could not find forecast URL" in str(exc_info.value)
 
 
-def test_get_alerts_precise_location(api_client):
+def test_get_alerts_precise_location(api_client, mock_http_response):
     """Test getting alerts for precise location."""
     lat, lon = 40.0, -75.0
     with patch("requests.get") as mock_get:
         # Mock point data and alerts response
-        mock_get.return_value.json.side_effect = [SAMPLE_POINT_DATA, SAMPLE_ALERTS_DATA]
-        mock_get.return_value.raise_for_status.return_value = None
+        responses = [
+            mock_http_response(status_code=200, json_data=SAMPLE_POINT_DATA),
+            mock_http_response(status_code=200, json_data=SAMPLE_ALERTS_DATA),
+        ]
+        mock_get.side_effect = responses
 
         result = api_client.get_alerts(lat, lon, precise_location=True)
 
@@ -231,7 +233,7 @@ def test_get_alerts_precise_location(api_client):
         assert mock_get.call_count == 2
 
 
-def test_get_alerts_state_fallback(api_client):
+def test_get_alerts_state_fallback(api_client, mock_http_response):
     """Test getting alerts falls back to state when precise location not found."""
     lat, lon = 40.0, -75.0
     with patch("requests.get") as mock_get:
@@ -268,8 +270,11 @@ def test_get_alerts_state_fallback(api_client):
         properties["relativeLocation"] = rel_location
         modified_point_data["properties"] = properties
 
-        mock_get.return_value.json.side_effect = [modified_point_data, SAMPLE_ALERTS_DATA]
-        mock_get.return_value.raise_for_status.return_value = None
+        responses = [
+            mock_http_response(status_code=200, json_data=modified_point_data),
+            mock_http_response(status_code=200, json_data=SAMPLE_ALERTS_DATA),
+        ]
+        mock_get.side_effect = responses
 
         result = api_client.get_alerts(lat, lon)
 
