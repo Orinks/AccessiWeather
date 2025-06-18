@@ -83,7 +83,9 @@ class WeatherDataRetrieval:
                 except (NoaaApiError, Exception) as e:
                     logger.warning(f"NWS API failed for forecast: {str(e)}")
                     # Try fallback to Open-Meteo
-                    fallback_result = self.fallback_handler.try_fallback_api(lat, lon, "get_forecast")
+                    fallback_result = self.fallback_handler.try_fallback_api(
+                        lat, lon, "get_forecast"
+                    )
                     if fallback_result:
                         return fallback_result
                     else:
@@ -133,7 +135,9 @@ class WeatherDataRetrieval:
                         lat, lon, temperature_unit=temp_unit
                     )
                     # Transform to NWS-compatible format
-                    return self.api_client_manager.openmeteo_mapper.map_hourly_forecast(openmeteo_data)
+                    return self.api_client_manager.openmeteo_mapper.map_hourly_forecast(
+                        openmeteo_data
+                    )
                 except (OpenMeteoError, Exception) as e:
                     logger.warning(f"Open-Meteo API failed for hourly forecast: {str(e)}")
                     # Try fallback to NWS if location is in US
@@ -155,7 +159,9 @@ class WeatherDataRetrieval:
                 except (NoaaApiError, Exception) as e:
                     logger.warning(f"NWS API failed for hourly forecast: {str(e)}")
                     # Try fallback to Open-Meteo
-                    fallback_result = self.fallback_handler.try_fallback_api(lat, lon, "get_hourly_forecast")
+                    fallback_result = self.fallback_handler.try_fallback_api(
+                        lat, lon, "get_hourly_forecast"
+                    )
                     if fallback_result:
                         return fallback_result
                     else:
@@ -228,7 +234,9 @@ class WeatherDataRetrieval:
                         lat, lon, temperature_unit=temp_unit
                     )
                     # Transform to NWS-compatible format
-                    return self.api_client_manager.openmeteo_mapper.map_current_conditions(openmeteo_data)
+                    return self.api_client_manager.openmeteo_mapper.map_current_conditions(
+                        openmeteo_data
+                    )
                 except (OpenMeteoError, Exception) as e:
                     logger.warning(f"Open-Meteo API failed for current conditions: {str(e)}")
                     # Try fallback to NWS if location is in US
@@ -250,7 +258,9 @@ class WeatherDataRetrieval:
                 except (NoaaApiError, Exception) as e:
                     logger.warning(f"NWS API failed for current conditions: {str(e)}")
                     # Try fallback to Open-Meteo
-                    fallback_result = self.fallback_handler.try_fallback_api(lat, lon, "get_current_conditions")
+                    fallback_result = self.fallback_handler.try_fallback_api(
+                        lat, lon, "get_current_conditions"
+                    )
                     if fallback_result:
                         return fallback_result
                     else:

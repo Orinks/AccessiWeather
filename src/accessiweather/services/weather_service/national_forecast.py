@@ -6,7 +6,7 @@ caching and retrieval of nationwide forecast discussions.
 
 import logging
 import time
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 from accessiweather.api_client import ApiClientError
 from accessiweather.services.national_discussion_scraper import NationalDiscussionScraper

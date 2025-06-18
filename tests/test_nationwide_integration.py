@@ -11,9 +11,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 import wx
 
+from accessiweather.api_client import ApiClientError
 from accessiweather.national_forecast_fetcher import NationalForecastFetcher
 from accessiweather.services.national_discussion_scraper import NationalDiscussionScraper
-from accessiweather.api_client import ApiClientError
 from accessiweather.services.weather_service import WeatherService
 
 # Sample test data

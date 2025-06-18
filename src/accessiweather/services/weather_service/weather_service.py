@@ -57,7 +57,9 @@ class WeatherService:
             nws_client, self.api_client_manager, self.fallback_handler
         )
         self.national_forecast_handler = NationalForecastHandler()
-        self.alerts_discussion_handler = AlertsDiscussionHandler(nws_client, self.api_client_manager)
+        self.alerts_discussion_handler = AlertsDiscussionHandler(
+            nws_client, self.api_client_manager
+        )
 
     # Backward compatibility properties for tests and external code
     @property
