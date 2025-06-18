@@ -34,7 +34,7 @@ class WeatherAppCore:
 
     def __init__(self, weather_app):
         """Initialize the core module.
-        
+
         Args:
             weather_app: Reference to the main WeatherApp instance
         """
@@ -53,7 +53,7 @@ class WeatherAppCore:
         debug_mode=False,
     ):
         """Initialize the weather app with all required services and configuration.
-        
+
         Args:
             parent: Parent window
             weather_service: WeatherService instance
@@ -90,7 +90,9 @@ class WeatherAppCore:
             logger.info("Debug mode enabled for additional debug information and alert testing")
 
         # Validate required services
-        if not all([self.app.weather_service, self.app.location_service, self.app.notification_service]):
+        if not all(
+            [self.app.weather_service, self.app.location_service, self.app.notification_service]
+        ):
             raise ValueError(
                 "Required services (weather_service, location_service, notification_service) "
                 "must be provided"
@@ -107,6 +109,7 @@ class WeatherAppCore:
     def _initialize_fetchers(self):
         """Initialize async fetchers using the weather service."""
         from accessiweather.national_forecast_fetcher import NationalForecastFetcher
+
         from ..async_fetchers import AlertsFetcher, DiscussionFetcher, ForecastFetcher
         from ..current_conditions_fetcher import CurrentConditionsFetcher
         from ..hourly_forecast_fetcher import HourlyForecastFetcher

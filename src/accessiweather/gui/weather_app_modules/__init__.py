@@ -11,7 +11,7 @@ from .ui_management import WeatherAppUIManagement
 
 __all__ = [
     "WeatherAppCore",
-    "WeatherAppEventHandlers", 
+    "WeatherAppEventHandlers",
     "WeatherAppServiceCoordination",
     "WeatherAppUIManagement",
 ]
