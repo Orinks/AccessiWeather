@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from accessiweather.api_client import ApiClientError, NoaaApiError
 from accessiweather.api_wrapper import NoaaApiWrapper
 
 # Common test coordinates
@@ -98,17 +97,24 @@ def api_wrapper():
         mock_nws_instance.client._headers = {"User-Agent": "TestClient (test@example.com)"}
         mock_nws_instance.cache = None
         mock_nws_instance._generate_cache_key = MagicMock(return_value="test_cache_key")
-        mock_nws_instance._get_cached_or_fetch = MagicMock()
+        mock_nws_instance._get_cached_or_fetch = MagicMock(return_value={"data": "test"})
         mock_nws_instance._make_api_request = MagicMock()
         mock_nws_instance._transform_point_data = MagicMock()
         mock_nws_instance._rate_limit = MagicMock()
         mock_nws_instance._handle_rate_limit = MagicMock()
         mock_nws_instance._handle_client_error = MagicMock()
-        mock_nws_instance.get_point_data = MagicMock()
+        mock_nws_instance.get_point_data = MagicMock(return_value=SAMPLE_POINT_DATA)
         mock_nws_instance.last_request_time = None
         mock_nws_instance.max_retries = 3
         mock_nws_instance.retry_initial_wait = 5.0
         mock_nws_instance.retry_backoff = 2.0
+
+        # Configure method return values with sample data
+        mock_nws_instance.get_alerts = MagicMock(return_value=SAMPLE_ALERTS_DATA)
+        mock_nws_instance.get_forecast = MagicMock(return_value=SAMPLE_FORECAST_DATA)
+        mock_nws_instance.get_hourly_forecast = MagicMock(return_value=SAMPLE_HOURLY_FORECAST_DATA)
+        mock_nws_instance.identify_location_type = MagicMock(return_value=("county", "PAC101"))
+
         mock_nws.return_value = mock_nws_instance
 
         mock_openmeteo_instance = MagicMock()
@@ -143,17 +149,24 @@ def cached_api_wrapper():
         mock_nws_instance.client._headers = {"User-Agent": "TestClient (test@example.com)"}
         mock_nws_instance.cache = mock_cache
         mock_nws_instance._generate_cache_key = MagicMock(return_value="test_cache_key")
-        mock_nws_instance._get_cached_or_fetch = MagicMock()
+        mock_nws_instance._get_cached_or_fetch = MagicMock(return_value={"data": "test"})
         mock_nws_instance._make_api_request = MagicMock()
         mock_nws_instance._transform_point_data = MagicMock()
         mock_nws_instance._rate_limit = MagicMock()
         mock_nws_instance._handle_rate_limit = MagicMock()
         mock_nws_instance._handle_client_error = MagicMock()
-        mock_nws_instance.get_point_data = MagicMock()
+        mock_nws_instance.get_point_data = MagicMock(return_value=SAMPLE_POINT_DATA)
         mock_nws_instance.last_request_time = None
         mock_nws_instance.max_retries = 3
         mock_nws_instance.retry_initial_wait = 5.0
         mock_nws_instance.retry_backoff = 2.0
+
+        # Configure method return values with sample data
+        mock_nws_instance.get_alerts = MagicMock(return_value=SAMPLE_ALERTS_DATA)
+        mock_nws_instance.get_forecast = MagicMock(return_value=SAMPLE_FORECAST_DATA)
+        mock_nws_instance.get_hourly_forecast = MagicMock(return_value=SAMPLE_HOURLY_FORECAST_DATA)
+        mock_nws_instance.identify_location_type = MagicMock(return_value=("county", "PAC101"))
+
         mock_nws.return_value = mock_nws_instance
 
         mock_openmeteo_instance = MagicMock()
