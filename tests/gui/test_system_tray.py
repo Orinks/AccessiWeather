@@ -200,16 +200,20 @@ class TestSystemTray(unittest.TestCase):
         """Test that context menu is shown with proper accessibility."""
         with patch("wx.adv.TaskBarIcon"):
             icon = TaskBarIcon(self.frame)
-            icon.CreatePopupMenu = MagicMock(return_value=MagicMock())
-            icon.PopupMenu = MagicMock()
 
-            # Test right-click context menu
-            mock_event = MagicMock()
-            icon.on_right_click(mock_event)
+            # Use patch.object for proper mocking instead of direct assignment
+            with (
+                patch.object(icon, "CreatePopupMenu", return_value=MagicMock()) as mock_create_menu,
+                patch.object(icon, "PopupMenu") as mock_popup_menu,
+            ):
 
-            # Verify menu was created and shown with proper focus
-            icon.CreatePopupMenu.assert_called_once()
-            icon.PopupMenu.assert_called_once()
+                # Test right-click context menu
+                mock_event = MagicMock()
+                icon.on_right_click(mock_event)
+
+                # Verify menu was created and shown with proper focus
+                mock_create_menu.assert_called_once()
+                mock_popup_menu.assert_called_once()
 
 
 if __name__ == "__main__":
