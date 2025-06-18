@@ -2,6 +2,7 @@
 
 import tempfile
 import unittest
+from typing import Any, Dict
 from unittest.mock import MagicMock, patch
 
 import wx
@@ -21,7 +22,7 @@ class MockWeatherApp(wx.Frame, WeatherAppUpdateHandlers):
             notification_callback=MagicMock(),
             progress_callback=MagicMock(),
         )
-        self.config = {"settings": {}}
+        self.config: Dict[str, Any] = {"settings": {}}
 
     def Close(self, force=False):
         """Mock method."""

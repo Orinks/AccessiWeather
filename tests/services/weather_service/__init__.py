@@ -1,0 +1,1 @@
+"""Weather service test module."""

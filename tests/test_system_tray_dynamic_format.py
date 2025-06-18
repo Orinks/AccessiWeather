@@ -222,17 +222,18 @@ class TestSystemTrayDynamicFormat:
             taskbar_icon.alerts_data = None
             taskbar_icon.current_text = ""
 
-            # Mock the methods we need to test
-            setattr(taskbar_icon, "update_weather_data", Mock())
-            setattr(taskbar_icon, "update_alerts_data", Mock())
+            # Use patch.object for proper mocking instead of setattr to avoid type checking issues
+            with (
+                patch.object(taskbar_icon, "update_weather_data") as mock_update_weather,
+                patch.object(taskbar_icon, "update_alerts_data") as mock_update_alerts,
+            ):
+                # Simulate calling update methods
+                taskbar_icon.update_weather_data(sample_weather_data)
+                taskbar_icon.update_alerts_data(sample_alerts)
 
-            # Simulate calling update methods
-            taskbar_icon.update_weather_data(sample_weather_data)
-            taskbar_icon.update_alerts_data(sample_alerts)
-
-            # Verify the mocks were called
-            taskbar_icon.update_weather_data.assert_called_once_with(sample_weather_data)
-            taskbar_icon.update_alerts_data.assert_called_once_with(sample_alerts)
+                # Verify the mocks were called
+                mock_update_weather.assert_called_once_with(sample_weather_data)
+                mock_update_alerts.assert_called_once_with(sample_alerts)
 
     def test_taskbar_text_disabled_no_formatting(self, mock_frame, sample_weather_data):
         """Test that no text formatting occurs when taskbar text is disabled."""
@@ -257,14 +258,13 @@ class TestSystemTrayDynamicFormat:
             taskbar_icon.alerts_data = None
             taskbar_icon.current_text = ""
 
-            # Mock the methods we need to test
-            setattr(taskbar_icon, "update_weather_data", Mock())
+            # Use patch.object for proper mocking instead of setattr to avoid type checking issues
+            with patch.object(taskbar_icon, "update_weather_data") as mock_update_weather:
+                # Simulate calling update_weather_data
+                taskbar_icon.update_weather_data(sample_weather_data)
 
-            # Simulate calling update_weather_data
-            taskbar_icon.update_weather_data(sample_weather_data)
-
-            # Verify the mock was called
-            taskbar_icon.update_weather_data.assert_called_once_with(sample_weather_data)
+                # Verify the mock was called
+                mock_update_weather.assert_called_once_with(sample_weather_data)
 
     def test_primary_alert_selection(self, taskbar_icon):
         """Test primary alert selection logic."""
