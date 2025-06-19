@@ -140,7 +140,7 @@ def setup_mock_components(mock_accessible_components):
 @pytest.fixture
 def mock_geocoding():
     """Mock GeocodingService."""
-    with patch("accessiweather.gui.dialogs.GeocodingService") as mock:
+    with patch("accessiweather.gui.dialogs.location_dialogs.GeocodingService") as mock:
         mock_instance = MagicMock()
         mock_instance.search_locations.return_value = SAMPLE_LOCATIONS
         mock.return_value = mock_instance
