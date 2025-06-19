@@ -10,12 +10,7 @@ import logging
 import wx
 import wx.adv
 
-from .settings.constants import (
-    TAB_GENERAL,
-    TAB_DISPLAY,
-    TAB_ADVANCED,
-    TAB_UPDATES,
-)
+from .settings.constants import TAB_ADVANCED, TAB_DISPLAY, TAB_GENERAL, TAB_UPDATES
 from .settings.data_handler import SettingsDataHandler
 from .settings.tab_components import (
     AdvancedTabBuilder,

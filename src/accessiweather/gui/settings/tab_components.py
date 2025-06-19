@@ -12,12 +12,12 @@ import wx
 from accessiweather.format_string_parser import FormatStringParser
 
 from .constants import (
-    MIN_UPDATE_INTERVAL,
+    DEFAULT_UPDATE_CHECK_INTERVAL,
+    MAX_UPDATE_CHECK_INTERVAL,
     MIN_ALERT_RADIUS,
     MIN_CACHE_TTL,
     MIN_UPDATE_CHECK_INTERVAL,
-    MAX_UPDATE_CHECK_INTERVAL,
-    DEFAULT_UPDATE_CHECK_INTERVAL,
+    MIN_UPDATE_INTERVAL,
 )
 
 logger = logging.getLogger(__name__)
