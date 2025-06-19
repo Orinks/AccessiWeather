@@ -8,7 +8,7 @@ with the original interface.
 import logging
 from typing import Any, Dict, Optional
 
-from accessiweather.api.nws_wrapper import NwsApiWrapper
+from accessiweather.api.nws import NwsApiWrapper
 from accessiweather.api.openmeteo_wrapper import OpenMeteoApiWrapper
 from accessiweather.api_client import ApiClientError, NoaaApiError
 
