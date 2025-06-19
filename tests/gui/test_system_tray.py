@@ -132,8 +132,8 @@ class TestSystemTray(unittest.TestCase):
             icon.RemoveIcon.assert_called_once()
             icon.Destroy.assert_called_once()
 
-    @patch("accessiweather.gui.system_tray._is_windows_11")
-    @patch("accessiweather.gui.system_tray._get_windows_version")
+    @patch("accessiweather.gui.system_tray_modules.icon_manager._is_windows_11")
+    @patch("accessiweather.gui.system_tray_modules.icon_manager._get_windows_version")
     def test_windows_10_cleanup_delay(self, mock_get_version, mock_is_win11):
         """Test that Windows 10 gets a cleanup delay."""
         # Mock Windows 10
@@ -152,8 +152,8 @@ class TestSystemTray(unittest.TestCase):
             # Verify delay was added for Windows 10
             mock_sleep.assert_called_once_with(0.1)
 
-    @patch("accessiweather.gui.system_tray._is_windows_11")
-    @patch("accessiweather.gui.system_tray._get_windows_version")
+    @patch("accessiweather.gui.system_tray_modules.icon_manager._is_windows_11")
+    @patch("accessiweather.gui.system_tray_modules.icon_manager._get_windows_version")
     def test_windows_11_no_cleanup_delay(self, mock_get_version, mock_is_win11):
         """Test that Windows 11 doesn't get a cleanup delay."""
         # Mock Windows 11
