@@ -8,7 +8,7 @@ and separation of concerns.
 from .discussion_dialogs import NationalDiscussionDialog, WeatherDiscussionDialog
 
 # Import dialog classes from the refactored modules
-from .location_dialogs import AdvancedLocationDialog, LocationDialog
+from .location import AdvancedLocationDialog, LocationDialog
 
 # Define exported symbols for backward compatibility
 __all__ = [
