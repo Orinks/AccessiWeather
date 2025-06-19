@@ -11,12 +11,8 @@ import wx
 from accessiweather.gui.handlers.config_handlers import WeatherAppConfigHandlers
 from accessiweather.gui.handlers.dialog_handlers import WeatherAppDialogHandlers
 from accessiweather.gui.handlers.settings_handlers import WeatherAppSettingsHandlers
-from accessiweather.gui.settings_dialog import (
-    DATA_SOURCE_AUTO,
-    DATA_SOURCE_KEY,
-    DATA_SOURCE_NWS,
-    SettingsDialog,
-)
+from accessiweather.gui.settings import DATA_SOURCE_AUTO, DATA_SOURCE_KEY, DATA_SOURCE_NWS
+from accessiweather.gui.settings_dialog import SettingsDialog
 
 
 class TestSettingsDialog(unittest.TestCase):
