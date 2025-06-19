@@ -5,9 +5,10 @@ Refactored from the original dialogs.py file for better maintainability
 and separation of concerns.
 """
 
+from .discussion_dialogs import NationalDiscussionDialog, WeatherDiscussionDialog
+
 # Import dialog classes from the refactored modules
 from .location_dialogs import AdvancedLocationDialog, LocationDialog
-from .discussion_dialogs import WeatherDiscussionDialog, NationalDiscussionDialog
 
 # Define exported symbols for backward compatibility
 __all__ = [
