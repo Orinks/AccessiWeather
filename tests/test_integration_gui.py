@@ -18,7 +18,7 @@ class TestWeatherAppIntegration:
     """Test WeatherApp integration with services."""
 
     def test_weather_app_initialization(
-        self, headless_environment, temp_config_dir, sample_config, sample_nws_current_response
+        self, temp_config_dir, sample_config, sample_nws_current_response
     ):
         """Test WeatherApp initializes correctly with service layer."""
         with (
@@ -381,7 +381,7 @@ class TestPerformanceIntegration:
             performance_timer.stop()
 
             # UI updates should be fast (even with mocking overhead)
-            assert performance_timer.elapsed < 1.0
+            assert performance_timer.elapsed() < 1.0
 
             # Verify all updates were processed
             assert mock_ui_instance.update_current_conditions.call_count == 10
