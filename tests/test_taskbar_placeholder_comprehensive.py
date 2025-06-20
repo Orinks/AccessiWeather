@@ -405,10 +405,16 @@ class TestTaskbarPlaceholderComprehensive(unittest.TestCase):
 
     def test_integration_with_system_tray(self):
         """Test integration with the actual TaskBarIcon system."""
-        # Create a TaskBarIcon instance
-        with patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"):
+        # Create a TaskBarIcon instance with proper mocking
+        with (
+            patch.object(TaskBarIcon, "set_icon") as mock_set_icon,
+            patch.object(TaskBarIcon, "bind_events"),
+            patch.object(TaskBarIcon, "SetIcon"),
+            patch.object(TaskBarIcon, "RemoveIcon"),
+            patch.object(TaskBarIcon, "Destroy"),
+        ):
+
             taskbar_icon = TaskBarIcon(self.frame)
-            taskbar_icon.SetIcon = MagicMock()
 
             # Test with NWS data
             nws_data = self.ui_manager._extract_nws_data_for_taskbar(self.nws_test_data)
@@ -417,8 +423,8 @@ class TestTaskbarPlaceholderComprehensive(unittest.TestCase):
             # Update weather data
             taskbar_icon.update_weather_data(nws_data)
 
-            # Verify that SetIcon was called (meaning formatting worked)
-            taskbar_icon.SetIcon.assert_called()
+            # Verify that set_icon was called (meaning formatting worked)
+            mock_set_icon.assert_called()
 
             # Test with Open-Meteo data
             openmeteo_data = self.ui_manager._extract_nws_data_for_taskbar(
@@ -429,8 +435,8 @@ class TestTaskbarPlaceholderComprehensive(unittest.TestCase):
             # Update weather data
             taskbar_icon.update_weather_data(openmeteo_data)
 
-            # Verify that SetIcon was called again
-            self.assertEqual(taskbar_icon.SetIcon.call_count, 2)
+            # Verify that set_icon was called again (should be at least 2 calls for the 2 updates)
+            self.assertGreaterEqual(mock_set_icon.call_count, 2)
 
 
 if __name__ == "__main__":

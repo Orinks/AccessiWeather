@@ -61,6 +61,7 @@ class TestSettingsChangeHandling:
             mock_app.current_conditions_fetcher = mock_current_conditions_fetcher
             mock_app.hourly_forecast_fetcher = mock_hourly_forecast_fetcher
             mock_app.national_forecast_fetcher = mock_national_forecast_fetcher
+            mock_app.core = MagicMock()
 
             # Import the method here to avoid import issues
             from accessiweather.gui.weather_app import WeatherApp
@@ -68,22 +69,8 @@ class TestSettingsChangeHandling:
             # Call the method
             WeatherApp._handle_data_source_change(mock_app)
 
-            # Verify that the weather service was updated
-            assert mock_app.weather_service == mock_new_weather_service
-
-            # Verify that the location service data source was updated
-            mock_location_service.update_data_source.assert_called_once_with(DATA_SOURCE_NWS)
-
-            # Verify that the fetchers were updated
-            assert mock_forecast_fetcher.service == mock_new_weather_service
-            assert mock_alerts_fetcher.service == mock_new_weather_service
-            assert mock_discussion_fetcher.service == mock_new_weather_service
-            assert mock_current_conditions_fetcher.service == mock_new_weather_service
-            assert mock_hourly_forecast_fetcher.service == mock_new_weather_service
-            assert mock_national_forecast_fetcher.service == mock_new_weather_service
-
-            # Verify that weather data was refreshed
-            mock_app.UpdateWeatherData.assert_called_once()
+            # Verify that the core handle_data_source_change was called (since method delegates)
+            mock_app.core.handle_data_source_change.assert_called_once()
 
     def test_handle_data_source_change_auto(self):
         """Test handling data source change to AUTO mode."""
@@ -133,6 +120,7 @@ class TestSettingsChangeHandling:
             mock_app.current_conditions_fetcher = mock_current_conditions_fetcher
             mock_app.hourly_forecast_fetcher = mock_hourly_forecast_fetcher
             mock_app.national_forecast_fetcher = mock_national_forecast_fetcher
+            mock_app.core = MagicMock()
 
             # Import the method here to avoid import issues
             from accessiweather.gui.weather_app import WeatherApp
@@ -140,19 +128,5 @@ class TestSettingsChangeHandling:
             # Call the method
             WeatherApp._handle_data_source_change(mock_app)
 
-            # Verify that the weather service was updated
-            assert mock_app.weather_service == mock_new_weather_service
-
-            # Verify that the location service data source was updated
-            mock_location_service.update_data_source.assert_called_once_with(DATA_SOURCE_AUTO)
-
-            # Verify that the fetchers were updated
-            assert mock_forecast_fetcher.service == mock_new_weather_service
-            assert mock_alerts_fetcher.service == mock_new_weather_service
-            assert mock_discussion_fetcher.service == mock_new_weather_service
-            assert mock_current_conditions_fetcher.service == mock_new_weather_service
-            assert mock_hourly_forecast_fetcher.service == mock_new_weather_service
-            assert mock_national_forecast_fetcher.service == mock_new_weather_service
-
-            # Verify that weather data was refreshed
-            mock_app.UpdateWeatherData.assert_called_once()
+            # Verify that the core handle_data_source_change was called (since method delegates)
+            mock_app.core.handle_data_source_change.assert_called_once()

@@ -279,11 +279,13 @@ def test_weather_app_on_alerts_fetched_uses_processed_alerts():
     # Create mock objects
     mock_notification_service = MagicMock()
     mock_ui_manager = MagicMock()
+    mock_service_coordination = MagicMock()
 
     # Create a mock WeatherApp with the necessary attributes
     mock_app = MagicMock()
     mock_app.notification_service = mock_notification_service
     mock_app.ui_manager = mock_ui_manager
+    mock_app.service_coordination = mock_service_coordination
     mock_app._alerts_complete = False
     mock_app._check_update_complete = MagicMock()
     mock_app._testing_alerts_callback = None
@@ -303,6 +305,9 @@ def test_weather_app_on_alerts_fetched_uses_processed_alerts():
     # Return a tuple of (processed_alerts, new_count, updated_count)
     mock_notification_service.process_alerts.return_value = (processed_alerts, 1, 0)
 
+    # Set up the service coordination to use our mocked notification service
+    mock_service_coordination.app = mock_app
+
     # Import the _on_alerts_fetched method from weather_app.py
     from accessiweather.gui.weather_app import WeatherApp
 
@@ -310,17 +315,9 @@ def test_weather_app_on_alerts_fetched_uses_processed_alerts():
     alerts_data = SAMPLE_ALERT_WITH_HEADLINE
     WeatherApp._on_alerts_fetched(mock_app, alerts_data)
 
-    # Verify that the notification service was called to process the alerts
-    mock_notification_service.process_alerts.assert_called_once_with(alerts_data)
+    # Verify that the service coordination _on_alerts_fetched was called
+    mock_service_coordination._on_alerts_fetched.assert_called_once_with(alerts_data)
 
-    # Verify that the processed alerts were saved to current_alerts
-    assert mock_app.current_alerts == processed_alerts
-
-    # Verify that the UI manager was called with the processed alerts
-    mock_ui_manager.display_alerts_processed.assert_called_once_with(processed_alerts)
-
-    # Verify that _alerts_complete was set to True
-    assert mock_app._alerts_complete is True
-
-    # Verify that _check_update_complete was called
-    mock_app._check_update_complete.assert_called_once()
+    # Since we're testing the delegation to service_coordination, we don't need to verify
+    # the internal behavior of service_coordination here - that should be tested separately
+    # We only verify that the delegation happens correctly

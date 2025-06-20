@@ -45,7 +45,7 @@ def mock_scraper():
 def mock_weather_service(mock_scraper):
     """Create a mock WeatherService with a mock scraper for testing."""
     with patch(
-        "accessiweather.services.weather_service.NationalDiscussionScraper",
+        "accessiweather.services.weather_service.national_forecast.NationalDiscussionScraper",
         return_value=mock_scraper,
     ):
         service = WeatherService(MagicMock())
@@ -194,7 +194,7 @@ class TestNationwideIntegration:
         thread.join(timeout=1.0)
         assert not thread.is_alive()
 
-    @patch("accessiweather.services.weather_service.NationalDiscussionScraper")
+    @patch("accessiweather.services.weather_service.national_forecast.NationalDiscussionScraper")
     def test_end_to_end_flow(self, mock_scraper_class, app):
         """Test the end-to-end flow from service to fetcher to callback."""
         # Set up the mock scraper

@@ -9,15 +9,27 @@ This module tests the system tray icon functionality including:
 
 import logging
 import unittest
+from contextlib import ExitStack
 from unittest.mock import MagicMock, patch
 
 import wx
 
 from accessiweather.gui.system_tray import TaskBarIcon
+from accessiweather.gui.system_tray_modules.icon_manager import TaskBarIconManager
 
 
 class TestSystemTray(unittest.TestCase):
     """Test cases for system tray functionality."""
+
+    def _get_taskbar_patches(self):
+        """Get common patches for TaskBarIcon tests."""
+        stack = ExitStack()
+        stack.enter_context(patch.object(TaskBarIcon, "set_icon"))
+        stack.enter_context(patch.object(TaskBarIcon, "bind_events"))
+        stack.enter_context(patch.object(TaskBarIcon, "SetIcon"))
+        stack.enter_context(patch.object(TaskBarIcon, "RemoveIcon"))
+        stack.enter_context(patch.object(TaskBarIcon, "Destroy"))
+        return stack
 
     def setUp(self):
         """Set up test fixtures."""
@@ -33,37 +45,44 @@ class TestSystemTray(unittest.TestCase):
         }
 
         # Reset class variables
-        TaskBarIcon._instance = None
-        TaskBarIcon._instance_count = 0
+        TaskBarIconManager._instance = None
+        TaskBarIconManager._instance_count = 0
 
     def tearDown(self):
         """Clean up after tests."""
         # Clean up any existing instances
-        TaskBarIcon.cleanup_existing_instance()
+        TaskBarIconManager.cleanup_existing_instance()
 
         # Destroy the wx.App
         self.app.Destroy()
 
     def test_single_instance_creation(self):
         """Test that only one TaskBarIcon instance can be created."""
-        with patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"):
+        with (
+            patch.object(TaskBarIcon, "set_icon"),
+            patch.object(TaskBarIcon, "bind_events"),
+            patch.object(TaskBarIcon, "SetIcon"),
+            patch.object(TaskBarIcon, "RemoveIcon"),
+            patch.object(TaskBarIcon, "Destroy"),
+        ):
             # Create first instance
             icon1 = TaskBarIcon(self.frame)
-            self.assertEqual(TaskBarIcon._instance_count, 1)
-            self.assertEqual(TaskBarIcon._instance, icon1)
+            # Access singleton attributes through the TaskBarIconManager base class
+            self.assertEqual(TaskBarIconManager._instance_count, 1)
+            self.assertEqual(TaskBarIconManager._instance, icon1)
 
             # Create second instance - should log warning
             with self.assertLogs(level=logging.WARNING) as log:
                 icon2 = TaskBarIcon(self.frame)
                 self.assertIn("TaskBarIcon instance already exists", log.output[0])
 
-            self.assertEqual(TaskBarIcon._instance_count, 2)
+            self.assertEqual(TaskBarIconManager._instance_count, 2)
             # The class instance should point to the latest one
-            self.assertEqual(TaskBarIcon._instance, icon2)
+            self.assertEqual(TaskBarIconManager._instance, icon2)
 
     def test_cleanup_existing_instance(self):
         """Test cleanup of existing instance before creating new one."""
-        with patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"):
+        with self._get_taskbar_patches():
             # Create first instance
             icon1 = TaskBarIcon(self.frame)
             icon1.IsOk = MagicMock(return_value=True)
@@ -71,16 +90,16 @@ class TestSystemTray(unittest.TestCase):
             icon1.Destroy = MagicMock()
 
             # Cleanup existing instance
-            TaskBarIcon.cleanup_existing_instance()
+            TaskBarIconManager.cleanup_existing_instance()
 
             # Verify cleanup was called
             icon1.RemoveIcon.assert_called_once()
             icon1.Destroy.assert_called_once()
-            self.assertIsNone(TaskBarIcon._instance)
+            self.assertIsNone(TaskBarIconManager._instance)
 
     def test_cleanup_method(self):
         """Test the cleanup method properly removes and destroys icon."""
-        with patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"):
+        with self._get_taskbar_patches():
             icon = TaskBarIcon(self.frame)
             icon.IsOk = MagicMock(return_value=True)
             icon.RemoveIcon = MagicMock()
@@ -93,11 +112,11 @@ class TestSystemTray(unittest.TestCase):
             icon.RemoveIcon.assert_called_once()
             icon.Destroy.assert_called_once()
             self.assertTrue(icon._is_destroyed)
-            self.assertIsNone(TaskBarIcon._instance)
+            self.assertIsNone(TaskBarIconManager._instance)
 
     def test_cleanup_when_not_ok(self):
         """Test cleanup when TaskBarIcon is not OK."""
-        with patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"):
+        with self._get_taskbar_patches():
             icon = TaskBarIcon(self.frame)
             icon.IsOk = MagicMock(return_value=False)
             icon.RemoveIcon = MagicMock()
@@ -114,7 +133,7 @@ class TestSystemTray(unittest.TestCase):
 
     def test_double_cleanup(self):
         """Test that double cleanup is handled gracefully."""
-        with patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"):
+        with self._get_taskbar_patches():
             icon = TaskBarIcon(self.frame)
             icon.IsOk = MagicMock(return_value=True)
             icon.RemoveIcon = MagicMock()
@@ -141,7 +160,11 @@ class TestSystemTray(unittest.TestCase):
         mock_is_win11.return_value = False
 
         with (
-            patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"),
+            patch.object(TaskBarIcon, "set_icon"),
+            patch.object(TaskBarIcon, "bind_events"),
+            patch.object(TaskBarIcon, "SetIcon"),
+            patch.object(TaskBarIcon, "RemoveIcon"),
+            patch.object(TaskBarIcon, "Destroy"),
             patch("time.sleep") as mock_sleep,
         ):
             icon = TaskBarIcon(self.frame)
@@ -164,7 +187,11 @@ class TestSystemTray(unittest.TestCase):
         mock_is_win11.return_value = True
 
         with (
-            patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"),
+            patch.object(TaskBarIcon, "set_icon"),
+            patch.object(TaskBarIcon, "bind_events"),
+            patch.object(TaskBarIcon, "SetIcon"),
+            patch.object(TaskBarIcon, "RemoveIcon"),
+            patch.object(TaskBarIcon, "Destroy"),
             patch("time.sleep") as mock_sleep,
         ):
             icon = TaskBarIcon(self.frame)
@@ -180,7 +207,7 @@ class TestSystemTray(unittest.TestCase):
 
     def test_accessibility_keyboard_events(self):
         """Test that keyboard accessibility events are properly bound."""
-        with patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"):
+        with self._get_taskbar_patches():
             icon = TaskBarIcon(self.frame)
 
             # Verify that additional accessibility events are bound
@@ -190,7 +217,7 @@ class TestSystemTray(unittest.TestCase):
 
     def test_accessibility_event_handling(self):
         """Test that accessibility events are handled properly."""
-        with patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"):
+        with self._get_taskbar_patches():
             icon = TaskBarIcon(self.frame)
 
             # Test left click event (keyboard Enter equivalent)
@@ -204,7 +231,7 @@ class TestSystemTray(unittest.TestCase):
 
     def test_context_menu_accessibility(self):
         """Test that context menu is shown with proper accessibility."""
-        with patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"):
+        with self._get_taskbar_patches():
             icon = TaskBarIcon(self.frame)
 
             # Use patch.object for proper mocking instead of direct assignment
