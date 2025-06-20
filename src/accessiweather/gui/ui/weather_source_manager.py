@@ -80,7 +80,7 @@ class WeatherSourceManager:
         Returns:
             bool: True if Open-Meteo should be used
         """
-        from accessiweather.gui.settings_dialog import DATA_SOURCE_AUTO, DATA_SOURCE_OPENMETEO
+        from accessiweather.gui.settings.constants import DATA_SOURCE_AUTO, DATA_SOURCE_OPENMETEO
 
         data_source = self.frame.config.get("settings", {}).get("data_source", "nws")
 

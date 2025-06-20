@@ -61,7 +61,7 @@ CUSTOM_COORDINATES_FORMAT = "Custom coordinates: {lat}, {lon}"
 SEARCH_THREAD_JOIN_TIMEOUT = 0.5  # seconds
 
 # Default values
-DEFAULT_LAT = None
-DEFAULT_LON = None
+DEFAULT_LAT: float | None = None
+DEFAULT_LON: float | None = None
 DEFAULT_LOCATION_NAME = ""
 DEFAULT_DATA_SOURCE = "nws"

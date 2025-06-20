@@ -290,7 +290,9 @@ class LocationDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.OnAdvanced, self.advanced_button)
         self.Bind(wx.EVT_BUTTON, self.OnOK, id=wx.ID_OK)
         self.Bind(wx.EVT_COMBOBOX, self._on_combobox_select, self.search_field)
-        self.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self._on_list_item_activated, self.search_results_list)
+        self.Bind(
+            wx.EVT_LIST_ITEM_ACTIVATED, self._on_list_item_activated, self.search_results_list
+        )
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
     def OnSearch(self, event: wx.CommandEvent) -> None:
@@ -367,7 +369,8 @@ class LocationDialog(wx.Dialog):
     def Destroy(self) -> bool:
         """Clean up resources before destroying the dialog."""
         self.geocoding_manager.cleanup()
-        return super().Destroy()
+        result = super().Destroy()
+        return bool(result)
 
     def GetValues(self) -> Tuple[str, Optional[float], Optional[float]]:
         """
@@ -386,7 +389,9 @@ class LocationDialog(wx.Dialog):
             result: Geocoding result tuple or None
             query: Original search query
         """
-        lat, lon, result_text, detailed_name = self.result_processor.process_search_result(result, query)
+        lat, lon, result_text, detailed_name = self.result_processor.process_search_result(
+            result, query
+        )
 
         self.latitude = lat
         self.longitude = lon

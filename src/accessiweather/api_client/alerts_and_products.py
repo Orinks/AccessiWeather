@@ -6,13 +6,48 @@ and national weather products retrieval.
 
 import logging
 import traceback
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
 
 class AlertsAndProductsMixin:
-    """Mixin class providing alerts and national products functionality."""
+    """Mixin class providing alerts and national products functionality.
+
+    This mixin expects the following methods to be provided by the implementing class:
+    - _make_request(endpoint_or_url, params=None, use_full_url=False, force_refresh=False)
+    - identify_location_type(lat, lon, force_refresh=False) -> Tuple[Optional[str], Optional[str]]
+    - get_point_data(lat, lon, force_refresh=False) -> Dict[str, Any]
+
+    And the following attributes:
+    - BASE_URL: str
+    """
+
+    # These methods must be implemented by the class that uses this mixin
+    def _make_request(
+        self,
+        endpoint_or_url: str,
+        params: Optional[Dict[str, Any]] = None,
+        use_full_url: bool = False,
+        force_refresh: bool = False,
+    ) -> Dict[str, Any]:
+        """Make a request to the API. Must be implemented by the using class."""
+        raise NotImplementedError("_make_request must be implemented by the using class")
+
+    def identify_location_type(
+        self, lat: float, lon: float, force_refresh: bool = False
+    ) -> Tuple[Optional[str], Optional[str]]:
+        """Identify location type. Must be implemented by the using class."""
+        raise NotImplementedError("identify_location_type must be implemented by the using class")
+
+    def get_point_data(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
+        """Get point data. Must be implemented by the using class."""
+        raise NotImplementedError("get_point_data must be implemented by the using class")
+
+    @property
+    def BASE_URL(self) -> str:
+        """Base URL for the API. Must be implemented by the using class."""
+        raise NotImplementedError("BASE_URL must be implemented by the using class")
 
     def get_alerts(
         self,

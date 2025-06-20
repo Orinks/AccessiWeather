@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from accessiweather.gui.handlers.timer_handlers import WeatherAppTimerHandlers
-from accessiweather.gui.settings_dialog import AUTO_REFRESH_NATIONAL_KEY, UPDATE_INTERVAL_KEY
+from accessiweather.gui.settings.constants import AUTO_REFRESH_NATIONAL_KEY, UPDATE_INTERVAL_KEY
 from accessiweather.location import NATIONWIDE_LOCATION_NAME
 
 

@@ -9,7 +9,7 @@ from typing import Any, Dict, Optional, Union
 
 from accessiweather.api_client import NoaaApiClient
 from accessiweather.api_wrapper import NoaaApiWrapper
-from accessiweather.gui.settings_dialog import DATA_SOURCE_AUTO, DATA_SOURCE_OPENMETEO
+from accessiweather.gui.settings.constants import DATA_SOURCE_AUTO, DATA_SOURCE_OPENMETEO
 from accessiweather.openmeteo_client import OpenMeteoApiClient
 from accessiweather.openmeteo_mapper import OpenMeteoMapper
 
@@ -43,7 +43,7 @@ class ApiClientManager:
         Returns:
             str: "celsius" or "fahrenheit" for Open-Meteo API
         """
-        from accessiweather.gui.settings_dialog import (
+        from accessiweather.gui.settings.constants import (
             DEFAULT_TEMPERATURE_UNIT,
             TEMPERATURE_UNIT_KEY,
         )

@@ -89,7 +89,7 @@ class WeatherAppLocationHandlers(WeatherAppHandlerBase):
 
             if not add_result:
                 # Location was invalid for the current data source
-                from ...gui.settings_dialog import DATA_SOURCE_KEY
+                from ...gui.settings.constants import DATA_SOURCE_KEY
 
                 # Get the current data source
                 data_source = self.config.get("settings", {}).get(DATA_SOURCE_KEY, "nws")

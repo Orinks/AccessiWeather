@@ -16,7 +16,36 @@ logger = logging.getLogger(__name__)
 
 
 class TaskBarEventHandler:
-    """Mixin class for handling system tray events."""
+    """Mixin class for handling system tray events.
+
+    This mixin expects the following methods to be provided by the implementing class:
+    - Bind(event_type, handler, source=None)
+    - PopupMenu(menu)
+
+    And the following attributes:
+    - frame: The main application frame
+    """
+
+    # These methods must be implemented by the class that uses this mixin (wx.adv.TaskBarIcon)
+    def Bind(self, event_type, handler, source=None):
+        """Bind an event handler. Must be implemented by wx.adv.TaskBarIcon."""
+        raise NotImplementedError("Bind must be implemented by wx.adv.TaskBarIcon")
+
+    def PopupMenu(self, menu):
+        """Show popup menu. Must be implemented by wx.adv.TaskBarIcon."""
+        raise NotImplementedError("PopupMenu must be implemented by wx.adv.TaskBarIcon")
+
+    @property
+    def frame(self):
+        """The main application frame. Must be set by the implementing class."""
+        if not hasattr(self, "_frame"):
+            raise NotImplementedError("frame must be set by the implementing class")
+        return self._frame
+
+    @frame.setter
+    def frame(self, value):
+        """Set the main application frame."""
+        self._frame = value
 
     def bind_events(self):
         """Bind all system tray events."""

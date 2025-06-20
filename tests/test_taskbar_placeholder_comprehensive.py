@@ -406,7 +406,7 @@ class TestTaskbarPlaceholderComprehensive(unittest.TestCase):
     def test_integration_with_system_tray(self):
         """Test integration with the actual TaskBarIcon system."""
         # Create a TaskBarIcon instance
-        with patch("wx.adv.TaskBarIcon"):
+        with patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"):
             taskbar_icon = TaskBarIcon(self.frame)
             taskbar_icon.SetIcon = MagicMock()
 

@@ -7,7 +7,7 @@ in the user interface.
 import logging
 from datetime import datetime
 
-from accessiweather.gui.settings_dialog import DEFAULT_TEMPERATURE_UNIT, TEMPERATURE_UNIT_KEY
+from accessiweather.gui.settings.constants import DEFAULT_TEMPERATURE_UNIT, TEMPERATURE_UNIT_KEY
 from accessiweather.utils.temperature_utils import TemperatureUnit, format_temperature
 
 logger = logging.getLogger(__name__)

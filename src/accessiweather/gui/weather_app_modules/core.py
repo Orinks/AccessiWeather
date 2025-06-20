@@ -7,10 +7,10 @@ service management, and lifecycle operations for the WeatherApp.
 import json
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from accessiweather.config_utils import get_config_dir
-from accessiweather.gui.settings_dialog import (
+from accessiweather.gui.settings.constants import (
     ALERT_RADIUS_KEY,
     API_KEYS_SECTION,
     DATA_SOURCE_KEY,

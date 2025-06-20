@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional
 
 from accessiweather.dynamic_format_manager import DynamicFormatManager
 from accessiweather.format_string_parser import FormatStringParser
-from accessiweather.gui.settings_dialog import (
+from accessiweather.gui.settings.constants import (
     DEFAULT_TEMPERATURE_UNIT,
     TASKBAR_ICON_DYNAMIC_ENABLED_KEY,
     TASKBAR_ICON_TEXT_ENABLED_KEY,
@@ -30,7 +30,31 @@ logger = logging.getLogger(__name__)
 
 
 class WeatherDataFormatter:
-    """Handles weather data formatting for system tray display."""
+    """Handles weather data formatting for system tray display.
+
+    This mixin expects the following methods to be provided by the implementing class:
+    - set_icon(tooltip_text=None)
+
+    And the following attributes:
+    - frame: The main application frame
+    """
+
+    # These methods must be implemented by the class that uses this mixin
+    def set_icon(self, tooltip_text=None):
+        """Set the taskbar icon. Must be implemented by the implementing class."""
+        raise NotImplementedError("set_icon must be implemented by the implementing class")
+
+    @property
+    def frame(self):
+        """The main application frame. Must be set by the implementing class."""
+        if not hasattr(self, "_frame"):
+            raise NotImplementedError("frame must be set by the implementing class")
+        return self._frame
+
+    @frame.setter
+    def frame(self, value):
+        """Set the main application frame."""
+        self._frame = value
 
     def __init__(self):
         """Initialize the weather data formatter."""
@@ -129,7 +153,9 @@ class WeatherDataFormatter:
             # Fall back to default icon
             self.set_icon()
 
-    def _format_weather_data(self, weather_data: Dict[str, Any], unit_pref: TemperatureUnit) -> Dict[str, Any]:
+    def _format_weather_data(
+        self, weather_data: Dict[str, Any], unit_pref: TemperatureUnit
+    ) -> Dict[str, Any]:
         """Format weather data values based on unit preference.
 
         Args:

@@ -146,7 +146,7 @@ class WeatherAppDialogHandlers(WeatherAppHandlerBase):
             Tuple of (dialog result, location data or None)
             Location data is a tuple of (name, latitude, longitude)
         """
-        from ...gui.settings_dialog import DATA_SOURCE_KEY
+        from ...gui.settings.constants import DATA_SOURCE_KEY
         from ..dialogs import LocationDialog
 
         # Get the current data source from config

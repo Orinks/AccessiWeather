@@ -154,13 +154,13 @@ def ensure_config_defaults(config: Dict[str, Any]) -> Dict[str, Any]:
 
     # Add data source setting if not present
     if "data_source" not in settings:
-        from accessiweather.gui.settings_dialog import DEFAULT_DATA_SOURCE
+        from accessiweather.gui.settings.constants import DEFAULT_DATA_SOURCE
 
         logger.info(f"Adding default data_source setting: {DEFAULT_DATA_SOURCE}")
         settings["data_source"] = DEFAULT_DATA_SOURCE
 
     # Add update settings if not present
-    from accessiweather.gui.settings_dialog import (
+    from accessiweather.gui.settings.constants import (
         AUTO_UPDATE_CHECK_KEY,
         DEFAULT_AUTO_UPDATE_CHECK,
         DEFAULT_UPDATE_CHANNEL,

@@ -7,6 +7,8 @@ initialization, client setup, and core request handling.
 import logging
 from typing import Any
 
+import httpx
+
 from accessiweather.api_client import NoaaApiError
 from accessiweather.weather_gov_api_client.client import Client
 from accessiweather.weather_gov_api_client.errors import UnexpectedStatus
@@ -21,7 +23,7 @@ class NwsCoreClient:
 
     def __init__(self, wrapper_instance):
         """Initialize the core client with reference to the main wrapper.
-        
+
         Args:
             wrapper_instance: The main NwsApiWrapper instance
         """
@@ -38,7 +40,7 @@ class NwsCoreClient:
         self.client = Client(
             base_url=self.BASE_URL,
             headers={"User-Agent": user_agent_string, "Accept": "application/geo+json"},
-            timeout=10.0,
+            timeout=httpx.Timeout(10.0),
             follow_redirects=True,
         )
 
@@ -46,14 +48,14 @@ class NwsCoreClient:
 
     def make_api_request(self, module_func, **kwargs) -> Any:
         """Call a function from the generated NWS client modules and handle exceptions.
-        
+
         Args:
             module_func: The API function to call
             **kwargs: Arguments to pass to the function
-            
+
         Returns:
             The response from the API call
-            
+
         Raises:
             NoaaApiError: For various API error conditions
         """
@@ -93,7 +95,16 @@ class NwsCoreClient:
                     status_code=status_code,
                 )
             else:
-                error_msg = f"HTTP {status_code} error at {url}: {e.content}"
+                # Decode bytes content if necessary
+                raw_content = e.content
+                if isinstance(raw_content, bytes):
+                    try:
+                        content_str = raw_content.decode("utf-8")
+                    except UnicodeDecodeError:
+                        content_str = raw_content.decode("utf-8", errors="replace")
+                else:
+                    content_str = str(raw_content)
+                error_msg = f"HTTP {status_code} error at {url}: {content_str}"
                 raise NoaaApiError(
                     message=error_msg,
                     error_type=NoaaApiError.HTTP_ERROR,

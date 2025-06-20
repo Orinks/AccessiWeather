@@ -27,7 +27,7 @@ from .handlers import (
     WeatherAppTimerHandlers,
     WeatherAppUpdateHandlers,
 )
-from .settings_dialog import UPDATE_INTERVAL_KEY
+from .settings.constants import UPDATE_INTERVAL_KEY
 from .system_tray import TaskBarIcon
 from .ui_manager import UIManager
 from .weather_app_modules.core import WeatherAppCore

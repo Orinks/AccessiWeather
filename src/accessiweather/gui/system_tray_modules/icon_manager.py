@@ -54,7 +54,31 @@ def _is_windows_11():
 
 
 class TaskBarIconManager:
-    """Core system tray icon management functionality."""
+    """Core system tray icon management functionality.
+
+    This mixin expects the following methods to be provided by the implementing class:
+    - SetIcon(icon, tooltip)
+    - IsOk() -> bool
+    - RemoveIcon()
+    - Destroy()
+    """
+
+    # These methods must be implemented by the class that uses this mixin (wx.adv.TaskBarIcon)
+    def SetIcon(self, icon, tooltip):
+        """Set the taskbar icon. Must be implemented by wx.adv.TaskBarIcon."""
+        raise NotImplementedError("SetIcon must be implemented by wx.adv.TaskBarIcon")
+
+    def IsOk(self) -> bool:
+        """Check if the taskbar icon is OK. Must be implemented by wx.adv.TaskBarIcon."""
+        raise NotImplementedError("IsOk must be implemented by wx.adv.TaskBarIcon")
+
+    def RemoveIcon(self):
+        """Remove the taskbar icon. Must be implemented by wx.adv.TaskBarIcon."""
+        raise NotImplementedError("RemoveIcon must be implemented by wx.adv.TaskBarIcon")
+
+    def Destroy(self):
+        """Destroy the taskbar icon. Must be implemented by wx.adv.TaskBarIcon."""
+        raise NotImplementedError("Destroy must be implemented by wx.adv.TaskBarIcon")
 
     # Class variable to track if an instance already exists
     _instance: Optional["TaskBarIconManager"] = None

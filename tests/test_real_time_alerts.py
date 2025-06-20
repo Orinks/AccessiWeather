@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import wx
 
-from accessiweather.gui.settings_dialog import (
+from accessiweather.gui.settings.constants import (
     ALERT_RADIUS_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
     UPDATE_INTERVAL_KEY,

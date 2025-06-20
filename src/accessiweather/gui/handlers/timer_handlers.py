@@ -25,7 +25,7 @@ class WeatherAppTimerHandlers(WeatherAppHandlerBase):
             event: Timer event
         """
         # Get update interval from config (default to 10 minutes)
-        from ..settings_dialog import UPDATE_INTERVAL_KEY
+        from ..settings.constants import UPDATE_INTERVAL_KEY
 
         # Get settings section
         settings = self.config.get("settings", {})

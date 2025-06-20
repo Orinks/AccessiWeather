@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import wx
 
-from accessiweather.gui.settings_dialog import (
+from accessiweather.gui.settings.constants import (
     TASKBAR_ICON_DYNAMIC_ENABLED_KEY,
     TASKBAR_ICON_TEXT_ENABLED_KEY,
     TASKBAR_ICON_TEXT_FORMAT_KEY,
@@ -47,12 +47,29 @@ class TestTaskBarIconText(unittest.TestCase):
 
         # Create a TaskBarIcon instance with the mock frame
         with (
-            patch("wx.adv.TaskBarIcon"),
+            patch(
+                "accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon.__init__",
+                return_value=None,
+            ),
+            patch(
+                "accessiweather.gui.system_tray_modules.icon_manager.TaskBarIconManager.__init__",
+                return_value=None,
+            ),
             patch("accessiweather.gui.system_tray.TaskBarIcon.set_icon"),
+            patch("accessiweather.gui.system_tray.TaskBarIcon.bind_events"),
         ):
             self.taskbar_icon = TaskBarIcon(self.frame)
             # Mock the SetIcon method to avoid type errors
             self.taskbar_icon.SetIcon = MagicMock()
+
+            # Initialize the weather formatter attributes that would normally be set by __init__
+            from accessiweather.dynamic_format_manager import DynamicFormatManager
+            from accessiweather.format_string_parser import FormatStringParser
+
+            self.taskbar_icon.format_parser = FormatStringParser()
+            self.taskbar_icon.dynamic_format_manager = DynamicFormatManager()
+            self.taskbar_icon.current_weather_data = {}
+            self.taskbar_icon.current_alerts_data = None
 
     def tearDown(self):
         """Clean up after tests."""

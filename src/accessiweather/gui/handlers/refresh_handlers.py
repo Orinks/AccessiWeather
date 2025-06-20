@@ -104,7 +104,7 @@ class WeatherAppRefreshHandlers(WeatherAppHandlerBase):
             )
 
             # Get precise location setting from config
-            from ..settings_dialog import ALERT_RADIUS_KEY, PRECISE_LOCATION_ALERTS_KEY
+            from ..settings.constants import ALERT_RADIUS_KEY, PRECISE_LOCATION_ALERTS_KEY
 
             precise_location = self.config.get("settings", {}).get(
                 PRECISE_LOCATION_ALERTS_KEY, True
@@ -128,7 +128,7 @@ class WeatherAppRefreshHandlers(WeatherAppHandlerBase):
                 self._on_forecast_fetched(forecast_data)
 
                 # Get alerts data
-                from ..settings_dialog import ALERT_RADIUS_KEY, PRECISE_LOCATION_ALERTS_KEY
+                from ..settings.constants import ALERT_RADIUS_KEY, PRECISE_LOCATION_ALERTS_KEY
 
                 precise_location = self.config.get("settings", {}).get(
                     PRECISE_LOCATION_ALERTS_KEY, True

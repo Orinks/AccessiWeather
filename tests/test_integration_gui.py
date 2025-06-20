@@ -99,7 +99,7 @@ class TestWeatherAppIntegration:
     def test_system_tray_integration(self, headless_environment, sample_config):
         """Test system tray integration with main application."""
         with (
-            patch("wx.adv.TaskBarIcon"),
+            patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"),
             patch("accessiweather.gui.system_tray.TaskBarIcon") as mock_tray_icon,
         ):
 

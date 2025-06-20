@@ -46,7 +46,7 @@ class TestSystemTray(unittest.TestCase):
 
     def test_single_instance_creation(self):
         """Test that only one TaskBarIcon instance can be created."""
-        with patch("wx.adv.TaskBarIcon"):
+        with patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"):
             # Create first instance
             icon1 = TaskBarIcon(self.frame)
             self.assertEqual(TaskBarIcon._instance_count, 1)
@@ -63,7 +63,7 @@ class TestSystemTray(unittest.TestCase):
 
     def test_cleanup_existing_instance(self):
         """Test cleanup of existing instance before creating new one."""
-        with patch("wx.adv.TaskBarIcon"):
+        with patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"):
             # Create first instance
             icon1 = TaskBarIcon(self.frame)
             icon1.IsOk = MagicMock(return_value=True)
@@ -80,7 +80,7 @@ class TestSystemTray(unittest.TestCase):
 
     def test_cleanup_method(self):
         """Test the cleanup method properly removes and destroys icon."""
-        with patch("wx.adv.TaskBarIcon"):
+        with patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"):
             icon = TaskBarIcon(self.frame)
             icon.IsOk = MagicMock(return_value=True)
             icon.RemoveIcon = MagicMock()
@@ -97,7 +97,7 @@ class TestSystemTray(unittest.TestCase):
 
     def test_cleanup_when_not_ok(self):
         """Test cleanup when TaskBarIcon is not OK."""
-        with patch("wx.adv.TaskBarIcon"):
+        with patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"):
             icon = TaskBarIcon(self.frame)
             icon.IsOk = MagicMock(return_value=False)
             icon.RemoveIcon = MagicMock()
@@ -114,7 +114,7 @@ class TestSystemTray(unittest.TestCase):
 
     def test_double_cleanup(self):
         """Test that double cleanup is handled gracefully."""
-        with patch("wx.adv.TaskBarIcon"):
+        with patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"):
             icon = TaskBarIcon(self.frame)
             icon.IsOk = MagicMock(return_value=True)
             icon.RemoveIcon = MagicMock()
@@ -140,7 +140,10 @@ class TestSystemTray(unittest.TestCase):
         mock_get_version.return_value = (10, 0, 19041)
         mock_is_win11.return_value = False
 
-        with patch("wx.adv.TaskBarIcon"), patch("time.sleep") as mock_sleep:
+        with (
+            patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"),
+            patch("time.sleep") as mock_sleep,
+        ):
             icon = TaskBarIcon(self.frame)
             icon.IsOk = MagicMock(return_value=True)
             icon.RemoveIcon = MagicMock()
@@ -160,7 +163,10 @@ class TestSystemTray(unittest.TestCase):
         mock_get_version.return_value = (10, 0, 22000)
         mock_is_win11.return_value = True
 
-        with patch("wx.adv.TaskBarIcon"), patch("time.sleep") as mock_sleep:
+        with (
+            patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"),
+            patch("time.sleep") as mock_sleep,
+        ):
             icon = TaskBarIcon(self.frame)
             icon.IsOk = MagicMock(return_value=True)
             icon.RemoveIcon = MagicMock()
@@ -174,7 +180,7 @@ class TestSystemTray(unittest.TestCase):
 
     def test_accessibility_keyboard_events(self):
         """Test that keyboard accessibility events are properly bound."""
-        with patch("wx.adv.TaskBarIcon"):
+        with patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"):
             icon = TaskBarIcon(self.frame)
 
             # Verify that additional accessibility events are bound
@@ -184,7 +190,7 @@ class TestSystemTray(unittest.TestCase):
 
     def test_accessibility_event_handling(self):
         """Test that accessibility events are handled properly."""
-        with patch("wx.adv.TaskBarIcon"):
+        with patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"):
             icon = TaskBarIcon(self.frame)
 
             # Test left click event (keyboard Enter equivalent)
@@ -198,7 +204,7 @@ class TestSystemTray(unittest.TestCase):
 
     def test_context_menu_accessibility(self):
         """Test that context menu is shown with proper accessibility."""
-        with patch("wx.adv.TaskBarIcon"):
+        with patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"):
             icon = TaskBarIcon(self.frame)
 
             # Use patch.object for proper mocking instead of direct assignment

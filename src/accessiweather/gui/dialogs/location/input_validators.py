@@ -50,7 +50,9 @@ class CoordinateValidator:
         return True, None
 
     @staticmethod
-    def parse_coordinates(lat_str: str, lon_str: str) -> Tuple[Optional[float], Optional[float], Optional[str]]:
+    def parse_coordinates(
+        lat_str: str, lon_str: str
+    ) -> Tuple[Optional[float], Optional[float], Optional[str]]:
         """
         Parse coordinate strings into float values.
 
@@ -69,7 +71,9 @@ class CoordinateValidator:
             return None, None, INVALID_NUMBERS_ERROR
 
     @staticmethod
-    def validate_coordinates(lat_str: str, lon_str: str) -> Tuple[bool, Optional[float], Optional[float], Optional[str]]:
+    def validate_coordinates(
+        lat_str: str, lon_str: str
+    ) -> Tuple[bool, Optional[float], Optional[float], Optional[str]]:
         """
         Complete coordinate validation including parsing and range checking.
 
@@ -85,10 +89,11 @@ class CoordinateValidator:
         if parse_error:
             return False, None, None, parse_error
 
-        # Validate range
-        is_valid, range_error = CoordinateValidator.validate_coordinate_range(lat, lon)
-        if not is_valid:
-            return False, lat, lon, range_error
+        # Validate range (only if we have valid coordinates)
+        if lat is not None and lon is not None:
+            is_valid, range_error = CoordinateValidator.validate_coordinate_range(lat, lon)
+            if not is_valid:
+                return False, lat, lon, range_error
 
         return True, lat, lon, None
 
@@ -112,7 +117,9 @@ class LocationInputValidator:
         return True, None
 
     @staticmethod
-    def validate_coordinates_exist(latitude: Optional[float], longitude: Optional[float]) -> Tuple[bool, Optional[str]]:
+    def validate_coordinates_exist(
+        latitude: Optional[float], longitude: Optional[float]
+    ) -> Tuple[bool, Optional[str]]:
         """
         Validate that coordinates have been set.
 
@@ -147,7 +154,9 @@ class ValidationErrorHandler:
     """Handler for displaying validation errors to users."""
 
     @staticmethod
-    def show_validation_error(parent: wx.Window, message: str, title: str = VALIDATION_ERROR_TITLE) -> None:
+    def show_validation_error(
+        parent: wx.Window, message: str, title: str = VALIDATION_ERROR_TITLE
+    ) -> None:
         """
         Display a validation error message box.
 
@@ -220,7 +229,9 @@ class AdvancedDialogValidator:
 class LocationDialogValidator:
     """Specialized validator for the main location dialog."""
 
-    def __init__(self, name_ctrl: wx.TextCtrl, latitude: Optional[float], longitude: Optional[float]):
+    def __init__(
+        self, name_ctrl: wx.TextCtrl, latitude: Optional[float], longitude: Optional[float]
+    ):
         """
         Initialize the validator with dialog state.
 
@@ -243,7 +254,7 @@ class LocationDialogValidator:
         # Validate location name
         name = self.name_ctrl.GetValue().strip()
         is_name_valid, name_error = LocationInputValidator.validate_location_name(name)
-        if not is_name_valid:
+        if not is_name_valid and name_error:
             ValidationErrorHandler.show_validation_error(self.name_ctrl.GetParent(), name_error)
             return False
 
@@ -251,7 +262,7 @@ class LocationDialogValidator:
         coords_valid, coords_error = LocationInputValidator.validate_coordinates_exist(
             self.latitude, self.longitude
         )
-        if not coords_valid:
+        if not coords_valid and coords_error:
             ValidationErrorHandler.show_validation_error(self.name_ctrl.GetParent(), coords_error)
             return False
 

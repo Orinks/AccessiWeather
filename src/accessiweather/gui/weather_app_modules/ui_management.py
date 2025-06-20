@@ -9,7 +9,7 @@ import time
 
 import wx
 
-from ..settings_dialog import ALERT_RADIUS_KEY, PRECISE_LOCATION_ALERTS_KEY, UPDATE_INTERVAL_KEY
+from ..settings.constants import ALERT_RADIUS_KEY, PRECISE_LOCATION_ALERTS_KEY, UPDATE_INTERVAL_KEY
 
 logger = logging.getLogger(__name__)
 
