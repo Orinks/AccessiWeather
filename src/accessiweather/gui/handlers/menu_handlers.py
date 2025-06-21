@@ -24,6 +24,7 @@ class WeatherAppMenuHandlers(WeatherAppHandlerBase):
 
         Returns:
             wx.Menu: The popup menu
+
         """
         menu = wx.Menu()
 
@@ -54,6 +55,7 @@ class WeatherAppMenuHandlers(WeatherAppHandlerBase):
 
         Args:
             event: The event object
+
         """
         if self.IsShown():
             self.Hide()
@@ -66,6 +68,7 @@ class WeatherAppMenuHandlers(WeatherAppHandlerBase):
 
         Args:
             event: The event object
+
         """
         # Call Close with force=True to ensure the app exits
         self.Close(force=True)

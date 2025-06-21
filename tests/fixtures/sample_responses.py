@@ -106,6 +106,60 @@ def sample_nws_alerts_response():
 
 
 @pytest.fixture
+def sample_nws_current_response():
+    """Sample NWS current conditions response."""
+    return {
+        "properties": {
+            "timestamp": "2024-01-15T18:53:00+00:00",
+            "temperature": {"value": 7.2, "unitCode": "wmoUnit:degC"},
+            "textDescription": "Clear",
+            "relativeHumidity": {"value": 65},
+            "windSpeed": {"value": 10, "unitCode": "wmoUnit:km_h-1"},
+            "windDirection": {"value": 180},
+            "barometricPressure": {"value": 101325, "unitCode": "wmoUnit:Pa"},
+            "visibility": {"value": 16093, "unitCode": "wmoUnit:m"},
+            "dewpoint": {"value": 1.1, "unitCode": "wmoUnit:degC"},
+            "windChill": {"value": None, "unitCode": "wmoUnit:degC"},
+            "heatIndex": {"value": None, "unitCode": "wmoUnit:degC"},
+        }
+    }
+    """Sample NWS alerts response."""
+    return {
+        "features": [
+            {
+                "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.123456789",
+                "type": "Feature",
+                "properties": {
+                    "id": "urn:oid:2.49.0.1.840.0.123456789",
+                    "areaDesc": "Philadelphia County",
+                    "geocode": {"FIPS6": ["42101"], "UGC": ["PAC101"]},
+                    "affectedZones": ["https://api.weather.gov/zones/county/PAC101"],
+                    "references": [],
+                    "sent": "2024-01-15T12:00:00-05:00",
+                    "effective": "2024-01-15T12:00:00-05:00",
+                    "onset": "2024-01-15T18:00:00-05:00",
+                    "expires": "2024-01-16T06:00:00-05:00",
+                    "ends": "2024-01-16T06:00:00-05:00",
+                    "status": "Actual",
+                    "messageType": "Alert",
+                    "category": "Met",
+                    "severity": "Minor",
+                    "certainty": "Likely",
+                    "urgency": "Expected",
+                    "event": "Frost Advisory",
+                    "sender": "w-nws.webmaster@noaa.gov",
+                    "senderName": "NWS Philadelphia PA",
+                    "headline": "Frost Advisory issued January 15 at 12:00PM EST until January 16 at 6:00AM EST by NWS Philadelphia PA",
+                    "description": "Frost may kill sensitive outdoor vegetation if left uncovered.",
+                    "instruction": "Take steps now to protect tender plants from the cold.",
+                    "response": "Prepare",
+                },
+            }
+        ]
+    }
+
+
+@pytest.fixture
 def sample_openmeteo_response():
     """Sample Open-Meteo API response."""
     return {

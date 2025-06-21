@@ -16,6 +16,7 @@ class StateManager:
 
         Args:
             frame: The main WeatherApp frame instance.
+
         """
         self.frame = frame
 
@@ -25,6 +26,7 @@ class StateManager:
         Args:
             location_name: Optional location name for status text
             is_nationwide: Whether this is a nationwide forecast
+
         """
         # Disable refresh button
         self.frame.refresh_btn.Disable()

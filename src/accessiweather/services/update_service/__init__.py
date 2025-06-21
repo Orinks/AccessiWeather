@@ -11,7 +11,7 @@ import json
 import logging
 import os
 import threading
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
 from .download_manager import DownloadManager
@@ -36,6 +36,7 @@ class UpdateService:
             config_dir: Directory to store update-related configuration
             notification_callback: Callback function for update notifications
             progress_callback: Callback function for download progress updates
+
         """
         self.config_dir = config_dir
         self.notification_callback = notification_callback
@@ -55,15 +56,15 @@ class UpdateService:
         self.download_manager = DownloadManager(progress_callback)
 
         # Background check thread
-        self._check_thread: Optional[threading.Thread] = None
+        self._check_thread: threading.Thread | None = None
         self._stop_checking = threading.Event()
 
-    def _load_update_state(self) -> Dict[str, Any]:
+    def _load_update_state(self) -> dict[str, Any]:
         """Load update state from file."""
         try:
             if os.path.exists(self.update_state_file):
-                with open(self.update_state_file, "r") as f:
-                    loaded_state: Dict[str, Any] = json.load(f)
+                with open(self.update_state_file) as f:
+                    loaded_state: dict[str, Any] = json.load(f)
                     return loaded_state
         except Exception as e:
             logger.error(f"Failed to load update state: {e}")
@@ -84,7 +85,7 @@ class UpdateService:
         except Exception as e:
             logger.error(f"Failed to save update state: {e}")
 
-    def check_for_updates(self, channel: Optional[str] = None) -> Optional[UpdateInfo]:
+    def check_for_updates(self, channel: str | None = None) -> UpdateInfo | None:
         """Check for available updates.
 
         Args:
@@ -92,6 +93,7 @@ class UpdateService:
 
         Returns:
             UpdateInfo if update is available, None otherwise
+
         """
         if channel is None:
             channel = self.update_state.get("update_channel", DEFAULT_UPDATE_CHANNEL)
@@ -99,7 +101,7 @@ class UpdateService:
         latest_update = self.version_checker.check_for_updates(channel)
 
         # Update last check time
-        self.update_state["last_check"] = datetime.now(timezone.utc).isoformat()
+        self.update_state["last_check"] = datetime.now(UTC).isoformat()
         self._save_update_state()
 
         return latest_update
@@ -120,7 +122,7 @@ class UpdateService:
             )
             next_check = last_check + timedelta(hours=interval_hours)
 
-            return datetime.now(timezone.utc) >= next_check
+            return datetime.now(UTC) >= next_check
         except Exception as e:
             logger.error(f"Error checking update interval: {e}")
             return True
@@ -176,10 +178,11 @@ class UpdateService:
 
         Returns:
             True if successful, False otherwise
+
         """
         return self.download_manager.download_and_install_update(update_info, install_type)
 
-    def get_settings(self) -> Dict:
+    def get_settings(self) -> dict:
         """Get current update settings."""
         return {
             "auto_check_enabled": self.update_state.get(
@@ -191,7 +194,7 @@ class UpdateService:
             "update_channel": self.update_state.get("update_channel", DEFAULT_UPDATE_CHANNEL),
         }
 
-    def update_settings(self, settings: Dict):
+    def update_settings(self, settings: dict):
         """Update settings and save to file."""
         self.update_state.update(settings)
         self._save_update_state()

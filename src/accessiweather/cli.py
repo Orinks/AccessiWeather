@@ -6,12 +6,11 @@ This module provides a command-line interface for running the application.
 import argparse
 import logging
 import sys
-from typing import List, Optional
 
 from accessiweather.main import main as app_main
 
 
-def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
+def parse_args(args: list[str] | None = None) -> argparse.Namespace:
     """Parse command-line arguments
 
     Args:
@@ -19,9 +18,10 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
 
     Returns:
         Parsed arguments
+
     """
     parser = argparse.ArgumentParser(
-        description=("AccessiWeather - An accessible weather " "application using NOAA data")
+        description=("AccessiWeather - An accessible weather application using NOAA data")
     )
     parser.add_argument(
         "-d",
@@ -45,6 +45,7 @@ def main() -> int:
 
     Returns:
         Exit code
+
     """
     args = parse_args()
 

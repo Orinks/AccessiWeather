@@ -4,7 +4,6 @@ This module provides utility functions for unit conversion and formatting.
 """
 
 import logging
-from typing import Optional, Union
 
 from accessiweather.utils.temperature_utils import TemperatureUnit
 
@@ -12,9 +11,9 @@ logger = logging.getLogger(__name__)
 
 
 def format_wind_speed(
-    wind_speed_mph: Optional[Union[int, float]],
+    wind_speed_mph: int | float | None,
     unit: TemperatureUnit = TemperatureUnit.FAHRENHEIT,
-    wind_speed_kph: Optional[Union[int, float]] = None,
+    wind_speed_kph: int | float | None = None,
     precision: int = 1,
 ) -> str:
     """Format wind speed for display based on user preference.
@@ -27,6 +26,7 @@ def format_wind_speed(
 
     Returns:
         Formatted wind speed string
+
     """
     if wind_speed_mph is None and wind_speed_kph is None:
         return "N/A"
@@ -40,16 +40,16 @@ def format_wind_speed(
     # Format based on user preference
     if unit == TemperatureUnit.FAHRENHEIT:
         return f"{wind_speed_mph:.{precision}f} mph"
-    elif unit == TemperatureUnit.CELSIUS:
+    if unit == TemperatureUnit.CELSIUS:
         return f"{wind_speed_kph:.{precision}f} km/h"
-    else:  # BOTH
-        return f"{wind_speed_mph:.{precision}f} mph ({wind_speed_kph:.{precision}f} km/h)"
+    # BOTH
+    return f"{wind_speed_mph:.{precision}f} mph ({wind_speed_kph:.{precision}f} km/h)"
 
 
 def format_pressure(
-    pressure_inhg: Optional[Union[int, float]],
+    pressure_inhg: int | float | None,
     unit: TemperatureUnit = TemperatureUnit.FAHRENHEIT,
-    pressure_mb: Optional[Union[int, float]] = None,
+    pressure_mb: int | float | None = None,
     precision: int = 2,
 ) -> str:
     """Format pressure for display based on user preference.
@@ -62,6 +62,7 @@ def format_pressure(
 
     Returns:
         Formatted pressure string
+
     """
     if pressure_inhg is None and pressure_mb is None:
         return "N/A"
@@ -75,16 +76,16 @@ def format_pressure(
     # Format based on user preference
     if unit == TemperatureUnit.FAHRENHEIT:
         return f"{pressure_inhg:.{precision}f} inHg"
-    elif unit == TemperatureUnit.CELSIUS:
+    if unit == TemperatureUnit.CELSIUS:
         return f"{pressure_mb:.{precision}f} hPa"
-    else:  # BOTH
-        return f"{pressure_inhg:.{precision}f} inHg ({pressure_mb:.{precision}f} hPa)"
+    # BOTH
+    return f"{pressure_inhg:.{precision}f} inHg ({pressure_mb:.{precision}f} hPa)"
 
 
 def format_visibility(
-    visibility_miles: Optional[Union[int, float]],
+    visibility_miles: int | float | None,
     unit: TemperatureUnit = TemperatureUnit.FAHRENHEIT,
-    visibility_km: Optional[Union[int, float]] = None,
+    visibility_km: int | float | None = None,
     precision: int = 1,
 ) -> str:
     """Format visibility for display based on user preference.
@@ -97,6 +98,7 @@ def format_visibility(
 
     Returns:
         Formatted visibility string
+
     """
     if visibility_miles is None and visibility_km is None:
         return "N/A"
@@ -110,16 +112,16 @@ def format_visibility(
     # Format based on user preference
     if unit == TemperatureUnit.FAHRENHEIT:
         return f"{visibility_miles:.{precision}f} mi"
-    elif unit == TemperatureUnit.CELSIUS:
+    if unit == TemperatureUnit.CELSIUS:
         return f"{visibility_km:.{precision}f} km"
-    else:  # BOTH
-        return f"{visibility_miles:.{precision}f} mi ({visibility_km:.{precision}f} km)"
+    # BOTH
+    return f"{visibility_miles:.{precision}f} mi ({visibility_km:.{precision}f} km)"
 
 
 def format_precipitation(
-    precip_in: Optional[Union[int, float]],
+    precip_in: int | float | None,
     unit: TemperatureUnit = TemperatureUnit.FAHRENHEIT,
-    precip_mm: Optional[Union[int, float]] = None,
+    precip_mm: int | float | None = None,
     precision: int = 2,
 ) -> str:
     """Format precipitation for display based on user preference.
@@ -132,6 +134,7 @@ def format_precipitation(
 
     Returns:
         Formatted precipitation string
+
     """
     if precip_in is None and precip_mm is None:
         return "N/A"
@@ -145,7 +148,7 @@ def format_precipitation(
     # Format based on user preference
     if unit == TemperatureUnit.FAHRENHEIT:
         return f"{precip_in:.{precision}f} in"
-    elif unit == TemperatureUnit.CELSIUS:
+    if unit == TemperatureUnit.CELSIUS:
         return f"{precip_mm:.{precision}f} mm"
-    else:  # BOTH
-        return f"{precip_in:.{precision}f} in ({precip_mm:.{precision}f} mm)"
+    # BOTH
+    return f"{precip_in:.{precision}f} in ({precip_mm:.{precision}f} mm)"

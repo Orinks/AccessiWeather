@@ -5,7 +5,7 @@ and location type identification operations.
 """
 
 import logging
-from typing import Any, Dict, Optional, Tuple, cast
+from typing import Any, cast
 
 from accessiweather.api_client import NoaaApiError
 from accessiweather.weather_gov_api_client.api.default import point
@@ -18,31 +18,33 @@ class NwsPointLocation:
 
     def __init__(self, wrapper_instance):
         """Initialize with reference to the main wrapper.
-        
+
         Args:
             wrapper_instance: The main NwsApiWrapper instance
+
         """
         self.wrapper = wrapper_instance
 
-    def get_point_data(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
+    def get_point_data(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
         """Get metadata about a specific lat/lon point.
-        
+
         Args:
             lat: Latitude
             lon: Longitude
             force_refresh: Whether to force refresh cached data
-            
+
         Returns:
             Point data dictionary
-            
+
         Raises:
             NoaaApiError: For API-related errors
+
         """
         endpoint = f"points/{lat},{lon}"
         cache_key = self.wrapper._generate_cache_key(endpoint, {})
         logger.info(f"Fetching point data for coordinates: ({lat}, {lon})")
 
-        def fetch_data() -> Dict[str, Any]:
+        def fetch_data() -> dict[str, Any]:
             self.wrapper._rate_limit()
             try:
                 point_str = f"{lat},{lon}"
@@ -58,16 +60,19 @@ class NwsPointLocation:
                     message=error_msg, error_type=NoaaApiError.UNKNOWN_ERROR, url=url
                 )
 
-        return cast(Dict[str, Any], self.wrapper._get_cached_or_fetch(cache_key, fetch_data, force_refresh))
+        return cast(
+            dict[str, Any], self.wrapper._get_cached_or_fetch(cache_key, fetch_data, force_refresh)
+        )
 
-    def _transform_point_data(self, point_data: Any) -> Dict[str, Any]:
+    def _transform_point_data(self, point_data: Any) -> dict[str, Any]:
         """Transform point data from the generated client format.
-        
+
         Args:
             point_data: Raw point data from the API
-            
+
         Returns:
             Transformed point data dictionary
+
         """
         # Extract and transform the data to match the format expected by the application
         if isinstance(point_data, dict):
@@ -129,16 +134,17 @@ class NwsPointLocation:
 
     def identify_location_type(
         self, lat: float, lon: float, force_refresh: bool = False
-    ) -> Tuple[Optional[str], Optional[str]]:
+    ) -> tuple[str | None, str | None]:
         """Identify the type of location (county, state, etc.) for the given coordinates.
-        
+
         Args:
             lat: Latitude
             lon: Longitude
             force_refresh: Whether to force refresh cached data
-            
+
         Returns:
             Tuple of (location_type, location_id) or (None, None) if unable to identify
+
         """
         try:
             point_data = self.get_point_data(lat, lon, force_refresh=force_refresh)

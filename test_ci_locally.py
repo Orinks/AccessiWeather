@@ -98,32 +98,21 @@ def run_linting_checks(python_path):
     """Run linting checks."""
     print("🔍 Running linting checks...")
 
-    # Black formatting check
+    # Ruff linting and formatting check
     try:
-        run_command(f"{python_path} -m black --check --line-length=100 src/ tests/")
-        print("✅ Black formatting check passed")
+        run_command("ruff check src/ tests/")
+        print("✅ Ruff linting check passed")
     except subprocess.CalledProcessError:
-        print("❌ Black formatting check failed")
-        print("💡 Run: python -m black --line-length=100 src/ tests/")
+        print("❌ Ruff linting check failed")
+        print("💡 Run: ruff check --fix src/ tests/")
 
-    # isort import sorting check
+    # Ruff formatting check
     try:
-        run_command(
-            f"{python_path} -m isort --check-only --profile black --line-length 100 src/ tests/"
-        )
-        print("✅ isort check passed")
+        run_command("ruff format --check src/ tests/")
+        print("✅ Ruff formatting check passed")
     except subprocess.CalledProcessError:
-        print("❌ isort check failed")
-        print("💡 Run: python -m isort --profile black --line-length 100 src/ tests/")
-
-    # flake8 linting
-    try:
-        run_command(
-            f"{python_path} -m flake8 src/ tests/ --max-line-length=100 --ignore=E203,W503,E501,F541"
-        )
-        print("✅ flake8 check passed")
-    except subprocess.CalledProcessError:
-        print("❌ flake8 check failed")
+        print("❌ Ruff formatting check failed")
+        print("💡 Run: ruff format src/ tests/")
 
     # mypy type checking
     try:

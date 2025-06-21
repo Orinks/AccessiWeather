@@ -7,7 +7,7 @@ import logging
 import os
 import platform
 import sys
-from typing import Any, Dict, Optional
+from typing import Any
 
 # Get logger
 logger = logging.getLogger(__name__)
@@ -24,6 +24,7 @@ def is_portable_mode() -> bool:
 
     Returns:
         True if running in portable mode, False otherwise
+
     """
     # Check for testing override first
     force_portable = os.environ.get("ACCESSIWEATHER_FORCE_PORTABLE", "").lower()
@@ -71,13 +72,13 @@ def is_portable_mode() -> bool:
         os.remove(test_file)
         logger.debug(f"Portable mode detected: directory {app_dir} is writable")
         return True
-    except (IOError, PermissionError) as e:
+    except (OSError, PermissionError) as e:
         # If we can't write to the directory, assume it's not portable
         logger.debug(f"Not in portable mode: directory {app_dir} is not writable ({e})")
         return False
 
 
-def get_config_dir(custom_dir: Optional[str] = None) -> str:
+def get_config_dir(custom_dir: str | None = None) -> str:
     """Get the configuration directory path
 
     Args:
@@ -85,6 +86,7 @@ def get_config_dir(custom_dir: Optional[str] = None) -> str:
 
     Returns:
         Path to the configuration directory
+
     """
     if custom_dir is not None:
         logger.debug(f"Using custom config directory: {custom_dir}")
@@ -131,7 +133,7 @@ def get_config_dir(custom_dir: Optional[str] = None) -> str:
     return config_dir
 
 
-def ensure_config_defaults(config: Dict[str, Any]) -> Dict[str, Any]:
+def ensure_config_defaults(config: dict[str, Any]) -> dict[str, Any]:
     """Ensure configuration has all required default settings
 
     This function adds missing default settings to the configuration
@@ -142,6 +144,7 @@ def ensure_config_defaults(config: Dict[str, Any]) -> Dict[str, Any]:
 
     Returns:
         Dict: Configuration dictionary with defaults added
+
     """
     # Make a copy of the config to avoid modifying the original
     updated_config = config.copy()

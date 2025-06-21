@@ -58,7 +58,6 @@ class TestAccessiWeatherAppExit(unittest.TestCase):
             patch("accessiweather.gui.app.isinstance", return_value=True),
             patch("accessiweather.gui.app.hasattr", return_value=True),
         ):
-
             # Call the method under test
             self.app.OnExit()
 

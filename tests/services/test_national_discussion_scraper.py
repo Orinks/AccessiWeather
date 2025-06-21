@@ -186,7 +186,11 @@ def test_fetch_wpc_request_error(mock_requests, mock_sleep):  # noqa: ARG001
 
 
 def test_fetch_wpc_rate_limit(
-    mock_requests, mock_bs4, mock_sleep, mock_time, clean_last_request_time  # noqa: ARG001
+    mock_requests,
+    mock_bs4,
+    mock_sleep,
+    mock_time,
+    clean_last_request_time,  # noqa: ARG001
 ):
     """Test WPC rate limiting."""
     mock_requests.return_value.text = SAMPLE_WPC_HTML
@@ -257,7 +261,11 @@ def test_fetch_spc_request_error(mock_requests, mock_sleep):  # noqa: ARG001
 
 
 def test_fetch_spc_rate_limit(
-    mock_requests, mock_bs4, mock_sleep, mock_time, clean_last_request_time  # noqa: ARG001
+    mock_requests,
+    mock_bs4,
+    mock_sleep,
+    mock_time,
+    clean_last_request_time,  # noqa: ARG001
 ):
     """Test SPC rate limiting."""
     mock_requests.return_value.text = SAMPLE_SPC_HTML

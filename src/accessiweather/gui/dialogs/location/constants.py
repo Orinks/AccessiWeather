@@ -1,5 +1,4 @@
-"""
-Constants and configuration values for location dialog components.
+"""Constants and configuration values for location dialog components.
 
 This module centralizes all constants, default values, UI text, and configuration
 settings used throughout the location dialog system.

@@ -1,5 +1,4 @@
-"""
-Comprehensive tests for taskbar placeholder functionality and backward compatibility.
+"""Comprehensive tests for taskbar placeholder functionality and backward compatibility.
 
 This test suite verifies all supported placeholders work correctly with both NWS and Open-Meteo APIs,
 tests edge cases, and ensures backward compatibility with existing placeholder system.
@@ -413,7 +412,6 @@ class TestTaskbarPlaceholderComprehensive(unittest.TestCase):
             patch.object(TaskBarIcon, "RemoveIcon"),
             patch.object(TaskBarIcon, "Destroy"),
         ):
-
             taskbar_icon = TaskBarIcon(self.frame)
 
             # Test with NWS data

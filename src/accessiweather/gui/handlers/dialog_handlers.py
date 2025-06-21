@@ -4,7 +4,7 @@ This module contains the dialog-related handlers for the WeatherApp class.
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import wx
 
@@ -35,6 +35,7 @@ class WeatherAppDialogHandlers(WeatherAppHandlerBase):
 
         Returns:
             Dialog result (e.g., wx.ID_OK, wx.ID_CANCEL)
+
         """
         logger.debug(f"Showing message dialog: {title} - {message}")
         result: int = wx.MessageBox(message, title, style, self)
@@ -52,6 +53,7 @@ class WeatherAppDialogHandlers(WeatherAppHandlerBase):
 
         Returns:
             True if confirmed (Yes/OK), False otherwise
+
         """
         logger.debug(f"Showing confirmation dialog: {title} - {message}")
         result = wx.MessageBox(message, title, style, self)
@@ -67,7 +69,7 @@ class WeatherAppDialogHandlers(WeatherAppHandlerBase):
         title: str,
         message: str,
         maximum: int = 100,
-        parent: Optional[wx.Window] = None,
+        parent: wx.Window | None = None,
         style: int = wx.PD_APP_MODAL | wx.PD_AUTO_HIDE,
     ) -> wx.ProgressDialog:
         """Show a progress dialog
@@ -81,6 +83,7 @@ class WeatherAppDialogHandlers(WeatherAppHandlerBase):
 
         Returns:
             Progress dialog instance
+
         """
         logger.debug(f"Creating progress dialog: {title} - {message}")
         if parent is None:
@@ -91,9 +94,9 @@ class WeatherAppDialogHandlers(WeatherAppHandlerBase):
         self,
         message: str,
         title: str,
-        choices: List[str],
-        parent: Optional[wx.Window] = None,
-    ) -> Tuple[int, Optional[int]]:
+        choices: list[str],
+        parent: wx.Window | None = None,
+    ) -> tuple[int, int | None]:
         """Show a single choice dialog
 
         Args:
@@ -104,6 +107,7 @@ class WeatherAppDialogHandlers(WeatherAppHandlerBase):
 
         Returns:
             Tuple of (dialog result, selected index or None)
+
         """
         logger.debug(f"Showing single choice dialog: {title} - {message}")
         if parent is None:
@@ -120,7 +124,7 @@ class WeatherAppDialogHandlers(WeatherAppHandlerBase):
         title: str = "Input",
         default_value: str = "",
         style: int = wx.OK | wx.CANCEL | wx.CENTRE,
-    ) -> Tuple[int, str]:
+    ) -> tuple[int, str]:
         """Show a text entry dialog
 
         Args:
@@ -131,6 +135,7 @@ class WeatherAppDialogHandlers(WeatherAppHandlerBase):
 
         Returns:
             Tuple of (dialog result, entered text)
+
         """
         logger.debug(f"Showing text entry dialog: {title} - {message}")
         dialog = wx.TextEntryDialog(self, message, title, default_value, style)
@@ -139,12 +144,13 @@ class WeatherAppDialogHandlers(WeatherAppHandlerBase):
         dialog.Destroy()
         return result, value
 
-    def ShowLocationDialog(self) -> Tuple[int, Optional[Tuple[str, float, float]]]:
+    def ShowLocationDialog(self) -> tuple[int, tuple[str, float, float] | None]:
         """Show the location dialog
 
         Returns:
             Tuple of (dialog result, location data or None)
             Location data is a tuple of (name, latitude, longitude)
+
         """
         from ...gui.settings.constants import DATA_SOURCE_KEY
         from ..dialogs import LocationDialog
@@ -168,8 +174,8 @@ class WeatherAppDialogHandlers(WeatherAppHandlerBase):
         return result, location_data
 
     def ShowSettingsDialog(
-        self, current_settings: Dict[str, Any]
-    ) -> Tuple[int, Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
+        self, current_settings: dict[str, Any]
+    ) -> tuple[int, dict[str, Any] | None, dict[str, Any] | None]:
         """Show the settings dialog
 
         Args:
@@ -177,6 +183,7 @@ class WeatherAppDialogHandlers(WeatherAppHandlerBase):
 
         Returns:
             Tuple of (dialog result, updated settings or None, updated API settings or None)
+
         """
         from ..settings_dialog import SettingsDialog
 
@@ -198,11 +205,12 @@ class WeatherAppDialogHandlers(WeatherAppHandlerBase):
 
         return result, updated_settings, updated_api_settings
 
-    def ShowAlertDetailsDialog(self, alert: Dict[str, Any]) -> None:
+    def ShowAlertDetailsDialog(self, alert: dict[str, Any]) -> None:
         """Show the alert details dialog
 
         Args:
             alert: Alert data dictionary
+
         """
         from ..alert_dialog import AlertDetailsDialog
 
@@ -221,6 +229,7 @@ class WeatherAppDialogHandlers(WeatherAppHandlerBase):
         Args:
             title: Dialog title
             text: Discussion text
+
         """
         from ..dialogs import WeatherDiscussionDialog
 
@@ -229,11 +238,12 @@ class WeatherAppDialogHandlers(WeatherAppHandlerBase):
         dialog.ShowModal()
         dialog.Destroy()
 
-    def ShowNationalDiscussionDialog(self, national_data: Dict[str, Any]) -> None:
+    def ShowNationalDiscussionDialog(self, national_data: dict[str, Any]) -> None:
         """Show the national discussion dialog
 
         Args:
             national_data: National discussion data
+
         """
         from ..dialogs import NationalDiscussionDialog
 

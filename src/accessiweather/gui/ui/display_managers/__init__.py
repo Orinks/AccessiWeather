@@ -28,6 +28,7 @@ class WeatherDisplayManager:
 
         Args:
             frame: The main WeatherApp frame instance.
+
         """
         self.frame = frame
         self.formatter = WeatherDataFormatter(frame)
@@ -46,6 +47,7 @@ class WeatherDisplayManager:
         Args:
             location_name: Optional location name for status text
             is_nationwide: Whether this is a nationwide forecast
+
         """
         self.state_manager.display_loading_state(location_name, is_nationwide)
 
@@ -59,6 +61,7 @@ class WeatherDisplayManager:
         Args:
             forecast_data: Dictionary with forecast data
             hourly_forecast_data: Optional dictionary with hourly forecast data
+
         """
         self.forecast_display.display_forecast(forecast_data, hourly_forecast_data)
 
@@ -67,6 +70,7 @@ class WeatherDisplayManager:
 
         Args:
             conditions_data: Dictionary with current conditions data
+
         """
         self.conditions_display.display_current_conditions(conditions_data)
 
@@ -75,6 +79,7 @@ class WeatherDisplayManager:
 
         Args:
             error: Error message or exception object
+
         """
         self.error_handler.display_forecast_error(error)
 
@@ -83,6 +88,7 @@ class WeatherDisplayManager:
 
         Args:
             error: Error message or exception object
+
         """
         self.error_handler.display_alerts_error(error)
 

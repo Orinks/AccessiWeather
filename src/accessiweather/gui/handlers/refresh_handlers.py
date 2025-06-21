@@ -23,6 +23,7 @@ class WeatherAppRefreshHandlers(WeatherAppHandlerBase):
 
         Args:
             event: Button event
+
         """
         # Trigger weather data update
         self.UpdateWeatherData()
@@ -32,6 +33,7 @@ class WeatherAppRefreshHandlers(WeatherAppHandlerBase):
 
         Args:
             event: Optional event parameter (required for wx event handlers)
+
         """
         # Even if updating is true, we still want to proceed if this is a
         # location change
@@ -58,6 +60,7 @@ class WeatherAppRefreshHandlers(WeatherAppHandlerBase):
 
         Args:
             location: Tuple of (name, lat, lon)
+
         """
         name, lat, lon = location
 
@@ -149,6 +152,7 @@ class WeatherAppRefreshHandlers(WeatherAppHandlerBase):
 
         Args:
             event: Optional event parameter (required for wx event handlers)
+
         """
         # Check if current location is Nationwide
         current_location = self.location_service.get_current_location_name()

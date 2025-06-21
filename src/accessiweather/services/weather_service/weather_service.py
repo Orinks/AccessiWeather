@@ -5,7 +5,7 @@ separating business logic from UI concerns.
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 from accessiweather.api_client import NoaaApiClient
 from accessiweather.api_wrapper import NoaaApiWrapper
@@ -23,17 +23,15 @@ logger = logging.getLogger(__name__)
 class ConfigurationError(Exception):
     """Exception raised for configuration errors."""
 
-    pass
-
 
 class WeatherService:
     """Service for weather-related operations."""
 
     def __init__(
         self,
-        nws_client: Union[NoaaApiClient, NoaaApiWrapper],
-        openmeteo_client: Optional[OpenMeteoApiClient] = None,
-        config: Optional[Dict[str, Any]] = None,
+        nws_client: NoaaApiClient | NoaaApiWrapper,
+        openmeteo_client: OpenMeteoApiClient | None = None,
+        config: dict[str, Any] | None = None,
     ):
         """Initialize the weather service.
 
@@ -41,6 +39,7 @@ class WeatherService:
             nws_client: The NWS API client to use for weather data retrieval.
             openmeteo_client: The Open-Meteo API client to use for international weather data.
             config: Configuration dictionary containing settings like data_source.
+
         """
         self.nws_client = nws_client
         self.config = config or {}
@@ -139,10 +138,11 @@ class WeatherService:
 
         Raises:
             ApiClientError: If there was an error retrieving the data
+
         """
         return self.national_forecast_handler.get_national_forecast_data(force_refresh)
 
-    def get_forecast(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
+    def get_forecast(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
         """Get forecast data for a location.
 
         Args:
@@ -156,12 +156,13 @@ class WeatherService:
 
         Raises:
             ApiClientError: If there was an error retrieving the forecast.
+
         """
         return self.weather_data_retrieval.get_forecast(lat, lon, force_refresh)
 
     def get_hourly_forecast(
         self, lat: float, lon: float, force_refresh: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get hourly forecast data for a location.
 
         Args:
@@ -175,10 +176,11 @@ class WeatherService:
 
         Raises:
             ApiClientError: If there was an error retrieving the hourly forecast.
+
         """
         return self.weather_data_retrieval.get_hourly_forecast(lat, lon, force_refresh)
 
-    def get_stations(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
+    def get_stations(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
         """Get observation stations for a location.
 
         Args:
@@ -192,12 +194,29 @@ class WeatherService:
 
         Raises:
             ApiClientError: If there was an error retrieving the stations.
+
         """
         return self.weather_data_retrieval.get_stations(lat, lon, force_refresh)
 
+    def get_point_data(self, lat: float, lon: float) -> dict[str, Any]:
+        """Get NWS point data for a location.
+
+        Args:
+            lat: Latitude of the location.
+            lon: Longitude of the location.
+
+        Returns:
+            Dictionary containing NWS point data.
+
+        Raises:
+            ApiClientError: If there was an error retrieving the point data.
+
+        """
+        return self.nws_client.get_point_data(lat, lon)
+
     def get_current_conditions(
         self, lat: float, lon: float, force_refresh: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get current weather conditions for a location.
 
         Args:
@@ -211,6 +230,7 @@ class WeatherService:
 
         Raises:
             ApiClientError: If there was an error retrieving the current conditions.
+
         """
         return self.weather_data_retrieval.get_current_conditions(lat, lon, force_refresh)
 
@@ -222,7 +242,7 @@ class WeatherService:
         include_forecast_alerts: bool = False,
         radius: float = 50,
         precise_location: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get weather alerts for a location.
 
         Args:
@@ -240,12 +260,13 @@ class WeatherService:
 
         Raises:
             ApiClientError: If there was an error retrieving the alerts.
+
         """
         return self.alerts_discussion_handler.get_alerts(
             lat, lon, force_refresh, include_forecast_alerts, radius, precise_location
         )
 
-    def get_discussion(self, lat: float, lon: float, force_refresh: bool = False) -> Optional[str]:
+    def get_discussion(self, lat: float, lon: float, force_refresh: bool = False) -> str | None:
         """Get forecast discussion for a location.
 
         Args:
@@ -259,10 +280,11 @@ class WeatherService:
 
         Raises:
             ApiClientError: If there was an error retrieving the discussion.
+
         """
         return self.alerts_discussion_handler.get_discussion(lat, lon, force_refresh)
 
-    def process_alerts(self, alerts_data: Dict[str, Any]) -> tuple[List[Dict[str, Any]], int, int]:
+    def process_alerts(self, alerts_data: dict[str, Any]) -> tuple[list[dict[str, Any]], int, int]:
         """Process alerts data and return processed alerts with counts.
 
         This method delegates to the WeatherNotifier for processing.
@@ -275,5 +297,6 @@ class WeatherService:
             - List of processed alert objects
             - Number of new alerts
             - Number of updated alerts
+
         """
         return self.alerts_discussion_handler.process_alerts(alerts_data)

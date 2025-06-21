@@ -85,71 +85,83 @@ class TestSystemTray(unittest.TestCase):
         with self._get_taskbar_patches():
             # Create first instance
             icon1 = TaskBarIcon(self.frame)
-            icon1.IsOk = MagicMock(return_value=True)
-            icon1.RemoveIcon = MagicMock()
-            icon1.Destroy = MagicMock()
 
-            # Cleanup existing instance
-            TaskBarIconManager.cleanup_existing_instance()
+            # Configure the patched methods to return appropriate values
+            with (
+                patch.object(icon1, "IsOk", return_value=True),
+                patch.object(icon1, "RemoveIcon") as mock_remove_icon,
+                patch.object(icon1, "Destroy") as mock_destroy,
+            ):
+                # Cleanup existing instance
+                TaskBarIconManager.cleanup_existing_instance()
 
-            # Verify cleanup was called
-            icon1.RemoveIcon.assert_called_once()
-            icon1.Destroy.assert_called_once()
-            self.assertIsNone(TaskBarIconManager._instance)
+                # Verify cleanup was called
+                mock_remove_icon.assert_called_once()
+                mock_destroy.assert_called_once()
+                self.assertIsNone(TaskBarIconManager._instance)
 
     def test_cleanup_method(self):
         """Test the cleanup method properly removes and destroys icon."""
         with self._get_taskbar_patches():
             icon = TaskBarIcon(self.frame)
-            icon.IsOk = MagicMock(return_value=True)
-            icon.RemoveIcon = MagicMock()
-            icon.Destroy = MagicMock()
 
-            # Call cleanup
-            icon.cleanup()
+            # Configure the patched methods to return appropriate values
+            with (
+                patch.object(icon, "IsOk", return_value=True),
+                patch.object(icon, "RemoveIcon") as mock_remove_icon,
+                patch.object(icon, "Destroy") as mock_destroy,
+            ):
+                # Call cleanup
+                icon.cleanup()
 
-            # Verify cleanup sequence
-            icon.RemoveIcon.assert_called_once()
-            icon.Destroy.assert_called_once()
-            self.assertTrue(icon._is_destroyed)
-            self.assertIsNone(TaskBarIconManager._instance)
+                # Verify cleanup sequence
+                mock_remove_icon.assert_called_once()
+                mock_destroy.assert_called_once()
+                self.assertTrue(icon._is_destroyed)
+                self.assertIsNone(TaskBarIconManager._instance)
 
     def test_cleanup_when_not_ok(self):
         """Test cleanup when TaskBarIcon is not OK."""
         with self._get_taskbar_patches():
             icon = TaskBarIcon(self.frame)
-            icon.IsOk = MagicMock(return_value=False)
-            icon.RemoveIcon = MagicMock()
-            icon.Destroy = MagicMock()
 
-            # Call cleanup
-            with self.assertLogs(level=logging.WARNING) as log:
-                icon.cleanup()
-                self.assertIn("TaskBarIcon is not OK", log.output[0])
+            # Configure the patched methods to return appropriate values
+            with (
+                patch.object(icon, "IsOk", return_value=False),
+                patch.object(icon, "RemoveIcon") as mock_remove_icon,
+                patch.object(icon, "Destroy") as mock_destroy,
+            ):
+                # Call cleanup
+                with self.assertLogs(level=logging.WARNING) as log:
+                    icon.cleanup()
+                    self.assertIn("TaskBarIcon is not OK", log.output[0])
 
-            # RemoveIcon should not be called, but Destroy should
-            icon.RemoveIcon.assert_not_called()
-            icon.Destroy.assert_called_once()
+                # RemoveIcon should not be called, but Destroy should
+                mock_remove_icon.assert_not_called()
+                mock_destroy.assert_called_once()
 
     def test_double_cleanup(self):
         """Test that double cleanup is handled gracefully."""
         with self._get_taskbar_patches():
             icon = TaskBarIcon(self.frame)
-            icon.IsOk = MagicMock(return_value=True)
-            icon.RemoveIcon = MagicMock()
-            icon.Destroy = MagicMock()
 
-            # First cleanup
-            icon.cleanup()
-
-            # Second cleanup should be ignored
-            with self.assertLogs(level=logging.DEBUG) as log:
+            # Configure the patched methods to return appropriate values
+            with (
+                patch.object(icon, "IsOk", return_value=True),
+                patch.object(icon, "RemoveIcon") as mock_remove_icon,
+                patch.object(icon, "Destroy") as mock_destroy,
+            ):
+                # First cleanup
                 icon.cleanup()
-                self.assertIn("TaskBarIcon already cleaned up", log.output[0])
 
-            # Methods should only be called once
-            icon.RemoveIcon.assert_called_once()
-            icon.Destroy.assert_called_once()
+                # Second cleanup should be ignored
+                with self.assertLogs(level=logging.DEBUG) as log:
+                    icon.cleanup()
+                    self.assertIn("TaskBarIcon already cleaned up", log.output[0])
+
+                # Methods should only be called once
+                mock_remove_icon.assert_called_once()
+                mock_destroy.assert_called_once()
 
     @patch("accessiweather.gui.system_tray_modules.icon_manager._is_windows_11")
     @patch("accessiweather.gui.system_tray_modules.icon_manager._get_windows_version")
@@ -168,15 +180,18 @@ class TestSystemTray(unittest.TestCase):
             patch("time.sleep") as mock_sleep,
         ):
             icon = TaskBarIcon(self.frame)
-            icon.IsOk = MagicMock(return_value=True)
-            icon.RemoveIcon = MagicMock()
-            icon.Destroy = MagicMock()
 
-            # Call cleanup
-            icon.cleanup()
+            # Configure the patched methods to return appropriate values
+            with (
+                patch.object(icon, "IsOk", return_value=True),
+                patch.object(icon, "RemoveIcon"),
+                patch.object(icon, "Destroy"),
+            ):
+                # Call cleanup
+                icon.cleanup()
 
-            # Verify delay was added for Windows 10
-            mock_sleep.assert_called_once_with(0.1)
+                # Verify delay was added for Windows 10
+                mock_sleep.assert_called_once_with(0.1)
 
     @patch("accessiweather.gui.system_tray_modules.icon_manager._is_windows_11")
     @patch("accessiweather.gui.system_tray_modules.icon_manager._get_windows_version")
@@ -195,15 +210,18 @@ class TestSystemTray(unittest.TestCase):
             patch("time.sleep") as mock_sleep,
         ):
             icon = TaskBarIcon(self.frame)
-            icon.IsOk = MagicMock(return_value=True)
-            icon.RemoveIcon = MagicMock()
-            icon.Destroy = MagicMock()
 
-            # Call cleanup
-            icon.cleanup()
+            # Configure the patched methods to return appropriate values
+            with (
+                patch.object(icon, "IsOk", return_value=True),
+                patch.object(icon, "RemoveIcon"),
+                patch.object(icon, "Destroy"),
+            ):
+                # Call cleanup
+                icon.cleanup()
 
-            # Verify no delay for Windows 11
-            mock_sleep.assert_not_called()
+                # Verify no delay for Windows 11
+                mock_sleep.assert_not_called()
 
     def test_accessibility_keyboard_events(self):
         """Test that keyboard accessibility events are properly bound."""
@@ -239,7 +257,6 @@ class TestSystemTray(unittest.TestCase):
                 patch.object(icon, "CreatePopupMenu", return_value=MagicMock()) as mock_create_menu,
                 patch.object(icon, "PopupMenu") as mock_popup_menu,
             ):
-
                 # Test right-click context menu
                 mock_event = MagicMock()
                 icon.on_right_click(mock_event)

@@ -1,7 +1,7 @@
 """Tests for weather notifications."""
 
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -74,20 +74,19 @@ def mock_toaster():
 @pytest.fixture
 def mock_datetime():
     """Mock datetime.now and isoparse."""
-    mock_now = datetime(2024, 4, 16, 10, 0, tzinfo=timezone.utc)
+    mock_now = datetime(2024, 4, 16, 10, 0, tzinfo=UTC)
 
     def mock_isoparse(timestamp_str):
         """Mock isoparse to return timezone-aware datetimes."""
         # Parse the timestamp manually for test data
         if timestamp_str == "2024-04-16T14:00:00Z":
-            return datetime(2024, 4, 16, 14, 0, tzinfo=timezone.utc)
-        elif timestamp_str == "2024-04-16T09:00:00Z":
-            return datetime(2024, 4, 16, 9, 0, tzinfo=timezone.utc)
-        elif timestamp_str == "2024-04-16T11:00:00Z":
-            return datetime(2024, 4, 16, 11, 0, tzinfo=timezone.utc)
-        else:
-            # For unknown timestamps, use the real isoparse
-            return isoparse(timestamp_str)
+            return datetime(2024, 4, 16, 14, 0, tzinfo=UTC)
+        if timestamp_str == "2024-04-16T09:00:00Z":
+            return datetime(2024, 4, 16, 9, 0, tzinfo=UTC)
+        if timestamp_str == "2024-04-16T11:00:00Z":
+            return datetime(2024, 4, 16, 11, 0, tzinfo=UTC)
+        # For unknown timestamps, use the real isoparse
+        return isoparse(timestamp_str)
 
     with (
         patch("accessiweather.notifications.weather_notifier.datetime") as mock_dt,

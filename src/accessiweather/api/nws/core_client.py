@@ -26,6 +26,7 @@ class NwsCoreClient:
 
         Args:
             wrapper_instance: The main NwsApiWrapper instance
+
         """
         self.wrapper = wrapper_instance
         self.client = None
@@ -58,6 +59,7 @@ class NwsCoreClient:
 
         Raises:
             NoaaApiError: For various API error conditions
+
         """
         # Always add the client to kwargs
         kwargs["client"] = self.client
@@ -78,7 +80,7 @@ class NwsCoreClient:
                     url=url,
                     status_code=status_code,
                 )
-            elif status_code == 429:
+            if status_code == 429:
                 error_msg = f"Rate limit exceeded (429) for {url}"
                 raise NoaaApiError(
                     message=error_msg,
@@ -86,7 +88,7 @@ class NwsCoreClient:
                     url=url,
                     status_code=status_code,
                 )
-            elif status_code >= 500:
+            if status_code >= 500:
                 error_msg = f"Server error ({status_code}) at {url}"
                 raise NoaaApiError(
                     message=error_msg,
@@ -94,23 +96,22 @@ class NwsCoreClient:
                     url=url,
                     status_code=status_code,
                 )
+            # Decode bytes content if necessary
+            raw_content = e.content
+            if isinstance(raw_content, bytes):
+                try:
+                    content_str = raw_content.decode("utf-8")
+                except UnicodeDecodeError:
+                    content_str = raw_content.decode("utf-8", errors="replace")
             else:
-                # Decode bytes content if necessary
-                raw_content = e.content
-                if isinstance(raw_content, bytes):
-                    try:
-                        content_str = raw_content.decode("utf-8")
-                    except UnicodeDecodeError:
-                        content_str = raw_content.decode("utf-8", errors="replace")
-                else:
-                    content_str = str(raw_content)
-                error_msg = f"HTTP {status_code} error at {url}: {content_str}"
-                raise NoaaApiError(
-                    message=error_msg,
-                    error_type=NoaaApiError.HTTP_ERROR,
-                    url=url,
-                    status_code=status_code,
-                )
+                content_str = str(raw_content)
+            error_msg = f"HTTP {status_code} error at {url}: {content_str}"
+            raise NoaaApiError(
+                message=error_msg,
+                error_type=NoaaApiError.HTTP_ERROR,
+                url=url,
+                status_code=status_code,
+            )
         except Exception as e:
             # Handle other exceptions
             url = kwargs.get("url", self.BASE_URL)

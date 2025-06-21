@@ -23,6 +23,7 @@ def _get_windows_version():
 
     Returns:
         tuple: (major_version, minor_version, build_number) or None if not Windows
+
     """
     try:
         if platform.system() != "Windows":
@@ -43,6 +44,7 @@ def _is_windows_11():
 
     Returns:
         bool: True if Windows 11, False otherwise
+
     """
     version = _get_windows_version()
     if version is None:
@@ -110,6 +112,7 @@ class TaskBarIconManager:
         Args:
             tooltip_text: Optional text to display in the taskbar icon tooltip.
                           If None, uses the default "AccessiWeather".
+
         """
         # Try to load the icon from the application's resources
         icon_path = os.path.join(

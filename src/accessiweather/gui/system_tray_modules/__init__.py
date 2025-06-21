@@ -19,9 +19,11 @@ logger = logging.getLogger(__name__)
 # This provides better compatibility with screen readers and system navigation
 
 
-class TaskBarIcon(wx.adv.TaskBarIcon, TaskBarIconManager, TaskBarEventHandler, WeatherDataFormatter):
+class TaskBarIcon(
+    wx.adv.TaskBarIcon, TaskBarIconManager, TaskBarEventHandler, WeatherDataFormatter
+):
     """System tray icon for AccessiWeather.
-    
+
     Combines icon management, event handling, and weather data formatting
     into a single cohesive system tray interface.
     """
@@ -31,6 +33,7 @@ class TaskBarIcon(wx.adv.TaskBarIcon, TaskBarIconManager, TaskBarEventHandler, W
 
         Args:
             frame: The main application frame (WeatherApp)
+
         """
         # Initialize all parent classes
         wx.adv.TaskBarIcon.__init__(self)

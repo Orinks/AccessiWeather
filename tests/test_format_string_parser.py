@@ -1,6 +1,4 @@
-"""
-Tests for the format string parser.
-"""
+"""Tests for the format string parser."""
 
 import unittest
 

@@ -71,6 +71,7 @@ class TaskBarEventHandler:
 
         Args:
             event: The event object
+
         """
         # For keyboard accessibility, left click should show/hide the main window
         logger.debug("Tray icon activated (left click or keyboard Enter)")
@@ -81,6 +82,7 @@ class TaskBarEventHandler:
 
         Args:
             event: The event object
+
         """
         self.on_show_hide(event)
 
@@ -89,6 +91,7 @@ class TaskBarEventHandler:
 
         Args:
             event: The event object
+
         """
         # Create and show the popup menu with proper accessibility focus
         menu = self.CreatePopupMenu()
@@ -105,6 +108,7 @@ class TaskBarEventHandler:
 
         Args:
             event: The event object
+
         """
         # This event can be triggered by Applications key for accessibility
         logger.debug("Right mouse down event (may be from Applications key)")
@@ -116,6 +120,7 @@ class TaskBarEventHandler:
 
         Returns:
             wx.Menu: The popup menu
+
         """
         # Use the menu handler from the frame to create the menu
         menu, items = self.frame.CreateTaskBarMenu()
@@ -145,6 +150,7 @@ class TaskBarEventHandler:
 
         Args:
             event: The event object
+
         """
         # Use the menu handler from the frame
         self.frame.OnTaskBarShowHide(event)
@@ -154,6 +160,7 @@ class TaskBarEventHandler:
 
         Args:
             event: The event object
+
         """
         # Call the frame's OnRefresh method
         self.frame.OnRefresh(event)
@@ -163,6 +170,7 @@ class TaskBarEventHandler:
 
         Args:
             event: The event object
+
         """
         # Call the frame's OnSettings method
         self.frame.OnSettings(event)
@@ -172,6 +180,7 @@ class TaskBarEventHandler:
 
         Args:
             event: The event object
+
         """
         # Use the menu handler from the frame
         self.frame.OnTaskBarExit(event)
@@ -181,6 +190,7 @@ class TaskBarEventHandler:
 
         Args:
             event: The event object
+
         """
         # Call the frame's test_alert_update method
         if hasattr(self.frame, "test_alert_update"):
@@ -193,6 +203,7 @@ class TaskBarEventHandler:
 
         Args:
             event: The event object
+
         """
         # Call the frame's verify_alert_interval method
         if hasattr(self.frame, "verify_alert_interval"):

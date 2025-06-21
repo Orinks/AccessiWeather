@@ -2,7 +2,7 @@
 
 import tempfile
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from accessiweather.services.update_service import UpdateInfo, UpdateService
 
@@ -13,9 +13,8 @@ class TestUpdateService(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.temp_dir = tempfile.mkdtemp()
-        self.notification_callback = Mock()
-        self.progress_callback = Mock()
-
+        self.notification_callback = MagicMock()
+        self.progress_callback = MagicMock()
         self.update_service = UpdateService(
             config_dir=self.temp_dir,
             notification_callback=self.notification_callback,

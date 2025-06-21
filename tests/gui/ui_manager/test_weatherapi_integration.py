@@ -2,7 +2,6 @@
 
 import pytest
 
-from .fixtures import mock_ui_manager
 from .test_data import (
     SAMPLE_FORECAST_DATA,
     SAMPLE_WEATHERAPI_ALERTS_DATA,

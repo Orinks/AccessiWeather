@@ -186,7 +186,6 @@ class TestResponseTimePerformance:
     def test_initial_app_startup_time(self, temp_config_dir, sample_config, performance_timer):
         """Test initial application startup time."""
         with patch("accessiweather.gui.app_factory.create_weather_app") as mock_create_app:
-
             # Mock app creation
             mock_app = MagicMock()
             mock_create_app.return_value = mock_app
@@ -262,7 +261,6 @@ class TestResponseTimePerformance:
     ):
         """Test UI update response time."""
         with patch("accessiweather.gui.ui_manager.UIManager") as mock_ui_manager:
-
             # Mock UI manager
             mock_ui_instance = MagicMock()
             mock_ui_manager.return_value = mock_ui_instance

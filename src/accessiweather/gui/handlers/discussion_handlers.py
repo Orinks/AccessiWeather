@@ -25,6 +25,7 @@ class WeatherAppDiscussionHandlers(WeatherAppHandlerBase):
 
         Args:
             event: Button event
+
         """
         # Check if we're in nationwide view mode
         if hasattr(self, "_in_nationwide_mode") and self._in_nationwide_mode:
@@ -77,6 +78,7 @@ class WeatherAppDiscussionHandlers(WeatherAppHandlerBase):
 
         Args:
             event: Timer event
+
         """
         has_dialog = hasattr(self, "_discussion_loading_dialog")
         dialog_exists = has_dialog and self._discussion_loading_dialog is not None

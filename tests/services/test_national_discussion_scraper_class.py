@@ -15,10 +15,10 @@ class TestNationalDiscussionScraper(unittest.TestCase):
         self.scraper = NationalDiscussionScraper(request_delay=0.01)
 
         # Load sample HTML responses
-        with open("tests/data/wpc_sample.html", "r") as f:
+        with open("tests/data/wpc_sample.html") as f:
             self.wpc_html = f.read()
 
-        with open("tests/data/spc_sample.html", "r") as f:
+        with open("tests/data/spc_sample.html") as f:
             self.spc_html = f.read()
 
     def test_rate_limiting(self):

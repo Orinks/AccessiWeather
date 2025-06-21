@@ -7,7 +7,7 @@ This module provides weather data formatting functionality including:
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from accessiweather.dynamic_format_manager import DynamicFormatManager
 from accessiweather.format_string_parser import FormatStringParser
@@ -61,22 +61,24 @@ class WeatherDataFormatter:
         self.format_parser = FormatStringParser()
         self.dynamic_format_manager = DynamicFormatManager()
         self.current_weather_data = {}
-        self.current_alerts_data: Optional[List[Dict[str, Any]]] = None
+        self.current_alerts_data: list[dict[str, Any]] | None = None
 
-    def update_weather_data(self, weather_data: Dict[str, Any]):
+    def update_weather_data(self, weather_data: dict[str, Any]):
         """Update the current weather data and refresh the taskbar icon text.
 
         Args:
             weather_data: Dictionary containing current weather data
+
         """
         self.current_weather_data = weather_data
         self.update_icon_text()
 
-    def update_alerts_data(self, alerts_data: Optional[List[Dict[str, Any]]]):
+    def update_alerts_data(self, alerts_data: list[dict[str, Any]] | None):
         """Update the current alerts data and refresh the taskbar icon text.
 
         Args:
             alerts_data: List of current weather alerts or None
+
         """
         self.current_alerts_data = alerts_data
         self.update_icon_text()
@@ -154,8 +156,8 @@ class WeatherDataFormatter:
             self.set_icon()
 
     def _format_weather_data(
-        self, weather_data: Dict[str, Any], unit_pref: TemperatureUnit
-    ) -> Dict[str, Any]:
+        self, weather_data: dict[str, Any], unit_pref: TemperatureUnit
+    ) -> dict[str, Any]:
         """Format weather data values based on unit preference.
 
         Args:
@@ -164,6 +166,7 @@ class WeatherDataFormatter:
 
         Returns:
             Dictionary with formatted weather values
+
         """
         formatted_data = weather_data.copy()
 
@@ -248,7 +251,7 @@ class WeatherDataFormatter:
 
         return formatted_data
 
-    def _get_primary_alert(self, alerts_data: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    def _get_primary_alert(self, alerts_data: list[dict[str, Any]]) -> dict[str, Any] | None:
         """Get the primary (highest severity) alert from alerts data.
 
         Args:
@@ -256,6 +259,7 @@ class WeatherDataFormatter:
 
         Returns:
             Primary alert dictionary or None if no alerts
+
         """
         if not alerts_data:
             return None

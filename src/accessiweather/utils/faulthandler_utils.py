@@ -9,16 +9,16 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Optional, TextIO, Union
+from typing import TextIO
 
 logger = logging.getLogger(__name__)
 
 # Global variable to keep track of the log file
-_fault_log_file: Optional[TextIO] = None
+_fault_log_file: TextIO | None = None
 
 
 def enable_faulthandler(
-    log_file_path: Optional[Union[str, Path]] = None,
+    log_file_path: str | Path | None = None,
     all_threads: bool = True,
     register_all_signals: bool = False,
 ) -> Path:
@@ -31,6 +31,7 @@ def enable_faulthandler(
 
     Returns:
         Path to the log file
+
     """
     global _fault_log_file
 
@@ -53,8 +54,8 @@ def enable_faulthandler(
             # Check if the signals are available
             if hasattr(signal, "SIGUSR1") and hasattr(signal, "SIGUSR2"):
                 # Use getattr to avoid mypy errors
-                sigusr1 = getattr(signal, "SIGUSR1")
-                sigusr2 = getattr(signal, "SIGUSR2")
+                sigusr1 = signal.SIGUSR1
+                sigusr2 = signal.SIGUSR2
                 for sig in (sigusr1, sigusr2):
                     if hasattr(faulthandler, "register"):
                         faulthandler.register(sig, file=sys.stderr, all_threads=all_threads)
@@ -106,6 +107,7 @@ def dump_traceback(all_threads: bool = True) -> None:
 
     Args:
         all_threads: Whether to dump tracebacks for all threads (default: True)
+
     """
     # Dump to stderr
     faulthandler.dump_traceback(file=sys.stderr, all_threads=all_threads)
@@ -130,6 +132,7 @@ def register_signal_handler(signum: int, all_threads: bool = True, chain: bool =
         signum: Signal number to register for
         all_threads: Whether to dump tracebacks for all threads (default: True)
         chain: Whether to call the previous signal handler (default: True)
+
     """
     # Register for stderr
     try:

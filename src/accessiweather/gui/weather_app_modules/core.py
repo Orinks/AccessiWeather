@@ -7,7 +7,7 @@ service management, and lifecycle operations for the WeatherApp.
 import json
 import logging
 import os
-from typing import Any, Dict
+from typing import Any
 
 from accessiweather.config_utils import get_config_dir
 from accessiweather.gui.settings.constants import (
@@ -37,6 +37,7 @@ class WeatherAppCore:
 
         Args:
             weather_app: Reference to the main WeatherApp instance
+
         """
         self.app = weather_app
         logger.debug("WeatherAppCore initialized")
@@ -63,6 +64,7 @@ class WeatherAppCore:
             config: Configuration dictionary (optional)
             config_path: Custom path to config file (optional)
             debug_mode: Whether to enable debug mode
+
         """
         # Set config path
         self.app._config_path = config_path or CONFIG_PATH
@@ -155,17 +157,18 @@ class WeatherAppCore:
 
         logger.debug("State variables initialized")
 
-    def load_config(self) -> Dict[str, Any]:
+    def load_config(self) -> dict[str, Any]:
         """Load configuration from file.
 
         Returns:
             Dict containing configuration or empty dict if not found
+
         """
         from accessiweather.config_utils import ensure_config_defaults
 
         if os.path.exists(self.app._config_path):
             try:
-                with open(self.app._config_path, "r") as f:
+                with open(self.app._config_path) as f:
                     config = json.load(f)
                     # Ensure config has all required defaults
                     updated_config = ensure_config_defaults(config)

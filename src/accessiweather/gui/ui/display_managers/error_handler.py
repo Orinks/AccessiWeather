@@ -18,6 +18,7 @@ class ErrorHandler:
 
         Args:
             frame: The main WeatherApp frame instance.
+
         """
         self.frame = frame
 
@@ -26,6 +27,7 @@ class ErrorHandler:
 
         Args:
             error: Error message or exception object
+
         """
         error_msg = self._format_error_message(error)
         self.frame.forecast_text.SetValue(f"Error fetching forecast: {error_msg}")
@@ -36,6 +38,7 @@ class ErrorHandler:
 
         Args:
             error: Error message or exception object
+
         """
         # Clear alerts list
         self.frame.alerts_list.DeleteAllItems()
@@ -60,24 +63,24 @@ class ErrorHandler:
 
         Returns:
             Formatted error message string
+
         """
         # If it's already a string, just return it
         if isinstance(error, str):
             return error
 
         # Handle NOAA API specific errors
-        elif isinstance(error, NoaaApiError):
+        if isinstance(error, NoaaApiError):
             if error.error_type == NoaaApiError.RATE_LIMIT_ERROR:
                 return "NWS API rate limit exceeded. Please try again later."
-            elif error.error_type == NoaaApiError.TIMEOUT_ERROR:
+            if error.error_type == NoaaApiError.TIMEOUT_ERROR:
                 return "NWS API request timed out. Please try again later."
-            elif error.error_type == NoaaApiError.CONNECTION_ERROR:
+            if error.error_type == NoaaApiError.CONNECTION_ERROR:
                 return "Connection error. Please check your internet connection."
-            else:
-                return f"NWS API error: {str(error)}"
+            return f"NWS API error: {str(error)}"
 
         # Handle generic API client errors
-        elif isinstance(error, ApiClientError):
+        if isinstance(error, ApiClientError):
             return f"API error: {str(error)}"
 
         # For any other exception, just convert to string

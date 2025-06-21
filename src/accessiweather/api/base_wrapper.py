@@ -10,7 +10,8 @@ import logging
 import threading
 import time
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, Optional
+from collections.abc import Callable
+from typing import Any
 
 import httpx
 
@@ -34,7 +35,7 @@ class BaseApiWrapper(ABC):
     def __init__(
         self,
         user_agent: str = "AccessiWeather",
-        contact_info: Optional[str] = None,
+        contact_info: str | None = None,
         enable_caching: bool = False,
         cache_ttl: int = 300,
         min_request_interval: float = 0.5,
@@ -53,6 +54,7 @@ class BaseApiWrapper(ABC):
             max_retries: Maximum number of retries for rate-limited requests
             retry_backoff: Multiplier for exponential backoff between retries
             retry_initial_wait: Initial wait time after a rate limit error
+
         """
         self.user_agent = user_agent
         self.contact_info = contact_info or user_agent
@@ -76,19 +78,16 @@ class BaseApiWrapper(ABC):
 
     # Abstract methods that must be implemented by subclasses
     @abstractmethod
-    def get_current_conditions(self, lat: float, lon: float, **kwargs) -> Dict[str, Any]:
+    def get_current_conditions(self, lat: float, lon: float, **kwargs) -> dict[str, Any]:
         """Get current weather conditions for a location."""
-        pass
 
     @abstractmethod
-    def get_forecast(self, lat: float, lon: float, **kwargs) -> Dict[str, Any]:
+    def get_forecast(self, lat: float, lon: float, **kwargs) -> dict[str, Any]:
         """Get forecast data for a location."""
-        pass
 
     @abstractmethod
-    def get_hourly_forecast(self, lat: float, lon: float, **kwargs) -> Dict[str, Any]:
+    def get_hourly_forecast(self, lat: float, lon: float, **kwargs) -> dict[str, Any]:
         """Get hourly forecast data for a location."""
-        pass
 
     # Shared utility methods
     def _rate_limit(self) -> None:
@@ -142,7 +141,7 @@ class BaseApiWrapper(ABC):
         self.cache.set(cache_key, data)
         return data
 
-    def _generate_cache_key(self, endpoint: str, params: Dict[str, Any]) -> str:
+    def _generate_cache_key(self, endpoint: str, params: dict[str, Any]) -> str:
         """Generate a cache key for the given endpoint and parameters."""
         # Create a string representation of the parameters
         param_str = "&".join(f"{k}={v}" for k, v in sorted(params.items()))
@@ -151,7 +150,7 @@ class BaseApiWrapper(ABC):
         # Generate a hash for the cache key
         return hashlib.md5(cache_string.encode()).hexdigest()
 
-    def _fetch_url(self, url: str, headers: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+    def _fetch_url(self, url: str, headers: dict[str, str] | None = None) -> dict[str, Any]:
         """Fetch data from a URL with error handling and retries."""
         retry_count = 0
 
@@ -168,23 +167,22 @@ class BaseApiWrapper(ABC):
                 with httpx.Client(timeout=httpx.Timeout(10.0), follow_redirects=True) as client:
                     response = client.get(url, headers=request_headers)
                     response.raise_for_status()
-                    return response.json()
+                    return response.json()  # type: ignore[no-any-return]
 
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 429:  # Rate limited
                     self._handle_rate_limit(url, retry_count)
                     retry_count += 1
                     continue
-                else:
-                    # For other HTTP errors, raise immediately
-                    error_msg = f"HTTP {e.response.status_code} error for {url}: {e.response.text}"
-                    logger.error(error_msg)
-                    raise NoaaApiError(
-                        message=error_msg,
-                        error_type=NoaaApiError.HTTP_ERROR,
-                        url=url,
-                        status_code=e.response.status_code,
-                    )
+                # For other HTTP errors, raise immediately
+                error_msg = f"HTTP {e.response.status_code} error for {url}: {e.response.text}"
+                logger.error(error_msg)
+                raise NoaaApiError(
+                    message=error_msg,
+                    error_type=NoaaApiError.HTTP_ERROR,
+                    url=url,
+                    status_code=e.response.status_code,
+                )
             except httpx.RequestError as e:
                 error_msg = f"Network error during API request to {url}: {e}"
                 logger.error(error_msg)

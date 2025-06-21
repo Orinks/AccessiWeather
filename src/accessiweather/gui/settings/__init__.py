@@ -1,5 +1,4 @@
-"""
-Settings package for AccessiWeather GUI components.
+"""Settings package for AccessiWeather GUI components.
 
 This package contains modular components for the settings dialog system,
 organized by functionality for better maintainability.

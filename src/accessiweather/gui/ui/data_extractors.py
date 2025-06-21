@@ -24,6 +24,7 @@ class WeatherDataExtractor:
 
         Args:
             frame: The main WeatherApp frame instance.
+
         """
         self.frame = frame
 
@@ -35,6 +36,7 @@ class WeatherDataExtractor:
 
         Returns:
             dict: Dictionary with extracted data for taskbar icon
+
         """
         if not conditions_data:
             return {}
@@ -75,6 +77,7 @@ class WeatherDataExtractor:
 
         Returns:
             dict: Dictionary with extracted data for taskbar icon
+
         """
         try:
             if not conditions_data or "properties" not in conditions_data:

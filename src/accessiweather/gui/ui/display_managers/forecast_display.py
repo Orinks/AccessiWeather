@@ -6,6 +6,7 @@ This module handles the display of weather forecast data in various formats.
 import logging
 
 from accessiweather.utils.temperature_utils import format_temperature
+
 from ..ui_utils import is_weatherapi_data
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,7 @@ class ForecastDisplay:
         Args:
             frame: The main WeatherApp frame instance.
             formatter: WeatherDataFormatter instance for formatting data.
+
         """
         self.frame = frame
         self.formatter = formatter
@@ -30,6 +32,7 @@ class ForecastDisplay:
         Args:
             forecast_data: Dictionary with forecast data
             hourly_forecast_data: Optional dictionary with hourly forecast data
+
         """
         logger.debug(f"display_forecast received: {forecast_data}")
 
@@ -69,6 +72,7 @@ class ForecastDisplay:
         Args:
             forecast_data: NWS forecast data
             hourly_forecast_data: Optional hourly forecast data
+
         """
         if not forecast_data or "properties" not in forecast_data:
             self.frame.forecast_text.SetValue("No forecast data available")
@@ -100,6 +104,7 @@ class ForecastDisplay:
 
         Returns:
             str: Formatted hourly summary text
+
         """
         hourly_periods = hourly_forecast_data.get("properties", {}).get("periods", [])
         if not hourly_periods:
@@ -163,6 +168,7 @@ class ForecastDisplay:
 
         Returns:
             str: Formatted daily periods text
+
         """
         text = ""
         unit_pref = self.formatter._get_temperature_unit_preference()

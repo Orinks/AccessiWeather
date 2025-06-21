@@ -71,4 +71,3 @@ def verify_no_real_geocoding_calls():
     """Verify that no real geocoding API calls are made during tests."""
     # This fixture can be used to ensure tests don't make real API calls
     # The autouse mock_all_geocoding fixture should prevent any real calls
-    pass

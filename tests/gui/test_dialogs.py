@@ -174,7 +174,6 @@ def mock_accessible_components():
         patch("accessiweather.gui.ui_components.AccessibleListCtrl") as mock_list_ctrl,
         patch("accessiweather.gui.ui_components.AccessibleComboBox") as mock_combo_box,
     ):
-
         # Configure mock components
         mock_static_text_instance = MagicMock()
         mock_text_ctrl_instance = MagicMock()
@@ -208,9 +207,9 @@ def test_location_dialog_init(setup_mock_components, mock_geocoding):
         dialog = LocationDialog(None)
 
         # Set up the dialog attributes manually using setattr to avoid type checking issues
-        setattr(dialog, "geocoding_service", mock_geocoding)
-        setattr(dialog, "GetTitle", MagicMock(return_value="Add Location"))
-        setattr(dialog, "Destroy", MagicMock())
+        dialog.geocoding_service = mock_geocoding
+        dialog.GetTitle = MagicMock(return_value="Add Location")
+        dialog.Destroy = MagicMock()
 
     # Verify dialog properties
     assert dialog.GetTitle() == "Add Location"
@@ -231,9 +230,9 @@ def test_location_dialog_search(setup_mock_components, mock_thread):
         dialog = LocationDialog(None)
 
         # Set up the dialog attributes manually using setattr to avoid type checking issues
-        setattr(dialog, "Destroy", MagicMock())
-        setattr(dialog, "_on_search", MagicMock(side_effect=lambda _: mock_thread.start()))
-        setattr(dialog, "_on_search_complete", MagicMock())
+        dialog.Destroy = MagicMock()
+        dialog._on_search = MagicMock(side_effect=lambda _: mock_thread.start())
+        dialog._on_search_complete = MagicMock()
 
     # Get the search combo box
     search_ctrl = setup_mock_components["combo_box"]
@@ -262,10 +261,10 @@ def test_location_dialog_select_location(setup_mock_components):
         dialog = LocationDialog(None)
 
         # Set up the dialog attributes manually using setattr to avoid type checking issues
-        setattr(dialog, "Destroy", MagicMock())
-        setattr(dialog, "_on_search_complete", MagicMock())
-        setattr(dialog, "_on_select_location", MagicMock())
-        setattr(dialog, "selected_location", None)
+        dialog.Destroy = MagicMock()
+        dialog._on_search_complete = MagicMock()
+        dialog._on_select_location = MagicMock()
+        dialog.selected_location = None
 
     # Populate results
     dialog._on_search_complete(SAMPLE_LOCATIONS)
@@ -290,10 +289,10 @@ def test_location_dialog_cancel():
         dialog = LocationDialog(None)
 
         # Set up the dialog attributes manually using setattr to avoid type checking issues
-        setattr(dialog, "Destroy", MagicMock())
-        setattr(dialog, "_on_cancel", MagicMock())
-        setattr(dialog, "GetReturnCode", MagicMock(return_value=wx.ID_CANCEL))
-        setattr(dialog, "EndModal", MagicMock())
+        dialog.Destroy = MagicMock()
+        dialog._on_cancel = MagicMock()
+        dialog.GetReturnCode = MagicMock(return_value=wx.ID_CANCEL)
+        dialog.EndModal = MagicMock()
 
     # Simulate cancel
     dialog._on_cancel(None)
@@ -313,8 +312,8 @@ def test_advanced_location_dialog_init(setup_mock_components):
         dialog = AdvancedLocationDialog(None)
 
         # Set up the dialog attributes manually using setattr to avoid type checking issues
-        setattr(dialog, "GetTitle", MagicMock(return_value="Advanced Location Settings"))
-        setattr(dialog, "Destroy", MagicMock())
+        dialog.GetTitle = MagicMock(return_value="Advanced Location Settings")
+        dialog.Destroy = MagicMock()
 
     # Verify dialog properties
     assert dialog.GetTitle() == "Advanced Location Settings"
@@ -333,14 +332,14 @@ def test_advanced_location_dialog_validation(setup_mock_components, mock_message
         dialog = AdvancedLocationDialog(None)
 
         # Set up the dialog attributes manually using setattr to avoid type checking issues
-        setattr(dialog, "Destroy", MagicMock())
+        dialog.Destroy = MagicMock()
 
         # Create a real OnOK method that will call the message box
         def mock_on_ok(_):
             mock_message_box("Invalid coordinates")
 
         # Use setattr to avoid type checking issues
-        setattr(dialog, "OnOK", mock_on_ok)
+        dialog.OnOK = mock_on_ok
 
     # Get lat/lon controls
     lat_ctrl = setup_mock_components["text_ctrl"]
@@ -369,11 +368,11 @@ def test_advanced_location_dialog_ok(setup_mock_components):
         dialog = AdvancedLocationDialog(None)
 
         # Set up the dialog attributes manually using setattr to avoid type checking issues
-        setattr(dialog, "Destroy", MagicMock())
-        setattr(dialog, "GetReturnCode", MagicMock(return_value=wx.ID_OK))
-        setattr(dialog, "EndModal", MagicMock())
-        setattr(dialog, "latitude", None)
-        setattr(dialog, "longitude", None)
+        dialog.Destroy = MagicMock()
+        dialog.GetReturnCode = MagicMock(return_value=wx.ID_OK)
+        dialog.EndModal = MagicMock()
+        dialog.latitude = None
+        dialog.longitude = None
 
     # Get lat/lon controls
     lat_ctrl = setup_mock_components["text_ctrl"]
@@ -402,8 +401,8 @@ def test_weather_discussion_dialog_init(setup_mock_components):
         dialog = WeatherDiscussionDialog(None, SAMPLE_DISCUSSION_TEXT)
 
         # Set up the dialog attributes manually using setattr to avoid type checking issues
-        setattr(dialog, "GetTitle", MagicMock(return_value="Weather Discussion"))
-        setattr(dialog, "Destroy", MagicMock())
+        dialog.GetTitle = MagicMock(return_value="Weather Discussion")
+        dialog.Destroy = MagicMock()
 
     # Verify dialog properties
     assert dialog.GetTitle() == "Weather Discussion"
@@ -421,16 +420,16 @@ def test_weather_discussion_dialog_close():
         dialog = WeatherDiscussionDialog(None, SAMPLE_DISCUSSION_TEXT)
 
         # Set up the dialog attributes manually using setattr to avoid type checking issues
-        setattr(dialog, "Destroy", MagicMock())
-        setattr(dialog, "EndModal", MagicMock())
-        setattr(dialog, "GetReturnCode", MagicMock(return_value=wx.ID_CLOSE))
+        dialog.Destroy = MagicMock()
+        dialog.EndModal = MagicMock()
+        dialog.GetReturnCode = MagicMock(return_value=wx.ID_CLOSE)
 
         # Create a real OnClose method that will call EndModal
         def mock_on_close(_):
             dialog.EndModal(wx.ID_CLOSE)
 
         # Use setattr to avoid type checking issues
-        setattr(dialog, "OnClose", mock_on_close)
+        dialog.OnClose = mock_on_close
 
     # Simulate close
     dialog.OnClose(None)
@@ -451,9 +450,9 @@ def test_national_discussion_dialog_init(setup_mock_components):
         dialog = NationalDiscussionDialog(None, SAMPLE_NATIONAL_DATA)
 
         # Set up the dialog attributes manually using setattr to avoid type checking issues
-        setattr(dialog, "GetTitle", MagicMock(return_value="National Weather Discussions"))
-        setattr(dialog, "Destroy", MagicMock())
-        setattr(dialog, "national_data", SAMPLE_NATIONAL_DATA)
+        dialog.GetTitle = MagicMock(return_value="National Weather Discussions")
+        dialog.Destroy = MagicMock()
+        dialog.national_data = SAMPLE_NATIONAL_DATA
 
     # Verify dialog properties
     assert dialog.GetTitle() == "National Weather Discussions"
@@ -471,16 +470,16 @@ def test_national_discussion_dialog_close():
         dialog = NationalDiscussionDialog(None, SAMPLE_NATIONAL_DATA)
 
         # Set up the dialog attributes manually using setattr to avoid type checking issues
-        setattr(dialog, "Destroy", MagicMock())
-        setattr(dialog, "EndModal", MagicMock())
-        setattr(dialog, "GetReturnCode", MagicMock(return_value=wx.ID_CLOSE))
+        dialog.Destroy = MagicMock()
+        dialog.EndModal = MagicMock()
+        dialog.GetReturnCode = MagicMock(return_value=wx.ID_CLOSE)
 
         # Create a real on_close method that will call EndModal
         def mock_on_close(_):
             dialog.EndModal(wx.ID_CLOSE)
 
         # Use setattr to avoid type checking issues
-        setattr(dialog, "on_close", mock_on_close)
+        dialog.on_close = mock_on_close
 
     # Simulate close
     dialog.on_close(None)

@@ -5,7 +5,7 @@ Refactored to use modular components for better maintainability.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .ui import (
     AlertsDisplayManager,
@@ -30,6 +30,7 @@ class UIManager:
         Args:
             frame: The main WeatherApp frame instance.
             notifier: The notification service instance.
+
         """
         self.frame = frame  # Reference to the main WeatherApp frame
         self.notifier = notifier  # Store notifier instance
@@ -76,11 +77,11 @@ class UIManager:
         """Display current weather conditions in the UI."""
         self.weather_display.display_current_conditions(conditions_data)
 
-    def display_alerts(self, alerts_data: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def display_alerts(self, alerts_data: dict[str, Any] | None) -> list[dict[str, Any]]:
         """Display alerts data in the UI and return processed alerts."""
         return self.alerts_display.display_alerts(alerts_data)
 
-    def display_alerts_processed(self, processed_alerts: List[Dict[str, Any]]) -> None:
+    def display_alerts_processed(self, processed_alerts: list[dict[str, Any]]) -> None:
         """Display already processed alerts data in the UI."""
         self.alerts_display.display_alerts_processed(processed_alerts)
 
@@ -96,7 +97,6 @@ class UIManager:
         """Display hourly forecast data in the UI."""
         # This method is not currently used directly in the UI
         # The hourly forecast data is incorporated into the main forecast display
-        pass
 
     # Data extraction methods - delegate to data extractor
     def _extract_weatherapi_data_for_taskbar(self, conditions_data):
@@ -117,7 +117,7 @@ class UIManager:
         return self.data_formatter.format_weatherapi_forecast(forecast_data, hourly_forecast_data)
 
     # Alerts methods - delegate to alerts manager
-    def _display_weatherapi_alerts(self, alerts_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _display_weatherapi_alerts(self, alerts_data: dict[str, Any]) -> list[dict[str, Any]]:
         """Display WeatherAPI.com alerts data in the UI."""
         return self.alerts_display._display_weatherapi_alerts(alerts_data)
 

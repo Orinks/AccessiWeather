@@ -1,5 +1,4 @@
-"""
-Tab component builders for the settings dialog.
+"""Tab component builders for the settings dialog.
 
 This module contains builder classes for each settings tab, handling
 UI component creation and layout for better organization and maintainability.

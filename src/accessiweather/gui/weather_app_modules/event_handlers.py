@@ -25,6 +25,7 @@ class WeatherAppEventHandlers:
 
         Args:
             weather_app: Reference to the main WeatherApp instance
+
         """
         self.app = weather_app
         logger.debug("WeatherAppEventHandlers initialized")
@@ -34,6 +35,7 @@ class WeatherAppEventHandlers:
 
         Args:
             event: Timer event
+
         """
         # Get update interval from config (default to 10 minutes)
         settings = self.app.config.get("settings", {})
@@ -80,6 +82,7 @@ class WeatherAppEventHandlers:
 
         Args:
             event: Character hook event
+
         """
         key_code = event.GetKeyCode()
 
@@ -99,6 +102,7 @@ class WeatherAppEventHandlers:
 
         Args:
             event: Menu event
+
         """
         info = wx.adv.AboutDialogInfo()
         info.SetName("AccessiWeather")

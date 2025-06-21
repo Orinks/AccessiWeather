@@ -1,5 +1,4 @@
-"""
-Dialog for configuring AccessiWeather settings.
+"""Dialog for configuring AccessiWeather settings.
 
 This module provides the main SettingsDialog class that coordinates between
 specialized components for UI building, data handling, and validation.
@@ -23,21 +22,20 @@ logger = logging.getLogger(__name__)
 
 
 class SettingsDialog(wx.Dialog):
-    """
-    A dialog window for modifying application settings.
+    """A dialog window for modifying application settings.
 
     This class coordinates between specialized components for UI building,
     data handling, and validation while maintaining the main dialog structure.
     """
 
     def __init__(self, parent, current_settings):
-        """
-        Initialize the Settings Dialog.
+        """Initialize the Settings Dialog.
 
         Args:
             parent: The parent window.
             current_settings (dict): A dictionary containing the current values
                                      for the settings to be edited.
+
         """
         super().__init__(parent, title="Settings", style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
 
@@ -155,28 +153,28 @@ class SettingsDialog(wx.Dialog):
             self.EndModal(wx.ID_OK)
 
     def get_settings(self):
-        """
-        Retrieve the modified settings from the UI controls.
+        """Retrieve the modified settings from the UI controls.
 
         Returns:
             dict: A dictionary containing the updated settings.
+
         """
         return self.data_handler.get_settings()
 
     def get_api_settings(self):
-        """
-        Retrieve the API-specific settings from the UI controls.
+        """Retrieve the API-specific settings from the UI controls.
 
         Returns:
             dict: A dictionary containing the updated API settings.
+
         """
         return self.data_handler.get_api_settings()
 
     def get_api_keys(self):
-        """
-        Retrieve the API keys from the UI controls.
+        """Retrieve the API keys from the UI controls.
 
         Returns:
             dict: A dictionary containing the updated API keys.
+
         """
         return self.data_handler.get_api_keys()

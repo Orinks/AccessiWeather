@@ -27,6 +27,7 @@ class AccessibleComboBox(wx.ComboBox):
             choices: List of choices
             label: Accessible label
             **kwargs: Additional arguments for wx.ComboBox
+
         """
         if choices is None:
             choices = []
@@ -57,6 +58,7 @@ class AccessibleComboBox(wx.ComboBox):
 
         Args:
             label: Accessible label
+
         """
         self.SetName(label)
         accessible = self.GetAccessible()
@@ -68,6 +70,7 @@ class AccessibleComboBox(wx.ComboBox):
 
         Args:
             label: New accessible label
+
         """
         self.SetLabel(label)
 
@@ -76,6 +79,7 @@ class AccessibleComboBox(wx.ComboBox):
 
         Args:
             items: List of items
+
         """
         self.Clear()
         for item in items:
@@ -86,6 +90,7 @@ class AccessibleComboBox(wx.ComboBox):
 
         Args:
             value: Text value to set
+
         """
         # Call parent method to set text value
         super().SetValue(value)
@@ -104,22 +109,23 @@ class AccessibleComboBox(wx.ComboBox):
 
         Returns:
             Index of the last item added
+
         """
         # Handle both single string and list of strings
         if isinstance(items, str):
             return super().Append(items)
-        else:
-            # Add items one by one
-            last_index = -1
-            for item in items:
-                last_index = super().Append(item)
-            return last_index
+        # Add items one by one
+        last_index = -1
+        for item in items:
+            last_index = super().Append(item)
+        return last_index
 
     def OnKeyDown(self, event):
         """Handle key down event for accessibility navigation
 
         Args:
             event: Key event
+
         """
         key_code = event.GetKeyCode()
 
@@ -139,6 +145,7 @@ class AccessibleComboBox(wx.ComboBox):
 
         Args:
             event: Character hook event
+
         """
         key_code = event.GetKeyCode()
 
@@ -178,6 +185,7 @@ class AccessibleComboBox(wx.ComboBox):
 
         Args:
             char: Character to announce
+
         """
         if not char:
             return
@@ -200,6 +208,7 @@ class AccessibleComboBox(wx.ComboBox):
 
         Args:
             message: Message to announce
+
         """
         # Get accessible object
         accessible = self.GetAccessible()
@@ -218,6 +227,7 @@ class AccessibleStaticText(wx.StaticText):
             id: Control ID
             label: Text label
             **kwargs: Additional arguments for wx.StaticText
+
         """
         super().__init__(parent, id, label, **kwargs)
 
@@ -229,6 +239,7 @@ class AccessibleStaticText(wx.StaticText):
 
         Args:
             label: New label text
+
         """
         super().SetLabel(label)
         self.SetName(label)
@@ -246,6 +257,7 @@ class AccessibleTextCtrl(wx.TextCtrl):
             value: Initial text value
             label: Accessible label
             **kwargs: Additional arguments for wx.TextCtrl
+
         """
         super().__init__(parent, id, value, **kwargs)
 
@@ -257,6 +269,7 @@ class AccessibleTextCtrl(wx.TextCtrl):
 
         Args:
             label: New accessible label
+
         """
         self.SetName(label)
 
@@ -273,6 +286,7 @@ class AccessibleChoice(wx.Choice):
             choices: List of choices
             label: Accessible label
             **kwargs: Additional arguments for wx.Choice
+
         """
         if choices is None:
             choices = []
@@ -286,6 +300,7 @@ class AccessibleChoice(wx.Choice):
 
         Args:
             label: New accessible label
+
         """
         self.SetName(label)
 
@@ -294,6 +309,7 @@ class AccessibleChoice(wx.Choice):
 
         Args:
             items: List of items
+
         """
         self.Clear()
         for item in items:
@@ -311,6 +327,7 @@ class AccessibleButton(wx.Button):
             id: Control ID
             label: Button label
             **kwargs: Additional arguments for wx.Button
+
         """
         super().__init__(parent, id, label, **kwargs)
 
@@ -322,6 +339,7 @@ class AccessibleButton(wx.Button):
 
         Args:
             label: New label text
+
         """
         super().SetLabel(label)
         self.SetName(label)

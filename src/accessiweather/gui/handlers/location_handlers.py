@@ -26,6 +26,7 @@ class WeatherAppLocationHandlers(WeatherAppHandlerBase):
 
         Args:
             event: Choice event
+
         """
         selected_index = self.location_choice.GetSelection()
         if selected_index == wx.NOT_FOUND:
@@ -78,6 +79,7 @@ class WeatherAppLocationHandlers(WeatherAppHandlerBase):
 
         Args:
             event: Button event
+
         """
         # Use ShowLocationDialog from DialogHandlers
         result, location_data = self.ShowLocationDialog()
@@ -125,6 +127,7 @@ class WeatherAppLocationHandlers(WeatherAppHandlerBase):
 
         Args:
             event: Button event
+
         """
         # Show a message box to confirm we're in the right method (only in debug mode)
         # Add debug print to check if debug_mode is set

@@ -36,6 +36,7 @@ class WeatherAppSettingsHandlers(WeatherAppHandlerBase):
 
         Args:
             event: Button event
+
         """
         # Get current settings
         settings = self.config.get("settings", {})

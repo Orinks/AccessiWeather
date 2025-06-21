@@ -7,6 +7,7 @@ import logging
 
 from accessiweather.utils.temperature_utils import format_temperature
 from accessiweather.utils.unit_utils import format_pressure, format_wind_speed
+
 from ..ui_utils import is_weatherapi_data
 
 logger = logging.getLogger(__name__)
@@ -22,6 +23,7 @@ class ConditionsDisplay:
             frame: The main WeatherApp frame instance.
             formatter: WeatherDataFormatter instance for formatting data.
             extractor: WeatherDataExtractor instance for extracting data.
+
         """
         self.frame = frame
         self.formatter = formatter
@@ -32,6 +34,7 @@ class ConditionsDisplay:
 
         Args:
             conditions_data: Dictionary with current conditions data
+
         """
         logger.debug(f"display_current_conditions received: {conditions_data}")
 
@@ -67,6 +70,7 @@ class ConditionsDisplay:
 
         Args:
             conditions_data: NWS current conditions data
+
         """
         if not conditions_data or "properties" not in conditions_data:
             self.frame.current_conditions_text.SetValue("No current conditions data available")
@@ -135,6 +139,7 @@ class ConditionsDisplay:
 
         Returns:
             str: Formatted conditions text
+
         """
         # Convert units and format temperature
         if temperature is not None:

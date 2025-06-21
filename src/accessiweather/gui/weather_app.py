@@ -82,6 +82,7 @@ class WeatherApp(
             config: Configuration dictionary (optional)
             config_path: Custom path to config file (optional)
             debug_mode: Whether to enable debug mode with additional logging and alert testing features (default: False)
+
         """
         super().__init__(parent, title="AccessiWeather", size=(800, 600))
 

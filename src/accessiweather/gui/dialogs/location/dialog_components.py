@@ -1,12 +1,10 @@
-"""
-Main dialog components for location input and management.
+"""Main dialog components for location input and management.
 
 This module contains the primary dialog classes for location-related user
 interactions, including manual coordinate entry and location search.
 """
 
 import logging
-from typing import Optional, Tuple
 
 import wx
 
@@ -50,31 +48,31 @@ class AdvancedLocationDialog(wx.Dialog):
         self,
         parent: wx.Window,
         title: str = ADVANCED_DIALOG_TITLE,
-        lat: Optional[float] = DEFAULT_LAT,
-        lon: Optional[float] = DEFAULT_LON,
+        lat: float | None = DEFAULT_LAT,
+        lon: float | None = DEFAULT_LON,
     ):
-        """
-        Initialize the advanced location dialog.
+        """Initialize the advanced location dialog.
 
         Args:
             parent: Parent window
             title: Dialog title
             lat: Initial latitude
             lon: Initial longitude
+
         """
         super().__init__(parent, title=title, style=wx.DEFAULT_DIALOG_STYLE)
 
-        self.validator: Optional[AdvancedDialogValidator] = None
+        self.validator: AdvancedDialogValidator | None = None
         self._init_ui(lat, lon)
         self._bind_events()
 
-    def _init_ui(self, lat: Optional[float], lon: Optional[float]) -> None:
-        """
-        Initialize the UI components.
+    def _init_ui(self, lat: float | None, lon: float | None) -> None:
+        """Initialize the UI components.
 
         Args:
             lat: Initial latitude value
             lon: Initial longitude value
+
         """
         # Create main panel
         panel = wx.Panel(self)
@@ -130,23 +128,23 @@ class AdvancedLocationDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.OnOK, id=wx.ID_OK)
 
     def OnOK(self, event: wx.CommandEvent) -> None:
-        """
-        Handle OK button event.
+        """Handle OK button event.
 
         Args:
             event: Button event
+
         """
         if self.validator:
             is_valid, lat, lon = self.validator.validate_and_get_coordinates()
             if is_valid:
                 event.Skip()  # Continue with default handler
 
-    def GetValues(self) -> Tuple[Optional[float], Optional[float]]:
-        """
-        Get the dialog values.
+    def GetValues(self) -> tuple[float | None, float | None]:
+        """Get the dialog values.
 
         Returns:
             Tuple of (latitude, longitude)
+
         """
         if self.validator:
             return self.validator.get_coordinates_safe()
@@ -161,12 +159,11 @@ class LocationDialog(wx.Dialog):
         parent: wx.Window,
         title: str = LOCATION_DIALOG_TITLE,
         location_name: str = DEFAULT_LOCATION_NAME,
-        lat: Optional[float] = DEFAULT_LAT,
-        lon: Optional[float] = DEFAULT_LON,
+        lat: float | None = DEFAULT_LAT,
+        lon: float | None = DEFAULT_LON,
         data_source: str = DEFAULT_DATA_SOURCE,
     ):
-        """
-        Initialize the location dialog.
+        """Initialize the location dialog.
 
         Args:
             parent: Parent window
@@ -175,6 +172,7 @@ class LocationDialog(wx.Dialog):
             lat: Initial latitude
             lon: Initial longitude
             data_source: The data source to use ('nws', 'openmeteo', or 'auto')
+
         """
         super().__init__(parent, title=title, style=wx.DEFAULT_DIALOG_STYLE)
 
@@ -189,20 +187,20 @@ class LocationDialog(wx.Dialog):
             error_callback=self._on_search_error,
         )
         self.result_processor = LocationSearchResultProcessor(self.geocoding_manager)
-        self.validator: Optional[LocationDialogValidator] = None
+        self.validator: LocationDialogValidator | None = None
 
         # Initialize UI
         self._init_ui(location_name, lat, lon)
         self._bind_events()
 
-    def _init_ui(self, location_name: str, lat: Optional[float], lon: Optional[float]) -> None:
-        """
-        Initialize the UI components.
+    def _init_ui(self, location_name: str, lat: float | None, lon: float | None) -> None:
+        """Initialize the UI components.
 
         Args:
             location_name: Initial location name
             lat: Initial latitude
             lon: Initial longitude
+
         """
         # Create main panel
         panel = wx.Panel(self)
@@ -296,11 +294,11 @@ class LocationDialog(wx.Dialog):
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
     def OnSearch(self, event: wx.CommandEvent) -> None:
-        """
-        Handle search button click.
+        """Handle search button click.
 
         Args:
             event: Button event
+
         """
         query = self.search_field.GetValue().strip()
         if not query:
@@ -324,11 +322,11 @@ class LocationDialog(wx.Dialog):
         self._fetch_search_suggestions(query)
 
     def OnAdvanced(self, event: wx.CommandEvent) -> None:
-        """
-        Handle advanced button click to open manual lat/lon dialog.
+        """Handle advanced button click to open manual lat/lon dialog.
 
         Args:
             event: Button event
+
         """
         dialog = AdvancedLocationDialog(self, lat=self.latitude, lon=self.longitude)
 
@@ -347,21 +345,21 @@ class LocationDialog(wx.Dialog):
         dialog.Destroy()
 
     def OnOK(self, event: wx.CommandEvent) -> None:
-        """
-        Handle OK button event.
+        """Handle OK button event.
 
         Args:
             event: Button event
+
         """
         if self.validator and self.validator.validate_for_save():
             event.Skip()  # Continue with default handler
 
     def OnClose(self, event: wx.CloseEvent) -> None:
-        """
-        Handle dialog close event.
+        """Handle dialog close event.
 
         Args:
             event: Close event
+
         """
         self.geocoding_manager.stop_search()
         event.Skip()
@@ -372,22 +370,22 @@ class LocationDialog(wx.Dialog):
         result = super().Destroy()
         return bool(result)
 
-    def GetValues(self) -> Tuple[str, Optional[float], Optional[float]]:
-        """
-        Get the dialog values.
+    def GetValues(self) -> tuple[str, float | None, float | None]:
+        """Get the dialog values.
 
         Returns:
             Tuple of (name, latitude, longitude)
+
         """
         return self.name_ctrl.GetValue().strip(), self.latitude, self.longitude
 
-    def _on_search_result(self, result: Optional[Tuple[float, float, str]], query: str) -> None:
-        """
-        Handle search result callback.
+    def _on_search_result(self, result: tuple[float, float, str] | None, query: str) -> None:
+        """Handle search result callback.
 
         Args:
             result: Geocoding result tuple or None
             query: Original search query
+
         """
         lat, lon, result_text, detailed_name = self.result_processor.process_search_result(
             result, query
@@ -405,11 +403,11 @@ class LocationDialog(wx.Dialog):
             self.name_ctrl.SetValue(detailed_name)
 
     def _on_search_error(self, error_msg: str) -> None:
-        """
-        Handle search error callback.
+        """Handle search error callback.
 
         Args:
             error_msg: Error message
+
         """
         result_text = self.result_processor.process_search_error(error_msg)
         self.result_text.SetValue(result_text)
@@ -419,11 +417,11 @@ class LocationDialog(wx.Dialog):
             self.validator.update_coordinates(None, None)
 
     def _fetch_search_suggestions(self, query: str) -> None:
-        """
-        Fetch location suggestions for the search list.
+        """Fetch location suggestions for the search list.
 
         Args:
             query: Search query string
+
         """
         # Clear the list
         self.search_results_list.DeleteAllItems()
@@ -433,11 +431,11 @@ class LocationDialog(wx.Dialog):
         self._update_search_results(suggestions)
 
     def _update_search_results(self, suggestions: list) -> None:
-        """
-        Update the search results list with suggestions.
+        """Update the search results list with suggestions.
 
         Args:
             suggestions: List of location suggestions
+
         """
         # Clear the list
         self.search_results_list.DeleteAllItems()
@@ -461,11 +459,11 @@ class LocationDialog(wx.Dialog):
             self.search_field.Append(history)
 
     def _on_combobox_select(self, event: wx.CommandEvent) -> None:
-        """
-        Handle combobox selection event.
+        """Handle combobox selection event.
 
         Args:
             event: Combobox event
+
         """
         # Get the selected item
         selection = self.search_field.GetSelection()
@@ -477,11 +475,11 @@ class LocationDialog(wx.Dialog):
             self.geocoding_manager.perform_search(selected_text)
 
     def _on_list_item_activated(self, event: wx.ListEvent) -> None:
-        """
-        Handle list item activation (double-click or Enter).
+        """Handle list item activation (double-click or Enter).
 
         Args:
             event: List event
+
         """
         # Get the selected item
         selection = event.GetIndex()

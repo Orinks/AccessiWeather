@@ -279,7 +279,7 @@ def test_update_data_source():
 
 def test_save_locations_handles_error(location_manager):
     """Test that saving locations handles file write errors gracefully."""
-    with patch("builtins.open", side_effect=IOError("Test error")):
+    with patch("builtins.open", side_effect=OSError("Test error")):
         # This should not raise an exception
         location_manager._save_locations()
 

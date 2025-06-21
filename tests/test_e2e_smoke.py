@@ -1,5 +1,4 @@
-"""
-End-to-end smoke tests for AccessiWeather application.
+"""End-to-end smoke tests for AccessiWeather application.
 
 These tests verify basic application functionality and critical user workflows
 without requiring a full GUI environment.
@@ -69,7 +68,7 @@ def test_configuration_system():
             json.dump(test_config, f)
 
         # Load config
-        with open(config_file, "r") as f:
+        with open(config_file) as f:
             loaded_config = json.load(f)
 
         assert loaded_config["location"] == "Test City"

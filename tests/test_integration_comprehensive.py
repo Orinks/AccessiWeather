@@ -60,7 +60,7 @@ class TestApplicationStartupFlow:
             mock_wrapper.return_value = mock_client
 
             # Mock API responses
-            mock_client.get_point.return_value = sample_nws_point_response
+            mock_client.get_point_data.return_value = sample_nws_point_response
             mock_client.get_forecast.return_value = sample_nws_forecast_response
             mock_client.get_current_conditions.return_value = sample_nws_current_response
 
@@ -82,7 +82,7 @@ class TestApplicationStartupFlow:
     def test_existing_user_startup_flow(self, config_file, sample_config):
         """Test startup flow for existing user with saved configuration."""
         # Load existing configuration
-        with open(config_file, "r") as f:
+        with open(config_file) as f:
             loaded_config = json.load(f)
 
         assert loaded_config == sample_config
@@ -143,7 +143,7 @@ class TestWeatherDataRefreshFlow:
         assert "periods" in forecast["properties"]
 
         # Verify performance (should be reasonable for integration test)
-        assert performance_timer.elapsed < 5.0
+        assert performance_timer.elapsed() < 5.0
 
         # Verify API calls were made (with any parameters)
         weather_service.nws_client.get_current_conditions.assert_called()
@@ -173,7 +173,7 @@ class TestLocationChangeFlow:
     """Test location change scenarios."""
 
     def test_location_change_triggers_data_refresh(
-        self, temp_config_dir, sample_nws_current_response, sample_openmeteo_current_response
+        self, temp_config_dir, sample_nws_current_response, sample_openmeteo_response
     ):
         """Test that changing location triggers fresh weather data fetch."""
         location_manager = LocationManager(config_dir=temp_config_dir)
@@ -193,7 +193,6 @@ class TestLocationChangeFlow:
             patch("accessiweather.api_wrapper.NoaaApiWrapper") as mock_nws,
             patch("accessiweather.openmeteo_client.OpenMeteoApiClient") as mock_openmeteo,
         ):
-
             nws_client = MagicMock(spec=NoaaApiWrapper)
             openmeteo_client = MagicMock(spec=OpenMeteoApiClient)
             mock_nws.return_value = nws_client
@@ -201,7 +200,7 @@ class TestLocationChangeFlow:
 
             # Mock responses
             nws_client.get_current_conditions.return_value = sample_nws_current_response
-            openmeteo_client.get_current_weather.return_value = sample_openmeteo_current_response
+            openmeteo_client.get_current_weather.return_value = sample_openmeteo_response
 
             config = {"settings": {"data_source": "auto"}}
             weather_service = WeatherService(
@@ -240,7 +239,6 @@ class TestDataSourceSelectionFlow:
             patch("accessiweather.api_wrapper.NoaaApiWrapper") as mock_nws,
             patch("accessiweather.openmeteo_client.OpenMeteoApiClient") as mock_openmeteo,
         ):
-
             nws_client = MagicMock(spec=NoaaApiWrapper)
             openmeteo_client = MagicMock(spec=OpenMeteoApiClient)
             mock_nws.return_value = nws_client
@@ -272,7 +270,6 @@ class TestDataSourceSelectionFlow:
             patch("accessiweather.api_wrapper.NoaaApiWrapper") as mock_nws,
             patch("accessiweather.openmeteo_client.OpenMeteoApiClient") as mock_openmeteo,
         ):
-
             nws_client = MagicMock(spec=NoaaApiWrapper)
             openmeteo_client = MagicMock(spec=OpenMeteoApiClient)
             mock_nws.return_value = nws_client
@@ -293,7 +290,6 @@ class TestDataSourceSelectionFlow:
             patch("accessiweather.api_wrapper.NoaaApiWrapper") as mock_nws,
             patch("accessiweather.openmeteo_client.OpenMeteoApiClient") as mock_openmeteo,
         ):
-
             nws_client = MagicMock(spec=NoaaApiWrapper)
             openmeteo_client = MagicMock(spec=OpenMeteoApiClient)
             mock_nws.return_value = nws_client
@@ -325,7 +321,7 @@ class TestErrorHandlingFlow:
             weather_service.get_current_conditions(lat, lon)
 
     def test_api_fallback_mechanism(
-        self, sample_nws_current_response, sample_openmeteo_current_response
+        self, weather_service, sample_nws_current_response, sample_openmeteo_response
     ):
         """Test fallback from one API to another."""
         lat, lon = 40.7128, -74.0060
@@ -336,7 +332,6 @@ class TestErrorHandlingFlow:
             patch("accessiweather.api_wrapper.NoaaApiWrapper") as mock_nws,
             patch("accessiweather.openmeteo_client.OpenMeteoApiClient") as mock_openmeteo,
         ):
-
             nws_client = MagicMock(spec=NoaaApiWrapper)
             openmeteo_client = MagicMock(spec=OpenMeteoApiClient)
             mock_nws.return_value = nws_client
@@ -350,7 +345,7 @@ class TestErrorHandlingFlow:
 
             # Mock NWS failure and Open-Meteo success
             nws_client.get_current_conditions.side_effect = Exception("NWS error")
-            openmeteo_client.get_current_weather.return_value = sample_openmeteo_current_response
+            openmeteo_client.get_current_weather.return_value = sample_openmeteo_response
 
             # Should fallback to Open-Meteo
             result = weather_service.get_current_conditions(lat, lon)
@@ -382,7 +377,7 @@ class TestConfigurationIntegration:
             json.dump(initial_config, f)
 
         # Load and verify
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             loaded_config = json.load(f)
 
         assert loaded_config == initial_config
@@ -396,7 +391,7 @@ class TestConfigurationIntegration:
             json.dump(loaded_config, f)
 
         # Reload and verify persistence
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             reloaded_config = json.load(f)
 
         assert reloaded_config["settings"]["temperature_unit"] == TemperatureUnit.CELSIUS.value

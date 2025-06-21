@@ -16,6 +16,7 @@ def convert_wind_direction_to_cardinal(degrees):
 
     Returns:
         str: Cardinal direction (N, NE, E, SE, S, SW, W, NW)
+
     """
     if degrees is None:
         logger.debug("Wind direction conversion: degrees is None")
@@ -68,6 +69,7 @@ def format_combined_wind(wind_speed, wind_direction, speed_unit="mph"):
 
     Returns:
         str: Formatted wind string (e.g., "15 mph NW")
+
     """
     logger.debug(
         f"Wind formatting: speed={wind_speed}, direction={wind_direction}, unit={speed_unit}"
@@ -120,6 +122,7 @@ def safe_get_location_name(location_service=None, fallback=""):
 
     Returns:
         str: Location name or fallback value
+
     """
     logger.debug(
         f"Location name retrieval: service={location_service is not None}, fallback='{fallback}'"
@@ -137,11 +140,10 @@ def safe_get_location_name(location_service=None, fallback=""):
                 f"Location name retrieval: got '{location_name}' from get_current_location_name()"
             )
             return location_name if location_name is not None else fallback
-        else:
-            logger.debug(
-                "Location name retrieval: location service has no get_current_location_name method"
-            )
-            return fallback
+        logger.debug(
+            "Location name retrieval: location service has no get_current_location_name method"
+        )
+        return fallback
     except Exception as e:
         logger.error(f"Location name retrieval failed: {e}")
         return fallback
@@ -157,6 +159,7 @@ def create_standardized_taskbar_data(**kwargs):
 
     Returns:
         dict: Standardized dictionary with all expected keys
+
     """
     # Define the standard structure with default values
     standard_data = {
@@ -203,6 +206,7 @@ def is_weatherapi_data(data):
 
     Returns:
         bool: True if the data is from WeatherAPI.com, False otherwise
+
     """
     if not data or not isinstance(data, dict):
         return False

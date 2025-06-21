@@ -48,7 +48,6 @@ class TestSettingsChangeHandling:
                 return_value=mock_new_weather_service,
             ),
         ):
-
             # Create a mock WeatherApp
             mock_app = MagicMock()
             mock_app.weather_service = mock_weather_service
@@ -107,7 +106,6 @@ class TestSettingsChangeHandling:
                 return_value=mock_new_weather_service,
             ),
         ):
-
             # Create a mock WeatherApp
             mock_app = MagicMock()
             mock_app.weather_service = mock_weather_service

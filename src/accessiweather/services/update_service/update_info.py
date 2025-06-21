@@ -4,8 +4,6 @@ This module contains the UpdateInfo class that holds information about
 available updates.
 """
 
-from typing import Dict, List
-
 
 class UpdateInfo:
     """Information about an available update."""
@@ -15,7 +13,7 @@ class UpdateInfo:
         version: str,
         release_url: str,
         release_notes: str,
-        assets: List[Dict],
+        assets: list[dict],
         published_date: str,
         is_prerelease: bool = False,
     ):

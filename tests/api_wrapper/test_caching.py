@@ -29,7 +29,6 @@ def api_wrapper():
         patch("accessiweather.api.nws.NwsApiWrapper") as mock_nws,
         patch("accessiweather.api.openmeteo_wrapper.OpenMeteoApiWrapper") as mock_openmeteo,
     ):
-
         # Create mock instances with proper attributes
         mock_nws_instance = MagicMock()
         mock_nws_instance.client = MagicMock()
@@ -60,7 +59,6 @@ def cached_api_wrapper():
         patch("accessiweather.api.nws.NwsApiWrapper") as mock_nws,
         patch("accessiweather.api.openmeteo_wrapper.OpenMeteoApiWrapper") as mock_openmeteo,
     ):
-
         # Create mock cache
         mock_cache = MagicMock()
         mock_cache.default_ttl = 300

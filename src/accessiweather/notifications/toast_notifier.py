@@ -14,15 +14,13 @@ logger = logging.getLogger(__name__)
 
 
 class SafeToastNotifier:
-    """
-    A wrapper around the notification system that handles exceptions.
+    """A wrapper around the notification system that handles exceptions.
     Provides cross-platform notification support using plyer.
     """
 
     def __init__(self):
         """Initialize the safe toast notifier"""
         # No initialization needed for plyer
-        pass
 
     def show_toast(self, **kwargs):
         """Show a toast notification"""
@@ -47,6 +45,6 @@ class SafeToastNotifier:
         except Exception as e:
             logger.warning(f"Failed to show toast notification: {str(e)}")
             logger.info(
-                f"Toast notification would show: {kwargs.get('title')} - " f"{kwargs.get('msg')}"
+                f"Toast notification would show: {kwargs.get('title')} - {kwargs.get('msg')}"
             )
             return False

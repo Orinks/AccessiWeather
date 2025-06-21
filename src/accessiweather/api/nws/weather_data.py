@@ -5,7 +5,7 @@ forecasts, hourly forecasts, and observation stations.
 """
 
 import logging
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 from accessiweather.api_client import ApiClientError, NoaaApiError
 from accessiweather.weather_gov_api_client.api.default import station_observation_latest
@@ -18,25 +18,27 @@ class NwsWeatherData:
 
     def __init__(self, wrapper_instance):
         """Initialize with reference to the main wrapper.
-        
+
         Args:
             wrapper_instance: The main NwsApiWrapper instance
+
         """
         self.wrapper = wrapper_instance
 
-    def get_current_conditions(self, lat: float, lon: float, **kwargs) -> Dict[str, Any]:
+    def get_current_conditions(self, lat: float, lon: float, **kwargs) -> dict[str, Any]:
         """Get current weather conditions for a location from the nearest observation station.
-        
+
         Args:
             lat: Latitude
             lon: Longitude
             **kwargs: Additional arguments including force_refresh
-            
+
         Returns:
             Current conditions data dictionary
-            
+
         Raises:
             ApiClientError: For client-related errors
+
         """
         force_refresh = kwargs.get("force_refresh", False)
 
@@ -57,9 +59,11 @@ class NwsWeatherData:
             logger.info(f"Using station {station_id} for current conditions")
 
             # Generate cache key for the current conditions
-            cache_key = self.wrapper._generate_cache_key(f"stations/{station_id}/observations/latest", {})
+            cache_key = self.wrapper._generate_cache_key(
+                f"stations/{station_id}/observations/latest", {}
+            )
 
-            def fetch_data() -> Dict[str, Any]:
+            def fetch_data() -> dict[str, Any]:
                 self.wrapper._rate_limit()
                 try:
                     response = self.wrapper.core_client.make_api_request(
@@ -79,32 +83,36 @@ class NwsWeatherData:
                     )
 
             return cast(
-                Dict[str, Any], self.wrapper._get_cached_or_fetch(cache_key, fetch_data, force_refresh)
+                dict[str, Any],
+                self.wrapper._get_cached_or_fetch(cache_key, fetch_data, force_refresh),
             )
         except Exception as e:
             logger.error(f"Error getting current conditions: {str(e)}")
             raise ApiClientError(f"Unable to retrieve current conditions data: {str(e)}")
 
-    def get_forecast(self, lat: float, lon: float, **kwargs) -> Dict[str, Any]:
+    def get_forecast(self, lat: float, lon: float, **kwargs) -> dict[str, Any]:
         """Get forecast for a location.
-        
+
         Args:
             lat: Latitude
             lon: Longitude
             **kwargs: Additional arguments including force_refresh
-            
+
         Returns:
             Forecast data dictionary
-            
+
         Raises:
             ApiClientError: For client-related errors
             NoaaApiError: For API-related errors
+
         """
         force_refresh = kwargs.get("force_refresh", False)
 
         try:
             logger.info(f"Getting forecast for coordinates: ({lat}, {lon})")
-            point_data = self.wrapper.point_location.get_point_data(lat, lon, force_refresh=force_refresh)
+            point_data = self.wrapper.point_location.get_point_data(
+                lat, lon, force_refresh=force_refresh
+            )
 
             forecast_url = point_data.get("properties", {}).get("forecast")
 
@@ -125,7 +133,7 @@ class NwsWeatherData:
                 f"gridpoints/{office_id}/{grid_x},{grid_y}/forecast", {}
             )
 
-            def fetch_data() -> Dict[str, Any]:
+            def fetch_data() -> dict[str, Any]:
                 self.wrapper._rate_limit()
                 try:
                     response = self.wrapper._fetch_url(forecast_url)
@@ -140,7 +148,8 @@ class NwsWeatherData:
                     )
 
             return cast(
-                Dict[str, Any], self.wrapper._get_cached_or_fetch(cache_key, fetch_data, force_refresh)
+                dict[str, Any],
+                self.wrapper._get_cached_or_fetch(cache_key, fetch_data, force_refresh),
             )
         except NoaaApiError:
             raise
@@ -148,25 +157,28 @@ class NwsWeatherData:
             logger.error(f"Error getting forecast: {str(e)}")
             raise ApiClientError(f"Unable to retrieve forecast data: {str(e)}")
 
-    def get_hourly_forecast(self, lat: float, lon: float, **kwargs) -> Dict[str, Any]:
+    def get_hourly_forecast(self, lat: float, lon: float, **kwargs) -> dict[str, Any]:
         """Get hourly forecast for a location.
-        
+
         Args:
             lat: Latitude
             lon: Longitude
             **kwargs: Additional arguments including force_refresh
-            
+
         Returns:
             Hourly forecast data dictionary
-            
+
         Raises:
             ApiClientError: For client-related errors
+
         """
         force_refresh = kwargs.get("force_refresh", False)
 
         try:
             logger.info(f"Getting hourly forecast for coordinates: ({lat}, {lon})")
-            point_data = self.wrapper.point_location.get_point_data(lat, lon, force_refresh=force_refresh)
+            point_data = self.wrapper.point_location.get_point_data(
+                lat, lon, force_refresh=force_refresh
+            )
 
             forecast_hourly_url = point_data.get("properties", {}).get("forecastHourly")
 
@@ -187,7 +199,7 @@ class NwsWeatherData:
                 f"gridpoints/{office_id}/{grid_x},{grid_y}/forecast/hourly", {}
             )
 
-            def fetch_data() -> Dict[str, Any]:
+            def fetch_data() -> dict[str, Any]:
                 self.wrapper._rate_limit()
                 try:
                     response = self.wrapper._fetch_url(forecast_hourly_url)
@@ -204,29 +216,33 @@ class NwsWeatherData:
                     )
 
             return cast(
-                Dict[str, Any], self.wrapper._get_cached_or_fetch(cache_key, fetch_data, force_refresh)
+                dict[str, Any],
+                self.wrapper._get_cached_or_fetch(cache_key, fetch_data, force_refresh),
             )
         except Exception as e:
             logger.error(f"Error getting hourly forecast: {str(e)}")
             raise ApiClientError(f"Unable to retrieve hourly forecast data: {str(e)}")
 
-    def get_stations(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
+    def get_stations(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
         """Get observation stations for a location.
-        
+
         Args:
             lat: Latitude
             lon: Longitude
             force_refresh: Whether to force refresh cached data
-            
+
         Returns:
             Stations data dictionary
-            
+
         Raises:
             ApiClientError: For client-related errors
+
         """
         try:
             logger.info(f"Getting observation stations for coordinates: ({lat}, {lon})")
-            point_data = self.wrapper.point_location.get_point_data(lat, lon, force_refresh=force_refresh)
+            point_data = self.wrapper.point_location.get_point_data(
+                lat, lon, force_refresh=force_refresh
+            )
 
             stations_url = point_data.get("properties", {}).get("observationStations")
 
@@ -240,7 +256,7 @@ class NwsWeatherData:
             # Generate cache key for the stations
             cache_key = self.wrapper._generate_cache_key(stations_url, {})
 
-            def fetch_data() -> Dict[str, Any]:
+            def fetch_data() -> dict[str, Any]:
                 self.wrapper._rate_limit()
                 try:
                     response = self.wrapper._fetch_url(stations_url)
@@ -255,30 +271,31 @@ class NwsWeatherData:
 
             logger.info(f"Retrieved observation stations URL: {stations_url}")
             return cast(
-                Dict[str, Any], self.wrapper._get_cached_or_fetch(cache_key, fetch_data, force_refresh)
+                dict[str, Any],
+                self.wrapper._get_cached_or_fetch(cache_key, fetch_data, force_refresh),
             )
         except Exception as e:
             logger.error(f"Error getting observation stations: {str(e)}")
             raise ApiClientError(f"Unable to retrieve observation stations data: {str(e)}")
 
-    def _transform_observation_data(self, observation_data: Any) -> Dict[str, Any]:
+    def _transform_observation_data(self, observation_data: Any) -> dict[str, Any]:
         """Transform observation data from the generated client format."""
         if isinstance(observation_data, dict):
             return observation_data
         if hasattr(observation_data, "to_dict"):
-            return cast(Dict[str, Any], observation_data.to_dict())
-        return cast(Dict[str, Any], observation_data)
+            return cast(dict[str, Any], observation_data.to_dict())
+        return cast(dict[str, Any], observation_data)
 
-    def _transform_forecast_data(self, forecast_data: Any) -> Dict[str, Any]:
+    def _transform_forecast_data(self, forecast_data: Any) -> dict[str, Any]:
         """Transform forecast data from the generated client format."""
         if hasattr(forecast_data, "to_dict"):
-            return cast(Dict[str, Any], forecast_data.to_dict())
-        return cast(Dict[str, Any], forecast_data)
+            return cast(dict[str, Any], forecast_data.to_dict())
+        return cast(dict[str, Any], forecast_data)
 
-    def _transform_stations_data(self, stations_data: Any) -> Dict[str, Any]:
+    def _transform_stations_data(self, stations_data: Any) -> dict[str, Any]:
         """Transform stations data from the generated client format."""
         if isinstance(stations_data, dict):
             return stations_data
         if hasattr(stations_data, "to_dict"):
-            return cast(Dict[str, Any], stations_data.to_dict())
-        return cast(Dict[str, Any], stations_data)
+            return cast(dict[str, Any], stations_data.to_dict())
+        return cast(dict[str, Any], stations_data)

@@ -3,7 +3,7 @@
 import os
 import tempfile
 import unittest
-from typing import Any, Dict, Optional
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import wx
@@ -22,7 +22,7 @@ class TestSettingsDialog(unittest.TestCase):
         """Set up test fixtures."""
         self.app = wx.App()
         self.frame = wx.Frame(None)
-        self.current_settings: Dict[str, Any] = {
+        self.current_settings: dict[str, Any] = {
             DATA_SOURCE_KEY: DATA_SOURCE_NWS,
         }
 
@@ -183,7 +183,7 @@ class MockWeatherApp(
 
     def __init__(self, config_path: str) -> None:
         self._config_path = config_path
-        self.config: Dict[str, Any] = {
+        self.config: dict[str, Any] = {
             "settings": {
                 "update_interval_minutes": 10,
                 "alert_radius_miles": 25,
@@ -192,20 +192,17 @@ class MockWeatherApp(
             "api_settings": {},
             "api_keys": {},
         }
-        self.location_service: Optional[Any] = None
-        self._last_settings_dialog: Optional[SettingsDialog] = None  # type: ignore[assignment]
+        self.location_service: Any | None = None
+        self._last_settings_dialog: SettingsDialog | None = None  # type: ignore[assignment]
 
     def UpdateLocationDropdown(self) -> None:
         """Mock method."""
-        pass
 
     def UpdateWeatherData(self) -> None:
         """Mock method."""
-        pass
 
     def _handle_data_source_change(self) -> None:
         """Mock method."""
-        pass
 
 
 class TestSettingsBugFix(unittest.TestCase):
@@ -228,8 +225,8 @@ class TestSettingsBugFix(unittest.TestCase):
 
         # Mock the dialog to return empty api_settings (the bug condition)
         def mock_show_dialog(
-            current_settings: Dict[str, Any],
-        ) -> tuple[int, Dict[str, Any], Dict[str, Any]]:
+            current_settings: dict[str, Any],
+        ) -> tuple[int, dict[str, Any], dict[str, Any]]:
             updated_settings = current_settings.copy()
             updated_settings["update_interval_minutes"] = 15
             updated_settings["alert_radius_miles"] = 30
@@ -253,7 +250,7 @@ class TestSettingsBugFix(unittest.TestCase):
             # Read and verify the saved config
             import json
 
-            with open(self.config_path, "r") as f:
+            with open(self.config_path) as f:
                 saved_config = json.load(f)
 
             self.assertEqual(saved_config["settings"]["update_interval_minutes"], 15)
@@ -264,7 +261,7 @@ class TestSettingsBugFix(unittest.TestCase):
 
         # Mock the dialog to return cancelled result
         def mock_show_dialog(
-            current_settings: Dict[str, Any],
+            current_settings: dict[str, Any],
         ) -> tuple[int, None, None]:  # noqa: ARG001
             return wx.ID_CANCEL, None, None
 
@@ -294,7 +291,7 @@ class TestSettingsBugFix(unittest.TestCase):
         # Simulate the original buggy condition
         result = wx.ID_OK
         updated_settings = {"update_interval_minutes": 15}
-        updated_api_settings: Dict[str, Any] = {}  # Empty dict - the bug!
+        updated_api_settings: dict[str, Any] = {}  # Empty dict - the bug!
 
         # Original condition (buggy) - would evaluate to False
         original_condition = result == wx.ID_OK and updated_settings and updated_api_settings

@@ -6,12 +6,11 @@ them to determine if updates are available.
 
 import logging
 import re
-from datetime import datetime, timezone
-from typing import List, Optional, Tuple
 
 import requests
 
 from accessiweather.version import __version__
+
 from .update_info import UpdateInfo
 
 logger = logging.getLogger(__name__)
@@ -36,9 +35,8 @@ class VersionChecker:
 
     def __init__(self):
         """Initialize the version checker."""
-        pass
 
-    def _parse_version(self, version_str: str) -> Tuple[List[int], bool]:
+    def _parse_version(self, version_str: str) -> tuple[list[int], bool]:
         """Parse version string into comparable format.
 
         Args:
@@ -46,6 +44,7 @@ class VersionChecker:
 
         Returns:
             Tuple of (version_parts, is_dev)
+
         """
         # Remove 'v' prefix if present
         version_str = version_str.lstrip("v")
@@ -76,6 +75,7 @@ class VersionChecker:
 
         Returns:
             True if new_version is newer
+
         """
         current_parts, current_is_dev = self._parse_version(current_version)
         new_parts, new_is_dev = self._parse_version(new_version)
@@ -91,7 +91,7 @@ class VersionChecker:
 
             if new_part > current_part:
                 return True
-            elif new_part < current_part:
+            if new_part < current_part:
                 return False
 
         # If versions are equal, dev version is newer than stable
@@ -100,11 +100,12 @@ class VersionChecker:
 
         return False
 
-    def _check_dev_builds(self) -> Optional[UpdateInfo]:
+    def _check_dev_builds(self) -> UpdateInfo | None:
         """Check for dev builds from GitHub Pages.
 
         Returns:
             UpdateInfo if dev build is available, None otherwise
+
         """
         try:
             logger.info("Checking for dev builds from GitHub Pages...")
@@ -161,15 +162,14 @@ class VersionChecker:
                     published_date=dev_date,
                     is_prerelease=True,
                 )
-            else:
-                logger.info(f"Dev build {dev_version} is not newer than current {current_version}")
-                return None
+            logger.info(f"Dev build {dev_version} is not newer than current {current_version}")
+            return None
 
         except Exception as e:
             logger.error(f"Failed to check dev builds: {e}")
             return None
 
-    def check_for_updates(self, channel: str) -> Optional[UpdateInfo]:
+    def check_for_updates(self, channel: str) -> UpdateInfo | None:
         """Check for available updates.
 
         Args:
@@ -177,6 +177,7 @@ class VersionChecker:
 
         Returns:
             UpdateInfo if update is available, None otherwise
+
         """
         try:
             logger.info(f"Checking for updates on {channel} channel...")

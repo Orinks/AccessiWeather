@@ -6,11 +6,10 @@ with the original interface.
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from accessiweather.api.nws import NwsApiWrapper
 from accessiweather.api.openmeteo_wrapper import OpenMeteoApiWrapper
-from accessiweather.api_client import ApiClientError, NoaaApiError
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +24,7 @@ class NoaaApiWrapper:
     def __init__(
         self,
         user_agent: str = "AccessiWeather",
-        contact_info: Optional[str] = None,
+        contact_info: str | None = None,
         enable_caching: bool = False,
         cache_ttl: int = 300,
         min_request_interval: float = 0.5,
@@ -46,6 +45,7 @@ class NoaaApiWrapper:
             retry_backoff: Multiplier for exponential backoff between retries
             retry_initial_wait: Initial wait time after a rate limit error
             preferred_provider: Preferred weather provider ("nws", "openmeteo", "auto")
+
         """
         self.user_agent = user_agent
         self.contact_info = contact_info or user_agent
@@ -81,25 +81,22 @@ class NoaaApiWrapper:
 
         Returns:
             Provider name ("nws" or "openmeteo")
+
         """
         if self.preferred_provider == "nws":
             return "nws"
-        elif self.preferred_provider == "openmeteo":
+        if self.preferred_provider == "openmeteo":
             return "openmeteo"
-        elif self.preferred_provider == "auto":
+        if self.preferred_provider == "auto":
             # Auto-selection logic: Use NWS for US locations, Open-Meteo for international
             # US boundaries (approximate): lat 24-49, lon -125 to -66
             if 24.0 <= lat <= 49.0 and -125.0 <= lon <= -66.0:
                 logger.debug(f"Auto-selected NWS for US location: ({lat}, {lon})")
                 return "nws"
-            else:
-                logger.debug(f"Auto-selected Open-Meteo for international location: ({lat}, {lon})")
-                return "openmeteo"
-        else:
-            logger.warning(
-                f"Unknown preferred provider '{self.preferred_provider}', defaulting to NWS"
-            )
-            return "nws"
+            logger.debug(f"Auto-selected Open-Meteo for international location: ({lat}, {lon})")
+            return "openmeteo"
+        logger.warning(f"Unknown preferred provider '{self.preferred_provider}', defaulting to NWS")
+        return "nws"
 
     def _get_provider_wrapper(self, provider: str):
         """Get the wrapper instance for the specified provider.
@@ -109,17 +106,17 @@ class NoaaApiWrapper:
 
         Returns:
             Provider wrapper instance
+
         """
         if provider == "nws":
             return self.nws_wrapper
-        elif provider == "openmeteo":
+        if provider == "openmeteo":
             return self.openmeteo_wrapper
-        else:
-            raise ValueError(f"Unknown provider: {provider}")
+        raise ValueError(f"Unknown provider: {provider}")
 
     def _execute_with_fallback(
         self, method_name: str, lat: float, lon: float, **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute a method with provider fallback logic.
 
         Args:
@@ -130,6 +127,7 @@ class NoaaApiWrapper:
 
         Returns:
             Result from the successful provider
+
         """
         primary_provider = self._select_provider(lat, lon)
         fallback_provider = "openmeteo" if primary_provider == "nws" else "nws"
@@ -139,7 +137,7 @@ class NoaaApiWrapper:
             wrapper = self._get_provider_wrapper(primary_provider)
             method = getattr(wrapper, method_name)
             logger.debug(f"Calling {method_name} on {primary_provider} provider")
-            return method(lat, lon, **kwargs)
+            return method(lat, lon, **kwargs)  # type: ignore[no-any-return]
         except Exception as e:
             logger.warning(f"Primary provider {primary_provider} failed for {method_name}: {e}")
 
@@ -148,7 +146,7 @@ class NoaaApiWrapper:
                 wrapper = self._get_provider_wrapper(fallback_provider)
                 method = getattr(wrapper, method_name)
                 logger.info(f"Falling back to {fallback_provider} provider for {method_name}")
-                return method(lat, lon, **kwargs)
+                return method(lat, lon, **kwargs)  # type: ignore[no-any-return]
             except Exception as fallback_error:
                 logger.error(
                     f"Fallback provider {fallback_provider} also failed for {method_name}: {fallback_error}"
@@ -157,7 +155,7 @@ class NoaaApiWrapper:
                 raise e
 
     # Core weather data methods - delegate to appropriate provider
-    def get_current_conditions(self, lat: float, lon: float, **kwargs) -> Dict[str, Any]:
+    def get_current_conditions(self, lat: float, lon: float, **kwargs) -> dict[str, Any]:
         """Get current weather conditions for a location.
 
         Args:
@@ -167,10 +165,11 @@ class NoaaApiWrapper:
 
         Returns:
             Current weather conditions data
+
         """
         return self._execute_with_fallback("get_current_conditions", lat, lon, **kwargs)
 
-    def get_forecast(self, lat: float, lon: float, **kwargs) -> Dict[str, Any]:
+    def get_forecast(self, lat: float, lon: float, **kwargs) -> dict[str, Any]:
         """Get forecast for a location.
 
         Args:
@@ -180,10 +179,11 @@ class NoaaApiWrapper:
 
         Returns:
             Forecast data
+
         """
         return self._execute_with_fallback("get_forecast", lat, lon, **kwargs)
 
-    def get_hourly_forecast(self, lat: float, lon: float, **kwargs) -> Dict[str, Any]:
+    def get_hourly_forecast(self, lat: float, lon: float, **kwargs) -> dict[str, Any]:
         """Get hourly forecast for a location.
 
         Args:
@@ -193,15 +193,16 @@ class NoaaApiWrapper:
 
         Returns:
             Hourly forecast data
+
         """
         return self._execute_with_fallback("get_hourly_forecast", lat, lon, **kwargs)
 
     # NWS-specific methods - delegate to NWS wrapper
-    def get_point_data(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
+    def get_point_data(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
         """Get metadata about a specific lat/lon point (NWS-specific)."""
         return self.nws_wrapper.get_point_data(lat, lon, force_refresh=force_refresh)
 
-    def get_stations(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
+    def get_stations(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
         """Get observation stations for a location (NWS-specific)."""
         return self.nws_wrapper.get_stations(lat, lon, force_refresh=force_refresh)
 
@@ -212,31 +213,31 @@ class NoaaApiWrapper:
         radius: float = 50,
         precise_location: bool = True,
         force_refresh: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get alerts for a location (NWS-specific)."""
         return self.nws_wrapper.get_alerts(
             lat, lon, radius=radius, precise_location=precise_location, force_refresh=force_refresh
         )
 
-    def get_discussion(self, lat: float, lon: float, force_refresh: bool = False) -> Optional[str]:
+    def get_discussion(self, lat: float, lon: float, force_refresh: bool = False) -> str | None:
         """Get forecast discussion for a location (NWS-specific)."""
         return self.nws_wrapper.get_discussion(lat, lon, force_refresh=force_refresh)
 
     def get_national_product(
         self, product_type: str, location: str, force_refresh: bool = False
-    ) -> Optional[str]:
+    ) -> str | None:
         """Get a national product from a specific center (NWS-specific)."""
         return self.nws_wrapper.get_national_product(
             product_type, location, force_refresh=force_refresh
         )
 
-    def get_national_forecast_data(self, force_refresh: bool = False) -> Dict[str, Any]:
+    def get_national_forecast_data(self, force_refresh: bool = False) -> dict[str, Any]:
         """Get national forecast data from various centers (NWS-specific)."""
         return self.nws_wrapper.get_national_forecast_data(force_refresh=force_refresh)
 
     def identify_location_type(
         self, lat: float, lon: float, force_refresh: bool = False
-    ) -> tuple[Optional[str], Optional[str]]:
+    ) -> tuple[str | None, str | None]:
         """Identify the type of location for the given coordinates (NWS-specific)."""
         return self.nws_wrapper.identify_location_type(lat, lon, force_refresh=force_refresh)
 
@@ -255,6 +256,7 @@ class NoaaApiWrapper:
 
         Args:
             provider: Provider name ("nws", "openmeteo", "auto")
+
         """
         if provider not in ["nws", "openmeteo", "auto"]:
             raise ValueError(f"Invalid provider: {provider}. Must be 'nws', 'openmeteo', or 'auto'")
@@ -262,7 +264,7 @@ class NoaaApiWrapper:
         self.preferred_provider = provider
         logger.info(f"Preferred provider set to: {provider}")
 
-    def get_provider_status(self) -> Dict[str, Any]:
+    def get_provider_status(self) -> dict[str, Any]:
         """Get status information about available providers."""
         return {
             "preferred_provider": self.preferred_provider,

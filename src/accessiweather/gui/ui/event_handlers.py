@@ -19,6 +19,7 @@ class EventHandlers:
 
         Args:
             frame: The main WeatherApp frame instance.
+
         """
         self.frame = frame
 
@@ -60,6 +61,7 @@ class EventHandlers:
 
         Returns:
             function: Event handler function for remove button
+
         """
 
         def on_remove_test(event):
@@ -80,6 +82,7 @@ class EventHandlers:
 
         Args:
             event: List item selected event
+
         """
         # Enable the alert button when an alert is selected
         if hasattr(self.frame, "alert_btn"):

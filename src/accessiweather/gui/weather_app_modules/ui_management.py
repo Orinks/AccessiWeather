@@ -22,6 +22,7 @@ class WeatherAppUIManagement:
 
         Args:
             weather_app: Reference to the main WeatherApp instance
+
         """
         self.app = weather_app
         logger.debug("WeatherAppUIManagement initialized")
@@ -53,6 +54,7 @@ class WeatherAppUIManagement:
 
         Args:
             loading_dialog: Progress dialog instance (optional)
+
         """
         timer_id = None
 

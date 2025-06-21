@@ -143,7 +143,6 @@ def test_weather_app_timer_initialization():
         patch("accessiweather.gui.weather_app.WeatherApp.Bind"),
         patch("accessiweather.gui.weather_app.logger"),
     ):
-
         # Create a mock timer instance
         mock_timer = MagicMock()
         mock_timer_class.return_value = mock_timer

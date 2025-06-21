@@ -7,7 +7,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 # Import the module that will be tested
-from accessiweather.api_client import ApiClientError, NoaaApiError
 from accessiweather.api_wrapper import NoaaApiWrapper
 
 # Create mock modules
@@ -73,7 +72,6 @@ def api_wrapper():
         patch("accessiweather.api.nws.NwsApiWrapper") as mock_nws,
         patch("accessiweather.api.openmeteo_wrapper.OpenMeteoApiWrapper") as mock_openmeteo,
     ):
-
         # Create mock instances with proper attributes
         mock_nws_instance = MagicMock()
         mock_nws_instance.client = MagicMock()
@@ -114,7 +112,6 @@ def cached_api_wrapper():
         patch("accessiweather.api.nws.NwsApiWrapper") as mock_nws,
         patch("accessiweather.api.openmeteo_wrapper.OpenMeteoApiWrapper") as mock_openmeteo,
     ):
-
         # Create mock cache
         mock_cache = MagicMock()
         mock_cache.default_ttl = 300
@@ -190,7 +187,6 @@ def test_generate_cache_key():
         patch("accessiweather.api.nws.NwsApiWrapper") as mock_nws,
         patch("accessiweather.api.openmeteo_wrapper.OpenMeteoApiWrapper") as mock_openmeteo,
     ):
-
         # Create mock instances with proper _generate_cache_key method
         mock_nws_instance = MagicMock()
         mock_nws_instance._generate_cache_key = MagicMock()

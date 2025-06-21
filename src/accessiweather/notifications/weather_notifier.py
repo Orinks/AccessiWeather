@@ -7,12 +7,13 @@ with deduplication, persistence, and change detection.
 import json
 import logging
 import os
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 from dateutil.parser import isoparse  # type: ignore # requires python-dateutil
 
 from accessiweather.config_utils import get_config_dir
+
 from .toast_notifier import SafeToastNotifier
 
 logger = logging.getLogger(__name__)
@@ -24,23 +25,22 @@ class WeatherNotifier:
     # Alert priority levels
     PRIORITY = {"Extreme": 3, "Severe": 2, "Moderate": 1, "Minor": 0, "Unknown": -1}
 
-    def __init__(self, config_dir: Optional[str] = None, enable_persistence: bool = True):
+    def __init__(self, config_dir: str | None = None, enable_persistence: bool = True):
         """Initialize the weather notifier
 
         Args:
             config_dir: Directory for storing alert state (optional)
             enable_persistence: Whether to enable persistent storage of alert state (default: True)
+
         """
         self.toaster = SafeToastNotifier()
-        self.active_alerts: Dict[str, Dict[str, Any]] = {}
+        self.active_alerts: dict[str, dict[str, Any]] = {}
         self.enable_persistence = enable_persistence
 
         # Set up persistent storage path
         if self.enable_persistence:
-            self.config_dir: Optional[str] = config_dir or get_config_dir()
-            self.alerts_state_file: Optional[str] = os.path.join(
-                self.config_dir, "alert_state.json"
-            )
+            self.config_dir: str | None = config_dir or get_config_dir()
+            self.alerts_state_file: str | None = os.path.join(self.config_dir, "alert_state.json")
             # Load existing alert state
             self._load_alert_state()
         else:
@@ -54,6 +54,7 @@ class WeatherNotifier:
             alert_count: Number of active alerts
             new_count: Number of new alerts (default: 0)
             updated_count: Number of updated alerts (default: 0)
+
         """
         if alert_count > 0:
             title = "Weather Alerts"
@@ -89,12 +90,13 @@ class WeatherNotifier:
 
             logger.info(f"Displayed summary notification: {message}")
 
-    def show_notification(self, alert: Dict[str, Any], is_update: bool = False) -> None:
+    def show_notification(self, alert: dict[str, Any], is_update: bool = False) -> None:
         """Show a desktop notification for an alert
 
         Args:
             alert: Dictionary containing alert information
             is_update: Whether this is an update to an existing alert (default: False)
+
         """
         try:
             # Customize title based on whether this is a new alert or an update
@@ -122,11 +124,12 @@ class WeatherNotifier:
         except Exception as e:
             logger.error(f"Failed to show notification: {str(e)}")
 
-    def get_sorted_alerts(self) -> List[Dict[str, Any]]:
+    def get_sorted_alerts(self) -> list[dict[str, Any]]:
         """Get all active alerts sorted by priority
 
         Returns:
             List of alerts sorted by priority (highest first)
+
         """
         alerts = list(self.active_alerts.values())
 
@@ -137,7 +140,7 @@ class WeatherNotifier:
             reverse=True,
         )
 
-    def process_alerts(self, alerts_data: Dict[str, Any]) -> tuple[List[Dict[str, Any]], int, int]:
+    def process_alerts(self, alerts_data: dict[str, Any]) -> tuple[list[dict[str, Any]], int, int]:
         """Process alerts data from NOAA API with change detection and deduplication
 
         Args:
@@ -148,19 +151,20 @@ class WeatherNotifier:
             - List of processed alerts
             - Number of new alerts
             - Number of updated alerts
+
         """
         # Clear expired alerts before processing new ones
         self.clear_expired_alerts()
 
         features = alerts_data.get("features", [])
-        processed_alerts: List[Dict[str, Any]] = []
+        processed_alerts: list[dict[str, Any]] = []
 
         # Track new and updated alerts for summary notification
         new_alerts_count = 0
         updated_alerts_count = 0
 
         # Group alerts by deduplication key to handle multiple offices issuing the same alert
-        alert_groups: Dict[str, List[Dict[str, Any]]] = {}
+        alert_groups: dict[str, list[dict[str, Any]]] = {}
 
         # First pass: group alerts by deduplication key
         for feature in features:
@@ -248,7 +252,7 @@ class WeatherNotifier:
 
         return processed_alerts, new_alerts_count, updated_alerts_count
 
-    def _is_alert_updated(self, old_alert: Dict[str, Any], new_alert: Dict[str, Any]) -> bool:
+    def _is_alert_updated(self, old_alert: dict[str, Any], new_alert: dict[str, Any]) -> bool:
         """Check if an alert has been updated by comparing key fields
 
         Args:
@@ -257,6 +261,7 @@ class WeatherNotifier:
 
         Returns:
             True if the alert has been meaningfully updated, False otherwise
+
         """
         # Fields to check for changes (these would indicate a meaningful update)
         key_fields = ["headline", "description", "instruction", "severity", "urgency", "expires"]
@@ -268,7 +273,7 @@ class WeatherNotifier:
 
         return False
 
-    def _generate_deduplication_key(self, alert: Dict[str, Any]) -> str:
+    def _generate_deduplication_key(self, alert: dict[str, Any]) -> str:
         """Generate a deduplication key for an alert to identify duplicate alerts from different offices
 
         Args:
@@ -276,6 +281,7 @@ class WeatherNotifier:
 
         Returns:
             String key that uniquely identifies the weather event (not the specific alert)
+
         """
         # Use event type, effective time, expires time, and a simplified area description
         # to create a key that identifies the same weather phenomenon
@@ -299,7 +305,7 @@ class WeatherNotifier:
         )
         return dedup_key
 
-    def _choose_representative_alert(self, alerts: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _choose_representative_alert(self, alerts: list[dict[str, Any]]) -> dict[str, Any]:
         """Choose the best representative alert from a group of duplicate alerts
 
         Args:
@@ -307,6 +313,7 @@ class WeatherNotifier:
 
         Returns:
             The alert that should be used as the representative for the group
+
         """
         if len(alerts) == 1:
             return alerts[0]
@@ -319,11 +326,9 @@ class WeatherNotifier:
             # Parse sent time for secondary sorting
             sent_str = alert.get("sent", "")
             try:
-                sent_time = (
-                    isoparse(sent_str) if sent_str else datetime.min.replace(tzinfo=timezone.utc)
-                )
+                sent_time = isoparse(sent_str) if sent_str else datetime.min.replace(tzinfo=UTC)
             except Exception:
-                sent_time = datetime.min.replace(tzinfo=timezone.utc)
+                sent_time = datetime.min.replace(tzinfo=UTC)
 
             # Return tuple for sorting: (severity_score, sent_time)
             # Higher severity score and more recent time are preferred
@@ -340,7 +345,7 @@ class WeatherNotifier:
 
     def clear_expired_alerts(self) -> None:
         """Remove expired alerts from the active alerts list"""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         expired_alert_ids = []
 
         # Iterate over a copy of items to allow modification during iteration
@@ -363,7 +368,7 @@ class WeatherNotifier:
                         f"is timezone-naive. Assuming UTC."
                     )
                     # Ensure the time is timezone-aware before comparison
-                    expiration_time = expiration_time.replace(tzinfo=timezone.utc)
+                    expiration_time = expiration_time.replace(tzinfo=UTC)
 
                 # Compare with current time
                 if expiration_time < now:
@@ -397,7 +402,7 @@ class WeatherNotifier:
 
         try:
             if os.path.exists(self.alerts_state_file):
-                with open(self.alerts_state_file, "r") as f:
+                with open(self.alerts_state_file) as f:
                     data = json.load(f)
 
                 # Validate the loaded data structure
@@ -405,7 +410,7 @@ class WeatherNotifier:
                     loaded_alerts = data["active_alerts"]
                     if isinstance(loaded_alerts, dict):
                         # Filter out expired alerts during load
-                        now = datetime.now(timezone.utc)
+                        now = datetime.now(UTC)
                         valid_alerts = {}
 
                         for alert_id, alert_data in loaded_alerts.items():
@@ -414,9 +419,7 @@ class WeatherNotifier:
                                 try:
                                     expiration_time = isoparse(expires_str)
                                     if expiration_time.tzinfo is None:
-                                        expiration_time = expiration_time.replace(
-                                            tzinfo=timezone.utc
-                                        )
+                                        expiration_time = expiration_time.replace(tzinfo=UTC)
 
                                     # Only keep non-expired alerts
                                     if expiration_time >= now:
@@ -459,7 +462,7 @@ class WeatherNotifier:
             # Prepare data to save
             data = {
                 "active_alerts": self.active_alerts,
-                "last_updated": datetime.now(timezone.utc).isoformat(),
+                "last_updated": datetime.now(UTC).isoformat(),
                 "version": "1.0",
             }
 

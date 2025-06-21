@@ -22,6 +22,7 @@ class AccessibleListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             id: Control ID
             label: Accessible label
             **kwargs: Additional arguments for wx.ListCtrl
+
         """
         wx.ListCtrl.__init__(self, parent, id, **kwargs)
         listmix.ListCtrlAutoWidthMixin.__init__(self)
@@ -37,6 +38,7 @@ class AccessibleListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 
         Args:
             label: New accessible label
+
         """
         self.SetName(label)
 
@@ -51,6 +53,7 @@ class AccessibleListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 
         Returns:
             Index of the new column
+
         """
         # Track column header
         if col >= len(self.column_headers):
@@ -68,6 +71,7 @@ class AccessibleListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
 
         Returns:
             Item text
+
         """
         # For column 0, use the built-in method
         if col == 0:

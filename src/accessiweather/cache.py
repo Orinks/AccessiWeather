@@ -6,7 +6,7 @@ This module provides caching functionality to reduce API calls and improve perfo
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -27,12 +27,13 @@ class Cache:
 
         Args:
             default_ttl: Default time-to-live in seconds (default: 5 minutes)
+
         """
-        self.data: Dict[str, CacheEntry] = {}
+        self.data: dict[str, CacheEntry] = {}
         self.default_ttl = default_ttl
         logger.debug(f"Initialized cache with default TTL of {default_ttl} seconds")
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Get a value from the cache.
 
         Args:
@@ -40,6 +41,7 @@ class Cache:
 
         Returns:
             The cached value or None if not found or expired
+
         """
         if key not in self.data:
             return None
@@ -57,13 +59,14 @@ class Cache:
         logger.debug(f"Cache hit for '{key}'")
         return entry.value
 
-    def set(self, key: str, value: Any, ttl: Optional[float] = None) -> None:
+    def set(self, key: str, value: Any, ttl: float | None = None) -> None:
         """Set a value in the cache.
 
         Args:
             key: The cache key
             value: The value to cache
             ttl: Time-to-live in seconds (uses default_ttl if None)
+
         """
         if ttl is None:
             ttl = self.default_ttl
@@ -80,6 +83,7 @@ class Cache:
 
         Returns:
             True if the key exists and is not expired, False otherwise
+
         """
         if key not in self.data:
             return False
@@ -100,6 +104,7 @@ class Cache:
 
         Args:
             key: The cache key to invalidate
+
         """
         if key in self.data:
             del self.data[key]

@@ -1,5 +1,4 @@
-"""
-Settings data handling, validation, and persistence.
+"""Settings data handling, validation, and persistence.
 
 This module handles loading settings into UI controls, validating user input,
 and retrieving settings data from the dialog for saving.
@@ -183,11 +182,11 @@ class SettingsDataHandler:
         return True
 
     def get_settings(self):
-        """
-        Retrieve the modified settings from the UI controls.
+        """Retrieve the modified settings from the UI controls.
 
         Returns:
             dict: A dictionary containing the updated settings.
+
         """
         # Determine data source
         selection = self.dialog.data_source_ctrl.GetSelection()
@@ -249,19 +248,19 @@ class SettingsDataHandler:
         }
 
     def get_api_settings(self):
-        """
-        Retrieve the API-specific settings from the UI controls.
+        """Retrieve the API-specific settings from the UI controls.
 
         Returns:
             dict: A dictionary containing the updated API settings.
+
         """
         return {}
 
     def get_api_keys(self):
-        """
-        Retrieve the API keys from the UI controls.
+        """Retrieve the API keys from the UI controls.
 
         Returns:
             dict: A dictionary containing the updated API keys.
+
         """
         return {}

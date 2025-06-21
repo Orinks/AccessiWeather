@@ -23,6 +23,7 @@ class DownloadManager:
 
         Args:
             progress_callback: Optional callback function for download progress updates
+
         """
         self.progress_callback = progress_callback
 
@@ -37,6 +38,7 @@ class DownloadManager:
 
         Returns:
             True if successful, False otherwise
+
         """
         try:
             # Select appropriate asset
@@ -87,10 +89,9 @@ class DownloadManager:
             # Install the update
             if install_type == "installer":
                 return self._install_update(download_path)
-            else:
-                # For portable, just notify user where file is downloaded
-                logger.info(f"Portable update downloaded to: {download_path}")
-                return True
+            # For portable, just notify user where file is downloaded
+            logger.info(f"Portable update downloaded to: {download_path}")
+            return True
 
         except Exception as e:
             logger.error(f"Failed to download/install update: {e}")
@@ -104,6 +105,7 @@ class DownloadManager:
 
         Returns:
             True if installation started successfully
+
         """
         try:
             # Run installer with silent install flags

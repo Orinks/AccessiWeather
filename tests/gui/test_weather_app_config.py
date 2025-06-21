@@ -178,7 +178,7 @@ class TestWeatherAppConfig:
 
             # Verify file was created and contains correct data
             assert os.path.exists(config_path)
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 saved_config = json.load(f)
 
             assert saved_config["settings"]["temperature_unit"] == "celsius"

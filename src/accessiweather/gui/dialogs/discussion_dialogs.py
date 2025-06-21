@@ -26,6 +26,7 @@ class WeatherDiscussionDialog(wx.Dialog):
             parent: Parent window
             title: Dialog title
             text: Discussion text
+
         """
         super().__init__(parent, title=title, style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
 
@@ -49,7 +50,8 @@ class WeatherDiscussionDialog(wx.Dialog):
             # Create a text control for the discussion
             logger.debug("Creating text control for discussion dialog")
             self.text_ctrl = wx.TextCtrl(
-                panel, style=wx.TE_MULTILINE | wx.TE_READONLY  # Removed wx.TE_RICH2
+                panel,
+                style=wx.TE_MULTILINE | wx.TE_READONLY,  # Removed wx.TE_RICH2
             )
 
             # Set a monospace font for better readability of formatted text
@@ -122,6 +124,7 @@ class WeatherDiscussionDialog(wx.Dialog):
 
         Args:
             event: Button event
+
         """
         logger.debug("Close button clicked, ending modal dialog")
         try:
@@ -140,6 +143,7 @@ class NationalDiscussionDialog(wx.Dialog):
         Args:
             parent: Parent window
             national_data: Dictionary with national forecast data containing WPC and SPC discussions
+
         """
         super().__init__(
             parent,
@@ -278,6 +282,7 @@ class NationalDiscussionDialog(wx.Dialog):
 
         Args:
             event: Notebook page changed event
+
         """
         # Simply allow the event to propagate
         # This lets the user tab to the text control instead of automatically setting focus to it
@@ -288,6 +293,7 @@ class NationalDiscussionDialog(wx.Dialog):
 
         Args:
             event: Button event
+
         """
         logger.debug("Close button clicked, ending modal dialog")
         try:

@@ -1,18 +1,11 @@
 """Tests for NoaaApiClient initialization and basic functionality."""
 
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
-from requests.exceptions import (
-    ConnectionError,
-    HTTPError,
-    JSONDecodeError,
-    RequestException,
-    Timeout,
-)
 
-from accessiweather.api_client import LOCATION_TYPE_COUNTY, NoaaApiClient, NoaaApiError
+from accessiweather.api_client import LOCATION_TYPE_COUNTY, NoaaApiClient
 
 # Sample test data
 SAMPLE_POINT_DATA = {
