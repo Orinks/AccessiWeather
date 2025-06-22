@@ -2,7 +2,6 @@
 
 from unittest.mock import call
 
-from .fixtures import mock_ui_manager
 from .test_data import SAMPLE_ALERTS_DATA, SAMPLE_FORECAST_DATA, SAMPLE_NATIONAL_FORECAST_DATA
 
 

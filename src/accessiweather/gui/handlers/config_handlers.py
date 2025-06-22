@@ -30,6 +30,7 @@ class WeatherAppConfigHandlers(WeatherAppHandlerBase):
 
         Returns:
             bool: True if save was successful, False otherwise
+
         """
         start_time = time.time()
         try:
@@ -68,6 +69,7 @@ class WeatherAppConfigHandlers(WeatherAppHandlerBase):
 
         Returns:
             thread: The started thread object, which can be joined if needed
+
         """
         import threading
 

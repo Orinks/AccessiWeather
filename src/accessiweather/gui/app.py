@@ -30,6 +30,7 @@ class AccessiWeatherApp(wx.App):
             filename: If redirect is True, redirect to this file
             useBestVisual: Whether to use the best visual on systems that support it
             clearSigInt: Whether to catch SIGINT or not
+
         """
         super().__init__(redirect, filename, useBestVisual, clearSigInt)
         self.frame = None  # Will store a reference to the main frame
@@ -40,6 +41,7 @@ class AccessiWeatherApp(wx.App):
 
         Returns:
             True to continue processing, False to exit
+
         """
         logger.debug("AccessiWeatherApp.OnInit called")
         return super().OnInit()
@@ -52,6 +54,7 @@ class AccessiWeatherApp(wx.App):
 
         Returns:
             The result of the parent OnExit method
+
         """
         logging.info("Application exit initiated")
         exit_successful = True

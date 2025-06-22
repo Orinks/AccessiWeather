@@ -142,7 +142,7 @@ def test_ensure_config_defaults_empty_config():
     """Test ensure_config_defaults with empty config."""
     config: dict = {}
 
-    with patch("accessiweather.gui.settings_dialog.DEFAULT_DATA_SOURCE", "auto"):
+    with patch("accessiweather.gui.settings.constants.DEFAULT_DATA_SOURCE", "auto"):
         result = ensure_config_defaults(config)
 
     expected = {
@@ -186,7 +186,7 @@ def test_ensure_config_defaults_missing_data_source():
     """Test ensure_config_defaults adds missing data_source."""
     config = {"settings": {"update_interval": 10}}
 
-    with patch("accessiweather.gui.settings_dialog.DEFAULT_DATA_SOURCE", "auto"):
+    with patch("accessiweather.gui.settings.constants.DEFAULT_DATA_SOURCE", "auto"):
         result = ensure_config_defaults(config)
 
     expected = {
@@ -228,7 +228,7 @@ def test_ensure_config_defaults_no_settings_section():
     """Test ensure_config_defaults creates settings section when missing."""
     config = {"other_section": {"some_key": "some_value"}}
 
-    with patch("accessiweather.gui.settings_dialog.DEFAULT_DATA_SOURCE", "auto"):
+    with patch("accessiweather.gui.settings.constants.DEFAULT_DATA_SOURCE", "auto"):
         result = ensure_config_defaults(config)
 
     expected = {

@@ -5,11 +5,11 @@ selection logic for the weather service.
 """
 
 import logging
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 from accessiweather.api_client import NoaaApiClient
 from accessiweather.api_wrapper import NoaaApiWrapper
-from accessiweather.gui.settings_dialog import DATA_SOURCE_AUTO, DATA_SOURCE_OPENMETEO
+from accessiweather.gui.settings.constants import DATA_SOURCE_AUTO, DATA_SOURCE_OPENMETEO
 from accessiweather.openmeteo_client import OpenMeteoApiClient
 from accessiweather.openmeteo_mapper import OpenMeteoMapper
 
@@ -21,9 +21,9 @@ class ApiClientManager:
 
     def __init__(
         self,
-        nws_client: Union[NoaaApiClient, NoaaApiWrapper],
-        openmeteo_client: Optional[OpenMeteoApiClient] = None,
-        config: Optional[Dict[str, Any]] = None,
+        nws_client: NoaaApiClient | NoaaApiWrapper,
+        openmeteo_client: OpenMeteoApiClient | None = None,
+        config: dict[str, Any] | None = None,
     ):
         """Initialize the API client manager.
 
@@ -31,6 +31,7 @@ class ApiClientManager:
             nws_client: The NWS API client to use for weather data retrieval.
             openmeteo_client: The Open-Meteo API client to use for international weather data.
             config: Configuration dictionary containing settings like data_source.
+
         """
         self.nws_client = nws_client
         self.openmeteo_client = openmeteo_client or OpenMeteoApiClient()
@@ -42,8 +43,9 @@ class ApiClientManager:
 
         Returns:
             str: "celsius" or "fahrenheit" for Open-Meteo API
+
         """
-        from accessiweather.gui.settings_dialog import (
+        from accessiweather.gui.settings.constants import (
             DEFAULT_TEMPERATURE_UNIT,
             TEMPERATURE_UNIT_KEY,
         )
@@ -55,15 +57,15 @@ class ApiClientManager:
         # Convert to Open-Meteo API format
         if unit_pref == TemperatureUnit.CELSIUS.value:
             return "celsius"
-        else:
-            # Default to fahrenheit for both "fahrenheit" and "both" preferences
-            return "fahrenheit"
+        # Default to fahrenheit for both "fahrenheit" and "both" preferences
+        return "fahrenheit"
 
     def _get_data_source(self) -> str:
         """Get the configured data source.
 
         Returns:
             String indicating which data source to use ('nws', 'openmeteo', or 'auto')
+
         """
         data_source = self.config.get("settings", {}).get("data_source", DATA_SOURCE_AUTO)
         logger.debug(
@@ -83,6 +85,7 @@ class ApiClientManager:
 
         Returns:
             True if the location is within the US, False otherwise
+
         """
         from accessiweather.geocoding import GeocodingService
 
@@ -108,6 +111,7 @@ class ApiClientManager:
 
         Returns:
             True if Open-Meteo should be used, False if NWS should be used
+
         """
         data_source = self._get_data_source()
         logger.debug(f"_should_use_openmeteo: data_source={data_source}, lat={lat}, lon={lon}")

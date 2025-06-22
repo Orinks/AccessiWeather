@@ -6,13 +6,48 @@ and national weather products retrieval.
 
 import logging
 import traceback
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
 class AlertsAndProductsMixin:
-    """Mixin class providing alerts and national products functionality."""
+    """Mixin class providing alerts and national products functionality.
+
+    This mixin expects the following methods to be provided by the implementing class:
+    - _make_request(endpoint_or_url, params=None, use_full_url=False, force_refresh=False)
+    - identify_location_type(lat, lon, force_refresh=False) -> Tuple[Optional[str], Optional[str]]
+    - get_point_data(lat, lon, force_refresh=False) -> Dict[str, Any]
+
+    And the following attributes:
+    - BASE_URL: str
+    """
+
+    # These methods must be implemented by the class that uses this mixin
+    def _make_request(
+        self,
+        endpoint_or_url: str,
+        params: dict[str, Any] | None = None,
+        use_full_url: bool = False,
+        force_refresh: bool = False,
+    ) -> dict[str, Any]:
+        """Make a request to the API. Must be implemented by the using class."""
+        raise NotImplementedError("_make_request must be implemented by the using class")
+
+    def identify_location_type(
+        self, lat: float, lon: float, force_refresh: bool = False
+    ) -> tuple[str | None, str | None]:
+        """Identify location type. Must be implemented by the using class."""
+        raise NotImplementedError("identify_location_type must be implemented by the using class")
+
+    def get_point_data(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
+        """Get point data. Must be implemented by the using class."""
+        raise NotImplementedError("get_point_data must be implemented by the using class")
+
+    @property
+    def BASE_URL(self) -> str:
+        """Base URL for the API. Must be implemented by the using class."""
+        raise NotImplementedError("BASE_URL must be implemented by the using class")
 
     def get_alerts(
         self,
@@ -21,7 +56,7 @@ class AlertsAndProductsMixin:
         radius: float = 50,
         precise_location: bool = True,
         force_refresh: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get active weather alerts for the given coordinates.
 
         Args:
@@ -34,6 +69,7 @@ class AlertsAndProductsMixin:
 
         Returns:
             Dictionary containing alert data
+
         """
         logger.info(
             f"Getting alerts for coordinates: ({lat}, {lon}) with radius {radius} miles, "
@@ -51,7 +87,7 @@ class AlertsAndProductsMixin:
             return self._make_request(
                 "alerts/active", params={"zone": location_id}, force_refresh=force_refresh
             )
-        elif location_type == "state" or not precise_location:
+        if location_type == "state" or not precise_location:
             # If we're not using precise location or we only have state info,
             # get alerts for the entire state
             if location_type == "state":
@@ -88,7 +124,7 @@ class AlertsAndProductsMixin:
             force_refresh=force_refresh,
         )
 
-    def get_alerts_direct(self, url: str, force_refresh: bool = False) -> Dict[str, Any]:
+    def get_alerts_direct(self, url: str, force_refresh: bool = False) -> dict[str, Any]:
         """Get active weather alerts directly from a provided URL.
 
         Args:
@@ -96,11 +132,12 @@ class AlertsAndProductsMixin:
 
         Returns:
             Dictionary containing alert data
+
         """
         logging.info(f"Fetching alerts directly from URL: {url}")
         return self._make_request(url, use_full_url=True, force_refresh=force_refresh)
 
-    def get_discussion(self, lat: float, lon: float, force_refresh: bool = False) -> Optional[str]:
+    def get_discussion(self, lat: float, lon: float, force_refresh: bool = False) -> str | None:
         """Get the forecast discussion for a location
 
         Args:
@@ -109,6 +146,7 @@ class AlertsAndProductsMixin:
 
         Returns:
             Text of the forecast discussion or None if not available
+
         """
         try:
             logger.info(f"Getting forecast discussion for coordinates: ({lat}, {lon})")
@@ -181,7 +219,7 @@ class AlertsAndProductsMixin:
 
     def get_national_product(
         self, product_type: str, location: str, force_refresh: bool = False
-    ) -> Optional[str]:
+    ) -> str | None:
         """Get a national product from a specific center
 
         Args:
@@ -191,6 +229,7 @@ class AlertsAndProductsMixin:
 
         Returns:
             Text of the product or None if not available
+
         """
         try:
             endpoint = f"products/types/{product_type}/locations/{location}"
@@ -226,11 +265,12 @@ class AlertsAndProductsMixin:
             logger.error(f"Error getting national product {product_type} from {location}: {str(e)}")
             return None
 
-    def get_national_forecast_data(self, force_refresh: bool = False) -> Dict[str, Any]:
+    def get_national_forecast_data(self, force_refresh: bool = False) -> dict[str, Any]:
         """Get national forecast data from various centers
 
         Returns:
             Dictionary containing national forecast data
+
         """
         result = {
             "wpc": {
@@ -255,11 +295,11 @@ class AlertsAndProductsMixin:
         return result
 
     def get_national_discussion_summary(self, force_refresh: bool = False) -> dict:
-        """
-        Fetch and summarize the latest WPC Short Range and SPC Day 1 discussions.
+        """Fetch and summarize the latest WPC Short Range and SPC Day 1 discussions.
 
         Returns:
             dict: Summary of WPC and SPC discussions
+
         """
 
         def summarize(text, lines=10):

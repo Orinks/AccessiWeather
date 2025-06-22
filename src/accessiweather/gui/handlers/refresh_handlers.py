@@ -23,6 +23,7 @@ class WeatherAppRefreshHandlers(WeatherAppHandlerBase):
 
         Args:
             event: Button event
+
         """
         # Trigger weather data update
         self.UpdateWeatherData()
@@ -32,6 +33,7 @@ class WeatherAppRefreshHandlers(WeatherAppHandlerBase):
 
         Args:
             event: Optional event parameter (required for wx event handlers)
+
         """
         # Even if updating is true, we still want to proceed if this is a
         # location change
@@ -58,6 +60,7 @@ class WeatherAppRefreshHandlers(WeatherAppHandlerBase):
 
         Args:
             location: Tuple of (name, lat, lon)
+
         """
         name, lat, lon = location
 
@@ -104,7 +107,7 @@ class WeatherAppRefreshHandlers(WeatherAppHandlerBase):
             )
 
             # Get precise location setting from config
-            from ..settings_dialog import ALERT_RADIUS_KEY, PRECISE_LOCATION_ALERTS_KEY
+            from ..settings.constants import ALERT_RADIUS_KEY, PRECISE_LOCATION_ALERTS_KEY
 
             precise_location = self.config.get("settings", {}).get(
                 PRECISE_LOCATION_ALERTS_KEY, True
@@ -128,7 +131,7 @@ class WeatherAppRefreshHandlers(WeatherAppHandlerBase):
                 self._on_forecast_fetched(forecast_data)
 
                 # Get alerts data
-                from ..settings_dialog import ALERT_RADIUS_KEY, PRECISE_LOCATION_ALERTS_KEY
+                from ..settings.constants import ALERT_RADIUS_KEY, PRECISE_LOCATION_ALERTS_KEY
 
                 precise_location = self.config.get("settings", {}).get(
                     PRECISE_LOCATION_ALERTS_KEY, True
@@ -149,6 +152,7 @@ class WeatherAppRefreshHandlers(WeatherAppHandlerBase):
 
         Args:
             event: Optional event parameter (required for wx event handlers)
+
         """
         # Check if current location is Nationwide
         current_location = self.location_service.get_current_location_name()

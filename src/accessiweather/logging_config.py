@@ -14,6 +14,7 @@ def setup_logging(log_level=logging.INFO):
 
     Args:
         log_level: Logging level (default: INFO)
+
     """
     # Create logs directory if it doesn't exist
     log_dir = Path.home() / "AccessiWeather_logs"
@@ -44,7 +45,9 @@ def setup_logging(log_level=logging.INFO):
     # File handler - more verbose for debugging
     log_file = log_dir / "accessiweather.log"
     file_handler = logging.handlers.RotatingFileHandler(
-        log_file, maxBytes=5 * 1024 * 1024, backupCount=3  # 5 MB
+        log_file,
+        maxBytes=5 * 1024 * 1024,
+        backupCount=3,  # 5 MB
     )
     file_handler.setLevel(min(log_level, logging.DEBUG))  # Always include DEBUG in file
     file_handler.setFormatter(file_format)

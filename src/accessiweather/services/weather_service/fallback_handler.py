@@ -5,7 +5,7 @@ providing resilient weather data retrieval.
 """
 
 import logging
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, cast
 
 from accessiweather.api_client import NoaaApiClient
 from accessiweather.api_wrapper import NoaaApiWrapper
@@ -20,7 +20,7 @@ class FallbackHandler:
 
     def __init__(
         self,
-        nws_client: Union[NoaaApiClient, NoaaApiWrapper],
+        nws_client: NoaaApiClient | NoaaApiWrapper,
         openmeteo_client: OpenMeteoApiClient,
         openmeteo_mapper: OpenMeteoMapper,
         api_client_manager,  # Type hint would create circular import
@@ -32,6 +32,7 @@ class FallbackHandler:
             openmeteo_client: The Open-Meteo API client
             openmeteo_mapper: The Open-Meteo data mapper
             api_client_manager: The API client manager instance
+
         """
         self.nws_client = nws_client
         self.openmeteo_client = openmeteo_client
@@ -40,7 +41,7 @@ class FallbackHandler:
 
     def try_fallback_api(
         self, lat: float, lon: float, method_name: str, *args, **kwargs
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Try fallback API when the primary API fails.
 
         Args:
@@ -52,6 +53,7 @@ class FallbackHandler:
 
         Returns:
             Dictionary containing the fallback API response, or None if fallback fails
+
         """
         try:
             # If we were using Open-Meteo and it failed, try NWS if location is in US
@@ -61,39 +63,35 @@ class FallbackHandler:
                     method = getattr(self.nws_client, method_name, None)
                     if method:
                         result = method(lat, lon, *args, **kwargs)
-                        return cast(Dict[str, Any], result)
-                    else:
-                        logger.warning(f"NWS client does not have method {method_name}")
-                        return None
-                else:
-                    logger.warning(
-                        f"Open-Meteo failed for non-US location, no fallback available for {method_name}"
-                    )
+                        return cast(dict[str, Any], result)
+                    logger.warning(f"NWS client does not have method {method_name}")
                     return None
-            else:
-                # If we were using NWS and it failed, try Open-Meteo as fallback
-                logger.info(f"NWS failed, trying Open-Meteo fallback for {method_name}")
-                if method_name == "get_forecast":
-                    temp_unit = self.api_client_manager._get_temperature_unit_preference()
-                    openmeteo_data = self.openmeteo_client.get_forecast(
-                        lat, lon, temperature_unit=temp_unit
-                    )
-                    return self.openmeteo_mapper.map_forecast(openmeteo_data)
-                elif method_name == "get_hourly_forecast":
-                    temp_unit = self.api_client_manager._get_temperature_unit_preference()
-                    openmeteo_data = self.openmeteo_client.get_hourly_forecast(
-                        lat, lon, temperature_unit=temp_unit
-                    )
-                    return self.openmeteo_mapper.map_hourly_forecast(openmeteo_data)
-                elif method_name == "get_current_conditions":
-                    temp_unit = self.api_client_manager._get_temperature_unit_preference()
-                    openmeteo_data = self.openmeteo_client.get_current_weather(
-                        lat, lon, temperature_unit=temp_unit
-                    )
-                    return self.openmeteo_mapper.map_current_conditions(openmeteo_data)
-                else:
-                    logger.warning(f"No Open-Meteo fallback available for {method_name}")
-                    return None
+                logger.warning(
+                    f"Open-Meteo failed for non-US location, no fallback available for {method_name}"
+                )
+                return None
+            # If we were using NWS and it failed, try Open-Meteo as fallback
+            logger.info(f"NWS failed, trying Open-Meteo fallback for {method_name}")
+            if method_name == "get_forecast":
+                temp_unit = self.api_client_manager._get_temperature_unit_preference()
+                openmeteo_data = self.openmeteo_client.get_forecast(
+                    lat, lon, temperature_unit=temp_unit
+                )
+                return self.openmeteo_mapper.map_forecast(openmeteo_data)
+            if method_name == "get_hourly_forecast":
+                temp_unit = self.api_client_manager._get_temperature_unit_preference()
+                openmeteo_data = self.openmeteo_client.get_hourly_forecast(
+                    lat, lon, temperature_unit=temp_unit
+                )
+                return self.openmeteo_mapper.map_hourly_forecast(openmeteo_data)
+            if method_name == "get_current_conditions":
+                temp_unit = self.api_client_manager._get_temperature_unit_preference()
+                openmeteo_data = self.openmeteo_client.get_current_weather(
+                    lat, lon, temperature_unit=temp_unit
+                )
+                return self.openmeteo_mapper.map_current_conditions(openmeteo_data)
+            logger.warning(f"No Open-Meteo fallback available for {method_name}")
+            return None
 
         except Exception as e:
             logger.error(f"Fallback API also failed for {method_name}: {str(e)}")

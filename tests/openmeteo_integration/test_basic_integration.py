@@ -1,7 +1,5 @@
 """Basic integration tests for Open-Meteo with WeatherService."""
 
-from unittest.mock import MagicMock
-
 import pytest
 
 from accessiweather.services.weather_service import WeatherService

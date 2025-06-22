@@ -16,7 +16,6 @@ def mock_ui_manager():
         patch("accessiweather.gui.ui_manager.UIManager._setup_ui"),
         patch("accessiweather.gui.ui_manager.UIManager._bind_events"),
     ):
-
         # Create a mock weather app frame
         mock_frame = MagicMock(spec=wx.Frame)
         mock_frame.location_choice = MagicMock()
@@ -39,7 +38,7 @@ def mock_ui_manager():
         ui_manager = UIManager(mock_frame, mock_notifier)
 
         # Store references for test access using setattr to avoid type checking issues
-        setattr(ui_manager, "mock_frame", mock_frame)
-        setattr(ui_manager, "mock_notifier", mock_notifier)
+        ui_manager.mock_frame = mock_frame
+        ui_manager.mock_notifier = mock_notifier
 
         yield ui_manager

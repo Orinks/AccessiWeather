@@ -1,5 +1,4 @@
-"""
-End-to-end smoke tests for AccessiWeather application.
+"""End-to-end smoke tests for AccessiWeather application.
 
 These tests verify basic application functionality and critical user workflows
 without requiring a full GUI environment.
@@ -69,7 +68,7 @@ def test_configuration_system():
             json.dump(test_config, f)
 
         # Load config
-        with open(config_file, "r") as f:
+        with open(config_file) as f:
             loaded_config = json.load(f)
 
         assert loaded_config["location"] == "Test City"
@@ -137,7 +136,7 @@ def test_cache_system():
 
 @pytest.mark.e2e
 @pytest.mark.smoke
-@patch("accessiweather.api_client.requests.get")
+@patch("accessiweather.api_client.core_client.requests.get")
 def test_api_client_basic_functionality(mock_get):
     """Test basic API client functionality."""
     from accessiweather.api_client import NoaaApiClient
@@ -162,6 +161,7 @@ def test_api_client_basic_functionality(mock_get):
         },
     ]
     mock_response.raise_for_status.return_value = None
+    mock_response.status_code = 200
     mock_get.return_value = mock_response
 
     # Test API client

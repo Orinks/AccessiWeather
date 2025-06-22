@@ -8,8 +8,6 @@ This compatibility layer re-exports all classes and constants from the new packa
 to ensure existing code continues to work without modification.
 """
 
-import warnings
-
 # Import all classes and constants from the new api_client package
 from .api_client import (
     LOCATION_TYPE_COUNTY,

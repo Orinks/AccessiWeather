@@ -9,7 +9,7 @@ import time
 
 import wx
 
-from ..settings_dialog import ALERT_RADIUS_KEY, PRECISE_LOCATION_ALERTS_KEY, UPDATE_INTERVAL_KEY
+from ..settings.constants import ALERT_RADIUS_KEY, PRECISE_LOCATION_ALERTS_KEY, UPDATE_INTERVAL_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ class WeatherAppUIManagement:
 
         Args:
             weather_app: Reference to the main WeatherApp instance
+
         """
         self.app = weather_app
         logger.debug("WeatherAppUIManagement initialized")
@@ -53,6 +54,7 @@ class WeatherAppUIManagement:
 
         Args:
             loading_dialog: Progress dialog instance (optional)
+
         """
         timer_id = None
 

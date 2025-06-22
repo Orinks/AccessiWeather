@@ -294,6 +294,7 @@ def test_get_discussion_success(api_client):
             SAMPLE_DISCUSSION_TEXT,
         ]
         mock_get.return_value.raise_for_status.return_value = None
+        mock_get.return_value.status_code = 200
 
         result = api_client.get_discussion(lat, lon)
 
@@ -313,6 +314,7 @@ def test_get_national_product_success(api_client):
             SAMPLE_NATIONAL_PRODUCT_TEXT,
         ]
         mock_get.return_value.raise_for_status.return_value = None
+        mock_get.return_value.status_code = 200
 
         result = api_client.get_national_product(product_type, location)
 
@@ -327,6 +329,7 @@ def test_get_stations_success(api_client):
         # First call for point data, second for stations
         mock_get.return_value.json.side_effect = [SAMPLE_POINT_DATA, SAMPLE_STATIONS_DATA]
         mock_get.return_value.raise_for_status.return_value = None
+        mock_get.return_value.status_code = 200
 
         result = api_client.get_stations(lat, lon)
 
@@ -353,6 +356,7 @@ def test_get_stations_no_url(api_client):
         bad_point_data["properties"] = properties
         mock_get.return_value.json.return_value = bad_point_data
         mock_get.return_value.raise_for_status.return_value = None
+        mock_get.return_value.status_code = 200
 
         with pytest.raises(ValueError) as exc_info:
             api_client.get_stations(lat, lon)
@@ -371,6 +375,7 @@ def test_get_current_conditions_success(api_client):
             SAMPLE_OBSERVATION_DATA,
         ]
         mock_get.return_value.raise_for_status.return_value = None
+        mock_get.return_value.status_code = 200
 
         result = api_client.get_current_conditions(lat, lon)
 
@@ -390,6 +395,7 @@ def test_get_current_conditions_no_stations(api_client):
             {"features": []},  # Empty stations list
         ]
         mock_get.return_value.raise_for_status.return_value = None
+        mock_get.return_value.status_code = 200
 
         with pytest.raises(ValueError) as exc_info:
             api_client.get_current_conditions(lat, lon)
@@ -404,6 +410,7 @@ def test_get_hourly_forecast_success(api_client):
         # First call for point data, second for hourly forecast
         mock_get.return_value.json.side_effect = [SAMPLE_POINT_DATA, SAMPLE_HOURLY_FORECAST_DATA]
         mock_get.return_value.raise_for_status.return_value = None
+        mock_get.return_value.status_code = 200
 
         result = api_client.get_hourly_forecast(lat, lon)
 
@@ -430,6 +437,7 @@ def test_get_hourly_forecast_no_url(api_client):
         bad_point_data["properties"] = properties
         mock_get.return_value.json.return_value = bad_point_data
         mock_get.return_value.raise_for_status.return_value = None
+        mock_get.return_value.status_code = 200
 
         with pytest.raises(ValueError) as exc_info:
             api_client.get_hourly_forecast(lat, lon)

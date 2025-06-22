@@ -215,7 +215,9 @@ def test_weather_service_openmeteo_fallback_on_error(weather_service):
     # Mock NWS success (fallback)
     weather_service.nws_client.get_current_conditions.return_value = {"properties": {"temp": 20}}
 
-    with patch.object(weather_service, "_should_use_openmeteo", return_value=True):
+    with patch.object(
+        weather_service.api_client_manager, "_should_use_openmeteo", return_value=True
+    ):
         result = weather_service.get_current_conditions(lat, lon)
 
         # Should have fallen back to NWS
@@ -234,7 +236,9 @@ def test_weather_service_both_apis_fail(weather_service):
     )
     weather_service.nws_client.get_current_conditions.side_effect = Exception("NWS Error")
 
-    with patch.object(weather_service, "_should_use_openmeteo", return_value=True):
+    with patch.object(
+        weather_service.api_client_manager, "_should_use_openmeteo", return_value=True
+    ):
         with pytest.raises(Exception):  # Should raise exception when both fail
             weather_service.get_current_conditions(lat, lon)
 
@@ -252,8 +256,12 @@ def test_weather_service_error_logging(weather_service):
     # Mock NWS success for fallback
     weather_service.nws_client.get_current_conditions.return_value = {"properties": {"temp": 20}}
 
-    with patch.object(weather_service, "_should_use_openmeteo", return_value=True):
-        with patch("accessiweather.services.weather_service.logger") as mock_logger:
+    with patch.object(
+        weather_service.api_client_manager, "_should_use_openmeteo", return_value=True
+    ):
+        with patch(
+            "accessiweather.services.weather_service.weather_data_retrieval.logger"
+        ) as mock_logger:
             result = weather_service.get_current_conditions(lat, lon)
 
             # Should log the error and succeed with fallback

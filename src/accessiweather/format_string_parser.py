@@ -1,5 +1,4 @@
-"""
-Format string parser for customizable text display.
+"""Format string parser for customizable text display.
 
 This module provides functionality to parse format strings with placeholders
 and substitute them with actual values.
@@ -7,7 +6,7 @@ and substitute them with actual values.
 
 import logging
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +44,7 @@ class FormatStringParser:
         # Compile a regex pattern to find placeholders in format strings
         self.placeholder_pattern = re.compile(r"\{([a-zA-Z_]+)\}")
 
-    def get_placeholders(self, format_string: str) -> List[str]:
+    def get_placeholders(self, format_string: str) -> list[str]:
         """Extract placeholders from a format string.
 
         Args:
@@ -53,6 +52,7 @@ class FormatStringParser:
 
         Returns:
             List of placeholder names found in the format string.
+
         """
         if not format_string:
             return []
@@ -61,7 +61,7 @@ class FormatStringParser:
         matches = self.placeholder_pattern.findall(format_string)
         return matches
 
-    def validate_format_string(self, format_string: str) -> Tuple[bool, Optional[str]]:
+    def validate_format_string(self, format_string: str) -> tuple[bool, str | None]:
         """Validate a format string.
 
         Args:
@@ -72,6 +72,7 @@ class FormatStringParser:
             is_valid will be True and error_message will be None. Otherwise,
             is_valid will be False and error_message will contain a description
             of the error.
+
         """
         if not format_string:
             return True, None  # Empty string is valid (will use default)
@@ -93,7 +94,7 @@ class FormatStringParser:
 
         return True, None
 
-    def format_string(self, format_string: str, data: Dict[str, Any]) -> str:
+    def format_string(self, format_string: str, data: dict[str, Any]) -> str:
         """Format a string by substituting placeholders with values from data.
 
         Args:
@@ -102,6 +103,7 @@ class FormatStringParser:
 
         Returns:
             The formatted string with placeholders replaced by values.
+
         """
         if not format_string:
             return ""
@@ -131,6 +133,7 @@ class FormatStringParser:
 
         Returns:
             A formatted string with all supported placeholders and their descriptions.
+
         """
         help_text = "Supported Placeholders:\n\n"
         for placeholder, description in cls.SUPPORTED_PLACEHOLDERS.items():

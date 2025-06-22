@@ -42,20 +42,79 @@ dev = [
 [project.scripts]
 accessiweather = "accessiweather.cli:main"
 
-[tool.black]
+[tool.ruff]
 line-length = 100
-target-version = ['py312']
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-)/
-'''
+target-version = "py312"
+
+# Cache configuration
+cache-dir = ".ruff_cache"
+respect-gitignore = true
+
+# Exclude auto-generated and build directories
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    "src/accessiweather/weather_gov_api_client",
+    "src/accessiweather/weatherapi_client",
+    ".venv",
+    "venv",
+    "env",
+    ".eggs",
+    "*.egg-info",
+    ".tox",
+    ".coverage",
+    "htmlcov",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    "temp_backup",
+    "installer/build",
+    "installer/dist",
+    "docs",
+    ".github"
+]
+
+[tool.ruff.lint]
+# Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
+# Also enable isort (`I`), pydocstyle (`D`), and other useful rules
+select = ["E", "W", "F", "I", "D", "UP", "B", "C4", "PIE", "SIM", "RET"]
+ignore = [
+    "E203",   # whitespace before ':'
+    "E501",   # line too long (handled by formatter)
+    "F541",   # f-string is missing placeholders
+    "C901",   # too complex (we'll handle this gradually)
+    "D100",   # Missing docstring in public module
+    "D101",   # Missing docstring in public class
+    "D102",   # Missing docstring in public method
+    "D103",   # Missing docstring in public function
+    "D104",   # Missing docstring in public package
+    "D105",   # Missing docstring in magic method
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]  # Allow unused imports in __init__.py files
+"src/accessiweather/weatherapi_client/client.py" = ["F401", "F541", "F811", "E741"]
+"src/accessiweather/weatherapi_mapper.py" = ["F401"]
+
+[tool.ruff.lint.isort]
+# Black-compatible settings
+combine-as-imports = true
+force-wrap-aliases = true
+split-on-trailing-comma = true
+
+[tool.ruff.format]
+# Use double quotes for strings.
+quote-style = "double"
+# Indent with spaces, rather than tabs.
+indent-style = "space"
+# Respect magic trailing commas.
+skip-magic-trailing-comma = false
+# Automatically detect the appropriate line ending.
+line-ending = "auto"
+
+
+
+[tool.ruff.lint.mccabe]
+max-complexity = 15

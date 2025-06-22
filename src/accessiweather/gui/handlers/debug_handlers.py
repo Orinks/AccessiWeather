@@ -70,6 +70,7 @@ class WeatherAppDebugHandlers(WeatherAppHandlerBase):
 
         Args:
             event: Menu event
+
         """
         # Format the config as pretty JSON
         config_json = json.dumps(self.config, indent=4)
@@ -100,6 +101,7 @@ class WeatherAppDebugHandlers(WeatherAppHandlerBase):
 
         Args:
             event: Menu event
+
         """
         # Get the current location
         location = self.location_service.get_current_location()
@@ -139,6 +141,7 @@ class WeatherAppDebugHandlers(WeatherAppHandlerBase):
             notebook: The notebook to add the page to
             title: The title of the page
             data: The data to display
+
         """
         panel = wx.Panel(notebook)
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -163,6 +166,7 @@ class WeatherAppDebugHandlers(WeatherAppHandlerBase):
 
         Args:
             event: Menu event
+
         """
         from ..debug_log_window import DebugLogWindow
 
@@ -193,6 +197,7 @@ class WeatherAppDebugHandlers(WeatherAppHandlerBase):
 
         Args:
             event: Menu event
+
         """
         self.test_alert_update()
 
@@ -201,6 +206,7 @@ class WeatherAppDebugHandlers(WeatherAppHandlerBase):
 
         Args:
             event: Menu event
+
         """
         self.verify_update_interval()
 
@@ -209,6 +215,7 @@ class WeatherAppDebugHandlers(WeatherAppHandlerBase):
 
         Args:
             event: Menu event
+
         """
         # Toggle the debug_mode flag
         self.debug_mode = not self.debug_mode

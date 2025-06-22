@@ -6,7 +6,6 @@ caching and retrieval of nationwide forecast discussions.
 
 import logging
 import time
-from typing import Dict, Optional
 
 from accessiweather.api_client import ApiClientError
 from accessiweather.services.national_discussion_scraper import NationalDiscussionScraper
@@ -20,7 +19,7 @@ class NationalForecastHandler:
     def __init__(self):
         """Initialize the national forecast handler."""
         self.national_scraper = NationalDiscussionScraper(request_delay=1.0)
-        self.national_data_cache: Optional[Dict[str, Dict[str, str]]] = None
+        self.national_data_cache: dict[str, dict[str, str]] | None = None
         self.national_data_timestamp: float = 0.0
         self.cache_expiry = 3600  # 1 hour in seconds
 
@@ -48,6 +47,7 @@ class NationalForecastHandler:
 
         Raises:
             ApiClientError: If there was an error retrieving the data
+
         """
         current_time = time.time()
 

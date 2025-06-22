@@ -3,11 +3,8 @@
 import pytest
 import wx
 
-from accessiweather.gui.settings_dialog import (
-    DEFAULT_TEMPERATURE_UNIT,
-    TEMPERATURE_UNIT_KEY,
-    SettingsDialog,
-)
+from accessiweather.gui.settings import DEFAULT_TEMPERATURE_UNIT, TEMPERATURE_UNIT_KEY
+from accessiweather.gui.settings_dialog import SettingsDialog
 from accessiweather.utils.temperature_utils import TemperatureUnit
 
 
@@ -68,7 +65,7 @@ class TestSettingsDialogDisplayTab:
         settings_dialog.current_settings[TEMPERATURE_UNIT_KEY] = TemperatureUnit.FAHRENHEIT.value
 
         # Load the settings
-        settings_dialog._load_settings()
+        settings_dialog.data_handler.load_settings(settings_dialog.current_settings)
 
         # Check that the temperature unit control is set to Fahrenheit
         assert settings_dialog.temp_unit_ctrl.GetSelection() == 0
@@ -79,7 +76,7 @@ class TestSettingsDialogDisplayTab:
         settings_dialog.current_settings[TEMPERATURE_UNIT_KEY] = TemperatureUnit.CELSIUS.value
 
         # Load the settings
-        settings_dialog._load_settings()
+        settings_dialog.data_handler.load_settings(settings_dialog.current_settings)
 
         # Check that the temperature unit control is set to Celsius
         assert settings_dialog.temp_unit_ctrl.GetSelection() == 1
@@ -90,7 +87,7 @@ class TestSettingsDialogDisplayTab:
         settings_dialog.current_settings[TEMPERATURE_UNIT_KEY] = TemperatureUnit.BOTH.value
 
         # Load the settings
-        settings_dialog._load_settings()
+        settings_dialog.data_handler.load_settings(settings_dialog.current_settings)
 
         # Check that the temperature unit control is set to Both
         assert settings_dialog.temp_unit_ctrl.GetSelection() == 2

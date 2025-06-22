@@ -1,13 +1,11 @@
-"""
-Tests for the taskbar icon text functionality.
-"""
+"""Tests for the taskbar icon text functionality."""
 
 import unittest
 from unittest.mock import MagicMock, patch
 
 import wx
 
-from accessiweather.gui.settings_dialog import (
+from accessiweather.gui.settings.constants import (
     TASKBAR_ICON_DYNAMIC_ENABLED_KEY,
     TASKBAR_ICON_TEXT_ENABLED_KEY,
     TASKBAR_ICON_TEXT_FORMAT_KEY,
@@ -47,12 +45,31 @@ class TestTaskBarIconText(unittest.TestCase):
 
         # Create a TaskBarIcon instance with the mock frame
         with (
-            patch("wx.adv.TaskBarIcon"),
+            patch(
+                "accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon.__init__",
+                return_value=None,
+            ),
+            patch(
+                "accessiweather.gui.system_tray_modules.icon_manager.TaskBarIconManager.__init__",
+                return_value=None,
+            ),
             patch("accessiweather.gui.system_tray.TaskBarIcon.set_icon"),
+            patch("accessiweather.gui.system_tray.TaskBarIcon.bind_events"),
         ):
             self.taskbar_icon = TaskBarIcon(self.frame)
-            # Mock the SetIcon method to avoid type errors
-            self.taskbar_icon.SetIcon = MagicMock()
+            # Use patch.object to properly mock the SetIcon method
+            self.set_icon_patcher = patch.object(self.taskbar_icon, "SetIcon")
+            self.mock_set_icon = self.set_icon_patcher.start()
+            self.addCleanup(self.set_icon_patcher.stop)
+
+            # Initialize the weather formatter attributes that would normally be set by __init__
+            from accessiweather.dynamic_format_manager import DynamicFormatManager
+            from accessiweather.format_string_parser import FormatStringParser
+
+            self.taskbar_icon.format_parser = FormatStringParser()
+            self.taskbar_icon.dynamic_format_manager = DynamicFormatManager()
+            self.taskbar_icon.current_weather_data = {}
+            self.taskbar_icon.current_alerts_data = None
 
     def tearDown(self):
         """Clean up after tests."""
@@ -86,7 +103,7 @@ class TestTaskBarIconText(unittest.TestCase):
         # New enhanced format includes humidity
         expected_text = "New York 72.5°F Partly Cloudy • 45%"
         # Check that the second argument (tooltip text) matches our expected text
-        self.assertEqual(self.taskbar_icon.SetIcon.call_args[0][1], expected_text)
+        self.assertEqual(self.mock_set_icon.call_args[0][1], expected_text)
 
     @patch("wx.ArtProvider.GetIcon")
     @patch("wx.Icon")
@@ -106,7 +123,7 @@ class TestTaskBarIconText(unittest.TestCase):
         self.taskbar_icon.update_icon_text()
 
         # Verify that SetIcon was called with default text
-        self.assertEqual(self.taskbar_icon.SetIcon.call_args[0][1], "AccessiWeather")
+        self.assertEqual(self.mock_set_icon.call_args[0][1], "AccessiWeather")
 
     def test_update_icon_text_no_weather_data(self):
         """Test updating the taskbar icon text when no weather data is available."""
@@ -117,7 +134,7 @@ class TestTaskBarIconText(unittest.TestCase):
         self.taskbar_icon.update_icon_text()
 
         # Verify that SetIcon was not called
-        self.taskbar_icon.SetIcon.assert_not_called()
+        self.mock_set_icon.assert_not_called()
 
     @patch("wx.ArtProvider.GetIcon")
     @patch("wx.Icon")
@@ -131,9 +148,9 @@ class TestTaskBarIconText(unittest.TestCase):
         self.taskbar_icon.current_weather_data = self.weather_data
 
         # Set a custom format string - note: wind_speed now includes the unit
-        self.frame.config["settings"][
-            TASKBAR_ICON_TEXT_FORMAT_KEY
-        ] = "{location}: {temp}, {wind_dir} {wind_speed}"
+        self.frame.config["settings"][TASKBAR_ICON_TEXT_FORMAT_KEY] = (
+            "{location}: {temp}, {wind_dir} {wind_speed}"
+        )
 
         # Disable dynamic formatting to use the custom format string
         self.frame.config["settings"][TASKBAR_ICON_DYNAMIC_ENABLED_KEY] = False
@@ -145,7 +162,7 @@ class TestTaskBarIconText(unittest.TestCase):
         # Test data has temp: 72.5°F which is not a whole number, so decimal is preserved
         expected_text = "New York: 72.5°F, NW 10.0 mph"
         # Check that the second argument (tooltip text) matches our expected text
-        self.assertEqual(self.taskbar_icon.SetIcon.call_args[0][1], expected_text)
+        self.assertEqual(self.mock_set_icon.call_args[0][1], expected_text)
 
 
 if __name__ == "__main__":

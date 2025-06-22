@@ -6,7 +6,7 @@ including alert processing delegation.
 
 import logging
 import tempfile
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 from accessiweather.api_client import ApiClientError, NoaaApiClient, NoaaApiError
 from accessiweather.api_wrapper import NoaaApiWrapper
@@ -19,7 +19,7 @@ class AlertsDiscussionHandler:
 
     def __init__(
         self,
-        nws_client: Union[NoaaApiClient, NoaaApiWrapper],
+        nws_client: NoaaApiClient | NoaaApiWrapper,
         api_client_manager,  # Type hint would create circular import
     ):
         """Initialize the alerts and discussion handler.
@@ -27,6 +27,7 @@ class AlertsDiscussionHandler:
         Args:
             nws_client: The NWS API client
             api_client_manager: The API client manager instance
+
         """
         self.nws_client = nws_client
         self.api_client_manager = api_client_manager
@@ -39,7 +40,7 @@ class AlertsDiscussionHandler:
         include_forecast_alerts: bool = False,
         radius: float = 50,
         precise_location: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get weather alerts for a location.
 
         Args:
@@ -57,6 +58,7 @@ class AlertsDiscussionHandler:
 
         Raises:
             ApiClientError: If there was an error retrieving the alerts.
+
         """
         try:
             logger.info(f"Getting alerts for coordinates: ({lat}, {lon})")
@@ -77,15 +79,14 @@ class AlertsDiscussionHandler:
                         "@vocab": "https://api.weather.gov/ontology#",
                     },
                 }
-            else:
-                logger.info("Using NWS API for alerts")
-                return self.nws_client.get_alerts(
-                    lat,
-                    lon,
-                    radius=radius,
-                    precise_location=precise_location,
-                    force_refresh=force_refresh,
-                )
+            logger.info("Using NWS API for alerts")
+            return self.nws_client.get_alerts(
+                lat,
+                lon,
+                radius=radius,
+                precise_location=precise_location,
+                force_refresh=force_refresh,
+            )
 
         except NoaaApiError as e:
             # Re-raise NOAA API errors directly for specific handling
@@ -95,7 +96,7 @@ class AlertsDiscussionHandler:
             logger.error(f"Error getting alerts: {str(e)}")
             raise ApiClientError(f"Unable to retrieve alerts data: {str(e)}")
 
-    def get_discussion(self, lat: float, lon: float, force_refresh: bool = False) -> Optional[str]:
+    def get_discussion(self, lat: float, lon: float, force_refresh: bool = False) -> str | None:
         """Get forecast discussion for a location.
 
         Args:
@@ -109,6 +110,7 @@ class AlertsDiscussionHandler:
 
         Raises:
             ApiClientError: If there was an error retrieving the discussion.
+
         """
         try:
             logger.info(f"Getting forecast discussion for coordinates: ({lat}, {lon})")
@@ -122,7 +124,7 @@ class AlertsDiscussionHandler:
             logger.error(f"Error getting forecast discussion: {str(e)}")
             raise ApiClientError(f"Unable to retrieve forecast discussion data: {str(e)}")
 
-    def process_alerts(self, alerts_data: Dict[str, Any]) -> tuple[List[Dict[str, Any]], int, int]:
+    def process_alerts(self, alerts_data: dict[str, Any]) -> tuple[list[dict[str, Any]], int, int]:
         """Process alerts data and return processed alerts with counts.
 
         This method delegates to the WeatherNotifier for processing.
@@ -135,6 +137,7 @@ class AlertsDiscussionHandler:
             - List of processed alert objects
             - Number of new alerts
             - Number of updated alerts
+
         """
         # Import here to avoid circular imports
         # Create a temporary notifier for processing

@@ -98,7 +98,9 @@ class TestWeatherAppConfig:
     """Test WeatherApp configuration handling."""
 
     @patch("wx.Frame.__init__", return_value=None)
-    @patch("accessiweather.gui.weather_app.WeatherApp._create_menu_bar")
+    @patch(
+        "accessiweather.gui.weather_app_modules.event_handlers.WeatherAppEventHandlers._create_menu_bar"
+    )
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateLocationDropdown")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateWeatherData")
     def test_load_config_from_file(
@@ -138,7 +140,9 @@ class TestWeatherAppConfig:
                 assert app.config["settings"]["update_interval_minutes"] == 15
 
     @patch("wx.Frame.__init__", return_value=None)
-    @patch("accessiweather.gui.weather_app.WeatherApp._create_menu_bar")
+    @patch(
+        "accessiweather.gui.weather_app_modules.event_handlers.WeatherAppEventHandlers._create_menu_bar"
+    )
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateLocationDropdown")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateWeatherData")
     def test_save_config_to_file(
@@ -174,13 +178,15 @@ class TestWeatherAppConfig:
 
             # Verify file was created and contains correct data
             assert os.path.exists(config_path)
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 saved_config = json.load(f)
 
             assert saved_config["settings"]["temperature_unit"] == "celsius"
 
     @patch("wx.Frame.__init__", return_value=None)
-    @patch("accessiweather.gui.weather_app.WeatherApp._create_menu_bar")
+    @patch(
+        "accessiweather.gui.weather_app_modules.event_handlers.WeatherAppEventHandlers._create_menu_bar"
+    )
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateLocationDropdown")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateWeatherData")
     def test_config_defaults_when_file_missing(
@@ -215,7 +221,9 @@ class TestWeatherAppConfig:
             assert "locations" in app.config
 
     @patch("wx.Frame.__init__", return_value=None)
-    @patch("accessiweather.gui.weather_app.WeatherApp._create_menu_bar")
+    @patch(
+        "accessiweather.gui.weather_app_modules.event_handlers.WeatherAppEventHandlers._create_menu_bar"
+    )
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateLocationDropdown")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateWeatherData")
     def test_config_validation_and_migration(
@@ -257,7 +265,9 @@ class TestWeatherAppConfig:
             assert "api_settings" in app.config
 
     @patch("wx.Frame.__init__", return_value=None)
-    @patch("accessiweather.gui.weather_app.WeatherApp._create_menu_bar")
+    @patch(
+        "accessiweather.gui.weather_app_modules.event_handlers.WeatherAppEventHandlers._create_menu_bar"
+    )
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateLocationDropdown")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateWeatherData")
     def test_config_error_handling(

@@ -1,7 +1,7 @@
 """Tests for weather notifications."""
 
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -74,24 +74,23 @@ def mock_toaster():
 @pytest.fixture
 def mock_datetime():
     """Mock datetime.now and isoparse."""
-    mock_now = datetime(2024, 4, 16, 10, 0, tzinfo=timezone.utc)
+    mock_now = datetime(2024, 4, 16, 10, 0, tzinfo=UTC)
 
     def mock_isoparse(timestamp_str):
         """Mock isoparse to return timezone-aware datetimes."""
         # Parse the timestamp manually for test data
         if timestamp_str == "2024-04-16T14:00:00Z":
-            return datetime(2024, 4, 16, 14, 0, tzinfo=timezone.utc)
-        elif timestamp_str == "2024-04-16T09:00:00Z":
-            return datetime(2024, 4, 16, 9, 0, tzinfo=timezone.utc)
-        elif timestamp_str == "2024-04-16T11:00:00Z":
-            return datetime(2024, 4, 16, 11, 0, tzinfo=timezone.utc)
-        else:
-            # For unknown timestamps, use the real isoparse
-            return isoparse(timestamp_str)
+            return datetime(2024, 4, 16, 14, 0, tzinfo=UTC)
+        if timestamp_str == "2024-04-16T09:00:00Z":
+            return datetime(2024, 4, 16, 9, 0, tzinfo=UTC)
+        if timestamp_str == "2024-04-16T11:00:00Z":
+            return datetime(2024, 4, 16, 11, 0, tzinfo=UTC)
+        # For unknown timestamps, use the real isoparse
+        return isoparse(timestamp_str)
 
     with (
-        patch("accessiweather.notifications.datetime") as mock_dt,
-        patch("accessiweather.notifications.isoparse") as mock_parse,
+        patch("accessiweather.notifications.weather_notifier.datetime") as mock_dt,
+        patch("accessiweather.notifications.weather_notifier.isoparse") as mock_parse,
     ):
         mock_dt.now.return_value = mock_now
         mock_dt.timezone = timezone  # Keep the real timezone
@@ -331,8 +330,8 @@ def test_get_sorted_alerts(notifier):
 def test_safe_toast_success():
     """Test successful toast notification."""
     with (
-        patch("accessiweather.notifications.notification") as mock_notify,
-        patch("accessiweather.notifications.sys") as mock_sys,
+        patch("accessiweather.notifications.toast_notifier.notification") as mock_notify,
+        patch("accessiweather.notifications.toast_notifier.sys") as mock_sys,
     ):
         # Create a modules dict without pytest
         mock_modules = dict(sys.modules)
@@ -351,8 +350,8 @@ def test_safe_toast_success():
 def test_safe_toast_exception():
     """Test toast notification with exception."""
     with (
-        patch("accessiweather.notifications.notification") as mock_notify,
-        patch("accessiweather.notifications.sys") as mock_sys,
+        patch("accessiweather.notifications.toast_notifier.notification") as mock_notify,
+        patch("accessiweather.notifications.toast_notifier.sys") as mock_sys,
     ):
         # Create a modules dict without pytest
         mock_modules = dict(sys.modules)
@@ -370,7 +369,7 @@ def test_safe_toast_pytest():
     """Test toast notification in pytest environment."""
     # pytest is already in sys.modules when running these tests
     toaster = SafeToastNotifier()
-    with patch("accessiweather.notifications.notification") as mock_notify:
+    with patch("accessiweather.notifications.toast_notifier.notification") as mock_notify:
         result = toaster.show_toast(title="Test Title", msg="Test Message")
 
         assert result is True

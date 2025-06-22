@@ -17,8 +17,12 @@ def test_openmeteo_fallback_to_nws(
     # US coordinates that could use either service
     lat, lon = 40.7128, -74.0060
 
-    # Configure to use Open-Meteo first
-    with patch.object(weather_service_with_openmeteo, "_should_use_openmeteo", return_value=True):
+    # Configure to use Open-Meteo first by patching the api_client_manager method
+    with patch.object(
+        weather_service_with_openmeteo.api_client_manager,
+        "_should_use_openmeteo",
+        return_value=True,
+    ):
         # Mock Open-Meteo failure
         mock_openmeteo_client.get_current_weather.side_effect = OpenMeteoApiError("API Error")
 
@@ -70,8 +74,14 @@ def test_error_propagation_and_logging(weather_service_with_openmeteo, mock_open
         "properties": {"temp": 20}
     }
 
-    with patch.object(weather_service_with_openmeteo, "_should_use_openmeteo", return_value=True):
-        with patch("accessiweather.services.weather_service.logger") as mock_logger:
+    with patch.object(
+        weather_service_with_openmeteo.api_client_manager,
+        "_should_use_openmeteo",
+        return_value=True,
+    ):
+        with patch(
+            "accessiweather.services.weather_service.weather_data_retrieval.logger"
+        ) as mock_logger:
             result = weather_service_with_openmeteo.get_current_conditions(lat, lon)
 
             # Should succeed with fallback

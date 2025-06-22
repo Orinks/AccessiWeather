@@ -26,10 +26,9 @@ SAMPLE_POINT_DATA = {
 def api_wrapper():
     """Create a NoaaApiWrapper instance without caching."""
     with (
-        patch("accessiweather.api.nws_wrapper.NwsApiWrapper") as mock_nws,
+        patch("accessiweather.api.nws.NwsApiWrapper") as mock_nws,
         patch("accessiweather.api.openmeteo_wrapper.OpenMeteoApiWrapper") as mock_openmeteo,
     ):
-
         # Create mock instances with proper attributes
         mock_nws_instance = MagicMock()
         mock_nws_instance.client = MagicMock()
@@ -57,10 +56,9 @@ def api_wrapper():
 def cached_api_wrapper():
     """Create a NoaaApiWrapper instance with caching enabled."""
     with (
-        patch("accessiweather.api.nws_wrapper.NwsApiWrapper") as mock_nws,
+        patch("accessiweather.api.nws.NwsApiWrapper") as mock_nws,
         patch("accessiweather.api.openmeteo_wrapper.OpenMeteoApiWrapper") as mock_openmeteo,
     ):
-
         # Create mock cache
         mock_cache = MagicMock()
         mock_cache.default_ttl = 300

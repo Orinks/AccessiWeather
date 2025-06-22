@@ -5,7 +5,6 @@ This module provides a status bar panel that shows debug information.
 
 import logging
 import time
-from typing import Optional
 
 import wx
 
@@ -21,6 +20,7 @@ class DebugStatusBar(wx.StatusBar):
         Args:
             parent: Parent window
             update_interval_key: Config key for update interval
+
         """
         super().__init__(parent, style=wx.STB_SIZEGRIP)
 
@@ -46,6 +46,7 @@ class DebugStatusBar(wx.StatusBar):
 
         Args:
             event: Timer event
+
         """
         self.UpdateStatusBar()
 
@@ -76,6 +77,7 @@ class DebugStatusBar(wx.StatusBar):
 
         Returns:
             Update interval in minutes
+
         """
         if hasattr(self.parent, "config"):
             settings = self.parent.config.get("settings", {})
@@ -87,16 +89,18 @@ class DebugStatusBar(wx.StatusBar):
 
         Returns:
             Time since last update in seconds
+
         """
         if hasattr(self.parent, "last_update"):
             return float(time.time() - self.parent.last_update)
         return 0.0
 
-    def _get_current_location(self) -> Optional[str]:
+    def _get_current_location(self) -> str | None:
         """Get the current location name.
 
         Returns:
             Current location name or None
+
         """
         if hasattr(self.parent, "location_service"):
             location_name = self.parent.location_service.get_current_location_name()
@@ -108,6 +112,7 @@ class DebugStatusBar(wx.StatusBar):
 
         Returns:
             Memory usage in MB
+
         """
         try:
             import psutil  # type: ignore

@@ -25,6 +25,7 @@ class WeatherAppAlertHandlers(WeatherAppHandlerBase):
 
         Args:
             event: Button event
+
         """
         # Get selected alert
         selected = self.alerts_list.GetFirstSelected()
@@ -55,6 +56,7 @@ class WeatherAppAlertHandlers(WeatherAppHandlerBase):
 
         Args:
             event: List item activated event
+
         """
         # Just call the view alert handler
         self.OnViewAlert(event)

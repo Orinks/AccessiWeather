@@ -7,7 +7,7 @@ import logging
 
 import wx
 
-from ..settings_dialog import (
+from ..settings import (
     API_KEYS_SECTION,
     CACHE_ENABLED_KEY,
     CACHE_TTL_KEY,
@@ -36,6 +36,7 @@ class WeatherAppSettingsHandlers(WeatherAppHandlerBase):
 
         Args:
             event: Button event
+
         """
         # Get current settings
         settings = self.config.get("settings", {})

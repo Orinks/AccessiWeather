@@ -59,6 +59,9 @@ dmypy.json
 .pyre/
 .pytype/
 
+# Ruff cache
+.ruff_cache/
+
 # Tool-specific files (Aider, Roo, act, etc.)
 .aider.chat.history.md
 .aider.input.history

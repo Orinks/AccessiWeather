@@ -6,7 +6,7 @@ with the service layer.
 
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import Any
 
 # NoaaApiWrapper is used in create_app
 from accessiweather.api_wrapper import NoaaApiWrapper
@@ -24,8 +24,8 @@ logger = logging.getLogger(__name__)
 
 def create_weather_app(
     parent=None,
-    config: Optional[Dict[str, Any]] = None,
-    config_path: Optional[str] = None,
+    config: dict[str, Any] | None = None,
+    config_path: str | None = None,
     enable_caching: bool = True,
     cache_ttl: int = 300,
     debug_mode: bool = False,
@@ -42,6 +42,7 @@ def create_weather_app(
 
     Returns:
         WeatherApp instance
+
     """
     # Initialize configuration
     config = config or {}

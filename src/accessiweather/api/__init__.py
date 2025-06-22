@@ -5,7 +5,7 @@ large api_wrapper.py file for better maintainability and separation of concerns.
 """
 
 from .base_wrapper import BaseApiWrapper
-from .nws_wrapper import NwsApiWrapper
+from .nws import NwsApiWrapper
 from .openmeteo_wrapper import OpenMeteoApiWrapper
 
 __all__ = [

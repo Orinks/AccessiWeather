@@ -7,7 +7,7 @@ in the user interface.
 import logging
 from datetime import datetime
 
-from accessiweather.gui.settings_dialog import DEFAULT_TEMPERATURE_UNIT, TEMPERATURE_UNIT_KEY
+from accessiweather.gui.settings.constants import DEFAULT_TEMPERATURE_UNIT, TEMPERATURE_UNIT_KEY
 from accessiweather.utils.temperature_utils import TemperatureUnit, format_temperature
 
 logger = logging.getLogger(__name__)
@@ -21,6 +21,7 @@ class WeatherDataFormatter:
 
         Args:
             frame: The main WeatherApp frame instance for config access.
+
         """
         self.frame = frame
 
@@ -29,6 +30,7 @@ class WeatherDataFormatter:
 
         Returns:
             TemperatureUnit: The user's temperature unit preference
+
         """
         if not hasattr(self.frame, "config"):
             return TemperatureUnit.FAHRENHEIT
@@ -39,12 +41,11 @@ class WeatherDataFormatter:
         # Convert string to enum
         if unit_pref == TemperatureUnit.FAHRENHEIT.value:
             return TemperatureUnit.FAHRENHEIT
-        elif unit_pref == TemperatureUnit.CELSIUS.value:
+        if unit_pref == TemperatureUnit.CELSIUS.value:
             return TemperatureUnit.CELSIUS
-        elif unit_pref == TemperatureUnit.BOTH.value:
+        if unit_pref == TemperatureUnit.BOTH.value:
             return TemperatureUnit.BOTH
-        else:
-            return TemperatureUnit.FAHRENHEIT
+        return TemperatureUnit.FAHRENHEIT
 
     def _get_temperature_precision(self, unit_pref: TemperatureUnit) -> int:
         """Get the appropriate precision for temperature formatting.
@@ -54,6 +55,7 @@ class WeatherDataFormatter:
 
         Returns:
             int: Precision (0 for whole numbers when 'both', 1 otherwise)
+
         """
         return 0 if unit_pref == TemperatureUnit.BOTH else 1
 
@@ -66,6 +68,7 @@ class WeatherDataFormatter:
 
         Returns:
             str: Formatted forecast text
+
         """
         if not forecast_data or "national_discussion_summaries" not in forecast_data:
             return "No national forecast data available"
@@ -105,6 +108,7 @@ class WeatherDataFormatter:
 
         Returns:
             str: Formatted forecast text
+
         """
         if not forecast_data:
             return "No forecast data available"
@@ -151,6 +155,7 @@ class WeatherDataFormatter:
 
         Returns:
             str: Formatted hourly forecast text
+
         """
         text = "Next 6 Hours:\n"
         unit_pref = self._get_temperature_unit_preference()
@@ -202,6 +207,7 @@ class WeatherDataFormatter:
 
         Returns:
             str: Formatted daily forecast text
+
         """
         date = day.get("date", "Unknown")
         high = day.get("high", day.get("maxtemp_f", "?"))
@@ -253,6 +259,7 @@ class WeatherDataFormatter:
 
         Returns:
             str: Formatted current conditions text
+
         """
         from accessiweather.utils.unit_utils import format_pressure, format_wind_speed
 

@@ -2,7 +2,7 @@
 
 import tempfile
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from accessiweather.services.update_service import UpdateInfo, UpdateService
 
@@ -13,9 +13,8 @@ class TestUpdateService(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.temp_dir = tempfile.mkdtemp()
-        self.notification_callback = Mock()
-        self.progress_callback = Mock()
-
+        self.notification_callback = MagicMock()
+        self.progress_callback = MagicMock()
         self.update_service = UpdateService(
             config_dir=self.temp_dir,
             notification_callback=self.notification_callback,
@@ -35,34 +34,46 @@ class TestUpdateService(unittest.TestCase):
     def test_parse_version(self):
         """Test version parsing functionality."""
         # Test stable versions
-        parts, is_dev = self.update_service._parse_version("0.9.3")
+        parts, is_dev = self.update_service.version_checker._parse_version("0.9.3")
         self.assertEqual(parts, [0, 9, 3])
         self.assertFalse(is_dev)
 
-        parts, is_dev = self.update_service._parse_version("v1.0.0")
+        parts, is_dev = self.update_service.version_checker._parse_version("v1.0.0")
         self.assertEqual(parts, [1, 0, 0])
         self.assertFalse(is_dev)
 
         # Test dev versions
-        parts, is_dev = self.update_service._parse_version("0.9.4-dev")
+        parts, is_dev = self.update_service.version_checker._parse_version("0.9.4-dev")
         self.assertEqual(parts, [0, 9, 4])
         self.assertTrue(is_dev)
 
-        parts, is_dev = self.update_service._parse_version("v1.0.0-dev")
+        parts, is_dev = self.update_service.version_checker._parse_version("v1.0.0-dev")
         self.assertEqual(parts, [1, 0, 0])
         self.assertTrue(is_dev)
 
     def test_is_newer_version(self):
         """Test version comparison logic."""
         # Test stable channel
-        self.assertTrue(self.update_service._is_newer_version("0.9.3", "0.9.4", "stable"))
-        self.assertFalse(self.update_service._is_newer_version("0.9.4", "0.9.3", "stable"))
-        self.assertFalse(self.update_service._is_newer_version("0.9.3", "0.9.4-dev", "stable"))
+        self.assertTrue(
+            self.update_service.version_checker._is_newer_version("0.9.3", "0.9.4", "stable")
+        )
+        self.assertFalse(
+            self.update_service.version_checker._is_newer_version("0.9.4", "0.9.3", "stable")
+        )
+        self.assertFalse(
+            self.update_service.version_checker._is_newer_version("0.9.3", "0.9.4-dev", "stable")
+        )
 
         # Test dev channel
-        self.assertTrue(self.update_service._is_newer_version("0.9.3", "0.9.4-dev", "dev"))
-        self.assertTrue(self.update_service._is_newer_version("0.9.3", "0.9.4", "dev"))
-        self.assertTrue(self.update_service._is_newer_version("0.9.3", "0.9.3-dev", "dev"))
+        self.assertTrue(
+            self.update_service.version_checker._is_newer_version("0.9.3", "0.9.4-dev", "dev")
+        )
+        self.assertTrue(
+            self.update_service.version_checker._is_newer_version("0.9.3", "0.9.4", "dev")
+        )
+        self.assertTrue(
+            self.update_service.version_checker._is_newer_version("0.9.3", "0.9.3-dev", "dev")
+        )
 
     def test_update_state_persistence(self):
         """Test that update state is saved and loaded correctly."""
@@ -87,7 +98,7 @@ class TestUpdateService(unittest.TestCase):
         self.update_service.update_state["last_check"] = None
         self.assertTrue(self.update_service.should_check_for_updates())
 
-    @patch("accessiweather.services.update_service.requests.get")
+    @patch("accessiweather.services.update_service.version_checker.requests.get")
     def test_check_for_updates_success(self, mock_get):
         """Test successful update check."""
         # Mock API response
@@ -112,7 +123,7 @@ class TestUpdateService(unittest.TestCase):
         mock_get.return_value = mock_response
 
         # Mock current version to be older
-        with patch("accessiweather.services.update_service.__version__", "0.9.4"):
+        with patch("accessiweather.services.update_service.version_checker.__version__", "0.9.4"):
             update_info = self.update_service.check_for_updates("stable")
 
         self.assertIsNotNone(update_info)
@@ -120,7 +131,7 @@ class TestUpdateService(unittest.TestCase):
         self.assertEqual(update_info.version, "0.9.5")
         self.assertIsNotNone(update_info.installer_asset)
 
-    @patch("accessiweather.services.update_service.requests.get")
+    @patch("accessiweather.services.update_service.version_checker.requests.get")
     def test_check_for_updates_no_update(self, mock_get):
         """Test update check when no update is available."""
         # Mock API response with older version
@@ -140,12 +151,12 @@ class TestUpdateService(unittest.TestCase):
         mock_get.return_value = mock_response
 
         # Mock current version to be newer
-        with patch("accessiweather.services.update_service.__version__", "0.9.4"):
+        with patch("accessiweather.services.update_service.version_checker.__version__", "0.9.4"):
             update_info = self.update_service.check_for_updates("stable")
 
         self.assertIsNone(update_info)
 
-    @patch("accessiweather.services.update_service.requests.get")
+    @patch("accessiweather.services.update_service.version_checker.requests.get")
     def test_check_for_updates_api_error(self, mock_get):
         """Test update check when API request fails."""
         mock_get.side_effect = Exception("Network error")
@@ -198,7 +209,7 @@ class TestUpdateService(unittest.TestCase):
         assert update_info.portable_asset is not None  # Type hint for mypy
         self.assertEqual(update_info.portable_asset["name"], "AccessiWeather-0.9.5-Portable.zip")
 
-    @patch("accessiweather.services.update_service.requests.get")
+    @patch("accessiweather.services.update_service.version_checker.requests.get")
     def test_check_dev_builds_success(self, mock_get):
         """Test successful dev build checking."""
         # Mock GitHub Pages response
@@ -217,8 +228,8 @@ class TestUpdateService(unittest.TestCase):
         mock_get.return_value = mock_response
 
         # Test with current version 0.9.3 (should find update)
-        with patch("accessiweather.services.update_service.__version__", "0.9.3"):
-            update_info = self.update_service._check_dev_builds()
+        with patch("accessiweather.services.update_service.version_checker.__version__", "0.9.3"):
+            update_info = self.update_service.version_checker._check_dev_builds()
 
         self.assertIsNotNone(update_info)
         assert update_info is not None  # Type hint for mypy
@@ -233,7 +244,7 @@ class TestUpdateService(unittest.TestCase):
         assert update_info.installer_asset is not None  # Type hint for mypy
         self.assertIn("nightly.link", update_info.installer_asset["browser_download_url"])
 
-    @patch("accessiweather.services.update_service.requests.get")
+    @patch("accessiweather.services.update_service.version_checker.requests.get")
     def test_check_dev_builds_no_update(self, mock_get):
         """Test dev build checking when no update is available."""
         # Mock GitHub Pages response
@@ -251,12 +262,12 @@ class TestUpdateService(unittest.TestCase):
         mock_get.return_value = mock_response
 
         # Test with current version 0.9.3 (should not find update)
-        with patch("accessiweather.services.update_service.__version__", "0.9.3"):
-            update_info = self.update_service._check_dev_builds()
+        with patch("accessiweather.services.update_service.version_checker.__version__", "0.9.3"):
+            update_info = self.update_service.version_checker._check_dev_builds()
 
         self.assertIsNone(update_info)
 
-    @patch("accessiweather.services.update_service.requests.get")
+    @patch("accessiweather.services.update_service.version_checker.requests.get")
     def test_check_for_updates_dev_channel(self, mock_get):
         """Test update checking on dev channel."""
         # Mock GitHub Pages response
@@ -274,7 +285,7 @@ class TestUpdateService(unittest.TestCase):
         mock_get.return_value = mock_response
 
         # Test with current version 0.9.3 (should find update)
-        with patch("accessiweather.services.update_service.__version__", "0.9.3"):
+        with patch("accessiweather.services.update_service.version_checker.__version__", "0.9.3"):
             update_info = self.update_service.check_for_updates(channel="dev")
 
         self.assertIsNotNone(update_info)
