@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from accessiweather.gui.handlers.timer_handlers import WeatherAppTimerHandlers
-from accessiweather.gui.settings_dialog import UPDATE_INTERVAL_KEY
+from accessiweather.gui.settings.constants import UPDATE_INTERVAL_KEY
 from accessiweather.gui.weather_app import WeatherApp
 
 
@@ -143,7 +143,6 @@ def test_weather_app_timer_initialization():
         patch("accessiweather.gui.weather_app.WeatherApp.Bind"),
         patch("accessiweather.gui.weather_app.logger"),
     ):
-
         # Create a mock timer instance
         mock_timer = MagicMock()
         mock_timer_class.return_value = mock_timer

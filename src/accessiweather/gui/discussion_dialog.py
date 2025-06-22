@@ -17,6 +17,7 @@ class WeatherDiscussionDialog(wx.Dialog):
             parent: Parent window
             title: Dialog title
             text: Discussion text
+
         """
         # Create the dialog with a simple style first
         super().__init__(parent, title=title, style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
@@ -110,6 +111,7 @@ class WeatherDiscussionDialog(wx.Dialog):
 
         Args:
             event: Button event
+
         """
         logger.debug("Close button clicked, ending modal dialog")
         try:

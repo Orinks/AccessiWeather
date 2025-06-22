@@ -5,7 +5,7 @@ weather API operations, inheriting from BaseApiWrapper for shared functionality.
 """
 
 import logging
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 from accessiweather.api_client import NoaaApiError
 from accessiweather.openmeteo_client import (
@@ -27,6 +27,7 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
 
         Args:
             **kwargs: Arguments passed to BaseApiWrapper
+
         """
         super().__init__(**kwargs)
 
@@ -49,27 +50,25 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
                     error_type=NoaaApiError.RATE_LIMIT_ERROR,
                     url=f"Open-Meteo API for {lat},{lon}",
                 )
-            else:
-                return NoaaApiError(
-                    message=str(error),
-                    error_type=NoaaApiError.API_ERROR,
-                    url=f"Open-Meteo API for {lat},{lon}",
-                )
-        elif isinstance(error, OpenMeteoNetworkError):
+            return NoaaApiError(
+                message=str(error),
+                error_type=NoaaApiError.API_ERROR,
+                url=f"Open-Meteo API for {lat},{lon}",
+            )
+        if isinstance(error, OpenMeteoNetworkError):
             return NoaaApiError(
                 message=str(error),
                 error_type=NoaaApiError.NETWORK_ERROR,
                 url=f"Open-Meteo API for {lat},{lon}",
             )
-        else:
-            return NoaaApiError(
-                message=f"Unexpected Open-Meteo error: {error}",
-                error_type=NoaaApiError.UNKNOWN_ERROR,
-                url=f"Open-Meteo API for {lat},{lon}",
-            )
+        return NoaaApiError(
+            message=f"Unexpected Open-Meteo error: {error}",
+            error_type=NoaaApiError.UNKNOWN_ERROR,
+            url=f"Open-Meteo API for {lat},{lon}",
+        )
 
     # Implementation of abstract methods from BaseApiWrapper
-    def get_current_conditions(self, lat: float, lon: float, **kwargs) -> Dict[str, Any]:
+    def get_current_conditions(self, lat: float, lon: float, **kwargs) -> dict[str, Any]:
         """Get current weather conditions for a location using Open-Meteo."""
         force_refresh = kwargs.get("force_refresh", False)
         temperature_unit = kwargs.get("temperature_unit", "fahrenheit")
@@ -89,7 +88,7 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
             },
         )
 
-        def fetch_data() -> Dict[str, Any]:
+        def fetch_data() -> dict[str, Any]:
             self._rate_limit()
             try:
                 response = self.openmeteo_client.get_current_weather(
@@ -106,9 +105,9 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
                 )
                 raise self._map_openmeteo_error(e, lat, lon)
 
-        return cast(Dict[str, Any], self._get_cached_or_fetch(cache_key, fetch_data, force_refresh))
+        return cast(dict[str, Any], self._get_cached_or_fetch(cache_key, fetch_data, force_refresh))
 
-    def get_forecast(self, lat: float, lon: float, **kwargs) -> Dict[str, Any]:
+    def get_forecast(self, lat: float, lon: float, **kwargs) -> dict[str, Any]:
         """Get forecast for a location using Open-Meteo."""
         force_refresh = kwargs.get("force_refresh", False)
         days = kwargs.get("days", 7)
@@ -130,7 +129,7 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
             },
         )
 
-        def fetch_data() -> Dict[str, Any]:
+        def fetch_data() -> dict[str, Any]:
             self._rate_limit()
             try:
                 response = self.openmeteo_client.get_forecast(
@@ -146,9 +145,9 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
                 logger.error(f"Error getting forecast from Open-Meteo for {lat},{lon}: {str(e)}")
                 raise self._map_openmeteo_error(e, lat, lon)
 
-        return cast(Dict[str, Any], self._get_cached_or_fetch(cache_key, fetch_data, force_refresh))
+        return cast(dict[str, Any], self._get_cached_or_fetch(cache_key, fetch_data, force_refresh))
 
-    def get_hourly_forecast(self, lat: float, lon: float, **kwargs) -> Dict[str, Any]:
+    def get_hourly_forecast(self, lat: float, lon: float, **kwargs) -> dict[str, Any]:
         """Get hourly forecast for a location using Open-Meteo."""
         force_refresh = kwargs.get("force_refresh", False)
         hours = kwargs.get("hours", 48)
@@ -170,7 +169,7 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
             },
         )
 
-        def fetch_data() -> Dict[str, Any]:
+        def fetch_data() -> dict[str, Any]:
             self._rate_limit()
             try:
                 response = self.openmeteo_client.get_hourly_forecast(
@@ -188,10 +187,10 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
                 )
                 raise self._map_openmeteo_error(e, lat, lon)
 
-        return cast(Dict[str, Any], self._get_cached_or_fetch(cache_key, fetch_data, force_refresh))
+        return cast(dict[str, Any], self._get_cached_or_fetch(cache_key, fetch_data, force_refresh))
 
     # Data transformation methods
-    def _transform_current_conditions(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def _transform_current_conditions(self, data: dict[str, Any]) -> dict[str, Any]:
         """Transform Open-Meteo current conditions to standard format."""
         # Open-Meteo returns data in a specific format, transform it to match expected format
         return {
@@ -201,7 +200,7 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
             "current_units": data.get("current_units", {}),
         }
 
-    def _transform_forecast(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def _transform_forecast(self, data: dict[str, Any]) -> dict[str, Any]:
         """Transform Open-Meteo forecast to standard format."""
         return {
             "type": "openmeteo_forecast",
@@ -210,7 +209,7 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
             "daily_units": data.get("daily_units", {}),
         }
 
-    def _transform_hourly_forecast(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def _transform_hourly_forecast(self, data: dict[str, Any]) -> dict[str, Any]:
         """Transform Open-Meteo hourly forecast to standard format."""
         return {
             "type": "openmeteo_hourly",

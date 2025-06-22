@@ -27,6 +27,7 @@ class WidgetFactory:
 
         Args:
             frame: The main WeatherApp frame instance.
+
         """
         self.frame = frame
 
@@ -35,6 +36,7 @@ class WidgetFactory:
 
         Returns:
             wx.Panel: The main panel with all UI components
+
         """
         panel = wx.Panel(self.frame)
         main_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -59,6 +61,7 @@ class WidgetFactory:
         Args:
             panel: Parent panel
             main_sizer: Main sizer to add components to
+
         """
         location_sizer = wx.BoxSizer(wx.HORIZONTAL)
         location_label = AccessibleStaticText(panel, label="Location:")
@@ -75,6 +78,7 @@ class WidgetFactory:
         Args:
             panel: Parent panel
             main_sizer: Main sizer to add components to
+
         """
         current_conditions_label = AccessibleStaticText(panel, label="Current Conditions:")
         main_sizer.Add(current_conditions_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
@@ -94,6 +98,7 @@ class WidgetFactory:
         Args:
             panel: Parent panel
             main_sizer: Main sizer to add components to
+
         """
         forecast_label = AccessibleStaticText(panel, label="Forecast:")
         main_sizer.Add(forecast_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
@@ -113,6 +118,7 @@ class WidgetFactory:
         Args:
             panel: Parent panel
             main_sizer: Main sizer to add components to
+
         """
         self.frame.discussion_btn = AccessibleButton(panel, wx.ID_ANY, "View Forecast Discussion")
         main_sizer.Add(self.frame.discussion_btn, 0, wx.ALL | wx.ALIGN_CENTER, 5)
@@ -126,6 +132,7 @@ class WidgetFactory:
 
         Returns:
             wx.StaticText: The alerts label for potential hiding with Open-Meteo
+
         """
         alerts_label = AccessibleStaticText(panel, label="Weather Alerts:")
         main_sizer.Add(alerts_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
@@ -158,6 +165,7 @@ class WidgetFactory:
         Args:
             panel: Parent panel
             main_sizer: Main sizer to add components to
+
         """
         buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -181,6 +189,7 @@ class WidgetFactory:
 
         Returns:
             list: List of (element, name) tuples for elements to hide
+
         """
         # Note: alerts_label needs to be retrieved from the created section
         # This is a limitation of the current design that could be improved

@@ -4,7 +4,7 @@ This module contains the common base class for all WeatherApp handlers.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import wx
 import wx.adv
@@ -26,10 +26,10 @@ class WeatherAppHandlerBase:
     location_service: Any
     forecast_text: wx.TextCtrl
     alerts_list: wx.ListCtrl
-    current_alerts: List[Dict[str, Any]]
+    current_alerts: list[dict[str, Any]]
     updating: bool
     last_update: float
-    config: Dict[str, Any]
+    config: dict[str, Any]
     _config_path: str
     api_client: Any
     weather_service: Any
@@ -37,42 +37,36 @@ class WeatherAppHandlerBase:
     discussion_fetcher: Any
     _on_discussion_fetched: Any
     _on_discussion_error: Any
-    taskbar_icon: Optional[wx.adv.TaskBarIcon]
+    taskbar_icon: wx.adv.TaskBarIcon | None
     _in_nationwide_mode: bool
-    _nationwide_wpc_full: Optional[str]
-    _nationwide_spc_full: Optional[str]
+    _nationwide_wpc_full: str | None
+    _nationwide_spc_full: str | None
     remove_btn: wx.Button
     alert_btn: wx.Button
     discussion_btn: wx.Button
-    _discussion_loading_dialog: Optional[wx.ProgressDialog]
-    _discussion_timer: Optional[wx.Timer]
+    _discussion_loading_dialog: wx.ProgressDialog | None
+    _discussion_timer: wx.Timer | None
     debug_mode: bool
     debug_alerts: bool
 
     # Methods that will be provided by WeatherApp
     def UpdateWeatherData(self) -> None:
         """Placeholder for WeatherApp.UpdateWeatherData method"""
-        pass
 
     def UpdateLocationDropdown(self) -> None:
         """Placeholder for WeatherApp.UpdateLocationDropdown method"""
-        pass
 
     def SetStatusText(self, text: str) -> None:  # noqa: U100
         """Placeholder for wx.Frame.SetStatusText method"""
-        pass
 
     def Bind(self, *args: Any, **kwargs: Any) -> None:  # noqa: U100
         """Placeholder for wx.Frame.Bind method"""
-        pass
 
     def Unbind(self, *args: Any, **kwargs: Any) -> None:  # noqa: U100
         """Placeholder for wx.Frame.Unbind method"""
-        pass
 
     def Hide(self) -> None:
         """Placeholder for wx.Frame.Hide method"""
-        pass
 
     def _save_config(self, show_errors: bool = True) -> bool:  # noqa: U100
         """Placeholder for WeatherApp._save_config method"""

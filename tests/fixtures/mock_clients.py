@@ -105,10 +105,9 @@ def mock_all_geocoding():
                 mock_us_location = MagicMock()
                 mock_us_location.raw = {"address": {"country_code": "us"}}
                 return mock_us_location
-            else:
-                mock_intl_location = MagicMock()
-                mock_intl_location.raw = {"address": {"country_code": "gb"}}
-                return mock_intl_location
+            mock_intl_location = MagicMock()
+            mock_intl_location.raw = {"address": {"country_code": "gb"}}
+            return mock_intl_location
 
         mock_nominatim_instance.reverse.side_effect = reverse_side_effect
 

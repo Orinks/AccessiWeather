@@ -27,6 +27,7 @@ class UpdateNotificationDialog(wx.Dialog):
             parent: Parent window
             update_info: Information about the available update
             update_service: Update service instance
+
         """
         super().__init__(
             parent,

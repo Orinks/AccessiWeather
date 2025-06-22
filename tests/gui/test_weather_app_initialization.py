@@ -94,7 +94,9 @@ class TestWeatherAppInitialization:
     """Test WeatherApp initialization."""
 
     @patch("wx.Frame.__init__", return_value=None)
-    @patch("accessiweather.gui.weather_app.WeatherApp._create_menu_bar")
+    @patch(
+        "accessiweather.gui.weather_app_modules.event_handlers.WeatherAppEventHandlers._create_menu_bar"
+    )
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateLocationDropdown")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateWeatherData")
     def test_init_with_all_services(
@@ -144,7 +146,9 @@ class TestWeatherAppInitialization:
             mock_update_weather.assert_called_once()
 
     @patch("wx.Frame.__init__", return_value=None)
-    @patch("accessiweather.gui.weather_app.WeatherApp._create_menu_bar")
+    @patch(
+        "accessiweather.gui.weather_app_modules.event_handlers.WeatherAppEventHandlers._create_menu_bar"
+    )
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateLocationDropdown")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateWeatherData")
     def test_init_with_debug_mode(
@@ -176,7 +180,9 @@ class TestWeatherAppInitialization:
             assert app.debug_mode is True
 
     @patch("wx.Frame.__init__", return_value=None)
-    @patch("accessiweather.gui.weather_app.WeatherApp._create_menu_bar")
+    @patch(
+        "accessiweather.gui.weather_app_modules.event_handlers.WeatherAppEventHandlers._create_menu_bar"
+    )
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateLocationDropdown")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateWeatherData")
     def test_init_with_custom_config_path(
@@ -207,7 +213,9 @@ class TestWeatherAppInitialization:
             assert app._config_path == temp_config_file
 
     @patch("wx.Frame.__init__", return_value=None)
-    @patch("accessiweather.gui.weather_app.WeatherApp._create_menu_bar")
+    @patch(
+        "accessiweather.gui.weather_app_modules.event_handlers.WeatherAppEventHandlers._create_menu_bar"
+    )
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateLocationDropdown")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateWeatherData")
     def test_init_sets_default_attributes(
@@ -249,7 +257,9 @@ class TestWeatherAppInitialization:
             assert app._testing_discussion_error_callback is None
 
     @patch("wx.Frame.__init__", return_value=None)
-    @patch("accessiweather.gui.weather_app.WeatherApp._create_menu_bar")
+    @patch(
+        "accessiweather.gui.weather_app_modules.event_handlers.WeatherAppEventHandlers._create_menu_bar"
+    )
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateLocationDropdown")
     @patch("accessiweather.gui.weather_app.WeatherApp.UpdateWeatherData")
     def test_init_with_backward_compatibility_api_client(

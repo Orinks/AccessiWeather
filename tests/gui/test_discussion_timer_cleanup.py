@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 import wx
 
 # We'll test the method directly without instantiating the full class
-from accessiweather.gui.weather_app import WeatherApp
+from accessiweather.gui.weather_app_modules.ui_management import WeatherAppUIManagement
 
 
 class TestDiscussionTimerCleanup(unittest.TestCase):
@@ -23,10 +23,8 @@ class TestDiscussionTimerCleanup(unittest.TestCase):
         # This avoids the complex initialization of the full class
         self.app = MagicMock()
 
-        # Copy the actual method we want to test to our mock
-        self.app._cleanup_discussion_loading = WeatherApp._cleanup_discussion_loading.__get__(
-            self.app, WeatherApp
-        )
+        # Create UI management instance to test
+        self.ui_management = WeatherAppUIManagement(self.app)
 
         # Add logger for debug messages
         self.app.logger = MagicMock()
@@ -49,7 +47,7 @@ class TestDiscussionTimerCleanup(unittest.TestCase):
         self.app._discussion_loading_dialog = mock_dialog
 
         # Call the method under test
-        self.app._cleanup_discussion_loading()
+        self.ui_management.cleanup_discussion_loading()
 
         # Verify timer was stopped
         mock_timer.Stop.assert_called_once()
@@ -82,7 +80,7 @@ class TestDiscussionTimerCleanup(unittest.TestCase):
         self.app._discussion_loading_dialog = mock_dialog
 
         # Call the method under test
-        self.app._cleanup_discussion_loading()
+        self.ui_management.cleanup_discussion_loading()
 
         # Verify timer was not stopped (since it wasn't running)
         mock_timer.Stop.assert_not_called()
@@ -112,7 +110,7 @@ class TestDiscussionTimerCleanup(unittest.TestCase):
         self.app._discussion_loading_dialog = mock_dialog
 
         # Call the method under test
-        self.app._cleanup_discussion_loading()
+        self.ui_management.cleanup_discussion_loading()
 
         # Verify timer was stopped
         mock_timer.Stop.assert_called_once()
@@ -142,7 +140,7 @@ class TestDiscussionTimerCleanup(unittest.TestCase):
         self.app._discussion_loading_dialog = mock_dialog
 
         # Call the method under test
-        self.app._cleanup_discussion_loading()
+        self.ui_management.cleanup_discussion_loading()
 
         # Verify dialog was still hidden and destroyed despite timer exception
         mock_dialog.Hide.assert_called_once()
@@ -167,7 +165,7 @@ class TestDiscussionTimerCleanup(unittest.TestCase):
         self.app._discussion_loading_dialog = mock_dialog
 
         # Call the method under test
-        self.app._cleanup_discussion_loading()
+        self.ui_management.cleanup_discussion_loading()
 
         # Verify timer was stopped despite dialog exception
         mock_timer.Stop.assert_called_once()
@@ -196,7 +194,7 @@ class TestDiscussionTimerCleanup(unittest.TestCase):
         self.app._discussion_loading_dialog = mock_internal_dialog
 
         # Call the method under test with external dialog
-        self.app._cleanup_discussion_loading(mock_external_dialog)
+        self.ui_management.cleanup_discussion_loading(mock_external_dialog)
 
         # Verify timer was stopped
         mock_timer.Stop.assert_called_once()

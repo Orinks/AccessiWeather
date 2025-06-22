@@ -5,7 +5,8 @@ from unittest.mock import patch
 
 import wx
 
-from accessiweather.gui.settings_dialog import DATA_SOURCE_AUTO, DATA_SOURCE_NWS, SettingsDialog
+from accessiweather.gui.settings.constants import DATA_SOURCE_AUTO, DATA_SOURCE_NWS
+from accessiweather.gui.settings_dialog import SettingsDialog
 
 
 class TestSettingsDialogAuto(unittest.TestCase):

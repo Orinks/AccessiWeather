@@ -27,7 +27,7 @@ from .handlers import (
     WeatherAppTimerHandlers,
     WeatherAppUpdateHandlers,
 )
-from .settings_dialog import UPDATE_INTERVAL_KEY
+from .settings.constants import UPDATE_INTERVAL_KEY
 from .system_tray import TaskBarIcon
 from .ui_manager import UIManager
 from .weather_app_modules.core import WeatherAppCore
@@ -82,6 +82,7 @@ class WeatherApp(
             config: Configuration dictionary (optional)
             config_path: Custom path to config file (optional)
             debug_mode: Whether to enable debug mode with additional logging and alert testing features (default: False)
+
         """
         super().__init__(parent, title="AccessiWeather", size=(800, 600))
 

@@ -4,8 +4,6 @@ import pytest
 
 from accessiweather.utils.temperature_utils import TemperatureUnit
 
-from .fixtures import mock_ui_manager
-
 
 @pytest.mark.unit
 def test_get_temperature_unit_preference_celsius(mock_ui_manager):

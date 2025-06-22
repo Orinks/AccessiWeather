@@ -185,3 +185,23 @@ def api_call_counter():
             return self.calls.copy()
 
     return APICallCounter()
+
+
+@pytest.fixture
+def headless_environment(monkeypatch):
+    """Set up headless environment for GUI testing."""
+    # Set environment variables for headless mode
+    monkeypatch.setenv("DISPLAY", "")
+    monkeypatch.setenv("PYTEST_DISABLE_PLUGIN_AUTOLOAD", "1")
+    monkeypatch.setenv("ACCESSIWEATHER_TEST_MODE", "1")
+
+    # Return a simple object to indicate headless mode is active
+    class HeadlessEnvironment:
+        def __init__(self):
+            self.headless = True
+            self.display = ""
+
+        def is_headless(self):
+            return self.headless
+
+    return HeadlessEnvironment()

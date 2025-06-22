@@ -7,7 +7,7 @@ all background threads in the application.
 import logging
 import threading
 import time
-from typing import Any, ClassVar, Dict, Optional
+from typing import Any, ClassVar, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ class ThreadManager:
     Attributes:
         _instance: Class variable to store the singleton instance
         _instance_lock: Class lock to ensure thread-safe singleton creation
+
     """
 
     _instance: Optional["ThreadManager"] = None
@@ -33,6 +34,7 @@ class ThreadManager:
 
         Returns:
             The singleton ThreadManager instance
+
         """
         with cls._instance_lock:
             if cls._instance is None:
@@ -44,9 +46,10 @@ class ThreadManager:
 
         Note:
             This should not be called directly. Use ThreadManager.instance() instead.
+
         """
-        self._threads: Dict[int, Dict[str, Any]] = {}
-        self._stop_events: Dict[int, threading.Event] = {}
+        self._threads: dict[int, dict[str, Any]] = {}
+        self._stop_events: dict[int, threading.Event] = {}
         self._lock = threading.RLock()
         logger.debug("ThreadManager initialized")
 
@@ -60,6 +63,7 @@ class ThreadManager:
 
         Returns:
             The registered thread
+
         """
         if thread is None:
             return None
@@ -90,6 +94,7 @@ class ThreadManager:
 
         Args:
             thread_id: The identifier of the thread to unregister.
+
         """
         with self._lock:
             # Check if thread exists before trying to delete
@@ -116,6 +121,7 @@ class ThreadManager:
 
         Returns:
             List of registered threads
+
         """
         with self._lock:
             return [thread["thread"] for thread in self._threads.values()]
@@ -125,6 +131,7 @@ class ThreadManager:
 
         Returns:
             List of registered stop events
+
         """
         with self._lock:
             return list(self._stop_events.values())
@@ -138,6 +145,7 @@ class ThreadManager:
 
         Returns:
             list: Names of threads that did not stop cleanly within the timeout.
+
         """
         logger.info("Beginning thread cleanup process")
         overall_start_time = time.time()
@@ -256,6 +264,7 @@ class ThreadManager:
 
         Returns:
             True if the thread is running, False otherwise
+
         """
         with self._lock:
             if thread_id in self._threads:
@@ -268,6 +277,7 @@ class ThreadManager:
 
         Returns:
             A list of thread objects that are currently active
+
         """
         active_threads = []
         with self._lock:
@@ -282,6 +292,7 @@ class ThreadManager:
 
         Returns:
             A list of dictionaries containing thread information
+
         """
         active_threads = []
         with self._lock:
@@ -323,6 +334,7 @@ def get_thread_manager():
 
     Returns:
         The global thread manager instance
+
     """
     return ThreadManager.instance()
 
@@ -337,6 +349,7 @@ def register_thread(thread, stop_event=None, name=None):
 
     Returns:
         The registered thread
+
     """
     return ThreadManager.instance().register_thread(thread, stop_event, name)
 
@@ -346,6 +359,7 @@ def unregister_thread(thread_id):
 
     Args:
         thread_id: The identifier of the thread to unregister.
+
     """
     return ThreadManager.instance().unregister_thread(thread_id)
 
@@ -358,5 +372,6 @@ def stop_all_threads(timeout=3.0):
 
     Returns:
         List of threads that could not be joined
+
     """
     return ThreadManager.instance().stop_all_threads(timeout)

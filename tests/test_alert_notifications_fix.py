@@ -7,7 +7,7 @@ of alert state to prevent duplicate notifications on app restart or timer update
 import json
 import os
 import tempfile
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 
 from accessiweather.notifications import WeatherNotifier
@@ -41,8 +41,9 @@ class TestAlertNotificationsFix:
 
         Returns:
             Dictionary containing alert data
+
         """
-        expires_time = datetime.now(timezone.utc) + timedelta(hours=expires_hours)
+        expires_time = datetime.now(UTC) + timedelta(hours=expires_hours)
         return {
             "id": alert_id,
             "event": event,
@@ -51,8 +52,8 @@ class TestAlertNotificationsFix:
             "severity": "Extreme",
             "urgency": "Immediate",
             "expires": expires_time.isoformat(),
-            "sent": datetime.now(timezone.utc).isoformat(),
-            "effective": datetime.now(timezone.utc).isoformat(),
+            "sent": datetime.now(UTC).isoformat(),
+            "effective": datetime.now(UTC).isoformat(),
             "status": "Actual",
             "messageType": "Alert",
             "category": "Met",
@@ -70,6 +71,7 @@ class TestAlertNotificationsFix:
 
         Returns:
             Dictionary in the format expected by the API
+
         """
         features = []
         for alert in alerts:
@@ -123,7 +125,7 @@ class TestAlertNotificationsFix:
         # Manually create alert state file with expired alert
         state_data = {
             "active_alerts": {"expired_alert": expired_alert},
-            "last_updated": datetime.now(timezone.utc).isoformat(),
+            "last_updated": datetime.now(UTC).isoformat(),
             "version": "1.0",
         }
 
@@ -220,7 +222,7 @@ class TestAlertNotificationsFix:
         notifier = WeatherNotifier(config_dir=self.temp_dir, enable_persistence=True)
 
         # Create duplicate alerts from different offices (same event, time, area)
-        base_time = datetime.now(timezone.utc)
+        base_time = datetime.now(UTC)
         expires_time = base_time + timedelta(hours=2)
 
         alert1 = {
@@ -270,9 +272,9 @@ class TestAlertNotificationsFix:
             # Should only show ONE notification despite having 2 alerts
             assert new_count == 1, f"Expected 1 new alert, got {new_count}"
             assert updated_count == 0
-            assert (
-                len(processed_alerts) == 1
-            ), f"Expected 1 processed alert, got {len(processed_alerts)}"
+            assert len(processed_alerts) == 1, (
+                f"Expected 1 processed alert, got {len(processed_alerts)}"
+            )
             assert mock_show.call_count == 1, f"Expected 1 notification, got {mock_show.call_count}"
 
             # The processed alert should be one of the original alerts

@@ -10,7 +10,7 @@ import logging
 import threading
 import time
 import traceback
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 import requests
 from requests.exceptions import JSONDecodeError
@@ -32,7 +32,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
     def __init__(
         self,
         user_agent: str = "AccessiWeather",
-        contact_info: Optional[str] = None,
+        contact_info: str | None = None,
         enable_caching: bool = False,
         cache_ttl: int = 300,
     ):
@@ -44,6 +44,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
                           for API identification. If None, uses the app name.
             enable_caching: Whether to enable caching of API responses
             cache_ttl: Time-to-live for cached responses in seconds (default: 5 minutes)
+
         """
         self.user_agent = user_agent
         # Use app name as default contact info if none provided
@@ -69,7 +70,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
         if enable_caching:
             logger.info(f"Caching enabled with TTL of {cache_ttl} seconds")
 
-    def get_point_data(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
+    def get_point_data(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
         """Get metadata about a specific lat/lon point
 
         Args:
@@ -78,6 +79,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
 
         Returns:
             Dict containing point metadata
+
         """
         endpoint = f"points/{lat},{lon}"
         logger.info(f"Fetching point data for coordinates: ({lat}, {lon})")
@@ -86,10 +88,10 @@ class NoaaApiClient(AlertsAndProductsMixin):
     def _make_request(
         self,
         endpoint_or_url: str,
-        params: Optional[Dict[str, Any]] = None,
+        params: dict[str, Any] | None = None,
         use_full_url: bool = False,
         force_refresh: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Make a request to the NOAA API
 
         Args:
@@ -104,6 +106,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
 
         Raises:
             NoaaApiError: If the API request fails
+
         """
         # Build the request URL
         if use_full_url:
@@ -123,7 +126,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
                 cached_response = self.cache.get(cache_key)
                 if cached_response is not None:
                     logger.debug(f"Cache hit for {request_url}")
-                    return cached_response
+                    return cached_response  # type: ignore[no-any-return]
 
         # Make the API request with rate limiting and error handling
         try:
@@ -163,7 +166,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
                         error_type=NoaaApiError.CLIENT_ERROR,
                         url=request_url,
                     )
-                elif response.status_code == 429:
+                if response.status_code == 429:
                     error_msg = f"Rate limit exceeded (429) for {request_url}"
                     logger.error(error_msg)
                     raise NoaaApiError(
@@ -172,7 +175,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
                         error_type=NoaaApiError.RATE_LIMIT_ERROR,
                         url=request_url,
                     )
-                elif response.status_code >= 500:
+                if response.status_code >= 500:
                     error_msg = f"Server error ({response.status_code}) for {request_url}"
                     logger.error(error_msg)
                     raise NoaaApiError(
@@ -181,7 +184,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
                         error_type=NoaaApiError.SERVER_ERROR,
                         url=request_url,
                     )
-                elif response.status_code >= 400:
+                if response.status_code >= 400:
                     error_msg = f"Client error ({response.status_code}) for {request_url}"
                     logger.error(error_msg)
                     raise NoaaApiError(
@@ -201,7 +204,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
                         self.cache.set(cache_key, data)
                         logger.debug(f"Cached response for {request_url}")
 
-                    return data
+                    return data  # type: ignore[no-any-return]
 
                 except JSONDecodeError as json_err:
                     error_msg = f"Failed to parse JSON response from {request_url}: {json_err}"
@@ -246,7 +249,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
                 message=error_msg, error_type=NoaaApiError.UNKNOWN_ERROR, url=request_url
             ) from e
 
-    def get_forecast(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
+    def get_forecast(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
         """Get forecast for a location
 
         Args:
@@ -256,6 +259,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
 
         Returns:
             Dict containing forecast data
+
         """
         # First get the forecast URL from the point data
         try:
@@ -270,7 +274,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
             if not forecast_url:
                 props = list(point_data.get("properties", {}).keys())
                 logger.error(
-                    "Could not find forecast URL in point data. " f"Available properties: {props}"
+                    f"Could not find forecast URL in point data. Available properties: {props}"
                 )
                 # Keep this specific ValueError for this context
                 raise ValueError("Could not find forecast URL in point data")
@@ -284,7 +288,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
 
     def get_hourly_forecast(
         self, lat: float, lon: float, force_refresh: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get hourly forecast for a location
 
         Args:
@@ -294,6 +298,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
 
         Returns:
             Dict containing hourly forecast data
+
         """
         # First get the hourly forecast URL from the point data
         try:
@@ -322,7 +327,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
             logger.debug(f"Traceback: {traceback.format_exc()}")
             raise
 
-    def get_stations(self, lat: float, lon: float, force_refresh: bool = False) -> Dict[str, Any]:
+    def get_stations(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
         """Get observation stations for a location
 
         Args:
@@ -332,6 +337,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
 
         Returns:
             Dict containing observation stations data
+
         """
         try:
             logger.info(f"Getting observation stations for coordinates: ({lat}, {lon})")
@@ -359,7 +365,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
 
     def get_current_conditions(
         self, lat: float, lon: float, force_refresh: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get current weather conditions for a location from the nearest observation station
 
         Args:
@@ -369,6 +375,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
 
         Returns:
             Dict containing current weather conditions
+
         """
         try:
             logger.info(f"Getting current conditions for coordinates: ({lat}, {lon})")
@@ -401,7 +408,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
 
     def identify_location_type(
         self, lat: float, lon: float, force_refresh: bool = False
-    ) -> Tuple[Optional[str], Optional[str]]:
+    ) -> tuple[str | None, str | None]:
         """Identify the type of location (county, state, etc.) for the given coordinates.
 
         Args:
@@ -414,6 +421,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
             Tuple of (location_type, location_id) where location_type is one of
             'county', 'forecast', 'fire', or None if the type cannot be determined.
             location_id is the UGC code for the location or None.
+
         """
         try:
             # Get point data for the coordinates

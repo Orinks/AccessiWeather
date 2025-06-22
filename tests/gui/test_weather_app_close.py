@@ -3,7 +3,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from accessiweather.gui.settings_dialog import MINIMIZE_TO_TRAY_KEY
+from accessiweather.gui.settings.constants import MINIMIZE_TO_TRAY_KEY
 from accessiweather.gui.weather_app import WeatherApp
 
 

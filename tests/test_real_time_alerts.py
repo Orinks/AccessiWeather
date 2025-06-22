@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import wx
 
-from accessiweather.gui.settings_dialog import (
+from accessiweather.gui.settings.constants import (
     ALERT_RADIUS_KEY,
     PRECISE_LOCATION_ALERTS_KEY,
     UPDATE_INTERVAL_KEY,
@@ -88,8 +88,8 @@ def mock_weather_app():
         app._alerts_complete = True  # Add the missing attribute
 
         # Mock methods - using setattr to avoid type checking issues
-        setattr(app, "SetStatusText", MagicMock())
-        setattr(app, "UpdateWeatherData", MagicMock())
+        app.SetStatusText = MagicMock()
+        app.UpdateWeatherData = MagicMock()
 
         yield app
 

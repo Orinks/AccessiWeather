@@ -20,6 +20,7 @@ class AlertDetailsDialog(wx.Dialog):
             parent: Parent window
             title: Dialog title
             alert_data: Dictionary containing alert data
+
         """
         # Create the dialog with resize border
         super().__init__(parent, title=title, style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
@@ -193,6 +194,7 @@ class AlertDetailsDialog(wx.Dialog):
 
         Args:
             event: Button event
+
         """
         logger.debug("Close button clicked, ending modal dialog")
         try:

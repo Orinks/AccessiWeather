@@ -7,7 +7,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 # Import the module that will be tested
-from accessiweather.api_client import ApiClientError, NoaaApiError
 from accessiweather.api_wrapper import NoaaApiWrapper
 
 # Create mock modules
@@ -70,10 +69,9 @@ SAMPLE_POINT_DATA = {
 def api_wrapper():
     """Create a NoaaApiWrapper instance without caching."""
     with (
-        patch("accessiweather.api.nws_wrapper.NwsApiWrapper") as mock_nws,
+        patch("accessiweather.api.nws.NwsApiWrapper") as mock_nws,
         patch("accessiweather.api.openmeteo_wrapper.OpenMeteoApiWrapper") as mock_openmeteo,
     ):
-
         # Create mock instances with proper attributes
         mock_nws_instance = MagicMock()
         mock_nws_instance.client = MagicMock()
@@ -111,10 +109,9 @@ def api_wrapper():
 def cached_api_wrapper():
     """Create a NoaaApiWrapper instance with caching enabled."""
     with (
-        patch("accessiweather.api.nws_wrapper.NwsApiWrapper") as mock_nws,
+        patch("accessiweather.api.nws.NwsApiWrapper") as mock_nws,
         patch("accessiweather.api.openmeteo_wrapper.OpenMeteoApiWrapper") as mock_openmeteo,
     ):
-
         # Create mock cache
         mock_cache = MagicMock()
         mock_cache.default_ttl = 300
@@ -187,10 +184,9 @@ def test_init_with_caching():
 def test_generate_cache_key():
     """Test cache key generation through NWS wrapper."""
     with (
-        patch("accessiweather.api.nws_wrapper.NwsApiWrapper") as mock_nws,
+        patch("accessiweather.api.nws.NwsApiWrapper") as mock_nws,
         patch("accessiweather.api.openmeteo_wrapper.OpenMeteoApiWrapper") as mock_openmeteo,
     ):
-
         # Create mock instances with proper _generate_cache_key method
         mock_nws_instance = MagicMock()
         mock_nws_instance._generate_cache_key = MagicMock()

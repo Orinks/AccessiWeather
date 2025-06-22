@@ -4,8 +4,6 @@ This module contains all exception classes and constants used by the API client
 for error handling and location type identification.
 """
 
-from typing import Optional
-
 # Constants for alert location types
 LOCATION_TYPE_COUNTY = "county"
 LOCATION_TYPE_FORECAST = "forecast"
@@ -15,8 +13,6 @@ LOCATION_TYPE_STATE = "state"
 
 class ApiClientError(Exception):
     """Custom exception for API client errors."""
-
-    pass
 
 
 class NoaaApiError(ApiClientError):
@@ -39,9 +35,9 @@ class NoaaApiError(ApiClientError):
     def __init__(
         self,
         message: str,
-        status_code: Optional[int] = None,
-        error_type: Optional[str] = None,
-        url: Optional[str] = None,
+        status_code: int | None = None,
+        error_type: str | None = None,
+        url: str | None = None,
     ):
         """Initialize the NoaaApiError.
 
@@ -50,6 +46,7 @@ class NoaaApiError(ApiClientError):
             status_code: HTTP status code if applicable
             error_type: Type of error (use class constants)
             url: URL that caused the error
+
         """
         self.status_code = status_code
         self.error_type = error_type or self.UNKNOWN_ERROR

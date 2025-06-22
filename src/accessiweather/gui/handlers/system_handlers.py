@@ -36,6 +36,7 @@ class WeatherAppSystemHandlers(WeatherAppHandlerBase):
 
         Args:
             event: Key event
+
         """
         # Handle key events for accessibility
         key_code = event.GetKeyCode()
@@ -67,6 +68,7 @@ class WeatherAppSystemHandlers(WeatherAppHandlerBase):
 
         Returns:
             bool: True to indicate successful handling of the event
+
         """
         close_successful = True
         logger.debug("OnClose called with force_close=%s", force_close)

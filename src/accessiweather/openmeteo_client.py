@@ -11,7 +11,7 @@ LIMITATIONS:
 
 import logging
 import time
-from typing import Any, Dict
+from typing import Any
 
 import httpx
 
@@ -21,19 +21,13 @@ logger = logging.getLogger(__name__)
 class OpenMeteoError(Exception):
     """Base exception for Open-Meteo API errors."""
 
-    pass
-
 
 class OpenMeteoApiError(OpenMeteoError):
     """Exception raised for Open-Meteo API errors."""
 
-    pass
-
 
 class OpenMeteoNetworkError(OpenMeteoError):
     """Exception raised for network-related errors."""
-
-    pass
 
 
 class OpenMeteoApiClient:
@@ -59,6 +53,7 @@ class OpenMeteoApiClient:
             timeout: Request timeout in seconds
             max_retries: Maximum number of retries for failed requests
             retry_delay: Delay between retries in seconds
+
         """
         self.user_agent = user_agent
         self.timeout = timeout
@@ -77,7 +72,7 @@ class OpenMeteoApiClient:
         if hasattr(self, "client"):
             self.client.close()
 
-    def _make_request(self, endpoint: str, params: Dict[str, Any]) -> Dict[str, Any]:
+    def _make_request(self, endpoint: str, params: dict[str, Any]) -> dict[str, Any]:
         """Make a request to the Open-Meteo API.
 
         Args:
@@ -90,6 +85,7 @@ class OpenMeteoApiClient:
         Raises:
             OpenMeteoApiError: If the API returns an error
             OpenMeteoNetworkError: If there's a network error
+
         """
         url = f"{self.BASE_URL}/{endpoint}"
 
@@ -103,15 +99,15 @@ class OpenMeteoApiClient:
                     error_data = response.json() if response.content else {}
                     error_msg = error_data.get("reason", "Bad request")
                     raise OpenMeteoApiError(f"API error: {error_msg}")
-                elif response.status_code == 429:
+                if response.status_code == 429:
                     raise OpenMeteoApiError("Rate limit exceeded")
-                elif response.status_code >= 500:
+                if response.status_code >= 500:
                     raise OpenMeteoApiError(f"Server error: {response.status_code}")
 
                 response.raise_for_status()
 
                 # Parse JSON response
-                data: Dict[str, Any] = response.json()
+                data: dict[str, Any] = response.json()
                 logger.debug(f"Received response with keys: {list(data.keys())}")
                 return data
 
@@ -152,7 +148,7 @@ class OpenMeteoApiClient:
         temperature_unit: str = "fahrenheit",
         wind_speed_unit: str = "mph",
         precipitation_unit: str = "inch",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get current weather conditions for a location.
 
         Args:
@@ -164,6 +160,7 @@ class OpenMeteoApiClient:
 
         Returns:
             Dictionary containing current weather data
+
         """
         params = {
             "latitude": latitude,
@@ -198,7 +195,7 @@ class OpenMeteoApiClient:
         temperature_unit: str = "fahrenheit",
         wind_speed_unit: str = "mph",
         precipitation_unit: str = "inch",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get daily forecast for a location.
 
         Args:
@@ -211,6 +208,7 @@ class OpenMeteoApiClient:
 
         Returns:
             Dictionary containing daily forecast data
+
         """
         params = {
             "latitude": latitude,
@@ -246,7 +244,7 @@ class OpenMeteoApiClient:
         temperature_unit: str = "fahrenheit",
         wind_speed_unit: str = "mph",
         precipitation_unit: str = "inch",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get hourly forecast for a location.
 
         Args:
@@ -259,6 +257,7 @@ class OpenMeteoApiClient:
 
         Returns:
             Dictionary containing hourly forecast data
+
         """
         params = {
             "latitude": latitude,
@@ -296,6 +295,7 @@ class OpenMeteoApiClient:
 
         Returns:
             Human-readable weather description
+
         """
         weather_codes = {
             0: "Clear sky",

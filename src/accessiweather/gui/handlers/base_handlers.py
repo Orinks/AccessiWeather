@@ -24,6 +24,7 @@ class WeatherAppBaseHandlers(WeatherAppHandlerBase):
 
         Args:
             event: Key event
+
         """
         # Handle key events for accessibility
         key_code = event.GetKeyCode()

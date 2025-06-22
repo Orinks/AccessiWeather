@@ -32,6 +32,7 @@ class SimpleMessageDialog(wx.Dialog):
             message: Message to display
             title: Dialog title
             style: Dialog style (determines icon and buttons)
+
         """
         super().__init__(
             parent,
@@ -157,6 +158,7 @@ class WeatherAppUpdateHandlers(WeatherAppHandlerBase):
 
         Args:
             update_info: UpdateInfo object with details about the available update
+
         """
         try:
             # Show update notification on main thread
@@ -169,6 +171,7 @@ class WeatherAppUpdateHandlers(WeatherAppHandlerBase):
 
         Args:
             progress: Progress percentage (0-100)
+
         """
         # This could be used to update a progress dialog if needed
         logger.debug(f"Update progress: {progress}%")
@@ -178,6 +181,7 @@ class WeatherAppUpdateHandlers(WeatherAppHandlerBase):
 
         Args:
             update_info: UpdateInfo object with details about the available update
+
         """
         try:
             if not self.update_service:
@@ -212,6 +216,7 @@ class WeatherAppUpdateHandlers(WeatherAppHandlerBase):
 
         Args:
             event: The menu event
+
         """
         logger.info("OnCheckForUpdates called - starting manual update check")
 
@@ -253,6 +258,7 @@ class WeatherAppUpdateHandlers(WeatherAppHandlerBase):
         Args:
             progress_dialog: The progress dialog to close
             update_info: UpdateInfo object or None if no update available
+
         """
         try:
             logger.info("Manual update check completed, processing results")
@@ -313,6 +319,7 @@ class WeatherAppUpdateHandlers(WeatherAppHandlerBase):
         Args:
             progress_dialog: The progress dialog to close
             error_message: Error message string
+
         """
         try:
             logger.error(f"Manual update check failed: {error_message}")
@@ -365,6 +372,7 @@ class WeatherAppUpdateHandlers(WeatherAppHandlerBase):
 
         Args:
             new_settings: Dictionary of new settings
+
         """
         if not self.update_service:
             return

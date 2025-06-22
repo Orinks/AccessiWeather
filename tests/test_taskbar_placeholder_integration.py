@@ -1,5 +1,4 @@
-"""
-Integration tests for taskbar placeholder functionality with real API data structures.
+"""Integration tests for taskbar placeholder functionality with real API data structures.
 
 This test suite uses actual API response structures to verify that the placeholder
 system works correctly with real data from both NWS and Open-Meteo APIs.

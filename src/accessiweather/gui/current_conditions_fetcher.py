@@ -27,6 +27,7 @@ class CurrentConditionsFetcher:
 
         Args:
             service: NoaaApiClient or WeatherService instance
+
         """
         self.service = service
         self.thread = None
@@ -37,6 +38,7 @@ class CurrentConditionsFetcher:
 
         Returns:
             bool: True if a thread was cancelled, False otherwise
+
         """
         if self.thread is not None and self.thread.is_alive():
             logger.debug("[EXIT OPTIMIZATION] Fast-cancelling current conditions fetch thread")
@@ -54,6 +56,7 @@ class CurrentConditionsFetcher:
             lon: Longitude
             on_success: Callback for successful fetch
             on_error: Callback for error handling
+
         """
         # Cancel any existing fetch
         if self.thread is not None and self.thread.is_alive():
@@ -79,6 +82,7 @@ class CurrentConditionsFetcher:
             lon: Longitude
             on_success: Success callback
             on_error: Error callback
+
         """
         thread = threading.current_thread()
         ThreadManager.instance().register_thread(thread, self._stop_event)

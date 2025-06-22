@@ -22,14 +22,14 @@ class TestAPIPerformance:
         self,
         weather_service,
         sample_nws_current_response,
-        sample_openmeteo_current_response,
+        sample_openmeteo_response,
         performance_timer,
     ):
         """Test performance with concurrent API requests."""
         # Mock API responses
         weather_service.nws_client.get_current_conditions.return_value = sample_nws_current_response
         weather_service.openmeteo_client.get_current_weather.return_value = (
-            sample_openmeteo_current_response
+            sample_openmeteo_response
         )
 
         def make_request(coordinates):
@@ -59,7 +59,7 @@ class TestAPIPerformance:
         assert all(result is not None for result in results)
 
         # Performance should be reasonable even with mocked responses
-        assert performance_timer.elapsed < 5.0
+        assert performance_timer.elapsed() < 5.0
 
         # Verify API was called for each request
         assert weather_service.nws_client.get_current_conditions.call_count >= 1
@@ -78,7 +78,7 @@ class TestAPIPerformance:
             cache.set(f"{cache_key}_{i}", test_data)
         performance_timer.stop()
 
-        write_time = performance_timer.elapsed
+        write_time = performance_timer.elapsed()
         assert write_time < 1.0, f"Cache writes took {write_time:.2f}s, expected < 1.0s"
 
         # Test cache read performance
@@ -88,7 +88,7 @@ class TestAPIPerformance:
             assert result == test_data
         performance_timer.stop()
 
-        read_time = performance_timer.elapsed
+        read_time = performance_timer.elapsed()
         assert read_time < 0.5, f"Cache reads took {read_time:.2f}s, expected < 0.5s"
 
     def test_api_rate_limiting_compliance(self, weather_service, sample_nws_current_response):
@@ -186,7 +186,6 @@ class TestResponseTimePerformance:
     def test_initial_app_startup_time(self, temp_config_dir, sample_config, performance_timer):
         """Test initial application startup time."""
         with patch("accessiweather.gui.app_factory.create_weather_app") as mock_create_app:
-
             # Mock app creation
             mock_app = MagicMock()
             mock_create_app.return_value = mock_app
@@ -199,7 +198,7 @@ class TestResponseTimePerformance:
             performance_timer.stop()
 
             # Startup should be fast (< 5 seconds requirement)
-            assert performance_timer.elapsed < 5.0
+            assert performance_timer.elapsed() < 5.0
             assert app is not None
 
     def test_weather_data_refresh_time(
@@ -225,7 +224,7 @@ class TestResponseTimePerformance:
         performance_timer.stop()
 
         # Should meet < 10 seconds requirement
-        assert performance_timer.elapsed < 10.0
+        assert performance_timer.elapsed() < 10.0
         assert current is not None
         assert forecast is not None
 
@@ -251,7 +250,7 @@ class TestResponseTimePerformance:
         performance_timer.stop()
 
         # Should meet < 5 seconds requirement
-        assert performance_timer.elapsed < 5.0
+        assert performance_timer.elapsed() < 5.0
         assert current1 is not None
         assert current1[0] == "New York"
         assert current2 is not None
@@ -262,7 +261,6 @@ class TestResponseTimePerformance:
     ):
         """Test UI update response time."""
         with patch("accessiweather.gui.ui_manager.UIManager") as mock_ui_manager:
-
             # Mock UI manager
             mock_ui_instance = MagicMock()
             mock_ui_manager.return_value = mock_ui_instance
@@ -276,7 +274,7 @@ class TestResponseTimePerformance:
             performance_timer.stop()
 
             # UI updates should be very fast (< 1 second requirement)
-            assert performance_timer.elapsed < 1.0
+            assert performance_timer.elapsed() < 1.0
             assert mock_ui_instance.update_current_conditions.call_count == 10
 
 
@@ -312,7 +310,7 @@ class TestScalabilityPerformance:
             performance_timer.stop()
 
             # Should handle many locations efficiently
-            assert performance_timer.elapsed < 2.0
+            assert performance_timer.elapsed() < 2.0
             # Should have 50 test locations + 1 Nationwide location
             assert len(all_locations) == 51
 

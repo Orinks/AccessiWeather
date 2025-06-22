@@ -20,6 +20,7 @@ class WeatherAppServiceCoordination:
 
         Args:
             weather_app: Reference to the main WeatherApp instance
+
         """
         self.app = weather_app
         logger.debug("WeatherAppServiceCoordination initialized")
@@ -29,6 +30,7 @@ class WeatherAppServiceCoordination:
 
         Args:
             forecast_data: Dictionary with national forecast data
+
         """
         logger.debug("National forecast fetch callback received data")
         # Save forecast data
@@ -75,6 +77,7 @@ class WeatherAppServiceCoordination:
 
         Args:
             conditions_data: Dictionary with current conditions data
+
         """
         logger.debug("_on_current_conditions_fetched received data")
 
@@ -86,6 +89,7 @@ class WeatherAppServiceCoordination:
 
         Args:
             error: Error message
+
         """
         logger.error(f"Current conditions fetch error: {error}")
 
@@ -100,6 +104,7 @@ class WeatherAppServiceCoordination:
 
         Args:
             hourly_forecast_data: Dictionary with hourly forecast data
+
         """
         logger.debug("_on_hourly_forecast_fetched received data")
 
@@ -115,6 +120,7 @@ class WeatherAppServiceCoordination:
 
         Args:
             forecast_data: Dictionary with forecast data
+
         """
         logger.debug("_on_forecast_fetched received data")
         # Save forecast data
@@ -146,6 +152,7 @@ class WeatherAppServiceCoordination:
 
         Args:
             error: Error message
+
         """
         logger.error(f"Forecast fetch error: {error}")
 
@@ -165,6 +172,7 @@ class WeatherAppServiceCoordination:
 
         Args:
             alerts_data: Dictionary with alerts data
+
         """
         logger.debug("Alerts fetched successfully, handling in main thread")
 
@@ -201,6 +209,7 @@ class WeatherAppServiceCoordination:
 
         Args:
             error: Error message
+
         """
         logger.error(f"Alerts fetch error: {error}")
 
@@ -223,6 +232,7 @@ class WeatherAppServiceCoordination:
             discussion_text: The discussion text
             name: Location name
             loading_dialog: Progress dialog to close
+
         """
         logger.debug(f"Discussion fetch callback received for {name}")
 
@@ -251,6 +261,7 @@ class WeatherAppServiceCoordination:
             error_message: Error message
             name: Location name
             loading_dialog: Progress dialog to close
+
         """
         logger.error(f"Discussion fetch error for {name}: {error_message}")
 

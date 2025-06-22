@@ -24,6 +24,7 @@ class LogWatcher(threading.Thread):
             log_file: Path to the log file to watch
             callback: Function to call when the log file changes
             interval: Interval in seconds to check for changes
+
         """
         super().__init__()
         self.daemon = True  # Thread will exit when main thread exits
@@ -45,7 +46,7 @@ class LogWatcher(threading.Thread):
                         self.last_modified = float(modified_time)
 
                         # Read the new content
-                        with open(self.log_file, "r") as f:
+                        with open(self.log_file) as f:
                             f.seek(self.last_position)
                             new_content = f.read()
                             self.last_position = f.tell()
@@ -82,6 +83,7 @@ class DebugLogWindow(wx.Dialog):
 
         Args:
             parent: Parent window
+
         """
         super().__init__(
             parent,
@@ -187,6 +189,7 @@ class DebugLogWindow(wx.Dialog):
 
         Returns:
             Path to the log file
+
         """
         log_dir = os.path.expanduser("~/AccessiWeather_logs")
         return os.path.join(log_dir, "accessiweather.log")
@@ -196,7 +199,7 @@ class DebugLogWindow(wx.Dialog):
         log_file = self._get_log_file_path()
         if os.path.exists(log_file):
             try:
-                with open(log_file, "r") as f:
+                with open(log_file) as f:
                     content = f.read()
                     self._apply_filter(content, replace=True)
 
@@ -215,6 +218,7 @@ class DebugLogWindow(wx.Dialog):
 
         Args:
             new_content: New content from the log file
+
         """
         self._apply_filter(new_content, replace=False)
 
@@ -224,6 +228,7 @@ class DebugLogWindow(wx.Dialog):
         Args:
             content: Log content to filter
             replace: Whether to replace the current content or append
+
         """
         # Get the current filter settings
         level = self.level_choice.GetStringSelection()
@@ -268,6 +273,7 @@ class DebugLogWindow(wx.Dialog):
 
         Args:
             event: Button event
+
         """
         # Reload the log with the new filter
         self._load_log()
@@ -277,6 +283,7 @@ class DebugLogWindow(wx.Dialog):
 
         Args:
             event: Button event
+
         """
         # Clear the filter controls
         self.level_choice.SetSelection(0)  # "All"
@@ -290,6 +297,7 @@ class DebugLogWindow(wx.Dialog):
 
         Args:
             event: Button event
+
         """
         # Clear the log text
         self.log_text.Clear()
@@ -299,6 +307,7 @@ class DebugLogWindow(wx.Dialog):
 
         Args:
             event: Button event
+
         """
         # Reload the log
         self._load_log()
@@ -308,6 +317,7 @@ class DebugLogWindow(wx.Dialog):
 
         Args:
             event: Close event
+
         """
         # Stop the log watcher
         if self.log_watcher:

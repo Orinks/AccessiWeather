@@ -18,7 +18,7 @@ class TestWeatherAppIntegration:
     """Test WeatherApp integration with services."""
 
     def test_weather_app_initialization(
-        self, headless_environment, temp_config_dir, sample_config, sample_nws_current_response
+        self, temp_config_dir, sample_config, sample_nws_current_response
     ):
         """Test WeatherApp initializes correctly with service layer."""
         with (
@@ -52,7 +52,6 @@ class TestWeatherAppIntegration:
             patch("wx.Dialog"),
             patch("accessiweather.gui.settings_dialog.SettingsDialog") as mock_settings,
         ):
-
             # Mock settings dialog
             mock_dialog_instance = MagicMock()
             mock_settings.return_value = mock_dialog_instance
@@ -76,7 +75,6 @@ class TestWeatherAppIntegration:
     ):
         """Test UI manager displays weather data correctly."""
         with patch("accessiweather.gui.ui_manager.UIManager") as mock_ui_manager:
-
             # Mock UI manager instance
             mock_ui_instance = MagicMock()
             mock_ui_manager.return_value = mock_ui_instance
@@ -99,10 +97,9 @@ class TestWeatherAppIntegration:
     def test_system_tray_integration(self, headless_environment, sample_config):
         """Test system tray integration with main application."""
         with (
-            patch("wx.adv.TaskBarIcon"),
+            patch("accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"),
             patch("accessiweather.gui.system_tray.TaskBarIcon") as mock_tray_icon,
         ):
-
             # Mock taskbar icon
             mock_icon_instance = MagicMock()
             mock_tray_icon.return_value = mock_icon_instance
@@ -132,7 +129,6 @@ class TestDialogIntegration:
             patch("wx.Dialog"),
             patch("accessiweather.gui.dialogs.LocationDialog") as mock_location_dialog,
         ):
-
             # Mock location dialog
             mock_dialog_instance = MagicMock()
             mock_location_dialog.return_value = mock_dialog_instance
@@ -164,7 +160,6 @@ class TestDialogIntegration:
             patch("wx.Dialog"),
             patch("accessiweather.gui.alert_dialog.AlertDetailsDialog") as mock_alert_dialog,
         ):
-
             # Mock alert dialog
             mock_dialog_instance = MagicMock()
             mock_alert_dialog.return_value = mock_dialog_instance
@@ -182,7 +177,6 @@ class TestDialogIntegration:
             patch("wx.Dialog"),
             patch("accessiweather.gui.dialogs.WeatherDiscussionDialog") as mock_discussion_dialog,
         ):
-
             # Mock discussion dialog
             mock_dialog_instance = MagicMock()
             mock_discussion_dialog.return_value = mock_dialog_instance
@@ -213,7 +207,6 @@ class TestTimerIntegration:
             patch("wx.Timer") as mock_timer,
             patch("accessiweather.gui.weather_app.WeatherApp") as mock_weather_app,
         ):
-
             # Mock timer
             mock_timer_instance = MagicMock()
             mock_timer.return_value = mock_timer_instance
@@ -248,7 +241,6 @@ class TestTimerIntegration:
             patch("wx.Timer") as mock_timer,
             patch("accessiweather.gui.weather_app.WeatherApp") as mock_weather_app,
         ):
-
             # Mock timer
             mock_timer_instance = MagicMock()
             mock_timer.return_value = mock_timer_instance
@@ -283,7 +275,6 @@ class TestAccessibilityIntegration:
     def test_screen_reader_announcements(self, headless_environment, sample_nws_current_response):
         """Test screen reader announcements for weather updates."""
         with patch("accessiweather.gui.ui_manager.UIManager") as mock_ui_manager:
-
             # Mock UI manager
             mock_ui_instance = MagicMock()
             mock_ui_manager.return_value = mock_ui_instance
@@ -304,7 +295,6 @@ class TestAccessibilityIntegration:
             patch("wx.Frame") as mock_frame,
             patch("accessiweather.gui.weather_app.WeatherApp") as mock_weather_app,
         ):
-
             # Mock frame and app
             mock_frame_instance = MagicMock()
             mock_frame.return_value = mock_frame_instance
@@ -330,7 +320,6 @@ class TestAccessibilityIntegration:
             patch("wx.SystemSettings") as mock_system_settings,
             patch("accessiweather.gui.ui_manager.UIManager") as mock_ui_manager,
         ):
-
             # Mock system settings
             mock_system_settings.GetColour.return_value = MagicMock()
 
@@ -365,7 +354,6 @@ class TestPerformanceIntegration:
     ):
         """Test UI remains responsive during data updates."""
         with patch("accessiweather.gui.ui_manager.UIManager") as mock_ui_manager:
-
             # Mock UI manager
             mock_ui_instance = MagicMock()
             mock_ui_manager.return_value = mock_ui_instance
@@ -381,7 +369,7 @@ class TestPerformanceIntegration:
             performance_timer.stop()
 
             # UI updates should be fast (even with mocking overhead)
-            assert performance_timer.elapsed < 1.0
+            assert performance_timer.elapsed() < 1.0
 
             # Verify all updates were processed
             assert mock_ui_instance.update_current_conditions.call_count == 10
@@ -392,7 +380,6 @@ class TestPerformanceIntegration:
         import gc
 
         with patch("accessiweather.gui.weather_app.WeatherApp") as mock_weather_app:
-
             # Mock weather app
             mock_app_instance = MagicMock()
             mock_weather_app.return_value = mock_app_instance

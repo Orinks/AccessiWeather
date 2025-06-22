@@ -2,8 +2,6 @@
 
 import pytest
 
-from .fixtures import mock_ui_manager
-
 
 @pytest.mark.unit
 def test_extract_nws_data_for_taskbar(mock_ui_manager):

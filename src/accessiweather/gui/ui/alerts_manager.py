@@ -5,7 +5,7 @@ in the user interface.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .ui_utils import is_weatherapi_data
 
@@ -20,10 +20,11 @@ class AlertsDisplayManager:
 
         Args:
             frame: The main WeatherApp frame instance.
+
         """
         self.frame = frame
 
-    def display_alerts(self, alerts_data: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def display_alerts(self, alerts_data: dict[str, Any] | None) -> list[dict[str, Any]]:
         """Display alerts data in the UI and return processed alerts.
 
         Args:
@@ -31,11 +32,12 @@ class AlertsDisplayManager:
 
         Returns:
             List of alert properties dictionaries.
+
         """
         # Clear current alerts display
         alerts_list_ctrl = self.frame.alerts_list
         alerts_list_ctrl.DeleteAllItems()
-        processed_alerts: List[Dict[str, Any]] = []  # List to store alert properties
+        processed_alerts: list[dict[str, Any]] = []  # List to store alert properties
 
         # Check if this is WeatherAPI.com data
         if alerts_data and is_weatherapi_data(alerts_data):
@@ -87,7 +89,7 @@ class AlertsDisplayManager:
 
         return processed_alerts
 
-    def _display_weatherapi_alerts(self, alerts_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _display_weatherapi_alerts(self, alerts_data: dict[str, Any]) -> list[dict[str, Any]]:
         """Display WeatherAPI.com alerts data in the UI.
 
         Args:
@@ -95,9 +97,10 @@ class AlertsDisplayManager:
 
         Returns:
             List of processed alert dictionaries
+
         """
         alerts_list_ctrl = self.frame.alerts_list
-        processed_alerts: List[Dict[str, Any]] = []
+        processed_alerts: list[dict[str, Any]] = []
 
         # Get alerts from the data
         alerts = alerts_data.get("alerts", [])
@@ -127,11 +130,12 @@ class AlertsDisplayManager:
 
         return processed_alerts
 
-    def display_alerts_processed(self, processed_alerts: List[Dict[str, Any]]) -> None:
+    def display_alerts_processed(self, processed_alerts: list[dict[str, Any]]) -> None:
         """Display already processed alerts data in the UI.
 
         Args:
             processed_alerts: List of processed alert dictionaries
+
         """
         # Clear current alerts display
         alerts_list_ctrl = self.frame.alerts_list

@@ -1,11 +1,10 @@
 """Tests for NoaaApiClient error handling functionality."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from requests.exceptions import (
     ConnectionError,
-    HTTPError,
     JSONDecodeError,
     RequestException,
     Timeout,

@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from accessiweather.gui.settings_dialog import (
+from accessiweather.gui.settings.constants import (
     DEFAULT_TEMPERATURE_UNIT,
     TASKBAR_ICON_DYNAMIC_ENABLED_KEY,
     TASKBAR_ICON_TEXT_ENABLED_KEY,
@@ -34,8 +34,10 @@ def taskbar_icon(mock_frame):
     """Create a TaskBarIcon instance for testing."""
     # Mock wx.adv.TaskBarIcon and wx.App to avoid GUI dependencies
     with (
-        patch("accessiweather.gui.system_tray.wx.adv.TaskBarIcon") as mock_taskbar_icon_class,
-        patch("accessiweather.gui.system_tray.wx.App.Get") as mock_app_get,
+        patch(
+            "accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"
+        ) as mock_taskbar_icon_class,
+        patch("accessiweather.gui.system_tray_modules.icon_manager.wx.App.Get") as mock_app_get,
         patch("accessiweather.gui.system_tray.TaskBarIcon.set_icon"),
     ):
         # Mock wx.App.Get() to return a mock app instance
@@ -52,10 +54,11 @@ def taskbar_icon(mock_frame):
         icon.alerts_data = None
         icon.current_text = ""
 
-        # Mock the SetIcon method to avoid type errors
-        icon.SetIcon = Mock()
+        # Use patch.object to properly mock the SetIcon method
+        with patch.object(icon, "SetIcon") as mock_set_icon:
+            icon.mock_set_icon = mock_set_icon
         # Use setattr to avoid the "Cannot assign to a method" error
-        setattr(icon, "set_icon", Mock())
+        icon.set_icon = Mock()
         return icon
 
 
@@ -154,9 +157,9 @@ class TestSystemTrayDynamicFormat:
         """Test static format with normal weather when dynamic is disabled."""
         # Disable dynamic format switching
         taskbar_icon.frame.config["settings"][TASKBAR_ICON_DYNAMIC_ENABLED_KEY] = False
-        taskbar_icon.frame.config["settings"][
-            TASKBAR_ICON_TEXT_FORMAT_KEY
-        ] = "Static: {temp}°F {condition}"
+        taskbar_icon.frame.config["settings"][TASKBAR_ICON_TEXT_FORMAT_KEY] = (
+            "Static: {temp}°F {condition}"
+        )
 
         # Update weather data
         taskbar_icon.update_weather_data(sample_weather_data)
@@ -175,9 +178,9 @@ class TestSystemTrayDynamicFormat:
         """Test static format with severe weather when dynamic is disabled."""
         # Disable dynamic format switching
         taskbar_icon.frame.config["settings"][TASKBAR_ICON_DYNAMIC_ENABLED_KEY] = False
-        taskbar_icon.frame.config["settings"][
-            TASKBAR_ICON_TEXT_FORMAT_KEY
-        ] = "Custom: {temp}°F - {condition}"
+        taskbar_icon.frame.config["settings"][TASKBAR_ICON_TEXT_FORMAT_KEY] = (
+            "Custom: {temp}°F - {condition}"
+        )
 
         # Update weather data
         taskbar_icon.update_weather_data(severe_weather_data)
@@ -200,13 +203,15 @@ class TestSystemTrayDynamicFormat:
         """Test static format with alerts when dynamic is disabled."""
         # Disable dynamic format switching
         mock_frame.config["settings"][TASKBAR_ICON_DYNAMIC_ENABLED_KEY] = False
-        mock_frame.config["settings"][
-            TASKBAR_ICON_TEXT_FORMAT_KEY
-        ] = "Weather: {temp}°F {condition}"
+        mock_frame.config["settings"][TASKBAR_ICON_TEXT_FORMAT_KEY] = (
+            "Weather: {temp}°F {condition}"
+        )
 
         with (
-            patch("accessiweather.gui.system_tray.wx.adv.TaskBarIcon") as mock_taskbar_icon_class,
-            patch("accessiweather.gui.system_tray.wx.App.Get") as mock_app_get,
+            patch(
+                "accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"
+            ) as mock_taskbar_icon_class,
+            patch("accessiweather.gui.system_tray_modules.icon_manager.wx.App.Get") as mock_app_get,
         ):
             # Mock wx.App.Get() to return a mock app instance
             mock_app = Mock()
@@ -241,8 +246,10 @@ class TestSystemTrayDynamicFormat:
         mock_frame.config["settings"][TASKBAR_ICON_TEXT_ENABLED_KEY] = False
 
         with (
-            patch("accessiweather.gui.system_tray.wx.adv.TaskBarIcon") as mock_taskbar_icon_class,
-            patch("accessiweather.gui.system_tray.wx.App.Get") as mock_app_get,
+            patch(
+                "accessiweather.gui.system_tray_modules.wx.adv.TaskBarIcon"
+            ) as mock_taskbar_icon_class,
+            patch("accessiweather.gui.system_tray_modules.icon_manager.wx.App.Get") as mock_app_get,
         ):
             # Mock wx.App.Get() to return a mock app instance
             mock_app = Mock()

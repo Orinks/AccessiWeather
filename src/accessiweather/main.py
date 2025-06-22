@@ -7,7 +7,6 @@ import json
 import logging
 import os
 import sys
-from typing import Optional
 
 import wx
 
@@ -21,7 +20,7 @@ from accessiweather.utils.single_instance import SingleInstanceChecker
 
 
 def main(
-    config_dir: Optional[str] = None,
+    config_dir: str | None = None,
     debug_mode: bool = False,
     enable_caching: bool = True,
     portable_mode: bool = False,
@@ -33,6 +32,7 @@ def main(
         debug_mode: Whether to enable debug mode with additional logging and alert testing features
         enable_caching: Whether to enable API response caching
         portable_mode: Whether to run in portable mode (saves config to local directory)
+
     """
     # Set portable mode environment variable if requested
     if portable_mode:
@@ -89,7 +89,7 @@ def main(
         config = {}
         if os.path.exists(config_file):
             try:
-                with open(config_file, "r") as f:
+                with open(config_file) as f:
                     config = json.load(f)
             except Exception as e:
                 logger.error(f"Failed to load config: {str(e)}")

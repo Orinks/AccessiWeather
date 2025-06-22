@@ -24,6 +24,7 @@ def safe_call_after(callback, *args, **kwargs):
         callback: Function to call on the main thread
         *args: Arguments to pass to the callback
         **kwargs: Keyword arguments to pass to the callback
+
     """
     try:
         # Check if the wx.App is still valid
@@ -74,6 +75,7 @@ class ForecastFetcher:
 
         Args:
             service: NoaaApiClient or WeatherService instance
+
         """
         self.service = service
         self.thread = None
@@ -84,6 +86,7 @@ class ForecastFetcher:
 
         Returns:
             bool: True if a thread was cancelled, False otherwise
+
         """
         if self.thread is not None and self.thread.is_alive():
             logger.debug("[EXIT OPTIMIZATION] Fast-cancelling forecast fetch thread")
@@ -101,6 +104,7 @@ class ForecastFetcher:
             lon: Longitude
             on_success: Callback for successful fetch
             on_error: Callback for error handling
+
         """
         # Cancel any existing fetch
         if self.thread is not None and self.thread.is_alive():
@@ -126,6 +130,7 @@ class ForecastFetcher:
             lon: Longitude
             on_success: Success callback
             on_error: Error callback
+
         """
         thread = threading.current_thread()
         ThreadManager.instance().register_thread(thread, self._stop_event)
@@ -179,6 +184,7 @@ class AlertsFetcher:
 
         Args:
             service: NoaaApiClient or WeatherService instance
+
         """
         self.service = service
         self.thread = None
@@ -189,6 +195,7 @@ class AlertsFetcher:
 
         Returns:
             bool: True if a thread was cancelled, False otherwise
+
         """
         if self.thread is not None and self.thread.is_alive():
             logger.debug("[EXIT OPTIMIZATION] Fast-cancelling alerts fetch thread")
@@ -208,6 +215,7 @@ class AlertsFetcher:
             on_error: Callback for error handling
             precise_location: Whether to get alerts for the precise location or statewide
             radius: Radius in miles to search for alerts if location type cannot be determined
+
         """
         # Cancel any existing fetch
         if self.thread is not None and self.thread.is_alive():
@@ -235,6 +243,7 @@ class AlertsFetcher:
             on_error: Error callback
             precise_location: Whether to get alerts for the precise location or statewide
             radius: Radius in miles to search for alerts if location type cannot be determined
+
         """
         thread = threading.current_thread()
         ThreadManager.instance().register_thread(thread, self._stop_event)
@@ -294,6 +303,7 @@ class DiscussionFetcher:
 
         Args:
             service: NoaaApiClient or WeatherService instance
+
         """
         self.service = service
         self.thread = None
@@ -304,6 +314,7 @@ class DiscussionFetcher:
 
         Returns:
             bool: True if a thread was cancelled, False otherwise
+
         """
         if self.thread is not None and self.thread.is_alive():
             logger.debug("[EXIT OPTIMIZATION] Fast-cancelling discussion fetch thread")
@@ -322,6 +333,7 @@ class DiscussionFetcher:
             on_success: Callback for successful fetch
             on_error: Callback for error handling
             additional_data: Additional data to pass to callbacks
+
         """
         # Cancel any existing fetch
         if self.thread is not None and self.thread.is_alive():
@@ -348,6 +360,7 @@ class DiscussionFetcher:
             on_success: Success callback
             on_error: Error callback
             additional_data: Additional data to pass to callbacks
+
         """
         thread = threading.current_thread()
         ThreadManager.instance().register_thread(thread, self._stop_event)

@@ -19,6 +19,7 @@ class SingleInstanceChecker:
 
         Args:
             app_name: Name of the application for the lock file
+
         """
         self.app_name = app_name
         self.checker = None
@@ -30,6 +31,7 @@ class SingleInstanceChecker:
 
         Returns:
             bool: True if lock was acquired, False if another instance is running
+
         """
         try:
             # Create a unique name for this user

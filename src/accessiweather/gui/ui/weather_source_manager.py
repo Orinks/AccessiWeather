@@ -17,6 +17,7 @@ class WeatherSourceManager:
 
         Args:
             frame: The main WeatherApp frame instance.
+
         """
         self.frame = frame
 
@@ -25,6 +26,7 @@ class WeatherSourceManager:
 
         Returns:
             bool: True if Open-Meteo is being used, False otherwise
+
         """
         logger.debug("is_using_openmeteo: Starting weather source detection")
         try:
@@ -60,8 +62,7 @@ class WeatherSourceManager:
                     f"is_using_openmeteo: weather_service._should_use_openmeteo returned {result}"
                 )
                 return result
-            else:
-                logger.debug("is_using_openmeteo: No weather service available, using fallback")
+            logger.debug("is_using_openmeteo: No weather service available, using fallback")
 
             # Fallback: check config directly
             return self._check_config_for_openmeteo(lat, lon)
@@ -79,14 +80,15 @@ class WeatherSourceManager:
 
         Returns:
             bool: True if Open-Meteo should be used
+
         """
-        from accessiweather.gui.settings_dialog import DATA_SOURCE_AUTO, DATA_SOURCE_OPENMETEO
+        from accessiweather.gui.settings.constants import DATA_SOURCE_AUTO, DATA_SOURCE_OPENMETEO
 
         data_source = self.frame.config.get("settings", {}).get("data_source", "nws")
 
         if data_source == DATA_SOURCE_OPENMETEO:
             return True
-        elif data_source == DATA_SOURCE_AUTO:
+        if data_source == DATA_SOURCE_AUTO:
             # For auto mode, check if location is outside US
             from accessiweather.geocoding import GeocodingService
 
@@ -103,6 +105,7 @@ class WeatherSourceManager:
 
         Args:
             openmeteo_hidden_elements: List of (element, name) tuples to hide for Open-Meteo
+
         """
         try:
             is_openmeteo = self.is_using_openmeteo()
@@ -127,6 +130,7 @@ class WeatherSourceManager:
 
         Args:
             openmeteo_hidden_elements: List of (element, name) tuples to hide for Open-Meteo
+
         """
         logger.debug("update_ui_for_location_change: Called from location handlers")
         self.update_ui_for_weather_source(openmeteo_hidden_elements)
