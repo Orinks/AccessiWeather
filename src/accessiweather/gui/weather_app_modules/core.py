@@ -183,8 +183,8 @@ class WeatherAppCore:
             "current": None,
             "settings": {
                 UPDATE_INTERVAL_KEY: 10,
-                ALERT_RADIUS_KEY: 25,
-                PRECISE_LOCATION_ALERTS_KEY: True,  # Default to precise location alerts
+                ALERT_RADIUS_KEY: 10,  # Smaller radius for more precise point-based alerts
+                PRECISE_LOCATION_ALERTS_KEY: True,  # Default to precise point-based alerts
                 MINIMIZE_TO_TRAY_KEY: True,  # Default to minimize to tray when closing
                 DATA_SOURCE_KEY: DEFAULT_DATA_SOURCE,  # Default to NWS
                 TEMPERATURE_UNIT_KEY: DEFAULT_TEMPERATURE_UNIT,  # Default to Fahrenheit

@@ -54,12 +54,38 @@ class NwsAlertsDiscussions:
                 f"Getting alerts for coordinates: ({lat}, {lon}) with radius {radius} miles, precise_location={precise_location}"
             )
 
+            if precise_location:
+                # Use point-based alerts for precise location (no radius parameter needed)
+                logger.info(f"Using point-based alerts for precise location: ({lat}, {lon})")
+                cache_key = self.wrapper._generate_cache_key(
+                    "alerts_point", {"lat": lat, "lon": lon}
+                )
+
+                def fetch_data() -> dict[str, Any]:
+                    self.wrapper._rate_limit()
+                    try:
+                        url = f"{self.wrapper.core_client.BASE_URL}/alerts/active?point={lat},{lon}"
+                        response = self.wrapper._fetch_url(url)
+                        return self._transform_alerts_data(response)
+                    except Exception as e:
+                        logger.error(f"Error getting alerts for point ({lat}, {lon}): {str(e)}")
+                        error_msg = f"Unexpected error getting alerts for point: {e}"
+                        raise NoaaApiError(
+                            message=error_msg, error_type=NoaaApiError.UNKNOWN_ERROR, url=url
+                        ) from e
+
+                return cast(
+                    dict[str, Any],
+                    self.wrapper._get_cached_or_fetch(cache_key, fetch_data, force_refresh),
+                )
+
+            # For non-precise location, use zone-based alerts
             # Identify the location type
             location_type, location_id = self.wrapper.point_location.identify_location_type(
                 lat, lon, force_refresh=force_refresh
             )
 
-            if precise_location and location_type in ("county", "forecast", "fire") and location_id:
+            if location_type in ("county", "forecast", "fire") and location_id:
                 # Get alerts for the specific zone
                 logger.info(f"Fetching alerts for {location_type} zone: {location_id}")
                 cache_key = self.wrapper._generate_cache_key(
@@ -83,7 +109,7 @@ class NwsAlertsDiscussions:
                         error_msg = f"Unexpected error getting alerts for zone: {e}"
                         raise NoaaApiError(
                             message=error_msg, error_type=NoaaApiError.UNKNOWN_ERROR, url=url
-                        )
+                        ) from e
 
                 return cast(
                     dict[str, Any],
@@ -108,7 +134,7 @@ class NwsAlertsDiscussions:
                         error_msg = f"Unexpected error getting alerts for state: {e}"
                         raise NoaaApiError(
                             message=error_msg, error_type=NoaaApiError.UNKNOWN_ERROR, url=url
-                        )
+                        ) from e
 
                 return cast(
                     dict[str, Any],
@@ -135,7 +161,7 @@ class NwsAlertsDiscussions:
                         error_msg = f"Unexpected error getting alerts for point: {e}"
                         raise NoaaApiError(
                             message=error_msg, error_type=NoaaApiError.UNKNOWN_ERROR, url=url
-                        )
+                        ) from e
 
                 return cast(
                     dict[str, Any],
@@ -159,7 +185,7 @@ class NwsAlertsDiscussions:
                     error_msg = f"Unexpected error getting all alerts: {e}"
                     raise NoaaApiError(
                         message=error_msg, error_type=NoaaApiError.UNKNOWN_ERROR, url=url
-                    )
+                    ) from e
 
             return cast(
                 dict[str, Any],
@@ -167,7 +193,7 @@ class NwsAlertsDiscussions:
             )
         except Exception as e:
             logger.error(f"Error getting alerts: {str(e)}")
-            raise ApiClientError(f"Unable to retrieve alerts data: {str(e)}")
+            raise ApiClientError(f"Unable to retrieve alerts data: {str(e)}") from e
 
     def get_discussion(self, lat: float, lon: float, force_refresh: bool = False) -> str | None:
         """Get forecast discussion for a location.
