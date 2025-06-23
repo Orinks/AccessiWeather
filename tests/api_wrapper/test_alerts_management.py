@@ -60,3 +60,52 @@ def test_get_alerts_with_point_radius_fallback(api_wrapper):
     api_wrapper.nws_wrapper.get_alerts.assert_called_once_with(
         lat, lon, radius=radius, precise_location=True, force_refresh=False
     )
+
+
+@pytest.mark.unit
+def test_get_alerts_point_based_vs_zone_based(api_wrapper):
+    """Test that point-based alerts (precise_location=True) vs zone-based alerts (precise_location=False) call different logic."""
+    lat, lon = TEST_LAT, TEST_LON
+
+    # Test point-based alerts (precise_location=True)
+    api_wrapper.get_alerts(lat, lon, precise_location=True)
+    api_wrapper.nws_wrapper.get_alerts.assert_called_with(
+        lat, lon, radius=50, precise_location=True, force_refresh=False
+    )
+
+    # Reset mock
+    api_wrapper.nws_wrapper.get_alerts.reset_mock()
+
+    # Test zone-based alerts (precise_location=False)
+    api_wrapper.get_alerts(lat, lon, precise_location=False)
+    api_wrapper.nws_wrapper.get_alerts.assert_called_with(
+        lat, lon, radius=50, precise_location=False, force_refresh=False
+    )
+
+
+@pytest.mark.unit
+def test_get_alerts_lumberton_coordinates(api_wrapper):
+    """Test alerts retrieval with actual Lumberton Township coordinates."""
+    # Lumberton Township, NJ coordinates
+    lat, lon = 39.9659459, -74.8051628
+
+    # Test point-based alerts for Lumberton
+    result = api_wrapper.get_alerts(lat, lon, precise_location=True)
+
+    assert result == SAMPLE_ALERTS_DATA
+    api_wrapper.nws_wrapper.get_alerts.assert_called_once_with(
+        lat, lon, radius=50, precise_location=True, force_refresh=False
+    )
+
+
+@pytest.mark.unit
+def test_get_alerts_default_precise_location_setting(api_wrapper):
+    """Test that the default precise_location setting is used correctly."""
+    lat, lon = TEST_LAT, TEST_LON
+
+    # Test with default parameters (should use precise_location=True by default)
+    api_wrapper.get_alerts(lat, lon)
+
+    api_wrapper.nws_wrapper.get_alerts.assert_called_once_with(
+        lat, lon, radius=50, precise_location=True, force_refresh=False
+    )

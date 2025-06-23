@@ -79,6 +79,68 @@ class TestSettingsDialog(unittest.TestCase):
         self.assertEqual(api_keys, {})
         dialog.Destroy()
 
+    def test_point_based_alerts_checkbox_default(self) -> None:
+        """Test that point-based alerts checkbox has correct default state."""
+        # Test with default settings (should default to True for point-based alerts)
+        settings = self.current_settings.copy()
+        settings["precise_location_alerts"] = True
+
+        dialog = SettingsDialog(self.frame, settings)
+
+        # Check that the precise alerts checkbox is checked by default
+        self.assertTrue(dialog.precise_alerts_ctrl.GetValue())
+        dialog.Destroy()
+
+    def test_point_based_alerts_checkbox_false(self) -> None:
+        """Test point-based alerts checkbox when set to False."""
+        settings = self.current_settings.copy()
+        settings["precise_location_alerts"] = False
+
+        dialog = SettingsDialog(self.frame, settings)
+
+        # Check that the precise alerts checkbox is unchecked
+        self.assertFalse(dialog.precise_alerts_ctrl.GetValue())
+        dialog.Destroy()
+
+    def test_point_based_alerts_tooltip(self) -> None:
+        """Test that point-based alerts checkbox has correct tooltip."""
+        dialog = SettingsDialog(self.frame, self.current_settings)
+
+        tooltip = dialog.precise_alerts_ctrl.GetToolTip()
+        self.assertIsNotNone(tooltip)
+
+        tooltip_text = tooltip.GetTip()
+        self.assertIn("point-based alerts", tooltip_text.lower())
+        self.assertIn("precise", tooltip_text.lower())
+        self.assertIn("county", tooltip_text.lower())
+
+        dialog.Destroy()
+
+    def test_alert_radius_default_value(self) -> None:
+        """Test that alert radius has correct default value for point-based alerts."""
+        # Test with default settings (should default to 10 miles for better precision)
+        settings = self.current_settings.copy()
+        settings["alert_radius_miles"] = 10
+
+        dialog = SettingsDialog(self.frame, settings)
+
+        # Check that the alert radius is set to 10 miles by default
+        self.assertEqual(dialog.alert_radius_ctrl.GetValue(), 10)
+        dialog.Destroy()
+
+    def test_alert_radius_tooltip_updated(self) -> None:
+        """Test that alert radius tooltip mentions point-based alerts."""
+        dialog = SettingsDialog(self.frame, self.current_settings)
+
+        tooltip = dialog.alert_radius_ctrl.GetToolTip()
+        self.assertIsNotNone(tooltip)
+
+        tooltip_text = tooltip.GetTip()
+        self.assertIn("fallback", tooltip_text.lower())
+        self.assertIn("point-based", tooltip_text.lower())
+
+        dialog.Destroy()
+
     def test_check_now_button_with_update_handler(self) -> None:
         """Test check now button when parent has OnCheckForUpdates method."""
         # Add OnCheckForUpdates method to the frame
@@ -186,7 +248,8 @@ class MockWeatherApp(
         self.config: dict[str, Any] = {
             "settings": {
                 "update_interval_minutes": 10,
-                "alert_radius_miles": 25,
+                "alert_radius_miles": 10,  # Updated default for point-based alerts
+                "precise_location_alerts": True,  # New point-based alerts setting
                 "data_source": "nws",
             },
             "api_settings": {},
