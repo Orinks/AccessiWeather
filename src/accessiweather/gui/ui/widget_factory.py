@@ -13,7 +13,6 @@ from ..ui_components import (
     AccessibleChoice,
     AccessibleListCtrl,
     AccessibleStaticText,
-    AccessibleTextCtrl,
 )
 
 logger = logging.getLogger(__name__)
@@ -83,13 +82,24 @@ class WidgetFactory:
         current_conditions_label = AccessibleStaticText(panel, label="Current Conditions:")
         main_sizer.Add(current_conditions_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
 
-        self.frame.current_conditions_text = AccessibleTextCtrl(
+        self.frame.current_conditions_text = wx.TextCtrl(
             panel,
             value="Select a location to view current conditions",
-            style=wx.TE_MULTILINE | wx.TE_READONLY,
+            style=wx.TE_MULTILINE | wx.TE_READONLY,  # Removed wx.TE_RICH2 for better accessibility
             size=(-1, 100),
-            label="Current Conditions Content",
         )
+
+        # Set system default font for better accessibility and visual consistency
+        font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+        self.frame.current_conditions_text.SetFont(font)
+
+        # Set accessible name and role for screen readers
+        self.frame.current_conditions_text.SetName("Current Conditions Content")
+        accessible = self.frame.current_conditions_text.GetAccessible()
+        if accessible:
+            accessible.SetName("Current Weather Conditions Text")
+            accessible.SetRole(wx.ACC_ROLE_TEXT)
+
         main_sizer.Add(self.frame.current_conditions_text, 0, wx.ALL | wx.EXPAND, 10)
 
     def _create_forecast_section(self, panel, main_sizer):
@@ -103,13 +113,24 @@ class WidgetFactory:
         forecast_label = AccessibleStaticText(panel, label="Forecast:")
         main_sizer.Add(forecast_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
 
-        self.frame.forecast_text = AccessibleTextCtrl(
+        self.frame.forecast_text = wx.TextCtrl(
             panel,
             value="Select a location to view the forecast",
-            style=wx.TE_MULTILINE | wx.TE_READONLY,
+            style=wx.TE_MULTILINE | wx.TE_READONLY,  # Removed wx.TE_RICH2 for better accessibility
             size=(-1, 200),
-            label="Forecast Content",
         )
+
+        # Set system default font for better accessibility and visual consistency
+        font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+        self.frame.forecast_text.SetFont(font)
+
+        # Set accessible name and role for screen readers
+        self.frame.forecast_text.SetName("Forecast Content")
+        accessible = self.frame.forecast_text.GetAccessible()
+        if accessible:
+            accessible.SetName("Weather Forecast Text")
+            accessible.SetRole(wx.ACC_ROLE_TEXT)
+
         main_sizer.Add(self.frame.forecast_text, 1, wx.ALL | wx.EXPAND, 10)
 
     def _create_discussion_section(self, panel, main_sizer):

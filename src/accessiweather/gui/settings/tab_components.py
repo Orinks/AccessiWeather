@@ -69,21 +69,26 @@ class GeneralTabBuilder:
         # Alert Radius
         alert_radius_label = wx.StaticText(panel, label="Alert Radius (miles):")
         self.dialog.alert_radius_ctrl = wx.SpinCtrl(
-            panel, min=MIN_ALERT_RADIUS, max=500, initial=25, name="Alert Radius"
+            panel, min=MIN_ALERT_RADIUS, max=500, initial=10, name="Alert Radius"
         )
-        tooltip_radius = "Radius around location to check for alerts (in miles)."
+        tooltip_radius = (
+            "Radius around location to check for alerts (in miles). "
+            "Only used as fallback when precise point-based alerts are unavailable. "
+            "Smaller values (5-15 miles) are recommended for most locations."
+        )
         self.dialog.alert_radius_ctrl.SetToolTip(tooltip_radius)
         grid_sizer.Add(alert_radius_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         grid_sizer.Add(self.dialog.alert_radius_ctrl, 0, wx.ALL, 5)
 
         # Precise Location Alerts Toggle
-        precise_alerts_label = "Use precise location for alerts"
+        precise_alerts_label = "Use point-based alerts (more precise)"
         self.dialog.precise_alerts_ctrl = wx.CheckBox(
             panel, label=precise_alerts_label, name="Precise Location Alerts"
         )
         tooltip_precise = (
-            "When checked, only shows alerts for your specific location. "
-            "When unchecked, shows all alerts for your state."
+            "When checked, shows only alerts that specifically affect your exact location coordinates. "
+            "When unchecked, shows all alerts for your county/zone (may include more alerts from nearby areas). "
+            "Point-based alerts are more precise but may miss some relevant regional alerts."
         )
         self.dialog.precise_alerts_ctrl.SetToolTip(tooltip_precise)
         grid_sizer.Add((1, 1), 0, wx.ALL, 5)

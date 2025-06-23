@@ -45,6 +45,9 @@ class ConditionsDisplay:
         if is_weatherapi_data(conditions_data):
             try:
                 text = self.formatter._format_weatherapi_current_conditions(conditions_data)
+                # Normalize line endings for consistent screen reader behavior
+                if isinstance(text, str):
+                    text = text.replace("\r\n", "\n").replace("\r", "\n")
                 self.frame.current_conditions_text.SetValue(text)
 
                 # Extract data for taskbar icon
@@ -109,6 +112,10 @@ class ConditionsDisplay:
             description,
             unit_pref,
         )
+
+        # Normalize line endings for consistent screen reader behavior
+        if isinstance(text, str):
+            text = text.replace("\r\n", "\n").replace("\r", "\n")
 
         self.frame.current_conditions_text.SetValue(text)
 
