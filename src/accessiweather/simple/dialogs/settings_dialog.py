@@ -21,7 +21,8 @@ class SettingsDialog:
     def __init__(self, app: toga.App, config_manager):
         self.app = app
         self.config_manager = config_manager
-        self.window = None
+        self.window = None  # Will be created fresh each time dialog is shown
+        self.future = None  # Will be created fresh each time dialog is shown
 
         # Current settings (working copy)
         self.current_settings = None
@@ -48,17 +49,35 @@ class SettingsDialog:
         # Updates tab controls (placeholder for future implementation)
         self.auto_update_switch = None
 
-    async def show(self) -> bool:
-        """Show the settings dialog and return True if settings were saved."""
+    def __await__(self):
+        """Make the dialog awaitable for modal behavior."""
+        if self.future is None:
+            raise RuntimeError("Dialog future not initialized. Call show_and_prepare() first.")
+        return self.future.__await__()
+
+    def show_and_prepare(self):
+        """Prepare and show the settings dialog."""
         logger.info("Showing settings dialog")
 
         try:
+            # Create a fresh future for this dialog session
+            self.future = self.app.loop.create_future()
+
+            # Create a fresh window instance
+            self.window = toga.Window(
+                title="AccessiWeather Settings",
+                size=(600, 500),
+                resizable=True,
+                minimizable=False,
+                closable=False,  # Prevent closing via X button to enforce modal behavior
+            )
+
             # Load current settings
             self.current_settings = self.config_manager.get_settings()
             logger.debug(f"Loaded settings: {self.current_settings}")
 
-            # Create dialog window
-            self._create_dialog_window()
+            # Create dialog content
+            self._create_dialog_content()
 
             # Show the dialog
             self.window.show()
@@ -66,25 +85,13 @@ class SettingsDialog:
             # Set initial focus to the first interactive control for accessibility
             self._set_initial_focus()
 
-            return True
-
         except Exception as e:
             logger.error(f"Failed to show settings dialog: {e}", exc_info=True)
-            await self.app.main_window.error_dialog(
-                "Settings Error", f"Failed to open settings: {e}"
-            )
-            return False
+            if self.future and not self.future.done():
+                self.future.set_exception(e)
 
-    def _create_dialog_window(self):
-        """Create the settings dialog window."""
-        self.window = toga.Window(
-            title="AccessiWeather Settings",
-            size=(600, 500),
-            resizable=True,
-            minimizable=False,
-            id="settings_dialog",
-        )
-
+    def _create_dialog_content(self):
+        """Create the settings dialog content."""
         # Main container
         main_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
 
@@ -329,10 +336,13 @@ class SettingsDialog:
 
             if success:
                 logger.info("Settings saved successfully")
-                # Close dialog first, then show confirmation
-                self._return_focus_to_trigger()
-                self.window.close()
-                await self.app.main_window.info_dialog("Settings", "Settings saved successfully!")
+                # Set result and close dialog
+                if self.future and not self.future.done():
+                    self.future.set_result(True)
+                if self.window:
+                    self.window.close()
+                    self.window = None  # Clear reference to help with cleanup
+                # No confirmation dialog - let focus return directly to main window
             else:
                 logger.error("Failed to save settings")
                 await self.app.main_window.error_dialog(
@@ -341,13 +351,17 @@ class SettingsDialog:
 
         except Exception as e:
             logger.error(f"Error saving settings: {e}")
+            # Don't close dialog on error, let user try again or cancel
             await self.app.main_window.error_dialog("Settings Error", f"Error saving settings: {e}")
 
     async def _on_cancel(self, widget):
         """Handle Cancel button press - close dialog without saving."""
         logger.info("Settings dialog cancelled")
-        self._return_focus_to_trigger()
-        self.window.close()
+        if self.future and not self.future.done():
+            self.future.set_result(False)
+        if self.window:
+            self.window.close()
+            self.window = None  # Clear reference to help with cleanup
 
     def _collect_settings_from_ui(self) -> AppSettings:
         """Collect current settings from UI controls."""

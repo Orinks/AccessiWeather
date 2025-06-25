@@ -388,16 +388,28 @@ class AccessiWeatherApp(toga.App):
         logger.info("Settings menu pressed")
 
         try:
-            # Create and show settings dialog
-            settings_dialog = SettingsDialog(self, self.config_manager)
-            await settings_dialog.show()
+            # Create a fresh settings dialog instance each time
+            # This avoids the "Window is already associated with an App" error
+            settings_saved = await self._show_settings_dialog()
 
-            # Refresh UI after settings change
-            self._update_location_selection()
+            if settings_saved:
+                # Refresh UI after settings change
+                self._update_location_selection()
+                logger.info("Settings updated successfully")
 
         except Exception as e:
             logger.error(f"Failed to show settings dialog: {e}")
             await self.main_window.error_dialog("Settings Error", f"Failed to open settings: {e}")
+
+    async def _show_settings_dialog(self) -> bool:
+        """Show the settings dialog and return whether settings were saved."""
+        # Create a completely fresh dialog instance each time to avoid
+        # "Window is already associated with an App" errors
+        settings_dialog = SettingsDialog(self, self.config_manager)
+        settings_dialog.show_and_prepare()
+
+        # Wait for dialog result - the dialog handles its own cleanup
+        return await settings_dialog
 
     async def _on_add_location_pressed(self, widget):
         """Handle add location menu item."""
