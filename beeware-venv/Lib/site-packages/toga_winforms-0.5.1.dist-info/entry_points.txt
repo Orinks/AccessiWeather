@@ -1,0 +1,2 @@
+[toga.backends]
+windows = toga_winforms

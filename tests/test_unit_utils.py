@@ -1,7 +1,7 @@
 """Tests for unit utility functions."""
 
-from accessiweather.utils.temperature_utils import TemperatureUnit
-from accessiweather.utils.unit_utils import (
+from accessiweather.simple.utils.temperature_utils import TemperatureUnit
+from accessiweather.simple.utils.unit_utils import (
     format_precipitation,
     format_pressure,
     format_visibility,

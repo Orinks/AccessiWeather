@@ -6,6 +6,7 @@ import unittest
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+import pytest
 import wx
 
 from accessiweather.gui.handlers.config_handlers import WeatherAppConfigHandlers
@@ -15,6 +16,7 @@ from accessiweather.gui.settings import DATA_SOURCE_AUTO, DATA_SOURCE_KEY, DATA_
 from accessiweather.gui.settings_dialog import SettingsDialog
 
 
+@pytest.mark.wx_only
 class TestSettingsDialog(unittest.TestCase):
     """Tests for the settings dialog."""
 

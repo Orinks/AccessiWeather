@@ -1,0 +1,125 @@
+Metadata-Version: 2.4
+Name: travertino
+Version: 0.5.1
+Summary: A set of constants and base classes for describing user interface layouts.
+Author-email: Russell Keith-Magee <russell@keith-magee.com>
+Maintainer-email: BeeWare Team <team@beeware.org>
+License-Expression: BSD-3-Clause
+Project-URL: Homepage, https://beeware.org/travertino
+Project-URL: Funding, https://beeware.org/contributing/membership/
+Project-URL: Tracker, https://github.com/beeware/travertino/issues
+Project-URL: Source, https://github.com/beeware/travertino
+Keywords: css,box model,layout
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: Programming Language :: Python :: 3.14
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Topic :: Software Development
+Classifier: Topic :: Software Development :: User Interfaces
+Requires-Python: >=3.9
+Description-Content-Type: text/x-rst
+License-File: LICENSE
+Provides-Extra: dev
+Requires-Dist: coverage[toml]==7.8.0; extra == "dev"
+Requires-Dist: coverage-conditional-plugin==0.9.0; extra == "dev"
+Requires-Dist: pytest==8.3.5; extra == "dev"
+Requires-Dist: tox==4.25.0; extra == "dev"
+Requires-Dist: typing-extensions==4.12.2; python_version < "3.10" and extra == "dev"
+Dynamic: license-file
+
+.. |logo| image:: https://beeware.org/static/images/defaultlogo.png
+    :width: 72px
+    :target: https://beeware.org
+
+.. |pyversions| image:: https://img.shields.io/pypi/pyversions/travertino.svg
+    :target: https://pypi.python.org/pypi/travertino
+    :alt: Python Versions
+
+.. |version| image:: https://img.shields.io/pypi/v/travertino.svg
+    :target: https://pypi.python.org/pypi/travertino
+    :alt: Project version
+
+.. |maturity| image:: https://img.shields.io/pypi/status/travertino.svg
+    :target: https://pypi.python.org/pypi/travertino
+    :alt: Project status
+
+.. |license| image:: https://img.shields.io/pypi/l/travertino.svg
+    :target: https://github.com/beeware/toga/blob/main/travertino/LICENSE
+    :alt: BSD License
+
+.. |ci| image:: https://github.com/beeware/toga/workflows/CI/badge.svg?branch=main
+   :target: https://github.com/beeware/toga/actions
+   :alt: Build Status
+
+.. |social| image:: https://img.shields.io/discord/836455665257021440?label=Discord%20Chat&logo=discord&style=plastic
+   :target: https://beeware.org/bee/chat/
+   :alt: Discord server
+
+|logo|
+
+Travertino
+==========
+
+|pyversions| |version| |maturity| |license| |ci| |social|
+
+Travertino is a set of constants and utilities for describing user
+interfaces, including:
+
+* colors
+* directions
+* text alignment
+* sizes
+
+Usage
+-----
+
+Install Travertino:
+
+    $ pip install travertino
+
+Then in your python code, import and use it::
+
+    >>> from travertino.colors import color, rgb
+
+    # Define a new color as an RGB triple
+    >>> red = rgb(0xff, 0x00, 0x00)
+
+    # Parse a color from a string
+    >>> color('#dead00')
+    rgb(0xde, 0xad, 0x00)
+
+    # Reference a pre-defined color
+    >>> color('RebeccaPurple')
+    rgb(102, 51, 153)
+
+
+Community
+---------
+
+Travertino is part of the `BeeWare suite <https://beeware.org>`_. You can talk to the
+community through:
+
+* `@beeware@fosstodon.org on Mastodon <https://fosstodon.org/@beeware>`__
+
+* `Discord <https://beeware.org/bee/chat/>`__
+
+We foster a welcoming and respectful community as described in our
+`BeeWare Community Code of Conduct <https://beeware.org/community/behavior/>`__.
+
+Contributing
+------------
+
+If you experience problems with Toga, `log them on GitHub
+<https://github.com/beeware/toga/issues>`__.
+
+If you'd like to contribute to Toga development, our `contribution guide
+<https://toga.readthedocs.io/en/latest/how-to/contribute/index.html>`__
+details how to set up a development environment, and other requirements we have
+as part of our contribution process.
