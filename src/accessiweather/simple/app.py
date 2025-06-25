@@ -1,0 +1,637 @@
+"""Simple AccessiWeather Toga application.
+
+This module provides the main Toga application class following BeeWare best practices,
+with a simplified architecture that avoids complex service layers and threading issues.
+"""
+
+import asyncio
+import logging
+
+import toga
+from toga.style import Pack
+from toga.style.pack import COLUMN, ROW
+
+from .config import ConfigManager
+from .dialogs import SettingsDialog
+from .display import WxStyleWeatherFormatter
+from .location_manager import LocationManager
+from .models import WeatherData
+from .weather_client import WeatherClient
+
+logger = logging.getLogger(__name__)
+
+
+class AccessiWeatherApp(toga.App):
+    """Simple AccessiWeather application using Toga."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Core components
+        self.config_manager: ConfigManager | None = None
+        self.weather_client: WeatherClient | None = None
+        self.location_manager: LocationManager | None = None
+        self.formatter: WeatherFormatter | None = None
+
+        # UI components
+        self.location_selection: toga.Selection | None = None
+        self.current_conditions_display: toga.MultilineTextInput | None = None
+        self.forecast_display: toga.MultilineTextInput | None = None
+        self.alerts_display: toga.MultilineTextInput | None = None
+        self.refresh_button: toga.Button | None = None
+        self.status_label: toga.Label | None = None
+
+        # Background update task
+        self.update_task: asyncio.Task | None = None
+        self.is_updating: bool = False
+
+    def startup(self):
+        """Initialize the application."""
+        logger.info("Starting AccessiWeather application")
+
+        try:
+            # Initialize core components
+            self._initialize_components()
+
+            # Create main UI
+            self._create_main_ui()
+
+            # Create menu system
+            self._create_menu_system()
+
+            # Load initial data
+            self._load_initial_data()
+
+            logger.info("AccessiWeather application started successfully")
+
+        except Exception as e:
+            logger.error(f"Failed to start application: {e}")
+            self._show_error_dialog("Startup Error", f"Failed to start application: {e}")
+
+    async def on_running(self):
+        """Called when the app starts running - start background tasks."""
+        logger.info("Application is now running, starting background tasks")
+
+        try:
+            # Start periodic weather updates
+            await self._start_background_updates()
+
+        except Exception as e:
+            logger.error(f"Failed to start background tasks: {e}")
+
+    def _initialize_components(self):
+        """Initialize core application components."""
+        logger.info("Initializing application components")
+
+        # Configuration manager
+        self.config_manager = ConfigManager(self)
+
+        # Weather client
+        self.weather_client = WeatherClient(user_agent="AccessiWeather/2.0")
+
+        # Location manager
+        self.location_manager = LocationManager()
+
+        # Formatter
+        config = self.config_manager.get_config()
+        self.formatter = WxStyleWeatherFormatter(config.settings)
+
+        logger.info("Application components initialized")
+
+    def _create_main_ui(self):
+        """Create the main user interface."""
+        logger.info("Creating main UI")
+
+        # Main container
+        main_box = toga.Box(style=Pack(direction=COLUMN, padding=10))
+
+        # Title
+        title_label = toga.Label(
+            "AccessiWeather",
+            style=Pack(text_align="center", font_size=18, font_weight="bold", padding_bottom=10),
+        )
+        main_box.add(title_label)
+
+        # Status label
+        self.status_label = toga.Label("Ready", style=Pack(padding_bottom=10, font_style="italic"))
+        main_box.add(self.status_label)
+
+        # Location selection section
+        location_box = self._create_location_section()
+        main_box.add(location_box)
+
+        # Weather display sections
+        weather_box = self._create_weather_display_section()
+        main_box.add(weather_box)
+
+        # Control buttons section (matching wx interface)
+        buttons_box = self._create_control_buttons_section()
+        main_box.add(buttons_box)
+
+        # Set up main window
+        self.main_window = toga.MainWindow(title=self.formal_name)
+        self.main_window.content = main_box
+        self.main_window.show()
+
+        logger.info("Main UI created successfully")
+
+    def _create_location_section(self) -> toga.Box:
+        """Create the location selection section."""
+        location_box = toga.Box(style=Pack(direction=ROW, padding_bottom=10))
+
+        location_label = toga.Label("Location:", style=Pack(width=80, padding_right=10))
+
+        # Get location choices
+        location_names = self._get_location_choices()
+
+        self.location_selection = toga.Selection(
+            items=location_names, style=Pack(flex=1), on_change=self._on_location_changed
+        )
+
+        # Set current location if available
+        current_location = self.config_manager.get_current_location()
+        if current_location and current_location.name in location_names:
+            self.location_selection.value = current_location.name
+
+        location_box.add(location_label)
+        location_box.add(self.location_selection)
+
+        return location_box
+
+    def _create_weather_display_section(self) -> toga.Box:
+        """Create the weather display section."""
+        weather_box = toga.Box(style=Pack(direction=COLUMN, flex=1))
+
+        # Current conditions
+        conditions_label = toga.Label(
+            "Current Conditions:", style=Pack(font_weight="bold", padding_top=10, padding_bottom=5)
+        )
+        weather_box.add(conditions_label)
+
+        self.current_conditions_display = toga.MultilineTextInput(
+            readonly=True, style=Pack(height=120, padding_bottom=10)
+        )
+        self.current_conditions_display.value = "No current conditions data available."
+        weather_box.add(self.current_conditions_display)
+
+        # Forecast
+        forecast_label = toga.Label("Forecast:", style=Pack(font_weight="bold", padding_bottom=5))
+        weather_box.add(forecast_label)
+
+        self.forecast_display = toga.MultilineTextInput(
+            readonly=True, style=Pack(height=200, padding_bottom=10)
+        )
+        self.forecast_display.value = "No forecast data available."
+        weather_box.add(self.forecast_display)
+
+        # Forecast discussion button
+        self.discussion_button = toga.Button(
+            "View Forecast Discussion",
+            on_press=self._on_discussion_pressed,
+            style=Pack(padding_bottom=10),
+        )
+        weather_box.add(self.discussion_button)
+
+        # Alerts
+        alerts_label = toga.Label(
+            "Weather Alerts:", style=Pack(font_weight="bold", padding_bottom=5)
+        )
+        weather_box.add(alerts_label)
+
+        self.alerts_table = toga.Table(
+            headings=["Event", "Severity", "Headline"],
+            data=[],
+            style=Pack(height=150, padding_bottom=10),
+        )
+        weather_box.add(self.alerts_table)
+
+        # Alert details button
+        self.alert_details_button = toga.Button(
+            "View Alert Details",
+            on_press=self._on_alert_details_pressed,
+            style=Pack(padding_bottom=10),
+            enabled=False,  # Disabled until an alert is selected
+        )
+        weather_box.add(self.alert_details_button)
+
+        return weather_box
+
+    def _create_control_buttons_section(self) -> toga.Box:
+        """Create the control buttons section (matching wx interface)."""
+        buttons_box = toga.Box(style=Pack(direction=ROW, padding_top=10))
+
+        # Add location button
+        self.add_button = toga.Button(
+            "Add", on_press=self._on_add_location_pressed, style=Pack(padding_right=5)
+        )
+        buttons_box.add(self.add_button)
+
+        # Remove location button
+        self.remove_button = toga.Button(
+            "Remove", on_press=self._on_remove_location_pressed, style=Pack(padding_right=5)
+        )
+        buttons_box.add(self.remove_button)
+
+        # Refresh button
+        self.refresh_button = toga.Button(
+            "Refresh", on_press=self._on_refresh_pressed, style=Pack(padding_right=5)
+        )
+        buttons_box.add(self.refresh_button)
+
+        # Settings button
+        self.settings_button = toga.Button(
+            "Settings", on_press=self._on_settings_pressed, style=Pack()
+        )
+        buttons_box.add(self.settings_button)
+
+        return buttons_box
+
+    def _create_menu_system(self):
+        """Create the application menu system."""
+        logger.info("Creating menu system")
+
+        # File menu
+        file_group = toga.Group("File")
+        settings_cmd = toga.Command(
+            self._on_settings_pressed,
+            text="Settings",
+            tooltip="Open application settings",
+            group=file_group,
+        )
+
+        # Location menu
+        location_group = toga.Group("Location")
+        add_location_cmd = toga.Command(
+            self._on_add_location_pressed,
+            text="Add Location",
+            tooltip="Add a new location",
+            group=location_group,
+        )
+
+        # View menu
+        view_group = toga.Group("View")
+        refresh_cmd = toga.Command(
+            self._on_refresh_pressed,
+            text="Refresh",
+            tooltip="Refresh weather data",
+            group=view_group,
+        )
+
+        # Help menu
+        help_group = toga.Group("Help")
+        about_cmd = toga.Command(
+            self._on_about_pressed, text="About", tooltip="About AccessiWeather", group=help_group
+        )
+
+        # Add commands to app
+        self.commands.add(settings_cmd, add_location_cmd, refresh_cmd, about_cmd)
+
+        logger.info("Menu system created")
+
+    def _load_initial_data(self):
+        """Load initial configuration and data."""
+        logger.info("Loading initial data")
+
+        try:
+            # Load configuration
+            config = self.config_manager.get_config()
+
+            # If no locations exist, add some common ones
+            if not config.locations:
+                logger.info("No locations found, adding default location")
+                # Try to get location from IP
+                asyncio.create_task(self._add_initial_location())
+            else:
+                # Refresh weather for current location
+                if config.current_location:
+                    asyncio.create_task(self._refresh_weather_data())
+
+        except Exception as e:
+            logger.error(f"Failed to load initial data: {e}")
+
+    async def _add_initial_location(self):
+        """Add an initial location for first-time users."""
+        try:
+            # Try to get location from IP
+            location = await self.location_manager.get_current_location_from_ip()
+
+            if location:
+                self.config_manager.add_location(
+                    location.name, location.latitude, location.longitude
+                )
+                self._update_location_selection()
+                await self._refresh_weather_data()
+            else:
+                # Fallback to a default location
+                self.config_manager.add_location("New York, NY", 40.7128, -74.0060)
+                self._update_location_selection()
+                await self._refresh_weather_data()
+
+        except Exception as e:
+            logger.error(f"Failed to add initial location: {e}")
+
+    def _get_location_choices(self) -> list[str]:
+        """Get list of location names for the selection widget."""
+        try:
+            location_names = self.config_manager.get_location_names()
+            return location_names if location_names else ["No locations available"]
+        except Exception as e:
+            logger.error(f"Failed to get location choices: {e}")
+            return ["Error loading locations"]
+
+    def _update_location_selection(self):
+        """Update the location selection widget with current locations."""
+        try:
+            location_names = self._get_location_choices()
+            self.location_selection.items = location_names
+
+            # Set current location if available
+            current_location = self.config_manager.get_current_location()
+            if current_location and current_location.name in location_names:
+                self.location_selection.value = current_location.name
+
+        except Exception as e:
+            logger.error(f"Failed to update location selection: {e}")
+
+    def _update_status(self, message: str):
+        """Update the status label."""
+        if self.status_label:
+            self.status_label.text = message
+            logger.info(f"Status: {message}")
+
+    # Event handlers
+    async def _on_location_changed(self, widget):
+        """Handle location selection change."""
+        if not widget.value or widget.value == "No locations available":
+            return
+
+        logger.info(f"Location changed to: {widget.value}")
+
+        try:
+            # Set current location
+            self.config_manager.set_current_location(widget.value)
+
+            # Refresh weather data
+            await self._refresh_weather_data()
+
+        except Exception as e:
+            logger.error(f"Failed to handle location change: {e}")
+            self._update_status(f"Error changing location: {e}")
+
+    async def _on_refresh_pressed(self, widget):
+        """Handle refresh button press."""
+        logger.info("Refresh button pressed")
+        await self._refresh_weather_data()
+
+    async def _on_settings_pressed(self, widget):
+        """Handle settings menu item."""
+        logger.info("Settings menu pressed")
+
+        try:
+            # Create and show settings dialog
+            settings_dialog = SettingsDialog(self, self.config_manager)
+            await settings_dialog.show()
+
+            # Refresh UI after settings change
+            self._update_location_selection()
+
+        except Exception as e:
+            logger.error(f"Failed to show settings dialog: {e}")
+            await self.main_window.error_dialog("Settings Error", f"Failed to open settings: {e}")
+
+    async def _on_add_location_pressed(self, widget):
+        """Handle add location menu item."""
+        logger.info("Add location menu pressed")
+        # TODO: Implement add location dialog
+        await self.main_window.info_dialog(
+            "Add Location", "Add location dialog will be implemented in a future version."
+        )
+
+    async def _on_remove_location_pressed(self, widget):
+        """Handle remove location button press."""
+        logger.info("Remove location button pressed")
+        # TODO: Implement remove location functionality
+        await self.main_window.info_dialog(
+            "Remove Location",
+            "Remove location functionality will be implemented in a future version.",
+        )
+
+    async def _on_discussion_pressed(self, widget):
+        """Handle forecast discussion button press."""
+        logger.info("Forecast discussion button pressed")
+        # TODO: Implement forecast discussion dialog
+        await self.main_window.info_dialog(
+            "Forecast Discussion", "Forecast discussion will be implemented in a future version."
+        )
+
+    async def _on_alert_details_pressed(self, widget):
+        """Handle alert details button press."""
+        logger.info("Alert details button pressed")
+        # TODO: Implement alert details dialog
+        await self.main_window.info_dialog(
+            "Alert Details", "Alert details dialog will be implemented in a future version."
+        )
+
+    async def _on_about_pressed(self, widget):
+        """Handle about menu item."""
+        await self.main_window.info_dialog(
+            "About AccessiWeather",
+            "AccessiWeather - Simple, accessible weather application\n\n"
+            "Built with BeeWare/Toga for cross-platform compatibility.\n"
+            "Designed with accessibility in mind for screen reader users.\n\n"
+            "Version 2.0 - Simplified Architecture",
+        )
+
+    # Weather data methods
+    async def _refresh_weather_data(self):
+        """Refresh weather data for the current location."""
+        if self.is_updating:
+            logger.info("Update already in progress, skipping")
+            return
+
+        current_location = self.config_manager.get_current_location()
+        if not current_location:
+            self._update_status("No location selected")
+            return
+
+        self.is_updating = True
+        self._update_status(f"Updating weather for {current_location.name}...")
+
+        try:
+            # Disable refresh button during update
+            if self.refresh_button:
+                self.refresh_button.enabled = False
+
+            # Fetch weather data
+            weather_data = await self.weather_client.get_weather_data(current_location)
+
+            # Update displays
+            self._update_weather_displays(weather_data)
+
+            self._update_status(f"Updated at {weather_data.last_updated.strftime('%I:%M %p')}")
+            logger.info(f"Successfully updated weather for {current_location.name}")
+
+        except Exception as e:
+            logger.error(f"Failed to refresh weather data: {e}")
+            self._update_status(f"Update failed: {e}")
+            self._show_error_displays(str(e))
+
+        finally:
+            self.is_updating = False
+            if self.refresh_button:
+                self.refresh_button.enabled = True
+
+    def _update_weather_displays(self, weather_data: WeatherData):
+        """Update the weather display widgets with new data."""
+        try:
+            # Format weather data
+            current_text = self.formatter.format_current_conditions(
+                weather_data.current, weather_data.location
+            )
+            forecast_text = self.formatter.format_forecast(
+                weather_data.forecast, weather_data.location
+            )
+            # For alerts, we need to handle the table format differently
+            # The WxStyleWeatherFormatter returns a string, but we need table data
+            if self.alerts_table:
+                # Convert alerts data to table format for the simple app
+                alerts_table_data = self._convert_alerts_to_table_data(weather_data.alerts)
+                self.alerts_table.data = alerts_table_data
+                # Store the original alerts data for detail view
+                self.current_alerts_data = weather_data.alerts
+
+                # Enable/disable the view details button based on whether there are alerts
+                if self.alert_details_button:
+                    self.alert_details_button.enabled = len(alerts_table_data) > 0
+
+            # Update displays
+            if self.current_conditions_display:
+                self.current_conditions_display.value = current_text
+
+            if self.forecast_display:
+                self.forecast_display.value = forecast_text
+
+            logger.info("Weather displays updated successfully")
+
+        except Exception as e:
+            logger.error(f"Failed to update weather displays: {e}")
+            self._show_error_displays(f"Display error: {e}")
+
+    def _convert_alerts_to_table_data(self, alerts):
+        """Convert WeatherAlerts to table data format."""
+        if not alerts or not alerts.has_alerts():
+            return []
+
+        table_data = []
+        active_alerts = alerts.get_active_alerts()
+
+        for alert in active_alerts[:10]:  # Limit to 10 alerts
+            event = alert.event or "Weather Alert"
+            severity = alert.severity or "Unknown"
+            headline = alert.headline or "No headline available"
+
+            # Truncate headline if too long for table display
+            if len(headline) > 80:
+                headline = headline[:77] + "..."
+
+            table_data.append((event, severity, headline))
+
+        return table_data
+
+    def _show_error_displays(self, error_message: str):
+        """Show error message in weather displays."""
+        error_text = f"Error loading weather data: {error_message}"
+
+        if self.current_conditions_display:
+            self.current_conditions_display.value = error_text
+
+        if self.forecast_display:
+            self.forecast_display.value = error_text
+
+        if self.alerts_table:
+            self.alerts_table.data = [("Error", "N/A", "No alerts available due to error")]
+            self.current_alerts_data = None
+
+        # Disable the view details button during errors
+        if self.alert_details_button:
+            self.alert_details_button.enabled = False
+
+    async def _start_background_updates(self):
+        """Start background weather updates."""
+        try:
+            config = self.config_manager.get_config()
+            update_interval = config.settings.update_interval_minutes * 60  # Convert to seconds
+
+            logger.info(
+                f"Starting background updates every {config.settings.update_interval_minutes} minutes"
+            )
+
+            while True:
+                await asyncio.sleep(update_interval)
+
+                # Only update if we have a current location and not already updating
+                if not self.is_updating and self.config_manager.get_current_location():
+                    logger.info("Performing background weather update")
+                    await self._refresh_weather_data()
+
+        except asyncio.CancelledError:
+            logger.info("Background updates cancelled")
+        except Exception as e:
+            logger.error(f"Background update error: {e}")
+
+    def on_view_alert_details(self, widget):
+        """Handle the View Alert Details button press."""
+        try:
+            if not self.alerts_table.selection or not self.current_alerts_data:
+                self.main_window.info_dialog(
+                    "No Selection", "Please select an alert from the table first."
+                )
+                return
+
+            # Get the selected row index
+            selected_row = self.alerts_table.selection
+            alert_index = self.alerts_table.data.index(selected_row)
+
+            # Get the alert from the original alerts data
+            active_alerts = self.current_alerts_data.get_active_alerts()
+            if alert_index >= len(active_alerts):
+                self.main_window.error_dialog("Error", "Selected alert is no longer available.")
+                return
+
+            alert = active_alerts[alert_index]
+
+            # Create and show the comprehensive alert details dialog
+            from .alert_details_dialog import AlertDetailsDialog
+
+            title = f"Alert Details - {alert.event or 'Weather Alert'}"
+            dialog = AlertDetailsDialog(self, title, alert)
+            dialog.show()
+
+        except Exception as e:
+            logger.error(f"Error showing alert details: {e}")
+            self.main_window.error_dialog("Error", f"Failed to show alert details: {e}")
+
+    def _show_error_dialog(self, title: str, message: str):
+        """Show an error dialog (synchronous fallback)."""
+        try:
+            # Try to show dialog if main window exists
+            if hasattr(self, "main_window") and self.main_window:
+                # Use the old synchronous API as fallback
+                self.main_window.error_dialog(title, message)
+            else:
+                # Fallback to logging if no window
+                logger.error(f"{title}: {message}")
+        except Exception as e:
+            logger.error(f"Failed to show error dialog: {e}")
+            logger.error(f"Original error - {title}: {message}")
+
+
+def main():
+    """Main entry point for the simplified AccessiWeather application."""
+    return AccessiWeatherApp(
+        "AccessiWeather",
+        "net.orinks.accessiweather.simple",
+        description="Simple, accessible weather application",
+        home_page="https://github.com/Orinks/AccessiWeather",
+        author="Orinks",
+    )

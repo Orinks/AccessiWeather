@@ -1,6 +1,6 @@
 """Tests for temperature utility functions."""
 
-from accessiweather.utils.temperature_utils import (
+from accessiweather.simple.utils.temperature_utils import (
     TemperatureUnit,
     celsius_to_fahrenheit,
     fahrenheit_to_celsius,
