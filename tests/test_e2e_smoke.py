@@ -210,8 +210,8 @@ def test_temperature_utilities():
 @pytest.mark.smoke
 def test_unit_utilities():
     """Test unit formatting utilities."""
-    from accessiweather.utils.temperature_utils import TemperatureUnit
-    from accessiweather.utils.unit_utils import format_pressure, format_wind_speed
+    from accessiweather.simple.utils.temperature_utils import TemperatureUnit
+    from accessiweather.simple.utils.unit_utils import format_pressure, format_wind_speed
 
     # Test wind speed formatting
     formatted_speed = format_wind_speed(15.0, TemperatureUnit.FAHRENHEIT)

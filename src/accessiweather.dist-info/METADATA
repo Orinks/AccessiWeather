@@ -1,0 +1,11 @@
+Metadata-Version: 2.1
+Briefcase-Version: 0.3.23
+Name: accessiweather
+Formal-Name: AccessiWeather
+App-ID: net.orinks.accessiweather.accessiweather
+Version: 0.0.1
+Home-page: http://accessiweather.orinks.net
+Download-URL: http://accessiweather.orinks.net
+Author: Orinks
+Author-email: orin8722@gmail.com
+Summary: AccessiWeather: An accessible weather application that includes NOAA and Open-Meteo support with focus on screen reader compatibility
