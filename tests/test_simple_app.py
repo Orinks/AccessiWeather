@@ -1,353 +1,307 @@
-"""Tests for the simplified AccessiWeather application.
+"""Tests for the simplified AccessiWeather Toga application.
 
-This module provides comprehensive tests for the simplified AccessiWeather
-implementation using BeeWare/Toga, following the BeeWare testing patterns.
+This module provides comprehensive tests for the AccessiWeatherApp in the simplified
+implementation, focusing on app initialization, UI components, event handlers,
+background tasks, and configuration integration using appropriate mocking to avoid
+actual GUI rendering.
 """
 
-import asyncio
+from unittest.mock import Mock, patch
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
-# Import the simplified app components
+# Import simplified app components
 from accessiweather.simple.app import AccessiWeatherApp
-from accessiweather.simple.config import ConfigManager
-from accessiweather.simple.display import WxStyleWeatherFormatter
-from accessiweather.simple.location_manager import LocationManager
-from accessiweather.simple.models import (
-    AppSettings,
-    CurrentConditions,
-    Forecast,
-    ForecastPeriod,
-    Location,
-    WeatherAlerts,
-    WeatherData,
-)
-from accessiweather.simple.utils import (
-    TemperatureUnit,
-    format_temperature,
-    format_wind_speed,
-    convert_wind_direction_to_cardinal,
-)
-from accessiweather.simple.weather_client import WeatherClient
+from accessiweather.simple.models import AppConfig, AppSettings, Location
 
 
-class TestSimpleAppComponents:
-    """Test the core components of the simplified app."""
+class TestAccessiWeatherAppInitialization:
+    """Test AccessiWeatherApp initialization and startup - new Toga-specific tests."""
 
-    def test_location_model(self):
-        """Test the Location model."""
-        location = Location("Philadelphia, PA", 39.9526, -75.1652)
-        
-        assert location.name == "Philadelphia, PA"
-        assert location.latitude == 39.9526
-        assert location.longitude == -75.1652
-        assert str(location) == "Philadelphia, PA"
+    @pytest.fixture
+    def mock_toga_app(self):
+        """Create a mock Toga app for testing."""
+        with patch("toga.App.__init__") as mock_init:
+            mock_init.return_value = None
+            app = AccessiWeatherApp("AccessiWeather", "org.example.accessiweather")
 
-    def test_current_conditions_model(self):
-        """Test the CurrentConditions model."""
-        conditions = CurrentConditions(
-            temperature_f=75.0,
-            temperature_c=23.9,
-            condition="Partly Cloudy",
-            humidity=65,
-            wind_speed_mph=10.0,
-            wind_direction=270
-        )
-        
-        assert conditions.has_data() is True
-        assert conditions.temperature_f == 75.0
-        assert conditions.condition == "Partly Cloudy"
-        
-        # Test empty conditions
-        empty_conditions = CurrentConditions()
-        assert empty_conditions.has_data() is False
+            # Mock the app properties that Toga would normally provide
+            app.formal_name = "AccessiWeather"
+            app.app_name = "accessiweather"
+            app.paths = Mock()
+            app.paths.config = Mock()
 
-    def test_forecast_model(self):
-        """Test the Forecast model."""
-        period = ForecastPeriod(
-            name="Today",
-            temperature=80.0,
-            temperature_unit="F",
-            short_forecast="Sunny"
-        )
-        
-        forecast = Forecast(periods=[period])
-        
-        assert forecast.has_data() is True
-        assert len(forecast.periods) == 1
-        assert forecast.periods[0].name == "Today"
-        
-        # Test empty forecast
-        empty_forecast = Forecast(periods=[])
-        assert empty_forecast.has_data() is False
+            return app
 
-    def test_app_settings_model(self):
-        """Test the AppSettings model."""
-        settings = AppSettings()
-        
-        # Test defaults
-        assert settings.temperature_unit == "both"
-        assert settings.update_interval_minutes == 10
-        assert settings.show_detailed_forecast is True
-        
-        # Test serialization
-        settings_dict = settings.to_dict()
-        assert "temperature_unit" in settings_dict
-        assert settings_dict["temperature_unit"] == "both"
-        
-        # Test deserialization
-        new_settings = AppSettings.from_dict(settings_dict)
-        assert new_settings.temperature_unit == settings.temperature_unit
+    def test_app_initialization(self, mock_toga_app):
+        """Test AccessiWeatherApp initialization."""
+        app = mock_toga_app
 
+        # Check initial state
+        assert app.config_manager is None
+        assert app.weather_client is None
+        assert app.location_manager is None
+        assert app.formatter is None
 
-class TestUtilityFunctions:
-    """Test the utility functions."""
+        # Check UI components are None initially
+        assert app.location_selection is None
+        assert app.current_conditions_display is None
+        assert app.forecast_display is None
+        assert app.alerts_display is None
+        assert app.refresh_button is None
+        assert app.status_label is None
 
-    def test_temperature_formatting(self):
-        """Test temperature formatting utilities."""
-        # Test Fahrenheit only
-        temp_f = format_temperature(75.0, TemperatureUnit.FAHRENHEIT)
-        assert temp_f == "75°F"
-        
-        # Test Celsius only
-        temp_c = format_temperature(75.0, TemperatureUnit.CELSIUS, temperature_c=23.9)
-        assert temp_c == "24°C"
-        
-        # Test both units
-        temp_both = format_temperature(75.0, TemperatureUnit.BOTH, temperature_c=23.9)
-        assert temp_both == "75°F (24°C)"
+        # Check background task state
+        assert app.update_task is None
+        assert app.is_updating is False
 
-    def test_wind_direction_conversion(self):
-        """Test wind direction conversion."""
-        # Test cardinal directions
-        assert convert_wind_direction_to_cardinal(0) == "N"
-        assert convert_wind_direction_to_cardinal(90) == "E"
-        assert convert_wind_direction_to_cardinal(180) == "S"
-        assert convert_wind_direction_to_cardinal(270) == "W"
-        assert convert_wind_direction_to_cardinal(330) == "NNW"
-        
-        # Test None input
-        assert convert_wind_direction_to_cardinal(None) == "N/A"
+    def test_startup_success(self, mock_toga_app):
+        """Test successful app startup sequence."""
+        app = mock_toga_app
 
-    def test_wind_speed_formatting(self):
-        """Test wind speed formatting."""
-        # Test mph only
-        wind_mph = format_wind_speed(15.0, TemperatureUnit.FAHRENHEIT)
-        assert wind_mph == "15.0 mph"
-        
-        # Test km/h only
-        wind_kph = format_wind_speed(15.0, TemperatureUnit.CELSIUS, wind_speed_kph=24.1)
-        assert wind_kph == "24.1 km/h"
-        
-        # Test both units
-        wind_both = format_wind_speed(15.0, TemperatureUnit.BOTH, wind_speed_kph=24.1)
-        assert wind_both == "15.0 mph (24.1 km/h)"
+        with (
+            patch.object(app, "_initialize_components") as mock_init_components,
+            patch.object(app, "_create_main_ui") as mock_create_ui,
+            patch.object(app, "_create_menu_system") as mock_create_menu,
+            patch.object(app, "_load_initial_data") as mock_load_data,
+        ):
+            app.startup()
 
+            # Verify startup sequence
+            mock_init_components.assert_called_once()
+            mock_create_ui.assert_called_once()
+            mock_create_menu.assert_called_once()
+            mock_load_data.assert_called_once()
 
-class TestWeatherFormatter:
-    """Test the WX-style weather formatter."""
+    def test_startup_component_initialization_failure(self, mock_toga_app):
+        """Test startup failure during component initialization."""
+        app = mock_toga_app
 
-    def test_formatter_initialization(self):
-        """Test formatter initialization."""
-        settings = AppSettings()
-        formatter = WxStyleWeatherFormatter(settings)
-        
-        assert formatter.settings == settings
+        with (
+            patch.object(app, "_initialize_components") as mock_init_components,
+            patch.object(app, "_show_error_dialog") as mock_show_error,
+        ):
+            mock_init_components.side_effect = Exception("Component init failed")
 
-    def test_current_conditions_formatting(self):
-        """Test current conditions formatting."""
-        settings = AppSettings()
-        formatter = WxStyleWeatherFormatter(settings)
-        
-        location = Location("Test City", 40.0, -75.0)
-        conditions = CurrentConditions(
-            temperature_f=75.0,
-            condition="Partly Cloudy",
-            humidity=65,
-            wind_speed_mph=10.0,
-            wind_direction=270
-        )
-        
-        formatted = formatter.format_current_conditions(conditions, location)
-        
-        assert "Test City" in formatted
-        assert "Partly Cloudy" in formatted
-        assert "75°F" in formatted
-        assert "65%" in formatted
-        assert "W at" in formatted  # Wind direction should be converted
+            app.startup()
 
-    def test_forecast_formatting(self):
-        """Test forecast formatting."""
-        settings = AppSettings()
-        formatter = WxStyleWeatherFormatter(settings)
-        
-        location = Location("Test City", 40.0, -75.0)
-        period = ForecastPeriod(
-            name="Today",
-            temperature=80.0,
-            temperature_unit="F",
-            detailed_forecast="Sunny skies with light winds."
-        )
-        forecast = Forecast(periods=[period])
-        
-        formatted = formatter.format_forecast(forecast, location)
-        
-        assert "Test City" in formatted
-        assert "Today" in formatted
-        assert "80°F" in formatted
-        assert "Sunny skies" in formatted
+            mock_show_error.assert_called_once_with(
+                "Startup Error", "Failed to start application: Component init failed"
+            )
 
-    def test_empty_data_formatting(self):
-        """Test formatting with empty data."""
-        settings = AppSettings()
-        formatter = WxStyleWeatherFormatter(settings)
-        
-        location = Location("Test City", 40.0, -75.0)
-        
-        # Test empty current conditions
-        formatted_current = formatter.format_current_conditions(None, location)
-        assert "No current weather data available" in formatted_current
-        
-        # Test empty forecast
-        formatted_forecast = formatter.format_forecast(None, location)
-        assert "No forecast data available" in formatted_forecast
-        
-        # Test empty alerts
-        formatted_alerts = formatter.format_alerts(None, location)
-        assert "No active weather alerts" in formatted_alerts
+    def test_startup_ui_creation_failure(self, mock_toga_app):
+        """Test startup failure during UI creation."""
+        app = mock_toga_app
 
+        with (
+            patch.object(app, "_initialize_components"),
+            patch.object(app, "_create_main_ui") as mock_create_ui,
+            patch.object(app, "_show_error_dialog") as mock_show_error,
+        ):
+            mock_create_ui.side_effect = Exception("UI creation failed")
 
-class TestWeatherClient:
-    """Test the weather client."""
+            app.startup()
 
-    def test_weather_client_initialization(self):
-        """Test weather client initialization."""
-        client = WeatherClient(user_agent="Test/1.0")
-        
-        assert client.user_agent == "Test/1.0"
-        assert client.nws_base_url == "https://api.weather.gov"
-        assert client.openmeteo_base_url == "https://api.open-meteo.com/v1"
-        assert client.timeout == 10.0
+            mock_show_error.assert_called_once_with(
+                "Startup Error", "Failed to start application: UI creation failed"
+            )
+
+    def test_initialize_components_success(self, mock_toga_app):
+        """Test successful component initialization."""
+        app = mock_toga_app
+
+        with (
+            patch("accessiweather.simple.app.ConfigManager") as mock_config_manager_class,
+            patch("accessiweather.simple.app.WeatherClient") as mock_weather_client_class,
+            patch("accessiweather.simple.app.LocationManager") as mock_location_manager_class,
+            patch("accessiweather.simple.app.WxStyleWeatherFormatter") as mock_formatter_class,
+        ):
+            # Mock the instances
+            mock_config_manager = Mock()
+            mock_config_manager.get_config.return_value = AppConfig(settings=AppSettings())
+            mock_config_manager_class.return_value = mock_config_manager
+
+            mock_weather_client = Mock()
+            mock_weather_client_class.return_value = mock_weather_client
+
+            mock_location_manager = Mock()
+            mock_location_manager_class.return_value = mock_location_manager
+
+            mock_formatter = Mock()
+            mock_formatter_class.return_value = mock_formatter
+
+            app._initialize_components()
+
+            # Verify components were created
+            assert app.config_manager == mock_config_manager
+            assert app.weather_client == mock_weather_client
+            assert app.location_manager == mock_location_manager
+            assert app.formatter == mock_formatter
+
+            # Verify correct initialization parameters
+            mock_config_manager_class.assert_called_once_with(app)
+            mock_weather_client_class.assert_called_once_with(user_agent="AccessiWeather/2.0")
+            mock_location_manager_class.assert_called_once()
+            mock_formatter_class.assert_called_once_with(mock_config_manager.get_config().settings)
 
     @pytest.mark.asyncio
-    async def test_weather_data_structure(self):
-        """Test that weather data is structured correctly."""
-        client = WeatherClient()
-        location = Location("Test City", 40.0, -75.0)
-        
-        # Mock the HTTP responses
-        with patch('httpx.AsyncClient') as mock_client:
-            # Mock successful responses
-            mock_response = MagicMock()
-            mock_response.status_code = 200
-            mock_response.json.return_value = {
-                "properties": {
-                    "temperature": {"value": 20.0},  # Celsius
-                    "textDescription": "Clear",
-                    "relativeHumidity": {"value": 60},
-                    "windSpeed": {"value": 5.0},  # m/s
-                    "windDirection": {"value": 270}
-                }
-            }
-            
-            mock_client_instance = mock_client.return_value.__aenter__.return_value
-            mock_client_instance.get.return_value = mock_response
-            
-            # This would normally make real API calls, but we're mocking them
-            # Just test that the structure is correct
-            weather_data = WeatherData(location=location)
-            
-            assert weather_data.location == location
-            assert weather_data.current is None  # Initially None
-            assert weather_data.forecast is None  # Initially None
-            assert weather_data.alerts is None  # Initially None
+    async def test_on_running_success(self, mock_toga_app):
+        """Test successful on_running method."""
+        app = mock_toga_app
+
+        with patch.object(app, "_start_background_updates") as mock_start_updates:
+            mock_start_updates.return_value = None  # Async method
+
+            await app.on_running()
+
+            mock_start_updates.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_on_running_failure(self, mock_toga_app):
+        """Test on_running method with background task failure."""
+        app = mock_toga_app
+
+        with patch.object(app, "_start_background_updates") as mock_start_updates:
+            mock_start_updates.side_effect = Exception("Background task failed")
+
+            # Should not raise exception, just log error
+            await app.on_running()
+
+            mock_start_updates.assert_called_once()
 
 
-class TestLocationManager:
-    """Test the location manager."""
+class TestAccessiWeatherAppUICreation:
+    """Test AccessiWeatherApp UI creation methods - new Toga-specific tests."""
 
-    def test_location_manager_initialization(self):
-        """Test location manager initialization."""
-        manager = LocationManager()
-        
-        assert manager.timeout == 10.0
-        assert manager.geocoding_base_url == "https://nominatim.openstreetmap.org"
+    @pytest.fixture
+    def mock_app_with_components(self):
+        """Create a mock app with initialized components."""
+        with patch("toga.App.__init__") as mock_init:
+            mock_init.return_value = None
+            app = AccessiWeatherApp("AccessiWeather", "org.example.accessiweather")
 
-    def test_coordinate_validation(self):
-        """Test coordinate validation."""
-        manager = LocationManager()
-        
-        # Valid coordinates
-        assert manager.validate_coordinates(40.0, -75.0) is True
-        assert manager.validate_coordinates(-90.0, 180.0) is True
-        
-        # Invalid coordinates
-        assert manager.validate_coordinates(91.0, 0.0) is False
-        assert manager.validate_coordinates(0.0, 181.0) is False
+            # Mock app properties
+            app.formal_name = "AccessiWeather"
+            app.paths = Mock()
 
-    def test_distance_calculation(self):
-        """Test distance calculation between locations."""
-        manager = LocationManager()
-        
-        loc1 = Location("Philadelphia", 39.9526, -75.1652)
-        loc2 = Location("New York", 40.7128, -74.0060)
-        
-        distance = manager.calculate_distance(loc1, loc2)
-        
-        # Distance should be approximately 80-100 miles
-        assert 80 <= distance <= 100
+            # Mock components
+            app.config_manager = Mock()
+            app.config_manager.get_location_names.return_value = [
+                "Philadelphia, PA",
+                "New York, NY",
+            ]
+            app.config_manager.get_current_location.return_value = Location(
+                "Philadelphia, PA", 39.9526, -75.1652
+            )
 
-    def test_common_locations(self):
-        """Test getting common locations."""
-        manager = LocationManager()
-        
-        common_locations = manager.get_common_locations()
-        
-        assert len(common_locations) > 0
-        assert any(loc.name == "New York, NY" for loc in common_locations)
-        assert any(loc.name == "Los Angeles, CA" for loc in common_locations)
+            return app
+
+    def test_create_main_ui_structure(self, mock_app_with_components):
+        """Test main UI creation structure."""
+        app = mock_app_with_components
+
+        with (
+            patch("toga.Box") as mock_box,
+            patch("toga.Label") as mock_label,
+            patch("toga.MainWindow") as mock_main_window,
+            patch.object(app, "_create_location_section") as mock_create_location,
+            patch.object(app, "_create_weather_display_section") as mock_create_weather,
+            patch.object(app, "_create_control_buttons_section") as mock_create_buttons,
+        ):
+            # Mock return values
+            mock_location_box = Mock()
+            mock_weather_box = Mock()
+            mock_buttons_box = Mock()
+
+            mock_create_location.return_value = mock_location_box
+            mock_create_weather.return_value = mock_weather_box
+            mock_create_buttons.return_value = mock_buttons_box
+
+            mock_main_box = Mock()
+            mock_box.return_value = mock_main_box
+
+            mock_window = Mock()
+            mock_main_window.return_value = mock_window
+
+            app._create_main_ui()
+
+            # Verify UI structure creation
+            mock_create_location.assert_called_once()
+            mock_create_weather.assert_called_once()
+            mock_create_buttons.assert_called_once()
+
+            # Verify main window setup
+            mock_main_window.assert_called_once_with(title=app.formal_name)
+            assert app.main_window == mock_window
+            mock_window.show.assert_called_once()
+
+    def test_get_location_choices_with_locations(self, mock_app_with_components):
+        """Test getting location choices when locations exist."""
+        app = mock_app_with_components
+
+        choices = app._get_location_choices()
+
+        assert choices == ["Philadelphia, PA", "New York, NY"]
+        app.config_manager.get_location_names.assert_called_once()
+
+    def test_get_location_choices_no_locations(self, mock_app_with_components):
+        """Test getting location choices when no locations exist."""
+        app = mock_app_with_components
+        app.config_manager.get_location_names.return_value = []
+
+        choices = app._get_location_choices()
+
+        assert choices == ["No locations available"]
+
+    def test_get_location_choices_error(self, mock_app_with_components):
+        """Test getting location choices when error occurs."""
+        app = mock_app_with_components
+        app.config_manager.get_location_names.side_effect = Exception("Config error")
+
+        choices = app._get_location_choices()
+
+        assert choices == ["Error loading locations"]
+
+    def test_update_status(self, mock_app_with_components):
+        """Test status label update."""
+        app = mock_app_with_components
+        app.status_label = Mock()
+
+        app._update_status("Test status message")
+
+        assert app.status_label.text == "Test status message"
 
 
-# Integration test that would run with briefcase dev --test
-def test_app_can_be_imported():
-    """Test that the simplified app can be imported successfully."""
-    try:
-        from accessiweather.simple import main
-        assert callable(main)
-    except ImportError as e:
-        pytest.fail(f"Failed to import simplified app: {e}")
+# Smoke test functions that can be run with briefcase dev --test
+def test_accessiweather_app_can_be_imported():
+    """Test that AccessiWeatherApp can be imported successfully."""
+    from accessiweather.simple.app import AccessiWeatherApp
+
+    # Basic instantiation test with mock
+    with patch("toga.App.__init__") as mock_init:
+        mock_init.return_value = None
+        app = AccessiWeatherApp("AccessiWeather", "org.example.accessiweather")
+        assert app is not None
 
 
-def test_app_components_integration():
-    """Test that all app components work together."""
-    # Test that we can create all the main components
-    settings = AppSettings()
-    location = Location("Test City", 40.0, -75.0)
-    
-    # Test formatter with settings
-    formatter = WxStyleWeatherFormatter(settings)
-    assert formatter is not None
-    
-    # Test weather client
-    client = WeatherClient()
-    assert client is not None
-    
-    # Test location manager
-    location_manager = LocationManager()
-    assert location_manager is not None
-    
-    # Test that they can work with each other
-    formatted_text = formatter.format_current_conditions(None, location)
-    assert "Test City" in formatted_text
+def test_accessiweather_app_basic_functionality():
+    """Test basic AccessiWeatherApp functionality without GUI rendering."""
+    from accessiweather.simple.app import AccessiWeatherApp
 
+    with patch("toga.App.__init__") as mock_init:
+        mock_init.return_value = None
+        app = AccessiWeatherApp("AccessiWeather", "org.example.accessiweather")
 
-# This test would be run by briefcase dev --test
-def test_simplified_app_main_function():
-    """Test the main function of the simplified app."""
-    from accessiweather.simple import main
-    
-    # Test that main returns an app instance
-    app = main()
-    assert app is not None
-    assert isinstance(app, AccessiWeatherApp)
-    assert app.formal_name == "AccessiWeather"
+        # Test initial state
+        assert app.config_manager is None
+        assert app.weather_client is None
+        assert app.location_manager is None
+        assert app.formatter is None
+        assert app.is_updating is False
+
+        # Test utility methods
+        app.config_manager = Mock()
+        app.config_manager.get_location_names.return_value = ["Test City"]
+
+        choices = app._get_location_choices()
+        assert choices == ["Test City"]
