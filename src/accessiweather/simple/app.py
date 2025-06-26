@@ -12,7 +12,7 @@ from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
 
 from .config import ConfigManager
-from .dialogs import SettingsDialog
+from .dialogs import AddLocationDialog, SettingsDialog
 from .display import WxStyleWeatherFormatter
 from .location_manager import LocationManager
 from .models import WeatherData
@@ -73,6 +73,25 @@ class AccessiWeatherApp(toga.App):
         logger.info("Application is now running, starting background tasks")
 
         try:
+            # Set initial focus for accessibility after app is fully loaded
+            # Small delay to ensure UI is fully rendered before setting focus
+            await asyncio.sleep(0.1)
+            if self.location_selection:
+                try:
+                    self.location_selection.focus()
+                    logger.info("Set initial focus to location dropdown for accessibility")
+                except Exception as e:
+                    logger.warning(f"Could not set focus to location dropdown: {e}")
+                    # Try focusing on the refresh button as fallback
+                    if self.refresh_button:
+                        try:
+                            self.refresh_button.focus()
+                            logger.info(
+                                "Set initial focus to refresh button as fallback for accessibility"
+                            )
+                        except Exception as e2:
+                            logger.warning(f"Could not set focus to any widget: {e2}")
+
             # Start periodic weather updates
             await self._start_background_updates()
 
@@ -202,6 +221,7 @@ class AccessiWeatherApp(toga.App):
             headings=["Event", "Severity", "Headline"],
             data=[],
             style=Pack(height=150, padding_bottom=10),
+            on_select=self._on_alert_selected,
         )
         weather_box.add(self.alerts_table)
 
@@ -414,19 +434,105 @@ class AccessiWeatherApp(toga.App):
     async def _on_add_location_pressed(self, widget):
         """Handle add location menu item."""
         logger.info("Add location menu pressed")
-        # TODO: Implement add location dialog
-        await self.main_window.info_dialog(
-            "Add Location", "Add location dialog will be implemented in a future version."
-        )
+
+        try:
+            # Create and show the add location dialog
+            add_dialog = AddLocationDialog(self, self.config_manager)
+
+            # Wait for dialog result
+            location_added = await add_dialog.show_and_wait()
+
+            if location_added:
+                # Refresh the location selection and weather data
+                self._update_location_selection()
+                await self._refresh_weather_data()
+                logger.info("Location added successfully")
+            else:
+                logger.info("Add location cancelled")
+
+        except Exception as e:
+            logger.error(f"Failed to show add location dialog: {e}")
+            await self.main_window.error_dialog(
+                "Add Location Error", f"Failed to open add location dialog: {e}"
+            )
 
     async def _on_remove_location_pressed(self, widget):
         """Handle remove location button press."""
         logger.info("Remove location button pressed")
-        # TODO: Implement remove location functionality
-        await self.main_window.info_dialog(
-            "Remove Location",
-            "Remove location functionality will be implemented in a future version.",
-        )
+
+        try:
+            # Get current location selection
+            if not self.location_selection or not self.location_selection.value:
+                await self.main_window.info_dialog(
+                    "No Selection", "Please select a location to remove from the dropdown."
+                )
+                return
+
+            selected_location = self.location_selection.value
+
+            # Check if this is the only location
+            location_names = self.config_manager.get_location_names()
+            if len(location_names) <= 1:
+                await self.main_window.info_dialog(
+                    "Cannot Remove",
+                    "You cannot remove the last location. At least one location must remain.",
+                )
+                return
+
+            # Show confirmation dialog
+            confirmed = await self._show_remove_confirmation_dialog(selected_location)
+
+            if confirmed:
+                # Remove the location
+                success = self.config_manager.remove_location(selected_location)
+
+                if success:
+                    # Update the location selection dropdown
+                    self._update_location_selection()
+
+                    # Refresh weather data for the new current location
+                    await self._refresh_weather_data()
+
+                    logger.info(f"Successfully removed location: {selected_location}")
+                else:
+                    await self.main_window.error_dialog(
+                        "Remove Failed", f"Failed to remove location '{selected_location}'."
+                    )
+            else:
+                logger.info("Location removal cancelled by user")
+
+        except Exception as e:
+            logger.error(f"Failed to remove location: {e}")
+            await self.main_window.error_dialog(
+                "Remove Location Error", f"Failed to remove location: {e}"
+            )
+
+    async def _show_remove_confirmation_dialog(self, location_name: str) -> bool:
+        """Show confirmation dialog for removing a location.
+
+        Args:
+            location_name: Name of the location to remove
+
+        Returns:
+            True if user confirmed removal, False if cancelled
+
+        """
+        try:
+            # Use Toga's question dialog for confirmation
+            result = await self.main_window.question_dialog(
+                "Confirm Removal",
+                f"Are you sure you want to remove '{location_name}' from your locations?\n\n"
+                f"This action cannot be undone.",
+            )
+            return result
+        except Exception as e:
+            logger.error(f"Error showing confirmation dialog: {e}")
+            # Fallback to a simple info dialog if question dialog fails
+            await self.main_window.info_dialog(
+                "Confirmation Error",
+                "Unable to show confirmation dialog. Location removal cancelled for safety.",
+            )
+            return False
 
     async def _on_discussion_pressed(self, widget):
         """Handle forecast discussion button press."""
@@ -439,10 +545,26 @@ class AccessiWeatherApp(toga.App):
     async def _on_alert_details_pressed(self, widget):
         """Handle alert details button press."""
         logger.info("Alert details button pressed")
-        # TODO: Implement alert details dialog
-        await self.main_window.info_dialog(
-            "Alert Details", "Alert details dialog will be implemented in a future version."
-        )
+
+        try:
+            # Call the existing working implementation
+            await self.on_view_alert_details(widget)
+        except Exception as e:
+            logger.error(f"Failed to show alert details: {e}")
+            await self.main_window.error_dialog(
+                "Alert Details Error", f"Failed to show alert details: {e}"
+            )
+
+    def _on_alert_selected(self, widget):
+        """Handle alert table selection to enable/disable the details button."""
+        try:
+            # Enable the alert details button when an alert is selected
+            if self.alert_details_button:
+                has_selection = widget.selection is not None
+                self.alert_details_button.enabled = has_selection
+                logger.debug(f"Alert details button {'enabled' if has_selection else 'disabled'}")
+        except Exception as e:
+            logger.error(f"Error handling alert selection: {e}")
 
     async def _on_about_pressed(self, widget):
         """Handle about menu item."""
@@ -591,11 +713,11 @@ class AccessiWeatherApp(toga.App):
         except Exception as e:
             logger.error(f"Background update error: {e}")
 
-    def on_view_alert_details(self, widget):
+    async def on_view_alert_details(self, widget):
         """Handle the View Alert Details button press."""
         try:
             if not self.alerts_table.selection or not self.current_alerts_data:
-                self.main_window.info_dialog(
+                await self.main_window.info_dialog(
                     "No Selection", "Please select an alert from the table first."
                 )
                 return
@@ -607,7 +729,9 @@ class AccessiWeatherApp(toga.App):
             # Get the alert from the original alerts data
             active_alerts = self.current_alerts_data.get_active_alerts()
             if alert_index >= len(active_alerts):
-                self.main_window.error_dialog("Error", "Selected alert is no longer available.")
+                await self.main_window.error_dialog(
+                    "Error", "Selected alert is no longer available."
+                )
                 return
 
             alert = active_alerts[alert_index]
@@ -617,11 +741,11 @@ class AccessiWeatherApp(toga.App):
 
             title = f"Alert Details - {alert.event or 'Weather Alert'}"
             dialog = AlertDetailsDialog(self, title, alert)
-            dialog.show()
+            await dialog.show()
 
         except Exception as e:
             logger.error(f"Error showing alert details: {e}")
-            self.main_window.error_dialog("Error", f"Failed to show alert details: {e}")
+            await self.main_window.error_dialog("Error", f"Failed to show alert details: {e}")
 
     def _show_error_dialog(self, title: str, message: str):
         """Show an error dialog (synchronous fallback)."""

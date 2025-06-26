@@ -29,7 +29,7 @@ class AlertDetailsDialog:
         self.alert_data = alert_data
         self.dialog_window = None
 
-    def show(self):
+    async def show(self):
         """Show the alert details dialog."""
         try:
             # Extract alert information
@@ -100,7 +100,7 @@ class AlertDetailsDialog:
             main_box.add(separator)
 
             # Create tabbed interface using OptionContainer
-            tab_container = toga.OptionContainer(style=Pack(flex=1))
+            self.tab_container = toga.OptionContainer(style=Pack(flex=1))
 
             # Statement tab
             statement_box = toga.Box(style=Pack(direction="column", margin=10))
@@ -108,14 +108,14 @@ class AlertDetailsDialog:
                 "Alert Statement:", style=Pack(font_weight="bold", margin_bottom=5)
             )
             statement_box.add(statement_label)
-            statement_text = toga.MultilineTextInput(
+            self.statement_text = toga.MultilineTextInput(
                 value=statement,
                 readonly=True,
                 style=Pack(flex=1, font_family="monospace"),
                 placeholder="Alert statement content",
             )
-            statement_box.add(statement_text)
-            tab_container.content.append("Statement", statement_box)
+            statement_box.add(self.statement_text)
+            self.tab_container.content.append("Statement", statement_box)
 
             # Description tab
             description_box = toga.Box(style=Pack(direction="column", margin=10))
@@ -130,7 +130,7 @@ class AlertDetailsDialog:
                 placeholder="Alert description content",
             )
             description_box.add(description_text)
-            tab_container.content.append("Description", description_box)
+            self.tab_container.content.append("Description", description_box)
 
             # Instructions tab
             instruction_box = toga.Box(style=Pack(direction="column", margin=10))
@@ -145,18 +145,18 @@ class AlertDetailsDialog:
                 placeholder="Alert instructions content",
             )
             instruction_box.add(instruction_text)
-            tab_container.content.append("Instructions", instruction_box)
+            self.tab_container.content.append("Instructions", instruction_box)
 
-            main_box.add(tab_container)
+            main_box.add(self.tab_container)
 
             # Close button (centered)
             button_box = toga.Box(style=Pack(direction="row", margin_top=10))
             # Add flexible space before button
             button_box.add(toga.Box(style=Pack(flex=1)))
-            close_button = toga.Button(
+            self.close_button = toga.Button(
                 "Close", on_press=self.on_close, style=Pack(margin=5, width=100)
             )
-            button_box.add(close_button)
+            button_box.add(self.close_button)
             # Add flexible space after button
             button_box.add(toga.Box(style=Pack(flex=1)))
             main_box.add(button_box)
@@ -164,6 +164,50 @@ class AlertDetailsDialog:
             # Set the content and show the window
             self.dialog_window.content = main_box
             self.dialog_window.show()
+
+            # Set initial focus for accessibility after window is fully rendered
+            # Secondary window approach - let window show, then focus tab container
+            import asyncio
+
+            # Longer delay for secondary window to fully render and gain focus
+            await asyncio.sleep(0.2)
+
+            # Focus on the Statement text area using direct reference pattern
+            focus_set = False
+
+            # Ensure Statement tab is selected first
+            if hasattr(self, "tab_container") and self.tab_container:
+                try:
+                    self.tab_container.current_tab = 0
+                    logger.info("Set current tab to Statement")
+                except Exception as e:
+                    logger.warning(f"Could not set current tab: {e}")
+
+            # Focus on the Statement text area directly
+            if hasattr(self, "statement_text") and self.statement_text:
+                try:
+                    self.statement_text.focus()
+                    logger.info("Set initial focus to Statement text area for accessibility")
+                    focus_set = True
+                except Exception as e:
+                    logger.warning(f"Could not set focus to Statement text area: {e}")
+            else:
+                logger.warning("Statement text area reference not available")
+
+            # Fallback: Focus on the close button if statement text focus failed
+            if not focus_set:
+                try:
+                    if self.close_button and hasattr(self.close_button, "focus"):
+                        self.close_button.focus()
+                        logger.info("Fallback: Set initial focus to close button for accessibility")
+                        focus_set = True
+                    else:
+                        logger.warning("Close button does not support focus")
+                except Exception as e:
+                    logger.warning(f"Could not set focus on close button: {e}")
+
+            if not focus_set:
+                logger.warning("Could not set focus on any widget in alert details dialog")
 
             logger.debug(f"Alert details dialog shown for {event} ({severity})")
 
