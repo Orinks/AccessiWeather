@@ -11,6 +11,7 @@ from ..models import (
     AppSettings,
     CurrentConditions,
     Forecast,
+    HourlyForecast,
     Location,
     WeatherAlerts,
     WeatherData,
@@ -163,16 +164,21 @@ class WxStyleWeatherFormatter:
         
         return text
     
-    def format_forecast(self, forecast: Forecast | None, location: Location) -> str:
-        """Format forecast exactly like the wx version."""
+    def format_forecast(self, forecast: Forecast | None, location: Location, hourly_forecast: HourlyForecast | None = None) -> str:
+        """Format forecast exactly like the wx version, including hourly forecast if available."""
         if not forecast or not forecast.has_data():
             return f"Forecast for {location.name}:\nNo forecast data available."
-        
+
         unit_pref = self._get_temperature_unit_preference()
         precision = self._get_temperature_precision(unit_pref)
-        
+
         text = f"Forecast for {location.name}:\n\n"
-        
+
+        # Add hourly forecast summary if available (matching wx version)
+        if hourly_forecast and hourly_forecast.has_data():
+            text += self._format_hourly_summary(hourly_forecast)
+            text += "\n"
+
         # Add extended forecast header
         text += "Extended Forecast:\n"
         
@@ -274,3 +280,80 @@ class WxStyleWeatherFormatter:
             return "Very High"
         else:
             return "Extreme"
+
+    def _format_hourly_summary(self, hourly_forecast: HourlyForecast) -> str:
+        """Format hourly forecast summary matching wx version."""
+        if not hourly_forecast or not hourly_forecast.has_data():
+            return ""
+
+        text = "Next 6 Hours:\n"
+        unit_pref = self._get_temperature_unit_preference()
+
+        # Get next 6 hours of data
+        next_hours = hourly_forecast.get_next_hours(6)
+
+        for period in next_hours:
+            if not period.has_data():
+                continue
+
+            # Format time (convert from ISO to readable format)
+            formatted_time = self._format_hour_time(period.start_time)
+
+            # Format temperature
+            temp_text = self._format_hourly_temperature(period.temperature, period.temperature_unit, unit_pref)
+
+            # Format conditions
+            condition = period.short_forecast or "Unknown"
+
+            # Format wind if available
+            wind_text = ""
+            if period.wind_speed and period.wind_direction:
+                wind_text = f", {period.wind_direction} {period.wind_speed}"
+            elif period.wind_speed:
+                wind_text = f", {period.wind_speed}"
+
+            # Combine into line
+            text += f"{formatted_time}: {temp_text}, {condition}{wind_text}\n"
+
+        return text
+
+    def _format_hour_time(self, start_time: datetime) -> str:
+        """Format hour time to match wx version (12:30 PM format)."""
+        if not start_time:
+            return "Unknown"
+
+        try:
+            # Convert to 12-hour format with AM/PM
+            hour = start_time.hour
+            minute = start_time.minute
+
+            am_pm = "AM" if hour < 12 else "PM"
+            if hour == 0:
+                hour = 12
+            elif hour > 12:
+                hour -= 12
+
+            return f"{hour}:{minute:02d} {am_pm}"
+        except Exception:
+            return "Unknown"
+
+    def _format_hourly_temperature(self, temperature: float | None, temp_unit: str, unit_pref: TemperatureUnit) -> str:
+        """Format hourly temperature according to user preference."""
+        if temperature is None:
+            return "Unknown"
+
+        # Convert to both units
+        if temp_unit == "F":
+            temp_f = temperature
+            temp_c = (temperature - 32) * 5 / 9
+        else:
+            temp_c = temperature
+            temp_f = (temperature * 9 / 5) + 32
+
+        # Format according to preference
+        if unit_pref == TemperatureUnit.FAHRENHEIT:
+            return f"{temp_f:.0f}°F"
+        elif unit_pref == TemperatureUnit.CELSIUS:
+            return f"{temp_c:.0f}°C"
+        else:  # Both
+            return f"{temp_f:.0f}°F ({temp_c:.0f}°C)"
