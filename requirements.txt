@@ -1,4 +1,4 @@
-wxPython
+toga>=0.4.0
 requests>=2.0
 plyer
 geopy

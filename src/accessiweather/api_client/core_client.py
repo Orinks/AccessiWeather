@@ -13,7 +13,12 @@ import traceback
 from typing import Any
 
 import requests
-from requests.exceptions import JSONDecodeError
+
+# For compatibility with different requests versions
+try:
+    from requests.exceptions import JSONDecodeError
+except ImportError:
+    from json import JSONDecodeError
 
 from accessiweather.cache import Cache
 

@@ -15,6 +15,7 @@ from toga.style.pack import COLUMN, ROW
 
 from accessiweather.config_utils import get_config_dir
 from accessiweather.toga_formatter import TogaWeatherFormatter
+from accessiweather.toga_data_transformer import TogaDataTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +97,7 @@ class AccessiWeatherToga(toga.App):
             self.config = {"settings": {"data_source": "auto"}}
 
     def _add_test_location(self):
-        """Add a test location for development/testing."""
+        """Add test locations for development/testing (both US and international)."""
         try:
             # Initialize services first if not already done
             if not self.location_service:
@@ -105,26 +106,46 @@ class AccessiWeatherToga(toga.App):
 
             if self.location_service:
                 # Add Philadelphia as a test location (good for NWS API testing)
-                success = self.location_service.add_location("Philadelphia, PA", 39.9526, -75.1652)
-                if success:
+                success_philly = self.location_service.add_location("Philadelphia, PA", 39.9526, -75.1652)
+                if success_philly:
                     logger.info("Added test location: Philadelphia, PA")
-                    # Set it as current location for testing
+
+                # Add Tokyo as an international test location (good for Open-Meteo API testing)
+                success_tokyo = self.location_service.add_location("Tokyo, Japan", 35.6762, 139.6503)
+                if success_tokyo:
+                    logger.info("Added test location: Tokyo, Japan")
+
+                # Add London as another international test location
+                success_london = self.location_service.add_location("London, UK", 51.5074, -0.1278)
+                if success_london:
+                    logger.info("Added test location: London, UK")
+
+                # Set Tokyo as current location for testing Open-Meteo
+                if success_tokyo:
+                    self.location_service.set_current_location("Tokyo, Japan")
+                    logger.info("Set Tokyo, Japan as current location for Open-Meteo testing")
+                    current_test_location = "Tokyo, Japan"
+                elif success_philly:
                     self.location_service.set_current_location("Philadelphia, PA")
                     logger.info("Set Philadelphia, PA as current location")
+                    current_test_location = "Philadelphia, PA"
+                else:
+                    current_test_location = None
 
-                    # Update the location selection widget if it exists
-                    if hasattr(self, "location_selection") and self.location_selection:
-                        locations = self._get_location_choices()
-                        self.location_selection.items = locations
-                        # Set the selection to the new location
-                        if "Philadelphia, PA" in locations:
-                            self.location_selection.value = "Philadelphia, PA"
+                # Update the location selection widget if it exists
+                if hasattr(self, "location_selection") and self.location_selection and current_test_location:
+                    locations = self._get_location_choices()
+                    self.location_selection.items = locations
+                    # Set the selection to the new location
+                    if current_test_location in locations:
+                        self.location_selection.value = current_test_location
 
-                    # Automatically refresh weather data for the new location
-                    logger.info("Automatically refreshing weather data for test location")
+                # Automatically refresh weather data for the new location
+                if current_test_location:
+                    logger.info(f"Automatically refreshing weather data for test location: {current_test_location}")
                     self._refresh_weather_data()
                 else:
-                    logger.warning("Failed to add test location: Philadelphia, PA")
+                    logger.warning("Failed to add any test locations")
         except Exception as e:
             logger.error(f"Error adding test location: {e}")
 
@@ -836,29 +857,51 @@ class AccessiWeatherToga(toga.App):
         try:
             logger.info(f"Fetching weather data for {name} ({lat}, {lon})")
 
-            # Create a Toga-specific formatter
+            # Check which API should be used for this location
+            if hasattr(self.weather_service, 'weather_data_retrieval') and hasattr(self.weather_service.weather_data_retrieval, 'api_client_manager'):
+                api_manager = self.weather_service.weather_data_retrieval.api_client_manager
+                should_use_openmeteo = api_manager._should_use_openmeteo(lat, lon)
+                api_name = "Open-Meteo" if should_use_openmeteo else "NWS"
+                logger.info(f"Using {api_name} API for location {name} ({lat}, {lon})")
+
+            # Create a Toga-specific formatter and transformer
             formatter = TogaWeatherFormatter(self.config)
+            transformer = TogaDataTransformer()
 
             # Fetch current conditions
             current_conditions = None
             try:
-                current_conditions = self.weather_service.get_current_conditions(lat, lon)
-                logger.debug(f"Current conditions data: {current_conditions}")
+                logger.info("Fetching current conditions...")
+                raw_current_conditions = self.weather_service.get_current_conditions(lat, lon)
+                logger.info(f"Successfully fetched current conditions using weather service")
+                logger.debug(f"Raw current conditions data: {raw_current_conditions}")
+
+                # Transform to format expected by Toga formatter
+                current_conditions = transformer.transform_current_conditions(raw_current_conditions)
+                logger.debug(f"Transformed current conditions: {current_conditions}")
             except Exception as e:
                 logger.warning(f"Failed to fetch current conditions: {e}")
 
             # Fetch forecast
             forecast_data = None
             try:
-                forecast_data = self.weather_service.get_forecast(lat, lon)
-                logger.debug(f"Forecast data: {forecast_data}")
+                logger.info("Fetching forecast...")
+                raw_forecast_data = self.weather_service.get_forecast(lat, lon)
+                logger.info("Successfully fetched forecast using weather service")
+                logger.debug(f"Raw forecast data: {raw_forecast_data}")
+
+                # Transform to format expected by Toga formatter
+                forecast_data = transformer.transform_forecast(raw_forecast_data)
+                logger.debug(f"Transformed forecast data: {forecast_data}")
             except Exception as e:
                 logger.warning(f"Failed to fetch forecast: {e}")
 
             # Fetch alerts
             alerts_data = None
             try:
+                logger.info("Fetching alerts...")
                 alerts_data = self.weather_service.get_alerts(lat, lon)
+                logger.info("Successfully fetched alerts using weather service")
                 logger.debug(f"Alerts data: {alerts_data}")
             except Exception as e:
                 logger.warning(f"Failed to fetch alerts: {e}")
@@ -951,8 +994,9 @@ class AccessiWeatherToga(toga.App):
         try:
             logger.info(f"Fetching weather data (no geocoding) for {name} ({lat}, {lon})")
 
-            # Create a Toga-specific formatter
+            # Create a Toga-specific formatter and transformer
             formatter = TogaWeatherFormatter(self.config)
+            transformer = TogaDataTransformer()
 
             # For US coordinates, force use of NWS API to avoid geocoding
             # Philadelphia coordinates are definitely in US, so use NWS directly
@@ -1000,6 +1044,12 @@ class AccessiWeatherToga(toga.App):
                 except Exception as e:
                     logger.warning(f"Alerts failed: {e}")
                     alerts_data = None
+
+                # Transform data to format expected by formatter
+                if current_conditions:
+                    current_conditions = transformer.transform_current_conditions(current_conditions)
+                if forecast_data:
+                    forecast_data = transformer.transform_forecast(forecast_data)
 
                 # Format the data for display
                 formatted_data = {
