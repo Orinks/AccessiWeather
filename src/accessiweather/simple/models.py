@@ -121,6 +121,7 @@ class WeatherData:
     location: Location
     current: Optional[CurrentConditions] = None
     forecast: Optional[Forecast] = None
+    discussion: Optional[str] = None
     alerts: Optional[WeatherAlerts] = None
     last_updated: Optional[datetime] = None
     

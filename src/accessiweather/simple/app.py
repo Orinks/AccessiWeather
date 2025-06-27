@@ -13,6 +13,7 @@ from toga.style.pack import COLUMN, ROW
 
 from .config import ConfigManager
 from .dialogs import AddLocationDialog, SettingsDialog
+from .dialogs.discussion import ForecastDiscussionDialog
 from .display import WxStyleWeatherFormatter
 from .location_manager import LocationManager
 from .models import WeatherData
@@ -44,6 +45,9 @@ class AccessiWeatherApp(toga.App):
         # Background update task
         self.update_task: asyncio.Task | None = None
         self.is_updating: bool = False
+
+        # Weather data storage
+        self.current_weather_data: WeatherData | None = None
 
     def startup(self):
         """Initialize the application."""
@@ -537,10 +541,41 @@ class AccessiWeatherApp(toga.App):
     async def _on_discussion_pressed(self, widget):
         """Handle forecast discussion button press."""
         logger.info("Forecast discussion button pressed")
-        # TODO: Implement forecast discussion dialog
-        await self.main_window.info_dialog(
-            "Forecast Discussion", "Forecast discussion will be implemented in a future version."
-        )
+
+        try:
+            # Check if we have current weather data
+            if not self.current_weather_data:
+                await self.main_window.info_dialog(
+                    "No Data Available",
+                    "Please refresh weather data first to view the forecast discussion.",
+                )
+                return
+
+            # Check if discussion data is available
+            discussion_text = self.current_weather_data.discussion
+            if not discussion_text or discussion_text.strip() == "":
+                await self.main_window.info_dialog(
+                    "Discussion Not Available",
+                    "Forecast discussion is not available for this location. "
+                    "This may occur for locations outside the US or when using backup weather data.",
+                )
+                return
+
+            # Create and show the forecast discussion dialog
+            location_name = (
+                self.current_weather_data.location.name
+                if self.current_weather_data.location
+                else "Unknown Location"
+            )
+            dialog = ForecastDiscussionDialog(self, discussion_text, location_name)
+            await dialog.show_and_focus()
+            logger.info("Forecast discussion dialog shown successfully")
+
+        except Exception as e:
+            logger.error(f"Failed to show forecast discussion: {e}")
+            await self.main_window.error_dialog(
+                "Discussion Error", f"Failed to show forecast discussion: {e}"
+            )
 
     async def _on_alert_details_pressed(self, widget):
         """Handle alert details button press."""
@@ -598,6 +633,7 @@ class AccessiWeatherApp(toga.App):
 
             # Fetch weather data
             weather_data = await self.weather_client.get_weather_data(current_location)
+            self.current_weather_data = weather_data
 
             # Update displays
             self._update_weather_displays(weather_data)
