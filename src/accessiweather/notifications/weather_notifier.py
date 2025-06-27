@@ -7,7 +7,13 @@ with deduplication, persistence, and change detection.
 import json
 import logging
 import os
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# For Python 3.10 compatibility
+try:
+    from datetime import UTC
+except ImportError:
+    UTC = timezone.utc
 from typing import Any
 
 from dateutil.parser import isoparse  # type: ignore # requires python-dateutil

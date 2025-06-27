@@ -4,61 +4,67 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from accessiweather.api_client import NoaaApiClient
-from accessiweather.api_wrapper import NoaaApiWrapper
-from accessiweather.geocoding import GeocodingService
-from accessiweather.location import LocationManager
-from accessiweather.notifications import WeatherNotifier
-from accessiweather.openmeteo_client import OpenMeteoApiClient
-from accessiweather.services.weather_service import WeatherService
+# Import only simple app components to avoid wx dependencies
+try:
+    from accessiweather.simple.weather_client import WeatherClient
+    from accessiweather.simple.location_manager import LocationManager as SimpleLocationManager
+    from accessiweather.simple.models import Location, WeatherData, CurrentConditions, Forecast
+except ImportError:
+    # Fallback for when simple components aren't available
+    WeatherClient = None
+    SimpleLocationManager = None
+    Location = None
+    WeatherData = None
+    CurrentConditions = None
+    Forecast = None
 
 
 @pytest.fixture
-def mock_nws_client():
-    """Mock NWS API client."""
-    return MagicMock(spec=NoaaApiClient)
+def mock_simple_weather_client():
+    """Mock simple weather client for Toga app."""
+    if WeatherClient is None:
+        return MagicMock()
+    return MagicMock(spec=WeatherClient)
 
 
 @pytest.fixture
-def mock_nws_wrapper():
-    """Mock NWS API wrapper."""
-    return MagicMock(spec=NoaaApiWrapper)
+def mock_simple_location_manager():
+    """Mock simple location manager for Toga app."""
+    if SimpleLocationManager is None:
+        return MagicMock()
+    return MagicMock(spec=SimpleLocationManager)
 
 
 @pytest.fixture
-def mock_openmeteo_client():
-    """Mock Open-Meteo API client."""
-    return MagicMock(spec=OpenMeteoApiClient)
+def mock_simple_location():
+    """Mock simple location for Toga app."""
+    if Location is None:
+        mock_location = MagicMock()
+        mock_location.name = "New York, NY"
+        mock_location.latitude = 40.7128
+        mock_location.longitude = -74.0060
+        return mock_location
+
+    return Location(name="New York, NY", latitude=40.7128, longitude=-74.0060)
 
 
 @pytest.fixture
-def mock_geocoding_service():
-    """Mock geocoding service."""
-    mock_service = MagicMock(spec=GeocodingService)
+def mock_simple_weather_data():
+    """Mock simple weather data for Toga app."""
+    if WeatherData is None or CurrentConditions is None or Forecast is None:
+        return MagicMock()
 
-    # Mock geocode method to return sample location
-    mock_service.geocode.return_value = {
-        "name": "New York, NY, USA",
-        "lat": 40.7128,
-        "lon": -74.0060,
-        "country_code": "us",
-    }
+    from datetime import datetime
+    location = Location(name="Test City", latitude=40.7128, longitude=-74.0060)
+    current = CurrentConditions(temperature_f=75.0, condition="Sunny")
+    forecast = Forecast(periods=[])
 
-    # Mock reverse_geocode method
-    mock_service.reverse_geocode.return_value = {"name": "New York, NY, USA", "country_code": "us"}
-
-    # Mock suggest_locations to return sample suggestions
-    mock_service.suggest_locations.return_value = [
-        "New York, NY, USA",
-        "Newark, NJ, USA",
-        "New Haven, CT, USA",
-    ]
-
-    # Mock utility methods
-    mock_service.is_zip_code.return_value = False
-    mock_service.format_zip_code.return_value = "12345, USA"
-
-    return mock_service
+    return WeatherData(
+        location=location,
+        current=current,
+        forecast=forecast,
+        last_updated=datetime.now()
+    )
 
 
 @pytest.fixture
@@ -115,21 +121,16 @@ def mock_all_geocoding():
 
 
 @pytest.fixture
-def location_manager(temp_config_dir):
-    """Create a LocationManager with temp config directory and mocked geocoding."""
-    # The geocoding is already mocked by the autouse fixture
-    return LocationManager(config_dir=temp_config_dir)
+def simple_location_manager():
+    """Create a simple LocationManager for Toga app."""
+    if SimpleLocationManager is None:
+        return MagicMock()
+    return SimpleLocationManager()
 
 
 @pytest.fixture
-def weather_notifier(temp_config_dir):
-    """Create a WeatherNotifier with temp config directory."""
-    return WeatherNotifier(config_dir=temp_config_dir, enable_persistence=True)
-
-
-@pytest.fixture
-def weather_service(mock_nws_wrapper, mock_openmeteo_client, sample_config):
-    """Create a WeatherService with mocked clients."""
-    return WeatherService(
-        nws_client=mock_nws_wrapper, openmeteo_client=mock_openmeteo_client, config=sample_config
-    )
+def simple_weather_client():
+    """Create a simple WeatherClient for Toga app."""
+    if WeatherClient is None:
+        return MagicMock()
+    return WeatherClient(data_source="auto")

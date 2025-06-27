@@ -1,4 +1,4 @@
-"""Test configuration and fixtures for AccessiWeather tests."""
+"""Test configuration and fixtures for AccessiWeather Toga app tests."""
 
 # Import all fixtures from fixture modules
 # Import additional fixtures that need to remain in conftest.py
@@ -13,90 +13,29 @@ from tests.fixtures.sample_responses import *  # noqa: F401, F403
 
 
 @pytest.fixture
-def mock_weather_apis():
-    """Mock all weather APIs with comprehensive responses."""
+def mock_simple_weather_apis():
+    """Mock weather APIs for simple Toga app testing."""
     with (
-        patch("accessiweather.api_wrapper.NoaaApiWrapper") as mock_nws,
-        patch("accessiweather.api_client.NoaaApiClient") as mock_nws_client,
-        patch("accessiweather.openmeteo_client.OpenMeteoApiClient") as mock_openmeteo,
+        patch("httpx.AsyncClient") as mock_httpx_client,
     ):
-        # Set up NWS wrapper mock
-        nws_instance = MagicMock()
-        mock_nws.return_value = nws_instance
-        nws_instance.get_current_conditions.return_value = {
-            "properties": {
-                "temperature": {"value": 20.0, "unitCode": "wmoUnit:degC"},
-                "textDescription": "Partly Cloudy",
-                "relativeHumidity": {"value": 65},
-                "windSpeed": {"value": 10, "unitCode": "wmoUnit:km_h-1"},
-                "windDirection": {"value": 180},
-                "barometricPressure": {"value": 101325, "unitCode": "wmoUnit:Pa"},
-            }
-        }
-        nws_instance.get_forecast.return_value = {
-            "properties": {
-                "periods": [
-                    {
-                        "name": "Today",
-                        "temperature": 75,
-                        "temperatureUnit": "F",
-                        "shortForecast": "Sunny",
-                        "detailedForecast": "Sunny with a high near 75.",
-                        "windSpeed": "10 mph",
-                        "windDirection": "SW",
-                    }
-                ]
-            }
-        }
-        nws_instance.get_alerts.return_value = {
-            "features": [
-                {
-                    "properties": {
-                        "headline": "Heat Advisory",
-                        "description": "Dangerous heat conditions expected.",
-                        "instruction": "Stay hydrated and avoid prolonged sun exposure.",
-                        "severity": "Moderate",
-                        "event": "Heat Advisory",
-                        "urgency": "Expected",
-                        "certainty": "Likely",
-                    }
-                }
-            ]
-        }
-        nws_instance.get_point_data.return_value = {
-            "properties": {
-                "gridId": "PHI",
-                "gridX": 50,
-                "gridY": 75,
-                "forecast": "https://api.weather.gov/gridpoints/PHI/50,75/forecast",
-                "county": "https://api.weather.gov/zones/county/PAC091",
-            }
-        }
+        # Set up httpx client mock for simple weather client
+        mock_client_instance = MagicMock()
+        mock_httpx_client.return_value.__aenter__.return_value = mock_client_instance
 
-        # Set up NWS client mock
-        nws_client_instance = MagicMock()
-        mock_nws_client.return_value = nws_client_instance
-        nws_client_instance.get_current_conditions.return_value = (
-            nws_instance.get_current_conditions.return_value
-        )
-        nws_client_instance.get_forecast.return_value = nws_instance.get_forecast.return_value
-        nws_client_instance.get_alerts.return_value = nws_instance.get_alerts.return_value
-        nws_client_instance.get_point_data.return_value = nws_instance.get_point_data.return_value
-
-        # Set up Open-Meteo mock
-        openmeteo_instance = MagicMock()
-        mock_openmeteo.return_value = openmeteo_instance
-        openmeteo_instance.get_current_weather.return_value = {
+        # Mock Open-Meteo API responses
+        mock_openmeteo_current = {
             "current": {
-                "temperature_2m": 68.0,
-                "weather_code": 2,
+                "temperature_2m": 75.0,
+                "weather_code": 1,
                 "relative_humidity_2m": 65,
                 "wind_speed_10m": 8.5,
                 "wind_direction_10m": 180,
                 "pressure_msl": 1013.2,
+                "apparent_temperature": 78.0,
             }
         }
-        openmeteo_instance.get_forecast.return_value = {
+
+        mock_openmeteo_forecast = {
             "daily": {
                 "time": ["2024-01-01", "2024-01-02", "2024-01-03"],
                 "weather_code": [1, 2, 3],
@@ -105,10 +44,16 @@ def mock_weather_apis():
             }
         }
 
+        # Configure mock responses
+        mock_response = MagicMock()
+        mock_response.raise_for_status.return_value = None
+        mock_response.json.side_effect = [mock_openmeteo_current, mock_openmeteo_forecast]
+        mock_client_instance.get.return_value = mock_response
+
         yield {
-            "nws": nws_instance,
-            "nws_client": nws_client_instance,
-            "openmeteo": openmeteo_instance,
+            "httpx_client": mock_client_instance,
+            "openmeteo_current": mock_openmeteo_current,
+            "openmeteo_forecast": mock_openmeteo_forecast,
         }
 
 
@@ -125,55 +70,29 @@ def mock_web_scraping():
 
 
 @pytest.fixture
-def mock_weather_apis_error():
-    """Mock weather APIs to simulate error conditions."""
-    with (
-        patch("accessiweather.api_wrapper.NoaaApiWrapper") as mock_nws,
-        patch("accessiweather.openmeteo_client.OpenMeteoApiClient") as mock_openmeteo,
-    ):
-        # Configure NWS mock to raise errors
-        nws_instance = MagicMock()
-        mock_nws.return_value = nws_instance
-        nws_instance.get_current_conditions.side_effect = Exception("NWS API Error")
-        nws_instance.get_forecast.side_effect = Exception("NWS API Error")
-        nws_instance.get_alerts.side_effect = Exception("NWS API Error")
+def mock_simple_weather_apis_error():
+    """Mock weather APIs to simulate error conditions for simple app."""
+    with patch("httpx.AsyncClient") as mock_httpx_client:
+        # Configure httpx client mock to raise errors
+        mock_client_instance = MagicMock()
+        mock_httpx_client.return_value.__aenter__.return_value = mock_client_instance
+        mock_client_instance.get.side_effect = Exception("API Error")
 
-        # Configure Open-Meteo mock to raise errors
-        openmeteo_instance = MagicMock()
-        mock_openmeteo.return_value = openmeteo_instance
-        openmeteo_instance.get_current_weather.side_effect = Exception("Open-Meteo API Error")
-        openmeteo_instance.get_forecast.side_effect = Exception("Open-Meteo API Error")
-
-        yield {"nws": nws_instance, "openmeteo": openmeteo_instance}
+        yield {"httpx_client": mock_client_instance}
 
 
 @pytest.fixture
-def mock_weather_apis_timeout():
-    """Mock weather APIs to simulate timeout conditions."""
-    with (
-        patch("accessiweather.api_wrapper.NoaaApiWrapper") as mock_nws,
-        patch("accessiweather.openmeteo_client.OpenMeteoApiClient") as mock_openmeteo,
-    ):
-        from requests.exceptions import Timeout
+def mock_simple_weather_apis_timeout():
+    """Mock weather APIs to simulate timeout conditions for simple app."""
+    with patch("httpx.AsyncClient") as mock_httpx_client:
+        import httpx
 
-        from accessiweather.openmeteo_client import OpenMeteoNetworkError
+        # Configure httpx client mock to raise timeout
+        mock_client_instance = MagicMock()
+        mock_httpx_client.return_value.__aenter__.return_value = mock_client_instance
+        mock_client_instance.get.side_effect = httpx.TimeoutException("Request timed out")
 
-        # Configure NWS mock to raise timeout
-        nws_instance = MagicMock()
-        mock_nws.return_value = nws_instance
-        nws_instance.get_current_conditions.side_effect = Timeout("Request timed out")
-        nws_instance.get_forecast.side_effect = Timeout("Request timed out")
-        nws_instance.get_alerts.side_effect = Timeout("Request timed out")
-
-        # Configure Open-Meteo mock to raise timeout
-        openmeteo_instance = MagicMock()
-        mock_openmeteo.return_value = openmeteo_instance
-        openmeteo_instance.get_current_weather.side_effect = OpenMeteoNetworkError(
-            "Request timed out"
-        )
-        openmeteo_instance.get_forecast.side_effect = OpenMeteoNetworkError("Request timed out")
-
-        yield {"nws": nws_instance, "openmeteo": openmeteo_instance}
+        yield {"httpx_client": mock_client_instance}
 
 
 @pytest.fixture
