@@ -1,8 +1,8 @@
-"""Data transformer for Toga app to convert NWS-compatible data to Toga formatter format.
+"""Data transformer and formatter for Toga app.
 
-This module provides transformation functions to convert data from the NWS-compatible
-format (used by both NWS and Open-Meteo mappers) to the flat format expected by
-the Toga weather formatter.
+This module provides transformation and formatting functions to convert data from the
+NWS-compatible format (used by both NWS and Open-Meteo mappers) to formatted text
+ready for display in the Toga app.
 """
 
 import logging
@@ -12,11 +12,15 @@ logger = logging.getLogger(__name__)
 
 
 class TogaDataTransformer:
-    """Transforms NWS-compatible data to Toga formatter format."""
+    """Transforms and formats NWS-compatible data for Toga app display."""
 
-    def __init__(self):
-        """Initialize the transformer."""
-        pass
+    def __init__(self, config=None):
+        """Initialize the transformer.
+
+        Args:
+            config: App configuration dictionary for temperature unit preferences
+        """
+        self.config = config or {}
 
     def transform_current_conditions(self, nws_data: dict[str, Any]) -> dict[str, Any]:
         """Transform NWS-compatible current conditions to Toga formatter format.
@@ -152,3 +156,99 @@ class TogaDataTransformer:
         # Calculate index (each direction covers 22.5 degrees)
         index = round(degrees / 22.5) % 16
         return directions[index]
+
+    def format_current_conditions(self, nws_data: dict[str, Any], location_name: str) -> str:
+        """Transform NWS data and format current conditions for Toga display.
+
+        Args:
+            nws_data: Data in NWS-compatible format
+            location_name: Name of the location
+
+        Returns:
+            Formatted text ready for display
+        """
+        # Transform the data first
+        transformed = self.transform_current_conditions(nws_data)
+
+        if not transformed:
+            return f"Current conditions for {location_name}\n\nNo current weather data available"
+
+        try:
+            # Extract values with defaults
+            temperature = transformed.get("temperature", "N/A")
+            condition = transformed.get("condition", "Unknown")
+            feelslike = transformed.get("feelslike", "N/A")
+            humidity = transformed.get("humidity", "N/A")
+            wind_speed = transformed.get("wind_speed", "N/A")
+            wind_direction = transformed.get("wind_direction", "N/A")
+            pressure = transformed.get("pressure", "N/A")
+
+            # Format temperature
+            temp_str = f"{temperature:.1f}°F" if isinstance(temperature, (int, float)) else str(temperature)
+            feels_str = f"{feelslike:.1f}°F" if isinstance(feelslike, (int, float)) else str(feelslike)
+
+            # Format humidity
+            humidity_str = f"{humidity:.0f}%" if isinstance(humidity, (int, float)) else str(humidity)
+
+            # Format wind
+            wind_str = f"{wind_speed:.1f} mph" if isinstance(wind_speed, (int, float)) else str(wind_speed)
+
+            # Format pressure
+            pressure_str = f"{pressure:.0f} inHg" if isinstance(pressure, (int, float)) else str(pressure)
+
+            # Build the formatted text
+            text = f"Current conditions for {location_name}\n\n"
+            text += f"Temperature: {temp_str}, {condition}\n"
+            text += f"Feels like: {feels_str}\n"
+            text += f"Humidity: {humidity_str}\n"
+            text += f"Wind: {wind_direction} at {wind_str}\n"
+            text += f"Pressure: {pressure_str}"
+
+            return text
+
+        except Exception as e:
+            logger.error(f"Error formatting current conditions: {e}")
+            return f"Current conditions for {location_name}\n\nError formatting weather data: {e}"
+
+    def format_forecast(self, nws_data: dict[str, Any], location_name: str) -> str:
+        """Transform NWS data and format forecast for Toga display.
+
+        Args:
+            nws_data: Data in NWS-compatible format
+            location_name: Name of the location
+
+        Returns:
+            Formatted text ready for display
+        """
+        # Transform the data first
+        transformed = self.transform_forecast(nws_data)
+
+        if not transformed:
+            return f"Forecast for {location_name}\n\nNo forecast data available"
+
+        try:
+            periods = transformed.get("periods", [])
+            if not periods:
+                return f"Forecast for {location_name}\n\nNo forecast periods available"
+
+            text = f"Forecast for {location_name}\n\n"
+
+            # Format each forecast period
+            for period in periods[:7]:  # Limit to 7 periods for readability
+                name = period.get("name", "Unknown")
+                temperature = period.get("temperature")
+                short_forecast = period.get("shortForecast", "")
+
+                # Format temperature
+                if temperature is not None:
+                    temp_str = f"{temperature:.0f}°F"
+                else:
+                    temp_str = "N/A"
+
+                text += f"{name}: {temp_str}, {short_forecast}\n"
+
+            return text
+
+        except Exception as e:
+            logger.error(f"Error formatting forecast: {e}")
+            return f"Forecast for {location_name}\n\nError formatting forecast data: {e}"

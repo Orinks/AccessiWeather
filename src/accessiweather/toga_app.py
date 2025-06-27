@@ -14,7 +14,6 @@ from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
 
 from accessiweather.config_utils import get_config_dir
-from accessiweather.toga_formatter import TogaWeatherFormatter
 from accessiweather.toga_data_transformer import TogaDataTransformer
 
 logger = logging.getLogger(__name__)
@@ -864,9 +863,8 @@ class AccessiWeatherToga(toga.App):
                 api_name = "Open-Meteo" if should_use_openmeteo else "NWS"
                 logger.info(f"Using {api_name} API for location {name} ({lat}, {lon})")
 
-            # Create a Toga-specific formatter and transformer
-            formatter = TogaWeatherFormatter(self.config)
-            transformer = TogaDataTransformer()
+            # Create a data transformer that also handles formatting
+            transformer = TogaDataTransformer(self.config)
 
             # Fetch current conditions
             current_conditions = None
@@ -876,9 +874,9 @@ class AccessiWeatherToga(toga.App):
                 logger.info(f"Successfully fetched current conditions using weather service")
                 logger.debug(f"Raw current conditions data: {raw_current_conditions}")
 
-                # Transform to format expected by Toga formatter
-                current_conditions = transformer.transform_current_conditions(raw_current_conditions)
-                logger.debug(f"Transformed current conditions: {current_conditions}")
+                # Transform and format for display
+                current_conditions = raw_current_conditions
+                logger.debug(f"Raw current conditions: {current_conditions}")
             except Exception as e:
                 logger.warning(f"Failed to fetch current conditions: {e}")
 
@@ -890,9 +888,9 @@ class AccessiWeatherToga(toga.App):
                 logger.info("Successfully fetched forecast using weather service")
                 logger.debug(f"Raw forecast data: {raw_forecast_data}")
 
-                # Transform to format expected by Toga formatter
-                forecast_data = transformer.transform_forecast(raw_forecast_data)
-                logger.debug(f"Transformed forecast data: {forecast_data}")
+                # Transform and format for display
+                forecast_data = raw_forecast_data
+                logger.debug(f"Raw forecast data: {forecast_data}")
             except Exception as e:
                 logger.warning(f"Failed to fetch forecast: {e}")
 
@@ -906,11 +904,11 @@ class AccessiWeatherToga(toga.App):
             except Exception as e:
                 logger.warning(f"Failed to fetch alerts: {e}")
 
-            # Format the data for display
+            # Format the data for display using transformer
             formatted_data = {
-                "current": formatter.format_current_conditions(current_conditions, name),
-                "forecast": formatter.format_forecast(forecast_data, name),
-                "alerts": formatter.format_alerts(alerts_data, name),
+                "current": transformer.format_current_conditions(current_conditions, name) if current_conditions else f"Current conditions for {name}\n\nNo current weather data available",
+                "forecast": transformer.format_forecast(forecast_data, name) if forecast_data else f"Forecast for {name}\n\nNo forecast data available",
+                "alerts": f"Weather alerts for {name}\n\nNo alerts available" if not alerts_data else f"Weather alerts for {name}\n\nAlerts data available",
             }
 
             logger.info("Successfully fetched and formatted weather data")
@@ -994,9 +992,8 @@ class AccessiWeatherToga(toga.App):
         try:
             logger.info(f"Fetching weather data (no geocoding) for {name} ({lat}, {lon})")
 
-            # Create a Toga-specific formatter and transformer
-            formatter = TogaWeatherFormatter(self.config)
-            transformer = TogaDataTransformer()
+            # Create a data transformer that also handles formatting
+            transformer = TogaDataTransformer(self.config)
 
             # For US coordinates, force use of NWS API to avoid geocoding
             # Philadelphia coordinates are definitely in US, so use NWS directly
@@ -1045,17 +1042,11 @@ class AccessiWeatherToga(toga.App):
                     logger.warning(f"Alerts failed: {e}")
                     alerts_data = None
 
-                # Transform data to format expected by formatter
-                if current_conditions:
-                    current_conditions = transformer.transform_current_conditions(current_conditions)
-                if forecast_data:
-                    forecast_data = transformer.transform_forecast(forecast_data)
-
-                # Format the data for display
+                # Format the data for display using transformer
                 formatted_data = {
-                    "current": formatter.format_current_conditions(current_conditions, name),
-                    "forecast": formatter.format_forecast(forecast_data, name),
-                    "alerts": formatter.format_alerts(alerts_data, name),
+                    "current": transformer.format_current_conditions(current_conditions, name) if current_conditions else f"Current conditions for {name}\n\nNo current weather data available",
+                    "forecast": transformer.format_forecast(forecast_data, name) if forecast_data else f"Forecast for {name}\n\nNo forecast data available",
+                    "alerts": f"Weather alerts for {name}\n\nNo alerts available" if not alerts_data else f"Weather alerts for {name}\n\nAlerts data available",
                 }
 
                 logger.info("Successfully fetched and formatted weather data (no geocoding)")
