@@ -82,7 +82,7 @@ class WeatherClient:
             # Get grid point for location
             grid_url = f"{self.nws_base_url}/points/{location.latitude},{location.longitude}"
 
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
+            async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
                 headers = {"User-Agent": self.user_agent}
 
                 # Get grid point
@@ -122,7 +122,7 @@ class WeatherClient:
             # Get grid point for location
             grid_url = f"{self.nws_base_url}/points/{location.latitude},{location.longitude}"
 
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
+            async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
                 headers = {"User-Agent": self.user_agent}
 
                 # Get grid point
@@ -219,7 +219,7 @@ class WeatherClient:
                 "message_type": "alert",
             }
 
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
+            async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
                 headers = {"User-Agent": self.user_agent}
                 response = await client.get(alerts_url, params=params, headers=headers)
                 response.raise_for_status()
@@ -247,7 +247,7 @@ class WeatherClient:
                 "timezone": "auto",
             }
 
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
+            async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
                 response = await client.get(url, params=params)
                 response.raise_for_status()
                 data = response.json()
@@ -272,7 +272,7 @@ class WeatherClient:
                 "forecast_days": 7,
             }
 
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
+            async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
                 response = await client.get(url, params=params)
                 response.raise_for_status()
                 data = response.json()
