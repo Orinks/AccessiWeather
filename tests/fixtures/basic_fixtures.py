@@ -6,8 +6,6 @@ import tempfile
 
 import pytest
 
-from accessiweather.utils.temperature_utils import TemperatureUnit
-
 
 @pytest.fixture
 def temp_config_dir():
@@ -23,7 +21,7 @@ def sample_config():
         "location": {"name": "Test City", "lat": 40.7128, "lon": -74.0060},
         "settings": {
             "update_interval": 30,
-            "temperature_unit": TemperatureUnit.FAHRENHEIT.value,
+            "temperature_unit": "both",  # Simple string instead of enum
             "data_source": "auto",
             "minimize_to_tray": False,
             "show_nationwide_location": True,

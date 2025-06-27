@@ -1,4 +1,4 @@
-"""GUI testing fixtures and performance testing utilities."""
+"""GUI testing fixtures and performance testing utilities for Toga app."""
 
 import time
 from unittest.mock import MagicMock
@@ -7,93 +7,82 @@ import pytest
 
 
 @pytest.fixture
-def mock_wx_app():
-    """Mock wx.App for GUI testing."""
+def mock_toga_app():
+    """Mock Toga App for GUI testing."""
     mock_app = MagicMock()
-    mock_app.MainLoop = MagicMock()
-    mock_app.ExitMainLoop = MagicMock()
-    mock_app.Yield = MagicMock(return_value=True)
+    mock_app.main_loop = MagicMock()
+    mock_app.exit = MagicMock()
+    mock_app.paths = MagicMock()
+    mock_app.paths.config = MagicMock()
     return mock_app
 
 
 @pytest.fixture
-def mock_wx_frame():
-    """Mock wx.Frame for GUI testing."""
-    mock_frame = MagicMock()
-    mock_frame.Show = MagicMock()
-    mock_frame.Hide = MagicMock()
-    mock_frame.Close = MagicMock()
-    mock_frame.Destroy = MagicMock()
-    mock_frame.SetTitle = MagicMock()
-    mock_frame.SetSize = MagicMock()
-    mock_frame.Center = MagicMock()
-    mock_frame.Bind = MagicMock()
-    return mock_frame
+def mock_toga_main_window():
+    """Mock Toga MainWindow for GUI testing."""
+    mock_window = MagicMock()
+    mock_window.show = MagicMock()
+    mock_window.hide = MagicMock()
+    mock_window.close = MagicMock()
+    mock_window.title = "Test Window"
+    mock_window.size = (800, 600)
+    return mock_window
 
 
 @pytest.fixture
-def mock_wx_panel():
-    """Mock wx.Panel for GUI testing."""
-    mock_panel = MagicMock()
-    mock_panel.SetSizer = MagicMock()
-    mock_panel.Layout = MagicMock()
-    mock_panel.Refresh = MagicMock()
-    mock_panel.Update = MagicMock()
-    return mock_panel
+def mock_toga_box():
+    """Mock Toga Box for layout testing."""
+    mock_box = MagicMock()
+    mock_box.add = MagicMock()
+    mock_box.insert = MagicMock()
+    mock_box.remove = MagicMock()
+    mock_box.clear = MagicMock()
+    return mock_box
 
 
 @pytest.fixture
-def mock_wx_sizer():
-    """Mock wx.Sizer for GUI testing."""
-    mock_sizer = MagicMock()
-    mock_sizer.Add = MagicMock()
-    mock_sizer.AddSpacer = MagicMock()
-    mock_sizer.Layout = MagicMock()
-    mock_sizer.Fit = MagicMock()
-    return mock_sizer
-
-
-@pytest.fixture
-def mock_wx_controls():
-    """Mock wx controls for GUI testing."""
+def mock_toga_controls():
+    """Mock Toga controls for GUI testing."""
     controls = {}
 
-    # Text controls
-    mock_text_ctrl = MagicMock()
-    mock_text_ctrl.GetValue = MagicMock(return_value="Test Value")
-    mock_text_ctrl.SetValue = MagicMock()
-    mock_text_ctrl.Clear = MagicMock()
-    controls["TextCtrl"] = mock_text_ctrl
+    # Text input controls
+    mock_text_input = MagicMock()
+    mock_text_input.value = "Test Value"
+    mock_text_input.placeholder = "Enter text"
+    mock_text_input.readonly = False
+    controls["TextInput"] = mock_text_input
+
+    # Multiline text input
+    mock_multiline_text = MagicMock()
+    mock_multiline_text.value = "Test multiline text"
+    mock_multiline_text.readonly = False
+    controls["MultilineTextInput"] = mock_multiline_text
 
     # Button controls
     mock_button = MagicMock()
-    mock_button.SetLabel = MagicMock()
-    mock_button.GetLabel = MagicMock(return_value="Test Button")
-    mock_button.Enable = MagicMock()
-    mock_button.Disable = MagicMock()
+    mock_button.text = "Test Button"
+    mock_button.enabled = True
+    mock_button.on_press = MagicMock()
     controls["Button"] = mock_button
 
-    # Choice controls
-    mock_choice = MagicMock()
-    mock_choice.GetSelection = MagicMock(return_value=0)
-    mock_choice.SetSelection = MagicMock()
-    mock_choice.GetStringSelection = MagicMock(return_value="Option 1")
-    mock_choice.SetStringSelection = MagicMock()
-    mock_choice.Append = MagicMock()
-    mock_choice.Clear = MagicMock()
-    controls["Choice"] = mock_choice
+    # Selection controls
+    mock_selection = MagicMock()
+    mock_selection.items = ["Option 1", "Option 2", "Option 3"]
+    mock_selection.value = "Option 1"
+    mock_selection.on_change = MagicMock()
+    controls["Selection"] = mock_selection
 
-    # CheckBox controls
-    mock_checkbox = MagicMock()
-    mock_checkbox.GetValue = MagicMock(return_value=True)
-    mock_checkbox.SetValue = MagicMock()
-    controls["CheckBox"] = mock_checkbox
+    # Switch controls
+    mock_switch = MagicMock()
+    mock_switch.value = True
+    mock_switch.text = "Enable feature"
+    mock_switch.on_change = MagicMock()
+    controls["Switch"] = mock_switch
 
-    # StaticText controls
-    mock_static_text = MagicMock()
-    mock_static_text.SetLabel = MagicMock()
-    mock_static_text.GetLabel = MagicMock(return_value="Static Text")
-    controls["StaticText"] = mock_static_text
+    # Label controls
+    mock_label = MagicMock()
+    mock_label.text = "Test Label"
+    controls["Label"] = mock_label
 
     return controls
 
@@ -188,20 +177,19 @@ def api_call_counter():
 
 
 @pytest.fixture
-def headless_environment(monkeypatch):
-    """Set up headless environment for GUI testing."""
-    # Set environment variables for headless mode
-    monkeypatch.setenv("DISPLAY", "")
-    monkeypatch.setenv("PYTEST_DISABLE_PLUGIN_AUTOLOAD", "1")
+def toga_test_environment(monkeypatch):
+    """Set up test environment for Toga app testing."""
+    # Set environment variables for test mode
     monkeypatch.setenv("ACCESSIWEATHER_TEST_MODE", "1")
+    monkeypatch.setenv("TOGA_BACKEND", "dummy")  # Use dummy backend for testing
 
-    # Return a simple object to indicate headless mode is active
-    class HeadlessEnvironment:
+    # Return a simple object to indicate test mode is active
+    class TogaTestEnvironment:
         def __init__(self):
-            self.headless = True
-            self.display = ""
+            self.test_mode = True
+            self.backend = "dummy"
 
-        def is_headless(self):
-            return self.headless
+        def is_test_mode(self):
+            return self.test_mode
 
-    return HeadlessEnvironment()
+    return TogaTestEnvironment()

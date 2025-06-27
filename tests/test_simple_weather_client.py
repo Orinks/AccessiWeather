@@ -12,19 +12,40 @@ from unittest.mock import Mock, patch
 import httpx
 import pytest
 
-from accessiweather.simple.models import (
-    CurrentConditions,
-    Forecast,
-    ForecastPeriod,
-    HourlyForecast,
-    HourlyForecastPeriod,
-    Location,
-    WeatherAlerts,
-    WeatherData,
-)
+# Import models and weather client directly to avoid toga dependency
+import sys
+import os
+import importlib.util
 
-# Import simplified app weather client components
-from accessiweather.simple.weather_client import WeatherClient
+# Load models module directly
+models_path = os.path.join(os.path.dirname(__file__), '..', 'src', 'accessiweather', 'simple', 'models.py')
+spec = importlib.util.spec_from_file_location("simple_models", models_path)
+simple_models = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(simple_models)
+
+# Load weather client module directly
+weather_client_path = os.path.join(os.path.dirname(__file__), '..', 'src', 'accessiweather', 'simple', 'weather_client.py')
+spec = importlib.util.spec_from_file_location("simple_weather_client", weather_client_path)
+simple_weather_client = importlib.util.module_from_spec(spec)
+
+# Inject models into weather_client namespace
+for attr in dir(simple_models):
+    if not attr.startswith('_'):
+        setattr(simple_weather_client, attr, getattr(simple_models, attr))
+
+# Execute weather_client
+spec.loader.exec_module(simple_weather_client)
+
+# Extract the classes we need
+CurrentConditions = simple_models.CurrentConditions
+Forecast = simple_models.Forecast
+ForecastPeriod = simple_models.ForecastPeriod
+HourlyForecast = simple_models.HourlyForecast
+HourlyForecastPeriod = simple_models.HourlyForecastPeriod
+Location = simple_models.Location
+WeatherAlerts = simple_models.WeatherAlerts
+WeatherData = simple_models.WeatherData
+WeatherClient = simple_weather_client.WeatherClient
 
 
 class TestWeatherClientBasics:
@@ -38,15 +59,17 @@ class TestWeatherClientBasics:
         assert client.nws_base_url == "https://api.weather.gov"
         assert client.openmeteo_base_url == "https://api.open-meteo.com/v1"
         assert client.timeout == 10.0
+        assert client.data_source == "auto"  # Default data source
 
     def test_weather_client_custom_initialization(self):
         """Test WeatherClient initialization with custom parameters."""
-        client = WeatherClient(user_agent="TestApp/2.0")
+        client = WeatherClient(user_agent="TestApp/2.0", data_source="openmeteo")
 
         assert client.user_agent == "TestApp/2.0"
         assert client.nws_base_url == "https://api.weather.gov"
         assert client.openmeteo_base_url == "https://api.open-meteo.com/v1"
         assert client.timeout == 10.0
+        assert client.data_source == "openmeteo"
 
     @pytest.mark.asyncio
     async def test_get_weather_data_structure(self):
@@ -319,6 +342,199 @@ class TestWeatherClientNWSAPI:
 
             current = await client._get_nws_current_conditions(location)
             assert current is None
+
+
+class TestWeatherClientOpenMeteoIntegration:
+    """Test WeatherClient Open-Meteo integration and automatic API selection."""
+
+    def test_should_use_openmeteo_auto_mode(self):
+        """Test automatic API selection based on location."""
+        client = WeatherClient(data_source="auto")
+
+        # US locations should use NWS
+        us_location = Location("Philadelphia, PA", 39.9526, -75.1652)
+        assert not client._should_use_openmeteo(us_location)
+
+        # International locations should use Open-Meteo
+        tokyo_location = Location("Tokyo, Japan", 35.6762, 139.6503)
+        assert client._should_use_openmeteo(tokyo_location)
+
+        london_location = Location("London, UK", 51.5074, -0.1278)
+        assert client._should_use_openmeteo(london_location)
+
+        sydney_location = Location("Sydney, Australia", -33.8688, 151.2093)
+        assert client._should_use_openmeteo(sydney_location)
+
+    def test_should_use_openmeteo_forced_modes(self):
+        """Test forced API selection modes."""
+        us_location = Location("Philadelphia, PA", 39.9526, -75.1652)
+        tokyo_location = Location("Tokyo, Japan", 35.6762, 139.6503)
+
+        # Force Open-Meteo mode
+        client_openmeteo = WeatherClient(data_source="openmeteo")
+        assert client_openmeteo._should_use_openmeteo(us_location)
+        assert client_openmeteo._should_use_openmeteo(tokyo_location)
+
+        # Force NWS mode
+        client_nws = WeatherClient(data_source="nws")
+        assert not client_nws._should_use_openmeteo(us_location)
+        assert not client_nws._should_use_openmeteo(tokyo_location)
+
+    def test_is_us_location(self):
+        """Test US location detection."""
+        client = WeatherClient()
+
+        # US locations
+        assert client._is_us_location(Location("New York, NY", 40.7128, -74.0060))
+        assert client._is_us_location(Location("Los Angeles, CA", 34.0522, -118.2437))
+        assert client._is_us_location(Location("Miami, FL", 25.7617, -80.1918))
+        assert client._is_us_location(Location("Seattle, WA", 47.6062, -122.3321))
+
+        # International locations
+        assert not client._is_us_location(Location("Tokyo, Japan", 35.6762, 139.6503))
+        assert not client._is_us_location(Location("London, UK", 51.5074, -0.1278))
+        assert not client._is_us_location(Location("Sydney, Australia", -33.8688, 151.2093))
+        assert not client._is_us_location(Location("Paris, France", 48.8566, 2.3522))
+
+        # Edge cases
+        assert not client._is_us_location(Location("Mexico City, Mexico", 19.4326, -99.1332))
+        assert not client._is_us_location(Location("Toronto, Canada", 43.6532, -79.3832))
+
+    def test_set_empty_weather_data(self):
+        """Test setting empty weather data when APIs fail."""
+        client = WeatherClient()
+        location = Location("Test Location", 40.0, -75.0)
+        weather_data = WeatherData(location=location, last_updated=datetime.now())
+
+        client._set_empty_weather_data(weather_data)
+
+        assert isinstance(weather_data.current, CurrentConditions)
+        assert isinstance(weather_data.forecast, Forecast)
+        assert isinstance(weather_data.hourly_forecast, HourlyForecast)
+        assert isinstance(weather_data.alerts, WeatherAlerts)
+        assert weather_data.discussion == "Weather data not available."
+        assert len(weather_data.forecast.periods) == 0
+        assert len(weather_data.alerts.alerts) == 0
+
+    @pytest.mark.asyncio
+    async def test_get_weather_data_auto_us_location(self):
+        """Test automatic API selection for US location (should use NWS)."""
+        client = WeatherClient(data_source="auto")
+        us_location = Location("Philadelphia, PA", 39.9526, -75.1652)
+
+        # Mock NWS success
+        with (
+            patch.object(client, "_get_nws_current_conditions") as mock_nws_current,
+            patch.object(client, "_get_nws_forecast_and_discussion") as mock_nws_forecast,
+            patch.object(client, "_get_nws_hourly_forecast") as mock_nws_hourly,
+            patch.object(client, "_get_nws_alerts") as mock_nws_alerts,
+        ):
+            mock_nws_current.return_value = CurrentConditions(temperature_f=75.0, condition="Sunny")
+            mock_nws_forecast.return_value = (
+                Forecast(periods=[ForecastPeriod(name="Today", temperature=75, short_forecast="Sunny")]),
+                "Sunny skies expected."
+            )
+            mock_nws_hourly.return_value = HourlyForecast(periods=[])
+            mock_nws_alerts.return_value = WeatherAlerts(alerts=[])
+
+            weather_data = await client.get_weather_data(us_location)
+
+            # Should use NWS
+            mock_nws_current.assert_called_once()
+            mock_nws_forecast.assert_called_once()
+            assert weather_data.current.temperature_f == 75.0
+            assert weather_data.discussion == "Sunny skies expected."
+
+    @pytest.mark.asyncio
+    async def test_get_weather_data_auto_international_location(self):
+        """Test automatic API selection for international location (should use Open-Meteo)."""
+        client = WeatherClient(data_source="auto")
+        tokyo_location = Location("Tokyo, Japan", 35.6762, 139.6503)
+
+        # Mock Open-Meteo success
+        with (
+            patch.object(client, "_get_openmeteo_current_conditions") as mock_om_current,
+            patch.object(client, "_get_openmeteo_forecast") as mock_om_forecast,
+            patch.object(client, "_get_openmeteo_hourly_forecast") as mock_om_hourly,
+        ):
+            mock_om_current.return_value = CurrentConditions(temperature_f=72.0, condition="Partly cloudy")
+            mock_om_forecast.return_value = Forecast(
+                periods=[ForecastPeriod(name="Today", temperature=72, short_forecast="Partly cloudy")]
+            )
+            mock_om_hourly.return_value = HourlyForecast(periods=[])
+
+            weather_data = await client.get_weather_data(tokyo_location)
+
+            # Should use Open-Meteo
+            mock_om_current.assert_called_once()
+            mock_om_forecast.assert_called_once()
+            assert weather_data.current.temperature_f == 72.0
+            assert weather_data.discussion == "Forecast discussion not available from Open-Meteo."
+            assert len(weather_data.alerts.alerts) == 0  # Open-Meteo doesn't provide alerts
+
+    @pytest.mark.asyncio
+    async def test_get_weather_data_openmeteo_fallback_for_us(self):
+        """Test Open-Meteo fallback when NWS fails for US location."""
+        client = WeatherClient(data_source="auto")
+        us_location = Location("Philadelphia, PA", 39.9526, -75.1652)
+
+        # Mock NWS failure and Open-Meteo success
+        with (
+            patch.object(client, "_get_nws_current_conditions") as mock_nws_current,
+            patch.object(client, "_get_nws_forecast_and_discussion") as mock_nws_forecast,
+            patch.object(client, "_get_nws_hourly_forecast") as mock_nws_hourly,
+            patch.object(client, "_get_nws_alerts") as mock_nws_alerts,
+            patch.object(client, "_get_openmeteo_current_conditions") as mock_om_current,
+            patch.object(client, "_get_openmeteo_forecast") as mock_om_forecast,
+            patch.object(client, "_get_openmeteo_hourly_forecast") as mock_om_hourly,
+        ):
+            # NWS fails
+            mock_nws_current.side_effect = Exception("NWS API error")
+            mock_nws_forecast.side_effect = Exception("NWS API error")
+            mock_nws_hourly.side_effect = Exception("NWS API error")
+            mock_nws_alerts.side_effect = Exception("NWS API error")
+
+            # Open-Meteo succeeds
+            mock_om_current.return_value = CurrentConditions(temperature_f=70.0, condition="Cloudy")
+            mock_om_forecast.return_value = Forecast(
+                periods=[ForecastPeriod(name="Today", temperature=70, short_forecast="Cloudy")]
+            )
+            mock_om_hourly.return_value = HourlyForecast(periods=[])
+
+            weather_data = await client.get_weather_data(us_location)
+
+            # Should try NWS first, then fallback to Open-Meteo
+            mock_nws_current.assert_called_once()
+            mock_om_current.assert_called_once()
+            assert weather_data.current.temperature_f == 70.0
+            assert weather_data.discussion == "Forecast discussion not available from Open-Meteo."
+
+    @pytest.mark.asyncio
+    async def test_get_weather_data_nws_fallback_for_international(self):
+        """Test NWS fallback when Open-Meteo fails for international location in US."""
+        client = WeatherClient(data_source="auto")
+        # Use coordinates that are technically international but close to US
+        border_location = Location("Vancouver, Canada", 49.2827, -123.1207)
+
+        # Mock Open-Meteo failure and NWS success (if location were in US)
+        with (
+            patch.object(client, "_get_openmeteo_current_conditions") as mock_om_current,
+            patch.object(client, "_get_openmeteo_forecast") as mock_om_forecast,
+            patch.object(client, "_get_openmeteo_hourly_forecast") as mock_om_hourly,
+        ):
+            # Open-Meteo fails
+            mock_om_current.side_effect = Exception("Open-Meteo API error")
+            mock_om_forecast.side_effect = Exception("Open-Meteo API error")
+            mock_om_hourly.side_effect = Exception("Open-Meteo API error")
+
+            weather_data = await client.get_weather_data(border_location)
+
+            # Should try Open-Meteo first, but since it's international and fails,
+            # should set empty data (no NWS fallback for international locations)
+            mock_om_current.assert_called_once()
+            assert isinstance(weather_data.current, CurrentConditions)
+            assert isinstance(weather_data.forecast, Forecast)
+            assert len(weather_data.forecast.periods) == 0
 
 
 class TestWeatherClientOpenMeteoAPI:

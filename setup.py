@@ -6,7 +6,7 @@ setup(
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     install_requires=[
-        "wxPython",
+        "toga",
         "requests",
         "plyer",  # For cross-platform notifications
         "geopy",  # For geocoding addresses and zip codes
