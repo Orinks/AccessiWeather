@@ -68,10 +68,53 @@ class Forecast:
     """Weather forecast data."""
     periods: List[ForecastPeriod]
     generated_at: Optional[datetime] = None
-    
+
     def has_data(self) -> bool:
         """Check if we have any forecast data."""
         return len(self.periods) > 0
+
+
+@dataclass
+class HourlyForecastPeriod:
+    """Single hourly forecast period."""
+    start_time: datetime
+    temperature: Optional[float] = None
+    temperature_unit: str = "F"
+    short_forecast: Optional[str] = None
+    wind_speed: Optional[str] = None
+    wind_direction: Optional[str] = None
+    icon: Optional[str] = None
+    end_time: Optional[datetime] = None
+
+    def has_data(self) -> bool:
+        """Check if we have any meaningful hourly forecast data."""
+        return any([
+            self.temperature is not None,
+            self.short_forecast is not None,
+            self.wind_speed is not None
+        ])
+
+
+@dataclass
+class HourlyForecast:
+    """Hourly weather forecast data."""
+    periods: List[HourlyForecastPeriod]
+    generated_at: Optional[datetime] = None
+
+    def has_data(self) -> bool:
+        """Check if we have any hourly forecast data."""
+        return len(self.periods) > 0
+
+    def get_next_hours(self, count: int = 6) -> List[HourlyForecastPeriod]:
+        """Get the next N hours of forecast data.
+
+        Args:
+            count: Number of hours to return (default: 6)
+
+        Returns:
+            List of hourly forecast periods, up to the requested count
+        """
+        return self.periods[:count]
 
 
 @dataclass
@@ -121,15 +164,17 @@ class WeatherData:
     location: Location
     current: Optional[CurrentConditions] = None
     forecast: Optional[Forecast] = None
+    hourly_forecast: Optional[HourlyForecast] = None
     discussion: Optional[str] = None
     alerts: Optional[WeatherAlerts] = None
     last_updated: Optional[datetime] = None
-    
+
     def has_any_data(self) -> bool:
         """Check if we have any weather data."""
         return any([
             self.current and self.current.has_data(),
             self.forecast and self.forecast.has_data(),
+            self.hourly_forecast and self.hourly_forecast.has_data(),
             self.alerts and self.alerts.has_alerts()
         ])
 
