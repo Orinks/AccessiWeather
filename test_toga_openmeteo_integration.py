@@ -17,8 +17,7 @@ def test_toga_openmeteo_integration():
     try:
         logger.info("Testing Open-Meteo integration in Toga app context...")
         
-        # Import the Toga weather formatter and transformer
-        from accessiweather.toga_formatter import TogaWeatherFormatter
+        # Import the Toga data transformer (which also handles formatting)
         from accessiweather.toga_data_transformer import TogaDataTransformer
         from accessiweather.openmeteo_client import OpenMeteoApiClient
         from accessiweather.openmeteo_mapper import OpenMeteoMapper
@@ -39,9 +38,8 @@ def test_toga_openmeteo_integration():
         openmeteo_client = OpenMeteoApiClient(user_agent="AccessiWeather-Toga-Test")
         openmeteo_mapper = OpenMeteoMapper()
 
-        # Create Toga formatter and transformer
-        formatter = TogaWeatherFormatter(config)
-        transformer = TogaDataTransformer()
+        # Create Toga transformer (which also handles formatting)
+        transformer = TogaDataTransformer(config)
         
         # Test international locations that should use Open-Meteo
         test_locations = [
@@ -83,16 +81,10 @@ def test_toga_openmeteo_integration():
                 mapped_forecast = openmeteo_mapper.map_forecast(forecast_data)
                 logger.info("Successfully mapped forecast")
 
-                # Transform to Toga formatter format
-                logger.info("Transforming data for Toga formatter...")
-                transformed_current = transformer.transform_current_conditions(mapped_current)
-                transformed_forecast = transformer.transform_forecast(mapped_forecast)
-                logger.info("Successfully transformed data")
-
-                # Format using Toga formatter (this is what the app actually uses)
+                # Format using Toga transformer (this is what the app actually uses)
                 logger.info("Formatting data for Toga display...")
-                formatted_current = formatter.format_current_conditions(transformed_current, name)
-                formatted_forecast = formatter.format_forecast(transformed_forecast, name)
+                formatted_current = transformer.format_current_conditions(mapped_current, name)
+                formatted_forecast = transformer.format_forecast(mapped_forecast, name)
                 
                 logger.info("✅ Successfully formatted data for Toga display")
                 
@@ -122,14 +114,10 @@ def test_toga_openmeteo_integration():
             forecast_data = openmeteo_client.get_forecast(lat, lon, days=7, temperature_unit="fahrenheit")
             mapped_forecast = openmeteo_mapper.map_forecast(forecast_data)
 
-            # Transform to Toga formatter format (what the updated Toga app does)
-            transformed_current = transformer.transform_current_conditions(mapped_current)
-            transformed_forecast = transformer.transform_forecast(mapped_forecast)
-
             # Format the data for display (what Toga app does)
             formatted_data = {
-                "current": formatter.format_current_conditions(transformed_current, name),
-                "forecast": formatter.format_forecast(transformed_forecast, name),
+                "current": transformer.format_current_conditions(mapped_current, name),
+                "forecast": transformer.format_forecast(mapped_forecast, name),
                 "alerts": "No alerts available for international locations",
             }
             

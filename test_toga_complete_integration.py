@@ -18,7 +18,6 @@ def test_complete_integration():
         logger.info("Testing complete Toga app integration with US and international locations...")
         
         # Import required modules
-        from accessiweather.toga_formatter import TogaWeatherFormatter
         from accessiweather.toga_data_transformer import TogaDataTransformer
         from accessiweather.openmeteo_client import OpenMeteoApiClient
         from accessiweather.openmeteo_mapper import OpenMeteoMapper
@@ -37,8 +36,7 @@ def test_complete_integration():
         }
         
         # Create clients
-        formatter = TogaWeatherFormatter(config)
-        transformer = TogaDataTransformer()
+        transformer = TogaDataTransformer(config)
         openmeteo_client = OpenMeteoApiClient(user_agent="AccessiWeather-Complete-Test")
         openmeteo_mapper = OpenMeteoMapper()
         nws_client = NoaaApiClient(user_agent="AccessiWeather-Complete-Test")
@@ -82,8 +80,7 @@ def test_complete_integration():
                         precipitation_unit="inch"
                     )
                     mapped_current = openmeteo_mapper.map_current_conditions(current_data)
-                    transformed_current = transformer.transform_current_conditions(mapped_current)
-                    
+
                     # Forecast
                     forecast_data = openmeteo_client.get_forecast(
                         latitude=lat,
@@ -94,7 +91,6 @@ def test_complete_integration():
                         precipitation_unit="inch"
                     )
                     mapped_forecast = openmeteo_mapper.map_forecast(forecast_data)
-                    transformed_forecast = transformer.transform_forecast(mapped_forecast)
                     
                     alerts_text = "No alerts available for international locations"
                     
@@ -105,12 +101,12 @@ def test_complete_integration():
                     try:
                         # Current conditions
                         current_data = nws_client.get_current_conditions(lat, lon)
-                        # NWS data might already be in the right format, but transform to be safe
-                        transformed_current = transformer.transform_current_conditions(current_data)
-                        
+                        # Keep NWS data as-is for formatting
+                        mapped_current = current_data
+
                         # Forecast
                         forecast_data = nws_client.get_forecast(lat, lon)
-                        transformed_forecast = transformer.transform_forecast(forecast_data)
+                        mapped_forecast = forecast_data
                         
                         alerts_text = "NWS alerts would be available here"
                         
@@ -126,8 +122,7 @@ def test_complete_integration():
                             precipitation_unit="inch"
                         )
                         mapped_current = openmeteo_mapper.map_current_conditions(current_data)
-                        transformed_current = transformer.transform_current_conditions(mapped_current)
-                        
+
                         forecast_data = openmeteo_client.get_forecast(
                             latitude=lat,
                             longitude=lon,
@@ -137,13 +132,12 @@ def test_complete_integration():
                             precipitation_unit="inch"
                         )
                         mapped_forecast = openmeteo_mapper.map_forecast(forecast_data)
-                        transformed_forecast = transformer.transform_forecast(mapped_forecast)
                         
                         alerts_text = "Fallback to Open-Meteo - no alerts available"
                 
                 # Format for display
-                formatted_current = formatter.format_current_conditions(transformed_current, name)
-                formatted_forecast = formatter.format_forecast(transformed_forecast, name)
+                formatted_current = transformer.format_current_conditions(mapped_current, name)
+                formatted_forecast = transformer.format_forecast(mapped_forecast, name)
                 
                 # Validate the output
                 if "N/A" not in formatted_current and len(formatted_current) > 50:
