@@ -108,9 +108,11 @@ class AccessiWeatherApp(toga.App):
 
         # Configuration manager
         self.config_manager = ConfigManager(self)
+        config = self.config_manager.load_config()
 
-        # Weather client
-        self.weather_client = WeatherClient(user_agent="AccessiWeather/2.0")
+        # Weather client with data source from config
+        data_source = config.settings.data_source if config.settings else "auto"
+        self.weather_client = WeatherClient(user_agent="AccessiWeather/2.0", data_source=data_source)
 
         # Location manager
         self.location_manager = LocationManager()
@@ -322,9 +324,9 @@ class AccessiWeatherApp(toga.App):
 
             # If no locations exist, add some common ones
             if not config.locations:
-                logger.info("No locations found, adding default location")
-                # Try to get location from IP
-                asyncio.create_task(self._add_initial_location())
+                logger.info("No locations found, adding default locations")
+                # Add both US and international test locations
+                asyncio.create_task(self._add_initial_locations())
             else:
                 # Refresh weather for current location
                 if config.current_location:
@@ -333,26 +335,45 @@ class AccessiWeatherApp(toga.App):
         except Exception as e:
             logger.error(f"Failed to load initial data: {e}")
 
-    async def _add_initial_location(self):
-        """Add an initial location for first-time users."""
+    async def _add_initial_locations(self):
+        """Add initial locations for first-time users (both US and international)."""
         try:
-            # Try to get location from IP
+            # Try to get location from IP first
             location = await self.location_manager.get_current_location_from_ip()
 
             if location:
                 self.config_manager.add_location(
                     location.name, location.latitude, location.longitude
                 )
-                self._update_location_selection()
-                await self._refresh_weather_data()
+                logger.info(f"Added current location from IP: {location.name}")
+
+            # Add some test locations to demonstrate Open-Meteo integration
+            test_locations = [
+                # US locations (will use NWS)
+                ("New York, NY", 40.7128, -74.0060),
+                ("Los Angeles, CA", 34.0522, -118.2437),
+                # International locations (will use Open-Meteo)
+                ("Tokyo, Japan", 35.6762, 139.6503),
+                ("London, UK", 51.5074, -0.1278),
+                ("Sydney, Australia", -33.8688, 151.2093),
+                ("Paris, France", 48.8566, 2.3522),
+            ]
+
+            for name, lat, lon in test_locations:
+                self.config_manager.add_location(name, lat, lon)
+                logger.info(f"Added test location: {name}")
+
+            # Set the first location as current
+            if location:
+                self.config_manager.set_current_location(location.name)
             else:
-                # Fallback to a default location
-                self.config_manager.add_location("New York, NY", 40.7128, -74.0060)
-                self._update_location_selection()
-                await self._refresh_weather_data()
+                self.config_manager.set_current_location("Tokyo, Japan")  # Start with international to test Open-Meteo
+
+            self._update_location_selection()
+            await self._refresh_weather_data()
 
         except Exception as e:
-            logger.error(f"Failed to add initial location: {e}")
+            logger.error(f"Failed to add initial locations: {e}")
 
     def _get_location_choices(self) -> list[str]:
         """Get list of location names for the selection widget."""

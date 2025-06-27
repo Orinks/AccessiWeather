@@ -27,39 +27,27 @@ logger = logging.getLogger(__name__)
 class WeatherClient:
     """Simple async weather API client."""
 
-    def __init__(self, user_agent: str = "AccessiWeather/1.0"):
+    def __init__(self, user_agent: str = "AccessiWeather/1.0", data_source: str = "auto"):
         self.user_agent = user_agent
         self.nws_base_url = "https://api.weather.gov"
         self.openmeteo_base_url = "https://api.open-meteo.com/v1"
         self.timeout = 10.0
+        self.data_source = data_source  # "auto", "nws", "openmeteo"
 
     async def get_weather_data(self, location: Location) -> WeatherData:
         """Get complete weather data for a location."""
         logger.info(f"Fetching weather data for {location.name}")
 
-        # Try NWS first for US locations, then fallback to OpenMeteo
+        # Determine which API to use based on data source and location
+        should_use_openmeteo = self._should_use_openmeteo(location)
+        api_name = "Open-Meteo" if should_use_openmeteo else "NWS"
+        logger.info(f"Using {api_name} API for {location.name} (data_source: {self.data_source})")
+
         weather_data = WeatherData(location=location, last_updated=datetime.now())
 
-        try:
-            # Try NWS API first
-            current = await self._get_nws_current_conditions(location)
-            forecast, discussion = await self._get_nws_forecast_and_discussion(location)
-            hourly_forecast = await self._get_nws_hourly_forecast(location)
-            alerts = await self._get_nws_alerts(location)
-
-            weather_data.current = current
-            weather_data.forecast = forecast
-            weather_data.hourly_forecast = hourly_forecast
-            weather_data.discussion = discussion
-            weather_data.alerts = alerts
-
-            logger.info(f"Successfully fetched NWS data for {location.name}")
-
-        except Exception as e:
-            logger.warning(f"NWS API failed for {location.name}: {e}")
-
+        if should_use_openmeteo:
+            # Use Open-Meteo API
             try:
-                # Fallback to OpenMeteo
                 current = await self._get_openmeteo_current_conditions(location)
                 forecast = await self._get_openmeteo_forecast(location)
                 hourly_forecast = await self._get_openmeteo_hourly_forecast(location)
@@ -67,21 +55,101 @@ class WeatherClient:
                 weather_data.current = current
                 weather_data.forecast = forecast
                 weather_data.hourly_forecast = hourly_forecast
-                weather_data.discussion = "Forecast discussion not available from OpenMeteo."
-                weather_data.alerts = WeatherAlerts(alerts=[])  # OpenMeteo doesn't provide alerts
+                weather_data.discussion = "Forecast discussion not available from Open-Meteo."
+                weather_data.alerts = WeatherAlerts(alerts=[])  # Open-Meteo doesn't provide alerts
 
-                logger.info(f"Successfully fetched OpenMeteo data for {location.name}")
+                logger.info(f"Successfully fetched Open-Meteo data for {location.name}")
 
-            except Exception as e2:
-                logger.error(f"Both APIs failed for {location.name}: NWS={e}, OpenMeteo={e2}")
-                # Return empty weather data
-                weather_data.current = CurrentConditions()
-                weather_data.forecast = Forecast(periods=[])
-                weather_data.hourly_forecast = HourlyForecast(periods=[])
-                weather_data.discussion = "Forecast discussion not available."
-                weather_data.alerts = WeatherAlerts(alerts=[])
+            except Exception as e:
+                logger.warning(f"Open-Meteo API failed for {location.name}: {e}")
+
+                # Try NWS as fallback if location is in US
+                if self._is_us_location(location):
+                    logger.info(f"Trying NWS fallback for US location: {location.name}")
+                    try:
+                        current = await self._get_nws_current_conditions(location)
+                        forecast, discussion = await self._get_nws_forecast_and_discussion(location)
+                        hourly_forecast = await self._get_nws_hourly_forecast(location)
+                        alerts = await self._get_nws_alerts(location)
+
+                        weather_data.current = current
+                        weather_data.forecast = forecast
+                        weather_data.hourly_forecast = hourly_forecast
+                        weather_data.discussion = discussion
+                        weather_data.alerts = alerts
+
+                        logger.info(f"Successfully fetched NWS fallback data for {location.name}")
+                    except Exception as e2:
+                        logger.error(f"Both Open-Meteo and NWS failed for {location.name}: OpenMeteo={e}, NWS={e2}")
+                        self._set_empty_weather_data(weather_data)
+                else:
+                    logger.error(f"Open-Meteo failed for international location {location.name}: {e}")
+                    self._set_empty_weather_data(weather_data)
+        else:
+            # Use NWS API
+            try:
+                current = await self._get_nws_current_conditions(location)
+                forecast, discussion = await self._get_nws_forecast_and_discussion(location)
+                hourly_forecast = await self._get_nws_hourly_forecast(location)
+                alerts = await self._get_nws_alerts(location)
+
+                weather_data.current = current
+                weather_data.forecast = forecast
+                weather_data.hourly_forecast = hourly_forecast
+                weather_data.discussion = discussion
+                weather_data.alerts = alerts
+
+                logger.info(f"Successfully fetched NWS data for {location.name}")
+
+            except Exception as e:
+                logger.warning(f"NWS API failed for {location.name}: {e}")
+
+                # Try Open-Meteo as fallback
+                logger.info(f"Trying Open-Meteo fallback for {location.name}")
+                try:
+                    current = await self._get_openmeteo_current_conditions(location)
+                    forecast = await self._get_openmeteo_forecast(location)
+                    hourly_forecast = await self._get_openmeteo_hourly_forecast(location)
+
+                    weather_data.current = current
+                    weather_data.forecast = forecast
+                    weather_data.hourly_forecast = hourly_forecast
+                    weather_data.discussion = "Forecast discussion not available from Open-Meteo."
+                    weather_data.alerts = WeatherAlerts(alerts=[])  # Open-Meteo doesn't provide alerts
+
+                    logger.info(f"Successfully fetched Open-Meteo fallback data for {location.name}")
+                except Exception as e2:
+                    logger.error(f"Both NWS and Open-Meteo failed for {location.name}: NWS={e}, OpenMeteo={e2}")
+                    self._set_empty_weather_data(weather_data)
 
         return weather_data
+
+    def _should_use_openmeteo(self, location: Location) -> bool:
+        """Determine if Open-Meteo should be used for the given location."""
+        if self.data_source == "openmeteo":
+            return True
+        elif self.data_source == "nws":
+            return False
+        elif self.data_source == "auto":
+            # Use Open-Meteo for international locations, NWS for US locations
+            return not self._is_us_location(location)
+        else:
+            logger.warning(f"Unknown data source '{self.data_source}', defaulting to NWS")
+            return False
+
+    def _is_us_location(self, location: Location) -> bool:
+        """Check if location is within the United States (rough approximation)."""
+        # Continental US bounds (approximate)
+        return (24.0 <= location.latitude <= 49.0 and
+                -125.0 <= location.longitude <= -66.0)
+
+    def _set_empty_weather_data(self, weather_data: WeatherData) -> None:
+        """Set empty weather data when all APIs fail."""
+        weather_data.current = CurrentConditions()
+        weather_data.forecast = Forecast(periods=[])
+        weather_data.hourly_forecast = HourlyForecast(periods=[])
+        weather_data.discussion = "Weather data not available."
+        weather_data.alerts = WeatherAlerts(alerts=[])
 
     async def _get_nws_current_conditions(self, location: Location) -> CurrentConditions | None:
         """Get current conditions from NWS API."""
