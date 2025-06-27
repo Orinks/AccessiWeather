@@ -659,7 +659,7 @@ class AccessiWeatherApp(toga.App):
                 weather_data.current, weather_data.location
             )
             forecast_text = self.formatter.format_forecast(
-                weather_data.forecast, weather_data.location
+                weather_data.forecast, weather_data.location, weather_data.hourly_forecast
             )
             # For alerts, we need to handle the table format differently
             # The WxStyleWeatherFormatter returns a string, but we need table data
