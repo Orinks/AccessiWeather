@@ -16,6 +16,8 @@ from accessiweather.simple.models import (
     CurrentConditions,
     Forecast,
     ForecastPeriod,
+    HourlyForecast,
+    HourlyForecastPeriod,
     Location,
     WeatherAlerts,
     WeatherData,
@@ -633,6 +635,160 @@ class TestWeatherClientIntegration:
             assert weather_data.current.condition == "Cloudy"
             assert len(weather_data.forecast.periods) == 1
             assert len(weather_data.alerts.alerts) == 0
+
+
+class TestWeatherClientHourlyForecast:
+    """Test WeatherClient hourly forecast functionality."""
+
+    @pytest.mark.asyncio
+    async def test_nws_hourly_forecast_success(self):
+        """Test successful NWS hourly forecast retrieval."""
+        client = WeatherClient()
+        location = Location("Philadelphia, PA", 39.9526, -75.1652)
+
+        # Mock NWS API responses
+        grid_response = {
+            "properties": {
+                "forecastHourly": "https://api.weather.gov/gridpoints/PHI/50,75/forecast/hourly"
+            }
+        }
+
+        hourly_response = {
+            "properties": {
+                "periods": [
+                    {
+                        "startTime": "2024-01-01T12:00:00-05:00",
+                        "endTime": "2024-01-01T13:00:00-05:00",
+                        "temperature": 75,
+                        "temperatureUnit": "F",
+                        "shortForecast": "Sunny",
+                        "windSpeed": "5 mph",
+                        "windDirection": "W",
+                        "icon": "https://api.weather.gov/icons/land/day/skc",
+                    },
+                    {
+                        "startTime": "2024-01-01T13:00:00-05:00",
+                        "endTime": "2024-01-01T14:00:00-05:00",
+                        "temperature": 76,
+                        "temperatureUnit": "F",
+                        "shortForecast": "Partly Cloudy",
+                        "windSpeed": "7 mph",
+                        "windDirection": "SW",
+                    },
+                ]
+            }
+        }
+
+        with patch("httpx.AsyncClient") as mock_client:
+            mock_client_instance = mock_client.return_value.__aenter__.return_value
+            mock_client_instance.get.side_effect = [
+                Mock(json=lambda: grid_response, raise_for_status=lambda: None),
+                Mock(json=lambda: hourly_response, raise_for_status=lambda: None),
+            ]
+
+            hourly_forecast = await client._get_nws_hourly_forecast(location)
+
+            assert hourly_forecast is not None
+            assert len(hourly_forecast.periods) == 2
+
+            first_hour = hourly_forecast.periods[0]
+            assert first_hour.temperature == 75
+            assert first_hour.temperature_unit == "F"
+            assert first_hour.short_forecast == "Sunny"
+            assert first_hour.wind_speed == "5 mph"
+            assert first_hour.wind_direction == "W"
+            assert first_hour.start_time is not None
+
+    @pytest.mark.asyncio
+    async def test_openmeteo_hourly_forecast_success(self):
+        """Test successful OpenMeteo hourly forecast retrieval."""
+        client = WeatherClient()
+        location = Location("Test Location", 40.0, -75.0)
+
+        # Mock OpenMeteo hourly response
+        openmeteo_response = {
+            "hourly": {
+                "time": [
+                    "2024-01-01T12:00",
+                    "2024-01-01T13:00",
+                    "2024-01-01T14:00",
+                ],
+                "temperature_2m": [75.0, 76.0, 74.0],
+                "weather_code": [1, 2, 1],  # Mainly clear, Partly cloudy, Mainly clear
+                "wind_speed_10m": [5.0, 7.0, 6.0],
+                "wind_direction_10m": [270, 225, 270],
+            }
+        }
+
+        with patch("httpx.AsyncClient") as mock_client:
+            mock_client_instance = mock_client.return_value.__aenter__.return_value
+            mock_client_instance.get.return_value = Mock(
+                json=lambda: openmeteo_response, raise_for_status=lambda: None
+            )
+
+            hourly_forecast = await client._get_openmeteo_hourly_forecast(location)
+
+            assert hourly_forecast is not None
+            assert len(hourly_forecast.periods) == 3
+
+            first_hour = hourly_forecast.periods[0]
+            assert first_hour.temperature == 75.0
+            assert first_hour.temperature_unit == "F"
+            assert first_hour.short_forecast == "Mainly clear"
+            assert first_hour.start_time is not None
+
+    @pytest.mark.asyncio
+    async def test_hourly_forecast_network_error(self):
+        """Test hourly forecast network error handling."""
+        client = WeatherClient()
+        location = Location("Test Location", 40.0, -75.0)
+
+        with patch("httpx.AsyncClient") as mock_client:
+            mock_client_instance = mock_client.return_value.__aenter__.return_value
+            mock_client_instance.get.side_effect = httpx.ConnectError("Connection failed")
+
+            nws_hourly = await client._get_nws_hourly_forecast(location)
+            assert nws_hourly is None
+
+            openmeteo_hourly = await client._get_openmeteo_hourly_forecast(location)
+            assert openmeteo_hourly is None
+
+    @pytest.mark.asyncio
+    async def test_get_weather_data_with_hourly_forecast(self):
+        """Test complete weather data retrieval including hourly forecast."""
+        client = WeatherClient()
+        location = Location("Philadelphia, PA", 39.9526, -75.1652)
+
+        # Mock successful responses including hourly forecast
+        with (
+            patch.object(client, "_get_nws_current_conditions") as mock_current,
+            patch.object(client, "_get_nws_forecast") as mock_forecast,
+            patch.object(client, "_get_nws_hourly_forecast") as mock_hourly,
+            patch.object(client, "_get_nws_alerts") as mock_alerts,
+        ):
+            mock_current.return_value = CurrentConditions(temperature_f=75.0, condition="Sunny")
+            mock_forecast.return_value = Forecast(
+                periods=[ForecastPeriod(name="Today", temperature=75, short_forecast="Sunny")]
+            )
+            mock_hourly.return_value = HourlyForecast(
+                periods=[
+                    HourlyForecastPeriod(
+                        start_time=datetime.now(),
+                        temperature=75.0,
+                        short_forecast="Sunny"
+                    )
+                ]
+            )
+            mock_alerts.return_value = WeatherAlerts(alerts=[])
+
+            weather_data = await client.get_weather_data(location)
+
+            assert weather_data.location == location
+            assert weather_data.current.temperature_f == 75.0
+            assert weather_data.forecast.periods[0].name == "Today"
+            assert weather_data.hourly_forecast is not None
+            assert len(weather_data.hourly_forecast.periods) == 1
+            assert weather_data.hourly_forecast.periods[0].temperature == 75.0
 
 
 class TestWeatherClientErrorHandling:

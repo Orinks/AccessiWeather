@@ -13,6 +13,8 @@ from .models import (
     CurrentConditions,
     Forecast,
     ForecastPeriod,
+    HourlyForecast,
+    HourlyForecastPeriod,
     Location,
     WeatherAlert,
     WeatherAlerts,
@@ -42,10 +44,12 @@ class WeatherClient:
             # Try NWS API first
             current = await self._get_nws_current_conditions(location)
             forecast, discussion = await self._get_nws_forecast_and_discussion(location)
+            hourly_forecast = await self._get_nws_hourly_forecast(location)
             alerts = await self._get_nws_alerts(location)
 
             weather_data.current = current
             weather_data.forecast = forecast
+            weather_data.hourly_forecast = hourly_forecast
             weather_data.discussion = discussion
             weather_data.alerts = alerts
 
@@ -58,9 +62,11 @@ class WeatherClient:
                 # Fallback to OpenMeteo
                 current = await self._get_openmeteo_current_conditions(location)
                 forecast = await self._get_openmeteo_forecast(location)
+                hourly_forecast = await self._get_openmeteo_hourly_forecast(location)
 
                 weather_data.current = current
                 weather_data.forecast = forecast
+                weather_data.hourly_forecast = hourly_forecast
                 weather_data.discussion = "Forecast discussion not available from OpenMeteo."
                 weather_data.alerts = WeatherAlerts(alerts=[])  # OpenMeteo doesn't provide alerts
 
@@ -71,6 +77,7 @@ class WeatherClient:
                 # Return empty weather data
                 weather_data.current = CurrentConditions()
                 weather_data.forecast = Forecast(periods=[])
+                weather_data.hourly_forecast = HourlyForecast(periods=[])
                 weather_data.discussion = "Forecast discussion not available."
                 weather_data.alerts = WeatherAlerts(alerts=[])
 
@@ -231,6 +238,35 @@ class WeatherClient:
             logger.error(f"Failed to get NWS alerts: {e}")
             return WeatherAlerts(alerts=[])
 
+    async def _get_nws_hourly_forecast(self, location: Location) -> HourlyForecast | None:
+        """Get hourly forecast from NWS API."""
+        try:
+            # Get grid point data first
+            grid_url = f"{self.nws_base_url}/points/{location.latitude},{location.longitude}"
+
+            async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
+                headers = {"User-Agent": self.user_agent}
+                response = await client.get(grid_url, headers=headers)
+                response.raise_for_status()
+                grid_data = response.json()
+
+                # Get hourly forecast URL
+                hourly_forecast_url = grid_data.get("properties", {}).get("forecastHourly")
+                if not hourly_forecast_url:
+                    logger.warning("No hourly forecast URL found in grid data")
+                    return None
+
+                # Fetch hourly forecast
+                response = await client.get(hourly_forecast_url, headers=headers)
+                response.raise_for_status()
+                hourly_data = response.json()
+
+                return self._parse_nws_hourly_forecast(hourly_data)
+
+        except Exception as e:
+            logger.error(f"Failed to get NWS hourly forecast: {e}")
+            return None
+
     async def _get_openmeteo_current_conditions(
         self, location: Location
     ) -> CurrentConditions | None:
@@ -281,6 +317,31 @@ class WeatherClient:
 
         except Exception as e:
             logger.error(f"Failed to get OpenMeteo forecast: {e}")
+            return None
+
+    async def _get_openmeteo_hourly_forecast(self, location: Location) -> HourlyForecast | None:
+        """Get hourly forecast from OpenMeteo API."""
+        try:
+            url = f"{self.openmeteo_base_url}/forecast"
+            params = {
+                "latitude": location.latitude,
+                "longitude": location.longitude,
+                "hourly": "temperature_2m,weather_code,wind_speed_10m,wind_direction_10m",
+                "temperature_unit": "fahrenheit",
+                "wind_speed_unit": "mph",
+                "timezone": "auto",
+                "forecast_days": 2,  # Get 48 hours of data
+            }
+
+            async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
+                response = await client.get(url, params=params)
+                response.raise_for_status()
+                data = response.json()
+
+                return self._parse_openmeteo_hourly_forecast(data)
+
+        except Exception as e:
+            logger.error(f"Failed to get OpenMeteo hourly forecast: {e}")
             return None
 
     def _parse_nws_current_conditions(self, data: dict) -> CurrentConditions:
@@ -346,6 +407,44 @@ class WeatherClient:
 
         return WeatherAlerts(alerts=alerts)
 
+    def _parse_nws_hourly_forecast(self, data: dict) -> HourlyForecast:
+        """Parse NWS hourly forecast data."""
+        periods = []
+
+        for period_data in data.get("properties", {}).get("periods", []):
+            # Parse start time
+            start_time_str = period_data.get("startTime")
+            start_time = None
+            if start_time_str:
+                try:
+                    # Parse ISO format: "2024-01-01T12:00:00-05:00"
+                    start_time = datetime.fromisoformat(start_time_str.replace("Z", "+00:00"))
+                except ValueError:
+                    logger.warning(f"Failed to parse start time: {start_time_str}")
+
+            # Parse end time
+            end_time_str = period_data.get("endTime")
+            end_time = None
+            if end_time_str:
+                try:
+                    end_time = datetime.fromisoformat(end_time_str.replace("Z", "+00:00"))
+                except ValueError:
+                    logger.warning(f"Failed to parse end time: {end_time_str}")
+
+            period = HourlyForecastPeriod(
+                start_time=start_time or datetime.now(),
+                end_time=end_time,
+                temperature=period_data.get("temperature"),
+                temperature_unit=period_data.get("temperatureUnit", "F"),
+                short_forecast=period_data.get("shortForecast"),
+                wind_speed=period_data.get("windSpeed"),
+                wind_direction=period_data.get("windDirection"),
+                icon=period_data.get("icon"),
+            )
+            periods.append(period)
+
+        return HourlyForecast(periods=periods, generated_at=datetime.now())
+
     def _parse_openmeteo_current_conditions(self, data: dict) -> CurrentConditions:
         """Parse OpenMeteo current conditions data."""
         current = data.get("current", {})
@@ -383,6 +482,46 @@ class WeatherClient:
                 periods.append(period)
 
         return Forecast(periods=periods, generated_at=datetime.now())
+
+    def _parse_openmeteo_hourly_forecast(self, data: dict) -> HourlyForecast:
+        """Parse OpenMeteo hourly forecast data."""
+        periods = []
+        hourly = data.get("hourly", {})
+
+        times = hourly.get("time", [])
+        temperatures = hourly.get("temperature_2m", [])
+        weather_codes = hourly.get("weather_code", [])
+        wind_speeds = hourly.get("wind_speed_10m", [])
+        wind_directions = hourly.get("wind_direction_10m", [])
+
+        for i, time_str in enumerate(times):
+            # Parse time
+            start_time = None
+            if time_str:
+                try:
+                    # OpenMeteo format: "2024-01-01T12:00"
+                    start_time = datetime.fromisoformat(time_str)
+                except ValueError:
+                    logger.warning(f"Failed to parse OpenMeteo time: {time_str}")
+                    start_time = datetime.now()
+
+            # Get values for this hour (with bounds checking)
+            temperature = temperatures[i] if i < len(temperatures) else None
+            weather_code = weather_codes[i] if i < len(weather_codes) else None
+            wind_speed = wind_speeds[i] if i < len(wind_speeds) else None
+            wind_direction = wind_directions[i] if i < len(wind_directions) else None
+
+            period = HourlyForecastPeriod(
+                start_time=start_time or datetime.now(),
+                temperature=temperature,
+                temperature_unit="F",
+                short_forecast=self._weather_code_to_description(weather_code),
+                wind_speed=f"{wind_speed} mph" if wind_speed is not None else None,
+                wind_direction=self._degrees_to_cardinal(wind_direction),
+            )
+            periods.append(period)
+
+        return HourlyForecast(periods=periods, generated_at=datetime.now())
 
     # Utility methods
     def _convert_mps_to_mph(self, mps: float | None) -> float | None:
