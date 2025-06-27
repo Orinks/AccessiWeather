@@ -112,7 +112,9 @@ class AccessiWeatherApp(toga.App):
 
         # Weather client with data source from config
         data_source = config.settings.data_source if config.settings else "auto"
-        self.weather_client = WeatherClient(user_agent="AccessiWeather/2.0", data_source=data_source)
+        self.weather_client = WeatherClient(
+            user_agent="AccessiWeather/2.0", data_source=data_source
+        )
 
         # Location manager
         self.location_manager = LocationManager()
@@ -121,7 +123,86 @@ class AccessiWeatherApp(toga.App):
         config = self.config_manager.get_config()
         self.formatter = WxStyleWeatherFormatter(config.settings)
 
+        # Initialize system tray
+        self._initialize_system_tray()
+
         logger.info("Application components initialized")
+
+    def _initialize_system_tray(self):
+        """Initialize system tray functionality."""
+        try:
+            logger.info("Initializing system tray")
+
+            # Create a menu-based status icon for AccessiWeather
+            self.status_icon = toga.MenuStatusIcon(
+                id="accessiweather_main",
+                icon=self.icon,  # Use the app's icon
+                text="AccessiWeather",
+            )
+
+            # Create system tray commands
+            self._create_system_tray_commands()
+
+            # Add the status icon to the app
+            self.status_icons.add(self.status_icon)
+
+            logger.info("System tray initialized successfully")
+
+        except Exception as e:
+            logger.error(f"Failed to initialize system tray: {e}")
+            # Don't fail app startup if system tray fails
+            self.status_icon = None
+
+    def _create_system_tray_commands(self):
+        """Create commands for the system tray menu."""
+        try:
+            # Show/Hide main window command
+            self.show_hide_command = toga.Command(
+                self._on_show_hide_window,
+                text="Show AccessiWeather",
+                group=self.status_icon,
+                tooltip="Show or hide the main window",
+            )
+
+            # Refresh weather command
+            self.refresh_command = toga.Command(
+                self._on_tray_refresh,
+                text="Refresh Weather",
+                group=self.status_icon,
+                tooltip="Refresh weather data for current location",
+            )
+
+            # Settings command
+            self.tray_settings_command = toga.Command(
+                self._on_tray_settings,
+                text="Settings",
+                group=self.status_icon,
+                tooltip="Open application settings",
+            )
+
+            # Separator group for organization
+            self.tray_separator_group = toga.Group("Actions", parent=self.status_icon)
+
+            # Exit command
+            self.exit_command = toga.Command(
+                self._on_tray_exit,
+                text="Exit AccessiWeather",
+                group=self.tray_separator_group,
+                tooltip="Exit the application",
+            )
+
+            # Add commands to the status icons command set
+            self.status_icons.commands.add(
+                self.show_hide_command,
+                self.refresh_command,
+                self.tray_settings_command,
+                self.exit_command,
+            )
+
+            logger.info("System tray commands created")
+
+        except Exception as e:
+            logger.error(f"Failed to create system tray commands: {e}")
 
     def _create_main_ui(self):
         """Create the main user interface."""
@@ -156,6 +237,10 @@ class AccessiWeatherApp(toga.App):
         # Set up main window
         self.main_window = toga.MainWindow(title=self.formal_name)
         self.main_window.content = main_box
+
+        # Set up window close handler for system tray functionality
+        self.main_window.on_close = self._on_window_close
+
         self.main_window.show()
 
         logger.info("Main UI created successfully")
@@ -367,7 +452,9 @@ class AccessiWeatherApp(toga.App):
             if location:
                 self.config_manager.set_current_location(location.name)
             else:
-                self.config_manager.set_current_location("Tokyo, Japan")  # Start with international to test Open-Meteo
+                self.config_manager.set_current_location(
+                    "Tokyo, Japan"
+                )  # Start with international to test Open-Meteo
 
             self._update_location_selection()
             await self._refresh_weather_data()
@@ -817,6 +904,67 @@ class AccessiWeatherApp(toga.App):
         except Exception as e:
             logger.error(f"Failed to show error dialog: {e}")
             logger.error(f"Original error - {title}: {message}")
+
+    # System Tray Event Handlers
+
+    async def _on_window_close(self, widget):
+        """Handle main window close event - minimize to tray instead of closing."""
+        try:
+            if self.status_icon:
+                # Hide window to system tray instead of closing
+                logger.info("Window close requested - minimizing to system tray")
+                self.main_window.hide()
+                if hasattr(self.show_hide_command, "text"):
+                    self.show_hide_command.text = "Show AccessiWeather"
+                return False  # Prevent default close behavior
+            # No system tray available, allow normal close
+            logger.info("No system tray available - allowing normal close")
+            return True
+        except Exception as e:
+            logger.error(f"Error handling window close: {e}")
+            return True  # Allow close on error
+
+    async def _on_show_hide_window(self, widget):
+        """Toggle main window visibility from system tray."""
+        try:
+            if self.main_window.visible:
+                # Hide the window to system tray
+                self.main_window.hide()
+                if self.status_icon and hasattr(self.show_hide_command, "text"):
+                    self.show_hide_command.text = "Show AccessiWeather"
+                logger.info("Main window hidden to system tray")
+            else:
+                # Show and bring window to front
+                self.main_window.show()
+                if self.status_icon and hasattr(self.show_hide_command, "text"):
+                    self.show_hide_command.text = "Hide AccessiWeather"
+                logger.info("Main window restored from system tray")
+        except Exception as e:
+            logger.error(f"Failed to toggle window visibility: {e}")
+
+    async def _on_tray_refresh(self, widget):
+        """Refresh weather data from system tray."""
+        try:
+            logger.info("Refreshing weather data from system tray")
+            await self._refresh_weather_data()
+        except Exception as e:
+            logger.error(f"Failed to refresh weather from system tray: {e}")
+
+    async def _on_tray_settings(self, widget):
+        """Open settings dialog from system tray."""
+        try:
+            logger.info("Opening settings from system tray")
+            await self._on_settings_clicked(widget)
+        except Exception as e:
+            logger.error(f"Failed to open settings from system tray: {e}")
+
+    async def _on_tray_exit(self, widget):
+        """Exit application from system tray."""
+        try:
+            logger.info("Exiting application from system tray")
+            self.exit()
+        except Exception as e:
+            logger.error(f"Failed to exit from system tray: {e}")
 
 
 def main():
