@@ -33,6 +33,7 @@ class AccessiWeatherApp(toga.App):
         self.weather_client: WeatherClient | None = None
         self.location_manager: LocationManager | None = None
         self.formatter: WxStyleWeatherFormatter | None = None
+        self.update_service = None  # Will be initialized after config_manager
 
         # UI components
         self.location_selection: toga.Selection | None = None
@@ -109,6 +110,16 @@ class AccessiWeatherApp(toga.App):
         # Configuration manager
         self.config_manager = ConfigManager(self)
         config = self.config_manager.load_config()
+
+        # Initialize update service
+        try:
+            from .services import BriefcaseUpdateService
+
+            self.update_service = BriefcaseUpdateService(self, self.config_manager)
+            logger.info("Update service initialized")
+        except Exception as e:
+            logger.warning(f"Failed to initialize update service: {e}")
+            self.update_service = None
 
         # Weather client with data source from config
         data_source = config.settings.data_source if config.settings else "auto"

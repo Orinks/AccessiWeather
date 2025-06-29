@@ -129,6 +129,17 @@ class SettingsDialog:
         # Set window content
         self.window.content = main_box
 
+        # Initialize update service and platform info
+        try:
+            self._initialize_update_info()
+        except Exception as e:
+            logger.error(f"Failed to initialize update info: {e}")
+            # Set fallback text for platform info
+            if hasattr(self, "platform_info_label"):
+                self.platform_info_label.text = "Platform information unavailable"
+            if hasattr(self, "update_capability_label"):
+                self.update_capability_label.text = "Update capability unknown"
+
     def _create_general_tab(self):
         """Create the General settings tab."""
         general_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
@@ -269,25 +280,89 @@ class SettingsDialog:
         self.option_container.content.append("Advanced", advanced_box)
 
     def _create_updates_tab(self):
-        """Create the Updates settings tab."""
+        """Create the Updates settings tab with full functionality."""
         updates_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
 
-        # Auto-update placeholder
+        # Auto-update settings
         self.auto_update_switch = toga.Switch(
-            "Check for updates automatically (not yet implemented)",
-            value=False,
-            enabled=False,
+            "Check for updates automatically",
+            value=getattr(self.current_settings, "auto_update_enabled", True),
             style=Pack(margin_bottom=10),
+            id="auto_update_switch",
         )
         updates_box.add(self.auto_update_switch)
 
-        # Add placeholder text
-        updates_box.add(
-            toga.Label(
-                "Update functionality will be implemented in future versions.",
-                style=Pack(margin_top=20, font_style="italic"),
-            )
+        # Update channel selection
+        updates_box.add(toga.Label("Update Channel:", style=Pack(margin_bottom=5)))
+
+        update_channel_options = ["Stable", "Development"]
+        self.update_channel_selection = toga.Selection(
+            items=update_channel_options,
+            style=Pack(margin_bottom=15),
+            id="update_channel_selection",
         )
+
+        # Set current value based on stored configuration
+        current_channel = getattr(self.current_settings, "update_channel", "stable")
+        if current_channel == "dev":
+            self.update_channel_selection.value = "Development"
+        else:
+            self.update_channel_selection.value = "Stable"
+
+        updates_box.add(self.update_channel_selection)
+
+        # Check interval
+        updates_box.add(toga.Label("Check Interval (hours):", style=Pack(margin_bottom=5)))
+        self.update_check_interval_input = toga.NumberInput(
+            value=getattr(self.current_settings, "update_check_interval_hours", 24),
+            style=Pack(margin_bottom=15),
+            id="update_check_interval_input",
+        )
+        updates_box.add(self.update_check_interval_input)
+
+        # Platform information
+        platform_info_box = toga.Box(style=Pack(direction=COLUMN, margin_bottom=15))
+        platform_info_box.add(
+            toga.Label("Platform Information:", style=Pack(font_weight="bold", margin_bottom=5))
+        )
+
+        # We'll populate this with actual platform info when the dialog is shown
+        self.platform_info_label = toga.Label(
+            "Detecting platform...",
+            style=Pack(font_size=11, margin_bottom=5),
+        )
+        platform_info_box.add(self.platform_info_label)
+
+        self.update_capability_label = toga.Label(
+            "Checking update capability...",
+            style=Pack(font_size=11, margin_bottom=10),
+        )
+        platform_info_box.add(self.update_capability_label)
+
+        updates_box.add(platform_info_box)
+
+        # Check now button
+        self.check_updates_button = toga.Button(
+            "Check for Updates Now",
+            on_press=self._on_check_updates,
+            style=Pack(margin_bottom=10),
+            id="check_updates_button",
+        )
+        updates_box.add(self.check_updates_button)
+
+        # Status display
+        self.update_status_label = toga.Label(
+            "Ready to check for updates",
+            style=Pack(margin_bottom=10, font_style="italic"),
+        )
+        updates_box.add(self.update_status_label)
+
+        # Last check information
+        self.last_check_label = toga.Label(
+            "Never checked for updates",
+            style=Pack(font_size=11, margin_bottom=10),
+        )
+        updates_box.add(self.last_check_label)
 
         # Add tab to container
         self.option_container.content.append("Updates", updates_box)
@@ -418,6 +493,28 @@ class SettingsDialog:
             logger.warning(f"Invalid update interval value: {e}, using default")
             update_interval = 10  # Default to 10 minutes
 
+        # Get update-related settings
+        auto_update_enabled = getattr(self, "auto_update_switch", None)
+        auto_update_enabled = auto_update_enabled.value if auto_update_enabled else True
+
+        update_channel = getattr(self, "update_channel_selection", None)
+        if update_channel and hasattr(update_channel, "value"):
+            update_channel = "dev" if update_channel.value == "Development" else "stable"
+        else:
+            update_channel = "stable"
+
+        update_check_interval = getattr(self, "update_check_interval_input", None)
+        if update_check_interval and hasattr(update_check_interval, "value"):
+            try:
+                update_check_interval_hours = int(update_check_interval.value)
+                update_check_interval_hours = max(
+                    1, min(168, update_check_interval_hours)
+                )  # 1 hour to 1 week
+            except (ValueError, TypeError):
+                update_check_interval_hours = 24
+        else:
+            update_check_interval_hours = 24
+
         return AppSettings(
             temperature_unit=temperature_unit,
             update_interval_minutes=update_interval,
@@ -425,4 +522,189 @@ class SettingsDialog:
             enable_alerts=self.enable_alerts_switch.value,
             minimize_to_tray=self.minimize_to_tray_switch.value,
             data_source=data_source,
+            auto_update_enabled=auto_update_enabled,
+            update_channel=update_channel,
+            update_check_interval_hours=update_check_interval_hours,
         )
+
+    def _initialize_update_info(self):
+        """Initialize update service and platform information."""
+        try:
+            # Import here to avoid circular imports
+            from ..services import PlatformDetector
+
+            # Get platform information
+            platform_detector = PlatformDetector()
+            platform_info = platform_detector.get_platform_info()
+
+            # Update platform info labels
+            if hasattr(self, "platform_info_label"):
+                platform_text = (
+                    f"Platform: {platform_info.platform.title()} ({platform_info.architecture})"
+                )
+                deployment_text = f"Deployment: {platform_info.deployment_type.title()}"
+                self.platform_info_label.text = f"{platform_text}, {deployment_text}"
+
+            if hasattr(self, "update_capability_label"):
+                if platform_info.update_capable:
+                    capability_text = "Auto-updates: Supported"
+                else:
+                    capability_text = "Auto-updates: Manual download required"
+                self.update_capability_label.text = capability_text
+
+            # Update last check information if available
+            self._update_last_check_info()
+
+        except Exception as e:
+            logger.error(f"Failed to initialize update info: {e}")
+            if hasattr(self, "platform_info_label"):
+                self.platform_info_label.text = "Platform information unavailable"
+            if hasattr(self, "update_capability_label"):
+                self.update_capability_label.text = "Update capability unknown"
+
+    def _update_last_check_info(self):
+        """Update the last check information display."""
+        try:
+            # This would typically get info from the update service
+            # For now, we'll show a placeholder
+            if hasattr(self, "last_check_label"):
+                self.last_check_label.text = "Last check: Not implemented yet"
+
+        except Exception as e:
+            logger.error(f"Failed to update last check info: {e}")
+
+    async def _on_check_updates(self, widget):
+        """Handle check for updates button press."""
+        logger.info("Manual update check requested")
+
+        try:
+            # Disable the button during check
+            if self.check_updates_button:
+                self.check_updates_button.enabled = False
+                self.check_updates_button.text = "Checking..."
+
+            # Update status
+            if self.update_status_label:
+                self.update_status_label.text = "Checking for updates..."
+
+            # Import update service
+            from ..services import BriefcaseUpdateService
+
+            # Create update service instance
+            update_service = BriefcaseUpdateService(self.app, self.config_manager)
+
+            # Get selected channel
+            channel = "dev" if self.update_channel_selection.value == "Development" else "stable"
+
+            # Check for updates
+            update_info = await update_service.check_for_updates(channel)
+
+            if update_info:
+                # Update available
+                if self.update_status_label:
+                    self.update_status_label.text = f"Update available: v{update_info.version}"
+
+                # Show update notification
+                from .update_progress_dialog import UpdateNotificationDialog
+
+                platform_detector = update_service.platform_detector
+                platform_info = platform_detector.get_platform_info()
+
+                notification = UpdateNotificationDialog(self.app, update_info, platform_info)
+                choice = await notification.show()
+
+                if choice == "download" and platform_info.update_capable:
+                    # Start update process
+                    await self._perform_update(update_service, update_info)
+
+            else:
+                # No updates available
+                if self.update_status_label:
+                    self.update_status_label.text = "No updates available"
+
+                await self.app.main_window.info_dialog(
+                    "No Updates", "You are running the latest version of AccessiWeather."
+                )
+
+            # Update last check info
+            self._update_last_check_info()
+
+        except Exception as e:
+            logger.error(f"Failed to check for updates: {e}")
+            if self.update_status_label:
+                self.update_status_label.text = "Update check failed"
+
+            await self.app.main_window.error_dialog(
+                "Update Check Failed", f"Failed to check for updates: {str(e)}"
+            )
+
+        finally:
+            # Re-enable the button
+            if self.check_updates_button:
+                self.check_updates_button.enabled = True
+                self.check_updates_button.text = "Check for Updates Now"
+
+    async def _perform_update(self, update_service, update_info):
+        """Perform the update process with progress dialog."""
+        try:
+            # Import progress dialog
+            from .update_progress_dialog import UpdateProgressDialog
+
+            # Create and show progress dialog
+            progress_dialog = UpdateProgressDialog(self.app, "Downloading Update")
+            progress_dialog.show_and_prepare()
+
+            # Download the update
+            async def progress_callback(progress, downloaded, total):
+                await progress_dialog.update_progress(progress, downloaded, total)
+                return not progress_dialog.is_cancelled
+
+            download_path = await update_service.download_update(update_info, progress_callback)
+
+            if progress_dialog.is_cancelled:
+                await progress_dialog.complete_error("Update cancelled by user")
+                return
+
+            if not download_path:
+                await progress_dialog.complete_error("Failed to download update")
+                return
+
+            # Apply the update
+            await progress_dialog.set_status("Installing update...", "Please wait...")
+
+            success = await update_service.apply_update(download_path)
+
+            if success:
+                await progress_dialog.complete_success("Update installed successfully")
+
+                # Show restart dialog
+                restart_choice = await self.app.main_window.question_dialog(
+                    "Restart Required",
+                    "The update has been installed successfully. "
+                    "AccessiWeather needs to restart to complete the update. "
+                    "Restart now?",
+                )
+
+                if restart_choice:
+                    # Close settings dialog and restart app
+                    if self.future and not self.future.done():
+                        self.future.set_result(True)
+                    if self.window:
+                        self.window.close()
+                        self.window = None
+                    # Note: Actual restart implementation would go here
+                    await self.app.main_window.info_dialog(
+                        "Restart", "Please restart AccessiWeather manually to complete the update."
+                    )
+            else:
+                await progress_dialog.complete_error("Failed to install update")
+
+            # Wait for user to close progress dialog
+            await progress_dialog
+            progress_dialog.close()
+
+        except Exception as e:
+            logger.error(f"Failed to perform update: {e}")
+            await self.app.main_window.error_dialog(
+                "Update Failed", f"Failed to perform update: {str(e)}"
+            )
