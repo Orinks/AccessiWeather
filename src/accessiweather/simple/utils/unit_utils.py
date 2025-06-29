@@ -27,6 +27,7 @@ def format_wind_speed(
 
     Returns:
         Formatted wind speed string
+
     """
     if wind_speed_mph is None and wind_speed_kph is None:
         return "N/A"
@@ -40,10 +41,10 @@ def format_wind_speed(
     # Format based on user preference
     if unit == TemperatureUnit.FAHRENHEIT:
         return f"{wind_speed_mph:.{precision}f} mph"
-    elif unit == TemperatureUnit.CELSIUS:
+    if unit == TemperatureUnit.CELSIUS:
         return f"{wind_speed_kph:.{precision}f} km/h"
-    else:  # BOTH
-        return f"{wind_speed_mph:.{precision}f} mph ({wind_speed_kph:.{precision}f} km/h)"
+    # BOTH
+    return f"{wind_speed_mph:.{precision}f} mph ({wind_speed_kph:.{precision}f} km/h)"
 
 
 def format_pressure(
@@ -62,6 +63,7 @@ def format_pressure(
 
     Returns:
         Formatted pressure string
+
     """
     if pressure_inhg is None and pressure_mb is None:
         return "N/A"
@@ -75,10 +77,10 @@ def format_pressure(
     # Format based on user preference
     if unit == TemperatureUnit.FAHRENHEIT:
         return f"{pressure_inhg:.{precision}f} inHg"
-    elif unit == TemperatureUnit.CELSIUS:
+    if unit == TemperatureUnit.CELSIUS:
         return f"{pressure_mb:.{precision}f} hPa"
-    else:  # BOTH
-        return f"{pressure_inhg:.{precision}f} inHg ({pressure_mb:.{precision}f} hPa)"
+    # BOTH
+    return f"{pressure_inhg:.{precision}f} inHg ({pressure_mb:.{precision}f} hPa)"
 
 
 def format_visibility(
@@ -97,6 +99,7 @@ def format_visibility(
 
     Returns:
         Formatted visibility string
+
     """
     if visibility_miles is None and visibility_km is None:
         return "N/A"
@@ -110,10 +113,10 @@ def format_visibility(
     # Format based on user preference
     if unit == TemperatureUnit.FAHRENHEIT:
         return f"{visibility_miles:.{precision}f} mi"
-    elif unit == TemperatureUnit.CELSIUS:
+    if unit == TemperatureUnit.CELSIUS:
         return f"{visibility_km:.{precision}f} km"
-    else:  # BOTH
-        return f"{visibility_miles:.{precision}f} mi ({visibility_km:.{precision}f} km)"
+    # BOTH
+    return f"{visibility_miles:.{precision}f} mi ({visibility_km:.{precision}f} km)"
 
 
 def format_precipitation(
@@ -132,6 +135,7 @@ def format_precipitation(
 
     Returns:
         Formatted precipitation string
+
     """
     if precipitation_inches is None and precipitation_mm is None:
         return "N/A"
@@ -145,10 +149,10 @@ def format_precipitation(
     # Format based on user preference
     if unit == TemperatureUnit.FAHRENHEIT:
         return f"{precipitation_inches:.{precision}f} in"
-    elif unit == TemperatureUnit.CELSIUS:
+    if unit == TemperatureUnit.CELSIUS:
         return f"{precipitation_mm:.{precision}f} mm"
-    else:  # BOTH
-        return f"{precipitation_inches:.{precision}f} in ({precipitation_mm:.{precision}f} mm)"
+    # BOTH
+    return f"{precipitation_inches:.{precision}f} in ({precipitation_mm:.{precision}f} mm)"
 
 
 def convert_wind_direction_to_cardinal(degrees: float | None) -> str:
@@ -159,6 +163,7 @@ def convert_wind_direction_to_cardinal(degrees: float | None) -> str:
 
     Returns:
         Cardinal direction (N, NE, E, SE, S, SW, W, NW)
+
     """
     if degrees is None:
         return "N/A"
@@ -172,8 +177,8 @@ def convert_wind_direction_to_cardinal(degrees: float | None) -> str:
 
 
 def format_combined_wind(
-    wind_speed: float | None, 
-    wind_direction: float | str | None, 
+    wind_speed: float | None,
+    wind_direction: float | str | None,
     speed_unit: str = "mph"
 ) -> str:
     """Format combined wind speed and direction for display.
@@ -185,6 +190,7 @@ def format_combined_wind(
 
     Returns:
         Formatted wind string (e.g., "15 mph NW")
+
     """
     if wind_speed is None:
         return "N/A"
@@ -206,8 +212,7 @@ def format_combined_wind(
 
         if direction and direction != "N/A":
             return f"{speed_str} {direction}"
-        else:
-            return speed_str
+        return speed_str
 
     except (ValueError, TypeError):
         return "N/A"

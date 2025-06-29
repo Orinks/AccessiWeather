@@ -6,16 +6,16 @@ replacing the complex service layer architecture with straightforward data struc
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional
 
 
 @dataclass
 class Location:
     """Simple location data."""
+
     name: str
     latitude: float
     longitude: float
-    
+
     def __str__(self) -> str:
         return self.name
 
@@ -23,22 +23,23 @@ class Location:
 @dataclass
 class CurrentConditions:
     """Current weather conditions."""
-    temperature_f: Optional[float] = None
-    temperature_c: Optional[float] = None
-    condition: Optional[str] = None
-    humidity: Optional[int] = None
-    wind_speed_mph: Optional[float] = None
-    wind_speed_kph: Optional[float] = None
-    wind_direction: Optional[str] = None
-    pressure_in: Optional[float] = None
-    pressure_mb: Optional[float] = None
-    feels_like_f: Optional[float] = None
-    feels_like_c: Optional[float] = None
-    visibility_miles: Optional[float] = None
-    visibility_km: Optional[float] = None
-    uv_index: Optional[float] = None
-    last_updated: Optional[datetime] = None
-    
+
+    temperature_f: float | None = None
+    temperature_c: float | None = None
+    condition: str | None = None
+    humidity: int | None = None
+    wind_speed_mph: float | None = None
+    wind_speed_kph: float | None = None
+    wind_direction: str | None = None
+    pressure_in: float | None = None
+    pressure_mb: float | None = None
+    feels_like_f: float | None = None
+    feels_like_c: float | None = None
+    visibility_miles: float | None = None
+    visibility_km: float | None = None
+    uv_index: float | None = None
+    last_updated: datetime | None = None
+
     def has_data(self) -> bool:
         """Check if we have any meaningful weather data."""
         return any([
@@ -51,23 +52,25 @@ class CurrentConditions:
 @dataclass
 class ForecastPeriod:
     """Single forecast period."""
+
     name: str
-    temperature: Optional[float] = None
+    temperature: float | None = None
     temperature_unit: str = "F"
-    short_forecast: Optional[str] = None
-    detailed_forecast: Optional[str] = None
-    wind_speed: Optional[str] = None
-    wind_direction: Optional[str] = None
-    icon: Optional[str] = None
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
+    short_forecast: str | None = None
+    detailed_forecast: str | None = None
+    wind_speed: str | None = None
+    wind_direction: str | None = None
+    icon: str | None = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
 
 
 @dataclass
 class Forecast:
     """Weather forecast data."""
-    periods: List[ForecastPeriod]
-    generated_at: Optional[datetime] = None
+
+    periods: list[ForecastPeriod]
+    generated_at: datetime | None = None
 
     def has_data(self) -> bool:
         """Check if we have any forecast data."""
@@ -77,14 +80,15 @@ class Forecast:
 @dataclass
 class HourlyForecastPeriod:
     """Single hourly forecast period."""
+
     start_time: datetime
-    temperature: Optional[float] = None
+    temperature: float | None = None
     temperature_unit: str = "F"
-    short_forecast: Optional[str] = None
-    wind_speed: Optional[str] = None
-    wind_direction: Optional[str] = None
-    icon: Optional[str] = None
-    end_time: Optional[datetime] = None
+    short_forecast: str | None = None
+    wind_speed: str | None = None
+    wind_direction: str | None = None
+    icon: str | None = None
+    end_time: datetime | None = None
 
     def has_data(self) -> bool:
         """Check if we have any meaningful hourly forecast data."""
@@ -98,14 +102,15 @@ class HourlyForecastPeriod:
 @dataclass
 class HourlyForecast:
     """Hourly weather forecast data."""
-    periods: List[HourlyForecastPeriod]
-    generated_at: Optional[datetime] = None
+
+    periods: list[HourlyForecastPeriod]
+    generated_at: datetime | None = None
 
     def has_data(self) -> bool:
         """Check if we have any hourly forecast data."""
         return len(self.periods) > 0
 
-    def get_next_hours(self, count: int = 6) -> List[HourlyForecastPeriod]:
+    def get_next_hours(self, count: int = 6) -> list[HourlyForecastPeriod]:
         """Get the next N hours of forecast data.
 
         Args:
@@ -113,6 +118,7 @@ class HourlyForecast:
 
         Returns:
             List of hourly forecast periods, up to the requested count
+
         """
         return self.periods[:count]
 
@@ -120,18 +126,19 @@ class HourlyForecast:
 @dataclass
 class WeatherAlert:
     """Weather alert/warning."""
+
     title: str
     description: str
     severity: str = "Unknown"
     urgency: str = "Unknown"
     certainty: str = "Unknown"
-    event: Optional[str] = None
-    headline: Optional[str] = None
-    instruction: Optional[str] = None
-    onset: Optional[datetime] = None
-    expires: Optional[datetime] = None
-    areas: List[str] = None
-    
+    event: str | None = None
+    headline: str | None = None
+    instruction: str | None = None
+    onset: datetime | None = None
+    expires: datetime | None = None
+    areas: list[str] = None
+
     def __post_init__(self):
         if self.areas is None:
             self.areas = []
@@ -140,34 +147,36 @@ class WeatherAlert:
 @dataclass
 class WeatherAlerts:
     """Collection of weather alerts."""
-    alerts: List[WeatherAlert]
-    
+
+    alerts: list[WeatherAlert]
+
     def has_alerts(self) -> bool:
         """Check if we have any active alerts."""
         return len(self.alerts) > 0
-    
-    def get_active_alerts(self) -> List[WeatherAlert]:
+
+    def get_active_alerts(self) -> list[WeatherAlert]:
         """Get alerts that haven't expired."""
         now = datetime.now()
         active = []
-        
+
         for alert in self.alerts:
             if alert.expires is None or alert.expires > now:
                 active.append(alert)
-        
+
         return active
 
 
 @dataclass
 class WeatherData:
     """Complete weather data for a location."""
+
     location: Location
-    current: Optional[CurrentConditions] = None
-    forecast: Optional[Forecast] = None
-    hourly_forecast: Optional[HourlyForecast] = None
-    discussion: Optional[str] = None
-    alerts: Optional[WeatherAlerts] = None
-    last_updated: Optional[datetime] = None
+    current: CurrentConditions | None = None
+    forecast: Forecast | None = None
+    hourly_forecast: HourlyForecast | None = None
+    discussion: str | None = None
+    alerts: WeatherAlerts | None = None
+    last_updated: datetime | None = None
 
     def has_any_data(self) -> bool:
         """Check if we have any weather data."""
@@ -182,11 +191,12 @@ class WeatherData:
 @dataclass
 class ApiError:
     """API error information."""
+
     message: str
-    code: Optional[str] = None
-    details: Optional[str] = None
-    timestamp: Optional[datetime] = None
-    
+    code: str | None = None
+    details: str | None = None
+    timestamp: datetime | None = None
+
     def __post_init__(self):
         if self.timestamp is None:
             self.timestamp = datetime.now()
@@ -196,13 +206,14 @@ class ApiError:
 @dataclass
 class AppSettings:
     """Application settings."""
+
     temperature_unit: str = "both"  # "f", "c", or "both"
     update_interval_minutes: int = 10
     show_detailed_forecast: bool = True
     enable_alerts: bool = True
     minimize_to_tray: bool = True
     data_source: str = "auto"  # "nws", "openmeteo", or "auto"
-    
+
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
         return {
@@ -213,7 +224,7 @@ class AppSettings:
             "minimize_to_tray": self.minimize_to_tray,
             "data_source": self.data_source,
         }
-    
+
     @classmethod
     def from_dict(cls, data: dict) -> "AppSettings":
         """Create from dictionary."""
@@ -230,10 +241,11 @@ class AppSettings:
 @dataclass
 class AppConfig:
     """Application configuration."""
+
     settings: AppSettings
-    locations: List[Location]
-    current_location: Optional[Location] = None
-    
+    locations: list[Location]
+    current_location: Location | None = None
+
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
         return {
@@ -252,12 +264,12 @@ class AppConfig:
                 "longitude": self.current_location.longitude,
             } if self.current_location else None,
         }
-    
+
     @classmethod
     def from_dict(cls, data: dict) -> "AppConfig":
         """Create from dictionary."""
         settings = AppSettings.from_dict(data.get("settings", {}))
-        
+
         locations = []
         for loc_data in data.get("locations", []):
             locations.append(Location(
@@ -265,7 +277,7 @@ class AppConfig:
                 latitude=loc_data["latitude"],
                 longitude=loc_data["longitude"],
             ))
-        
+
         current_location = None
         if data.get("current_location"):
             loc_data = data["current_location"]
@@ -274,13 +286,13 @@ class AppConfig:
                 latitude=loc_data["latitude"],
                 longitude=loc_data["longitude"],
             )
-        
+
         return cls(
             settings=settings,
             locations=locations,
             current_location=current_location,
         )
-    
+
     @classmethod
     def default(cls) -> "AppConfig":
         """Create default configuration."""

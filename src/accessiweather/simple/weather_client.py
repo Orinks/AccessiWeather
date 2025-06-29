@@ -128,14 +128,13 @@ class WeatherClient:
         """Determine if Open-Meteo should be used for the given location."""
         if self.data_source == "openmeteo":
             return True
-        elif self.data_source == "nws":
+        if self.data_source == "nws":
             return False
-        elif self.data_source == "auto":
+        if self.data_source == "auto":
             # Use Open-Meteo for international locations, NWS for US locations
             return not self._is_us_location(location)
-        else:
-            logger.warning(f"Unknown data source '{self.data_source}', defaulting to NWS")
-            return False
+        logger.warning(f"Unknown data source '{self.data_source}', defaulting to NWS")
+        return False
 
     def _is_us_location(self, location: Location) -> bool:
         """Check if location is within the United States (rough approximation)."""
