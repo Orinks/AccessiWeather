@@ -42,11 +42,13 @@ class CurrentConditions:
 
     def has_data(self) -> bool:
         """Check if we have any meaningful weather data."""
-        return any([
-            self.temperature_f is not None,
-            self.temperature_c is not None,
-            self.condition is not None
-        ])
+        return any(
+            [
+                self.temperature_f is not None,
+                self.temperature_c is not None,
+                self.condition is not None,
+            ]
+        )
 
 
 @dataclass
@@ -92,11 +94,13 @@ class HourlyForecastPeriod:
 
     def has_data(self) -> bool:
         """Check if we have any meaningful hourly forecast data."""
-        return any([
-            self.temperature is not None,
-            self.short_forecast is not None,
-            self.wind_speed is not None
-        ])
+        return any(
+            [
+                self.temperature is not None,
+                self.short_forecast is not None,
+                self.wind_speed is not None,
+            ]
+        )
 
 
 @dataclass
@@ -180,12 +184,14 @@ class WeatherData:
 
     def has_any_data(self) -> bool:
         """Check if we have any weather data."""
-        return any([
-            self.current and self.current.has_data(),
-            self.forecast and self.forecast.has_data(),
-            self.hourly_forecast and self.hourly_forecast.has_data(),
-            self.alerts and self.alerts.has_alerts()
-        ])
+        return any(
+            [
+                self.current and self.current.has_data(),
+                self.forecast and self.forecast.has_data(),
+                self.hourly_forecast and self.hourly_forecast.has_data(),
+                self.alerts and self.alerts.has_alerts(),
+            ]
+        )
 
 
 @dataclass
@@ -214,6 +220,11 @@ class AppSettings:
     minimize_to_tray: bool = True
     data_source: str = "auto"  # "nws", "openmeteo", or "auto"
 
+    # Update system settings
+    auto_update_enabled: bool = True
+    update_channel: str = "stable"  # "stable" or "dev"
+    update_check_interval_hours: int = 24
+
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
         return {
@@ -223,6 +234,9 @@ class AppSettings:
             "enable_alerts": self.enable_alerts,
             "minimize_to_tray": self.minimize_to_tray,
             "data_source": self.data_source,
+            "auto_update_enabled": self.auto_update_enabled,
+            "update_channel": self.update_channel,
+            "update_check_interval_hours": self.update_check_interval_hours,
         }
 
     @classmethod
@@ -235,6 +249,9 @@ class AppSettings:
             enable_alerts=data.get("enable_alerts", True),
             minimize_to_tray=data.get("minimize_to_tray", True),
             data_source=data.get("data_source", "auto"),
+            auto_update_enabled=data.get("auto_update_enabled", True),
+            update_channel=data.get("update_channel", "stable"),
+            update_check_interval_hours=data.get("update_check_interval_hours", 24),
         )
 
 
@@ -262,7 +279,9 @@ class AppConfig:
                 "name": self.current_location.name,
                 "latitude": self.current_location.latitude,
                 "longitude": self.current_location.longitude,
-            } if self.current_location else None,
+            }
+            if self.current_location
+            else None,
         }
 
     @classmethod
@@ -272,11 +291,13 @@ class AppConfig:
 
         locations = []
         for loc_data in data.get("locations", []):
-            locations.append(Location(
-                name=loc_data["name"],
-                latitude=loc_data["latitude"],
-                longitude=loc_data["longitude"],
-            ))
+            locations.append(
+                Location(
+                    name=loc_data["name"],
+                    latitude=loc_data["latitude"],
+                    longitude=loc_data["longitude"],
+                )
+            )
 
         current_location = None
         if data.get("current_location"):
