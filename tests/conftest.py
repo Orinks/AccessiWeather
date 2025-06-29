@@ -10,6 +10,7 @@ from tests.fixtures.basic_fixtures import *  # noqa: F401, F403
 from tests.fixtures.gui_fixtures import *  # noqa: F401, F403
 from tests.fixtures.mock_clients import *  # noqa: F401, F403
 from tests.fixtures.sample_responses import *  # noqa: F401, F403
+from tests.toga_test_helpers import *  # noqa: F401, F403
 
 
 @pytest.fixture
