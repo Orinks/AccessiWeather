@@ -1,7 +1,5 @@
 """Test Toga integration and fixture compatibility."""
 
-import pytest
-from unittest.mock import MagicMock
 
 
 class TestTogaFixtures:
@@ -20,7 +18,7 @@ class TestTogaFixtures:
         assert 'TextInput' in mock_toga_controls
         assert 'Button' in mock_toga_controls
         assert 'Selection' in mock_toga_controls
-        
+
         # Test button control
         button = mock_toga_controls['Button']
         assert button.text == "Test Button"
@@ -63,7 +61,7 @@ class TestOpenMeteoIntegrationLogic:
         # US bounds from the code: 24.0 <= lat <= 49.0 and -125.0 <= lon <= -66.0
         us_lat_min, us_lat_max = 24.0, 49.0
         us_lon_min, us_lon_max = -125.0, -66.0
-        
+
         # Test US locations
         us_locations = [
             ("Philadelphia, PA", 39.9526, -75.1652),
@@ -72,7 +70,7 @@ class TestOpenMeteoIntegrationLogic:
             ("Miami, FL", 25.7617, -80.1918),
             ("Seattle, WA", 47.6062, -122.3321),
         ]
-        
+
         for name, lat, lon in us_locations:
             is_us = (us_lat_min <= lat <= us_lat_max and us_lon_min <= lon <= us_lon_max)
             assert is_us, f"{name} should be detected as US location"
@@ -82,7 +80,7 @@ class TestOpenMeteoIntegrationLogic:
         # US bounds from the code: 24.0 <= lat <= 49.0 and -125.0 <= lon <= -66.0
         us_lat_min, us_lat_max = 24.0, 49.0
         us_lon_min, us_lon_max = -125.0, -66.0
-        
+
         # Test international locations (clearly outside US bounds)
         international_locations = [
             ("Tokyo, Japan", 35.6762, 139.6503),
@@ -92,7 +90,7 @@ class TestOpenMeteoIntegrationLogic:
             ("Mexico City, Mexico", 19.4326, -99.1332),
             ("Vancouver, Canada", 49.2827, -123.1207),  # Changed from Toronto (which is in US bounds)
         ]
-        
+
         for name, lat, lon in international_locations:
             is_us = (us_lat_min <= lat <= us_lat_max and us_lon_min <= lon <= us_lon_max)
             assert not is_us, f"{name} should NOT be detected as US location"
@@ -105,20 +103,20 @@ class TestOpenMeteoIntegrationLogic:
             us_lon_min, us_lon_max = -125.0, -66.0
             is_us = (us_lat_min <= lat <= us_lat_max and us_lon_min <= lon <= us_lon_max)
             return not is_us  # Use Open-Meteo for non-US locations
-        
+
         # Test forced modes
         def should_use_openmeteo_forced(data_source):
             if data_source == "openmeteo":
                 return True
-            elif data_source == "nws":
+            if data_source == "nws":
                 return False
-            else:  # auto
-                return None  # Depends on location
-        
+            # auto
+            return None  # Depends on location
+
         # Test auto mode
         assert should_use_openmeteo_auto(40.7128, -74.0060) is False  # NYC -> NWS
         assert should_use_openmeteo_auto(35.6762, 139.6503) is True   # Tokyo -> Open-Meteo
-        
+
         # Test forced modes
         assert should_use_openmeteo_forced("openmeteo") is True
         assert should_use_openmeteo_forced("nws") is False
@@ -144,13 +142,13 @@ class TestOpenMeteoIntegrationLogic:
             75: "Heavy snow",
             95: "Thunderstorm",
         }
-        
+
         # Test known codes
         assert code_map[0] == "Clear sky"
         assert code_map[1] == "Mainly clear"
         assert code_map[61] == "Slight rain"
         assert code_map[95] == "Thunderstorm"
-        
+
         # Test unknown code handling
         unknown_code = 999
         expected_unknown = f"Weather code {unknown_code}"
@@ -163,7 +161,7 @@ class TestOpenMeteoIntegrationLogic:
             if temp_f is None:
                 return None
             return (temp_f - 32) * 5 / 9
-        
+
         # Test conversions
         assert abs(convert_f_to_c(32.0) - 0.0) < 0.01  # Freezing point
         assert abs(convert_f_to_c(212.0) - 100.0) < 0.01  # Boiling point
@@ -175,11 +173,11 @@ class TestOpenMeteoIntegrationLogic:
         def degrees_to_cardinal(degrees):
             if degrees is None:
                 return None
-            directions = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", 
+            directions = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
                          "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
             index = round(degrees / 22.5) % 16
             return directions[index]
-        
+
         # Test cardinal directions
         assert degrees_to_cardinal(0) == "N"
         assert degrees_to_cardinal(90) == "E"
@@ -199,4 +197,4 @@ def test_pytest_integration():
 def test_fixtures_available():
     """Test that all required fixtures are available."""
     # This test will fail if fixtures are not properly imported
-    pass  # The fact that this test runs means fixtures are working
+    # The fact that this test runs means fixtures are working

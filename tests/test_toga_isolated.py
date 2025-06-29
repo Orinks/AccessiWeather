@@ -32,7 +32,7 @@ class TestTogaBasics:
         async def simple_task():
             await asyncio.sleep(0.01)
             return "async_works"
-        
+
         result = await simple_task()
         assert result == "async_works"
 
@@ -50,21 +50,21 @@ class TestTogaBasics:
         async def quick_task():
             await asyncio.sleep(0.001)
             return "completed"
-        
+
         try:
             result = await asyncio.wait_for(quick_task(), timeout=1.0)
             assert result == "completed"
-        except asyncio.TimeoutError:
+        except TimeoutError:
             pytest.fail("Task should not have timed out")
 
     def test_mock_creation(self):
         """Test basic mock creation."""
-        from unittest.mock import Mock, AsyncMock
-        
+        from unittest.mock import AsyncMock, Mock
+
         # Test sync mock
         sync_mock = Mock(return_value="sync_result")
         assert sync_mock() == "sync_result"
-        
+
         # Test async mock
         async_mock = AsyncMock(return_value="async_result")
         assert asyncio.iscoroutine(async_mock())
@@ -73,7 +73,7 @@ class TestTogaBasics:
     async def test_async_mock_execution(self):
         """Test async mock execution."""
         from unittest.mock import AsyncMock
-        
+
         async_mock = AsyncMock(return_value="async_result")
         result = await async_mock()
         assert result == "async_result"
@@ -86,7 +86,7 @@ class TestTogaBasics:
             "condition": "Sunny",
             "timestamp": "2025-06-29T12:00:00Z"
         }
-        
+
         assert test_data["name"] == "Test Location"
         assert test_data["temperature"] == 75.0
         assert test_data["condition"] == "Sunny"
@@ -97,14 +97,14 @@ class TestTogaBasics:
         async def task(delay, result):
             await asyncio.sleep(delay)
             return result
-        
+
         # Run multiple tasks concurrently
         tasks = [
             task(0.01, "task1"),
             task(0.02, "task2"),
             task(0.01, "task3")
         ]
-        
+
         results = await asyncio.gather(*tasks)
         assert results == ["task1", "task2", "task3"]
 
@@ -113,10 +113,10 @@ class TestTogaBasics:
         # Test that we can set and read environment variables
         test_var = "TOGA_TEST_VAR"
         test_value = "test_value_123"
-        
+
         os.environ[test_var] = test_value
         assert os.environ.get(test_var) == test_value
-        
+
         # Clean up
         del os.environ[test_var]
         assert os.environ.get(test_var) is None
