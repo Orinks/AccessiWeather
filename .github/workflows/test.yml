@@ -43,8 +43,8 @@ jobs:
       env:
         TOGA_BACKEND: toga_dummy
       run: |
-        python -m pytest tests/test_toga_isolated.py -v --tb=short
-        echo "✓ Toga isolated tests completed"
+        python -m pytest tests/test_toga_isolated.py tests/test_toga_simple.py -v --tb=short
+        echo "✓ Toga tests completed successfully"
 
 
 
