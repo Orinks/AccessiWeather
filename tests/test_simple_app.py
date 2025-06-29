@@ -6,6 +6,7 @@ background tasks, and configuration integration using appropriate mocking to avo
 actual GUI rendering.
 """
 
+import asyncio
 from unittest.mock import Mock, patch
 
 import pytest
@@ -202,7 +203,7 @@ class TestAccessiWeatherAppUICreation:
 
         with (
             patch("toga.Box") as mock_box,
-            patch("toga.Label") as mock_label,
+            patch("toga.Label"),
             patch("toga.MainWindow") as mock_main_window,
             patch.object(app, "_create_location_section") as mock_create_location,
             patch.object(app, "_create_weather_display_section") as mock_create_weather,
@@ -305,3 +306,69 @@ def test_accessiweather_app_basic_functionality():
 
         choices = app._get_location_choices()
         assert choices == ["Test City"]
+
+
+class TestAccessiWeatherAppAsyncOperations:
+    """Test async operations and Toga testing infrastructure."""
+
+    @pytest.mark.asyncio
+    async def test_async_weather_refresh(
+        self, mock_weather_client, mock_weather_data, mock_location
+    ):
+        """Test async weather data refresh."""
+        # Test async weather client
+        weather_data = await mock_weather_client.get_weather_data(mock_location)
+        assert weather_data == mock_weather_data
+        mock_weather_client.get_weather_data.assert_called_once_with(mock_location)
+
+    @pytest.mark.asyncio
+    async def test_async_error_handling(self, failing_weather_client, mock_location):
+        """Test async error handling."""
+        with pytest.raises(Exception, match="Mock weather client failure"):
+            await failing_weather_client.get_weather_data(mock_location)
+
+    def test_toga_dummy_backend_setup(self, mock_widgets):
+        """Test that toga-dummy backend is properly configured."""
+        # Create mock widgets to verify testing infrastructure
+        button = mock_widgets.create_widget("Button", text="Refresh")
+        selection = mock_widgets.create_widget("Selection", items=["City A", "City B"])
+        text_input = mock_widgets.create_widget("MultilineTextInput", readonly=True)
+
+        assert button.widget_type == "Button"
+        assert button.text == "Refresh"
+        assert selection.widget_type == "Selection"
+        assert selection.items == ["City A", "City B"]
+        assert text_input.widget_type == "MultilineTextInput"
+        assert text_input.readonly is True
+
+    @pytest.mark.asyncio
+    async def test_background_task_simulation(self, async_helper):
+        """Test background task simulation."""
+        task_completed = False
+
+        async def background_task():
+            nonlocal task_completed
+            await asyncio.sleep(0.1)
+            task_completed = True
+            return "completed"
+
+        # Test async helper
+        result = await async_helper.run_with_timeout(background_task())
+        assert result == "completed"
+        assert task_completed is True
+
+    def test_weather_data_factory(self, weather_factory, mock_location, mock_weather_data):
+        """Test weather data factory for creating test data."""
+        # Test factory creates proper data structures
+        assert mock_location.name == "Test City, ST"
+        assert mock_location.latitude == 40.0
+        assert mock_location.longitude == -75.0
+
+        assert mock_weather_data.location is not None
+        assert mock_weather_data.current is not None
+        assert mock_weather_data.forecast is not None
+
+        # Test factory methods
+        custom_location = weather_factory.create_location("Custom City", 41.0, -76.0)
+        assert custom_location.name == "Custom City"
+        assert custom_location.latitude == 41.0

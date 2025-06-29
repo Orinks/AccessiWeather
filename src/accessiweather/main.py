@@ -3,9 +3,7 @@
 This module provides the main entry point for running the application.
 """
 
-
-
-from accessiweather.toga_app import main as toga_main
+from accessiweather.simple import main as toga_main
 
 # Add blank line before function definition
 

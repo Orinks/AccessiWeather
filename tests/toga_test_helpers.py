@@ -1,0 +1,247 @@
+"""Essential Toga testing helpers for AccessiWeather."""
+
+import asyncio
+import os
+from datetime import datetime
+from typing import Any
+from unittest.mock import AsyncMock, Mock
+
+import pytest
+
+# Set up toga-dummy backend for testing
+os.environ["TOGA_BACKEND"] = "toga_dummy"
+
+from accessiweather.simple.models import (
+    CurrentConditions,
+    Forecast,
+    ForecastPeriod,
+    HourlyForecast,
+    HourlyForecastPeriod,
+    Location,
+    WeatherAlert,
+    WeatherAlerts,
+    WeatherData,
+)
+
+
+class WeatherDataFactory:
+    """Factory for creating mock weather data."""
+
+    @staticmethod
+    def create_location(
+        name: str = "Test City, ST", lat: float = 40.0, lon: float = -75.0
+    ) -> Location:
+        return Location(name, lat, lon)
+
+    @staticmethod
+    def create_current_conditions(
+        temp_f: float = 75.0, condition: str = "Partly Cloudy"
+    ) -> CurrentConditions:
+        return CurrentConditions(
+            temperature_f=temp_f,
+            temperature_c=(temp_f - 32) * 5 / 9,
+            condition=condition,
+            humidity=65,
+            wind_speed_mph=8.5,
+            wind_direction="S",
+            pressure_in=30.15,
+            visibility_miles=10.0,
+            uv_index=5,
+            last_updated=datetime.now(),
+        )
+
+    @staticmethod
+    def create_forecast_period(name: str = "Today", temp: int = 78) -> ForecastPeriod:
+        return ForecastPeriod(
+            name=name,
+            temperature=temp,
+            temperature_unit="F",
+            short_forecast="Sunny",
+            detailed_forecast="Sunny skies with light winds.",
+            start_time=datetime.now(),
+            end_time=datetime.now(),
+        )
+
+    @staticmethod
+    def create_forecast(num_periods: int = 7) -> Forecast:
+        periods = [
+            WeatherDataFactory.create_forecast_period(f"Day {i + 1}", 75 + i)
+            for i in range(num_periods)
+        ]
+        return Forecast(periods=periods)
+
+    @staticmethod
+    def create_hourly_forecast(num_periods: int = 24) -> HourlyForecast:
+        periods = []
+        for i in range(num_periods):
+            period = HourlyForecastPeriod(
+                start_time=datetime.now(),
+                temperature=70 + (i % 10),
+                temperature_unit="F",
+                short_forecast=f"Hour {i + 1}",
+                wind_speed=f"{5 + (i % 5)} mph",
+                wind_direction=f"{180 + (i * 10) % 360}°",
+            )
+            periods.append(period)
+        return HourlyForecast(periods=periods)
+
+    @staticmethod
+    def create_weather_alert(title: str = "Test Alert", severity: str = "Minor") -> WeatherAlert:
+        return WeatherAlert(
+            title=title,
+            description="Test weather alert for testing purposes.",
+            severity=severity,
+            event=title,
+            headline=title,
+            instruction="Take appropriate precautions.",
+            onset=datetime.now(),
+            expires=datetime.now(),
+        )
+
+    @staticmethod
+    def create_weather_alerts(num_alerts: int = 2) -> WeatherAlerts:
+        alerts = [
+            WeatherDataFactory.create_weather_alert(
+                f"Alert {i + 1}", "Minor" if i % 2 == 0 else "Moderate"
+            )
+            for i in range(num_alerts)
+        ]
+        return WeatherAlerts(alerts=alerts)
+
+    @staticmethod
+    def create_weather_data(
+        include_current: bool = True,
+        include_forecast: bool = True,
+        include_hourly: bool = True,
+        include_alerts: bool = True,
+    ) -> WeatherData:
+        location = WeatherDataFactory.create_location()
+        weather_data = WeatherData(location=location)
+
+        if include_current:
+            weather_data.current = WeatherDataFactory.create_current_conditions()
+        if include_forecast:
+            weather_data.forecast = WeatherDataFactory.create_forecast()
+        if include_hourly:
+            weather_data.hourly_forecast = WeatherDataFactory.create_hourly_forecast()
+        if include_alerts:
+            weather_data.alerts = WeatherDataFactory.create_weather_alerts()
+
+        weather_data.discussion = "Mock forecast discussion for testing."
+        weather_data.last_updated = datetime.now()
+
+        return weather_data
+
+
+class AsyncTestHelper:
+    """Helper for async testing operations."""
+
+    @staticmethod
+    async def run_with_timeout(coro, timeout: float = 5.0):
+        """Run a coroutine with a timeout."""
+        try:
+            return await asyncio.wait_for(coro, timeout=timeout)
+        except TimeoutError:
+            pytest.fail(f"Async operation timed out after {timeout} seconds")
+
+    @staticmethod
+    def create_async_mock(return_value: Any = None, side_effect: Any = None) -> AsyncMock:
+        """Create an AsyncMock with optional return value or side effect."""
+        mock = AsyncMock()
+        if return_value is not None:
+            mock.return_value = return_value
+        if side_effect is not None:
+            mock.side_effect = side_effect
+        return mock
+
+
+class MockTogaWidgets:
+    """Mock Toga widgets for testing."""
+
+    @staticmethod
+    def create_widget(widget_type: str, **kwargs) -> Mock:
+        """Create a mock widget of the specified type."""
+        widget = Mock()
+        widget.widget_type = widget_type
+
+        # Common properties
+        widget.enabled = kwargs.get("enabled", True)
+        widget.visible = kwargs.get("visible", True)
+        widget.style = kwargs.get("style", Mock())
+
+        # Widget-specific properties
+        if widget_type == "Button":
+            widget.text = kwargs.get("text", "")
+            widget.on_press = kwargs.get("on_press", Mock())
+        elif widget_type == "Selection":
+            widget.items = kwargs.get("items", [])
+            widget.value = kwargs.get("value")
+            widget.on_change = kwargs.get("on_change", Mock())
+        elif widget_type == "MultilineTextInput":
+            widget.value = kwargs.get("value", "")
+            widget.readonly = kwargs.get("readonly", False)
+        elif widget_type == "Table":
+            widget.headings = kwargs.get("headings", [])
+            widget.data = kwargs.get("data", [])
+            widget.on_select = kwargs.get("on_select", Mock())
+
+        return widget
+
+
+# Pytest fixtures
+@pytest.fixture
+def weather_factory():
+    """Pytest fixture for weather data factory."""
+    return WeatherDataFactory()
+
+
+@pytest.fixture
+def async_helper():
+    """Pytest fixture for async test helper."""
+    return AsyncTestHelper()
+
+
+@pytest.fixture
+def mock_widgets():
+    """Pytest fixture for mock Toga widgets."""
+    return MockTogaWidgets()
+
+
+@pytest.fixture
+def mock_location():
+    """Pytest fixture for mock location."""
+    return WeatherDataFactory.create_location()
+
+
+@pytest.fixture
+def mock_weather_data():
+    """Pytest fixture for mock weather data."""
+    return WeatherDataFactory.create_weather_data()
+
+
+@pytest.fixture
+def mock_weather_client():
+    """Pytest fixture for mock weather client."""
+    client = Mock()
+    client.get_weather_data = AsyncTestHelper.create_async_mock(
+        return_value=WeatherDataFactory.create_weather_data()
+    )
+    return client
+
+
+@pytest.fixture
+def failing_weather_client():
+    """Pytest fixture for failing weather client."""
+    client = Mock()
+    client.get_weather_data = AsyncTestHelper.create_async_mock(
+        side_effect=Exception("Mock weather client failure")
+    )
+    return client
+
+
+@pytest.fixture(autouse=True)
+def setup_toga_dummy():
+    """Automatically set up toga-dummy backend for all tests."""
+    os.environ["TOGA_BACKEND"] = "toga_dummy"
+    yield
+    # Cleanup handled by OS environment
