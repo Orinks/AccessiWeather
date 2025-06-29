@@ -1,10 +1,18 @@
-name: Test AccessiWeather Toga
+name: Toga Migration CI
 
 on:
   push:
-    branches: [ main, feature/toga-migration ]
+    branches: [ dev, feature/toga-migration ]
   pull_request:
-    branches: [ main ]
+    branches: [ dev ]
+  workflow_dispatch:
+
+env:
+  # Toga-specific environment variables
+  TOGA_BACKEND: toga_dummy
+  # Quality gate thresholds - aligned with existing dev branch
+  MAX_COMPLEXITY: 30
+  SECURITY_SEVERITY_THRESHOLD: "medium"
 
 jobs:
   test:
@@ -48,25 +56,8 @@ jobs:
 
 
 
-  # lint:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v4
-
-  #   - name: Set up Python 3.12
-  #     uses: actions/setup-python@v4
-  #     with:
-  #       python-version: '3.12'
-
-  #   - name: Install dependencies
-  #     run: |
-  #       python -m pip install --upgrade pip
-  #       pip install tox
-
-  #   - name: Lint with ruff
-  #     run: tox -e lint
-
-  type-check:
+  code-quality:
+    name: Code Quality (Toga)
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -79,10 +70,57 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install tox
+        pip install tox ruff mypy
+
+    - name: Lint with ruff
+      run: tox -e lint
 
     - name: Type check with mypy
       run: tox -e type-check
       continue-on-error: true  # Type checking is informational for now
+
+  quality-gate:
+    name: Toga Quality Gate
+    runs-on: ubuntu-latest
+    needs: [test, code-quality]
+    if: always()
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check all jobs status
+      run: |
+        echo "Test job status: ${{ needs.test.result }}"
+        echo "Code Quality job status: ${{ needs.code-quality.result }}"
+
+        if [ "${{ needs.test.result }}" != "success" ] ||
+           [ "${{ needs.code-quality.result }}" != "success" ]; then
+          echo "Quality gate failed - one or more checks did not pass"
+          exit 1
+        fi
+
+        echo "Toga Quality gate passed - all checks successful"
+      shell: bash
+
+    - name: Generate Toga quality summary
+      run: |
+        echo "# Toga Migration Quality Gate Summary" > toga-quality-summary.md
+        echo "" >> toga-quality-summary.md
+        echo "## Job Results" >> toga-quality-summary.md
+        echo "- **Toga Tests**: ${{ needs.test.result }}" >> toga-quality-summary.md
+        echo "- **Code Quality**: ${{ needs.code-quality.result }}" >> toga-quality-summary.md
+        echo "" >> toga-quality-summary.md
+        echo "## Test Coverage" >> toga-quality-summary.md
+        echo "- **Toga Infrastructure Tests**: 20 tests across platforms" >> toga-quality-summary.md
+        echo "- **Cross-platform**: Ubuntu, Windows, macOS" >> toga-quality-summary.md
+        echo "- **Backend**: toga-dummy for headless testing" >> toga-quality-summary.md
+
+    - name: Upload quality summary
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: toga-quality-gate-summary
+        path: toga-quality-summary.md
+
+
 
 
