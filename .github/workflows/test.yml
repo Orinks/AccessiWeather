@@ -43,7 +43,7 @@ jobs:
       env:
         TOGA_BACKEND: toga_dummy
       run: |
-        python -m pytest tests/test_simple_app.py::TestAccessiWeatherAppAsyncOperations -v --tb=short
+        python -m pytest tests/test_toga_simple.py -v --tb=short
         python -c "from tests.toga_test_helpers import WeatherDataFactory; factory = WeatherDataFactory(); data = factory.create_weather_data(); print('✓ Toga test helpers working')"
 
 
