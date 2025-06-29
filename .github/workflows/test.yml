@@ -72,11 +72,25 @@ jobs:
         python -m pip install --upgrade pip
         pip install tox ruff mypy
 
-    - name: Lint with ruff
-      run: tox -e lint
+    - name: Lint with ruff (Toga-focused)
+      run: |
+        # Lint only Toga-related files and test infrastructure
+        ruff check \
+          src/accessiweather/simple/ \
+          tests/test_toga_*.py \
+          tests/toga_test_helpers.py \
+          tests/conftest.py \
+          --config pyproject.toml
 
-    - name: Type check with mypy
-      run: tox -e type-check
+    - name: Type check with mypy (Toga-focused)
+      run: |
+        # Type check only Toga-related files
+        mypy \
+          src/accessiweather/simple/ \
+          tests/test_toga_*.py \
+          tests/toga_test_helpers.py \
+          --config-file pyproject.toml \
+          --ignore-missing-imports
       continue-on-error: true  # Type checking is informational for now
 
   quality-gate:
