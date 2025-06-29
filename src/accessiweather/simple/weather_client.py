@@ -80,10 +80,14 @@ class WeatherClient:
 
                         logger.info(f"Successfully fetched NWS fallback data for {location.name}")
                     except Exception as e2:
-                        logger.error(f"Both Open-Meteo and NWS failed for {location.name}: OpenMeteo={e}, NWS={e2}")
+                        logger.error(
+                            f"Both Open-Meteo and NWS failed for {location.name}: OpenMeteo={e}, NWS={e2}"
+                        )
                         self._set_empty_weather_data(weather_data)
                 else:
-                    logger.error(f"Open-Meteo failed for international location {location.name}: {e}")
+                    logger.error(
+                        f"Open-Meteo failed for international location {location.name}: {e}"
+                    )
                     self._set_empty_weather_data(weather_data)
         else:
             # Use NWS API
@@ -115,11 +119,17 @@ class WeatherClient:
                     weather_data.forecast = forecast
                     weather_data.hourly_forecast = hourly_forecast
                     weather_data.discussion = "Forecast discussion not available from Open-Meteo."
-                    weather_data.alerts = WeatherAlerts(alerts=[])  # Open-Meteo doesn't provide alerts
+                    weather_data.alerts = WeatherAlerts(
+                        alerts=[]
+                    )  # Open-Meteo doesn't provide alerts
 
-                    logger.info(f"Successfully fetched Open-Meteo fallback data for {location.name}")
+                    logger.info(
+                        f"Successfully fetched Open-Meteo fallback data for {location.name}"
+                    )
                 except Exception as e2:
-                    logger.error(f"Both NWS and Open-Meteo failed for {location.name}: NWS={e}, OpenMeteo={e2}")
+                    logger.error(
+                        f"Both NWS and Open-Meteo failed for {location.name}: NWS={e}, OpenMeteo={e2}"
+                    )
                     self._set_empty_weather_data(weather_data)
 
         return weather_data
@@ -139,8 +149,7 @@ class WeatherClient:
     def _is_us_location(self, location: Location) -> bool:
         """Check if location is within the United States (rough approximation)."""
         # Continental US bounds (approximate)
-        return (24.0 <= location.latitude <= 49.0 and
-                -125.0 <= location.longitude <= -66.0)
+        return 24.0 <= location.latitude <= 49.0 and -125.0 <= location.longitude <= -66.0
 
     def _set_empty_weather_data(self, weather_data: WeatherData) -> None:
         """Set empty weather data when all APIs fail."""
@@ -535,7 +544,7 @@ class WeatherClient:
 
         dates = daily.get("time", [])
         max_temps = daily.get("temperature_2m_max", [])
-        min_temps = daily.get("temperature_2m_min", [])
+        # min_temps = daily.get("temperature_2m_min", [])  # Not currently used
         weather_codes = daily.get("weather_code", [])
 
         for i, date in enumerate(dates):
@@ -666,5 +675,5 @@ class WeatherClient:
         try:
             date_obj = datetime.fromisoformat(date_str)
             return date_obj.strftime("%A")
-        except:
+        except (ValueError, TypeError):
             return f"Day {index + 1}"

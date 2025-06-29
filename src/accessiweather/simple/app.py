@@ -32,7 +32,7 @@ class AccessiWeatherApp(toga.App):
         self.config_manager: ConfigManager | None = None
         self.weather_client: WeatherClient | None = None
         self.location_manager: LocationManager | None = None
-        self.formatter: WeatherFormatter | None = None
+        self.formatter: WxStyleWeatherFormatter | None = None
 
         # UI components
         self.location_selection: toga.Selection | None = None

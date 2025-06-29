@@ -1,40 +1,39 @@
 """Test Toga integration and fixture compatibility."""
 
 
-
 class TestTogaFixtures:
     """Test that Toga fixtures work correctly."""
 
     def test_toga_app_fixture(self, mock_toga_app):
         """Test that Toga app fixture works."""
         assert mock_toga_app is not None
-        assert hasattr(mock_toga_app, 'main_loop')
-        assert hasattr(mock_toga_app, 'exit')
-        assert hasattr(mock_toga_app, 'paths')
+        assert hasattr(mock_toga_app, "main_loop")
+        assert hasattr(mock_toga_app, "exit")
+        assert hasattr(mock_toga_app, "paths")
 
     def test_toga_controls_fixture(self, mock_toga_controls):
         """Test that Toga controls fixture works."""
         assert mock_toga_controls is not None
-        assert 'TextInput' in mock_toga_controls
-        assert 'Button' in mock_toga_controls
-        assert 'Selection' in mock_toga_controls
+        assert "TextInput" in mock_toga_controls
+        assert "Button" in mock_toga_controls
+        assert "Selection" in mock_toga_controls
 
         # Test button control
-        button = mock_toga_controls['Button']
+        button = mock_toga_controls["Button"]
         assert button.text == "Test Button"
         assert button.enabled is True
 
     def test_simple_weather_apis_fixture(self, mock_simple_weather_apis):
         """Test that simple weather APIs fixture works."""
         assert mock_simple_weather_apis is not None
-        assert 'httpx_client' in mock_simple_weather_apis
-        assert 'openmeteo_current' in mock_simple_weather_apis
-        assert 'openmeteo_forecast' in mock_simple_weather_apis
+        assert "httpx_client" in mock_simple_weather_apis
+        assert "openmeteo_current" in mock_simple_weather_apis
+        assert "openmeteo_forecast" in mock_simple_weather_apis
 
     def test_simple_location_fixture(self, mock_simple_location):
         """Test that simple location fixture works."""
         assert mock_simple_location is not None
-        if hasattr(mock_simple_location, 'name'):
+        if hasattr(mock_simple_location, "name"):
             assert mock_simple_location.name == "New York, NY"
             assert mock_simple_location.latitude == 40.7128
             assert mock_simple_location.longitude == -74.0060
@@ -42,9 +41,9 @@ class TestTogaFixtures:
     def test_sample_config_fixture(self, sample_config):
         """Test that sample config fixture works."""
         assert sample_config is not None
-        assert 'settings' in sample_config
-        assert sample_config['settings']['data_source'] == 'auto'
-        assert sample_config['settings']['temperature_unit'] == 'both'
+        assert "settings" in sample_config
+        assert sample_config["settings"]["data_source"] == "auto"
+        assert sample_config["settings"]["temperature_unit"] == "both"
 
     def test_toga_test_environment(self, toga_test_environment):
         """Test that Toga test environment fixture works."""
@@ -72,7 +71,7 @@ class TestOpenMeteoIntegrationLogic:
         ]
 
         for name, lat, lon in us_locations:
-            is_us = (us_lat_min <= lat <= us_lat_max and us_lon_min <= lon <= us_lon_max)
+            is_us = us_lat_min <= lat <= us_lat_max and us_lon_min <= lon <= us_lon_max
             assert is_us, f"{name} should be detected as US location"
 
     def test_international_location_detection_logic(self):
@@ -88,20 +87,25 @@ class TestOpenMeteoIntegrationLogic:
             ("Sydney, Australia", -33.8688, 151.2093),
             ("Paris, France", 48.8566, 2.3522),
             ("Mexico City, Mexico", 19.4326, -99.1332),
-            ("Vancouver, Canada", 49.2827, -123.1207),  # Changed from Toronto (which is in US bounds)
+            (
+                "Vancouver, Canada",
+                49.2827,
+                -123.1207,
+            ),  # Changed from Toronto (which is in US bounds)
         ]
 
         for name, lat, lon in international_locations:
-            is_us = (us_lat_min <= lat <= us_lat_max and us_lon_min <= lon <= us_lon_max)
+            is_us = us_lat_min <= lat <= us_lat_max and us_lon_min <= lon <= us_lon_max
             assert not is_us, f"{name} should NOT be detected as US location"
 
     def test_api_selection_logic(self):
         """Test API selection logic for different data source modes."""
+
         # Test auto mode logic
         def should_use_openmeteo_auto(lat, lon):
             us_lat_min, us_lat_max = 24.0, 49.0
             us_lon_min, us_lon_max = -125.0, -66.0
-            is_us = (us_lat_min <= lat <= us_lat_max and us_lon_min <= lon <= us_lon_max)
+            is_us = us_lat_min <= lat <= us_lat_max and us_lon_min <= lon <= us_lon_max
             return not is_us  # Use Open-Meteo for non-US locations
 
         # Test forced modes
@@ -115,7 +119,7 @@ class TestOpenMeteoIntegrationLogic:
 
         # Test auto mode
         assert should_use_openmeteo_auto(40.7128, -74.0060) is False  # NYC -> NWS
-        assert should_use_openmeteo_auto(35.6762, 139.6503) is True   # Tokyo -> Open-Meteo
+        assert should_use_openmeteo_auto(35.6762, 139.6503) is True  # Tokyo -> Open-Meteo
 
         # Test forced modes
         assert should_use_openmeteo_forced("openmeteo") is True
@@ -151,12 +155,12 @@ class TestOpenMeteoIntegrationLogic:
 
         # Test unknown code handling
         unknown_code = 999
-        expected_unknown = f"Weather code {unknown_code}"
         assert unknown_code not in code_map
-        # The actual implementation would return "Weather code 999"
+        # The actual implementation would return f"Weather code {unknown_code}"
 
     def test_temperature_conversion_logic(self):
         """Test temperature conversion logic."""
+
         def convert_f_to_c(temp_f):
             if temp_f is None:
                 return None
@@ -170,11 +174,28 @@ class TestOpenMeteoIntegrationLogic:
 
     def test_wind_direction_conversion_logic(self):
         """Test wind direction conversion logic."""
+
         def degrees_to_cardinal(degrees):
             if degrees is None:
                 return None
-            directions = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
-                         "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
+            directions = [
+                "N",
+                "NNE",
+                "NE",
+                "ENE",
+                "E",
+                "ESE",
+                "SE",
+                "SSE",
+                "S",
+                "SSW",
+                "SW",
+                "WSW",
+                "W",
+                "WNW",
+                "NW",
+                "NNW",
+            ]
             index = round(degrees / 22.5) % 16
             return directions[index]
 
