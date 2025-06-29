@@ -118,7 +118,7 @@ class ConfigManager:
         # Find and remove location
         for i, location in enumerate(config.locations):
             if location.name == name:
-                removed_location = config.locations.pop(i)
+                config.locations.pop(i)
 
                 # If this was the current location, clear it
                 if config.current_location and config.current_location.name == name:
