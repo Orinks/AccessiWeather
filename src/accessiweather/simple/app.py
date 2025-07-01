@@ -17,6 +17,7 @@ from .dialogs.discussion import ForecastDiscussionDialog
 from .display import WxStyleWeatherFormatter
 from .location_manager import LocationManager
 from .models import WeatherData
+from .single_instance import SingleInstanceManager
 from .weather_client import WeatherClient
 
 logger = logging.getLogger(__name__)
@@ -34,6 +35,7 @@ class AccessiWeatherApp(toga.App):
         self.location_manager: LocationManager | None = None
         self.formatter: WxStyleWeatherFormatter | None = None
         self.update_service = None  # Will be initialized after config_manager
+        self.single_instance_manager = None  # Will be initialized in startup
 
         # UI components
         self.location_selection: toga.Selection | None = None
@@ -55,6 +57,13 @@ class AccessiWeatherApp(toga.App):
         logger.info("Starting AccessiWeather application")
 
         try:
+            # Check for single instance before initializing anything else
+            self.single_instance_manager = SingleInstanceManager(self)
+            if not self.single_instance_manager.try_acquire_lock():
+                logger.info("Another instance is already running, showing dialog and exiting")
+                asyncio.create_task(self._handle_already_running())
+                return
+
             # Initialize core components
             self._initialize_components()
 
@@ -72,6 +81,15 @@ class AccessiWeatherApp(toga.App):
         except Exception as e:
             logger.error(f"Failed to start application: {e}")
             self._show_error_dialog("Startup Error", f"Failed to start application: {e}")
+
+    async def _handle_already_running(self):
+        """Handle the case when another instance is already running."""
+        try:
+            await self.single_instance_manager.show_already_running_dialog()
+        except Exception as e:
+            logger.error(f"Failed to show already running dialog: {e}")
+        finally:
+            self.exit()
 
     async def on_running(self):
         """Called when the app starts running - start background tasks."""
@@ -973,9 +991,28 @@ class AccessiWeatherApp(toga.App):
         """Exit application from system tray."""
         try:
             logger.info("Exiting application from system tray")
+            # Release single instance lock before exiting
+            if self.single_instance_manager:
+                self.single_instance_manager.release_lock()
             self.exit()
         except Exception as e:
             logger.error(f"Failed to exit from system tray: {e}")
+
+    def exit(self):
+        """Override exit to ensure single instance lock is released."""
+        try:
+            # Release single instance lock before exiting
+            if self.single_instance_manager:
+                self.single_instance_manager.release_lock()
+        except Exception as e:
+            logger.error(f"Failed to release single instance lock during exit: {e}")
+        finally:
+            # Call parent exit method only if app is properly initialized
+            try:
+                super().exit()
+            except AttributeError:
+                # App not fully initialized, just log and continue
+                logger.info("App exit called before full initialization")
 
 
 def main():
