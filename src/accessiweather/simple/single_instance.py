@@ -9,7 +9,6 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Optional
 
 import toga
 
@@ -29,7 +28,7 @@ class SingleInstanceManager:
         """
         self.app = app
         self.lock_filename = lock_filename
-        self.lock_file_path: Optional[Path] = None
+        self.lock_file_path: Path | None = None
         self._lock_acquired = False
 
     def try_acquire_lock(self) -> bool:
@@ -48,7 +47,7 @@ class SingleInstanceManager:
             logger.info(f"Checking for existing instance using lock file: {self.lock_file_path}")
 
             # Check if lock file exists and is valid
-            if self.lock_file_path.exists():
+            if self.lock_file_path and self.lock_file_path.exists():
                 if self._is_lock_file_stale():
                     logger.info("Found stale lock file, removing it")
                     self._remove_lock_file()
@@ -80,7 +79,7 @@ class SingleInstanceManager:
                 return False
 
             # Read the lock file content
-            with open(self.lock_file_path, "r", encoding="utf-8") as f:
+            with open(self.lock_file_path, encoding="utf-8") as f:
                 content = f.read().strip()
 
             # Parse the lock file content
@@ -128,17 +127,15 @@ class SingleInstanceManager:
             # Cross-platform way to check if process is running
             if os.name == "nt":  # Windows
                 import subprocess
+
                 result = subprocess.run(
-                    ["tasklist", "/FI", f"PID eq {pid}"],
-                    capture_output=True,
-                    text=True,
-                    timeout=5
+                    ["tasklist", "/FI", f"PID eq {pid}"], capture_output=True, text=True, timeout=5
                 )
                 return str(pid) in result.stdout
-            else:  # Unix-like systems (macOS, Linux)
-                # Send signal 0 to check if process exists
-                os.kill(pid, 0)
-                return True
+            # Unix-like systems (macOS, Linux)
+            # Send signal 0 to check if process exists
+            os.kill(pid, 0)
+            return True
         except (OSError, subprocess.TimeoutExpired, subprocess.SubprocessError):
             return False
 
@@ -187,7 +184,7 @@ class SingleInstanceManager:
                 "AccessiWeather Already Running",
                 "AccessiWeather is already running.\n\n"
                 "Please check your system tray or taskbar for the existing instance.\n"
-                "If you cannot find it, please wait a moment and try again."
+                "If you cannot find it, please wait a moment and try again.",
             )
         except Exception as e:
             logger.error(f"Failed to show already running dialog: {e}")

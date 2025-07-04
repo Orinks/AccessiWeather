@@ -4,7 +4,7 @@ This module provides simple dataclasses for weather information,
 replacing the complex service layer architecture with straightforward data structures.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 
 
@@ -141,7 +141,7 @@ class WeatherAlert:
     instruction: str | None = None
     onset: datetime | None = None
     expires: datetime | None = None
-    areas: list[str] = None
+    areas: list[str] = field(default_factory=list)
 
     def __post_init__(self):
         if self.areas is None:
@@ -224,6 +224,7 @@ class AppSettings:
     auto_update_enabled: bool = True
     update_channel: str = "stable"  # "stable" or "dev"
     update_check_interval_hours: int = 24
+    debug_mode: bool = False
 
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
@@ -237,6 +238,7 @@ class AppSettings:
             "auto_update_enabled": self.auto_update_enabled,
             "update_channel": self.update_channel,
             "update_check_interval_hours": self.update_check_interval_hours,
+            "debug_mode": self.debug_mode,
         }
 
     @classmethod
@@ -252,6 +254,7 @@ class AppSettings:
             auto_update_enabled=data.get("auto_update_enabled", True),
             update_channel=data.get("update_channel", "stable"),
             update_check_interval_hours=data.get("update_check_interval_hours", 24),
+            debug_mode=data.get("debug_mode", False),
         )
 
 

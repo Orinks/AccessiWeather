@@ -39,6 +39,7 @@ class SettingsDialog:
         self.update_interval_input = None
         self.show_detailed_forecast_switch = None
         self.enable_alerts_switch = None
+        self.debug_mode_switch = None
 
         # Display tab controls
         self.temperature_unit_selection = None
@@ -203,6 +204,15 @@ class SettingsDialog:
             id="enable_alerts_switch",
         )
         general_box.add(self.enable_alerts_switch)
+
+        # Debug Mode
+        self.debug_mode_switch = toga.Switch(
+            "Enable Debug Mode",
+            value=getattr(self.current_settings, "debug_mode", False),
+            style=Pack(margin_bottom=10),
+            id="debug_mode_switch",
+        )
+        general_box.add(self.debug_mode_switch)
 
         # Add tab to container
         self.option_container.content.append("General", general_box)
@@ -525,6 +535,7 @@ class SettingsDialog:
             auto_update_enabled=auto_update_enabled,
             update_channel=update_channel,
             update_check_interval_hours=update_check_interval_hours,
+            debug_mode=self.debug_mode_switch.value,
         )
 
     def _initialize_update_info(self):

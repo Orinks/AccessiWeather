@@ -136,8 +136,6 @@ scripts/prd.txt
 scripts/PRD*.txt
 scripts/example_prd.txt
 scripts/task-complexity-report.json
-tasks/
-tasks.json
 tasks.json.bak
 tasks/*.txt
 .cursor/rules/taskmaster.mdc
@@ -166,4 +164,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 dev-debug.log
+
 # Task files
+# tasks.json
+# tasks/ 

@@ -9,7 +9,8 @@ import logging
 
 import toga
 from toga.style import Pack
-from toga.style.pack import COLUMN, ROW
+from travertino.constants import COLUMN, ROW
+from plyer import notification
 
 from .config import ConfigManager
 from .dialogs import AddLocationDialog, SettingsDialog
@@ -51,6 +52,7 @@ class AccessiWeatherApp(toga.App):
 
         # Weather data storage
         self.current_weather_data: WeatherData | None = None
+        self._last_alert_ids = set()  # Track previously notified alert IDs
 
     def startup(self):
         """Initialize the application."""
@@ -262,6 +264,20 @@ class AccessiWeatherApp(toga.App):
         # Control buttons section (matching wx interface)
         buttons_box = self._create_control_buttons_section()
         main_box.add(buttons_box)
+
+        # Debug/Test button (only if debug mode is enabled)
+        debug_mode = False
+        try:
+            debug_mode = self.config_manager.get_settings().debug_mode
+        except Exception as e:
+            logger.warning(f"Could not read debug_mode from settings: {e}")
+        if debug_mode:
+            self.test_notification_button = toga.Button(
+                "Send Test Notification",
+                on_press=self._on_test_notification_pressed,
+                style=Pack(padding_top=10, background_color="#e0e0e0"),
+            )
+            main_box.add(self.test_notification_button)
 
         # Set up main window
         self.main_window = toga.MainWindow(title=self.formal_name)
@@ -804,12 +820,11 @@ class AccessiWeatherApp(toga.App):
                 # Convert alerts data to table format for the simple app
                 alerts_table_data = self._convert_alerts_to_table_data(weather_data.alerts)
                 self.alerts_table.data = alerts_table_data
-                # Store the original alerts data for detail view
                 self.current_alerts_data = weather_data.alerts
-
-                # Enable/disable the view details button based on whether there are alerts
                 if self.alert_details_button:
                     self.alert_details_button.enabled = len(alerts_table_data) > 0
+                # Trigger notifications for new alerts
+                self._notify_new_alerts(weather_data.alerts)
 
             # Update displays
             if self.current_conditions_display:
@@ -844,6 +859,39 @@ class AccessiWeatherApp(toga.App):
             table_data.append((event, severity, headline))
 
         return table_data
+
+    def _notify_new_alerts(self, alerts):
+        """Send system notifications for new or changed alerts using Plyer."""
+        if not alerts or not alerts.has_alerts():
+            self._last_alert_ids = set()
+            return
+        active_alerts = alerts.get_active_alerts()
+        new_alerts = []
+        new_ids = set()
+        for alert in active_alerts:
+            alert_id = getattr(alert, 'id', None) or f"{alert.event}-{alert.severity}-{alert.headline}"
+            new_ids.add(alert_id)
+            if alert_id not in self._last_alert_ids:
+                new_alerts.append(alert)
+        # Only notify for new alerts
+        for alert in new_alerts:
+            title = alert.event or "Weather Alert"
+            message = alert.headline or "A new weather alert has been issued."
+            try:
+                notification.notify(
+                    title=title,
+                    message=message,
+                    app_name="AccessiWeather"
+                )
+                logger.info(
+                    f"Notification sent: {title} - "
+                    f"{message[:80]}{'...' if len(message) > 80 else ''}"
+                )
+            except Exception as e:
+                logger.error(
+                    f"Failed to send notification: {e}"
+                )
+        self._last_alert_ids = new_ids
 
     def _show_error_displays(self, error_message: str):
         """Show error message in weather displays."""
@@ -1013,6 +1061,20 @@ class AccessiWeatherApp(toga.App):
             except AttributeError:
                 # App not fully initialized, just log and continue
                 logger.info("App exit called before full initialization")
+
+    def _on_test_notification_pressed(self, widget):
+        """Send a test notification using Plyer."""
+        try:
+            notification.notify(
+                title="Test Notification",
+                message="This is a test notification from AccessiWeather (Debug Mode)",
+                app_name="AccessiWeather"
+            )
+            logger.info("Test notification sent successfully.")
+            self._update_status("Test notification sent.")
+        except Exception as e:
+            logger.error(f"Failed to send test notification: {e}")
+            self._update_status(f"Failed to send test notification: {e}")
 
 
 def main():
