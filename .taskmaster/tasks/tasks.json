@@ -1,0 +1,896 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Setup Toga Project Structure",
+        "description": "Initialize the project structure for the Toga-based AccessiWeather application.",
+        "details": "1. Install the latest version of BeeWare Toga (currently 0.3.1) using 'pip install toga==0.3.1'\n2. Create a new Toga project structure using 'briefcase new'\n3. Set up a virtual environment for the project\n4. Initialize git repository and create .gitignore file\n5. Copy over relevant non-GUI code from the wxPython version\n6. Update README.md with project details and setup instructions",
+        "testStrategy": "1. Verify that the project structure is created correctly\n2. Ensure all necessary files are present (pyproject.toml, app.py, etc.)\n3. Confirm that the application runs without errors using 'briefcase dev'",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set Up Development Environment for Toga",
+            "description": "Install Python 3 if not already present, create a new project directory, set up a virtual environment, and install Toga along with any required system dependencies.",
+            "dependencies": [],
+            "details": "1. Install Python 3 using the official installer or your OS package manager.\n2. Create a new directory for your Toga project and navigate into it.\n3. Set up a virtual environment using `python3 -m venv venv` and activate it.\n4. Install any necessary system packages (e.g., cairo, gtk3, gobject-introspection) as required by your platform.\n5. Install Toga in the virtual environment using `python -m pip install toga`.[1][3]",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Initialize Toga Project Structure",
+            "description": "Create the initial Toga application files and structure, ensuring the project is ready for code migration.",
+            "dependencies": [
+              1
+            ],
+            "details": "1. Create the main application Python file (e.g., `app.py`).\n2. Set up the basic Toga app structure, including the main class inheriting from `toga.App` and the `main()` entry point.\n3. Verify that a minimal Toga app runs successfully in your environment.[1][3]",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Migrate Code from wxPython to Toga",
+            "description": "Port the existing wxPython application logic and UI components to the Toga framework, adapting code as necessary.",
+            "dependencies": [
+              2
+            ],
+            "details": "1. Analyze the wxPython codebase to identify UI elements and logic to migrate.\n2. Replace wxPython widgets and event handling with their Toga equivalents.\n3. Refactor application logic to fit Toga's event-driven model and widget hierarchy.\n4. Test the migrated application to ensure feature parity and resolve any compatibility issues.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Implement Main Window and Layout",
+        "description": "Create the main application window and implement the basic layout structure using Toga's MainWindow and Box layout system.",
+        "details": "1. Create a MainWindow class that inherits from toga.MainWindow\n2. Implement a basic Box layout for the main content area\n3. Add placeholders for major UI components (weather display, forecast, alerts)\n4. Implement a basic menu structure using Toga's Command and Group classes\n5. Ensure the window is resizable and has appropriate minimum dimensions",
+        "testStrategy": "1. Verify that the main window opens with the correct title and size\n2. Check that the basic layout structure is visible\n3. Ensure the menu is present and clickable\n4. Test window resizing behavior",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Main Window Creation",
+            "description": "Set up the main application window using Toga's MainWindow class, ensuring it is properly instantiated and displayed as the application's primary interface.",
+            "dependencies": [],
+            "details": "Use toga.MainWindow to create the main window, set its title, and call the show() method to display it. This forms the foundation for all subsequent UI elements.[1][3][5]",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Establish Layout System",
+            "description": "Implement the layout system for the main window using Toga's Box containers and style system to organize child components.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a main Box container (e.g., toga.Box) and apply layout styles (such as COLUMN or ROW) to define how child widgets will be arranged within the window.[1][5]",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Add Component Placeholders",
+            "description": "Insert placeholder widgets (such as empty boxes or labels) into the layout to reserve space for future UI components.",
+            "dependencies": [
+              2
+            ],
+            "details": "Add placeholder widgets to the main Box to represent where future components (buttons, text fields, etc.) will be placed. This helps visualize and test the layout structure before full implementation.[1][5]",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Define Menu Structure",
+            "description": "Implement the menu system for the main window, ensuring it integrates with Toga's application and window structure.",
+            "dependencies": [
+              1
+            ],
+            "details": "Set up the menu for the main window, using Toga's built-in menu support. Define menu items and connect them to appropriate handlers as needed.[3][5]",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Migrate Weather Data Display",
+        "description": "Port the current weather data display from wxPython to Toga, ensuring all information is presented correctly.",
+        "details": "1. Replace wxPython StaticText widgets with Toga Label widgets for displaying weather information\n2. Use Toga's Box layout to arrange weather data elements\n3. Implement data binding between the weather service and UI components\n4. Ensure proper formatting and alignment of weather data\n5. Implement refresh functionality using Toga's Button widget and on_press event",
+        "testStrategy": "1. Verify that all weather data is displayed correctly\n2. Test data updates when refresh is triggered\n3. Check alignment and formatting of weather information\n4. Ensure accessibility of weather data elements using VoiceOver/NVDA",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Identify and Map UI Components",
+            "description": "Analyze existing wxPython weather data display widgets and map them to equivalent Toga UI components.",
+            "dependencies": [],
+            "details": "List all wxPython widgets used in the current weather display (e.g., panels, labels, buttons, charts) and identify corresponding Toga widgets.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Data Binding Logic",
+            "description": "Design and implement data binding between weather data sources and Toga UI components.",
+            "dependencies": [
+              1
+            ],
+            "details": "Ensure weather data updates are reflected in the UI by connecting data sources to Toga widgets, replacing wxPython data binding mechanisms.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Apply Data Formatting and Styling",
+            "description": "Translate data formatting and styling rules from wxPython to Toga.",
+            "dependencies": [
+              1
+            ],
+            "details": "Replicate the look and feel of the original display by applying equivalent formatting and styling in Toga, including fonts, colors, and layout.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement Refresh and Update Functionality",
+            "description": "Ensure the UI can refresh and update weather data in real-time or on demand.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Implement mechanisms for refreshing the display, such as timers or user-triggered updates, using Toga's event handling.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Integrate Accessibility Features",
+            "description": "Add or adapt accessibility features to ensure the Toga-based UI is accessible.",
+            "dependencies": [
+              1,
+              3
+            ],
+            "details": "Review and implement accessibility best practices for Toga widgets, such as keyboard navigation, screen reader support, and ARIA attributes.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Implement Forecast Display",
+        "description": "Migrate the forecast display functionality from wxPython to Toga, preserving all current features.",
+        "details": "1. Replace wxPython ListCtrl with Toga's Table widget for displaying forecast data\n2. Implement custom cell renderers if needed for specific forecast elements\n3. Ensure proper data binding between forecast service and Table widget\n4. Implement sorting functionality if present in the original version\n5. Add appropriate styling to match the original design",
+        "testStrategy": "1. Verify that forecast data is displayed correctly in the Table\n2. Test sorting functionality if implemented\n3. Check accessibility of the forecast table using screen readers\n4. Ensure keyboard navigation works for the forecast display",
+        "priority": "high",
+        "dependencies": [
+          3
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Table Creation",
+            "description": "Implement the basic table structure using Toga's Table widget.",
+            "dependencies": [],
+            "details": "Use Toga's Table class to create a table with initial data and headings.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Custom Renderers",
+            "description": "Develop custom renderers for specific data types in the table.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement custom rendering logic for complex data types.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Data Binding",
+            "description": "Bind dynamic data to the table, ensuring updates are reflected in real-time.",
+            "dependencies": [
+              1
+            ],
+            "details": "Use data accessors to link data sources to the table for dynamic updates.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Sorting Functionality",
+            "description": "Implement sorting capabilities for the table columns.",
+            "dependencies": [
+              1,
+              3
+            ],
+            "details": "Add event handlers to sort data when column headers are clicked.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Styling",
+            "description": "Apply custom styles to enhance the table's appearance and user experience.",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "details": "Use Toga's styling options to customize the table's layout and visual appeal.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Migrate Alert System",
+        "description": "Redesign and implement the notifications system for the weather app using Toga, ensuring timely and accessible notifications outside the main application window.",
+        "status": "pending",
+        "dependencies": [
+          2
+        ],
+        "priority": "high",
+        "details": "1. Implement a notification system using platform-native notifications (Windows Toast, macOS Notification Center, Linux DBus)\n2. Use asyncio for background notification checking\n3. Ensure notifications are keyboard accessible\n4. Implement notification sound playback using a cross-platform audio library like 'playsound'\n5. Create a notification preferences panel to allow users to customize notification behavior",
+        "testStrategy": "1. Verify that notifications appear correctly on all supported platforms\n2. Test notification interaction using both mouse and keyboard\n3. Check accessibility of notifications using screen readers\n4. Ensure notification sounds play correctly on all supported platforms\n5. Test notification preferences are correctly saved and applied",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Research platform-specific notification APIs",
+            "description": "Investigate the best approaches for implementing native notifications on Windows, macOS, and Linux",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Create notification abstraction layer",
+            "description": "Develop a platform-agnostic interface for sending notifications that will use the appropriate native API based on the operating system",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement notification sound system",
+            "description": "Add support for playing alert sounds when notifications appear, using a cross-platform audio library",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create notification preferences UI",
+            "description": "Design and implement a preferences panel allowing users to customize notification behavior, sounds, and display options",
+            "status": "pending",
+            "dependencies": [],
+            "details": "",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Implement Location Selection",
+        "description": "Migrate the location selection functionality from wxPython to Toga, including search and favorites.",
+        "details": "1. Replace wxPython Choice widget with Toga's Selection widget for location dropdown\n2. Implement location search using Toga's TextInput and Button widgets\n3. Create a custom Dialog for advanced location search if present in the original version\n4. Implement favorites management using Toga's Table widget and local storage\n5. Ensure proper data flow between location selection and weather/forecast updates",
+        "testStrategy": "1. Test location selection from dropdown and search\n2. Verify that favorites can be added, removed, and selected\n3. Check accessibility of location selection components\n4. Ensure keyboard navigation works for all location-related functionality",
+        "priority": "medium",
+        "dependencies": [
+          2
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Location Dropdown UI",
+            "description": "Create a dropdown component that displays a list of available locations, supporting hierarchical or grouped display if necessary.",
+            "dependencies": [],
+            "details": "Ensure the dropdown is accessible, responsive, and can handle a large number of locations. Consider using a tree-like structure for regions and sub-regions if the dataset is large.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Develop Location Search Functionality",
+            "description": "Add a search input to the dropdown that allows users to quickly find locations by typing, with auto-completion and disambiguation for similar names.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement auto-complete suggestions after a minimum number of characters. Display multiple results for ambiguous queries and order them by popularity or relevance.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Favorites Management",
+            "description": "Enable users to mark locations as favorites, view their favorite locations, and manage (add/remove) them within the dropdown.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Persist favorite locations using local storage or user profile data. Display favorites at the top of the dropdown for quick access.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Integrate Data Flow with Weather System",
+            "description": "Connect the selected location (from dropdown, search, or favorites) to the weather data system, ensuring seamless data retrieval and UI updates.",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Ensure that selecting a location triggers the appropriate data fetch and updates the weather display. Handle edge cases such as invalid or unavailable locations.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Migrate Settings Dialog",
+        "description": "Port the settings/preferences dialog from wxPython to Toga, maintaining all configuration options.",
+        "details": "1. Create a new Toga Dialog subclass for the settings window\n2. Implement all configuration options using appropriate Toga widgets (Switch, TextInput, Selection, etc.)\n3. Organize settings into logical groups using Box layouts\n4. Implement 'Save' and 'Cancel' functionality\n5. Ensure settings persistence using a configuration file or local storage\n6. Add a Command to the main menu to open the settings dialog",
+        "testStrategy": "1. Verify that all settings options are present and functional\n2. Test saving and canceling changes\n3. Check that settings persist across application restarts\n4. Ensure settings dialog is fully accessible via keyboard and screen readers",
+        "priority": "medium",
+        "dependencies": [
+          2
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Settings Dialog Structure",
+            "description": "Design and implement the main settings dialog window, establishing its layout and navigation structure.",
+            "dependencies": [],
+            "details": "This includes setting up the dialog container, window title, and basic navigation (tabs, sections, or sidebar) to organize different settings categories.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Settings Widgets",
+            "description": "Develop and integrate UI widgets for each settings option (e.g., checkboxes, dropdowns, text fields) within the dialog.",
+            "dependencies": [
+              1
+            ],
+            "details": "Ensure each widget is appropriately placed within its category and supports user interaction and validation.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Organize Settings Categories",
+            "description": "Group related settings into logical categories or sections within the dialog for improved usability.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Define clear categories (e.g., General, Appearance, Notifications) and move widgets into their respective sections.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement Settings Persistence",
+            "description": "Ensure that changes made in the settings dialog are saved to and loaded from persistent storage.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Connect UI widgets to the underlying settings storage mechanism, handling save, load, and reset operations.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Integrate Dialog with Application Menu",
+            "description": "Add an entry to the application's main menu or toolbar to open the settings dialog.",
+            "dependencies": [
+              1,
+              4
+            ],
+            "details": "Ensure the dialog can be launched from the menu and that its state is consistent with the application's current settings.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Implement Keyboard Shortcuts",
+        "description": "Migrate all existing keyboard shortcuts to Toga and implement any missing accessibility shortcuts.",
+        "details": "1. Identify all existing keyboard shortcuts from the wxPython version\n2. Implement shortcuts using Toga's accelerator key functionality in Commands\n3. Add additional accessibility shortcuts as needed (e.g., for navigating between major UI sections)\n4. Create a keyboard shortcut overlay or help dialog to display available shortcuts\n5. Ensure all shortcuts work consistently across supported platforms",
+        "testStrategy": "1. Test each keyboard shortcut for correct functionality\n2. Verify that shortcuts work on all supported platforms\n3. Check for any conflicts between shortcuts\n4. Ensure the shortcut help overlay is accessible and accurate",
+        "priority": "medium",
+        "dependencies": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Shortcut Identification",
+            "description": "Identify necessary keyboard shortcuts for the application, considering cross-platform compatibility and user convenience.",
+            "dependencies": [],
+            "details": "Analyze existing shortcuts in similar applications and define a set of shortcuts that are intuitive and consistent across different platforms.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implementation in Toga",
+            "description": "Implement identified shortcuts using Toga's Key and Command systems, ensuring compatibility with various keyboard layouts.",
+            "dependencies": [
+              1
+            ],
+            "details": "Use Toga's Key constants and modifier keys to define shortcuts, and integrate them with the application's commands.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Help Overlay Creation",
+            "description": "Design and implement a help overlay to display available shortcuts to users, enhancing usability and accessibility.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create a visually appealing overlay that lists all available shortcuts, ensuring it is easily accessible and understandable for users.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Migrate Background Operations",
+        "description": "Port all background operations and timers from wxPython to asyncio tasks in Toga.",
+        "details": "1. Identify all background operations in the wxPython version (e.g., periodic weather updates, alert checking)\n2. Reimplement each operation as an asyncio coroutine\n3. Use asyncio.create_task() to run background operations\n4. Implement a task management system to handle starting, stopping, and monitoring background tasks\n5. Ensure proper error handling and logging for background tasks\n6. Update the UI using Toga's main thread to avoid race conditions",
+        "testStrategy": "1. Verify that all background operations function correctly\n2. Test error handling and recovery for network issues or API problems\n3. Check that UI updates from background tasks are smooth and don't cause freezing\n4. Ensure background tasks don't interfere with user interactions",
+        "priority": "high",
+        "dependencies": [
+          3,
+          4,
+          5
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Identify Background Operations",
+            "description": "Catalog all current background operations in the application, including their triggers, dependencies, and interactions with the UI.",
+            "dependencies": [],
+            "details": "Review the existing codebase to list all operations currently handled in the background, noting which are event-driven and how they interact with wxPython's event system.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Design Asyncio Integration",
+            "description": "Plan how to migrate identified operations to use asyncio, considering event loop management and compatibility with the application's architecture.",
+            "dependencies": [
+              1
+            ],
+            "details": "Determine which operations are suitable for asyncio coroutines, how to manage the event loop, and how to integrate with any existing synchronous code.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Asyncio-Based Operations",
+            "description": "Rewrite background operations using async/await syntax and asyncio tasks, ensuring non-blocking execution and proper scheduling.",
+            "dependencies": [
+              2
+            ],
+            "details": "Convert blocking or event-based logic to asynchronous coroutines, using asyncio best practices such as avoiding long-running synchronous loops and leveraging tasks for concurrent execution[1][3].",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Manage Task Lifecycle and Concurrency",
+            "description": "Establish robust task management, including creation, cancellation, and tracking of asyncio tasks to prevent resource leaks and ensure correct operation sequencing.",
+            "dependencies": [
+              3
+            ],
+            "details": "Implement mechanisms to monitor and control the lifecycle of background tasks, handle task cancellation, and coordinate concurrent operations safely[1].",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement Error Handling and UI Updates",
+            "description": "Add comprehensive error handling for async tasks and ensure thread-safe updates to the wxPython UI from asyncio coroutines.",
+            "dependencies": [
+              4
+            ],
+            "details": "Catch and log exceptions in async tasks, propagate errors to the UI as needed, and use thread-safe methods (such as wx.CallAfter) to update UI elements from async code[3][5].",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Optimize Performance and Event Loop Responsiveness",
+            "description": "Profile and optimize the new asyncio-based background operations to minimize event loop blocking and maximize responsiveness.",
+            "dependencies": [
+              5
+            ],
+            "details": "Identify and refactor any remaining blocking code, use diagnostic tools to monitor event loop health, and optimize coroutine scheduling to ensure smooth UI and background operation performance[1][4].",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Implement Error Handling and Logging",
+        "description": "Migrate and enhance the error handling and logging system for the Toga-based application.",
+        "details": "1. Implement a centralized error handling system using Python's logging module\n2. Create custom exception classes for application-specific errors\n3. Implement error dialogs using Toga's Dialog class for critical errors\n4. Add non-intrusive error notifications for non-critical issues\n5. Implement a log viewer within the application for easy troubleshooting\n6. Ensure all errors are properly caught and logged throughout the application",
+        "testStrategy": "1. Simulate various error conditions and verify proper handling\n2. Check that error messages are clear and actionable\n3. Verify that the log viewer displays all relevant information\n4. Ensure error handling doesn't break application flow or accessibility",
+        "priority": "medium",
+        "dependencies": [
+          2,
+          9
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Logging Implementation",
+            "description": "Implement a logging system to record errors, warnings, and informational messages throughout the application.",
+            "dependencies": [],
+            "details": "Configure log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL), set up log file rotation, and ensure logs are written to persistent storage.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Exception Handling",
+            "description": "Develop robust exception handling mechanisms to catch, process, and manage errors at runtime.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement try-except blocks, custom exception classes, and exception chaining to provide meaningful error context and prevent application crashes.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Error Dialogs",
+            "description": "Design and implement user-friendly error dialogs to inform users of issues and guide them toward resolution.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create modal or non-modal dialogs that display clear, actionable error messages and suggest next steps.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Log Viewer Creation",
+            "description": "Build a log viewer interface to allow users and administrators to inspect and filter application logs.",
+            "dependencies": [
+              1
+            ],
+            "details": "Develop a UI component that loads, filters, and displays log entries from persistent storage, supporting search and export functionality.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "title": "Optimize Performance",
+        "description": "Analyze and optimize the performance of the Toga-based application to match or exceed the wxPython version.",
+        "details": "1. Profile the application to identify performance bottlenecks\n2. Optimize data loading and caching mechanisms\n3. Implement lazy loading for non-critical UI elements\n4. Optimize asyncio usage for efficient background operations\n5. Minimize redraws and layout recalculations\n6. Implement efficient data structures for storing and retrieving weather data",
+        "testStrategy": "1. Conduct performance benchmarks comparing Toga version to wxPython version\n2. Test application responsiveness under various conditions (low memory, high CPU usage)\n3. Verify smooth scrolling and interaction in the UI\n4. Ensure optimizations don't negatively impact accessibility or functionality",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          4,
+          5,
+          9
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Profile Application Performance",
+            "description": "Use profiling tools to identify performance bottlenecks in the application, focusing on CPU, memory, and I/O usage.",
+            "dependencies": [],
+            "details": "Leverage tools such as New Relic, Dynatrace, or built-in profilers to gather data on where the application spends the most resources. Document key hotspots and areas for improvement.[5][2]",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Optimize Data Handling and Storage",
+            "description": "Improve data-related performance by optimizing database queries, schema design, and caching strategies.",
+            "dependencies": [
+              1
+            ],
+            "details": "Analyze and refactor inefficient queries, implement proper indexing, and introduce caching for frequently accessed data. Ensure the database schema supports efficient data retrieval and storage.[1][5][3]",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Enhance UI Responsiveness",
+            "description": "Optimize the user interface to ensure fast load times and smooth interactions.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement lazy loading, minimize render-blocking resources, and reduce unnecessary UI updates. Focus on delivering a seamless user experience by addressing front-end bottlenecks.[3]",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Optimize Asynchronous and Concurrent Operations",
+            "description": "Refactor code to leverage asynchronous programming and concurrency for improved responsiveness and throughput.",
+            "dependencies": [
+              1
+            ],
+            "details": "Identify I/O-bound and CPU-bound tasks that can benefit from async/await patterns or multithreading. Ensure proper resource management and avoid common pitfalls in async code.[1][3]",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Conduct Benchmark Testing and Validate Improvements",
+            "description": "Design and execute benchmark tests to measure the impact of optimizations and ensure performance goals are met.",
+            "dependencies": [
+              2,
+              3,
+              4
+            ],
+            "details": "Use benchmarking tools to compare pre- and post-optimization metrics. Analyze results to confirm that changes have led to measurable improvements without introducing regressions.[2][5]",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "title": "Update Testing Suite",
+        "description": "Migrate and enhance the existing test suite to work with the Toga-based application.",
+        "details": "1. Update unit tests to work with Toga components instead of wxPython\n2. Implement integration tests using Toga's testing utilities\n3. Create UI tests using a tool like pytest-gui or a custom Toga UI testing framework\n4. Implement accessibility-specific tests\n5. Set up CI/CD pipeline using GitHub Actions or similar for automated testing\n6. Implement performance tests to ensure optimizations are maintained",
+        "testStrategy": "1. Verify that all tests pass consistently\n2. Ensure good test coverage across all components and features\n3. Conduct manual testing to complement automated tests\n4. Regularly run full test suite during development to catch regressions",
+        "priority": "high",
+        "dependencies": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          9,
+          10
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Update and Expand Unit Tests for Toga Core Components",
+            "description": "Develop and refine unit tests targeting Toga core components to ensure platform-independent logic is thoroughly validated. Focus on verifying core functionality, such as property assignments and method outputs, using standard Python testing frameworks.",
+            "dependencies": [],
+            "details": "Review existing unit tests for Toga core modules. Identify gaps and add new tests for recently added or modified components. Ensure tests are backend-agnostic and validate core logic, such as widget properties and behaviors.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Design and Implement Integration Tests for Toga Backends",
+            "description": "Create integration tests to verify that Toga core components interact correctly with various platform backends. Ensure that backend implementations conform to defined requirements and interface contracts.",
+            "dependencies": [
+              1
+            ],
+            "details": "Develop tests that instantiate Toga widgets and simulate interactions across supported backends. Use inspection and requirement definition strategies to ensure consistent implementation and naming across platforms.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Develop Custom UI Testing Solutions for Toga Applications",
+            "description": "Establish a UI testing framework tailored to Toga's unique architecture, enabling automated testing of user interface elements and interactions. Address the lack of mature third-party tools for Toga by exploring or building custom solutions.",
+            "dependencies": [
+              2
+            ],
+            "details": "Research available UI testing tools for Toga or similar frameworks. If necessary, implement custom scripts or harnesses to simulate user actions and verify UI state changes. Ensure tests are maintainable and can run across different platforms.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement Accessibility Testing for Toga Components",
+            "description": "Integrate accessibility checks into the testing suite to ensure Toga applications meet accessibility standards. Develop or adapt tools to validate accessibility features within Toga's UI components.",
+            "dependencies": [
+              3
+            ],
+            "details": "Identify accessibility requirements relevant to Toga applications. Develop automated tests or scripts to check for compliance, such as keyboard navigation, screen reader compatibility, and proper labeling of UI elements.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Configure CI/CD Pipeline for Automated Test Execution",
+            "description": "Set up and optimize a CI/CD pipeline to automatically run the full suite of unit, integration, UI, and accessibility tests on code changes. Ensure reliable reporting and fast feedback for developers.",
+            "dependencies": [
+              4
+            ],
+            "details": "Select and configure CI/CD tools (e.g., GitHub Actions, GitLab CI) to execute all test types on supported platforms. Integrate test reporting and notifications. Address any platform-specific challenges for running Toga UI and integration tests in CI environments.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 15,
+        "title": "Update Documentation",
+        "description": "Revise and expand the project documentation to reflect the Toga-based implementation.",
+        "details": "1. Update the README.md with new setup and running instructions\n2. Create a CONTRIBUTING.md file with guidelines for contributors\n3. Update or create user documentation explaining all features and accessibility options\n4. Document the application architecture and key design decisions\n5. Create API documentation for any public modules or classes\n6. Update troubleshooting guides and FAQs\n7. Document known issues and limitations compared to the wxPython version",
+        "testStrategy": "1. Review all documentation for accuracy and completeness\n2. Verify that setup instructions work on all supported platforms\n3. Have team members follow documentation to ensure clarity\n4. Ensure documentation is accessible and easy to navigate",
+        "priority": "medium",
+        "dependencies": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          13,
+          14
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Update User Documentation",
+            "description": "Review and update user documentation to ensure it aligns with the latest software changes and features.",
+            "dependencies": [],
+            "details": "Focus on clarity and readability, ensuring that users can easily understand how to use the software.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Update Developer Documentation",
+            "description": "Update developer documentation to reflect any changes in the codebase, APIs, or development processes.",
+            "dependencies": [],
+            "details": "Ensure that the documentation is accurate and useful for developers, including code examples and technical details.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Update API Documentation",
+            "description": "Review and update API documentation to ensure it accurately describes all API endpoints, parameters, and responses.",
+            "dependencies": [],
+            "details": "Use tools like Treblle to automate the process and ensure consistency across all API documentation.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Update Troubleshooting Guides",
+            "description": "Update troubleshooting guides to include solutions for common issues and reflect any changes in the software.",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Ensure that the guides are comprehensive and easy to follow, providing step-by-step solutions to common problems.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 16,
+        "title": "Implement Debug Mode",
+        "description": "Add a debug mode to the Toga app that can be enabled via a checkbox in the settings dialog, displaying additional debug/testing buttons throughout the UI for development purposes.",
+        "details": "1. Add a debug mode checkbox to the existing settings dialog (Task 7)\n2. Implement a configuration option to store the debug mode state\n3. Create a DebugManager class to handle the debug state and provide access throughout the app\n4. Design and implement debug buttons with the following functionality:\n   - Test notification button to trigger sample notifications without real data\n   - Simulate weather alert button to test the alert system\n   - Force data refresh button to test weather data updates\n   - Log viewer button to quickly access application logs\n5. Add these debug buttons strategically throughout the UI:\n   - In the main weather display area\n   - In the forecast display section\n   - In the alert system interface\n6. Ensure debug buttons are only visible when debug mode is enabled\n7. Style debug buttons distinctly (e.g., with a different color or icon) to clearly indicate they are for development use\n8. Implement persistence of the debug mode setting using the app's configuration system\n9. Add appropriate documentation in code comments explaining each debug feature\n10. Ensure debug features don't interfere with normal application operation when enabled",
+        "testStrategy": "1. Verify that the debug mode checkbox appears correctly in the settings dialog\n2. Test enabling and disabling debug mode and confirm debug buttons appear/disappear accordingly\n3. Verify that the debug mode state persists across application restarts\n4. Test each debug button to ensure it performs its intended function:\n   - Confirm test notifications appear correctly\n   - Verify simulated weather alerts trigger the alert system\n   - Check that force data refresh updates the display\n   - Ensure the log viewer displays application logs correctly\n5. Verify that debug buttons are styled distinctly from regular UI elements\n6. Test the application with debug mode enabled to ensure it doesn't impact normal functionality\n7. Verify that debug mode works correctly across all supported platforms\n8. Check that debug buttons are accessible via keyboard navigation and screen readers",
+        "status": "pending",
+        "dependencies": [
+          7,
+          10,
+          5,
+          3,
+          4
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Add Debug Mode Checkbox to Settings Dialog",
+            "description": "Integrate a checkbox into the existing settings dialog to allow users to enable or disable debug mode.",
+            "dependencies": [],
+            "details": "Modify the settings dialog UI to include a new checkbox labeled 'Enable Debug Mode'. Ensure the checkbox state can be read and updated by the application.",
+            "status": "pending",
+            "testStrategy": "Verify that the checkbox appears in the settings dialog and that toggling it updates the internal state."
+          },
+          {
+            "id": 2,
+            "title": "Implement Debug Mode State Persistence",
+            "description": "Create a configuration option to store and retrieve the debug mode state across app sessions.",
+            "dependencies": [
+              1
+            ],
+            "details": "Update the app's configuration system to persist the debug mode setting. Ensure the setting is loaded at startup and saved when changed.",
+            "status": "pending",
+            "testStrategy": "Test that enabling/disabling debug mode persists after restarting the app."
+          },
+          {
+            "id": 3,
+            "title": "Develop DebugManager Class",
+            "description": "Design and implement a DebugManager class to manage the debug state and provide access throughout the app.",
+            "dependencies": [
+              2
+            ],
+            "details": "The DebugManager should expose methods to check if debug mode is enabled and notify relevant UI components of state changes.",
+            "status": "pending",
+            "testStrategy": "Unit test the DebugManager to ensure correct state management and notification."
+          },
+          {
+            "id": 4,
+            "title": "Implement and Integrate Debug Buttons",
+            "description": "Design and add debug/testing buttons (test notification, simulate weather alert, force data refresh, log viewer) to key UI areas, ensuring they are only visible in debug mode.",
+            "dependencies": [
+              3
+            ],
+            "details": "Add the specified debug buttons to the main weather display, forecast section, and alert interface. Style them distinctly and ensure their visibility is controlled by the DebugManager.",
+            "status": "pending",
+            "testStrategy": "Check that debug buttons appear only when debug mode is enabled and that each button performs its intended function."
+          },
+          {
+            "id": 5,
+            "title": "Document and Safeguard Debug Features",
+            "description": "Add comprehensive code comments explaining each debug feature and ensure debug features do not interfere with normal app operation.",
+            "dependencies": [
+              4
+            ],
+            "details": "Review all debug-related code for clear documentation and implement safeguards to prevent debug features from affecting production behavior.",
+            "status": "pending",
+            "testStrategy": "Conduct code review for documentation quality and test normal app workflows with debug mode both enabled and disabled."
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-07-04T17:29:34.287Z",
+      "updated": "2025-07-04T18:01:29.472Z",
+      "description": "Tasks for toga-migration context"
+    }
+  }
+}
