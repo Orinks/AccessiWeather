@@ -1,6 +1,6 @@
 toga>=0.4.0
 requests>=2.0
-plyer
+desktop-notifier
 geopy
 python-dateutil
 beautifulsoup4>=4.0
