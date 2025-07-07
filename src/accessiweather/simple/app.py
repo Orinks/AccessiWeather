@@ -10,7 +10,6 @@ import logging
 import toga
 from toga.style import Pack
 from travertino.constants import COLUMN, ROW
-from plyer import notification
 
 from .config import ConfigManager
 from .dialogs import AddLocationDialog, SettingsDialog
@@ -53,6 +52,9 @@ class AccessiWeatherApp(toga.App):
         # Weather data storage
         self.current_weather_data: WeatherData | None = None
         self._last_alert_ids = set()  # Track previously notified alert IDs
+
+        # Notification system
+        self._notifier = None  # Will be initialized in startup
 
     def startup(self):
         """Initialize the application."""
@@ -153,6 +155,11 @@ class AccessiWeatherApp(toga.App):
         # Formatter
         config = self.config_manager.get_config()
         self.formatter = WxStyleWeatherFormatter(config.settings)
+
+        # Notification system
+        from ..notifications.toast_notifier import SafeDesktopNotifier
+
+        self._notifier = SafeDesktopNotifier()
 
         # Initialize system tray
         self._initialize_system_tray()
@@ -869,7 +876,9 @@ class AccessiWeatherApp(toga.App):
         new_alerts = []
         new_ids = set()
         for alert in active_alerts:
-            alert_id = getattr(alert, 'id', None) or f"{alert.event}-{alert.severity}-{alert.headline}"
+            alert_id = (
+                getattr(alert, "id", None) or f"{alert.event}-{alert.severity}-{alert.headline}"
+            )
             new_ids.add(alert_id)
             if alert_id not in self._last_alert_ids:
                 new_alerts.append(alert)
@@ -878,19 +887,13 @@ class AccessiWeatherApp(toga.App):
             title = alert.event or "Weather Alert"
             message = alert.headline or "A new weather alert has been issued."
             try:
-                notification.notify(
-                    title=title,
-                    message=message,
-                    app_name="AccessiWeather"
-                )
+                self._notifier.send_notification(title=title, message=message)
                 logger.info(
                     f"Notification sent: {title} - "
                     f"{message[:80]}{'...' if len(message) > 80 else ''}"
                 )
             except Exception as e:
-                logger.error(
-                    f"Failed to send notification: {e}"
-                )
+                logger.error(f"Failed to send notification: {e}")
         self._last_alert_ids = new_ids
 
     def _show_error_displays(self, error_message: str):
@@ -1063,12 +1066,11 @@ class AccessiWeatherApp(toga.App):
                 logger.info("App exit called before full initialization")
 
     def _on_test_notification_pressed(self, widget):
-        """Send a test notification using Plyer."""
+        """Send a test notification using desktop-notifier."""
         try:
-            notification.notify(
+            self._notifier.send_notification(
                 title="Test Notification",
                 message="This is a test notification from AccessiWeather (Debug Mode)",
-                app_name="AccessiWeather"
             )
             logger.info("Test notification sent successfully.")
             self._update_status("Test notification sent.")

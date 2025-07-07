@@ -8,6 +8,7 @@ import pytest
 from dateutil.parser import isoparse  # type: ignore # requires python-dateutil
 
 from accessiweather.notifications import SafeToastNotifier, WeatherNotifier
+from accessiweather.notifications.toast_notifier import SafeDesktopNotifier
 
 # --- Test Data ---
 
@@ -330,7 +331,9 @@ def test_get_sorted_alerts(notifier):
 def test_safe_toast_success():
     """Test successful toast notification."""
     with (
-        patch("accessiweather.notifications.toast_notifier.notification") as mock_notify,
+        patch(
+            "accessiweather.notifications.toast_notifier.SafeDesktopNotifier"
+        ) as mock_notifier_class,
         patch("accessiweather.notifications.toast_notifier.sys") as mock_sys,
     ):
         # Create a modules dict without pytest
@@ -338,19 +341,26 @@ def test_safe_toast_success():
         mock_modules.pop("pytest", None)
         mock_sys.modules = mock_modules
 
+        # Mock the SafeDesktopNotifier instance
+        mock_notifier_instance = MagicMock()
+        mock_notifier_instance.send_notification.return_value = True
+        mock_notifier_class.return_value = mock_notifier_instance
+
         toaster = SafeToastNotifier()
         result = toaster.show_toast(title="Test Title", msg="Test Message", duration=5)
 
         assert result is True
-        mock_notify.notify.assert_called_once_with(
-            title="Test Title", message="Test Message", app_name="AccessiWeather", timeout=5
+        mock_notifier_instance.send_notification.assert_called_once_with(
+            "Test Title", "Test Message", 5
         )
 
 
 def test_safe_toast_exception():
     """Test toast notification with exception."""
     with (
-        patch("accessiweather.notifications.toast_notifier.notification") as mock_notify,
+        patch(
+            "accessiweather.notifications.toast_notifier.SafeDesktopNotifier"
+        ) as mock_notifier_class,
         patch("accessiweather.notifications.toast_notifier.sys") as mock_sys,
     ):
         # Create a modules dict without pytest
@@ -358,7 +368,11 @@ def test_safe_toast_exception():
         mock_modules.pop("pytest", None)
         mock_sys.modules = mock_modules
 
-        mock_notify.notify.side_effect = Exception("Test error")
+        # Mock the SafeDesktopNotifier instance to raise exception
+        mock_notifier_instance = MagicMock()
+        mock_notifier_instance.send_notification.return_value = False
+        mock_notifier_class.return_value = mock_notifier_instance
+
         toaster = SafeToastNotifier()
         result = toaster.show_toast(title="Test Title", msg="Test Message")
 
@@ -369,8 +383,57 @@ def test_safe_toast_pytest():
     """Test toast notification in pytest environment."""
     # pytest is already in sys.modules when running these tests
     toaster = SafeToastNotifier()
-    with patch("accessiweather.notifications.toast_notifier.notification") as mock_notify:
+    with patch(
+        "accessiweather.notifications.toast_notifier.SafeDesktopNotifier"
+    ) as mock_notifier_class:
+        mock_notifier_instance = MagicMock()
+        mock_notifier_class.return_value = mock_notifier_instance
+
         result = toaster.show_toast(title="Test Title", msg="Test Message")
 
         assert result is True
-        mock_notify.notify.assert_not_called()
+        # In pytest environment, it should just log and return True without calling the notifier
+        mock_notifier_instance.send_notification.assert_not_called()
+
+
+# --- SafeDesktopNotifier Tests ---
+
+
+def test_safe_desktop_notifier_success():
+    """Test successful desktop notification."""
+    with patch(
+        "accessiweather.notifications.toast_notifier.DesktopNotifier"
+    ) as mock_desktop_notifier_class:
+        mock_desktop_notifier_instance = MagicMock()
+        mock_desktop_notifier_class.return_value = mock_desktop_notifier_instance
+
+        # Mock the async send method
+        async def mock_send(*args, **kwargs):
+            return None
+
+        mock_desktop_notifier_instance.send = mock_send
+
+        notifier = SafeDesktopNotifier()
+        result = notifier.send_notification("Test Title", "Test Message", 10)
+
+        assert result is True
+
+
+def test_safe_desktop_notifier_exception():
+    """Test desktop notification with exception."""
+    with patch(
+        "accessiweather.notifications.toast_notifier.DesktopNotifier"
+    ) as mock_desktop_notifier_class:
+        mock_desktop_notifier_instance = MagicMock()
+        mock_desktop_notifier_class.return_value = mock_desktop_notifier_instance
+
+        # Mock the async send method to raise exception
+        async def mock_send(*args, **kwargs):
+            raise Exception("Test error")
+
+        mock_desktop_notifier_instance.send = mock_send
+
+        notifier = SafeDesktopNotifier()
+        result = notifier.send_notification("Test Title", "Test Message", 10)
+
+        assert result is False

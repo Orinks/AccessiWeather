@@ -14,7 +14,7 @@ requires-python = ">=3.7"
 dependencies = [
     "toga",
 
-    "plyer",
+    "desktop-notifier",
     "geopy",
     "python-dateutil",
     "beautifulsoup4",
@@ -148,6 +148,7 @@ test_sources = [
 requires = [
     "httpx>=0.20.0",
     "python-dateutil",
+    "desktop-notifier",
 ]
 test_requires = [
     "pytest>=7.0.0",
