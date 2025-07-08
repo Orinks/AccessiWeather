@@ -27,6 +27,7 @@ class AccessiWeatherApp(toga.App):
     """Simple AccessiWeather application using Toga."""
 
     def __init__(self, *args, **kwargs):
+        """Initialize the AccessiWeather application."""
         super().__init__(*args, **kwargs)
 
         # Core components
@@ -65,6 +66,9 @@ class AccessiWeatherApp(toga.App):
             self.single_instance_manager = SingleInstanceManager(self)
             if not self.single_instance_manager.try_acquire_lock():
                 logger.info("Another instance is already running, showing dialog and exiting")
+                # Create a minimal main window to satisfy Toga's requirements
+                self.main_window = toga.MainWindow(title=self.formal_name)
+                self.main_window.content = toga.Box()
                 asyncio.create_task(self._handle_already_running())
                 return
 
@@ -84,6 +88,10 @@ class AccessiWeatherApp(toga.App):
 
         except Exception as e:
             logger.error(f"Failed to start application: {e}")
+            # Create a minimal main window to satisfy Toga's requirements
+            if not hasattr(self, "main_window") or self.main_window is None:
+                self.main_window = toga.MainWindow(title=self.formal_name)
+                self.main_window.content = toga.Box()
             self._show_error_dialog("Startup Error", f"Failed to start application: {e}")
 
     async def _handle_already_running(self):
@@ -93,10 +101,11 @@ class AccessiWeatherApp(toga.App):
         except Exception as e:
             logger.error(f"Failed to show already running dialog: {e}")
         finally:
-            self.exit()
+            # Use request_exit to allow proper cleanup through on_exit handler
+            self.request_exit()
 
     async def on_running(self):
-        """Called when the app starts running - start background tasks."""
+        """Start background tasks when the app starts running."""
         logger.info("Application is now running, starting background tasks")
 
         try:
@@ -221,8 +230,8 @@ class AccessiWeatherApp(toga.App):
             # Separator group for organization
             self.tray_separator_group = toga.Group("Actions", parent=self.status_icon)
 
-            # Exit command
-            self.exit_command = toga.Command(
+            # Create a system tray exit command using the standard exit command pattern
+            self.tray_exit_command = toga.Command(
                 self._on_tray_exit,
                 text="Exit AccessiWeather",
                 group=self.tray_separator_group,
@@ -234,7 +243,7 @@ class AccessiWeatherApp(toga.App):
                 self.show_hide_command,
                 self.refresh_command,
                 self.tray_settings_command,
-                self.exit_command,
+                self.tray_exit_command,
             )
 
             logger.info("System tray commands created")
@@ -413,16 +422,24 @@ class AccessiWeatherApp(toga.App):
         """Create the application menu system."""
         logger.info("Creating menu system")
 
-        # File menu
-        file_group = toga.Group("File")
+        # Use built-in File group to avoid duplicate File menus
         settings_cmd = toga.Command(
             self._on_settings_pressed,
             text="Settings",
             tooltip="Open application settings",
-            group=file_group,
+            group=toga.Group.FILE,
         )
 
-        # Location menu
+        # Add Exit command to File menu
+        exit_cmd = toga.Command(
+            lambda widget: self.request_exit(),
+            text="Exit",
+            tooltip="Exit the application",
+            group=toga.Group.FILE,
+            section=1,  # Put in a separate section after Settings
+        )
+
+        # Location menu (custom group)
         location_group = toga.Group("Location")
         add_location_cmd = toga.Command(
             self._on_add_location_pressed,
@@ -431,23 +448,24 @@ class AccessiWeatherApp(toga.App):
             group=location_group,
         )
 
-        # View menu
-        view_group = toga.Group("View")
+        # Use built-in View group to avoid duplicate View menus
         refresh_cmd = toga.Command(
             self._on_refresh_pressed,
             text="Refresh",
             tooltip="Refresh weather data",
-            group=view_group,
+            group=toga.Group.VIEW,
         )
 
-        # Help menu
-        help_group = toga.Group("Help")
-        about_cmd = toga.Command(
-            self._on_about_pressed, text="About", tooltip="About AccessiWeather", group=help_group
-        )
+        # Add commands to app (About command is automatically provided by Toga)
+        self.commands.add(settings_cmd, exit_cmd, add_location_cmd, refresh_cmd)
 
-        # Add commands to app
-        self.commands.add(settings_cmd, add_location_cmd, refresh_cmd, about_cmd)
+        # Override the default About command to use our custom handler
+        if toga.Command.ABOUT in self.commands:
+            self.commands[toga.Command.ABOUT].action = self._on_about_pressed
+
+        # Override the default Exit command to use request_exit (if it exists)
+        if toga.Command.EXIT in self.commands:
+            self.commands[toga.Command.EXIT].action = lambda widget: self.request_exit()
 
         logger.info("Menu system created")
 
@@ -688,7 +706,11 @@ class AccessiWeatherApp(toga.App):
                 f"Are you sure you want to remove '{location_name}' from your locations?\n\n"
                 f"This action cannot be undone.",
             )
-            return result
+            return await self.main_window.confirm_dialog(
+                "Remove Location",
+                f"Are you sure you want to remove '{location_name}' from your locations?\n\n"
+                f"This action cannot be undone.",
+            )
         except Exception as e:
             logger.error(f"Error showing confirmation dialog: {e}")
             # Fallback to a simple info dialog if question dialog fails
@@ -1042,28 +1064,28 @@ class AccessiWeatherApp(toga.App):
         """Exit application from system tray."""
         try:
             logger.info("Exiting application from system tray")
-            # Release single instance lock before exiting
-            if self.single_instance_manager:
-                self.single_instance_manager.release_lock()
-            self.exit()
+            # Use request_exit to allow proper cleanup through on_exit handler
+            self.request_exit()
         except Exception as e:
             logger.error(f"Failed to exit from system tray: {e}")
 
-    def exit(self):
-        """Override exit to ensure single instance lock is released."""
+    def on_exit(self):
+        """Handle application exit - perform cleanup and return True to allow exit."""
         try:
+            logger.info("Application exit requested - performing cleanup")
+
             # Release single instance lock before exiting
             if self.single_instance_manager:
+                logger.debug("Releasing single instance lock")
                 self.single_instance_manager.release_lock()
+
+            # Perform any other cleanup here
+            logger.info("Application cleanup completed successfully")
+            return True  # Allow exit to proceed
+
         except Exception as e:
-            logger.error(f"Failed to release single instance lock during exit: {e}")
-        finally:
-            # Call parent exit method only if app is properly initialized
-            try:
-                super().exit()
-            except AttributeError:
-                # App not fully initialized, just log and continue
-                logger.info("App exit called before full initialization")
+            logger.error(f"Error during application exit cleanup: {e}")
+            return True  # Still allow exit even if cleanup fails
 
     def _on_test_notification_pressed(self, widget):
         """Send a test notification using desktop-notifier."""
@@ -1080,7 +1102,7 @@ class AccessiWeatherApp(toga.App):
 
 
 def main():
-    """Main entry point for the simplified AccessiWeather application."""
+    """Provide main entry point for the simplified AccessiWeather application."""
     return AccessiWeatherApp(
         "AccessiWeather",
         "net.orinks.accessiweather.simple",

@@ -218,7 +218,7 @@ get_required_dependencies() {
     local dependencies=(
         "wxPython"
         "requests"
-        "plyer"
+        "desktop-notifier"
         "geopy"
         "python-dateutil"
         "beautifulsoup4"
@@ -371,8 +371,7 @@ if [ -f "$SPEC_FILE" ]; then
 else
     echo -e "${YELLOW}Warning: Spec file not found, falling back to command line arguments${NC}"
     $PYTHON_CMD -m PyInstaller $PYINSTALLER_OPTS \
-        --hidden-import=plyer.platforms.linux.notification \
-        --hidden-import=plyer.platforms.macosx.notification \
+        --hidden-import=desktop_notifier \
         --hidden-import=dateutil.parser \
         --hidden-import=httpx \
         --hidden-import=attrs \

@@ -1,7 +1,7 @@
 # Script to install Python dependencies for AccessiWeather
 try {
     Write-Host "Installing required Python packages..."
-    pip install -q wxPython requests plyer geopy python-dateutil httpx attrs psutil
+    pip install -q wxPython requests desktop-notifier geopy python-dateutil httpx attrs psutil
     Write-Host "Dependencies installed successfully." -ForegroundColor Green
 }
 catch {
