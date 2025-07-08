@@ -1,0 +1,57 @@
+# Task ID: 9
+# Title: Migrate Background Operations
+# Status: done
+# Dependencies: 3, 4, 5
+# Priority: high
+# Description: Port all background operations and timers from wxPython to asyncio tasks in Toga.
+# Details:
+1. Identify all background operations in the wxPython version (e.g., periodic weather updates, alert checking)
+2. Reimplement each operation as an asyncio coroutine
+3. Use asyncio.create_task() to run background operations
+4. Implement a task management system to handle starting, stopping, and monitoring background tasks
+5. Ensure proper error handling and logging for background tasks
+6. Update the UI using Toga's main thread to avoid race conditions
+
+# Test Strategy:
+1. Verify that all background operations function correctly
+2. Test error handling and recovery for network issues or API problems
+3. Check that UI updates from background tasks are smooth and don't cause freezing
+4. Ensure background tasks don't interfere with user interactions
+
+# Subtasks:
+## 1. Identify Background Operations [done]
+### Dependencies: None
+### Description: Catalog all current background operations in the application, including their triggers, dependencies, and interactions with the UI.
+### Details:
+Review the existing codebase to list all operations currently handled in the background, noting which are event-driven and how they interact with wxPython's event system.
+
+## 2. Design Asyncio Integration [done]
+### Dependencies: 9.1
+### Description: Plan how to migrate identified operations to use asyncio, considering event loop management and compatibility with the application's architecture.
+### Details:
+Determine which operations are suitable for asyncio coroutines, how to manage the event loop, and how to integrate with any existing synchronous code.
+
+## 3. Implement Asyncio-Based Operations [done]
+### Dependencies: 9.2
+### Description: Rewrite background operations using async/await syntax and asyncio tasks, ensuring non-blocking execution and proper scheduling.
+### Details:
+Convert blocking or event-based logic to asynchronous coroutines, using asyncio best practices such as avoiding long-running synchronous loops and leveraging tasks for concurrent execution[1][3].
+
+## 4. Manage Task Lifecycle and Concurrency [done]
+### Dependencies: 9.3
+### Description: Establish robust task management, including creation, cancellation, and tracking of asyncio tasks to prevent resource leaks and ensure correct operation sequencing.
+### Details:
+Implement mechanisms to monitor and control the lifecycle of background tasks, handle task cancellation, and coordinate concurrent operations safely[1].
+
+## 5. Implement Error Handling and UI Updates [done]
+### Dependencies: 9.4
+### Description: Add comprehensive error handling for async tasks and ensure thread-safe updates to the wxPython UI from asyncio coroutines.
+### Details:
+Catch and log exceptions in async tasks, propagate errors to the UI as needed, and use thread-safe methods (such as wx.CallAfter) to update UI elements from async code[3][5].
+
+## 6. Optimize Performance and Event Loop Responsiveness [done]
+### Dependencies: 9.5
+### Description: Profile and optimize the new asyncio-based background operations to minimize event loop blocking and maximize responsiveness.
+### Details:
+Identify and refactor any remaining blocking code, use diagnostic tools to monitor event loop health, and optimize coroutine scheduling to ensure smooth UI and background operation performance[1][4].
+

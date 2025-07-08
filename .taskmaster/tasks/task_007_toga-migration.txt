@@ -1,0 +1,51 @@
+# Task ID: 7
+# Title: Migrate Settings Dialog
+# Status: done
+# Dependencies: 2
+# Priority: medium
+# Description: Port the settings/preferences dialog from wxPython to Toga, maintaining all configuration options.
+# Details:
+1. Create a new Toga Dialog subclass for the settings window
+2. Implement all configuration options using appropriate Toga widgets (Switch, TextInput, Selection, etc.)
+3. Organize settings into logical groups using Box layouts
+4. Implement 'Save' and 'Cancel' functionality
+5. Ensure settings persistence using a configuration file or local storage
+6. Add a Command to the main menu to open the settings dialog
+
+# Test Strategy:
+1. Verify that all settings options are present and functional
+2. Test saving and canceling changes
+3. Check that settings persist across application restarts
+4. Ensure settings dialog is fully accessible via keyboard and screen readers
+
+# Subtasks:
+## 1. Create Settings Dialog Structure [done]
+### Dependencies: None
+### Description: Design and implement the main settings dialog window, establishing its layout and navigation structure.
+### Details:
+This includes setting up the dialog container, window title, and basic navigation (tabs, sections, or sidebar) to organize different settings categories.
+
+## 2. Implement Settings Widgets [done]
+### Dependencies: 7.1
+### Description: Develop and integrate UI widgets for each settings option (e.g., checkboxes, dropdowns, text fields) within the dialog.
+### Details:
+Ensure each widget is appropriately placed within its category and supports user interaction and validation.
+
+## 3. Organize Settings Categories [done]
+### Dependencies: 7.1, 7.2
+### Description: Group related settings into logical categories or sections within the dialog for improved usability.
+### Details:
+Define clear categories (e.g., General, Appearance, Notifications) and move widgets into their respective sections.
+
+## 4. Implement Settings Persistence [done]
+### Dependencies: 7.2, 7.3
+### Description: Ensure that changes made in the settings dialog are saved to and loaded from persistent storage.
+### Details:
+Connect UI widgets to the underlying settings storage mechanism, handling save, load, and reset operations.
+
+## 5. Integrate Dialog with Application Menu [done]
+### Dependencies: 7.1, 7.4
+### Description: Add an entry to the application's main menu or toolbar to open the settings dialog.
+### Details:
+Ensure the dialog can be launched from the menu and that its state is consistent with the application's current settings.
+

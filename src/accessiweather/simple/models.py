@@ -226,6 +226,10 @@ class AppSettings:
     update_check_interval_hours: int = 24
     debug_mode: bool = False
 
+    # Sound settings
+    sound_enabled: bool = True
+    sound_pack: str = "default"
+
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
         return {
@@ -239,6 +243,8 @@ class AppSettings:
             "update_channel": self.update_channel,
             "update_check_interval_hours": self.update_check_interval_hours,
             "debug_mode": self.debug_mode,
+            "sound_enabled": self.sound_enabled,
+            "sound_pack": self.sound_pack,
         }
 
     @classmethod
@@ -255,6 +261,8 @@ class AppSettings:
             update_channel=data.get("update_channel", "stable"),
             update_check_interval_hours=data.get("update_check_interval_hours", 24),
             debug_mode=data.get("debug_mode", False),
+            sound_enabled=data.get("sound_enabled", True),
+            sound_pack=data.get("sound_pack", "default"),
         )
 
 

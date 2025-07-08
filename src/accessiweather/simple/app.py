@@ -890,7 +890,7 @@ class AccessiWeatherApp(toga.App):
         return table_data
 
     def _notify_new_alerts(self, alerts):
-        """Send system notifications for new or changed alerts using Plyer."""
+        """Send system notifications for new or changed alerts using desktop-notifier."""
         if not alerts or not alerts.has_alerts():
             self._last_alert_ids = set()
             return
