@@ -135,15 +135,16 @@ class SafeDesktopNotifier:
 
 class SafeToastNotifier:
     """A wrapper around the notification system that handles exceptions.
+
     Provides cross-platform notification support using desktop-notifier.
     """
 
     def __init__(self):
-        """Initialize the safe toast notifier"""
+        """Initialize the safe toast notifier."""
         self._desktop_notifier = SafeDesktopNotifier()
 
     def show_toast(self, **kwargs):
-        """Show a toast notification"""
+        """Show a toast notification."""
         try:
             # If we're running tests, just log the notification
             if "pytest" in sys.modules:

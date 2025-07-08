@@ -8,7 +8,7 @@ setup(
     install_requires=[
         "toga",
         "requests",
-        "plyer",  # For cross-platform notifications
+        "desktop-notifier",  # For cross-platform notifications
         "geopy",  # For geocoding addresses and zip codes
         "python-dateutil",  # For parsing ISO timestamps
         "beautifulsoup4",  # For parsing HTML in the scraper

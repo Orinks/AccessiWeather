@@ -230,7 +230,7 @@ function Get-RequiredDependencies {
     $dependencies = @(
         "wxPython",
         "requests",
-        "plyer",
+        "desktop-notifier",
         "geopy",
         "python-dateutil",
         "beautifulsoup4",
@@ -401,7 +401,7 @@ if (Test-Path $SpecFile) {
 else {
     Write-Host "Warning: Spec file not found, falling back to command line arguments" -ForegroundColor Yellow
     $PyInstallerArgs = @("-m", "PyInstaller") + $PyInstallerOpts + @(
-        "--hidden-import=plyer.platforms.win.notification",
+        "--hidden-import=desktop_notifier",
         "--hidden-import=dateutil.parser",
         "--hidden-import=httpx",
         "--hidden-import=attrs",

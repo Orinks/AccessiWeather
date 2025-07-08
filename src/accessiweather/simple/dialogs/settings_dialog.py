@@ -271,7 +271,7 @@ class SettingsDialog:
 
         # Minimize to Tray (note: not applicable to all platforms)
         self.minimize_to_tray_switch = toga.Switch(
-            "Minimize to system tray when closing (Windows only)",
+            "Minimize to notification area when closing",
             value=self.current_settings.minimize_to_tray,
             style=Pack(margin_bottom=10),
             id="minimize_to_tray_switch",
