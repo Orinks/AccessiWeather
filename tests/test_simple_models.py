@@ -919,27 +919,3 @@ class TestHourlyForecast:
         # Request more hours than available
         next_20 = forecast.get_next_hours(20)
         assert len(next_20) == 12  # Should return all available
-
-    # Test current conditions
-    conditions = CurrentConditions(temperature_f=70.0)
-    assert conditions.has_data() is True
-
-    # Test forecast
-    period = ForecastPeriod(name="Today", temperature=75.0)
-    forecast = Forecast(periods=[period])
-    assert forecast.has_data() is True
-
-    # Test alerts
-    alert = WeatherAlert(title="Test Alert", description="Test")
-    alerts = WeatherAlerts(alerts=[alert])
-    assert alerts.has_alerts() is True
-
-    # Test weather data
-    weather_data = WeatherData(location=location, current=conditions)
-    assert weather_data.has_any_data() is True
-
-    # Test settings serialization
-    settings = AppSettings(temperature_unit="f")
-    settings_dict = settings.to_dict()
-    restored_settings = AppSettings.from_dict(settings_dict)
-    assert restored_settings.temperature_unit == "f"

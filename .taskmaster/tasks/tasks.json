@@ -1600,7 +1600,7 @@
           9,
           10
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -1652,71 +1652,6 @@
               4
             ],
             "details": "Select and configure CI/CD tools (e.g., GitHub Actions, GitLab CI) to execute all test types on supported platforms. Integrate test reporting and notifications. Address any platform-specific challenges for running Toga UI and integration tests in CI environments.",
-            "status": "pending",
-            "testStrategy": ""
-          }
-        ]
-      },
-      {
-        "id": 15,
-        "title": "Update Documentation",
-        "description": "Revise and expand the project documentation to reflect the Toga-based implementation.",
-        "details": "1. Update the README.md with new setup and running instructions\n2. Create a CONTRIBUTING.md file with guidelines for contributors\n3. Update or create user documentation explaining all features and accessibility options\n4. Document the application architecture and key design decisions\n5. Create API documentation for any public modules or classes\n6. Update troubleshooting guides and FAQs\n7. Document known issues and limitations compared to the wxPython version",
-        "testStrategy": "1. Review all documentation for accuracy and completeness\n2. Verify that setup instructions work on all supported platforms\n3. Have team members follow documentation to ensure clarity\n4. Ensure documentation is accessible and easy to navigate",
-        "priority": "medium",
-        "dependencies": [
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
-          8,
-          9,
-          10,
-          13,
-          14
-        ],
-        "status": "pending",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Update User Documentation",
-            "description": "Review and update user documentation to ensure it aligns with the latest software changes and features.",
-            "dependencies": [],
-            "details": "Focus on clarity and readability, ensuring that users can easily understand how to use the software.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 2,
-            "title": "Update Developer Documentation",
-            "description": "Update developer documentation to reflect any changes in the codebase, APIs, or development processes.",
-            "dependencies": [],
-            "details": "Ensure that the documentation is accurate and useful for developers, including code examples and technical details.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 3,
-            "title": "Update API Documentation",
-            "description": "Review and update API documentation to ensure it accurately describes all API endpoints, parameters, and responses.",
-            "dependencies": [],
-            "details": "Use tools like Treblle to automate the process and ensure consistency across all API documentation.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 4,
-            "title": "Update Troubleshooting Guides",
-            "description": "Update troubleshooting guides to include solutions for common issues and reflect any changes in the software.",
-            "dependencies": [
-              1,
-              2,
-              3
-            ],
-            "details": "Ensure that the guides are comprehensive and easy to follow, providing step-by-step solutions to common problems.",
             "status": "pending",
             "testStrategy": ""
           }
@@ -1796,7 +1731,7 @@
     ],
     "metadata": {
       "created": "2025-07-04T17:29:34.287Z",
-      "updated": "2025-07-08T17:54:12.852Z",
+      "updated": "2025-07-08T19:10:17.601Z",
       "description": "Tasks for toga-migration context"
     }
   }

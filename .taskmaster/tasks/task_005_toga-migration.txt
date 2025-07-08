@@ -19,13 +19,15 @@
 5. Accessibility is covered by native OS notification systems
 
 # Subtasks:
-## 1. Integrate desktop-notifier for core notification delivery [pending]
+## 1. Integrate desktop-notifier for core notification delivery [done]
 ### Dependencies: None
 ### Description: Replace previous notification mechanisms with desktop-notifier to provide robust, cross-platform notifications. Implement error handling and ensure notifications are triggered from background tasks using asyncio.
 ### Details:
+<info added on 2025-07-08T17:52:34.014Z>
+All notification triggers have been updated to use SafeDesktopNotifier or SafeToastNotifier, both of which wrap desktop-notifier. There is no remaining legacy notification code in the main source code. Error handling and test support are comprehensive. The docstring in _notify_new_alerts has been revised to reference desktop-notifier instead of Plyer. No additional changes are required for this subtask.
+</info added on 2025-07-08T17:52:34.014Z>
 
-
-## 2. Add test coverage for notification delivery and error handling [pending]
+## 2. Add test coverage for notification delivery and error handling [in-progress]
 ### Dependencies: None
 ### Description: Develop and run tests to ensure notifications are delivered reliably and errors are handled gracefully across supported platforms.
 ### Details:
