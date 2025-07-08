@@ -6,5 +6,6 @@ for weather alerts.
 
 from .toast_notifier import SafeToastNotifier
 from .weather_notifier import WeatherNotifier
+from .sound_player import play_notification_sound, play_sample_sound
 
 __all__ = ["SafeToastNotifier", "WeatherNotifier"]

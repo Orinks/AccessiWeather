@@ -8,7 +8,7 @@ import logging
 
 import toga
 from toga.style import Pack
-from toga.style.pack import COLUMN, ROW
+from travertino.constants import COLUMN, ROW
 
 from ..models import AppSettings
 
@@ -49,6 +49,12 @@ class SettingsDialog:
 
         # Updates tab controls (placeholder for future implementation)
         self.auto_update_switch = None
+
+        # Sound settings controls
+        self.sound_enabled_switch = None
+        self.sound_pack_selection = None
+        self.preview_sound_button = None
+        self.manage_soundpacks_button = None
 
     def __await__(self):
         """Make the dialog awaitable for modal behavior."""
@@ -213,6 +219,72 @@ class SettingsDialog:
             id="debug_mode_switch",
         )
         general_box.add(self.debug_mode_switch)
+
+        # --- Sound Settings ---
+        general_box.add(toga.Label("Sound Notifications:", style=Pack(margin_top=15, font_weight="bold")))
+
+        # Enable Sounds Switch
+        self.sound_enabled_switch = toga.Switch(
+            "Enable Sounds",
+            value=getattr(self.current_settings, "sound_enabled", True),
+            style=Pack(margin_bottom=10),
+            id="sound_enabled_switch",
+            on_change=self._on_sound_enabled_changed,
+        )
+        general_box.add(self.sound_enabled_switch)
+
+        # Sound Pack Selection
+        from pathlib import Path
+        import json
+        soundpacks_dir = Path(__file__).parent.parent / "soundpacks"
+        self.sound_pack_options = []
+        self.sound_pack_map = {}
+        if soundpacks_dir.exists():
+            for pack_dir in soundpacks_dir.iterdir():
+                if pack_dir.is_dir() and (pack_dir / "pack.json").exists():
+                    try:
+                        with open(pack_dir / "pack.json", "r", encoding="utf-8") as f:
+                            meta = json.load(f)
+                        display_name = meta.get("name", pack_dir.name)
+                        self.sound_pack_options.append(display_name)
+                        self.sound_pack_map[display_name] = pack_dir.name
+                    except Exception:
+                        continue
+        if not self.sound_pack_options:
+            self.sound_pack_options = ["Default"]
+            self.sound_pack_map["Default"] = "default"
+
+        self.sound_pack_selection = toga.Selection(
+            items=self.sound_pack_options,
+            style=Pack(margin_bottom=10, width=200),
+            id="sound_pack_selection",
+        )
+        # Set current value
+        current_pack = getattr(self.current_settings, "sound_pack", "default")
+        for k, v in self.sound_pack_map.items():
+            if v == current_pack:
+                self.sound_pack_selection.value = k
+                break
+        else:
+            self.sound_pack_selection.value = self.sound_pack_options[0]
+        general_box.add(self.sound_pack_selection)
+
+        # Preview Button
+        self.preview_sound_button = toga.Button(
+            "Preview Sound",
+            on_press=self._on_preview_sound,
+            style=Pack(margin_right=10, width=120),
+            enabled=self.sound_enabled_switch.value,
+        )
+        general_box.add(self.preview_sound_button)
+
+        # Manage Sound Packs Button (stub)
+        self.manage_soundpacks_button = toga.Button(
+            "Manage Sound Packs...",
+            on_press=self._on_manage_soundpacks,
+            style=Pack(margin_bottom=10, width=180),
+        )
+        general_box.add(self.manage_soundpacks_button)
 
         # Add tab to container
         self.option_container.content.append("General", general_box)
@@ -448,6 +520,25 @@ class SettingsDialog:
             self.window.close()
             self.window = None  # Clear reference to help with cleanup
 
+    def _on_sound_enabled_changed(self, widget):
+        enabled = widget.value
+        self.sound_pack_selection.enabled = enabled
+        self.preview_sound_button.enabled = enabled
+
+    def _on_preview_sound(self, widget):
+        # Play a sample sound from the selected pack
+        try:
+            pack_display = self.sound_pack_selection.value
+            pack_dir = self.sound_pack_map.get(pack_display, "default")
+            from ..notifications.sound_player import play_sample_sound
+            play_sample_sound(pack_dir)
+        except Exception as e:
+            logger.error(f"Failed to preview sound: {e}")
+
+    def _on_manage_soundpacks(self, widget):
+        # Placeholder for future sound pack management dialog
+        self.app.main_window.info_dialog("Manage Sound Packs", "Sound pack management coming soon.")
+
     def _collect_settings_from_ui(self) -> AppSettings:
         """Collect current settings from UI controls."""
         # Map data source selection back to internal values
@@ -525,6 +616,10 @@ class SettingsDialog:
         else:
             update_check_interval_hours = 24
 
+        sound_enabled = self.sound_enabled_switch.value
+        pack_display = self.sound_pack_selection.value
+        sound_pack = self.sound_pack_map.get(pack_display, "default")
+
         return AppSettings(
             temperature_unit=temperature_unit,
             update_interval_minutes=update_interval,
@@ -536,6 +631,8 @@ class SettingsDialog:
             update_channel=update_channel,
             update_check_interval_hours=update_check_interval_hours,
             debug_mode=self.debug_mode_switch.value,
+            sound_enabled=sound_enabled,
+            sound_pack=sound_pack,
         )
 
     def _initialize_update_info(self):

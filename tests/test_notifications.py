@@ -10,6 +10,17 @@ from dateutil.parser import isoparse  # type: ignore # requires python-dateutil
 from accessiweather.notifications import SafeToastNotifier, WeatherNotifier
 from accessiweather.notifications.toast_notifier import SafeDesktopNotifier
 
+import os
+import json
+import logging
+import shutil
+import tempfile
+from pathlib import Path
+import pytest
+from unittest import mock
+
+import src.accessiweather.notifications.sound_player as sound_player
+
 # --- Test Data ---
 
 SAMPLE_ALERT = {
@@ -97,6 +108,23 @@ def mock_datetime():
         mock_dt.timezone = timezone  # Keep the real timezone
         mock_parse.side_effect = mock_isoparse
         yield mock_dt
+
+
+# --- Notification Sound Playback & Sound Pack Tests (TDD Scaffold) ---
+
+@pytest.fixture
+def mock_sound_player():
+    """Mock the sound playback function/class."""
+    with patch("accessiweather.notifications.sound_player.SoundPlayer") as mock_player_class:
+        mock_player = MagicMock()
+        mock_player_class.return_value = mock_player
+        yield mock_player
+
+@pytest.fixture
+def mock_toga_dummy_backend():
+    """Mock Toga dummy backend for sound playback integration tests."""
+    with patch("toga_dummy_backend.sound") as mock_toga_sound:
+        yield mock_toga_sound
 
 
 # --- WeatherNotifier Tests ---
@@ -437,3 +465,208 @@ def test_safe_desktop_notifier_exception():
         result = notifier.send_notification("Test Title", "Test Message", 10)
 
         assert result is False
+
+
+# --- Notification Sound Playback & Sound Pack Tests (TDD Scaffold) ---
+
+@pytest.fixture
+def mock_sound_player():
+    """Mock the sound playback function/class."""
+    with patch("accessiweather.notifications.sound_player.SoundPlayer") as mock_player_class:
+        mock_player = MagicMock()
+        mock_player_class.return_value = mock_player
+        yield mock_player
+
+@pytest.fixture
+def mock_toga_dummy_backend():
+    """Mock Toga dummy backend for sound playback integration tests."""
+    with patch("toga_dummy_backend.sound") as mock_toga_sound:
+        yield mock_toga_sound
+
+
+def test_notification_plays_sound_on_send(mock_sound_player, mock_toaster):
+    """Test that a sound is played when a notification is sent."""
+    # TODO: Implement test logic after sound feature is added
+    pass
+
+
+def test_selects_correct_sound_file_based_on_user_preference(mock_sound_player):
+    """Test that the correct sound file is selected based on user preference."""
+    # TODO: Implement test logic after sound feature is added
+    pass
+
+
+def test_fallback_to_default_sound_if_selected_missing(mock_sound_player):
+    """Test fallback to default sound if the selected sound file is missing."""
+    # TODO: Implement test logic after sound feature is added
+    pass
+
+
+def test_error_handling_for_sound_playback_failure(mock_sound_player):
+    """Test error handling when sound playback fails (e.g., file not found, playback error)."""
+    # TODO: Implement test logic after sound feature is added
+    pass
+
+
+def test_no_sound_played_if_user_disables_sounds(mock_sound_player):
+    """Test that no sound is played if the user disables notification sounds in preferences."""
+    # TODO: Implement test logic after sound feature is added
+    pass
+
+
+def test_list_and_load_available_sound_packs():
+    """Test listing and loading available sound packs."""
+    # TODO: Implement test logic after sound feature is added
+    pass
+
+
+def test_toga_dummy_backend_sound_integration(mock_toga_dummy_backend, mock_sound_player):
+    """Test integration of sound playback with Toga dummy backend (for CI and headless testing)."""
+    # TODO: Implement test logic after sound feature is added
+    pass
+
+
+# --- Sound Pack System Tests (TDD Scaffold) ---
+
+def test_load_sound_pack_metadata():
+    """Test loading sound pack metadata from pack.json."""
+    # TODO: Implement test logic after sound pack loader is added
+    pass
+
+
+def test_list_available_sound_packs():
+    """Test listing available sound packs in the soundpacks/ directory."""
+    # TODO: Implement test logic after sound pack loader is added
+    pass
+
+
+def test_select_sound_for_alert_type_and_severity():
+    """Test selecting a sound for a given alert type and severity."""
+    # TODO: Implement test logic after sound pack loader is added
+    pass
+
+
+def test_fallback_to_alert_type_if_severity_missing():
+    """Test fallback to alert type sound if severity-specific sound is missing."""
+    # TODO: Implement test logic after sound pack loader is added
+    pass
+
+
+def test_fallback_to_default_if_alert_type_missing():
+    """Test fallback to default sound if alert type sound is missing."""
+    # TODO: Implement test logic after sound pack loader is added
+    pass
+
+
+def test_user_can_select_and_preview_sounds():
+    """Test that user can select and preview sounds for each alert type/severity."""
+    # TODO: Implement test logic after sound pack loader is added
+    pass
+
+
+def test_add_new_sound_pack():
+    """Test adding a new sound pack by placing a zip/folder in soundpacks/."""
+    # TODO: Implement test logic after sound pack loader is added
+    pass
+
+
+def test_remove_sound_pack():
+    """Test removing a sound pack from the soundpacks/ directory."""
+    # TODO: Implement test logic after sound pack loader is added
+    pass
+
+
+def test_error_handling_for_malformed_or_missing_pack_json():
+    """Test error handling for malformed or missing pack.json in a sound pack."""
+    # TODO: Implement test logic after sound pack loader is added
+    pass
+
+
+@pytest.fixture
+def temp_soundpacks(tmp_path):
+    # Create a temp soundpacks dir with a default pack and a custom pack
+    soundpacks = tmp_path / "soundpacks"
+    soundpacks.mkdir()
+    # Default pack
+    default_pack = soundpacks / "default"
+    default_pack.mkdir()
+    (default_pack / "alert.wav").write_bytes(b"fakewav")
+    (default_pack / "notify.wav").write_bytes(b"fakewav")
+    (default_pack / "pack.json").write_text(json.dumps({
+        "name": "Default",
+        "author": "Test",
+        "description": "Default pack",
+        "sounds": {"alert": "alert.wav", "notify": "notify.wav"}
+    }))
+    # Custom pack (missing alert.wav)
+    custom_pack = soundpacks / "custom"
+    custom_pack.mkdir()
+    (custom_pack / "notify.wav").write_bytes(b"fakewav")
+    (custom_pack / "pack.json").write_text(json.dumps({
+        "name": "Custom",
+        "author": "Test",
+        "description": "Custom pack",
+        "sounds": {"alert": "alert.wav", "notify": "notify.wav"}
+    }))
+    # Patch SOUNDPACKS_DIR for the duration of the test
+    orig_dir = sound_player.SOUNDPACKS_DIR
+    sound_player.SOUNDPACKS_DIR = soundpacks
+    yield soundpacks
+    sound_player.SOUNDPACKS_DIR = orig_dir
+
+
+def test_get_sound_file_found(temp_soundpacks):
+    f = sound_player.get_sound_file("alert", "default")
+    assert f is not None
+    assert f.name == "alert.wav"
+    assert f.parent.name == "default"
+
+def test_get_sound_file_fallback_to_default(temp_soundpacks):
+    # custom pack missing alert.wav, should fallback to default
+    f = sound_player.get_sound_file("alert", "custom")
+    assert f is not None
+    assert f.name == "alert.wav"
+    assert f.parent.name == "default"
+
+def test_get_sound_file_missing_everywhere(temp_soundpacks):
+    # Remove alert.wav from default
+    (temp_soundpacks / "default" / "alert.wav").unlink()
+    f = sound_player.get_sound_file("alert", "custom")
+    assert f is None
+
+def test_get_sound_file_missing_pack_json(temp_soundpacks, caplog):
+    # Remove pack.json from custom
+    (temp_soundpacks / "custom" / "pack.json").unlink()
+    with caplog.at_level(logging.WARNING):
+        f = sound_player.get_sound_file("alert", "custom")
+        assert f is not None  # Should fallback to default
+        assert f.parent.name == "default"
+        assert "pack.json not found" in caplog.text
+
+def test_get_sound_file_missing_default_pack_json(temp_soundpacks, caplog):
+    # Remove pack.json from both
+    (temp_soundpacks / "custom" / "pack.json").unlink(missing_ok=True)
+    (temp_soundpacks / "default" / "pack.json").unlink(missing_ok=True)
+    with caplog.at_level(logging.ERROR):
+        f = sound_player.get_sound_file("alert", "custom")
+        assert f is None
+        assert "Default sound pack is missing" in caplog.text
+
+@mock.patch("src.accessiweather.notifications.sound_player.playsound")
+def test_play_notification_sound_success(mock_playsound, temp_soundpacks):
+    sound_player.play_notification_sound("alert", "default")
+    mock_playsound.assert_called_once()
+    # Should call with the alert.wav path
+    arg = mock_playsound.call_args[0][0]
+    assert arg.endswith("alert.wav")
+
+@mock.patch("src.accessiweather.notifications.sound_player.playsound", None)
+def test_play_notification_sound_no_playsound(temp_soundpacks, caplog):
+    with caplog.at_level(logging.WARNING):
+        sound_player.play_notification_sound("alert", "default")
+        assert "Sound playback not available" in caplog.text
+
+@mock.patch("src.accessiweather.notifications.sound_player.play_notification_sound")
+def test_play_sample_sound_delegates(mock_play, temp_soundpacks):
+    sound_player.play_sample_sound("default")
+    mock_play.assert_called_once_with(sound_player.DEFAULT_EVENT, "default")

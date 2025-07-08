@@ -8,6 +8,7 @@ import asyncio
 import logging
 import sys
 import threading
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,7 @@ except ImportError as e:
     DesktopNotifier = None
     DESKTOP_NOTIFIER_AVAILABLE = False
 
+from .sound_player import play_notification_sound, play_sample_sound
 
 class SafeDesktopNotifier:
     """A wrapper around desktop-notifier that provides synchronous interface.
@@ -139,11 +141,23 @@ class SafeToastNotifier:
     Provides cross-platform notification support using desktop-notifier.
     """
 
-    def __init__(self):
-        """Initialize the safe toast notifier."""
-        self._desktop_notifier = SafeDesktopNotifier()
+    def __init__(self, sound_enabled: bool = True, soundpack: Optional[str] = None):
+        self.sound_enabled: bool = sound_enabled
+        self.soundpack: str = soundpack if soundpack is not None else "default"
+        self.soundpack = self.soundpack  # keep the pack name/dir for use with the new API
+        if DESKTOP_NOTIFIER_AVAILABLE:
+            self._desktop_notifier = SafeDesktopNotifier()
+        else:
+            self._desktop_notifier = None
 
-    def show_toast(self, **kwargs):
+    def _safe_send_notification(self, title: str, message: str, timeout: int) -> bool:
+        m = getattr(self._desktop_notifier, 'send_notification', None) if self._desktop_notifier is not None else None
+        if m is not None and callable(m):
+            return bool(m(title, message, timeout))
+        logger.info(f"Notification (desktop notifier unavailable): {title} - {message}")
+        return True
+
+    def show_toast(self, **kwargs) -> bool:
         """Show a toast notification."""
         try:
             # If we're running tests, just log the notification
@@ -158,9 +172,20 @@ class SafeToastNotifier:
             title = kwargs.get("title", "Notification")
             message = kwargs.get("msg", "")
             timeout = kwargs.get("duration", 10)
+            alert_type = kwargs.get("alert_type", "notification")
+            severity = kwargs.get("severity")
 
-            # Use desktop-notifier
-            return self._desktop_notifier.send_notification(title, message, timeout)
+            # Use desktop-notifier if available and callable
+            success = self._safe_send_notification(title, message, timeout)
+
+            # Play sound if enabled
+            if self.sound_enabled:
+                try:
+                    play_notification_sound(alert_type, self.soundpack)
+                except Exception as e:
+                    logger.error(f"Failed to play notification sound: {e}")
+
+            return success
         except Exception as e:
             logger.warning(f"Failed to show toast notification: {str(e)}")
             logger.info(
