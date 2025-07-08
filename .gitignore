@@ -40,7 +40,6 @@ coverage.xml
 .venv
 env/
 venv/
-beeware-venv/
 ENV/
 venv.bak/
 env.bak/
