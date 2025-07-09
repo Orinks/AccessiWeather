@@ -20,6 +20,7 @@ from .models import (
     WeatherAlerts,
     WeatherData,
 )
+from .visual_crossing_client import VisualCrossingApiError, VisualCrossingClient
 
 logger = logging.getLogger(__name__)
 
@@ -27,25 +28,109 @@ logger = logging.getLogger(__name__)
 class WeatherClient:
     """Simple async weather API client."""
 
-    def __init__(self, user_agent: str = "AccessiWeather/1.0", data_source: str = "auto"):
+    def __init__(
+        self,
+        user_agent: str = "AccessiWeather/1.0",
+        data_source: str = "auto",
+        visual_crossing_api_key: str = "",
+    ):
         self.user_agent = user_agent
         self.nws_base_url = "https://api.weather.gov"
         self.openmeteo_base_url = "https://api.open-meteo.com/v1"
         self.timeout = 10.0
-        self.data_source = data_source  # "auto", "nws", "openmeteo"
+        self.data_source = data_source  # "auto", "nws", "openmeteo", "visualcrossing"
+        self.visual_crossing_api_key = visual_crossing_api_key
+
+        # Initialize Visual Crossing client if API key is provided
+        self.visual_crossing_client = None
+        if visual_crossing_api_key:
+            self.visual_crossing_client = VisualCrossingClient(visual_crossing_api_key, user_agent)
 
     async def get_weather_data(self, location: Location) -> WeatherData:
         """Get complete weather data for a location."""
         logger.info(f"Fetching weather data for {location.name}")
 
         # Determine which API to use based on data source and location
-        should_use_openmeteo = self._should_use_openmeteo(location)
-        api_name = "Open-Meteo" if should_use_openmeteo else "NWS"
+        api_choice = self._determine_api_choice(location)
+        api_name = {
+            "nws": "NWS",
+            "openmeteo": "Open-Meteo",
+            "visualcrossing": "Visual Crossing",
+        }.get(api_choice, "NWS")
         logger.info(f"Using {api_name} API for {location.name} (data_source: {self.data_source})")
 
         weather_data = WeatherData(location=location, last_updated=datetime.now())
 
-        if should_use_openmeteo:
+        if api_choice == "visualcrossing":
+            # Use Visual Crossing API
+            try:
+                if not self.visual_crossing_client:
+                    raise VisualCrossingApiError("Visual Crossing API key not configured")
+
+                current = await self.visual_crossing_client.get_current_conditions(location)
+                forecast = await self.visual_crossing_client.get_forecast(location)
+                hourly_forecast = await self.visual_crossing_client.get_hourly_forecast(location)
+                alerts = await self.visual_crossing_client.get_alerts(location)
+
+                weather_data.current = current
+                weather_data.forecast = forecast
+                weather_data.hourly_forecast = hourly_forecast
+                weather_data.discussion = "Forecast discussion not available from Visual Crossing."
+                weather_data.alerts = alerts
+
+                logger.info(f"Successfully fetched Visual Crossing data for {location.name}")
+
+            except VisualCrossingApiError as e:
+                logger.warning(f"Visual Crossing API failed for {location.name}: {e}")
+
+                # Try fallback based on location
+                if self._is_us_location(location):
+                    logger.info(f"Trying NWS fallback for US location: {location.name}")
+                    try:
+                        current = await self._get_nws_current_conditions(location)
+                        forecast, discussion = await self._get_nws_forecast_and_discussion(location)
+                        hourly_forecast = await self._get_nws_hourly_forecast(location)
+                        alerts = await self._get_nws_alerts(location)
+
+                        weather_data.current = current
+                        weather_data.forecast = forecast
+                        weather_data.hourly_forecast = hourly_forecast
+                        weather_data.discussion = discussion
+                        weather_data.alerts = alerts
+
+                        logger.info(f"Successfully fetched NWS fallback data for {location.name}")
+                    except Exception as e2:
+                        logger.error(
+                            f"Both Visual Crossing and NWS failed for {location.name}: VC={e}, NWS={e2}"
+                        )
+                        self._set_empty_weather_data(weather_data)
+                else:
+                    logger.info(
+                        f"Trying Open-Meteo fallback for international location: {location.name}"
+                    )
+                    try:
+                        current = await self._get_openmeteo_current_conditions(location)
+                        forecast = await self._get_openmeteo_forecast(location)
+                        hourly_forecast = await self._get_openmeteo_hourly_forecast(location)
+
+                        weather_data.current = current
+                        weather_data.forecast = forecast
+                        weather_data.hourly_forecast = hourly_forecast
+                        weather_data.discussion = (
+                            "Forecast discussion not available from Open-Meteo."
+                        )
+                        weather_data.alerts = WeatherAlerts(alerts=[])
+
+                        logger.info(
+                            f"Successfully fetched Open-Meteo fallback data for {location.name}"
+                        )
+                    except Exception as e2:
+                        logger.error(
+                            f"Both Visual Crossing and Open-Meteo failed for {location.name}: VC={e}, OM={e2}"
+                        )
+                        self._set_empty_weather_data(weather_data)
+
+        elif api_choice == "openmeteo":
             # Use Open-Meteo API
             try:
                 current = await self._get_openmeteo_current_conditions(location)
@@ -134,17 +219,19 @@ class WeatherClient:
 
         return weather_data
 
-    def _should_use_openmeteo(self, location: Location) -> bool:
-        """Determine if Open-Meteo should be used for the given location."""
+    def _determine_api_choice(self, location: Location) -> str:
+        """Determine which API to use for the given location."""
+        if self.data_source == "visualcrossing":
+            return "visualcrossing"
         if self.data_source == "openmeteo":
-            return True
+            return "openmeteo"
         if self.data_source == "nws":
-            return False
+            return "nws"
         if self.data_source == "auto":
-            # Use Open-Meteo for international locations, NWS for US locations
-            return not self._is_us_location(location)
+            # Use NWS for US locations, Open-Meteo for international locations
+            return "nws" if self._is_us_location(location) else "openmeteo"
         logger.warning(f"Unknown data source '{self.data_source}', defaulting to NWS")
-        return False
+        return "nws"
 
     def _is_us_location(self, location: Location) -> bool:
         """Check if location is within the United States (rough approximation)."""
@@ -199,7 +286,7 @@ class WeatherClient:
 
     async def _get_nws_forecast_and_discussion(
         self, location: Location
-    ) -> (Forecast | None, str | None):
+    ) -> tuple[Forecast | None, str | None]:
         """Get forecast and discussion from NWS API."""
         try:
             # Get grid point for location

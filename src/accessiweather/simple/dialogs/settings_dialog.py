@@ -159,12 +159,12 @@ class SettingsDialog:
             "Automatic (NWS for US, Open-Meteo for non-US)",
             "National Weather Service (NWS)",
             "Open-Meteo (International)",
+            "Visual Crossing (Global, requires API key)",
         ]
 
         self.data_source_selection = toga.Selection(
             items=data_source_options,
             style=Pack(margin_bottom=15),
-            id="data_source_selection",
         )
 
         # Set current value based on stored configuration
@@ -172,6 +172,7 @@ class SettingsDialog:
             "auto": 0,
             "nws": 1,
             "openmeteo": 2,
+            "visualcrossing": 3,
         }
 
         try:
@@ -184,12 +185,36 @@ class SettingsDialog:
 
         general_box.add(self.data_source_selection)
 
+        # Visual Crossing API Key Configuration
+        general_box.add(
+            toga.Label(
+                "Visual Crossing API Configuration:",
+                style=Pack(margin_top=15, margin_bottom=5, font_weight="bold"),
+            )
+        )
+
+        # API Key input
+        general_box.add(toga.Label("API Key:", style=Pack(margin_bottom=5)))
+        self.visual_crossing_api_key_input = toga.TextInput(
+            value=getattr(self.current_settings, "visual_crossing_api_key", ""),
+            placeholder="Enter your Visual Crossing API key",
+            style=Pack(margin_bottom=10),
+        )
+        general_box.add(self.visual_crossing_api_key_input)
+
+        # API Key registration link button
+        self.get_api_key_button = toga.Button(
+            "Get Free API Key",
+            on_press=self._on_get_visual_crossing_api_key,
+            style=Pack(margin_bottom=15, width=150),
+        )
+        general_box.add(self.get_api_key_button)
+
         # Update Interval
         general_box.add(toga.Label("Update Interval (minutes):", style=Pack(margin_bottom=5)))
         self.update_interval_input = toga.NumberInput(
             value=self.current_settings.update_interval_minutes,
             style=Pack(margin_bottom=15),
-            id="update_interval_input",
         )
         general_box.add(self.update_interval_input)
 
@@ -221,7 +246,9 @@ class SettingsDialog:
         general_box.add(self.debug_mode_switch)
 
         # --- Sound Settings ---
-        general_box.add(toga.Label("Sound Notifications:", style=Pack(margin_top=15, font_weight="bold")))
+        general_box.add(
+            toga.Label("Sound Notifications:", style=Pack(margin_top=15, font_weight="bold"))
+        )
 
         # Enable Sounds Switch
         self.sound_enabled_switch = toga.Switch(
@@ -234,8 +261,9 @@ class SettingsDialog:
         general_box.add(self.sound_enabled_switch)
 
         # Sound Pack Selection
-        from pathlib import Path
         import json
+        from pathlib import Path
+
         soundpacks_dir = Path(__file__).parent.parent / "soundpacks"
         self.sound_pack_options = []
         self.sound_pack_map = {}
@@ -243,7 +271,7 @@ class SettingsDialog:
             for pack_dir in soundpacks_dir.iterdir():
                 if pack_dir.is_dir() and (pack_dir / "pack.json").exists():
                     try:
-                        with open(pack_dir / "pack.json", "r", encoding="utf-8") as f:
+                        with open(pack_dir / "pack.json", encoding="utf-8") as f:
                             meta = json.load(f)
                         display_name = meta.get("name", pack_dir.name)
                         self.sound_pack_options.append(display_name)
@@ -531,6 +559,7 @@ class SettingsDialog:
             pack_display = self.sound_pack_selection.value
             pack_dir = self.sound_pack_map.get(pack_display, "default")
             from ..notifications.sound_player import play_sample_sound
+
             play_sample_sound(pack_dir)
         except Exception as e:
             logger.error(f"Failed to preview sound: {e}")
@@ -539,14 +568,36 @@ class SettingsDialog:
         # Placeholder for future sound pack management dialog
         self.app.main_window.info_dialog("Manage Sound Packs", "Sound pack management coming soon.")
 
+    async def _on_get_visual_crossing_api_key(self, widget):
+        """Handle Get API Key button press - open Visual Crossing registration page."""
+        try:
+            # Open Visual Crossing sign-up page in default browser
+            import webbrowser
+
+            webbrowser.open("https://www.visualcrossing.com/weather-query-builder/")
+
+            # Show info dialog with instructions
+            await self.app.main_window.info_dialog(
+                "Visual Crossing API Key",
+                "The Visual Crossing Weather Query Builder page has been opened in your browser.\n\n"
+                "To get your free API key:\n"
+                "1. Sign up for a free account\n"
+                "2. Go to your account page\n"
+                "3. Copy your API key\n"
+                "4. Paste it into the API Key field below\n\n"
+                "Free accounts include 1000 weather records per day.",
+            )
+        except Exception as e:
+            logger.error(f"Failed to open Visual Crossing registration page: {e}")
+            await self.app.main_window.error_dialog(
+                "Error",
+                "Failed to open the Visual Crossing registration page. "
+                "Please visit https://www.visualcrossing.com/weather-query-builder/ manually.",
+            )
+
     def _collect_settings_from_ui(self) -> AppSettings:
         """Collect current settings from UI controls."""
         # Map data source selection back to internal values
-        data_source_reverse_map = {
-            0: "auto",
-            1: "nws",
-            2: "openmeteo",
-        }
 
         try:
             # Get the selected value and map it directly to internal values
@@ -557,6 +608,8 @@ class SettingsDialog:
                 data_source = "nws"
             elif "Open-Meteo" in selected_value:
                 data_source = "openmeteo"
+            elif "Visual Crossing" in selected_value:
+                data_source = "visualcrossing"
             else:
                 data_source = "auto"  # Default fallback
         except (ValueError, AttributeError) as e:
@@ -564,11 +617,6 @@ class SettingsDialog:
             data_source = "auto"
 
         # Map temperature unit selection back to internal values
-        temp_unit_reverse_map = {
-            0: "f",
-            1: "c",
-            2: "both",
-        }
 
         try:
             # Get the selected value and map it directly to internal values
@@ -620,6 +668,11 @@ class SettingsDialog:
         pack_display = self.sound_pack_selection.value
         sound_pack = self.sound_pack_map.get(pack_display, "default")
 
+        # Get Visual Crossing API key
+        visual_crossing_api_key = ""
+        if hasattr(self, "visual_crossing_api_key_input") and self.visual_crossing_api_key_input:
+            visual_crossing_api_key = str(self.visual_crossing_api_key_input.value).strip()
+
         return AppSettings(
             temperature_unit=temperature_unit,
             update_interval_minutes=update_interval,
@@ -627,6 +680,7 @@ class SettingsDialog:
             enable_alerts=self.enable_alerts_switch.value,
             minimize_to_tray=self.minimize_to_tray_switch.value,
             data_source=data_source,
+            visual_crossing_api_key=visual_crossing_api_key,
             auto_update_enabled=auto_update_enabled,
             update_channel=update_channel,
             update_check_interval_hours=update_check_interval_hours,
