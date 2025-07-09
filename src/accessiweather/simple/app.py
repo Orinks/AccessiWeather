@@ -152,10 +152,13 @@ class AccessiWeatherApp(toga.App):
             logger.warning(f"Failed to initialize update service: {e}")
             self.update_service = None
 
-        # Weather client with data source from config
+        # Weather client with data source and API keys from config
         data_source = config.settings.data_source if config.settings else "auto"
+        visual_crossing_api_key = config.settings.visual_crossing_api_key if config.settings else ""
         self.weather_client = WeatherClient(
-            user_agent="AccessiWeather/2.0", data_source=data_source
+            user_agent="AccessiWeather/2.0",
+            data_source=data_source,
+            visual_crossing_api_key=visual_crossing_api_key,
         )
 
         # Location manager
@@ -700,12 +703,7 @@ class AccessiWeatherApp(toga.App):
 
         """
         try:
-            # Use Toga's question dialog for confirmation
-            result = await self.main_window.question_dialog(
-                "Confirm Removal",
-                f"Are you sure you want to remove '{location_name}' from your locations?\n\n"
-                f"This action cannot be undone.",
-            )
+            # Use Toga's confirm dialog for confirmation
             return await self.main_window.confirm_dialog(
                 "Remove Location",
                 f"Are you sure you want to remove '{location_name}' from your locations?\n\n"
