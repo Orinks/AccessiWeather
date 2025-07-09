@@ -41,6 +41,11 @@ class SettingsDialog:
         self.enable_alerts_switch = None
         self.debug_mode_switch = None
 
+        # Visual Crossing API controls
+        self.visual_crossing_config_box = None
+        self.visual_crossing_api_key_input = None
+        self.get_api_key_button = None
+
         # Display tab controls
         self.temperature_unit_selection = None
 
@@ -165,6 +170,7 @@ class SettingsDialog:
         self.data_source_selection = toga.Selection(
             items=data_source_options,
             style=Pack(margin_bottom=15),
+            on_change=self._on_data_source_changed,
         )
 
         # Set current value based on stored configuration
@@ -185,8 +191,10 @@ class SettingsDialog:
 
         general_box.add(self.data_source_selection)
 
-        # Visual Crossing API Key Configuration
-        general_box.add(
+        # Visual Crossing API Key Configuration (initially hidden)
+        self.visual_crossing_config_box = toga.Box(style=Pack(direction=COLUMN))
+
+        self.visual_crossing_config_box.add(
             toga.Label(
                 "Visual Crossing API Configuration:",
                 style=Pack(margin_top=15, margin_bottom=5, font_weight="bold"),
@@ -194,21 +202,39 @@ class SettingsDialog:
         )
 
         # API Key input
-        general_box.add(toga.Label("API Key:", style=Pack(margin_bottom=5)))
-        self.visual_crossing_api_key_input = toga.TextInput(
+        self.visual_crossing_config_box.add(toga.Label("API Key:", style=Pack(margin_bottom=5)))
+        self.visual_crossing_api_key_input = toga.PasswordInput(
             value=getattr(self.current_settings, "visual_crossing_api_key", ""),
             placeholder="Enter your Visual Crossing API key",
             style=Pack(margin_bottom=10),
         )
-        general_box.add(self.visual_crossing_api_key_input)
+        self.visual_crossing_config_box.add(self.visual_crossing_api_key_input)
+
+        # API Key buttons row
+        api_key_buttons_row = toga.Box(style=Pack(direction=ROW, margin_bottom=15))
 
         # API Key registration link button
         self.get_api_key_button = toga.Button(
             "Get Free API Key",
             on_press=self._on_get_visual_crossing_api_key,
-            style=Pack(margin_bottom=15, width=150),
+            style=Pack(margin_right=10, width=150),
         )
-        general_box.add(self.get_api_key_button)
+        api_key_buttons_row.add(self.get_api_key_button)
+
+        # API Key validation button
+        self.validate_api_key_button = toga.Button(
+            "Validate API Key",
+            on_press=self._on_validate_visual_crossing_api_key,
+            style=Pack(width=150),
+        )
+        api_key_buttons_row.add(self.validate_api_key_button)
+
+        self.visual_crossing_config_box.add(api_key_buttons_row)
+
+        general_box.add(self.visual_crossing_config_box)
+
+        # Set initial visibility of Visual Crossing config based on current selection
+        self._update_visual_crossing_visibility()
 
         # Update Interval
         general_box.add(toga.Label("Update Interval (minutes):", style=Pack(margin_bottom=5)))
@@ -568,6 +594,40 @@ class SettingsDialog:
         # Placeholder for future sound pack management dialog
         self.app.main_window.info_dialog("Manage Sound Packs", "Sound pack management coming soon.")
 
+    def _on_data_source_changed(self, widget):
+        """Handle data source selection change to show/hide Visual Crossing config."""
+        self._update_visual_crossing_visibility()
+
+    def _update_visual_crossing_visibility(self):
+        """Update visibility of Visual Crossing configuration based on data source selection."""
+        if not self.data_source_selection or not self.visual_crossing_config_box:
+            return
+
+        selected_value = str(self.data_source_selection.value)
+        show_visual_crossing = "Visual Crossing" in selected_value
+
+        # Show or hide the Visual Crossing configuration box by adding/removing from parent
+        parent_box = self.visual_crossing_config_box.parent
+        if parent_box:
+            if show_visual_crossing:
+                # Make sure it's visible (add if not already present)
+                if self.visual_crossing_config_box not in parent_box.children:
+                    # Find the position after data source selection
+                    data_source_index = -1
+                    for i, child in enumerate(parent_box.children):
+                        if child == self.data_source_selection:
+                            data_source_index = i
+                            break
+
+                    if data_source_index >= 0:
+                        parent_box.insert(data_source_index + 1, self.visual_crossing_config_box)
+                    else:
+                        parent_box.add(self.visual_crossing_config_box)
+            else:
+                # Hide by removing from parent
+                if self.visual_crossing_config_box in parent_box.children:
+                    parent_box.remove(self.visual_crossing_config_box)
+
     async def _on_get_visual_crossing_api_key(self, widget):
         """Handle Get API Key button press - open Visual Crossing registration page."""
         try:
@@ -594,6 +654,102 @@ class SettingsDialog:
                 "Failed to open the Visual Crossing registration page. "
                 "Please visit https://www.visualcrossing.com/weather-query-builder/ manually.",
             )
+
+    async def _on_validate_visual_crossing_api_key(self, widget):
+        """Handle Validate API Key button press - test the API key with a simple call."""
+        api_key = str(self.visual_crossing_api_key_input.value).strip()
+
+        if not api_key:
+            await self.app.main_window.error_dialog(
+                "API Key Required", "Please enter your Visual Crossing API key before validating."
+            )
+            return
+
+        try:
+            # Import here to avoid circular imports
+            import httpx
+
+            from ..visual_crossing_client import VisualCrossingClient
+
+            # Show a simple loading message (we can't show a progress dialog easily in Toga)
+            # Instead, we'll disable the button temporarily
+            original_text = self.validate_api_key_button.text
+            self.validate_api_key_button.text = "Validating..."
+            self.validate_api_key_button.enabled = False
+
+            try:
+                # Create a simple test client
+                client = VisualCrossingClient(api_key, "AccessiWeather/2.0")
+
+                # Make a simple test request to a known location (New York City)
+                # This is a minimal request to test API key validity
+                url = f"{client.base_url}/40.7128,-74.0060"
+                params = {
+                    "key": api_key,
+                    "include": "current",
+                    "unitGroup": "us",
+                    "elements": "temp",  # Just get temperature to minimize data usage
+                }
+
+                async with httpx.AsyncClient(timeout=10.0) as http_client:
+                    response = await http_client.get(url, params=params)
+
+                    if response.status_code == 200:
+                        # API key is valid
+                        await self.app.main_window.info_dialog(
+                            "API Key Valid",
+                            "✅ Your Visual Crossing API key is valid and working!\n\n"
+                            "You can now use Visual Crossing as your weather data source.",
+                        )
+                    elif response.status_code == 401:
+                        # Invalid API key
+                        await self.app.main_window.error_dialog(
+                            "Invalid API Key",
+                            "❌ The API key you entered is invalid.\n\n"
+                            "Please check your API key and try again. Make sure you copied it correctly from your Visual Crossing account.",
+                        )
+                    elif response.status_code == 429:
+                        # Rate limit exceeded
+                        await self.app.main_window.error_dialog(
+                            "Rate Limit Exceeded",
+                            "⚠️ Your API key is valid, but you've exceeded your rate limit.\n\n"
+                            "Please wait a moment before making more requests, or check your Visual Crossing account usage.",
+                        )
+                    else:
+                        # Other error
+                        await self.app.main_window.error_dialog(
+                            "API Error",
+                            f"❌ API validation failed with status code {response.status_code}.\n\n"
+                            "Please check your internet connection and try again.",
+                        )
+
+            except httpx.TimeoutException:
+                await self.app.main_window.error_dialog(
+                    "Connection Timeout",
+                    "⚠️ The validation request timed out.\n\n"
+                    "Please check your internet connection and try again.",
+                )
+            except httpx.RequestError as e:
+                await self.app.main_window.error_dialog(
+                    "Connection Error",
+                    f"❌ Failed to connect to Visual Crossing API.\n\n"
+                    f"Error: {e}\n\n"
+                    "Please check your internet connection and try again.",
+                )
+            finally:
+                # Restore button state
+                self.validate_api_key_button.text = original_text
+                self.validate_api_key_button.enabled = True
+
+        except Exception as e:
+            logger.error(f"Failed to validate Visual Crossing API key: {e}")
+            await self.app.main_window.error_dialog(
+                "Validation Error",
+                f"❌ An unexpected error occurred while validating your API key.\n\nError: {e}",
+            )
+            # Restore button state in case of error
+            self.validate_api_key_button.text = original_text
+            self.validate_api_key_button.enabled = True
 
     def _collect_settings_from_ui(self) -> AppSettings:
         """Collect current settings from UI controls."""
