@@ -142,10 +142,58 @@ class WeatherAlert:
     onset: datetime | None = None
     expires: datetime | None = None
     areas: list[str] = field(default_factory=list)
+    id: str | None = None  # NWS alert ID for unique identification
 
     def __post_init__(self):
         if self.areas is None:
             self.areas = []
+
+    def get_unique_id(self) -> str:
+        """Get a unique identifier for this alert.
+
+        Uses the NWS alert ID if available, otherwise generates one from key fields.
+        """
+        if self.id:
+            return self.id
+
+        # Generate ID from key fields if NWS ID not available
+        key_parts = [
+            self.event or "unknown",
+            self.severity or "unknown",
+            self.headline or self.title or "unknown",
+        ]
+        return "-".join(part.lower().replace(" ", "_") for part in key_parts)
+
+    def get_content_hash(self) -> str:
+        """Generate a hash of key content fields for change detection.
+
+        This helps detect when an alert has been updated with new information.
+        """
+        import hashlib
+
+        # Include key fields that would indicate a meaningful change
+        content_parts = [
+            self.title or "",
+            self.description or "",
+            self.severity or "",
+            self.urgency or "",
+            self.headline or "",
+            self.instruction or "",
+        ]
+
+        content_string = "|".join(content_parts)
+        return hashlib.md5(content_string.encode()).hexdigest()
+
+    def is_expired(self) -> bool:
+        """Check if this alert has expired."""
+        if self.expires is None:
+            return False
+        return datetime.now() > self.expires
+
+    def get_severity_priority(self) -> int:
+        """Get numeric priority for severity level (higher = more severe)."""
+        severity_map = {"extreme": 5, "severe": 4, "moderate": 3, "minor": 2, "unknown": 1}
+        return severity_map.get(self.severity.lower(), 1)
 
 
 @dataclass
@@ -230,6 +278,19 @@ class AppSettings:
     sound_enabled: bool = True
     sound_pack: str = "default"
 
+    # Alert notification settings
+    alert_notifications_enabled: bool = True
+    alert_notify_extreme: bool = True
+    alert_notify_severe: bool = True
+    alert_notify_moderate: bool = True
+    alert_notify_minor: bool = False
+    alert_notify_unknown: bool = False
+    alert_global_cooldown_minutes: int = 5
+    alert_per_alert_cooldown_minutes: int = 60
+    alert_escalation_cooldown_minutes: int = 15
+    alert_max_notifications_per_hour: int = 10
+    alert_ignored_categories: list[str] = field(default_factory=list)
+
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
         return {
@@ -245,6 +306,17 @@ class AppSettings:
             "debug_mode": self.debug_mode,
             "sound_enabled": self.sound_enabled,
             "sound_pack": self.sound_pack,
+            "alert_notifications_enabled": self.alert_notifications_enabled,
+            "alert_notify_extreme": self.alert_notify_extreme,
+            "alert_notify_severe": self.alert_notify_severe,
+            "alert_notify_moderate": self.alert_notify_moderate,
+            "alert_notify_minor": self.alert_notify_minor,
+            "alert_notify_unknown": self.alert_notify_unknown,
+            "alert_global_cooldown_minutes": self.alert_global_cooldown_minutes,
+            "alert_per_alert_cooldown_minutes": self.alert_per_alert_cooldown_minutes,
+            "alert_escalation_cooldown_minutes": self.alert_escalation_cooldown_minutes,
+            "alert_max_notifications_per_hour": self.alert_max_notifications_per_hour,
+            "alert_ignored_categories": self.alert_ignored_categories,
         }
 
     @classmethod
@@ -263,7 +335,47 @@ class AppSettings:
             debug_mode=data.get("debug_mode", False),
             sound_enabled=data.get("sound_enabled", True),
             sound_pack=data.get("sound_pack", "default"),
+            alert_notifications_enabled=data.get("alert_notifications_enabled", True),
+            alert_notify_extreme=data.get("alert_notify_extreme", True),
+            alert_notify_severe=data.get("alert_notify_severe", True),
+            alert_notify_moderate=data.get("alert_notify_moderate", True),
+            alert_notify_minor=data.get("alert_notify_minor", False),
+            alert_notify_unknown=data.get("alert_notify_unknown", False),
+            alert_global_cooldown_minutes=data.get("alert_global_cooldown_minutes", 5),
+            alert_per_alert_cooldown_minutes=data.get("alert_per_alert_cooldown_minutes", 60),
+            alert_escalation_cooldown_minutes=data.get("alert_escalation_cooldown_minutes", 15),
+            alert_max_notifications_per_hour=data.get("alert_max_notifications_per_hour", 10),
+            alert_ignored_categories=data.get("alert_ignored_categories", []),
         )
+
+    def to_alert_settings(self):
+        """Convert to AlertSettings for the alert management system."""
+        from .alert_manager import AlertSettings
+
+        settings = AlertSettings()
+        settings.notifications_enabled = self.alert_notifications_enabled
+        settings.sound_enabled = self.sound_enabled
+        settings.global_cooldown = self.alert_global_cooldown_minutes
+        settings.per_alert_cooldown = self.alert_per_alert_cooldown_minutes
+        settings.escalation_cooldown = self.alert_escalation_cooldown_minutes
+        settings.max_notifications_per_hour = self.alert_max_notifications_per_hour
+        settings.ignored_categories = set(self.alert_ignored_categories)
+
+        # Map severity preferences to minimum priority
+        if self.alert_notify_unknown:
+            settings.min_severity_priority = 1
+        elif self.alert_notify_minor:
+            settings.min_severity_priority = 2
+        elif self.alert_notify_moderate:
+            settings.min_severity_priority = 3
+        elif self.alert_notify_severe:
+            settings.min_severity_priority = 4
+        elif self.alert_notify_extreme:
+            settings.min_severity_priority = 5
+        else:
+            settings.min_severity_priority = 6  # Effectively disable notifications
+
+        return settings
 
 
 @dataclass
