@@ -555,6 +555,33 @@ class WeatherClient:
 
         for alert_data in data.get("features", []):
             props = alert_data.get("properties", {})
+
+            # Extract alert ID from the NWS API response
+            # The ID can be in different places depending on the API response format
+            alert_id = None
+            if "id" in alert_data:
+                alert_id = alert_data["id"]
+            elif "identifier" in props:
+                alert_id = props["identifier"]
+            elif "@id" in props:
+                alert_id = props["@id"]
+
+            # Parse onset and expires times
+            onset = None
+            expires = None
+
+            if props.get("onset"):
+                try:
+                    onset = datetime.fromisoformat(props["onset"].replace("Z", "+00:00"))
+                except ValueError:
+                    logger.warning(f"Failed to parse onset time: {props['onset']}")
+
+            if props.get("expires"):
+                try:
+                    expires = datetime.fromisoformat(props["expires"].replace("Z", "+00:00"))
+                except ValueError:
+                    logger.warning(f"Failed to parse expires time: {props['expires']}")
+
             alert = WeatherAlert(
                 title=props.get("headline", "Weather Alert"),
                 description=props.get("description", ""),
@@ -564,10 +591,19 @@ class WeatherClient:
                 event=props.get("event"),
                 headline=props.get("headline"),
                 instruction=props.get("instruction"),
+                onset=onset,
+                expires=expires,
                 areas=props.get("areaDesc", "").split("; ") if props.get("areaDesc") else [],
+                id=alert_id,  # Store the NWS alert ID for unique identification
             )
             alerts.append(alert)
 
+            if alert_id:
+                logger.debug(f"Parsed alert with ID: {alert_id}")
+            else:
+                logger.debug(f"Parsed alert without ID, will generate: {alert.get_unique_id()}")
+
+        logger.info(f"Parsed {len(alerts)} alerts from NWS API")
         return WeatherAlerts(alerts=alerts)
 
     def _parse_nws_hourly_forecast(self, data: dict) -> HourlyForecast:
