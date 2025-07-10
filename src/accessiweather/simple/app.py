@@ -11,6 +11,8 @@ import toga
 from toga.style import Pack
 from travertino.constants import COLUMN, ROW
 
+from .alert_manager import AlertManager
+from .alert_notification_system import AlertNotificationSystem
 from .config import ConfigManager
 from .dialogs import AddLocationDialog, SettingsDialog
 from .dialogs.discussion import ForecastDiscussionDialog
@@ -52,7 +54,10 @@ class AccessiWeatherApp(toga.App):
 
         # Weather data storage
         self.current_weather_data: WeatherData | None = None
-        self._last_alert_ids = set()  # Track previously notified alert IDs
+
+        # Alert management system
+        self.alert_manager: AlertManager | None = None
+        self.alert_notification_system: AlertNotificationSystem | None = None
 
         # Notification system
         self._notifier = None  # Will be initialized in startup
@@ -170,10 +175,29 @@ class AccessiWeatherApp(toga.App):
 
         self._notifier = SafeDesktopNotifier()
 
+        # Initialize alert management system
+        from .alert_manager import AlertManager
+        from .alert_notification_system import AlertNotificationSystem
+
+        config_dir = str(self.paths.config)
+        alert_settings = config.settings.to_alert_settings()
+        self.alert_manager = AlertManager(config_dir, alert_settings)
+        self.alert_notification_system = AlertNotificationSystem(self.alert_manager, self._notifier)
+
         # Initialize system tray
         self._initialize_system_tray()
 
         logger.info("Application components initialized")
+
+        # Add test alert command for debugging
+        if config.settings.debug_mode:
+            test_alert_command = toga.Command(
+                self._test_alert_notification,
+                text="Test Alert Notification",
+                tooltip="Send a test alert notification",
+                group=toga.Group.COMMANDS,
+            )
+            self.commands.add(test_alert_command)
 
     def _initialize_system_tray(self):
         """Initialize system tray functionality."""
@@ -818,7 +842,7 @@ class AccessiWeatherApp(toga.App):
             self.current_weather_data = weather_data
 
             # Update displays
-            self._update_weather_displays(weather_data)
+            await self._update_weather_displays(weather_data)
 
             self._update_status(f"Updated at {weather_data.last_updated.strftime('%I:%M %p')}")
             logger.info(f"Successfully updated weather for {current_location.name}")
@@ -833,7 +857,7 @@ class AccessiWeatherApp(toga.App):
             if self.refresh_button:
                 self.refresh_button.enabled = True
 
-    def _update_weather_displays(self, weather_data: WeatherData):
+    async def _update_weather_displays(self, weather_data: WeatherData):
         """Update the weather display widgets with new data."""
         try:
             # Format weather data
@@ -853,7 +877,7 @@ class AccessiWeatherApp(toga.App):
                 if self.alert_details_button:
                     self.alert_details_button.enabled = len(alerts_table_data) > 0
                 # Trigger notifications for new alerts
-                self._notify_new_alerts(weather_data.alerts)
+                await self._notify_new_alerts(weather_data.alerts)
 
             # Update displays
             if self.current_conditions_display:
@@ -889,34 +913,58 @@ class AccessiWeatherApp(toga.App):
 
         return table_data
 
-    def _notify_new_alerts(self, alerts):
-        """Send system notifications for new or changed alerts using desktop-notifier."""
+    async def _notify_new_alerts(self, alerts):
+        """Send system notifications for new or changed alerts using the enhanced alert system."""
         if not alerts or not alerts.has_alerts():
-            self._last_alert_ids = set()
             return
-        active_alerts = alerts.get_active_alerts()
-        new_alerts = []
-        new_ids = set()
-        for alert in active_alerts:
-            alert_id = (
-                getattr(alert, "id", None) or f"{alert.event}-{alert.severity}-{alert.headline}"
-            )
-            new_ids.add(alert_id)
-            if alert_id not in self._last_alert_ids:
-                new_alerts.append(alert)
-        # Only notify for new alerts
-        for alert in new_alerts:
-            title = alert.event or "Weather Alert"
-            message = alert.headline or "A new weather alert has been issued."
+
+        try:
+            # Use the new alert notification system
+            if self.alert_notification_system:
+                notifications_sent = await self.alert_notification_system.process_and_notify(alerts)
+                if notifications_sent > 0:
+                    logger.info(f"Sent {notifications_sent} alert notifications")
+            else:
+                logger.warning("Alert notification system not initialized")
+        except Exception as e:
+            logger.error(f"Failed to process alert notifications: {e}")
+            # Fallback to simple notification for critical alerts
             try:
-                self._notifier.send_notification(title=title, message=message)
-                logger.info(
-                    f"Notification sent: {title} - "
-                    f"{message[:80]}{'...' if len(message) > 80 else ''}"
+                active_alerts = alerts.get_active_alerts()
+                for alert in active_alerts[:1]:  # Only notify for first alert as fallback
+                    if alert.severity.lower() in ["extreme", "severe"]:
+                        title = alert.event or "Weather Alert"
+                        message = alert.headline or "A new weather alert has been issued."
+                        self._notifier.send_notification(title=title, message=message)
+                        logger.info(f"Fallback notification sent: {title}")
+                        break
+            except Exception as fallback_error:
+                logger.error(f"Fallback notification also failed: {fallback_error}")
+
+    async def _test_alert_notification(self, widget):
+        """Test the alert notification system (debug mode only)."""
+        try:
+            if self.alert_notification_system:
+                success = await self.alert_notification_system.test_notification("Severe")
+                if success:
+                    await self.main_window.info_dialog(
+                        "Test Alert",
+                        "Test alert notification sent successfully! Check your system notifications.",
+                    )
+                else:
+                    await self.main_window.error_dialog(
+                        "Test Alert Failed",
+                        "Failed to send test alert notification. Check the logs for details.",
+                    )
+            else:
+                await self.main_window.error_dialog(
+                    "Alert System Error", "Alert notification system is not initialized."
                 )
-            except Exception as e:
-                logger.error(f"Failed to send notification: {e}")
-        self._last_alert_ids = new_ids
+        except Exception as e:
+            logger.error(f"Error testing alert notification: {e}")
+            await self.main_window.error_dialog(
+                "Test Error", f"Error testing alert notification: {e}"
+            )
 
     def _show_error_displays(self, error_message: str):
         """Show error message in weather displays."""
