@@ -41,6 +41,11 @@ class SettingsDialog:
         self.enable_alerts_switch = None
         self.debug_mode_switch = None
 
+        # Visual Crossing API controls
+        self.visual_crossing_config_box = None
+        self.visual_crossing_api_key_input = None
+        self.get_api_key_button = None
+
         # Display tab controls
         self.temperature_unit_selection = None
 
@@ -159,12 +164,13 @@ class SettingsDialog:
             "Automatic (NWS for US, Open-Meteo for non-US)",
             "National Weather Service (NWS)",
             "Open-Meteo (International)",
+            "Visual Crossing (Global, requires API key)",
         ]
 
         self.data_source_selection = toga.Selection(
             items=data_source_options,
             style=Pack(margin_bottom=15),
-            id="data_source_selection",
+            on_change=self._on_data_source_changed,
         )
 
         # Set current value based on stored configuration
@@ -172,6 +178,7 @@ class SettingsDialog:
             "auto": 0,
             "nws": 1,
             "openmeteo": 2,
+            "visualcrossing": 3,
         }
 
         try:
@@ -184,12 +191,56 @@ class SettingsDialog:
 
         general_box.add(self.data_source_selection)
 
+        # Visual Crossing API Key Configuration (initially hidden)
+        self.visual_crossing_config_box = toga.Box(style=Pack(direction=COLUMN))
+
+        self.visual_crossing_config_box.add(
+            toga.Label(
+                "Visual Crossing API Configuration:",
+                style=Pack(margin_top=15, margin_bottom=5, font_weight="bold"),
+            )
+        )
+
+        # API Key input
+        self.visual_crossing_config_box.add(toga.Label("API Key:", style=Pack(margin_bottom=5)))
+        self.visual_crossing_api_key_input = toga.PasswordInput(
+            value=getattr(self.current_settings, "visual_crossing_api_key", ""),
+            placeholder="Enter your Visual Crossing API key",
+            style=Pack(margin_bottom=10),
+        )
+        self.visual_crossing_config_box.add(self.visual_crossing_api_key_input)
+
+        # API Key buttons row
+        api_key_buttons_row = toga.Box(style=Pack(direction=ROW, margin_bottom=15))
+
+        # API Key registration link button
+        self.get_api_key_button = toga.Button(
+            "Get Free API Key",
+            on_press=self._on_get_visual_crossing_api_key,
+            style=Pack(margin_right=10, width=150),
+        )
+        api_key_buttons_row.add(self.get_api_key_button)
+
+        # API Key validation button
+        self.validate_api_key_button = toga.Button(
+            "Validate API Key",
+            on_press=self._on_validate_visual_crossing_api_key,
+            style=Pack(width=150),
+        )
+        api_key_buttons_row.add(self.validate_api_key_button)
+
+        self.visual_crossing_config_box.add(api_key_buttons_row)
+
+        general_box.add(self.visual_crossing_config_box)
+
+        # Set initial visibility of Visual Crossing config based on current selection
+        self._update_visual_crossing_visibility()
+
         # Update Interval
         general_box.add(toga.Label("Update Interval (minutes):", style=Pack(margin_bottom=5)))
         self.update_interval_input = toga.NumberInput(
             value=self.current_settings.update_interval_minutes,
             style=Pack(margin_bottom=15),
-            id="update_interval_input",
         )
         general_box.add(self.update_interval_input)
 
@@ -221,7 +272,9 @@ class SettingsDialog:
         general_box.add(self.debug_mode_switch)
 
         # --- Sound Settings ---
-        general_box.add(toga.Label("Sound Notifications:", style=Pack(margin_top=15, font_weight="bold")))
+        general_box.add(
+            toga.Label("Sound Notifications:", style=Pack(margin_top=15, font_weight="bold"))
+        )
 
         # Enable Sounds Switch
         self.sound_enabled_switch = toga.Switch(
@@ -234,8 +287,9 @@ class SettingsDialog:
         general_box.add(self.sound_enabled_switch)
 
         # Sound Pack Selection
-        from pathlib import Path
         import json
+        from pathlib import Path
+
         soundpacks_dir = Path(__file__).parent.parent / "soundpacks"
         self.sound_pack_options = []
         self.sound_pack_map = {}
@@ -243,7 +297,7 @@ class SettingsDialog:
             for pack_dir in soundpacks_dir.iterdir():
                 if pack_dir.is_dir() and (pack_dir / "pack.json").exists():
                     try:
-                        with open(pack_dir / "pack.json", "r", encoding="utf-8") as f:
+                        with open(pack_dir / "pack.json", encoding="utf-8") as f:
                             meta = json.load(f)
                         display_name = meta.get("name", pack_dir.name)
                         self.sound_pack_options.append(display_name)
@@ -531,6 +585,7 @@ class SettingsDialog:
             pack_display = self.sound_pack_selection.value
             pack_dir = self.sound_pack_map.get(pack_display, "default")
             from ..notifications.sound_player import play_sample_sound
+
             play_sample_sound(pack_dir)
         except Exception as e:
             logger.error(f"Failed to preview sound: {e}")
@@ -539,14 +594,166 @@ class SettingsDialog:
         # Placeholder for future sound pack management dialog
         self.app.main_window.info_dialog("Manage Sound Packs", "Sound pack management coming soon.")
 
+    def _on_data_source_changed(self, widget):
+        """Handle data source selection change to show/hide Visual Crossing config."""
+        self._update_visual_crossing_visibility()
+
+    def _update_visual_crossing_visibility(self):
+        """Update visibility of Visual Crossing configuration based on data source selection."""
+        if not self.data_source_selection or not self.visual_crossing_config_box:
+            return
+
+        selected_value = str(self.data_source_selection.value)
+        show_visual_crossing = "Visual Crossing" in selected_value
+
+        # Show or hide the Visual Crossing configuration box by adding/removing from parent
+        parent_box = self.visual_crossing_config_box.parent
+        if parent_box:
+            if show_visual_crossing:
+                # Make sure it's visible (add if not already present)
+                if self.visual_crossing_config_box not in parent_box.children:
+                    # Find the position after data source selection
+                    data_source_index = -1
+                    for i, child in enumerate(parent_box.children):
+                        if child == self.data_source_selection:
+                            data_source_index = i
+                            break
+
+                    if data_source_index >= 0:
+                        parent_box.insert(data_source_index + 1, self.visual_crossing_config_box)
+                    else:
+                        parent_box.add(self.visual_crossing_config_box)
+            else:
+                # Hide by removing from parent
+                if self.visual_crossing_config_box in parent_box.children:
+                    parent_box.remove(self.visual_crossing_config_box)
+
+    async def _on_get_visual_crossing_api_key(self, widget):
+        """Handle Get API Key button press - open Visual Crossing registration page."""
+        try:
+            # Open Visual Crossing sign-up page in default browser
+            import webbrowser
+
+            webbrowser.open("https://www.visualcrossing.com/weather-query-builder/")
+
+            # Show info dialog with instructions
+            await self.app.main_window.info_dialog(
+                "Visual Crossing API Key",
+                "The Visual Crossing Weather Query Builder page has been opened in your browser.\n\n"
+                "To get your free API key:\n"
+                "1. Sign up for a free account\n"
+                "2. Go to your account page\n"
+                "3. Copy your API key\n"
+                "4. Paste it into the API Key field below\n\n"
+                "Free accounts include 1000 weather records per day.",
+            )
+        except Exception as e:
+            logger.error(f"Failed to open Visual Crossing registration page: {e}")
+            await self.app.main_window.error_dialog(
+                "Error",
+                "Failed to open the Visual Crossing registration page. "
+                "Please visit https://www.visualcrossing.com/weather-query-builder/ manually.",
+            )
+
+    async def _on_validate_visual_crossing_api_key(self, widget):
+        """Handle Validate API Key button press - test the API key with a simple call."""
+        api_key = str(self.visual_crossing_api_key_input.value).strip()
+
+        if not api_key:
+            await self.app.main_window.error_dialog(
+                "API Key Required", "Please enter your Visual Crossing API key before validating."
+            )
+            return
+
+        try:
+            # Import here to avoid circular imports
+            import httpx
+
+            from ..visual_crossing_client import VisualCrossingClient
+
+            # Show a simple loading message (we can't show a progress dialog easily in Toga)
+            # Instead, we'll disable the button temporarily
+            original_text = self.validate_api_key_button.text
+            self.validate_api_key_button.text = "Validating..."
+            self.validate_api_key_button.enabled = False
+
+            try:
+                # Create a simple test client
+                client = VisualCrossingClient(api_key, "AccessiWeather/2.0")
+
+                # Make a simple test request to a known location (New York City)
+                # This is a minimal request to test API key validity
+                url = f"{client.base_url}/40.7128,-74.0060"
+                params = {
+                    "key": api_key,
+                    "include": "current",
+                    "unitGroup": "us",
+                    "elements": "temp",  # Just get temperature to minimize data usage
+                }
+
+                async with httpx.AsyncClient(timeout=10.0) as http_client:
+                    response = await http_client.get(url, params=params)
+
+                    if response.status_code == 200:
+                        # API key is valid
+                        await self.app.main_window.info_dialog(
+                            "API Key Valid",
+                            "✅ Your Visual Crossing API key is valid and working!\n\n"
+                            "You can now use Visual Crossing as your weather data source.",
+                        )
+                    elif response.status_code == 401:
+                        # Invalid API key
+                        await self.app.main_window.error_dialog(
+                            "Invalid API Key",
+                            "❌ The API key you entered is invalid.\n\n"
+                            "Please check your API key and try again. Make sure you copied it correctly from your Visual Crossing account.",
+                        )
+                    elif response.status_code == 429:
+                        # Rate limit exceeded
+                        await self.app.main_window.error_dialog(
+                            "Rate Limit Exceeded",
+                            "⚠️ Your API key is valid, but you've exceeded your rate limit.\n\n"
+                            "Please wait a moment before making more requests, or check your Visual Crossing account usage.",
+                        )
+                    else:
+                        # Other error
+                        await self.app.main_window.error_dialog(
+                            "API Error",
+                            f"❌ API validation failed with status code {response.status_code}.\n\n"
+                            "Please check your internet connection and try again.",
+                        )
+
+            except httpx.TimeoutException:
+                await self.app.main_window.error_dialog(
+                    "Connection Timeout",
+                    "⚠️ The validation request timed out.\n\n"
+                    "Please check your internet connection and try again.",
+                )
+            except httpx.RequestError as e:
+                await self.app.main_window.error_dialog(
+                    "Connection Error",
+                    f"❌ Failed to connect to Visual Crossing API.\n\n"
+                    f"Error: {e}\n\n"
+                    "Please check your internet connection and try again.",
+                )
+            finally:
+                # Restore button state
+                self.validate_api_key_button.text = original_text
+                self.validate_api_key_button.enabled = True
+
+        except Exception as e:
+            logger.error(f"Failed to validate Visual Crossing API key: {e}")
+            await self.app.main_window.error_dialog(
+                "Validation Error",
+                f"❌ An unexpected error occurred while validating your API key.\n\nError: {e}",
+            )
+            # Restore button state in case of error
+            self.validate_api_key_button.text = original_text
+            self.validate_api_key_button.enabled = True
+
     def _collect_settings_from_ui(self) -> AppSettings:
         """Collect current settings from UI controls."""
         # Map data source selection back to internal values
-        data_source_reverse_map = {
-            0: "auto",
-            1: "nws",
-            2: "openmeteo",
-        }
 
         try:
             # Get the selected value and map it directly to internal values
@@ -557,6 +764,8 @@ class SettingsDialog:
                 data_source = "nws"
             elif "Open-Meteo" in selected_value:
                 data_source = "openmeteo"
+            elif "Visual Crossing" in selected_value:
+                data_source = "visualcrossing"
             else:
                 data_source = "auto"  # Default fallback
         except (ValueError, AttributeError) as e:
@@ -564,11 +773,6 @@ class SettingsDialog:
             data_source = "auto"
 
         # Map temperature unit selection back to internal values
-        temp_unit_reverse_map = {
-            0: "f",
-            1: "c",
-            2: "both",
-        }
 
         try:
             # Get the selected value and map it directly to internal values
@@ -620,6 +824,11 @@ class SettingsDialog:
         pack_display = self.sound_pack_selection.value
         sound_pack = self.sound_pack_map.get(pack_display, "default")
 
+        # Get Visual Crossing API key
+        visual_crossing_api_key = ""
+        if hasattr(self, "visual_crossing_api_key_input") and self.visual_crossing_api_key_input:
+            visual_crossing_api_key = str(self.visual_crossing_api_key_input.value).strip()
+
         return AppSettings(
             temperature_unit=temperature_unit,
             update_interval_minutes=update_interval,
@@ -627,6 +836,7 @@ class SettingsDialog:
             enable_alerts=self.enable_alerts_switch.value,
             minimize_to_tray=self.minimize_to_tray_switch.value,
             data_source=data_source,
+            visual_crossing_api_key=visual_crossing_api_key,
             auto_update_enabled=auto_update_enabled,
             update_channel=update_channel,
             update_check_interval_hours=update_check_interval_hours,
