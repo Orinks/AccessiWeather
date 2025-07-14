@@ -1,1 +1,0 @@
-"""OpenMeteo integration tests package."""
