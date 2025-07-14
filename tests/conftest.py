@@ -5,12 +5,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-# Import only basic fixtures and Toga helpers, skip wx-specific ones
-from tests.fixtures.basic_fixtures import *  # noqa: F401, F403
-from tests.fixtures.sample_responses import *  # noqa: F401, F403
+# Import only Toga helpers
 from tests.toga_test_helpers import *  # noqa: F401, F403
 
-# Skip gui_fixtures and mock_clients as they contain wx/geocoding dependencies
+# Skip removed fixtures directories (basic_fixtures, sample_responses, gui_fixtures, mock_clients)
 
 
 @pytest.fixture

@@ -174,7 +174,8 @@ class TestUnitUtils:
 
         # Test with Both preference but providing mm value
         assert (
-            format_precipitation(None, TemperatureUnit.BOTH, precip_mm=12.7) == "0.50 in (12.70 mm)"
+            format_precipitation(None, TemperatureUnit.BOTH, precipitation_mm=12.7)
+            == "0.50 in (12.70 mm)"
         )
         assert (
             format_precipitation(None, TemperatureUnit.BOTH, precip_mm=31.75)
