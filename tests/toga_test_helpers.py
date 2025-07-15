@@ -245,3 +245,85 @@ def setup_toga_dummy():
     os.environ["TOGA_BACKEND"] = "toga_dummy"
     yield
     # Cleanup handled by OS environment
+
+
+@pytest.fixture
+def mock_toga_app():
+    """Pytest fixture for mock Toga app."""
+    app = Mock()
+    app.main_loop = Mock()
+    app.exit = Mock()
+    app.paths = Mock()
+    app.formal_name = "AccessiWeather"
+    app.app_name = "accessiweather"
+    return app
+
+
+@pytest.fixture
+def mock_toga_controls():
+    """Pytest fixture for mock Toga controls."""
+    return {
+        "TextInput": MockTogaWidgets.create_widget("TextInput", value=""),
+        "Button": MockTogaWidgets.create_widget("Button", text="Test Button"),
+        "Selection": MockTogaWidgets.create_widget("Selection", items=["Option 1", "Option 2"]),
+        "MultilineTextInput": MockTogaWidgets.create_widget("MultilineTextInput", value=""),
+        "Table": MockTogaWidgets.create_widget("Table", headings=["Name", "Value"]),
+    }
+
+
+@pytest.fixture
+def mock_simple_location():
+    """Pytest fixture for simple location."""
+    return WeatherDataFactory.create_location(name="New York, NY", lat=40.7128, lon=-74.0060)
+
+
+@pytest.fixture
+def sample_config():
+    """Pytest fixture for sample config."""
+    return {
+        "settings": {
+            "data_source": "auto",
+            "temperature_unit": "both",
+            "update_interval": 300,
+            "notifications_enabled": True,
+            "startup_location": "last_used",
+            "minimize_to_tray": True,
+            "show_in_taskbar": True,
+            "auto_refresh": True,
+            "sound_alerts": False,
+            "visual_alerts": True,
+            "alert_types": ["warning", "watch", "advisory"],
+            "debug_mode": False,
+            "log_level": "INFO",
+            "cache_duration": 600,
+            "api_timeout": 30,
+            "retry_attempts": 3,
+            "retry_delay": 1.0,
+        },
+        "locations": [
+            {
+                "name": "New York, NY",
+                "latitude": 40.7128,
+                "longitude": -74.0060,
+            },
+            {
+                "name": "Philadelphia, PA",
+                "latitude": 39.9526,
+                "longitude": -75.1652,
+            },
+        ],
+        "current_location": {
+            "name": "New York, NY",
+            "latitude": 40.7128,
+            "longitude": -74.0060,
+        },
+    }
+
+
+@pytest.fixture
+def toga_test_environment():
+    """Pytest fixture for Toga test environment."""
+    env = Mock()
+    env.is_test_mode = Mock(return_value=True)
+    env.backend = "dummy"
+    return env

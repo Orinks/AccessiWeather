@@ -19,7 +19,7 @@ def test_main_module_import():
 
 
 @pytest.mark.unit
-@patch("accessiweather.simple.main")
+@patch("accessiweather.main.toga_main")
 def test_app_main_another_instance_running(mock_toga_main):
     """Test app_main delegates to toga main."""
     mock_app = MagicMock()
@@ -32,7 +32,7 @@ def test_app_main_another_instance_running(mock_toga_main):
 
 
 @pytest.mark.unit
-@patch("accessiweather.simple.main")
+@patch("accessiweather.main.toga_main")
 def test_app_main_exception_handling(mock_toga_main):
     """Test app_main exception handling."""
     mock_toga_main.side_effect = Exception("Test error")

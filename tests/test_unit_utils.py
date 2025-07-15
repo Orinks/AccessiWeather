@@ -151,8 +151,14 @@ class TestUnitUtils:
         assert format_precipitation(None, TemperatureUnit.FAHRENHEIT) == "N/A"
 
         # Test with Fahrenheit preference but providing mm value
-        assert format_precipitation(None, TemperatureUnit.FAHRENHEIT, precip_mm=12.7) == "0.50 in"
-        assert format_precipitation(None, TemperatureUnit.FAHRENHEIT, precip_mm=31.75) == "1.25 in"
+        assert (
+            format_precipitation(None, TemperatureUnit.FAHRENHEIT, precipitation_mm=12.7)
+            == "0.50 in"
+        )
+        assert (
+            format_precipitation(None, TemperatureUnit.FAHRENHEIT, precipitation_mm=31.75)
+            == "1.25 in"
+        )
 
     def test_format_precipitation_celsius(self):
         """Test format_precipitation function with Celsius preference."""
@@ -162,8 +168,13 @@ class TestUnitUtils:
         assert format_precipitation(None, TemperatureUnit.CELSIUS) == "N/A"
 
         # Test with Celsius preference but providing mm value
-        assert format_precipitation(None, TemperatureUnit.CELSIUS, precip_mm=12.7) == "12.70 mm"
-        assert format_precipitation(None, TemperatureUnit.CELSIUS, precip_mm=31.75) == "31.75 mm"
+        assert (
+            format_precipitation(None, TemperatureUnit.CELSIUS, precipitation_mm=12.7) == "12.70 mm"
+        )
+        assert (
+            format_precipitation(None, TemperatureUnit.CELSIUS, precipitation_mm=31.75)
+            == "31.75 mm"
+        )
 
     def test_format_precipitation_both(self):
         """Test format_precipitation function with Both preference."""
@@ -178,6 +189,6 @@ class TestUnitUtils:
             == "0.50 in (12.70 mm)"
         )
         assert (
-            format_precipitation(None, TemperatureUnit.BOTH, precip_mm=31.75)
+            format_precipitation(None, TemperatureUnit.BOTH, precipitation_mm=31.75)
             == "1.25 in (31.75 mm)"
         )
