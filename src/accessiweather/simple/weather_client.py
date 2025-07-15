@@ -252,7 +252,19 @@ class WeatherClient:
 
     def _determine_api_choice(self, location: Location) -> str:
         """Determine which API to use for the given location."""
+        # Validate data source
+        valid_sources = ["auto", "nws", "openmeteo", "visualcrossing"]
+        if self.data_source not in valid_sources:
+            logger.warning(f"Invalid data source '{self.data_source}', defaulting to 'auto'")
+            self.data_source = "auto"
+
         if self.data_source == "visualcrossing":
+            # Check if Visual Crossing client is available
+            if not self.visual_crossing_client:
+                logger.warning(
+                    "Visual Crossing selected but no API key provided, falling back to auto"
+                )
+                return "nws" if self._is_us_location(location) else "openmeteo"
             return "visualcrossing"
         if self.data_source == "openmeteo":
             return "openmeteo"
@@ -261,8 +273,9 @@ class WeatherClient:
         if self.data_source == "auto":
             # Use NWS for US locations, Open-Meteo for international locations
             return "nws" if self._is_us_location(location) else "openmeteo"
-        logger.warning(f"Unknown data source '{self.data_source}', defaulting to NWS")
-        return "nws"
+        # Fallback for any unexpected cases
+        logger.warning(f"Unexpected data source '{self.data_source}', defaulting to auto")
+        return "nws" if self._is_us_location(location) else "openmeteo"
 
     def _is_us_location(self, location: Location) -> bool:
         """Check if location is within the United States (rough approximation)."""

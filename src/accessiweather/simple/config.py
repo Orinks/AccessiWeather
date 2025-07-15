@@ -39,6 +39,9 @@ class ConfigManager:
                 with open(self.config_file, encoding="utf-8") as f:
                     data = json.load(f)
                     self._config = AppConfig.from_dict(data)
+
+                    # Validate and fix configuration
+                    self._validate_and_fix_config()
                     logger.info("Configuration loaded successfully")
             else:
                 logger.info("No config file found, creating default configuration")
@@ -51,6 +54,43 @@ class ConfigManager:
             self._config = AppConfig.default()
 
         return self._config
+
+    def _validate_and_fix_config(self) -> None:
+        """Validate and fix configuration settings."""
+        if self._config is None:
+            return
+
+        settings = self._config.settings
+        config_changed = False
+
+        # Validate data_source
+        valid_sources = ["auto", "nws", "openmeteo", "visualcrossing"]
+        if settings.data_source not in valid_sources:
+            logger.warning(f"Invalid data_source '{settings.data_source}', resetting to 'auto'")
+            settings.data_source = "auto"
+            config_changed = True
+
+        # Validate Visual Crossing configuration
+        if settings.data_source == "visualcrossing":
+            if not settings.visual_crossing_api_key:
+                logger.warning(
+                    "Visual Crossing selected but no API key provided, switching to 'auto'"
+                )
+                settings.data_source = "auto"
+                config_changed = True
+        else:
+            # Clear Visual Crossing API key if not using Visual Crossing
+            if settings.visual_crossing_api_key:
+                logger.info(
+                    f"Clearing Visual Crossing API key for data_source '{settings.data_source}'"
+                )
+                settings.visual_crossing_api_key = ""
+                config_changed = True
+
+        # Save config if changes were made
+        if config_changed:
+            logger.info("Configuration was corrected, saving changes")
+            self.save_config()
 
     def save_config(self) -> bool:
         """Save configuration to file."""
