@@ -188,7 +188,38 @@ class WeatherClient:
                 weather_data.discussion = discussion
                 weather_data.alerts = alerts
 
-                logger.info(f"Successfully fetched NWS data for {location.name}")
+                # Check if we actually got valid data
+                if current is None and forecast is None:
+                    # If essential data is missing, try Open-Meteo fallback
+                    logger.info(
+                        f"NWS returned empty data for {location.name}, trying Open-Meteo fallback"
+                    )
+                    try:
+                        current = await self._get_openmeteo_current_conditions(location)
+                        forecast = await self._get_openmeteo_forecast(location)
+                        hourly_forecast = await self._get_openmeteo_hourly_forecast(location)
+
+                        weather_data.current = current
+                        weather_data.forecast = forecast
+                        weather_data.hourly_forecast = hourly_forecast
+                        weather_data.discussion = (
+                            "Forecast discussion not available from Open-Meteo."
+                        )
+                        weather_data.alerts = WeatherAlerts(alerts=[])
+
+                        # Check if Open-Meteo returned valid data
+                        if current is None and forecast is None:
+                            logger.error(f"Open-Meteo also returned empty data for {location.name}")
+                            self._set_empty_weather_data(weather_data)
+                        else:
+                            logger.info(
+                                f"Successfully fetched Open-Meteo fallback data for {location.name}"
+                            )
+                    except Exception as e2:
+                        logger.error(f"Both NWS and Open-Meteo failed for {location.name}: {e2}")
+                        self._set_empty_weather_data(weather_data)
+                else:
+                    logger.info(f"Successfully fetched NWS data for {location.name}")
 
             except Exception as e:
                 logger.warning(f"NWS API failed for {location.name}: {e}")
