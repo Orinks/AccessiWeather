@@ -1,0 +1,273 @@
+{
+  "Central London, UK": {
+    "location": {
+      "name": "Central London, UK",
+      "latitude": 51.5074,
+      "longitude": -0.1278
+    },
+    "alert_count": 2,
+    "alerts": [
+      {
+        "event": "Yellow thunderstorm warning",
+        "severity": "Unknown",
+        "headline": "Heavy rain, with some thunderstorms, may lead to disruption in places on Friday night and through much of Saturday: UPDATED",
+        "description": "Information on update: Warning area expanded westwards over northern England, and text updated. The start time has been adjusted to constrain the main risk period to Saturday, whilst the end time extended to later in the evening. Areas of heavy rain with embedded thunderstorms will move northwestwards across a large swathe of central and eastern England through Friday night into Saturday. Rain will likely be torrential in places, bringing 20-30 mm in less than an hour, with 60-90 mm in 2-3 hours possible in a few places.\n\nWhilst more widespread heavy rain will gradually clear northwestwards during Saturday, additional scattered heavy showers and thunderstorms may develop in its wake during Saturday afternoon and early evening, before eventually decaying later.\n\nFor further details see https://www.metoffice.gov.uk/weather/warnings-and-advice/uk-warnings",
+        "areas": [],
+        "id": "2.49.0.0.826.0.GB_250718095056_588f95ba.v2.0.T",
+        "onset": "2025-07-19T00:00:00",
+        "expires": null,
+        "urgency": "Unknown",
+        "certainty": "Possible",
+        "instruction": null
+      },
+      {
+        "event": "Amber thunderstorm warning",
+        "severity": "Unknown",
+        "headline": "Torrential rain, with thunderstorms in places, could lead to some significant surface water flooding during Saturday morning",
+        "description": "Areas of heavy rain with embedded thunderstorms will move northwards during the early hours of Saturday, with torrential downpours in places. Accumulations of 20-40 mm are possible in 1 hour, and where heavy downpours persist then as much as 70-100 mm could accumulate in just a few hours. Significant impacts are possible if this occurs over more urban areas. \n\nThe more widespread heavy rain should clear to the north during Saturday morning, but additional scattered heavy showers and a few thunderstorms could develop during Saturday afternoon and early evening, this risk covered by the much larger Yellow thunderstorm warning.\n\nFor further details see https://www.metoffice.gov.uk/weather/warnings-and-advice/uk-warnings",
+        "areas": [],
+        "id": "2.49.0.0.826.0.GB_250718095451_5e642f73.v1.0.T",
+        "onset": "2025-07-19T04:00:00",
+        "expires": null,
+        "urgency": "Unknown",
+        "certainty": "Possible",
+        "instruction": null
+      }
+    ]
+  },
+  "Greenwich, London, UK": {
+    "location": {
+      "name": "Greenwich, London, UK",
+      "latitude": 51.4769,
+      "longitude": -0.0005
+    },
+    "alert_count": 2,
+    "alerts": [
+      {
+        "event": "Yellow thunderstorm warning",
+        "severity": "Unknown",
+        "headline": "Heavy rain, with some thunderstorms, may lead to disruption in places on Friday night and through much of Saturday: UPDATED",
+        "description": "Information on update: Warning area expanded westwards over northern England, and text updated. The start time has been adjusted to constrain the main risk period to Saturday, whilst the end time extended to later in the evening. Areas of heavy rain with embedded thunderstorms will move northwestwards across a large swathe of central and eastern England through Friday night into Saturday. Rain will likely be torrential in places, bringing 20-30 mm in less than an hour, with 60-90 mm in 2-3 hours possible in a few places.\n\nWhilst more widespread heavy rain will gradually clear northwestwards during Saturday, additional scattered heavy showers and thunderstorms may develop in its wake during Saturday afternoon and early evening, before eventually decaying later.\n\nFor further details see https://www.metoffice.gov.uk/weather/warnings-and-advice/uk-warnings",
+        "areas": [],
+        "id": "2.49.0.0.826.0.GB_250718095056_588f95ba.v2.0.T",
+        "onset": "2025-07-19T00:00:00",
+        "expires": null,
+        "urgency": "Unknown",
+        "certainty": "Possible",
+        "instruction": null
+      },
+      {
+        "event": "Amber thunderstorm warning",
+        "severity": "Unknown",
+        "headline": "Torrential rain, with thunderstorms in places, could lead to some significant surface water flooding during Saturday morning",
+        "description": "Areas of heavy rain with embedded thunderstorms will move northwards during the early hours of Saturday, with torrential downpours in places. Accumulations of 20-40 mm are possible in 1 hour, and where heavy downpours persist then as much as 70-100 mm could accumulate in just a few hours. Significant impacts are possible if this occurs over more urban areas. \n\nThe more widespread heavy rain should clear to the north during Saturday morning, but additional scattered heavy showers and a few thunderstorms could develop during Saturday afternoon and early evening, this risk covered by the much larger Yellow thunderstorm warning.\n\nFor further details see https://www.metoffice.gov.uk/weather/warnings-and-advice/uk-warnings",
+        "areas": [],
+        "id": "2.49.0.0.826.0.GB_250718095451_5e642f73.v1.0.T",
+        "onset": "2025-07-19T04:00:00",
+        "expires": null,
+        "urgency": "Unknown",
+        "certainty": "Possible",
+        "instruction": null
+      }
+    ]
+  },
+  "Camden, London, UK": {
+    "location": {
+      "name": "Camden, London, UK",
+      "latitude": 51.529,
+      "longitude": -0.1255
+    },
+    "alert_count": 2,
+    "alerts": [
+      {
+        "event": "Yellow thunderstorm warning",
+        "severity": "Unknown",
+        "headline": "Heavy rain, with some thunderstorms, may lead to disruption in places on Friday night and through much of Saturday: UPDATED",
+        "description": "Information on update: Warning area expanded westwards over northern England, and text updated. The start time has been adjusted to constrain the main risk period to Saturday, whilst the end time extended to later in the evening. Areas of heavy rain with embedded thunderstorms will move northwestwards across a large swathe of central and eastern England through Friday night into Saturday. Rain will likely be torrential in places, bringing 20-30 mm in less than an hour, with 60-90 mm in 2-3 hours possible in a few places.\n\nWhilst more widespread heavy rain will gradually clear northwestwards during Saturday, additional scattered heavy showers and thunderstorms may develop in its wake during Saturday afternoon and early evening, before eventually decaying later.\n\nFor further details see https://www.metoffice.gov.uk/weather/warnings-and-advice/uk-warnings",
+        "areas": [],
+        "id": "2.49.0.0.826.0.GB_250718095056_588f95ba.v2.0.T",
+        "onset": "2025-07-19T00:00:00",
+        "expires": null,
+        "urgency": "Unknown",
+        "certainty": "Possible",
+        "instruction": null
+      },
+      {
+        "event": "Amber thunderstorm warning",
+        "severity": "Unknown",
+        "headline": "Torrential rain, with thunderstorms in places, could lead to some significant surface water flooding during Saturday morning",
+        "description": "Areas of heavy rain with embedded thunderstorms will move northwards during the early hours of Saturday, with torrential downpours in places. Accumulations of 20-40 mm are possible in 1 hour, and where heavy downpours persist then as much as 70-100 mm could accumulate in just a few hours. Significant impacts are possible if this occurs over more urban areas. \n\nThe more widespread heavy rain should clear to the north during Saturday morning, but additional scattered heavy showers and a few thunderstorms could develop during Saturday afternoon and early evening, this risk covered by the much larger Yellow thunderstorm warning.\n\nFor further details see https://www.metoffice.gov.uk/weather/warnings-and-advice/uk-warnings",
+        "areas": [],
+        "id": "2.49.0.0.826.0.GB_250718095451_5e642f73.v1.0.T",
+        "onset": "2025-07-19T04:00:00",
+        "expires": null,
+        "urgency": "Unknown",
+        "certainty": "Possible",
+        "instruction": null
+      }
+    ]
+  },
+  "Westminster, London, UK": {
+    "location": {
+      "name": "Westminster, London, UK",
+      "latitude": 51.4994,
+      "longitude": -0.1244
+    },
+    "alert_count": 2,
+    "alerts": [
+      {
+        "event": "Yellow thunderstorm warning",
+        "severity": "Unknown",
+        "headline": "Heavy rain, with some thunderstorms, may lead to disruption in places on Friday night and through much of Saturday: UPDATED",
+        "description": "Information on update: Warning area expanded westwards over northern England, and text updated. The start time has been adjusted to constrain the main risk period to Saturday, whilst the end time extended to later in the evening. Areas of heavy rain with embedded thunderstorms will move northwestwards across a large swathe of central and eastern England through Friday night into Saturday. Rain will likely be torrential in places, bringing 20-30 mm in less than an hour, with 60-90 mm in 2-3 hours possible in a few places.\n\nWhilst more widespread heavy rain will gradually clear northwestwards during Saturday, additional scattered heavy showers and thunderstorms may develop in its wake during Saturday afternoon and early evening, before eventually decaying later.\n\nFor further details see https://www.metoffice.gov.uk/weather/warnings-and-advice/uk-warnings",
+        "areas": [],
+        "id": "2.49.0.0.826.0.GB_250718095056_588f95ba.v2.0.T",
+        "onset": "2025-07-19T00:00:00",
+        "expires": null,
+        "urgency": "Unknown",
+        "certainty": "Possible",
+        "instruction": null
+      },
+      {
+        "event": "Amber thunderstorm warning",
+        "severity": "Unknown",
+        "headline": "Torrential rain, with thunderstorms in places, could lead to some significant surface water flooding during Saturday morning",
+        "description": "Areas of heavy rain with embedded thunderstorms will move northwards during the early hours of Saturday, with torrential downpours in places. Accumulations of 20-40 mm are possible in 1 hour, and where heavy downpours persist then as much as 70-100 mm could accumulate in just a few hours. Significant impacts are possible if this occurs over more urban areas. \n\nThe more widespread heavy rain should clear to the north during Saturday morning, but additional scattered heavy showers and a few thunderstorms could develop during Saturday afternoon and early evening, this risk covered by the much larger Yellow thunderstorm warning.\n\nFor further details see https://www.metoffice.gov.uk/weather/warnings-and-advice/uk-warnings",
+        "areas": [],
+        "id": "2.49.0.0.826.0.GB_250718095451_5e642f73.v1.0.T",
+        "onset": "2025-07-19T04:00:00",
+        "expires": null,
+        "urgency": "Unknown",
+        "certainty": "Possible",
+        "instruction": null
+      }
+    ]
+  },
+  "Birmingham, UK": {
+    "location": {
+      "name": "Birmingham, UK",
+      "latitude": 52.4862,
+      "longitude": -1.8904
+    },
+    "alert_count": 1,
+    "alerts": [
+      {
+        "event": "Yellow thunderstorm warning",
+        "severity": "Unknown",
+        "headline": "Heavy rain, with some thunderstorms, may lead to disruption in places on Friday night and through much of Saturday: UPDATED",
+        "description": "Information on update: Warning area expanded westwards over northern England, and text updated. The start time has been adjusted to constrain the main risk period to Saturday, whilst the end time extended to later in the evening. Areas of heavy rain with embedded thunderstorms will move northwestwards across a large swathe of central and eastern England through Friday night into Saturday. Rain will likely be torrential in places, bringing 20-30 mm in less than an hour, with 60-90 mm in 2-3 hours possible in a few places.\n\nWhilst more widespread heavy rain will gradually clear northwestwards during Saturday, additional scattered heavy showers and thunderstorms may develop in its wake during Saturday afternoon and early evening, before eventually decaying later.\n\nFor further details see https://www.metoffice.gov.uk/weather/warnings-and-advice/uk-warnings",
+        "areas": [],
+        "id": "2.49.0.0.826.0.GB_250718095056_588f95ba.v2.0.T",
+        "onset": "2025-07-19T00:00:00",
+        "expires": null,
+        "urgency": "Unknown",
+        "certainty": "Possible",
+        "instruction": null
+      }
+    ]
+  },
+  "Manchester, UK": {
+    "location": {
+      "name": "Manchester, UK",
+      "latitude": 53.4808,
+      "longitude": -2.2426
+    },
+    "alert_count": 1,
+    "alerts": [
+      {
+        "event": "Yellow thunderstorm warning",
+        "severity": "Unknown",
+        "headline": "Heavy rain, with some thunderstorms, may lead to disruption in places on Friday night and through much of Saturday: UPDATED",
+        "description": "Information on update: Warning area expanded westwards over northern England, and text updated. The start time has been adjusted to constrain the main risk period to Saturday, whilst the end time extended to later in the evening. Areas of heavy rain with embedded thunderstorms will move northwestwards across a large swathe of central and eastern England through Friday night into Saturday. Rain will likely be torrential in places, bringing 20-30 mm in less than an hour, with 60-90 mm in 2-3 hours possible in a few places.\n\nWhilst more widespread heavy rain will gradually clear northwestwards during Saturday, additional scattered heavy showers and thunderstorms may develop in its wake during Saturday afternoon and early evening, before eventually decaying later.\n\nFor further details see https://www.metoffice.gov.uk/weather/warnings-and-advice/uk-warnings",
+        "areas": [],
+        "id": "2.49.0.0.826.0.GB_250718095056_588f95ba.v2.0.T",
+        "onset": "2025-07-19T00:00:00",
+        "expires": null,
+        "urgency": "Unknown",
+        "certainty": "Possible",
+        "instruction": null
+      }
+    ]
+  },
+  "Manhattan, NYC": {
+    "location": {
+      "name": "Manhattan, NYC",
+      "latitude": 40.7831,
+      "longitude": -73.9712
+    },
+    "alert_count": 0,
+    "alerts": []
+  },
+  "Brooklyn, NYC": {
+    "location": {
+      "name": "Brooklyn, NYC",
+      "latitude": 40.6782,
+      "longitude": -73.9442
+    },
+    "alert_count": 0,
+    "alerts": []
+  },
+  "Miami, FL": {
+    "location": {
+      "name": "Miami, FL",
+      "latitude": 25.7617,
+      "longitude": -80.1918
+    },
+    "alert_count": 2,
+    "alerts": [
+      {
+        "event": "Heat Advisory",
+        "severity": "Unknown",
+        "headline": "Heat Advisory issued July 18 at 3:04AM EDT until July 18 at 6:00PM EDT by NWS Miami FL",
+        "description": "* WHAT...Heat index values of 105-111 expected.\n\n* WHERE...Portions of southeast, southern, and southwest Florida.\n\n* WHEN...From 11 AM this morning to 6 PM EDT this evening.\n\n* IMPACTS...Hot temperatures and high humidity may cause heat\nillnesses.\n",
+        "areas": [],
+        "id": "urn:oid:2.49.0.1.840.0.f80b49a96aa23c1eda8fa96604132368d2875103.001.1",
+        "onset": "2025-07-18T11:00:00",
+        "expires": null,
+        "urgency": "Unknown",
+        "certainty": "Possible",
+        "instruction": null
+      },
+      {
+        "event": "Rip Current Statement",
+        "severity": "Unknown",
+        "headline": "Rip Current Statement issued July 18 at 3:05AM EDT until July 18 at 2:00PM EDT by NWS Miami FL",
+        "description": "* WHAT...Dangerous rip currents expected.\n\n* WHERE...Coastal Palm Beach County, Coastal Broward County and\nCoastal Miami Dade County.\n\n* WHEN...Until 2 PM EDT this afternoon.\n\n* IMPACTS...Rip currents can sweep even the best swimmers away\nfrom shore into deeper water.\n",
+        "areas": [],
+        "id": "urn:oid:2.49.0.1.840.0.1f01f969573eedac825270030fbfeb63d39c3c48.001.1",
+        "onset": "2025-07-18T06:00:00",
+        "expires": null,
+        "urgency": "Unknown",
+        "certainty": "Possible",
+        "instruction": null
+      }
+    ]
+  },
+  "Paris, France": {
+    "location": {
+      "name": "Paris, France",
+      "latitude": 48.8566,
+      "longitude": 2.3522
+    },
+    "alert_count": 0,
+    "alerts": []
+  },
+  "Tokyo, Japan": {
+    "location": {
+      "name": "Tokyo, Japan",
+      "latitude": 35.6762,
+      "longitude": 139.6503
+    },
+    "alert_count": 0,
+    "alerts": []
+  },
+  "Sydney, Australia": {
+    "location": {
+      "name": "Sydney, Australia",
+      "latitude": -33.8688,
+      "longitude": 151.2093
+    },
+    "alert_count": 0,
+    "alerts": []
+  }
+}

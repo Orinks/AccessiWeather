@@ -78,6 +78,13 @@ class WeatherClient:
                 weather_data.discussion = "Forecast discussion not available from Visual Crossing."
                 weather_data.alerts = alerts
 
+                # Process alerts for notifications if we have any
+                if alerts and alerts.has_alerts():
+                    logger.info(
+                        f"Processing {len(alerts.alerts)} Visual Crossing alerts for notifications"
+                    )
+                    await self._process_visual_crossing_alerts(alerts, location)
+
                 logger.info(f"Successfully fetched Visual Crossing data for {location.name}")
 
             except VisualCrossingApiError as e:
@@ -249,6 +256,61 @@ class WeatherClient:
                     self._set_empty_weather_data(weather_data)
 
         return weather_data
+
+    async def _process_visual_crossing_alerts(self, alerts: WeatherAlerts, location: Location):
+        """Process Visual Crossing alerts for notifications."""
+        try:
+            # Import the alert notification system
+            # Create config directory for alert state
+            import os
+            import tempfile
+
+            from .alert_manager import AlertManager
+            from .alert_notification_system import AlertNotificationSystem
+
+            config_dir = os.path.join(tempfile.gettempdir(), "accessiweather_alerts")
+
+            # Create alert manager with more permissive settings for testing
+            from .alert_manager import AlertSettings
+
+            # Create settings that will allow all alerts through
+            settings = AlertSettings()
+            settings.min_severity_priority = 1  # Allow all severities including "unknown"
+            settings.notifications_enabled = True
+
+            alert_manager = AlertManager(config_dir, settings)
+            notification_system = AlertNotificationSystem(alert_manager)
+
+            # Add debugging information
+            logger.info(f"Processing Visual Crossing alerts for {location.name}")
+            logger.info(f"Number of alerts to process: {len(alerts.alerts)}")
+
+            # Log alert details for debugging
+            for i, alert in enumerate(alerts.alerts):
+                logger.info(f"Alert {i + 1}: {alert.event} - {alert.severity} - {alert.headline}")
+
+            # Check notification settings
+            settings = notification_system.get_settings()
+            logger.info(
+                f"Notification settings - enabled: {settings.notifications_enabled}, min_severity: {settings.min_severity_priority}"
+            )
+
+            # Process and send notifications
+            notifications_sent = await notification_system.process_and_notify(alerts)
+
+            if notifications_sent > 0:
+                logger.info(
+                    f"✅ Sent {notifications_sent} Visual Crossing alert notifications for {location.name}"
+                )
+            else:
+                logger.warning(f"⚠️ No Visual Crossing alert notifications sent for {location.name}")
+
+                # Get statistics for debugging
+                stats = notification_system.get_statistics()
+                logger.info(f"Alert statistics: {stats}")
+
+        except Exception as e:
+            logger.error(f"Failed to process Visual Crossing alerts for notifications: {e}")
 
     def _determine_api_choice(self, location: Location) -> str:
         """Determine which API to use for the given location."""

@@ -288,25 +288,119 @@ class VisualCrossingClient:
     def _parse_alerts(self, data: dict) -> WeatherAlerts:
         """Parse Visual Crossing alerts data."""
         alerts = []
-        alert_data_list = data.get("alerts", [])
 
-        for alert_data in alert_data_list:
-            alert = WeatherAlert(
-                title=alert_data.get("headline", "Weather Alert"),
-                description=alert_data.get("description", ""),
-                severity=alert_data.get("severity", "Unknown"),
-                urgency=alert_data.get("urgency", "Unknown"),
-                certainty=alert_data.get("certainty", "Unknown"),
-                event=alert_data.get("event"),
-                headline=alert_data.get("headline"),
-                instruction=alert_data.get("instruction"),
-                areas=alert_data.get("areas", [])
-                if isinstance(alert_data.get("areas"), list)
-                else [],
+        # Visual Crossing may return alerts in different structures
+        # Check multiple possible locations for alert data
+        alert_data_list = []
+
+        # Check top-level alerts
+        if "alerts" in data:
+            alert_data_list.extend(data["alerts"])
+
+        # Check if alerts are nested in days
+        if "days" in data:
+            for day in data["days"]:
+                if "alerts" in day:
+                    alert_data_list.extend(day["alerts"])
+
+        # Check current conditions for alerts
+        if "currentConditions" in data and "alerts" in data["currentConditions"]:
+            alert_data_list.extend(data["currentConditions"]["alerts"])
+
+        logger.debug(f"Found {len(alert_data_list)} alert(s) in Visual Crossing response")
+
+        for i, alert_data in enumerate(alert_data_list):
+            logger.debug(f"Processing alert {i + 1}: {alert_data}")
+
+            # Extract alert information with fallbacks
+            event = alert_data.get("event") or alert_data.get("type") or "Weather Alert"
+            headline = (
+                alert_data.get("headline")
+                or alert_data.get("title")
+                or alert_data.get("description", "")[:100]
             )
+            description = alert_data.get("description") or alert_data.get("details") or headline
+
+            # Map Visual Crossing severity to standard levels
+            severity = self._map_visual_crossing_severity(alert_data.get("severity"))
+
+            # Generate a unique ID for the alert
+            alert_id = alert_data.get("id") or f"vc-{hash(f'{event}-{headline}')}"
+
+            # Parse time fields
+            onset = self._parse_alert_time(alert_data.get("onset") or alert_data.get("start"))
+            expires = self._parse_alert_time(alert_data.get("expires") or alert_data.get("end"))
+
+            # Extract affected areas
+            areas = []
+            if "areas" in alert_data:
+                if isinstance(alert_data["areas"], list):
+                    areas = alert_data["areas"]
+                elif isinstance(alert_data["areas"], str):
+                    areas = [alert_data["areas"]]
+            elif "area" in alert_data:
+                areas = [alert_data["area"]]
+
+            alert = WeatherAlert(
+                id=alert_id,
+                title=headline,
+                description=description,
+                severity=severity,
+                urgency=alert_data.get("urgency", "Unknown"),
+                certainty=alert_data.get("certainty", "Possible"),
+                event=event,
+                headline=headline,
+                instruction=alert_data.get("instruction") or alert_data.get("response"),
+                areas=areas,
+                onset=onset,
+                expires=expires,
+            )
+
+            logger.debug(f"Created alert: {alert.event} - {alert.severity} - {alert.headline}")
             alerts.append(alert)
 
+        logger.info(f"Parsed {len(alerts)} Visual Crossing alerts")
         return WeatherAlerts(alerts=alerts)
+
+    def _map_visual_crossing_severity(self, vc_severity: str | None) -> str:
+        """Map Visual Crossing severity to standard severity levels."""
+        if not vc_severity:
+            return "Unknown"
+
+        vc_severity = vc_severity.lower()
+
+        # Map Visual Crossing severity levels to standard ones
+        severity_map = {
+            "extreme": "Extreme",
+            "severe": "Severe",
+            "moderate": "Moderate",
+            "minor": "Minor",
+            "unknown": "Unknown",
+            # Additional mappings for Visual Crossing specific terms
+            "high": "Severe",
+            "medium": "Moderate",
+            "low": "Minor",
+            "critical": "Extreme",
+            "warning": "Severe",
+            "watch": "Moderate",
+            "advisory": "Minor",
+        }
+
+        return severity_map.get(vc_severity, "Unknown")
+
+    def _parse_alert_time(self, time_str: str | None) -> datetime | None:
+        """Parse Visual Crossing alert time string."""
+        if not time_str:
+            return None
+
+        try:
+            # Visual Crossing typically uses ISO format
+            from dateutil.parser import parse
+
+            return parse(time_str)
+        except Exception as e:
+            logger.warning(f"Failed to parse alert time '{time_str}': {e}")
+            return None
 
     # Utility methods
     def _convert_f_to_c(self, fahrenheit: float | None) -> float | None:
