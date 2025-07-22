@@ -13,12 +13,12 @@ from travertino.constants import COLUMN, ROW
 
 from .alert_manager import AlertManager
 from .alert_notification_system import AlertNotificationSystem
-from .config import ConfigManager
 from .dialogs import AddLocationDialog, SettingsDialog
 from .dialogs.discussion import ForecastDiscussionDialog
 from .display import WxStyleWeatherFormatter
 from .location_manager import LocationManager
 from .models import WeatherData
+from .simple_config import ConfigManager
 from .single_instance import SingleInstanceManager
 from .weather_client import WeatherClient
 

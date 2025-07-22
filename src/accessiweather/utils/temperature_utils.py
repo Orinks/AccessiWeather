@@ -1,6 +1,7 @@
-"""Temperature utility functions for AccessiWeather.
+"""Temperature utility functions for AccessiWeather Simple.
 
-This module provides utility functions for temperature conversion and formatting.
+This module provides utility functions for temperature conversion and formatting,
+copied from the wx version for consistency.
 """
 
 import logging
