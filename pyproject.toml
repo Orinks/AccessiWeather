@@ -145,6 +145,9 @@ test_sources = [
     "tests",
 ]
 
+# Specify the entry point for the main app
+entry_point = "accessiweather:main"
+
 requires = [
     "toga>=0.5.1",
     "httpx>=0.20.0",

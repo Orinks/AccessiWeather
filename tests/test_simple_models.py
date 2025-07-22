@@ -8,7 +8,7 @@ imports and ensuring tests match the simplified model structure.
 from datetime import datetime, timedelta
 
 # Import simplified app models
-from accessiweather.simple.models import (
+from accessiweather.models import (
     ApiError,
     AppConfig,
     AppSettings,
@@ -762,7 +762,7 @@ class TestModelIntegration:
 def test_models_can_be_imported():
     """Test that all simplified models can be imported successfully."""
     # This test verifies that all models are available for import
-    from accessiweather.simple.models import (
+    from accessiweather.models import (
         AppSettings,
         HourlyForecast,
         HourlyForecastPeriod,

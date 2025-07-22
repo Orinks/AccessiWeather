@@ -14,8 +14,8 @@ from .weather_client import WeatherClient
 # Set up logging
 logging.basicConfig(
     level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler(sys.stdout)]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
 )
 
 logger = logging.getLogger(__name__)
@@ -35,24 +35,18 @@ class TestWeatherApp(toga.App):
         main_box = toga.Box(style=Pack(direction=COLUMN, padding=10))
 
         # Status label
-        self.status_label = toga.Label(
-            "Ready to test weather fetching...",
-            style=Pack(padding=10)
-        )
+        self.status_label = toga.Label("Ready to test weather fetching...", style=Pack(padding=10))
         main_box.add(self.status_label)
 
         # Test button
         test_button = toga.Button(
-            "Test Weather Fetch",
-            on_press=self.test_weather_fetch,
-            style=Pack(padding=10)
+            "Test Weather Fetch", on_press=self.test_weather_fetch, style=Pack(padding=10)
         )
         main_box.add(test_button)
 
         # Results display
         self.results_display = toga.MultilineTextInput(
-            readonly=True,
-            style=Pack(height=400, padding=10)
+            readonly=True, style=Pack(height=400, padding=10)
         )
         main_box.add(self.results_display)
 
@@ -81,12 +75,20 @@ class TestWeatherApp(toga.App):
             weather_data = await self.weather_client.get_weather_data(self.test_location)
 
             self.results_display.value += f"Weather data fetched successfully!\n"
-            self.results_display.value += f"Has current data: {weather_data.current and weather_data.current.has_data()}\n"
-            self.results_display.value += f"Has forecast data: {weather_data.forecast and weather_data.forecast.has_data()}\n"
-            self.results_display.value += f"Has alerts: {weather_data.alerts and weather_data.alerts.has_alerts()}\n"
+            self.results_display.value += (
+                f"Has current data: {weather_data.current and weather_data.current.has_data()}\n"
+            )
+            self.results_display.value += (
+                f"Has forecast data: {weather_data.forecast and weather_data.forecast.has_data()}\n"
+            )
+            self.results_display.value += (
+                f"Has alerts: {weather_data.alerts and weather_data.alerts.has_alerts()}\n"
+            )
 
             if weather_data.current:
-                self.results_display.value += f"Temperature: {weather_data.current.temperature_f}°F\n"
+                self.results_display.value += (
+                    f"Temperature: {weather_data.current.temperature_f}°F\n"
+                )
                 self.results_display.value += f"Condition: {weather_data.current.condition}\n"
                 self.results_display.value += f"Wind direction: {weather_data.current.wind_direction} (type: {type(weather_data.current.wind_direction)})\n"
 
@@ -102,7 +104,9 @@ class TestWeatherApp(toga.App):
                 self.results_display.value += "\n--- TESTING FORMATTER ---\n"
 
                 # Test current conditions formatting
-                current_text = formatter.format_current_conditions(weather_data.current, weather_data.location)
+                current_text = formatter.format_current_conditions(
+                    weather_data.current, weather_data.location
+                )
                 self.results_display.value += f"Current conditions formatted successfully!\n"
                 self.results_display.value += f"Length: {len(current_text)} characters\n"
 
@@ -122,6 +126,7 @@ class TestWeatherApp(toga.App):
             self.results_display.value += f"\n❌ Weather fetch error: {e}\n"
             self.status_label.text = f"Error: {e}"
             import traceback
+
             self.results_display.value += f"\nTraceback:\n{traceback.format_exc()}\n"
 
 
@@ -130,7 +135,7 @@ def main():
     return TestWeatherApp(
         "Weather Test",
         "net.orinks.accessiweather.test",
-        description="Test app for weather debugging"
+        description="Test app for weather debugging",
     )
 
 

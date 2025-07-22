@@ -4,19 +4,20 @@
 import os
 import re
 
+
 def check_weather_client_integration():
     """Check that the weather client has proper Open-Meteo integration."""
     print("🔍 Checking weather client integration...")
-    
+
     weather_client_path = os.path.join('src', 'accessiweather', 'simple', 'weather_client.py')
-    
+
     if not os.path.exists(weather_client_path):
         print("❌ Weather client file not found")
         return False
-    
-    with open(weather_client_path, 'r') as f:
+
+    with open(weather_client_path) as f:
         content = f.read()
-    
+
     # Check for key integration features
     checks = [
         (r'def __init__\(.*data_source.*\)', "Constructor accepts data_source parameter"),
@@ -31,7 +32,7 @@ def check_weather_client_integration():
         (r'24\.0 <= location\.latitude <= 49\.0', "Has US latitude bounds check"),
         (r'-125\.0 <= location\.longitude <= -66\.0', "Has US longitude bounds check"),
     ]
-    
+
     passed = 0
     for pattern, description in checks:
         if re.search(pattern, content):
@@ -39,23 +40,23 @@ def check_weather_client_integration():
             passed += 1
         else:
             print(f"❌ {description}")
-    
+
     print(f"\nWeather client integration: {passed}/{len(checks)} checks passed")
     return passed == len(checks)
 
 def check_app_integration():
     """Check that the app properly configures the weather client."""
     print("\n🔍 Checking app integration...")
-    
+
     app_path = os.path.join('src', 'accessiweather', 'simple', 'app.py')
-    
+
     if not os.path.exists(app_path):
         print("❌ App file not found")
         return False
-    
-    with open(app_path, 'r') as f:
+
+    with open(app_path) as f:
         content = f.read()
-    
+
     # Check for app integration features
     checks = [
         (r'data_source = config\.settings\.data_source', "Reads data source from config"),
@@ -65,7 +66,7 @@ def check_app_integration():
         (r'Sydney, Australia.*-33\.8688.*151\.2093', "Has Sydney test location"),
         (r'Paris, France.*48\.8566.*2\.3522', "Has Paris test location"),
     ]
-    
+
     passed = 0
     for pattern, description in checks:
         if re.search(pattern, content):
@@ -73,23 +74,23 @@ def check_app_integration():
             passed += 1
         else:
             print(f"❌ {description}")
-    
+
     print(f"\nApp integration: {passed}/{len(checks)} checks passed")
     return passed == len(checks)
 
 def check_models_support():
     """Check that models support the required data structures."""
     print("\n🔍 Checking models support...")
-    
+
     models_path = os.path.join('src', 'accessiweather', 'simple', 'models.py')
-    
+
     if not os.path.exists(models_path):
         print("❌ Models file not found")
         return False
-    
-    with open(models_path, 'r') as f:
+
+    with open(models_path) as f:
         content = f.read()
-    
+
     # Check for required model features
     checks = [
         (r'data_source.*str.*=.*"auto"', "AppSettings has data_source field"),
@@ -99,7 +100,7 @@ def check_models_support():
         (r'class WeatherData', "Has WeatherData model"),
         (r'def has_data\(', "Models have has_data methods"),
     ]
-    
+
     passed = 0
     for pattern, description in checks:
         if re.search(pattern, content):
@@ -107,23 +108,23 @@ def check_models_support():
             passed += 1
         else:
             print(f"❌ {description}")
-    
+
     print(f"\nModels support: {passed}/{len(checks)} checks passed")
     return passed == len(checks)
 
 def check_test_integration():
     """Check that tests have been updated."""
     print("\n🔍 Checking test integration...")
-    
+
     test_path = os.path.join('tests', 'test_simple_weather_client.py')
-    
+
     if not os.path.exists(test_path):
         print("❌ Test file not found")
         return False
-    
-    with open(test_path, 'r') as f:
+
+    with open(test_path) as f:
         content = f.read()
-    
+
     # Check for test integration features
     checks = [
         (r'class TestWeatherClientOpenMeteoIntegration', "Has Open-Meteo integration test class"),
@@ -134,7 +135,7 @@ def check_test_integration():
         (r'Tokyo, Japan.*35\.6762.*139\.6503', "Tests Tokyo location"),
         (r'London, UK.*51\.5074.*-0\.1278', "Tests London location"),
     ]
-    
+
     passed = 0
     for pattern, description in checks:
         if re.search(pattern, content):
@@ -142,14 +143,14 @@ def check_test_integration():
             passed += 1
         else:
             print(f"❌ {description}")
-    
+
     print(f"\nTest integration: {passed}/{len(checks)} checks passed")
     return passed == len(checks)
 
 def validate_api_selection_logic():
     """Validate the API selection logic mathematically."""
     print("\n🔍 Validating API selection logic...")
-    
+
     # Test coordinates
     test_cases = [
         # US locations (should use NWS in auto mode)
@@ -158,7 +159,7 @@ def validate_api_selection_logic():
         ("Los Angeles, CA", 34.0522, -118.2437, True),
         ("Miami, FL", 25.7617, -80.1918, True),
         ("Seattle, WA", 47.6062, -122.3321, True),
-        
+
         # International locations (should use Open-Meteo in auto mode)
         ("Tokyo, Japan", 35.6762, 139.6503, False),
         ("London, UK", 51.5074, -0.1278, False),
@@ -167,15 +168,15 @@ def validate_api_selection_logic():
         ("Mexico City, Mexico", 19.4326, -99.1332, False),
         ("Toronto, Canada", 43.6532, -79.3832, False),
     ]
-    
+
     # US bounds from the code: 24.0 <= lat <= 49.0 and -125.0 <= lon <= -66.0
     us_lat_min, us_lat_max = 24.0, 49.0
     us_lon_min, us_lon_max = -125.0, -66.0
-    
+
     passed = 0
     for name, lat, lon, expected_us in test_cases:
         is_us = (us_lat_min <= lat <= us_lat_max and us_lon_min <= lon <= us_lon_max)
-        
+
         if is_us == expected_us:
             api = "NWS" if is_us else "Open-Meteo"
             print(f"✅ {name}: {api} (lat={lat}, lon={lon})")
@@ -184,7 +185,7 @@ def validate_api_selection_logic():
             expected_api = "NWS" if expected_us else "Open-Meteo"
             actual_api = "NWS" if is_us else "Open-Meteo"
             print(f"❌ {name}: Expected {expected_api}, got {actual_api}")
-    
+
     print(f"\nAPI selection logic: {passed}/{len(test_cases)} cases correct")
     return passed == len(test_cases)
 
@@ -192,7 +193,7 @@ def main():
     """Run all validation checks."""
     print("🧪 Validating Open-Meteo Integration in Simple Toga App")
     print("=" * 60)
-    
+
     checks = [
         check_weather_client_integration,
         check_app_integration,
@@ -200,15 +201,15 @@ def main():
         check_test_integration,
         validate_api_selection_logic,
     ]
-    
+
     passed_checks = 0
     for check in checks:
         if check():
             passed_checks += 1
-    
+
     print("\n" + "=" * 60)
     print(f"📊 VALIDATION SUMMARY: {passed_checks}/{len(checks)} checks passed")
-    
+
     if passed_checks == len(checks):
         print("🎉 ALL VALIDATIONS PASSED!")
         print("✅ Open-Meteo integration is properly implemented")
@@ -218,9 +219,8 @@ def main():
         print("✅ Comprehensive test coverage")
         print("✅ Ready for production use!")
         return True
-    else:
-        print("❌ Some validations failed - check the output above")
-        return False
+    print("❌ Some validations failed - check the output above")
+    return False
 
 if __name__ == "__main__":
     success = main()

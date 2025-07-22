@@ -153,8 +153,10 @@ class LocationManager:
         dlat = lat2_rad - lat1_rad
         dlon = lon2_rad - lon1_rad
 
-        a = (math.sin(dlat / 2) ** 2 +
-             math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon / 2) ** 2)
+        a = (
+            math.sin(dlat / 2) ** 2
+            + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon / 2) ** 2
+        )
         c = 2 * math.asin(math.sqrt(a))
 
         # Earth's radius in miles
@@ -177,8 +179,10 @@ class LocationManager:
         }
 
         for state, bounds in state_bounds.items():
-            if (bounds["lat_min"] <= latitude <= bounds["lat_max"] and
-                bounds["lon_min"] <= longitude <= bounds["lon_max"]):
+            if (
+                bounds["lat_min"] <= latitude <= bounds["lat_max"]
+                and bounds["lon_min"] <= longitude <= bounds["lon_max"]
+            ):
                 return state
 
         return None
@@ -190,11 +194,13 @@ class LocationManager:
             "lat_min": 24.0,  # Southern tip of Florida
             "lat_max": 49.0,  # Northern border
             "lon_min": -125.0,  # West coast
-            "lon_max": -66.0,   # East coast
+            "lon_max": -66.0,  # East coast
         }
 
-        return (us_bounds["lat_min"] <= location.latitude <= us_bounds["lat_max"] and
-                us_bounds["lon_min"] <= location.longitude <= us_bounds["lon_max"])
+        return (
+            us_bounds["lat_min"] <= location.latitude <= us_bounds["lat_max"]
+            and us_bounds["lon_min"] <= location.longitude <= us_bounds["lon_max"]
+        )
 
     def format_coordinates(self, latitude: float, longitude: float, precision: int = 4) -> str:
         """Format coordinates as a readable string."""
@@ -210,7 +216,13 @@ class LocationManager:
             coord_string = coord_string.strip()
 
             # Remove degree symbols and direction letters for parsing
-            clean_string = coord_string.replace("°", "").replace("N", "").replace("S", "").replace("E", "").replace("W", "")
+            clean_string = (
+                coord_string.replace("°", "")
+                .replace("N", "")
+                .replace("S", "")
+                .replace("E", "")
+                .replace("W", "")
+            )
 
             # Split on comma
             parts = [part.strip() for part in clean_string.split(",")]
@@ -279,9 +291,7 @@ class LocationManager:
                     name = ", ".join(name_parts) if name_parts else "Current Location"
 
                     location = Location(
-                        name=name,
-                        latitude=data.get("lat", 0.0),
-                        longitude=data.get("lon", 0.0)
+                        name=name, latitude=data.get("lat", 0.0), longitude=data.get("lon", 0.0)
                     )
 
                     logger.info(f"Detected location from IP: {location.name}")

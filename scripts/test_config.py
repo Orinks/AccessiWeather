@@ -1,12 +1,11 @@
-"""
-Test configuration and performance optimization settings for AccessiWeather.
+"""Test configuration and performance optimization settings for AccessiWeather.
 
 This module provides configuration for different test execution modes,
 performance optimization settings, and test environment setup.
 """
 
 import os
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, cast
 
 
 class TestConfig:
@@ -107,13 +106,12 @@ class TestConfig:
     def get_test_command(
         cls,
         category: str,
-        coverage: Optional[bool] = None,
-        parallel: Optional[bool] = None,
+        coverage: bool | None = None,
+        parallel: bool | None = None,
         fast: bool = False,
-        paths: Optional[List[str]] = None,
-    ) -> List[str]:
-        """
-        Generate pytest command for a specific test category.
+        paths: list[str] | None = None,
+    ) -> list[str]:
+        """Generate pytest command for a specific test category.
 
         Args:
             category: Test category name
@@ -124,6 +122,7 @@ class TestConfig:
 
         Returns:
             List of command arguments for pytest
+
         """
         if category not in cls.TEST_CATEGORIES:
             raise ValueError(f"Unknown test category: {category}")
@@ -132,33 +131,33 @@ class TestConfig:
         cmd = ["python", "-m", "pytest"]
 
         # Add markers
-        markers = cast(List[str], config["markers"])
+        markers = cast(list[str], config["markers"])
         if markers:
             marker_expr = " or ".join(markers)
             cmd.extend(["-m", marker_expr])
 
         # Add base arguments
-        pytest_args = cast(Dict[str, Any], cls.PERFORMANCE_SETTINGS["pytest_args"])
-        base_args = cast(List[str], pytest_args["base"])
+        pytest_args = cast(dict[str, Any], cls.PERFORMANCE_SETTINGS["pytest_args"])
+        base_args = cast(list[str], pytest_args["base"])
         cmd.extend(base_args)
 
         # Add fast mode arguments
         if fast:
-            fast_args = cast(List[str], pytest_args["fast"])
+            fast_args = cast(list[str], pytest_args["fast"])
             cmd.extend(fast_args)
         else:
-            thorough_args = cast(List[str], pytest_args["thorough"])
+            thorough_args = cast(list[str], pytest_args["thorough"])
             cmd.extend(thorough_args)
 
         # Add coverage if enabled
         use_coverage = coverage if coverage is not None else config["coverage"]
         if use_coverage:
-            coverage_args = cast(List[str], pytest_args["coverage"])
+            coverage_args = cast(list[str], pytest_args["coverage"])
             cmd.extend(coverage_args)
 
         # Add parallel execution if enabled
         use_parallel = parallel if parallel is not None else config["parallel"]
-        parallel_settings = cast(Dict[str, Any], cls.PERFORMANCE_SETTINGS["parallel"])
+        parallel_settings = cast(dict[str, Any], cls.PERFORMANCE_SETTINGS["parallel"])
         if use_parallel and parallel_settings["enabled"]:
             cmd.extend(
                 [
@@ -182,15 +181,15 @@ class TestConfig:
         return cmd
 
     @classmethod
-    def get_environment(cls, mode: str = "local") -> Dict[str, str]:
-        """
-        Get environment variables for test execution.
+    def get_environment(cls, mode: str = "local") -> dict[str, str]:
+        """Get environment variables for test execution.
 
         Args:
             mode: Environment mode (headless, ci, local)
 
         Returns:
             Dictionary of environment variables
+
         """
         if mode not in cls.TEST_ENVIRONMENTS:
             raise ValueError(f"Unknown environment mode: {mode}")
@@ -202,7 +201,7 @@ class TestConfig:
         return env
 
     @classmethod
-    def get_category_info(cls, category: str) -> Dict:
+    def get_category_info(cls, category: str) -> dict:
         """Get information about a test category."""
         if category not in cls.TEST_CATEGORIES:
             raise ValueError(f"Unknown test category: {category}")
@@ -210,7 +209,7 @@ class TestConfig:
         return cls.TEST_CATEGORIES[category].copy()
 
     @classmethod
-    def list_categories(cls) -> List[str]:
+    def list_categories(cls) -> list[str]:
         """List all available test categories."""
         return list(cls.TEST_CATEGORIES.keys())
 
@@ -221,46 +220,46 @@ class TestConfig:
 
 
 # Convenience functions for common test configurations
-def get_unit_test_command(coverage: bool = True, fast: bool = False) -> List[str]:
+def get_unit_test_command(coverage: bool = True, fast: bool = False) -> list[str]:
     """Get command for running unit tests."""
     return TestConfig.get_test_command("unit", coverage=coverage, fast=fast)
 
 
-def get_integration_test_command(fast: bool = False) -> List[str]:
+def get_integration_test_command(fast: bool = False) -> list[str]:
     """Get command for running integration tests."""
     return TestConfig.get_test_command("integration", fast=fast)
 
 
-def get_smoke_test_command(fast: bool = True) -> List[str]:
+def get_smoke_test_command(fast: bool = True) -> list[str]:
     """Get command for running smoke tests."""
     return TestConfig.get_test_command("smoke", fast=fast)
 
 
-def get_all_test_command(coverage: bool = True, fast: bool = False) -> List[str]:
+def get_all_test_command(coverage: bool = True, fast: bool = False) -> list[str]:
     """Get command for running all tests."""
     cmd = ["python", "-m", "pytest"]
-    pytest_args = cast(Dict[str, Any], TestConfig.PERFORMANCE_SETTINGS["pytest_args"])
-    base_args = cast(List[str], pytest_args["base"])
+    pytest_args = cast(dict[str, Any], TestConfig.PERFORMANCE_SETTINGS["pytest_args"])
+    base_args = cast(list[str], pytest_args["base"])
     cmd.extend(base_args)
 
     if fast:
-        fast_args = cast(List[str], pytest_args["fast"])
+        fast_args = cast(list[str], pytest_args["fast"])
         cmd.extend(fast_args)
 
     if coverage:
-        coverage_args = cast(List[str], pytest_args["coverage"])
+        coverage_args = cast(list[str], pytest_args["coverage"])
         cmd.extend(coverage_args)
 
     cmd.append("tests/")
     return cmd
 
 
-def get_ci_environment() -> Dict[str, str]:
+def get_ci_environment() -> dict[str, str]:
     """Get environment variables for CI execution."""
     return TestConfig.get_environment("ci")
 
 
-def get_local_environment() -> Dict[str, str]:
+def get_local_environment() -> dict[str, str]:
     """Get environment variables for local execution."""
     return TestConfig.get_environment("local")
 

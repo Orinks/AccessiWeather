@@ -7,9 +7,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from accessiweather.simple.config import ConfigManager
-from accessiweather.simple.models import AppConfig, Location
-from accessiweather.simple.weather_client import WeatherClient
+from accessiweather.models import AppConfig, Location
+from accessiweather.simple_config import ConfigManager
+from accessiweather.weather_client import WeatherClient
 
 
 class MockApp:

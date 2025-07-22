@@ -12,9 +12,10 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from accessiweather.models import AppConfig, AppSettings
+
 # Import simplified app configuration components
-from accessiweather.simple.config import ConfigManager
-from accessiweather.simple.models import AppConfig, AppSettings
+from accessiweather.simple_config import ConfigManager
 
 
 class TestConfigManagerBasics:
@@ -603,7 +604,7 @@ class TestConfigManagerErrorHandling:
 # Smoke test functions that can be run with briefcase dev --test
 def test_config_manager_can_be_imported():
     """Test that ConfigManager can be imported successfully."""
-    from accessiweather.simple.config import ConfigManager
+    from accessiweather.simple_config import ConfigManager
 
     # Basic instantiation test with mock app
     mock_app = Mock()
@@ -616,7 +617,7 @@ def test_config_manager_can_be_imported():
 
 def test_config_manager_basic_functionality():
     """Test basic ConfigManager functionality without complex scenarios."""
-    from accessiweather.simple.config import ConfigManager
+    from accessiweather.simple_config import ConfigManager
 
     # Create mock app
     mock_app = Mock()

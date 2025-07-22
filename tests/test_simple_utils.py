@@ -6,7 +6,7 @@ updating imports and module references for the simplified Toga architecture.
 """
 
 # Import utility functions from the simplified app
-from accessiweather.simple.utils import (
+from accessiweather.utils import (
     TemperatureUnit,
     celsius_to_fahrenheit,
     convert_wind_direction_to_cardinal,
@@ -411,7 +411,7 @@ class TestUtilityIntegration:
 def test_utility_imports_available():
     """Test that all utility functions can be imported successfully."""
     # This test verifies that all utility functions are available for import
-    from accessiweather.simple.utils import (
+    from accessiweather.utils import (
         TemperatureUnit,
         celsius_to_fahrenheit,
         convert_wind_direction_to_cardinal,
