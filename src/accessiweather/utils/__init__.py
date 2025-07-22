@@ -27,7 +27,6 @@ __all__ = [
     "fahrenheit_to_celsius",
     "format_temperature",
     "get_temperature_values",
-
     # Unit utilities
     "format_wind_speed",
     "format_pressure",

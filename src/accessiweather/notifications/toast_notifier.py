@@ -8,7 +8,6 @@ import asyncio
 import logging
 import sys
 import threading
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +20,8 @@ except ImportError as e:
     DesktopNotifier = None
     DESKTOP_NOTIFIER_AVAILABLE = False
 
-from .sound_player import play_notification_sound, play_sample_sound
+from .sound_player import play_notification_sound
+
 
 class SafeDesktopNotifier:
     """A wrapper around desktop-notifier that provides synchronous interface.
@@ -141,7 +141,7 @@ class SafeToastNotifier:
     Provides cross-platform notification support using desktop-notifier.
     """
 
-    def __init__(self, sound_enabled: bool = True, soundpack: Optional[str] = None):
+    def __init__(self, sound_enabled: bool = True, soundpack: str | None = None):
         self.sound_enabled: bool = sound_enabled
         self.soundpack: str = soundpack if soundpack is not None else "default"
         self.soundpack = self.soundpack  # keep the pack name/dir for use with the new API

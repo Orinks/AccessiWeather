@@ -8,10 +8,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from accessiweather.simple.display import WxStyleWeatherFormatter
-from accessiweather.simple.models import Location
-from accessiweather.simple.utils import convert_wind_direction_to_cardinal
-from accessiweather.simple.weather_client import WeatherClient
+from accessiweather.display import WxStyleWeatherFormatter
+from accessiweather.models import Location
+from accessiweather.utils import convert_wind_direction_to_cardinal
+from accessiweather.weather_client import WeatherClient
 
 
 class TestWeatherDataFetching:
@@ -81,7 +81,7 @@ class TestWeatherDataFetching:
 
     def test_formatter_handles_numeric_wind_direction(self):
         """Test that the formatter correctly handles numeric wind directions."""
-        from accessiweather.simple.models import AppSettings, CurrentConditions
+        from accessiweather.models import AppSettings, CurrentConditions
 
         settings = AppSettings()
         formatter = WxStyleWeatherFormatter(settings)
@@ -272,8 +272,8 @@ class TestWeatherDataFetching:
 def test_weather_fetching_components_available():
     """Test that all weather fetching components are available."""
     # Test imports
-    from accessiweather.simple.utils import convert_wind_direction_to_cardinal
-    from accessiweather.simple.weather_client import WeatherClient
+    from accessiweather.utils import convert_wind_direction_to_cardinal
+    from accessiweather.weather_client import WeatherClient
 
     # Test instantiation
     client = WeatherClient()
@@ -286,8 +286,8 @@ def test_weather_fetching_components_available():
 
 def test_wind_direction_bug_is_fixed():
     """Test that the wind direction formatting bug is fixed."""
-    from accessiweather.simple.display import WxStyleWeatherFormatter
-    from accessiweather.simple.models import AppSettings, CurrentConditions, Location
+    from accessiweather.display import WxStyleWeatherFormatter
+    from accessiweather.models import AppSettings, CurrentConditions, Location
 
     # This test verifies the specific bug that was causing crashes
     settings = AppSettings()

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Comprehensive test runner for AccessiWeather project.
+"""Comprehensive test runner for AccessiWeather project.
 
 This script provides different test execution modes for various development
 and CI/CD scenarios, including unit tests, integration tests, and end-to-end tests.

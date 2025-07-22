@@ -11,7 +11,7 @@ import pytest
 # Set up toga-dummy backend for testing
 os.environ["TOGA_BACKEND"] = "toga_dummy"
 
-from accessiweather.simple.models import (
+from accessiweather.models import (
     CurrentConditions,
     Forecast,
     ForecastPeriod,

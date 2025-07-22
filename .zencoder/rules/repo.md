@@ -50,7 +50,7 @@ To prevent Ruff from modifying specific code sections:
    ```python
    # This import is needed for runtime type checking
    from typing import TYPE_CHECKING  # noqa: F401
-   
+
    # Keep specific formatting intact
    my_list = [  # noqa: E201
        1,

@@ -48,7 +48,9 @@ class WxStyleWeatherFormatter:
         """Get the appropriate precision for temperature formatting."""
         return 0 if unit_pref == TemperatureUnit.BOTH else 1
 
-    def format_current_conditions(self, current: CurrentConditions | None, location: Location) -> str:
+    def format_current_conditions(
+        self, current: CurrentConditions | None, location: Location
+    ) -> str:
         """Format current conditions exactly like the wx version."""
         if not current or not current.has_data():
             return f"Current conditions for {location.name}:\nNo current weather data available."
@@ -62,9 +64,9 @@ class WxStyleWeatherFormatter:
 
         # Calculate missing temperature if needed
         if temperature_f is None and temperature_c is not None:
-            temperature_f = (temperature_c * 9/5) + 32
+            temperature_f = (temperature_c * 9 / 5) + 32
         elif temperature_c is None and temperature_f is not None:
-            temperature_c = (temperature_f - 32) * 5/9
+            temperature_c = (temperature_f - 32) * 5 / 9
 
         # Format temperature
         temperature_str = format_temperature(
@@ -75,9 +77,9 @@ class WxStyleWeatherFormatter:
         feels_like_f = current.feels_like_f
         feels_like_c = current.feels_like_c
         if feels_like_f is None and feels_like_c is not None:
-            feels_like_f = (feels_like_c * 9/5) + 32
+            feels_like_f = (feels_like_c * 9 / 5) + 32
         elif feels_like_c is None and feels_like_f is not None:
-            feels_like_c = (feels_like_f - 32) * 5/9
+            feels_like_c = (feels_like_f - 32) * 5 / 9
 
         feels_like_str = "N/A"
         if feels_like_f is not None:
@@ -94,8 +96,10 @@ class WxStyleWeatherFormatter:
 
         if current.wind_speed_mph is not None:
             wind_speed_str = format_wind_speed(
-                current.wind_speed_mph, unit_pref,
-                wind_speed_kph=current.wind_speed_kph, precision=1
+                current.wind_speed_mph,
+                unit_pref,
+                wind_speed_kph=current.wind_speed_kph,
+                precision=1,
             )
 
         if current.wind_direction is not None:
@@ -108,15 +112,13 @@ class WxStyleWeatherFormatter:
         pressure_str = "N/A"
         if current.pressure_in is not None:
             pressure_str = format_pressure(
-                current.pressure_in, unit_pref,
-                pressure_mb=current.pressure_mb, precision=0
+                current.pressure_in, unit_pref, pressure_mb=current.pressure_mb, precision=0
             )
         elif current.pressure_mb is not None:
             # Convert mb to inHg
             pressure_in = current.pressure_mb / 33.8639
             pressure_str = format_pressure(
-                pressure_in, unit_pref,
-                pressure_mb=current.pressure_mb, precision=0
+                pressure_in, unit_pref, pressure_mb=current.pressure_mb, precision=0
             )
 
         # Format visibility
@@ -143,7 +145,7 @@ class WxStyleWeatherFormatter:
         # Add dewpoint if available (calculated from temperature and humidity)
         if current.temperature_f is not None and current.humidity is not None:
             dewpoint_f = self._calculate_dewpoint(current.temperature_f, current.humidity)
-            dewpoint_c = (dewpoint_f - 32) * 5/9
+            dewpoint_c = (dewpoint_f - 32) * 5 / 9
             dewpoint_str = format_temperature(
                 dewpoint_f, unit_pref, temperature_c=dewpoint_c, precision=precision
             )
@@ -162,7 +164,12 @@ class WxStyleWeatherFormatter:
 
         return text
 
-    def format_forecast(self, forecast: Forecast | None, location: Location, hourly_forecast: HourlyForecast | None = None) -> str:
+    def format_forecast(
+        self,
+        forecast: Forecast | None,
+        location: Location,
+        hourly_forecast: HourlyForecast | None = None,
+    ) -> str:
         """Format forecast exactly like the wx version, including hourly forecast if available."""
         if not forecast or not forecast.has_data():
             return f"Forecast for {location.name}:\nNo forecast data available."
@@ -254,7 +261,7 @@ class WxStyleWeatherFormatter:
     def _calculate_dewpoint(self, temperature_f: float, humidity: float) -> float:
         """Calculate dewpoint from temperature and humidity."""
         # Convert to Celsius for calculation
-        temp_c = (temperature_f - 32) * 5/9
+        temp_c = (temperature_f - 32) * 5 / 9
 
         # Magnus formula approximation
         a = 17.27
@@ -264,7 +271,7 @@ class WxStyleWeatherFormatter:
         dewpoint_c = (b * alpha) / (a - alpha)
 
         # Convert back to Fahrenheit
-        return (dewpoint_c * 9/5) + 32
+        return (dewpoint_c * 9 / 5) + 32
 
     def _get_uv_description(self, uv_index: float) -> str:
         """Get UV index description."""
@@ -297,7 +304,9 @@ class WxStyleWeatherFormatter:
             formatted_time = self._format_hour_time(period.start_time)
 
             # Format temperature
-            temp_text = self._format_hourly_temperature(period.temperature, period.temperature_unit, unit_pref)
+            temp_text = self._format_hourly_temperature(
+                period.temperature, period.temperature_unit, unit_pref
+            )
 
             # Format conditions
             condition = period.short_forecast or "Unknown"
@@ -334,7 +343,9 @@ class WxStyleWeatherFormatter:
         except Exception:
             return "Unknown"
 
-    def _format_hourly_temperature(self, temperature: float | None, temp_unit: str, unit_pref: TemperatureUnit) -> str:
+    def _format_hourly_temperature(
+        self, temperature: float | None, temp_unit: str, unit_pref: TemperatureUnit
+    ) -> str:
         """Format hourly temperature according to user preference."""
         if temperature is None:
             return "Unknown"

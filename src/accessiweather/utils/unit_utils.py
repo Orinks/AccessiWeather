@@ -169,17 +169,29 @@ def convert_wind_direction_to_cardinal(degrees: float | None) -> str:
         return "N/A"
 
     directions = [
-        "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
-        "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"
+        "N",
+        "NNE",
+        "NE",
+        "ENE",
+        "E",
+        "ESE",
+        "SE",
+        "SSE",
+        "S",
+        "SSW",
+        "SW",
+        "WSW",
+        "W",
+        "WNW",
+        "NW",
+        "NNW",
     ]
     index = round(degrees / 22.5) % 16
     return directions[index]
 
 
 def format_combined_wind(
-    wind_speed: float | None,
-    wind_direction: float | str | None,
-    speed_unit: str = "mph"
+    wind_speed: float | None, wind_direction: float | str | None, speed_unit: str = "mph"
 ) -> str:
     """Format combined wind speed and direction for display.
 

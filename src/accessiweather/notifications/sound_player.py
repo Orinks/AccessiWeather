@@ -1,4 +1,3 @@
-import os
 import json
 import logging
 from pathlib import Path
@@ -26,7 +25,7 @@ def get_sound_file(event: str, pack_dir: str) -> Path | None:
             logger.error("Default sound pack is missing!")
             return None
     try:
-        with open(pack_json, "r", encoding="utf-8") as f:
+        with open(pack_json, encoding="utf-8") as f:
             meta = json.load(f)
         filename = meta.get("sounds", {}).get(event, f"{event}.wav")
         sound_file = pack_path / filename
@@ -53,4 +52,4 @@ def play_notification_sound(event: str, pack_dir: str) -> None:
 
 def play_sample_sound(pack_dir: str) -> None:
     """Play a sample (alert) sound from the given pack."""
-    play_notification_sound(DEFAULT_EVENT, pack_dir) 
+    play_notification_sound(DEFAULT_EVENT, pack_dir)

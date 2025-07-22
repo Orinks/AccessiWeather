@@ -11,9 +11,10 @@ from unittest.mock import Mock, PropertyMock, patch
 
 import pytest
 
+from accessiweather.models import AppConfig, AppSettings, Location
+
 # Import simplified app components
-from accessiweather.simple.app import AccessiWeatherApp
-from accessiweather.simple.models import AppConfig, AppSettings, Location
+from accessiweather.toga_app import AccessiWeatherApp
 
 
 class TestAccessiWeatherAppInitialization:
@@ -352,7 +353,7 @@ class TestAccessiWeatherAppUICreation:
 # Smoke test functions that can be run with briefcase dev --test
 def test_accessiweather_app_can_be_imported():
     """Test that AccessiWeatherApp can be imported successfully."""
-    from accessiweather.simple.app import AccessiWeatherApp
+    from accessiweather.toga_app import AccessiWeatherApp
 
     # Basic instantiation test with mock
     with patch("toga.App.__init__") as mock_init:
@@ -363,7 +364,7 @@ def test_accessiweather_app_can_be_imported():
 
 def test_accessiweather_app_basic_functionality():
     """Test basic AccessiWeatherApp functionality without GUI rendering."""
-    from accessiweather.simple.app import AccessiWeatherApp
+    from accessiweather.toga_app import AccessiWeatherApp
 
     with patch("toga.App.__init__") as mock_init:
         mock_init.return_value = None

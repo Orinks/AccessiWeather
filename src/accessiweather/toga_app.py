@@ -174,7 +174,7 @@ class AccessiWeatherApp(toga.App):
         self.formatter = WxStyleWeatherFormatter(config.settings)
 
         # Notification system
-        from ..notifications.toast_notifier import SafeDesktopNotifier
+        from .notifications.toast_notifier import SafeDesktopNotifier
 
         self._notifier = SafeDesktopNotifier()
 
