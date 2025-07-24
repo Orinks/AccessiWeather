@@ -60,6 +60,9 @@ DEFAULT_DATA_SOURCE = DATA_SOURCE_AUTO
 # UI Configuration
 DEFAULT_TASKBAR_FORMAT = "{temp} {condition}"
 
+# Default values for intervals
+UPDATE_INTERVAL = 15  # Default update interval in minutes
+
 # Validation limits
 MIN_UPDATE_INTERVAL = 1
 MIN_ALERT_RADIUS = 1

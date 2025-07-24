@@ -8,19 +8,39 @@ name: Update GitHub Pages
 # IMPORTANT: This workflow runs AFTER the build workflow completes, not on direct pushes.
 # This prevents duplicate runs and ensures build artifacts are available when updating pages.
 
+# TEMPORARILY DISABLED FOR TESTING
+# on:
+#   # Trigger when build workflow completes successfully on main or dev branches
+#   workflow_run:
+#     workflows: ["Build and Package"]
+#     types:
+#       - completed
+#     branches: [main, dev]
+#   # Trigger when releases are published/edited
+#   release:
+#     types:
+#       - published
+#       - edited
+#   # Manual trigger
+#   workflow_dispatch:
+#     inputs:
+#       force_update:
+#         description: 'Force update pages'
+#         required: false
+#         type: boolean
+#         default: false
+#       target_branch:
+#         description: 'Target branch for build info (main/dev/both)'
+#         required: false
+#         type: choice
+#         options:
+#           - both
+#           - main
+#           - dev
+#         default: both
+
+# Temporary manual-only trigger for testing
 on:
-  # Trigger when build workflow completes successfully on main or dev branches
-  workflow_run:
-    workflows: ["Build and Package"]
-    types:
-      - completed
-    branches: [main, dev]
-  # Trigger when releases are published/edited
-  release:
-    types:
-      - published
-      - edited
-  # Manual trigger
   workflow_dispatch:
     inputs:
       force_update:
