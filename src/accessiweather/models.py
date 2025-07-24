@@ -182,7 +182,7 @@ class WeatherAlert:
         ]
 
         content_string = "|".join(content_parts)
-        return hashlib.md5(content_string.encode()).hexdigest()
+        return hashlib.md5(content_string.encode(), usedforsecurity=False).hexdigest()
 
     def is_expired(self) -> bool:
         """Check if this alert has expired."""

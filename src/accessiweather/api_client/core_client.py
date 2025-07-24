@@ -124,7 +124,9 @@ class NoaaApiClient(AlertsAndProductsMixin):
         if self.cache:
             # Create a unique cache key based on URL and params
             cache_data = {"url": request_url, "params": params or {}}
-            cache_key = hashlib.md5(json.dumps(cache_data, sort_keys=True).encode()).hexdigest()
+            cache_key = hashlib.md5(
+                json.dumps(cache_data, sort_keys=True).encode(), usedforsecurity=False
+            ).hexdigest()
 
             # Check cache first if not forcing refresh
             if not force_refresh:
