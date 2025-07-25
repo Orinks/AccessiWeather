@@ -287,26 +287,7 @@ class SettingsDialog:
         general_box.add(self.sound_enabled_switch)
 
         # Sound Pack Selection
-        import json
-        from pathlib import Path
-
-        soundpacks_dir = Path(__file__).parent.parent / "soundpacks"
-        self.sound_pack_options = []
-        self.sound_pack_map = {}
-        if soundpacks_dir.exists():
-            for pack_dir in soundpacks_dir.iterdir():
-                if pack_dir.is_dir() and (pack_dir / "pack.json").exists():
-                    try:
-                        with open(pack_dir / "pack.json", encoding="utf-8") as f:
-                            meta = json.load(f)
-                        display_name = meta.get("name", pack_dir.name)
-                        self.sound_pack_options.append(display_name)
-                        self.sound_pack_map[display_name] = pack_dir.name
-                    except Exception:
-                        continue
-        if not self.sound_pack_options:
-            self.sound_pack_options = ["Default"]
-            self.sound_pack_map["Default"] = "default"
+        self._load_sound_packs()
 
         self.sound_pack_selection = toga.Selection(
             items=self.sound_pack_options,
@@ -574,6 +555,29 @@ class SettingsDialog:
             self.window.close()
             self.window = None  # Clear reference to help with cleanup
 
+    def _load_sound_packs(self):
+        """Load available sound packs."""
+        import json
+        from pathlib import Path
+
+        soundpacks_dir = Path(__file__).parent.parent / "soundpacks"
+        self.sound_pack_options = []
+        self.sound_pack_map = {}
+        if soundpacks_dir.exists():
+            for pack_dir in soundpacks_dir.iterdir():
+                if pack_dir.is_dir() and (pack_dir / "pack.json").exists():
+                    try:
+                        with open(pack_dir / "pack.json", encoding="utf-8") as f:
+                            meta = json.load(f)
+                        display_name = meta.get("name", pack_dir.name)
+                        self.sound_pack_options.append(display_name)
+                        self.sound_pack_map[display_name] = pack_dir.name
+                    except Exception:
+                        continue
+        if not self.sound_pack_options:
+            self.sound_pack_options = ["Default"]
+            self.sound_pack_map["Default"] = "default"
+
     def _on_sound_enabled_changed(self, widget):
         enabled = widget.value
         self.sound_pack_selection.enabled = enabled
@@ -591,8 +595,36 @@ class SettingsDialog:
             logger.error(f"Failed to preview sound: {e}")
 
     def _on_manage_soundpacks(self, widget):
-        # Placeholder for future sound pack management dialog
-        self.app.main_window.info_dialog("Manage Sound Packs", "Sound pack management coming soon.")
+        """Open the sound pack manager dialog."""
+        try:
+            from .soundpack_manager_dialog import SoundPackManagerDialog
+
+            # Get current sound pack
+            current_pack = getattr(self.current_settings, "sound_pack", "default")
+
+            # Open sound pack manager
+            manager = SoundPackManagerDialog(self.app, current_pack)
+            selected_pack = manager.show()
+
+            # Update sound pack selection if changed
+            if selected_pack != current_pack:
+                # Update the sound pack selection widget
+                self._load_sound_packs()  # Reload available packs
+
+                # Update the selection widget items
+                self.sound_pack_selection.items = self.sound_pack_options
+
+                # Find and select the new pack
+                for display_name, pack_id in self.sound_pack_map.items():
+                    if pack_id == selected_pack:
+                        self.sound_pack_selection.value = display_name
+                        break
+
+        except Exception as e:
+            logger.error(f"Failed to open sound pack manager: {e}")
+            self.app.main_window.error_dialog(
+                "Sound Pack Manager Error", f"Failed to open sound pack manager: {e}"
+            )
 
     def _on_data_source_changed(self, widget):
         """Handle data source selection change to show/hide Visual Crossing config."""
