@@ -166,4 +166,67 @@ dev-debug.log
 
 # Task files
 # tasks.json
-# tasks/ 
+# tasks/
+
+# Testing and development files
+test_*.py
+debug_*.py
+run_*.py
+simple_test.py
+validate_*.py
+examine_*.py
+
+# Analysis and temporary data files
+*_analysis.json
+*_alert_analysis.json
+visual_crossing_alert_analysis.json
+commit_message.txt
+prd.txt
+enhanced_release_notes.md
+release_notes.md
+
+# Soundpack testing and creation files
+*.zip
+*_pack.zip
+*_sounds_pack.zip
+nature_sounds_pack.zip
+test_soundpack.zip
+
+# Temporary backup directories
+temp_backup/
+backup_*/
+
+# Screen reader and accessibility test logs
+screen_reader_test.log
+accessibility_test.log
+
+# Briefcase logs (already covered by logs/ but being specific)
+logs/briefcase.*.log
+
+# Test configuration directories
+test_config/
+
+# Eleven Labs SFX generated files
+*.mp3
+generated_sounds/
+sfx_output/
+temp_sounds/
+test_sounds/
+
+# Exclude generated audio files but keep soundpack audio files
+# (soundpack .wav files are intentionally tracked)
+/generated_*.wav
+/temp_*.wav
+/test_*.wav
+
+# Development markdown files (project-specific)
+TESTING_*.md
+*_SOLUTION.md
+BETA_RELEASE.md
+AGENTS.md
+CLAUDE.md
+knowledge.md
+RELEASE_README.md
+
+# PyInstaller spec files (project-specific)
+AccessiWeather.spec 
