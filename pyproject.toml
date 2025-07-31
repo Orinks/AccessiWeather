@@ -13,7 +13,7 @@ license = {text = "MIT"}
 requires-python = ">=3.7"
 dependencies = [
     "toga",
-
+    "playsound",
     "desktop-notifier",
     "geopy",
     "python-dateutil",
@@ -150,6 +150,7 @@ entry_point = "accessiweather:main"
 
 requires = [
     "toga>=0.5.1",
+    "playsound",
     "httpx>=0.20.0",
     "python-dateutil",
     "desktop-notifier",
