@@ -7,7 +7,7 @@ alert identification and user controls.
 
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from .models import WeatherAlert, WeatherAlerts
@@ -106,7 +106,7 @@ class AlertManager:
         self.alert_states: dict[str, AlertState] = {}
         self.last_global_notification: datetime | None = None
         self.notifications_this_hour = 0
-        self.hour_reset_time = datetime.now().replace(minute=0, second=0, microsecond=0)
+        self.hour_reset_time = datetime.now(UTC).replace(minute=0, second=0, microsecond=0)
 
         # Load existing state
         self._load_state()
@@ -152,7 +152,7 @@ class AlertManager:
                     if self.last_global_notification
                     else None
                 ),
-                "saved_at": datetime.now().isoformat(),
+                "saved_at": datetime.now(UTC).isoformat(),
             }
 
             # Write atomically
@@ -168,7 +168,7 @@ class AlertManager:
 
     def _cleanup_expired_states(self):
         """Remove old alert states to prevent unbounded growth."""
-        cutoff_time = datetime.now() - timedelta(days=7)  # Keep states for 7 days
+        cutoff_time = datetime.now(UTC) - timedelta(days=7)  # Keep states for 7 days
 
         expired_ids = [
             alert_id
@@ -184,7 +184,7 @@ class AlertManager:
 
     def _reset_hourly_counter(self):
         """Reset hourly notification counter if needed."""
-        now = datetime.now()
+        now = datetime.now(UTC)
         current_hour = now.replace(minute=0, second=0, microsecond=0)
 
         if current_hour > self.hour_reset_time:
@@ -197,7 +197,7 @@ class AlertManager:
             return True
 
         cooldown_period = timedelta(minutes=self.settings.global_cooldown)
-        return datetime.now() - self.last_global_notification > cooldown_period
+        return datetime.now(UTC) - self.last_global_notification > cooldown_period
 
     def _can_send_alert_notification(
         self, alert_state: AlertState, is_escalation: bool = False
@@ -212,7 +212,7 @@ class AlertManager:
         )
         cooldown_period = timedelta(minutes=cooldown_minutes)
 
-        return datetime.now() - alert_state.last_notified > cooldown_period
+        return datetime.now(UTC) - alert_state.last_notified > cooldown_period
 
     def _should_notify_alert(self, alert: WeatherAlert) -> tuple[bool, str]:
         """Determine if we should notify for this alert and why."""
@@ -255,7 +255,7 @@ class AlertManager:
 
         notifications_to_send = []
         active_alerts = alerts.get_active_alerts()
-        current_time = datetime.now()
+        current_time = datetime.now(UTC)
 
         for alert in active_alerts:
             alert_id = alert.get_unique_id()
@@ -344,7 +344,7 @@ class AlertManager:
 
     def get_alert_statistics(self) -> dict:
         """Get statistics about alert processing."""
-        now = datetime.now()
+        now = datetime.now(UTC)
 
         # Count recent notifications
         recent_notifications = sum(
