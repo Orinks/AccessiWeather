@@ -225,7 +225,7 @@ class AlertManager:
             return False, f"severity_below_threshold_{alert.severity}"
 
         # Check category filters
-        if not self.settings.should_notify_category(alert.event):
+        if alert.event and not self.settings.should_notify_category(alert.event):
             return False, f"category_ignored_{alert.event}"
 
         # Check if alert is expired
@@ -301,7 +301,7 @@ class AlertManager:
                     logger.debug(f"Alert reminder: {alert_id}")
 
         # Update notification timestamps for alerts we're about to notify
-        for alert, reason in notifications_to_send:
+        for alert, _reason in notifications_to_send:
             alert_id = alert.get_unique_id()
             if alert_id in self.alert_states:
                 state = self.alert_states[alert_id]
