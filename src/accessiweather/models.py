@@ -5,7 +5,7 @@ replacing the complex service layer architecture with straightforward data struc
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 
 
 @dataclass
@@ -188,7 +188,16 @@ class WeatherAlert:
         """Check if this alert has expired."""
         if self.expires is None:
             return False
-        return datetime.now() > self.expires
+
+        now = datetime.now(UTC)
+        alert_expires = self.expires
+
+        # Ensure both datetimes are timezone-aware for comparison
+        if alert_expires.tzinfo is None:
+            # If alert expires time is naive, assume it's UTC
+            alert_expires = alert_expires.replace(tzinfo=UTC)
+
+        return now > alert_expires
 
     def get_severity_priority(self) -> int:
         """Get numeric priority for severity level (higher = more severe)."""
@@ -208,12 +217,21 @@ class WeatherAlerts:
 
     def get_active_alerts(self) -> list[WeatherAlert]:
         """Get alerts that haven't expired."""
-        now = datetime.now()
+        now = datetime.now(UTC)
         active = []
 
         for alert in self.alerts:
-            if alert.expires is None or alert.expires > now:
+            if alert.expires is None:
                 active.append(alert)
+            else:
+                # Ensure both datetimes are timezone-aware for comparison
+                alert_expires = alert.expires
+                if alert_expires.tzinfo is None:
+                    # If alert expires time is naive, assume it's UTC
+                    alert_expires = alert_expires.replace(tzinfo=UTC)
+
+                if alert_expires > now:
+                    active.append(alert)
 
         return active
 

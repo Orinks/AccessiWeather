@@ -280,7 +280,21 @@ class SoundPackManagerDialog:
 
     def _on_sound_selected(self, widget) -> None:
         """Handle sound selection."""
-        self.preview_button.enabled = widget.selection is not None
+        if widget.selection is None:
+            self.preview_button.enabled = False
+            return
+
+        # Check if the selected sound file exists
+        sound_item = widget.selection
+        if self.selected_pack and self.selected_pack in self.sound_packs:
+            pack_info = self.sound_packs[self.selected_pack]
+            sound_path = pack_info["path"] / sound_item.sound_file
+
+            # Enable preview only if the actual sound file exists
+            # This will work for classic, default, nature, minimal, and any other packs with real files
+            self.preview_button.enabled = sound_path.exists() and sound_path.stat().st_size > 0
+        else:
+            self.preview_button.enabled = False
 
     def _on_preview_sound(self, widget) -> None:
         """Preview the selected sound."""
@@ -290,6 +304,17 @@ class SoundPackManagerDialog:
         try:
             sound_item = self.sound_list.selection
             sound_name = sound_item.sound_name
+
+            # Check if the sound file exists
+            pack_info = self.sound_packs[self.selected_pack]
+            sound_path = pack_info["path"] / sound_item.sound_file
+
+            if not sound_path.exists():
+                self.app.main_window.info_dialog(
+                    "Sound Not Available",
+                    f"The sound file '{sound_item.sound_file}' is not available. This may be a placeholder sound pack.",
+                )
+                return
 
             from ..notifications.sound_player import play_notification_sound
 

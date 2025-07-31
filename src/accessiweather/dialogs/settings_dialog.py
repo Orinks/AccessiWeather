@@ -304,15 +304,6 @@ class SettingsDialog:
             self.sound_pack_selection.value = self.sound_pack_options[0]
         general_box.add(self.sound_pack_selection)
 
-        # Preview Button
-        self.preview_sound_button = toga.Button(
-            "Preview Sound",
-            on_press=self._on_preview_sound,
-            style=Pack(margin_right=10, width=120),
-            enabled=self.sound_enabled_switch.value,
-        )
-        general_box.add(self.preview_sound_button)
-
         # Manage Sound Packs Button (stub)
         self.manage_soundpacks_button = toga.Button(
             "Manage Sound Packs...",
@@ -581,18 +572,6 @@ class SettingsDialog:
     def _on_sound_enabled_changed(self, widget):
         enabled = widget.value
         self.sound_pack_selection.enabled = enabled
-        self.preview_sound_button.enabled = enabled
-
-    def _on_preview_sound(self, widget):
-        # Play a sample sound from the selected pack
-        try:
-            pack_display = self.sound_pack_selection.value
-            pack_dir = self.sound_pack_map.get(pack_display, "default")
-            from ..notifications.sound_player import play_sample_sound
-
-            play_sample_sound(pack_dir)
-        except Exception as e:
-            logger.error(f"Failed to preview sound: {e}")
 
     def _on_manage_soundpacks(self, widget):
         """Open the sound pack manager dialog."""
