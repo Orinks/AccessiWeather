@@ -38,6 +38,10 @@ def get_sound_file(event: str, pack_dir: str) -> Path | None:
         return sound_file
     except Exception as e:
         logger.error(f"Error reading sound pack: {e}")
+        # If we failed to read the current pack and it's not the default, try the default
+        if pack_dir != DEFAULT_PACK:
+            logger.info("Falling back to default sound pack due to error")
+            return get_sound_file(event, DEFAULT_PACK)
         return None
 
 
@@ -60,7 +64,7 @@ def play_sample_sound(pack_dir: str) -> None:
 
 def get_available_sound_packs() -> dict[str, dict]:
     """Get all available sound packs with their metadata."""
-    sound_packs = {}
+    sound_packs: dict[str, dict] = {}
 
     if not SOUNDPACKS_DIR.exists():
         return sound_packs
@@ -136,7 +140,7 @@ def validate_sound_pack(pack_path: Path) -> tuple[bool, str]:
         sounds = pack_data["sounds"]
         missing_files = []
 
-        for sound_name, sound_file in sounds.items():
+        for _sound_name, sound_file in sounds.items():
             sound_path = pack_path / sound_file
             if not sound_path.exists():
                 missing_files.append(sound_file)

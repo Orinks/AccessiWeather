@@ -1,5 +1,8 @@
 """Single instance checker for AccessiWeather.
 
+DEPRECATED: This module is part of the legacy wxPython implementation and is no longer used.
+The Toga-based implementation uses a different single instance manager in single_instance.py.
+
 This module provides functionality to ensure only one instance of the application
 can run at a time using wxPython's SingleInstanceChecker.
 """
