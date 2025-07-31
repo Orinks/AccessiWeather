@@ -1,11 +1,20 @@
+import contextlib
 import json
 import logging
+import platform
 from pathlib import Path
+from typing import Any
 
 try:
     from playsound import playsound
 except ImportError:
     playsound = None
+
+# Windows-specific sound playing
+winsound = None
+if platform.system() == "Windows":
+    with contextlib.suppress(ImportError):
+        import winsound  # type: ignore[import-untyped]
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +36,11 @@ def get_sound_file(event: str, pack_dir: str) -> Path | None:
             return None
     try:
         with open(pack_json, encoding="utf-8") as f:
-            meta = json.load(f)
-        filename = meta.get("sounds", {}).get(event, f"{event}.wav")
+            meta: dict[str, Any] = json.load(f)
+        sounds = meta.get("sounds", {})
+        if not isinstance(sounds, dict):
+            sounds = {}
+        filename = sounds.get(event, f"{event}.wav")
         sound_file = pack_path / filename
         if not sound_file.exists():
             logger.warning(f"Sound file {sound_file} not found, falling back to default pack.")
@@ -48,13 +60,40 @@ def get_sound_file(event: str, pack_dir: str) -> Path | None:
 def play_notification_sound(event: str, pack_dir: str) -> None:
     """Play a notification sound for the given event and pack."""
     sound_file = get_sound_file(event, pack_dir)
-    if sound_file and playsound:
+    if not sound_file:
+        logger.warning("Sound file not found.")
+        return
+
+    # Try different sound playing methods based on platform
+    success = False
+
+    # Method 1: Try winsound on Windows (most reliable)
+    if platform.system() == "Windows" and winsound:
         try:
-            playsound(str(sound_file), block=False)
+            winsound.PlaySound(str(sound_file), winsound.SND_FILENAME | winsound.SND_ASYNC)
+            success = True
+            logger.debug(f"Played sound using winsound: {sound_file}")
         except Exception as e:
-            logger.error(f"Failed to play sound: {e}")
-    else:
-        logger.warning("Sound playback not available or sound file missing.")
+            logger.warning(f"winsound failed: {e}")
+
+    # Method 2: Try playsound as fallback
+    if not success and playsound:
+        try:
+            # Convert to short path on Windows to avoid MCI issues
+            if platform.system() == "Windows":
+                # Use raw string path to avoid issues with backslashes
+                sound_path = str(sound_file).replace("\\", "/")
+            else:
+                sound_path = str(sound_file)
+
+            playsound(sound_path, block=False)
+            success = True
+            logger.debug(f"Played sound using playsound: {sound_file}")
+        except Exception as e:
+            logger.warning(f"playsound failed: {e}")
+
+    if not success:
+        logger.warning("Sound playback not available or all methods failed.")
 
 
 def play_sample_sound(pack_dir: str) -> None:
@@ -79,7 +118,7 @@ def get_available_sound_packs() -> dict[str, dict]:
 
         try:
             with open(pack_json, encoding="utf-8") as f:
-                pack_data = json.load(f)
+                pack_data: dict[str, Any] = json.load(f)
 
             pack_data["directory"] = pack_dir.name
             pack_data["path"] = str(pack_dir)
@@ -101,8 +140,9 @@ def get_sound_pack_sounds(pack_dir: str) -> dict[str, str]:
 
     try:
         with open(pack_json, encoding="utf-8") as f:
-            pack_data = json.load(f)
-        return pack_data.get("sounds", {})
+            pack_data: dict[str, Any] = json.load(f)
+        sounds = pack_data.get("sounds", {})
+        return sounds if isinstance(sounds, dict) else {}
     except Exception as e:
         logger.error(f"Failed to read sound pack {pack_dir}: {e}")
         return {}
