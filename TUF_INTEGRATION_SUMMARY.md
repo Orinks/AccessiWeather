@@ -127,10 +127,10 @@ update_info = await update_service.check_for_updates()
 
 if update_info:
     print(f"Update available: {update_info.version}")
-    
+
     # Download update
     downloaded_file = await update_service.download_update(update_info)
-    
+
     if downloaded_file:
         print(f"Update downloaded: {downloaded_file}")
 

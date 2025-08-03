@@ -23,10 +23,12 @@ TARGET_BASE_URL = "https://orinks.net/updates/targets/"
 # Key configuration
 KEY_NAME = "accessiweather_key"
 PRIVATE_KEY_PATH = KEYS_DIR / KEY_NAME
-KEY_MAP = {role_name: [KEY_NAME] for role_name in DEFAULT_KEY_MAP.keys()}
-ENCRYPTED_KEYS = []  # For simplicity, keys are not encrypted (not recommended for production)
-THRESHOLDS = dict(root=1, targets=1, snapshot=1, timestamp=1)
-EXPIRATION_DAYS = dict(root=365, targets=30, snapshot=7, timestamp=1)
+KEY_MAP = {role_name: [KEY_NAME] for role_name in DEFAULT_KEY_MAP}
+ENCRYPTED_KEYS: list[
+    str
+] = []  # For simplicity, keys are not encrypted (not recommended for production)
+THRESHOLDS = {"root": 1, "targets": 1, "snapshot": 1, "timestamp": 1}
+EXPIRATION_DAYS = {"root": 365, "targets": 30, "snapshot": 7, "timestamp": 1}
 
 # Ensure directories exist
 REPO_DIR.mkdir(exist_ok=True)

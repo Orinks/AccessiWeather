@@ -253,7 +253,6 @@ class TUFUpdateService:
     def _find_platform_asset(self, assets: list) -> dict | None:
         """Find the appropriate asset for the current platform."""
         system = platform.system().lower()
-        machine = platform.machine().lower()
 
         # Platform-specific patterns
         patterns = []
@@ -289,9 +288,8 @@ class TUFUpdateService:
 
             # Try to copy root metadata from app bundle
             root_path = metadata_dir / "root.json"
-            if not root_path.exists():
-                if not self._copy_root_metadata(root_path):
-                    logger.warning("Could not find root.json - TUF client may not work properly")
+            if not root_path.exists() and not self._copy_root_metadata(root_path):
+                logger.warning("Could not find root.json - TUF client may not work properly")
 
             # Initialize TUF client with proper parameters
             self._tuf_client = TUFClient(
