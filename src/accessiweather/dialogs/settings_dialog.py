@@ -19,6 +19,7 @@ class SettingsDialog:
     """Settings dialog with tabbed interface for configuration options."""
 
     def __init__(self, app: toga.App, config_manager):
+        """Initialize the settings dialog."""
         self.app = app
         self.config_manager = config_manager
         self.window = None  # Will be created fresh each time dialog is shown
@@ -573,7 +574,7 @@ class SettingsDialog:
         enabled = widget.value
         self.sound_pack_selection.enabled = enabled
 
-    def _on_manage_soundpacks(self, widget):
+    async def _on_manage_soundpacks(self, widget):
         """Open the sound pack manager dialog."""
         try:
             from .soundpack_manager_dialog import SoundPackManagerDialog
@@ -583,7 +584,7 @@ class SettingsDialog:
 
             # Open sound pack manager
             manager = SoundPackManagerDialog(self.app, current_pack)
-            selected_pack = manager.show()
+            selected_pack = await manager.show()
 
             # Update sound pack selection if changed
             if selected_pack != current_pack:

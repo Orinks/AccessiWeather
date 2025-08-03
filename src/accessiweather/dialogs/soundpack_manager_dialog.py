@@ -4,6 +4,7 @@ This module provides a dialog for managing sound packs, including importing new 
 previewing sounds, and selecting different sound packs.
 """
 
+import asyncio
 import json
 import logging
 import shutil
@@ -21,6 +22,7 @@ class SoundPackManagerDialog:
     """Dialog for managing sound packs."""
 
     def __init__(self, app: toga.App, current_pack: str = "default"):
+        """Initialize the sound pack manager dialog."""
         self.app = app
         self.current_pack = current_pack
         self.soundpacks_dir = Path(__file__).parent.parent / "soundpacks"
@@ -37,10 +39,12 @@ class SoundPackManagerDialog:
         self.pack_name_label: toga.Label | None = None
         self.pack_author_label: toga.Label | None = None
         self.pack_description_label: toga.Label | None = None
-        self.sound_list: toga.DetailedList | None = None
+        self.sound_selection: toga.Selection | None = None
         self.preview_button: toga.Button | None = None
         self.select_button: toga.Button | None = None
         self.delete_button: toga.Button | None = None
+        self.import_button: toga.Button | None = None
+        self.close_button: toga.Button | None = None
 
         self._load_sound_packs()
         self._create_dialog()
@@ -106,9 +110,18 @@ class SoundPackManagerDialog:
 
         self.dialog.content = main_box
 
+        # Populate the pack list with loaded sound packs
+        self._refresh_pack_list()
+
         # Select current pack if available
         if self.current_pack in self.sound_packs:
             self.selected_pack = self.current_pack
+            # Find and set the current pack in the detailed list
+            for item in self.pack_list.data:
+                if item.pack_id == self.current_pack:
+                    # Note: DetailedList selection is read-only, so we can't set it programmatically
+                    # Just update the pack details instead
+                    break
             self._update_pack_details()
 
     def _create_pack_list_panel(self) -> toga.Box:
@@ -122,27 +135,17 @@ class SoundPackManagerDialog:
         panel.add(title_label)
 
         # Pack list
-        pack_data = []
-        for pack_id, pack_info in self.sound_packs.items():
-            pack_data.append(
-                {
-                    "title": pack_info.get("name", pack_id),
-                    "subtitle": f"by {pack_info.get('author', 'Unknown')}",
-                    "icon": None,
-                    "pack_id": pack_id,
-                }
-            )
-
         self.pack_list = toga.DetailedList(
-            data=pack_data, on_select=self._on_pack_selected, style=Pack(flex=1, padding_bottom=10)
+            on_select=self._on_pack_selected,
+            style=Pack(flex=1, padding_bottom=10),
         )
         panel.add(self.pack_list)
 
         # Import button
-        import_button = toga.Button(
+        self.import_button = toga.Button(
             "Import Sound Pack", on_press=self._on_import_pack, style=Pack(width=150)
         )
-        panel.add(import_button)
+        panel.add(self.import_button)
 
         return panel
 
@@ -180,11 +183,14 @@ class SoundPackManagerDialog:
         )
         panel.add(sounds_label)
 
-        # Sound list
-        self.sound_list = toga.DetailedList(
-            data=[], on_select=self._on_sound_selected, style=Pack(flex=1, padding_bottom=10)
+        # Sound selection
+        self.sound_selection = toga.Selection(
+            items=[],
+            accessor="display_name",
+            on_change=self._on_sound_selected,
+            style=Pack(flex=1, padding_bottom=10),
         )
-        panel.add(self.sound_list)
+        panel.add(self.sound_selection)
 
         # Sound action buttons
         sound_button_box = toga.Box(style=Pack(direction=ROW, padding_bottom=10))
@@ -224,8 +230,10 @@ class SoundPackManagerDialog:
         )
         button_box.add(self.select_button)
 
-        close_button = toga.Button("Close", on_press=self._on_close, style=Pack(margin_right=0))
-        button_box.add(close_button)
+        self.close_button = toga.Button(
+            "Close", on_press=self._on_close, style=Pack(margin_right=0)
+        )
+        button_box.add(self.close_button)
 
         return button_box
 
@@ -250,7 +258,7 @@ class SoundPackManagerDialog:
             self.pack_name_label.text = "No pack selected"
             self.pack_author_label.text = ""
             self.pack_description_label.text = ""
-            self.sound_list.data = []
+            self.sound_selection.items = []
             return
 
         pack_info = self.sound_packs[self.selected_pack]
@@ -260,32 +268,32 @@ class SoundPackManagerDialog:
         self.pack_author_label.text = f"Author: {pack_info.get('author', 'Unknown')}"
         self.pack_description_label.text = pack_info.get("description", "No description available")
 
-        # Update sound list
+        # Update sound selection
         sounds = pack_info.get("sounds", {})
-        sound_data = []
+        sound_items = []
         for sound_name, sound_file in sounds.items():
             sound_path = pack_info["path"] / sound_file
             status = "✓" if sound_path.exists() else "✗"
-            sound_data.append(
+            display_name = f"{sound_name.title()} ({sound_file}) - {status} {'Available' if sound_path.exists() else 'Missing'}"
+            sound_items.append(
                 {
-                    "title": f"{sound_name.title()} ({sound_file})",
-                    "subtitle": f"Status: {status} {'Available' if sound_path.exists() else 'Missing'}",
-                    "icon": None,
+                    "display_name": display_name,
                     "sound_name": sound_name,
                     "sound_file": sound_file,
+                    "exists": sound_path.exists(),
                 }
             )
 
-        self.sound_list.data = sound_data
+        self.sound_selection.items = sound_items
 
     def _on_sound_selected(self, widget) -> None:
         """Handle sound selection."""
-        if widget.selection is None:
+        if widget.value is None:
             self.preview_button.enabled = False
             return
 
         # Check if the selected sound file exists
-        sound_item = widget.selection
+        sound_item = widget.value
         if self.selected_pack and self.selected_pack in self.sound_packs:
             pack_info = self.sound_packs[self.selected_pack]
             sound_path = pack_info["path"] / sound_item.sound_file
@@ -298,11 +306,11 @@ class SoundPackManagerDialog:
 
     def _on_preview_sound(self, widget) -> None:
         """Preview the selected sound."""
-        if not self.sound_list.selection or not self.selected_pack:
+        if not self.sound_selection.value or not self.selected_pack:
             return
 
         try:
-            sound_item = self.sound_list.selection
+            sound_item = self.sound_selection.value
             sound_name = sound_item.sound_name
 
             # Check if the sound file exists
@@ -391,18 +399,24 @@ class SoundPackManagerDialog:
 
     def _refresh_pack_list(self) -> None:
         """Refresh the sound pack list."""
-        pack_data = []
-        for pack_id, pack_info in self.sound_packs.items():
-            pack_data.append(
-                {
-                    "title": pack_info.get("name", pack_id),
-                    "subtitle": f"by {pack_info.get('author', 'Unknown')}",
-                    "icon": None,
-                    "pack_id": pack_id,
-                }
-            )
+        # Clear existing data
+        self.pack_list.data.clear()
 
-        self.pack_list.data = pack_data
+        # Add pack data to DetailedList
+        for pack_id, pack_info in self.sound_packs.items():
+            pack_name = pack_info.get("name", pack_id)
+            author = pack_info.get("author", "Unknown")
+
+            # Create a data object for the DetailedList
+            pack_data = {
+                "pack_id": pack_id,
+                "pack_info": pack_info,
+                "title": pack_name,
+                "subtitle": f"by {author}",
+                "icon": None,  # Could add icons later
+            }
+
+            self.pack_list.data.append(pack_data)
 
     def _on_delete_pack(self, widget) -> None:
         """Delete the selected sound pack."""
@@ -454,7 +468,58 @@ class SoundPackManagerDialog:
         """Close the dialog."""
         self.dialog.close()
 
-    def show(self) -> str:
+    async def show(self) -> str:
         """Show the dialog and return the selected pack."""
         self.dialog.show()
+
+        # Set initial focus for accessibility after dialog is shown
+        # Longer delay to ensure dialog is fully rendered and accessible before setting focus
+        await asyncio.sleep(0.3)
+
+        # Select first pack if available for better accessibility
+        if self.pack_list and self.pack_list.data and len(self.pack_list.data) > 0:
+            try:
+                first_pack = self.pack_list.data[0]
+                logger.info(f"Attempting to select first pack: {first_pack}")
+                logger.info(f"Pack list data count: {len(self.pack_list.data)}")
+                logger.info(
+                    f"Select button enabled before selection: {getattr(self.select_button, 'enabled', 'N/A')}"
+                )
+
+                self.pack_list.selection = first_pack
+                logger.info(f"Set pack list selection to: {self.pack_list.selection}")
+
+                # Manually trigger the selection handler to ensure buttons are enabled
+                self._on_pack_selected(self.pack_list)
+                logger.info(
+                    f"Select button enabled after selection: {getattr(self.select_button, 'enabled', 'N/A')}"
+                )
+
+                # Small delay to ensure the UI updates
+                await asyncio.sleep(0.1)
+            except Exception as e:
+                logger.warning(f"Could not select first pack: {e}")
+                import traceback
+
+                logger.warning(f"Traceback: {traceback.format_exc()}")
+
+        # Set focus to close button for predictable tab order
+        # This allows users to tab through the interface in a logical order:
+        # Close -> Import -> Pack Selection -> Select Pack -> Delete Pack -> Sound Selection -> Preview
+        try:
+            if self.close_button:
+                self.close_button.focus()
+                logger.info("Set initial focus to close button for predictable tab order")
+            else:
+                logger.warning("Close button not available for initial focus")
+        except Exception as e:
+            logger.warning(f"Could not set focus to close button: {e}")
+            # Try import button as fallback
+            try:
+                if self.import_button:
+                    self.import_button.focus()
+                    logger.info("Set focus to import button as fallback")
+            except Exception as fallback_e:
+                logger.warning(f"Fallback focus attempt failed: {fallback_e}")
+
         return self.current_pack
