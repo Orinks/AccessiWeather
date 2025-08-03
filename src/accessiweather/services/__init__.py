@@ -5,9 +5,9 @@ and other application services.
 """
 
 from .platform_detector import PlatformDetector
-from .update_service import BriefcaseUpdateService
+from .tuf_update_service import TUFUpdateService
 
 __all__ = [
     "PlatformDetector",
-    "BriefcaseUpdateService",
+    "TUFUpdateService",
 ]
