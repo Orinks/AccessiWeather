@@ -230,3 +230,10 @@ RELEASE_README.md
 
 # PyInstaller spec files (project-specific)
 AccessiWeather.spec
+
+# TUF (The Update Framework) repository files
+# SECURITY: Never commit private keys or sensitive repository state
+tuf_repo/keystore/
+tuf_repo/repository/metadata/
+tuf_repo/.tufup-repo-config
+tuf_repo/repository/targets/

@@ -918,32 +918,37 @@ class SettingsDialog:
                 self.update_status_label.text = "Checking for updates..."
 
             # Import update service
-            from ..services import BriefcaseUpdateService
+            from ..services import TUFUpdateService
 
             # Create update service instance
-            update_service = BriefcaseUpdateService(self.app, self.config_manager)
+            update_service = TUFUpdateService(
+                app_name="AccessiWeather",
+                config_dir=self.config_manager.config_dir if self.config_manager else None,
+            )
 
             # Get selected channel
             channel = "dev" if self.update_channel_selection.value == "Development" else "stable"
 
+            # Update service settings
+            update_service.update_settings(channel=channel)
+
             # Check for updates
-            update_info = await update_service.check_for_updates(channel)
+            update_info = await update_service.check_for_updates()
 
             if update_info:
                 # Update available
                 if self.update_status_label:
                     self.update_status_label.text = f"Update available: v{update_info.version}"
 
-                # Show update notification
-                from .update_progress_dialog import UpdateNotificationDialog
+                # Show simple update notification (simplified for now)
+                from ..services import PlatformDetector
 
-                platform_detector = update_service.platform_detector
+                platform_detector = PlatformDetector()
                 platform_info = platform_detector.get_platform_info()
 
-                notification = UpdateNotificationDialog(self.app, update_info, platform_info)
-                choice = await notification.show()
-
-                if choice == "download" and platform_info.update_capable:
+                # For now, just show a simple dialog
+                # TODO: Integrate with UpdateNotificationDialog when ready
+                if platform_info.update_capable:
                     # Start update process
                     await self._perform_update(update_service, update_info)
 

@@ -12,7 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 try:
-    from repo_settings import METADATA_DIR, REPO_DIR
+    from repo_settings import METADATA_DIR
 except ImportError as e:
     print(f"Error importing repo settings: {e}")
     sys.exit(1)

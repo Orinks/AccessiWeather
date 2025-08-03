@@ -149,9 +149,12 @@ class AccessiWeatherApp(toga.App):
 
         # Initialize update service
         try:
-            from .services import BriefcaseUpdateService
+            from .services import TUFUpdateService
 
-            self.update_service = BriefcaseUpdateService(self, self.config_manager)
+            self.update_service = TUFUpdateService(
+                app_name="AccessiWeather",
+                config_dir=self.config_manager.config_dir if self.config_manager else None,
+            )
             logger.info("Update service initialized")
         except Exception as e:
             logger.warning(f"Failed to initialize update service: {e}")

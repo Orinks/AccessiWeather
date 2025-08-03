@@ -12,7 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 try:
-    from repo_settings import APP_NAME, BUILD_DIR, KEYS_DIR, METADATA_DIR, REPO_DIR, TARGETS_DIR
+    from repo_settings import APP_NAME, BUILD_DIR, KEYS_DIR, REPO_DIR, TARGETS_DIR
     from tufup.repo import Repository
 except ImportError as e:
     print(f"Error importing required modules: {e}")
