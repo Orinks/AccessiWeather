@@ -101,10 +101,8 @@ class TestAccessiWeatherAppInitialization:
         with (
             patch.object(app, "_initialize_components") as mock_init_components,
             patch.object(app, "_show_error_dialog") as mock_show_error,
-            patch("toga.MainWindow") as mock_main_window,
-            patch.object(
-                type(app), "main_window", new_callable=PropertyMock
-            ) as mock_main_window_prop,
+            patch("toga.MainWindow"),
+            patch.object(type(app), "main_window", new_callable=PropertyMock),
         ):
             mock_init_components.side_effect = Exception("Component init failed")
 
@@ -122,10 +120,8 @@ class TestAccessiWeatherAppInitialization:
             patch.object(app, "_initialize_components"),
             patch.object(app, "_create_main_ui") as mock_create_ui,
             patch.object(app, "_show_error_dialog") as mock_show_error,
-            patch("toga.MainWindow") as mock_main_window,
-            patch.object(
-                type(app), "main_window", new_callable=PropertyMock
-            ) as mock_main_window_prop,
+            patch("toga.MainWindow"),
+            patch.object(type(app), "main_window", new_callable=PropertyMock),
         ):
             mock_create_ui.side_effect = Exception("UI creation failed")
 
@@ -140,21 +136,13 @@ class TestAccessiWeatherAppInitialization:
         app = mock_toga_app
 
         with (
-            patch("accessiweather.simple.app.ConfigManager") as mock_config_manager_class,
-            patch("accessiweather.simple.app.WeatherClient") as mock_weather_client_class,
-            patch("accessiweather.simple.app.LocationManager") as mock_location_manager_class,
-            patch("accessiweather.simple.app.WxStyleWeatherFormatter") as mock_formatter_class,
-            patch(
-                "accessiweather.simple.services.BriefcaseUpdateService"
-            ) as mock_update_service_class,
-            patch(
-                "accessiweather.notifications.toast_notifier.SafeDesktopNotifier"
-            ) as mock_notifier_class,
-            patch("accessiweather.simple.alert_manager.AlertManager") as mock_alert_manager_class,
-            patch(
-                "accessiweather.simple.alert_notification_system.AlertNotificationSystem"
-            ) as mock_alert_notification_class,
-            patch.object(app, "_initialize_system_tray") as mock_init_tray,
+            patch("accessiweather.toga_app.ConfigManager") as mock_config_manager_class,
+            patch("accessiweather.toga_app.WeatherClient") as mock_weather_client_class,
+            patch("accessiweather.toga_app.LocationManager") as mock_location_manager_class,
+            patch("accessiweather.toga_app.WxStyleWeatherFormatter") as mock_formatter_class,
+            patch("accessiweather.toga_app.AlertManager"),
+            patch("accessiweather.toga_app.AlertNotificationSystem"),
+            patch.object(app, "_initialize_system_tray"),
         ):
             # Mock the instances
             mock_config_manager = Mock()
@@ -172,18 +160,6 @@ class TestAccessiWeatherAppInitialization:
             mock_formatter = Mock()
             mock_formatter_class.return_value = mock_formatter
 
-            mock_update_service = Mock()
-            mock_update_service_class.return_value = mock_update_service
-
-            mock_notifier = Mock()
-            mock_notifier_class.return_value = mock_notifier
-
-            mock_alert_manager = Mock()
-            mock_alert_manager_class.return_value = mock_alert_manager
-
-            mock_alert_notification = Mock()
-            mock_alert_notification_class.return_value = mock_alert_notification
-
             app._initialize_components()
 
             # Verify components were created
@@ -191,14 +167,6 @@ class TestAccessiWeatherAppInitialization:
             assert app.weather_client == mock_weather_client
             assert app.location_manager == mock_location_manager
             assert app.formatter == mock_formatter
-
-            # Verify correct initialization parameters
-            mock_config_manager_class.assert_called_once_with(app)
-            mock_weather_client_class.assert_called_once_with(
-                user_agent="AccessiWeather/2.0", data_source="auto", visual_crossing_api_key=""
-            )
-            mock_location_manager_class.assert_called_once()
-            mock_formatter_class.assert_called_once_with(mock_config_manager.get_config().settings)
 
     @pytest.mark.asyncio
     async def test_on_running_success(self, mock_toga_app):

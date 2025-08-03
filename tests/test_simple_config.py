@@ -179,7 +179,7 @@ class TestConfigManagerSettings:
 
     def test_update_settings_invalid_attribute(self, config_manager):
         """Test updating invalid settings attribute."""
-        with patch("accessiweather.simple.config.logger") as mock_logger:
+        with patch("accessiweather.simple_config.logger") as mock_logger:
             result = config_manager.update_settings(temperature_unit="c", invalid_setting="value")
 
             assert result is True  # Should still save valid settings

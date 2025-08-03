@@ -5,7 +5,7 @@ AccessiWeather implementation, adapted from existing test logic while updating
 imports and ensuring tests match the simplified model structure.
 """
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 # Import simplified app models
 from accessiweather.models import (
@@ -276,7 +276,7 @@ class TestWeatherAlertModels:
 
     def test_weather_alerts_active_filtering(self):
         """Test active alerts filtering by expiration time."""
-        now = datetime.now()
+        now = datetime.now(UTC)
 
         # Create expired alert
         expired_alert = WeatherAlert(
@@ -693,23 +693,19 @@ class TestModelIntegration:
         # Create hourly forecast
         hourly_periods = [
             HourlyForecastPeriod(
-                start_time=datetime.now(),
-                temperature=75.0,
-                short_forecast="Sunny"
+                start_time=datetime.now(), temperature=75.0, short_forecast="Sunny"
             ),
             HourlyForecastPeriod(
                 start_time=datetime.now() + timedelta(hours=1),
                 temperature=73.0,
-                short_forecast="Partly Cloudy"
-            )
+                short_forecast="Partly Cloudy",
+            ),
         ]
         hourly_forecast = HourlyForecast(periods=hourly_periods)
 
         # Create weather data with hourly forecast
         weather_data = WeatherData(
-            location=location,
-            hourly_forecast=hourly_forecast,
-            last_updated=datetime.now()
+            location=location, hourly_forecast=hourly_forecast, last_updated=datetime.now()
         )
 
         assert weather_data.hourly_forecast is not None
@@ -729,9 +725,7 @@ class TestModelIntegration:
         # Hourly forecast
         hourly_periods = [
             HourlyForecastPeriod(
-                start_time=datetime.now(),
-                temperature=75.0,
-                short_forecast="Sunny"
+                start_time=datetime.now(), temperature=75.0, short_forecast="Sunny"
             )
         ]
         hourly_forecast = HourlyForecast(periods=hourly_periods)
@@ -747,7 +741,7 @@ class TestModelIntegration:
             forecast=forecast,
             hourly_forecast=hourly_forecast,
             alerts=alerts,
-            last_updated=datetime.now()
+            last_updated=datetime.now(),
         )
 
         # Verify all components
@@ -803,7 +797,7 @@ class TestHourlyForecastPeriod:
             temperature_unit="F",
             short_forecast="Sunny",
             wind_speed="10 mph",
-            wind_direction="NW"
+            wind_direction="NW",
         )
 
         assert period.start_time == start_time
@@ -832,17 +826,11 @@ class TestHourlyForecastPeriod:
         assert period_empty.has_data() is False
 
         # Period with temperature only
-        period_temp = HourlyForecastPeriod(
-            start_time=datetime.now(),
-            temperature=75.0
-        )
+        period_temp = HourlyForecastPeriod(start_time=datetime.now(), temperature=75.0)
         assert period_temp.has_data() is True
 
         # Period with forecast only
-        period_forecast = HourlyForecastPeriod(
-            start_time=datetime.now(),
-            short_forecast="Sunny"
-        )
+        period_forecast = HourlyForecastPeriod(start_time=datetime.now(), short_forecast="Sunny")
         assert period_forecast.has_data() is True
 
 
@@ -853,15 +841,13 @@ class TestHourlyForecast:
         """Test creating an hourly forecast."""
         periods = [
             HourlyForecastPeriod(
-                start_time=datetime.now(),
-                temperature=75.0,
-                short_forecast="Sunny"
+                start_time=datetime.now(), temperature=75.0, short_forecast="Sunny"
             ),
             HourlyForecastPeriod(
                 start_time=datetime.now() + timedelta(hours=1),
                 temperature=73.0,
-                short_forecast="Partly Cloudy"
-            )
+                short_forecast="Partly Cloudy",
+            ),
         ]
 
         forecast = HourlyForecast(periods=periods)
@@ -883,12 +869,7 @@ class TestHourlyForecast:
         assert forecast_empty.has_data() is False
 
         # Forecast with periods
-        periods = [
-            HourlyForecastPeriod(
-                start_time=datetime.now(),
-                temperature=75.0
-            )
-        ]
+        periods = [HourlyForecastPeriod(start_time=datetime.now(), temperature=75.0)]
         forecast_with_data = HourlyForecast(periods=periods)
         assert forecast_with_data.has_data() is True
 
@@ -897,11 +878,13 @@ class TestHourlyForecast:
         base_time = datetime.now()
         periods = []
         for i in range(12):  # 12 hours of data
-            periods.append(HourlyForecastPeriod(
-                start_time=base_time + timedelta(hours=i),
-                temperature=75.0 - i,
-                short_forecast=f"Hour {i}"
-            ))
+            periods.append(
+                HourlyForecastPeriod(
+                    start_time=base_time + timedelta(hours=i),
+                    temperature=75.0 - i,
+                    short_forecast=f"Hour {i}",
+                )
+            )
 
         forecast = HourlyForecast(periods=periods)
 
