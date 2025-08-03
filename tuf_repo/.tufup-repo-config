@@ -1,0 +1,33 @@
+{
+    "app_name": "accessiweather",
+    "app_version_attr": "__version__",
+    "encrypted_keys": [],
+    "expiration_days": {
+        "root": 365,
+        "snapshot": 7,
+        "targets": 30,
+        "timestamp": 1
+    },
+    "key_map": {
+        "root": [
+            "accessiweather_key"
+        ],
+        "snapshot": [
+            "accessiweather_key"
+        ],
+        "targets": [
+            "accessiweather_key"
+        ],
+        "timestamp": [
+            "accessiweather_key"
+        ]
+    },
+    "keys_dir": "keystore",
+    "repo_dir": "repository",
+    "thresholds": {
+        "root": 1,
+        "snapshot": 1,
+        "targets": 1,
+        "timestamp": 1
+    }
+}
