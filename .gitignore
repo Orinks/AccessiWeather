@@ -168,13 +168,13 @@ dev-debug.log
 # tasks.json
 # tasks/
 
-# Testing and development files
-test_*.py
-debug_*.py
-run_*.py
-simple_test.py
-validate_*.py
-examine_*.py
+# Testing and development files (root directory only, not tests/ directory)
+/test_*.py
+/debug_*.py
+/run_*.py
+/simple_test.py
+/validate_*.py
+/examine_*.py
 
 # Analysis and temporary data files
 *_analysis.json
