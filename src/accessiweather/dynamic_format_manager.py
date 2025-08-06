@@ -221,10 +221,13 @@ class DynamicFormatManager:
 
             # Customize based on alert severity
             severity = analysis.get("alert_severity")
-            if (severity and severity.name in ["EXTREME", "SEVERE"] and
-                    not format_string.startswith("⚠️")):
+            if (
+                severity
+                and severity.name in ["EXTREME", "SEVERE"]
+                and not format_string.startswith("⚠️")
+            ):
                 # Add warning emoji for severe alerts
-                    format_string = f"⚠️ {format_string}"
+                format_string = f"⚠️ {format_string}"
 
             return format_string
 

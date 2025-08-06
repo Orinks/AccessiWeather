@@ -23,7 +23,6 @@ except ImportError as e:
     DESKTOP_NOTIFIER_AVAILABLE = False
 
 
-
 class SafeDesktopNotifier:
     """A wrapper around desktop-notifier that provides synchronous interface.
 
