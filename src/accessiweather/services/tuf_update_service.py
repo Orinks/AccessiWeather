@@ -88,6 +88,16 @@ class TUFUpdateService:
         logger.info(f"TUF available: {TUF_AVAILABLE}")
         logger.info(f"Current method: {self.settings.method}")
 
+    @property
+    def tuf_available(self) -> bool:
+        """Check if TUF is available."""
+        return TUF_AVAILABLE
+
+    @property
+    def current_method(self) -> str:
+        """Get the current update method."""
+        return self.settings.method
+
     def _load_settings(self) -> UpdateSettings:
         """Load settings from file or create defaults."""
         try:

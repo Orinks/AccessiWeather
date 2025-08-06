@@ -486,16 +486,16 @@ class AccessiWeatherApp(toga.App):
             group=toga.Group.VIEW,
         )
 
-        # Help menu commands
-        check_updates_cmd = toga.Command(
-            self._on_check_updates_pressed,
-            text="Check for Updates",
-            tooltip="Check for application updates",
-            group=toga.Group.HELP,
-        )
+        # Help menu commands - Update checking is now in Settings > Updates tab
+        # check_updates_cmd = toga.Command(
+        #     self._on_check_updates_pressed,
+        #     text="Check for Updates",
+        #     tooltip="Check for application updates",
+        #     group=toga.Group.HELP,
+        # )
 
         # Add commands to app (About command is automatically provided by Toga)
-        self.commands.add(settings_cmd, exit_cmd, add_location_cmd, refresh_cmd, check_updates_cmd)
+        self.commands.add(settings_cmd, exit_cmd, add_location_cmd, refresh_cmd)
 
         # Override the default About command to use our custom handler
         if toga.Command.ABOUT in self.commands:
@@ -645,7 +645,7 @@ class AccessiWeatherApp(toga.App):
         """Show the settings dialog and return whether settings were saved."""
         # Create a completely fresh dialog instance each time to avoid
         # "Window is already associated with an App" errors
-        settings_dialog = SettingsDialog(self, self.config_manager)
+        settings_dialog = SettingsDialog(self, self.config_manager, self.update_service)
         settings_dialog.show_and_prepare()
 
         # Wait for dialog result - the dialog handles its own cleanup

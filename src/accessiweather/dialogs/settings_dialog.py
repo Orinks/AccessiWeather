@@ -18,10 +18,11 @@ logger = logging.getLogger(__name__)
 class SettingsDialog:
     """Settings dialog with tabbed interface for configuration options."""
 
-    def __init__(self, app: toga.App, config_manager):
+    def __init__(self, app: toga.App, config_manager, update_service=None):
         """Initialize the settings dialog."""
         self.app = app
         self.config_manager = config_manager
+        self.update_service = update_service  # Optional update service from main app
         self.window = None  # Will be created fresh each time dialog is shown
         self.future = None  # Will be created fresh each time dialog is shown
 
@@ -53,8 +54,16 @@ class SettingsDialog:
         # Advanced tab controls
         self.minimize_to_tray_switch = None
 
-        # Updates tab controls (placeholder for future implementation)
+        # Updates tab controls
         self.auto_update_switch = None
+        self.update_channel_selection = None
+        self.update_method_selection = None
+        self.update_check_interval_input = None
+        self.check_updates_button = None
+        self.update_status_label = None
+        self.last_check_label = None
+        self.platform_info_label = None
+        self.update_capability_label = None
 
         # Sound settings controls
         self.sound_enabled_switch = None
@@ -419,6 +428,38 @@ class SettingsDialog:
             self.update_channel_selection.value = "Stable"
 
         updates_box.add(self.update_channel_selection)
+
+        # Update method selection
+        updates_box.add(toga.Label("Update Method:", style=Pack(margin_bottom=5)))
+
+        update_method_options = ["TUF (Secure)", "GitHub (Fallback)"]
+        self.update_method_selection = toga.Selection(
+            items=update_method_options,
+            style=Pack(margin_bottom=15),
+            id="update_method_selection",
+        )
+
+        # Set current value based on stored configuration or TUF availability
+        current_method = getattr(self.current_settings, "update_method", "auto")
+        if current_method == "tuf":
+            self.update_method_selection.value = "TUF (Secure)"
+        elif current_method == "github":
+            self.update_method_selection.value = "GitHub (Fallback)"
+        else:
+            # Auto-detect based on TUF availability
+            try:
+                from ..services import TUFUpdateService
+
+                temp_service = TUFUpdateService("AccessiWeather")
+                if temp_service.tuf_available:
+                    self.update_method_selection.value = "TUF (Secure)"
+                else:
+                    self.update_method_selection.value = "GitHub (Fallback)"
+                temp_service.cleanup()
+            except Exception:
+                self.update_method_selection.value = "GitHub (Fallback)"
+
+        updates_box.add(self.update_method_selection)
 
         # Check interval
         updates_box.add(toga.Label("Check Interval (hours):", style=Pack(margin_bottom=5)))
@@ -832,6 +873,18 @@ class SettingsDialog:
         else:
             update_check_interval_hours = 24
 
+        # Get update method
+        update_method = getattr(self, "update_method_selection", None)
+        if update_method and hasattr(update_method, "value"):
+            if update_method.value == "TUF (Secure)":
+                update_method = "tuf"
+            elif update_method.value == "GitHub (Fallback)":
+                update_method = "github"
+            else:
+                update_method = "auto"
+        else:
+            update_method = "auto"
+
         sound_enabled = self.sound_enabled_switch.value
         pack_display = self.sound_pack_selection.value
         sound_pack = self.sound_pack_map.get(pack_display, "default")
@@ -852,6 +905,7 @@ class SettingsDialog:
             auto_update_enabled=auto_update_enabled,
             update_channel=update_channel,
             update_check_interval_hours=update_check_interval_hours,
+            update_method=update_method,
             debug_mode=self.debug_mode_switch.value,
             sound_enabled=sound_enabled,
             sound_pack=sound_pack,
@@ -876,10 +930,32 @@ class SettingsDialog:
                 self.platform_info_label.text = f"{platform_text}, {deployment_text}"
 
             if hasattr(self, "update_capability_label"):
-                if platform_info.update_capable:
-                    capability_text = "Auto-updates: Supported"
+                # Check TUF availability
+                tuf_available = False
+                update_method = "GitHub"
+
+                if self.update_service:
+                    tuf_available = self.update_service.tuf_available
+                    update_method = self.update_service.current_method.upper()
                 else:
-                    capability_text = "Auto-updates: Manual download required"
+                    try:
+                        from ..services import TUFUpdateService
+
+                        temp_service = TUFUpdateService("AccessiWeather")
+                        tuf_available = temp_service.tuf_available
+                        update_method = temp_service.current_method.upper()
+                        temp_service.cleanup()
+                    except Exception:
+                        pass
+
+                if platform_info.update_capable:
+                    capability_text = f"Auto-updates: Supported via {update_method}"
+                else:
+                    capability_text = f"Auto-updates: Manual download via {update_method}"
+
+                if tuf_available:
+                    capability_text += " (TUF Secure)"
+
                 self.update_capability_label.text = capability_text
 
             # Update last check information if available
@@ -917,20 +993,24 @@ class SettingsDialog:
             if self.update_status_label:
                 self.update_status_label.text = "Checking for updates..."
 
-            # Import update service
-            from ..services import TUFUpdateService
+            # Use existing update service or create new one
+            if self.update_service:
+                update_service = self.update_service
+            else:
+                # Import and create update service
+                from ..services import TUFUpdateService
 
-            # Create update service instance
-            update_service = TUFUpdateService(
-                app_name="AccessiWeather",
-                config_dir=self.config_manager.config_dir if self.config_manager else None,
-            )
+                update_service = TUFUpdateService(
+                    app_name="AccessiWeather",
+                    config_dir=self.config_manager.config_dir if self.config_manager else None,
+                )
 
-            # Get selected channel
+            # Get selected channel and method
             channel = "dev" if self.update_channel_selection.value == "Development" else "stable"
+            method = "tuf" if self.update_method_selection.value == "TUF (Secure)" else "github"
 
             # Update service settings
-            update_service.update_settings(channel=channel)
+            update_service.update_settings(channel=channel, method=method)
 
             # Check for updates
             update_info = await update_service.check_for_updates()
@@ -940,17 +1020,40 @@ class SettingsDialog:
                 if self.update_status_label:
                     self.update_status_label.text = f"Update available: v{update_info.version}"
 
-                # Show simple update notification (simplified for now)
-                from ..services import PlatformDetector
+                # Build update message
+                message = (
+                    f"Update Available: Version {update_info.version}\n\n"
+                    f"Current version: 2.0\n"
+                    f"New version: {update_info.version}\n\n"
+                )
 
-                platform_detector = PlatformDetector()
-                platform_info = platform_detector.get_platform_info()
+                if update_info.release_notes:
+                    message += f"Release Notes:\n{update_info.release_notes[:500]}"
+                    if len(update_info.release_notes) > 500:
+                        message += "..."
 
-                # For now, just show a simple dialog
-                # TODO: Integrate with UpdateNotificationDialog when ready
-                if platform_info.update_capable:
-                    # Start update process
-                    await self._perform_update(update_service, update_info)
+                # Ask user if they want to download
+                should_download = await self.app.main_window.question_dialog(
+                    "Update Available",
+                    message + "\n\nWould you like to download and install this update?",
+                )
+
+                if should_download:
+                    # Check platform capability
+                    from ..services import PlatformDetector
+
+                    platform_detector = PlatformDetector()
+                    platform_info = platform_detector.get_platform_info()
+
+                    if platform_info.update_capable:
+                        # Start update process
+                        await self._perform_update(update_service, update_info)
+                    else:
+                        # Platform not capable, just download
+                        await self._download_only(update_service, update_info)
+                else:
+                    if self.update_status_label:
+                        self.update_status_label.text = "Update available (not downloaded)"
 
             else:
                 # No updates available
@@ -978,6 +1081,42 @@ class SettingsDialog:
             if self.check_updates_button:
                 self.check_updates_button.enabled = True
                 self.check_updates_button.text = "Check for Updates Now"
+
+    async def _download_only(self, update_service, update_info):
+        """Download an update without installing (for platforms that can't auto-install)."""
+        try:
+            if self.update_status_label:
+                self.update_status_label.text = f"Downloading update {update_info.version}..."
+
+            # Download the update
+            downloaded_file = await update_service.download_update(update_info)
+
+            if downloaded_file:
+                if self.update_status_label:
+                    self.update_status_label.text = f"Update {update_info.version} downloaded"
+
+                await self.app.main_window.info_dialog(
+                    "Update Downloaded",
+                    f"Update {update_info.version} has been downloaded successfully.\n\n"
+                    f"Location: {downloaded_file}\n\n"
+                    "Please close the application and run the installer to complete the update.",
+                )
+            else:
+                if self.update_status_label:
+                    self.update_status_label.text = "Update download failed"
+
+                await self.app.main_window.error_dialog(
+                    "Download Failed", "Failed to download the update. Please try again later."
+                )
+
+        except Exception as e:
+            logger.error(f"Update download failed: {e}")
+            if self.update_status_label:
+                self.update_status_label.text = "Update download failed"
+
+            await self.app.main_window.error_dialog(
+                "Download Failed", f"Failed to download update: {str(e)}"
+            )
 
     async def _perform_update(self, update_service, update_info):
         """Perform the update process with progress dialog."""
