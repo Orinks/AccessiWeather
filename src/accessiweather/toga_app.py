@@ -486,8 +486,16 @@ class AccessiWeatherApp(toga.App):
             group=toga.Group.VIEW,
         )
 
+        # Help menu commands
+        check_updates_cmd = toga.Command(
+            self._on_check_updates_pressed,
+            text="Check for Updates",
+            tooltip="Check for application updates",
+            group=toga.Group.HELP,
+        )
+
         # Add commands to app (About command is automatically provided by Toga)
-        self.commands.add(settings_cmd, exit_cmd, add_location_cmd, refresh_cmd)
+        self.commands.add(settings_cmd, exit_cmd, add_location_cmd, refresh_cmd, check_updates_cmd)
 
         # Override the default About command to use our custom handler
         if toga.Command.ABOUT in self.commands:
@@ -818,6 +826,89 @@ class AccessiWeatherApp(toga.App):
             "Version 2.0 - Simplified Architecture",
         )
 
+    async def _on_check_updates_pressed(self, widget):
+        """Handle check for updates menu item."""
+        if not self.update_service:
+            await self.main_window.error_dialog(
+                "Update Service Unavailable",
+                "The update service is not available. Please check your internet connection and try again.",
+            )
+            return
+
+        try:
+            # Show checking dialog
+            self._update_status("Checking for updates...")
+
+            # Check for updates
+            update_info = await self.update_service.check_for_updates()
+
+            if update_info:
+                # Update available
+                message = (
+                    f"Update Available: Version {update_info.version}\n\n"
+                    f"Current version: 2.0\n"
+                    f"New version: {update_info.version}\n\n"
+                )
+
+                if update_info.release_notes:
+                    message += f"Release Notes:\n{update_info.release_notes[:500]}"
+                    if len(update_info.release_notes) > 500:
+                        message += "..."
+
+                # Ask user if they want to download
+                should_download = await self.main_window.question_dialog(
+                    "Update Available", message + "\n\nWould you like to download this update?"
+                )
+
+                if should_download:
+                    await self._download_update(update_info)
+                else:
+                    self._update_status("Update check completed")
+            else:
+                # No updates available
+                await self.main_window.info_dialog(
+                    "No Updates Available", "You are running the latest version of AccessiWeather."
+                )
+                self._update_status("No updates available")
+
+        except Exception as e:
+            logger.error(f"Update check failed: {e}")
+            await self.main_window.error_dialog(
+                "Update Check Failed",
+                f"Failed to check for updates: {str(e)}\n\n"
+                "Please check your internet connection and try again.",
+            )
+            self._update_status("Update check failed")
+
+    async def _download_update(self, update_info):
+        """Download an available update."""
+        try:
+            self._update_status(f"Downloading update {update_info.version}...")
+
+            # Download the update
+            downloaded_file = await self.update_service.download_update(update_info)
+
+            if downloaded_file:
+                await self.main_window.info_dialog(
+                    "Update Downloaded",
+                    f"Update {update_info.version} has been downloaded successfully.\n\n"
+                    f"Location: {downloaded_file}\n\n"
+                    "Please close the application and run the installer to complete the update.",
+                )
+                self._update_status(f"Update {update_info.version} downloaded")
+            else:
+                await self.main_window.error_dialog(
+                    "Download Failed", "Failed to download the update. Please try again later."
+                )
+                self._update_status("Update download failed")
+
+        except Exception as e:
+            logger.error(f"Update download failed: {e}")
+            await self.main_window.error_dialog(
+                "Download Failed", f"Failed to download update: {str(e)}"
+            )
+            self._update_status("Update download failed")
+
     # Weather data methods
     async def _refresh_weather_data(self):
         """Refresh weather data for the current location."""
@@ -988,6 +1079,10 @@ class AccessiWeatherApp(toga.App):
     async def _start_background_updates(self):
         """Start background weather updates."""
         try:
+            if not self.config_manager:
+                logger.warning("Config manager not available, skipping background updates")
+                return
+
             config = self.config_manager.get_config()
             update_interval = config.settings.update_interval_minutes * 60  # Convert to seconds
 
@@ -999,7 +1094,11 @@ class AccessiWeatherApp(toga.App):
                 await asyncio.sleep(update_interval)
 
                 # Only update if we have a current location and not already updating
-                if not self.is_updating and self.config_manager.get_current_location():
+                if (
+                    not self.is_updating
+                    and self.config_manager
+                    and self.config_manager.get_current_location()
+                ):
                     logger.info("Performing background weather update")
                     await self._refresh_weather_data()
 

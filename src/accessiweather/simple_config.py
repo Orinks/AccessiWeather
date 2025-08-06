@@ -11,19 +11,21 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
+import toga
+
 from .models import AppConfig, AppSettings, Location
 
 logger = logging.getLogger(__name__)
-
-from toga import App
 
 
 class ConfigManager:
     """Simple configuration manager using Toga paths."""
 
-    def __init__(self, app: App):
+    def __init__(self, app: toga.App):
+        """Initialize the configuration manager with a Toga app instance."""
         self.app = app
         self.config_file = self.app.paths.config / "accessiweather.json"
+        self.config_dir = self.app.paths.config  # Add config_dir property
         self._config: AppConfig | None = None
 
         # Ensure config directory exists
