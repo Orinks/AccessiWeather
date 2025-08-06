@@ -153,7 +153,7 @@ class TUFUpdateService:
         """Check for available updates.
 
         Args:
-            method: Update method to use ("tuf" or "github"). Uses settings default if None.
+            method: Update method to use ("tuf", "github", or "auto"). Uses settings default if None.
 
         Returns:
             UpdateInfo if update available, None otherwise
@@ -164,6 +164,13 @@ class TUFUpdateService:
         logger.info(f"Checking for updates using method: {check_method}")
 
         try:
+            if check_method == "auto":
+                # Auto method: use TUF for stable, GitHub for beta/dev
+                if self.settings.channel == "stable" and TUF_AVAILABLE:
+                    logger.info("Auto method: using TUF for stable channel")
+                    return await self._check_tuf_updates()
+                logger.info(f"Auto method: using GitHub for {self.settings.channel} channel")
+                return await self._check_github_updates()
             if check_method == "tuf" and TUF_AVAILABLE:
                 return await self._check_tuf_updates()
             return await self._check_github_updates()
@@ -191,7 +198,14 @@ class TUFUpdateService:
 
             # Use the tufup client to check for updates
             # The pre parameter can be used for pre-release channels
-            pre_release = None if self.settings.channel == "stable" else self.settings.channel
+            if self.settings.channel == "stable":
+                pre_release = None
+            elif self.settings.channel == "beta":
+                pre_release = "beta"
+            elif self.settings.channel == "dev":
+                pre_release = "dev"
+            else:
+                pre_release = None
 
             new_update = self._tuf_client.check_for_updates(pre=pre_release)
 
@@ -233,23 +247,39 @@ class TUFUpdateService:
 
             # Filter releases based on channel
             for release in releases:
-                if self.settings.channel == "stable" and release.get("prerelease", False):
-                    continue
+                is_prerelease = release.get("prerelease", False)
+                version = release["tag_name"].lstrip("v")
+
+                # Channel-based filtering
+                if self.settings.channel == "stable":
+                    # Stable channel: only non-prerelease versions
+                    if is_prerelease:
+                        continue
+                elif self.settings.channel == "beta":
+                    # Beta channel: only beta/rc prereleases, no dev/alpha
+                    if not is_prerelease:
+                        continue  # Skip stable releases for beta channel
+                    if not any(keyword in version.lower() for keyword in ["beta", "rc"]):
+                        continue  # Skip non-beta prereleases
+                elif self.settings.channel == "dev":
+                    # Dev channel: all releases (stable and prerelease)
+                    pass  # No filtering needed
+                else:
+                    # Unknown channel, default to stable behavior
+                    if is_prerelease:
+                        continue
 
                 # Find appropriate asset for current platform
                 asset = self._find_platform_asset(release.get("assets", []))
                 if not asset:
                     continue
 
-                # Check if this is a newer version (simplified check)
-                version = release["tag_name"].lstrip("v")
-
                 return UpdateInfo(
                     version=version,
                     download_url=asset["browser_download_url"],
                     artifact_name=asset["name"],
                     release_notes=release.get("body", ""),
-                    is_prerelease=release.get("prerelease", False),
+                    is_prerelease=is_prerelease,
                     file_size=asset.get("size"),
                 )
 

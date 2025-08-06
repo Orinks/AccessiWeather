@@ -291,7 +291,7 @@ class AppSettings:
 
     # Update system settings
     auto_update_enabled: bool = True
-    update_channel: str = "stable"  # "stable" or "dev"
+    update_channel: str = "stable"  # "stable", "beta", or "dev"
     update_check_interval_hours: int = 24
     update_method: str = "auto"  # "tuf", "github", or "auto"
     debug_mode: bool = False

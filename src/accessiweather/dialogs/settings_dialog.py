@@ -413,53 +413,74 @@ class SettingsDialog:
         # Update channel selection
         updates_box.add(toga.Label("Update Channel:", style=Pack(margin_bottom=5)))
 
-        update_channel_options = ["Stable", "Development"]
+        update_channel_options = [
+            "Stable (Production releases only)",
+            "Beta (Pre-release testing)",
+            "Development (Latest features, may be unstable)",
+        ]
         self.update_channel_selection = toga.Selection(
             items=update_channel_options,
-            style=Pack(margin_bottom=15),
+            style=Pack(margin_bottom=10),
             id="update_channel_selection",
+            on_change=self._on_update_channel_changed,
         )
 
         # Set current value based on stored configuration
         current_channel = getattr(self.current_settings, "update_channel", "stable")
         if current_channel == "dev":
-            self.update_channel_selection.value = "Development"
+            self.update_channel_selection.value = "Development (Latest features, may be unstable)"
+        elif current_channel == "beta":
+            self.update_channel_selection.value = "Beta (Pre-release testing)"
         else:
-            self.update_channel_selection.value = "Stable"
+            self.update_channel_selection.value = "Stable (Production releases only)"
 
         updates_box.add(self.update_channel_selection)
+
+        # Channel description label
+        self.channel_description_label = toga.Label(
+            "",
+            style=Pack(margin_bottom=15, font_size=11, font_style="italic"),
+        )
+        updates_box.add(self.channel_description_label)
+
+        # Update description based on current selection
+        self._update_channel_description()
 
         # Update method selection
         updates_box.add(toga.Label("Update Method:", style=Pack(margin_bottom=5)))
 
-        update_method_options = ["TUF (Secure)", "GitHub (Fallback)"]
+        update_method_options = [
+            "Automatic (TUF for stable, GitHub for beta/dev)",
+            "TUF Only (Secure, stable releases only)",
+            "GitHub Only (All releases, less secure)",
+        ]
         self.update_method_selection = toga.Selection(
             items=update_method_options,
-            style=Pack(margin_bottom=15),
+            style=Pack(margin_bottom=10),
             id="update_method_selection",
+            on_change=self._on_update_method_changed,
         )
 
         # Set current value based on stored configuration or TUF availability
         current_method = getattr(self.current_settings, "update_method", "auto")
         if current_method == "tuf":
-            self.update_method_selection.value = "TUF (Secure)"
+            self.update_method_selection.value = "TUF Only (Secure, stable releases only)"
         elif current_method == "github":
-            self.update_method_selection.value = "GitHub (Fallback)"
+            self.update_method_selection.value = "GitHub Only (All releases, less secure)"
         else:
-            # Auto-detect based on TUF availability
-            try:
-                from ..services import TUFUpdateService
-
-                temp_service = TUFUpdateService("AccessiWeather")
-                if temp_service.tuf_available:
-                    self.update_method_selection.value = "TUF (Secure)"
-                else:
-                    self.update_method_selection.value = "GitHub (Fallback)"
-                temp_service.cleanup()
-            except Exception:
-                self.update_method_selection.value = "GitHub (Fallback)"
+            self.update_method_selection.value = "Automatic (TUF for stable, GitHub for beta/dev)"
 
         updates_box.add(self.update_method_selection)
+
+        # Method description label
+        self.method_description_label = toga.Label(
+            "",
+            style=Pack(margin_bottom=15, font_size=11, font_style="italic"),
+        )
+        updates_box.add(self.method_description_label)
+
+        # Update description based on current selection
+        self._update_method_description()
 
         # Check interval
         updates_box.add(toga.Label("Check Interval (hours):", style=Pack(margin_bottom=5)))
@@ -681,6 +702,60 @@ class SettingsDialog:
                 if self.visual_crossing_config_box in parent_box.children:
                     parent_box.remove(self.visual_crossing_config_box)
 
+    def _on_update_channel_changed(self, widget):
+        """Handle update channel selection change."""
+        self._update_channel_description()
+        self._update_method_description()  # Method description may change based on channel
+
+    def _on_update_method_changed(self, widget):
+        """Handle update method selection change."""
+        self._update_method_description()
+
+    def _update_channel_description(self):
+        """Update the channel description based on current selection."""
+        if not hasattr(self, "channel_description_label") or not self.channel_description_label:
+            return
+
+        channel_value = str(self.update_channel_selection.value)
+
+        if "Stable" in channel_value:
+            description = "🔒 Stable releases only. Maximum security with TUF verification. Recommended for most users."
+        elif "Beta" in channel_value:
+            description = "🧪 Pre-release versions for testing. Includes new features before stable release. May contain bugs."
+        elif "Development" in channel_value:
+            description = "🛠️ Latest development builds. Cutting-edge features but may be unstable. For developers and early testers."
+        else:
+            description = ""
+
+        self.channel_description_label.text = description
+
+    def _update_method_description(self):
+        """Update the method description based on current selection."""
+        if not hasattr(self, "method_description_label") or not self.method_description_label:
+            return
+
+        method_value = str(self.update_method_selection.value)
+        channel_value = str(self.update_channel_selection.value)
+
+        if "Automatic" in method_value:
+            if "Stable" in channel_value:
+                description = "🔄 Uses TUF for stable releases (secure) and GitHub for beta/dev releases (faster)."
+            else:
+                description = "🔄 Uses GitHub for beta/dev releases. TUF will be used when stable releases are available."
+        elif "TUF Only" in method_value:
+            if "Stable" in channel_value:
+                description = "🔐 Maximum security with cryptographic verification. Only stable releases available."
+            else:
+                description = "⚠️ TUF only provides stable releases. Beta/dev releases not available with this method."
+        elif "GitHub Only" in method_value:
+            description = (
+                "📦 All releases available but less secure than TUF. Good for beta testing."
+            )
+        else:
+            description = ""
+
+        self.method_description_label.text = description
+
     async def _on_get_visual_crossing_api_key(self, widget):
         """Handle Get API Key button press - open Visual Crossing registration page."""
         try:
@@ -857,7 +932,13 @@ class SettingsDialog:
 
         update_channel = getattr(self, "update_channel_selection", None)
         if update_channel and hasattr(update_channel, "value"):
-            update_channel = "dev" if update_channel.value == "Development" else "stable"
+            channel_value = str(update_channel.value)
+            if "Development" in channel_value:
+                update_channel = "dev"
+            elif "Beta" in channel_value:
+                update_channel = "beta"
+            else:
+                update_channel = "stable"
         else:
             update_channel = "stable"
 
@@ -876,9 +957,10 @@ class SettingsDialog:
         # Get update method
         update_method = getattr(self, "update_method_selection", None)
         if update_method and hasattr(update_method, "value"):
-            if update_method.value == "TUF (Secure)":
+            method_value = str(update_method.value)
+            if "TUF Only" in method_value:
                 update_method = "tuf"
-            elif update_method.value == "GitHub (Fallback)":
+            elif "GitHub Only" in method_value:
                 update_method = "github"
             else:
                 update_method = "auto"
@@ -1006,8 +1088,21 @@ class SettingsDialog:
                 )
 
             # Get selected channel and method
-            channel = "dev" if self.update_channel_selection.value == "Development" else "stable"
-            method = "tuf" if self.update_method_selection.value == "TUF (Secure)" else "github"
+            channel_value = str(self.update_channel_selection.value)
+            if "Development" in channel_value:
+                channel = "dev"
+            elif "Beta" in channel_value:
+                channel = "beta"
+            else:
+                channel = "stable"
+
+            method_value = str(self.update_method_selection.value)
+            if "TUF Only" in method_value:
+                method = "tuf"
+            elif "GitHub Only" in method_value:
+                method = "github"
+            else:
+                method = "auto"
 
             # Update service settings
             update_service.update_settings(channel=channel, method=method)

@@ -237,3 +237,6 @@ tuf_repo/keystore/
 tuf_repo/repository/metadata/
 tuf_repo/.tufup-repo-config
 tuf_repo/repository/targets/
+
+# Private release documentation (contains sensitive deployment info)
+RELEASE_PROCESS.md
