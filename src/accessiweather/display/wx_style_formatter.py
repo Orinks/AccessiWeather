@@ -30,6 +30,7 @@ class WxStyleWeatherFormatter:
     """Weather data formatter that matches the wx version's output exactly."""
 
     def __init__(self, settings: AppSettings):
+        """Initialize the instance."""
         self.settings = settings
 
     def _get_temperature_unit_preference(self) -> TemperatureUnit:

@@ -152,7 +152,7 @@ class NoaaApiWrapper:
                     f"Fallback provider {fallback_provider} also failed for {method_name}: {fallback_error}"
                 )
                 # Re-raise the original error from the primary provider
-                raise e
+                raise e from None
 
     # Core weather data methods - delegate to appropriate provider
     def get_current_conditions(self, lat: float, lon: float, **kwargs) -> dict[str, Any]:

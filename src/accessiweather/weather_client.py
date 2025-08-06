@@ -34,6 +34,7 @@ class WeatherClient:
         data_source: str = "auto",
         visual_crossing_api_key: str = "",
     ):
+        """Initialize the instance."""
         self.user_agent = user_agent
         self.nws_base_url = "https://api.weather.gov"
         self.openmeteo_base_url = "https://api.open-meteo.com/v1"

@@ -88,7 +88,7 @@ class NwsWeatherData:
             )
         except Exception as e:
             logger.error(f"Error getting current conditions: {str(e)}")
-            raise ApiClientError(f"Unable to retrieve current conditions data: {str(e)}")
+            raise ApiClientError(f"Unable to retrieve current conditions data: {str(e)}") from e
 
     def get_forecast(self, lat: float, lon: float, **kwargs) -> dict[str, Any]:
         """Get forecast for a location.
@@ -155,7 +155,7 @@ class NwsWeatherData:
             raise
         except Exception as e:
             logger.error(f"Error getting forecast: {str(e)}")
-            raise ApiClientError(f"Unable to retrieve forecast data: {str(e)}")
+            raise ApiClientError(f"Unable to retrieve forecast data: {str(e)}") from e
 
     def get_hourly_forecast(self, lat: float, lon: float, **kwargs) -> dict[str, Any]:
         """Get hourly forecast for a location.
@@ -221,7 +221,7 @@ class NwsWeatherData:
             )
         except Exception as e:
             logger.error(f"Error getting hourly forecast: {str(e)}")
-            raise ApiClientError(f"Unable to retrieve hourly forecast data: {str(e)}")
+            raise ApiClientError(f"Unable to retrieve hourly forecast data: {str(e)}") from e
 
     def get_stations(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
         """Get observation stations for a location.
@@ -276,7 +276,7 @@ class NwsWeatherData:
             )
         except Exception as e:
             logger.error(f"Error getting observation stations: {str(e)}")
-            raise ApiClientError(f"Unable to retrieve observation stations data: {str(e)}")
+            raise ApiClientError(f"Unable to retrieve observation stations data: {str(e)}") from e
 
     def _transform_observation_data(self, observation_data: Any) -> dict[str, Any]:
         """Transform observation data from the generated client format."""

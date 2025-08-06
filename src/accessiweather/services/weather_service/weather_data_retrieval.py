@@ -74,7 +74,9 @@ class WeatherDataRetrieval:
                     )
                     if fallback_result:
                         return fallback_result  # type: ignore[no-any-return]
-                    raise ApiClientError(f"Open-Meteo failed and no fallback available: {str(e)}")
+                    raise ApiClientError(
+                        f"Open-Meteo failed and no fallback available: {str(e)}"
+                    ) from e
             else:
                 logger.info("Using NWS API for forecast")
                 try:
@@ -90,14 +92,16 @@ class WeatherDataRetrieval:
                     # Re-raise the original NWS error
                     if isinstance(e, NoaaApiError):
                         raise
-                    raise ApiClientError(f"NWS failed and Open-Meteo fallback failed: {str(e)}")
+                    raise ApiClientError(
+                        f"NWS failed and Open-Meteo fallback failed: {str(e)}"
+                    ) from e
 
         except ApiClientError:
             # Re-raise API client errors directly
             raise
         except Exception as e:
             logger.error(f"Unexpected error getting forecast: {str(e)}")
-            raise ApiClientError(f"Unable to retrieve forecast data: {str(e)}")
+            raise ApiClientError(f"Unable to retrieve forecast data: {str(e)}") from e
 
     def get_hourly_forecast(
         self, lat: float, lon: float, force_refresh: bool = False
@@ -142,7 +146,9 @@ class WeatherDataRetrieval:
                     )
                     if fallback_result:
                         return fallback_result  # type: ignore[no-any-return]
-                    raise ApiClientError(f"Open-Meteo failed and no fallback available: {str(e)}")
+                    raise ApiClientError(
+                        f"Open-Meteo failed and no fallback available: {str(e)}"
+                    ) from e
             else:
                 logger.info("Using NWS API for hourly forecast")
                 try:
@@ -160,14 +166,16 @@ class WeatherDataRetrieval:
                     # Re-raise the original NWS error
                     if isinstance(e, NoaaApiError):
                         raise
-                    raise ApiClientError(f"NWS failed and Open-Meteo fallback failed: {str(e)}")
+                    raise ApiClientError(
+                        f"NWS failed and Open-Meteo fallback failed: {str(e)}"
+                    ) from e
 
         except ApiClientError:
             # Re-raise API client errors directly
             raise
         except Exception as e:
             logger.error(f"Unexpected error getting hourly forecast: {str(e)}")
-            raise ApiClientError(f"Unable to retrieve hourly forecast data: {str(e)}")
+            raise ApiClientError(f"Unable to retrieve hourly forecast data: {str(e)}") from e
 
     def get_stations(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
         """Get observation stations for a location.
@@ -191,7 +199,7 @@ class WeatherDataRetrieval:
             return self.nws_client.get_stations(lat, lon, force_refresh=force_refresh)
         except Exception as e:
             logger.error(f"Error getting observation stations: {str(e)}")
-            raise ApiClientError(f"Unable to retrieve observation stations data: {str(e)}")
+            raise ApiClientError(f"Unable to retrieve observation stations data: {str(e)}") from e
 
     def get_current_conditions(
         self, lat: float, lon: float, force_refresh: bool = False
@@ -236,7 +244,9 @@ class WeatherDataRetrieval:
                     )
                     if fallback_result:
                         return fallback_result  # type: ignore[no-any-return]
-                    raise ApiClientError(f"Open-Meteo failed and no fallback available: {str(e)}")
+                    raise ApiClientError(
+                        f"Open-Meteo failed and no fallback available: {str(e)}"
+                    ) from e
             else:
                 logger.info("Using NWS API for current conditions")
                 try:
@@ -254,11 +264,13 @@ class WeatherDataRetrieval:
                     # Re-raise the original NWS error
                     if isinstance(e, NoaaApiError):
                         raise
-                    raise ApiClientError(f"NWS failed and Open-Meteo fallback failed: {str(e)}")
+                    raise ApiClientError(
+                        f"NWS failed and Open-Meteo fallback failed: {str(e)}"
+                    ) from e
 
         except ApiClientError:
             # Re-raise API client errors directly
             raise
         except Exception as e:
             logger.error(f"Unexpected error getting current conditions: {str(e)}")
-            raise ApiClientError(f"Unable to retrieve current conditions data: {str(e)}")
+            raise ApiClientError(f"Unable to retrieve current conditions data: {str(e)}") from e

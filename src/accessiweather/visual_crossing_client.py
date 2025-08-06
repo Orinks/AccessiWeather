@@ -27,6 +27,7 @@ class VisualCrossingApiError(Exception):
     """Exception raised for Visual Crossing API errors."""
 
     def __init__(self, message: str, status_code: int | None = None):
+        """Initialize the instance."""
         self.message = message
         self.status_code = status_code
         super().__init__(message)
@@ -36,6 +37,7 @@ class VisualCrossingClient:
     """Client for Visual Crossing Weather API."""
 
     def __init__(self, api_key: str, user_agent: str = "AccessiWeather/1.0"):
+        """Initialize the instance."""
         self.api_key = api_key
         self.user_agent = user_agent
         self.base_url = (
@@ -73,13 +75,13 @@ class VisualCrossingClient:
 
         except httpx.TimeoutException:
             logger.error("Visual Crossing API request timed out")
-            raise VisualCrossingApiError("Request timed out")
+            raise VisualCrossingApiError("Request timed out") from None
         except httpx.RequestError as e:
             logger.error(f"Visual Crossing API request failed: {e}")
-            raise VisualCrossingApiError(f"Request failed: {e}")
+            raise VisualCrossingApiError(f"Request failed: {e}") from e
         except Exception as e:
             logger.error(f"Failed to get Visual Crossing current conditions: {e}")
-            raise VisualCrossingApiError(f"Unexpected error: {e}")
+            raise VisualCrossingApiError(f"Unexpected error: {e}") from e
 
     async def get_forecast(self, location: Location) -> Forecast | None:
         """Get weather forecast from Visual Crossing API."""
@@ -110,13 +112,13 @@ class VisualCrossingClient:
 
         except httpx.TimeoutException:
             logger.error("Visual Crossing API request timed out")
-            raise VisualCrossingApiError("Request timed out")
+            raise VisualCrossingApiError("Request timed out") from None
         except httpx.RequestError as e:
             logger.error(f"Visual Crossing API request failed: {e}")
-            raise VisualCrossingApiError(f"Request failed: {e}")
+            raise VisualCrossingApiError(f"Request failed: {e}") from e
         except Exception as e:
             logger.error(f"Failed to get Visual Crossing forecast: {e}")
-            raise VisualCrossingApiError(f"Unexpected error: {e}")
+            raise VisualCrossingApiError(f"Unexpected error: {e}") from e
 
     async def get_hourly_forecast(self, location: Location) -> HourlyForecast | None:
         """Get hourly weather forecast from Visual Crossing API."""
@@ -147,13 +149,13 @@ class VisualCrossingClient:
 
         except httpx.TimeoutException:
             logger.error("Visual Crossing API request timed out")
-            raise VisualCrossingApiError("Request timed out")
+            raise VisualCrossingApiError("Request timed out") from None
         except httpx.RequestError as e:
             logger.error(f"Visual Crossing API request failed: {e}")
-            raise VisualCrossingApiError(f"Request failed: {e}")
+            raise VisualCrossingApiError(f"Request failed: {e}") from e
         except Exception as e:
             logger.error(f"Failed to get Visual Crossing hourly forecast: {e}")
-            raise VisualCrossingApiError(f"Unexpected error: {e}")
+            raise VisualCrossingApiError(f"Unexpected error: {e}") from e
 
     async def get_alerts(self, location: Location) -> WeatherAlerts:
         """Get weather alerts from Visual Crossing API."""
@@ -183,10 +185,10 @@ class VisualCrossingClient:
 
         except httpx.TimeoutException:
             logger.error("Visual Crossing API request timed out")
-            raise VisualCrossingApiError("Request timed out")
+            raise VisualCrossingApiError("Request timed out") from None
         except httpx.RequestError as e:
             logger.error(f"Visual Crossing API request failed: {e}")
-            raise VisualCrossingApiError(f"Request failed: {e}")
+            raise VisualCrossingApiError(f"Request failed: {e}") from e
         except Exception as e:
             logger.error(f"Failed to get Visual Crossing alerts: {e}")
             # Return empty alerts on error rather than raising

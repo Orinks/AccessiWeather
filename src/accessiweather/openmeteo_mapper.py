@@ -142,7 +142,7 @@ class OpenMeteoMapper:
 
         except Exception as e:
             logger.error(f"Error mapping current conditions: {str(e)}")
-            raise ValueError(f"Failed to map current conditions: {str(e)}")
+            raise ValueError(f"Failed to map current conditions: {str(e)}") from e
 
     def map_forecast(self, openmeteo_data: dict[str, Any]) -> dict[str, Any]:
         """Map Open-Meteo daily forecast data to NWS-compatible format.
@@ -265,7 +265,7 @@ class OpenMeteoMapper:
 
         except Exception as e:
             logger.error(f"Error mapping forecast: {str(e)}")
-            raise ValueError(f"Failed to map forecast: {str(e)}")
+            raise ValueError(f"Failed to map forecast: {str(e)}") from e
 
     def map_hourly_forecast(self, openmeteo_data: dict[str, Any]) -> dict[str, Any]:
         """Map Open-Meteo hourly forecast data to NWS-compatible format.
@@ -358,7 +358,7 @@ class OpenMeteoMapper:
 
         except Exception as e:
             logger.error(f"Error mapping hourly forecast: {str(e)}")
-            raise ValueError(f"Failed to map hourly forecast: {str(e)}")
+            raise ValueError(f"Failed to map hourly forecast: {str(e)}") from e
 
     def _get_temperature_unit_code(self, unit_str: str) -> str:
         """Convert temperature unit string to WMO unit code."""

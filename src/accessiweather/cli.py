@@ -41,7 +41,7 @@ def parse_args(args: list[str] | None = None) -> argparse.Namespace:
 
 
 def main() -> int:
-    """Main entry point for the command-line interface.
+    """Run the command-line interface.
 
     Returns:
         Exit code

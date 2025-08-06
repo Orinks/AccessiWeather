@@ -20,6 +20,7 @@ class ConfigManager:
     """Simple configuration manager using Toga paths."""
 
     def __init__(self, app: toga.App):
+        """Initialize the instance."""
         self.app = app
         self.config_file = self.app.paths.config / "accessiweather.json"
         self._config: AppConfig | None = None

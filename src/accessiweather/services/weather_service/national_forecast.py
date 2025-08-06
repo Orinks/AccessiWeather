@@ -79,4 +79,4 @@ class NationalForecastHandler:
                 return {"national_discussion_summaries": self.national_data_cache}
 
             # Otherwise, raise an error
-            raise ApiClientError(f"Unable to retrieve nationwide forecast data: {str(e)}")
+            raise ApiClientError(f"Unable to retrieve nationwide forecast data: {str(e)}") from e

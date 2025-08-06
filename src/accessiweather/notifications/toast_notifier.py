@@ -90,7 +90,7 @@ class SafeDesktopNotifier:
 
                 if exception:
                     logger.error(f"Notification thread failed: {exception}")
-                    raise exception
+                    raise exception from None
                 return result
             # We can run directly in the current loop
             logger.debug("Running directly in current loop")
@@ -142,6 +142,7 @@ class SafeToastNotifier:
     """
 
     def __init__(self, sound_enabled: bool = True, soundpack: str | None = None):
+        """Initialize the instance."""
         self.sound_enabled: bool = sound_enabled
         self.soundpack: str = soundpack if soundpack is not None else "default"
         self.soundpack = self.soundpack  # keep the pack name/dir for use with the new API
@@ -151,7 +152,11 @@ class SafeToastNotifier:
             self._desktop_notifier = None
 
     def _safe_send_notification(self, title: str, message: str, timeout: int) -> bool:
-        m = getattr(self._desktop_notifier, 'send_notification', None) if self._desktop_notifier is not None else None
+        m = (
+            getattr(self._desktop_notifier, "send_notification", None)
+            if self._desktop_notifier is not None
+            else None
+        )
         if m is not None and callable(m):
             return bool(m(title, message, timeout))
         logger.info(f"Notification (desktop notifier unavailable): {title} - {message}")

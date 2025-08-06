@@ -94,7 +94,7 @@ class AlertsDiscussionHandler:
             raise
         except Exception as e:
             logger.error(f"Error getting alerts: {str(e)}")
-            raise ApiClientError(f"Unable to retrieve alerts data: {str(e)}")
+            raise ApiClientError(f"Unable to retrieve alerts data: {str(e)}") from e
 
     def get_discussion(self, lat: float, lon: float, force_refresh: bool = False) -> str | None:
         """Get forecast discussion for a location.
@@ -122,7 +122,7 @@ class AlertsDiscussionHandler:
             raise
         except Exception as e:
             logger.error(f"Error getting forecast discussion: {str(e)}")
-            raise ApiClientError(f"Unable to retrieve forecast discussion data: {str(e)}")
+            raise ApiClientError(f"Unable to retrieve forecast discussion data: {str(e)}") from e
 
     def process_alerts(self, alerts_data: dict[str, Any]) -> tuple[list[dict[str, Any]], int, int]:
         """Process alerts data and return processed alerts with counts.

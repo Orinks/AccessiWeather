@@ -120,7 +120,7 @@ class OpenMeteoApiClient:
                     continue
                 raise OpenMeteoNetworkError(
                     f"Request timeout after {self.max_retries} retries: {str(e)}"
-                )
+                ) from e
 
             except httpx.NetworkError as e:
                 if attempt < self.max_retries:
@@ -131,12 +131,12 @@ class OpenMeteoApiClient:
                     continue
                 raise OpenMeteoNetworkError(
                     f"Network error after {self.max_retries} retries: {str(e)}"
-                )
+                ) from e
 
             except Exception as e:
                 if isinstance(e, OpenMeteoApiError | OpenMeteoNetworkError):
                     raise
-                raise OpenMeteoApiError(f"Unexpected error: {str(e)}")
+                raise OpenMeteoApiError(f"Unexpected error: {str(e)}") from e
 
         # This should never be reached due to the exception handling above
         raise OpenMeteoApiError("Request failed after all retries")
