@@ -78,7 +78,7 @@ class TestTogaInfrastructure:
 
         # Check that temperature data is present
         assert weather_data.current.temperature_f is not None
-        assert isinstance(weather_data.current.temperature_f, (int, float))
+        assert isinstance(weather_data.current.temperature_f, int | float)
 
     @pytest.mark.asyncio
     async def test_background_task_simulation(self):

@@ -217,7 +217,7 @@ def format_combined_wind(
         speed_str = f"{int(round(speed_val))} {speed_unit}"
 
         # Handle direction
-        if isinstance(wind_direction, (int, float)):
+        if isinstance(wind_direction, int | float):
             direction = convert_wind_direction_to_cardinal(wind_direction)
         else:
             direction = str(wind_direction) if wind_direction else ""

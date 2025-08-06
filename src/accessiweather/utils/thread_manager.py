@@ -281,7 +281,7 @@ class ThreadManager:
         """
         active_threads = []
         with self._lock:
-            for thread_id, thread_info in self._threads.items():
+            for _thread_id, thread_info in self._threads.items():
                 thread = thread_info["thread"]
                 if thread.is_alive():
                     active_threads.append(thread)

@@ -1,4 +1,4 @@
-"""Main entry point for AccessiWeather
+"""Main entry point for AccessiWeather.
 
 This module provides the main entry point for running the application.
 """
@@ -16,7 +16,7 @@ def main(
     enable_caching: bool = True,
     portable_mode: bool = False,
 ):
-    """Main entry point for the application
+    """Main entry point for the application.
 
     Args:
         config_dir: Configuration directory, defaults to ~/.accessiweather

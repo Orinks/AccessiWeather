@@ -248,7 +248,7 @@ class WeatherFormatter:
 
         # Direction - handle both string and numeric directions
         if direction is not None:
-            if isinstance(direction, (int, float)):
+            if isinstance(direction, int | float):
                 # Convert numeric degrees to cardinal direction
                 direction_str = self._degrees_to_cardinal(direction)
                 if direction_str:

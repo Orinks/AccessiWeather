@@ -58,8 +58,7 @@ class FormatStringParser:
             return []
 
         # Find all matches of the placeholder pattern
-        matches = self.placeholder_pattern.findall(format_string)
-        return matches
+        return self.placeholder_pattern.findall(format_string)
 
     def validate_format_string(self, format_string: str) -> tuple[bool, str | None]:
         """Validate a format string.

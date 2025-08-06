@@ -1,4 +1,4 @@
-"""Location handling for AccessiWeather
+"""Location handling for AccessiWeather.
 
 This module handles location storage and retrieval.
 """
@@ -20,7 +20,7 @@ NATIONWIDE_LON = -98.5795
 
 
 class LocationManager:
-    """Manager for handling saved locations"""
+    """Manager for handling saved locations."""
 
     def __init__(
         self,
@@ -28,7 +28,7 @@ class LocationManager:
         show_nationwide: bool = True,
         data_source: str = "nws",
     ):
-        """Initialize the location manager
+        """Initialize the location manager.
 
         Args:
             config_dir: Directory for config files, defaults to user's home directory
@@ -64,7 +64,7 @@ class LocationManager:
                 self._save_locations()
 
     def _load_locations(self) -> None:
-        """Load saved locations from file and validate them"""
+        """Load saved locations from file and validate them."""
         try:
             if os.path.exists(self.locations_file):
                 with open(self.locations_file) as f:
@@ -154,7 +154,7 @@ class LocationManager:
                     elif not self.show_nationwide and current == NATIONWIDE_LOCATION_NAME:
                         # If current location was Nationwide but it's hidden now,
                         # try to set another location as current
-                        non_nationwide = [loc for loc in self.saved_locations.keys()]
+                        non_nationwide = list(self.saved_locations.keys())
                         if non_nationwide:
                             self.current_location = non_nationwide[0]
                         else:
@@ -166,7 +166,7 @@ class LocationManager:
                         else:
                             non_nationwide = [
                                 loc
-                                for loc in self.saved_locations.keys()
+                                for loc in self.saved_locations
                                 if loc != NATIONWIDE_LOCATION_NAME
                             ]
                             if non_nationwide:
@@ -184,7 +184,7 @@ class LocationManager:
             self.current_location = None
 
     def _save_locations(self) -> None:
-        """Save locations to file"""
+        """Save locations to file."""
         try:
             # When saving, always include Nationwide location
             locations_to_save = dict(self.saved_locations)
@@ -224,9 +224,8 @@ class LocationManager:
             new_locations[NATIONWIDE_LOCATION_NAME] = {"lat": NATIONWIDE_LAT, "lon": NATIONWIDE_LON}
 
         # If show_nationwide is False, remove it from the working set
-        if not self.show_nationwide:
-            if NATIONWIDE_LOCATION_NAME in new_locations:
-                del new_locations[NATIONWIDE_LOCATION_NAME]
+        if not self.show_nationwide and NATIONWIDE_LOCATION_NAME in new_locations:
+            del new_locations[NATIONWIDE_LOCATION_NAME]
 
         self.saved_locations = new_locations
 
@@ -239,7 +238,7 @@ class LocationManager:
                 self.current_location = NATIONWIDE_LOCATION_NAME
             else:
                 non_nationwide = [
-                    loc for loc in self.saved_locations.keys() if loc != NATIONWIDE_LOCATION_NAME
+                    loc for loc in self.saved_locations if loc != NATIONWIDE_LOCATION_NAME
                 ]
                 if non_nationwide:
                     self.current_location = non_nationwide[0]
@@ -353,7 +352,7 @@ class LocationManager:
         return False
 
     def set_current_location(self, name: str) -> bool:
-        """Set the current location
+        """Set the current location.
 
         Args:
             name: Location name
@@ -387,7 +386,7 @@ class LocationManager:
         )
 
     def get_current_location(self) -> tuple[str, float, float] | None:
-        """Get the current location
+        """Get the current location.
 
         Returns:
             Tuple of (name, lat, lon) if current location exists, None otherwise
@@ -400,7 +399,7 @@ class LocationManager:
         return None
 
     def get_current_location_name(self) -> str | None:
-        """Get the name of the current location
+        """Get the name of the current location.
 
         Returns:
             Name of current location if it exists, None otherwise
@@ -409,7 +408,7 @@ class LocationManager:
         return self.current_location if self.current_location in self.saved_locations else None
 
     def get_all_locations(self) -> list[str]:
-        """Get all saved location names
+        """Get all saved location names.
 
         Returns:
             List of location names
@@ -417,10 +416,10 @@ class LocationManager:
         """
         if self.show_nationwide:
             return list(self.saved_locations.keys())
-        return [loc for loc in self.saved_locations.keys() if loc != NATIONWIDE_LOCATION_NAME]
+        return [loc for loc in self.saved_locations if loc != NATIONWIDE_LOCATION_NAME]
 
     def _ensure_nationwide_location(self) -> None:
-        """Ensure the Nationwide location exists in saved locations"""
+        """Ensure the Nationwide location exists in saved locations."""
         if NATIONWIDE_LOCATION_NAME not in self.saved_locations:
             logger.info(f"Adding {NATIONWIDE_LOCATION_NAME} location")
             self.saved_locations[NATIONWIDE_LOCATION_NAME] = {
@@ -430,7 +429,7 @@ class LocationManager:
         # Never remove or overwrite Nationwide; do not save yet (callers will save)
 
     def is_nationwide_location(self, name: str) -> bool:
-        """Check if a location is the Nationwide location
+        """Check if a location is the Nationwide location.
 
         Args:
             name: Location name to check
@@ -442,7 +441,7 @@ class LocationManager:
         return name == NATIONWIDE_LOCATION_NAME
 
     def set_show_nationwide(self, show: bool) -> None:
-        """Set whether to show the Nationwide location
+        """Set whether to show the Nationwide location.
 
         Args:
             show: Whether to show the Nationwide location
@@ -456,7 +455,7 @@ class LocationManager:
             # If current location is Nationwide, switch to another location
             if self.current_location == NATIONWIDE_LOCATION_NAME:
                 non_nationwide = [
-                    loc for loc in self.saved_locations.keys() if loc != NATIONWIDE_LOCATION_NAME
+                    loc for loc in self.saved_locations if loc != NATIONWIDE_LOCATION_NAME
                 ]
                 if non_nationwide:
                     self.current_location = non_nationwide[0]

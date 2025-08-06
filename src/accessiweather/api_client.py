@@ -9,13 +9,13 @@ to ensure existing code continues to work without modification.
 """
 
 # Import all classes and constants from the new api_client package
-from .api_client import (
+from .api_client.core_client import NoaaApiClient
+from .api_client.exceptions import (
     LOCATION_TYPE_COUNTY,
     LOCATION_TYPE_FIRE,
     LOCATION_TYPE_FORECAST,
     LOCATION_TYPE_STATE,
     ApiClientError,
-    NoaaApiClient,
     NoaaApiError,
 )
 

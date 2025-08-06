@@ -147,8 +147,8 @@ class BaseApiWrapper(ABC):
         param_str = "&".join(f"{k}={v}" for k, v in sorted(params.items()))
         cache_string = f"{endpoint}?{param_str}"
 
-        # Generate a hash for the cache key
-        return hashlib.md5(cache_string.encode()).hexdigest()
+        # Generate a hash for the cache key (using SHA256 for security)
+        return hashlib.sha256(cache_string.encode()).hexdigest()
 
     def _fetch_url(self, url: str, headers: dict[str, str] | None = None) -> dict[str, Any]:
         """Fetch data from a URL with error handling and retries."""
@@ -182,19 +182,19 @@ class BaseApiWrapper(ABC):
                     error_type=NoaaApiError.HTTP_ERROR,
                     url=url,
                     status_code=e.response.status_code,
-                )
+                ) from e
             except httpx.RequestError as e:
                 error_msg = f"Network error during API request to {url}: {e}"
                 logger.error(error_msg)
                 raise NoaaApiError(
                     message=error_msg, error_type=NoaaApiError.NETWORK_ERROR, url=url
-                )
+                ) from e
             except Exception as e:
                 error_msg = f"Unexpected error during API request to {url}: {e}"
                 logger.error(error_msg)
                 raise NoaaApiError(
                     message=error_msg, error_type=NoaaApiError.UNKNOWN_ERROR, url=url
-                )
+                ) from e
 
         # This should never be reached due to the exception handling above
         raise NoaaApiError(

@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 class NoaaApiClient(AlertsAndProductsMixin):
-    """Client for interacting with NOAA Weather API"""
+    """Client for interacting with NOAA Weather API."""
 
     # NOAA Weather API base URL
     BASE_URL = "https://api.weather.gov"
@@ -41,7 +41,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
         enable_caching: bool = False,
         cache_ttl: int = 300,
     ):
-        """Initialize the NOAA API client
+        """Initialize the NOAA API client.
 
         Args:
             user_agent: User agent string for API requests
@@ -76,7 +76,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
             logger.info(f"Caching enabled with TTL of {cache_ttl} seconds")
 
     def get_point_data(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
-        """Get metadata about a specific lat/lon point
+        """Get metadata about a specific lat/lon point.
 
         Args:
             lat: Latitude
@@ -97,7 +97,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
         use_full_url: bool = False,
         force_refresh: bool = False,
     ) -> dict[str, Any]:
-        """Make a request to the NOAA API
+        """Make a request to the NOAA API.
 
         Args:
             endpoint_or_url: API endpoint path or full URL if use_full_url
@@ -114,10 +114,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
 
         """
         # Build the request URL
-        if use_full_url:
-            request_url = endpoint_or_url
-        else:
-            request_url = f"{self.BASE_URL}/{endpoint_or_url}"
+        request_url = endpoint_or_url if use_full_url else f"{self.BASE_URL}/{endpoint_or_url}"
 
         # Create cache key if caching is enabled
         cache_key = None
@@ -257,7 +254,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
             ) from e
 
     def get_forecast(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
-        """Get forecast for a location
+        """Get forecast for a location.
 
         Args:
             lat: Latitude
@@ -296,7 +293,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
     def get_hourly_forecast(
         self, lat: float, lon: float, force_refresh: bool = False
     ) -> dict[str, Any]:
-        """Get hourly forecast for a location
+        """Get hourly forecast for a location.
 
         Args:
             lat: Latitude
@@ -335,7 +332,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
             raise
 
     def get_stations(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
-        """Get observation stations for a location
+        """Get observation stations for a location.
 
         Args:
             lat: Latitude
@@ -373,7 +370,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
     def get_current_conditions(
         self, lat: float, lon: float, force_refresh: bool = False
     ) -> dict[str, Any]:
-        """Get current weather conditions for a location from the nearest observation station
+        """Get current weather conditions for a location from the nearest observation station.
 
         Args:
             lat: Latitude

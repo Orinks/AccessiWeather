@@ -26,13 +26,13 @@ logger = logging.getLogger(__name__)
 
 
 class WeatherNotifier:
-    """Class for handling weather notifications"""
+    """Class for handling weather notifications."""
 
     # Alert priority levels
     PRIORITY = {"Extreme": 3, "Severe": 2, "Moderate": 1, "Minor": 0, "Unknown": -1}
 
     def __init__(self, config_dir: str | None = None, enable_persistence: bool = True):
-        """Initialize the weather notifier
+        """Initialize the weather notifier.
 
         Args:
             config_dir: Directory for storing alert state (optional)
@@ -54,7 +54,7 @@ class WeatherNotifier:
             self.alerts_state_file = None
 
     def notify_alerts(self, alert_count, new_count=0, updated_count=0):
-        """Notify the user about new alerts
+        """Notify the user about new alerts.
 
         Args:
             alert_count: Number of active alerts
@@ -97,7 +97,7 @@ class WeatherNotifier:
             logger.info(f"Displayed summary notification: {message}")
 
     def show_notification(self, alert: dict[str, Any], is_update: bool = False) -> None:
-        """Show a desktop notification for an alert
+        """Show a desktop notification for an alert.
 
         Args:
             alert: Dictionary containing alert information
@@ -131,7 +131,7 @@ class WeatherNotifier:
             logger.error(f"Failed to show notification: {str(e)}")
 
     def get_sorted_alerts(self) -> list[dict[str, Any]]:
-        """Get all active alerts sorted by priority
+        """Get all active alerts sorted by priority.
 
         Returns:
             List of alerts sorted by priority (highest first)
@@ -147,7 +147,7 @@ class WeatherNotifier:
         )
 
     def process_alerts(self, alerts_data: dict[str, Any]) -> tuple[list[dict[str, Any]], int, int]:
-        """Process alerts data from NOAA API with change detection and deduplication
+        """Process alerts data from NOAA API with change detection and deduplication.
 
         Args:
             alerts_data: Dictionary containing alerts data from NOAA API
@@ -259,7 +259,7 @@ class WeatherNotifier:
         return processed_alerts, new_alerts_count, updated_alerts_count
 
     def _is_alert_updated(self, old_alert: dict[str, Any], new_alert: dict[str, Any]) -> bool:
-        """Check if an alert has been updated by comparing key fields
+        """Check if an alert has been updated by comparing key fields.
 
         Args:
             old_alert: The existing alert in our active alerts dictionary
@@ -280,7 +280,7 @@ class WeatherNotifier:
         return False
 
     def _generate_deduplication_key(self, alert: dict[str, Any]) -> str:
-        """Generate a deduplication key for an alert to identify duplicate alerts from different offices
+        """Generate a deduplication key for an alert to identify duplicate alerts from different offices.
 
         Args:
             alert: Alert dictionary
@@ -312,7 +312,7 @@ class WeatherNotifier:
         return dedup_key
 
     def _choose_representative_alert(self, alerts: list[dict[str, Any]]) -> dict[str, Any]:
-        """Choose the best representative alert from a group of duplicate alerts
+        """Choose the best representative alert from a group of duplicate alerts.
 
         Args:
             alerts: List of alerts that represent the same weather event
@@ -350,7 +350,7 @@ class WeatherNotifier:
         return representative
 
     def clear_expired_alerts(self) -> None:
-        """Remove expired alerts from the active alerts list"""
+        """Remove expired alerts from the active alerts list."""
         now = datetime.now(UTC)
         expired_alert_ids = []
 
@@ -402,7 +402,7 @@ class WeatherNotifier:
             self._save_alert_state()
 
     def _load_alert_state(self) -> None:
-        """Load alert state from persistent storage"""
+        """Load alert state from persistent storage."""
         if not self.enable_persistence or not self.alerts_state_file:
             return
 
@@ -456,7 +456,7 @@ class WeatherNotifier:
             self.active_alerts = {}
 
     def _save_alert_state(self) -> None:
-        """Save alert state to persistent storage"""
+        """Save alert state to persistent storage."""
         if not self.enable_persistence or not self.alerts_state_file:
             return
 
