@@ -16,6 +16,7 @@ class MockApp:
     """Mock app for testing."""
 
     def __init__(self, config_dir: Path):
+        """Initialize mock app with config directory."""
         self.paths = MagicMock()
         self.paths.config = config_dir
 

@@ -178,7 +178,7 @@ def test_settings_conversion():
     # Convert to AlertSettings
     alert_settings = app_settings.to_alert_settings()
 
-    assert alert_settings.notifications_enabled == True, "Notifications should be enabled"
+    assert alert_settings.notifications_enabled is True, "Notifications should be enabled"
     assert alert_settings.min_severity_priority == 4, "Should require Severe or higher (priority 4)"
     assert alert_settings.global_cooldown == 10, "Global cooldown should be 10 minutes"
     assert "Test Category" in alert_settings.ignored_categories, "Should include ignored category"

@@ -138,7 +138,7 @@ class AlertsAndProductsMixin:
         return self._make_request(url, use_full_url=True, force_refresh=force_refresh)
 
     def get_discussion(self, lat: float, lon: float, force_refresh: bool = False) -> str | None:
-        """Get the forecast discussion for a location
+        """Get the forecast discussion for a location.
 
         Args:
             lat: Latitude
@@ -220,7 +220,7 @@ class AlertsAndProductsMixin:
     def get_national_product(
         self, product_type: str, location: str, force_refresh: bool = False
     ) -> str | None:
-        """Get a national product from a specific center
+        """Get a national product from a specific center.
 
         Args:
             product_type: Product type code (e.g., "FXUS01")
@@ -266,13 +266,13 @@ class AlertsAndProductsMixin:
             return None
 
     def get_national_forecast_data(self, force_refresh: bool = False) -> dict[str, Any]:
-        """Get national forecast data from various centers
+        """Get national forecast data from various centers.
 
         Returns:
             Dictionary containing national forecast data
 
         """
-        result = {
+        return {
             "wpc": {
                 "short_range": self.get_national_product("FXUS01", "KWNH", force_refresh),
                 "medium_range": self.get_national_product("FXUS06", "KWNH", force_refresh),
@@ -292,7 +292,6 @@ class AlertsAndProductsMixin:
                 "8_14_day": self.get_national_product("FXUS07", "KWNC", force_refresh),
             },
         }
-        return result
 
     def get_national_discussion_summary(self, force_refresh: bool = False) -> dict:
         """Fetch and summarize the latest WPC Short Range and SPC Day 1 discussions.

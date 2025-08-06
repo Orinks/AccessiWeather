@@ -173,7 +173,7 @@ class SafeToastNotifier:
             message = kwargs.get("msg", "")
             timeout = kwargs.get("duration", 10)
             alert_type = kwargs.get("alert_type", "notification")
-            severity = kwargs.get("severity")
+            kwargs.get("severity")
 
             # Use desktop-notifier if available and callable
             success = self._safe_send_notification(title, message, timeout)

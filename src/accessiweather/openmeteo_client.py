@@ -134,7 +134,7 @@ class OpenMeteoApiClient:
                 )
 
             except Exception as e:
-                if isinstance(e, (OpenMeteoApiError, OpenMeteoNetworkError)):
+                if isinstance(e, OpenMeteoApiError | OpenMeteoNetworkError):
                     raise
                 raise OpenMeteoApiError(f"Unexpected error: {str(e)}")
 

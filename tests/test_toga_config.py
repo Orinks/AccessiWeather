@@ -683,7 +683,7 @@ class TestConfigurationUtils:
             # Test error recovery
             try:
                 with open("non_existent_config.json") as f:
-                    content = f.read()
+                    f.read()  # We don't need to store the content
             except OSError as e:
                 assert str(e) == "File not found"
 

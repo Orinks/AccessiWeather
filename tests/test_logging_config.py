@@ -179,14 +179,16 @@ def test_setup_logging_return_value():
     mock_console = MagicMock(level=logging.NOTSET)  # Mock handler with level
     mock_file = MagicMock(level=logging.NOTSET)  # Mock handler with level
 
-    with patch("pathlib.Path.home", return_value=MOCK_HOME):
-        with patch("pathlib.Path.__truediv__") as mock_truediv:
-            with patch("pathlib.Path.mkdir"):  # Mock mkdir directly
-                with patch("logging.StreamHandler", return_value=mock_console):
-                    with patch("logging.handlers.RotatingFileHandler", return_value=mock_file):
-                        with patch("logging.FileHandler._open"):  # Prevent file opening
-                            mock_truediv.side_effect = [MOCK_LOG_DIR, MOCK_LOG_FILE]
+    with (
+        patch("pathlib.Path.home", return_value=MOCK_HOME),
+        patch("pathlib.Path.__truediv__") as mock_truediv,
+        patch("pathlib.Path.mkdir"),  # Mock mkdir directly
+        patch("logging.StreamHandler", return_value=mock_console),
+        patch("logging.handlers.RotatingFileHandler", return_value=mock_file),
+        patch("logging.FileHandler._open"),  # Prevent file opening
+    ):
+        mock_truediv.side_effect = [MOCK_LOG_DIR, MOCK_LOG_FILE]
 
-                            result = setup_logging()
+        result = setup_logging()
 
-                            assert result == MOCK_LOG_DIR
+        assert result == MOCK_LOG_DIR

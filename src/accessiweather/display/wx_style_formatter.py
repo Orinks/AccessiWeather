@@ -103,7 +103,7 @@ class WxStyleWeatherFormatter:
             )
 
         if current.wind_direction is not None:
-            if isinstance(current.wind_direction, (int, float)):
+            if isinstance(current.wind_direction, int | float):
                 wind_dir_str = convert_wind_direction_to_cardinal(current.wind_direction)
             else:
                 wind_dir_str = str(current.wind_direction)
@@ -195,10 +195,10 @@ class WxStyleWeatherFormatter:
             details = period.detailed_forecast or "No details available"
 
             # Convert temperature if needed
-            if unit == "F" and isinstance(temp, (int, float)):
+            if unit == "F" and isinstance(temp, int | float):
                 temp_f = temp
                 temp_c = (temp - 32) * 5 / 9
-            elif unit == "C" and isinstance(temp, (int, float)):
+            elif unit == "C" and isinstance(temp, int | float):
                 temp_c = temp
                 temp_f = (temp * 9 / 5) + 32
             else:

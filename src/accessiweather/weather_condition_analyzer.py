@@ -137,7 +137,7 @@ class WeatherConditionAnalyzer:
 
             # Analyze weather code
             weather_code = weather_data.get("weather_code", 0)
-            if isinstance(weather_code, (list, tuple)) and weather_code:
+            if isinstance(weather_code, list | tuple) and weather_code:
                 weather_code = weather_code[0]
 
             category, severity = self.WEATHER_CODE_MAPPING.get(

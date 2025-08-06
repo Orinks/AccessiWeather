@@ -128,10 +128,7 @@ class DynamicFormatManager:
         current_priority = analysis.get("priority_score", 0)
         last_priority = self.last_analysis.get("priority_score", 0)
 
-        if abs(current_priority - last_priority) >= 20:
-            return True
-
-        return False
+        return abs(current_priority - last_priority) >= 20
 
     def _update_format_string(
         self,

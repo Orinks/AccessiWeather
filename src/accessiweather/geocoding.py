@@ -1,4 +1,4 @@
-"""Geocoding service for AccessiWeather
+"""Geocoding service for AccessiWeather.
 
 This module provides geocoding functionality to convert addresses and zip codes to coordinates.
 """
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class GeocodingService:
-    """Service for geocoding addresses and zip codes"""
+    """Service for geocoding addresses and zip codes."""
 
     # Regular expression for US ZIP codes (both 5-digit and ZIP+4 formats)
     ZIP_CODE_PATTERN = re.compile(r"^\d{5}(?:-\d{4})?$")
@@ -24,7 +24,7 @@ class GeocodingService:
     def __init__(
         self, user_agent: str = "AccessiWeather", timeout: int = 10, data_source: str = "nws"
     ):
-        """Initialize the geocoding service
+        """Initialize the geocoding service.
 
         Args:
             user_agent: User agent string for API requests
@@ -36,7 +36,7 @@ class GeocodingService:
         self.data_source = data_source
 
     def is_zip_code(self, text: str) -> bool:
-        """Check if the given text is a valid US ZIP code
+        """Check if the given text is a valid US ZIP code.
 
         Args:
             text: Text to check
@@ -48,7 +48,7 @@ class GeocodingService:
         return bool(self.ZIP_CODE_PATTERN.match(text))
 
     def format_zip_code(self, zip_code: str) -> str:
-        """Format a ZIP code for geocoding
+        """Format a ZIP code for geocoding.
 
         Args:
             zip_code: ZIP code to format
