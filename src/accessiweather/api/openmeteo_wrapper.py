@@ -103,7 +103,7 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
                 logger.error(
                     f"Error getting current conditions from Open-Meteo for {lat},{lon}: {str(e)}"
                 )
-                raise self._map_openmeteo_error(e, lat, lon)
+                raise self._map_openmeteo_error(e, lat, lon) from e
 
         return cast(dict[str, Any], self._get_cached_or_fetch(cache_key, fetch_data, force_refresh))
 
@@ -143,7 +143,7 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
                 return self._transform_forecast(response)
             except Exception as e:
                 logger.error(f"Error getting forecast from Open-Meteo for {lat},{lon}: {str(e)}")
-                raise self._map_openmeteo_error(e, lat, lon)
+                raise self._map_openmeteo_error(e, lat, lon) from e
 
         return cast(dict[str, Any], self._get_cached_or_fetch(cache_key, fetch_data, force_refresh))
 
@@ -185,7 +185,7 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
                 logger.error(
                     f"Error getting hourly forecast from Open-Meteo for {lat},{lon}: {str(e)}"
                 )
-                raise self._map_openmeteo_error(e, lat, lon)
+                raise self._map_openmeteo_error(e, lat, lon) from e
 
         return cast(dict[str, Any], self._get_cached_or_fetch(cache_key, fetch_data, force_refresh))
 

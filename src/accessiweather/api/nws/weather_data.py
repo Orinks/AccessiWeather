@@ -80,7 +80,7 @@ class NwsWeatherData:
                     error_msg = f"Unexpected error getting current conditions: {e}"
                     raise NoaaApiError(
                         message=error_msg, error_type=NoaaApiError.UNKNOWN_ERROR, url=url
-                    )
+                    ) from e
 
             return cast(
                 dict[str, Any],
@@ -145,7 +145,7 @@ class NwsWeatherData:
                     error_msg = f"Unexpected error getting forecast: {e}"
                     raise NoaaApiError(
                         message=error_msg, error_type=NoaaApiError.UNKNOWN_ERROR, url=forecast_url
-                    )
+                    ) from e
 
             return cast(
                 dict[str, Any],
@@ -213,7 +213,7 @@ class NwsWeatherData:
                         message=error_msg,
                         error_type=NoaaApiError.UNKNOWN_ERROR,
                         url=forecast_hourly_url,
-                    )
+                    ) from e
 
             return cast(
                 dict[str, Any],
@@ -267,7 +267,7 @@ class NwsWeatherData:
                         message=f"Error getting stations: {e}",
                         error_type=NoaaApiError.UNKNOWN_ERROR,
                         url=stations_url,
-                    )
+                    ) from e
 
             logger.info(f"Retrieved observation stations URL: {stations_url}")
             return cast(

@@ -312,7 +312,7 @@ class WeatherFormatter:
         return directions[index]
 
     def _wrap_text(self, text: str, width: int) -> str:
-        """Simple text wrapping for better readability."""
+        """Wrap text for better readability."""
         if len(text) <= width:
             return text
 

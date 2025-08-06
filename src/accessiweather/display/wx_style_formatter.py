@@ -136,8 +136,8 @@ class WxStyleWeatherFormatter:
         text += f"Temperature: {temperature_str}\n"
 
         # Only show feels like if it's different from actual temperature
-        if feels_like_f is not None and temperature_f is not None:
-            if abs(feels_like_f - temperature_f) > 2:  # Only show if significantly different
+        if (feels_like_f is not None and temperature_f is not None and
+                abs(feels_like_f - temperature_f) > 2):  # Only show if significantly different
                 text += f"Feels like: {feels_like_str}\n"
 
         text += f"Humidity: {humidity_str}\n"

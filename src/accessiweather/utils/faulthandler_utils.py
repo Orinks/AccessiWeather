@@ -28,6 +28,7 @@ def enable_faulthandler(
         log_file_path: Path to the log file. If None, a file will be created in
             the user's AccessiWeather_logs directory.
         all_threads: Whether to dump tracebacks for all threads (default: True)
+        register_all_signals: If True, register handlers for all available signals
 
     Returns:
         Path to the log file
@@ -77,17 +78,16 @@ def enable_faulthandler(
     log_file_path.parent.mkdir(exist_ok=True, parents=True)
 
     try:
-        # Open the log file in append mode
-        _fault_log_file = open(log_file_path, "a", encoding="utf-8")
+        # Open the log file in append mode using context manager
+        with open(log_file_path, "a", encoding="utf-8") as _fault_log_file:
+            # Write a header to the log file
+            _fault_log_file.write("\n" + "=" * 80 + "\n")
+            _fault_log_file.write(f"Faulthandler enabled at {log_file_path}\n")
+            _fault_log_file.write("=" * 80 + "\n")
+            _fault_log_file.flush()
 
-        # Write a header to the log file
-        _fault_log_file.write("\n" + "=" * 80 + "\n")
-        _fault_log_file.write(f"Faulthandler enabled at {log_file_path}\n")
-        _fault_log_file.write("=" * 80 + "\n")
-        _fault_log_file.flush()
-
-        # Enable faulthandler for the log file
-        faulthandler.enable(file=_fault_log_file, all_threads=all_threads)
+            # Enable faulthandler for the log file
+            faulthandler.enable(file=_fault_log_file, all_threads=all_threads)
 
         logger.info(f"Faulthandler enabled, logging to {log_file_path}")
         return log_file_path

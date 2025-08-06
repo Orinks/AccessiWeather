@@ -9,6 +9,8 @@ import logging
 import sys
 import threading
 
+from .sound_player import play_notification_sound
+
 logger = logging.getLogger(__name__)
 
 try:
@@ -20,7 +22,6 @@ except ImportError as e:
     DesktopNotifier = None
     DESKTOP_NOTIFIER_AVAILABLE = False
 
-from .sound_player import play_notification_sound
 
 
 class SafeDesktopNotifier:
