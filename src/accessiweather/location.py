@@ -249,6 +249,7 @@ class LocationManager:
 
     def add_location(self, name: str, lat: float, lon: float) -> bool:
         """Add a new location. Cannot overwrite Nationwide location.
+
         Validates that the location is within the US NWS coverage area when using NWS data source.
         When using WeatherAPI, allows locations worldwide.
 

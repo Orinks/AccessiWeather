@@ -5,7 +5,7 @@ to specialized modules while maintaining backward compatibility.
 """
 
 import logging
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 
 from accessiweather.api.base_wrapper import BaseApiWrapper
 

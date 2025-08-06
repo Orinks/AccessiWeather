@@ -66,6 +66,7 @@ class AlertsAndProductsMixin:
                     (used if location type cannot be determined)
             precise_location: Whether to get alerts for the precise location (county/zone)
                              or for the entire state
+            force_refresh: If True, bypass cache and fetch fresh data
 
         Returns:
             Dictionary containing alert data
@@ -129,6 +130,7 @@ class AlertsAndProductsMixin:
 
         Args:
             url: Full URL to the alerts endpoint
+            force_refresh: If True, bypass cache and fetch fresh data
 
         Returns:
             Dictionary containing alert data
@@ -143,6 +145,7 @@ class AlertsAndProductsMixin:
         Args:
             lat: Latitude
             lon: Longitude
+            force_refresh: If True, bypass cache and fetch fresh data
 
         Returns:
             Text of the forecast discussion or None if not available

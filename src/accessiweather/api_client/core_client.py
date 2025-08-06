@@ -81,6 +81,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
         Args:
             lat: Latitude
             lon: Longitude
+            force_refresh: If True, bypass cache and fetch fresh data
 
         Returns:
             Dict containing point metadata

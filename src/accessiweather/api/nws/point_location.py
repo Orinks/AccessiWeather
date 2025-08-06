@@ -58,7 +58,7 @@ class NwsPointLocation:
                 error_msg = f"Unexpected error getting point data: {e}"
                 raise NoaaApiError(
                     message=error_msg, error_type=NoaaApiError.UNKNOWN_ERROR, url=url
-                )
+                ) from e
 
         return cast(
             dict[str, Any], self.wrapper._get_cached_or_fetch(cache_key, fetch_data, force_refresh)
