@@ -79,7 +79,7 @@ class NwsCoreClient:
                     error_type=NoaaApiError.NOT_FOUND_ERROR,
                     url=url,
                     status_code=status_code,
-                )
+                ) from e
             if status_code == 429:
                 error_msg = f"Rate limit exceeded (429) for {url}"
                 raise NoaaApiError(
@@ -87,7 +87,7 @@ class NwsCoreClient:
                     error_type=NoaaApiError.RATE_LIMIT_ERROR,
                     url=url,
                     status_code=status_code,
-                )
+                ) from e
             if status_code >= 500:
                 error_msg = f"Server error ({status_code}) at {url}"
                 raise NoaaApiError(
@@ -95,7 +95,7 @@ class NwsCoreClient:
                     error_type=NoaaApiError.SERVER_ERROR,
                     url=url,
                     status_code=status_code,
-                )
+                ) from e
             # Decode bytes content if necessary
             raw_content = e.content
             if isinstance(raw_content, bytes):
@@ -111,10 +111,12 @@ class NwsCoreClient:
                 error_type=NoaaApiError.HTTP_ERROR,
                 url=url,
                 status_code=status_code,
-            )
+            ) from e
         except Exception as e:
             # Handle other exceptions
             url = kwargs.get("url", self.BASE_URL)
             error_msg = f"Unexpected error during NWS API request to {url}: {e}"
             logger.error(error_msg)
-            raise NoaaApiError(message=error_msg, error_type=NoaaApiError.UNKNOWN_ERROR, url=url)
+            raise NoaaApiError(
+                message=error_msg, error_type=NoaaApiError.UNKNOWN_ERROR, url=url
+            ) from e

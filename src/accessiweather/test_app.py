@@ -131,7 +131,7 @@ class TestWeatherApp(toga.App):
 
 
 def main():
-    """Main entry point for test app."""
+    """Create and return test app."""
     return TestWeatherApp(
         "Weather Test",
         "net.orinks.accessiweather.test",

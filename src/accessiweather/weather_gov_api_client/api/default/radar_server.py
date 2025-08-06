@@ -34,7 +34,7 @@ def _parse_response(
     if response.status_code == 200:
         return None
     if client.raise_on_unexpected_status:
-        raise errors.UnexpectedStatus(response.status_code, response.content)
+        raise e from Nonerrors.UnexpectedStatus(response.status_code, response.content)
     else:
         return None
 

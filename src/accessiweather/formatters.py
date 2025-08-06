@@ -22,6 +22,7 @@ class WeatherFormatter:
     """Simple weather data formatter for display."""
 
     def __init__(self, settings: AppSettings):
+        """Initialize the instance."""
         self.settings = settings
 
     def format_current_conditions(

@@ -26,6 +26,7 @@ class AlertState:
         last_notified: datetime | None = None,
         notification_count: int = 0,
     ):
+        """Initialize the instance."""
         self.alert_id = alert_id
         self.content_hash = content_hash
         self.first_seen = first_seen
@@ -60,6 +61,7 @@ class AlertSettings:
     """Alert notification settings and preferences."""
 
     def __init__(self):
+        """Initialize the instance."""
         # Severity threshold (minimum severity to notify)
         self.min_severity_priority = 2  # Default: minor and above
 
@@ -96,6 +98,7 @@ class AlertManager:
     """Manages alert state tracking, change detection, and notifications."""
 
     def __init__(self, config_dir: str, settings: AlertSettings | None = None):
+        """Initialize the instance."""
         self.config_dir = Path(config_dir)
         self.config_dir.mkdir(parents=True, exist_ok=True)
 

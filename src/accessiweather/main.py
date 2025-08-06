@@ -16,7 +16,7 @@ def main(
     enable_caching: bool = True,
     portable_mode: bool = False,
 ):
-    """Main entry point for the application.
+    """Run the application.
 
     Args:
         config_dir: Configuration directory, defaults to ~/.accessiweather

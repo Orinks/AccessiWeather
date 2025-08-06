@@ -19,6 +19,7 @@ class AlertNotificationSystem:
     """Enhanced notification system with user controls and accessibility features."""
 
     def __init__(self, alert_manager: AlertManager, notifier: SafeDesktopNotifier | None = None):
+        """Initialize the instance."""
         self.alert_manager = alert_manager
         self.notifier = notifier or SafeDesktopNotifier()
 
@@ -205,6 +206,7 @@ class AlertNotificationPreferences:
     """User preferences for alert notifications."""
 
     def __init__(self):
+        """Initialize the instance."""
         # Severity preferences
         self.notify_extreme = True
         self.notify_severe = True

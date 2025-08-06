@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 def main():
-    """Main entry point for the simplified AccessiWeather application."""
+    """Run the simplified AccessiWeather application."""
     try:
         logger.info("Starting simplified AccessiWeather application")
 

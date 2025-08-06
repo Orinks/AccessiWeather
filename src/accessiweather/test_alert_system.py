@@ -128,6 +128,7 @@ async def test_notification_system():
         # Use a mock notifier for testing
         class MockNotifier:
             def __init__(self):
+                """Initialize the instance."""
                 self.notifications_sent = []
 
             def send_notification(self, title, message, timeout=10):
@@ -208,7 +209,7 @@ async def run_all_tests():
 
 
 def main():
-    """Main test runner."""
+    """Run all tests."""
     success = asyncio.run(run_all_tests())
     if not success:
         exit(1)

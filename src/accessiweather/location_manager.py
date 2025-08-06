@@ -17,6 +17,7 @@ class LocationManager:
     """Simple location manager with geocoding support."""
 
     def __init__(self):
+        """Initialize the instance."""
         self.timeout = 10.0
         self.geocoding_base_url = "https://nominatim.openstreetmap.org"
 
