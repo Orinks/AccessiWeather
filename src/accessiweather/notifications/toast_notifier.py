@@ -30,11 +30,20 @@ class SafeDesktopNotifier:
     interface compatible with the existing codebase.
     """
 
-    def __init__(self, app_name: str = "AccessiWeather"):
+    def __init__(
+        self,
+        app_name: str = "AccessiWeather",
+        sound_enabled: bool = True,
+        soundpack: str | None = None,
+    ):
         """Initialize the desktop notifier wrapper."""
         self.app_name = app_name
         self._loop = None
         self._thread = None
+
+        # Sound configuration
+        self.sound_enabled: bool = bool(sound_enabled)
+        self.soundpack: str = soundpack or "default"
 
         if not DESKTOP_NOTIFIER_AVAILABLE:
             logger.warning("Desktop notifier not available, notifications will be logged only")
@@ -124,10 +133,22 @@ class SafeDesktopNotifier:
         """Send a notification synchronously."""
         if not DESKTOP_NOTIFIER_AVAILABLE:
             logger.info(f"Notification (desktop notifier unavailable): {title} - {message}")
+            # Still play sound if configured, as a basic cue
+            if self.sound_enabled:
+                try:
+                    play_notification_sound("alert", self.soundpack)
+                except Exception as e:
+                    logger.debug(f"Sound playback failed (no notifier): {e}")
             return True
 
         try:
             self._run_async(self._send_notification_async(title, message, timeout))
+            # Play alert sound for weather alerts when enabled
+            if self.sound_enabled:
+                try:
+                    play_notification_sound("alert", self.soundpack)
+                except Exception as e:
+                    logger.debug(f"Sound playback failed: {e}")
             return True
         except Exception as e:
             logger.warning(f"Failed to send notification: {str(e)}")
@@ -143,11 +164,15 @@ class SafeToastNotifier:
 
     def __init__(self, sound_enabled: bool = True, soundpack: str | None = None):
         """Initialize the instance."""
-        self.sound_enabled: bool = sound_enabled
+        self.sound_enabled: bool = bool(sound_enabled)
         self.soundpack: str = soundpack if soundpack is not None else "default"
-        self.soundpack = self.soundpack  # keep the pack name/dir for use with the new API
+        # Initialize underlying desktop notifier with sound preferences as well
         if DESKTOP_NOTIFIER_AVAILABLE:
-            self._desktop_notifier = SafeDesktopNotifier()
+            self._desktop_notifier = SafeDesktopNotifier(
+                app_name="AccessiWeather",
+                sound_enabled=self.sound_enabled,
+                soundpack=self.soundpack,
+            )
         else:
             self._desktop_notifier = None
 
@@ -186,7 +211,12 @@ class SafeToastNotifier:
             # Play sound if enabled
             if self.sound_enabled:
                 try:
-                    play_notification_sound(alert_type, self.soundpack)
+                    # Map alert_type to supported sound events
+                    # Use 'alert' for urgent/alert types, 'notify' for general notifications
+                    sound_event = (
+                        "alert" if str(alert_type).lower() in ("urgent", "alert") else "notify"
+                    )
+                    play_notification_sound(sound_event, self.soundpack)
                 except Exception as e:
                     logger.error(f"Failed to play notification sound: {e}")
 
