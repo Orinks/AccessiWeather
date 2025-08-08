@@ -631,7 +631,23 @@ class AccessiWeatherApp(toga.App):
             if settings_saved:
                 # Refresh UI after settings change
                 self._update_location_selection()
-                logger.info("Settings updated successfully")
+
+                # Apply updated runtime settings to notifier and alert system
+                try:
+                    config = self.config_manager.get_config()
+                    if self._notifier:
+                        self._notifier.sound_enabled = bool(
+                            getattr(config.settings, "sound_enabled", True)
+                        )
+                        self._notifier.soundpack = getattr(config.settings, "sound_pack", "default")
+                    if self.alert_manager:
+                        # Update alert manager sound and notification-related settings
+                        self.alert_manager.update_settings(config.settings.to_alert_settings())
+                    logger.info("Settings updated successfully and applied to runtime components")
+                except Exception as apply_err:
+                    logger.warning(
+                        f"Settings saved but failed to apply to runtime components: {apply_err}"
+                    )
 
         except Exception as e:
             logger.error(f"Failed to show settings dialog: {e}")
@@ -1141,11 +1157,15 @@ class AccessiWeatherApp(toga.App):
             return True  # Still allow exit even if cleanup fails
 
     def _on_test_notification_pressed(self, widget):
-        """Send a test notification using desktop-notifier."""
+        """Send a test notification using desktop-notifier.
+
+        Use the 'notify' sound to reflect the current sound pack selection.
+        """
         try:
             self._notifier.send_notification(
                 title="Test Notification",
                 message="This is a test notification from AccessiWeather (Debug Mode)",
+                sound_event="notify",  # ensure test uses non-alert notification sound
             )
             logger.info("Test notification sent successfully.")
             self._update_status("Test notification sent.")
