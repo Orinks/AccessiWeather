@@ -10,7 +10,6 @@ by severity and finally to generic defaults.
 from __future__ import annotations
 
 import re
-from typing import Iterable, List, Tuple
 
 from ..models import WeatherAlert
 
@@ -44,7 +43,11 @@ def _contains_token(text: str | None, token: str) -> bool:
 def _extract_alert_type(alert: WeatherAlert) -> str | None:
     # Look at event and headline/title for NWS-style type words
     for key in KNOWN_ALERT_TYPE_KEYS:
-        if _contains_token(alert.event, key) or _contains_token(alert.headline, key) or _contains_token(alert.title, key):
+        if (
+            _contains_token(alert.event, key)
+            or _contains_token(alert.headline, key)
+            or _contains_token(alert.title, key)
+        ):
             return key
     return None
 
@@ -66,21 +69,95 @@ def _normalize_severity(sev: str | None) -> str | None:
     return alias if alias in KNOWN_SEVERITY_KEYS else None
 
 
-def get_candidate_sound_events(alert: WeatherAlert) -> List[str]:
+HAZARD_KEYWORDS = {
+    # core
+    "flood": ["flood"],
+    "tornado": ["tornado"],
+    "heat": ["heat", "excessive heat"],
+    "wind": ["wind", "high wind"],
+    "winter": ["winter", "winter storm"],
+    "snow": ["snow", "heavy snow"],
+    "ice": ["ice", "freezing rain", "freezing drizzle"],
+    "thunderstorm": ["thunderstorm", "severe thunderstorm"],
+    "hurricane": ["hurricane"],
+    "fire": ["fire", "red flag"],
+    "fog": ["fog", "dense fog"],
+    "dust": ["dust", "blowing dust"],
+    "air_quality": ["air quality", "smoke"],
+}
+
+
+def _extract_hazard(alert: WeatherAlert) -> str | None:
+    text = " ".join(
+        [
+            getattr(alert, "event", "") or "",
+            getattr(alert, "headline", "") or "",
+            getattr(alert, "title", "") or "",
+            getattr(alert, "description", "") or "",
+        ]
+    ).lower()
+    for hazard_key, phrases in HAZARD_KEYWORDS.items():
+        for phrase in phrases:
+            if phrase in text:
+                return hazard_key
+    return None
+
+
+def _normalize_event_to_key(text: str | None) -> str | None:
+    """Normalize an alert event/title/headline to a pack key.
+
+    Example: "Excessive Heat Watch" -> "excessive_heat_watch"
+    """
+    if not text:
+        return None
+    import re as _re
+
+    s = text.strip().lower()
+    # Replace any non-alphanumeric with underscores
+    s = _re.sub(r"[^a-z0-9]+", "_", s)
+    # Collapse multiple underscores
+    s = _re.sub(r"_+", "_", s)
+    # Trim leading/trailing underscores
+    s = s.strip("_")
+    return s or None
+
+
+def get_candidate_sound_events(alert: WeatherAlert) -> list[str]:
     """Return an ordered list of candidate sound event keys for an alert.
 
     Order of preference:
-    - Specific alert type (warning/watch/advisory/statement) if detected
+    - Exact normalized event key from alert.event (e.g., excessive_heat_watch)
+    - Hazard + Type (e.g., flood_warning) if both can be detected
+    - Hazard + Severity (e.g., heat_extreme) if detected
+    - Hazard only (e.g., flood, heat)
+    - Specific alert type (warning/watch/advisory/statement)
     - Severity level (extreme/severe/moderate/minor)
     - Generic fallbacks (alert, notify)
     """
     candidates: list[str] = []
 
-    atype = _extract_alert_type(alert)
-    if atype:
-        candidates.append(atype)
+    # Exact normalized event key first
+    normalized_event = _normalize_event_to_key(getattr(alert, "event", None))
+    if normalized_event:
+        candidates.append(normalized_event)
 
+    atype = _extract_alert_type(alert)
     sev = _normalize_severity(getattr(alert, "severity", None))
+    hazard = _extract_hazard(alert)
+
+    # Hazard combinations next
+    if hazard and atype:
+        candidates.append(f"{hazard}_{atype}")
+    if hazard and sev:
+        key = f"{hazard}_{sev}"
+        if key not in candidates:
+            candidates.append(key)
+    if hazard and hazard not in candidates:
+        candidates.append(hazard)
+
+    # Then type and severity
+    if atype and atype not in candidates:
+        candidates.append(atype)
     if sev and sev not in candidates:
         candidates.append(sev)
 
@@ -94,4 +171,3 @@ def get_candidate_sound_events(alert: WeatherAlert) -> List[str]:
 def choose_sound_event(alert: WeatherAlert) -> str:
     """Return the preferred sound event key for this alert (first candidate)."""
     return get_candidate_sound_events(alert)[0]
-

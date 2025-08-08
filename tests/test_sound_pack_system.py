@@ -339,7 +339,7 @@ from accessiweather.notifications.sound_player import (
 
 
 def test_alert_sound_mapper_candidates_warning_first():
-    """Alert with 'Warning' in event should prefer type over severity."""
+    """Alert with 'Warning' in event should prefer exact event key first, then type."""
     alert = WeatherAlert(
         title="Tornado Warning",
         description="",
@@ -347,9 +347,10 @@ def test_alert_sound_mapper_candidates_warning_first():
         event="Tornado Warning",
     )
     candidates = get_candidate_sound_events(alert)
-    # First candidate should be 'warning'
-    assert candidates[0] == "warning"
-    # Should include severity and generic fallbacks
+    # Exact normalized event should be first
+    assert candidates[0] == "tornado_warning"
+    # Type and severity should be present as fallbacks
+    assert "warning" in candidates
     assert "severe" in candidates
     assert candidates[-2:] == ["alert", "notify"]
 
@@ -362,7 +363,8 @@ def test_alert_sound_mapper_candidates_watch():
         event="Flood Watch",
     )
     candidates = get_candidate_sound_events(alert)
-    assert candidates[0] == "watch"
+    assert candidates[0] == "flood_watch"
+    assert "watch" in candidates
     assert "moderate" in candidates
 
 
@@ -415,3 +417,41 @@ def test_get_sound_file_for_candidates_resolution(tmp_path):
 
 if __name__ == "__main__":
     pytest.main([__file__])
+
+
+def test_alert_sound_mapper_hazard_flood_warning_candidates():
+    from accessiweather.notifications.alert_sound_mapper import get_candidate_sound_events
+
+    alert = WeatherAlert(
+        title="Flood Warning",
+        description="",
+        severity="Severe",
+        event="Flood Warning",
+        headline="Flood Warning for the area",
+    )
+    candidates = get_candidate_sound_events(alert)
+    # Hazard+type should come first if detected
+    assert candidates[0] == "flood_warning"
+    # Should include hazard-only and type as well
+    assert "flood" in candidates
+    assert "warning" in candidates
+    assert "severe" in candidates
+
+
+def test_alert_sound_mapper_hazard_heat_watch_candidates():
+    from accessiweather.notifications.alert_sound_mapper import get_candidate_sound_events
+
+    alert = WeatherAlert(
+        title="Excessive Heat Watch",
+        description="",
+        severity="Extreme",
+        event="Excessive Heat Watch",
+        headline="Excessive Heat Watch in effect",
+    )
+    candidates = get_candidate_sound_events(alert)
+    # Exact normalized event should come first now
+    assert candidates[0] == "excessive_heat_watch"
+    assert "heat_watch" in candidates
+    assert "heat" in candidates
+    assert "watch" in candidates
+    assert "extreme" in candidates

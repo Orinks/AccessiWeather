@@ -5,6 +5,7 @@ previewing sounds, and selecting different sound packs.
 """
 
 import asyncio
+import contextlib
 import json
 import logging
 import shutil
@@ -241,6 +242,28 @@ class SoundPackManagerDialog:
         mapping_row.add(self.mapping_browse_button)
         mapping_row.add(self.mapping_preview_button)
         panel.add(mapping_row)
+        # Simpler controls for non-technical users: Add a custom key mapping directly
+        simple_map_box = toga.Box(style=Pack(direction=ROW, padding_bottom=10))
+        simple_label = toga.Label("Add or change a mapping:", style=Pack(padding_right=10))
+        self.simple_key_input = toga.TextInput(
+            placeholder="e.g., excessive_heat_warning or tornado_warning",
+            style=Pack(width=260, margin_right=10),
+            tooltip=(
+                "Type any key to map (examples: excessive_heat_warning, flash_flood_watch, tornado_warning).\n"
+                "Built-ins also work: warning, watch, advisory, statement, extreme, severe, moderate, minor, alert, notify"
+            ),
+        )
+        self.simple_file_button = toga.Button(
+            "Choose Sound...", on_press=self._on_simple_choose_file, style=Pack(margin_right=10)
+        )
+        self.simple_remove_button = toga.Button(
+            "Remove Mapping", on_press=self._on_simple_remove_mapping
+        )
+        simple_map_box.add(simple_label)
+        simple_map_box.add(self.simple_key_input)
+        simple_map_box.add(self.simple_file_button)
+        simple_map_box.add(self.simple_remove_button)
+        panel.add(simple_map_box)
 
         # Sound action buttons
         sound_button_box = toga.Box(style=Pack(direction=ROW, padding_bottom=10))
@@ -256,6 +279,29 @@ class SoundPackManagerDialog:
         panel.add(sound_button_box)
 
         return panel
+
+        # Simpler controls for non-technical users: Add a custom key mapping directly
+        simple_map_box = toga.Box(style=Pack(direction=ROW, padding_bottom=10))
+        simple_label = toga.Label("Add or change a mapping:", style=Pack(padding_right=10))
+        self.simple_key_input = toga.TextInput(
+            placeholder="e.g., flood_warning or heat",
+            style=Pack(width=240, margin_right=10),
+            tooltip=(
+                "You can type any key to map (examples: flood_warning, heat_watch, tornado, alert).\n"
+                "Supported built-ins: warning, watch, advisory, statement, extreme, severe, moderate, minor, alert, notify"
+            ),
+        )
+        self.simple_file_button = toga.Button(
+            "Choose Sound...", on_press=self._on_simple_choose_file, style=Pack(margin_right=10)
+        )
+        self.simple_remove_button = toga.Button(
+            "Remove Mapping", on_press=self._on_simple_remove_mapping
+        )
+        simple_map_box.add(simple_label)
+        simple_map_box.add(self.simple_key_input)
+        simple_map_box.add(self.simple_file_button)
+        simple_map_box.add(self.simple_remove_button)
+        panel.add(simple_map_box)
 
     def _create_button_panel(self) -> toga.Box:
         """Create the bottom button panel."""
@@ -499,6 +545,129 @@ class SoundPackManagerDialog:
         except Exception as e:
             logger.error(f"Failed to open import dialog: {e}")
             self.app.main_window.error_dialog("Import Error", f"Failed to open import dialog: {e}")
+
+    def _on_simple_choose_file(self, widget) -> None:
+        """Simplified: pick a file and map it to the entered key, copying into the pack."""
+        if not self.selected_pack or self.selected_pack not in self.sound_packs:
+            return
+        key = (self.simple_key_input.value or "").strip().lower()
+        if not key:
+            self.app.main_window.info_dialog("Missing Key", "Please enter a mapping key first.")
+            return
+
+        def _apply(_, path=None):
+            if not path:
+                return
+            try:
+                pack_info = self.sound_packs[self.selected_pack]
+                pack_json_path = pack_info["path"] / "pack.json"
+                with open(pack_json_path, encoding="utf-8") as f:
+                    meta = json.load(f)
+                sounds = meta.get("sounds", {})
+                if not isinstance(sounds, dict):
+                    sounds = {}
+                rel_name = Path(path).name
+                sounds[key] = rel_name
+                meta["sounds"] = sounds
+                with open(pack_json_path, "w", encoding="utf-8") as f:
+                    json.dump(meta, f, indent=2)
+                dst = pack_info["path"] / rel_name
+                if Path(path) != dst:
+                    with contextlib.suppress(Exception):
+                        shutil.copy2(path, dst)
+                pack_info["sounds"] = sounds
+                self._update_pack_details()
+                self.app.main_window.info_dialog(
+                    "Mapping Updated", f"Mapped '{key}' to '{rel_name}'."
+                )
+            except Exception as e:
+                logger.error(f"Failed to update mapping: {e}")
+                self.app.main_window.error_dialog("Mapping Error", f"Failed to update mapping: {e}")
+
+        self.app.main_window.open_file_dialog(
+            title="Select Audio File",
+            file_types=["wav", "mp3", "ogg", "flac"],
+            on_result=_apply,
+        )
+
+    def _on_simple_remove_mapping(self, widget) -> None:
+        """Remove the entered mapping key from the pack.json (no file deletes)."""
+        if not self.selected_pack or self.selected_pack not in self.sound_packs:
+            return
+        key = (self.simple_key_input.value or "").strip().lower()
+        if not key:
+            self.app.main_window.info_dialog("Missing Key", "Please enter a mapping key to remove.")
+            return
+        try:
+            pack_info = self.sound_packs[self.selected_pack]
+            pack_json_path = pack_info["path"] / "pack.json"
+            with open(pack_json_path, encoding="utf-8") as f:
+                meta = json.load(f)
+            sounds = meta.get("sounds", {}) or {}
+            if key in sounds:
+                sounds.pop(key, None)
+                meta["sounds"] = sounds
+                with open(pack_json_path, "w", encoding="utf-8") as f:
+                    json.dump(meta, f, indent=2)
+                pack_info["sounds"] = sounds
+                self._update_pack_details()
+                self.app.main_window.info_dialog("Mapping Removed", f"Removed mapping for '{key}'.")
+            else:
+                self.app.main_window.info_dialog("Not Found", f"No mapping exists for '{key}'.")
+        except Exception as e:
+            logger.error(f"Failed to remove mapping: {e}")
+            self.app.main_window.error_dialog("Remove Error", f"Failed to remove mapping: {e}")
+
+        """Import a sound pack from a ZIP file."""
+        if not path:
+            return
+
+        try:
+            with zipfile.ZipFile(path, "r") as zip_file:
+                # Check if pack.json exists in the zip
+                if "pack.json" not in zip_file.namelist():
+                    self.app.main_window.error_dialog(
+                        "Invalid Sound Pack",
+                        "The selected file is not a valid sound pack. Missing pack.json file.",
+                    )
+                    return
+
+                # Read pack.json to get pack info
+                with zip_file.open("pack.json") as f:
+                    pack_info = json.load(f)
+
+                pack_name = pack_info.get("name", "Unknown Pack")
+                pack_id = pack_name.lower().replace(" ", "_").replace("-", "_")
+
+                # Check if pack already exists
+                pack_dir = self.soundpacks_dir / pack_id
+                if pack_dir.exists():
+                    # Ask user if they want to overwrite
+                    result = self.app.main_window.question_dialog(
+                        "Pack Already Exists",
+                        f"A sound pack named '{pack_name}' already exists. Do you want to overwrite it?",
+                    )
+                    if not result:
+                        return
+
+                    # Remove existing pack
+                    shutil.rmtree(pack_dir)
+
+                # Extract the sound pack
+                pack_dir.mkdir(exist_ok=True)
+                zip_file.extractall(pack_dir)
+
+                # Reload sound packs
+                self._load_sound_packs()
+                self._refresh_pack_list()
+
+                self.app.main_window.info_dialog(
+                    "Import Successful", f"Sound pack '{pack_name}' has been imported successfully."
+                )
+
+        except Exception as e:
+            logger.error(f"Failed to import sound pack: {e}")
+            self.app.main_window.error_dialog("Import Error", f"Failed to import sound pack: {e}")
 
     def _import_pack_file(self, widget, path=None) -> None:
         """Import a sound pack from a ZIP file."""
