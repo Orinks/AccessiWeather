@@ -57,14 +57,8 @@ def get_sound_file(event: str, pack_dir: str) -> Path | None:
         return None
 
 
-def play_notification_sound(event: str, pack_dir: str) -> None:
-    """Play a notification sound for the given event and pack."""
-    sound_file = get_sound_file(event, pack_dir)
-    if not sound_file:
-        logger.warning("Sound file not found.")
-        return
-
-    # Try different sound playing methods based on platform
+def _play_sound_file(sound_file: Path) -> bool:
+    """Try to play a sound file using available backends; return True if played."""
     success = False
 
     # Method 1: Try winsound on Windows (most reliable)
@@ -79,20 +73,27 @@ def play_notification_sound(event: str, pack_dir: str) -> None:
     # Method 2: Try playsound as fallback
     if not success and playsound:
         try:
-            # Convert to short path on Windows to avoid MCI issues
             if platform.system() == "Windows":
-                # Use raw string path to avoid issues with backslashes
                 sound_path = str(sound_file).replace("\\", "/")
             else:
                 sound_path = str(sound_file)
-
             playsound(sound_path, block=False)
             success = True
             logger.debug(f"Played sound using playsound: {sound_file}")
         except Exception as e:
             logger.warning(f"playsound failed: {e}")
 
-    if not success:
+    return success
+
+
+def play_notification_sound(event: str, pack_dir: str) -> None:
+    """Play a notification sound for the given event and pack."""
+    sound_file = get_sound_file(event, pack_dir)
+    if not sound_file:
+        logger.warning("Sound file not found.")
+        return
+
+    if not _play_sound_file(sound_file):
         logger.warning("Sound playback not available or all methods failed.")
 
 
@@ -191,6 +192,16 @@ def get_sound_file_for_candidates(candidates: list[str], pack_dir: str) -> Path 
 
     # Final fallback: always use the default pack's 'alert'
     return get_sound_file(DEFAULT_EVENT, DEFAULT_PACK)
+
+
+def play_notification_sound_candidates(candidates: list[str], pack_dir: str) -> None:
+    """Play the first available sound from a list of candidate event keys."""
+    sound_file = get_sound_file_for_candidates(candidates, pack_dir)
+    if not sound_file:
+        logger.warning("No candidate sound file found.")
+        return
+    if not _play_sound_file(sound_file):
+        logger.warning("Sound playback not available or all methods failed.")
 
 
 def validate_sound_pack(pack_path: Path) -> tuple[bool, str]:

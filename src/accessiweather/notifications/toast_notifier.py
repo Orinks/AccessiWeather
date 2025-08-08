@@ -129,14 +129,29 @@ class SafeDesktopNotifier:
             logger.error(f"Failed to create or use notifier in worker thread: {e}")
             raise
 
-    def send_notification(self, title: str, message: str, timeout: int = 10) -> bool:
-        """Send a notification synchronously."""
+    def send_notification(
+        self,
+        title: str,
+        message: str,
+        timeout: int = 10,
+        *,
+        sound_event: str | None = None,
+        sound_candidates: list[str] | None = None,
+    ) -> bool:
+        """Send a notification synchronously.
+
+        Optionally specify a specific sound_event or a list of sound_candidates
+        to determine which sound to play. candidates take precedence over event.
+        """
         if not DESKTOP_NOTIFIER_AVAILABLE:
             logger.info(f"Notification (desktop notifier unavailable): {title} - {message}")
             # Still play sound if configured, as a basic cue
             if self.sound_enabled:
                 try:
-                    play_notification_sound("alert", self.soundpack)
+                    if sound_candidates:
+                        play_notification_sound_candidates(sound_candidates, self.soundpack)
+                    else:
+                        play_notification_sound(sound_event or "alert", self.soundpack)
                 except Exception as e:
                     logger.debug(f"Sound playback failed (no notifier): {e}")
             return True
@@ -146,7 +161,10 @@ class SafeDesktopNotifier:
             # Play alert sound for weather alerts when enabled
             if self.sound_enabled:
                 try:
-                    play_notification_sound("alert", self.soundpack)
+                    if sound_candidates:
+                        play_notification_sound_candidates(sound_candidates, self.soundpack)
+                    else:
+                        play_notification_sound(sound_event or "alert", self.soundpack)
                 except Exception as e:
                     logger.debug(f"Sound playback failed: {e}")
             return True

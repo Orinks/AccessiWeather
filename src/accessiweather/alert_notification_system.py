@@ -128,11 +128,21 @@ class AlertNotificationSystem:
                 expires_str = alert.expires.strftime("%I:%M %p on %m/%d")
                 message += f"\n\nExpires: {expires_str}"
 
-            # Send the notification
+            # Compute sound candidates based on alert content
+            try:
+                from .notifications.alert_sound_mapper import get_candidate_sound_events
+
+                sound_candidates = get_candidate_sound_events(alert)
+            except Exception:
+                # Fallback if mapper not available
+                sound_candidates = None
+
+            # Send the notification, providing candidate-based sound selection
             success = self.notifier.send_notification(
                 title=title,
                 message=message,
                 timeout=15,  # Longer timeout for weather alerts
+                sound_candidates=sound_candidates,
             )
 
             if success:
