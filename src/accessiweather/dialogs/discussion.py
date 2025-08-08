@@ -41,14 +41,14 @@ class ForecastDiscussionDialog:
         title = f"Area Forecast Discussion - {self.location_name}"
         self.window = toga.Window(title=title, size=(800, 600))
 
-        main_box = toga.Box(style=Pack(direction=COLUMN, padding=15))
+        main_box = toga.Box(style=Pack(direction=COLUMN, margin=15))
 
         # Simple header without unnecessary descriptive text
-        header_box = toga.Box(style=Pack(direction=COLUMN, padding_bottom=10))
+        header_box = toga.Box(style=Pack(direction=COLUMN, margin_bottom=10))
 
         title_label = toga.Label(
             "Area Forecast Discussion",
-            style=Pack(font_size=16, font_weight="bold", padding_bottom=10),
+            style=Pack(font_size=16, font_weight="bold", margin_bottom=10),
         )
 
         header_box.add(title_label)
@@ -60,21 +60,21 @@ class ForecastDiscussionDialog:
             readonly=True,
             style=Pack(
                 flex=1,
-                padding=5,
+                margin=5,
                 font_family="monospace",  # Monospace for better AFD formatting
             ),
         )
         main_box.add(self.text_display)
 
         # Button box for better layout
-        button_box = toga.Box(style=Pack(direction=ROW, padding_top=15))
+        button_box = toga.Box(style=Pack(direction=ROW, margin_top=15))
 
         # Add some spacing
         spacer = toga.Box(style=Pack(flex=1))
         button_box.add(spacer)
 
         self.close_button = toga.Button(
-            "Close", on_press=self._on_close, style=Pack(width=100, padding_left=10)
+            "Close", on_press=self._on_close, style=Pack(width=100, margin_left=10)
         )
         button_box.add(self.close_button)
 

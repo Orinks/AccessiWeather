@@ -98,16 +98,16 @@ class SoundPackManagerDialog:
             resizable=True,
         )
 
-        main_box = toga.Box(style=Pack(direction=COLUMN, padding=10, flex=1))
+        main_box = toga.Box(style=Pack(direction=COLUMN, margin=10, flex=1))
 
         # Title
         title_label = toga.Label(
-            "Sound Pack Manager", style=Pack(font_size=16, font_weight="bold", padding_bottom=10)
+            "Sound Pack Manager", style=Pack(font_size=16, font_weight="bold", margin_bottom=10)
         )
         main_box.add(title_label)
 
         # Content area
-        content_box = toga.Box(style=Pack(direction=ROW, flex=1, padding_bottom=10))
+        content_box = toga.Box(style=Pack(direction=ROW, flex=1, margin_bottom=10))
 
         # Left panel - Sound pack list
         left_panel = self._create_pack_list_panel()
@@ -141,18 +141,18 @@ class SoundPackManagerDialog:
 
     def _create_pack_list_panel(self) -> toga.Box:
         """Create the sound pack list panel."""
-        panel = toga.Box(style=Pack(direction=COLUMN, flex=1, padding_right=10))
+        panel = toga.Box(style=Pack(direction=COLUMN, flex=1, margin_right=10))
 
         # Panel title
         title_label = toga.Label(
-            "Available Sound Packs", style=Pack(font_weight="bold", padding_bottom=5)
+            "Available Sound Packs", style=Pack(font_weight="bold", margin_bottom=5)
         )
         panel.add(title_label)
 
         # Pack list
         self.pack_list = toga.DetailedList(
             on_select=self._on_pack_selected,
-            style=Pack(flex=1, padding_bottom=10),
+            style=Pack(flex=1, margin_bottom=10),
         )
         panel.add(self.pack_list)
 
@@ -166,35 +166,35 @@ class SoundPackManagerDialog:
 
     def _create_pack_details_panel(self) -> toga.Box:
         """Create the pack details panel."""
-        panel = toga.Box(style=Pack(direction=COLUMN, flex=2, padding_left=10))
+        panel = toga.Box(style=Pack(direction=COLUMN, flex=2, margin_left=10))
 
         # Panel title
         title_label = toga.Label(
-            "Sound Pack Details", style=Pack(font_weight="bold", padding_bottom=5)
+            "Sound Pack Details", style=Pack(font_weight="bold", margin_bottom=5)
         )
         panel.add(title_label)
 
         # Pack info box
         self.pack_info_box = toga.Box(
-            style=Pack(direction=COLUMN, padding=10, background_color="#f0f0f0")
+            style=Pack(direction=COLUMN, margin=10, background_color="#f0f0f0")
         )
 
         self.pack_name_label = toga.Label(
-            "No pack selected", style=Pack(font_size=14, font_weight="bold", padding_bottom=5)
+            "No pack selected", style=Pack(font_size=14, font_weight="bold", margin_bottom=5)
         )
         self.pack_info_box.add(self.pack_name_label)
 
-        self.pack_author_label = toga.Label("", style=Pack(padding_bottom=5))
+        self.pack_author_label = toga.Label("", style=Pack(margin_bottom=5))
         self.pack_info_box.add(self.pack_author_label)
 
-        self.pack_description_label = toga.Label("", style=Pack(padding_bottom=10))
+        self.pack_description_label = toga.Label("", style=Pack(margin_bottom=10))
         self.pack_info_box.add(self.pack_description_label)
 
         panel.add(self.pack_info_box)
 
         # Sounds section
         sounds_label = toga.Label(
-            "Sounds in this pack:", style=Pack(font_weight="bold", padding=(10, 0, 5, 0))
+            "Sounds in this pack:", style=Pack(font_weight="bold", margin=(10, 0, 5, 0))
         )
         panel.add(sounds_label)
 
@@ -203,15 +203,15 @@ class SoundPackManagerDialog:
             items=[],
             accessor="display_name",
             on_change=self._on_sound_selected,
-            style=Pack(flex=1, padding_bottom=10),
+            style=Pack(flex=1, margin_bottom=10),
         )
         panel.add(self.sound_selection)
 
         # Mapping controls header and help text (no widget tooltips; Toga tooltips are for Commands)
-        mapping_header = toga.Box(style=Pack(direction=ROW, padding_bottom=5))
+        mapping_header = toga.Box(style=Pack(direction=ROW, margin_bottom=5))
         mapping_label = toga.Label(
             "Alert type/severity mapping:",
-            style=Pack(font_weight="bold", padding_right=5),
+            style=Pack(font_weight="bold", margin_right=5),
         )
         mapping_header.add(mapping_label)
         panel.add(mapping_header)
@@ -223,7 +223,7 @@ class SoundPackManagerDialog:
         )
 
         # Mapping controls: key dropdown + file picker + preview
-        mapping_row = toga.Box(style=Pack(direction=ROW, padding_bottom=10))
+        mapping_row = toga.Box(style=Pack(direction=ROW, margin_bottom=10))
         self.mapping_key_selection = toga.Selection(
             items=[k.title() for k in SUPPORTED_SOUND_KEYS],
             on_change=self._on_mapping_key_change,
@@ -244,8 +244,8 @@ class SoundPackManagerDialog:
         mapping_row.add(self.mapping_preview_button)
         panel.add(mapping_row)
         # Simpler controls for non-technical users: Add a custom key mapping directly
-        simple_map_box = toga.Box(style=Pack(direction=ROW, padding_bottom=10))
-        simple_label = toga.Label("Add or change a mapping:", style=Pack(padding_right=10))
+        simple_map_box = toga.Box(style=Pack(direction=ROW, margin_bottom=10))
+        simple_label = toga.Label("Add or change a mapping:", style=Pack(margin_right=10))
         self.simple_key_input = toga.TextInput(
             placeholder="e.g., excessive_heat_warning or tornado_warning",
             style=Pack(width=260, margin_right=10),
@@ -263,7 +263,7 @@ class SoundPackManagerDialog:
         panel.add(simple_map_box)
 
         # Sound action buttons
-        sound_button_box = toga.Box(style=Pack(direction=ROW, padding_bottom=10))
+        sound_button_box = toga.Box(style=Pack(direction=ROW, margin_bottom=10))
 
         self.preview_button = toga.Button(
             "Preview Selected Sound",

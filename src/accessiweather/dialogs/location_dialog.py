@@ -115,7 +115,7 @@ class AddLocationDialog:
         """Create the location name input section."""
         section = toga.Box(style=Pack(direction=COLUMN, margin_bottom=10))
 
-        name_label = toga.Label("Location Name:", style=Pack(font_weight="bold", padding_bottom=5))
+        name_label = toga.Label("Location Name:", style=Pack(font_weight="bold", margin_bottom=5))
         section.add(name_label)
 
         self.name_input = toga.TextInput(

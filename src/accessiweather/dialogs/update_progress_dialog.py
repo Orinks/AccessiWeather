@@ -82,23 +82,23 @@ class UpdateProgressDialog:
     def _create_dialog_content(self):
         """Create the progress dialog content."""
         # Main container
-        main_box = toga.Box(style=Pack(direction=COLUMN, padding=20))
+        main_box = toga.Box(style=Pack(direction=COLUMN, margin=20))
 
         # Status label
         self.status_label = toga.Label(
             "Preparing update...",
-            style=Pack(font_size=14, font_weight="bold", padding_bottom=10),
+            style=Pack(font_size=14, font_weight="bold", margin_bottom=10),
         )
         main_box.add(self.status_label)
 
         # Progress bar (using ActivityIndicator for now, as Toga doesn't have ProgressBar)
-        self.progress_indicator = toga.ActivityIndicator(style=Pack(padding_bottom=10))
+        self.progress_indicator = toga.ActivityIndicator(style=Pack(margin_bottom=10))
         main_box.add(self.progress_indicator)
 
         # Detail label for progress information
         self.detail_label = toga.Label(
             "Initializing...",
-            style=Pack(font_size=12, padding_bottom=15),
+            style=Pack(font_size=12, margin_bottom=15),
         )
         main_box.add(self.detail_label)
 
