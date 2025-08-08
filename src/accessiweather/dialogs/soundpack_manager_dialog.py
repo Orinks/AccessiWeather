@@ -207,19 +207,20 @@ class SoundPackManagerDialog:
         )
         panel.add(self.sound_selection)
 
-        # Mapping controls header with tooltip docs
+        # Mapping controls header and help text (no widget tooltips; Toga tooltips are for Commands)
         mapping_header = toga.Box(style=Pack(direction=ROW, padding_bottom=5))
         mapping_label = toga.Label(
             "Alert type/severity mapping:",
             style=Pack(font_weight="bold", padding_right=5),
-            tooltip=(
-                "Supported keys: warning, watch, advisory, statement; "
-                "severities: extreme, severe, moderate, minor; "
-                "fallbacks: alert, notify"
-            ),
         )
         mapping_header.add(mapping_label)
         panel.add(mapping_header)
+        panel.add(
+            toga.Label(
+                "Supported keys: warning, watch, advisory, statement; severities: extreme, severe, moderate, minor; fallbacks: alert, notify",
+                style=Pack(margin_bottom=5),
+            )
+        )
 
         # Mapping controls: key dropdown + file picker + preview
         mapping_row = toga.Box(style=Pack(direction=ROW, padding_bottom=10))
@@ -248,10 +249,6 @@ class SoundPackManagerDialog:
         self.simple_key_input = toga.TextInput(
             placeholder="e.g., excessive_heat_warning or tornado_warning",
             style=Pack(width=260, margin_right=10),
-            tooltip=(
-                "Type any key to map (examples: excessive_heat_warning, flash_flood_watch, tornado_warning).\n"
-                "Built-ins also work: warning, watch, advisory, statement, extreme, severe, moderate, minor, alert, notify"
-            ),
         )
         self.simple_file_button = toga.Button(
             "Choose Sound...", on_press=self._on_simple_choose_file, style=Pack(margin_right=10)
@@ -286,10 +283,6 @@ class SoundPackManagerDialog:
         self.simple_key_input = toga.TextInput(
             placeholder="e.g., flood_warning or heat",
             style=Pack(width=240, margin_right=10),
-            tooltip=(
-                "You can type any key to map (examples: flood_warning, heat_watch, tornado, alert).\n"
-                "Supported built-ins: warning, watch, advisory, statement, extreme, severe, moderate, minor, alert, notify"
-            ),
         )
         self.simple_file_button = toga.Button(
             "Choose Sound...", on_press=self._on_simple_choose_file, style=Pack(margin_right=10)
