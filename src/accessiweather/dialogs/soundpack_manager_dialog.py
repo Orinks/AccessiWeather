@@ -128,7 +128,7 @@ class SoundPackManagerDialog:
         # Populate the pack list with loaded sound packs
         self._refresh_pack_list()
 
-        # Select current pack if available
+        # Select current pack if available (for focus), but do not change app setting here
         if self.current_pack in self.sound_packs:
             self.selected_pack = self.current_pack
             # Find and set the current pack in the detailed list
@@ -776,8 +776,14 @@ class SoundPackManagerDialog:
                 )
 
     def _on_select_pack(self, widget) -> None:
-        """Select the current sound pack."""
+        """Select the current sound pack within the manager UI.
+
+        This does NOT change the app's active sound pack. The authoritative selection
+        happens in the Settings dialog general tab. Here we only close the manager
+        and return focus.
+        """
         if self.selected_pack:
+            # Keep self.current_pack for focus purposes, but do not propagate as app setting
             self.current_pack = self.selected_pack
             self.dialog.close()
 

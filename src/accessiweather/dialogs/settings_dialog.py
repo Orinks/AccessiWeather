@@ -637,30 +637,33 @@ class SettingsDialog:
         self.sound_pack_selection.enabled = enabled
 
     async def _on_manage_soundpacks(self, widget):
-        """Open the sound pack manager dialog."""
+        """Open the sound pack manager dialog.
+
+        Note: The Sound Pack Manager is for importing, editing, and managing packs.
+        The current pack selection is controlled by the selection widget in this Settings dialog.
+        """
         try:
             from .soundpack_manager_dialog import SoundPackManagerDialog
 
-            # Get current sound pack
-            current_pack = getattr(self.current_settings, "sound_pack", "default")
+            # Preserve the currently selected pack from settings (authoritative)
+            current_pack_id = getattr(self.current_settings, "sound_pack", "default")
 
-            # Open sound pack manager
-            manager = SoundPackManagerDialog(self.app, current_pack)
-            selected_pack = await manager.show()
+            # Open the manager focused on the current pack; do not treat its selection as app setting
+            manager = SoundPackManagerDialog(self.app, current_pack_id)
+            await manager.show()
 
-            # Update sound pack selection if changed
-            if selected_pack != current_pack:
-                # Update the sound pack selection widget
-                self._load_sound_packs()  # Reload available packs
+            # After the manager closes, just refresh the available pack list (packs may have changed)
+            self._load_sound_packs()
+            self.sound_pack_selection.items = self.sound_pack_options
 
-                # Update the selection widget items
-                self.sound_pack_selection.items = self.sound_pack_options
-
-                # Find and select the new pack
-                for display_name, pack_id in self.sound_pack_map.items():
-                    if pack_id == selected_pack:
-                        self.sound_pack_selection.value = display_name
-                        break
+            # Keep showing the current pack if it still exists; otherwise fall back to first option
+            for display_name, pack_id in self.sound_pack_map.items():
+                if pack_id == current_pack_id:
+                    self.sound_pack_selection.value = display_name
+                    break
+            else:
+                if self.sound_pack_options:
+                    self.sound_pack_selection.value = self.sound_pack_options[0]
 
         except Exception as e:
             logger.error(f"Failed to open sound pack manager: {e}")
