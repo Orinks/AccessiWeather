@@ -290,17 +290,17 @@ class AccessiWeatherApp(toga.App):
         logger.info("Creating main UI")
 
         # Main container
-        main_box = toga.Box(style=Pack(direction=COLUMN, padding=10))
+        main_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
 
         # Title
         title_label = toga.Label(
             "AccessiWeather",
-            style=Pack(text_align="center", font_size=18, font_weight="bold", padding_bottom=10),
+            style=Pack(text_align="center", font_size=18, font_weight="bold", margin_bottom=10),
         )
         main_box.add(title_label)
 
         # Status label
-        self.status_label = toga.Label("Ready", style=Pack(padding_bottom=10, font_style="italic"))
+        self.status_label = toga.Label("Ready", style=Pack(margin_bottom=10, font_style="italic"))
         main_box.add(self.status_label)
 
         # Location selection section
@@ -325,7 +325,7 @@ class AccessiWeatherApp(toga.App):
             self.test_notification_button = toga.Button(
                 "Send Test Notification",
                 on_press=self._on_test_notification_pressed,
-                style=Pack(padding_top=10, background_color="#e0e0e0"),
+                style=Pack(margin_top=10, background_color="#e0e0e0"),
             )
             main_box.add(self.test_notification_button)
 
@@ -342,9 +342,9 @@ class AccessiWeatherApp(toga.App):
 
     def _create_location_section(self) -> toga.Box:
         """Create the location selection section."""
-        location_box = toga.Box(style=Pack(direction=ROW, padding_bottom=10))
+        location_box = toga.Box(style=Pack(direction=ROW, margin_bottom=10))
 
-        location_label = toga.Label("Location:", style=Pack(width=80, padding_right=10))
+        location_label = toga.Label("Location:", style=Pack(width=80, margin_right=10))
 
         # Get location choices
         location_names = self._get_location_choices()
@@ -369,22 +369,22 @@ class AccessiWeatherApp(toga.App):
 
         # Current conditions
         conditions_label = toga.Label(
-            "Current Conditions:", style=Pack(font_weight="bold", padding_top=10, padding_bottom=5)
+            "Current Conditions:", style=Pack(font_weight="bold", margin_top=10, margin_bottom=5)
         )
         weather_box.add(conditions_label)
 
         self.current_conditions_display = toga.MultilineTextInput(
-            readonly=True, style=Pack(height=120, padding_bottom=10)
+            readonly=True, style=Pack(height=120, margin_bottom=10)
         )
         self.current_conditions_display.value = "No current conditions data available."
         weather_box.add(self.current_conditions_display)
 
         # Forecast
-        forecast_label = toga.Label("Forecast:", style=Pack(font_weight="bold", padding_bottom=5))
+        forecast_label = toga.Label("Forecast:", style=Pack(font_weight="bold", margin_bottom=5))
         weather_box.add(forecast_label)
 
         self.forecast_display = toga.MultilineTextInput(
-            readonly=True, style=Pack(height=200, padding_bottom=10)
+            readonly=True, style=Pack(height=200, margin_bottom=10)
         )
         self.forecast_display.value = "No forecast data available."
         weather_box.add(self.forecast_display)
@@ -393,20 +393,20 @@ class AccessiWeatherApp(toga.App):
         self.discussion_button = toga.Button(
             "View Forecast Discussion",
             on_press=self._on_discussion_pressed,
-            style=Pack(padding_bottom=10),
+            style=Pack(margin_bottom=10),
         )
         weather_box.add(self.discussion_button)
 
         # Alerts
         alerts_label = toga.Label(
-            "Weather Alerts:", style=Pack(font_weight="bold", padding_bottom=5)
+            "Weather Alerts:", style=Pack(font_weight="bold", margin_bottom=5)
         )
         weather_box.add(alerts_label)
 
         self.alerts_table = toga.Table(
             headings=["Event", "Severity", "Headline"],
             data=[],
-            style=Pack(height=150, padding_bottom=10),
+            style=Pack(height=150, margin_bottom=10),
             on_select=self._on_alert_selected,
         )
         weather_box.add(self.alerts_table)
@@ -415,7 +415,7 @@ class AccessiWeatherApp(toga.App):
         self.alert_details_button = toga.Button(
             "View Alert Details",
             on_press=self._on_alert_details_pressed,
-            style=Pack(padding_bottom=10),
+            style=Pack(margin_bottom=10),
             enabled=False,  # Disabled until an alert is selected
         )
         weather_box.add(self.alert_details_button)
@@ -424,23 +424,23 @@ class AccessiWeatherApp(toga.App):
 
     def _create_control_buttons_section(self) -> toga.Box:
         """Create the control buttons section (matching wx interface)."""
-        buttons_box = toga.Box(style=Pack(direction=ROW, padding_top=10))
+        buttons_box = toga.Box(style=Pack(direction=ROW, margin_top=10))
 
         # Add location button
         self.add_button = toga.Button(
-            "Add", on_press=self._on_add_location_pressed, style=Pack(padding_right=5)
+            "Add", on_press=self._on_add_location_pressed, style=Pack(margin_right=5)
         )
         buttons_box.add(self.add_button)
 
         # Remove location button
         self.remove_button = toga.Button(
-            "Remove", on_press=self._on_remove_location_pressed, style=Pack(padding_right=5)
+            "Remove", on_press=self._on_remove_location_pressed, style=Pack(margin_right=5)
         )
         buttons_box.add(self.remove_button)
 
         # Refresh button
         self.refresh_button = toga.Button(
-            "Refresh", on_press=self._on_refresh_pressed, style=Pack(padding_right=5)
+            "Refresh", on_press=self._on_refresh_pressed, style=Pack(margin_right=5)
         )
         buttons_box.add(self.refresh_button)
 
