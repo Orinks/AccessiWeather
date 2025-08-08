@@ -1240,11 +1240,15 @@ class AccessiWeatherApp(toga.App):
             return True  # Still allow exit even if cleanup fails
 
     def _on_test_notification_pressed(self, widget):
-        """Send a test notification using desktop-notifier."""
+        """Send a test notification using desktop-notifier.
+
+        Use the 'notify' sound to reflect the current sound pack selection.
+        """
         try:
             self._notifier.send_notification(
                 title="Test Notification",
                 message="This is a test notification from AccessiWeather (Debug Mode)",
+                sound_event="notify",  # ensure test uses non-alert notification sound
             )
             logger.info("Test notification sent successfully.")
             self._update_status("Test notification sent.")
