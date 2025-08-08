@@ -148,6 +148,51 @@ def get_sound_pack_sounds(pack_dir: str) -> dict[str, str]:
         return {}
 
 
+def get_sound_file_for_candidates(candidates: list[str], pack_dir: str) -> Path | None:
+    """Resolve a sound file trying multiple candidate event keys, with fallbacks.
+
+    Tries the given pack first across all candidates, then falls back to the
+    default pack. If still nothing is found, falls back to the default 'alert'
+    event in the current pack (which itself may fall back to the default pack).
+    """
+    # Try in the requested pack
+    pack_path = SOUNDPACKS_DIR / pack_dir
+    pack_json = pack_path / "pack.json"
+
+    def _load_sounds(_pack_json: Path) -> dict[str, Any]:
+        try:
+            with open(_pack_json, encoding="utf-8") as f:
+                meta: dict[str, Any] = json.load(f)
+            sounds = meta.get("sounds", {})
+            return sounds if isinstance(sounds, dict) else {}
+        except Exception:
+            return {}
+
+    # Candidate search in requested pack
+    if pack_json.exists():
+        sounds = _load_sounds(pack_json)
+        for event in candidates:
+            # Prefer explicit mapping if present; otherwise try event.wav
+            filename = sounds.get(event) or f"{event}.wav"
+            candidate_path = pack_path / filename
+            if candidate_path.exists():
+                return candidate_path
+
+    # Fall back to default pack for candidates
+    default_pack_path = SOUNDPACKS_DIR / DEFAULT_PACK
+    default_pack_json = default_pack_path / "pack.json"
+    if default_pack_json.exists():
+        default_sounds = _load_sounds(default_pack_json)
+        for event in candidates:
+            filename = default_sounds.get(event) or f"{event}.wav"
+            candidate_path = default_pack_path / filename
+            if candidate_path.exists():
+                return candidate_path
+
+    # Final fallback: always use the default pack's 'alert'
+    return get_sound_file(DEFAULT_EVENT, DEFAULT_PACK)
+
+
 def validate_sound_pack(pack_path: Path) -> tuple[bool, str]:
     """Validate a sound pack directory.
 

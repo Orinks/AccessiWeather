@@ -328,5 +328,90 @@ class TestSoundPackManagerDialog:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+# --- New tests for alert sound mapping and candidate resolution ---
+from accessiweather.models import WeatherAlert
+from accessiweather.notifications.alert_sound_mapper import (
+    get_candidate_sound_events,
+)
+from accessiweather.notifications.sound_player import (
+    get_sound_file_for_candidates,
+)
+
+
+def test_alert_sound_mapper_candidates_warning_first():
+    """Alert with 'Warning' in event should prefer type over severity."""
+    alert = WeatherAlert(
+        title="Tornado Warning",
+        description="",
+        severity="Severe",
+        event="Tornado Warning",
+    )
+    candidates = get_candidate_sound_events(alert)
+    # First candidate should be 'warning'
+    assert candidates[0] == "warning"
+    # Should include severity and generic fallbacks
+    assert "severe" in candidates
+    assert candidates[-2:] == ["alert", "notify"]
+
+
+def test_alert_sound_mapper_candidates_watch():
+    alert = WeatherAlert(
+        title="Flood Watch",
+        description="",
+        severity="Moderate",
+        event="Flood Watch",
+    )
+    candidates = get_candidate_sound_events(alert)
+    assert candidates[0] == "watch"
+    assert "moderate" in candidates
+
+
+def test_get_sound_file_for_candidates_resolution(tmp_path):
+    """Resolver should pick first available key in pack, falling back appropriately."""
+    # Create a test pack
+    pack_dir = tmp_path / "theme"
+    pack_dir.mkdir(parents=True, exist_ok=True)
+    pack_json = {
+        "name": "Theme",
+        "sounds": {
+            # Intentionally omit 'warning' to force fallback to 'severe'
+            "severe": "sev.wav",
+            "alert": "alert.wav",
+        },
+    }
+    (pack_dir / "sev.wav").write_bytes(b"x")
+    (pack_dir / "alert.wav").write_bytes(b"y")
+    import json as _json
+
+    with open(pack_dir / "pack.json", "w", encoding="utf-8") as f:
+        _json.dump(pack_json, f)
+
+    # Patch SOUNDPACKS_DIR to tmp dir containing our pack and a default
+    default_dir = tmp_path / "default"
+    default_dir.mkdir(exist_ok=True)
+    with open(default_dir / "pack.json", "w", encoding="utf-8") as f:
+        _json.dump({"name": "Default", "sounds": {"alert": "alert.wav"}}, f)
+    (default_dir / "alert.wav").write_bytes(b"z")
+
+    from unittest.mock import patch as _patch
+
+    with _patch("accessiweather.notifications.sound_player.SOUNDPACKS_DIR", tmp_path):
+        # Prefer 'severe' since 'warning' missing in pack
+        p = get_sound_file_for_candidates(["warning", "severe", "alert"], "theme")
+        assert p is not None
+        assert p.name == "sev.wav"
+
+        # If candidate only 'warning', should fall back to 'alert' (present in pack)
+        p2 = get_sound_file_for_candidates(["warning"], "theme")
+        assert p2 is not None
+        assert p2.name == "alert.wav"
+
+        # If pack missing both, fall back to default's alert
+        p3 = get_sound_file_for_candidates(["warning", "watch"], "theme")
+        assert p3 is not None
+        assert p3.parent.name == "default"
+        assert p3.name == "alert.wav"
+
+
 if __name__ == "__main__":
     pytest.main([__file__])
