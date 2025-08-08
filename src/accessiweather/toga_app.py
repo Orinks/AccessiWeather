@@ -179,7 +179,11 @@ class AccessiWeatherApp(toga.App):
         # Notification system
         from .notifications.toast_notifier import SafeDesktopNotifier
 
-        self._notifier = SafeDesktopNotifier()
+        # Initialize notifier with sound preferences
+        self._notifier = SafeDesktopNotifier(
+            sound_enabled=bool(getattr(config.settings, "sound_enabled", True)),
+            soundpack=getattr(config.settings, "sound_pack", "default"),
+        )
 
         # Initialize alert management system
         from .alert_manager import AlertManager

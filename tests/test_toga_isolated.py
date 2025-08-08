@@ -29,6 +29,7 @@ class TestTogaBasics:
     @pytest.mark.asyncio
     async def test_basic_async_functionality(self):
         """Test basic async functionality works."""
+
         async def simple_task():
             await asyncio.sleep(0.01)
             return "async_works"
@@ -40,6 +41,7 @@ class TestTogaBasics:
         """Test that toga-dummy can be imported."""
         try:
             import toga_dummy
+
             assert toga_dummy is not None
         except ImportError:
             pytest.skip("toga-dummy not available")
@@ -47,6 +49,7 @@ class TestTogaBasics:
     @pytest.mark.asyncio
     async def test_asyncio_timeout(self):
         """Test asyncio timeout functionality."""
+
         async def quick_task():
             await asyncio.sleep(0.001)
             return "completed"
@@ -84,7 +87,7 @@ class TestTogaBasics:
             "name": "Test Location",
             "temperature": 75.0,
             "condition": "Sunny",
-            "timestamp": "2025-06-29T12:00:00Z"
+            "timestamp": "2025-06-29T12:00:00Z",
         }
 
         assert test_data["name"] == "Test Location"
@@ -94,16 +97,13 @@ class TestTogaBasics:
     @pytest.mark.asyncio
     async def test_concurrent_tasks(self):
         """Test concurrent async task execution."""
+
         async def task(delay, result):
             await asyncio.sleep(delay)
             return result
 
         # Run multiple tasks concurrently
-        tasks = [
-            task(0.01, "task1"),
-            task(0.02, "task2"),
-            task(0.01, "task3")
-        ]
+        tasks = [task(0.01, "task1"), task(0.02, "task2"), task(0.01, "task3")]
 
         results = await asyncio.gather(*tasks)
         assert results == ["task1", "task2", "task3"]
