@@ -15,6 +15,20 @@ import toga
 from toga.style import Pack
 from travertino.constants import COLUMN, ROW
 
+# Supported alert keys for mapping
+SUPPORTED_SOUND_KEYS = [
+    "warning",
+    "watch",
+    "advisory",
+    "statement",
+    "extreme",
+    "severe",
+    "moderate",
+    "minor",
+    "alert",
+    "notify",
+]
+
 logger = logging.getLogger(__name__)
 
 
@@ -192,11 +206,47 @@ class SoundPackManagerDialog:
         )
         panel.add(self.sound_selection)
 
+        # Mapping controls header with tooltip docs
+        mapping_header = toga.Box(style=Pack(direction=ROW, padding_bottom=5))
+        mapping_label = toga.Label(
+            "Alert type/severity mapping:",
+            style=Pack(font_weight="bold", padding_right=5),
+            tooltip=(
+                "Supported keys: warning, watch, advisory, statement; "
+                "severities: extreme, severe, moderate, minor; "
+                "fallbacks: alert, notify"
+            ),
+        )
+        mapping_header.add(mapping_label)
+        panel.add(mapping_header)
+
+        # Mapping controls: key dropdown + file picker + preview
+        mapping_row = toga.Box(style=Pack(direction=ROW, padding_bottom=10))
+        self.mapping_key_selection = toga.Selection(
+            items=[k.title() for k in SUPPORTED_SOUND_KEYS],
+            on_change=self._on_mapping_key_change,
+            style=Pack(width=200, margin_right=10),
+        )
+        self.mapping_file_input = toga.TextInput(
+            readonly=True, placeholder="Select audio file...", style=Pack(flex=1, margin_right=10)
+        )
+        self.mapping_browse_button = toga.Button(
+            "Browse...", on_press=self._on_browse_mapping_file, style=Pack(margin_right=10)
+        )
+        self.mapping_preview_button = toga.Button(
+            "Preview", on_press=self._on_preview_mapping, enabled=False
+        )
+        mapping_row.add(self.mapping_key_selection)
+        mapping_row.add(self.mapping_file_input)
+        mapping_row.add(self.mapping_browse_button)
+        mapping_row.add(self.mapping_preview_button)
+        panel.add(mapping_row)
+
         # Sound action buttons
         sound_button_box = toga.Box(style=Pack(direction=ROW, padding_bottom=10))
 
         self.preview_button = toga.Button(
-            "Preview Sound",
+            "Preview Selected Sound",
             on_press=self._on_preview_sound,
             enabled=False,
             style=Pack(margin_right=10),
@@ -285,6 +335,111 @@ class SoundPackManagerDialog:
             )
 
         self.sound_selection.items = sound_items
+
+    def _on_mapping_key_change(self, widget) -> None:
+        """When the mapping key changes, populate the file input with current mapping if present."""
+        try:
+            if not self.selected_pack or self.selected_pack not in self.sound_packs:
+                return
+            pack_info = self.sound_packs[self.selected_pack]
+            sounds = pack_info.get("sounds", {})
+            key = (widget.value or "").strip().lower()
+            current = sounds.get(key, "")
+            self.mapping_file_input.value = current
+            # Enable preview if file exists
+            if current:
+                sound_path = pack_info["path"] / current
+                self.mapping_preview_button.enabled = (
+                    sound_path.exists() and sound_path.stat().st_size > 0
+                )
+            else:
+                self.mapping_preview_button.enabled = False
+        except Exception as e:
+            logger.warning(f"Failed to update mapping input: {e}")
+
+    def _on_browse_mapping_file(self, widget) -> None:
+        """Open a file dialog to choose an audio file for the selected key."""
+        if not self.selected_pack or self.selected_pack not in self.sound_packs:
+            return
+        key_label = (self.mapping_key_selection.value or "").strip()
+        if not key_label:
+            return
+        try:
+            # Choose audio file
+            def _apply_file_choice(_, path=None):
+                if not path:
+                    return
+                try:
+                    pack_info = self.sound_packs[self.selected_pack]
+                    rel_name = Path(path).name  # store filename relative to pack
+                    # Update pack.json
+                    pack_json_path = pack_info["path"] / "pack.json"
+                    with open(pack_json_path, encoding="utf-8") as f:
+                        meta = json.load(f)
+                    sounds = meta.get("sounds", {})
+                    if not isinstance(sounds, dict):
+                        sounds = {}
+                    key = key_label.lower()
+                    sounds[key] = rel_name
+                    meta["sounds"] = sounds
+                    with open(pack_json_path, "w", encoding="utf-8") as f:
+                        json.dump(meta, f, indent=2)
+                    # Copy file into pack if not already there
+                    dst = pack_info["path"] / rel_name
+                    if Path(path) != dst:
+                        try:
+                            shutil.copy2(path, dst)
+                        except Exception as copy_err:
+                            logger.warning(f"Could not copy audio file: {copy_err}")
+                    # Update in-memory data and UI
+                    pack_info["sounds"] = sounds
+                    self.mapping_file_input.value = rel_name
+                    self._update_pack_details()
+                    self.app.main_window.info_dialog(
+                        "Mapping Updated",
+                        f"Mapped '{key_label}' to '{rel_name}' in pack '{pack_info.get('name', self.selected_pack)}'.",
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to update mapping: {e}")
+                    self.app.main_window.error_dialog(
+                        "Mapping Error", f"Failed to update mapping: {e}"
+                    )
+
+            self.app.main_window.open_file_dialog(
+                title="Select Audio File",
+                file_types=["wav", "mp3", "ogg", "flac"],
+                on_result=_apply_file_choice,
+            )
+        except Exception as e:
+            logger.error(f"Failed to open file dialog: {e}")
+            self.app.main_window.error_dialog(
+                "File Dialog Error", f"Failed to open file dialog: {e}"
+            )
+
+    def _on_preview_mapping(self, widget) -> None:
+        """Preview the audio currently mapped for the selected key."""
+        try:
+            if not self.selected_pack or self.selected_pack not in self.sound_packs:
+                return
+            key_label = (self.mapping_key_selection.value or "").strip()
+            if not key_label:
+                return
+            pack_info = self.sound_packs[self.selected_pack]
+            sounds = pack_info.get("sounds", {})
+            filename = sounds.get(key_label.lower()) or f"{key_label.lower()}.wav"
+            sound_path = pack_info["path"] / filename
+            if not sound_path.exists():
+                self.app.main_window.info_dialog(
+                    "Sound Not Available",
+                    f"The sound file '{filename}' is not available in this pack.",
+                )
+                return
+            from ..notifications.sound_player import _play_sound_file
+
+            _play_sound_file(sound_path)
+        except Exception as e:
+            logger.error(f"Failed to preview mapping: {e}")
+            self.app.main_window.error_dialog("Preview Error", f"Failed to preview mapping: {e}")
 
     def _on_sound_selected(self, widget) -> None:
         """Handle sound selection."""
