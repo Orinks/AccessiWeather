@@ -1,7 +1,8 @@
 """Sound pack management dialog for AccessiWeather.
 
 This module provides a dialog for managing sound packs, including importing new packs,
-previewing sounds, and selecting different sound packs.
+previewing sounds, and managing/editing pack contents. The active pack is selected
+in Settings > General and is not changed from this manager.
 """
 
 import asyncio
@@ -162,6 +163,14 @@ class SoundPackManagerDialog:
         )
         panel.add(self.import_button)
 
+        # Quick hint: Active pack is selected in Settings > General
+        panel.add(
+            toga.Label(
+                "Hint: Select your active pack in Settings > General.",
+                style=Pack(margin_top=8, font_style="italic"),
+            )
+        )
+
         return panel
 
     def _create_pack_details_panel(self) -> toga.Box:
@@ -277,25 +286,6 @@ class SoundPackManagerDialog:
 
         return panel
 
-        # Simpler controls for non-technical users: Add a custom key mapping directly
-        simple_map_box = toga.Box(style=Pack(direction=ROW, padding_bottom=10))
-        simple_label = toga.Label("Add or change a mapping:", style=Pack(padding_right=10))
-        self.simple_key_input = toga.TextInput(
-            placeholder="e.g., flood_warning or heat",
-            style=Pack(width=240, margin_right=10),
-        )
-        self.simple_file_button = toga.Button(
-            "Choose Sound...", on_press=self._on_simple_choose_file, style=Pack(margin_right=10)
-        )
-        self.simple_remove_button = toga.Button(
-            "Remove Mapping", on_press=self._on_simple_remove_mapping
-        )
-        simple_map_box.add(simple_label)
-        simple_map_box.add(self.simple_key_input)
-        simple_map_box.add(self.simple_file_button)
-        simple_map_box.add(self.simple_remove_button)
-        panel.add(simple_map_box)
-
     def _create_button_panel(self) -> toga.Box:
         """Create the bottom button panel."""
         button_box = toga.Box(style=Pack(direction=ROW))
@@ -303,6 +293,42 @@ class SoundPackManagerDialog:
         # Add flexible space to push buttons to the right
         button_box.add(toga.Box(style=Pack(flex=1)))
 
+        # Create New Pack
+        self.create_button = toga.Button(
+            "Create New",
+            on_press=self._on_create_pack,
+            style=Pack(margin_right=10),
+        )
+        button_box.add(self.create_button)
+
+        # Duplicate Selected Pack
+        self.duplicate_button = toga.Button(
+            "Duplicate",
+            on_press=self._on_duplicate_pack,
+            enabled=False,
+            style=Pack(margin_right=10),
+        )
+        button_box.add(self.duplicate_button)
+
+        # Edit Metadata of Selected Pack
+        self.edit_button = toga.Button(
+            "Edit",
+            on_press=self._on_edit_pack,
+            enabled=False,
+            style=Pack(margin_right=10),
+        )
+        button_box.add(self.edit_button)
+
+        # Open Selected Pack (focus/manage only; does not change active pack)
+        self.select_button = toga.Button(
+            "Open",
+            on_press=self._on_open_pack,
+            enabled=False,
+            style=Pack(margin_right=10, background_color="#4CAF50", color="#ffffff"),
+        )
+        button_box.add(self.select_button)
+
+        # Delete Selected Pack
         self.delete_button = toga.Button(
             "Delete Pack",
             on_press=self._on_delete_pack,
@@ -310,14 +336,6 @@ class SoundPackManagerDialog:
             style=Pack(margin_right=10, background_color="#ff4444", color="#ffffff"),
         )
         button_box.add(self.delete_button)
-
-        self.select_button = toga.Button(
-            "Select Pack",
-            on_press=self._on_select_pack,
-            enabled=False,
-            style=Pack(margin_right=10, background_color="#4CAF50", color="#ffffff"),
-        )
-        button_box.add(self.select_button)
 
         self.close_button = toga.Button(
             "Close", on_press=self._on_close, style=Pack(margin_right=0)
@@ -337,6 +355,10 @@ class SoundPackManagerDialog:
 
         # Enable buttons
         self.select_button.enabled = True
+        if hasattr(self, "duplicate_button"):
+            self.duplicate_button.enabled = True
+        if hasattr(self, "edit_button"):
+            self.edit_button.enabled = True
         self.delete_button.enabled = (
             self.selected_pack != "default"
         )  # Don't allow deleting default pack
@@ -611,6 +633,7 @@ class SoundPackManagerDialog:
             logger.error(f"Failed to remove mapping: {e}")
             self.app.main_window.error_dialog("Remove Error", f"Failed to remove mapping: {e}")
 
+    def _import_pack_file(self, widget, path: str | None = None) -> None:
         """Import a sound pack from a ZIP file."""
         if not path:
             return
@@ -657,59 +680,6 @@ class SoundPackManagerDialog:
                 self.app.main_window.info_dialog(
                     "Import Successful", f"Sound pack '{pack_name}' has been imported successfully."
                 )
-
-        except Exception as e:
-            logger.error(f"Failed to import sound pack: {e}")
-            self.app.main_window.error_dialog("Import Error", f"Failed to import sound pack: {e}")
-
-    def _import_pack_file(self, widget, path=None) -> None:
-        """Import a sound pack from a ZIP file."""
-        if not path:
-            return
-
-        try:
-            with zipfile.ZipFile(path, "r") as zip_file:
-                # Check if pack.json exists in the zip
-                if "pack.json" not in zip_file.namelist():
-                    self.app.main_window.error_dialog(
-                        "Invalid Sound Pack",
-                        "The selected file is not a valid sound pack. Missing pack.json file.",
-                    )
-                    return
-
-                # Read pack.json to get pack info
-                with zip_file.open("pack.json") as f:
-                    pack_info = json.load(f)
-
-                pack_name = pack_info.get("name", "Unknown Pack")
-                pack_id = pack_name.lower().replace(" ", "_").replace("-", "_")
-
-                # Check if pack already exists
-                pack_dir = self.soundpacks_dir / pack_id
-                if pack_dir.exists():
-                    # Ask user if they want to overwrite
-                    result = self.app.main_window.question_dialog(
-                        "Pack Already Exists",
-                        f"A sound pack named '{pack_name}' already exists. Do you want to overwrite it?",
-                    )
-                    if not result:
-                        return
-
-                    # Remove existing pack
-                    shutil.rmtree(pack_dir)
-
-                # Extract the sound pack
-                pack_dir.mkdir(exist_ok=True)
-                zip_file.extractall(pack_dir)
-
-                # Reload sound packs
-                self._load_sound_packs()
-                self._refresh_pack_list()
-
-                self.app.main_window.info_dialog(
-                    "Import Successful", f"Sound pack '{pack_name}' has been imported successfully."
-                )
-
         except Exception as e:
             logger.error(f"Failed to import sound pack: {e}")
             self.app.main_window.error_dialog("Import Error", f"Failed to import sound pack: {e}")
@@ -775,17 +745,192 @@ class SoundPackManagerDialog:
                     "Delete Error", f"Failed to delete sound pack: {e}"
                 )
 
-    def _on_select_pack(self, widget) -> None:
-        """Select the current sound pack within the manager UI.
+    def _on_create_pack(self, widget) -> None:
+        """Create a new, empty sound pack with default metadata and no sounds.
 
-        This does NOT change the app's active sound pack. The authoritative selection
-        happens in the Settings dialog general tab. Here we only close the manager
-        and return focus.
+        Generates a unique pack ID (custom_1, custom_2, ...), writes a minimal
+        pack.json, reloads the list, and focuses the new pack.
+        """
+        try:
+            # Find a unique pack ID
+            base = "custom"
+            idx = 1
+            while True:
+                pack_id = f"{base}_{idx}"
+                pack_dir = self.soundpacks_dir / pack_id
+                if not pack_dir.exists():
+                    break
+                idx += 1
+
+            pack_dir.mkdir(parents=True, exist_ok=False)
+            meta = {
+                "name": f"Custom Pack {idx}",
+                "author": "",
+                "description": "A new custom sound pack.",
+                "sounds": {
+                    # Provide common placeholders users can map later
+                    "alert": "alert.wav",
+                    "notify": "notify.wav",
+                },
+            }
+            with open(pack_dir / "pack.json", "w", encoding="utf-8") as f:
+                json.dump(meta, f, indent=2)
+
+            # Refresh in-memory state and UI
+            self._load_sound_packs()
+            self._refresh_pack_list()
+            self.selected_pack = pack_id
+            self.current_pack = pack_id
+            self._update_pack_details()
+
+            if hasattr(self, "duplicate_button"):
+                self.duplicate_button.enabled = True
+            if hasattr(self, "edit_button"):
+                self.edit_button.enabled = True
+            if hasattr(self, "select_button"):
+                self.select_button.enabled = True
+            if hasattr(self, "delete_button"):
+                self.delete_button.enabled = pack_id != "default"
+
+            self.app.main_window.info_dialog(
+                "Pack Created", f"Created new sound pack '{meta['name']}' (ID: {pack_id})."
+            )
+        except Exception as e:
+            logger.error(f"Failed to create sound pack: {e}")
+            self.app.main_window.error_dialog("Create Error", f"Failed to create sound pack: {e}")
+
+    def _on_duplicate_pack(self, widget) -> None:
+        """Duplicate the currently selected pack into a new pack directory."""
+        if not self.selected_pack or self.selected_pack not in self.sound_packs:
+            return
+        try:
+            src_info = self.sound_packs[self.selected_pack]
+            src_dir = src_info.get("path")
+            if not src_dir or not src_dir.exists():
+                return
+
+            # Compute unique destination
+            base = f"{self.selected_pack}_copy"
+            candidate = base
+            suffix = 2
+            while (self.soundpacks_dir / candidate).exists():
+                candidate = f"{base}{suffix}"
+                suffix += 1
+            dst_dir = self.soundpacks_dir / candidate
+
+            shutil.copytree(src_dir, dst_dir)
+
+            # Update metadata name to indicate copy
+            pack_json_path = dst_dir / "pack.json"
+            try:
+                with open(pack_json_path, encoding="utf-8") as f:
+                    meta = json.load(f)
+            except Exception:
+                meta = {}
+            name = meta.get("name", candidate)
+            if "(Copy)" not in name:
+                meta["name"] = f"{name} (Copy)"
+            with open(pack_json_path, "w", encoding="utf-8") as f:
+                json.dump(meta, f, indent=2)
+
+            self._load_sound_packs()
+            self._refresh_pack_list()
+            self.selected_pack = candidate
+            self.current_pack = candidate
+            self._update_pack_details()
+
+            self.app.main_window.info_dialog(
+                "Pack Duplicated",
+                f"Duplicated '{src_info.get('name', self.selected_pack)}' to '{meta.get('name', candidate)}'.",
+            )
+        except Exception as e:
+            logger.error(f"Failed to duplicate sound pack: {e}")
+            self.app.main_window.error_dialog(
+                "Duplicate Error", f"Failed to duplicate sound pack: {e}"
+            )
+
+    def _on_edit_pack(self, widget) -> None:
+        """Open a small editor to modify name, author, and description of the pack."""
+        if not self.selected_pack or self.selected_pack not in self.sound_packs:
+            return
+
+        pack_info = self.sound_packs[self.selected_pack]
+        pack_json_path = pack_info["path"] / "pack.json"
+
+        # Load existing metadata
+        meta = {}
+        try:
+            with open(pack_json_path, encoding="utf-8") as f:
+                meta = json.load(f)
+        except Exception:
+            meta = {}
+
+        # Create a simple modal window with inputs
+        edit_win = toga.Window(title="Edit Sound Pack Metadata", size=(480, 300), resizable=False)
+        box = toga.Box(style=Pack(direction=COLUMN, padding=10))
+
+        name_input = toga.TextInput(
+            value=meta.get("name", self.selected_pack), style=Pack(margin_bottom=8)
+        )
+        author_input = toga.TextInput(value=meta.get("author", ""), style=Pack(margin_bottom=8))
+        desc_input = toga.MultilineTextInput(
+            value=meta.get("description", ""), style=Pack(flex=1, margin_bottom=8)
+        )
+
+        box.add(toga.Label("Name:"))
+        box.add(name_input)
+        box.add(toga.Label("Author:"))
+        box.add(author_input)
+        box.add(toga.Label("Description:"))
+        box.add(desc_input)
+
+        btn_row = toga.Box(style=Pack(direction=ROW))
+
+        def _save_changes(_):
+            try:
+                updated = {
+                    **meta,
+                    "name": (name_input.value or self.selected_pack).strip(),
+                    "author": (author_input.value or "").strip(),
+                    "description": (desc_input.value or "").strip(),
+                }
+                with open(pack_json_path, "w", encoding="utf-8") as f:
+                    json.dump(updated, f, indent=2)
+                # Update in-memory and UI
+                self._load_sound_packs()
+                self._refresh_pack_list()
+                self._update_pack_details()
+                edit_win.close()
+                self.app.main_window.info_dialog("Pack Updated", "Sound pack metadata updated.")
+            except Exception as e:
+                logger.error(f"Failed to save pack metadata: {e}")
+                self.app.main_window.error_dialog(
+                    "Save Error", f"Failed to save pack metadata: {e}"
+                )
+
+        def _cancel(_):
+            edit_win.close()
+
+        save_btn = toga.Button("Save", on_press=_save_changes, style=Pack(margin_right=10))
+        cancel_btn = toga.Button("Cancel", on_press=_cancel)
+        btn_row.add(save_btn)
+        btn_row.add(cancel_btn)
+
+        box.add(btn_row)
+        edit_win.content = box
+        self.app.windows.add(edit_win)
+        edit_win.show()
+
+    def _on_open_pack(self, widget) -> None:
+        """Open the selected pack for management.
+
+        This focuses the selected pack inside the manager. It does NOT change
+        the app's active sound pack; that selection is made in Settings > General.
         """
         if self.selected_pack:
-            # Keep self.current_pack for focus purposes, but do not propagate as app setting
             self.current_pack = self.selected_pack
-            self.dialog.close()
+            # Keep dialog open; users can edit, preview, or import assets
+            self._update_pack_details()
 
     def _on_close(self, widget) -> None:
         """Close the dialog."""
