@@ -9,7 +9,7 @@ import logging
 import sys
 import threading
 
-from .sound_player import play_notification_sound
+from .sound_player import play_notification_sound, play_notification_sound_candidates
 
 logger = logging.getLogger(__name__)
 

@@ -639,6 +639,22 @@ class AccessiWeatherApp(toga.App):
             if settings_saved:
                 # Refresh UI after settings change
                 self._update_location_selection()
+                # Apply updated runtime settings to notifier and alert system
+                try:
+                    config = self.config_manager.get_config()
+                    if self._notifier:
+                        self._notifier.sound_enabled = bool(
+                            getattr(config.settings, "sound_enabled", True)
+                        )
+                        self._notifier.soundpack = getattr(config.settings, "sound_pack", "default")
+                    if self.alert_manager:
+                        # Update alert manager sound and notification-related settings
+                        self.alert_manager.update_settings(config.settings.to_alert_settings())
+                    logger.info("Settings updated successfully and applied to runtime components")
+                except Exception as apply_err:
+                    logger.warning(
+                        f"Settings saved but failed to apply to runtime components: {apply_err}"
+                    )
                 logger.info("Settings updated successfully")
 
         except Exception as e:
