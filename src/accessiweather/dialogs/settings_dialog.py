@@ -296,8 +296,11 @@ class SettingsDialog:
         )
         general_box.add(self.sound_enabled_switch)
 
-        # Sound Pack Selection
+        # Sound Pack Selection (authoritative selector for active pack)
         self._load_sound_packs()
+
+        # Label for clarity
+        general_box.add(toga.Label("Active sound pack:", style=Pack(margin_bottom=5)))
 
         self.sound_pack_selection = toga.Selection(
             items=self.sound_pack_options,
@@ -314,7 +317,9 @@ class SettingsDialog:
             self.sound_pack_selection.value = self.sound_pack_options[0]
         general_box.add(self.sound_pack_selection)
 
-        # Manage Sound Packs Button (stub)
+        # Manage Sound Packs Button
+        # Opens manager focused on the current pack for import/edit/organize only.
+        # Active pack selection remains controlled by the selector above.
         self.manage_soundpacks_button = toga.Button(
             "Manage Sound Packs...",
             on_press=self._on_manage_soundpacks,
