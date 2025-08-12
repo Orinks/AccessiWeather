@@ -17,8 +17,8 @@ KEYS_DIR = MODULE_DIR / "keystore"
 BUILD_DIR = MODULE_DIR.parent / "build"
 
 # TUF metadata URLs (will be hosted on orinks.net)
-METADATA_BASE_URL = "https://orinks.net/updates/metadata/"
-TARGET_BASE_URL = "https://orinks.net/updates/targets/"
+METADATA_BASE_URL = "https://orinks.net/updates/metadata"
+TARGET_BASE_URL = "https://orinks.net/updates/targets"
 
 # Key configuration
 KEY_NAME = "accessiweather_key"

@@ -17,17 +17,25 @@ from typing import Any
 
 import httpx
 
+from accessiweather.version import __version__
+
 logger = logging.getLogger(__name__)
 
 # Try to import TUF components
 try:
+    import tufup
     from tufup.client import Client as TUFClient
 
     TUF_AVAILABLE = True
-    logger.info("TUF (tufup) is available")
+    tufup_version = getattr(tufup, "__version__", "unknown")
+    logger.info(f"TUF (tufup) is available - version: {tufup_version}")
 except ImportError as e:
     TUF_AVAILABLE = False
-    logger.warning(f"TUF (tufup) not available - falling back to GitHub releases: {e}")
+    logger.warning(
+        f"TUF (tufup) not available - falling back to GitHub releases. "
+        f"Install with: pip install tufup. Error: {e}"
+    )
+    logger.debug(f"Full TUF import error traceback:", exc_info=True)
 
 
 @dataclass
@@ -53,7 +61,7 @@ class UpdateSettings:
     check_interval_hours: int = 24
     repo_owner: str = "joshuakitchen"
     repo_name: str = "accessiweather"
-    tuf_repo_url: str = "https://updates.accessiweather.app"
+    tuf_repo_url: str = "https://orinks.net/updates"
 
 
 class TUFUpdateService:
@@ -197,13 +205,15 @@ class TUFUpdateService:
             logger.info("Checking TUF repository for updates...")
 
             # Use the tufup client to check for updates
-            # The pre parameter can be used for pre-release channels
+            # The pre parameter can be used for pre-release channels (PEP 440 identifiers)
             if self.settings.channel == "stable":
                 pre_release = None
             elif self.settings.channel == "beta":
-                pre_release = "beta"
+                pre_release = "b"  # PEP 440 beta identifier
             elif self.settings.channel == "dev":
-                pre_release = "dev"
+                pre_release = "a"  # PEP 440 alpha identifier
+            elif self.settings.channel == "rc":
+                pre_release = "rc"  # PEP 440 release candidate identifier
             else:
                 pre_release = None
 
@@ -334,8 +344,8 @@ class TUFUpdateService:
             # Initialize TUF client with proper parameters
             self._tuf_client = TUFClient(
                 app_name=self.app_name,
-                app_install_dir=self.config_dir / "install",  # Where updates will be installed
-                current_version="1.0.0",  # Current app version
+                app_install_dir=self.config_dir.parent / "app",  # Where updates will be installed
+                current_version=__version__,  # Current app version from version.py
                 metadata_dir=metadata_dir,
                 metadata_base_url=self.settings.tuf_repo_url,
                 target_dir=targets_dir,
@@ -412,6 +422,38 @@ class TUFUpdateService:
         except Exception as e:
             logger.error(f"Failed to download update: {e}")
             return None
+
+    def get_tuf_diagnostics(self) -> dict:
+        """Get detailed TUF diagnostics for troubleshooting.
+
+        Returns:
+            dict: Diagnostic information about TUF availability and status
+
+        """
+        diagnostics = {
+            "tuf_available": TUF_AVAILABLE,
+            "tufup_installed": False,
+            "tufup_version": None,
+            "import_error": None,
+            "installation_command": "pip install tufup",
+        }
+
+        try:
+            import tufup
+
+            diagnostics["tufup_installed"] = True
+            diagnostics["tufup_version"] = getattr(tufup, "__version__", "unknown")
+
+            # Test basic TUF client import
+            from tufup.client import Client as TUFClient
+
+            diagnostics["client_import_success"] = True
+
+        except ImportError as e:
+            diagnostics["import_error"] = str(e)
+            diagnostics["client_import_success"] = False
+
+        return diagnostics
 
     async def cleanup(self) -> None:
         """Clean up resources."""
