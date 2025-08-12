@@ -11,10 +11,9 @@ from unittest.mock import Mock, PropertyMock, patch
 
 import pytest
 
-from accessiweather.models import AppConfig, AppSettings, Location
-
 # Import simplified app components
-from accessiweather.toga_app import AccessiWeatherApp
+from accessiweather.app import AccessiWeatherApp
+from accessiweather.models import AppConfig, AppSettings, Location
 
 
 class TestAccessiWeatherAppInitialization:
@@ -136,12 +135,12 @@ class TestAccessiWeatherAppInitialization:
         app = mock_toga_app
 
         with (
-            patch("accessiweather.toga_app.ConfigManager") as mock_config_manager_class,
-            patch("accessiweather.toga_app.WeatherClient") as mock_weather_client_class,
-            patch("accessiweather.toga_app.LocationManager") as mock_location_manager_class,
-            patch("accessiweather.toga_app.WxStyleWeatherFormatter") as mock_formatter_class,
-            patch("accessiweather.toga_app.AlertManager"),
-            patch("accessiweather.toga_app.AlertNotificationSystem"),
+            patch("accessiweather.app.ConfigManager") as mock_config_manager_class,
+            patch("accessiweather.app.WeatherClient") as mock_weather_client_class,
+            patch("accessiweather.app.LocationManager") as mock_location_manager_class,
+            patch("accessiweather.app.WxStyleWeatherFormatter") as mock_formatter_class,
+            patch("accessiweather.app.AlertManager"),
+            patch("accessiweather.app.AlertNotificationSystem"),
             patch.object(app, "_initialize_system_tray"),
         ):
             # Mock the instances
@@ -321,7 +320,7 @@ class TestAccessiWeatherAppUICreation:
 # Smoke test functions that can be run with briefcase dev --test
 def test_accessiweather_app_can_be_imported():
     """Test that AccessiWeatherApp can be imported successfully."""
-    from accessiweather.toga_app import AccessiWeatherApp
+    from accessiweather.app import AccessiWeatherApp
 
     # Basic instantiation test with mock
     with patch("toga.App.__init__") as mock_init:
@@ -332,7 +331,7 @@ def test_accessiweather_app_can_be_imported():
 
 def test_accessiweather_app_basic_functionality():
     """Test basic AccessiWeatherApp functionality without GUI rendering."""
-    from accessiweather.toga_app import AccessiWeatherApp
+    from accessiweather.app import AccessiWeatherApp
 
     with patch("toga.App.__init__") as mock_init:
         mock_init.return_value = None

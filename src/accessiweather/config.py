@@ -4,6 +4,8 @@ This module provides simple configuration loading and saving using Toga's paths 
 replacing the complex configuration system with straightforward JSON-based storage.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 from datetime import datetime
@@ -20,9 +22,10 @@ class ConfigManager:
     """Simple configuration manager using Toga paths."""
 
     def __init__(self, app: toga.App):
-        """Initialize the instance."""
+        """Initialize the configuration manager with a Toga app instance."""
         self.app = app
         self.config_file = self.app.paths.config / "accessiweather.json"
+        self.config_dir = self.app.paths.config  # Add config_dir property
         self._config: AppConfig | None = None
 
         # Ensure config directory exists

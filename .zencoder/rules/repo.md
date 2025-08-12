@@ -276,9 +276,8 @@ The Toga-based implementation (`src/accessiweather/simple/`) follows a more mode
 
 ### Entry Points
 - **CLI Entry Point**: accessiweather.cli:main
-- **Main Application**: src/accessiweather/main.py
-- **Toga App**: src/accessiweather/simple/app.py
-- **Simple Main**: src/accessiweather/simple_main.py
+- **Main Application**: src/accessiweather/main.py (provides both simple_main() and main() functions)
+- **Toga App**: src/accessiweather/app.py
 
 ### Platform Support
 - **Primary**: Windows 10+

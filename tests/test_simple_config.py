@@ -12,10 +12,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from accessiweather.models import AppConfig, AppSettings
-
 # Import simplified app configuration components
-from accessiweather.simple_config import ConfigManager
+from accessiweather.config import ConfigManager
+from accessiweather.models import AppConfig, AppSettings
 
 
 class TestConfigManagerBasics:
@@ -179,7 +178,7 @@ class TestConfigManagerSettings:
 
     def test_update_settings_invalid_attribute(self, config_manager):
         """Test updating invalid settings attribute."""
-        with patch("accessiweather.simple_config.logger") as mock_logger:
+        with patch("accessiweather.config.logger") as mock_logger:
             result = config_manager.update_settings(temperature_unit="c", invalid_setting="value")
 
             assert result is True  # Should still save valid settings
@@ -604,7 +603,7 @@ class TestConfigManagerErrorHandling:
 # Smoke test functions that can be run with briefcase dev --test
 def test_config_manager_can_be_imported():
     """Test that ConfigManager can be imported successfully."""
-    from accessiweather.simple_config import ConfigManager
+    from accessiweather.config import ConfigManager
 
     # Basic instantiation test with mock app
     mock_app = Mock()
@@ -617,7 +616,7 @@ def test_config_manager_can_be_imported():
 
 def test_config_manager_basic_functionality():
     """Test basic ConfigManager functionality without complex scenarios."""
-    from accessiweather.simple_config import ConfigManager
+    from accessiweather.config import ConfigManager
 
     # Create mock app
     mock_app = Mock()

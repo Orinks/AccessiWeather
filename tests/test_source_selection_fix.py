@@ -7,8 +7,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from accessiweather.config import ConfigManager
 from accessiweather.models import AppConfig, Location
-from accessiweather.simple_config import ConfigManager
 from accessiweather.weather_client import WeatherClient
 
 

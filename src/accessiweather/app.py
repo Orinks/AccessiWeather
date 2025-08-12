@@ -177,7 +177,7 @@ class AccessiWeatherApp(toga.App):
         self.formatter = WxStyleWeatherFormatter(config.settings)
 
         # Notification system
-        from ..notifications.toast_notifier import SafeDesktopNotifier
+        from .notifications.toast_notifier import SafeDesktopNotifier
 
         # Initialize notifier with sound preferences
         self._notifier = SafeDesktopNotifier(
@@ -406,7 +406,7 @@ class AccessiWeatherApp(toga.App):
         self.alerts_table = toga.Table(
             headings=["Event", "Severity", "Headline"],
             data=[],
-            style=Pack(height=150, margin_bottom=10),
+            style=Pack(height=150, padding_bottom=10),
             on_select=self._on_alert_selected,
         )
         weather_box.add(self.alerts_table)
@@ -415,7 +415,7 @@ class AccessiWeatherApp(toga.App):
         self.alert_details_button = toga.Button(
             "View Alert Details",
             on_press=self._on_alert_details_pressed,
-            style=Pack(margin_bottom=10),
+            style=Pack(padding_bottom=10),
             enabled=False,  # Disabled until an alert is selected
         )
         weather_box.add(self.alert_details_button)
@@ -424,23 +424,23 @@ class AccessiWeatherApp(toga.App):
 
     def _create_control_buttons_section(self) -> toga.Box:
         """Create the control buttons section (matching wx interface)."""
-        buttons_box = toga.Box(style=Pack(direction=ROW, margin_top=10))
+        buttons_box = toga.Box(style=Pack(direction=ROW, padding_top=10))
 
         # Add location button
         self.add_button = toga.Button(
-            "Add", on_press=self._on_add_location_pressed, style=Pack(margin_right=5)
+            "Add", on_press=self._on_add_location_pressed, style=Pack(padding_right=5)
         )
         buttons_box.add(self.add_button)
 
         # Remove location button
         self.remove_button = toga.Button(
-            "Remove", on_press=self._on_remove_location_pressed, style=Pack(margin_right=5)
+            "Remove", on_press=self._on_remove_location_pressed, style=Pack(padding_right=5)
         )
         buttons_box.add(self.remove_button)
 
         # Refresh button
         self.refresh_button = toga.Button(
-            "Refresh", on_press=self._on_refresh_pressed, style=Pack(margin_right=5)
+            "Refresh", on_press=self._on_refresh_pressed, style=Pack(padding_right=5)
         )
         buttons_box.add(self.refresh_button)
 
@@ -489,6 +489,14 @@ class AccessiWeatherApp(toga.App):
             tooltip="Refresh weather data",
             group=toga.Group.VIEW,
         )
+
+        # Help menu commands - Update checking is now in Settings > Updates tab
+        # check_updates_cmd = toga.Command(
+        #     self._on_check_updates_pressed,
+        #     text="Check for Updates",
+        #     tooltip="Check for application updates",
+        #     group=toga.Group.HELP,
+        # )
 
         # Add commands to app (About command is automatically provided by Toga)
         self.commands.add(settings_cmd, exit_cmd, add_location_cmd, refresh_cmd)
@@ -631,7 +639,6 @@ class AccessiWeatherApp(toga.App):
             if settings_saved:
                 # Refresh UI after settings change
                 self._update_location_selection()
-
                 # Apply updated runtime settings to notifier and alert system
                 try:
                     config = self.config_manager.get_config()
@@ -648,6 +655,7 @@ class AccessiWeatherApp(toga.App):
                     logger.warning(
                         f"Settings saved but failed to apply to runtime components: {apply_err}"
                     )
+                logger.info("Settings updated successfully")
 
         except Exception as e:
             logger.error(f"Failed to show settings dialog: {e}")
@@ -657,7 +665,7 @@ class AccessiWeatherApp(toga.App):
         """Show the settings dialog and return whether settings were saved."""
         # Create a completely fresh dialog instance each time to avoid
         # "Window is already associated with an App" errors
-        settings_dialog = SettingsDialog(self, self.config_manager)
+        settings_dialog = SettingsDialog(self, self.config_manager, self.update_service)
         settings_dialog.show_and_prepare()
 
         # Wait for dialog result - the dialog handles its own cleanup
@@ -838,6 +846,89 @@ class AccessiWeatherApp(toga.App):
             "Version 2.0 - Simplified Architecture",
         )
 
+    async def _on_check_updates_pressed(self, widget):
+        """Handle check for updates menu item."""
+        if not self.update_service:
+            await self.main_window.error_dialog(
+                "Update Service Unavailable",
+                "The update service is not available. Please check your internet connection and try again.",
+            )
+            return
+
+        try:
+            # Show checking dialog
+            self._update_status("Checking for updates...")
+
+            # Check for updates
+            update_info = await self.update_service.check_for_updates()
+
+            if update_info:
+                # Update available
+                message = (
+                    f"Update Available: Version {update_info.version}\n\n"
+                    f"Current version: 2.0\n"
+                    f"New version: {update_info.version}\n\n"
+                )
+
+                if update_info.release_notes:
+                    message += f"Release Notes:\n{update_info.release_notes[:500]}"
+                    if len(update_info.release_notes) > 500:
+                        message += "..."
+
+                # Ask user if they want to download
+                should_download = await self.main_window.question_dialog(
+                    "Update Available", message + "\n\nWould you like to download this update?"
+                )
+
+                if should_download:
+                    await self._download_update(update_info)
+                else:
+                    self._update_status("Update check completed")
+            else:
+                # No updates available
+                await self.main_window.info_dialog(
+                    "No Updates Available", "You are running the latest version of AccessiWeather."
+                )
+                self._update_status("No updates available")
+
+        except Exception as e:
+            logger.error(f"Update check failed: {e}")
+            await self.main_window.error_dialog(
+                "Update Check Failed",
+                f"Failed to check for updates: {str(e)}\n\n"
+                "Please check your internet connection and try again.",
+            )
+            self._update_status("Update check failed")
+
+    async def _download_update(self, update_info):
+        """Download an available update."""
+        try:
+            self._update_status(f"Downloading update {update_info.version}...")
+
+            # Download the update
+            downloaded_file = await self.update_service.download_update(update_info)
+
+            if downloaded_file:
+                await self.main_window.info_dialog(
+                    "Update Downloaded",
+                    f"Update {update_info.version} has been downloaded successfully.\n\n"
+                    f"Location: {downloaded_file}\n\n"
+                    "Please close the application and run the installer to complete the update.",
+                )
+                self._update_status(f"Update {update_info.version} downloaded")
+            else:
+                await self.main_window.error_dialog(
+                    "Download Failed", "Failed to download the update. Please try again later."
+                )
+                self._update_status("Update download failed")
+
+        except Exception as e:
+            logger.error(f"Update download failed: {e}")
+            await self.main_window.error_dialog(
+                "Download Failed", f"Failed to download update: {str(e)}"
+            )
+            self._update_status("Update download failed")
+
     # Weather data methods
     async def _refresh_weather_data(self):
         """Refresh weather data for the current location."""
@@ -1008,6 +1099,10 @@ class AccessiWeatherApp(toga.App):
     async def _start_background_updates(self):
         """Start background weather updates."""
         try:
+            if not self.config_manager:
+                logger.warning("Config manager not available, skipping background updates")
+                return
+
             config = self.config_manager.get_config()
             update_interval = config.settings.update_interval_minutes * 60  # Convert to seconds
 
@@ -1019,7 +1114,11 @@ class AccessiWeatherApp(toga.App):
                 await asyncio.sleep(update_interval)
 
                 # Only update if we have a current location and not already updating
-                if not self.is_updating and self.config_manager.get_current_location():
+                if (
+                    not self.is_updating
+                    and self.config_manager
+                    and self.config_manager.get_current_location()
+                ):
                     logger.info("Performing background weather update")
                     await self._refresh_weather_data()
 

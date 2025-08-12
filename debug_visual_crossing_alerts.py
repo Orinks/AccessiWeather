@@ -13,11 +13,11 @@ import sys
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
-from accessiweather.simple.alert_manager import AlertManager
-from accessiweather.simple.alert_notification_system import AlertNotificationSystem
-from accessiweather.simple.models import Location
-from accessiweather.simple.visual_crossing_client import VisualCrossingClient
-from accessiweather.simple.weather_client import WeatherClient
+from accessiweather.alert_manager import AlertManager
+from accessiweather.alert_notification_system import AlertNotificationSystem
+from accessiweather.models import Location
+from accessiweather.visual_crossing_client import VisualCrossingClient
+from accessiweather.weather_client import WeatherClient
 
 # Set up logging
 logging.basicConfig(

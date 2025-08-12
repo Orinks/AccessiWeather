@@ -5,6 +5,8 @@ using BeeWare/Toga best practices, replacing the complex service layer architect
 with straightforward, direct API calls and simple data models.
 """
 
+from .app import AccessiWeatherApp, main
+from .config import ConfigManager
 from .display import WxStyleWeatherFormatter
 from .formatters import WeatherFormatter
 from .location_manager import LocationManager
@@ -21,8 +23,6 @@ from .models import (
     WeatherAlerts,
     WeatherData,
 )
-from .simple_config import ConfigManager
-from .toga_app import AccessiWeatherApp, main
 from .utils import (
     TemperatureUnit,
     convert_wind_direction_to_cardinal,
