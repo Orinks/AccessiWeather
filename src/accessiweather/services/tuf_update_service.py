@@ -323,35 +323,79 @@ class TUFUpdateService:
         return assets[0] if assets else None
 
     async def _init_tuf_client(self) -> bool:
-        """Initialize TUF client."""
+        """Initialize TUF client with comprehensive validation."""
         if not TUF_AVAILABLE:
+            logger.error("TUF not available - cannot initialize client")
             return False
 
         try:
+            logger.info("Starting TUF client initialization...")
+
+            # Perform pre-initialization validation
+            validation_result = await self._validate_tuf_configuration()
+            if not validation_result:
+                logger.error("TUF configuration validation failed")
+                return False
+
+            logger.debug("TUF configuration validation passed")
+
             # Create TUF directories
             tuf_dir = self.config_dir / "tuf"
             metadata_dir = tuf_dir / "metadata"
             targets_dir = tuf_dir / "targets"
 
-            metadata_dir.mkdir(parents=True, exist_ok=True)
-            targets_dir.mkdir(parents=True, exist_ok=True)
+            try:
+                metadata_dir.mkdir(parents=True, exist_ok=True)
+                targets_dir.mkdir(parents=True, exist_ok=True)
+                logger.debug(f"Created TUF directories: {tuf_dir}")
+            except PermissionError as e:
+                logger.error(f"Permission denied creating TUF directories: {e}")
+                return False
+            except OSError as e:
+                logger.error(f"OS error creating TUF directories: {e}")
+                return False
 
-            # Try to copy root metadata from app bundle
+            # Ensure root metadata exists and is valid
             root_path = metadata_dir / "root.json"
-            if not root_path.exists() and not self._copy_root_metadata(root_path):
-                logger.warning("Could not find root.json - TUF client may not work properly")
+            if not root_path.exists():
+                logger.info("Root metadata not found, attempting to copy from app bundle")
+                if not self._copy_root_metadata(root_path):
+                    logger.error(
+                        "Could not find or copy valid root.json - TUF client cannot be initialized"
+                    )
+                    return False
+            elif not self._validate_root_json(root_path):
+                logger.warning("Existing root.json is invalid, attempting to replace")
+                root_path.unlink(missing_ok=True)
+                if not self._copy_root_metadata(root_path):
+                    logger.error(
+                        "Could not replace invalid root.json - TUF client cannot be initialized"
+                    )
+                    return False
+
+            # Validate current version format
+            if not self._validate_version_format(__version__):
+                logger.error(f"Current version format is invalid: {__version__}")
+                return False
 
             # Initialize TUF client with proper parameters
-            self._tuf_client = TUFClient(
-                app_name=self.app_name,
-                app_install_dir=self.config_dir.parent / "app",  # Where updates will be installed
-                current_version=__version__,  # Current app version from version.py
-                metadata_dir=metadata_dir,
-                metadata_base_url=self.settings.tuf_repo_url,
-                target_dir=targets_dir,
-                target_base_url=self.settings.tuf_repo_url,
-                refresh_required=False,
-            )
+            try:
+                self._tuf_client = TUFClient(
+                    app_name=self.app_name,
+                    app_install_dir=self.config_dir.parent
+                    / "app",  # Where updates will be installed
+                    current_version=__version__,  # Current app version from version.py
+                    metadata_dir=metadata_dir,
+                    metadata_base_url=self.settings.tuf_repo_url,
+                    target_dir=targets_dir,
+                    target_base_url=self.settings.tuf_repo_url,
+                    refresh_required=False,
+                )
+                logger.debug("TUF client object created successfully")
+            except Exception as e:
+                logger.error(f"Failed to create TUF client object: {e}")
+                logger.debug("TUF client creation error details:", exc_info=True)
+                return False
 
             self._tuf_initialized = True
             logger.info("TUF client initialized successfully")
@@ -359,10 +403,11 @@ class TUFUpdateService:
 
         except Exception as e:
             logger.error(f"Failed to initialize TUF client: {e}")
+            logger.debug("TUF client initialization error details:", exc_info=True)
             return False
 
     def _copy_root_metadata(self, dest_path: Path) -> bool:
-        """Copy root.json from app bundle."""
+        """Copy root.json from app bundle with comprehensive validation."""
         try:
             # Possible locations for root.json
             possible_locations = [
@@ -373,18 +418,327 @@ class TUFUpdateService:
 
             for source_path in possible_locations:
                 if source_path.exists():
+                    logger.debug(f"Found root.json at {source_path}")
+
+                    # Validate source file before copying
+                    if not self._validate_root_json(source_path):
+                        logger.error(f"Source root.json at {source_path} is invalid")
+                        continue
+
                     import shutil
 
                     dest_path.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(source_path, dest_path)
                     logger.info(f"Copied root metadata from {source_path}")
+
+                    # Validate copied file
+                    if not self._validate_root_json(dest_path):
+                        logger.error(f"Copied root.json at {dest_path} is invalid")
+                        dest_path.unlink(missing_ok=True)
+                        return False
+
+                    logger.debug("Root metadata validation successful after copy")
                     return True
 
-            logger.warning("Could not find root.json in app bundle")
+            logger.warning("Could not find valid root.json in app bundle")
             return False
 
         except Exception as e:
             logger.error(f"Failed to copy root metadata: {e}")
+            logger.debug("Root metadata copy error details:", exc_info=True)
+            return False
+
+    def _validate_root_json(self, root_path: Path) -> bool:
+        """Validate root.json file structure and content.
+
+        Args:
+            root_path: Path to the root.json file to validate
+
+        Returns:
+            bool: True if valid, False otherwise
+
+        """
+        try:
+            if not root_path.exists():
+                logger.error(f"Root metadata file does not exist: {root_path}")
+                return False
+
+            if not root_path.is_file():
+                logger.error(f"Root metadata path is not a file: {root_path}")
+                return False
+
+            # Check file is readable
+            if not root_path.stat().st_size > 0:
+                logger.error(f"Root metadata file is empty: {root_path}")
+                return False
+
+            # Parse JSON
+            try:
+                with open(root_path, encoding="utf-8") as f:
+                    root_data = json.load(f)
+            except json.JSONDecodeError as e:
+                logger.error(f"Root metadata is not valid JSON: {e}")
+                return False
+            except UnicodeDecodeError as e:
+                logger.error(f"Root metadata has encoding issues: {e}")
+                return False
+
+            # Validate required TUF root metadata structure
+            required_fields = ["signed", "signatures"]
+            for field in required_fields:
+                if field not in root_data:
+                    logger.error(f"Root metadata missing required field: {field}")
+                    return False
+
+            # Validate signed section
+            signed = root_data["signed"]
+            required_signed_fields = ["_type", "version", "expires", "keys", "roles"]
+            for field in required_signed_fields:
+                if field not in signed:
+                    logger.error(f"Root metadata signed section missing required field: {field}")
+                    return False
+
+            # Validate metadata type
+            if signed["_type"] != "root":
+                logger.error(f"Root metadata has wrong type: {signed['_type']}")
+                return False
+
+            # Validate required roles
+            required_roles = ["root", "targets", "snapshot", "timestamp"]
+            roles = signed.get("roles", {})
+            for role in required_roles:
+                if role not in roles:
+                    logger.error(f"Root metadata missing required role: {role}")
+                    return False
+
+            # Check expiration (with import here to avoid unused import)
+            from datetime import datetime
+
+            try:
+                expires_str = signed["expires"]
+                expires_date = datetime.fromisoformat(expires_str.replace("Z", "+00:00"))
+                if expires_date < datetime.now(expires_date.tzinfo):
+                    logger.warning(f"Root metadata has expired: {expires_str}")
+                    # Don't fail validation for expired metadata, just warn
+            except (ValueError, TypeError) as e:
+                logger.warning(f"Could not parse expiration date: {e}")
+
+            # Validate signatures exist
+            signatures = root_data["signatures"]
+            if not isinstance(signatures, list) or len(signatures) == 0:
+                logger.error("Root metadata has no signatures")
+                return False
+
+            logger.debug(f"Root metadata validation successful: {root_path}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Root metadata validation failed: {e}")
+            logger.debug("Root metadata validation error details:", exc_info=True)
+            return False
+
+    async def _validate_tuf_configuration(self) -> bool:
+        """Validate TUF configuration before client initialization.
+
+        Returns:
+            bool: True if configuration is valid, False otherwise
+
+        """
+        try:
+            logger.debug("Starting TUF configuration validation")
+
+            # Validate repository URLs
+            if not await self._validate_repository_urls():
+                logger.error("Repository URL validation failed")
+                return False
+
+            # Validate TUF package version compatibility
+            if not self._validate_tuf_package():
+                logger.error("TUF package validation failed")
+                return False
+
+            # Validate configuration directory permissions
+            if not self._validate_directory_permissions():
+                logger.error("Directory permissions validation failed")
+                return False
+
+            logger.debug("TUF configuration validation completed successfully")
+            return True
+
+        except Exception as e:
+            logger.error(f"TUF configuration validation failed: {e}")
+            logger.debug("TUF configuration validation error details:", exc_info=True)
+            return False
+
+    def _validate_version_format(self, version: str) -> bool:
+        """Validate version string format.
+
+        Args:
+            version: Version string to validate
+
+        Returns:
+            bool: True if valid, False otherwise
+
+        """
+        try:
+            if not version or not isinstance(version, str):
+                logger.error(f"Version is not a valid string: {version}")
+                return False
+
+            # Basic version format validation (semantic versioning)
+            import re
+
+            version_pattern = (
+                r"^(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z0-9\-\.]+))?(?:\+([a-zA-Z0-9\-\.]+))?$"
+            )
+            if not re.match(version_pattern, version.strip()):
+                logger.error(f"Version does not match semantic versioning format: {version}")
+                return False
+
+            logger.debug(f"Version format validation successful: {version}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Version format validation failed: {e}")
+            return False
+
+    def _validate_tuf_package(self) -> bool:
+        """Validate TUF package installation and version.
+
+        Returns:
+            bool: True if valid, False otherwise
+
+        """
+        try:
+            if not TUF_AVAILABLE:
+                logger.error("TUF package is not available")
+                return False
+
+            import tufup
+
+            version = getattr(tufup, "__version__", None)
+            if not version:
+                logger.warning("Could not determine tufup version")
+                return True  # Don't fail if we can't get version
+
+            logger.debug(f"TUF package validation successful: tufup {version}")
+            return True
+
+        except Exception as e:
+            logger.error(f"TUF package validation failed: {e}")
+            return False
+
+    def _validate_directory_permissions(self) -> bool:
+        """Validate directory permissions for TUF operations.
+
+        Returns:
+            bool: True if permissions are valid, False otherwise
+
+        """
+        try:
+            # Test write permissions to config directory
+            test_file = self.config_dir / ".tuf_permission_test"
+            try:
+                test_file.write_text("test", encoding="utf-8")
+                test_file.unlink()
+                logger.debug(f"Directory permissions validation successful: {self.config_dir}")
+                return True
+            except (PermissionError, OSError) as e:
+                logger.error(f"No write permission to config directory {self.config_dir}: {e}")
+                return False
+
+        except Exception as e:
+            logger.error(f"Directory permissions validation failed: {e}")
+            return False
+
+    async def _validate_repository_urls(self) -> bool:
+        """Validate TUF repository URLs before using them.
+
+        Returns:
+            bool: True if URLs are valid, False otherwise
+
+        """
+        try:
+            from urllib.parse import urlparse
+
+            base_url = self.settings.tuf_repo_url
+            if not base_url:
+                logger.error("TUF repository URL is not configured")
+                return False
+
+            # Validate URL format
+            parsed = urlparse(base_url)
+            if not parsed.scheme or not parsed.netloc:
+                logger.error(f"Invalid TUF repository URL format: {base_url}")
+                return False
+
+            if parsed.scheme not in ["http", "https"]:
+                logger.error(f"TUF repository URL must use HTTP or HTTPS: {base_url}")
+                return False
+
+            logger.debug(f"URL format validation successful: {base_url}")
+
+            # Test connectivity to metadata and targets endpoints
+            metadata_url = f"{base_url.rstrip('/')}/metadata"
+            targets_url = f"{base_url.rstrip('/')}/targets"
+
+            # Test metadata URL
+            try:
+                logger.debug(f"Testing connectivity to metadata URL: {metadata_url}")
+                response = await self._http_client.head(metadata_url, timeout=10.0)
+                if response.status_code >= 500:
+                    logger.warning(f"Metadata URL returned server error: {response.status_code}")
+                    # Don't fail validation for server errors, just warn
+                else:
+                    logger.debug(
+                        f"Metadata URL connectivity test successful: {response.status_code}"
+                    )
+            except Exception as e:
+                logger.warning(f"Could not connect to metadata URL {metadata_url}: {e}")
+                # Don't fail validation for connectivity issues, just warn
+
+            # Test targets URL
+            try:
+                logger.debug(f"Testing connectivity to targets URL: {targets_url}")
+                response = await self._http_client.head(targets_url, timeout=10.0)
+                if response.status_code >= 500:
+                    logger.warning(f"Targets URL returned server error: {response.status_code}")
+                    # Don't fail validation for server errors, just warn
+                else:
+                    logger.debug(
+                        f"Targets URL connectivity test successful: {response.status_code}"
+                    )
+            except Exception as e:
+                logger.warning(f"Could not connect to targets URL {targets_url}: {e}")
+                # Don't fail validation for connectivity issues, just warn
+
+            # Validate SSL certificate for HTTPS URLs
+            if parsed.scheme == "https":
+                try:
+                    import socket
+                    import ssl
+
+                    logger.debug(f"Validating SSL certificate for: {parsed.netloc}")
+                    context = ssl.create_default_context()
+                    with socket.create_connection(
+                        (parsed.hostname, parsed.port or 443), timeout=10
+                    ) as sock:
+                        with context.wrap_socket(sock, server_hostname=parsed.hostname) as ssock:
+                            cert = ssock.getpeercert()
+                            if cert:
+                                logger.debug("SSL certificate validation successful")
+                            else:
+                                logger.warning("Could not retrieve SSL certificate")
+                except Exception as e:
+                    logger.warning(f"SSL certificate validation failed: {e}")
+                    # Don't fail validation for SSL issues, just warn
+
+            logger.debug("Repository URL validation completed successfully")
+            return True
+
+        except Exception as e:
+            logger.error(f"Repository URL validation failed: {e}")
+            logger.debug("Repository URL validation error details:", exc_info=True)
             return False
 
     async def download_update(
@@ -436,6 +790,12 @@ class TUFUpdateService:
             "tufup_version": None,
             "import_error": None,
             "installation_command": "pip install tufup",
+            "client_initialized": self._tuf_initialized,
+            "configuration_valid": False,
+            "root_metadata_valid": False,
+            "repository_urls_valid": False,
+            "directory_permissions_valid": False,
+            "version_format_valid": False,
         }
 
         try:
@@ -448,6 +808,41 @@ class TUFUpdateService:
             from tufup.client import Client as TUFClient
 
             diagnostics["client_import_success"] = True
+
+            # Test configuration validation components
+            try:
+                # Test TUF package validation
+                diagnostics["tuf_package_valid"] = self._validate_tuf_package()
+
+                # Test directory permissions
+                diagnostics["directory_permissions_valid"] = self._validate_directory_permissions()
+
+                # Test version format
+                diagnostics["version_format_valid"] = self._validate_version_format(__version__)
+
+                # Test root metadata if it exists
+                tuf_dir = self.config_dir / "tuf" / "metadata"
+                root_path = tuf_dir / "root.json"
+                if root_path.exists():
+                    diagnostics["root_metadata_valid"] = self._validate_root_json(root_path)
+                    diagnostics["root_metadata_path"] = str(root_path)
+                else:
+                    diagnostics["root_metadata_path"] = "Not found"
+
+                # Add repository URL information
+                diagnostics["repository_url"] = self.settings.tuf_repo_url
+                diagnostics["metadata_url"] = f"{self.settings.tuf_repo_url.rstrip('/')}/metadata"
+                diagnostics["targets_url"] = f"{self.settings.tuf_repo_url.rstrip('/')}/targets"
+
+                # Add configuration directory information
+                diagnostics["config_directory"] = str(self.config_dir)
+                diagnostics["tuf_directory"] = str(self.config_dir / "tuf")
+
+                # Add current version information
+                diagnostics["current_version"] = __version__
+
+            except Exception as e:
+                diagnostics["validation_error"] = str(e)
 
         except ImportError as e:
             diagnostics["import_error"] = str(e)
