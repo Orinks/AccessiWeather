@@ -9,8 +9,8 @@ import sys
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
-from accessiweather.simple.models import Location
-from accessiweather.simple.weather_client import WeatherClient
+from accessiweather.models import Location
+from accessiweather.weather_client import WeatherClient
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)

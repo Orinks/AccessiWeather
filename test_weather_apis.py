@@ -9,22 +9,20 @@ from pathlib import Path
 # Add the src directory to the path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from accessiweather.simple.models import Location
-from accessiweather.simple.weather_client import WeatherClient
+from accessiweather.models import Location
+from accessiweather.weather_client import WeatherClient
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
 async def test_weather_apis():
     """Test weather APIs with a sample location."""
     # Test location: Philadelphia, PA
-    test_location = Location(
-        name="Philadelphia, PA",
-        latitude=39.9526,
-        longitude=-75.1652
-    )
+    test_location = Location(name="Philadelphia, PA", latitude=39.9526, longitude=-75.1652)
 
     logger.info(f"Testing weather APIs for {test_location.name}")
 
@@ -44,15 +42,21 @@ async def test_weather_apis():
 
             # Check current conditions
             if weather_data.current and weather_data.current.has_data():
-                logger.info(f"✓ Current conditions: {weather_data.current.temperature_f}°F, {weather_data.current.condition}")
+                logger.info(
+                    f"✓ Current conditions: {weather_data.current.temperature_f}°F, {weather_data.current.condition}"
+                )
             else:
                 logger.warning("✗ No current conditions data")
 
             # Check forecast
             if weather_data.forecast and weather_data.forecast.has_data():
                 logger.info(f"✓ Forecast: {len(weather_data.forecast.periods)} periods")
-                for i, period in enumerate(weather_data.forecast.periods[:3]):  # Show first 3 periods
-                    logger.info(f"  {period.name}: {period.temperature}°{period.temperature_unit}, {period.short_forecast}")
+                for i, period in enumerate(
+                    weather_data.forecast.periods[:3]
+                ):  # Show first 3 periods
+                    logger.info(
+                        f"  {period.name}: {period.temperature}°{period.temperature_unit}, {period.short_forecast}"
+                    )
             else:
                 logger.warning("✗ No forecast data")
 
@@ -76,6 +80,7 @@ async def test_weather_apis():
     except Exception as e:
         logger.error(f"Error testing weather APIs: {e}")
         import traceback
+
         traceback.print_exc()
 
 

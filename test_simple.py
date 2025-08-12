@@ -36,13 +36,14 @@ def test_imports():
         traceback.print_exc()
         return False
 
+
 def test_basic_functionality():
     """Test basic functionality without GUI."""
     print("\nTesting basic functionality...")
 
     try:
-        from src.accessiweather.simple.formatters import WeatherFormatter
-        from src.accessiweather.simple.models import AppSettings, Location
+        from src.accessiweather.formatters import WeatherFormatter
+        from src.accessiweather.models import AppSettings, Location
 
         # Test location creation
         location = Location("Test City", 40.7128, -74.0060)
@@ -64,6 +65,7 @@ def test_basic_functionality():
         traceback.print_exc()
         return False
 
+
 def main():
     """Run all tests."""
     print("AccessiWeather Simplified - Test Suite")
@@ -78,6 +80,7 @@ def main():
         sys.exit(1)
 
     print("\n🎉 All tests passed! The simplified AccessiWeather is ready.")
+
 
 if __name__ == "__main__":
     main()

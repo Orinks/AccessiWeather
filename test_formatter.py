@@ -12,9 +12,9 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 async def test_formatter():
     """Test the weather formatter with real data."""
     try:
-        from accessiweather.simple.formatters import WeatherFormatter
-        from accessiweather.simple.models import AppSettings, Location
-        from accessiweather.simple.weather_client import WeatherClient
+        from accessiweather.formatters import WeatherFormatter
+        from accessiweather.models import AppSettings, Location
+        from accessiweather.weather_client import WeatherClient
 
         # Create test location
         test_location = Location("Philadelphia, PA", 39.9526, -75.1652)
@@ -33,7 +33,9 @@ async def test_formatter():
         print("=" * 60)
         print("CURRENT CONDITIONS:")
         print("=" * 60)
-        current_text = formatter.format_current_conditions(weather_data.current, weather_data.location)
+        current_text = formatter.format_current_conditions(
+            weather_data.current, weather_data.location
+        )
         print(current_text)
 
         print("\n" + "=" * 60)
@@ -59,6 +61,7 @@ async def test_formatter():
     except Exception as e:
         print(f"Formatter test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

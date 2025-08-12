@@ -9,9 +9,9 @@ import os
 import sys
 
 # Add the src directory to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
-from accessiweather.simple.app import AccessiWeatherApp
+from accessiweather.app import AccessiWeatherApp
 
 
 def test_second_instance():
@@ -19,10 +19,7 @@ def test_second_instance():
     print("Testing second instance behavior...")
 
     # Create the app (this will trigger the single instance check in startup)
-    app = AccessiWeatherApp(
-        'AccessiWeather',
-        'net.orinks.accessiweather'
-    )
+    app = AccessiWeatherApp("AccessiWeather", "net.orinks.accessiweather")
 
     # The startup method will be called automatically when the app runs
     # If another instance is running, it should show a dialog and exit

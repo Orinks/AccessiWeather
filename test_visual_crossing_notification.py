@@ -12,9 +12,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 import tempfile
 from datetime import datetime
 
-from accessiweather.simple.alert_manager import AlertManager, AlertSettings
-from accessiweather.simple.alert_notification_system import AlertNotificationSystem
-from accessiweather.simple.models import WeatherAlert, WeatherAlerts
+from accessiweather.alert_manager import AlertManager, AlertSettings
+from accessiweather.alert_notification_system import AlertNotificationSystem
+from accessiweather.models import WeatherAlert, WeatherAlerts
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)

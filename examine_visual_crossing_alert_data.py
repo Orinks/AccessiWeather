@@ -10,8 +10,8 @@ import sys
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
-from accessiweather.simple.models import Location
-from accessiweather.simple.visual_crossing_client import VisualCrossingClient
+from accessiweather.models import Location
+from accessiweather.visual_crossing_client import VisualCrossingClient
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)

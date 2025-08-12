@@ -10,10 +10,12 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 try:
     print("Testing imports...")
 
-    from accessiweather.simple.models import AppSettings
+    from accessiweather.models import AppSettings
+
     print("✓ Models imported")
 
-    from accessiweather.simple.formatters import WeatherFormatter
+    from accessiweather.formatters import WeatherFormatter
+
     print("✓ Formatter imported")
 
     # Test basic functionality
@@ -30,5 +32,6 @@ try:
 except Exception as e:
     print(f"❌ Error: {e}")
     import traceback
+
     traceback.print_exc()
     sys.exit(1)
