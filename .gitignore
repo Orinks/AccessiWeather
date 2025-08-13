@@ -44,6 +44,8 @@ ENV/
 venv.bak/
 env.bak/
 
+.make-venv/
+
 # IDE specific files
 .idea/
 .vscode/
