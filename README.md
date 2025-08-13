@@ -125,6 +125,55 @@ We will update this section with Briefcase commands for building installer and p
 
 In the meantime, do not use installer/build_installer.ps1 or .sh — they are broken for the Toga app and will be removed or replaced.
 
+
+### Briefcase packaging (Windows MSI)
+
+Use BeeWare Briefcase to produce a native Windows installer (MSI):
+
+```bash
+# Ensure Briefcase is installed
+pip install briefcase
+
+# Create platform scaffold (first time per platform)
+briefcase create windows
+
+# Build the app bundle
+briefcase build windows
+
+# Package into an MSI installer
+briefcase package windows
+```
+
+Artifacts
+- MSI output: dist/AccessiWeather-<version>.msi (path may vary slightly by Briefcase version)
+- Build tree (intermediate files): windows/AccessiWeather/
+
+### Portable ZIP (temporary recipe)
+
+Briefcase focuses on native installers. If you need a portable ZIP during migration:
+
+- After a successful build (briefcase build windows), zip the built app folder.
+
+PowerShell (Windows):
+```powershell
+$AppDir = "windows/AccessiWeather/build/AccessiWeather"
+$ZipOut = "dist/AccessiWeather_Portable_v$((python -c \"import tomllib,sys;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])\")) .zip"
+Compress-Archive -Path "$AppDir/*" -DestinationPath $ZipOut -Force
+```
+
+Bash (Git Bash):
+```bash
+APP_DIR="windows/AccessiWeather/build/AccessiWeather"
+VERSION=$(python - <<'PY'
+import tomllib
+print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])
+PY
+)
+( cd "$APP_DIR" && zip -r "../../../../dist/AccessiWeather_Portable_v${VERSION}.zip" . )
+```
+
+Note: Exact build folder names can vary between Briefcase versions; inspect windows/AccessiWeather/ after build and adjust the path as needed.
+
 ## Requirements
 
 - **Python 3.7+** (Python 3.11+ recommended for best performance)
