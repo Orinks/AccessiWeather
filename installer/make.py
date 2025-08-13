@@ -41,7 +41,8 @@ def _run(cmd: list[str], cwd: Path | None = None) -> int:
 
 
 def _briefcase_exists() -> bool:
-    code = _run([sys.executable, "-m", "briefcase", "--help"], cwd=ROOT)
+    # Use version check; some CLIs return non-zero for --help
+    code = _run([sys.executable, "-m", "briefcase", "-V"], cwd=ROOT)
     return code == 0
 
 
