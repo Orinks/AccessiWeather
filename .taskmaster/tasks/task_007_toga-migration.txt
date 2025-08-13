@@ -48,4 +48,3 @@ Connect UI widgets to the underlying settings storage mechanism, handling save, 
 ### Description: Add an entry to the application's main menu or toolbar to open the settings dialog.
 ### Details:
 Ensure the dialog can be launched from the menu and that its state is consistent with the application's current settings.
-

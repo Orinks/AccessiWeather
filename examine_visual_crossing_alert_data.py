@@ -109,7 +109,7 @@ async def examine_alert_data():
                     if alert.areas:
                         print(f"Geographic Analysis:")
                         print(f"  Number of areas: {len(alert.areas)}")
-                        print(f"  Area types: {[area for area in alert.areas]}")
+                        print(f"  Area types: {list(alert.areas)}")
 
                         # Check for hierarchical relationships
                         area_analysis = analyze_area_hierarchy(alert.areas, location.name)

@@ -138,7 +138,3 @@ jobs:
       with:
         name: toga-quality-gate-summary
         path: toga-quality-summary.md
-
-
-
-

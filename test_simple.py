@@ -53,8 +53,8 @@ def test_basic_functionality():
         settings = AppSettings()
         print(f"   ✓ Created settings: {settings.temperature_unit}")
 
-        # Test formatter
-        formatter = WeatherFormatter(settings)
+        # Test formatter (instantiate to verify import works)
+        WeatherFormatter(settings)
         print("   ✓ Created formatter")
 
         print("\n✅ Basic functionality test passed!")

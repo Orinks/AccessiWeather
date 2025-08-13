@@ -163,7 +163,7 @@ python test_tuf_simple.py
 
 #### 3. Network Connectivity Issues
 **Error**: Connection timeouts or network errors
-**Solution**: 
+**Solution**:
 - Check internet connectivity
 - Verify GitHub API access
 - Check firewall settings

@@ -49,5 +49,3 @@ All notification triggers have been updated to use SafeDesktopNotifier or SafeTo
 ### Dependencies: None
 ### Description: Add support for playing alert sounds with notifications. Allow users to choose from built-in and custom sound packs, and provide a mechanism for downloading additional sound packs in the future.
 ### Details:
-
-

@@ -126,9 +126,8 @@ def test_make_request_max_retries_exceeded(openmeteo_client):
     with patch.object(openmeteo_client.client, "get") as mock_get:
         mock_get.side_effect = httpx.ConnectError("Connection failed")
 
-        with patch("time.sleep"):  # Mock sleep to speed up test
-            with pytest.raises(OpenMeteoNetworkError):
-                openmeteo_client._make_request("forecast", {"latitude": 40.0, "longitude": -75.0})
+        with patch("time.sleep"), pytest.raises(OpenMeteoNetworkError):
+            openmeteo_client._make_request("forecast", {"latitude": 40.0, "longitude": -75.0})
 
         # Should try max_retries + 1 times (initial + retries)
         assert mock_get.call_count == openmeteo_client.max_retries + 1

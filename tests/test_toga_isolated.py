@@ -70,7 +70,10 @@ class TestTogaBasics:
 
         # Test async mock
         async_mock = AsyncMock(return_value="async_result")
-        assert asyncio.iscoroutine(async_mock())
+        # Create coroutine and close it to avoid 'never awaited' RuntimeWarning
+        coro = async_mock()
+        assert asyncio.iscoroutine(coro)
+        coro.close()
 
     @pytest.mark.asyncio
     async def test_async_mock_execution(self):

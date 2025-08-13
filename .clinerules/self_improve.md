@@ -38,7 +38,7 @@ alwaysApply: true
     select: { id: true, email: true },
     where: { status: 'ACTIVE' }
   });
-  
+
   // Consider adding to [prisma.md](.clinerules/prisma.md):
   // - Standard select fields
   // - Common where conditions

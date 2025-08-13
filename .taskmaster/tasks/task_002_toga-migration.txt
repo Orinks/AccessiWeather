@@ -41,4 +41,3 @@ Add placeholder widgets to the main Box to represent where future components (bu
 ### Description: Implement the menu system for the main window, ensuring it integrates with Toga's application and window structure.
 ### Details:
 Set up the menu for the main window, using Toga's built-in menu support. Define menu items and connect them to appropriate handlers as needed.[3][5]
-

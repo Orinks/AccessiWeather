@@ -1,0 +1,25 @@
+# Merge strategy to favor Toga branch for wx/legacy GUI code and conflicting app modules
+# These rules help when merging origin/dev into feature/toga-migration
+
+# Use 'ours' merge driver for these paths (keep current branch version during merges)
+# Note: Requires core driver 'merge=ours' which is built-in to Git.
+
+# Legacy/wx-era app and GUI modules removed/replaced by Toga
+src/accessiweather/app.py merge=ours
+src/accessiweather/dialogs/** merge=ours
+src/accessiweather/display/** merge=ours
+src/accessiweather/gui/** merge=ours
+
+# Models and services that diverge between branches
+src/accessiweather/models.py merge=ours
+src/accessiweather/services/** merge=ours
+
+# Notifications diverged (sound, toast, etc.)
+src/accessiweather/notifications/** merge=ours
+
+# Any remaining legacy top-level modules we replaced in Toga
+src/accessiweather/formatters.py merge=ours
+src/accessiweather/location_manager.py merge=ours
+
+# If dev deletes files we still keep, preserve ours
+* -diff
