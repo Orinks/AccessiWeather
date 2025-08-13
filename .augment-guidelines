@@ -60,4 +60,3 @@
    - Build your app for all platforms using `briefcase build`.
 3. **use briefcase for running the whole test suite**
 Use `briefcase dev --test` to run the test suite.
-

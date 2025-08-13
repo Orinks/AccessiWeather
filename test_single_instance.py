@@ -21,18 +21,12 @@ async def test_single_instance():
     project_dir = Path(__file__).parent
 
     # Command to run the app
-    cmd = [
-        sys.executable, "-m", "briefcase", "dev"
-    ]
+    cmd = [sys.executable, "-m", "briefcase", "dev"]
 
     print("Starting first instance...")
     # Start first instance
     process1 = subprocess.Popen(
-        cmd,
-        cwd=project_dir,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True
+        cmd, cwd=project_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
     )
 
     # Wait a bit for the first instance to start and acquire the lock
@@ -41,11 +35,7 @@ async def test_single_instance():
     print("Starting second instance (should show dialog and exit)...")
     # Try to start second instance
     process2 = subprocess.Popen(
-        cmd,
-        cwd=project_dir,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True
+        cmd, cwd=project_dir, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
     )
 
     # Wait for second instance to complete

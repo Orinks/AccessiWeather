@@ -13,7 +13,7 @@ This is the main debugging script that now tests both US and international locat
 
 **US Locations Tested:**
 - Miami, FL (hurricanes, thunderstorms)
-- Oklahoma City, OK (tornadoes, severe weather)  
+- Oklahoma City, OK (tornadoes, severe weather)
 - Denver, CO (winter weather, high winds)
 - Phoenix, AZ (heat warnings, dust storms)
 

@@ -110,7 +110,7 @@ async def test_international_alerts():
             print("🔍 Comparison: Testing NWS for this location...")
             try:
                 nws_client = WeatherClient(data_source="nws")
-                nws_weather = await nws_client.get_weather_data(location)
+                await nws_client.get_weather_data(location)
                 print("⚠️  Unexpected: NWS worked for international location")
             except Exception as nws_error:
                 print(

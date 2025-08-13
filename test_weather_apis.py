@@ -51,7 +51,7 @@ async def test_weather_apis():
             # Check forecast
             if weather_data.forecast and weather_data.forecast.has_data():
                 logger.info(f"✓ Forecast: {len(weather_data.forecast.periods)} periods")
-                for i, period in enumerate(
+                for _i, period in enumerate(
                     weather_data.forecast.periods[:3]
                 ):  # Show first 3 periods
                     logger.info(

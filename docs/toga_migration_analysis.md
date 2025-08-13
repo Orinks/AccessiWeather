@@ -9,7 +9,7 @@ This document provides a comprehensive analysis for migrating AccessiWeather fro
 ### Current Toga Accessibility Status
 - **Focus Management**: Toga widgets support `focus()` method and `tab_index` property for keyboard navigation
 - **Screen Reader Support**: Uses native platform accessibility APIs (Windows Narrator, macOS VoiceOver, Linux Orca)
-- **Known Limitations**: 
+- **Known Limitations**:
   - Labels are not focusable by default (Issue #2827)
   - No built-in way to pair labels with input widgets for screen readers (Issue #2233)
   - Limited customizable accessible text support

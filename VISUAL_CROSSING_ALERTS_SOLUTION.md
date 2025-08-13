@@ -31,19 +31,19 @@ async def _process_visual_crossing_alerts(self, alerts: WeatherAlerts, location:
         # Import the alert notification system
         from .alert_notification_system import AlertNotificationSystem
         from .alert_manager import AlertManager
-        
+
         # Create alert manager and notification system
         alert_manager = AlertManager()
         notification_system = AlertNotificationSystem(alert_manager)
-        
+
         # Process and send notifications
         notifications_sent = await notification_system.process_and_notify(alerts)
-        
+
         if notifications_sent > 0:
             logger.info(f"Sent {notifications_sent} Visual Crossing alert notifications for {location.name}")
         else:
             logger.debug(f"No Visual Crossing alert notifications sent for {location.name}")
-            
+
     except Exception as e:
         logger.error(f"Failed to process Visual Crossing alerts for notifications: {e}")
 ```
@@ -65,27 +65,27 @@ Key improvements:
 def _parse_alerts(self, data: dict) -> WeatherAlerts:
     """Parse Visual Crossing alerts data."""
     alerts = []
-    
+
     # Visual Crossing may return alerts in different structures
     # Check multiple possible locations for alert data
     alert_data_list = []
-    
+
     # Check top-level alerts
     if "alerts" in data:
         alert_data_list.extend(data["alerts"])
-        
+
     # Check if alerts are nested in days
     if "days" in data:
         for day in data["days"]:
             if "alerts" in day:
                 alert_data_list.extend(day["alerts"])
-    
+
     # Check current conditions for alerts
     if "currentConditions" in data and "alerts" in data["currentConditions"]:
         alert_data_list.extend(data["currentConditions"]["alerts"])
-    
+
     logger.debug(f"Found {len(alert_data_list)} alert(s) in Visual Crossing response")
-    
+
     # Process each alert with enhanced field mapping...
 ```
 
@@ -95,13 +95,13 @@ def _map_visual_crossing_severity(self, vc_severity: str | None) -> str:
     """Map Visual Crossing severity to standard severity levels."""
     severity_map = {
         "extreme": "Extreme",
-        "severe": "Severe", 
+        "severe": "Severe",
         "moderate": "Moderate",
         "minor": "Minor",
         "unknown": "Unknown",
         # Additional mappings for Visual Crossing specific terms
         "high": "Severe",
-        "medium": "Moderate", 
+        "medium": "Moderate",
         "low": "Minor",
         "critical": "Extreme",
         "warning": "Severe",

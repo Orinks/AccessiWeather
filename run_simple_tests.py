@@ -140,7 +140,7 @@ def check_test_environment():
 
 
 def main():
-    """Main function."""
+    """Run the simplified test runner."""
     print("AccessiWeather Simplified - Test Runner")
     print("Using BeeWare Testing Approach")
 

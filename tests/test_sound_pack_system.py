@@ -8,9 +8,12 @@ from unittest.mock import patch
 import pytest
 import toga
 
+from accessiweather.models import WeatherAlert
+from accessiweather.notifications.alert_sound_mapper import get_candidate_sound_events
 from accessiweather.notifications.sound_player import (
     get_available_sound_packs,
     get_sound_file,
+    get_sound_file_for_candidates,
     play_notification_sound,
 )
 
@@ -326,16 +329,6 @@ class TestSoundPackManagerDialog:
         import shutil
 
         shutil.rmtree(temp_dir, ignore_errors=True)
-
-
-# --- New tests for alert sound mapping and candidate resolution ---
-from accessiweather.models import WeatherAlert
-from accessiweather.notifications.alert_sound_mapper import (
-    get_candidate_sound_events,
-)
-from accessiweather.notifications.sound_player import (
-    get_sound_file_for_candidates,
-)
 
 
 def test_alert_sound_mapper_candidates_warning_first():

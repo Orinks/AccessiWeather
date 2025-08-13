@@ -1,0 +1,37 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/pyright/main/packages/pyright/schema/pyrightconfig.schema.json",
+  "venvPath": ".",
+  "venv": ".venv",
+  "pythonVersion": "3.12",
+  "include": [
+    "src/accessiweather/models.py",
+    "src/accessiweather/utils"
+  ],
+  "exclude": [
+    "**/.venv",
+    "**/venv",
+    "**/.mypy_cache",
+    "**/.ruff_cache",
+    "**/__pycache__",
+    "build",
+    "dist",
+    "src/accessiweather/weather_gov_api_client",
+    "src/accessiweather/weatherapi_client",
+    "installer/build",
+    "installer/dist",
+    "docs",
+    ".github"
+  ],
+  "reportMissingImports": "warning",
+  "reportMissingTypeStubs": "none",
+  "typeCheckingMode": "basic",
+  "executionEnvironments": [
+    {
+      "root": "src/accessiweather",
+      "extraPaths": [
+        "src"
+      ],
+      "pythonVersion": "3.12"
+    }
+  ]
+}

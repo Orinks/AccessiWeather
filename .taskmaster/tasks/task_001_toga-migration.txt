@@ -44,4 +44,3 @@
 2. Replace wxPython widgets and event handling with their Toga equivalents.
 3. Refactor application logic to fit Toga's event-driven model and widget hierarchy.
 4. Test the migrated application to ensure feature parity and resolve any compatibility issues.
-

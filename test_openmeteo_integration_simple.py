@@ -5,7 +5,8 @@ import os
 import sys
 
 # Add the src directory to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+
 
 def test_api_selection():
     """Test automatic API selection logic."""
@@ -15,12 +16,12 @@ def test_api_selection():
     import importlib.util
 
     # Load weather_client module
-    weather_client_path = os.path.join('src', 'accessiweather', 'simple', 'weather_client.py')
+    weather_client_path = os.path.join("src", "accessiweather", "simple", "weather_client.py")
     spec = importlib.util.spec_from_file_location("weather_client", weather_client_path)
     weather_client_module = importlib.util.module_from_spec(spec)
 
     # Load models module
-    models_path = os.path.join('src', 'accessiweather', 'simple', 'models.py')
+    models_path = os.path.join("src", "accessiweather", "simple", "models.py")
     spec = importlib.util.spec_from_file_location("models", models_path)
     models_module = importlib.util.module_from_spec(spec)
 
@@ -28,7 +29,7 @@ def test_api_selection():
     spec.loader.exec_module(models_module)
 
     # Inject models into weather_client namespace
-    sys.modules['models'] = models_module
+    sys.modules["models"] = models_module
     weather_client_module.models = models_module
     weather_client_module.CurrentConditions = models_module.CurrentConditions
     weather_client_module.Forecast = models_module.Forecast
@@ -49,11 +50,11 @@ def test_api_selection():
     Location = models_module.Location
 
     # Test basic functionality
-    client = WeatherClient(data_source='auto')
-    us_location = Location('Philadelphia, PA', 39.9526, -75.1652)
-    tokyo_location = Location('Tokyo, Japan', 35.6762, 139.6503)
-    london_location = Location('London, UK', 51.5074, -0.1278)
-    sydney_location = Location('Sydney, Australia', -33.8688, 151.2093)
+    client = WeatherClient(data_source="auto")
+    us_location = Location("Philadelphia, PA", 39.9526, -75.1652)
+    tokyo_location = Location("Tokyo, Japan", 35.6762, 139.6503)
+    london_location = Location("London, UK", 51.5074, -0.1278)
+    sydney_location = Location("Sydney, Australia", -33.8688, 151.2093)
 
     # Test automatic API selection
     print("✅ Auto mode - US locations should use NWS:")
@@ -78,21 +79,28 @@ def test_api_selection():
 
     # Test forced modes
     print("✅ Forced API modes:")
-    client_openmeteo = WeatherClient(data_source='openmeteo')
-    client_nws = WeatherClient(data_source='nws')
+    client_openmeteo = WeatherClient(data_source="openmeteo")
+    client_nws = WeatherClient(data_source="nws")
 
     # Force Open-Meteo mode
-    assert client_openmeteo._should_use_openmeteo(us_location), "Force Open-Meteo should work for US"
-    assert client_openmeteo._should_use_openmeteo(tokyo_location), "Force Open-Meteo should work for international"
+    assert client_openmeteo._should_use_openmeteo(us_location), (
+        "Force Open-Meteo should work for US"
+    )
+    assert client_openmeteo._should_use_openmeteo(tokyo_location), (
+        "Force Open-Meteo should work for international"
+    )
     print(f"  Force Open-Meteo mode working ✓")
 
     # Force NWS mode
     assert not client_nws._should_use_openmeteo(us_location), "Force NWS should work for US"
-    assert not client_nws._should_use_openmeteo(tokyo_location), "Force NWS should work for international"
+    assert not client_nws._should_use_openmeteo(tokyo_location), (
+        "Force NWS should work for international"
+    )
     print(f"  Force NWS mode working ✓")
 
     print("\n🎉 All API selection tests passed!")
     return True
+
 
 def test_utility_methods():
     """Test utility methods."""
@@ -100,21 +108,22 @@ def test_utility_methods():
 
     # Import weather client
     import importlib.util
-    weather_client_path = os.path.join('src', 'accessiweather', 'simple', 'weather_client.py')
+
+    weather_client_path = os.path.join("src", "accessiweather", "simple", "weather_client.py")
     spec = importlib.util.spec_from_file_location("weather_client", weather_client_path)
     weather_client_module = importlib.util.module_from_spec(spec)
 
     # Load models first
-    models_path = os.path.join('src', 'accessiweather', 'simple', 'models.py')
+    models_path = os.path.join("src", "accessiweather", "simple", "models.py")
     spec = importlib.util.spec_from_file_location("models", models_path)
     models_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(models_module)
 
     # Inject models into weather_client namespace
-    sys.modules['models'] = models_module
+    sys.modules["models"] = models_module
     weather_client_module.models = models_module
     for attr in dir(models_module):
-        if not attr.startswith('_'):
+        if not attr.startswith("_"):
             setattr(weather_client_module, attr, getattr(models_module, attr))
 
     # Execute weather_client
@@ -146,6 +155,7 @@ def test_utility_methods():
     print("🎉 All utility method tests passed!")
     return True
 
+
 def main():
     """Run all tests."""
     print("🧪 Testing Open-Meteo Integration in Simple Toga App")
@@ -166,10 +176,12 @@ def main():
     except Exception as e:
         print(f"\n❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
     return True
+
 
 if __name__ == "__main__":
     success = main()

@@ -61,7 +61,7 @@ class UpdateSettings:
     check_interval_hours: int = 24
     repo_owner: str = "joshuakitchen"
     repo_name: str = "accessiweather"
-    tuf_repo_url: str = "https://orinks.net/updates"
+    tuf_repo_url: str = "https://updates.accessiweather.app"
 
 
 class TUFUpdateService:
@@ -720,15 +720,17 @@ class TUFUpdateService:
 
                     logger.debug(f"Validating SSL certificate for: {parsed.netloc}")
                     context = ssl.create_default_context()
-                    with socket.create_connection(
-                        (parsed.hostname, parsed.port or 443), timeout=10
-                    ) as sock:
-                        with context.wrap_socket(sock, server_hostname=parsed.hostname) as ssock:
-                            cert = ssock.getpeercert()
-                            if cert:
-                                logger.debug("SSL certificate validation successful")
-                            else:
-                                logger.warning("Could not retrieve SSL certificate")
+                    with (
+                        socket.create_connection(
+                            (parsed.hostname, parsed.port or 443), timeout=10
+                        ) as sock,
+                        context.wrap_socket(sock, server_hostname=parsed.hostname) as ssock,
+                    ):
+                        cert = ssock.getpeercert()
+                        if cert:
+                            logger.debug("SSL certificate validation successful")
+                        else:
+                            logger.warning("Could not retrieve SSL certificate")
                 except Exception as e:
                     logger.warning(f"SSL certificate validation failed: {e}")
                     # Don't fail validation for SSL issues, just warn
@@ -763,6 +765,8 @@ class TUFUpdateService:
 
             logger.info(f"Downloading update to {dest_file}")
 
+            # The stream context manager is intentionally not awaited in tests using AsyncMock;
+            # this code path is exercised in integration; tests use patching and may not await.
             async with self._http_client.stream("GET", update_info.download_url) as response:
                 response.raise_for_status()
 
@@ -804,10 +808,12 @@ class TUFUpdateService:
             diagnostics["tufup_installed"] = True
             diagnostics["tufup_version"] = getattr(tufup, "__version__", "unknown")
 
-            # Test basic TUF client import
-            from tufup.client import Client as TUFClient
+            # Test basic TUF client importability without binding the symbol
+            import importlib.util
 
-            diagnostics["client_import_success"] = True
+            diagnostics["client_import_success"] = (
+                importlib.util.find_spec("tufup.client") is not None
+            )
 
             # Test configuration validation components
             try:
@@ -859,10 +865,19 @@ class TUFUpdateService:
             logger.error(f"Cleanup failed: {e}")
 
     def __del__(self):
-        """Destructor to ensure cleanup."""
+        """Destructor to ensure cleanup without emitting warnings.
+
+        We only schedule aclose() if an event loop is running; otherwise, we
+        avoid constructing the coroutine to prevent 'never awaited' warnings.
+        """
         try:
-            # Try to close the HTTP client if it exists
             if hasattr(self, "_http_client") and self._http_client:
-                asyncio.create_task(self._http_client.aclose())
+                try:
+                    loop = asyncio.get_running_loop()
+                except RuntimeError:
+                    loop = None
+                if loop and loop.is_running():
+                    loop.create_task(self._http_client.aclose())
         except Exception:
-            pass  # Ignore errors during cleanup
+            # Best-effort cleanup; ignore errors at interpreter shutdown
+            pass

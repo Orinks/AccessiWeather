@@ -48,4 +48,3 @@ Identify accessibility requirements relevant to Toga applications. Develop autom
 ### Description: Set up and optimize a CI/CD pipeline to automatically run the full suite of unit, integration, UI, and accessibility tests on code changes. Ensure reliable reporting and fast feedback for developers.
 ### Details:
 Select and configure CI/CD tools (e.g., GitHub Actions, GitLab CI) to execute all test types on supported platforms. Integrate test reporting and notifications. Address any platform-specific challenges for running Toga UI and integration tests in CI environments.
-

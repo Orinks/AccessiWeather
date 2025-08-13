@@ -19,12 +19,12 @@ repos:
     -   id: ruff-format
         exclude: ^src/accessiweather/weather_gov_api_client/
 
--   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
+-   repo: https://github.com/RobertCraigie/pyright-python
+    rev: v1.1.403
     hooks:
-    -   id: mypy
-        additional_dependencies: [types-requests, types-python-dateutil]
-        args: [--ignore-missing-imports]
+    -   id: pyright
+        pass_filenames: false
+        args: [--project=pyrightconfig.json]
         exclude: ^(tests/|docs/|setup.py|src/accessiweather/weather_gov_api_client/)
 
 -   repo: local

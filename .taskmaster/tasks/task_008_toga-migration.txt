@@ -35,4 +35,3 @@ Use Toga's Key constants and modifier keys to define shortcuts, and integrate th
 ### Description: Design and implement a help overlay to display available shortcuts to users, enhancing usability and accessibility.
 ### Details:
 Create a visually appealing overlay that lists all available shortcuts, ensuring it is easily accessible and understandable for users.
-

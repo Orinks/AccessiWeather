@@ -47,4 +47,3 @@ Add event handlers to sort data when column headers are clicked.
 ### Description: Apply custom styles to enhance the table's appearance and user experience.
 ### Details:
 Use Toga's styling options to customize the table's layout and visual appeal.
-
