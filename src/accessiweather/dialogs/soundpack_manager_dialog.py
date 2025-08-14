@@ -938,8 +938,11 @@ class SoundPackManagerDialog:
                     "notify": "notify.wav",
                 },
             }
-            with open(pack_dir / "pack.json", "w", encoding="utf-8") as f:
-                json.dump(meta, f, indent=2)
+            try:
+                with open(pack_dir / "pack.json", "w", encoding="utf-8") as f:
+                    json.dump(meta, f, indent=2)
+            except Exception as e:
+                logger.error(f"Failed to write pack.json: {e}")
 
             # Refresh in-memory state and UI
             self._load_sound_packs()
@@ -995,8 +998,11 @@ class SoundPackManagerDialog:
             name = meta.get("name", candidate)
             if "(Copy)" not in name:
                 meta["name"] = f"{name} (Copy)"
-            with open(pack_json_path, "w", encoding="utf-8") as f:
-                json.dump(meta, f, indent=2)
+            try:
+                with open(pack_json_path, "w", encoding="utf-8") as f:
+                    json.dump(meta, f, indent=2)
+            except Exception as e:
+                logger.error(f"Failed to write pack.json: {e}")
 
             self._load_sound_packs()
             self._refresh_pack_list()
@@ -1190,8 +1196,11 @@ class SoundPackManagerDialog:
             "description": getattr(state, "description", "") or "",
             "sounds": sounds,
         }
-        with open(pack_dir / "pack.json", "w", encoding="utf-8") as f:
-            json.dump(meta, f, indent=2)
+        try:
+            with open(pack_dir / "pack.json", "w", encoding="utf-8") as f:
+                json.dump(meta, f, indent=2)
+        except Exception as e:
+            logger.error(f"Failed to write pack.json: {e}")
 
     async def _on_browse_community_packs(self, widget) -> None:
         """Open the community packs browser dialog and refresh after install."""
