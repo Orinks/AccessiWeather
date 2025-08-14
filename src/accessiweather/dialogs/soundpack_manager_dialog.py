@@ -1094,11 +1094,14 @@ class SoundPackManagerDialog:
                         self.delete_button.enabled = new_pack_id != "default"
 
             # Create and show the wizard dialog
-            wizard = self.SoundPackWizardDialog(
+            from .soundpack_wizard_dialog import SoundPackWizardDialog
+
+            wizard = SoundPackWizardDialog(
                 app=self.app,
                 soundpacks_dir=self.soundpacks_dir,
+                friendly_categories=FRIENDLY_ALERT_CATEGORIES,
+                create_pack_callback=self._create_pack_from_wizard_state,
                 on_complete=_on_complete,
-                parent=self,
             )
             wizard.show()
         except Exception as e:
