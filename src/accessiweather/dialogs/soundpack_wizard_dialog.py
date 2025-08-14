@@ -5,6 +5,7 @@ Extracted from SoundPackManagerDialog to a dedicated module.
 
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import logging
 from dataclasses import dataclass
@@ -77,6 +78,7 @@ class SoundPackWizardDialog:
         )
         self.content_box = toga.Box(style=Pack(direction=COLUMN, flex=1))
         self.nav_row = toga.Box(style=Pack(direction=ROW, margin_top=10))
+        self._focus_target = None
 
         self.prev_btn = toga.Button(
             "Previous", on_press=self._go_previous, enabled=False, style=Pack(margin_right=10)
@@ -158,7 +160,21 @@ class SoundPackWizardDialog:
         self.prev_btn.enabled = self.current_step > 1
         self.next_btn.text = "Next" if self.current_step < self.total_steps else "Create Pack"
 
-        self.content_box.children.clear()
+        # Replace the entire content container to ensure old controls are removed
+        try:
+            self.root_box.remove(self.content_box)
+        except Exception:
+            pass
+        self.content_box = toga.Box(style=Pack(direction=COLUMN, flex=1))
+        # Insert after header_label
+        try:
+            self.root_box.insert(1, self.content_box)
+        except Exception:
+            # Fallback: add then reorder not strictly necessary
+            self.root_box.add(self.content_box)
+        # Reset focus target
+        self._focus_target = None
+
         if self.current_step == 1:
             self._build_step1()
         elif self.current_step == 2:
@@ -167,6 +183,20 @@ class SoundPackWizardDialog:
             self._build_step3()
         else:
             self._build_step4()
+
+        # Defer focus to first control of the step for screen readers
+        async def _defer_focus(widget):
+            await asyncio.sleep(0.1)
+            with contextlib.suppress(Exception):
+                if widget is not None:
+                    widget.focus()
+
+        try:
+            asyncio.create_task(_defer_focus(self._focus_target))
+        except Exception:
+            with contextlib.suppress(Exception):
+                if self._focus_target is not None:
+                    self._focus_target.focus()
 
     # Step 1: Pack details
     def _build_step1(self) -> None:
@@ -178,6 +208,8 @@ class SoundPackWizardDialog:
             style=Pack(margin_bottom=8),
         )
         form.add(self.name_input)
+        # Set focus to the first input for step 1
+        self._focus_target = self.name_input
         form.add(toga.Label("Author (optional):"))
         self.author_input = toga.TextInput(
             value=self.state.author or "", style=Pack(margin_bottom=8)
@@ -243,13 +275,19 @@ class SoundPackWizardDialog:
         inner = toga.Box(style=Pack(direction=COLUMN, padding=(4, 8)))
 
         self.category_checks: list[tuple[str, toga.Switch]] = []
+        first_switch = None
         for display, key in self.friendly_categories:
             row = toga.Box(style=Pack(direction=ROW, margin_bottom=4))
             chk = toga.Switch(display)
+            if first_switch is None:
+                first_switch = chk
             chk.value = key in (self.state.selected_alert_keys or [])
             row.add(chk)
             inner.add(row)
             self.category_checks.append((key, chk))
+        # Focus the first switch if available
+        if first_switch is not None:
+            self._focus_target = first_switch
 
         scroll.content = inner
         outer.add(scroll)
@@ -292,6 +330,7 @@ class SoundPackWizardDialog:
 
         self.mapping_rows = []
         selected = self.state.selected_alert_keys or []
+        first_focus_set = False
         for key in selected:
             friendly = next(
                 (d for d, k in self.friendly_categories if k == key),
@@ -373,6 +412,9 @@ class SoundPackWizardDialog:
             row.add(preview_btn)
             inner.add(row)
             self.mapping_rows.append((key, file_display))
+            if not first_focus_set:
+                self._focus_target = choose_btn
+                first_focus_set = True
 
         scroll.content = inner
         outer.add(scroll)
@@ -443,8 +485,12 @@ class SoundPackWizardDialog:
                 logger.error(f"Failed to test pack: {e}")
                 self.app.main_window.error_dialog("Test Error", f"Failed to test pack: {e}")
 
-        outer.add(
-            toga.Button("Test Pack", on_press=_test_pack, style=Pack(margin_top=8, width=120))
+        test_button = toga.Button(
+            "Test Pack", on_press=_test_pack, style=Pack(margin_top=8, width=120)
         )
+        outer.add(test_button)
+
+        # Focus Test Pack button on step 4 start
+        self._focus_target = test_button
 
         self.content_box.add(outer)
