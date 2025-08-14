@@ -1206,11 +1206,18 @@ class SoundPackManagerDialog:
             )
             return
 
-        def _on_installed(_pack_display_name: str):
-            # Refresh local list on the main loop
+        def _on_installed(pack_display_name: str):
+            # Refresh local list on the main loop and auto-select the installed pack
             try:
                 self._load_sound_packs()
                 self._refresh_pack_list()
+                # Try to find the newly installed pack by its display name
+                for pack_id, info in self.sound_packs.items():
+                    if info.get("name") == pack_display_name:
+                        self.selected_pack = pack_id
+                        self.current_pack = pack_id
+                        self._update_pack_details()
+                        break
             except Exception:
                 pass
 
@@ -1224,6 +1231,12 @@ class SoundPackManagerDialog:
 
     def _on_close(self, widget) -> None:
         """Close the dialog."""
+        try:
+            if getattr(self, "community_service", None):
+                # Schedule async cleanup of HTTP client without blocking UI
+                asyncio.create_task(self.community_service.aclose())
+        except Exception:
+            pass
         self.dialog.close()
 
     async def show(self) -> str:

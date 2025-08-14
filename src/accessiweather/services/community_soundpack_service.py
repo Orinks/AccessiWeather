@@ -85,14 +85,8 @@ class CommunitySoundPackService:
         self._cached_at: float | None = None
 
     async def aclose(self) -> None:
-        with contextlib.suppress(Exception):  # type: ignore[name-defined]
+        with contextlib.suppress(Exception):
             await self._http.aclose()
-
-    # Lightweight local contextlib to avoid another import if not present
-    # (Importing here to keep file self-contained)
-    import contextlib as _contextlib  # noqa: E402
-
-    contextlib = _contextlib  # re-export for type checker friendliness
 
     async def fetch_available_packs(self, force_refresh: bool = False) -> list[CommunityPack]:
         """Fetch a list of available community packs.
@@ -239,6 +233,7 @@ class CommunitySoundPackService:
         while attempt <= max_retries:
             attempt += 1
             try:
+                tmp_path: Path | None = None
                 async with self._http.stream("GET", pack.download_url) as resp:
                     if resp.status_code != 200:
                         raise RuntimeError(f"Download failed with status {resp.status_code}")
@@ -270,12 +265,18 @@ class CommunitySoundPackService:
                     tmp_path.replace(final_path)
                     return final_path
             except asyncio.CancelledError:
-                # Cleanup partial file
-                with self.contextlib.suppress(Exception):
+                # Cleanup partial file(s)
+                with contextlib.suppress(Exception):
                     if final_path.exists():
                         final_path.unlink()
+                    if tmp_path and tmp_path.exists():
+                        tmp_path.unlink()
                 raise
             except Exception as e:
+                # Remove any temp file created this attempt
+                with contextlib.suppress(Exception):
+                    if tmp_path and tmp_path.exists():
+                        tmp_path.unlink()
                 last_exc = e
                 logger.warning(f"Download attempt {attempt} failed: {e}")
                 await asyncio.sleep(min(2 * attempt, 5))
