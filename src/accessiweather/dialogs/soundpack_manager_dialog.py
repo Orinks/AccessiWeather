@@ -6,7 +6,6 @@ in Settings > General and is not changed from this manager.
 """
 
 import asyncio
-import contextlib
 import json
 import logging
 from pathlib import Path
@@ -28,7 +27,7 @@ from ..notifications.sound_player import (  # noqa: F401
 from ..services.community_soundpack_service import CommunitySoundPackService
 
 # Import shared constants/datatypes for categories
-from .soundpack_manager.constants import FRIENDLY_ALERT_CATEGORIES, AlertCategoryItem
+from .soundpack_manager.constants import FRIENDLY_ALERT_CATEGORIES
 
 logger = logging.getLogger(__name__)
 
@@ -98,266 +97,24 @@ class SoundPackManagerDialog:
 
     def _create_dialog(self) -> None:
         """Create the sound pack manager dialog."""
-        self.dialog = toga.Window(
-            title="Sound Pack Manager",
-            size=(800, 600),
-            resizable=True,
-        )
+        from .soundpack_manager.ui import create_dialog_ui as _ui
 
-        main_box = toga.Box(style=Pack(direction=COLUMN, margin=10, flex=1))
-
-        # Title
-        title_label = toga.Label(
-            "Sound Pack Manager", style=Pack(font_size=16, font_weight="bold", margin_bottom=10)
-        )
-        main_box.add(title_label)
-
-        # Content area
-        content_box = toga.Box(style=Pack(direction=ROW, flex=1, margin_bottom=10))
-
-        # Left panel - Sound pack list
-        left_panel = self._create_pack_list_panel()
-        content_box.add(left_panel)
-
-        # Right panel - Pack details and sounds
-        right_panel = self._create_pack_details_panel()
-        content_box.add(right_panel)
-
-        main_box.add(content_box)
-
-        # Bottom buttons
-        button_box = self._create_button_panel()
-        main_box.add(button_box)
-
-        self.dialog.content = main_box
-
-        # Populate the pack list with loaded sound packs
-        self._refresh_pack_list()
-
-        # Select current pack if available (for focus), but do not change app setting here
-        if self.current_pack in self.sound_packs:
-            self.selected_pack = self.current_pack
-            # Find and set the current pack in the detailed list
-            for item in self.pack_list.data:
-                if item.pack_id == self.current_pack:
-                    # Note: DetailedList selection is read-only, so we can't set it programmatically
-                    # Just update the pack details instead
-                    break
-            self._update_pack_details()
+        _ui(self)
 
     def _create_pack_list_panel(self) -> toga.Box:
-        """Create the sound pack list panel."""
-        panel = toga.Box(style=Pack(direction=COLUMN, flex=1, margin_right=10))
+        from .soundpack_manager.ui import create_pack_list_panel as _panel
 
-        # Panel title
-        title_label = toga.Label(
-            "Available Sound Packs", style=Pack(font_weight="bold", margin_bottom=5)
-        )
-        panel.add(title_label)
-
-        # Pack list
-        self.pack_list = toga.DetailedList(
-            on_select=self._on_pack_selected,
-            style=Pack(flex=1, margin_bottom=10),
-        )
-        panel.add(self.pack_list)
-
-        # Import button
-        self.import_button = toga.Button(
-            "Import Sound Pack", on_press=self._on_import_pack, style=Pack(width=150)
-        )
-        panel.add(self.import_button)
-
-        # Quick hint: Active pack is selected in Settings > General
-        panel.add(
-            toga.Label(
-                "Hint: Select your active pack in Settings > General.",
-                style=Pack(margin_top=8, font_style="italic"),
-            )
-        )
-
-        return panel
+        return _panel(self)
 
     def _create_pack_details_panel(self) -> toga.Box:
-        """Create the pack details panel."""
-        panel = toga.Box(style=Pack(direction=COLUMN, flex=2, margin_left=10))
+        from .soundpack_manager.ui import create_pack_details_panel as _panel
 
-        # Panel title
-        title_label = toga.Label(
-            "Sound Pack Details", style=Pack(font_weight="bold", margin_bottom=5)
-        )
-        panel.add(title_label)
-
-        # Pack info box
-        self.pack_info_box = toga.Box(
-            style=Pack(direction=COLUMN, margin=10, background_color="#f0f0f0")
-        )
-
-        self.pack_name_label = toga.Label(
-            "No pack selected", style=Pack(font_size=14, font_weight="bold", margin_bottom=5)
-        )
-        self.pack_info_box.add(self.pack_name_label)
-
-        self.pack_author_label = toga.Label("", style=Pack(margin_bottom=5))
-        self.pack_info_box.add(self.pack_author_label)
-
-        self.pack_description_label = toga.Label("", style=Pack(margin_bottom=10))
-        self.pack_info_box.add(self.pack_description_label)
-
-        panel.add(self.pack_info_box)
-
-        # Sounds section
-        sounds_label = toga.Label(
-            "Sounds in this pack:", style=Pack(font_weight="bold", margin=(10, 0, 5, 0))
-        )
-        panel.add(sounds_label)
-
-        # Sound selection
-        self.sound_selection = toga.Selection(
-            items=[],
-            accessor="display_name",
-            on_change=self._on_sound_selected,
-            style=Pack(flex=1, margin_bottom=10),
-        )
-        panel.add(self.sound_selection)
-
-        # Mapping controls header and help text (no widget tooltips; Toga tooltips are for Commands)
-        mapping_header = toga.Box(style=Pack(direction=ROW, margin_bottom=5))
-        # WCAG: Keep labels concise; provide verbose guidance in separate help text.
-        mapping_label = toga.Label(
-            "Alert category:",
-            style=Pack(font_weight="bold", margin_right=5),
-        )
-        mapping_header.add(mapping_label)
-        panel.add(mapping_header)
-        # Mapping controls: key dropdown + file picker + preview
-        mapping_row = toga.Box(style=Pack(direction=ROW, margin_bottom=10))
-        self.mapping_key_selection = toga.Selection(
-            items=[
-                AlertCategoryItem(display_name=name, technical_key=key)
-                for name, key in FRIENDLY_ALERT_CATEGORIES
-            ],
-            accessor="display_name",
-            on_change=self._on_mapping_key_change,
-            style=Pack(width=260, margin_right=10),
-        )
-        # Accessibility: keep label concise; attach verbose help as description of the control
-        with contextlib.suppress(Exception):
-            self.mapping_key_selection.aria_label = "Alert category"
-            self.mapping_key_selection.aria_description = (
-                "Select from common weather alert categories. Each category maps to technical keys used by weather services. "
-                "Use the custom mapping field below for specific alert types not listed."
-            )
-        self.mapping_file_input = toga.TextInput(
-            readonly=True, placeholder="Select audio file...", style=Pack(flex=1, margin_right=10)
-        )
-        self.mapping_browse_button = toga.Button(
-            "Browse...", on_press=self._on_browse_mapping_file, style=Pack(margin_right=10)
-        )
-        self.mapping_preview_button = toga.Button(
-            "Preview", on_press=self._on_preview_mapping, enabled=False
-        )
-        mapping_row.add(self.mapping_key_selection)
-        mapping_row.add(self.mapping_file_input)
-        mapping_row.add(self.mapping_browse_button)
-        mapping_row.add(self.mapping_preview_button)
-        panel.add(mapping_row)
-        # Simpler controls for non-technical users: Add a custom key mapping directly
-        simple_map_box = toga.Box(style=Pack(direction=ROW, margin_bottom=10))
-        simple_label = toga.Label("Add or change a mapping:", style=Pack(margin_right=10))
-        self.simple_key_input = toga.TextInput(
-            placeholder="e.g., excessive_heat_warning or tornado_warning",
-            style=Pack(width=260, margin_right=10),
-        )
-        self.simple_file_button = toga.Button(
-            "Choose Sound...", on_press=self._on_simple_choose_file, style=Pack(margin_right=10)
-        )
-        self.simple_remove_button = toga.Button(
-            "Remove Mapping", on_press=self._on_simple_remove_mapping
-        )
-        simple_map_box.add(simple_label)
-        simple_map_box.add(self.simple_key_input)
-        simple_map_box.add(self.simple_file_button)
-        simple_map_box.add(self.simple_remove_button)
-        panel.add(simple_map_box)
-
-        # Sound action buttons removed; preview is available per alert category mapping
-        return panel
+        return _panel(self)
 
     def _create_button_panel(self) -> toga.Box:
-        """Create the bottom button panel."""
-        button_box = toga.Box(style=Pack(direction=ROW))
+        from .soundpack_manager.ui import create_button_panel as _btns
 
-        # Add flexible space to push buttons to the right
-        button_box.add(toga.Box(style=Pack(flex=1)))
-
-        # Create New Pack
-        self.create_button = toga.Button(
-            "Create New",
-            on_press=self._on_create_pack,
-            style=Pack(margin_right=10),
-        )
-        button_box.add(self.create_button)
-
-        # Create with Wizard (guided)
-        self.create_wizard_button = toga.Button(
-            "Create with Wizard",
-            on_press=self._on_create_pack_wizard,
-            style=Pack(margin_right=10),
-        )
-        button_box.add(self.create_wizard_button)
-
-        # Browse Community Packs
-        self.browse_community_button = toga.Button(
-            "Browse Community",
-            on_press=self._on_browse_community_packs,
-            style=Pack(margin_right=10),
-            enabled=self.community_service is not None,
-        )
-        button_box.add(self.browse_community_button)
-
-        # Duplicate Selected Pack
-        self.duplicate_button = toga.Button(
-            "Duplicate",
-            on_press=self._on_duplicate_pack,
-            enabled=False,
-            style=Pack(margin_right=10),
-        )
-        button_box.add(self.duplicate_button)
-
-        # Edit Metadata of Selected Pack
-        self.edit_button = toga.Button(
-            "Edit",
-            on_press=self._on_edit_pack,
-            enabled=False,
-            style=Pack(margin_right=10),
-        )
-        button_box.add(self.edit_button)
-
-        # Open Selected Pack (focus/manage only; does not change active pack)
-        self.select_button = toga.Button(
-            "Open",
-            on_press=self._on_open_pack,
-            enabled=False,
-            style=Pack(margin_right=10, background_color="#4CAF50", color="#ffffff"),
-        )
-        button_box.add(self.select_button)
-
-        # Delete Selected Pack
-        self.delete_button = toga.Button(
-            "Delete Pack",
-            on_press=self._on_delete_pack,
-            enabled=False,
-            style=Pack(margin_right=10, background_color="#ff4444", color="#ffffff"),
-        )
-        button_box.add(self.delete_button)
-
-        self.close_button = toga.Button(
-            "Close", on_press=self._on_close, style=Pack(margin_right=0)
-        )
-        button_box.add(self.close_button)
-
-        return button_box
+        return _btns(self)
 
     def _on_pack_selected(self, widget) -> None:
         """Handle pack selection."""
