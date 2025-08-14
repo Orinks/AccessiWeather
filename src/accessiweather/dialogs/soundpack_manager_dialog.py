@@ -18,6 +18,13 @@ import toga
 from toga.style import Pack
 from travertino.constants import COLUMN, ROW
 
+from ..notifications.alert_sound_mapper import CANONICAL_ALERT_KEYS  # noqa: F401
+from ..notifications.sound_player import (  # noqa: F401
+    get_available_sound_packs,
+    get_sound_pack_sounds,
+    validate_sound_pack,
+)
+
 
 @dataclass
 class AlertCategoryItem:
@@ -425,12 +432,36 @@ class SoundPackManagerDialog:
                 mapping_items = getattr(self.mapping_key_selection, "items", []) or []
                 selected_item = None
                 for item in mapping_items:
+                    # Derive a technical key from the item, handling Toga Row wrappers
+                    technical_key = None
                     try:
-                        technical_key = (
-                            item.get("technical_key")
-                            if isinstance(item, dict)
-                            else getattr(item, "technical_key", None)
-                        )
+                        # Direct attribute on dataclass
+                        technical_key = getattr(item, "technical_key", None)
+                        # Dict-style fallback
+                        if not technical_key and isinstance(item, dict):
+                            technical_key = item.get("technical_key")
+                        if not technical_key:
+                            # Toga Row case: display_name may be an AlertCategoryItem instance
+                            dn = getattr(item, "display_name", None)
+                            # If dn is a dataclass instance
+                            if dn is not None:
+                                tk2 = getattr(dn, "technical_key", None)
+                                if tk2:
+                                    technical_key = tk2
+                                else:
+                                    # If dn is a dataclass or string, try to map by friendly name
+                                    name = (
+                                        getattr(dn, "display_name", None)
+                                        if dn is not None
+                                        else None
+                                    )
+                                    if not name and isinstance(dn, str):
+                                        name = dn
+                                    if name:
+                                        for _name, _key in FRIENDLY_ALERT_CATEGORIES:
+                                            if _name == name:
+                                                technical_key = _key
+                                                break
                     except Exception:
                         technical_key = None
                     if technical_key and technical_key in sounds_keys:
@@ -538,12 +569,37 @@ class SoundPackManagerDialog:
             if not self.mapping_key_selection or not self.mapping_key_selection.value:
                 return None
             sel = self.mapping_key_selection.value
-            # With AlertCategoryItem dataclass, we can directly access the attribute
-            if hasattr(sel, "technical_key"):
-                return sel.technical_key
-            # Fallback for backward compatibility
+
+            # Direct attribute (dataclass instance assigned directly)
+            tk = getattr(sel, "technical_key", None)
+            if tk:
+                return tk
+
+            # Dict-style fallback
             if isinstance(sel, dict):
-                return sel.get("technical_key")
+                tk = sel.get("technical_key")
+                if tk:
+                    return tk
+
+            # Toga Row wrapper: display_name may actually be the AlertCategoryItem instance
+            dn = getattr(sel, "display_name", None)
+            if dn is not None:
+                tk2 = getattr(dn, "technical_key", None)
+                if tk2:
+                    return tk2
+                # Or try mapping from friendly name
+                name = getattr(dn, "display_name", None) if dn is not None else None
+                if not name and isinstance(dn, str):
+                    name = dn
+                if name:
+                    for friendly, key in FRIENDLY_ALERT_CATEGORIES:
+                        if friendly == name:
+                            return key
+
+            # Last resort: if selection is a plain string, normalize underscores
+            if isinstance(sel, str):
+                return sel.strip().lower().replace(" ", "_")
+
             return None
         except Exception:
             return None
