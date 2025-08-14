@@ -9,8 +9,6 @@ import asyncio
 import contextlib
 import json
 import logging
-import shutil
-from dataclasses import dataclass
 from pathlib import Path
 
 import toga
@@ -29,44 +27,8 @@ from ..notifications.sound_player import (  # noqa: F401
 # Community packs imports
 from ..services.community_soundpack_service import CommunitySoundPackService
 
-
-@dataclass
-class AlertCategoryItem:
-    """Data class for alert category selection items."""
-
-    display_name: str
-    technical_key: str
-
-    def __str__(self) -> str:  # Shown by Selection and debug; only show friendly name
-        return self.display_name
-
-    def __repr__(self) -> str:  # Prevent noisy reprs in lists/debug UIs
-        return f"{self.display_name}"
-
-
-# Friendly alert categories for mapping (display name, technical key)
-# Updated to match canonical keys from alert_sound_mapper
-FRIENDLY_ALERT_CATEGORIES = [
-    ("Tornado Warnings", "tornado_warning"),
-    ("Flood Warnings", "flood_warning"),
-    ("Heat Advisories", "heat_advisory"),
-    ("Thunderstorm Warnings", "thunderstorm_warning"),
-    ("Winter Storm Warnings", "winter_storm_warning"),
-    ("Hurricane Warnings", "hurricane_warning"),
-    ("Wind Warnings", "wind_warning"),
-    ("Fire Weather Warnings", "fire_warning"),
-    ("Air Quality Alerts", "air_quality_alert"),
-    ("Fog Advisories", "fog_advisory"),
-    ("Ice Warnings", "ice_warning"),
-    ("Snow Warnings", "snow_warning"),
-    ("Dust Warnings", "dust_warning"),
-    ("Generic Warning", "warning"),
-    ("Generic Watch", "watch"),
-    ("Generic Advisory", "advisory"),
-    ("Generic Statement", "statement"),
-    ("General Alert", "alert"),
-    ("General Notification", "notify"),
-]
+# Import shared constants/datatypes for categories
+from .soundpack_manager.constants import FRIENDLY_ALERT_CATEGORIES, AlertCategoryItem
 
 logger = logging.getLogger(__name__)
 
@@ -839,76 +801,9 @@ class SoundPackManagerDialog:
             self.app.main_window.error_dialog("Wizard Error", f"Failed to open wizard: {e}")
 
     def _create_pack_from_wizard_state(self, state) -> str:
-        """Create the pack on disk from the wizard state. Returns the new pack_id.
+        from .soundpack_manager.wizard_ops import create_pack_from_wizard_state as _wiz
 
-        This uses similar patterns to _on_create_pack but with user-provided metadata
-        and selected sounds copied from a staging area.
-        """
-
-        # Sanitize and ensure unique ID
-        def _slugify(name: str) -> str:
-            slug = (name or "custom").strip().lower().replace(" ", "_").replace("-", "_")
-            if not slug:
-                slug = "custom"
-            return slug
-
-        base_id = _slugify(getattr(state, "pack_name", ""))
-        if not base_id:
-            base_id = "custom"
-        pack_id = base_id
-        suffix = 1
-        while (self.soundpacks_dir / pack_id).exists():
-            suffix += 1
-            pack_id = f"{base_id}_{suffix}"
-
-        pack_dir = self.soundpacks_dir / pack_id
-        pack_dir.mkdir(parents=True, exist_ok=False)
-
-        # Copy staged files into pack dir and build sounds mapping with filenames
-        sounds: dict[str, str] = {}
-        for key, src in (getattr(state, "sound_mappings", {}) or {}).items():
-            try:
-                src_path = Path(src)
-                if not src_path.exists():
-                    continue
-                dest_name = src_path.name
-                dest_path = pack_dir / dest_name
-                # Avoid collisions: if a different source would overwrite an existing file,
-                # append a numeric suffix to the destination filename.
-                if dest_path.exists():
-                    try:
-                        same = src_path.resolve() == dest_path.resolve()
-                    except Exception:
-                        same = False
-                    if not same:
-                        stem = dest_path.stem
-                        suffix = dest_path.suffix
-                        counter = 1
-                        while True:
-                            candidate = pack_dir / f"{stem}_{counter}{suffix}"
-                            if not candidate.exists():
-                                dest_path = candidate
-                                dest_name = dest_path.name
-                                break
-                            counter += 1
-                if src_path.resolve() != dest_path.resolve():
-                    with contextlib.suppress(Exception):
-                        shutil.copy2(src_path, dest_path)
-                sounds[key] = dest_name
-            except Exception as copy_err:
-                logger.warning(f"Failed to copy sound for {key}: {copy_err}")
-
-        meta = {
-            "name": getattr(state, "pack_name", pack_id) or pack_id,
-            "author": getattr(state, "author", "") or "",
-            "description": getattr(state, "description", "") or "",
-            "sounds": sounds,
-        }
-        try:
-            with open(pack_dir / "pack.json", "w", encoding="utf-8") as f:
-                json.dump(meta, f, indent=2)
-        except Exception as e:
-            logger.error(f"Failed to write pack.json: {e}")
+        return _wiz(self, state)
 
     async def _on_browse_community_packs(self, widget) -> None:
         """Open the community packs browser dialog and refresh after install."""
