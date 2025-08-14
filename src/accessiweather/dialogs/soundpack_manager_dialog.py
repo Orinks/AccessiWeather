@@ -230,8 +230,9 @@ class SoundPackManagerDialog:
 
         # Mapping controls header and help text (no widget tooltips; Toga tooltips are for Commands)
         mapping_header = toga.Box(style=Pack(direction=ROW, margin_bottom=5))
+        # WCAG: Keep labels concise; provide verbose guidance in separate help text.
         mapping_label = toga.Label(
-            "Alert type/severity mapping:",
+            "Alert category:",
             style=Pack(font_weight="bold", margin_right=5),
         )
         mapping_header.add(mapping_label)
