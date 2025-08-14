@@ -535,6 +535,7 @@ class TestSoundPackManagerDialogUI:
 
         sp_mod = importlib.import_module("accessiweather.notifications.sound_player")
         monkeypatch.setattr(sp_mod, "_play_sound_file", lambda p: _fake_play(p), raising=True)
+        # Use the mapping preview button since the per-sound preview button was removed
         dlg._on_preview_mapping(dlg.mapping_preview_button)
         assert played.get("path") == pack_dir / "adv.wav"
 
