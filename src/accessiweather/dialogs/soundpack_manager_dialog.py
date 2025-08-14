@@ -1174,7 +1174,6 @@ class SoundPackManagerDialog:
 
         return pack_id
 
-    class SoundPackWizardDialog:
         """Guided wizard for creating a new sound pack."""
 
         @dataclass
