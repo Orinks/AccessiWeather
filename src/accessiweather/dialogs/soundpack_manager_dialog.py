@@ -33,6 +33,12 @@ class AlertCategoryItem:
     display_name: str
     technical_key: str
 
+    def __str__(self) -> str:  # Shown by Selection and debug; only show friendly name
+        return self.display_name
+
+    def __repr__(self) -> str:  # Prevent noisy reprs in lists/debug UIs
+        return f"{self.display_name}"
+
 
 # Friendly alert categories for mapping (display name, technical key)
 # Updated to match canonical keys from alert_sound_mapper
