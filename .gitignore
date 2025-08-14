@@ -242,3 +242,7 @@ tuf_repo/repository/targets/
 
 # Private release documentation (contains sensitive deployment info)
 RELEASE_PROCESS.md
+
+
+# Legacy temporary wx repo directory (do not track)
+AccessiWeather-wx-legacy-tmp/
