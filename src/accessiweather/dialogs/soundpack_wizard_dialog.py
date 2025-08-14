@@ -204,13 +204,6 @@ class SoundPackWizardDialog:
     # Step 1: Pack details
     def _build_step1(self) -> None:
         form = toga.Box(style=Pack(direction=COLUMN))
-        help_lbl = toga.Label(
-            "Enter a pack name, and optionally an author and description. Press Next to continue.",
-            style=Pack(margin_bottom=8),
-        )
-        form.add(help_lbl)
-        # Focus help text for screen readers when entering this step
-        self._focus_target = help_lbl
         form.add(toga.Label("Pack name (required):"))
         self.name_input = toga.TextInput(
             value=self.state.pack_name or "",
@@ -218,6 +211,8 @@ class SoundPackWizardDialog:
             style=Pack(margin_bottom=8),
         )
         form.add(self.name_input)
+        # Set focus to the first input for step 1
+        self._focus_target = self.name_input
         form.add(toga.Label("Author (optional):"))
         self.author_input = toga.TextInput(
             value=self.state.author or "", style=Pack(margin_bottom=8)
@@ -277,24 +272,25 @@ class SoundPackWizardDialog:
     # Step 2: Alert selection
     def _build_step2(self) -> None:
         outer = toga.Box(style=Pack(direction=COLUMN, flex=1))
-        help_lbl = toga.Label(
-            "Choose the alert categories you want sounds for. Use Space to toggle switches, then press Next to continue.",
-            style=Pack(margin_bottom=6),
-        )
+        help_lbl = toga.Label("Choose the alert categories you want sounds for.")
         outer.add(help_lbl)
-        # Focus help text for screen readers when entering this step
-        self._focus_target = help_lbl
         scroll = toga.ScrollContainer(style=Pack(flex=1, margin_top=8))
         inner = toga.Box(style=Pack(direction=COLUMN, padding=(4, 8)))
 
         self.category_checks: list[tuple[str, toga.Switch]] = []
+        first_switch = None
         for display, key in self.friendly_categories:
             row = toga.Box(style=Pack(direction=ROW, margin_bottom=4))
             chk = toga.Switch(display)
+            if first_switch is None:
+                first_switch = chk
             chk.value = key in (self.state.selected_alert_keys or [])
             row.add(chk)
             inner.add(row)
             self.category_checks.append((key, chk))
+        # Focus the first switch if available
+        if first_switch is not None:
+            self._focus_target = first_switch
 
         scroll.content = inner
         outer.add(scroll)
@@ -329,17 +325,15 @@ class SoundPackWizardDialog:
     def _build_step3(self) -> None:
         outer = toga.Box(style=Pack(direction=COLUMN, flex=1))
         help_lbl = toga.Label(
-            "Assign a sound file to each selected alert. Use Choose File to pick a sound; Record is coming soon. Use Preview to test. Press Next to continue.",
-            style=Pack(margin_bottom=6),
+            "Assign a sound file to each selected alert. You can leave some blank; defaults will be used."
         )
         outer.add(help_lbl)
-        # Focus help text for screen readers when entering this step
-        self._focus_target = help_lbl
         scroll = toga.ScrollContainer(style=Pack(flex=1, margin_top=8))
         inner = toga.Box(style=Pack(direction=COLUMN, padding=(4, 8)))
 
         self.mapping_rows = []
         selected = self.state.selected_alert_keys or []
+        first_focus_set = False
         for key in selected:
             friendly = next(
                 (d for d, k in self.friendly_categories if k == key),
@@ -429,6 +423,9 @@ class SoundPackWizardDialog:
             row.add(record_hint)
             inner.add(row)
             self.mapping_rows.append((key, file_display))
+            if not first_focus_set:
+                self._focus_target = choose_btn
+                first_focus_set = True
 
         scroll.content = inner
         outer.add(scroll)
@@ -437,13 +434,6 @@ class SoundPackWizardDialog:
     # Step 4: Preview & finalize
     def _build_step4(self) -> None:
         outer = toga.Box(style=Pack(direction=COLUMN, flex=1))
-        help_lbl = toga.Label(
-            "Review your selections below. Use Preview to test individual sounds, or Test Pack to play a short sequence. Press Create Pack to finish.",
-            style=Pack(margin_bottom=6),
-        )
-        outer.add(help_lbl)
-        # Focus help text for screen readers when entering this step
-        self._focus_target = help_lbl
         meta = toga.Label(f"Pack: {self.state.pack_name}  |  Author: {self.state.author}")
         outer.add(meta)
         desc = toga.Label(self.state.description or "")
@@ -516,5 +506,8 @@ class SoundPackWizardDialog:
             "Test Pack", on_press=_test_pack, style=Pack(margin_top=8, width=120)
         )
         outer.add(test_button)
+
+        # Focus Test Pack button on step 4 start
+        self._focus_target = test_button
 
         self.content_box.add(outer)
