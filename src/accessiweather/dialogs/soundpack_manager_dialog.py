@@ -511,81 +511,17 @@ class SoundPackManagerDialog:
 
     def _on_mapping_key_change(self, widget) -> None:
         """When the mapping key changes, populate the file input with current mapping if present."""
-        try:
-            if not self.selected_pack or self.selected_pack not in self.sound_packs:
-                return
-            pack_info = self.sound_packs[self.selected_pack]
-            sounds = pack_info.get("sounds", {})
-            key = self._get_technical_key_from_selection()
-            current = sounds.get(key, "")
-            self.mapping_file_input.value = current
-            # Enable preview if file exists
-            if current:
-                sound_path = pack_info["path"] / current
-                self.mapping_preview_button.enabled = (
-                    sound_path.exists() and sound_path.stat().st_size > 0
-                )
-            else:
-                self.mapping_preview_button.enabled = False
-        except Exception as e:
-            logger.warning(f"Failed to update mapping input: {e}")
+        from .soundpack_manager.mappings import on_mapping_key_change as _mkc
+
+        _mkc(self, widget)
 
     def _on_browse_mapping_file(self, widget) -> None:
         """Open a file dialog to choose an audio file for the selected key."""
         if not self.selected_pack or self.selected_pack not in self.sound_packs:
             return
-        display_name = self._get_display_name_from_selection()
-        technical_key = self._get_technical_key_from_selection()
-        if not technical_key:
-            return
-        try:
-            # Choose audio file
-            def _apply_file_choice(_, path=None):
-                if not path:
-                    return
-                try:
-                    pack_info = self.sound_packs[self.selected_pack]
-                    rel_name = Path(path).name  # store filename relative to pack
-                    # Update pack.json
-                    meta = self._load_pack_meta(pack_info)
-                    sounds = meta.get("sounds", {})
-                    if not isinstance(sounds, dict):
-                        sounds = {}
-                    key = technical_key
-                    sounds[key] = rel_name
-                    meta["sounds"] = sounds
-                    self._save_pack_meta(pack_info, meta)
-                    # Copy file into pack if not already there
-                    dst = pack_info["path"] / rel_name
-                    if Path(path) != dst:
-                        try:
-                            shutil.copy2(path, dst)
-                        except Exception as copy_err:
-                            logger.warning(f"Could not copy audio file: {copy_err}")
-                    # Update in-memory data and UI
-                    pack_info["sounds"] = sounds
-                    self.mapping_file_input.value = rel_name
-                    self._update_pack_details()
-                    self.app.main_window.info_dialog(
-                        "Mapping Updated",
-                        f"Mapped '{display_name or key}' to '{rel_name}' in pack '{pack_info.get('name', self.selected_pack)}'.",
-                    )
-                except Exception as e:
-                    logger.error(f"Failed to update mapping: {e}")
-                    self.app.main_window.error_dialog(
-                        "Mapping Error", f"Failed to update mapping: {e}"
-                    )
+        from .soundpack_manager.mappings import on_browse_mapping_file as _b
 
-            self.app.main_window.open_file_dialog(
-                title="Select Audio File",
-                file_types=["wav", "mp3", "ogg", "flac"],
-                on_result=_apply_file_choice,
-            )
-        except Exception as e:
-            logger.error(f"Failed to open file dialog: {e}")
-            self.app.main_window.error_dialog(
-                "File Dialog Error", f"Failed to open file dialog: {e}"
-            )
+        _b(self, widget)
 
     def _get_selected_mapping_item(self):
         try:
@@ -635,19 +571,9 @@ class SoundPackManagerDialog:
             return None
 
     def _get_display_name_from_selection(self) -> str | None:
-        try:
-            if not self.mapping_key_selection or not self.mapping_key_selection.value:
-                return None
-            sel = self.mapping_key_selection.value
-            # With AlertCategoryItem dataclass, we can directly access the attribute
-            if hasattr(sel, "display_name"):
-                return sel.display_name
-            # Fallback for backward compatibility
-            if isinstance(sel, dict):
-                return sel.get("display_name")
-            return str(sel) if sel is not None else None
-        except Exception:
-            return None
+        from .soundpack_manager.mappings import get_display_name_from_selection as _dn
+
+        return _dn(self)
 
     def _on_preview_mapping(self, widget) -> None:
         """Preview the audio currently mapped for the selected key."""
@@ -736,29 +662,9 @@ class SoundPackManagerDialog:
         )
 
     def _apply_simple_mapping(self, key: str, path: str | None) -> None:
-        """Apply a mapping of key->audio file in the selected pack; copy file into pack."""
-        if not path:
-            return
-        try:
-            pack_info = self.sound_packs[self.selected_pack]  # type: ignore[index]
-            meta = self._load_pack_meta(pack_info)
-            sounds = meta.get("sounds", {})
-            if not isinstance(sounds, dict):
-                sounds = {}
-            rel_name = Path(path).name
-            sounds[key] = rel_name
-            meta["sounds"] = sounds
-            self._save_pack_meta(pack_info, meta)
-            dst = pack_info["path"] / rel_name
-            if Path(path) != dst:
-                with contextlib.suppress(Exception):
-                    shutil.copy2(path, dst)
-            pack_info["sounds"] = sounds
-            self._update_pack_details()
-            self.app.main_window.info_dialog("Mapping Updated", f"Mapped '{key}' to '{rel_name}'.")
-        except Exception as e:
-            logger.error(f"Failed to update mapping: {e}")
-            self.app.main_window.error_dialog("Mapping Error", f"Failed to update mapping: {e}")
+        from .soundpack_manager.mappings import apply_simple_mapping as _asm
+
+        _asm(self, key, path)
 
     def _load_pack_meta(self, pack_info: dict) -> dict:
         """Load pack.json metadata for a pack."""
@@ -773,29 +679,9 @@ class SoundPackManagerDialog:
             json.dump(meta, f, indent=2)
 
     def _on_simple_remove_mapping(self, widget) -> None:
-        """Remove the entered mapping key from the pack.json (no file deletes)."""
-        if not self.selected_pack or self.selected_pack not in self.sound_packs:
-            return
-        key = (self.simple_key_input.value or "").strip().lower()
-        if not key:
-            self.app.main_window.info_dialog("Missing Key", "Please enter a mapping key to remove.")
-            return
-        try:
-            pack_info = self.sound_packs[self.selected_pack]
-            meta = self._load_pack_meta(pack_info)
-            sounds = meta.get("sounds", {}) or {}
-            if key in sounds:
-                sounds.pop(key, None)
-                meta["sounds"] = sounds
-                self._save_pack_meta(pack_info, meta)
-                pack_info["sounds"] = sounds
-                self._update_pack_details()
-                self.app.main_window.info_dialog("Mapping Removed", f"Removed mapping for '{key}'.")
-            else:
-                self.app.main_window.info_dialog("Not Found", f"No mapping exists for '{key}'.")
-        except Exception as e:
-            logger.error(f"Failed to remove mapping: {e}")
-            self.app.main_window.error_dialog("Remove Error", f"Failed to remove mapping: {e}")
+        from .soundpack_manager.mappings import on_simple_remove_mapping as _srm
+
+        _srm(self, widget)
 
     def _import_pack_file(self, widget, path: str | None = None) -> None:
         """Import a sound pack from a ZIP file."""
