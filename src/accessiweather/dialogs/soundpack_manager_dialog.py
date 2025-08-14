@@ -548,17 +548,14 @@ class SoundPackManagerDialog:
                     pack_info = self.sound_packs[self.selected_pack]
                     rel_name = Path(path).name  # store filename relative to pack
                     # Update pack.json
-                    pack_json_path = pack_info["path"] / "pack.json"
-                    with open(pack_json_path, encoding="utf-8") as f:
-                        meta = json.load(f)
+                    meta = self._load_pack_meta(pack_info)
                     sounds = meta.get("sounds", {})
                     if not isinstance(sounds, dict):
                         sounds = {}
                     key = technical_key
                     sounds[key] = rel_name
                     meta["sounds"] = sounds
-                    with open(pack_json_path, "w", encoding="utf-8") as f:
-                        json.dump(meta, f, indent=2)
+                    self._save_pack_meta(pack_info, meta)
                     # Copy file into pack if not already there
                     dst = pack_info["path"] / rel_name
                     if Path(path) != dst:
