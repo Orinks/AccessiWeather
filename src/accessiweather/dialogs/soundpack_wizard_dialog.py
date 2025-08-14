@@ -121,6 +121,11 @@ class SoundPackWizardDialog:
                 self.window.close()
                 if self.on_complete:
                     self.on_complete(new_pack_id)
+                # Cleanup staging directory on success
+                with contextlib.suppress(Exception):
+                    import shutil as _shutil
+
+                    _shutil.rmtree(self.staging_dir)
             except Exception as e:
                 logger.error(f"Failed to create pack from wizard: {e}")
                 self.app.main_window.error_dialog("Create Error", f"Failed to create pack: {e}")
@@ -161,10 +166,8 @@ class SoundPackWizardDialog:
         self.next_btn.text = "Next" if self.current_step < self.total_steps else "Create Pack"
 
         # Replace the entire content container to ensure old controls are removed
-        try:
+        with contextlib.suppress(Exception):
             self.root_box.remove(self.content_box)
-        except Exception:
-            pass
         self.content_box = toga.Box(style=Pack(direction=COLUMN, flex=1))
         # Insert after header_label
         try:
@@ -404,12 +407,20 @@ class SoundPackWizardDialog:
                 on_press=_choose_file_factory(key, file_display, friendly),
                 style=Pack(margin_right=8),
             )
+            # Placeholder Record control (disabled) with hint label
+            record_btn = toga.Button("Record", enabled=False, style=Pack(margin_right=8))
+            record_hint = toga.Label(
+                "Recording coming soon",
+                style=Pack(padding_top=6, margin_left=4, font_style="italic"),
+            )
             preview_btn = toga.Button("Preview", on_press=_preview_factory(key, friendly))
 
             row.add(label)
             row.add(file_display)
             row.add(choose_btn)
+            row.add(record_btn)
             row.add(preview_btn)
+            row.add(record_hint)
             inner.add(row)
             self.mapping_rows.append((key, file_display))
             if not first_focus_set:
@@ -477,10 +488,16 @@ class SoundPackWizardDialog:
 
                 from ..notifications.sound_player import play_sound_file
 
-                for key in (self.state.selected_alert_keys or [])[:5]:
-                    src = self.state.sound_mappings.get(key)
-                    if src:
-                        play_sound_file(_Path(src))
+                async def _runner():
+                    for key in (self.state.selected_alert_keys or [])[:5]:
+                        src = self.state.sound_mappings.get(key)
+                        if src:
+                            play_sound_file(_Path(src))
+                            # Small delay to avoid overlap with async playback backends
+                            await asyncio.sleep(0.4)
+
+                # Run playback sequence without blocking UI
+                asyncio.create_task(_runner())
             except Exception as e:
                 logger.error(f"Failed to test pack: {e}")
                 self.app.main_window.error_dialog("Test Error", f"Failed to test pack: {e}")
