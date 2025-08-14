@@ -185,7 +185,7 @@ class SoundPackWizardDialog:
         form.add(self.author_input)
         form.add(toga.Label("Description (optional):"))
         self.desc_input = toga.MultilineTextInput(
-            value=self.state.description or "", style=Pack(flex=1, min_height=120)
+            value=self.state.description or "", style=Pack(flex=1, height=120)
         )
         form.add(self.desc_input)
 
