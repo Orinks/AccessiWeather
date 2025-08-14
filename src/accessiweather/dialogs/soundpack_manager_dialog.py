@@ -17,18 +17,30 @@ import toga
 from toga.style import Pack
 from travertino.constants import COLUMN, ROW
 
-# Supported alert keys for mapping
-SUPPORTED_SOUND_KEYS = [
-    "warning",
-    "watch",
-    "advisory",
-    "statement",
-    "extreme",
-    "severe",
-    "moderate",
-    "minor",
-    "alert",
-    "notify",
+# Friendly alert categories for mapping (display name, technical key)
+FRIENDLY_ALERT_CATEGORIES = [
+    ("Tornado Warnings", "tornado_warning"),
+    ("Flood Alerts", "flood_warning"),
+    ("Heat Advisories", "heat_advisory"),
+    ("Severe Thunderstorm Warnings", "severe_thunderstorm_warning"),
+    ("Winter Storm Warnings", "winter_storm_warning"),
+    ("Hurricane Warnings", "hurricane_warning"),
+    ("Wind Warnings", "wind_warning"),
+    ("Fire Weather Warnings", "fire_warning"),
+    ("Air Quality Alerts", "air_quality_alert"),
+    ("Fog Advisories", "fog_advisory"),
+    ("Ice Storm Warnings", "ice_warning"),
+    ("Snow Warnings", "snow_warning"),
+    ("Generic Warning", "warning"),
+    ("Generic Watch", "watch"),
+    ("Generic Advisory", "advisory"),
+    ("Generic Statement", "statement"),
+    ("Extreme Severity", "extreme"),
+    ("Severe Level", "severe"),
+    ("Moderate Level", "moderate"),
+    ("Minor Level", "minor"),
+    ("General Alert", "alert"),
+    ("General Notification", "notify"),
 ]
 
 logger = logging.getLogger(__name__)
@@ -226,7 +238,7 @@ class SoundPackManagerDialog:
         panel.add(mapping_header)
         panel.add(
             toga.Label(
-                "Supported keys: warning, watch, advisory, statement; severities: extreme, severe, moderate, minor; fallbacks: alert, notify",
+                "Select from common weather alert categories. Each category maps to technical keys used by weather services. Use the custom mapping field below for specific alert types not listed.",
                 style=Pack(margin_bottom=5),
             )
         )
@@ -234,9 +246,13 @@ class SoundPackManagerDialog:
         # Mapping controls: key dropdown + file picker + preview
         mapping_row = toga.Box(style=Pack(direction=ROW, margin_bottom=10))
         self.mapping_key_selection = toga.Selection(
-            items=[k.title() for k in SUPPORTED_SOUND_KEYS],
+            items=[
+                {"display_name": name, "technical_key": key}
+                for name, key in FRIENDLY_ALERT_CATEGORIES
+            ],
+            accessor="display_name",
             on_change=self._on_mapping_key_change,
-            style=Pack(width=200, margin_right=10),
+            style=Pack(width=260, margin_right=10),
         )
         self.mapping_file_input = toga.TextInput(
             readonly=True, placeholder="Select audio file...", style=Pack(flex=1, margin_right=10)
@@ -397,6 +413,33 @@ class SoundPackManagerDialog:
 
         self.sound_selection.items = sound_items
 
+        # Update mapping selection to a friendly category that has a mapping in this pack
+        try:
+            if self.mapping_key_selection is not None:
+                sounds_keys = set(sounds.keys())
+                mapping_items = getattr(self.mapping_key_selection, "items", []) or []
+                selected_item = None
+                for item in mapping_items:
+                    try:
+                        technical_key = (
+                            item.get("technical_key")
+                            if isinstance(item, dict)
+                            else getattr(item, "technical_key", None)
+                        )
+                    except Exception:
+                        technical_key = None
+                    if technical_key and technical_key in sounds_keys:
+                        selected_item = item
+                        break
+                if selected_item is None and mapping_items:
+                    selected_item = mapping_items[0]
+                if selected_item is not None:
+                    self.mapping_key_selection.value = selected_item
+                    # Populate file input/preview state for initial selection
+                    self._on_mapping_key_change(self.mapping_key_selection)
+        except Exception as e:
+            logger.warning(f"Failed to update mapping selection: {e}")
+
     def _on_mapping_key_change(self, widget) -> None:
         """When the mapping key changes, populate the file input with current mapping if present."""
         try:
@@ -404,7 +447,7 @@ class SoundPackManagerDialog:
                 return
             pack_info = self.sound_packs[self.selected_pack]
             sounds = pack_info.get("sounds", {})
-            key = (widget.value or "").strip().lower()
+            key = self._get_technical_key_from_selection()
             current = sounds.get(key, "")
             self.mapping_file_input.value = current
             # Enable preview if file exists
@@ -422,8 +465,9 @@ class SoundPackManagerDialog:
         """Open a file dialog to choose an audio file for the selected key."""
         if not self.selected_pack or self.selected_pack not in self.sound_packs:
             return
-        key_label = (self.mapping_key_selection.value or "").strip()
-        if not key_label:
+        display_name = self._get_display_name_from_selection()
+        technical_key = self._get_technical_key_from_selection()
+        if not technical_key:
             return
         try:
             # Choose audio file
@@ -440,7 +484,7 @@ class SoundPackManagerDialog:
                     sounds = meta.get("sounds", {})
                     if not isinstance(sounds, dict):
                         sounds = {}
-                    key = key_label.lower()
+                    key = technical_key
                     sounds[key] = rel_name
                     meta["sounds"] = sounds
                     with open(pack_json_path, "w", encoding="utf-8") as f:
@@ -458,7 +502,7 @@ class SoundPackManagerDialog:
                     self._update_pack_details()
                     self.app.main_window.info_dialog(
                         "Mapping Updated",
-                        f"Mapped '{key_label}' to '{rel_name}' in pack '{pack_info.get('name', self.selected_pack)}'.",
+                        f"Mapped '{display_name or key}' to '{rel_name}' in pack '{pack_info.get('name', self.selected_pack)}'.",
                     )
                 except Exception as e:
                     logger.error(f"Failed to update mapping: {e}")
@@ -477,17 +521,77 @@ class SoundPackManagerDialog:
                 "File Dialog Error", f"Failed to open file dialog: {e}"
             )
 
+    def _get_selected_mapping_item(self):
+        try:
+            return self.mapping_key_selection.value if self.mapping_key_selection else None
+        except Exception:
+            return None
+
+    def _get_technical_key_from_selection(self) -> str | None:
+        """Safely extract the technical key from the current mapping selection."""
+        try:
+            if not self.mapping_key_selection or not self.mapping_key_selection.value:
+                return None
+            sel = self.mapping_key_selection.value
+            # Toga Selection may wrap dicts as attribute-accessible rows
+            technical_key = None
+            if isinstance(sel, dict):
+                technical_key = sel.get("technical_key")
+            else:
+                technical_key = getattr(sel, "technical_key", None)
+            # Fallback: try to look up by display name
+            if not technical_key:
+                display_name = None
+                if isinstance(sel, dict):
+                    display_name = sel.get("display_name")
+                else:
+                    display_name = getattr(sel, "display_name", None) or (
+                        str(sel) if sel is not None else None
+                    )
+                if display_name:
+                    for name, key in FRIENDLY_ALERT_CATEGORIES:
+                        if name == display_name:
+                            technical_key = key
+                            break
+            # Final fallback: if selection is a plain string, normalize
+            if not technical_key and isinstance(sel, str):
+                technical_key = sel.strip().lower().replace(" ", "_")
+            return technical_key
+        except Exception:
+            return None
+
+    def _get_display_name_from_selection(self) -> str | None:
+        try:
+            if not self.mapping_key_selection or not self.mapping_key_selection.value:
+                return None
+            sel = self.mapping_key_selection.value
+            if isinstance(sel, dict):
+                return sel.get("display_name")
+            name = getattr(sel, "display_name", None)
+            if name:
+                return name
+            # Fallback by resolving from technical key
+            tech = getattr(sel, "technical_key", None)
+            if tech:
+                for name, key in FRIENDLY_ALERT_CATEGORIES:
+                    if key == tech:
+                        return name
+            # Last resort: string cast
+            return str(sel)
+        except Exception:
+            return None
+
     def _on_preview_mapping(self, widget) -> None:
         """Preview the audio currently mapped for the selected key."""
         try:
             if not self.selected_pack or self.selected_pack not in self.sound_packs:
                 return
-            key_label = (self.mapping_key_selection.value or "").strip()
-            if not key_label:
+            technical_key = self._get_technical_key_from_selection()
+            if not technical_key:
                 return
             pack_info = self.sound_packs[self.selected_pack]
             sounds = pack_info.get("sounds", {})
-            filename = sounds.get(key_label.lower()) or f"{key_label.lower()}.wav"
+            filename = sounds.get(technical_key) or f"{technical_key}.wav"
             sound_path = pack_info["path"] / filename
             if not sound_path.exists():
                 self.app.main_window.info_dialog(
