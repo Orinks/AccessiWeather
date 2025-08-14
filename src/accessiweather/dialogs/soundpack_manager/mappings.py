@@ -161,3 +161,52 @@ def on_simple_remove_mapping(dlg, widget) -> None:
     except Exception as e:
         logger.error(f"Failed to remove mapping: {e}")
         dlg.app.main_window.error_dialog("Remove Error", f"Failed to remove mapping: {e}")
+
+
+def preview_mapping(dlg, widget) -> None:
+    """Preview audio for the currently selected mapping key, if available."""
+    try:
+        if not dlg.selected_pack or dlg.selected_pack not in dlg.sound_packs:
+            return
+        technical_key = get_technical_key_from_selection(dlg)
+        if not technical_key:
+            return
+        pack_info = dlg.sound_packs[dlg.selected_pack]
+        sounds = pack_info.get("sounds", {})
+        filename = sounds.get(technical_key) or f"{technical_key}.wav"
+        sound_path = pack_info["path"] / filename
+        if not sound_path.exists():
+            dlg.app.main_window.info_dialog(
+                "Sound Not Available",
+                f"The sound file '{filename}' is not available in this pack.",
+            )
+            return
+        from ..notifications.sound_player import play_sound_file
+
+        play_sound_file(sound_path)
+    except Exception as e:
+        logger.error(f"Failed to preview mapping: {e}")
+        dlg.app.main_window.error_dialog("Preview Error", f"Failed to preview mapping: {e}")
+
+
+def preview_selected_sound(dlg, widget) -> None:
+    """Preview the sound selected from the sound list."""
+    if not dlg.sound_selection.value or not dlg.selected_pack:
+        return
+    try:
+        sound_item = dlg.sound_selection.value
+        sound_name = sound_item.sound_name
+        pack_info = dlg.sound_packs[dlg.selected_pack]
+        sound_path = pack_info["path"] / sound_item.sound_file
+        if not sound_path.exists():
+            dlg.app.main_window.info_dialog(
+                "Sound Not Available",
+                f"The sound file '{sound_item.sound_file}' is not available. This may be a placeholder sound pack.",
+            )
+            return
+        from ..notifications.sound_player import play_notification_sound
+
+        play_notification_sound(sound_name, dlg.selected_pack)
+    except Exception as e:
+        logger.error(f"Failed to preview sound: {e}")
+        dlg.app.main_window.error_dialog("Preview Error", f"Failed to preview sound: {e}")

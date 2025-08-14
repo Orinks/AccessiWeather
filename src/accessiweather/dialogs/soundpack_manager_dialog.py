@@ -6,7 +6,6 @@ in Settings > General and is not changed from this manager.
 """
 
 import asyncio
-import json
 import logging
 from pathlib import Path
 
@@ -150,29 +149,9 @@ class SoundPackManagerDialog:
         return _dn(self)
 
     def _on_preview_mapping(self, widget) -> None:
-        """Preview the audio currently mapped for the selected key."""
-        try:
-            if not self.selected_pack or self.selected_pack not in self.sound_packs:
-                return
-            technical_key = self._get_technical_key_from_selection()
-            if not technical_key:
-                return
-            pack_info = self.sound_packs[self.selected_pack]
-            sounds = pack_info.get("sounds", {})
-            filename = sounds.get(technical_key) or f"{technical_key}.wav"
-            sound_path = pack_info["path"] / filename
-            if not sound_path.exists():
-                self.app.main_window.info_dialog(
-                    "Sound Not Available",
-                    f"The sound file '{filename}' is not available in this pack.",
-                )
-                return
-            from ..notifications.sound_player import play_sound_file
+        from .soundpack_manager.mappings import preview_mapping as _prev
 
-            play_sound_file(sound_path)
-        except Exception as e:
-            logger.error(f"Failed to preview mapping: {e}")
-            self.app.main_window.error_dialog("Preview Error", f"Failed to preview mapping: {e}")
+        _prev(self, widget)
 
     def _on_sound_selected(self, widget) -> None:
         """Handle sound selection (no separate preview button)."""
@@ -181,32 +160,9 @@ class SoundPackManagerDialog:
         # Preview is provided via the alert category mapping controls.
 
     def _on_preview_sound(self, widget) -> None:
-        """Preview the selected sound."""
-        if not self.sound_selection.value or not self.selected_pack:
-            return
+        from .soundpack_manager.mappings import preview_selected_sound as _ps
 
-        try:
-            sound_item = self.sound_selection.value
-            sound_name = sound_item.sound_name
-
-            # Check if the sound file exists
-            pack_info = self.sound_packs[self.selected_pack]
-            sound_path = pack_info["path"] / sound_item.sound_file
-
-            if not sound_path.exists():
-                self.app.main_window.info_dialog(
-                    "Sound Not Available",
-                    f"The sound file '{sound_item.sound_file}' is not available. This may be a placeholder sound pack.",
-                )
-                return
-
-            from ..notifications.sound_player import play_notification_sound
-
-            play_notification_sound(sound_name, self.selected_pack)
-
-        except Exception as e:
-            logger.error(f"Failed to preview sound: {e}")
-            self.app.main_window.error_dialog("Preview Error", f"Failed to preview sound: {e}")
+        _ps(self, widget)
 
     def _on_import_pack(self, widget) -> None:
         """Import a new sound pack."""
@@ -237,16 +193,14 @@ class SoundPackManagerDialog:
         _asm(self, key, path)
 
     def _load_pack_meta(self, pack_info: dict) -> dict:
-        """Load pack.json metadata for a pack."""
-        pack_json_path = pack_info["path"] / "pack.json"
-        with open(pack_json_path, encoding="utf-8") as f:
-            return json.load(f)
+        from .soundpack_manager.ops import load_pack_meta as _load
+
+        return _load(pack_info)
 
     def _save_pack_meta(self, pack_info: dict, meta: dict) -> None:
-        """Save pack.json metadata for a pack."""
-        pack_json_path = pack_info["path"] / "pack.json"
-        with open(pack_json_path, "w", encoding="utf-8") as f:
-            json.dump(meta, f, indent=2)
+        from .soundpack_manager.ops import save_pack_meta as _save
+
+        _save(pack_info, meta)
 
     def _on_simple_remove_mapping(self, widget) -> None:
         from .soundpack_manager.mappings import on_simple_remove_mapping as _srm
