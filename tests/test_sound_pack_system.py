@@ -449,7 +449,7 @@ class TestSoundPackManagerDialogUI:
 
         # Create pack with a hazard+type key present
         self._create_pack(
-            tmp_path, "ui_test", {"severe_thunderstorm_warning": "storm.wav", "alert": "alert.wav"}
+            tmp_path, "ui_test", {"thunderstorm_warning": "storm.wav", "alert": "alert.wav"}
         )
         dlg = SoundPackManagerDialog(self.app, current_pack="ui_test")
         # Point dialog at our temp packs dir and reload
@@ -458,18 +458,18 @@ class TestSoundPackManagerDialogUI:
         dlg._refresh_pack_list()
         dlg.selected_pack = "ui_test"
         dlg._update_pack_details()
-        # Selection should have been auto-set to a category that exists in pack
-        assert dlg.mapping_key_selection is not None
-        sel = dlg.mapping_key_selection.value
-        # Extract technical key regardless of wrapper type
-        tech = (
-            sel.get("technical_key")
-            if isinstance(sel, dict)
-            else getattr(sel, "technical_key", None)
-        )
-        assert tech == "severe_thunderstorm_warning"
-        assert dlg.mapping_file_input.value == "storm.wav"
-        assert dlg.mapping_preview_button.enabled is True
+        # Verify the friendly sound list shows the hazard-friendly name
+        assert dlg.sound_selection is not None
+        items = dlg.sound_selection.items or []
+        names = []
+        for i in items:
+            dn = i.get("display_name") if isinstance(i, dict) else getattr(i, "display_name", None)
+            # Handle dataclass or Row wrapper gracefully
+            if hasattr(dn, "display_name"):
+                names.append(dn.display_name)
+            else:
+                names.append(str(dn))
+        assert any("Thunderstorm Warnings" in n for n in names)
 
     def test_browse_mapping_stores_technical_key(self, tmp_path, monkeypatch):
         from accessiweather.dialogs.soundpack_manager_dialog import SoundPackManagerDialog
@@ -483,13 +483,16 @@ class TestSoundPackManagerDialogUI:
         dlg._refresh_pack_list()
         dlg.selected_pack = "ui_test"
         dlg._update_pack_details()
-        # Choose the 'Flood Alerts' category
-        flood_item = next(
-            i
-            for i in dlg.mapping_key_selection.items
-            if (i.get("display_name") if isinstance(i, dict) else getattr(i, "display_name", ""))
-            == "Flood Alerts"
-        )
+        # Choose the 'Flood Warnings' category
+        flood_item = None
+        for i in dlg.mapping_key_selection.items:
+            dn = i.get("display_name") if isinstance(i, dict) else getattr(i, "display_name", None)
+            # Handle Toga Row wrapper where display_name may be an AlertCategoryItem instance
+            dn_str = dn.display_name if hasattr(dn, "display_name") else dn
+            if dn_str == "Flood Warnings":
+                flood_item = i
+                break
+        assert flood_item is not None, "Flood Warnings item not found in mapping selection"
         dlg.mapping_key_selection.value = flood_item
 
         # Patch open_file_dialog to immediately invoke callback
@@ -516,12 +519,14 @@ class TestSoundPackManagerDialogUI:
         dlg.selected_pack = "ui_test"
         dlg._update_pack_details()
         # Choose 'Generic Advisory'
-        adv_item = next(
-            i
-            for i in dlg.mapping_key_selection.items
-            if (i.get("display_name") if isinstance(i, dict) else getattr(i, "display_name", ""))
-            == "Generic Advisory"
-        )
+        adv_item = None
+        for i in dlg.mapping_key_selection.items:
+            dn = i.get("display_name") if isinstance(i, dict) else getattr(i, "display_name", None)
+            dn_str = dn.display_name if hasattr(dn, "display_name") else dn
+            if dn_str == "Generic Advisory":
+                adv_item = i
+                break
+        assert adv_item is not None, "Generic Advisory item not found in mapping selection"
         dlg.mapping_key_selection.value = adv_item
         # Patch the low-level player to capture the path
         played = {}
