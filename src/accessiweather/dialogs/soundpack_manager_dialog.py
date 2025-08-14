@@ -70,30 +70,9 @@ class SoundPackManagerDialog:
         self._create_dialog()
 
     def _load_sound_packs(self) -> None:
-        """Load all available sound packs."""
-        self.sound_packs.clear()
+        from .soundpack_manager.state import load_sound_packs as _load
 
-        if not self.soundpacks_dir.exists():
-            return
-
-        for pack_dir in self.soundpacks_dir.iterdir():
-            if not pack_dir.is_dir():
-                continue
-
-            pack_json = pack_dir / "pack.json"
-            if not pack_json.exists():
-                continue
-
-            try:
-                with open(pack_json, encoding="utf-8") as f:
-                    pack_data = json.load(f)
-
-                pack_data["directory"] = pack_dir.name
-                pack_data["path"] = pack_dir
-                self.sound_packs[pack_dir.name] = pack_data
-
-            except Exception as e:
-                logger.error(f"Failed to load sound pack {pack_dir.name}: {e}")
+        _load(self)
 
     def _create_dialog(self) -> None:
         """Create the sound pack manager dialog."""
@@ -136,97 +115,9 @@ class SoundPackManagerDialog:
         )  # Don't allow deleting default pack
 
     def _update_pack_details(self) -> None:
-        """Update the pack details display."""
-        if not self.selected_pack or self.selected_pack not in self.sound_packs:
-            self.pack_name_label.text = "No pack selected"
-            self.pack_author_label.text = ""
-            self.pack_description_label.text = ""
-            self.sound_selection.items = []
-            return
+        from .soundpack_manager.state import update_pack_details as _upd
 
-        pack_info = self.sound_packs[self.selected_pack]
-
-        # Update pack info
-        self.pack_name_label.text = pack_info.get("name", self.selected_pack)
-        self.pack_author_label.text = f"Author: {pack_info.get('author', 'Unknown')}"
-        self.pack_description_label.text = pack_info.get("description", "No description available")
-
-        # Update sound selection
-        sounds = pack_info.get("sounds", {})
-        sound_items = []
-        for sound_name, sound_file in sounds.items():
-            sound_path = pack_info["path"] / sound_file
-            status = "✓" if sound_path.exists() else "✗"
-
-            # Use friendly name if available for recognized keys
-            friendly_name = sound_name.title()
-            for display_name, technical_key in FRIENDLY_ALERT_CATEGORIES:
-                if technical_key == sound_name:
-                    friendly_name = display_name
-                    break
-
-            display_name = f"{friendly_name} ({sound_file}) - {status} {'Available' if sound_path.exists() else 'Missing'}"
-            sound_items.append(
-                {
-                    "display_name": display_name,
-                    "sound_name": sound_name,
-                    "sound_file": sound_file,
-                    "exists": sound_path.exists(),
-                }
-            )
-
-        self.sound_selection.items = sound_items
-
-        # Update mapping selection to a friendly category that has a mapping in this pack
-        try:
-            if self.mapping_key_selection is not None:
-                sounds_keys = set(sounds.keys())
-                mapping_items = getattr(self.mapping_key_selection, "items", []) or []
-                selected_item = None
-                for item in mapping_items:
-                    # Derive a technical key from the item, handling Toga Row wrappers
-                    technical_key = None
-                    try:
-                        # Direct attribute on dataclass
-                        technical_key = getattr(item, "technical_key", None)
-                        # Dict-style fallback
-                        if not technical_key and isinstance(item, dict):
-                            technical_key = item.get("technical_key")
-                        if not technical_key:
-                            # Toga Row case: display_name may be an AlertCategoryItem instance
-                            dn = getattr(item, "display_name", None)
-                            # If dn is a dataclass instance
-                            if dn is not None:
-                                tk2 = getattr(dn, "technical_key", None)
-                                if tk2:
-                                    technical_key = tk2
-                                else:
-                                    # If dn is a dataclass or string, try to map by friendly name
-                                    name = (
-                                        getattr(dn, "display_name", None)
-                                        if dn is not None
-                                        else None
-                                    )
-                                    if not name and isinstance(dn, str):
-                                        name = dn
-                                    if name:
-                                        for _name, _key in FRIENDLY_ALERT_CATEGORIES:
-                                            if _name == name:
-                                                technical_key = _key
-                                                break
-                    except Exception:
-                        technical_key = None
-                    if technical_key and technical_key in sounds_keys:
-                        selected_item = item
-                        break
-                if selected_item is None and mapping_items:
-                    selected_item = mapping_items[0]
-                if selected_item is not None:
-                    self.mapping_key_selection.value = selected_item
-                    # Populate file input/preview state for initial selection
-                    self._on_mapping_key_change(self.mapping_key_selection)
-        except Exception as e:
-            logger.warning(f"Failed to update mapping selection: {e}")
+        _upd(self)
 
     def _on_mapping_key_change(self, widget) -> None:
         """When the mapping key changes, populate the file input with current mapping if present."""
@@ -249,45 +140,9 @@ class SoundPackManagerDialog:
             return None
 
     def _get_technical_key_from_selection(self) -> str | None:
-        """Safely extract the technical key from the current mapping selection."""
-        try:
-            if not self.mapping_key_selection or not self.mapping_key_selection.value:
-                return None
-            sel = self.mapping_key_selection.value
+        from .soundpack_manager.mappings import get_technical_key_from_selection as _tk
 
-            # Direct attribute (dataclass instance assigned directly)
-            tk = getattr(sel, "technical_key", None)
-            if tk:
-                return tk
-
-            # Dict-style fallback
-            if isinstance(sel, dict):
-                tk = sel.get("technical_key")
-                if tk:
-                    return tk
-
-            # Toga Row wrapper: display_name may actually be the AlertCategoryItem instance
-            dn = getattr(sel, "display_name", None)
-            if dn is not None:
-                tk2 = getattr(dn, "technical_key", None)
-                if tk2:
-                    return tk2
-                # Or try mapping from friendly name
-                name = getattr(dn, "display_name", None) if dn is not None else None
-                if not name and isinstance(dn, str):
-                    name = dn
-                if name:
-                    for friendly, key in FRIENDLY_ALERT_CATEGORIES:
-                        if friendly == name:
-                            return key
-
-            # Last resort: if selection is a plain string, normalize underscores
-            if isinstance(sel, str):
-                return sel.strip().lower().replace(" ", "_")
-
-            return None
-        except Exception:
-            return None
+        return _tk(self)
 
     def _get_display_name_from_selection(self) -> str | None:
         from .soundpack_manager.mappings import get_display_name_from_selection as _dn
@@ -355,15 +210,11 @@ class SoundPackManagerDialog:
 
     def _on_import_pack(self, widget) -> None:
         """Import a new sound pack."""
-        try:
-            self.app.main_window.open_file_dialog(
-                title="Select Sound Pack ZIP File",
-                file_types=["zip"],
-                on_result=lambda w, path=None: self._import_pack_file(w, path),
-            )
-        except Exception as e:
-            logger.error(f"Failed to open import dialog: {e}")
-            self.app.main_window.error_dialog("Import Error", f"Failed to open import dialog: {e}")
+        self.app.main_window.open_file_dialog(
+            title="Select Sound Pack ZIP File",
+            file_types=["zip"],
+            on_result=lambda w, path=None: self._import_pack_file(w, path),
+        )
 
     def _on_simple_choose_file(self, widget) -> None:
         """Simplified: pick a file and map it to the entered key, copying into the pack."""
@@ -409,25 +260,9 @@ class SoundPackManagerDialog:
         _import(self, widget, path)
 
     def _refresh_pack_list(self) -> None:
-        """Refresh the sound pack list."""
-        # Clear existing data
-        self.pack_list.data.clear()
+        from .soundpack_manager.state import refresh_pack_list as _refresh
 
-        # Add pack data to DetailedList
-        for pack_id, pack_info in self.sound_packs.items():
-            pack_name = pack_info.get("name", pack_id)
-            author = pack_info.get("author", "Unknown")
-
-            # Create a data object for the DetailedList
-            pack_data = {
-                "pack_id": pack_id,
-                "pack_info": pack_info,
-                "title": pack_name,
-                "subtitle": f"by {author}",
-                "icon": None,  # Could add icons later
-            }
-
-            self.pack_list.data.append(pack_data)
+        _refresh(self)
 
     def _on_delete_pack(self, widget) -> None:
         """Delete the selected sound pack."""
