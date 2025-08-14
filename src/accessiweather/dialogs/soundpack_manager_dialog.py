@@ -10,7 +10,6 @@ import contextlib
 import json
 import logging
 import shutil
-import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -800,54 +799,9 @@ class SoundPackManagerDialog:
 
     def _import_pack_file(self, widget, path: str | None = None) -> None:
         """Import a sound pack from a ZIP file."""
-        if not path:
-            return
+        from .soundpack_manager.ops import import_pack_file as _import
 
-        try:
-            with zipfile.ZipFile(path, "r") as zip_file:
-                # Check if pack.json exists in the zip
-                if "pack.json" not in zip_file.namelist():
-                    self.app.main_window.error_dialog(
-                        "Invalid Sound Pack",
-                        "The selected file is not a valid sound pack. Missing pack.json file.",
-                    )
-                    return
-
-                # Read pack.json to get pack info
-                with zip_file.open("pack.json") as f:
-                    pack_info = json.load(f)
-
-                pack_name = pack_info.get("name", "Unknown Pack")
-                pack_id = pack_name.lower().replace(" ", "_").replace("-", "_")
-
-                # Check if pack already exists
-                pack_dir = self.soundpacks_dir / pack_id
-                if pack_dir.exists():
-                    # Ask user if they want to overwrite
-                    result = self.app.main_window.question_dialog(
-                        "Pack Already Exists",
-                        f"A sound pack named '{pack_name}' already exists. Do you want to overwrite it?",
-                    )
-                    if not result:
-                        return
-
-                    # Remove existing pack
-                    shutil.rmtree(pack_dir)
-
-                # Extract the sound pack
-                pack_dir.mkdir(exist_ok=True)
-                zip_file.extractall(pack_dir)
-
-                # Reload sound packs
-                self._load_sound_packs()
-                self._refresh_pack_list()
-
-                self.app.main_window.info_dialog(
-                    "Import Successful", f"Sound pack '{pack_name}' has been imported successfully."
-                )
-        except Exception as e:
-            logger.error(f"Failed to import sound pack: {e}")
-            self.app.main_window.error_dialog("Import Error", f"Failed to import sound pack: {e}")
+        _import(self, widget, path)
 
     def _refresh_pack_list(self) -> None:
         """Refresh the sound pack list."""
@@ -872,153 +826,21 @@ class SoundPackManagerDialog:
 
     def _on_delete_pack(self, widget) -> None:
         """Delete the selected sound pack."""
-        if not self.selected_pack or self.selected_pack == "default":
-            return
+        from .soundpack_manager.ops import delete_pack as _del
 
-        pack_info = self.sound_packs.get(self.selected_pack, {})
-        pack_name = pack_info.get("name", self.selected_pack)
-
-        # Confirm deletion
-        result = self.app.main_window.question_dialog(
-            "Delete Sound Pack",
-            f"Are you sure you want to delete the sound pack '{pack_name}'? This action cannot be undone.",
-        )
-
-        if result:
-            try:
-                pack_path = pack_info.get("path")
-                if pack_path and pack_path.exists():
-                    shutil.rmtree(pack_path)
-
-                # Reload sound packs
-                self._load_sound_packs()
-                self._refresh_pack_list()
-
-                # Clear selection
-                self.selected_pack = None
-                self._update_pack_details()
-                self.select_button.enabled = False
-                self.delete_button.enabled = False
-
-                self.app.main_window.info_dialog(
-                    "Pack Deleted", f"Sound pack '{pack_name}' has been deleted."
-                )
-
-            except Exception as e:
-                logger.error(f"Failed to delete sound pack: {e}")
-                self.app.main_window.error_dialog(
-                    "Delete Error", f"Failed to delete sound pack: {e}"
-                )
+        _del(self, widget)
 
     def _on_create_pack(self, widget) -> None:
-        """Create a new, empty sound pack with default metadata and no sounds.
+        """Create a new, empty sound pack with default metadata and no sounds."""
+        from .soundpack_manager.ops import create_pack as _create
 
-        Generates a unique pack ID (custom_1, custom_2, ...), writes a minimal
-        pack.json, reloads the list, and focuses the new pack.
-        """
-        try:
-            # Find a unique pack ID
-            base = "custom"
-            idx = 1
-            while True:
-                pack_id = f"{base}_{idx}"
-                pack_dir = self.soundpacks_dir / pack_id
-                if not pack_dir.exists():
-                    break
-                idx += 1
-
-            pack_dir.mkdir(parents=True, exist_ok=False)
-            meta = {
-                "name": f"Custom Pack {idx}",
-                "author": "",
-                "description": "A new custom sound pack.",
-                "sounds": {
-                    # Provide common placeholders users can map later
-                    "alert": "alert.wav",
-                    "notify": "notify.wav",
-                },
-            }
-            try:
-                with open(pack_dir / "pack.json", "w", encoding="utf-8") as f:
-                    json.dump(meta, f, indent=2)
-            except Exception as e:
-                logger.error(f"Failed to write pack.json: {e}")
-
-            # Refresh in-memory state and UI
-            self._load_sound_packs()
-            self._refresh_pack_list()
-            self.selected_pack = pack_id
-            self.current_pack = pack_id
-            self._update_pack_details()
-
-            if hasattr(self, "duplicate_button"):
-                self.duplicate_button.enabled = True
-            if hasattr(self, "edit_button"):
-                self.edit_button.enabled = True
-            if hasattr(self, "select_button"):
-                self.select_button.enabled = True
-            if hasattr(self, "delete_button"):
-                self.delete_button.enabled = pack_id != "default"
-
-            self.app.main_window.info_dialog(
-                "Pack Created", f"Created new sound pack '{meta['name']}' (ID: {pack_id})."
-            )
-        except Exception as e:
-            logger.error(f"Failed to create sound pack: {e}")
-            self.app.main_window.error_dialog("Create Error", f"Failed to create sound pack: {e}")
+        _create(self)
 
     def _on_duplicate_pack(self, widget) -> None:
         """Duplicate the currently selected pack into a new pack directory."""
-        if not self.selected_pack or self.selected_pack not in self.sound_packs:
-            return
-        try:
-            src_info = self.sound_packs[self.selected_pack]
-            src_dir = src_info.get("path")
-            if not src_dir or not src_dir.exists():
-                return
+        from .soundpack_manager.ops import duplicate_pack as _dup
 
-            # Compute unique destination
-            base = f"{self.selected_pack}_copy"
-            candidate = base
-            suffix = 2
-            while (self.soundpacks_dir / candidate).exists():
-                candidate = f"{base}{suffix}"
-                suffix += 1
-            dst_dir = self.soundpacks_dir / candidate
-
-            shutil.copytree(src_dir, dst_dir)
-
-            # Update metadata name to indicate copy
-            pack_json_path = dst_dir / "pack.json"
-            try:
-                with open(pack_json_path, encoding="utf-8") as f:
-                    meta = json.load(f)
-            except Exception:
-                meta = {}
-            name = meta.get("name", candidate)
-            if "(Copy)" not in name:
-                meta["name"] = f"{name} (Copy)"
-            try:
-                with open(pack_json_path, "w", encoding="utf-8") as f:
-                    json.dump(meta, f, indent=2)
-            except Exception as e:
-                logger.error(f"Failed to write pack.json: {e}")
-
-            self._load_sound_packs()
-            self._refresh_pack_list()
-            self.selected_pack = candidate
-            self.current_pack = candidate
-            self._update_pack_details()
-
-            self.app.main_window.info_dialog(
-                "Pack Duplicated",
-                f"Duplicated '{src_info.get('name', self.selected_pack)}' to '{meta.get('name', candidate)}'.",
-            )
-        except Exception as e:
-            logger.error(f"Failed to duplicate sound pack: {e}")
-            self.app.main_window.error_dialog(
-                "Duplicate Error", f"Failed to duplicate sound pack: {e}"
-            )
+        _dup(self)
 
     def _on_edit_pack(self, widget) -> None:
         """Open a small editor to modify name, author, and description of the pack."""
