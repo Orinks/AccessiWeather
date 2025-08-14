@@ -18,12 +18,17 @@ import toga
 from toga.style import Pack
 from travertino.constants import COLUMN, ROW
 
+from ..dialogs.community_packs_browser_dialog import CommunityPacksBrowserDialog
 from ..notifications.alert_sound_mapper import CANONICAL_ALERT_KEYS  # noqa: F401
+from ..notifications.sound_pack_installer import SoundPackInstaller
 from ..notifications.sound_player import (  # noqa: F401
     get_available_sound_packs,
     get_sound_pack_sounds,
     validate_sound_pack,
 )
+
+# Community packs imports
+from ..services.community_soundpack_service import CommunitySoundPackService
 
 
 @dataclass
@@ -94,6 +99,12 @@ class SoundPackManagerDialog:
         self.delete_button: toga.Button | None = None
         self.import_button: toga.Button | None = None
         self.close_button: toga.Button | None = None
+        # Community service and installer
+        try:
+            self.community_service = CommunitySoundPackService()
+        except Exception:
+            self.community_service = None
+        self.installer = SoundPackInstaller(self.soundpacks_dir)
 
         self._load_sound_packs()
         self._create_dialog()
@@ -334,6 +345,15 @@ class SoundPackManagerDialog:
             style=Pack(margin_right=10),
         )
         button_box.add(self.create_wizard_button)
+
+        # Browse Community Packs
+        self.browse_community_button = toga.Button(
+            "Browse Community",
+            on_press=self._on_browse_community_packs,
+            style=Pack(margin_right=10),
+            enabled=self.community_service is not None,
+        )
+        button_box.add(self.browse_community_button)
 
         # Duplicate Selected Pack
         self.duplicate_button = toga.Button(
@@ -1177,20 +1197,30 @@ class SoundPackManagerDialog:
         with open(pack_dir / "pack.json", "w", encoding="utf-8") as f:
             json.dump(meta, f, indent=2)
 
-        # Validate pack (best-effort)
-        try:
-            validate_sound_pack(pack_dir)
-        except Exception as ve:
-            logger.warning(f"Wizard-created pack validation warnings: {ve}")
-
-        # Inform user
-        with contextlib.suppress(Exception):
-            self.app.main_window.info_dialog(
-                "Pack Created",
-                f"Created sound pack '{meta['name']}' with {len(sounds)} sound(s).",
+    async def _on_browse_community_packs(self, widget) -> None:
+        """Open the community packs browser dialog and refresh after install."""
+        if not self.community_service:
+            await self.app.main_window.info_dialog(
+                "Community Packs",
+                "Community service is not available in this build.",
             )
+            return
 
-        return pack_id
+        def _on_installed(_pack_display_name: str):
+            # Refresh local list on the main loop
+            try:
+                self._load_sound_packs()
+                self._refresh_pack_list()
+            except Exception:
+                pass
+
+        browser = CommunityPacksBrowserDialog(
+            app=self.app,
+            service=self.community_service,
+            installer=self.installer,
+            on_installed=_on_installed,
+        )
+        browser.show()
 
     def _on_close(self, widget) -> None:
         """Close the dialog."""
