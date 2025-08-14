@@ -237,13 +237,6 @@ class SoundPackManagerDialog:
         )
         mapping_header.add(mapping_label)
         panel.add(mapping_header)
-        panel.add(
-            toga.Label(
-                "Select from common weather alert categories. Each category maps to technical keys used by weather services. Use the custom mapping field below for specific alert types not listed.",
-                style=Pack(margin_bottom=5),
-            )
-        )
-
         # Mapping controls: key dropdown + file picker + preview
         mapping_row = toga.Box(style=Pack(direction=ROW, margin_bottom=10))
         self.mapping_key_selection = toga.Selection(
@@ -255,6 +248,13 @@ class SoundPackManagerDialog:
             on_change=self._on_mapping_key_change,
             style=Pack(width=260, margin_right=10),
         )
+        # Accessibility: keep label concise; attach verbose help as description of the control
+        with contextlib.suppress(Exception):
+            self.mapping_key_selection.aria_label = "Alert category"
+            self.mapping_key_selection.aria_description = (
+                "Select from common weather alert categories. Each category maps to technical keys used by weather services. "
+                "Use the custom mapping field below for specific alert types not listed."
+            )
         self.mapping_file_input = toga.TextInput(
             readonly=True, placeholder="Select audio file...", style=Pack(flex=1, margin_right=10)
         )
