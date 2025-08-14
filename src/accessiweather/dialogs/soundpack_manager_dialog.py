@@ -1020,13 +1020,9 @@ class SoundPackManagerDialog:
             return
 
         pack_info = self.sound_packs[self.selected_pack]
-        pack_json_path = pack_info["path"] / "pack.json"
-
         # Load existing metadata
-        meta = {}
         try:
-            with open(pack_json_path, encoding="utf-8") as f:
-                meta = json.load(f)
+            meta = self._load_pack_meta(pack_info)
         except Exception:
             meta = {}
 
@@ -1059,8 +1055,7 @@ class SoundPackManagerDialog:
                     "author": (author_input.value or "").strip(),
                     "description": (desc_input.value or "").strip(),
                 }
-                with open(pack_json_path, "w", encoding="utf-8") as f:
-                    json.dump(updated, f, indent=2)
+                self._save_pack_meta(pack_info, updated)
                 # Update in-memory and UI
                 self._load_sound_packs()
                 self._refresh_pack_list()
