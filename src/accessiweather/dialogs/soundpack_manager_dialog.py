@@ -288,19 +288,7 @@ class SoundPackManagerDialog:
         simple_map_box.add(self.simple_remove_button)
         panel.add(simple_map_box)
 
-        # Sound action buttons
-        sound_button_box = toga.Box(style=Pack(direction=ROW, margin_bottom=10))
-
-        self.preview_button = toga.Button(
-            "Preview Selected Sound",
-            on_press=self._on_preview_sound,
-            enabled=False,
-            style=Pack(margin_right=10),
-        )
-        sound_button_box.add(self.preview_button)
-
-        panel.add(sound_button_box)
-
+        # Sound action buttons removed; preview is available per alert category mapping
         return panel
 
     def _create_button_panel(self) -> toga.Box:
@@ -608,22 +596,10 @@ class SoundPackManagerDialog:
             self.app.main_window.error_dialog("Preview Error", f"Failed to preview mapping: {e}")
 
     def _on_sound_selected(self, widget) -> None:
-        """Handle sound selection."""
+        """Handle sound selection (no separate preview button)."""
         if widget.value is None:
-            self.preview_button.enabled = False
             return
-
-        # Check if the selected sound file exists
-        sound_item = widget.value
-        if self.selected_pack and self.selected_pack in self.sound_packs:
-            pack_info = self.sound_packs[self.selected_pack]
-            sound_path = pack_info["path"] / sound_item.sound_file
-
-            # Enable preview only if the actual sound file exists
-            # This will work for classic, default, nature, minimal, and any other packs with real files
-            self.preview_button.enabled = sound_path.exists() and sound_path.stat().st_size > 0
-        else:
-            self.preview_button.enabled = False
+        # Preview is provided via the alert category mapping controls.
 
     def _on_preview_sound(self, widget) -> None:
         """Preview the selected sound."""
