@@ -11,34 +11,42 @@ import json
 import logging
 import shutil
 import zipfile
+from dataclasses import dataclass
 from pathlib import Path
 
 import toga
 from toga.style import Pack
 from travertino.constants import COLUMN, ROW
 
+
+@dataclass
+class AlertCategoryItem:
+    """Data class for alert category selection items."""
+
+    display_name: str
+    technical_key: str
+
+
 # Friendly alert categories for mapping (display name, technical key)
+# Updated to match canonical keys from alert_sound_mapper
 FRIENDLY_ALERT_CATEGORIES = [
     ("Tornado Warnings", "tornado_warning"),
-    ("Flood Alerts", "flood_warning"),
+    ("Flood Warnings", "flood_warning"),
     ("Heat Advisories", "heat_advisory"),
-    ("Severe Thunderstorm Warnings", "severe_thunderstorm_warning"),
+    ("Thunderstorm Warnings", "thunderstorm_warning"),
     ("Winter Storm Warnings", "winter_storm_warning"),
     ("Hurricane Warnings", "hurricane_warning"),
     ("Wind Warnings", "wind_warning"),
     ("Fire Weather Warnings", "fire_warning"),
     ("Air Quality Alerts", "air_quality_alert"),
     ("Fog Advisories", "fog_advisory"),
-    ("Ice Storm Warnings", "ice_warning"),
+    ("Ice Warnings", "ice_warning"),
     ("Snow Warnings", "snow_warning"),
+    ("Dust Warnings", "dust_warning"),
     ("Generic Warning", "warning"),
     ("Generic Watch", "watch"),
     ("Generic Advisory", "advisory"),
     ("Generic Statement", "statement"),
-    ("Extreme Severity", "extreme"),
-    ("Severe Level", "severe"),
-    ("Moderate Level", "moderate"),
-    ("Minor Level", "minor"),
     ("General Alert", "alert"),
     ("General Notification", "notify"),
 ]
@@ -241,7 +249,7 @@ class SoundPackManagerDialog:
         mapping_row = toga.Box(style=Pack(direction=ROW, margin_bottom=10))
         self.mapping_key_selection = toga.Selection(
             items=[
-                {"display_name": name, "technical_key": key}
+                AlertCategoryItem(display_name=name, technical_key=key)
                 for name, key in FRIENDLY_ALERT_CATEGORIES
             ],
             accessor="display_name",
@@ -390,7 +398,15 @@ class SoundPackManagerDialog:
         for sound_name, sound_file in sounds.items():
             sound_path = pack_info["path"] / sound_file
             status = "✓" if sound_path.exists() else "✗"
-            display_name = f"{sound_name.title()} ({sound_file}) - {status} {'Available' if sound_path.exists() else 'Missing'}"
+
+            # Use friendly name if available for recognized keys
+            friendly_name = sound_name.title()
+            for display_name, technical_key in FRIENDLY_ALERT_CATEGORIES:
+                if technical_key == sound_name:
+                    friendly_name = display_name
+                    break
+
+            display_name = f"{friendly_name} ({sound_file}) - {status} {'Available' if sound_path.exists() else 'Missing'}"
             sound_items.append(
                 {
                     "display_name": display_name,
@@ -522,30 +538,13 @@ class SoundPackManagerDialog:
             if not self.mapping_key_selection or not self.mapping_key_selection.value:
                 return None
             sel = self.mapping_key_selection.value
-            # Toga Selection may wrap dicts as attribute-accessible rows
-            technical_key = None
+            # With AlertCategoryItem dataclass, we can directly access the attribute
+            if hasattr(sel, "technical_key"):
+                return sel.technical_key
+            # Fallback for backward compatibility
             if isinstance(sel, dict):
-                technical_key = sel.get("technical_key")
-            else:
-                technical_key = getattr(sel, "technical_key", None)
-            # Fallback: try to look up by display name
-            if not technical_key:
-                display_name = None
-                if isinstance(sel, dict):
-                    display_name = sel.get("display_name")
-                else:
-                    display_name = getattr(sel, "display_name", None) or (
-                        str(sel) if sel is not None else None
-                    )
-                if display_name:
-                    for name, key in FRIENDLY_ALERT_CATEGORIES:
-                        if name == display_name:
-                            technical_key = key
-                            break
-            # Final fallback: if selection is a plain string, normalize
-            if not technical_key and isinstance(sel, str):
-                technical_key = sel.strip().lower().replace(" ", "_")
-            return technical_key
+                return sel.get("technical_key")
+            return None
         except Exception:
             return None
 
@@ -554,19 +553,13 @@ class SoundPackManagerDialog:
             if not self.mapping_key_selection or not self.mapping_key_selection.value:
                 return None
             sel = self.mapping_key_selection.value
+            # With AlertCategoryItem dataclass, we can directly access the attribute
+            if hasattr(sel, "display_name"):
+                return sel.display_name
+            # Fallback for backward compatibility
             if isinstance(sel, dict):
                 return sel.get("display_name")
-            name = getattr(sel, "display_name", None)
-            if name:
-                return name
-            # Fallback by resolving from technical key
-            tech = getattr(sel, "technical_key", None)
-            if tech:
-                for name, key in FRIENDLY_ALERT_CATEGORIES:
-                    if key == tech:
-                        return name
-            # Last resort: string cast
-            return str(sel)
+            return str(sel) if sel is not None else None
         except Exception:
             return None
 
@@ -588,9 +581,9 @@ class SoundPackManagerDialog:
                     f"The sound file '{filename}' is not available in this pack.",
                 )
                 return
-            from ..notifications.sound_player import _play_sound_file
+            from ..notifications.sound_player import play_sound_file
 
-            _play_sound_file(sound_path)
+            play_sound_file(sound_path)
         except Exception as e:
             logger.error(f"Failed to preview mapping: {e}")
             self.app.main_window.error_dialog("Preview Error", f"Failed to preview mapping: {e}")
