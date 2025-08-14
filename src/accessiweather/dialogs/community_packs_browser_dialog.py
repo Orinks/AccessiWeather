@@ -139,7 +139,7 @@ class CommunityPacksBrowserDialog:
             await self._populate_table()
         except Exception as e:
             logger.error(f"Failed to load community packs: {e}")
-            with contextlib.suppress(Exception):  # type: ignore[name-defined]
+            with contextlib.suppress(Exception):
                 await self.app.main_window.error_dialog(
                     "Community Packs", f"Failed to load community packs: {e}"
                 )
@@ -149,6 +149,7 @@ class CommunityPacksBrowserDialog:
             return
         self.table.data.clear()
         ft = (filter_text or "").strip().lower()
+        added = 0
         for p in self._packs:
             if ft and (ft not in p.name.lower()) and (ft not in p.author.lower()):
                 continue
@@ -160,7 +161,18 @@ class CommunityPacksBrowserDialog:
                     "Version": p.version,
                     "Description": (p.description or "").replace("\n", " ")[:120],
                     "Size": size_str,
-                    "_pack_ref": p,
+                }
+            )
+            added += 1
+        if added == 0:
+            # Empty-state guidance when no packs are available or filtered out
+            self.table.data.append(
+                {
+                    "Name": "No community packs found",
+                    "Author": "",
+                    "Version": "",
+                    "Description": "You may be offline or rate-limited. Try Refresh, adjust search, or set a GitHub token.",
+                    "Size": "",
                 }
             )
 
@@ -173,15 +185,35 @@ class CommunityPacksBrowserDialog:
 
     def _on_select_row(self, widget):
         has_sel = bool(widget.selection)
-        self.download_button.enabled = has_sel
         self.preview_button.enabled = has_sel
+        # Enable Download only if a pack is selected and has a valid download_url
+        selected = self._get_selected_pack() if has_sel else None
+        self.download_button.enabled = bool(selected and selected.download_url)
 
     def _get_selected_pack(self) -> CommunityPack | None:
         if not self.table or not self.table.selection:
             return None
         row = self.table.selection
-        # Access hidden reference set in _populate_table
-        return getattr(row, "_pack_ref", None)
+        # Match row data against self._packs instead of relying on hidden _pack_ref
+        try:
+            row_name = getattr(row, "Name", None)
+            row_author = getattr(row, "Author", None)
+            row_version = getattr(row, "Version", None)
+
+            if not row_name or not row_author or not row_version:
+                return None
+
+            # Find matching pack by name, author, and version
+            for pack in self._packs:
+                if (
+                    pack.name == row_name
+                    and pack.author == row_author
+                    and pack.version == row_version
+                ):
+                    return pack
+        except Exception:
+            pass
+        return None
 
     def _format_pack_details(self, p: CommunityPack) -> str:
         parts = [
@@ -228,15 +260,16 @@ class CommunityPacksBrowserDialog:
                 await progress.complete_error("Download cancelled")
                 return
 
-            # Install from ZIP
+            # Install from ZIP (offload to thread to avoid blocking UI)
             await progress.set_status("Installing...", f"Installing pack {p.name}")
-            ok, msg = self.installer.install_from_zip(zip_path, pack_name=None)
+            ok, msg = await asyncio.to_thread(self.installer.install_from_zip, zip_path, None)
             if ok:
                 await progress.complete_success("Installed successfully")
-                # Notify parent to refresh
+                # Notify parent to refresh; pass the pack display name
                 if self.on_installed:
                     with contextlib.suppress(Exception):
-                        self.on_installed(msg if msg else p.name)
+                        # If installer returned a quoted success message, still send p.name per contract
+                        self.on_installed(p.name)
             else:
                 await progress.complete_error(msg)
         except Exception as e:
