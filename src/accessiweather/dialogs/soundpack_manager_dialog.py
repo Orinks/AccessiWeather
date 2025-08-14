@@ -715,11 +715,10 @@ class SoundPackManagerDialog:
     def _on_import_pack(self, widget) -> None:
         """Import a new sound pack."""
         try:
-            # Open file dialog to select sound pack zip file
             self.app.main_window.open_file_dialog(
                 title="Select Sound Pack ZIP File",
                 file_types=["zip"],
-                on_result=self._import_pack_file,
+                on_result=lambda w, path=None: self._import_pack_file(w, path),
             )
         except Exception as e:
             logger.error(f"Failed to open import dialog: {e}")
@@ -734,40 +733,48 @@ class SoundPackManagerDialog:
             self.app.main_window.info_dialog("Missing Key", "Please enter a mapping key first.")
             return
 
-        def _apply(_, path=None):
-            if not path:
-                return
-            try:
-                pack_info = self.sound_packs[self.selected_pack]
-                pack_json_path = pack_info["path"] / "pack.json"
-                with open(pack_json_path, encoding="utf-8") as f:
-                    meta = json.load(f)
-                sounds = meta.get("sounds", {})
-                if not isinstance(sounds, dict):
-                    sounds = {}
-                rel_name = Path(path).name
-                sounds[key] = rel_name
-                meta["sounds"] = sounds
-                with open(pack_json_path, "w", encoding="utf-8") as f:
-                    json.dump(meta, f, indent=2)
-                dst = pack_info["path"] / rel_name
-                if Path(path) != dst:
-                    with contextlib.suppress(Exception):
-                        shutil.copy2(path, dst)
-                pack_info["sounds"] = sounds
-                self._update_pack_details()
-                self.app.main_window.info_dialog(
-                    "Mapping Updated", f"Mapped '{key}' to '{rel_name}'."
-                )
-            except Exception as e:
-                logger.error(f"Failed to update mapping: {e}")
-                self.app.main_window.error_dialog("Mapping Error", f"Failed to update mapping: {e}")
-
         self.app.main_window.open_file_dialog(
             title="Select Audio File",
             file_types=["wav", "mp3", "ogg", "flac"],
-            on_result=_apply,
+            on_result=lambda _, path=None: self._apply_simple_mapping(key, path),
         )
+
+    def _apply_simple_mapping(self, key: str, path: str | None) -> None:
+        """Apply a mapping of key->audio file in the selected pack; copy file into pack."""
+        if not path:
+            return
+        try:
+            pack_info = self.sound_packs[self.selected_pack]  # type: ignore[index]
+            meta = self._load_pack_meta(pack_info)
+            sounds = meta.get("sounds", {})
+            if not isinstance(sounds, dict):
+                sounds = {}
+            rel_name = Path(path).name
+            sounds[key] = rel_name
+            meta["sounds"] = sounds
+            self._save_pack_meta(pack_info, meta)
+            dst = pack_info["path"] / rel_name
+            if Path(path) != dst:
+                with contextlib.suppress(Exception):
+                    shutil.copy2(path, dst)
+            pack_info["sounds"] = sounds
+            self._update_pack_details()
+            self.app.main_window.info_dialog("Mapping Updated", f"Mapped '{key}' to '{rel_name}'.")
+        except Exception as e:
+            logger.error(f"Failed to update mapping: {e}")
+            self.app.main_window.error_dialog("Mapping Error", f"Failed to update mapping: {e}")
+
+    def _load_pack_meta(self, pack_info: dict) -> dict:
+        """Load pack.json metadata for a pack."""
+        pack_json_path = pack_info["path"] / "pack.json"
+        with open(pack_json_path, encoding="utf-8") as f:
+            return json.load(f)
+
+    def _save_pack_meta(self, pack_info: dict, meta: dict) -> None:
+        """Save pack.json metadata for a pack."""
+        pack_json_path = pack_info["path"] / "pack.json"
+        with open(pack_json_path, "w", encoding="utf-8") as f:
+            json.dump(meta, f, indent=2)
 
     def _on_simple_remove_mapping(self, widget) -> None:
         """Remove the entered mapping key from the pack.json (no file deletes)."""
@@ -779,15 +786,12 @@ class SoundPackManagerDialog:
             return
         try:
             pack_info = self.sound_packs[self.selected_pack]
-            pack_json_path = pack_info["path"] / "pack.json"
-            with open(pack_json_path, encoding="utf-8") as f:
-                meta = json.load(f)
+            meta = self._load_pack_meta(pack_info)
             sounds = meta.get("sounds", {}) or {}
             if key in sounds:
                 sounds.pop(key, None)
                 meta["sounds"] = sounds
-                with open(pack_json_path, "w", encoding="utf-8") as f:
-                    json.dump(meta, f, indent=2)
+                self._save_pack_meta(pack_info, meta)
                 pack_info["sounds"] = sounds
                 self._update_pack_details()
                 self.app.main_window.info_dialog("Mapping Removed", f"Removed mapping for '{key}'.")
