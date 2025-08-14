@@ -327,6 +327,14 @@ class SoundPackManagerDialog:
         )
         button_box.add(self.create_button)
 
+        # Create with Wizard (guided)
+        self.create_wizard_button = toga.Button(
+            "Create with Wizard",
+            on_press=self._on_create_pack_wizard,
+            style=Pack(margin_right=10),
+        )
+        button_box.add(self.create_wizard_button)
+
         # Duplicate Selected Pack
         self.duplicate_button = toga.Button(
             "Duplicate",
@@ -1064,6 +1072,518 @@ class SoundPackManagerDialog:
         the app's active sound pack; that selection is made in Settings > General.
         """
         if self.selected_pack:
+            self.current_pack = self.selected_pack
+            # Keep dialog open; users can edit, preview, or import assets
+            self._update_pack_details()
+
+    def _on_create_pack_wizard(self, widget) -> None:
+        """Launch the guided wizard to create a new sound pack."""
+        try:
+
+            def _on_complete(new_pack_id: str | None):
+                # Refresh list and select the new pack if created
+                self._load_sound_packs()
+                self._refresh_pack_list()
+                if new_pack_id and new_pack_id in self.sound_packs:
+                    self.selected_pack = new_pack_id
+                    self.current_pack = new_pack_id
+                    self._update_pack_details()
+                    if hasattr(self, "select_button"):
+                        self.select_button.enabled = True
+                    if hasattr(self, "delete_button"):
+                        self.delete_button.enabled = new_pack_id != "default"
+
+            # Create and show the wizard dialog
+            wizard = self.SoundPackWizardDialog(
+                app=self.app,
+                soundpacks_dir=self.soundpacks_dir,
+                on_complete=_on_complete,
+                parent=self,
+            )
+            wizard.show()
+        except Exception as e:
+            logger.error(f"Failed to open wizard: {e}")
+            self.app.main_window.error_dialog("Wizard Error", f"Failed to open wizard: {e}")
+
+    def _create_pack_from_wizard_state(self, state) -> str:
+        """Create the pack on disk from the wizard state. Returns the new pack_id.
+
+        This uses similar patterns to _on_create_pack but with user-provided metadata
+        and selected sounds copied from a staging area.
+        """
+
+        # Sanitize and ensure unique ID
+        def _slugify(name: str) -> str:
+            slug = (name or "custom").strip().lower().replace(" ", "_").replace("-", "_")
+            if not slug:
+                slug = "custom"
+            return slug
+
+        base_id = _slugify(getattr(state, "pack_name", ""))
+        if not base_id:
+            base_id = "custom"
+        pack_id = base_id
+        suffix = 1
+        while (self.soundpacks_dir / pack_id).exists():
+            suffix += 1
+            pack_id = f"{base_id}_{suffix}"
+
+        pack_dir = self.soundpacks_dir / pack_id
+        pack_dir.mkdir(parents=True, exist_ok=False)
+
+        # Copy staged files into pack dir and build sounds mapping with filenames
+        sounds: dict[str, str] = {}
+        for key, src in (getattr(state, "sound_mappings", {}) or {}).items():
+            try:
+                src_path = Path(src)
+                if not src_path.exists():
+                    continue
+                dest_name = src_path.name
+                dest_path = pack_dir / dest_name
+                if src_path.resolve() != dest_path.resolve():
+                    with contextlib.suppress(Exception):
+                        shutil.copy2(src_path, dest_path)
+                sounds[key] = dest_name
+            except Exception as copy_err:
+                logger.warning(f"Failed to copy sound for {key}: {copy_err}")
+
+        meta = {
+            "name": getattr(state, "pack_name", pack_id) or pack_id,
+            "author": getattr(state, "author", "") or "",
+            "description": getattr(state, "description", "") or "",
+            "sounds": sounds,
+        }
+        with open(pack_dir / "pack.json", "w", encoding="utf-8") as f:
+            json.dump(meta, f, indent=2)
+
+        # Validate pack (best-effort)
+        try:
+            validate_sound_pack(pack_dir)
+        except Exception as ve:
+            logger.warning(f"Wizard-created pack validation warnings: {ve}")
+
+        # Inform user
+        with contextlib.suppress(Exception):
+            self.app.main_window.info_dialog(
+                "Pack Created",
+                f"Created sound pack '{meta['name']}' with {len(sounds)} sound(s).",
+            )
+
+        return pack_id
+
+    class SoundPackWizardDialog:
+        """Guided wizard for creating a new sound pack."""
+
+        @dataclass
+        class WizardState:
+            """State container for the wizard UI flow."""
+
+            pack_name: str = ""
+            author: str = ""
+            description: str = ""
+            selected_alert_keys: list[str] = None  # type: ignore[assignment]
+            sound_mappings: dict[str, str] = None  # key -> staged file path
+
+        def __init__(
+            self, app: toga.App, soundpacks_dir: Path, on_complete, parent: "SoundPackManagerDialog"
+        ):
+            """Initialize the wizard dialog with app refs, pack dir, and callbacks."""
+            self.app = app
+            self.soundpacks_dir = soundpacks_dir
+            self.on_complete = on_complete
+            self.parent = parent
+            self.current_step = 1
+            self.total_steps = 4
+            self.state = self.WizardState(selected_alert_keys=[], sound_mappings={})
+
+            # Lazy import to minimize global dependencies
+            import tempfile as _tempfile
+
+            self._tempfile = _tempfile
+            self.staging_dir = Path(self._tempfile.mkdtemp(prefix="aw_soundpack_wizard_"))
+
+            # Build window
+            self.window = toga.Window(
+                title="Create Sound Pack (Wizard)", size=(600, 500), resizable=False
+            )
+
+            # Layout containers
+            self.root_box = toga.Box(style=Pack(direction=COLUMN, padding=10))
+            self.header_label = toga.Label(
+                "Step 1 of 4: Pack Details", style=Pack(margin_bottom=10, font_weight="bold")
+            )
+            self.content_box = toga.Box(style=Pack(direction=COLUMN, flex=1))
+            self.nav_row = toga.Box(style=Pack(direction=ROW, margin_top=10))
+
+            # Navigation buttons
+            self.prev_btn = toga.Button(
+                "Previous", on_press=self._go_previous, enabled=False, style=Pack(margin_right=10)
+            )
+            self.next_btn = toga.Button("Next", on_press=self._go_next, style=Pack(margin_right=10))
+            self.cancel_btn = toga.Button("Cancel", on_press=self._cancel)
+
+            # Assemble
+            self.root_box.add(self.header_label)
+            self.root_box.add(self.content_box)
+            # push nav to right
+            nav_spacer = toga.Box(style=Pack(flex=1))
+            self.nav_row.add(nav_spacer)
+            self.nav_row.add(self.prev_btn)
+            self.nav_row.add(self.next_btn)
+            self.nav_row.add(self.cancel_btn)
+            self.root_box.add(self.nav_row)
+
+            self.window.content = self.root_box
+            self._render_step()
+
+        def show(self):
+            self.app.windows.add(self.window)
+            self.window.show()
+
+        # Navigation helpers
+        def _go_previous(self, _):
+            if self.current_step > 1:
+                self.current_step -= 1
+                self._render_step()
+
+        def _go_next(self, _):
+            if not self._validate_current_step():
+                return
+            if self.current_step < self.total_steps:
+                self.current_step += 1
+                self._render_step()
+            else:
+                # Finalize
+                try:
+                    new_pack_id = self.parent._create_pack_from_wizard_state(self.state)
+                    self.window.close()
+                    if self.on_complete:
+                        self.on_complete(new_pack_id)
+                except Exception as e:
+                    logger.error(f"Failed to create pack from wizard: {e}")
+                    self.app.main_window.error_dialog("Create Error", f"Failed to create pack: {e}")
+
+        def _cancel(self, _):
+            try:
+                # If user has entered any data, confirm
+                any_changes = bool(
+                    self.state.pack_name
+                    or self.state.author
+                    or self.state.description
+                    or self.state.selected_alert_keys
+                    or self.state.sound_mappings
+                )
+                if any_changes and not self.app.main_window.question_dialog(
+                    "Cancel Wizard", "Discard changes and close the wizard?"
+                ):
+                    return
+                self.window.close()
+                if self.on_complete:
+                    self.on_complete(None)
+            finally:
+                with contextlib.suppress(Exception):
+                    shutil.rmtree(self.staging_dir)
+
+        def _render_step(self):
+            # Update header and buttons
+            titles = {
+                1: "Pack Details",
+                2: "Select Alert Types",
+                3: "Assign Sounds",
+                4: "Preview & Finalize",
+            }
+            self.header_label.text = f"Step {self.current_step} of {self.total_steps}: {titles.get(self.current_step, '')}"
+            self.prev_btn.enabled = self.current_step > 1
+            self.next_btn.text = "Next" if self.current_step < self.total_steps else "Create Pack"
+
+            # Replace content_box content
+            self.content_box.children.clear()
+            if self.current_step == 1:
+                self._build_step1()
+            elif self.current_step == 2:
+                self._build_step2()
+            elif self.current_step == 3:
+                self._build_step3()
+            else:
+                self._build_step4()
+
+        # Step 1: Pack details
+        def _build_step1(self):
+            form = toga.Box(style=Pack(direction=COLUMN))
+            form.add(toga.Label("Pack name (required):"))
+            self.name_input = toga.TextInput(
+                value=self.state.pack_name or "",
+                placeholder="e.g., My Weather Sounds",
+                style=Pack(margin_bottom=8),
+            )
+            form.add(self.name_input)
+            form.add(toga.Label("Author (optional):"))
+            self.author_input = toga.TextInput(
+                value=self.state.author or "", style=Pack(margin_bottom=8)
+            )
+            form.add(self.author_input)
+            form.add(toga.Label("Description (optional):"))
+            self.desc_input = toga.MultilineTextInput(
+                value=self.state.description or "", style=Pack(flex=1, min_height=120)
+            )
+            form.add(self.desc_input)
+
+            hint = toga.Label(
+                "We'll generate a folder name from your pack name and ensure it's unique.",
+                style=Pack(margin_top=8, font_style="italic"),
+            )
+            form.add(hint)
+
+            self.content_box.add(form)
+
+        def _validate_current_step(self) -> bool:
+            if self.current_step == 1:
+                # Save state
+                self.state.pack_name = (self.name_input.value or "").strip()
+                self.state.author = (self.author_input.value or "").strip()
+                self.state.description = (self.desc_input.value or "").strip()
+                if not self.state.pack_name:
+                    self.app.main_window.info_dialog(
+                        "Missing Name", "Please enter a pack name to continue."
+                    )
+                    return False
+                # Check conflict
+                slug = self.state.pack_name.strip().lower().replace(" ", "_").replace("-", "_")
+                conflict = (self.soundpacks_dir / slug).exists()
+                if conflict:
+                    self.app.main_window.info_dialog(
+                        "Name In Use",
+                        "A pack with a similar folder name already exists. You can still continue; we'll make it unique.",
+                    )
+                return True
+            if self.current_step == 2:
+                if not getattr(self, "category_checks", None):
+                    self.state.selected_alert_keys = []
+                else:
+                    self.state.selected_alert_keys = [
+                        key for key, chk in self.category_checks if chk.value
+                    ]
+                if not self.state.selected_alert_keys:
+                    self.app.main_window.info_dialog(
+                        "Choose Alerts", "Select at least one alert type to continue."
+                    )
+                    return False
+                return True
+            if self.current_step == 3:
+                # Nothing strictly required; unmapped will be allowed with defaults
+                return True
+            if self.current_step == 4:
+                return True
+            return True
+
+        # Step 2: Alert selection
+        def _build_step2(self):
+            outer = toga.Box(style=Pack(direction=COLUMN, flex=1))
+            help_lbl = toga.Label("Choose the alert categories you want sounds for.")
+            outer.add(help_lbl)
+            scroll = toga.ScrollContainer(style=Pack(flex=1, margin_top=8))
+            inner = toga.Box(style=Pack(direction=COLUMN, padding=(4, 8)))
+
+            # Build checkbox list
+            self.category_checks: list[tuple[str, toga.Switch]] = []
+            for display, key in FRIENDLY_ALERT_CATEGORIES:
+                row = toga.Box(style=Pack(direction=ROW, margin_bottom=4))
+                chk = toga.Switch(display)
+                chk.value = key in (self.state.selected_alert_keys or [])
+                row.add(chk)
+                inner.add(row)
+                self.category_checks.append((key, chk))
+
+            scroll.content = inner
+            outer.add(scroll)
+
+            # Quick actions
+            actions = toga.Box(style=Pack(direction=ROW, margin_top=8))
+
+            def _select_common(_):
+                common = {
+                    "tornado_warning",
+                    "thunderstorm_warning",
+                    "flood_warning",
+                    "heat_advisory",
+                    "alert",
+                    "notify",
+                }
+                for key, chk in self.category_checks:
+                    chk.value = key in common
+
+            def _clear_all(_):
+                for _, chk in self.category_checks:
+                    chk.value = False
+
+            actions.add(
+                toga.Button("Select Common", on_press=_select_common, style=Pack(margin_right=8))
+            )
+            actions.add(toga.Button("Clear All", on_press=_clear_all))
+            outer.add(actions)
+
+            self.content_box.add(outer)
+
+        # Step 3: Sound assignment
+        def _build_step3(self):
+            outer = toga.Box(style=Pack(direction=COLUMN, flex=1))
+            help_lbl = toga.Label(
+                "Assign a sound file to each selected alert. You can leave some blank; defaults will be used."
+            )
+            outer.add(help_lbl)
+            scroll = toga.ScrollContainer(style=Pack(flex=1, margin_top=8))
+            inner = toga.Box(style=Pack(direction=COLUMN, padding=(4, 8)))
+
+            self.mapping_rows = []
+            selected = self.state.selected_alert_keys or []
+            for key in selected:
+                # Friendly display name
+                friendly = next(
+                    (d for d, k in FRIENDLY_ALERT_CATEGORIES if k == key),
+                    key.replace("_", " ").title(),
+                )
+                row = toga.Box(style=Pack(direction=ROW, margin_bottom=6))
+                label = toga.Label(friendly + ":", style=Pack(width=220, padding_top=6))
+                file_display = toga.TextInput(readonly=True, style=Pack(flex=1, margin_right=8))
+                existing = (self.state.sound_mappings or {}).get(key)
+                if existing:
+                    file_display.value = Path(existing).name
+
+                def _choose_file_factory(
+                    alert_key: str, display: toga.TextInput, friendly_name: str
+                ):
+                    def _handler(_):
+                        def _apply(__, path=None):
+                            if not path:
+                                return
+                            try:
+                                src = Path(path)
+                                if not src.exists():
+                                    return
+                                dest = self.staging_dir / src.name
+                                if src.resolve() != dest.resolve():
+                                    with contextlib.suppress(Exception):
+                                        shutil.copy2(src, dest)
+                                self.state.sound_mappings[alert_key] = str(dest)
+                                display.value = dest.name
+                            except Exception as e:
+                                logger.error(f"Failed to stage file: {e}")
+                                self.app.main_window.error_dialog(
+                                    "File Error", f"Failed to add file: {e}"
+                                )
+
+                        self.app.main_window.open_file_dialog(
+                            title=f"Choose sound for {friendly_name}",
+                            file_types=["wav", "mp3", "ogg", "flac"],
+                            on_result=_apply,
+                        )
+
+                    return _handler
+
+                def _preview_factory(alert_key: str, display_name: str):
+                    def _handler(_):
+                        try:
+                            src = self.state.sound_mappings.get(alert_key)
+                            if not src:
+                                self.app.main_window.info_dialog(
+                                    "No Sound", f"No sound chosen for {display_name}."
+                                )
+                                return
+                            from ..notifications.sound_player import play_sound_file
+
+                            play_sound_file(Path(src))
+                        except Exception as e:
+                            logger.error(f"Failed to preview: {e}")
+                            self.app.main_window.error_dialog(
+                                "Preview Error", f"Failed to preview: {e}"
+                            )
+
+                    return _handler
+
+                choose_btn = toga.Button(
+                    "Choose File",
+                    on_press=_choose_file_factory(key, file_display, friendly),
+                    style=Pack(margin_right=8),
+                )
+                preview_btn = toga.Button("Preview", on_press=_preview_factory(key, friendly))
+
+                row.add(label)
+                row.add(file_display)
+                row.add(choose_btn)
+                row.add(preview_btn)
+                inner.add(row)
+                self.mapping_rows.append((key, file_display))
+
+            scroll.content = inner
+            outer.add(scroll)
+            self.content_box.add(outer)
+
+        # Step 4: Preview & finalize
+        def _build_step4(self):
+            outer = toga.Box(style=Pack(direction=COLUMN, flex=1))
+            meta = toga.Label(f"Pack: {self.state.pack_name}  |  Author: {self.state.author}")
+            outer.add(meta)
+            desc = toga.Label(self.state.description or "")
+            outer.add(desc)
+            outer.add(toga.Label(f"Sounds selected: {len(self.state.sound_mappings or {})}"))
+
+            table_scroll = toga.ScrollContainer(style=Pack(flex=1, margin_top=8))
+            inner = toga.Box(style=Pack(direction=COLUMN, padding=(4, 8)))
+            for key in self.state.selected_alert_keys or []:
+                friendly = next((d for d, k in FRIENDLY_ALERT_CATEGORIES if k == key), key)
+                file_name = (
+                    Path(self.state.sound_mappings.get(key, "")).name
+                    if self.state.sound_mappings and key in self.state.sound_mappings
+                    else "(default)"
+                )
+                row = toga.Box(style=Pack(direction=ROW, margin_bottom=4))
+                row.add(toga.Label(f"{friendly}:", style=Pack(width=240)))
+                row.add(toga.Label(file_name, style=Pack(flex=1)))
+
+                def _preview_factory2(alert_key: str, display_name: str):
+                    def _handler(_):
+                        try:
+                            src = self.state.sound_mappings.get(alert_key)
+                            if src:
+                                from ..notifications.sound_player import play_sound_file
+
+                                play_sound_file(Path(src))
+                            else:
+                                self.app.main_window.info_dialog(
+                                    "No Sound", f"No custom sound chosen for {display_name}."
+                                )
+                        except Exception as e:
+                            logger.error(f"Failed to preview: {e}")
+                            self.app.main_window.error_dialog(
+                                "Preview Error", f"Failed to preview: {e}"
+                            )
+
+                    return _handler
+
+                row.add(toga.Button("Preview", on_press=_preview_factory2(key, friendly)))
+                inner.add(row)
+            table_scroll.content = inner
+            outer.add(table_scroll)
+
+            def _test_pack(_):
+                try:
+                    from ..notifications.sound_player import play_sound_file
+
+                    for key in (self.state.selected_alert_keys or [])[:5]:
+                        src = self.state.sound_mappings.get(key)
+                        if src:
+                            play_sound_file(Path(src))
+                except Exception as e:
+                    logger.error(f"Failed to test pack: {e}")
+                    self.app.main_window.error_dialog("Test Error", f"Failed to test pack: {e}")
+
+            outer.add(
+                toga.Button("Test Pack", on_press=_test_pack, style=Pack(margin_top=8, width=120))
+            )
+
+            # Replace Next with Create Pack label on button already handled in _render_step
+            self.content_box.add(outer)
+
             self.current_pack = self.selected_pack
             # Keep dialog open; users can edit, preview, or import assets
             self._update_pack_details()
