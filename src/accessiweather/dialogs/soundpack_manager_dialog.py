@@ -14,6 +14,7 @@ from toga.style import Pack
 from travertino.constants import COLUMN, ROW
 
 from ..dialogs.community_packs_browser_dialog import CommunityPacksBrowserDialog
+from ..dialogs.update_progress_dialog import UpdateProgressDialog
 from ..notifications.alert_sound_mapper import CANONICAL_ALERT_KEYS  # noqa: F401
 from ..notifications.sound_pack_installer import SoundPackInstaller
 from ..notifications.sound_player import (  # noqa: F401
@@ -65,6 +66,16 @@ class SoundPackManagerDialog:
             self.community_service = None
         self.installer = SoundPackInstaller(self.soundpacks_dir)
 
+        # Pack submission service
+        try:
+            from ..services.pack_submission_service import (
+                PackSubmissionService,  # local import safety
+            )
+
+            self.submission_service = PackSubmissionService()
+        except Exception:
+            self.submission_service = None
+
         self._load_sound_packs()
         self._create_dialog()
 
@@ -112,6 +123,22 @@ class SoundPackManagerDialog:
         self.delete_button.enabled = (
             self.selected_pack != "default"
         )  # Don't allow deleting default pack
+        # Share button state: enabled when a non-default pack is selected and metadata is valid
+        try:
+            if hasattr(self, "share_button"):
+                enable_share = False
+                if self.selected_pack and self.selected_pack != "default":
+                    info = self.sound_packs.get(self.selected_pack) or {}
+                    try:
+                        meta = self._load_pack_meta(info)
+                    except Exception:
+                        meta = {}
+                    name_ok = bool((meta.get("name") or "").strip())
+                    author_ok = bool((meta.get("author") or "").strip())
+                    enable_share = name_ok and author_ok
+                self.share_button.enabled = enable_share
+        except Exception:
+            pass
 
     def _update_pack_details(self) -> None:
         from .soundpack_manager.state import update_pack_details as _upd
@@ -419,8 +446,6 @@ class SoundPackManagerDialog:
                 logger.info(
                     f"Select button enabled after selection: {getattr(self.select_button, 'enabled', 'N/A')}"
                 )
-
-                # Small delay to ensure the UI updates
                 await asyncio.sleep(0.1)
             except Exception as e:
                 logger.warning(f"Could not select first pack: {e}")
@@ -428,23 +453,119 @@ class SoundPackManagerDialog:
 
                 logger.warning(f"Traceback: {traceback.format_exc()}")
 
-        # Set focus to close button for predictable tab order
-        # This allows users to tab through the interface in a logical order:
-        # Close -> Import -> Pack Selection -> Select Pack -> Delete Pack -> Sound Selection -> Preview
-        try:
-            if self.close_button:
-                self.close_button.focus()
-                logger.info("Set initial focus to close button for predictable tab order")
-            else:
-                logger.warning("Close button not available for initial focus")
-        except Exception as e:
-            logger.warning(f"Could not set focus to close button: {e}")
-            # Try import button as fallback
-            try:
-                if self.import_button:
-                    self.import_button.focus()
-                    logger.info("Set focus to import button as fallback")
-            except Exception as fallback_e:
-                logger.warning(f"Fallback focus attempt failed: {fallback_e}")
-
         return self.current_pack
+
+    async def _on_share_pack(self, widget) -> None:
+        """Validate and submit the selected pack to the community repository via PR."""
+        try:
+            if not getattr(self, "submission_service", None):
+                await self.app.main_window.info_dialog(
+                    "Share Pack",
+                    "Pack sharing is not available in this build.",
+                )
+                return
+
+            if not self.selected_pack or self.selected_pack == "default":
+                await self.app.main_window.info_dialog(
+                    "Share Pack",
+                    "Please select a non-default sound pack to share.",
+                )
+                return
+
+            pack_info = self.sound_packs.get(self.selected_pack)
+            if not pack_info:
+                await self.app.main_window.error_dialog(
+                    "Share Pack",
+                    "Could not load selected pack information.",
+                )
+                return
+
+            # Load metadata
+            try:
+                meta = self._load_pack_meta(pack_info)
+            except Exception:
+                meta = {}
+
+            name = (meta.get("name") or self.selected_pack).strip()
+            author = (meta.get("author") or "").strip()
+
+            # Basic metadata validation
+            missing = []
+            if not name:
+                missing.append("name")
+            if not author:
+                missing.append("author")
+            if missing:
+                await self.app.main_window.error_dialog(
+                    "Incomplete Metadata",
+                    f"Please add the following to pack.json before sharing: {', '.join(missing)}",
+                )
+                return
+
+            # Structural validation
+            ok, msg = validate_sound_pack(pack_info["path"])
+            if not ok:
+                await self.app.main_window.error_dialog(
+                    "Validation Failed",
+                    f"Please fix the following before sharing:\n{msg}",
+                )
+                return
+
+            # Confirm
+            body = (
+                f"You are about to share the sound pack '{name}' by {author}.\n\n"
+                "This will:\n"
+                "- Clone the community repository\n"
+                "- Create a new Git branch\n"
+                "- Copy your pack into the repository\n"
+                "- Open a Pull Request on GitHub using the gh CLI\n\n"
+                "Do you want to continue?"
+            )
+            proceed = await self.app.main_window.question_dialog("Share Pack", body)
+            if not proceed:
+                return
+
+            # Progress dialog
+            progress = UpdateProgressDialog(self.app, title="Sharing Sound Pack")
+            progress.show_and_prepare()
+
+            def _progress_cb(pct: float, status: str) -> bool | None:
+                # Bridge to our dialog; schedule without awaiting
+                try:
+                    asyncio.create_task(progress.set_status(status))
+                    asyncio.create_task(progress.update_progress(pct))
+                except Exception:
+                    pass
+                # Allow cancellation
+                return not progress.is_cancelled
+
+            try:
+                pr_url = await self.submission_service.submit_pack(
+                    pack_path=pack_info["path"],
+                    pack_meta=meta,
+                    progress_callback=_progress_cb,
+                )
+            except asyncio.CancelledError:
+                await progress.complete_error("Share cancelled.")
+                progress.close()
+                return
+            except Exception as e:
+                await progress.complete_error(str(e))
+                progress.close()
+                return
+
+            await progress.complete_success("Pack shared successfully!")
+            progress.close()
+
+            # Offer to open PR
+            open_msg = f"Your pull request was created successfully.\n\nPR: {pr_url}\n\nOpen it in your browser now?"
+            if await self.app.main_window.question_dialog("Share Complete", open_msg):
+                try:
+                    import webbrowser
+
+                    webbrowser.open(pr_url)
+                except Exception:
+                    pass
+        except Exception as e:
+            logger.error(f"Share pack failed: {e}")
+            await self.app.main_window.error_dialog("Share Failed", str(e))
