@@ -139,8 +139,9 @@ class PackSubmissionService:
             report(40.0, "Copying pack files into repository...")
             dest_dir.parent.mkdir(parents=True, exist_ok=True)
             if dest_dir.exists():
-                # Clean any existing directory
-                shutil.rmtree(dest_dir)
+                raise RuntimeError(
+                    "A pack with this ID already exists in the community repository. Please rename your pack or adjust metadata to produce a unique ID."
+                )
             shutil.copytree(pack_path, dest_dir)
 
             # Validate the copied pack again (defensive)
@@ -180,15 +181,32 @@ class PackSubmissionService:
             )
 
             # Fork the repository if needed (non-interactive)
-            report(80.0, "Ensuring repository fork...")
+            report(80.0, "Ensuring repository fork and pushing branch...")
             with contextlib.suppress(RuntimeError):
                 # Fork may already exist or user has write access, continue on error
                 await self._run_cmd(
-                    ["gh", "repo", "fork", "--remote=false", "--clone=false"], cwd=workdir
+                    ["gh", "repo", "fork", "--remote=true", "--clone=false"], cwd=workdir
                 )
 
-            # Create PR with automatic head detection
-            pr_url = await self._create_pr(workdir, pr_title, pr_body, label="soundpack")
+            # Push the branch to the fork (origin)
+            await self._run_cmd(["git", "push", "-u", "origin", branch], cwd=workdir)
+
+            # Optionally resolve login to construct explicit head ref
+            head_ref: str | None = None
+            try:
+                login = await self._run_cmd(["gh", "api", "user", "-q", ".login"], cwd=workdir)
+                head_ref = f"{login.strip()}:{branch}"
+            except Exception:
+                head_ref = None
+
+            # Create PR with explicit base and optional head
+            pr_url = await self._create_pr(
+                workdir,
+                pr_title,
+                pr_body,
+                label="soundpack",
+                head=head_ref,
+            )
 
             report(100.0, "Submission complete.")
             return pr_url
@@ -215,6 +233,7 @@ class PackSubmissionService:
         title: str,
         body: str,
         label: str | None = None,
+        head: str | None = None,
     ) -> str:
         args = [
             "gh",
@@ -230,6 +249,8 @@ class PackSubmissionService:
         ]
         if label:
             args += ["--label", label]
+        if head:
+            args += ["--head", head]
 
         code, out, _ = await self._run_cmd(args, cwd=cwd, return_all=True)
         # gh prints the PR URL in stdout on success
@@ -266,6 +287,10 @@ class PackSubmissionService:
                 with contextlib.suppress(ProcessLookupError):
                     proc.kill()
                 raise RuntimeError(f"Command timed out: {' '.join(args)}") from e
+            except asyncio.CancelledError:
+                with contextlib.suppress(ProcessLookupError):
+                    proc.kill()
+                raise
 
             code = proc.returncode or 0
             stdout = stdout_b.decode(errors="ignore") if stdout_b else ""

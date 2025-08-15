@@ -493,6 +493,15 @@ class SoundPackManagerDialog:
             except Exception:
                 meta = {}
 
+            # Ensure at least one sound mapping exists
+            sounds = meta.get("sounds") or {}
+            if not isinstance(sounds, dict) or len(sounds) == 0:
+                await self.app.main_window.error_dialog(
+                    "Validation Failed",
+                    "Your pack has no sounds mapped. Add at least one mapping before sharing.",
+                )
+                return
+
             name = (meta.get("name") or self.selected_pack).strip()
             author = (meta.get("author") or "").strip()
             description = (meta.get("description") or "").strip()
