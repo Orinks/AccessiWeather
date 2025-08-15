@@ -66,6 +66,7 @@ def import_pack_file(dlg, widget, path: str | None = None) -> None:
             zip_file.extractall(pack_dir)
             dlg._load_sound_packs()
             dlg._refresh_pack_list()
+            dlg._update_pack_details()
             dlg.app.main_window.info_dialog(
                 "Import Successful", f"Sound pack '{pack_name}' has been imported successfully."
             )
