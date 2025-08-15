@@ -123,27 +123,34 @@ class SoundPackManagerDialog:
         self.delete_button.enabled = (
             self.selected_pack != "default"
         )  # Don't allow deleting default pack
-        # Share button state: enabled when a non-default pack is selected and metadata is valid
-        try:
-            if hasattr(self, "share_button"):
-                enable_share = False
-                if self.selected_pack and self.selected_pack != "default":
-                    info = self.sound_packs.get(self.selected_pack) or {}
-                    try:
-                        meta = self._load_pack_meta(info)
-                    except Exception:
-                        meta = {}
-                    name_ok = bool((meta.get("name") or "").strip())
-                    author_ok = bool((meta.get("author") or "").strip())
-                    enable_share = name_ok and author_ok
-                self.share_button.enabled = enable_share
-        except Exception:
-            pass
+        # Update share button state
+        self._update_share_button_state()
 
     def _update_pack_details(self) -> None:
         from .soundpack_manager.state import update_pack_details as _upd
 
         _upd(self)
+        self._update_share_button_state()
+
+    def _update_share_button_state(self) -> None:
+        """Update the share button enabled state based on current pack selection and metadata."""
+        try:
+            if not hasattr(self, "share_button"):
+                return
+
+            enable_share = False
+            if self.selected_pack and self.selected_pack != "default":
+                info = self.sound_packs.get(self.selected_pack) or {}
+                try:
+                    meta = self._load_pack_meta(info)
+                except Exception:
+                    meta = {}
+                name_ok = bool((meta.get("name") or "").strip())
+                author_ok = bool((meta.get("author") or "").strip())
+                enable_share = name_ok and author_ok
+            self.share_button.enabled = enable_share
+        except Exception:
+            pass
 
     def _on_mapping_key_change(self, widget) -> None:
         """When the mapping key changes, populate the file input with current mapping if present."""
@@ -486,8 +493,18 @@ class SoundPackManagerDialog:
             except Exception:
                 meta = {}
 
+            # Ensure at least one sound mapping exists
+            sounds = meta.get("sounds") or {}
+            if not isinstance(sounds, dict) or len(sounds) == 0:
+                await self.app.main_window.error_dialog(
+                    "Validation Failed",
+                    "Your pack has no sounds mapped. Add at least one mapping before sharing.",
+                )
+                return
+
             name = (meta.get("name") or self.selected_pack).strip()
             author = (meta.get("author") or "").strip()
+            description = (meta.get("description") or "").strip()
 
             # Basic metadata validation
             missing = []
@@ -502,8 +519,20 @@ class SoundPackManagerDialog:
                 )
                 return
 
+            # Optional description warning
+            if not description:
+                proceed = await self.app.main_window.question_dialog(
+                    "Missing Description",
+                    "Your sound pack doesn't have a description. While not required, "
+                    "a description helps users understand what your pack contains.\n\n"
+                    "Do you want to continue without a description?",
+                )
+                if not proceed:
+                    return
+
             # Structural validation
-            ok, msg = validate_sound_pack(pack_info["path"])
+            pack_dir = Path(pack_info["path"])
+            ok, msg = validate_sound_pack(pack_dir)
             if not ok:
                 await self.app.main_window.error_dialog(
                     "Validation Failed",
@@ -541,7 +570,7 @@ class SoundPackManagerDialog:
 
             try:
                 pr_url = await self.submission_service.submit_pack(
-                    pack_path=pack_info["path"],
+                    pack_path=pack_dir,
                     pack_meta=meta,
                     progress_callback=_progress_cb,
                 )
