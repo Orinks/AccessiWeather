@@ -68,9 +68,14 @@ class PackSubmissionService:
             pack_meta: Parsed metadata from pack.json
             progress_callback: Optional callback(progress_percent, status_text) -> bool | None.
                 If it returns False, the operation will be cancelled.
+                The callback should be synchronous and return immediately.
 
         Returns:
             The URL of the created Pull Request.
+
+        Note:
+            This method handles git operations, GitHub authentication, and PR creation.
+            On cancellation, any running subprocess will be terminated.
 
         """
 
@@ -92,6 +97,10 @@ class PackSubmissionService:
 
         report(5.0, "Checking prerequisites...")
         await self._ensure_tools_available()
+
+        # Ensure GitHub CLI is authenticated early
+        report(7.0, "Verifying GitHub authentication...")
+        await self._ensure_gh_authenticated(None)
 
         # Basic local validation first
         report(10.0, "Validating pack locally...")
@@ -144,26 +153,41 @@ class PackSubmissionService:
             report(65.0, "Staging changes...")
             await self._run_cmd(["git", "add", "-A"], cwd=workdir)
 
+            # Ensure git identity is configured before committing
+            report(67.0, "Configuring git identity...")
+            try:
+                await self._run_cmd(["git", "config", "user.email"], cwd=workdir)
+                await self._run_cmd(["git", "config", "user.name"], cwd=workdir)
+            except Exception:
+                await self._run_cmd(
+                    ["git", "config", "user.email", "accessiweather@users.noreply.github.com"],
+                    cwd=workdir,
+                )
+                await self._run_cmd(
+                    ["git", "config", "user.name", author or pack_name], cwd=workdir
+                )
+
             commit_msg = f"Add sound pack: {pack_name} by {author}"
             report(70.0, "Committing changes...")
             await self._run_cmd(["git", "commit", "-m", commit_msg], cwd=workdir)
 
-            # Push branch to origin (this may trigger fork behavior depending on permissions)
-            report(75.0, "Pushing branch to origin...")
-            await self._run_cmd(["git", "push", "-u", "origin", branch], cwd=workdir)
-
-            # Create PR via gh CLI
-            report(85.0, "Creating pull request via GitHub CLI...")
+            # Create PR via gh CLI (gh will handle forking and pushing automatically)
+            report(75.0, "Creating pull request via GitHub CLI...")
             pr_title = commit_msg
             pr_body = (
                 f"This PR submits the sound pack '{pack_name}' by {author}.\n\n"
                 f"Submitted via AccessiWeather {APP_VERSION}."
             )
 
-            # Ensure gh is authenticated
-            await self._ensure_gh_authenticated(workdir)
+            # Fork the repository if needed (non-interactive)
+            report(80.0, "Ensuring repository fork...")
+            with contextlib.suppress(RuntimeError):
+                # Fork may already exist or user has write access, continue on error
+                await self._run_cmd(
+                    ["gh", "repo", "fork", "--remote=false", "--clone=false"], cwd=workdir
+                )
 
-            # Some repos use 'main', others 'master'. Try default first, then fallback.
+            # Create PR with automatic head detection
             pr_url = await self._create_pr(workdir, pr_title, pr_body, label="soundpack")
 
             report(100.0, "Submission complete.")
@@ -202,6 +226,7 @@ class PackSubmissionService:
             body,
             "--base",
             self.default_base_branch,
+            "--fill",  # Avoid editor prompts if PR template exists
         ]
         if label:
             args += ["--label", label]
@@ -237,10 +262,10 @@ class PackSubmissionService:
             )
             try:
                 stdout_b, stderr_b = await asyncio.wait_for(proc.communicate(), timeout=timeout)
-            except TimeoutError:
+            except TimeoutError as e:
                 with contextlib.suppress(ProcessLookupError):
                     proc.kill()
-                raise RuntimeError(f"Command timed out: {' '.join(args)}") from None
+                raise RuntimeError(f"Command timed out: {' '.join(args)}") from e
 
             code = proc.returncode or 0
             stdout = stdout_b.decode(errors="ignore") if stdout_b else ""
@@ -262,18 +287,21 @@ class PackSubmissionService:
         env.setdefault("GITHUB_TOKEN", os.environ.get("GH_TOKEN", ""))
         env.setdefault("GH_PAGER", "cat")
         env.setdefault("GLAMOUR_STYLE", "plain")
+        env.setdefault("GH_PROMPT_DISABLED", "1")  # Disable interactive prompts
         # User-Agent for potential HTTP operations by gh
         env.setdefault("HTTP_USER_AGENT", self.user_agent)
         return env
 
     @staticmethod
     def _derive_pack_id(pack_path: Path, meta: dict) -> str:
-        # Prefer directory name; else sanitize name
-        name = pack_path.name
-        if name:
-            return PackSubmissionService._sanitize_id(name)
-        fallback = (meta.get("name") or "pack").strip()
-        return PackSubmissionService._sanitize_id(fallback)
+        # Prefer metadata name, then directory name, with optional author for uniqueness
+        name = (meta.get("name") or pack_path.name or "pack").strip()
+        author = (meta.get("author") or "").strip()
+
+        # Include author if available to reduce collision risk
+        pack_id = f"{name}-{author}" if author and author.lower() != "unknown" else name
+
+        return PackSubmissionService._sanitize_id(pack_id)
 
     @staticmethod
     def _sanitize_id(text: str) -> str:
