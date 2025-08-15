@@ -205,6 +205,10 @@ def create_button_panel(dlg) -> toga.Box:
     )
     button_box.add(dlg.share_button)
 
+    # Add accessibility description for share button
+    with contextlib.suppress(Exception):
+        dlg.share_button.aria_description = "Enable by selecting a non-default pack with name, author, and at least one mapped sound."
+
     dlg.duplicate_button = toga.Button(
         "Duplicate", on_press=dlg._on_duplicate_pack, enabled=False, style=Pack(margin_right=10)
     )

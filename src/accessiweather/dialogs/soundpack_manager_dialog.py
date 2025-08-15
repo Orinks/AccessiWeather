@@ -45,6 +45,7 @@ class SoundPackManagerDialog:
         # Sound pack data
         self.sound_packs: dict[str, dict] = {}
         self.selected_pack: str | None = None
+        self._share_cancel_event: asyncio.Event | None = None
 
         # UI components
         self.dialog: toga.Window | None = None
@@ -139,7 +140,11 @@ class SoundPackManagerDialog:
                 return
 
             enable_share = False
-            if self.selected_pack and self.selected_pack != "default":
+            if (
+                self.selected_pack
+                and self.selected_pack != "default"
+                and self.submission_service is not None
+            ):
                 info = self.sound_packs.get(self.selected_pack) or {}
                 try:
                     meta = self._load_pack_meta(info)
@@ -147,7 +152,12 @@ class SoundPackManagerDialog:
                     meta = {}
                 name_ok = bool((meta.get("name") or "").strip())
                 author_ok = bool((meta.get("author") or "").strip())
-                enable_share = name_ok and author_ok
+
+                # Also require at least one mapped sound
+                sounds = meta.get("sounds") or {}
+                sounds_ok = isinstance(sounds, dict) and len(sounds) > 0
+
+                enable_share = name_ok and author_ok and sounds_ok
             self.share_button.enabled = enable_share
         except Exception:
             pass
@@ -420,6 +430,10 @@ class SoundPackManagerDialog:
     def _on_close(self, widget) -> None:
         """Close the dialog."""
         try:
+            # Cancel any in-progress submission
+            if self._share_cancel_event is not None and getattr(self, "_share_in_progress", False):
+                self._share_cancel_event.set()
+
             if getattr(self, "community_service", None):
                 # Schedule async cleanup of HTTP client without blocking UI
                 asyncio.create_task(self.community_service.aclose())
@@ -464,6 +478,10 @@ class SoundPackManagerDialog:
 
     async def _on_share_pack(self, widget) -> None:
         """Validate and submit the selected pack to the community repository via PR."""
+        # Guard against re-entrancy
+        if getattr(self, "_share_in_progress", False):
+            return
+
         try:
             if not getattr(self, "submission_service", None):
                 await self.app.main_window.info_dialog(
@@ -554,17 +572,28 @@ class SoundPackManagerDialog:
             if not proceed:
                 return
 
+            # Disable share button and set progress flag before showing progress dialog
+            self.share_button.enabled = False
+            self._share_in_progress = True
+
             # Progress dialog
-            progress = UpdateProgressDialog(self.app, title="Sharing Sound Pack")
+            progress = UpdateProgressDialog(self.app, title="Sharing Sound Pack", mode="generic")
             progress.show_and_prepare()
 
-            def _progress_cb(pct: float, status: str) -> bool | None:
-                # Bridge to our dialog; schedule without awaiting
+            # Create cancel event for subprocess cancellation
+            self._share_cancel_event = asyncio.Event()
+            cancel_event = self._share_cancel_event
+
+            async def _progress_cb(pct: float, status: str) -> bool | None:
+                # Bridge to our dialog with ordered updates
                 try:
-                    asyncio.create_task(progress.set_status(status))
-                    asyncio.create_task(progress.update_progress(pct))
+                    await progress.update_progress(pct)
+                    await progress.set_status(status)
                 except Exception:
                     pass
+                # Set cancel event when progress dialog is cancelled
+                if progress.is_cancelled:
+                    cancel_event.set()
                 # Allow cancellation
                 return not progress.is_cancelled
 
@@ -573,17 +602,28 @@ class SoundPackManagerDialog:
                     pack_path=pack_dir,
                     pack_meta=meta,
                     progress_callback=_progress_cb,
+                    cancel_event=cancel_event,
                 )
             except asyncio.CancelledError:
                 await progress.complete_error("Share cancelled.")
+                # Close progress dialog and show additional feedback
                 progress.close()
+                await self.app.main_window.info_dialog(
+                    "Share Cancelled", "The pack sharing operation was cancelled."
+                )
                 return
             except Exception as e:
                 await progress.complete_error(str(e))
+                # Close progress dialog and show additional error feedback
                 progress.close()
+                await self.app.main_window.error_dialog(
+                    "Share Failed", f"Failed to share pack: {str(e)}"
+                )
                 return
 
-            await progress.complete_success("Pack shared successfully!")
+            await progress.complete_success(
+                "Pack shared successfully!", "You can now review your PR."
+            )
             progress.close()
 
             # Offer to open PR
@@ -598,3 +638,8 @@ class SoundPackManagerDialog:
         except Exception as e:
             logger.error(f"Share pack failed: {e}")
             await self.app.main_window.error_dialog("Share Failed", str(e))
+        finally:
+            # Restore share button state and clear progress flag
+            self._share_in_progress = False
+            self._share_cancel_event = None
+            self._update_share_button_state()
