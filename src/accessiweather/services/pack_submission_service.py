@@ -1,15 +1,14 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
-import inspect
+import base64
 import logging
 import os
 import re
-import shutil
-import tempfile
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from pathlib import Path
+
+import httpx
 
 from accessiweather.notifications.sound_player import validate_sound_pack
 from accessiweather.version import __version__ as APP_VERSION
@@ -18,10 +17,10 @@ logger = logging.getLogger(__name__)
 
 
 class PackSubmissionService:
-    """Service to validate a sound pack and submit it to the community repo via GitHub CLI.
+    """Service to validate a sound pack and submit it to the community repo via GitHub REST API.
 
-    This uses git and gh CLI tools. It performs operations in a temporary working
-    directory and cleans up afterwards.
+    This uses direct HTTP calls to the GitHub API (no git/gh CLI), preserving
+    progress reporting and cancellation semantics.
     """
 
     def __init__(
@@ -31,7 +30,6 @@ class PackSubmissionService:
         dest_subdir: str = "packs",
         user_agent: str | None = None,
         default_base_branch: str = "main",
-        command_timeout: float = 600.0,
     ) -> None:
         """Initialize the submission service.
 
@@ -41,14 +39,12 @@ class PackSubmissionService:
             dest_subdir: Subdirectory within repo to place packs
             user_agent: Optional user-agent string
             default_base_branch: The base branch to target PRs against
-            command_timeout: Timeout in seconds for subprocess commands
 
         """
         self.repo_owner = repo_owner
         self.repo_name = repo_name
         self.dest_subdir = dest_subdir
         self.default_base_branch = default_base_branch
-        self.command_timeout = command_timeout
         self.user_agent = user_agent or f"AccessiWeather/{APP_VERSION}"
 
     async def submit_pack(
@@ -58,23 +54,10 @@ class PackSubmissionService:
         progress_callback: Callable[[float, str], bool | None] | None = None,
         cancel_event: asyncio.Event | None = None,
     ) -> str:
-        """Validate, prepare, and submit a sound pack as a GitHub PR.
+        """Validate, prepare, and submit a sound pack as a GitHub PR (API-based).
 
-        Args:
-            pack_path: Path to the directory containing pack.json and audio files
-            pack_meta: Parsed metadata from pack.json
-            progress_callback: Optional callback(progress_percent, status_text) -> bool | None.
-                If it returns False, the operation will be cancelled.
-                The callback should be synchronous and return immediately.
-            cancel_event: Optional asyncio.Event to signal cancellation
-
-        Returns:
-            The URL of the created Pull Request.
-
-        Note:
-            This method handles git operations, GitHub authentication, and PR creation.
-            On cancellation, any running subprocess will be terminated.
-
+        This implementation uses the GitHub REST API via httpx, preserving the
+        existing interface, progress reporting, and cancellation behavior.
         """
         if cancel_event is None:
             cancel_event = asyncio.Event()
@@ -84,7 +67,6 @@ class PackSubmissionService:
                 if progress_callback is not None:
                     res = progress_callback(pct, status)
                     if asyncio.iscoroutine(res):
-                        # Await the coroutine properly
                         res = await res
                     if res is False:
                         cancel_event.set()
@@ -95,430 +77,315 @@ class PackSubmissionService:
                 pass
 
         await report(5.0, "Checking prerequisites...")
-        await self._ensure_tools_available()
 
-        # Ensure GitHub CLI is authenticated early
+        # Verify token and create client
         await report(7.0, "Verifying GitHub authentication...")
-        await self._ensure_gh_authenticated(None)
-
-        # Resolve the default branch of the target repository
-        await report(8.0, "Resolving repository default branch...")
-        await self._resolve_default_branch()
-
-        # Basic local validation first
-        await report(10.0, "Validating pack locally...")
-        ok, msg = validate_sound_pack(pack_path)
-        if not ok:
-            raise RuntimeError(f"Pack validation failed: {msg}")
-
-        pack_name = (pack_meta.get("name") or pack_path.name).strip()
-        author = (pack_meta.get("author") or "Unknown").strip()
-        pack_id = self._derive_pack_id(pack_path, pack_meta)
-
-        # Work inside a temp directory
-        with tempfile.TemporaryDirectory(prefix="aw-pack-submit-") as tmpdir:
-            workdir = Path(tmpdir)
-
-            # Clone
-            await report(20.0, "Cloning community repository...")
-            await self._run_cmd(
-                [
-                    "git",
-                    "clone",
-                    "--depth=1",
-                    f"https://github.com/{self.repo_owner}/{self.repo_name}.git",
-                    "repo",
-                ],
-                cwd=workdir,
-                cancel_event=cancel_event,
+        token = os.getenv("ACCESSIWEATHER_GITHUB_TOKEN")
+        if not token:
+            raise RuntimeError(
+                "Missing GitHub token. Set ACCESSIWEATHER_GITHUB_TOKEN environment variable."
             )
 
-            # Set repo_dir for subsequent operations
-            repo_dir = workdir / "repo"
+        async with self._get_auth_client(token) as client:
+            # Resolve default branch
+            await report(8.0, "Resolving repository default branch...")
+            repo_info = await self._get_repo_info(client)
+            default_branch = repo_info.get("default_branch") or self.default_base_branch
+            self.default_base_branch = default_branch
 
-            # Create branch
+            # Verify auth by fetching current user
+            me = await self._get_user_login(client)
+
+            # Local validation first
+            await report(10.0, "Validating pack locally...")
+            ok, msg = validate_sound_pack(pack_path)
+            if not ok:
+                raise RuntimeError(f"Pack validation failed: {msg}")
+
+            pack_name = (pack_meta.get("name") or pack_path.name).strip()
+            author = (pack_meta.get("author") or "Unknown").strip()
+            pack_id = self._derive_pack_id(pack_path, pack_meta)
             branch = self._build_branch_name(pack_id)
-            await report(30.0, f"Creating branch {branch}...")
-            await self._run_cmd(
-                ["git", "checkout", "-b", branch], cwd=repo_dir, cancel_event=cancel_event
-            )
 
-            # Copy pack directory into repo (<dest_subdir>/<pack_id>)
-            dest_dir = repo_dir / self.dest_subdir / pack_id
-            await report(40.0, "Copying pack files into repository...")
-            dest_dir.parent.mkdir(parents=True, exist_ok=True)
-            if dest_dir.exists():
+            # Prevent duplicate in upstream
+            dest_prefix = f"{self.dest_subdir}/{pack_id}"
+            exists_in_upstream = await self._path_exists(
+                client,
+                f"{self.repo_owner}/{self.repo_name}",
+                dest_prefix,
+                default_branch,
+            )
+            if exists_in_upstream:
                 raise RuntimeError(
                     "A pack with this ID already exists in the community repository. Please rename your pack or adjust metadata to produce a unique ID."
                 )
 
-            async def copy_progress_cb(p: float) -> None:
-                await report(40.0 + (p / 100.0) * 10.0, "Copying pack files...")
+            # Ensure fork exists
+            await report(20.0, "Ensuring repository fork...")
+            fork_full_name = await self._ensure_fork(client, me, cancel_event)
 
-            await self._copy_pack(
-                pack_path,
-                dest_dir,
-                cancel_event,
-                copy_progress_cb,
-            )
-
-            # Validate the copied pack again (defensive)
-            await report(55.0, "Running validation on copied files...")
-            ok2, msg2 = validate_sound_pack(dest_dir)
-            if not ok2:
-                raise RuntimeError(f"Validation after copy failed: {msg2}")
-
-            # Stage + commit
-            await report(60.0, "Staging changes...")
-            await self._run_cmd(["git", "add", "-A"], cwd=repo_dir, cancel_event=cancel_event)
-
-            # Ensure git identity is configured before committing
-            await report(65.0, "Configuring git identity...")
+            # Create branch in fork based on fork's default branch SHA
+            await report(30.0, f"Creating branch {branch}...")
             try:
-                await self._run_cmd(
-                    ["git", "config", "user.email"], cwd=repo_dir, cancel_event=cancel_event
+                base_sha = await self._get_branch_sha(client, fork_full_name, default_branch)
+            except RuntimeError:
+                # Fallback to upstream if fork doesn't have the branch yet
+                base_sha = await self._get_branch_sha(
+                    client, f"{self.repo_owner}/{self.repo_name}", default_branch
                 )
-                await self._run_cmd(
-                    ["git", "config", "user.name"], cwd=repo_dir, cancel_event=cancel_event
-                )
-            except Exception:
-                await self._run_cmd(
-                    ["git", "config", "user.email", "accessiweather@users.noreply.github.com"],
-                    cwd=repo_dir,
-                    cancel_event=cancel_event,
-                )
-                await self._run_cmd(
-                    ["git", "config", "user.name", author or pack_name],
-                    cwd=repo_dir,
-                    cancel_event=cancel_event,
-                )
+            await self._create_branch(client, fork_full_name, branch, base_sha)
 
-            commit_msg = f"Add sound pack: {pack_name} by {author}"
-            await report(75.0, "Committing changes...")
-            await self._run_cmd(
-                ["git", "commit", "-m", commit_msg], cwd=repo_dir, cancel_event=cancel_event
-            )
-
-            # Create PR via gh CLI (gh will handle forking and pushing automatically)
-            await report(90.0, "Creating pull request via GitHub CLI...")
-            pr_title = commit_msg
-
-            # Build enhanced PR body with pack metadata
+            # Build PR title/body
+            pr_title = f"Add sound pack: {pack_name} by {author}"
             pr_body_parts = [f"This PR submits the sound pack '{pack_name}' by {author}."]
-
-            # Add description if available
-            description = pack_meta.get("description", "").strip()
+            description = (pack_meta.get("description") or "").strip()
             if description:
                 pr_body_parts.append(f"\n**Description:** {description}")
-
-            # Add number of mapped sounds
             sounds = pack_meta.get("sounds") or {}
             if isinstance(sounds, dict):
-                sound_count = len(sounds)
-                pr_body_parts.append(f"\n**Mapped sounds:** {sound_count}")
-
+                pr_body_parts.append(f"\n**Mapped sounds:** {len(sounds)}")
             pr_body_parts.append(f"\n\nSubmitted via AccessiWeather {APP_VERSION}.")
             pr_body = "".join(pr_body_parts)
 
-            # Fork the repository if needed (non-interactive)
-            await report(92.0, "Ensuring repository fork and pushing branch...")
-            with contextlib.suppress(RuntimeError):
-                # Fork may already exist or user has write access, continue on error
-                await self._run_cmd(
-                    ["gh", "repo", "fork", "--remote=true", "--clone=false"],
-                    cwd=repo_dir,
-                    cancel_event=cancel_event,
+            # Upload files one-by-one with progress mapping 20-90%
+            await report(40.0, "Preparing files for upload...")
+            files: list[Path] = []
+            for root, _dirs, filenames in os.walk(pack_path):
+                for name in filenames:
+                    files.append(Path(root) / name)
+            total = len(files)
+            if total == 0:
+                raise RuntimeError("No files found in the sound pack directory.")
+
+            for idx, file_path in enumerate(files, start=1):
+                if cancel_event.is_set():
+                    raise asyncio.CancelledError("Operation cancelled by user")
+                rel = file_path.relative_to(pack_path).as_posix()
+                repo_path = f"{dest_prefix}/{rel}"
+                content = await asyncio.to_thread(file_path.read_bytes)
+
+                # Check file size limit (GitHub Contents API rejects files >100MB)
+                if len(content) > 100 * 1024 * 1024:  # 100MB
+                    raise RuntimeError(
+                        f"File {rel} is too large ({len(content)} bytes). GitHub Contents API has a 100MB limit."
+                    )
+
+                commit_msg = f"{pr_title} - add {rel}"
+                await self._upload_file(
+                    client,
+                    fork_full_name,
+                    repo_path,
+                    content,
+                    commit_msg,
+                    branch,
                 )
+                pct = 40.0 + (idx / total) * 50.0
+                await report(pct, f"Uploaded {rel}")
+                await asyncio.sleep(0)
 
-            # Configure git to use GitHub CLI for authentication
-            await self._run_cmd(
-                ["gh", "auth", "setup-git"], cwd=repo_dir, cancel_event=cancel_event
-            )
-
-            # Simplified push logic: always attempt to push to fork remote first
-            try:
-                await self._run_cmd(
-                    ["git", "push", "-u", "fork", branch], cwd=repo_dir, cancel_event=cancel_event
-                )
-            except RuntimeError:
-                # If fork remote is missing, create it and push to it
-                try:
-                    login = await self._run_cmd(
-                        ["gh", "api", "user", "-q", ".login"],
-                        cwd=repo_dir,
-                        cancel_event=cancel_event,
-                    )
-                    expected_fork_url = f"https://github.com/{login.strip()}/{self.repo_name}.git"
-
-                    await self._run_cmd(
-                        ["git", "remote", "add", "fork", expected_fork_url],
-                        cwd=repo_dir,
-                        cancel_event=cancel_event,
-                    )
-                    await self._run_cmd(
-                        ["git", "push", "-u", "fork", branch],
-                        cwd=repo_dir,
-                        cancel_event=cancel_event,
-                    )
-                except RuntimeError:
-                    # Fall back to pushing to origin
-                    await self._run_cmd(
-                        ["git", "push", "-u", "origin", branch],
-                        cwd=repo_dir,
-                        cancel_event=cancel_event,
-                    )
-
-            # Optionally resolve login to construct explicit head ref
-            head_ref: str | None = None
-            try:
-                login = await self._run_cmd(
-                    ["gh", "api", "user", "-q", ".login"], cwd=repo_dir, cancel_event=cancel_event
-                )
-                head_ref = f"{login.strip()}:{branch}"
-            except Exception:
-                head_ref = None
-
-            # Create PR with explicit base and optional head
-            pr_url = await self._create_pr(
-                repo_dir,
+            # Create PR 90-100%
+            await report(90.0, "Creating pull request...")
+            head = f"{me}:{branch}"
+            pr_url = await self._create_pull_request(
+                client,
+                f"{self.repo_owner}/{self.repo_name}",
                 pr_title,
                 pr_body,
+                head,
+                default_branch,
                 label="soundpack",
-                head=head_ref,
-                cancel_event=cancel_event,
             )
 
             await report(100.0, "Submission complete.")
             return pr_url
 
-    # Internal helpers
-
-    async def _resolve_default_branch(self) -> None:
-        """Resolve the default branch of the target repository."""
-        try:
-            result = await self._run_cmd(
-                [
-                    "gh",
-                    "repo",
-                    "view",
-                    "-R",
-                    f"{self.repo_owner}/{self.repo_name}",
-                    "--json",
-                    "defaultBranchRef",
-                    "-q",
-                    ".defaultBranchRef.name",
-                ],
-                cwd=None,
-            )
-            self.default_base_branch = result.strip()
-        except Exception:
-            # Fall back to 'main' if we can't determine the default branch
-            self.default_base_branch = "main"
-
-    async def _ensure_tools_available(self) -> None:
-        # git
-        try:
-            await self._run_cmd(["git", "--version"], cwd=None)
-        except RuntimeError as e:
-            raise RuntimeError(
-                "Git is not installed or not in PATH. Please install Git from https://git-scm.com/ and try again."
-            ) from e
-
-        # gh
-        try:
-            await self._run_cmd(["gh", "--version"], cwd=None)
-        except RuntimeError as e:
-            raise RuntimeError(
-                "GitHub CLI (gh) is not installed or not in PATH. Please install it from https://cli.github.com/ and try again."
-            ) from e
-
-    async def _ensure_gh_authenticated(self, cwd: Path | None) -> None:
-        try:
-            await self._run_cmd(["gh", "auth", "status"], cwd=cwd)
-        except RuntimeError as e:
-            raise RuntimeError(
-                "GitHub CLI is not authenticated. Run 'gh auth login' and try again."
-            ) from e
-
-    async def _create_pr(
-        self,
-        cwd: Path,
-        title: str,
-        body: str,
-        label: str | None = None,
-        head: str | None = None,
-        cancel_event: asyncio.Event | None = None,
-    ) -> str:
-        args = [
-            "gh",
-            "pr",
-            "create",
-            "-R",
-            f"{self.repo_owner}/{self.repo_name}",
-            "--title",
-            title,
-            "--body",
-            body,
-            "--base",
-            self.default_base_branch,
-        ]
-        if label:
-            args += ["--label", label]
-        if head:
-            args += ["--head", head]
-
-        code, out, err = await self._run_cmd(
-            args, cwd=cwd, return_all=True, cancel_event=cancel_event
+    def _get_auth_client(self, token: str) -> httpx.AsyncClient:
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "User-Agent": self.user_agent,
+            "X-GitHub-Api-Version": "2022-11-28",
+        }
+        timeout = httpx.Timeout(30.0)
+        return httpx.AsyncClient(
+            base_url="https://api.github.com/", headers=headers, timeout=timeout
         )
 
-        # Check for non-zero exit code and handle label errors
-        if code != 0:
-            error_msg = err.strip() if err.strip() else out.strip()
+    def _raise_if_cancelled(self, cancel_event: asyncio.Event | None) -> None:
+        """Check cancellation and raise if cancelled."""
+        if cancel_event and cancel_event.is_set():
+            raise asyncio.CancelledError("Operation cancelled by user")
 
-            # If label doesn't exist, retry without label
-            if label and "label" in error_msg.lower() and "exist" in error_msg.lower():
-                # Retry without the label argument
-                args_no_label = [
-                    "gh",
-                    "pr",
-                    "create",
-                    "-R",
-                    f"{self.repo_owner}/{self.repo_name}",
-                    "--title",
-                    title,
-                    "--body",
-                    body,
-                    "--base",
-                    self.default_base_branch,
-                ]
-                if head:
-                    args_no_label += ["--head", head]
-
-                code, out, err = await self._run_cmd(
-                    args_no_label, cwd=cwd, return_all=True, cancel_event=cancel_event
-                )
-
-                if code != 0:
-                    error_msg = err.strip() if err.strip() else out.strip()
-                    raise RuntimeError(f"Failed to create PR (exit code {code}): {error_msg}")
-            else:
-                raise RuntimeError(f"Failed to create PR (exit code {code}): {error_msg}")
-
-        # gh prints the PR URL in stdout on success
-        url = self._extract_url(out)
-        if not url:
-            raise RuntimeError("Failed to create PR: No URL returned by gh CLI.")
-        return url
-
-    async def _run_cmd(
+    async def _github_request(
         self,
-        args: list[str],
-        cwd: Path | None,
-        timeout: float | None = None,
-        return_all: bool = False,
+        client: httpx.AsyncClient,
+        method: str,
+        url: str,
+        *,
+        json: dict | None = None,
+        params: dict | None = None,
+        expected: int | tuple[int, ...] = (200, 201),
         cancel_event: asyncio.Event | None = None,
-    ) -> tuple[int, str, str] | str:
-        """Run a subprocess command asynchronously.
-
-        If return_all is False (default), raises on non-zero exit and returns stdout string.
-        If return_all is True, returns (code, stdout, stderr).
-
-        Args:
-            args: Command and arguments to execute
-            cwd: Working directory for the command
-            timeout: Timeout in seconds (uses default if None)
-            return_all: If True, return (code, stdout, stderr); if False, return stdout only
-            cancel_event: Optional event that when set will cancel the subprocess
-
-        """
-        timeout = timeout or self.command_timeout
-        logger.debug(f"Running command: {' '.join(args)} (cwd={cwd})")
-        try:
-            proc = await asyncio.create_subprocess_exec(
-                *args,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                cwd=str(cwd) if cwd else None,
-                env=self._build_env(),
-            )
+    ) -> dict:
+        self._raise_if_cancelled(cancel_event)
+        resp = await client.request(method, url, json=json, params=params)
+        if resp.status_code == 404 and 404 in (
+            expected if isinstance(expected, tuple) else (expected,)
+        ):
+            return {}
+        if resp.status_code not in (expected if isinstance(expected, tuple) else (expected,)):
             try:
-                if cancel_event is not None:
-                    # Wait for either process completion or cancellation
-                    comm_task = asyncio.create_task(proc.communicate())
-                    cancel_task = asyncio.create_task(cancel_event.wait())
+                detail = resp.json()
+            except Exception:
+                detail = {"message": resp.text}
+            raise RuntimeError(f"GitHub API error {resp.status_code} for {url}: {detail}")
+        try:
+            return resp.json()
+        except Exception:
+            return {}
 
-                    done, pending = await asyncio.wait(
-                        [comm_task, cancel_task],
-                        timeout=timeout,
-                        return_when=asyncio.FIRST_COMPLETED,
-                    )
+    async def _get_repo_info(self, client: httpx.AsyncClient) -> dict:
+        return await self._github_request(
+            client, "GET", f"/repos/{self.repo_owner}/{self.repo_name}"
+        )
 
-                    # Cancel any pending tasks
-                    for task in pending:
-                        task.cancel()
-                        with contextlib.suppress(asyncio.CancelledError):
-                            await task
+    async def _get_user_login(self, client: httpx.AsyncClient) -> str:
+        me = await self._github_request(client, "GET", "/user")
+        login = me.get("login")
+        if not login:
+            raise RuntimeError("Unable to determine authenticated user login")
+        return login
 
-                    if cancel_task in done:
-                        # Cancellation was requested
-                        with contextlib.suppress(ProcessLookupError):
-                            proc.kill()
-                        with contextlib.suppress(Exception):
-                            await proc.wait()
-                        raise asyncio.CancelledError("Operation cancelled by cancel_event")
+    async def _ensure_fork(
+        self, client: httpx.AsyncClient, login: str, cancel_event: asyncio.Event | None = None
+    ) -> str:
+        # Try to get fork; if missing, create
+        fork_name = f"{login}/{self.repo_name}"
+        repo = await self._github_request(
+            client, "GET", f"/repos/{fork_name}", cancel_event=cancel_event
+        )
+        if (
+            repo.get("fork")
+            and repo.get("parent", {}).get("full_name") == f"{self.repo_owner}/{self.repo_name}"
+        ):
+            return repo["full_name"]
+        # Create fork
+        await self._github_request(
+            client,
+            "POST",
+            f"/repos/{self.repo_owner}/{self.repo_name}/forks",
+            expected=(202, 201),
+            cancel_event=cancel_event,
+        )
+        # Fork creation can be asynchronous; poll a few times
+        for _ in range(10):
+            self._raise_if_cancelled(cancel_event)
+            await asyncio.sleep(1)
+            repo = await self._github_request(
+                client, "GET", f"/repos/{fork_name}", cancel_event=cancel_event
+            )
+            if repo.get("full_name"):
+                return repo["full_name"]
+        raise RuntimeError("Timed out waiting for fork to become available")
 
-                    if not done:
-                        # Timeout occurred
-                        with contextlib.suppress(ProcessLookupError):
-                            proc.kill()
-                        raise RuntimeError(f"Command timed out: {' '.join(args)}")
+    async def _get_branch_sha(self, client: httpx.AsyncClient, full_name: str, branch: str) -> str:
+        ref = await self._github_request(
+            client, "GET", f"/repos/{full_name}/git/ref/heads/{branch}", expected=(200,)
+        )
+        obj = ref.get("object") or {}
+        sha = obj.get("sha")
+        if not sha:
+            raise RuntimeError(f"Unable to resolve branch SHA for {full_name}@{branch}")
+        return sha
 
-                    stdout_b, stderr_b = await comm_task
-                else:
-                    # Standard execution without cancellation support
-                    stdout_b, stderr_b = await asyncio.wait_for(proc.communicate(), timeout=timeout)
-            except TimeoutError as e:
-                with contextlib.suppress(ProcessLookupError):
-                    proc.kill()
-                raise RuntimeError(f"Command timed out: {' '.join(args)}") from e
-            except asyncio.CancelledError:
-                with contextlib.suppress(ProcessLookupError):
-                    proc.kill()
-                # Wait for process termination to avoid zombie processes
-                with contextlib.suppress(Exception):
-                    await proc.wait()
-                raise
+    async def _create_branch(
+        self, client: httpx.AsyncClient, full_name: str, branch: str, base_sha: str
+    ) -> None:
+        await self._github_request(
+            client,
+            "POST",
+            f"/repos/{full_name}/git/refs",
+            json={"ref": f"refs/heads/{branch}", "sha": base_sha},
+            expected=(201,),
+        )
 
-            code = proc.returncode or 0
-            stdout = stdout_b.decode(errors="ignore") if stdout_b else ""
-            stderr = stderr_b.decode(errors="ignore") if stderr_b else ""
+    async def _upload_file(
+        self,
+        client: httpx.AsyncClient,
+        full_name: str,
+        path: str,
+        content: bytes,
+        message: str,
+        branch: str,
+    ) -> None:
+        import urllib.parse
 
-            if return_all:
-                return code, stdout, stderr
+        b64 = base64.b64encode(content).decode("ascii")
+        encoded_path = urllib.parse.quote(path, safe="/")
+        await self._github_request(
+            client,
+            "PUT",
+            f"/repos/{full_name}/contents/{encoded_path}",
+            json={"message": message, "content": b64, "branch": branch},
+            expected=(201, 200),
+        )
 
-            if code != 0:
-                raise RuntimeError(
-                    f"Command failed ({code}): {' '.join(args)}\nSTDOUT:\n{stdout}\nSTDERR:\n{stderr}"
+    async def _create_pull_request(
+        self,
+        client: httpx.AsyncClient,
+        upstream_full_name: str,
+        title: str,
+        body: str,
+        head: str,
+        base: str,
+        label: str | None = None,
+    ) -> str:
+        pr = await self._github_request(
+            client,
+            "POST",
+            f"/repos/{upstream_full_name}/pulls",
+            json={"title": title, "body": body, "head": head, "base": base},
+            expected=(201,),
+        )
+        # Optionally add label
+        if label:
+            from contextlib import suppress
+
+            with suppress(Exception):
+                await self._github_request(
+                    client,
+                    "POST",
+                    f"/repos/{upstream_full_name}/issues/{pr['number']}/labels",
+                    json={"labels": [label]},
+                    expected=(200,),
                 )
-            return stdout
-        except FileNotFoundError as e:
-            raise RuntimeError(f"Required tool not found: {args[0]}") from e
+        return pr.get("html_url") or ""
 
-    def _build_env(self) -> dict[str, str]:
-        env = os.environ.copy()
-        # Keep GH_TOKEN if already set; do not rewrite/move it.
-        env.setdefault("GH_PAGER", "cat")
-        env.setdefault("GLAMOUR_STYLE", "plain")
-        env.setdefault("GH_PROMPT_DISABLED", "1")  # Disable interactive prompts
-        # User-Agent for potential HTTP operations by gh
-        env.setdefault("HTTP_USER_AGENT", self.user_agent)
-        return env
+    async def _path_exists(
+        self,
+        client: httpx.AsyncClient,
+        full_name: str,
+        path: str,
+        ref: str,
+        cancel_event: asyncio.Event | None = None,
+    ) -> bool:
+        import urllib.parse
+
+        encoded_path = urllib.parse.quote(path, safe="/")
+        result = await self._github_request(
+            client,
+            "GET",
+            f"/repos/{full_name}/contents/{encoded_path}",
+            params={"ref": ref},
+            expected=(200, 404),
+            cancel_event=cancel_event,
+        )
+        return bool(result)  # Empty dict for 404, non-empty for 200
+
+    # Internal helpers
 
     @staticmethod
     def _derive_pack_id(pack_path: Path, meta: dict) -> str:
-        import hashlib
-        import json
-
         # Prefer metadata name, then directory name, with optional author for uniqueness
         name = (meta.get("name") or pack_path.name or "pack").strip()
         author = (meta.get("author") or "").strip()
@@ -526,89 +393,14 @@ class PackSubmissionService:
         # Include author if available to reduce collision risk
         pack_id = f"{name}-{author}" if author and author.lower() != "unknown" else name
 
-        # Add a short hash from pack.json content (or meta dict) instead of pack_path
-        # This makes the ID stable across machines and directories
-        hash_input = json.dumps(meta, sort_keys=True).encode()
-        short_hash = hashlib.md5(hash_input).hexdigest()[:6]
-        pack_id_with_hash = f"{pack_id}-{short_hash}"
-
-        return PackSubmissionService._sanitize_id(pack_id_with_hash)
+        return PackSubmissionService._sanitize_id(pack_id)
 
     @staticmethod
     def _sanitize_id(text: str) -> str:
         s = text.strip().lower()
-        s = s.replace(" ", "_").replace("-", "_")
-        s = re.sub(r"[^a-z0-9_]+", "", s)
+        s = s.replace(" ", "-")
+        s = re.sub(r"[^a-z0-9\-]+", "", s)
         return s or "pack"
-
-    async def _copy_pack(
-        self,
-        src: Path,
-        dst: Path,
-        cancel_event: asyncio.Event,
-        progress_cb: Callable[[float], None] | Callable[[float], Awaitable[None]] | None = None,
-    ) -> None:
-        """Copy a pack directory with cancellation support and progress reporting.
-
-        Args:
-            src: Source directory path
-            dst: Destination directory path
-            cancel_event: Event that when set will cancel the operation
-            progress_cb: Optional callback to report progress (0-100)
-
-        """
-        import os
-
-        # First, walk the source to count total files for progress
-        total_files = 0
-        for _root, _dirs, files in os.walk(src):
-            total_files += len(files)
-
-        if total_files == 0:
-            if progress_cb:
-                res = progress_cb(100.0)
-                if inspect.isawaitable(res):
-                    await res
-            return
-
-        # Create destination directory
-        dst.mkdir(parents=True, exist_ok=True)
-
-        # Copy files with progress tracking
-        copied_files = 0
-
-        for root, _dirs, files in os.walk(src):
-            # Check for cancellation
-            if cancel_event.is_set():
-                raise asyncio.CancelledError("Copy operation cancelled")
-
-            # Create subdirectories
-            rel_root = Path(root).relative_to(src)
-            dst_root = dst / rel_root
-            dst_root.mkdir(parents=True, exist_ok=True)
-
-            # Copy files in this directory
-            for file in files:
-                if cancel_event.is_set():
-                    raise asyncio.CancelledError("Copy operation cancelled")
-
-                src_file = Path(root) / file
-                dst_file = dst_root / file
-
-                # Copy file using asyncio.to_thread for non-blocking operation
-                await asyncio.to_thread(shutil.copy2, src_file, dst_file)
-
-                copied_files += 1
-
-                # Report progress and yield control
-                if progress_cb:
-                    progress = (copied_files / total_files) * 100.0
-                    res = progress_cb(progress)
-                    if inspect.isawaitable(res):
-                        await res
-
-                # Yield control to allow cancellation checks
-                await asyncio.sleep(0)
 
     @staticmethod
     def _build_branch_name(pack_id: str) -> str:
@@ -616,10 +408,3 @@ class PackSubmissionService:
 
         ts = _time.strftime("%Y%m%d-%H%M%S")
         return f"soundpack/{pack_id}-{ts}"
-
-    @staticmethod
-    def _extract_url(text: str) -> str | None:
-        if not text:
-            return None
-        m = re.search(r"https?://\S+", text)
-        return m.group(0) if m else None
