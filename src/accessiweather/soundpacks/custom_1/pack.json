@@ -1,9 +1,0 @@
-{
-  "name": "Custom Pack 1",
-  "author": "",
-  "description": "A new custom sound pack.",
-  "sounds": {
-    "alert": "alert.wav",
-    "notify": "notify.wav"
-  }
-}
