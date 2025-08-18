@@ -288,6 +288,7 @@ class AppSettings:
 
     # API Keys
     visual_crossing_api_key: str = ""
+    github_token: str = ""
 
     # Update system settings
     auto_update_enabled: bool = True
@@ -323,6 +324,7 @@ class AppSettings:
             "minimize_to_tray": self.minimize_to_tray,
             "data_source": self.data_source,
             "visual_crossing_api_key": self.visual_crossing_api_key,
+            "github_token": self.github_token,
             "auto_update_enabled": self.auto_update_enabled,
             "update_channel": self.update_channel,
             "update_check_interval_hours": self.update_check_interval_hours,
@@ -354,6 +356,7 @@ class AppSettings:
             minimize_to_tray=data.get("minimize_to_tray", True),
             data_source=data.get("data_source", "auto"),
             visual_crossing_api_key=data.get("visual_crossing_api_key", ""),
+            github_token=data.get("github_token", ""),
             auto_update_enabled=data.get("auto_update_enabled", True),
             update_channel=data.get("update_channel", "stable"),
             update_check_interval_hours=data.get("update_check_interval_hours", 24),

@@ -91,6 +91,19 @@ class ConfigManager:
                 settings.visual_crossing_api_key = ""
                 config_changed = True
 
+        # Validate GitHub token format (basic checks)
+        if settings.github_token:
+            token = settings.github_token.strip()
+            if not token:
+                logger.warning("Empty GitHub token found, clearing")
+                settings.github_token = ""
+                config_changed = True
+            elif not (token.startswith(("ghp_", "github_pat_")) or len(token) == 40):
+                logger.warning(
+                    "GitHub token format appears invalid (should start with 'ghp_' or 'github_pat_' or be 40 characters)"
+                )
+                # Don't automatically clear - let user decide
+
         # Save config if changes were made
         if config_changed:
             logger.info("Configuration was corrected, saving changes")
@@ -320,3 +333,85 @@ class ConfigManager:
         except Exception as e:
             logger.error(f"Failed to import locations: {e}")
             return False
+
+    async def validate_github_token(self) -> tuple[bool, str]:
+        """Validate the GitHub token by making a test request to the GitHub API.
+
+        Returns:
+            Tuple of (is_valid, message) where message contains error details or user info
+
+        """
+        import httpx
+
+        from .constants import GITHUB_API_BASE_URL
+
+        token = self.get_github_token()
+        if not token:
+            return False, "No GitHub token configured"
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{GITHUB_API_BASE_URL}/user",
+                    headers={
+                        "Authorization": f"token {token}",
+                        "Accept": "application/vnd.github.v3+json",
+                        "User-Agent": f"AccessiWeather/{self.app.version}",
+                    },
+                    timeout=10.0,
+                )
+
+                if response.status_code == 200:
+                    user_info = response.json()
+                    username = user_info.get("login", "Unknown")
+                    return True, f"Token valid for user: {username}"
+                if response.status_code == 401:
+                    return False, "Invalid GitHub token"
+                if response.status_code == 403:
+                    return False, "GitHub token lacks required permissions or rate limit exceeded"
+                return False, f"GitHub API error: {response.status_code}"
+
+        except httpx.TimeoutException:
+            return False, "Request timeout - check your internet connection"
+        except Exception as e:
+            return False, f"Network error: {str(e)}"
+
+    def set_github_token(self, token: str) -> bool:
+        """Set the GitHub token in the configuration.
+
+        Args:
+            token: The GitHub token to store
+
+        Returns:
+            True if successful, False otherwise
+
+        """
+        try:
+            config = self.get_config()
+            config.settings.github_token = token.strip()
+            return self.save_config()
+        except Exception as e:
+            logger.error(f"Failed to set GitHub token: {e}")
+            return False
+
+    def get_github_token(self) -> str:
+        """Get the GitHub token from the configuration.
+
+        Returns:
+            The GitHub token, or empty string if not set
+
+        """
+        try:
+            return self.get_config().settings.github_token
+        except Exception as e:
+            logger.error(f"Failed to get GitHub token: {e}")
+            return ""
+
+    def clear_github_token(self) -> bool:
+        """Clear the GitHub token from the configuration.
+
+        Returns:
+            True if successful, False otherwise
+
+        """
+        return self.set_github_token("")

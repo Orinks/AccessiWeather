@@ -10,6 +10,7 @@ from pathlib import Path
 
 import httpx
 
+from accessiweather.config import ConfigManager
 from accessiweather.notifications.sound_player import validate_sound_pack
 from accessiweather.version import __version__ as APP_VERSION
 
@@ -30,6 +31,7 @@ class PackSubmissionService:
         dest_subdir: str = "packs",
         user_agent: str | None = None,
         default_base_branch: str = "main",
+        config_manager: ConfigManager | None = None,
     ) -> None:
         """Initialize the submission service.
 
@@ -39,6 +41,7 @@ class PackSubmissionService:
             dest_subdir: Subdirectory within repo to place packs
             user_agent: Optional user-agent string
             default_base_branch: The base branch to target PRs against
+            config_manager: Configuration manager for accessing GitHub token
 
         """
         self.repo_owner = repo_owner
@@ -46,6 +49,7 @@ class PackSubmissionService:
         self.dest_subdir = dest_subdir
         self.default_base_branch = default_base_branch
         self.user_agent = user_agent or f"AccessiWeather/{APP_VERSION}"
+        self.config_manager = config_manager
 
     async def submit_pack(
         self,
@@ -80,10 +84,18 @@ class PackSubmissionService:
 
         # Verify token and create client
         await report(7.0, "Verifying GitHub authentication...")
-        token = os.getenv("ACCESSIWEATHER_GITHUB_TOKEN")
+
+        # Get token from configuration first, then fall back to environment variable
+        token = None
+        if self.config_manager:
+            token = self.config_manager.get_settings().github_token
+
+        if not token:
+            token = os.getenv("ACCESSIWEATHER_GITHUB_TOKEN")
+
         if not token:
             raise RuntimeError(
-                "Missing GitHub token. Set ACCESSIWEATHER_GITHUB_TOKEN environment variable."
+                "Missing GitHub token. Please configure your GitHub token in the app settings."
             )
 
         async with self._get_auth_client(token) as client:
@@ -93,8 +105,9 @@ class PackSubmissionService:
             default_branch = repo_info.get("default_branch") or self.default_base_branch
             self.default_base_branch = default_branch
 
-            # Verify auth by fetching current user
-            me = await self._get_user_login(client, cancel_event=cancel_event)
+            # Verify auth and get user info
+            user_info = await self._validate_github_token(client)
+            me = user_info["login"]
 
             # Local validation first
             await report(10.0, "Validating pack locally...")
@@ -251,6 +264,35 @@ class PackSubmissionService:
         return await self._github_request(
             client, "GET", f"/repos/{self.repo_owner}/{self.repo_name}", cancel_event=cancel_event
         )
+
+    async def _validate_github_token(self, client: httpx.AsyncClient) -> dict:
+        """Validate GitHub token and return user information.
+
+        Args:
+            client: Authenticated HTTP client
+
+        Returns:
+            User information dictionary from GitHub API
+
+        Raises:
+            RuntimeError: If token is invalid or user info cannot be retrieved
+
+        """
+        try:
+            user_info = await self._github_request(client, "GET", "/user")
+            if not user_info.get("login"):
+                raise RuntimeError("Unable to determine authenticated user login")
+            return user_info
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 401:
+                raise RuntimeError(
+                    "Invalid GitHub token. Please check your token configuration."
+                ) from e
+            if e.response.status_code == 403:
+                raise RuntimeError(
+                    "GitHub token lacks required permissions or rate limit exceeded."
+                ) from e
+            raise RuntimeError(f"GitHub API error: {e.response.status_code}") from e
 
     async def _get_user_login(
         self, client: httpx.AsyncClient, cancel_event: asyncio.Event | None = None

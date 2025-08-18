@@ -75,3 +75,12 @@ TAB_GENERAL = "General"
 TAB_DISPLAY = "Display"
 TAB_ADVANCED = "Advanced"
 TAB_UPDATES = "Updates"
+
+# GitHub token configuration constants
+GITHUB_TOKEN_KEY = "github_token"
+DEFAULT_GITHUB_TOKEN = ""
+GITHUB_API_BASE_URL = "https://api.github.com"
+
+# GitHub repository constants for community soundpack repository
+COMMUNITY_REPO_OWNER = "accessiweather-community"
+COMMUNITY_REPO_NAME = "soundpacks"
