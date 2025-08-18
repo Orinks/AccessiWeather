@@ -89,12 +89,12 @@ class PackSubmissionService:
         async with self._get_auth_client(token) as client:
             # Resolve default branch
             await report(8.0, "Resolving repository default branch...")
-            repo_info = await self._get_repo_info(client)
+            repo_info = await self._get_repo_info(client, cancel_event=cancel_event)
             default_branch = repo_info.get("default_branch") or self.default_base_branch
             self.default_base_branch = default_branch
 
             # Verify auth by fetching current user
-            me = await self._get_user_login(client)
+            me = await self._get_user_login(client, cancel_event=cancel_event)
 
             # Local validation first
             await report(10.0, "Validating pack locally...")
@@ -114,6 +114,7 @@ class PackSubmissionService:
                 f"{self.repo_owner}/{self.repo_name}",
                 dest_prefix,
                 default_branch,
+                cancel_event=cancel_event,
             )
             if exists_in_upstream:
                 raise RuntimeError(
@@ -244,13 +245,17 @@ class PackSubmissionService:
         except Exception:
             return {}
 
-    async def _get_repo_info(self, client: httpx.AsyncClient) -> dict:
+    async def _get_repo_info(
+        self, client: httpx.AsyncClient, cancel_event: asyncio.Event | None = None
+    ) -> dict:
         return await self._github_request(
-            client, "GET", f"/repos/{self.repo_owner}/{self.repo_name}"
+            client, "GET", f"/repos/{self.repo_owner}/{self.repo_name}", cancel_event=cancel_event
         )
 
-    async def _get_user_login(self, client: httpx.AsyncClient) -> str:
-        me = await self._github_request(client, "GET", "/user")
+    async def _get_user_login(
+        self, client: httpx.AsyncClient, cancel_event: asyncio.Event | None = None
+    ) -> str:
+        me = await self._github_request(client, "GET", "/user", cancel_event=cancel_event)
         login = me.get("login")
         if not login:
             raise RuntimeError("Unable to determine authenticated user login")

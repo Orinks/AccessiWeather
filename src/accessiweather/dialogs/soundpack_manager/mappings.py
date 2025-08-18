@@ -181,7 +181,7 @@ def preview_mapping(dlg, widget) -> None:
                 f"The sound file '{filename}' is not available in this pack.",
             )
             return
-        from ..notifications.sound_player import play_sound_file
+        from ...notifications.sound_player import play_sound_file
 
         play_sound_file(sound_path)
     except Exception as e:
@@ -204,7 +204,7 @@ def preview_selected_sound(dlg, widget) -> None:
                 f"The sound file '{sound_item.sound_file}' is not available. This may be a placeholder sound pack.",
             )
             return
-        from ..notifications.sound_player import play_notification_sound
+        from ...notifications.sound_player import play_notification_sound
 
         play_notification_sound(sound_name, dlg.selected_pack)
     except Exception as e:
