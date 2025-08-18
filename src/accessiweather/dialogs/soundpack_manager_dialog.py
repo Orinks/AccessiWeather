@@ -476,6 +476,28 @@ class SoundPackManagerDialog:
 
         return self.current_pack
 
+    def _build_share_confirmation_message(self, name: str, author: str) -> str:
+        """Build the confirmation message for sharing a sound pack.
+
+        Args:
+            name: The name of the sound pack
+            author: The author of the sound pack
+
+        Returns:
+            The formatted confirmation message
+
+        """
+        return (
+            f"You are about to share the sound pack '{name}' by {author}.\n\n"
+            "This will:\n"
+            "- Fork the community repository to your GitHub account\n"
+            "- Create a new branch in your fork\n"
+            "- Upload your pack files using GitHub's API\n"
+            "- Create a Pull Request for review\n\n"
+            "This process uses GitHub's API directly and requires no local git tools.\n\n"
+            "Do you want to continue?"
+        )
+
     async def _on_share_pack(self, widget) -> None:
         """Validate and submit the selected pack to the community repository via PR."""
         # Guard against re-entrancy
@@ -559,16 +581,7 @@ class SoundPackManagerDialog:
                 return
 
             # Confirm
-            body = (
-                f"You are about to share the sound pack '{name}' by {author}.\n\n"
-                "This will:\n"
-                "- Fork the community repository to your GitHub account\n"
-                "- Create a new branch in your fork\n"
-                "- Upload your pack files using GitHub's API\n"
-                "- Create a Pull Request for review\n\n"
-                "This process uses GitHub's API directly and requires no local git tools.\n\n"
-                "Do you want to continue?"
-            )
+            body = self._build_share_confirmation_message(name, author)
             proceed = await self.app.main_window.question_dialog("Share Pack", body)
             if not proceed:
                 return
