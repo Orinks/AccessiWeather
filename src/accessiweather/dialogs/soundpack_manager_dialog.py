@@ -562,10 +562,11 @@ class SoundPackManagerDialog:
             body = (
                 f"You are about to share the sound pack '{name}' by {author}.\n\n"
                 "This will:\n"
-                "- Clone the community repository\n"
-                "- Create a new Git branch\n"
-                "- Copy your pack into the repository\n"
-                "- Open a Pull Request on GitHub using the gh CLI\n\n"
+                "- Fork the community repository to your GitHub account\n"
+                "- Create a new branch in your fork\n"
+                "- Upload your pack files using GitHub's API\n"
+                "- Create a Pull Request for review\n\n"
+                "This process uses GitHub's API directly and requires no local git tools.\n\n"
                 "Do you want to continue?"
             )
             proceed = await self.app.main_window.question_dialog("Share Pack", body)
