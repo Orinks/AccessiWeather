@@ -20,7 +20,8 @@ dependencies = [
     "httpx>=0.20.0",
     "attrs>=22.2.0",
     "psutil",
-    "tufup"
+    "tufup",
+    "cryptography"
 ]
 readme = "README.md"
 classifiers = [
@@ -170,6 +171,7 @@ requires = [
     "attrs>=22.2.0",
     "psutil",
     "tufup",
+    "cryptography",
 ]
 test_requires = [
     "pytest>=7.0.0",
