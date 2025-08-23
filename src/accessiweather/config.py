@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -42,6 +43,15 @@ class ConfigManager:
                 logger.info(f"Loading config from {self.config_file}")
                 with open(self.config_file, encoding="utf-8") as f:
                     data = json.load(f)
+
+                    # Handle legacy configs containing github_token
+                    if isinstance(data, dict):
+                        legacy_token = (data.get("settings") or {}).get("github_token")
+                        if legacy_token:
+                            logger.info(
+                                "Detected legacy 'github_token' in config. User tokens are no longer supported and will be ignored."
+                            )
+
                     self._config = AppConfig.from_dict(data)
 
                     # Validate and fix configuration
@@ -108,9 +118,26 @@ class ConfigManager:
                 logger.warning("Empty GitHub App private key found, clearing")
                 settings.github_app_private_key = ""
                 config_changed = True
-            elif not (private_key.startswith("-----BEGIN") and "PRIVATE KEY-----" in private_key):
-                logger.warning("GitHub App private key appears invalid (should be PEM formatted)")
-                # Don't automatically clear - let user decide
+            else:
+                from .constants import (
+                    GITHUB_APP_PKCS8_PRIVATE_KEY_FOOTER,
+                    GITHUB_APP_PKCS8_PRIVATE_KEY_HEADER,
+                    GITHUB_APP_PRIVATE_KEY_FOOTER,
+                    GITHUB_APP_PRIVATE_KEY_HEADER,
+                )
+
+                pk = private_key.strip()
+                valid_pem = (
+                    pk.startswith(GITHUB_APP_PKCS8_PRIVATE_KEY_HEADER)
+                    and pk.endswith(GITHUB_APP_PKCS8_PRIVATE_KEY_FOOTER)
+                ) or (
+                    pk.startswith(GITHUB_APP_PRIVATE_KEY_HEADER)
+                    and pk.endswith(GITHUB_APP_PRIVATE_KEY_FOOTER)
+                )
+                if not valid_pem:
+                    logger.warning(
+                        "GitHub App private key appears invalid (should be PEM formatted)"
+                    )
 
         if settings.github_app_installation_id:
             installation_id = settings.github_app_installation_id.strip()
@@ -137,6 +164,14 @@ class ConfigManager:
             logger.info(f"Saving config to {self.config_file}")
             with open(self.config_file, "w", encoding="utf-8") as f:
                 json.dump(self._config.to_dict(), f, indent=2, ensure_ascii=False)
+
+            # Restrict permissions on POSIX systems
+            try:
+                if os.name != "nt":
+                    os.chmod(self.config_file, 0o600)
+            except Exception:
+                logger.debug("Could not set strict permissions on config file", exc_info=True)
+
             logger.info("Configuration saved successfully")
             return True
 
@@ -364,10 +399,10 @@ class ConfigManager:
 
         if not settings.github_app_id:
             return False, "No GitHub App ID configured"
-        
+
         if not settings.github_app_private_key:
             return False, "No GitHub App private key configured"
-        
+
         if not settings.github_app_installation_id:
             return False, "No GitHub App installation ID configured"
 

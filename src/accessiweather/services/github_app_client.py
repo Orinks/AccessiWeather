@@ -60,6 +60,8 @@ class GitHubAppClient:
         # Token cache
         self._installation_token: str | None = None
         self._installation_token_exp: int | None = None  # epoch seconds
+        # Guard concurrent token refreshes
+        self._token_lock: asyncio.Lock = asyncio.Lock()
 
     # ------------------------
     # Public API
@@ -91,33 +93,24 @@ class GitHubAppClient:
         # Normalize URL
         req_url = url if url.startswith(("http://", "https://")) else url.lstrip("/")
 
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/vnd.github+json",
-            "User-Agent": self.user_agent,
-            "X-GitHub-Api-Version": "2022-11-28",
-        }
-        timeout = httpx.Timeout(30.0)
-
-        async with httpx.AsyncClient(
-            base_url=self.api_base_url, headers=headers, timeout=timeout
-        ) as client:
+        expected_tuple = expected if isinstance(expected, tuple) else (expected,)
+        result: dict
+        async with self._get_installation_client(token) as client:
             resp = await client.request(method, req_url, json=json, params=params)
-
-        if resp.status_code == 404 and 404 in (
-            expected if isinstance(expected, tuple) else (expected,)
-        ):
-            return {}
-        if resp.status_code not in (expected if isinstance(expected, tuple) else (expected,)):
-            try:
-                detail = resp.json()
-            except Exception:
-                detail = {"message": resp.text}
-            raise RuntimeError(f"GitHub API error {resp.status_code} for {req_url}: {detail}")
-        try:
-            return resp.json()
-        except Exception:
-            return {}
+            if resp.status_code == 404 and 404 in expected_tuple:
+                result = {}
+            elif resp.status_code not in expected_tuple:
+                try:
+                    detail = resp.json()
+                except Exception:
+                    detail = {"message": resp.text}
+                raise RuntimeError(f"GitHub API error {resp.status_code} for {req_url}: {detail}")
+            else:
+                try:
+                    result = resp.json()
+                except Exception:
+                    result = {}
+        return result
 
     async def get_installation_token(
         self,
@@ -126,9 +119,12 @@ class GitHubAppClient:
         cancel_event: asyncio.Event | None = None,
     ) -> str:
         """Return a valid (cached) installation access token, refreshing if needed."""
+        if cancel_event is None:
+            cancel_event = asyncio.Event()
+
         self._raise_if_cancelled(cancel_event)
 
-        # If cached and not expiring in the next 120 seconds, reuse
+        # Fast path: If cached and not expiring in the next 120 seconds, reuse
         now = int(time.time())
         if (
             self._installation_token
@@ -142,7 +138,12 @@ class GitHubAppClient:
                 if progress_callback is not None:
                     res = progress_callback(pct, status)
                     if asyncio.iscoroutine(res):
-                        await res
+                        res = await res
+                    if res is False:
+                        cancel_event.set()
+                        raise asyncio.CancelledError("Operation cancelled by user")
+            except asyncio.CancelledError:
+                raise
             except Exception:
                 # Non-fatal for progress updates
                 pass
@@ -150,44 +151,44 @@ class GitHubAppClient:
         await report(5.0, "Generating GitHub App JWT...")
         jwt_token = self._generate_jwt()
 
-        await report(30.0, "Requesting installation access token...")
-        headers = {
-            "Authorization": f"Bearer {jwt_token}",
-            "Accept": "application/vnd.github+json",
-            "User-Agent": self.user_agent,
-            "X-GitHub-Api-Version": "2022-11-28",
-        }
-        timeout = httpx.Timeout(30.0)
-        url = f"/app/installations/{self.installation_id}/access_tokens"
+        # Guard concurrent refreshes
+        async with self._token_lock:
+            # Re-check cache under lock
+            now = int(time.time())
+            if (
+                self._installation_token
+                and self._installation_token_exp
+                and (self._installation_token_exp - now > 120)
+            ):
+                return self._installation_token
 
-        async with httpx.AsyncClient(
-            base_url=self.api_base_url, headers=headers, timeout=timeout
-        ) as client:
-            resp = await client.post(url)
+            await report(30.0, "Requesting installation access token...")
+            url = f"/app/installations/{self.installation_id}/access_tokens"
 
-        if resp.status_code not in (201,):
-            try:
-                detail = resp.json()
-            except Exception:
-                detail = {"message": resp.text}
-            raise RuntimeError(
-                f"Failed to obtain installation token (HTTP {resp.status_code}): {detail}"
-            )
+            async with self._get_installation_client(jwt_token) as client:
+                resp = await client.post(url)
+                if resp.status_code not in (201,):
+                    try:
+                        detail = resp.json()
+                    except Exception:
+                        detail = {"message": resp.text}
+                    raise RuntimeError(
+                        f"Failed to obtain installation token (HTTP {resp.status_code}): {detail}"
+                    )
+                data = resp.json()
+                token = data.get("token")
+                expires_at = data.get("expires_at")  # ISO-8601 string
+                if not token or not expires_at:
+                    raise RuntimeError("GitHub API did not return a token or expiration time")
 
-        data = resp.json()
-        token = data.get("token")
-        expires_at = data.get("expires_at")  # ISO-8601 string, e.g., 2023-01-01T00:00:00Z
-        if not token or not expires_at:
-            raise RuntimeError("GitHub API did not return a token or expiration time")
-
-        # GitHub returns ISO time; parse conservatively to epoch
-        exp_epoch = _iso8601_to_epoch(expires_at) if isinstance(expires_at, str) else None
-        # Fallback: 50 minutes from now if parsing fails (installation tokens are ~1h)
-        self._installation_token = token
-        self._installation_token_exp = exp_epoch or (now + 50 * 60)
+                # GitHub returns ISO time; parse conservatively to epoch
+                exp_epoch = _iso8601_to_epoch(expires_at) if isinstance(expires_at, str) else None
+                # Fallback: 50 minutes from now if parsing fails (installation tokens are ~1h)
+                self._installation_token = token
+                self._installation_token_exp = exp_epoch or (int(time.time()) + 50 * 60)
 
         await report(100.0, "Installation token ready")
-        return token
+        return self._installation_token  # type: ignore[return-value]
 
     # ------------------------
     # Internals
@@ -223,6 +224,17 @@ class GitHubAppClient:
             hashes.SHA256(),
         )
         return f"{signing_input}.{_b64url(signature)}"
+
+    def _get_installation_client(self, token: str) -> httpx.AsyncClient:
+        """Construct an authenticated AsyncClient for GitHub API using the provided token."""
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "User-Agent": self.user_agent,
+            "X-GitHub-Api-Version": "2022-11-28",
+        }
+        timeout = httpx.Timeout(30.0)
+        return httpx.AsyncClient(base_url=self.api_base_url, headers=headers, timeout=timeout)
 
     @staticmethod
     def _raise_if_cancelled(cancel_event: asyncio.Event | None) -> None:

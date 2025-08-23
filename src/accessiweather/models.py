@@ -316,6 +316,11 @@ class AppSettings:
     alert_max_notifications_per_hour: int = 10
     alert_ignored_categories: list[str] = field(default_factory=list)
 
+    @property
+    def github_token(self) -> str:  # Deprecated compatibility shim
+        """Deprecated: user tokens are no longer supported."""
+        return ""
+
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
         return {

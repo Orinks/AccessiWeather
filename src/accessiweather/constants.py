@@ -89,6 +89,8 @@ GITHUB_API_BASE_URL = "https://api.github.com"
 GITHUB_APP_MIN_ID_LENGTH = 1
 GITHUB_APP_PRIVATE_KEY_HEADER = "-----BEGIN RSA PRIVATE KEY-----"
 GITHUB_APP_PRIVATE_KEY_FOOTER = "-----END RSA PRIVATE KEY-----"
+GITHUB_APP_PKCS8_PRIVATE_KEY_HEADER = "-----BEGIN PRIVATE KEY-----"
+GITHUB_APP_PKCS8_PRIVATE_KEY_FOOTER = "-----END PRIVATE KEY-----"
 
 # GitHub repository constants for community soundpack repository
 COMMUNITY_REPO_OWNER = "accessiweather-community"
