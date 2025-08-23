@@ -51,8 +51,15 @@ class ConfigManager:
                             logger.info(
                                 "Detected legacy 'github_token' in config. User tokens are no longer supported and will be ignored."
                             )
+                            # Remove legacy token from config data
+                            if "github_token" in data.get("settings", {}):
+                                del data["settings"]["github_token"]
 
                     self._config = AppConfig.from_dict(data)
+
+                    # If we removed legacy token, save the cleaned config
+                    if isinstance(data, dict) and legacy_token:
+                        self.save_config()
 
                     # Validate and fix configuration
                     self._validate_and_fix_config()
@@ -189,11 +196,20 @@ class ConfigManager:
         """Update application settings."""
         config = self.get_config()
 
+        # Define sensitive keys that should be redacted in logs
+        secret_keys = {"github_app_private_key", "visual_crossing_api_key"}
+
         # Update settings attributes
         for key, value in kwargs.items():
+            if key == "github_token":
+                logger.info("'github_token' is deprecated and ignored.")
+                continue
+
             if hasattr(config.settings, key):
                 setattr(config.settings, key, value)
-                logger.info(f"Updated setting {key} = {value}")
+                # Redact sensitive values in logs
+                log_value = "***redacted***" if key in secret_keys else value
+                logger.info(f"Updated setting {key} = {log_value}")
             else:
                 logger.warning(f"Unknown setting: {key}")
 
@@ -410,9 +426,23 @@ class ConfigManager:
         if not settings.github_app_id.strip().isdigit():
             return False, "GitHub App ID must be numeric"
 
-        # Validate private key has PEM format
+        # Validate private key has PEM format using constants
+        from .constants import (
+            GITHUB_APP_PKCS8_PRIVATE_KEY_FOOTER,
+            GITHUB_APP_PKCS8_PRIVATE_KEY_HEADER,
+            GITHUB_APP_PRIVATE_KEY_FOOTER,
+            GITHUB_APP_PRIVATE_KEY_HEADER,
+        )
+
         private_key = settings.github_app_private_key.strip()
-        if not (private_key.startswith("-----BEGIN") and "PRIVATE KEY-----" in private_key):
+        valid_pem = (
+            private_key.startswith(GITHUB_APP_PKCS8_PRIVATE_KEY_HEADER)
+            and private_key.endswith(GITHUB_APP_PKCS8_PRIVATE_KEY_FOOTER)
+        ) or (
+            private_key.startswith(GITHUB_APP_PRIVATE_KEY_HEADER)
+            and private_key.endswith(GITHUB_APP_PRIVATE_KEY_FOOTER)
+        )
+        if not valid_pem:
             return False, "GitHub App private key must be PEM formatted"
 
         # Validate installation_id is numeric

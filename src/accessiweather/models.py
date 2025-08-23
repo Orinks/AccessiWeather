@@ -321,6 +321,12 @@ class AppSettings:
         """Deprecated: user tokens are no longer supported."""
         return ""
 
+    @github_token.setter
+    def github_token(self, value: str) -> None:
+        import logging
+
+        logging.getLogger(__name__).info("'github_token' is deprecated and ignored.")
+
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
         return {
