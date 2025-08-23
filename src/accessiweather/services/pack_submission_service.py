@@ -91,30 +91,31 @@ class PackSubmissionService:
             "GitHub App authentication not yet implemented. User tokens are no longer supported."
         )
 
-            # Local validation first
-            await report(10.0, "Validating pack locally...")
-            ok, msg = validate_sound_pack(pack_path)
-            if not ok:
-                raise RuntimeError(f"Pack validation failed: {msg}")
+        # NOTE: The following code is unreachable and serves as a template for future GitHub App implementation
+        # Local validation first
+        await report(10.0, "Validating pack locally...")
+        ok, msg = validate_sound_pack(pack_path)
+        if not ok:
+            raise RuntimeError(f"Pack validation failed: {msg}")
 
-            pack_name = (pack_meta.get("name") or pack_path.name).strip()
-            author = (pack_meta.get("author") or "Unknown").strip()
-            pack_id = self._derive_pack_id(pack_path, pack_meta)
-            branch = self._build_branch_name(pack_id)
+        pack_name = (pack_meta.get("name") or pack_path.name).strip()
+        author = (pack_meta.get("author") or "Unknown").strip()
+        pack_id = self._derive_pack_id(pack_path, pack_meta)
+        branch = self._build_branch_name(pack_id)
 
-            # Prevent duplicate in upstream
-            dest_prefix = f"{self.dest_subdir}/{pack_id}"
-            exists_in_upstream = await self._path_exists(
-                client,
-                f"{self.repo_owner}/{self.repo_name}",
-                dest_prefix,
-                default_branch,
-                cancel_event=cancel_event,
+        # Prevent duplicate in upstream
+        dest_prefix = f"{self.dest_subdir}/{pack_id}"
+        exists_in_upstream = await self._path_exists(
+            client,
+            f"{self.repo_owner}/{self.repo_name}",
+            dest_prefix,
+            default_branch,
+            cancel_event=cancel_event,
+        )
+        if exists_in_upstream:
+            raise RuntimeError(
+                "A pack with this ID already exists in the community repository. Please rename your pack or adjust metadata to produce a unique ID."
             )
-            if exists_in_upstream:
-                raise RuntimeError(
-                    "A pack with this ID already exists in the community repository. Please rename your pack or adjust metadata to produce a unique ID."
-                )
 
             # Ensure fork exists
             await report(20.0, "Ensuring repository fork...")
