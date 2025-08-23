@@ -42,8 +42,8 @@ async def test_submit_pack_happy_path(tmp_pack_dir, monkeypatch):
     # Service under test
     svc = PackSubmissionService(repo_owner="owner", repo_name="repo", dest_subdir="packs")
 
-    # Test that submit_pack now raises RuntimeError for user token authentication
-    with pytest.raises(RuntimeError) as exc_info:
+    # Test that submit_pack now raises NotImplementedError for user token authentication
+    with pytest.raises(NotImplementedError) as exc_info:
         await svc.submit_pack(pack_dir, meta, progress_callback=progress_cb)
     
     assert "User tokens are no longer supported" in str(exc_info.value)
@@ -69,8 +69,8 @@ async def test_size_guard(tmp_path, monkeypatch):
 
     svc = PackSubmissionService(repo_owner="owner", repo_name="repo")
 
-    # Test that submit_pack now raises RuntimeError for user token authentication
-    with pytest.raises(RuntimeError) as exc_info:
+    # Test that submit_pack now raises NotImplementedError for user token authentication
+    with pytest.raises(NotImplementedError) as exc_info:
         await svc.submit_pack(pack_dir, {"name": "Big"})
     
     assert "User tokens are no longer supported" in str(exc_info.value)
@@ -115,8 +115,8 @@ async def test_branch_base_sha_fallback(monkeypatch, tmp_pack_dir):
 
     svc = PackSubmissionService(repo_owner="owner", repo_name="repo")
 
-    # Test that submit_pack now raises RuntimeError for user token authentication
-    with pytest.raises(RuntimeError) as exc_info:
+    # Test that submit_pack now raises NotImplementedError for user token authentication
+    with pytest.raises(NotImplementedError) as exc_info:
         await svc.submit_pack(pack_dir, meta)
     
     assert "User tokens are no longer supported" in str(exc_info.value)

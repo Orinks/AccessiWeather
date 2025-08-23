@@ -87,114 +87,11 @@ class PackSubmissionService:
 
         # TODO: Replace with GitHub App authentication
         # This is a placeholder for the GitHub App integration
-        raise RuntimeError(
+        raise NotImplementedError(
             "GitHub App authentication not yet implemented. User tokens are no longer supported."
         )
 
-        # NOTE: The following code is unreachable and serves as a template for future GitHub App implementation
-        # Local validation first
-        await report(10.0, "Validating pack locally...")
-        ok, msg = validate_sound_pack(pack_path)
-        if not ok:
-            raise RuntimeError(f"Pack validation failed: {msg}")
-
-        pack_name = (pack_meta.get("name") or pack_path.name).strip()
-        author = (pack_meta.get("author") or "Unknown").strip()
-        pack_id = self._derive_pack_id(pack_path, pack_meta)
-        branch = self._build_branch_name(pack_id)
-
-        # Prevent duplicate in upstream
-        dest_prefix = f"{self.dest_subdir}/{pack_id}"
-        exists_in_upstream = await self._path_exists(
-            client,
-            f"{self.repo_owner}/{self.repo_name}",
-            dest_prefix,
-            default_branch,
-            cancel_event=cancel_event,
-        )
-        if exists_in_upstream:
-            raise RuntimeError(
-                "A pack with this ID already exists in the community repository. Please rename your pack or adjust metadata to produce a unique ID."
-            )
-
-            # Ensure fork exists
-            await report(20.0, "Ensuring repository fork...")
-            fork_full_name = await self._ensure_fork(client, me, cancel_event)
-
-            # Create branch in fork based on fork's default branch SHA
-            await report(30.0, f"Creating branch {branch}...")
-            try:
-                base_sha = await self._get_branch_sha(client, fork_full_name, default_branch)
-            except RuntimeError:
-                # Fallback to upstream if fork doesn't have the branch yet
-                base_sha = await self._get_branch_sha(
-                    client, f"{self.repo_owner}/{self.repo_name}", default_branch
-                )
-            await self._create_branch(client, fork_full_name, branch, base_sha)
-
-            # Build PR title/body
-            pr_title = f"Add sound pack: {pack_name} by {author}"
-            pr_body_parts = [f"This PR submits the sound pack '{pack_name}' by {author}."]
-            description = (pack_meta.get("description") or "").strip()
-            if description:
-                pr_body_parts.append(f"\n**Description:** {description}")
-            sounds = pack_meta.get("sounds") or {}
-            if isinstance(sounds, dict):
-                pr_body_parts.append(f"\n**Mapped sounds:** {len(sounds)}")
-            pr_body_parts.append(f"\n\nSubmitted via AccessiWeather {APP_VERSION}.")
-            pr_body = "".join(pr_body_parts)
-
-            # Upload files one-by-one with progress mapping 20-90%
-            await report(40.0, "Preparing files for upload...")
-            files: list[Path] = []
-            for root, _dirs, filenames in os.walk(pack_path):
-                for name in filenames:
-                    files.append(Path(root) / name)
-            total = len(files)
-            if total == 0:
-                raise RuntimeError("No files found in the sound pack directory.")
-
-            for idx, file_path in enumerate(files, start=1):
-                if cancel_event.is_set():
-                    raise asyncio.CancelledError("Operation cancelled by user")
-                rel = file_path.relative_to(pack_path).as_posix()
-                repo_path = f"{dest_prefix}/{rel}"
-                content = await asyncio.to_thread(file_path.read_bytes)
-
-                # Check file size limit (GitHub Contents API rejects files >100MB)
-                if len(content) > 100 * 1024 * 1024:  # 100MB
-                    raise RuntimeError(
-                        f"File {rel} is too large ({len(content)} bytes). GitHub Contents API has a 100MB limit."
-                    )
-
-                commit_msg = f"{pr_title} - add {rel}"
-                await self._upload_file(
-                    client,
-                    fork_full_name,
-                    repo_path,
-                    content,
-                    commit_msg,
-                    branch,
-                )
-                pct = 40.0 + (idx / total) * 50.0
-                await report(pct, f"Uploaded {rel}")
-                await asyncio.sleep(0)
-
-            # Create PR 90-100%
-            await report(90.0, "Creating pull request...")
-            head = f"{me}:{branch}"
-            pr_url = await self._create_pull_request(
-                client,
-                f"{self.repo_owner}/{self.repo_name}",
-                pr_title,
-                pr_body,
-                head,
-                default_branch,
-                label="soundpack",
-            )
-
-            await report(100.0, "Submission complete.")
-            return pr_url
+        # TODO: Implement GitHub App authentication flow to restore pack submission functionality
 
     def _get_auth_client_with_headers(self, headers: dict) -> httpx.AsyncClient:
         """Create an authenticated HTTP client with the provided headers.
