@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from accessiweather.config import ConfigManager
 
 from accessiweather.notifications.sound_player import validate_sound_pack
+from accessiweather.services.github_app_client import GitHubAppClient
 from accessiweather.version import __version__ as APP_VERSION
 
 logger = logging.getLogger(__name__)
@@ -23,8 +24,8 @@ logger = logging.getLogger(__name__)
 class PackSubmissionService:
     """Service to validate a sound pack and submit it to the community repo via GitHub REST API.
 
-    This uses direct HTTP calls to the GitHub API (no git/gh CLI), preserving
-    progress reporting and cancellation semantics.
+    This service uses GitHub App authentication for all API operations, providing
+    secure and authenticated access to the GitHub API without requiring user tokens.
     """
 
     def __init__(
@@ -61,10 +62,23 @@ class PackSubmissionService:
         progress_callback: Callable[[float, str], bool | None] | None = None,
         cancel_event: asyncio.Event | None = None,
     ) -> str:
-        """Validate, prepare, and submit a sound pack as a GitHub PR (API-based).
+        """Validate, prepare, and submit a sound pack as a GitHub PR using GitHub App authentication.
 
-        This implementation uses the GitHub REST API via httpx, preserving the
-        existing interface, progress reporting, and cancellation behavior.
+        This implementation uses GitHub App authentication via GitHubAppClient for all
+        GitHub API operations, maintaining existing progress reporting and cancellation behavior.
+
+        Args:
+            pack_path: Path to the sound pack directory
+            pack_meta: Pack metadata dictionary
+            progress_callback: Optional progress callback function
+            cancel_event: Optional cancellation event
+
+        Returns:
+            URL of the created pull request
+
+        Raises:
+            RuntimeError: If GitHub App configuration is invalid or API calls fail
+            asyncio.CancelledError: If operation is cancelled
         """
         if cancel_event is None:
             cancel_event = asyncio.Event()
@@ -87,107 +101,211 @@ class PackSubmissionService:
 
         # Verify GitHub App configuration
         await report(7.0, "Verifying GitHub App authentication...")
+        
+        if not self.config_manager:
+            raise RuntimeError("No configuration manager provided for GitHub App authentication")
+        
+        is_valid, message = self.config_manager.validate_github_app_config()
+        if not is_valid:
+            raise RuntimeError(f"GitHub App configuration invalid: {message}")
 
-        # TODO: Replace with GitHub App authentication
-        # This is a placeholder for the GitHub App integration
-        raise NotImplementedError(
-            "GitHub App authentication not yet implemented. User tokens are no longer supported."
+        # Get GitHub App configuration
+        app_id, private_key, installation_id = self.config_manager.get_github_app_config()
+
+        # Create GitHub App client
+        github_client = GitHubAppClient(
+            app_id=app_id,
+            private_key_pem=private_key,
+            installation_id=installation_id,
+            user_agent=self.user_agent,
         )
 
-        # TODO: Implement GitHub App authentication flow to restore pack submission functionality
+        await report(10.0, "Validating sound pack...")
+        
+        # Validate pack
+        if not validate_sound_pack(pack_path):
+            raise RuntimeError(f"Sound pack validation failed for {pack_path}")
 
-    def _get_auth_client_with_headers(self, headers: dict) -> httpx.AsyncClient:
-        """Create an authenticated HTTP client with the provided headers.
-        
-        Args:
-            headers: Dictionary of HTTP headers to include in requests
-            
-        Returns:
-            Configured httpx.AsyncClient for GitHub API requests
-        """
-        default_headers = {
-            "Accept": "application/vnd.github+json",
-            "User-Agent": self.user_agent,
-            "X-GitHub-Api-Version": "2022-11-28",
-        }
-        # Merge provided headers with defaults, allowing overrides
-        final_headers = {**default_headers, **headers}
-        
-        timeout = httpx.Timeout(30.0)
-        return httpx.AsyncClient(
-            base_url="https://api.github.com/", headers=final_headers, timeout=timeout
+        # Rest of implementation follows existing pattern with GitHub App client
+        return await self._submit_pack_with_github_client(
+            github_client, pack_path, pack_meta, report, cancel_event
         )
 
-    def _get_auth_client_for_installation(self, installation_token: str) -> httpx.AsyncClient:
-        """Create an authenticated HTTP client for GitHub App installation.
-        
+    async def submit_pack_anonymous(
+        self,
+        pack_path: Path,
+        pack_meta: dict,
+        submitter_name: str,
+        submitter_email: str,
+        progress_callback: Callable[[float, str], bool | None] | None = None,
+        cancel_event: asyncio.Event | None = None,
+    ) -> str:
+        """Submit a sound pack anonymously with submitter attribution using GitHub App authentication.
+
+        This method allows users to submit packs without requiring their own GitHub account,
+        using AccessiBot (GitHub App) credentials for all operations while properly attributing
+        the submitter in the pull request description.
+
         Args:
-            installation_token: GitHub App installation access token
-            
+            pack_path: Path to the sound pack directory
+            pack_meta: Pack metadata dictionary
+            submitter_name: Name of the person submitting the pack
+            submitter_email: Email of the person submitting the pack
+            progress_callback: Optional progress callback function
+            cancel_event: Optional cancellation event
+
         Returns:
-            Configured httpx.AsyncClient for GitHub API requests with App authentication
+            URL of the created pull request
+
+        Raises:
+            RuntimeError: If GitHub App configuration is invalid or API calls fail
+            asyncio.CancelledError: If operation is cancelled
         """
-        headers = {
-            "Authorization": f"Bearer {installation_token}",
+        if cancel_event is None:
+            cancel_event = asyncio.Event()
+
+        async def report(pct: float, status: str) -> None:
+            try:
+                if progress_callback is not None:
+                    res = progress_callback(pct, status)
+                    if asyncio.iscoroutine(res):
+                        res = await res
+                    if res is False:
+                        cancel_event.set()
+                        raise asyncio.CancelledError("Operation cancelled by user")
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                pass
+
+        await report(5.0, "Checking prerequisites...")
+
+        # Verify GitHub App configuration
+        await report(7.0, "Verifying GitHub App authentication...")
+        
+        if not self.config_manager:
+            raise RuntimeError("No configuration manager provided for GitHub App authentication")
+        
+        is_valid, message = self.config_manager.validate_github_app_config()
+        if not is_valid:
+            raise RuntimeError(f"GitHub App configuration invalid: {message}")
+
+        # Get GitHub App configuration
+        app_id, private_key, installation_id = self.config_manager.get_github_app_config()
+
+        # Create GitHub App client
+        github_client = GitHubAppClient(
+            app_id=app_id,
+            private_key_pem=private_key,
+            installation_id=installation_id,
+            user_agent=self.user_agent,
+        )
+
+        await report(10.0, "Validating sound pack...")
+        
+        # Validate pack
+        if not validate_sound_pack(pack_path):
+            raise RuntimeError(f"Sound pack validation failed for {pack_path}")
+
+        # Create enhanced metadata with submitter attribution
+        enhanced_meta = pack_meta.copy()
+        enhanced_meta["_submitter"] = {
+            "name": submitter_name,
+            "email": submitter_email,
+            "submission_type": "anonymous"
         }
-        return self._get_auth_client_with_headers(headers)
+
+        # Rest of implementation follows existing pattern with GitHub App client
+        return await self._submit_pack_with_github_client(
+            github_client, pack_path, enhanced_meta, report, cancel_event, is_anonymous=True
+        )
+
+    async def _submit_pack_with_github_client(
+        self,
+        github_client: GitHubAppClient,
+        pack_path: Path,
+        pack_meta: dict,
+        report: Callable[[float, str], None],
+        cancel_event: asyncio.Event,
+        is_anonymous: bool = False,
+    ) -> str:
+        """Internal method to handle pack submission with an authenticated GitHub client.
+
+        This method implements the actual pack submission workflow using the GitHub App client.
+        """
+        await report(15.0, "Connecting to GitHub...")
+
+        # Get repository information
+        upstream_full_name = f"{self.repo_owner}/{self.repo_name}"
+        repo = await github_client.github_request(
+            "GET", f"/repos/{upstream_full_name}", cancel_event=cancel_event
+        )
+        if not repo:
+            raise RuntimeError(f"Repository {upstream_full_name} not found or not accessible")
+
+        await report(20.0, "Getting AccessiBot user info...")
+        
+        # Get the authenticated user (AccessiBot)
+        me = await github_client.github_request("GET", "/user", cancel_event=cancel_event)
+        bot_login = me.get("login")
+        if not bot_login:
+            raise RuntimeError("Unable to determine authenticated user login")
+
+        await report(25.0, "Ensuring fork exists...")
+        
+        # Ensure fork exists
+        fork_full_name = await self._ensure_fork(github_client, bot_login, cancel_event)
+        
+        await report(35.0, "Preparing pack submission...")
+        
+        # Derive pack ID and branch name
+        pack_id = self._derive_pack_id(pack_path, pack_meta)
+        branch_name = self._build_branch_name(pack_id)
+        
+        await report(40.0, f"Creating branch '{branch_name}'...")
+        
+        # Get base branch SHA
+        base_sha = await self._get_branch_sha(github_client, upstream_full_name, self.default_base_branch)
+        
+        # Create new branch
+        await self._create_branch(github_client, fork_full_name, branch_name, base_sha)
+        
+        await report(50.0, "Uploading pack files...")
+        
+        # Upload pack files
+        await self._upload_pack_files(github_client, fork_full_name, pack_path, pack_id, branch_name, cancel_event, report)
+        
+        await report(80.0, "Creating pull request...")
+        
+        # Create pull request
+        pr_title, pr_body = self._build_pr_content(pack_meta, pack_id, is_anonymous)
+        head = f"{bot_login}:{branch_name}"
+        
+        pr_url = await self._create_pull_request(
+            github_client,
+            upstream_full_name,
+            pr_title,
+            pr_body,
+            head,
+            self.default_base_branch,
+            label="community-submission",
+        )
+        
+        await report(100.0, f"Pull request created: {pr_url}")
+        return pr_url
 
     def _raise_if_cancelled(self, cancel_event: asyncio.Event | None) -> None:
         """Check cancellation and raise if cancelled."""
         if cancel_event and cancel_event.is_set():
             raise asyncio.CancelledError("Operation cancelled by user")
 
-    async def _github_request(
-        self,
-        client: httpx.AsyncClient,
-        method: str,
-        url: str,
-        *,
-        json: dict | None = None,
-        params: dict | None = None,
-        expected: int | tuple[int, ...] = (200, 201),
-        cancel_event: asyncio.Event | None = None,
-    ) -> dict:
-        self._raise_if_cancelled(cancel_event)
-        resp = await client.request(method, url, json=json, params=params)
-        if resp.status_code == 404 and 404 in (
-            expected if isinstance(expected, tuple) else (expected,)
-        ):
-            return {}
-        if resp.status_code not in (expected if isinstance(expected, tuple) else (expected,)):
-            try:
-                detail = resp.json()
-            except Exception:
-                detail = {"message": resp.text}
-            raise RuntimeError(f"GitHub API error {resp.status_code} for {url}: {detail}")
-        try:
-            return resp.json()
-        except Exception:
-            return {}
-
-    async def _get_repo_info(
-        self, client: httpx.AsyncClient, cancel_event: asyncio.Event | None = None
-    ) -> dict:
-        return await self._github_request(
-            client, "GET", f"/repos/{self.repo_owner}/{self.repo_name}", cancel_event=cancel_event
-        )
-
-    async def _get_user_login(
-        self, client: httpx.AsyncClient, cancel_event: asyncio.Event | None = None
-    ) -> str:
-        me = await self._github_request(client, "GET", "/user", cancel_event=cancel_event)
-        login = me.get("login")
-        if not login:
-            raise RuntimeError("Unable to determine authenticated user login")
-        return login
-
     async def _ensure_fork(
-        self, client: httpx.AsyncClient, login: str, cancel_event: asyncio.Event | None = None
+        self, github_client: GitHubAppClient, login: str, cancel_event: asyncio.Event | None = None
     ) -> str:
         # Try to get fork; if missing, create
         fork_name = f"{login}/{self.repo_name}"
-        repo = await self._github_request(
-            client, "GET", f"/repos/{fork_name}", cancel_event=cancel_event
+        repo = await github_client.github_request(
+            "GET", f"/repos/{fork_name}", expected=(200, 404), cancel_event=cancel_event
         )
         if (
             repo.get("fork")
@@ -195,8 +313,7 @@ class PackSubmissionService:
         ):
             return repo["full_name"]
         # Create fork
-        await self._github_request(
-            client,
+        await github_client.github_request(
             "POST",
             f"/repos/{self.repo_owner}/{self.repo_name}/forks",
             expected=(202, 201),
@@ -206,16 +323,16 @@ class PackSubmissionService:
         for _ in range(10):
             self._raise_if_cancelled(cancel_event)
             await asyncio.sleep(1)
-            repo = await self._github_request(
-                client, "GET", f"/repos/{fork_name}", cancel_event=cancel_event
+            repo = await github_client.github_request(
+                "GET", f"/repos/{fork_name}", expected=(200, 404), cancel_event=cancel_event
             )
             if repo.get("full_name"):
                 return repo["full_name"]
         raise RuntimeError("Timed out waiting for fork to become available")
 
-    async def _get_branch_sha(self, client: httpx.AsyncClient, full_name: str, branch: str) -> str:
-        ref = await self._github_request(
-            client, "GET", f"/repos/{full_name}/git/ref/heads/{branch}", expected=(200,)
+    async def _get_branch_sha(self, github_client: GitHubAppClient, full_name: str, branch: str) -> str:
+        ref = await github_client.github_request(
+            "GET", f"/repos/{full_name}/git/ref/heads/{branch}", expected=(200,)
         )
         obj = ref.get("object") or {}
         sha = obj.get("sha")
@@ -224,10 +341,9 @@ class PackSubmissionService:
         return sha
 
     async def _create_branch(
-        self, client: httpx.AsyncClient, full_name: str, branch: str, base_sha: str
+        self, github_client: GitHubAppClient, full_name: str, branch: str, base_sha: str
     ) -> None:
-        await self._github_request(
-            client,
+        await github_client.github_request(
             "POST",
             f"/repos/{full_name}/git/refs",
             json={"ref": f"refs/heads/{branch}", "sha": base_sha},
@@ -236,7 +352,7 @@ class PackSubmissionService:
 
     async def _upload_file(
         self,
-        client: httpx.AsyncClient,
+        github_client: GitHubAppClient,
         full_name: str,
         path: str,
         content: bytes,
@@ -247,8 +363,7 @@ class PackSubmissionService:
 
         b64 = base64.b64encode(content).decode("ascii")
         encoded_path = urllib.parse.quote(path, safe="/")
-        await self._github_request(
-            client,
+        await github_client.github_request(
             "PUT",
             f"/repos/{full_name}/contents/{encoded_path}",
             json={"message": message, "content": b64, "branch": branch},
@@ -257,7 +372,7 @@ class PackSubmissionService:
 
     async def _create_pull_request(
         self,
-        client: httpx.AsyncClient,
+        github_client: GitHubAppClient,
         upstream_full_name: str,
         title: str,
         body: str,
@@ -265,8 +380,7 @@ class PackSubmissionService:
         base: str,
         label: str | None = None,
     ) -> str:
-        pr = await self._github_request(
-            client,
+        pr = await github_client.github_request(
             "POST",
             f"/repos/{upstream_full_name}/pulls",
             json={"title": title, "body": body, "head": head, "base": base},
@@ -277,8 +391,7 @@ class PackSubmissionService:
             from contextlib import suppress
 
             with suppress(Exception):
-                await self._github_request(
-                    client,
+                await github_client.github_request(
                     "POST",
                     f"/repos/{upstream_full_name}/issues/{pr['number']}/labels",
                     json={"labels": [label]},
@@ -288,7 +401,7 @@ class PackSubmissionService:
 
     async def _path_exists(
         self,
-        client: httpx.AsyncClient,
+        github_client: GitHubAppClient,
         full_name: str,
         path: str,
         ref: str,
@@ -297,8 +410,7 @@ class PackSubmissionService:
         import urllib.parse
 
         encoded_path = urllib.parse.quote(path, safe="/")
-        result = await self._github_request(
-            client,
+        result = await github_client.github_request(
             "GET",
             f"/repos/{full_name}/contents/{encoded_path}",
             params={"ref": ref},
@@ -306,6 +418,106 @@ class PackSubmissionService:
             cancel_event=cancel_event,
         )
         return bool(result)  # Empty dict for 404, non-empty for 200
+
+    async def _upload_pack_files(
+        self,
+        github_client: GitHubAppClient,
+        fork_full_name: str,
+        pack_path: Path,
+        pack_id: str,
+        branch_name: str,
+        cancel_event: asyncio.Event,
+        report: Callable[[float, str], None],
+    ) -> None:
+        """Upload all pack files to the repository."""
+        # Get all files in the pack directory
+        pack_files = list(pack_path.rglob("*"))
+        pack_files = [f for f in pack_files if f.is_file()]
+        
+        if not pack_files:
+            raise RuntimeError(f"No files found in pack directory: {pack_path}")
+        
+        total_files = len(pack_files)
+        for i, file_path in enumerate(pack_files):
+            self._raise_if_cancelled(cancel_event)
+            
+            # Calculate progress (50% to 75% range for file uploads)
+            progress = 50 + (25 * i / total_files)
+            await report(progress, f"Uploading {file_path.name}...")
+            
+            # Read file content
+            try:
+                content = file_path.read_bytes()
+            except Exception as e:
+                raise RuntimeError(f"Failed to read file {file_path}: {e}")
+            
+            # Calculate relative path within pack
+            rel_path = file_path.relative_to(pack_path)
+            
+            # Build destination path in repository
+            dest_path = f"{self.dest_subdir}/{pack_id}/{rel_path.as_posix()}"
+            
+            # Upload file
+            commit_message = f"Add {file_path.name} for {pack_id} pack"
+            await self._upload_file(
+                github_client, fork_full_name, dest_path, content, commit_message, branch_name
+            )
+
+    def _build_pr_content(self, pack_meta: dict, pack_id: str, is_anonymous: bool = False) -> tuple[str, str]:
+        """Build pull request title and body content."""
+        pack_name = pack_meta.get("name", pack_id)
+        pack_author = pack_meta.get("author", "Unknown")
+        pack_description = pack_meta.get("description", "No description provided")
+        
+        # Build title
+        if is_anonymous:
+            title = f"Add community sound pack: {pack_name}"
+        else:
+            title = f"Add sound pack: {pack_name} by {pack_author}"
+        
+        # Build body
+        body_lines = [
+            f"## Sound Pack Submission: {pack_name}",
+            "",
+            f"**Pack ID:** `{pack_id}`",
+            f"**Author:** {pack_author}",
+            f"**Description:** {pack_description}",
+            "",
+        ]
+        
+        # Add submitter attribution for anonymous submissions
+        if is_anonymous and "_submitter" in pack_meta:
+            submitter = pack_meta["_submitter"]
+            body_lines.extend([
+                "## Submitter Information",
+                f"**Submitted by:** {submitter.get('name', 'Unknown')}",
+                f"**Email:** {submitter.get('email', 'Not provided')}",
+                f"**Submission Type:** Anonymous submission via AccessiBot",
+                "",
+            ])
+        
+        # Add pack details
+        sounds = pack_meta.get("sounds", {})
+        if sounds:
+            body_lines.extend([
+                "## Pack Contents",
+                ""
+            ])
+            for sound_key, filename in sounds.items():
+                body_lines.append(f"- **{sound_key}:** {filename}")
+            body_lines.append("")
+        
+        body_lines.extend([
+            "## Submission Details",
+            "- This pack has been validated using AccessiWeather's sound pack validation system",
+            "- All files have been uploaded and are ready for review",
+            "- This submission was created automatically via the AccessiWeather pack submission service",
+            "",
+            "---",
+            "*This pull request was created automatically by AccessiBot on behalf of the community.*"
+        ])
+        
+        return title, "\n".join(body_lines)
 
     # Internal helpers
 
