@@ -61,12 +61,14 @@ AccessiWeather is a Python 3.7+ desktop weather application built with wxPython,
 - **Non-GUI component test**: Core utilities work without wxPython
 - **PyInstaller availability**: `python -m PyInstaller --version` (instant)
 
-### Build Timing Expectations
-- **pip install basic**: 2-5 minutes
-- **pip install with wxPython**: 10-30 minutes (often fails due to network)
-- **PyInstaller build**: 5-15 minutes for full executable
-- **Test suite**: 30 seconds-5 minutes depending on scope
-- **CI pipeline**: 15-30 minutes total
+### Build Timing Expectations (MEASURED)
+- **pip install basic dependencies**: 2-5 minutes (validated)
+- **pip install with wxPython**: 10-30 minutes (often fails due to network timeouts)
+- **PyInstaller simple script**: 7-8 seconds (validated with test script)
+- **PyInstaller full app**: 5-15 minutes for complete application (estimated based on complexity)
+- **Test suite basic**: 30 seconds-2 minutes (for non-GUI components)
+- **Test suite full**: 2-5 minutes (requires wxPython for GUI tests)
+- **CI pipeline**: 15-30 minutes total (based on GitHub Actions configuration)
 
 ### NEVER CANCEL Operations
 - **ANY pip install command** - Always use timeouts of 600+ seconds
@@ -94,25 +96,62 @@ AccessiWeather is a Python 3.7+ desktop weather application built with wxPython,
 
 ## Validation Scenarios
 
+### Repository Health Check (ALWAYS run first)
+```bash
+# Quick structure validation
+python -c "
+import os
+key_dirs = ['src/accessiweather', 'tests', 'installer', '.github/workflows']
+key_files = ['pyproject.toml', 'setup.py', 'requirements.txt', '.pre-commit-config.yaml']
+for item in key_dirs + key_files:
+    print(f'✓ {item}' if os.path.exists(item) else f'✗ {item} MISSING')
+"
+
+# Detailed project analysis
+python -c "
+import os
+src_path = 'src/accessiweather'
+if os.path.exists(src_path):
+    files = [f for f in os.listdir(src_path) if f.endswith('.py')]
+    print(f'Python modules: {len(files)}')
+    key_modules = ['main.py', 'config_utils.py', 'cli.py', 'constants.py']
+    for mod in key_modules:
+        print(f'  {\"✓\" if mod in files else \"✗\"} {mod}')
+
+test_files = len([f for f in os.listdir('tests') if f.startswith('test_')])
+print(f'Test files: {test_files}')
+
+workflows = len([f for f in os.listdir('.github/workflows') if f.endswith('.yml')])
+print(f'CI workflows: {workflows}')
+"
+```
+
 ### After Making Changes, ALWAYS:
 1. **Test core functionality**:
    ```bash
-   # Test basic imports and utilities
+   # Test basic imports and utilities (works without wxPython)
    python -c "
    import sys; sys.path.insert(0, 'src')
    from accessiweather.utils.temperature_utils import fahrenheit_to_celsius
    from accessiweather import config_utils, constants
    print('Core components working')
+   print(f'Temperature test: 32°F = {fahrenheit_to_celsius(32.0)}°C')
    "
    ```
 
-2. **Run relevant tests** (if wxPython available):
+2. **Validate version consistency**:
+   ```bash
+   echo "=== Version check ==="
+   grep -n "version.*=" setup.py pyproject.toml
+   ```
+
+3. **Run relevant tests** (if wxPython available):
    ```bash
    python -m pytest tests/test_temperature_utils.py -v
    python -m pytest tests/test_config_utils.py -v
    ```
 
-3. **Check code quality** (if tools available):
+4. **Check code quality** (if tools available):
    ```bash
    pre-commit run --all-files
    # OR manually:
@@ -121,18 +160,39 @@ AccessiWeather is a Python 3.7+ desktop weather application built with wxPython,
    flake8 src/
    ```
 
+### Build Readiness Check
+```bash
+# Verify PyInstaller availability and timing
+time python -c "
+import PyInstaller.__main__
+print(f'PyInstaller version: {PyInstaller.__version__}')
+print('PyInstaller ready for builds')
+"
+
+# Check build scripts exist
+ls -la installer/build_installer.*
+
+# Quick PyInstaller test (takes ~8 seconds)
+mkdir -p /tmp/build_test
+echo "print('Build test OK')" > /tmp/build_test/test.py
+time python -m PyInstaller --onefile /tmp/build_test/test.py --distpath /tmp/build_test/dist --workpath /tmp/build_test/build --specpath /tmp/build_test
+rm -rf /tmp/build_test
+```
+
 ## Known Issues and Limitations
 
 ### Critical Constraints
 - **wxPython dependency**: Most application functionality requires wxPython, which often fails to install due to network/firewall issues
-- **Network dependency**: All pip installations require stable internet connection with generous timeouts
+- **Network dependency**: All pip installations require stable internet connection with generous timeouts  
 - **Windows-focused build**: Primary build targets Windows executables via PyInstaller
 - **GUI test limitations**: GUI tests may be flaky in headless CI environments
+- **CLI requires GUI**: Even the CLI entry point requires wxPython due to module dependencies
 
 ### Working Workarounds
 - **Core utilities testing**: Non-GUI components can be tested without wxPython
 - **Build validation**: PyInstaller functionality can be verified without full builds
-- **Incremental development**: Focus on core logic before GUI integration
+- **Incremental development**: Focus on core logic in `src/accessiweather/utils/` before GUI integration
+- **Version management**: Versions are in both `setup.py` (0.9.3) and `pyproject.toml` (0.9.3.1) - keep synchronized
 
 ### Timeout Requirements
 - **pip operations**: Minimum 600 seconds, recommend 1800 seconds
@@ -163,8 +223,37 @@ AccessiWeather is a Python 3.7+ desktop weather application built with wxPython,
 - **Build pipeline**: `.github/workflows/build.yml` (PyInstaller Windows builds)
 - **Release pipeline**: `.github/workflows/release.yml` (automated releases)
 
+## Common Development Scenarios
+
+### Working on Core Logic (Recommended Start)
+1. **Focus on utilities first**: Work in `src/accessiweather/utils/` - these don't require wxPython
+2. **Test immediately**: `python -c "import sys; sys.path.insert(0, 'src'); from accessiweather.utils.temperature_utils import *"`
+3. **Iterate quickly**: Core utilities can be tested without full environment setup
+
+### Working on API Integration
+1. **Test API clients**: Work in `src/accessiweather/openmeteo_client.py`, `src/accessiweather/api_client.py`
+2. **Use mock data**: Check `tests/mock_data.py` for examples
+3. **Network independence**: Most API logic can be developed offline with mocks
+
+### Working on Configuration
+1. **Config utilities**: `src/accessiweather/config_utils.py` works without GUI dependencies
+2. **Test config loading**: Validate with repository health checks
+3. **Version management**: Keep `setup.py` and `pyproject.toml` versions synchronized
+
+### Preparing for GUI Work
+1. **Install wxPython first**: `pip install --timeout=1800 wxPython` (expect 10-30 minutes)
+2. **Test GUI imports**: `python -c "import wx; print('wxPython working')"`
+3. **Run full tests**: Only after wxPython is successfully installed
+
 ## Project Context
 
 AccessiWeather provides weather information with a focus on accessibility for screen reader users. It integrates with National Weather Service (US) and Open-Meteo (international) APIs, supports multiple weather data sources, and creates Windows desktop applications via PyInstaller.
+
+**Architecture Summary**:
+- **Core**: Python 3.7+ with 20 modules, 40+ tests, comprehensive CI/CD
+- **GUI**: wxPython desktop application with accessibility features  
+- **Build**: PyInstaller for Windows executables, PowerShell/bash scripts
+- **APIs**: NWS (US weather + alerts) and Open-Meteo (international weather)
+- **Distribution**: GitHub Actions CI/CD with 5 workflows, Windows installer generation
 
 The development workflow emphasizes comprehensive testing, code quality checks, and automated CI/CD with generous timeout allowances for build processes that can take 30+ minutes to complete.
