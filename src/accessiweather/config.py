@@ -91,17 +91,35 @@ class ConfigManager:
                 settings.visual_crossing_api_key = ""
                 config_changed = True
 
-        # Validate GitHub token format (basic checks)
-        if settings.github_token:
-            token = settings.github_token.strip()
-            if not token:
-                logger.warning("Empty GitHub token found, clearing")
-                settings.github_token = ""
+        # Validate GitHub App configuration
+        if settings.github_app_id:
+            app_id = settings.github_app_id.strip()
+            if not app_id:
+                logger.warning("Empty GitHub App ID found, clearing")
+                settings.github_app_id = ""
                 config_changed = True
-            elif not (token.startswith(("ghp_", "github_pat_")) or len(token) == 40):
-                logger.warning(
-                    "GitHub token format appears invalid (should start with 'ghp_' or 'github_pat_' or be 40 characters)"
-                )
+            elif not app_id.isdigit() or len(app_id) < 1:
+                logger.warning("GitHub App ID appears invalid (should be numeric)")
+                # Don't automatically clear - let user decide
+
+        if settings.github_app_private_key:
+            private_key = settings.github_app_private_key.strip()
+            if not private_key:
+                logger.warning("Empty GitHub App private key found, clearing")
+                settings.github_app_private_key = ""
+                config_changed = True
+            elif not (private_key.startswith("-----BEGIN") and "PRIVATE KEY-----" in private_key):
+                logger.warning("GitHub App private key appears invalid (should be PEM formatted)")
+                # Don't automatically clear - let user decide
+
+        if settings.github_app_installation_id:
+            installation_id = settings.github_app_installation_id.strip()
+            if not installation_id:
+                logger.warning("Empty GitHub App installation ID found, clearing")
+                settings.github_app_installation_id = ""
+                config_changed = True
+            elif not installation_id.isdigit() or len(installation_id) < 1:
+                logger.warning("GitHub App installation ID appears invalid (should be numeric)")
                 # Don't automatically clear - let user decide
 
         # Save config if changes were made
@@ -334,53 +352,47 @@ class ConfigManager:
             logger.error(f"Failed to import locations: {e}")
             return False
 
-    async def validate_github_token(self) -> tuple[bool, str]:
-        """Validate the GitHub token by making a test request to the GitHub API.
+    def validate_github_app_config(self) -> tuple[bool, str]:
+        """Validate the GitHub App configuration fields.
 
         Returns:
-            Tuple of (is_valid, message) where message contains error details or user info
+            Tuple of (is_valid, message) where message contains validation details
 
         """
-        import httpx
+        config = self.get_config()
+        settings = config.settings
 
-        from .constants import GITHUB_API_BASE_URL
+        if not settings.github_app_id:
+            return False, "No GitHub App ID configured"
+        
+        if not settings.github_app_private_key:
+            return False, "No GitHub App private key configured"
+        
+        if not settings.github_app_installation_id:
+            return False, "No GitHub App installation ID configured"
 
-        token = self.get_github_token()
-        if not token:
-            return False, "No GitHub token configured"
+        # Validate app_id is numeric
+        if not settings.github_app_id.strip().isdigit():
+            return False, "GitHub App ID must be numeric"
 
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    f"{GITHUB_API_BASE_URL}/user",
-                    headers={
-                        "Authorization": f"token {token}",
-                        "Accept": "application/vnd.github.v3+json",
-                        "User-Agent": f"AccessiWeather/{self.app.version}",
-                    },
-                    timeout=10.0,
-                )
+        # Validate private key has PEM format
+        private_key = settings.github_app_private_key.strip()
+        if not (private_key.startswith("-----BEGIN") and "PRIVATE KEY-----" in private_key):
+            return False, "GitHub App private key must be PEM formatted"
 
-                if response.status_code == 200:
-                    user_info = response.json()
-                    username = user_info.get("login", "Unknown")
-                    return True, f"Token valid for user: {username}"
-                if response.status_code == 401:
-                    return False, "Invalid GitHub token"
-                if response.status_code == 403:
-                    return False, "GitHub token lacks required permissions or rate limit exceeded"
-                return False, f"GitHub API error: {response.status_code}"
+        # Validate installation_id is numeric
+        if not settings.github_app_installation_id.strip().isdigit():
+            return False, "GitHub App installation ID must be numeric"
 
-        except httpx.TimeoutException:
-            return False, "Request timeout - check your internet connection"
-        except Exception as e:
-            return False, f"Network error: {str(e)}"
+        return True, "GitHub App configuration is valid"
 
-    def set_github_token(self, token: str) -> bool:
-        """Set the GitHub token in the configuration.
+    def set_github_app_config(self, app_id: str, private_key: str, installation_id: str) -> bool:
+        """Set the GitHub App configuration in the settings.
 
         Args:
-            token: The GitHub token to store
+            app_id: The GitHub App ID
+            private_key: The PEM-encoded private key
+            installation_id: The installation ID
 
         Returns:
             True if successful, False otherwise
@@ -388,30 +400,47 @@ class ConfigManager:
         """
         try:
             config = self.get_config()
-            config.settings.github_token = token.strip()
+            config.settings.github_app_id = app_id.strip()
+            config.settings.github_app_private_key = private_key.strip()
+            config.settings.github_app_installation_id = installation_id.strip()
             return self.save_config()
         except Exception as e:
-            logger.error(f"Failed to set GitHub token: {e}")
+            logger.error(f"Failed to set GitHub App configuration: {e}")
             return False
 
-    def get_github_token(self) -> str:
-        """Get the GitHub token from the configuration.
+    def get_github_app_config(self) -> tuple[str, str, str]:
+        """Get the GitHub App configuration from the settings.
 
         Returns:
-            The GitHub token, or empty string if not set
+            Tuple of (app_id, private_key, installation_id), empty strings if not set
 
         """
         try:
-            return self.get_config().settings.github_token
+            settings = self.get_config().settings
+            return (
+                settings.github_app_id,
+                settings.github_app_private_key,
+                settings.github_app_installation_id,
+            )
         except Exception as e:
-            logger.error(f"Failed to get GitHub token: {e}")
-            return ""
+            logger.error(f"Failed to get GitHub App configuration: {e}")
+            return ("", "", "")
 
-    def clear_github_token(self) -> bool:
-        """Clear the GitHub token from the configuration.
+    def clear_github_app_config(self) -> bool:
+        """Clear the GitHub App configuration from the settings.
 
         Returns:
             True if successful, False otherwise
 
         """
-        return self.set_github_token("")
+        return self.set_github_app_config("", "", "")
+
+    def has_github_app_config(self) -> bool:
+        """Check if all required GitHub App configuration fields are present.
+
+        Returns:
+            True if all fields are configured, False otherwise
+
+        """
+        app_id, private_key, installation_id = self.get_github_app_config()
+        return bool(app_id and private_key and installation_id)
