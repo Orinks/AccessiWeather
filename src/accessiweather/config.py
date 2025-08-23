@@ -44,23 +44,7 @@ class ConfigManager:
                 with open(self.config_file, encoding="utf-8") as f:
                     data = json.load(f)
 
-                    # Handle legacy configs containing github_token
-                    legacy_token = None
-                    if isinstance(data, dict):
-                        legacy_token = (data.get("settings") or {}).get("github_token")
-                        if legacy_token:
-                            logger.info(
-                                "Detected legacy 'github_token' in config. User tokens are no longer supported and will be ignored."
-                            )
-                            # Remove legacy token from config data
-                            if "github_token" in data.get("settings", {}):
-                                del data["settings"]["github_token"]
-
                     self._config = AppConfig.from_dict(data)
-
-                    # If we removed legacy token, save the cleaned config
-                    if isinstance(data, dict) and legacy_token:
-                        self.save_config()
 
                     # Validate and fix configuration
                     self._validate_and_fix_config()
@@ -217,10 +201,6 @@ class ConfigManager:
 
         # Update settings attributes
         for key, value in kwargs.items():
-            if key == "github_token":
-                logger.info("'github_token' is deprecated and ignored.")
-                continue
-
             if hasattr(config.settings, key):
                 setattr(config.settings, key, value)
                 # Redact sensitive values in logs
@@ -544,30 +524,3 @@ class ConfigManager:
         """
         app_id, private_key, installation_id = self.get_github_app_config()
         return bool(app_id and private_key and installation_id)
-
-    # Deprecated shim methods for backward compatibility
-    def set_github_token(self, token: str) -> bool:
-        """Set GitHub token (deprecated - no longer supported)."""
-        logger.warning(
-            "set_github_token() is deprecated and ignored. Use GitHub App configuration instead."
-        )
-        return True
-
-    def get_github_token(self) -> str:
-        """Get GitHub token (deprecated - no longer supported)."""
-        logger.warning("get_github_token() is deprecated. Use GitHub App configuration instead.")
-        return ""
-
-    def validate_github_token(self, token: str) -> bool:
-        """Validate GitHub token (deprecated - no longer supported)."""
-        logger.warning(
-            "validate_github_token() is deprecated. Use validate_github_app_config() instead."
-        )
-        return False
-
-    def clear_github_token(self) -> bool:
-        """Clear GitHub token (deprecated - no longer supported)."""
-        logger.warning(
-            "clear_github_token() is deprecated and ignored. Use clear_github_app_config() instead."
-        )
-        return True

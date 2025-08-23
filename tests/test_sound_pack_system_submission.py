@@ -42,9 +42,6 @@ async def test_submit_pack_happy_path(tmp_pack_dir, monkeypatch):
     # Service under test
     svc = PackSubmissionService(repo_owner="owner", repo_name="repo", dest_subdir="packs")
 
-    # Environment token
-    monkeypatch.setenv("ACCESSIWEATHER_GITHUB_TOKEN", "dummy")
-
     # Stub helpers to avoid real network
     async def _repo_info(client, cancel_event=None):
         await asyncio.sleep(0)
@@ -61,12 +58,6 @@ async def test_submit_pack_happy_path(tmp_pack_dir, monkeypatch):
     monkeypatch.setattr(svc, "_get_repo_info", _repo_info)
     monkeypatch.setattr(svc, "_get_user_login", _user_login)
     monkeypatch.setattr(svc, "_ensure_fork", _ensure_fork)
-
-    async def _validate_token_ok(client):
-        await asyncio.sleep(0)
-        return {"login": "user"}
-
-    monkeypatch.setattr(svc, "_validate_github_token", _validate_token_ok)
 
     base_sha_calls: list[tuple[str, str]] = []
 
@@ -148,7 +139,6 @@ async def test_size_guard(tmp_path, monkeypatch):
     big_file.write_bytes(b"x")
 
     svc = PackSubmissionService(repo_owner="owner", repo_name="repo")
-    monkeypatch.setenv("ACCESSIWEATHER_GITHUB_TOKEN", "dummy")
 
     # Stubs to get to upload step
     async def _repo_info_sz(client, cancel_event=None):
@@ -165,11 +155,6 @@ async def test_size_guard(tmp_path, monkeypatch):
 
     async def _create_branch_sz(client, full_name, branch, sha):
         return None
-
-    async def _validate_token_ok2(client):
-        return {"login": "user"}
-
-    monkeypatch.setattr(svc, "_validate_github_token", _validate_token_ok2)
 
     async def _path_exists_sz(client, full_name, path, ref, cancel_event=None):
         return False
@@ -234,18 +219,12 @@ async def test_branch_base_sha_fallback(monkeypatch, tmp_pack_dir):
     pack_dir, meta = tmp_pack_dir
 
     svc = PackSubmissionService(repo_owner="owner", repo_name="repo")
-    monkeypatch.setenv("ACCESSIWEATHER_GITHUB_TOKEN", "dummy")
 
     order: list[str] = []
 
     # Stubs
     async def _repo_info_fb(client, cancel_event=None):
         return {"default_branch": "main"}
-
-    async def _validate_token_ok3(client):
-        return {"login": "user"}
-
-    monkeypatch.setattr(svc, "_validate_github_token", _validate_token_ok3)
 
     async def _user_login_fb(client, cancel_event=None):
         return "user"
