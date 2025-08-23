@@ -125,7 +125,7 @@ class PackSubmissionService:
             Configured httpx.AsyncClient for GitHub API requests with App authentication
         """
         headers = {
-            "Authorization": f"Bearer {installation_token}",
+            "Authorization": f"token {installation_token}",
         }
         return self._get_auth_client_with_headers(headers)
 

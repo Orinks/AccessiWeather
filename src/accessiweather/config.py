@@ -44,29 +44,10 @@ class ConfigManager:
                 with open(self.config_file, encoding="utf-8") as f:
                     data = json.load(f)
 
-                    # Remove legacy github_token keys if present to clean up old configs
-                    config_cleaned = False
-                    if "github_token" in data:
-                        logger.info("Removing legacy github_token from configuration")
-                        del data["github_token"]
-                        config_cleaned = True
-                    
-                    # Also check in settings nested dict
-                    if "settings" in data and isinstance(data["settings"], dict):
-                        if "github_token" in data["settings"]:
-                            logger.info("Removing legacy github_token from settings")
-                            del data["settings"]["github_token"]
-                            config_cleaned = True
-
                     self._config = AppConfig.from_dict(data)
 
                     # Validate and fix configuration
                     self._validate_and_fix_config()
-                    
-                    # Save config immediately if legacy keys were removed to persist the cleanup
-                    if config_cleaned:
-                        logger.info("Saving configuration to persist legacy key cleanup")
-                        self.save_config()
                         
                     logger.info("Configuration loaded successfully")
             else:
