@@ -81,7 +81,7 @@ jobs:
         echo "Final target branch: $TARGET_BRANCH"
 
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         ref: ${{ steps.target-branch.outputs.target_branch }}
         token: ${{ github.token }}
