@@ -196,17 +196,41 @@ class PackSubmissionService:
             await report(100.0, "Submission complete.")
             return pr_url
 
-    def _get_auth_client(self, token: str) -> httpx.AsyncClient:
-        headers = {
-            "Authorization": f"Bearer {token}",
+    def _get_auth_client_with_headers(self, headers: dict) -> httpx.AsyncClient:
+        """Create an authenticated HTTP client with the provided headers.
+        
+        Args:
+            headers: Dictionary of HTTP headers to include in requests
+            
+        Returns:
+            Configured httpx.AsyncClient for GitHub API requests
+        """
+        default_headers = {
             "Accept": "application/vnd.github+json",
             "User-Agent": self.user_agent,
             "X-GitHub-Api-Version": "2022-11-28",
         }
+        # Merge provided headers with defaults, allowing overrides
+        final_headers = {**default_headers, **headers}
+        
         timeout = httpx.Timeout(30.0)
         return httpx.AsyncClient(
-            base_url="https://api.github.com/", headers=headers, timeout=timeout
+            base_url="https://api.github.com/", headers=final_headers, timeout=timeout
         )
+
+    def _get_auth_client_for_installation(self, installation_token: str) -> httpx.AsyncClient:
+        """Create an authenticated HTTP client for GitHub App installation.
+        
+        Args:
+            installation_token: GitHub App installation access token
+            
+        Returns:
+            Configured httpx.AsyncClient for GitHub API requests with App authentication
+        """
+        headers = {
+            "Authorization": f"Bearer {installation_token}",
+        }
+        return self._get_auth_client_with_headers(headers)
 
     def _raise_if_cancelled(self, cancel_event: asyncio.Event | None) -> None:
         """Check cancellation and raise if cancelled."""
