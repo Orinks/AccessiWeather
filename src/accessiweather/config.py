@@ -45,6 +45,7 @@ class ConfigManager:
                     data = json.load(f)
 
                     # Handle legacy configs containing github_token
+                    legacy_token = None
                     if isinstance(data, dict):
                         legacy_token = (data.get("settings") or {}).get("github_token")
                         if legacy_token:
@@ -142,9 +143,24 @@ class ConfigManager:
                     and pk.endswith(GITHUB_APP_PRIVATE_KEY_FOOTER)
                 )
                 if not valid_pem:
-                    logger.warning(
-                        "GitHub App private key appears invalid (should be PEM formatted)"
-                    )
+                    # Check what's missing for clearer error message
+                    has_pkcs8_header = pk.startswith(GITHUB_APP_PKCS8_PRIVATE_KEY_HEADER)
+                    has_pkcs8_footer = pk.endswith(GITHUB_APP_PKCS8_PRIVATE_KEY_FOOTER)
+                    has_pkcs1_header = pk.startswith(GITHUB_APP_PRIVATE_KEY_HEADER)
+                    has_pkcs1_footer = pk.endswith(GITHUB_APP_PRIVATE_KEY_FOOTER)
+
+                    if not (has_pkcs8_header or has_pkcs1_header):
+                        logger.warning(
+                            "GitHub App private key missing PEM header. Expected '-----BEGIN PRIVATE KEY-----' (PKCS#8) or '-----BEGIN RSA PRIVATE KEY-----' (PKCS#1). Please use the .pem file downloaded from GitHub."
+                        )
+                    elif not (has_pkcs8_footer or has_pkcs1_footer):
+                        logger.warning(
+                            "GitHub App private key missing PEM footer. Expected '-----END PRIVATE KEY-----' (PKCS#8) or '-----END RSA PRIVATE KEY-----' (PKCS#1). Please use the .pem file downloaded from GitHub."
+                        )
+                    else:
+                        logger.warning(
+                            "GitHub App private key has mismatched PEM headers/footers. Please use the .pem file downloaded from GitHub."
+                        )
 
         if settings.github_app_installation_id:
             installation_id = settings.github_app_installation_id.strip()
@@ -443,7 +459,26 @@ class ConfigManager:
             and private_key.endswith(GITHUB_APP_PRIVATE_KEY_FOOTER)
         )
         if not valid_pem:
-            return False, "GitHub App private key must be PEM formatted"
+            # Check what's missing for clearer error message
+            has_pkcs8_header = private_key.startswith(GITHUB_APP_PKCS8_PRIVATE_KEY_HEADER)
+            has_pkcs8_footer = private_key.endswith(GITHUB_APP_PKCS8_PRIVATE_KEY_FOOTER)
+            has_pkcs1_header = private_key.startswith(GITHUB_APP_PRIVATE_KEY_HEADER)
+            has_pkcs1_footer = private_key.endswith(GITHUB_APP_PRIVATE_KEY_FOOTER)
+
+            if not (has_pkcs8_header or has_pkcs1_header):
+                return (
+                    False,
+                    "GitHub App private key missing PEM header. Expected '-----BEGIN PRIVATE KEY-----' (PKCS#8) or '-----BEGIN RSA PRIVATE KEY-----' (PKCS#1). Please use the .pem file downloaded from GitHub.",
+                )
+            if not (has_pkcs8_footer or has_pkcs1_footer):
+                return (
+                    False,
+                    "GitHub App private key missing PEM footer. Expected '-----END PRIVATE KEY-----' (PKCS#8) or '-----END RSA PRIVATE KEY-----' (PKCS#1). Please use the .pem file downloaded from GitHub.",
+                )
+            return (
+                False,
+                "GitHub App private key has mismatched PEM headers/footers. Please use the .pem file downloaded from GitHub.",
+            )
 
         # Validate installation_id is numeric
         if not settings.github_app_installation_id.strip().isdigit():
@@ -509,3 +544,30 @@ class ConfigManager:
         """
         app_id, private_key, installation_id = self.get_github_app_config()
         return bool(app_id and private_key and installation_id)
+
+    # Deprecated shim methods for backward compatibility
+    def set_github_token(self, token: str) -> bool:
+        """Set GitHub token (deprecated - no longer supported)."""
+        logger.warning(
+            "set_github_token() is deprecated and ignored. Use GitHub App configuration instead."
+        )
+        return True
+
+    def get_github_token(self) -> str:
+        """Get GitHub token (deprecated - no longer supported)."""
+        logger.warning("get_github_token() is deprecated. Use GitHub App configuration instead.")
+        return ""
+
+    def validate_github_token(self, token: str) -> bool:
+        """Validate GitHub token (deprecated - no longer supported)."""
+        logger.warning(
+            "validate_github_token() is deprecated. Use validate_github_app_config() instead."
+        )
+        return False
+
+    def clear_github_token(self) -> bool:
+        """Clear GitHub token (deprecated - no longer supported)."""
+        logger.warning(
+            "clear_github_token() is deprecated and ignored. Use clear_github_app_config() instead."
+        )
+        return True
