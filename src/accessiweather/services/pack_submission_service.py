@@ -7,10 +7,13 @@ import os
 import re
 from collections.abc import Callable
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import httpx
 
-from accessiweather.config import ConfigManager
+if TYPE_CHECKING:
+    from accessiweather.config import ConfigManager
+
 from accessiweather.notifications.sound_player import validate_sound_pack
 from accessiweather.version import __version__ as APP_VERSION
 
@@ -31,7 +34,7 @@ class PackSubmissionService:
         dest_subdir: str = "packs",
         user_agent: str | None = None,
         default_base_branch: str = "main",
-        config_manager: ConfigManager | None = None,
+        config_manager: "ConfigManager" | None = None,
     ) -> None:
         """Initialize the submission service.
 
@@ -125,7 +128,7 @@ class PackSubmissionService:
             Configured httpx.AsyncClient for GitHub API requests with App authentication
         """
         headers = {
-            "Authorization": f"token {installation_token}",
+            "Authorization": f"Bearer {installation_token}",
         }
         return self._get_auth_client_with_headers(headers)
 
