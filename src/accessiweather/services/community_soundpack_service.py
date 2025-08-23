@@ -7,7 +7,7 @@ installation using SoundPackInstaller.
 Design notes:
 - Mirrors httpx async client usage and logging patterns from TUFUpdateService
 - Provides simple in-memory caching for the list of packs
-- Supports optional authentication via GITHUB_TOKEN environment variable
+- Supports authentication via GitHub App for higher rate limits when available
 - Gracefully handles rate limits and transient errors with lightweight retries
 """
 
@@ -76,9 +76,8 @@ class CommunitySoundPackService:
         self.cache_duration_seconds = cache_duration_seconds
         headers = {"User-Agent": user_agent, "Accept": "application/vnd.github+json"}
 
-        token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
-        if token:
-            headers["Authorization"] = f"Bearer {token}"
+        # Note: GitHub authentication removed for security reasons
+        # Future implementation should use GitHub App authentication
 
         self._http = httpx.AsyncClient(timeout=timeout, headers=headers)
         self._cached_packs: list[CommunityPack] | None = None
