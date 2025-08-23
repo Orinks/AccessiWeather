@@ -7,10 +7,13 @@ import os
 import re
 from collections.abc import Callable
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import httpx
 
-from accessiweather.config import ConfigManager
+if TYPE_CHECKING:
+    from accessiweather.config import ConfigManager
+
 from accessiweather.notifications.sound_player import validate_sound_pack
 from accessiweather.version import __version__ as APP_VERSION
 
@@ -31,7 +34,7 @@ class PackSubmissionService:
         dest_subdir: str = "packs",
         user_agent: str | None = None,
         default_base_branch: str = "main",
-        config_manager: ConfigManager | None = None,
+        config_manager: "ConfigManager" | None = None,
     ) -> None:
         """Initialize the submission service.
 
@@ -41,7 +44,7 @@ class PackSubmissionService:
             dest_subdir: Subdirectory within repo to place packs
             user_agent: Optional user-agent string
             default_base_branch: The base branch to target PRs against
-            config_manager: Configuration manager for accessing GitHub token
+            config_manager: Configuration manager for accessing GitHub App configuration
 
         """
         self.repo_owner = repo_owner
@@ -82,148 +85,52 @@ class PackSubmissionService:
 
         await report(5.0, "Checking prerequisites...")
 
-        # Verify token and create client
-        await report(7.0, "Verifying GitHub authentication...")
+        # Verify GitHub App configuration
+        await report(7.0, "Verifying GitHub App authentication...")
 
-        # Get token from configuration first, then fall back to environment variable
-        token = None
-        if self.config_manager:
-            token = self.config_manager.get_settings().github_token
+        # TODO: Replace with GitHub App authentication
+        # This is a placeholder for the GitHub App integration
+        raise NotImplementedError(
+            "GitHub App authentication not yet implemented. User tokens are no longer supported."
+        )
 
-        if not token:
-            token = os.getenv("ACCESSIWEATHER_GITHUB_TOKEN")
+        # TODO: Implement GitHub App authentication flow to restore pack submission functionality
 
-        if not token:
-            raise RuntimeError(
-                "Missing GitHub token. Please configure your GitHub token in the app settings."
-            )
-
-        async with self._get_auth_client(token) as client:
-            # Resolve default branch
-            await report(8.0, "Resolving repository default branch...")
-            repo_info = await self._get_repo_info(client, cancel_event=cancel_event)
-            default_branch = repo_info.get("default_branch") or self.default_base_branch
-            self.default_base_branch = default_branch
-
-            # Verify auth and get user info
-            user_info = await self._validate_github_token(client)
-            me = user_info["login"]
-
-            # Local validation first
-            await report(10.0, "Validating pack locally...")
-            ok, msg = validate_sound_pack(pack_path)
-            if not ok:
-                raise RuntimeError(f"Pack validation failed: {msg}")
-
-            pack_name = (pack_meta.get("name") or pack_path.name).strip()
-            author = (pack_meta.get("author") or "Unknown").strip()
-            pack_id = self._derive_pack_id(pack_path, pack_meta)
-            branch = self._build_branch_name(pack_id)
-
-            # Prevent duplicate in upstream
-            dest_prefix = f"{self.dest_subdir}/{pack_id}"
-            exists_in_upstream = await self._path_exists(
-                client,
-                f"{self.repo_owner}/{self.repo_name}",
-                dest_prefix,
-                default_branch,
-                cancel_event=cancel_event,
-            )
-            if exists_in_upstream:
-                raise RuntimeError(
-                    "A pack with this ID already exists in the community repository. Please rename your pack or adjust metadata to produce a unique ID."
-                )
-
-            # Ensure fork exists
-            await report(20.0, "Ensuring repository fork...")
-            fork_full_name = await self._ensure_fork(client, me, cancel_event)
-
-            # Create branch in fork based on fork's default branch SHA
-            await report(30.0, f"Creating branch {branch}...")
-            try:
-                base_sha = await self._get_branch_sha(client, fork_full_name, default_branch)
-            except RuntimeError:
-                # Fallback to upstream if fork doesn't have the branch yet
-                base_sha = await self._get_branch_sha(
-                    client, f"{self.repo_owner}/{self.repo_name}", default_branch
-                )
-            await self._create_branch(client, fork_full_name, branch, base_sha)
-
-            # Build PR title/body
-            pr_title = f"Add sound pack: {pack_name} by {author}"
-            pr_body_parts = [f"This PR submits the sound pack '{pack_name}' by {author}."]
-            description = (pack_meta.get("description") or "").strip()
-            if description:
-                pr_body_parts.append(f"\n**Description:** {description}")
-            sounds = pack_meta.get("sounds") or {}
-            if isinstance(sounds, dict):
-                pr_body_parts.append(f"\n**Mapped sounds:** {len(sounds)}")
-            pr_body_parts.append(f"\n\nSubmitted via AccessiWeather {APP_VERSION}.")
-            pr_body = "".join(pr_body_parts)
-
-            # Upload files one-by-one with progress mapping 20-90%
-            await report(40.0, "Preparing files for upload...")
-            files: list[Path] = []
-            for root, _dirs, filenames in os.walk(pack_path):
-                for name in filenames:
-                    files.append(Path(root) / name)
-            total = len(files)
-            if total == 0:
-                raise RuntimeError("No files found in the sound pack directory.")
-
-            for idx, file_path in enumerate(files, start=1):
-                if cancel_event.is_set():
-                    raise asyncio.CancelledError("Operation cancelled by user")
-                rel = file_path.relative_to(pack_path).as_posix()
-                repo_path = f"{dest_prefix}/{rel}"
-                content = await asyncio.to_thread(file_path.read_bytes)
-
-                # Check file size limit (GitHub Contents API rejects files >100MB)
-                if len(content) > 100 * 1024 * 1024:  # 100MB
-                    raise RuntimeError(
-                        f"File {rel} is too large ({len(content)} bytes). GitHub Contents API has a 100MB limit."
-                    )
-
-                commit_msg = f"{pr_title} - add {rel}"
-                await self._upload_file(
-                    client,
-                    fork_full_name,
-                    repo_path,
-                    content,
-                    commit_msg,
-                    branch,
-                )
-                pct = 40.0 + (idx / total) * 50.0
-                await report(pct, f"Uploaded {rel}")
-                await asyncio.sleep(0)
-
-            # Create PR 90-100%
-            await report(90.0, "Creating pull request...")
-            head = f"{me}:{branch}"
-            pr_url = await self._create_pull_request(
-                client,
-                f"{self.repo_owner}/{self.repo_name}",
-                pr_title,
-                pr_body,
-                head,
-                default_branch,
-                label="soundpack",
-            )
-
-            await report(100.0, "Submission complete.")
-            return pr_url
-
-    def _get_auth_client(self, token: str) -> httpx.AsyncClient:
-        headers = {
-            "Authorization": f"Bearer {token}",
+    def _get_auth_client_with_headers(self, headers: dict) -> httpx.AsyncClient:
+        """Create an authenticated HTTP client with the provided headers.
+        
+        Args:
+            headers: Dictionary of HTTP headers to include in requests
+            
+        Returns:
+            Configured httpx.AsyncClient for GitHub API requests
+        """
+        default_headers = {
             "Accept": "application/vnd.github+json",
             "User-Agent": self.user_agent,
             "X-GitHub-Api-Version": "2022-11-28",
         }
+        # Merge provided headers with defaults, allowing overrides
+        final_headers = {**default_headers, **headers}
+        
         timeout = httpx.Timeout(30.0)
         return httpx.AsyncClient(
-            base_url="https://api.github.com/", headers=headers, timeout=timeout
+            base_url="https://api.github.com/", headers=final_headers, timeout=timeout
         )
+
+    def _get_auth_client_for_installation(self, installation_token: str) -> httpx.AsyncClient:
+        """Create an authenticated HTTP client for GitHub App installation.
+        
+        Args:
+            installation_token: GitHub App installation access token
+            
+        Returns:
+            Configured httpx.AsyncClient for GitHub API requests with App authentication
+        """
+        headers = {
+            "Authorization": f"Bearer {installation_token}",
+        }
+        return self._get_auth_client_with_headers(headers)
 
     def _raise_if_cancelled(self, cancel_event: asyncio.Event | None) -> None:
         """Check cancellation and raise if cancelled."""
@@ -264,35 +171,6 @@ class PackSubmissionService:
         return await self._github_request(
             client, "GET", f"/repos/{self.repo_owner}/{self.repo_name}", cancel_event=cancel_event
         )
-
-    async def _validate_github_token(self, client: httpx.AsyncClient) -> dict:
-        """Validate GitHub token and return user information.
-
-        Args:
-            client: Authenticated HTTP client
-
-        Returns:
-            User information dictionary from GitHub API
-
-        Raises:
-            RuntimeError: If token is invalid or user info cannot be retrieved
-
-        """
-        try:
-            user_info = await self._github_request(client, "GET", "/user")
-            if not user_info.get("login"):
-                raise RuntimeError("Unable to determine authenticated user login")
-            return user_info
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code == 401:
-                raise RuntimeError(
-                    "Invalid GitHub token. Please check your token configuration."
-                ) from e
-            if e.response.status_code == 403:
-                raise RuntimeError(
-                    "GitHub token lacks required permissions or rate limit exceeded."
-                ) from e
-            raise RuntimeError(f"GitHub API error: {e.response.status_code}") from e
 
     async def _get_user_login(
         self, client: httpx.AsyncClient, cancel_event: asyncio.Event | None = None

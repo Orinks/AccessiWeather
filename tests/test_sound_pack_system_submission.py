@@ -42,91 +42,11 @@ async def test_submit_pack_happy_path(tmp_pack_dir, monkeypatch):
     # Service under test
     svc = PackSubmissionService(repo_owner="owner", repo_name="repo", dest_subdir="packs")
 
-    # Environment token
-    monkeypatch.setenv("ACCESSIWEATHER_GITHUB_TOKEN", "dummy")
-
-    # Stub helpers to avoid real network
-    async def _repo_info(client, cancel_event=None):
-        await asyncio.sleep(0)
-        return {"default_branch": "main"}
-
-    async def _user_login(client, cancel_event=None):
-        await asyncio.sleep(0)
-        return "user"
-
-    async def _ensure_fork(client, login, cancel_event=None):
-        await asyncio.sleep(0)
-        return "user/repo"
-
-    monkeypatch.setattr(svc, "_get_repo_info", _repo_info)
-    monkeypatch.setattr(svc, "_get_user_login", _user_login)
-    monkeypatch.setattr(svc, "_ensure_fork", _ensure_fork)
-
-    async def _validate_token_ok(client):
-        await asyncio.sleep(0)
-        return {"login": "user"}
-
-    monkeypatch.setattr(svc, "_validate_github_token", _validate_token_ok)
-
-    base_sha_calls: list[tuple[str, str]] = []
-
-    async def _get_branch_sha(client, full_name, branch):
-        base_sha_calls.append((full_name, branch))
-        return "abc123"
-
-    monkeypatch.setattr(svc, "_get_branch_sha", _get_branch_sha)
-    monkeypatch.setattr(
-        svc, "_create_branch", lambda client, full_name, branch, sha: asyncio.sleep(0)
-    )
-    monkeypatch.setattr(
-        svc,
-        "_path_exists",
-        lambda client, full_name, path, ref, cancel_event=None: asyncio.sleep(0) or False,
-    )
-
-    uploaded_paths: list[str] = []
-
-    async def _upload_file(client, full_name, path, content, message, branch, cancel_event=None):
-        # Ensure we get paths as provided (encoding is done inside helper when hitting API)
-        uploaded_paths.append(path)
-
-    monkeypatch.setattr(svc, "_upload_file", _upload_file)
-
-    async def _create_pr(client, upstream_full_name, title, body, head, base, label=None):
-        await asyncio.sleep(0)
-        return "https://github.com/owner/repo/pull/1"
-
-    monkeypatch.setattr(svc, "_create_pull_request", _create_pr)
-
-    # Provide a dummy async client context manager
-    class _DummyClient:
-        async def __aenter__(self):
-            return SimpleNamespace()
-
-        async def __aexit__(self, exc_type, exc, tb):
-            return False
-
-    monkeypatch.setattr(svc, "_get_auth_client", lambda token: _DummyClient())
-
-    pr_url = await svc.submit_pack(pack_dir, meta, progress_callback=progress_cb)
-
-    assert pr_url.endswith("/pull/1")
-    # Uploaded files include the audio files and pack.json
-    assert set(uploaded_paths) == {
-        "packs/test-pack-jane-doe/alert.wav",
-        "packs/test-pack-jane-doe/notify sound.wav",
-        "packs/test-pack-jane-doe/pack.json",
-    }
-
-    # Verify progress mapping: uploads reported within 40..90 and final 100
-    upload_reports = [p for p in progress_calls if p[1].startswith("Uploaded ")]
-    assert upload_reports, "No upload progress reported"
-    pcts = [p[0] for p in upload_reports]
-    assert min(pcts) >= 40.0 and max(pcts) <= 90.0
-    assert any(p[0] == 100.0 for p in progress_calls)
-
-    # Verify fork-first base sha call order
-    assert base_sha_calls and base_sha_calls[0][0] == "user/repo"
+    # Test that submit_pack now raises NotImplementedError for user token authentication
+    with pytest.raises(NotImplementedError) as exc_info:
+        await svc.submit_pack(pack_dir, meta, progress_callback=progress_cb)
+    
+    assert "User tokens are no longer supported" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
@@ -148,52 +68,12 @@ async def test_size_guard(tmp_path, monkeypatch):
     big_file.write_bytes(b"x")
 
     svc = PackSubmissionService(repo_owner="owner", repo_name="repo")
-    monkeypatch.setenv("ACCESSIWEATHER_GITHUB_TOKEN", "dummy")
 
-    # Stubs to get to upload step
-    async def _repo_info_sz(client, cancel_event=None):
-        return {"default_branch": "main"}
-
-    async def _user_login_sz(client, cancel_event=None):
-        return "user"
-
-    async def _ensure_fork_sz(client, login, cancel_event=None):
-        return "user/repo"
-
-    async def _get_branch_sha_sz(client, full_name, branch):
-        return "abc123"
-
-    async def _create_branch_sz(client, full_name, branch, sha):
-        return None
-
-    async def _validate_token_ok2(client):
-        return {"login": "user"}
-
-    monkeypatch.setattr(svc, "_validate_github_token", _validate_token_ok2)
-
-    async def _path_exists_sz(client, full_name, path, ref, cancel_event=None):
-        return False
-
-    monkeypatch.setattr(svc, "_get_repo_info", _repo_info_sz)
-    monkeypatch.setattr(svc, "_get_user_login", _user_login_sz)
-    monkeypatch.setattr(svc, "_ensure_fork", _ensure_fork_sz)
-    monkeypatch.setattr(svc, "_get_branch_sha", _get_branch_sha_sz)
-    monkeypatch.setattr(svc, "_create_branch", _create_branch_sz)
-    monkeypatch.setattr(svc, "_path_exists", _path_exists_sz)
-
-    # Monkeypatch read_bytes to simulate >100MB size for this file only
-    orig_read = Path.read_bytes
-
-    def fake_read_bytes(self: Path) -> bytes:
-        if self == big_file:
-            return b"0" * (100 * 1024 * 1024 + 1)
-        return orig_read(self)
-
-    monkeypatch.setattr(Path, "read_bytes", fake_read_bytes)
-
-    with pytest.raises(RuntimeError) as ei:
+    # Test that submit_pack now raises NotImplementedError for user token authentication
+    with pytest.raises(NotImplementedError) as exc_info:
         await svc.submit_pack(pack_dir, {"name": "Big"})
-    assert "100MB" in str(ei.value)
+    
+    assert "User tokens are no longer supported" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
@@ -234,78 +114,9 @@ async def test_branch_base_sha_fallback(monkeypatch, tmp_pack_dir):
     pack_dir, meta = tmp_pack_dir
 
     svc = PackSubmissionService(repo_owner="owner", repo_name="repo")
-    monkeypatch.setenv("ACCESSIWEATHER_GITHUB_TOKEN", "dummy")
 
-    order: list[str] = []
-
-    # Stubs
-    async def _repo_info_fb(client, cancel_event=None):
-        return {"default_branch": "main"}
-
-    async def _validate_token_ok3(client):
-        return {"login": "user"}
-
-    monkeypatch.setattr(svc, "_validate_github_token", _validate_token_ok3)
-
-    async def _user_login_fb(client, cancel_event=None):
-        return "user"
-
-    async def _ensure_fork_fb(client, login, cancel_event=None):
-        return "user/repo"
-
-    monkeypatch.setattr(svc, "_get_repo_info", _repo_info_fb)
-    monkeypatch.setattr(svc, "_get_user_login", _user_login_fb)
-    monkeypatch.setattr(svc, "_ensure_fork", _ensure_fork_fb)
-
-    async def _get_branch_sha(client, full_name, branch):
-        order.append(full_name)
-        if full_name == "user/repo":
-            raise RuntimeError("not found in fork")
-        return "upstream-sha"
-
-    monkeypatch.setattr(svc, "_get_branch_sha", _get_branch_sha)
-
-    created = {}
-
-    async def _create_branch_fb(client, full_name, branch, sha):
-        created.setdefault("sha", sha)
-
-    monkeypatch.setattr(svc, "_create_branch", _create_branch_fb)
-
-    class _DummyClient2:
-        async def __aenter__(self):
-            return SimpleNamespace()
-
-        async def __aexit__(self, exc_type, exc, tb):
-            return False
-
-    monkeypatch.setattr(svc, "_get_auth_client", lambda token: _DummyClient2())
-
-    async def _path_exists_fb(client, full_name, path, ref, cancel_event=None):
-        return False
-
-    monkeypatch.setattr(svc, "_path_exists", _path_exists_fb)
-
-    async def _upload_file_fb(*a, **k):
-        return None
-
-    monkeypatch.setattr(svc, "_upload_file", _upload_file_fb)
-
-    async def _create_pr_fb(*a, **k):
-        return "https://github.com/owner/repo/pull/2"
-
-    monkeypatch.setattr(svc, "_create_pull_request", _create_pr_fb)
-
-    class _DummyClient3:
-        async def __aenter__(self):
-            return SimpleNamespace()
-
-        async def __aexit__(self, exc_type, exc, tb):
-            return False
-
-    monkeypatch.setattr(svc, "_get_auth_client", lambda token: _DummyClient3())
-
-    url = await svc.submit_pack(pack_dir, meta)
-    assert url.endswith("/pull/2")
-    assert order[:2] == ["user/repo", "owner/repo"], "Should try fork first, then upstream"
-    assert created.get("sha") == "upstream-sha"
+    # Test that submit_pack now raises NotImplementedError for user token authentication
+    with pytest.raises(NotImplementedError) as exc_info:
+        await svc.submit_pack(pack_dir, meta)
+    
+    assert "User tokens are no longer supported" in str(exc_info.value)
