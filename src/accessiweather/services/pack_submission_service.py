@@ -243,34 +243,36 @@ class PackSubmissionService:
         if not repo:
             raise RuntimeError(f"Repository {upstream_full_name} not found or not accessible")
 
-        await report(20.0, "Getting AccessiBot user info...")
-        
-        # Get the authenticated user (AccessiBot)
-        me = await github_client.github_request("GET", "/user", cancel_event=cancel_event)
-        bot_login = me.get("login")
-        if not bot_login:
-            raise RuntimeError("Unable to determine authenticated user login")
-
-        await report(25.0, "Ensuring fork exists...")
+        await report(20.0, "Ensuring fork exists...")
         
         # Ensure fork exists
-        fork_full_name = await self._ensure_fork(github_client, bot_login, cancel_event)
+        fork_full_name = await self._ensure_fork(github_client, cancel_event)
+        fork_owner = fork_full_name.split('/')[0]
         
-        await report(35.0, "Preparing pack submission...")
+        await report(25.0, "Preparing pack submission...")
         
         # Derive pack ID and branch name
         pack_id = self._derive_pack_id(pack_path, pack_meta)
         branch_name = self._build_branch_name(pack_id)
         
-        await report(40.0, f"Creating branch '{branch_name}'...")
+        # Check for duplicate pack
+        await report(27.0, "Checking for duplicate pack...")
+        pack_exists = await self._path_exists(
+            github_client, upstream_full_name, f"{self.dest_subdir}/{pack_id}", 
+            ref=self.default_base_branch, cancel_event=cancel_event
+        )
+        if pack_exists:
+            raise RuntimeError(f"Pack '{pack_id}' already exists in the repository. Please choose a different name or author.")
+        
+        await report(35.0, f"Creating branch '{branch_name}'...")
         
         # Get base branch SHA
-        base_sha = await self._get_branch_sha(github_client, upstream_full_name, self.default_base_branch)
+        base_sha = await self._get_branch_sha(github_client, upstream_full_name, self.default_base_branch, cancel_event)
         
         # Create new branch
-        await self._create_branch(github_client, fork_full_name, branch_name, base_sha)
+        await self._create_branch(github_client, fork_full_name, branch_name, base_sha, cancel_event)
         
-        await report(50.0, "Uploading pack files...")
+        await report(45.0, "Uploading pack files...")
         
         # Upload pack files
         await self._upload_pack_files(github_client, fork_full_name, pack_path, pack_id, branch_name, cancel_event, report)
@@ -279,7 +281,7 @@ class PackSubmissionService:
         
         # Create pull request
         pr_title, pr_body = self._build_pr_content(pack_meta, pack_id, is_anonymous)
-        head = f"{bot_login}:{branch_name}"
+        head = f"{fork_owner}:{branch_name}"
         
         pr_url = await self._create_pull_request(
             github_client,
@@ -289,6 +291,7 @@ class PackSubmissionService:
             head,
             self.default_base_branch,
             label="community-submission",
+            cancel_event=cancel_event,
         )
         
         await report(100.0, f"Pull request created: {pr_url}")
@@ -300,8 +303,31 @@ class PackSubmissionService:
             raise asyncio.CancelledError("Operation cancelled by user")
 
     async def _ensure_fork(
-        self, github_client: GitHubAppClient, login: str, cancel_event: asyncio.Event | None = None
+        self, github_client: GitHubAppClient, cancel_event: asyncio.Event | None = None
     ) -> str:
+        """Ensure fork exists and return its full name.
+        
+        Since we can't easily determine the bot login with installation tokens,
+        we'll use a different approach: try to get the installation info first.
+        """
+        # Get installation information to determine the account that owns the fork
+        # Use JWT token for this call since it's an app endpoint
+        jwt_token = github_client._generate_jwt()
+        async with github_client._get_app_client(jwt_token) as client:
+            resp = await client.get(f"/app/installations/{github_client.installation_id}")
+            if resp.status_code != 200:
+                try:
+                    detail = resp.json()
+                except Exception:
+                    detail = {"message": resp.text}
+                raise RuntimeError(f"Failed to get installation info (HTTP {resp.status_code}): {detail}")
+            installation = resp.json()
+        
+        if not installation or not installation.get("account", {}).get("login"):
+            raise RuntimeError("Unable to determine installation account login")
+        
+        login = installation["account"]["login"]
+        
         # Try to get fork; if missing, create
         fork_name = f"{login}/{self.repo_name}"
         repo = await github_client.github_request(
@@ -330,9 +356,9 @@ class PackSubmissionService:
                 return repo["full_name"]
         raise RuntimeError("Timed out waiting for fork to become available")
 
-    async def _get_branch_sha(self, github_client: GitHubAppClient, full_name: str, branch: str) -> str:
+    async def _get_branch_sha(self, github_client: GitHubAppClient, full_name: str, branch: str, cancel_event: asyncio.Event | None = None) -> str:
         ref = await github_client.github_request(
-            "GET", f"/repos/{full_name}/git/ref/heads/{branch}", expected=(200,)
+            "GET", f"/repos/{full_name}/git/ref/heads/{branch}", expected=(200,), cancel_event=cancel_event
         )
         obj = ref.get("object") or {}
         sha = obj.get("sha")
@@ -341,13 +367,14 @@ class PackSubmissionService:
         return sha
 
     async def _create_branch(
-        self, github_client: GitHubAppClient, full_name: str, branch: str, base_sha: str
+        self, github_client: GitHubAppClient, full_name: str, branch: str, base_sha: str, cancel_event: asyncio.Event | None = None
     ) -> None:
         await github_client.github_request(
             "POST",
             f"/repos/{full_name}/git/refs",
             json={"ref": f"refs/heads/{branch}", "sha": base_sha},
             expected=(201,),
+            cancel_event=cancel_event,
         )
 
     async def _upload_file(
@@ -358,6 +385,7 @@ class PackSubmissionService:
         content: bytes,
         message: str,
         branch: str,
+        cancel_event: asyncio.Event | None = None,
     ) -> None:
         import urllib.parse
 
@@ -368,6 +396,7 @@ class PackSubmissionService:
             f"/repos/{full_name}/contents/{encoded_path}",
             json={"message": message, "content": b64, "branch": branch},
             expected=(201, 200),
+            cancel_event=cancel_event,
         )
 
     async def _create_pull_request(
@@ -379,12 +408,14 @@ class PackSubmissionService:
         head: str,
         base: str,
         label: str | None = None,
+        cancel_event: asyncio.Event | None = None,
     ) -> str:
         pr = await github_client.github_request(
             "POST",
             f"/repos/{upstream_full_name}/pulls",
             json={"title": title, "body": body, "head": head, "base": base},
             expected=(201,),
+            cancel_event=cancel_event,
         )
         # Optionally add label
         if label:
@@ -396,6 +427,7 @@ class PackSubmissionService:
                     f"/repos/{upstream_full_name}/issues/{pr['number']}/labels",
                     json={"labels": [label]},
                     expected=(200,),
+                    cancel_event=cancel_event,
                 )
         return pr.get("html_url") or ""
 
@@ -441,8 +473,8 @@ class PackSubmissionService:
         for i, file_path in enumerate(pack_files):
             self._raise_if_cancelled(cancel_event)
             
-            # Calculate progress (50% to 75% range for file uploads)
-            progress = 50 + (25 * i / total_files)
+            # Calculate progress (45% to 75% range for file uploads)
+            progress = 45 + (30 * i / total_files)
             await report(progress, f"Uploading {file_path.name}...")
             
             # Read file content
@@ -460,7 +492,7 @@ class PackSubmissionService:
             # Upload file
             commit_message = f"Add {file_path.name} for {pack_id} pack"
             await self._upload_file(
-                github_client, fork_full_name, dest_path, content, commit_message, branch_name
+                github_client, fork_full_name, dest_path, content, commit_message, branch_name, cancel_event
             )
 
     def _build_pr_content(self, pack_meta: dict, pack_id: str, is_anonymous: bool = False) -> tuple[str, str]:
