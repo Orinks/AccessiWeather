@@ -3,13 +3,10 @@ from __future__ import annotations
 import asyncio
 import base64
 import logging
-import os
 import re
 from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING
-
-import httpx
 
 if TYPE_CHECKING:
     from accessiweather.config import ConfigManager
@@ -35,7 +32,7 @@ class PackSubmissionService:
         dest_subdir: str = "packs",
         user_agent: str | None = None,
         default_base_branch: str = "main",
-        config_manager: "ConfigManager" | None = None,
+        config_manager: ConfigManager | None = None,
     ) -> None:
         """Initialize the submission service.
 
@@ -79,6 +76,7 @@ class PackSubmissionService:
         Raises:
             RuntimeError: If GitHub App configuration is invalid or API calls fail
             asyncio.CancelledError: If operation is cancelled
+
         """
         if cancel_event is None:
             cancel_event = asyncio.Event()
@@ -101,10 +99,10 @@ class PackSubmissionService:
 
         # Verify GitHub App configuration
         await report(7.0, "Verifying GitHub App authentication...")
-        
+
         if not self.config_manager:
             raise RuntimeError("No configuration manager provided for GitHub App authentication")
-        
+
         is_valid, message = self.config_manager.validate_github_app_config()
         if not is_valid:
             raise RuntimeError(f"GitHub App configuration invalid: {message}")
@@ -121,10 +119,11 @@ class PackSubmissionService:
         )
 
         await report(10.0, "Validating sound pack...")
-        
+
         # Validate pack
-        if not validate_sound_pack(pack_path):
-            raise RuntimeError(f"Sound pack validation failed for {pack_path}")
+        ok, msg = validate_sound_pack(pack_path)
+        if not ok:
+            raise RuntimeError(f"Sound pack validation failed for {pack_path}: {msg}")
 
         # Rest of implementation follows existing pattern with GitHub App client
         return await self._submit_pack_with_github_client(
@@ -160,6 +159,7 @@ class PackSubmissionService:
         Raises:
             RuntimeError: If GitHub App configuration is invalid or API calls fail
             asyncio.CancelledError: If operation is cancelled
+
         """
         if cancel_event is None:
             cancel_event = asyncio.Event()
@@ -182,10 +182,10 @@ class PackSubmissionService:
 
         # Verify GitHub App configuration
         await report(7.0, "Verifying GitHub App authentication...")
-        
+
         if not self.config_manager:
             raise RuntimeError("No configuration manager provided for GitHub App authentication")
-        
+
         is_valid, message = self.config_manager.validate_github_app_config()
         if not is_valid:
             raise RuntimeError(f"GitHub App configuration invalid: {message}")
@@ -202,10 +202,11 @@ class PackSubmissionService:
         )
 
         await report(10.0, "Validating sound pack...")
-        
+
         # Validate pack
-        if not validate_sound_pack(pack_path):
-            raise RuntimeError(f"Sound pack validation failed for {pack_path}")
+        ok, msg = validate_sound_pack(pack_path)
+        if not ok:
+            raise RuntimeError(f"Sound pack validation failed for {pack_path}: {msg}")
 
         # Create enhanced metadata with submitter attribution
         enhanced_meta = pack_meta.copy()
@@ -244,45 +245,45 @@ class PackSubmissionService:
             raise RuntimeError(f"Repository {upstream_full_name} not found or not accessible")
 
         await report(20.0, "Ensuring fork exists...")
-        
+
         # Ensure fork exists
         fork_full_name = await self._ensure_fork(github_client, cancel_event)
         fork_owner = fork_full_name.split('/')[0]
-        
+
         await report(25.0, "Preparing pack submission...")
-        
+
         # Derive pack ID and branch name
         pack_id = self._derive_pack_id(pack_path, pack_meta)
         branch_name = self._build_branch_name(pack_id)
-        
+
         # Check for duplicate pack
         await report(27.0, "Checking for duplicate pack...")
         pack_exists = await self._path_exists(
-            github_client, upstream_full_name, f"{self.dest_subdir}/{pack_id}", 
+            github_client, upstream_full_name, f"{self.dest_subdir}/{pack_id}",
             ref=self.default_base_branch, cancel_event=cancel_event
         )
         if pack_exists:
             raise RuntimeError(f"Pack '{pack_id}' already exists in the repository. Please choose a different name or author.")
-        
+
         await report(35.0, f"Creating branch '{branch_name}'...")
-        
+
         # Get base branch SHA
         base_sha = await self._get_branch_sha(github_client, upstream_full_name, self.default_base_branch, cancel_event)
-        
+
         # Create new branch
         await self._create_branch(github_client, fork_full_name, branch_name, base_sha, cancel_event)
-        
+
         await report(45.0, "Uploading pack files...")
-        
+
         # Upload pack files
         await self._upload_pack_files(github_client, fork_full_name, pack_path, pack_id, branch_name, cancel_event, report)
-        
+
         await report(80.0, "Creating pull request...")
-        
+
         # Create pull request
         pr_title, pr_body = self._build_pr_content(pack_meta, pack_id, is_anonymous)
         head = f"{fork_owner}:{branch_name}"
-        
+
         pr_url = await self._create_pull_request(
             github_client,
             upstream_full_name,
@@ -293,7 +294,7 @@ class PackSubmissionService:
             label="community-submission",
             cancel_event=cancel_event,
         )
-        
+
         await report(100.0, f"Pull request created: {pr_url}")
         return pr_url
 
@@ -322,12 +323,12 @@ class PackSubmissionService:
                     detail = {"message": resp.text}
                 raise RuntimeError(f"Failed to get installation info (HTTP {resp.status_code}): {detail}")
             installation = resp.json()
-        
+
         if not installation or not installation.get("account", {}).get("login"):
             raise RuntimeError("Unable to determine installation account login")
-        
+
         login = installation["account"]["login"]
-        
+
         # Try to get fork; if missing, create
         fork_name = f"{login}/{self.repo_name}"
         repo = await github_client.github_request(
@@ -465,30 +466,30 @@ class PackSubmissionService:
         # Get all files in the pack directory
         pack_files = list(pack_path.rglob("*"))
         pack_files = [f for f in pack_files if f.is_file()]
-        
+
         if not pack_files:
             raise RuntimeError(f"No files found in pack directory: {pack_path}")
-        
+
         total_files = len(pack_files)
         for i, file_path in enumerate(pack_files):
             self._raise_if_cancelled(cancel_event)
-            
+
             # Calculate progress (45% to 75% range for file uploads)
             progress = 45 + (30 * i / total_files)
             await report(progress, f"Uploading {file_path.name}...")
-            
+
             # Read file content
             try:
                 content = file_path.read_bytes()
             except Exception as e:
                 raise RuntimeError(f"Failed to read file {file_path}: {e}")
-            
+
             # Calculate relative path within pack
             rel_path = file_path.relative_to(pack_path)
-            
+
             # Build destination path in repository
             dest_path = f"{self.dest_subdir}/{pack_id}/{rel_path.as_posix()}"
-            
+
             # Upload file
             commit_message = f"Add {file_path.name} for {pack_id} pack"
             await self._upload_file(
@@ -500,13 +501,13 @@ class PackSubmissionService:
         pack_name = pack_meta.get("name", pack_id)
         pack_author = pack_meta.get("author", "Unknown")
         pack_description = pack_meta.get("description", "No description provided")
-        
+
         # Build title
         if is_anonymous:
             title = f"Add community sound pack: {pack_name}"
         else:
             title = f"Add sound pack: {pack_name} by {pack_author}"
-        
+
         # Build body
         body_lines = [
             f"## Sound Pack Submission: {pack_name}",
@@ -516,7 +517,7 @@ class PackSubmissionService:
             f"**Description:** {pack_description}",
             "",
         ]
-        
+
         # Add submitter attribution for anonymous submissions
         if is_anonymous and "_submitter" in pack_meta:
             submitter = pack_meta["_submitter"]
@@ -527,7 +528,7 @@ class PackSubmissionService:
                 f"**Submission Type:** Anonymous submission via AccessiBot",
                 "",
             ])
-        
+
         # Add pack details
         sounds = pack_meta.get("sounds", {})
         if sounds:
@@ -538,7 +539,7 @@ class PackSubmissionService:
             for sound_key, filename in sounds.items():
                 body_lines.append(f"- **{sound_key}:** {filename}")
             body_lines.append("")
-        
+
         body_lines.extend([
             "## Submission Details",
             "- This pack has been validated using AccessiWeather's sound pack validation system",
@@ -548,7 +549,7 @@ class PackSubmissionService:
             "---",
             "*This pull request was created automatically by AccessiBot on behalf of the community.*"
         ])
-        
+
         return title, "\n".join(body_lines)
 
     # Internal helpers
