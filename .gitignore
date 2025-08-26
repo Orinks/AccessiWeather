@@ -101,6 +101,10 @@ secrets.yaml
 AccessiBotApp.txt
 AccessiBotApp Configuration.txt
 
+# GitHub App environment setup scripts (contain secrets)
+set_github_env.bat
+set_github_env.sh
+
 # API-related files
 *_swagger.json
 *_openapi.json

@@ -349,10 +349,30 @@ class AppSettings:
             "alert_ignored_categories": self.alert_ignored_categories,
         }
 
+    def _load_github_app_from_env(self) -> None:
+        """Load GitHub App credentials from environment variables if not already set."""
+        import os
+
+        # Only load from environment if the current values are empty
+        if not self.github_app_id:
+            env_app_id = os.getenv("ACCESSIWEATHER_GITHUB_APP_ID")
+            if env_app_id:
+                self.github_app_id = env_app_id.strip()
+
+        if not self.github_app_private_key:
+            env_private_key = os.getenv("ACCESSIWEATHER_GITHUB_APP_PRIVATE_KEY")
+            if env_private_key:
+                self.github_app_private_key = env_private_key.strip()
+
+        if not self.github_app_installation_id:
+            env_installation_id = os.getenv("ACCESSIWEATHER_GITHUB_APP_INSTALLATION_ID")
+            if env_installation_id:
+                self.github_app_installation_id = env_installation_id.strip()
+
     @classmethod
     def from_dict(cls, data: dict) -> "AppSettings":
         """Create from dictionary."""
-        return cls(
+        settings = cls(
             temperature_unit=data.get("temperature_unit", "both"),
             update_interval_minutes=data.get("update_interval_minutes", 10),
             show_detailed_forecast=data.get("show_detailed_forecast", True),
@@ -382,6 +402,10 @@ class AppSettings:
             alert_max_notifications_per_hour=data.get("alert_max_notifications_per_hour", 10),
             alert_ignored_categories=data.get("alert_ignored_categories", []),
         )
+
+        # Load GitHub App credentials from environment variables if not set
+        settings._load_github_app_from_env()
+        return settings
 
     def to_alert_settings(self):
         """Convert to AlertSettings for the alert management system."""
@@ -475,8 +499,11 @@ class AppConfig:
     @classmethod
     def default(cls) -> "AppConfig":
         """Create default configuration."""
+        settings = AppSettings()
+        # Load GitHub App credentials from environment variables
+        settings._load_github_app_from_env()
         return cls(
-            settings=AppSettings(),
+            settings=settings,
             locations=[],
             current_location=None,
         )
