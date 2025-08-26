@@ -291,6 +291,7 @@ class AppSettings:
     github_app_id: str = ""
     github_app_private_key: str = ""
     github_app_installation_id: str = ""
+    github_backend_url: str = ""
 
     # Update system settings
     auto_update_enabled: bool = True
@@ -350,25 +351,9 @@ class AppSettings:
         }
 
     def _load_github_app_from_env(self) -> None:
-        """Load GitHub App credentials from environment variables or build-time embedding if not already set."""
-        from .github_credentials import get_github_app_credentials
-
-        # Only load if the current values are empty
-        if (
-            not self.github_app_id
-            or not self.github_app_private_key
-            or not self.github_app_installation_id
-        ):
-            app_id, private_key, installation_id = get_github_app_credentials()
-
-            if not self.github_app_id and app_id:
-                self.github_app_id = app_id
-
-            if not self.github_app_private_key and private_key:
-                self.github_app_private_key = private_key
-
-            if not self.github_app_installation_id and installation_id:
-                self.github_app_installation_id = installation_id
+        """Load GitHub App credentials from environment variables (deprecated - backend service handles auth)."""
+        # This method is deprecated since we now use a backend service for GitHub App authentication
+        # Keeping for backward compatibility but it does nothing
 
     @classmethod
     def from_dict(cls, data: dict) -> "AppSettings":

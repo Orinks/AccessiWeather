@@ -48,7 +48,7 @@ class ConfigManager:
 
                     # Validate and fix configuration
                     self._validate_and_fix_config()
-                        
+
                     logger.info("Configuration loaded successfully")
             else:
                 logger.info("No config file found, creating default configuration")
@@ -519,9 +519,52 @@ class ConfigManager:
     def has_github_app_config(self) -> bool:
         """Check if all required GitHub App configuration fields are present.
 
+        First checks configuration file credentials, then falls back to
+        environment variables and build-time embedded credentials.
+
         Returns:
-            True if all fields are configured, False otherwise
+            True if all fields are configured from any source, False otherwise
 
         """
+        # First check config file credentials
         app_id, private_key, installation_id = self.get_github_app_config()
-        return bool(app_id and private_key and installation_id)
+        if app_id and private_key and installation_id:
+            return True
+
+        # Backend service handles authentication
+        from . import github_credentials
+
+        return github_credentials.has_github_app_credentials()
+
+    def get_github_backend_url(self) -> str:
+        """Get the GitHub backend service URL.
+
+        Returns:
+            Backend service URL from config, or default URL if not set
+
+        """
+        config = self.get_config()
+        backend_url = config.settings.github_backend_url.strip()
+        if backend_url:
+            return backend_url
+
+        # Default backend URL
+        return "https://soundpack-backend.onrender.com"
+
+    def set_github_backend_url(self, backend_url: str) -> bool:
+        """Set the GitHub backend service URL.
+
+        Args:
+            backend_url: The backend service URL
+
+        Returns:
+            True if successful, False otherwise
+
+        """
+        try:
+            config = self.get_config()
+            config.settings.github_backend_url = backend_url.strip()
+            return self.save_config()
+        except Exception as e:
+            logger.error(f"Failed to set GitHub backend URL: {e}")
+            return False

@@ -37,7 +37,7 @@ class SoundPackManagerDialog:
 
     def __init__(self, app: toga.App, current_pack: str = "default"):
         """Initialize the sound pack manager dialog.
-        
+
         The dialog supports frictionless community submissions without requiring
         user authentication, using GitHub App credentials for all operations
         while providing optional submitter attribution.
@@ -143,10 +143,7 @@ class SoundPackManagerDialog:
                 return
 
             enable_share = False
-            if (
-                self.selected_pack
-                and self.selected_pack != "default"
-            ):
+            if self.selected_pack and self.selected_pack != "default":
                 info = self.sound_packs.get(self.selected_pack) or {}
                 try:
                     meta = self._load_pack_meta(info)
@@ -480,16 +477,14 @@ class SoundPackManagerDialog:
 
     async def _get_submitter_attribution(self) -> tuple[str | None, str | None]:
         """Show a dialog to collect optional submitter attribution information.
-        
+
         Returns:
             Tuple of (submitter_name, submitter_email) or (None, None) if cancelled
 
         """
         # Create attribution dialog
         attribution_win = toga.Window(
-            title="Community Attribution (Optional)",
-            size=(520, 280),
-            resizable=False
+            title="Community Attribution (Optional)", size=(520, 280), resizable=False
         )
 
         main_box = toga.Box(style=Pack(direction=COLUMN, padding=15))
@@ -497,7 +492,7 @@ class SoundPackManagerDialog:
         # Header message
         header_label = toga.Label(
             "Help the community recognize your contribution!",
-            style=Pack(font_size=14, font_weight="bold", margin_bottom=10)
+            style=Pack(font_size=14, font_weight="bold", margin_bottom=10),
         )
         main_box.add(header_label)
 
@@ -505,7 +500,7 @@ class SoundPackManagerDialog:
             "Adding your name and email is completely optional but helps the community "
             "recognize and connect with pack creators. This information will only be "
             "included in the pull request description.",
-            style=Pack(margin_bottom=15, text_align="left")
+            style=Pack(margin_bottom=15, text_align="left"),
         )
         main_box.add(info_label)
 
@@ -513,8 +508,7 @@ class SoundPackManagerDialog:
         name_label = toga.Label("Your name (optional):", style=Pack(margin_bottom=5))
         main_box.add(name_label)
         name_input = toga.TextInput(
-            placeholder="e.g., John Smith",
-            style=Pack(margin_bottom=10, width=400)
+            placeholder="e.g., John Smith", style=Pack(margin_bottom=10, width=400)
         )
         main_box.add(name_input)
 
@@ -522,15 +516,14 @@ class SoundPackManagerDialog:
         email_label = toga.Label("Your email (optional):", style=Pack(margin_bottom=5))
         main_box.add(email_label)
         email_input = toga.TextInput(
-            placeholder="e.g., john@example.com",
-            style=Pack(margin_bottom=15, width=400)
+            placeholder="e.g., john@example.com", style=Pack(margin_bottom=15, width=400)
         )
         main_box.add(email_input)
 
         # Privacy notice
         privacy_label = toga.Label(
             "Privacy: This information is only used for attribution and is not stored or shared beyond the GitHub pull request.",
-            style=Pack(margin_bottom=15, font_style="italic", font_size=11)
+            style=Pack(margin_bottom=15, font_style="italic", font_size=11),
         )
         main_box.add(privacy_label)
 
@@ -561,12 +554,10 @@ class SoundPackManagerDialog:
         submit_btn = toga.Button(
             "Continue with Attribution",
             on_press=_submit_with_attribution,
-            style=Pack(margin_right=10, background_color="#4CAF50", color="#ffffff")
+            style=Pack(margin_right=10, background_color="#4CAF50", color="#ffffff"),
         )
         anonymous_btn = toga.Button(
-            "Submit Anonymously",
-            on_press=_submit_anonymously,
-            style=Pack(margin_right=10)
+            "Submit Anonymously", on_press=_submit_anonymously, style=Pack(margin_right=10)
         )
         cancel_btn = toga.Button("Cancel", on_press=_cancel)
 
@@ -682,15 +673,6 @@ class SoundPackManagerDialog:
                 await self.app.main_window.error_dialog(
                     "Pack Quality Check Failed",
                     f"Please fix the following to ensure pack quality:\n{msg}",
-                )
-                return
-
-            # Preflight check for GitHub App configuration
-            cm = self.submission_service.config_manager
-            if cm and not cm.has_github_app_config():
-                await self.app.main_window.info_dialog(
-                    "Share Unavailable",
-                    "Community submissions are temporarily unavailable. Please try again later.",
                 )
                 return
 
