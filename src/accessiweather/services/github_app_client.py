@@ -165,7 +165,7 @@ class GitHubAppClient:
             await report(30.0, "Requesting installation access token...")
             url = f"/app/installations/{self.installation_id}/access_tokens"
 
-            async with self._get_installation_client(jwt_token) as client:
+            async with self._get_app_client(jwt_token) as client:
                 resp = await client.post(url)
                 if resp.status_code not in (201,):
                     try:
@@ -225,10 +225,21 @@ class GitHubAppClient:
         )
         return f"{signing_input}.{_b64url(signature)}"
 
-    def _get_installation_client(self, token: str) -> httpx.AsyncClient:
-        """Construct an authenticated AsyncClient for GitHub API using the provided token."""
+    def _get_app_client(self, jwt_token: str) -> httpx.AsyncClient:
+        """Construct an authenticated AsyncClient for GitHub App API using JWT token with Bearer scheme."""
         headers = {
-            "Authorization": f"Bearer {token}",
+            "Authorization": f"Bearer {jwt_token}",
+            "Accept": "application/vnd.github+json",
+            "User-Agent": self.user_agent,
+            "X-GitHub-Api-Version": "2022-11-28",
+        }
+        timeout = httpx.Timeout(30.0)
+        return httpx.AsyncClient(base_url=self.api_base_url, headers=headers, timeout=timeout)
+
+    def _get_installation_client(self, installation_token: str) -> httpx.AsyncClient:
+        """Construct an authenticated AsyncClient for GitHub API using installation token with token scheme."""
+        headers = {
+            "Authorization": f"token {installation_token}",
             "Accept": "application/vnd.github+json",
             "User-Agent": self.user_agent,
             "X-GitHub-Api-Version": "2022-11-28",

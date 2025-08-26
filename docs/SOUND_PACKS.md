@@ -213,13 +213,105 @@ play_sample_sound("default")
 
 ## Contributing Sound Packs
 
-If you create high-quality sound packs that you'd like to share:
+AccessiWeather features a completely frictionless community submission process that allows anyone to share custom sound packs without requiring GitHub accounts or complex setup procedures.
 
-1. Ensure all sounds are original or properly licensed
-2. Test thoroughly with the validation system
-3. Include clear attribution in the pack metadata
-4. Consider creating both ZIP and directory versions
-5. Document any special requirements or themes
+### Frictionless Community Sharing
+
+The AccessiWeather sound pack manager includes a revolutionary "Share with Community" feature that removes all barriers to contribution:
+
+#### No Account Required
+- **Zero Setup**: Share packs without creating GitHub accounts or external service registrations
+- **Instant Submission**: Click "Share with Community" and submit immediately
+- **Inclusive Access**: Welcome contributors regardless of technical background
+
+#### Optional Attribution
+- **Community Recognition**: Optionally provide your name and email for attribution in the community repository
+- **Anonymous Option**: Submit completely anonymously with no personal information required
+- **Clear Privacy**: Transparent messaging about how attribution information is used
+
+#### Automated Backend
+- **GitHub App Authentication**: Secure submission process using AccessiBot credentials behind the scenes
+- **Professional Handling**: All submissions processed through proper GitHub workflows
+- **Quality Assurance**: Automatic validation ensures pack completeness and community guidelines
+
+### How Community Sharing Works
+
+#### User Experience
+1. **Create Your Pack**: Design your sound pack with name, author, and mapped sounds
+2. **Quality Check**: Built-in validation ensures your pack meets community standards
+3. **Share Decision**: Click "Share with Community" - no external authentication needed
+4. **Optional Attribution**: Choose to include your name/email for recognition or submit anonymously
+5. **Instant Submission**: Pack automatically submitted to the community repository
+6. **Pull Request**: Your pack becomes a pull request for community review and inclusion
+
+#### Behind the Scenes
+- **AccessiBot Integration**: Secure GitHub App authentication handles all repository operations
+- **Fork Management**: Automatic fork creation and branch management
+- **Proper Attribution**: Submitter information included in pull request descriptions when provided
+- **Community Guidelines**: Automated checks ensure submissions meet quality standards
+
+### Submission Process Details
+
+#### Pack Validation
+Before submission, AccessiWeather validates your pack to ensure:
+- **Complete Metadata**: Pack has name, author, and description
+- **Mapped Sounds**: All sound types have corresponding audio files
+- **File Accessibility**: All referenced files exist and are readable
+- **Community Standards**: Pack meets basic quality requirements
+
+#### Attribution Options
+When sharing, you can choose:
+
+**With Attribution (Recommended)**:
+- Provide your name for community recognition
+- Optional email for maintainer contact
+- Attribution appears in pull request description
+- Encourages community engagement and recognition
+
+**Anonymous Submission**:
+- Submit without any personal information
+- Still contributes to the community
+- Maintains complete privacy
+- Equal treatment in review process
+
+#### Quality Focus
+The submission process emphasizes pack quality rather than technical barriers:
+- **Content Validation**: Focus on sound pack completeness and quality
+- **User-Friendly Errors**: Clear messaging about how to improve pack quality
+- **Community Guidelines**: Emphasis on creating valuable contributions
+
+### Community Repository
+
+#### Submission Workflow
+1. **Automatic Fork**: AccessiBot creates/updates repository fork as needed
+2. **Branch Creation**: Unique branch created for each submission
+3. **File Upload**: All pack files uploaded with proper commit messages
+4. **Pull Request**: Professional pull request created with:
+   - Descriptive title and comprehensive information
+   - Pack contents and metadata details
+   - Submitter attribution (when provided)
+   - Community submission labeling
+
+#### Review Process
+- **Community Review**: Submitted packs reviewed by maintainers and community
+- **Quality Assessment**: Focus on audio quality, completeness, and appropriateness
+- **Feedback Integration**: Collaborative improvement process when needed
+- **Inclusion**: Approved packs become available to all AccessiWeather users
+
+### Encouraging Participation
+
+#### Accessibility Focus
+The frictionless submission process particularly benefits:
+- **Non-Technical Users**: No GitHub knowledge or account creation required
+- **Accessibility Community**: Easy contribution path for assistive technology users
+- **Quick Contributors**: Share packs immediately without setup delays
+- **Privacy-Conscious Users**: Anonymous submission option respects privacy preferences
+
+#### Community Benefits
+- **Diverse Contributions**: Removes barriers that might exclude potential contributors
+- **Higher Participation**: Simplified process encourages more community involvement
+- **Quality Focus**: Attention on content quality rather than technical hurdles
+- **Inclusive Environment**: Welcoming approach that values all contributors
 
 ## Technical Details
 
