@@ -97,6 +97,9 @@ secrets.yaml
 *.env
 .*_env
 
+# AccessiBotApp configuration
+AccessiBotApp.txt
+
 # API-related files
 *_swagger.json
 *_openapi.json
