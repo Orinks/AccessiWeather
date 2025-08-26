@@ -1,19 +1,29 @@
 # GitHub App Setup for AccessiWeather
 
-AccessiWeather uses environment variables to securely load GitHub App credentials for sound pack submission functionality. This approach keeps sensitive credentials out of the source code while making them easily accessible to the application.
+AccessiWeather uses a hybrid approach for GitHub App credentials that provides security during development and seamless user experience in distribution:
 
-## Quick Setup
+- **Development**: Uses environment variables for security
+- **Distribution**: Credentials are automatically embedded during build process
+- **End Users**: No configuration required - credentials are built into the app
+
+## For End Users
+
+**No setup required!** When you download AccessiWeather, the GitHub App credentials are already embedded in the application. Sound pack submission will work automatically.
+
+## For Developers
+
+### Development Setup
 
 1. **Ensure you have the credentials file**:
    - Make sure `AccessiBotApp Configuration.txt` exists in the project root
    - This file contains the GitHub App ID, Installation ID, and Private Key
 
-2. **Run the setup script**:
+2. **Set up environment variables** (for development):
    ```bash
    python setup_github_env.py
    ```
 
-3. **Use the generated script** (for future sessions):
+3. **Use the generated script** (for future development sessions):
    - **Windows**: Run `set_github_env.bat` before starting AccessiWeather
    - **Linux/Mac**: Run `source set_github_env.sh` before starting AccessiWeather
 
@@ -27,13 +37,21 @@ The following environment variables are used:
 
 ## How It Works
 
-1. **Automatic Loading**: When AccessiWeather starts, it automatically checks for these environment variables
-2. **Fallback Behavior**: If environment variables are not set, the app falls back to empty credentials (sound pack submission will be disabled)
-3. **No User Configuration**: Users don't need to manually configure GitHub App settings - it's handled automatically via environment variables
+### For End Users (Distribution)
+1. **Build-Time Embedding**: During the build process, GitHub App credentials are automatically embedded into the application
+2. **No Configuration**: Users download a fully configured app with credentials already included
+3. **Seamless Experience**: Sound pack submission works immediately without any setup
+
+### For Developers
+1. **Environment Variables**: Development uses environment variables for security
+2. **Build Hooks**: Briefcase automatically embeds credentials during packaging
+3. **Automatic Restoration**: Original source files are restored after build to prevent credential leakage
 
 ## Security Features
 
-✅ **Credentials never stored in source code**
+✅ **Credentials never stored in source code** (development)
+✅ **Build-time embedding only** (distribution)
+✅ **Automatic restoration after build** (prevents source code leakage)
 ✅ **Environment setup scripts are gitignored**
 ✅ **Credentials file is gitignored**
 ✅ **Automatic fallback if credentials unavailable**
@@ -50,20 +68,25 @@ python -m accessiweather
 ```
 
 ### For Production/Distribution
-Set the environment variables in your deployment environment:
+
+**Automatic Build Process**: Credentials are automatically embedded during Briefcase packaging:
 
 ```bash
-# Linux/Mac
-export ACCESSIWEATHER_GITHUB_APP_ID="1842273"
-export ACCESSIWEATHER_GITHUB_APP_INSTALLATION_ID="82746401"
-export ACCESSIWEATHER_GITHUB_APP_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----
-...
------END RSA PRIVATE KEY-----"
+# Build with automatic credential embedding
+briefcase build windows    # Credentials embedded automatically
+briefcase package windows  # Create installer with embedded credentials
+```
 
-# Windows
-set "ACCESSIWEATHER_GITHUB_APP_ID=1842273"
-set "ACCESSIWEATHER_GITHUB_APP_INSTALLATION_ID=82746401"
-set "ACCESSIWEATHER_GITHUB_APP_PRIVATE_KEY=-----BEGIN RSA PRIVATE KEY-----..."
+**Manual Embedding** (if needed):
+```bash
+# Embed credentials manually
+python scripts/embed_credentials.py
+
+# Build your app
+briefcase build windows
+
+# Restore original files
+python scripts/embed_credentials.py restore
 ```
 
 ## Troubleshooting

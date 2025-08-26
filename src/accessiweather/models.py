@@ -350,24 +350,25 @@ class AppSettings:
         }
 
     def _load_github_app_from_env(self) -> None:
-        """Load GitHub App credentials from environment variables if not already set."""
-        import os
+        """Load GitHub App credentials from environment variables or build-time embedding if not already set."""
+        from .github_credentials import get_github_app_credentials
 
-        # Only load from environment if the current values are empty
-        if not self.github_app_id:
-            env_app_id = os.getenv("ACCESSIWEATHER_GITHUB_APP_ID")
-            if env_app_id:
-                self.github_app_id = env_app_id.strip()
+        # Only load if the current values are empty
+        if (
+            not self.github_app_id
+            or not self.github_app_private_key
+            or not self.github_app_installation_id
+        ):
+            app_id, private_key, installation_id = get_github_app_credentials()
 
-        if not self.github_app_private_key:
-            env_private_key = os.getenv("ACCESSIWEATHER_GITHUB_APP_PRIVATE_KEY")
-            if env_private_key:
-                self.github_app_private_key = env_private_key.strip()
+            if not self.github_app_id and app_id:
+                self.github_app_id = app_id
 
-        if not self.github_app_installation_id:
-            env_installation_id = os.getenv("ACCESSIWEATHER_GITHUB_APP_INSTALLATION_ID")
-            if env_installation_id:
-                self.github_app_installation_id = env_installation_id.strip()
+            if not self.github_app_private_key and private_key:
+                self.github_app_private_key = private_key
+
+            if not self.github_app_installation_id and installation_id:
+                self.github_app_installation_id = installation_id
 
     @classmethod
     def from_dict(cls, data: dict) -> "AppSettings":

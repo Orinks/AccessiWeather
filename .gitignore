@@ -105,6 +105,9 @@ AccessiBotApp Configuration.txt
 set_github_env.bat
 set_github_env.sh
 
+# Build-time credential embedding backups
+src/accessiweather/github_credentials.py.backup
+
 # API-related files
 *_swagger.json
 *_openapi.json
