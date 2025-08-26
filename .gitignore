@@ -99,6 +99,7 @@ secrets.yaml
 
 # AccessiBotApp configuration
 AccessiBotApp.txt
+AccessiBotApp Configuration.txt
 
 # API-related files
 *_swagger.json
