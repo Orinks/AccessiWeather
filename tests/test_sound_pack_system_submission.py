@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from accessiweather.services.pack_submission_service import PackSubmissionService
+from accessiweather.version import __version__ as APP_VERSION
 
 
 @pytest.fixture()
@@ -47,6 +48,21 @@ def mock_github_client():
     
     # Setup default responses for common API calls
     mock_client.github_request.side_effect = _github_request_side_effect
+    
+    # Mock private methods used by _ensure_fork
+    mock_client._generate_jwt = MagicMock(return_value="mock-jwt-token")
+    
+    # Mock _get_app_client to return an async context manager
+    mock_app_client = AsyncMock()
+    mock_app_client.get = AsyncMock(return_value=AsyncMock(
+        status_code=200,
+        json=MagicMock(return_value={"account": {"login": "accessibot"}})
+    ))
+    
+    async def mock_get_app_client(jwt_token):
+        return mock_app_client
+    
+    mock_client._get_app_client = mock_get_app_client
     
     return mock_client
 
@@ -219,7 +235,7 @@ async def test_github_app_authentication_flow(tmp_pack_dir, mock_config_manager,
             app_id="123456",
             private_key_pem="-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
             installation_id="789012",
-            user_agent="AccessiWeather/test"
+            user_agent=f"AccessiWeather/{APP_VERSION}"
         )
         
         # Verify API calls were made

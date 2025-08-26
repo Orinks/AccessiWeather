@@ -153,6 +153,148 @@ The sound pack manager provides a GUI for:
 2. Use the sound pack manager or installer to import the ZIP
 3. The system will validate and install the pack automatically
 
+## Community Submission System
+
+AccessiWeather features a **frictionless community submission system** that allows users to share their custom sound packs with the community without requiring any GitHub account setup or authentication barriers.
+
+### Frictionless Submission Process
+
+The community submission system is designed to be completely **barrier-free**:
+
+- **No GitHub Account Required**: Users can submit packs without creating external accounts
+- **No Authentication Setup**: No tokens, passwords, or OAuth flows required
+- **One-Click Sharing**: Simple "Share with Community" button in the sound pack manager
+- **Optional Attribution**: Users can provide their name/email for recognition or submit completely anonymously
+
+### How Community Submission Works
+
+#### User Experience
+
+1. **Create Your Pack**: Build a custom sound pack using any of the creation methods above
+2. **Open Sound Pack Manager**: Access the pack manager from the main settings
+3. **Select Your Pack**: Choose the custom pack you want to share
+4. **Click "Share with Community"**: No setup or authentication required
+5. **Optional Attribution**: Dialog appears asking for optional name/email for community recognition
+6. **Submit**: Pack is automatically submitted to the community repository
+
+#### Behind the Scenes - GitHub App Authentication
+
+The frictionless experience is powered by **GitHub App authentication** that handles all technical complexity:
+
+- **AccessiBot Integration**: Uses AccessiBot (GitHub App) credentials for all GitHub operations
+- **Secure Backend Auth**: JWT-based authentication with GitHub's App API
+- **Professional Workflow**: Creates proper pull requests with full attribution and documentation
+- **Automated Processing**: Handles fork creation, branch management, file uploads, and PR creation
+
+### PackSubmissionService
+
+The community submission is handled by the `PackSubmissionService` class, which provides two main methods:
+
+#### Regular Submission (submit_pack)
+```python
+from accessiweather.services.pack_submission_service import PackSubmissionService
+
+service = PackSubmissionService(
+    repo_owner="accessiweather-community",
+    repo_name="soundpacks", 
+    dest_subdir="packs",
+    config_manager=config_manager
+)
+
+# Submit pack with GitHub App authentication
+pr_url = await service.submit_pack(pack_path, pack_metadata)
+```
+
+#### Anonymous Submission (submit_pack_anonymous)
+```python
+# Submit pack anonymously with optional attribution
+pr_url = await service.submit_pack_anonymous(
+    pack_path, 
+    pack_metadata,
+    submitter_name="John Doe",  # Optional
+    submitter_email="john@example.com",  # Optional
+    progress_callback=progress_callback
+)
+```
+
+### GitHubAppClient Integration
+
+The submission service uses `GitHubAppClient` for secure authentication:
+
+```python
+from accessiweather.services.github_app_client import GitHubAppClient
+
+# Create GitHub App client
+client = GitHubAppClient(
+    app_id=app_id,
+    private_key_pem=private_key,
+    installation_id=installation_id,
+    user_agent="AccessiWeather/0.9.4-dev"
+)
+
+# Perform authenticated API requests
+repo_info = await client.github_request("GET", "/repos/accessiweather-community/soundpacks")
+```
+
+#### Authentication Flow
+
+1. **JWT Generation**: Creates signed JWT token using GitHub App private key
+2. **Installation Token**: Exchanges JWT for installation access token via `/app/installations/{id}/access_tokens`
+3. **Resource Access**: Uses installation token for all repository operations
+4. **Proper Auth Schemes**: 
+   - `Authorization: Bearer <jwt>` for GitHub App endpoints
+   - `Authorization: token <token>` for resource endpoints
+
+### Security and Privacy
+
+The community submission system maintains strong security practices:
+
+#### Privacy Protection
+- **Optional Attribution**: Users choose whether to provide identifying information
+- **Clear Privacy Messaging**: Users understand exactly how attribution information is used
+- **Anonymous Submission Support**: Complete anonymity option available
+
+#### Security Features
+- **No User Credentials**: No storage or transmission of user GitHub credentials
+- **Backend Authentication**: All GitHub operations use secure App authentication
+- **Validation**: Comprehensive pack validation before submission
+- **Duplicate Detection**: Prevents submission of existing packs
+
+### Error Handling and User Experience
+
+#### Quality-Focused Validation
+- **Pack Completeness**: Ensures all required sounds and metadata are present
+- **Content Quality**: Validates audio files and pack structure
+- **User-Friendly Messages**: Clear guidance on improving pack quality rather than technical errors
+
+#### Graceful Failure Handling
+- **Connection Issues**: Clear messaging when GitHub is unavailable
+- **Validation Failures**: Specific guidance on fixing pack issues
+- **Cancellation Support**: Users can cancel submission at any point
+
+### Testing
+
+The community submission system includes comprehensive testing:
+
+#### Test Coverage Areas
+- **GitHub App Authentication**: Mock JWT generation and token exchange
+- **Anonymous Submission Flow**: Full workflow testing with attribution metadata
+- **Error Scenarios**: Validation failures, network issues, cancellation
+- **Fork Management**: Installation-based fork creation and management
+- **Duplicate Detection**: Preflight checks for existing packs
+
+#### Running Submission Tests
+```bash
+# Test community submission functionality
+pytest tests/test_sound_pack_system_submission.py
+
+# Test with verbose output
+pytest tests/test_sound_pack_system_submission.py -v
+
+# Test specific scenarios
+pytest tests/test_sound_pack_system_submission.py::test_submit_pack_anonymous_comprehensive
+```
+
 ## Audio File Requirements
 
 - **Format**: WAV files recommended for best compatibility
@@ -179,35 +321,68 @@ The sound pack system includes robust error handling:
 
 ## Testing
 
-The sound pack system includes comprehensive tests:
+The sound pack system includes comprehensive tests covering all functionality:
 
+### Core System Tests
 - **Unit Tests**: Individual component testing
-- **Integration Tests**: End-to-end workflow testing
+- **Integration Tests**: End-to-end workflow testing  
 - **Dialog Tests**: UI component testing with Toga dummy backend
 - **Error Handling Tests**: Validation and fallback testing
 
-Run tests with:
+### Community Submission Tests
+- **GitHub App Authentication**: JWT generation and installation token exchange
+- **Anonymous Submission Flow**: Full workflow with attribution metadata
+- **Error Scenarios**: Validation failures, network issues, and cancellation
+- **Fork Management**: Installation-based repository operations
+- **Duplicate Detection**: Preflight checks for existing community packs
+
+### Running Tests
+
 ```bash
+# Core sound pack system tests
 pytest tests/test_sound_pack_system.py
 pytest tests/test_sound_pack_installer.py
 pytest tests/test_sound_pack_integration.py
+
+# Community submission tests
+pytest tests/test_sound_pack_system_submission.py
+
+# Run all sound pack tests
+pytest tests/test_sound_pack*.py
+
+# Verbose output for debugging
+pytest tests/test_sound_pack_system_submission.py -v
 ```
 
 ## File Locations
 
+### Core Sound Pack System
 - **Sound Packs**: `src/accessiweather/soundpacks/`
 - **Core Module**: `src/accessiweather/notifications/sound_player.py`
 - **Manager Dialog**: `src/accessiweather/dialogs/soundpack_manager_dialog.py`
 - **Installer**: `src/accessiweather/notifications/sound_pack_installer.py`
-- **Tests**: `tests/test_sound_pack_*.py`
+
+### Community Submission System
+- **Submission Service**: `src/accessiweather/services/pack_submission_service.py`
+- **GitHub App Client**: `src/accessiweather/services/github_app_client.py`
+
+### Tests
+- **Core Tests**: `tests/test_sound_pack_*.py`
+- **Submission Tests**: `tests/test_sound_pack_system_submission.py`
 
 ## Dependencies
 
+### Core System Dependencies
 - **playsound**: Audio playback functionality
 - **toga**: GUI framework for dialogs
 - **pathlib**: File system operations
 - **json**: Pack metadata handling
 - **zipfile**: Pack import/export functionality
+
+### Community Submission Dependencies
+- **httpx**: HTTP client for GitHub API requests
+- **cryptography**: JWT signing for GitHub App authentication
+- **asyncio**: Asynchronous operation support
 
 ## Future Enhancements
 
