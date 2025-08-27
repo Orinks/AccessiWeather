@@ -186,7 +186,7 @@ async def test_build_pr_content_anonymous():
     assert "## Submitter Information" in body
     assert "**Submitted by:** John Smith" in body
     assert "**Email:** john@example.com" in body
-    assert "Anonymous submission via AccessiBot" in body
+    assert "Anonymous submission via AccessiBotApp" in body
 
 
 @pytest.mark.asyncio
@@ -443,7 +443,7 @@ async def test_attribution_metadata_handling(tmp_pack_dir):
     assert title == "Add community sound pack: Test Pack"
     assert "Community Contributor" in body
     assert "contributor@example.com" in body
-    assert "Anonymous submission via AccessiBot" in body
+    assert "Anonymous submission via AccessiBotApp" in body
 
     # Test without attribution (regular submission)
     title, body = svc._build_pr_content(meta, "test-pack", is_anonymous=False)

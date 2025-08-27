@@ -43,7 +43,7 @@ async def test_create_pull_request_with_pack_data():
             title="Test PR",
             body="Test body",
             pack_data=pack_data,
-            head_owner="accessibot",
+            head_owner="accessibotapp",
         )
 
         # Verify the request was made with correct parameters
@@ -59,7 +59,7 @@ async def test_create_pull_request_with_pack_data():
         assert json_body["title"] == "Test PR"
         assert json_body["body"] == "Test body"
         assert json_body["pack_data"] == pack_data
-        assert json_body["head_owner"] == "accessibot"
+        assert json_body["head_owner"] == "accessibotapp"
 
         # Check headers
         headers = call_args[1]["headers"]

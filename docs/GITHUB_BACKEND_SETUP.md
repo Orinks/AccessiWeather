@@ -31,7 +31,7 @@ Creates a pull request in the soundpacks repository.
   "branch": "pack-submission-branch-name",
   "title": "Add MyPack sound pack",
   "body": "Pull request description with pack details and submitter attribution",
-  "head_owner": "accessibot",
+  "head_owner": "accessibotapp",
   "pack_data": {
     "name": "MyPack",
     "author": "Pack Author",

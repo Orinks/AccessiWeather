@@ -163,7 +163,7 @@ class PackSubmissionService:
         """Submit a sound pack anonymously with submitter attribution using GitHub App authentication.
 
         This method allows users to submit packs without requiring their own GitHub account,
-        using AccessiBot (GitHub App) credentials for all operations while properly attributing
+        using AccessiBotApp (GitHub App) credentials for all operations while properly attributing
         the submitter in the pull request description.
 
         Args:
@@ -607,7 +607,7 @@ class PackSubmissionService:
                     "## Submitter Information",
                     f"**Submitted by:** {submitter.get('name', 'Unknown')}",
                     f"**Email:** {submitter.get('email', 'Not provided')}",
-                    f"**Submission Type:** Anonymous submission via AccessiBot",
+                    f"**Submission Type:** Anonymous submission via AccessiBotApp",
                     "",
                 ]
             )
@@ -628,7 +628,7 @@ class PackSubmissionService:
                 "- This submission was created automatically via the AccessiWeather pack submission service",
                 "",
                 "---",
-                "*This pull request was created automatically by AccessiBot on behalf of the community.*",
+                "*This pull request was created automatically by AccessiBotApp on behalf of the community.*",
             ]
         )
 
