@@ -70,7 +70,7 @@ class GitHubBackendClient:
             raise asyncio.CancelledError("Operation cancelled by user")
 
         url = f"{self.backend_url}/create-pr"
-        data = {
+        params = {
             "branch": branch,
             "title": title,
             "body": body,
@@ -78,7 +78,6 @@ class GitHubBackendClient:
 
         headers = {
             "User-Agent": self.user_agent,
-            "Content-Type": "application/json",
         }
 
         try:
@@ -87,7 +86,7 @@ class GitHubBackendClient:
                     raise asyncio.CancelledError("Operation cancelled by user")
 
                 logger.debug(f"Creating PR via backend: {url}")
-                response = await client.post(url, json=data, headers=headers)
+                response = await client.post(url, params=params, headers=headers)
 
                 if cancel_event and cancel_event.is_set():
                     raise asyncio.CancelledError("Operation cancelled by user")
