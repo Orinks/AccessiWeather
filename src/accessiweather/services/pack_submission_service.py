@@ -254,6 +254,7 @@ class PackSubmissionService:
         pr_title, pr_body = self._build_pr_content(enhanced_meta, pack_id, is_anonymous=True)
 
         # Create pull request via backend
+        # The backend will use its GitHub App installation account as the head owner
         pr_data = await backend_client.create_pull_request(
             branch=branch_name,
             title=pr_title,

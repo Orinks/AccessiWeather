@@ -39,7 +39,11 @@ async def test_create_pull_request_with_pack_data():
         mock_client.post.return_value = mock_response
 
         result = await client.create_pull_request(
-            branch="test-branch", title="Test PR", body="Test body", pack_data=pack_data
+            branch="test-branch",
+            title="Test PR",
+            body="Test body",
+            pack_data=pack_data,
+            head_owner="accessibot",
         )
 
         # Verify the request was made with correct parameters
@@ -55,6 +59,7 @@ async def test_create_pull_request_with_pack_data():
         assert json_body["title"] == "Test PR"
         assert json_body["body"] == "Test body"
         assert json_body["pack_data"] == pack_data
+        assert json_body["head_owner"] == "accessibot"
 
         # Check headers
         headers = call_args[1]["headers"]
@@ -91,12 +96,13 @@ async def test_create_pull_request_without_pack_data():
         mock_client.post.assert_called_once()
         call_args = mock_client.post.call_args
 
-        # Check JSON body does not contain pack_data
+        # Check JSON body does not contain pack_data or head_owner
         json_body = call_args[1]["json"]
         assert json_body["branch"] == "test-branch"
         assert json_body["title"] == "Test PR"
         assert json_body["body"] == "Test body"
         assert "pack_data" not in json_body
+        assert "head_owner" not in json_body
 
         # Check result
         assert result["html_url"] == "https://github.com/owner/repo/pull/123"

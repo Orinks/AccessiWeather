@@ -48,6 +48,7 @@ class GitHubBackendClient:
         title: str,
         body: str = "",
         pack_data: dict[str, Any] | None = None,
+        head_owner: str | None = None,
         *,
         cancel_event: asyncio.Event | None = None,
     ) -> dict[str, Any]:
@@ -58,6 +59,7 @@ class GitHubBackendClient:
             title: Pull request title
             body: Pull request description/body
             pack_data: Pack metadata from pack.json (required for backend)
+            head_owner: Owner of the head branch (e.g., "accessibot")
             cancel_event: Optional cancellation event
 
         Returns:
@@ -79,6 +81,10 @@ class GitHubBackendClient:
             "title": title,
             "body": body,
         }
+
+        # Include head owner if provided
+        if head_owner:
+            request_body["head_owner"] = head_owner
 
         # Include pack data if provided
         if pack_data:

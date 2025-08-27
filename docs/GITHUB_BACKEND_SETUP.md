@@ -31,6 +31,7 @@ Creates a pull request in the soundpacks repository.
   "branch": "pack-submission-branch-name",
   "title": "Add MyPack sound pack",
   "body": "Pull request description with pack details and submitter attribution",
+  "head_owner": "accessibot",
   "pack_data": {
     "name": "MyPack",
     "author": "Pack Author",
@@ -48,6 +49,13 @@ Creates a pull request in the soundpacks repository.
   }
 }
 ```
+
+**Request Fields:**
+- `branch`: The branch name to create the PR from (e.g., "soundpack/mypack-20250827-141921")
+- `title`: Pull request title
+- `body`: Pull request description with pack details and submitter attribution
+- `head_owner`: (Optional) The GitHub username/organization that owns the head branch. If not provided, the backend should use its GitHub App installation account.
+- `pack_data`: Complete pack metadata from pack.json, including submitter information for anonymous submissions
 
 **Response:**
 ```json
