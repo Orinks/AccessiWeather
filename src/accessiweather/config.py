@@ -549,7 +549,7 @@ class ConfigManager:
             return backend_url
 
         # Default backend URL
-        return "https://soundpack-backend.onrender.com"
+        return "https://soundpack-backend.fly.dev"
 
     def set_github_backend_url(self, backend_url: str) -> bool:
         """Set the GitHub backend service URL.

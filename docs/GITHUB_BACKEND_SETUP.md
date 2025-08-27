@@ -5,7 +5,7 @@ AccessiWeather now uses a backend service for all GitHub App authentication inst
 ## Configuration
 
 The backend service URL is hardcoded in the application as:
-`https://soundpack-backend.onrender.com`
+`https://soundpack-backend.fly.dev`
 
 Users can optionally override this by setting it in their AccessiWeather settings:
 
