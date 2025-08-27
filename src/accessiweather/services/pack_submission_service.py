@@ -258,6 +258,7 @@ class PackSubmissionService:
             branch=branch_name,
             title=pr_title,
             body=pr_body,
+            pack_data=enhanced_meta,
             cancel_event=cancel_event,
         )
 

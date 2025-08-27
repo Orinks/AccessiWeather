@@ -30,7 +30,22 @@ Creates a pull request in the soundpacks repository.
 {
   "branch": "pack-submission-branch-name",
   "title": "Add MyPack sound pack",
-  "body": "Pull request description with pack details and submitter attribution"
+  "body": "Pull request description with pack details and submitter attribution",
+  "pack_data": {
+    "name": "MyPack",
+    "author": "Pack Author",
+    "description": "Description of the sound pack",
+    "version": "1.0.0",
+    "sounds": {
+      "alert": "alert.wav",
+      "notify": "notify.wav"
+    },
+    "_submitter": {
+      "name": "Submitter Name",
+      "email": "submitter@example.com",
+      "submission_type": "anonymous"
+    }
+  }
 }
 ```
 

@@ -47,6 +47,7 @@ class GitHubBackendClient:
         branch: str,
         title: str,
         body: str = "",
+        pack_data: dict[str, Any] | None = None,
         *,
         cancel_event: asyncio.Event | None = None,
     ) -> dict[str, Any]:
@@ -56,6 +57,7 @@ class GitHubBackendClient:
             branch: The branch name to create PR from
             title: Pull request title
             body: Pull request description/body
+            pack_data: Pack metadata from pack.json (required for backend)
             cancel_event: Optional cancellation event
 
         Returns:
@@ -70,14 +72,21 @@ class GitHubBackendClient:
             raise asyncio.CancelledError("Operation cancelled by user")
 
         url = f"{self.backend_url}/create-pr"
-        params = {
+
+        # Prepare request body with pack data
+        request_body = {
             "branch": branch,
             "title": title,
             "body": body,
         }
 
+        # Include pack data if provided
+        if pack_data:
+            request_body["pack_data"] = pack_data
+
         headers = {
             "User-Agent": self.user_agent,
+            "Content-Type": "application/json",
         }
 
         try:
@@ -86,7 +95,7 @@ class GitHubBackendClient:
                     raise asyncio.CancelledError("Operation cancelled by user")
 
                 logger.debug(f"Creating PR via backend: {url}")
-                response = await client.post(url, params=params, headers=headers)
+                response = await client.post(url, json=request_body, headers=headers)
 
                 if cancel_event and cancel_event.is_set():
                     raise asyncio.CancelledError("Operation cancelled by user")
