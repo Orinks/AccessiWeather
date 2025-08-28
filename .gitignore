@@ -44,6 +44,8 @@ ENV/
 venv.bak/
 env.bak/
 
+beeware-venv/
+
 # IDE specific files
 .idea/
 .vscode/
