@@ -1,0 +1,9 @@
+{
+    "name": "Default",
+    "author": "AccessiWeather Team",
+    "description": "The default sound pack for AccessiWeather. Replace the .wav files to customize.",
+    "sounds": {
+        "alert": "alert.wav",
+        "notify": "notify.wav"
+    }
+}

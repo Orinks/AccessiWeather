@@ -8,7 +8,7 @@ error handling, and automatic retry mechanisms.
 
 import logging
 import time
-from typing import Any, Dict
+from typing import Any
 
 import requests
 from bs4 import BeautifulSoup
@@ -19,7 +19,7 @@ HEADERS = {"User-Agent": "AccessiWeather/1.0 (AccessiWeather)"}
 
 # Rate limit: minimum seconds between requests to the same domain
 MIN_REQUEST_INTERVAL = 10  # seconds
-_last_request_time: Dict[str, float] = {}
+_last_request_time: dict[str, float] = {}
 
 
 class NationalDiscussionScraper:
@@ -53,12 +53,13 @@ class NationalDiscussionScraper:
             max_retries: Maximum number of retry attempts for failed requests
             retry_backoff: Multiplier for increasing delay between retries
             timeout: Request timeout in seconds
+
         """
         self.request_delay = request_delay  # Delay between requests in seconds
         self.max_retries = max_retries  # Maximum number of retry attempts
         self.retry_backoff = retry_backoff  # Backoff multiplier for retries
         self.timeout = timeout  # Request timeout in seconds
-        self.last_request_time: Dict[str, float] = {}
+        self.last_request_time: dict[str, float] = {}
         self.headers = HEADERS  # Use the same headers as the legacy functions
 
     def _rate_limit(self, domain: str) -> None:
@@ -66,6 +67,7 @@ class NationalDiscussionScraper:
 
         Args:
             domain: The domain being requested
+
         """
         # For testing compatibility, we'll use the global _last_request_time
         # This allows the tests to mock time.time() correctly
@@ -81,7 +83,7 @@ class NationalDiscussionScraper:
 
         _last_request_time[domain] = time.time()
 
-    def _make_request(self, url: str, domain: str, retry_count: int = 0) -> Dict[str, Any]:
+    def _make_request(self, url: str, domain: str, retry_count: int = 0) -> dict[str, Any]:
         """Make an HTTP request with retry logic and error handling.
 
         Args:
@@ -91,6 +93,7 @@ class NationalDiscussionScraper:
 
         Returns:
             Dictionary with response text or error information
+
         """
         self._rate_limit(domain)
 
@@ -122,7 +125,7 @@ class NationalDiscussionScraper:
             logger.warning(f"Request exception for {url}: {e}")
             return {"success": False, "error": f"Request error: {e}", "error_type": "request"}
 
-    def _extract_discussion_text(self, html_content: str, source: str) -> Dict[str, Any]:
+    def _extract_discussion_text(self, html_content: str, source: str) -> dict[str, Any]:
         """Extract discussion text from HTML content with robust parsing.
 
         Args:
@@ -131,6 +134,7 @@ class NationalDiscussionScraper:
 
         Returns:
             Dictionary with extracted text or error information
+
         """
         try:
             soup = BeautifulSoup(html_content, "html.parser")
@@ -206,11 +210,12 @@ class NationalDiscussionScraper:
                 "error": f"Error parsing {source.upper()} discussion: {str(e)}",
             }
 
-    def fetch_wpc_discussion(self) -> Dict[str, str]:
+    def fetch_wpc_discussion(self) -> dict[str, str]:
         """Fetch the Weather Prediction Center (WPC) discussion with retry logic.
 
         Returns:
             Dictionary containing summary and full text of the discussion
+
         """
         domain = "wpc.ncep.noaa.gov"
         urls = [self.WPC_URL, self.WPC_ALT_URL]  # Try primary URL first, then fallback
@@ -255,11 +260,12 @@ class NationalDiscussionScraper:
         logger.error(f"Failed to fetch WPC discussion after {self.max_retries + 1} attempts")
         return {"summary": "No discussion found. (WPC)", "full": ""}
 
-    def fetch_spc_discussion(self) -> Dict[str, str]:
+    def fetch_spc_discussion(self) -> dict[str, str]:
         """Fetch the Storm Prediction Center (SPC) discussion with retry logic.
 
         Returns:
             Dictionary containing summary and full text of the discussion
+
         """
         domain = "spc.noaa.gov"
         urls = [self.SPC_URL, self.SPC_ALT_URL]  # Try primary URL first, then fallback
@@ -304,7 +310,7 @@ class NationalDiscussionScraper:
         logger.error(f"Failed to fetch SPC discussion after {self.max_retries + 1} attempts")
         return {"summary": "No discussion found. (SPC)", "full": ""}
 
-    def fetch_all_discussions(self) -> Dict[str, Dict[str, str]]:
+    def fetch_all_discussions(self) -> dict[str, dict[str, str]]:
         """Fetch all national discussions with parallel processing.
 
         Returns:
@@ -319,6 +325,7 @@ class NationalDiscussionScraper:
                     "full": str
                 }
             }
+
         """
         # Fetch both discussions
         wpc_data = self.fetch_wpc_discussion()
@@ -354,20 +361,20 @@ def _rate_limit(domain: str) -> None:
 
     Args:
         domain: The domain being requested
+
     """
     # This function is only used for testing
-    pass
 
 
 def fetch_wpc_short_range():
-    """
-    Fetch the latest WPC Short Range Discussion (PMDSPD) from the WPC site.
+    """Fetch the latest WPC Short Range Discussion (PMDSPD) from the WPC site.
 
     This function uses the improved NationalDiscussionScraper class internally
     for better reliability and error handling.
 
     Returns:
         text (str): The discussion text, or a friendly error message.
+
     """
     try:
         # Use the singleton scraper instance
@@ -376,8 +383,7 @@ def fetch_wpc_short_range():
         # Return the full text if available, otherwise return the error message
         if result.get("full"):
             return result["full"]
-        else:
-            return "No discussion found. (WPC)"
+        return "No discussion found. (WPC)"
     except requests.exceptions.RequestException as e:
         # For test compatibility with the request error test
         logger.error(f"Request exception in fetch_wpc_short_range: {e}")
@@ -385,14 +391,14 @@ def fetch_wpc_short_range():
 
 
 def fetch_spc_day1():
-    """
-    Fetch the latest SPC Day 1 Outlook Discussion from the SPC site.
+    """Fetch the latest SPC Day 1 Outlook Discussion from the SPC site.
 
     This function uses the improved NationalDiscussionScraper class internally
     for better reliability and error handling.
 
     Returns:
         text (str): The discussion text, or a friendly error message.
+
     """
     try:
         # Use the singleton scraper instance
@@ -401,8 +407,7 @@ def fetch_spc_day1():
         # Return the full text if available, otherwise return the error message
         if result.get("full"):
             return result["full"]
-        else:
-            return "No discussion found. (SPC)"
+        return "No discussion found. (SPC)"
     except requests.exceptions.RequestException as e:
         # For test compatibility with the request error test
         logger.error(f"Request exception in fetch_spc_day1: {e}")
@@ -410,8 +415,7 @@ def fetch_spc_day1():
 
 
 def get_national_discussion_summaries():
-    """
-    Fetch and summarize the latest WPC and SPC national discussions.
+    """Fetch and summarize the latest WPC and SPC national discussions.
 
     This function uses the improved NationalDiscussionScraper class internally
     for better reliability and error handling.
@@ -429,6 +433,7 @@ def get_national_discussion_summaries():
                 },
                 "attribution": str
             }
+
     """
     # Get the WPC and SPC discussions using the legacy functions
     # This allows the tests to mock these functions

@@ -1,0 +1,62 @@
+
+
+# User Guidelines for Augment Code with Toga Framework
+
+1. **Align with Toga’s API Design Philosophy**
+   - Use high-level abstractions like `toga.Button` instead of platform-specific widgets.
+   - Leverage Pythonic features such as context managers, generators, and async methods.
+   - Avoid platform-specific code, relying on Toga’s interface layer (`toga-core`).
+
+2. **Structure Apps Using Toga’s Application Model**
+   - Subclass `toga.App` and override `startup()` to define the main window and content.
+   - Assign the `main_window` property in `startup()` with widgets like `toga.Box` or `toga.SplitContainer`.
+   - Implement lifecycle event handlers like `on_exit()`, returning a boolean to control app closure.
+   - Start the app with `app.main_loop()`.
+
+3. **Use Toga’s Pack Style Engine for Layout**
+   - Apply styles via `toga.style.pack.Pack` with properties like `direction`, `margin`, `gap`, and `flex`.
+   - Specify dimensions in CSS pixels (e.g., `margin=10`) and avoid hardcoding physical pixels.
+   - Respect widgets’ intrinsic sizes and use `flex` for expandable widgets.
+   - Nest containers like `toga.Box` or `toga.SplitContainer` with appropriate styles.
+
+4. **Implement Data Separation with Data Sources**
+   - Use built-in data sources (`ValueSource`, `ListSource`, `TreeSource`) for simple cases.
+   - Create custom data sources by subclassing `toga.sources.Source` for complex data, ensuring change notifications.
+   - Bind data sources to widgets like `toga.Table` or `toga.Selection` in their constructors.
+
+5. **Handle Platform-Specific Requirements**
+   - Check platform prerequisites for widgets (e.g., Edge WebView2 for `toga.WebView` on Windows).
+   - Use `app.paths` for platform-appropriate file paths (e.g., `app.paths.data`).
+   - Provide fallbacks for unsupported widgets (e.g., use `toga.Table` instead of `toga.DetailedList`).
+
+6. **Implement Event Handlers and Commands**
+   - Define event handlers like `on_press` or `on_change`, supporting both sync and async methods.
+   - Use `toga.Command` for menu items, grouping with `toga.Group` and adding to `app.commands`.
+   - Validate input in `toga.TextInput` using the `validators` parameter and implement `on_confirm` handlers.
+
+7. **Optimize for Native Look and Feel**
+   - Leverage default menus (e.g., “Quit,” “About”) and the default app icon.
+   - Use `toga.SimpleStatusIcon` or `toga.MenuStatusIcon` for system tray icons.
+   - Respect platform conventions (e.g., app-wide menus on macOS, window-specific elsewhere).
+
+8. **Ensure Robust Testing and Debugging**
+   - Validate API inputs to avoid runtime errors (e.g., non-null `style` objects).
+   - Include test cases using Toga’s dummy backend for non-graphical testing.
+   - Log unimplemented features (e.g., `toga.WebView` cookie support on Android) with comments or warnings.
+
+9. **Follow Best Practices for Installation and Dependencies**
+   - Install Toga in a virtual environment to avoid dependency conflicts.
+   - Document platform-specific dependencies (e.g., `libcairo2-dev` on Linux for GTK).
+   - Avoid global Toga installations outside virtual environments.
+
+# Briefcase guidelines
+
+1. **Align with Briefcase’s Project Structure**
+   - Use the standard project structure created by `briefcase new`.
+   - Keep platform-specific code in `src/accessiweather/platform/`.
+   - Avoid platform-specific code in `src/accessiweather/`.
+
+2. **Use Briefcase for Building and Distributing**
+   - Build your app for all platforms using `briefcase build`.
+3. **use briefcase for running the whole test suite**
+Use `briefcase dev --test` to run the test suite.

@@ -1,0 +1,35 @@
+TUF TEST SUITE REPORT
+============================================================
+Total Execution Time: 61.48 seconds
+Timestamp: 2025-08-12 07:09:39
+
+SUMMARY
+------------------------------
+Tests Passed: 2/5
+Success Rate: 40.0%
+
+DETAILED RESULTS
+------------------------------
+Environment Validation: PASS
+Package Verification: PASS
+Simple Integration: FAIL
+  Error: INFO: Update service initialized for AccessiWeather
+INFO: TUF available: True
+INFO: Current method: tuf
+INFO: Checking for updates using method: tuf
+INFO: Starting TUF client initialization...
+INFO: H...
+Comprehensive Integration: FAIL
+  Error: Traceback (most recent call last):
+  File "C:\Users\joshu\accessiweather\test_tuf_integration.py", line 92, in test_tuf_updates
+    config_manager = ConfigManager()
+                     ^^^^^^^^^^^^^^...
+Unit Tests: FAIL
+Additional TUF Tests: FAIL
+
+RECOMMENDATIONS
+------------------------------
+- Some tests failed. Check individual test output above.
+- Ensure 'tufup' package is installed: pip install tufup
+- Check network connectivity for repository access tests
+- Verify TUF repository configuration in settings

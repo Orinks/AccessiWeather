@@ -1,0 +1,49 @@
+# Task ID: 4
+# Title: Implement Forecast Display
+# Status: done
+# Dependencies: 3
+# Priority: high
+# Description: Migrate the forecast display functionality from wxPython to Toga, preserving all current features.
+# Details:
+1. Replace wxPython ListCtrl with Toga's Table widget for displaying forecast data
+2. Implement custom cell renderers if needed for specific forecast elements
+3. Ensure proper data binding between forecast service and Table widget
+4. Implement sorting functionality if present in the original version
+5. Add appropriate styling to match the original design
+
+# Test Strategy:
+1. Verify that forecast data is displayed correctly in the Table
+2. Test sorting functionality if implemented
+3. Check accessibility of the forecast table using screen readers
+4. Ensure keyboard navigation works for the forecast display
+
+# Subtasks:
+## 1. Table Creation [done]
+### Dependencies: None
+### Description: Implement the basic table structure using Toga's Table widget.
+### Details:
+Use Toga's Table class to create a table with initial data and headings.
+
+## 2. Custom Renderers [done]
+### Dependencies: 4.1
+### Description: Develop custom renderers for specific data types in the table.
+### Details:
+Implement custom rendering logic for complex data types.
+
+## 3. Data Binding [done]
+### Dependencies: 4.1
+### Description: Bind dynamic data to the table, ensuring updates are reflected in real-time.
+### Details:
+Use data accessors to link data sources to the table for dynamic updates.
+
+## 4. Sorting Functionality [done]
+### Dependencies: 4.1, 4.3
+### Description: Implement sorting capabilities for the table columns.
+### Details:
+Add event handlers to sort data when column headers are clicked.
+
+## 5. Styling [done]
+### Dependencies: 4.1, 4.2, 4.3, 4.4
+### Description: Apply custom styles to enhance the table's appearance and user experience.
+### Details:
+Use Toga's styling options to customize the table's layout and visual appeal.

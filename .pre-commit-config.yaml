@@ -10,34 +10,28 @@ repos:
     -   id: check-added-large-files
     -   id: debug-statements
 
--   repo: https://github.com/psf/black
-    rev: 25.1.0
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.3
     hooks:
-    -   id: black
-        args: [--line-length=100]
+    -   id: ruff
+        args: [--fix]
+        exclude: ^src/accessiweather/weather_gov_api_client/
+    -   id: ruff-format
         exclude: ^src/accessiweather/weather_gov_api_client/
 
--   repo: https://github.com/pycqa/isort
-    rev: 5.13.2
+-   repo: https://github.com/RobertCraigie/pyright-python
+    rev: v1.1.403
     hooks:
-    -   id: isort
-        args: ["--profile", "black", "--line-length", "100"]
-        exclude: ^src/accessiweather/weather_gov_api_client/
-
--   repo: https://github.com/pycqa/flake8
-    rev: 7.0.0
-    hooks:
-    -   id: flake8
-        args: ["--max-line-length=100", "--ignore=E203,W503,E501,F541,C901"]
-        exclude: ^src/accessiweather/weather_gov_api_client/
-
--   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
-    hooks:
-    -   id: mypy
-        additional_dependencies: [types-requests, types-python-dateutil]
-        args: [--ignore-missing-imports]
+    -   id: pyright
+        pass_filenames: false
+        args: [--project=pyrightconfig.json]
         exclude: ^(tests/|docs/|setup.py|src/accessiweather/weather_gov_api_client/)
+
+
+-   repo: https://github.com/GitGuardian/ggshield
+    rev: v1.21.0
+    hooks:
+    -   id: ggshield
 
 -   repo: local
     hooks:

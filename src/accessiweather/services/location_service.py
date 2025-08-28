@@ -5,7 +5,6 @@ separating business logic from UI concerns.
 """
 
 import logging
-from typing import List, Optional, Tuple
 
 from accessiweather.location import LocationManager
 
@@ -20,6 +19,7 @@ class LocationService:
 
         Args:
             location_manager: The location manager to use for location operations.
+
         """
         self.location_manager = location_manager
 
@@ -28,30 +28,34 @@ class LocationService:
 
         Args:
             data_source: The data source to use ('nws', 'weatherapi', or 'auto')
+
         """
         self.location_manager.update_data_source(data_source)
 
-    def get_current_location(self) -> Optional[Tuple[str, float, float]]:
+    def get_current_location(self) -> tuple[str, float, float] | None:
         """Get the current location.
 
         Returns:
             Tuple of (name, lat, lon) or None if no current location.
+
         """
         return self.location_manager.get_current_location()
 
-    def get_current_location_name(self) -> Optional[str]:
+    def get_current_location_name(self) -> str | None:
         """Get the name of the current location.
 
         Returns:
             Name of the current location or None if no current location.
+
         """
         return self.location_manager.get_current_location_name()
 
-    def get_all_locations(self) -> List[str]:
+    def get_all_locations(self) -> list[str]:
         """Get all saved locations.
 
         Returns:
             List of location names.
+
         """
         return self.location_manager.get_all_locations()
 
@@ -65,6 +69,7 @@ class LocationService:
 
         Returns:
             True if the location was added successfully, False if it's outside the US NWS coverage area.
+
         """
         logger.info(f"Adding location: {name} ({lat}, {lon})")
         return self.location_manager.add_location(name, lat, lon)
@@ -77,6 +82,7 @@ class LocationService:
 
         Returns:
             True if the location was removed, False otherwise.
+
         """
         logger.info(f"Removing location: {name}")
         return self.location_manager.remove_location(name)
@@ -86,11 +92,12 @@ class LocationService:
 
         Args:
             name: Name of the location to set as current.
+
         """
         logger.info(f"Setting current location: {name}")
         self.location_manager.set_current_location(name)
 
-    def get_location_coordinates(self, name: str) -> Optional[Tuple[float, float]]:
+    def get_location_coordinates(self, name: str) -> tuple[float, float] | None:
         """Get the coordinates for a location.
 
         Args:
@@ -98,6 +105,7 @@ class LocationService:
 
         Returns:
             Tuple of (lat, lon) or None if location not found.
+
         """
         # Get all locations from the location manager
         locations = self.location_manager.saved_locations
@@ -120,5 +128,6 @@ class LocationService:
 
         Returns:
             True if the location is the Nationwide location, False otherwise.
+
         """
         return self.location_manager.is_nationwide_location(name)
