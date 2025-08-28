@@ -17,16 +17,18 @@ logger = logging.getLogger(__name__)
 class UpdateProgressDialog:
     """Dialog for displaying update progress with accessibility features."""
 
-    def __init__(self, app, title: str = "Updating AccessiWeather"):
+    def __init__(self, app, title: str = "Updating AccessiWeather", mode: str = "update"):
         """Initialize the update progress dialog.
 
         Args:
             app: The main application instance
             title: Dialog title
+            mode: Dialog mode - "update" for automatic status updates, "generic" for manual control
 
         """
         self.app = app
         self.title = title
+        self.mode = mode
         self.window = None
         self.future = None
 
@@ -148,30 +150,32 @@ class UpdateProgressDialog:
             self.downloaded_size = downloaded
             self.total_size = total
 
-            # Update status based on progress
-            if progress < 1:
-                status = "Preparing update..."
-            elif progress >= 100:
-                status = "Finalizing update..."
-            else:
-                status = f"Downloading update... {progress:.1f}%"
+            # Only update status/detail automatically in "update" mode
+            if self.mode == "update":
+                # Update status based on progress
+                if progress < 1:
+                    status = "Preparing update..."
+                elif progress >= 100:
+                    status = "Finalizing update..."
+                else:
+                    status = f"Downloading update... {progress:.1f}%"
 
-            # Update detail information
-            if total > 0:
-                downloaded_mb = downloaded / (1024 * 1024)
-                total_mb = total / (1024 * 1024)
-                detail = f"{downloaded_mb:.1f} MB of {total_mb:.1f} MB"
-            else:
-                detail = "Preparing download..."
+                # Update detail information
+                if total > 0:
+                    downloaded_mb = downloaded / (1024 * 1024)
+                    total_mb = total / (1024 * 1024)
+                    detail = f"{downloaded_mb:.1f} MB of {total_mb:.1f} MB"
+                else:
+                    detail = "Preparing download..."
 
-            # Update UI elements
-            if self.status_label:
-                self.status_label.text = status
+                # Update UI elements
+                if self.status_label:
+                    self.status_label.text = status
 
-            if self.detail_label:
-                self.detail_label.text = detail
+                if self.detail_label:
+                    self.detail_label.text = detail
 
-            # Start/stop activity indicator based on progress
+            # Start/stop activity indicator based on progress (always control this)
             if self.progress_indicator:
                 if 0 < progress < 100:
                     self.progress_indicator.start()
@@ -218,15 +222,20 @@ class UpdateProgressDialog:
         if self.future and not self.future.done():
             self.future.set_result("cancelled")
 
-    async def complete_success(self, message: str = "Update completed successfully"):
+    async def complete_success(
+        self, message: str = "Update completed successfully", detail: str = ""
+    ):
         """Complete the dialog with success.
 
         Args:
             message: Success message to display
+            detail: Optional detail message. If not provided, uses default restart message.
 
         """
         try:
-            await self.set_status(message, "The application will restart shortly.")
+            if not detail:
+                detail = "The application will restart shortly."
+            await self.set_status(message, detail)
 
             if self.progress_indicator:
                 self.progress_indicator.stop()

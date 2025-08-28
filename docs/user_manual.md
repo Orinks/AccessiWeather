@@ -383,6 +383,103 @@ accessiweather --portable
 - **Removable Media**: Run from USB drives or network locations
 - **Multiple Instances**: Different portable installations can have separate configurations
 
+## Sound Pack System and Community Sharing
+
+AccessiWeather includes a comprehensive sound pack system that allows you to customize notification sounds and share your creations with the community through a completely frictionless submission process.
+
+### Sound Pack Management
+
+AccessiWeather provides built-in sound pack management through the Settings dialog:
+
+#### Accessing Sound Packs
+1. Open AccessiWeather Settings (Ctrl+S)
+2. Navigate to the "General" tab
+3. Find the "Sound Pack" dropdown to select active pack
+4. Click "Manage Sound Packs..." for advanced management
+
+#### Sound Pack Features
+- **Multiple Packs**: Install and switch between different sound themes
+- **Preview System**: Test sounds before applying changes
+- **Import Support**: Add new packs from ZIP files
+- **Quality Validation**: Automatic checking of pack completeness and audio files
+
+### Community Sound Pack Sharing
+
+AccessiWeather features a revolutionary frictionless community sharing system that removes all barriers to contributing sound packs.
+
+#### Zero-Barrier Submission
+
+**No Account Required**: Share your custom sound packs with the global AccessiWeather community without creating GitHub accounts, learning version control, or dealing with complex authentication procedures.
+
+**Instant Sharing**: Simply click "Share with Community" to submit your pack immediately to the community repository where it can benefit users worldwide.
+
+**Optional Attribution**: Choose whether to include your name and email for community recognition, or contribute completely anonymously while still helping the community.
+
+#### How to Share Your Sound Pack
+
+1. **Create or Customize Pack**: Design your sound pack with appropriate name, author, and audio file mappings
+2. **Access Sound Pack Manager**: Open Settings → General → "Manage Sound Packs..."
+3. **Select Your Pack**: Choose the sound pack you want to share with the community
+4. **Quality Validation**: The system automatically validates your pack for completeness and quality
+5. **Click Share**: Press "Share with Community" - no external authentication or setup required
+6. **Attribution Decision**: Choose to include your name/email for recognition or submit anonymously
+7. **Automatic Submission**: Your pack is instantly uploaded to the community repository via AccessiBot
+8. **Community Review**: Pack enters review process for potential inclusion in the official community collection
+
+#### Attribution and Privacy Options
+
+**With Attribution (Recommended)**:
+- Include your name for community recognition and building connections
+- Optional email for maintainer communication about your contribution
+- Proper credit displayed in the community repository
+- Encourages ongoing community engagement
+
+**Anonymous Submission**:
+- Contribute valuable content without sharing personal information
+- Complete privacy protection while still helping the community
+- Equal consideration and treatment in the review process
+- Perfect for users who prefer to remain private
+
+#### Community Quality Standards
+
+To ensure your sound pack is well-received and valuable to the community:
+
+**Technical Requirements**:
+- **Complete Metadata**: Include descriptive pack name, author, and description
+- **Sound Mapping**: Ensure all notification types have corresponding high-quality audio files
+- **File Accessibility**: Verify all referenced audio files exist and are playable
+- **Audio Quality**: Use clear, properly-leveled WAV files for best compatibility
+
+**Content Guidelines**:
+- **Appropriate Content**: Ensure sounds are suitable for diverse users in professional and personal environments
+- **Original or Licensed**: Only submit sounds you have legal rights to distribute
+- **Accessibility Friendly**: Consider how sounds work with assistive technologies
+- **Cultural Sensitivity**: Ensure content is respectful and inclusive
+
+#### Behind-the-Scenes Technology
+
+**GitHub App Authentication**: All submissions use secure AccessiBot credentials, eliminating the need for users to manage GitHub authentication or repository access.
+
+**Professional Workflow**: Submissions automatically create properly formatted pull requests with comprehensive metadata, attribution information, and community submission labels.
+
+**Quality Assurance**: Built-in validation ensures submissions meet technical and community standards before reaching the review process.
+
+**Fork Management**: Automatic repository fork creation and branch management handles all technical Git operations transparently.
+
+### Benefits of Community Participation
+
+#### For Contributors
+- **Easy Sharing**: Remove barriers that traditionally prevent non-technical users from contributing
+- **Community Recognition**: Optional attribution provides acknowledgment for quality contributions
+- **Immediate Impact**: Help users worldwide improve their AccessiWeather experience
+- **Inclusive Process**: Welcomes contributors regardless of technical background
+
+#### For the Community
+- **Diverse Sound Options**: Access to community-created packs beyond the built-in options
+- **Inclusive Contributions**: Frictionless process encourages participation from users who might otherwise be excluded
+- **Quality Focus**: Emphasis on sound quality and user experience rather than technical hurdles
+- **Global Accessibility**: Shared packs benefit the worldwide AccessiWeather user community
+
 ## Troubleshooting
 
 ### Installation Issues

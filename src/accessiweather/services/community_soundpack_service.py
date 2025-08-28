@@ -7,7 +7,7 @@ installation using SoundPackInstaller.
 Design notes:
 - Mirrors httpx async client usage and logging patterns from TUFUpdateService
 - Provides simple in-memory caching for the list of packs
-- Supports optional authentication via GITHUB_TOKEN environment variable
+- Supports authentication via GitHub App for higher rate limits when available
 - Gracefully handles rate limits and transient errors with lightweight retries
 """
 
@@ -18,13 +18,14 @@ import base64
 import contextlib
 import json
 import logging
-import os
 import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
 import httpx
+
+from accessiweather.constants import COMMUNITY_REPO_NAME, COMMUNITY_REPO_OWNER
 
 logger = logging.getLogger(__name__)
 
@@ -55,8 +56,8 @@ class CommunitySoundPackService:
 
     def __init__(
         self,
-        repo_owner: str = "accessiweather-community",
-        repo_name: str = "soundpacks",
+        repo_owner: str = COMMUNITY_REPO_OWNER,
+        repo_name: str = COMMUNITY_REPO_NAME,
         timeout: float = 30.0,
         cache_duration_seconds: int = 300,
         user_agent: str = "AccessiWeather-CommunityPacks/1.0",
@@ -76,9 +77,8 @@ class CommunitySoundPackService:
         self.cache_duration_seconds = cache_duration_seconds
         headers = {"User-Agent": user_agent, "Accept": "application/vnd.github+json"}
 
-        token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
-        if token:
-            headers["Authorization"] = f"Bearer {token}"
+        # Note: GitHub authentication removed for security reasons
+        # Future implementation should use GitHub App authentication
 
         self._http = httpx.AsyncClient(timeout=timeout, headers=headers)
         self._cached_packs: list[CommunityPack] | None = None
