@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from accessiweather.services.pack_submission_service import PackSubmissionService
-from accessiweather.version import __version__ as APP_VERSION
 
 
 @pytest.fixture()
@@ -83,28 +82,28 @@ def mock_github_client():
 
 def _github_request_side_effect(method: str, url: str, **kwargs):
     """Mock GitHub API responses based on request URL and method."""
-    if url == "/repos/accessiweather-community/soundpacks":
-        return {"full_name": "accessiweather-community/soundpacks", "default_branch": "main"}
+    if url == "/repos/orinks/accessiweather-soundpacks":
+        return {"full_name": "orinks/accessiweather-soundpacks", "default_branch": "main"}
     if url == "/app/installations/789012":
         return {"account": {"login": "accessibot"}}
-    if url == "/repos/accessibot/soundpacks":
+    if url == "/repos/accessibot/accessiweather-soundpacks":
         return {
-            "full_name": "accessibot/soundpacks",
+            "full_name": "accessibot/accessiweather-soundpacks",
             "fork": True,
-            "parent": {"full_name": "accessiweather-community/soundpacks"},
+            "parent": {"full_name": "orinks/accessiweather-soundpacks"},
         }
-    if url == "/repos/accessiweather-community/soundpacks/git/ref/heads/main":
+    if url == "/repos/orinks/accessiweather-soundpacks/git/ref/heads/main":
         return {"object": {"sha": "abc123"}}
-    if url.startswith("/repos/accessiweather-community/soundpacks/contents/packs/"):
+    if url.startswith("/repos/orinks/accessiweather-soundpacks/contents/packs/"):
         # Return 404 for pack existence checks (no duplicates)
         return {}
-    if method == "POST" and url == "/repos/accessibot/soundpacks/git/refs":
+    if method == "POST" and url == "/repos/accessibot/accessiweather-soundpacks/git/refs":
         return {"ref": "refs/heads/soundpack/test-pack-jane-doe-20240101-120000"}
     if method == "PUT" and "/contents/" in url:
         return {"commit": {"sha": "def456"}}
-    if method == "POST" and url == "/repos/accessiweather-community/soundpacks/pulls":
+    if method == "POST" and url == "/repos/orinks/accessiweather-soundpacks/pulls":
         return {
-            "html_url": "https://github.com/accessiweather-community/soundpacks/pull/123",
+            "html_url": "https://github.com/orinks/accessiweather-soundpacks/pull/123",
             "number": 123,
         }
     if method == "POST" and url.endswith("/labels"):
@@ -114,22 +113,36 @@ def _github_request_side_effect(method: str, url: str, **kwargs):
 
 @pytest.mark.asyncio
 async def test_submit_pack_no_config_manager(tmp_pack_dir):
-    """Test submit_pack raises error when no config manager is provided."""
+    """Test submit_pack works without config manager using default backend URL.
+
+    We mock the backend client to avoid real network calls and assert success.
+    """
     pack_dir, meta = tmp_pack_dir
 
     svc = PackSubmissionService(repo_owner="owner", repo_name="repo", dest_subdir="packs")
 
-    with pytest.raises(RuntimeError) as exc_info:
-        await svc.submit_pack(pack_dir, meta)
+    mock_backend_client = AsyncMock()
+    mock_backend_client.upload_zip = AsyncMock(
+        return_value={"html_url": "https://github.com/owner/repo/pull/999"}
+    )
 
-    assert "No configuration manager provided" in str(exc_info.value)
+    with patch(
+        "accessiweather.services.pack_submission_service.GitHubBackendClient"
+    ) as mock_backend_class:
+        mock_backend_class.return_value = mock_backend_client
+
+        pr_url = await svc.submit_pack(pack_dir, meta)
+
+        mock_backend_class.assert_called_once()
+        mock_backend_client.upload_zip.assert_called_once()
+        assert pr_url == "https://github.com/owner/repo/pull/999"
 
 
 @pytest.mark.asyncio
-async def test_submit_pack_invalid_config(tmp_pack_dir, mock_config_manager):
-    """Test submit_pack raises error when GitHub App configuration is invalid."""
+async def test_submit_pack_with_config_manager(tmp_pack_dir, mock_config_manager):
+    """Test submit_pack works with config manager using backend service."""
     pack_dir, meta = tmp_pack_dir
-    mock_config_manager.validate_github_app_config.return_value = (False, "Invalid configuration")
+    mock_config_manager.get_github_backend_url.return_value = "https://test-backend.example.com"
 
     svc = PackSubmissionService(
         repo_owner="owner",
@@ -138,23 +151,27 @@ async def test_submit_pack_invalid_config(tmp_pack_dir, mock_config_manager):
         config_manager=mock_config_manager,
     )
 
+    # This should now work with the backend service, but will fail due to invalid test data
     with pytest.raises(RuntimeError) as exc_info:
         await svc.submit_pack(pack_dir, meta)
 
-    assert "GitHub App configuration invalid: Invalid configuration" in str(exc_info.value)
+    # Should get a backend service error, not a config manager error
+    assert "Failed to connect to backend service" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
 async def test_submit_pack_anonymous_no_config_manager(tmp_pack_dir):
-    """Test submit_pack_anonymous raises error when no config manager is provided."""
+    """Test submit_pack_anonymous works without config manager using default backend URL."""
     pack_dir, meta = tmp_pack_dir
 
     svc = PackSubmissionService(repo_owner="owner", repo_name="repo", dest_subdir="packs")
 
+    # This should now work with the backend service, but will fail due to invalid test data
     with pytest.raises(RuntimeError) as exc_info:
         await svc.submit_pack_anonymous(pack_dir, meta, "John Doe", "john@example.com")
 
-    assert "Configuration manager required for backend service" in str(exc_info.value)
+    # Should get a backend service error, not a config manager error
+    assert "Backend service error" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
@@ -244,38 +261,37 @@ async def test_submit_pack_anonymous_invalid_config(tmp_pack_dir, mock_config_ma
 
 
 @pytest.mark.asyncio
-async def test_github_app_authentication_flow(
-    tmp_pack_dir, mock_config_manager, mock_github_client
-):
-    """Test complete GitHub App authentication flow for pack submission."""
+async def test_submit_pack_backend_flow(tmp_pack_dir, mock_config_manager):
+    """Test complete backend service flow for pack submission."""
     pack_dir, meta = tmp_pack_dir
 
+    # Mock the backend client
+    mock_backend_client = AsyncMock()
+    mock_backend_client.upload_zip = AsyncMock(
+        return_value={"html_url": "https://github.com/orinks/accessiweather-soundpacks/pull/123"}
+    )
+
     with patch(
-        "accessiweather.services.pack_submission_service.GitHubAppClient"
-    ) as mock_client_class:
-        mock_client_class.return_value = mock_github_client
+        "accessiweather.services.pack_submission_service.GitHubBackendClient"
+    ) as mock_backend_class:
+        mock_backend_class.return_value = mock_backend_client
 
         svc = PackSubmissionService(
-            repo_owner="accessiweather-community",
-            repo_name="soundpacks",
+            repo_owner="orinks",
+            repo_name="accessiweather-soundpacks",
             dest_subdir="packs",
             config_manager=mock_config_manager,
         )
 
-        # Test submit_pack with GitHub App authentication
+        # Test submit_pack with backend service
         result = await svc.submit_pack(pack_dir, meta)
 
-        # Verify GitHub App client was created with correct parameters
-        mock_client_class.assert_called_once_with(
-            app_id="123456",
-            private_key_pem="-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
-            installation_id="789012",
-            user_agent=f"AccessiWeather/{APP_VERSION}",
-        )
+        # Verify backend client was created and called
+        mock_backend_class.assert_called_once()
+        mock_backend_client.upload_zip.assert_called_once()
 
-        # Verify API calls were made
-        assert mock_github_client.github_request.call_count >= 5  # Multiple API calls for full flow
-        assert result == "https://github.com/accessiweather-community/soundpacks/pull/123"
+        # Verify result
+        assert result == "https://github.com/orinks/accessiweather-soundpacks/pull/123"
 
 
 @pytest.mark.asyncio
@@ -287,8 +303,8 @@ async def test_anonymous_submission_comprehensive(
 
     # Mock the backend client
     mock_backend_client = AsyncMock()
-    mock_backend_client.create_pull_request = AsyncMock(
-        return_value={"html_url": "https://github.com/accessiweather-community/soundpacks/pull/123"}
+    mock_backend_client.upload_zip = AsyncMock(
+        return_value={"html_url": "https://github.com/orinks/accessiweather-soundpacks/pull/123"}
     )
 
     with patch(
@@ -297,8 +313,8 @@ async def test_anonymous_submission_comprehensive(
         mock_backend_class.return_value = mock_backend_client
 
         svc = PackSubmissionService(
-            repo_owner="accessiweather-community",
-            repo_name="soundpacks",
+            repo_owner="orinks",
+            repo_name="accessiweather-soundpacks",
             dest_subdir="packs",
             config_manager=mock_config_manager,
         )
@@ -320,11 +336,11 @@ async def test_anonymous_submission_comprehensive(
         assert progress_calls[-1][1].startswith("Pull request created:")
 
         # Verify result
-        assert result == "https://github.com/accessiweather-community/soundpacks/pull/123"
+        assert result == "https://github.com/orinks/accessiweather-soundpacks/pull/123"
 
         # Verify backend client was created and called
         mock_backend_class.assert_called_once()
-        mock_backend_client.create_pull_request.assert_called_once()
+        mock_backend_client.upload_zip.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -347,80 +363,30 @@ async def test_error_handling_scenarios(tmp_pack_dir, mock_config_manager):
 
 
 @pytest.mark.asyncio
-async def test_cancellation_support(tmp_pack_dir, mock_config_manager, mock_github_client):
+async def test_cancellation_support(tmp_pack_dir, mock_config_manager):
     """Test cancellation support throughout submission process."""
     pack_dir, meta = tmp_pack_dir
 
+    # Mock the backend client to simulate cancellation
+    mock_backend_client = AsyncMock()
+
+    def progress_callback(pct, status):
+        # Return False to trigger cancellation
+        return False
+
+    mock_backend_client.upload_zip = AsyncMock(side_effect=asyncio.CancelledError())
+
     with patch(
-        "accessiweather.services.pack_submission_service.GitHubAppClient"
-    ) as mock_client_class:
-        mock_client_class.return_value = mock_github_client
+        "accessiweather.services.pack_submission_service.GitHubBackendClient"
+    ) as mock_backend_class:
+        mock_backend_class.return_value = mock_backend_client
 
         svc = PackSubmissionService(config_manager=mock_config_manager)
-
-        # Test cancellation via progress callback
-        cancel_count = 0
-
-        def progress_callback(pct, status):
-            nonlocal cancel_count
-            cancel_count += 1
-            return cancel_count < 3  # Cancel operation after 3 calls
 
         with pytest.raises(asyncio.CancelledError):
             await svc.submit_pack_anonymous(
                 pack_dir, meta, "Test User", "test@example.com", progress_callback=progress_callback
             )
-
-
-@pytest.mark.asyncio
-async def test_duplicate_pack_detection(tmp_pack_dir, mock_config_manager, mock_github_client):
-    """Test duplicate pack detection prevents submission."""
-    pack_dir, meta = tmp_pack_dir
-
-    # Mock existing pack detection
-    async def mock_github_request(method, url, **kwargs):
-        if url.startswith(
-            "/repos/accessiweather-community/soundpacks/contents/packs/test-pack-jane-doe"
-        ):
-            return {"name": "pack.json"}  # Pack exists
-        return _github_request_side_effect(method, url, **kwargs)
-
-    mock_github_client.github_request.side_effect = mock_github_request
-
-    with patch(
-        "accessiweather.services.pack_submission_service.GitHubAppClient"
-    ) as mock_client_class:
-        mock_client_class.return_value = mock_github_client
-
-        svc = PackSubmissionService(config_manager=mock_config_manager)
-
-        with pytest.raises(RuntimeError) as exc_info:
-            await svc.submit_pack(pack_dir, meta)
-        assert "already exists in the repository" in str(exc_info.value)
-
-
-@pytest.mark.asyncio
-async def test_fork_management_with_installation_auth(mock_config_manager, mock_github_client):
-    """Test fork creation and management using installation authentication."""
-    with patch(
-        "accessiweather.services.pack_submission_service.GitHubAppClient"
-    ) as mock_client_class:
-        mock_client_class.return_value = mock_github_client
-
-        svc = PackSubmissionService(config_manager=mock_config_manager)
-
-        # Test fork creation flow
-        result = await svc._ensure_fork(mock_github_client)
-
-        # Verify installation info call was made
-        expected_calls = [
-            call
-            for call in mock_github_client.github_request.call_args_list
-            if "/repos/accessibot/soundpacks" in str(call)
-        ]
-        assert len(expected_calls) > 0
-
-        assert result == "accessibot/soundpacks"
 
 
 @pytest.mark.asyncio

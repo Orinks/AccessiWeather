@@ -593,7 +593,7 @@ class SoundPackManagerDialog:
             f"You are about to share the sound pack '{name}' by {author}.\n\n"
             "This will:\n"
             "- Create a submission using AccessiBot (no GitHub account needed)\n"
-            "- Upload your pack files using GitHub's API\n"
+            "- Prepare your pack for submission\n"
             "- Create a Pull Request for community review\n"
             "- Include optional attribution for community recognition\n\n"
             "This process is completely frictionless and requires no authentication setup.\n\n"

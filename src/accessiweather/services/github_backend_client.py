@@ -1,7 +1,7 @@
 """GitHub App backend service client for AccessiWeather.
 
 This module provides a client for communicating with the AccessiWeather GitHub App
-backend service, which handles GitHub App authentication and pull request creation.
+backend service, which handles GitHub App authentication and soundpack submissions.
 """
 
 import asyncio
@@ -19,7 +19,7 @@ class GitHubBackendClient:
     """Client for the AccessiWeather GitHub App backend service.
 
     This client communicates with a backend service that handles GitHub App
-    authentication and pull request creation, eliminating the need to manage
+    authentication and soundpack submission, eliminating the need to manage
     GitHub App credentials directly in the client application.
     """
 
@@ -42,66 +42,38 @@ class GitHubBackendClient:
         self.user_agent = user_agent or f"AccessiWeather/{APP_VERSION}"
         self.timeout = timeout
 
-    async def create_pull_request(
+    async def upload_zip(
         self,
-        branch: str,
-        title: str,
-        body: str = "",
-        pack_data: dict[str, Any] | None = None,
-        head_owner: str | None = None,
+        zip_bytes: bytes,
+        filename: str = "soundpack.zip",
         *,
         cancel_event: asyncio.Event | None = None,
     ) -> dict[str, Any]:
-        """Create a pull request via the backend service.
+        """Upload a ZIP soundpack to the backend which will create a PR.
 
         Args:
-            branch: The branch name to create PR from
-            title: Pull request title
-            body: Pull request description/body
-            pack_data: Pack metadata from pack.json (required for backend)
-            head_owner: Owner of the head branch (e.g., "accessibot")
+            zip_bytes: Bytes of the ZIP file containing pack.json and audio files
+            filename: Name to send for the multipart file
             cancel_event: Optional cancellation event
 
         Returns:
-            Dictionary containing PR information from GitHub API
-
-        Raises:
-            RuntimeError: If the backend request fails
-            asyncio.CancelledError: If operation is cancelled
+            Dictionary containing PR information from the backend
 
         """
         if cancel_event and cancel_event.is_set():
             raise asyncio.CancelledError("Operation cancelled by user")
 
-        url = f"{self.backend_url}/create-pr"
-
-        # Prepare request body with pack data
-        request_body = {
-            "branch": branch,
-            "title": title,
-            "body": body,
-        }
-
-        # Include head owner if provided
-        if head_owner:
-            request_body["head_owner"] = head_owner
-
-        # Include pack data if provided
-        if pack_data:
-            request_body["pack_data"] = pack_data
-
-        headers = {
-            "User-Agent": self.user_agent,
-            "Content-Type": "application/json",
-        }
+        url = f"{self.backend_url}/upload-zip"
+        headers = {"User-Agent": self.user_agent}
+        files = {"zip_file": (filename, zip_bytes, "application/zip")}
 
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 if cancel_event and cancel_event.is_set():
                     raise asyncio.CancelledError("Operation cancelled by user")
 
-                logger.debug(f"Creating PR via backend: {url}")
-                response = await client.post(url, json=request_body, headers=headers)
+                logger.debug(f"Uploading soundpack ZIP to backend: {url}")
+                response = await client.post(url, files=files, headers=headers)
 
                 if cancel_event and cancel_event.is_set():
                     raise asyncio.CancelledError("Operation cancelled by user")
@@ -120,6 +92,44 @@ class GitHubBackendClient:
 
                 return response.json()
 
+        except asyncio.CancelledError:
+            raise
+        except httpx.TimeoutException as e:
+            raise RuntimeError(f"Backend service timeout after {self.timeout}s") from e
+        except httpx.RequestError as e:
+            raise RuntimeError(f"Failed to connect to backend service: {e}") from e
+        except Exception as e:
+            raise RuntimeError(f"Unexpected error communicating with backend: {e}") from e
+
+    async def upload_pack_json_only(
+        self,
+        pack_data: dict[str, Any],
+        *,
+        cancel_event: asyncio.Event | None = None,
+    ) -> dict[str, Any]:
+        """Submit only pack.json metadata (legacy endpoint)."""
+        if cancel_event and cancel_event.is_set():
+            raise asyncio.CancelledError("Operation cancelled by user")
+
+        url = f"{self.backend_url}/share-pack"
+        headers = {"User-Agent": self.user_agent, "Content-Type": "application/json"}
+
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.post(url, json=pack_data, headers=headers)
+                if cancel_event and cancel_event.is_set():
+                    raise asyncio.CancelledError("Operation cancelled by user")
+                if response.status_code >= 400:
+                    error_detail = "Unknown error"
+                    try:
+                        error_data = response.json()
+                        error_detail = error_data.get("detail", response.text)
+                    except Exception:
+                        error_detail = response.text
+                    raise RuntimeError(
+                        f"Backend service error (HTTP {response.status_code}): {error_detail}"
+                    )
+                return response.json()
         except asyncio.CancelledError:
             raise
         except httpx.TimeoutException as e:

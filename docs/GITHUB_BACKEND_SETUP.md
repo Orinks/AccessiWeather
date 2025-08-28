@@ -19,53 +19,21 @@ Users can optionally override this by setting it in their AccessiWeather setting
 
 ## Backend Service Requirements
 
-Your backend service must implement the following endpoint:
+Your backend service must implement the following endpoints:
 
-### POST /create-pr
+### POST /upload-zip
 
-Creates a pull request in the soundpacks repository.
+Recommended endpoint. Accepts a ZIP containing pack.json and audio files. The backend validates the contents, creates a branch, commits files, and opens a PR.
 
-**Request Body:**
-```json
-{
-  "branch": "pack-submission-branch-name",
-  "title": "Add MyPack sound pack",
-  "body": "Pull request description with pack details and submitter attribution",
-  "head_owner": "accessibotapp",
-  "pack_data": {
-    "name": "MyPack",
-    "author": "Pack Author",
-    "description": "Description of the sound pack",
-    "version": "1.0.0",
-    "sounds": {
-      "alert": "alert.wav",
-      "notify": "notify.wav"
-    },
-    "_submitter": {
-      "name": "Submitter Name",
-      "email": "submitter@example.com",
-      "submission_type": "anonymous"
-    }
-  }
-}
-```
+- Request: multipart/form-data with field `zip_file` (application/zip)
+- Response (200): `{ "html_url": "https://github.com/owner/repo/pull/123", "number": 123 }`
 
-**Request Fields:**
-- `branch`: The branch name to create the PR from (e.g., "soundpack/mypack-20250827-141921")
-- `title`: Pull request title
-- `body`: Pull request description with pack details and submitter attribution
-- `head_owner`: (Optional) The GitHub username/organization that owns the head branch. If not provided, the backend should use its GitHub App installation account.
-- `pack_data`: Complete pack metadata from pack.json, including submitter information for anonymous submissions
+### POST /share-pack
 
-**Response:**
-```json
-{
-  "html_url": "https://github.com/owner/repo/pull/123",
-  "number": 123,
-  "title": "Add MyPack sound pack",
-  "state": "open"
-}
-```
+Legacy endpoint. Accepts only pack.json metadata and opens a PR without uploading audio files.
+
+- Request: JSON body matching pack.json schema
+- Response (200): `{ "html_url": "https://github.com/owner/repo/pull/123", "number": 123 }`
 
 ## Security Benefits
 
@@ -79,14 +47,7 @@ Using a backend service provides several security advantages:
 
 ## Implementation Notes
 
-The current implementation creates pull requests via the backend but still requires the full pack submission workflow (file uploads, branch creation, etc.) to be handled by the backend service.
-
-For a complete implementation, the backend service would need additional endpoints for:
-- File upload handling
-- Branch creation and management
-- Repository operations
-
-This is a simplified initial implementation that demonstrates the authentication flow.
+The current client uses /upload-zip as the primary path for submissions and falls back to /share-pack only for JSON-only submissions.
 
 ## No Fallback
 

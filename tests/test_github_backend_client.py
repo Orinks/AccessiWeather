@@ -1,4 +1,4 @@
-"""Tests for GitHubBackendClient."""
+"""Tests for GitHubBackendClient (new endpoints)."""
 
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -9,8 +9,8 @@ from accessiweather.services.github_backend_client import GitHubBackendClient
 
 
 @pytest.mark.asyncio
-async def test_create_pull_request_with_pack_data():
-    """Test that create_pull_request sends pack data in the request body."""
+async def test_upload_pack_json_only_success():
+    """Test that upload_pack_json_only sends JSON to /share-pack."""
     backend_url = "https://api.example.com"
     client = GitHubBackendClient(backend_url)
 
@@ -19,11 +19,6 @@ async def test_create_pull_request_with_pack_data():
         "author": "Test Author",
         "description": "Test description",
         "sounds": {"alert": "alert.wav", "notify": "notify.wav"},
-        "_submitter": {
-            "name": "Submitter Name",
-            "email": "submitter@example.com",
-            "submission_type": "anonymous",
-        },
     }
 
     mock_response = MagicMock()
@@ -38,28 +33,18 @@ async def test_create_pull_request_with_pack_data():
         mock_httpx.return_value.__aenter__.return_value = mock_client
         mock_client.post.return_value = mock_response
 
-        result = await client.create_pull_request(
-            branch="test-branch",
-            title="Test PR",
-            body="Test body",
-            pack_data=pack_data,
-            head_owner="accessibotapp",
-        )
+        result = await client.upload_pack_json_only(pack_data)
 
         # Verify the request was made with correct parameters
         mock_client.post.assert_called_once()
         call_args = mock_client.post.call_args
 
         # Check URL
-        assert call_args[0][0] == f"{backend_url}/create-pr"
+        assert call_args[0][0] == f"{backend_url}/share-pack"
 
         # Check JSON body contains pack data
         json_body = call_args[1]["json"]
-        assert json_body["branch"] == "test-branch"
-        assert json_body["title"] == "Test PR"
-        assert json_body["body"] == "Test body"
-        assert json_body["pack_data"] == pack_data
-        assert json_body["head_owner"] == "accessibotapp"
+        assert json_body == pack_data
 
         # Check headers
         headers = call_args[1]["headers"]
@@ -71,16 +56,18 @@ async def test_create_pull_request_with_pack_data():
 
 
 @pytest.mark.asyncio
-async def test_create_pull_request_without_pack_data():
-    """Test that create_pull_request works without pack data."""
+async def test_upload_zip_success():
+    """Test that upload_zip sends multipart data to /upload-zip."""
     backend_url = "https://api.example.com"
     client = GitHubBackendClient(backend_url)
+
+    zip_bytes = b"PK\x03\x04..."  # dummy zip header bytes
 
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = {
-        "html_url": "https://github.com/owner/repo/pull/123",
-        "number": 123,
+        "html_url": "https://github.com/owner/repo/pull/456",
+        "number": 456,
     }
 
     with patch("httpx.AsyncClient") as mock_httpx:
@@ -88,29 +75,32 @@ async def test_create_pull_request_without_pack_data():
         mock_httpx.return_value.__aenter__.return_value = mock_client
         mock_client.post.return_value = mock_response
 
-        result = await client.create_pull_request(
-            branch="test-branch", title="Test PR", body="Test body"
-        )
+        result = await client.upload_zip(zip_bytes, filename="testpack.zip")
 
-        # Verify the request was made with correct parameters
         mock_client.post.assert_called_once()
         call_args = mock_client.post.call_args
 
-        # Check JSON body does not contain pack_data or head_owner
-        json_body = call_args[1]["json"]
-        assert json_body["branch"] == "test-branch"
-        assert json_body["title"] == "Test PR"
-        assert json_body["body"] == "Test body"
-        assert "pack_data" not in json_body
-        assert "head_owner" not in json_body
+        # URL
+        assert call_args[0][0] == f"{backend_url}/upload-zip"
 
-        # Check result
-        assert result["html_url"] == "https://github.com/owner/repo/pull/123"
+        # Files
+        files = call_args[1]["files"]
+        assert "zip_file" in files
+        name, data, content_type = files["zip_file"]
+        assert name == "testpack.zip"
+        assert data == zip_bytes
+        assert content_type == "application/zip"
+
+        # Headers
+        headers = call_args[1]["headers"]
+        assert "User-Agent" in headers
+
+        assert result["html_url"] == "https://github.com/owner/repo/pull/456"
 
 
 @pytest.mark.asyncio
-async def test_create_pull_request_error_handling():
-    """Test error handling in create_pull_request."""
+async def test_upload_pack_json_only_error_handling():
+    """Test error handling for JSON-only endpoint."""
     backend_url = "https://api.example.com"
     client = GitHubBackendClient(backend_url)
 
@@ -127,16 +117,14 @@ async def test_create_pull_request_error_handling():
         mock_client.post.return_value = mock_response
 
         with pytest.raises(RuntimeError) as exc_info:
-            await client.create_pull_request(
-                branch="test-branch", title="Test PR", body="Test body"
-            )
+            await client.upload_pack_json_only({})
 
         assert "Backend service error (HTTP 422)" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
-async def test_create_pull_request_cancellation():
-    """Test cancellation support in create_pull_request."""
+async def test_upload_zip_cancellation():
+    """Test cancellation support in upload_zip."""
     backend_url = "https://api.example.com"
     client = GitHubBackendClient(backend_url)
 
@@ -144,6 +132,4 @@ async def test_create_pull_request_cancellation():
     cancel_event.set()  # Pre-cancel the event
 
     with pytest.raises(asyncio.CancelledError):
-        await client.create_pull_request(
-            branch="test-branch", title="Test PR", body="Test body", cancel_event=cancel_event
-        )
+        await client.upload_zip(b"123", cancel_event=cancel_event)

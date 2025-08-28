@@ -195,8 +195,8 @@ The community submission is handled by the `PackSubmissionService` class, which 
 from accessiweather.services.pack_submission_service import PackSubmissionService
 
 service = PackSubmissionService(
-    repo_owner="accessiweather-community",
-    repo_name="soundpacks", 
+    repo_owner="orinks",
+    repo_name="accessiweather-soundpacks",
     dest_subdir="packs",
     config_manager=config_manager
 )
@@ -209,7 +209,7 @@ pr_url = await service.submit_pack(pack_path, pack_metadata)
 ```python
 # Submit pack anonymously with optional attribution
 pr_url = await service.submit_pack_anonymous(
-    pack_path, 
+    pack_path,
     pack_metadata,
     submitter_name="John Doe",  # Optional
     submitter_email="john@example.com",  # Optional
@@ -241,7 +241,7 @@ repo_info = await client.github_request("GET", "/repos/accessiweather-community/
 1. **JWT Generation**: Creates signed JWT token using GitHub App private key
 2. **Installation Token**: Exchanges JWT for installation access token via `/app/installations/{id}/access_tokens`
 3. **Resource Access**: Uses installation token for all repository operations
-4. **Proper Auth Schemes**: 
+4. **Proper Auth Schemes**:
    - `Authorization: Bearer <jwt>` for GitHub App endpoints
    - `Authorization: token <token>` for resource endpoints
 
@@ -325,7 +325,7 @@ The sound pack system includes comprehensive tests covering all functionality:
 
 ### Core System Tests
 - **Unit Tests**: Individual component testing
-- **Integration Tests**: End-to-end workflow testing  
+- **Integration Tests**: End-to-end workflow testing
 - **Dialog Tests**: UI component testing with Toga dummy backend
 - **Error Handling Tests**: Validation and fallback testing
 

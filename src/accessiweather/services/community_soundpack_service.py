@@ -18,13 +18,14 @@ import base64
 import contextlib
 import json
 import logging
-import os
 import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
 import httpx
+
+from accessiweather.constants import COMMUNITY_REPO_NAME, COMMUNITY_REPO_OWNER
 
 logger = logging.getLogger(__name__)
 
@@ -55,8 +56,8 @@ class CommunitySoundPackService:
 
     def __init__(
         self,
-        repo_owner: str = "accessiweather-community",
-        repo_name: str = "soundpacks",
+        repo_owner: str = COMMUNITY_REPO_OWNER,
+        repo_name: str = COMMUNITY_REPO_NAME,
         timeout: float = 30.0,
         cache_duration_seconds: int = 300,
         user_agent: str = "AccessiWeather-CommunityPacks/1.0",

@@ -93,5 +93,5 @@ GITHUB_APP_PKCS8_PRIVATE_KEY_HEADER = "-----BEGIN PRIVATE KEY-----"
 GITHUB_APP_PKCS8_PRIVATE_KEY_FOOTER = "-----END PRIVATE KEY-----"
 
 # GitHub repository constants for community soundpack repository
-COMMUNITY_REPO_OWNER = "accessiweather-community"
-COMMUNITY_REPO_NAME = "soundpacks"
+COMMUNITY_REPO_OWNER = "orinks"
+COMMUNITY_REPO_NAME = "accessiweather-soundpacks"
