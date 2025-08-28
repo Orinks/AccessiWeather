@@ -1,0 +1,298 @@
+name: Beta Release
+
+on:
+  push:
+    tags:
+      - 'v*-beta.*'    # Triggers on tags like v1.0.0-beta.1
+      - 'v*-alpha.*'   # Triggers on tags like v1.0.0-alpha.1
+      - 'v*-rc.*'      # Triggers on tags like v1.0.0-rc.1
+      - 'v*-dev.*'     # Triggers on tags like v1.0.0-dev.20241224
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Beta version (e.g., 1.0.0-beta.1)'
+        required: true
+        type: string
+      notify_testers:
+        description: 'Notify beta testers'
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  FORCE_COLOR: "1"
+
+jobs:
+  beta-release:
+    name: Build and Release Beta
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.12"
+
+    - name: Get version
+      id: version
+      shell: bash
+      run: |
+        if [ -n "${{ github.event.inputs.version }}" ]; then
+          VERSION="${{ github.event.inputs.version }}"
+        else
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"  # Remove 'v' prefix
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+        echo "Version: $VERSION"
+
+    - name: Validate beta version
+      shell: bash
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        if [[ ! "$VERSION" =~ (beta|alpha|rc|dev) ]]; then
+          echo "Error: Version '$VERSION' is not a valid beta/pre-release version"
+          echo "Expected format: 1.0.0-beta.1, 1.0.0-alpha.1, 1.0.0-rc.1, or 1.0.0-dev.20241224"
+          exit 1
+        fi
+        echo "✓ Valid beta version: $VERSION"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        pip install -e .[dev]
+        pip install briefcase
+
+    - name: Update version in files
+      shell: bash
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+
+        # Update pyproject.toml
+        sed -i "s/version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml
+
+        # Update version.py
+        sed -i "s/__version__ = \"[^\"]*\"/__version__ = \"$VERSION\"/" src/accessiweather/version.py
+
+        echo "Updated version to: $VERSION"
+
+    - name: Build Briefcase application
+      run: |
+        echo "Building Briefcase app for Windows..."
+        briefcase build windows app --no-input --log
+      env:
+        DISPLAY: ""
+        ACCESSIWEATHER_TEST_MODE: "1"
+
+    - name: Package Briefcase application
+      run: |
+        echo "Packaging Briefcase app as MSI installer..."
+        briefcase package windows app --no-input --log --adhoc-sign
+      env:
+        DISPLAY: ""
+        ACCESSIWEATHER_TEST_MODE: "1"
+
+    - name: Create portable ZIP version
+      shell: bash
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+
+        # Find the built app directory
+        APP_DIR=$(find build -name "AccessiWeather" -type d | head -1)
+
+        if [ -z "$APP_DIR" ]; then
+          echo "Error: Could not find built app directory"
+          find build -type d -name "*" | head -10
+          exit 1
+        fi
+
+        echo "Found app directory: $APP_DIR"
+
+        # Create portable ZIP
+        cd "$APP_DIR"
+        powershell -Command "Compress-Archive -Path * -DestinationPath '../../AccessiWeather_Beta_v$VERSION.zip'"
+        cd ../..
+
+        echo "Created portable ZIP: AccessiWeather_Beta_v$VERSION.zip"
+
+    - name: Prepare release assets
+      shell: bash
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+
+        # Create release directory
+        mkdir -p release-assets
+
+        # Copy MSI installer
+        MSI_SOURCE=$(find dist -name "*.msi" | head -1)
+        if [ -n "$MSI_SOURCE" ] && [ -f "$MSI_SOURCE" ]; then
+          # Rename to include beta designation
+          MSI_NAME="AccessiWeather_Beta_v$VERSION.msi"
+          cp "$MSI_SOURCE" "release-assets/$MSI_NAME"
+          echo "✓ Copied MSI installer as $MSI_NAME"
+        else
+          echo "✗ MSI installer not found"
+          exit 1
+        fi
+
+        # Copy portable ZIP
+        PORTABLE_SOURCE="AccessiWeather_Beta_v$VERSION.zip"
+        if [ -f "$PORTABLE_SOURCE" ]; then
+          cp "$PORTABLE_SOURCE" "release-assets/"
+          echo "✓ Copied portable ZIP"
+        else
+          echo "✗ Portable ZIP not found at: $PORTABLE_SOURCE"
+          exit 1
+        fi
+
+        # Generate checksums
+        CHECKSUM_FILE="release-assets/checksums.txt"
+        echo "AccessiWeather v$VERSION - Beta Release Checksums" > "$CHECKSUM_FILE"
+        echo "" >> "$CHECKSUM_FILE"
+
+        # Get all files in release-assets directory
+        for file in release-assets/*.{msi,zip}; do
+          if [ -f "$file" ]; then
+            HASH=$(powershell -Command "(Get-FileHash '$file' -Algorithm SHA256).Hash")
+            SIZE=$(powershell -Command "(Get-Item '$file').Length")
+            SIZE_MB=$(echo "scale=2; $SIZE / 1024 / 1024" | bc -l)
+            echo "$HASH  $(basename "$file") ($SIZE_MB MB)" >> "$CHECKSUM_FILE"
+          fi
+        done
+
+        echo "✓ Generated checksums"
+        cat "$CHECKSUM_FILE"
+
+    - name: Create beta release notes
+      shell: bash
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+
+        # Determine release type
+        if [[ "$VERSION" =~ beta ]]; then
+          RELEASE_TYPE="Beta"
+          STABILITY="This is a beta release for testing purposes."
+        elif [[ "$VERSION" =~ alpha ]]; then
+          RELEASE_TYPE="Alpha"
+          STABILITY="This is an alpha release - expect bugs and instability."
+        elif [[ "$VERSION" =~ rc ]]; then
+          RELEASE_TYPE="Release Candidate"
+          STABILITY="This is a release candidate - nearly ready for stable release."
+        elif [[ "$VERSION" =~ dev ]]; then
+          RELEASE_TYPE="Development"
+          STABILITY="This is a development build - for testing latest changes."
+        else
+          RELEASE_TYPE="Pre-release"
+          STABILITY="This is a pre-release version."
+        fi
+
+        cat > release-notes.md << EOF
+        # AccessiWeather v$VERSION ($RELEASE_TYPE)
+
+        🧪 **$STABILITY**
+
+        ## What's New in This $RELEASE_TYPE
+
+        This $RELEASE_TYPE includes the latest improvements and bug fixes for AccessiWeather, built with the modern Toga/BeeWare framework.
+
+        ### For Beta Testers
+        - Please test all major features (weather fetching, alerts, settings)
+        - Report any issues on [GitHub Issues](https://github.com/joshuakitchen/accessiweather/issues)
+        - Check accessibility with your preferred screen reader
+        - Test with different locations (US and international)
+
+        ## Downloads
+
+        - **Windows MSI Installer**: \`AccessiWeather_Beta_v$VERSION.msi\`
+        - **Portable Version**: \`AccessiWeather_Beta_v$VERSION.zip\`
+
+        ## Installation
+
+        ### Windows MSI Installer
+        1. Download the MSI installer
+        2. Run the installer (you may see security warnings for beta software)
+        3. Launch AccessiWeather from the Start Menu
+
+        ### Portable Version
+        1. Download \`AccessiWeather_Beta_v$VERSION.zip\`
+        2. Extract to your desired location
+        3. Run \`AccessiWeather.exe\` from the extracted folder
+
+        ## Beta Testing Checklist
+
+        - [ ] Application starts without errors
+        - [ ] Location search works (try multiple locations)
+        - [ ] Current weather displays correctly
+        - [ ] Forecasts load properly
+        - [ ] Weather alerts function (if available in your area)
+        - [ ] Settings can be changed and saved
+        - [ ] Screen reader compatibility (NVDA, JAWS, Narrator)
+        - [ ] Keyboard navigation works
+        - [ ] System tray integration functions
+
+        ## Known Issues
+
+        - This is beta software - expect some bugs
+        - Report any crashes or unexpected behavior
+        - Performance may not be optimized
+
+        ## Checksums
+
+        \`\`\`
+        $(cat release-assets/checksums.txt)
+        \`\`\`
+
+        ## System Requirements
+
+        - Windows 10 or later
+        - Internet connection for weather data
+        - Screen reader (optional, but recommended for accessibility testing)
+
+        ---
+
+        **Thank you for beta testing AccessiWeather!** 🙏
+
+        Your feedback helps make AccessiWeather better for everyone. Please report issues and suggestions on our [GitHub repository](https://github.com/joshuakitchen/accessiweather).
+        EOF
+
+        echo "✓ Generated beta release notes"
+
+    - name: Create GitHub Pre-Release
+      uses: ncipollo/release-action@v1
+      with:
+        tag: ${{ steps.version.outputs.tag }}
+        name: AccessiWeather v${{ steps.version.outputs.version }} (Beta)
+        bodyFile: release-notes.md
+        artifacts: "release-assets/*"
+        draft: false
+        prerelease: true  # Always mark as pre-release
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload Briefcase logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: briefcase-beta-logs
+        path: logs/*
+
+    - name: Beta release summary
+      shell: bash
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        echo "✅ Successfully created beta release v$VERSION"
+        echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/v$VERSION"
+        echo "🧪 Beta testers can now download and test this version!"
+
+        if [ "${{ github.event.inputs.notify_testers }}" = "true" ]; then
+          echo "📧 Consider notifying your beta testers about this release"
+        fi

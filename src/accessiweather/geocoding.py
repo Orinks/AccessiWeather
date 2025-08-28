@@ -1,11 +1,10 @@
-"""Geocoding service for AccessiWeather
+"""Geocoding service for AccessiWeather.
 
 This module provides geocoding functionality to convert addresses and zip codes to coordinates.
 """
 
 import logging
 import re
-from typing import List, Optional, Tuple
 
 from geopy.exc import GeocoderServiceError, GeocoderTimedOut
 from geopy.geocoders import Nominatim
@@ -14,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class GeocodingService:
-    """Service for geocoding addresses and zip codes"""
+    """Service for geocoding addresses and zip codes."""
 
     # Regular expression for US ZIP codes (both 5-digit and ZIP+4 formats)
     ZIP_CODE_PATTERN = re.compile(r"^\d{5}(?:-\d{4})?$")
@@ -25,35 +24,38 @@ class GeocodingService:
     def __init__(
         self, user_agent: str = "AccessiWeather", timeout: int = 10, data_source: str = "nws"
     ):
-        """Initialize the geocoding service
+        """Initialize the geocoding service.
 
         Args:
             user_agent: User agent string for API requests
             timeout: Timeout in seconds for geocoding requests
             data_source: The data source to use ('nws' or 'auto')
+
         """
         self.geolocator = Nominatim(user_agent=user_agent, timeout=timeout)
         self.data_source = data_source
 
     def is_zip_code(self, text: str) -> bool:
-        """Check if the given text is a valid US ZIP code
+        """Check if the given text is a valid US ZIP code.
 
         Args:
             text: Text to check
 
         Returns:
             True if the text is a valid US ZIP code, False otherwise
+
         """
         return bool(self.ZIP_CODE_PATTERN.match(text))
 
     def format_zip_code(self, zip_code: str) -> str:
-        """Format a ZIP code for geocoding
+        """Format a ZIP code for geocoding.
 
         Args:
             zip_code: ZIP code to format
 
         Returns:
             Formatted ZIP code string for geocoding
+
         """
         # Remove the dash for ZIP+4 codes to get just the 5-digit base
         if "-" in zip_code:
@@ -62,7 +64,7 @@ class GeocodingService:
         # Add USA to improve geocoding accuracy
         return f"{zip_code}, USA"
 
-    def geocode_address(self, address: str) -> Optional[Tuple[float, float, str]]:
+    def geocode_address(self, address: str) -> tuple[float, float, str] | None:
         """Convert an address or zip code to coordinates, filtering for US locations.
 
         Args:
@@ -71,6 +73,7 @@ class GeocodingService:
         Returns:
             Tuple of (latitude, longitude, display_name) if successful and within
             the US NWS coverage area, None otherwise
+
         """
         try:
             # Clean up the address string
@@ -112,13 +115,12 @@ class GeocodingService:
                     f"(country_code: {country_code})"
                 )
                 return location.latitude, location.longitude, location.address
-            else:
-                logger.warning(
-                    f"Geocoding result for '{original_query}' lacks detailed address information "
-                    f"to verify country code. Raw data: {getattr(location, 'raw', 'N/A')}"
-                )
-                # Cannot verify country, treat as unsupported for safety
-                return None
+            logger.warning(
+                f"Geocoding result for '{original_query}' lacks detailed address information "
+                f"to verify country code. Raw data: {getattr(location, 'raw', 'N/A')}"
+            )
+            # Cannot verify country, treat as unsupported for safety
+            return None
 
         except (GeocoderTimedOut, GeocoderServiceError) as e:
             logger.error(f"Geocoding error for '{original_query}': {str(e)}")
@@ -127,7 +129,7 @@ class GeocodingService:
             logger.error(f"Unexpected geocoding error for '{original_query}': {str(e)}")
             return None
 
-    def validate_coordinates(self, lat: float, lon: float, us_only: Optional[bool] = None) -> bool:
+    def validate_coordinates(self, lat: float, lon: float, us_only: bool | None = None) -> bool:
         """Validate if coordinates are within the US NWS coverage area or globally valid.
 
         This method performs a reverse geocoding lookup to determine if the
@@ -145,6 +147,7 @@ class GeocodingService:
 
         Returns:
             True if coordinates are valid according to the criteria, False otherwise
+
         """
         # If us_only is not specified, determine based on data source
         if us_only is None:
@@ -181,19 +184,17 @@ class GeocodingService:
                         f"Coordinates ({lat}, {lon}) validated as within US (country_code: {country_code})"
                     )
                     return True
-                else:
-                    logger.warning(
-                        f"Coordinates ({lat}, {lon}) are outside the US NWS coverage area "
-                        f"(country_code: '{country_code}'). Only {self.ALLOWED_COUNTRY_CODES} are supported."
-                    )
-                    return False
-            else:
                 logger.warning(
-                    f"Reverse geocoding result for coordinates ({lat}, {lon}) lacks detailed "
-                    f"address information to verify country code. Raw data: {getattr(location, 'raw', 'N/A')}"
+                    f"Coordinates ({lat}, {lon}) are outside the US NWS coverage area "
+                    f"(country_code: '{country_code}'). Only {self.ALLOWED_COUNTRY_CODES} are supported."
                 )
-                # Cannot verify country, treat as unsupported for safety
                 return False
+            logger.warning(
+                f"Reverse geocoding result for coordinates ({lat}, {lon}) lacks detailed "
+                f"address information to verify country code. Raw data: {getattr(location, 'raw', 'N/A')}"
+            )
+            # Cannot verify country, treat as unsupported for safety
+            return False
 
         except (GeocoderTimedOut, GeocoderServiceError) as e:
             logger.error(f"Geocoding error validating coordinates ({lat}, {lon}): {str(e)}")
@@ -205,7 +206,7 @@ class GeocodingService:
             # Same as above, assume valid in case of unexpected errors
             return True
 
-    def suggest_locations(self, query: str, limit: int = 5) -> List[str]:
+    def suggest_locations(self, query: str, limit: int = 5) -> list[str]:
         """Suggest location completions based on partial input, filtering for US locations.
 
         Args:
@@ -214,6 +215,7 @@ class GeocodingService:
 
         Returns:
             List of suggested location strings (US locations only)
+
         """
         try:
             # Clean up the query string
@@ -263,17 +265,15 @@ class GeocodingService:
                         f"Found {len(suggestions)} US location suggestions for NWS data source"
                     )
                     return suggestions
-                else:
-                    logger.debug(f"No US location suggestions found for query: {query}")
-                    return []
-            else:
-                # For WeatherAPI or Automatic, allow any location worldwide
-                filtered_locations = locations[:limit]  # Just take the first 'limit' locations
-                suggestions = [location.address for location in filtered_locations]
-                logger.debug(
-                    f"Found {len(suggestions)} worldwide location suggestions for non-NWS data source"
-                )
-                return suggestions
+                logger.debug(f"No US location suggestions found for query: {query}")
+                return []
+            # For WeatherAPI or Automatic, allow any location worldwide
+            filtered_locations = locations[:limit]  # Just take the first 'limit' locations
+            suggestions = [location.address for location in filtered_locations]
+            logger.debug(
+                f"Found {len(suggestions)} worldwide location suggestions for non-NWS data source"
+            )
+            return suggestions
 
         except (GeocoderTimedOut, GeocoderServiceError) as e:
             logger.error(f"Location suggestion error for '{query}': {str(e)}")

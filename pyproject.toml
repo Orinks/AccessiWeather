@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "accessiweather"
-version = "0.9.3.1"
+version = "0.9.4-dev"
 description = "AccessiWeather: An accessible weather application that includes NOAA and Open-Meteo support with focus on screen reader compatibility"
 authors = [
     { name = "Orinks" }
@@ -12,15 +12,16 @@ authors = [
 license = {text = "MIT"}
 requires-python = ">=3.7"
 dependencies = [
-    "wxPython",
-    "requests",
-    "plyer",
+    "toga",
+    "desktop-notifier",
     "geopy",
     "python-dateutil",
     "beautifulsoup4",
     "httpx>=0.20.0",
     "attrs>=22.2.0",
-    "psutil"
+    "psutil",
+    "tufup",
+    "cryptography"
 ]
 readme = "README.md"
 classifiers = [
@@ -34,28 +35,233 @@ dev = [
     "pytest",
     "pytest-mock",
     "pytest-cov",
-    "requests-mock",
+    "pytest-asyncio",
+    "ruff>=0.9.0",
+    "mypy>=1.0.0",
     "types-requests",
     "PyInstaller"
+]
+audio = [
+    "playsound"
 ]
 
 [project.scripts]
 accessiweather = "accessiweather.cli:main"
 
-[tool.black]
+[tool.ruff]
 line-length = 100
-target-version = ['py312']
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-)/
-'''
+target-version = "py312"
+
+# Cache configuration
+cache-dir = ".ruff_cache"
+respect-gitignore = true
+
+# Exclude auto-generated and build directories
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    "src/accessiweather/weather_gov_api_client",
+    "src/accessiweather/weatherapi_client",
+    ".venv",
+    "venv",
+    "env",
+    ".eggs",
+    "*.egg-info",
+    ".tox",
+    ".coverage",
+    "htmlcov",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    "temp_backup",
+    "installer/build",
+    "installer/dist",
+    "docs",
+    ".github"
+]
+
+[tool.ruff.lint]
+# Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
+# Also enable isort (`I`), pydocstyle (`D`), and other useful rules
+select = ["E", "W", "F", "I", "D", "UP", "B", "C4", "PIE", "SIM", "RET"]
+ignore = [
+    "E203",   # whitespace before ':'
+    "E501",   # line too long (handled by formatter)
+    "F541",   # f-string is missing placeholders
+    "C901",   # too complex (we'll handle this gradually)
+    "D100",   # Missing docstring in public module
+    "D101",   # Missing docstring in public class
+    "D102",   # Missing docstring in public method
+    "D103",   # Missing docstring in public function
+    "D104",   # Missing docstring in public package
+    "D105",   # Missing docstring in magic method
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]  # Allow unused imports in __init__.py files
+"src/accessiweather/weatherapi_client/client.py" = ["F401", "F541", "F811", "E741"]
+"src/accessiweather/weatherapi_mapper.py" = ["F401"]
+"tests/test_logging_config.py" = ["SIM117"]
+
+[tool.ruff.lint.isort]
+# Black-compatible settings
+combine-as-imports = true
+force-wrap-aliases = true
+split-on-trailing-comma = true
+
+[tool.ruff.format]
+# Use double quotes for strings.
+quote-style = "double"
+# Indent with spaces, rather than tabs.
+indent-style = "space"
+# Respect magic trailing commas.
+skip-magic-trailing-comma = false
+# Automatically detect the appropriate line ending.
+line-ending = "auto"
+
+
+
+[tool.ruff.lint.mccabe]
+max-complexity = 15
+
+
+
+# content below this line added by briefcase convert
+# This project was generated with 0.3.23 using template: https://github.com/beeware/briefcase-template @ v0.3.23
+[tool.briefcase]
+project_name = "Accessiweather"
+bundle = "net.orinks.accessiweather"
+version = "0.0.1"
+url = "http://accessiweather.orinks.net"
+license.file = "LICENSE"
+author = "Orinks"
+author_email = "orin8722@gmail.com"
+
+[tool.briefcase.app.accessiweather]
+formal_name = "AccessiWeather"
+description = "AccessiWeather: An accessible weather application that includes NOAA and Open-Meteo support with focus on screen reader compatibility"
+long_description = """AccessiWeather is a simplified, accessible weather application built with BeeWare/Toga.
+It provides current conditions, forecasts, and weather alerts with a focus on screen reader compatibility.
+"""
+sources = [
+    "src/accessiweather",
+]
+test_sources = [
+    "tests",
+]
+
+# Include TUF root metadata and other resources
+resources = [
+    "src/accessiweather/resources",
+]
+
+# Specify the entry point for the main app
+entry_point = "accessiweather:main"
+
+requires = [
+    "toga>=0.5.1",
+    "playsound",
+    "httpx>=0.20.0",
+    "python-dateutil",
+    "desktop-notifier",
+    "geopy",
+    "beautifulsoup4",
+    "attrs>=22.2.0",
+    "psutil",
+    "tufup",
+    "cryptography",
+]
+test_requires = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.20.0",
+    "pytest-cov>=4.0.0",
+    "httpx>=0.20.0",
+]
+
+[tool.briefcase.app.accessiweather.macOS]
+universal_build = true
+requires = [
+    # Add your macOS-specific app requirements here
+]
+
+# Build hooks for credential embedding
+pre_build = "scripts.briefcase_hooks:pre_build_hook"
+post_build = "scripts.briefcase_hooks:post_build_hook"
+
+[tool.briefcase.app.accessiweather.linux]
+requires = [
+    # Add your Linux-specific app requirements here
+]
+
+# Build hooks for credential embedding
+pre_build = "scripts.briefcase_hooks:pre_build_hook"
+post_build = "scripts.briefcase_hooks:post_build_hook"
+
+[tool.briefcase.app.accessiweather.linux.system.debian]
+system_requires = [
+    # Add any system packages needed at build the app here
+]
+
+system_runtime_requires = [
+    # Add any system packages needed at runtime here
+]
+
+[tool.briefcase.app.accessiweather.linux.system.rhel]
+system_requires = [
+    # Add any system packages needed at build the app here
+]
+
+system_runtime_requires = [
+    # Add any system packages needed at runtime here
+]
+
+[tool.briefcase.app.accessiweather.linux.system.suse]
+system_requires = [
+    # Add any system packages needed at build the app here
+]
+
+system_runtime_requires = [
+    # Add any system packages needed at runtime here
+]
+
+[tool.briefcase.app.accessiweather.linux.system.arch]
+system_requires = [
+    # Add any system packages needed at build the app here
+]
+
+system_runtime_requires = [
+    # Add any system packages needed at runtime here
+]
+
+[tool.briefcase.app.accessiweather.linux.flatpak]
+flatpak_runtime = "org.freedesktop.Platform"
+flatpak_runtime_version = "24.08"
+flatpak_sdk = "org.freedesktop.Sdk"
+
+[tool.briefcase.app.accessiweather.windows]
+requires = [
+    # Add your Windows-specific app requirements here
+]
+
+# Build hooks for credential embedding
+pre_build = "scripts.briefcase_hooks:pre_build_hook"
+post_build = "scripts.briefcase_hooks:post_build_hook"
+
+# Mobile deployments
+[tool.briefcase.app.accessiweather.iOS]
+requires = [
+    # Add your iOS-specific app requirements here
+]
+
+[tool.briefcase.app.accessiweather.android]
+requires = [
+    # Add your Android-specific app requirements here
+]
+
+# Web deployments
+[tool.briefcase.app.accessiweather.web]
+requires = [
+    # Add your web-specific app requirements here
+]

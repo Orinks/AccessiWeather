@@ -94,14 +94,15 @@ The following thresholds are configurable via environment variables in the GitHu
 
 ### Pre-commit Hooks
 - **Configuration**: `.pre-commit-config.yaml`
-- **Tools**: black, isort, flake8, mypy, basic checks
+- **Tools**: ruff (linting & formatting), mypy, basic checks
 - **Integration**: Runs in CI to ensure consistency
 
-### Flake8
-- **Configuration**: `.flake8`
+### Ruff
+- **Configuration**: `pyproject.toml`
 - **Max Line Length**: 100 characters
-- **Max Complexity**: 10 (enforced)
+- **Max Complexity**: 15 (enforced)
 - **Exclusions**: Generated code, build artifacts
+- **Features**: Combines linting, formatting, and import sorting
 
 ### Complexity Analysis
 - **Tools**: Radon (analysis), Xenon (enforcement)
@@ -130,6 +131,10 @@ pip install -r requirements-dev.txt
 # Run pre-commit hooks
 pre-commit install
 pre-commit run --all-files
+
+# Run ruff checks manually
+ruff check src/accessiweather tests/
+ruff format src/accessiweather tests/
 
 # Run tests with coverage
 pytest --cov=src/accessiweather

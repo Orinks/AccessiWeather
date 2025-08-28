@@ -173,7 +173,7 @@ def _parse_response(
         response_301 = cast(Any, None)
         return response_301
     if client.raise_on_unexpected_status:
-        raise errors.UnexpectedStatus(response.status_code, response.content)
+        raise e from Nonerrors.UnexpectedStatus(response.status_code, response.content)
     else:
         return None
 

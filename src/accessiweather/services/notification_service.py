@@ -5,7 +5,6 @@ separating business logic from UI concerns.
 """
 
 import logging
-from typing import Dict, List, Optional
 
 from accessiweather.notifications import WeatherNotifier
 
@@ -20,13 +19,14 @@ class NotificationService:
 
         Args:
             notifier: The notifier to use for notification operations.
+
         """
         self.notifier = notifier
 
     def notify_alerts(
         self,
-        alerts: List[Dict],
-        count: Optional[int] = None,
+        alerts: list[dict],
+        count: int | None = None,
         new_count: int = 0,
         updated_count: int = 0,
     ) -> None:
@@ -37,6 +37,7 @@ class NotificationService:
             count: Optional count of alerts to notify about. If None, all alerts are notified.
             new_count: Number of new alerts (default: 0)
             updated_count: Number of updated alerts (default: 0)
+
         """
         if not alerts:
             logger.info("No alerts to notify about")
@@ -48,7 +49,7 @@ class NotificationService:
         logger.info(f"Notifying about {count} alerts (new: {new_count}, updated: {updated_count})")
         self.notifier.notify_alerts(count, new_count, updated_count)
 
-    def process_alerts(self, alerts_data: Dict) -> tuple[List[Dict], int, int]:
+    def process_alerts(self, alerts_data: dict) -> tuple[list[dict], int, int]:
         """Process alerts data and notify the user.
 
         Args:
@@ -59,6 +60,7 @@ class NotificationService:
             - List of processed alert objects
             - Number of new alerts
             - Number of updated alerts
+
         """
         processed_alerts, new_count, updated_count = self.notifier.process_alerts(alerts_data)
 
@@ -73,11 +75,12 @@ class NotificationService:
 
         return processed_alerts, new_count, updated_count
 
-    def get_sorted_alerts(self) -> List[Dict]:
+    def get_sorted_alerts(self) -> list[dict]:
         """Get a sorted list of active alerts.
 
         Returns:
             List of alert objects sorted by severity.
+
         """
         return self.notifier.get_sorted_alerts()
 

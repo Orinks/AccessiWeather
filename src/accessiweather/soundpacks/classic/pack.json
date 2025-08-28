@@ -1,0 +1,10 @@
+{
+    "name": "Classic",
+    "author": "AccessiWeather Team",
+    "description": "Classic retro computer sounds for a nostalgic experience.",
+    "version": "1.0.0",
+    "sounds": {
+        "alert": "alert.wav",
+        "notify": "notify.wav"
+    }
+}

@@ -41,17 +41,17 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Fetch full history for build metadata
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
     - name: Cache pip dependencies
-      uses: actions/cache@v4
+      uses: actions/cache@v3
       with:
         path: ~\AppData\Local\pip\Cache
         key: ${{ runner.os }}-build-pip-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml') }}
@@ -59,7 +59,7 @@ jobs:
           ${{ runner.os }}-build-pip-
 
     - name: Cache PyInstaller build cache
-      uses: actions/cache@v4
+      uses: actions/cache@v3
       if: ${{ !github.event.inputs.skip_cache }}
       with:
         path: |
@@ -274,13 +274,13 @@ jobs:
 
     steps:
     - name: Download installer artifacts
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v4
       with:
         name: windows-installer-${{ needs.build.outputs.version }}
         path: artifacts/installer/
 
     - name: Download portable artifacts
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v4
       with:
         name: windows-portable-${{ needs.build.outputs.version }}
         path: artifacts/portable/

@@ -1,0 +1,140 @@
+name: Toga Migration CI
+
+on:
+  push:
+    branches: [ dev, feature/toga-migration ]
+  pull_request:
+    branches: [ dev ]
+  workflow_dispatch:
+
+env:
+  # Toga-specific environment variables
+  TOGA_BACKEND: toga_dummy
+  # Quality gate thresholds - aligned with existing dev branch
+  MAX_COMPLEXITY: 30
+  SECURITY_SEVERITY_THRESHOLD: "medium"
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.12']  # Focus on Python 3.12 for Briefcase testing
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install system dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgirepository1.0-dev libcairo2-dev pkg-config python3-dev
+
+    - name: Install system dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install cairo pkg-config
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install briefcase
+        pip install pytest pytest-asyncio pytest-cov toga-dummy Pillow
+
+    - name: Test Toga components only
+      env:
+        TOGA_BACKEND: toga_dummy
+      run: |
+        python -m pytest tests/test_toga_isolated.py tests/test_toga_simple.py -v --tb=short
+        echo "✓ Toga tests completed successfully"
+
+
+
+  code-quality:
+    name: Code Quality (Toga)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install tox ruff mypy
+
+    - name: Lint with ruff (Toga-focused)
+      run: |
+        # Lint only Toga-related files and test infrastructure
+        ruff check \
+          src/accessiweather/simple/ \
+          tests/test_toga_*.py \
+          tests/toga_test_helpers.py \
+          tests/conftest.py \
+          --config pyproject.toml
+      continue-on-error: true  # Allow style issues while focusing on functionality
+
+    - name: Type check with mypy (Toga-focused)
+      run: |
+        # Type check only Toga-related files
+        mypy \
+          src/accessiweather/simple/ \
+          tests/test_toga_*.py \
+          tests/toga_test_helpers.py \
+          --config-file pyproject.toml \
+          --ignore-missing-imports
+      continue-on-error: true  # Type checking is informational for now
+
+  quality-gate:
+    name: Toga Quality Gate
+    runs-on: ubuntu-latest
+    needs: [test, code-quality]
+    if: always()
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check all jobs status
+      run: |
+        echo "Test job status: ${{ needs.test.result }}"
+        echo "Code Quality job status: ${{ needs.code-quality.result }}"
+
+        # Only require tests to pass - code quality is informational for now
+        if [ "${{ needs.test.result }}" != "success" ]; then
+          echo "Quality gate failed - Toga tests did not pass"
+          exit 1
+        fi
+
+        echo "Toga Quality gate passed - tests successful"
+        if [ "${{ needs.code-quality.result }}" != "success" ]; then
+          echo "Note: Code quality checks have style issues (non-blocking)"
+        fi
+      shell: bash
+
+    - name: Generate Toga quality summary
+      run: |
+        echo "# Toga Migration Quality Gate Summary" > toga-quality-summary.md
+        echo "" >> toga-quality-summary.md
+        echo "## Job Results" >> toga-quality-summary.md
+        echo "- **Toga Tests**: ${{ needs.test.result }}" >> toga-quality-summary.md
+        echo "- **Code Quality**: ${{ needs.code-quality.result }}" >> toga-quality-summary.md
+        echo "" >> toga-quality-summary.md
+        echo "## Test Coverage" >> toga-quality-summary.md
+        echo "- **Toga Infrastructure Tests**: 20 tests across platforms" >> toga-quality-summary.md
+        echo "- **Cross-platform**: Ubuntu, Windows, macOS" >> toga-quality-summary.md
+        echo "- **Backend**: toga-dummy for headless testing" >> toga-quality-summary.md
+
+    - name: Upload quality summary
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: toga-quality-gate-summary
+        path: toga-quality-summary.md

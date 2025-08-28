@@ -6,9 +6,9 @@ setup(
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     install_requires=[
-        "wxPython",
+        "toga",
         "requests",
-        "plyer",  # For cross-platform notifications
+        "desktop-notifier",  # For cross-platform notifications
         "geopy",  # For geocoding addresses and zip codes
         "python-dateutil",  # For parsing ISO timestamps
         "beautifulsoup4",  # For parsing HTML in the scraper
@@ -28,9 +28,4 @@ setup(
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.7",
-    entry_points={
-        "console_scripts": [
-            "accessiweather=accessiweather.cli:main",
-        ],
-    },
 )

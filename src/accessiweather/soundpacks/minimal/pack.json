@@ -1,0 +1,12 @@
+{
+    "name": "Minimal",
+    "author": "AccessiWeather Team",
+    "description": "Simple, unobtrusive notification sounds for users who prefer subtle audio cues.",
+    "version": "1.0.0",
+    "sounds": {
+        "alert": "soft_beep.wav",
+        "notify": "gentle_chime.wav",
+        "error": "low_tone.wav",
+        "success": "high_tone.wav"
+    }
+}

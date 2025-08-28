@@ -1,6 +1,9 @@
-# AccessiWeather (v0.9.3)
+# AccessiWeather (v0.9.4-dev)
 
-A desktop weather application with robust accessibility features and international weather support. Built using wxPython with a focus on screen reader compatibility and keyboard navigation.
+A desktop weather application with robust accessibility features and international weather support. Built using the BeeWare/Toga framework with a focus on screen reader compatibility and keyboard navigation.
+
+> Important: BeeWare/Toga is the active framework. The installer scripts in the installer/ folder use PyInstaller + Inno Setup from the legacy wxPython era and are currently broken. We are migrating packaging to BeeWare Briefcase. Until installer scripts are updated, use Briefcase for development and packaging.
+
 
 ## Features
 
@@ -92,59 +95,91 @@ accessiweather --portable
    - System tray behavior
    - Taskbar icon customization
 
-## Building Binaries
+## Packaging and Installation
 
-AccessiWeather includes a PowerShell script to build Windows binaries and installers.
+We are migrating to BeeWare Briefcase for builds and installers.
 
-### Prerequisites
+- The legacy scripts in installer/ use PyInstaller + Inno Setup and target the wxPython app; they are not compatible with the current Toga app.
+- Until Briefcase packaging is finalized for release builds, use Briefcase for development runs and testing.
 
-- Python 3.7+ (Python 3.11 recommended)
-- PowerShell 5.0+
-- [Inno Setup 6](https://jrsoftware.org/isdl.php) (for creating installers)
+### Development workflow (Briefcase)
 
-### Building Steps
+```bash
+# Create/activate your venv
+python -m venv .venv
+source .venv/Scripts/activate  # Windows
 
-1. Ensure Inno Setup is installed and in your PATH
-   ```powershell
-   # You can install Inno Setup using winget
-   winget install JRSoftware.InnoSetup
-   ```
+# Install deps
+pip install -r requirements-dev.txt
 
-2. Run the build script from the project root directory
-   ```powershell
-   # Navigate to the project directory
-   cd path\to\AccessiWeather
+# Run in dev mode
+briefcase dev
 
-   # Run the build script
-   .\installer\build_installer.ps1
-   ```
+# Run tests
+briefcase dev --test  # or: pytest
+```
 
-3. The script will:
-   - Check for processes that might interfere with the build
-   - Install PyInstaller if needed
-   - Build the executable using PyInstaller
-   - Create a portable ZIP archive
-   - Build an installer with Inno Setup
+### Release packaging (coming soon)
 
-4. After completion, you'll find the following in the `dist` directory:
-   - `AccessiWeather_Setup_v{version}.exe` - Windows installer
-   - `AccessiWeather_Portable_v{version}.zip` - Portable ZIP archive
-   - `AccessiWeather` folder - Standalone executable and dependencies
+We will update this section with Briefcase commands for building installer and portable distributions for Windows (MSI/ZIP), and other platforms.
 
-   The version number is automatically extracted from `setup.py`.
+In the meantime, do not use installer/build_installer.ps1 or .sh — they are broken for the Toga app and will be removed or replaced.
 
-### Troubleshooting
 
-- If the script can't find Inno Setup, ensure it's installed and the `iscc` command is in your PATH
-- If you encounter file locking issues, the script will help identify and close interfering processes
-- For detailed logs, check the console output during the build process
+### Briefcase packaging (Windows MSI)
+
+Use BeeWare Briefcase to produce a native Windows installer (MSI):
+
+```bash
+# Ensure Briefcase is installed
+pip install briefcase
+
+# Create platform scaffold (first time per platform)
+briefcase create windows
+
+# Build the app bundle
+briefcase build windows
+
+# Package into an MSI installer
+briefcase package windows
+```
+
+Artifacts
+- MSI output: dist/AccessiWeather-<version>.msi (path may vary slightly by Briefcase version)
+- Build tree (intermediate files): windows/AccessiWeather/
+
+### Portable ZIP (temporary recipe)
+
+Briefcase focuses on native installers. If you need a portable ZIP during migration:
+
+- After a successful build (briefcase build windows), zip the built app folder.
+
+PowerShell (Windows):
+```powershell
+$AppDir = "windows/AccessiWeather/build/AccessiWeather"
+$ZipOut = "dist/AccessiWeather_Portable_v$((python -c \"import tomllib,sys;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])\")) .zip"
+Compress-Archive -Path "$AppDir/*" -DestinationPath $ZipOut -Force
+```
+
+Bash (Git Bash):
+```bash
+APP_DIR="windows/AccessiWeather/build/AccessiWeather"
+VERSION=$(python - <<'PY'
+import tomllib
+print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])
+PY
+)
+( cd "$APP_DIR" && zip -r "../../../../dist/AccessiWeather_Portable_v${VERSION}.zip" . )
+```
+
+Note: Exact build folder names can vary between Briefcase versions; inspect windows/AccessiWeather/ after build and adjust the path as needed.
 
 ## Requirements
 
 - **Python 3.7+** (Python 3.11+ recommended for best performance)
-- **wxPython 4.2.2+** (automatically installed with pip)
+- **Toga 0.5.1+** (BeeWare GUI framework, automatically installed with pip)
 - **Internet connection** for weather data access
-- **Windows 10+** (primary platform), Linux support experimental
+- **Windows 10+** (primary platform), Linux and macOS support available
 
 ## Weather Data Sources
 
@@ -218,6 +253,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - **National Weather Service**: For providing free, reliable weather data
 - **Open-Meteo**: For international weather data coverage
-- **wxPython Community**: For the accessible GUI framework
+- **BeeWare/Toga Community**: For the cross-platform GUI framework
 - **Accessibility Community**: For testing and feedback on screen reader compatibility
 Test auto-trigger: Sat, Jun  7, 2025  1:42:50 PM

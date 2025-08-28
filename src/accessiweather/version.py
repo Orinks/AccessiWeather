@@ -5,4 +5,4 @@ It is kept separate to avoid circular imports.
 """
 
 # Version should match the one in pyproject.toml
-__version__ = "0.9.3"
+__version__ = "0.9.4-dev"
