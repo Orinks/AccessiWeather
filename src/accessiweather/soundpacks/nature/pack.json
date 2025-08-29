@@ -7,6 +7,8 @@
         "alert": "bird_chirp.wav",
         "notify": "water_drop.wav",
         "error": "thunder_distant.wav",
-        "success": "gentle_rain.wav"
+        "success": "gentle_rain.wav",
+        "startup": "bird_chirp.wav",
+        "exit": "gentle_rain.wav"
     }
 }
