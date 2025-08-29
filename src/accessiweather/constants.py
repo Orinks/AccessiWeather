@@ -75,3 +75,23 @@ TAB_GENERAL = "General"
 TAB_DISPLAY = "Display"
 TAB_ADVANCED = "Advanced"
 TAB_UPDATES = "Updates"
+
+# GitHub App configuration constants
+GITHUB_APP_ID_KEY = "github_app_id"
+GITHUB_APP_PRIVATE_KEY_KEY = "github_app_private_key"
+GITHUB_APP_INSTALLATION_ID_KEY = "github_app_installation_id"
+DEFAULT_GITHUB_APP_ID = ""
+DEFAULT_GITHUB_APP_PRIVATE_KEY = ""
+DEFAULT_GITHUB_APP_INSTALLATION_ID = ""
+GITHUB_API_BASE_URL = "https://api.github.com"
+
+# GitHub App validation constants
+GITHUB_APP_MIN_ID_LENGTH = 1
+GITHUB_APP_PRIVATE_KEY_HEADER = "-----BEGIN RSA PRIVATE KEY-----"
+GITHUB_APP_PRIVATE_KEY_FOOTER = "-----END RSA PRIVATE KEY-----"
+GITHUB_APP_PKCS8_PRIVATE_KEY_HEADER = "-----BEGIN PRIVATE KEY-----"
+GITHUB_APP_PKCS8_PRIVATE_KEY_FOOTER = "-----END PRIVATE KEY-----"
+
+# GitHub repository constants for community soundpack repository
+COMMUNITY_REPO_OWNER = "orinks"
+COMMUNITY_REPO_NAME = "accessiweather-soundpacks"

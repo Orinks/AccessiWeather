@@ -288,6 +288,10 @@ class AppSettings:
 
     # API Keys
     visual_crossing_api_key: str = ""
+    github_app_id: str = ""
+    github_app_private_key: str = ""
+    github_app_installation_id: str = ""
+    github_backend_url: str = ""
 
     # Update system settings
     auto_update_enabled: bool = True
@@ -323,6 +327,9 @@ class AppSettings:
             "minimize_to_tray": self.minimize_to_tray,
             "data_source": self.data_source,
             "visual_crossing_api_key": self.visual_crossing_api_key,
+            "github_app_id": self.github_app_id,
+            "github_app_private_key": self.github_app_private_key,
+            "github_app_installation_id": self.github_app_installation_id,
             "auto_update_enabled": self.auto_update_enabled,
             "update_channel": self.update_channel,
             "update_check_interval_hours": self.update_check_interval_hours,
@@ -343,10 +350,15 @@ class AppSettings:
             "alert_ignored_categories": self.alert_ignored_categories,
         }
 
+    def _load_github_app_from_env(self) -> None:
+        """Load GitHub App credentials from environment variables (deprecated - backend service handles auth)."""
+        # This method is deprecated since we now use a backend service for GitHub App authentication
+        # Keeping for backward compatibility but it does nothing
+
     @classmethod
     def from_dict(cls, data: dict) -> "AppSettings":
         """Create from dictionary."""
-        return cls(
+        settings = cls(
             temperature_unit=data.get("temperature_unit", "both"),
             update_interval_minutes=data.get("update_interval_minutes", 10),
             show_detailed_forecast=data.get("show_detailed_forecast", True),
@@ -354,6 +366,9 @@ class AppSettings:
             minimize_to_tray=data.get("minimize_to_tray", True),
             data_source=data.get("data_source", "auto"),
             visual_crossing_api_key=data.get("visual_crossing_api_key", ""),
+            github_app_id=data.get("github_app_id", ""),
+            github_app_private_key=data.get("github_app_private_key", ""),
+            github_app_installation_id=data.get("github_app_installation_id", ""),
             auto_update_enabled=data.get("auto_update_enabled", True),
             update_channel=data.get("update_channel", "stable"),
             update_check_interval_hours=data.get("update_check_interval_hours", 24),
@@ -373,6 +388,10 @@ class AppSettings:
             alert_max_notifications_per_hour=data.get("alert_max_notifications_per_hour", 10),
             alert_ignored_categories=data.get("alert_ignored_categories", []),
         )
+
+        # Load GitHub App credentials from environment variables if not set
+        settings._load_github_app_from_env()
+        return settings
 
     def to_alert_settings(self):
         """Convert to AlertSettings for the alert management system."""
@@ -466,8 +485,11 @@ class AppConfig:
     @classmethod
     def default(cls) -> "AppConfig":
         """Create default configuration."""
+        settings = AppSettings()
+        # Load GitHub App credentials from environment variables
+        settings._load_github_app_from_env()
         return cls(
-            settings=AppSettings(),
+            settings=settings,
             locations=[],
             current_location=None,
         )

@@ -171,7 +171,7 @@ class CommunityPacksBrowserDialog:
                     "Name": "No community packs found",
                     "Author": "",
                     "Version": "",
-                    "Description": "You may be offline or rate-limited. Try Refresh, adjust search, or set a GitHub token.",
+                    "Description": "You may be offline or rate-limited. Try Refresh or adjust search criteria.",
                     "Size": "",
                 }
             )

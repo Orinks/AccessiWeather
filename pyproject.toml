@@ -20,7 +20,8 @@ dependencies = [
     "httpx>=0.20.0",
     "attrs>=22.2.0",
     "psutil",
-    "tufup"
+    "tufup",
+    "cryptography"
 ]
 readme = "README.md"
 classifiers = [
@@ -170,6 +171,7 @@ requires = [
     "attrs>=22.2.0",
     "psutil",
     "tufup",
+    "cryptography",
 ]
 test_requires = [
     "pytest>=7.0.0",
@@ -184,10 +186,18 @@ requires = [
     # Add your macOS-specific app requirements here
 ]
 
+# Build hooks for credential embedding
+pre_build = "scripts.briefcase_hooks:pre_build_hook"
+post_build = "scripts.briefcase_hooks:post_build_hook"
+
 [tool.briefcase.app.accessiweather.linux]
 requires = [
     # Add your Linux-specific app requirements here
 ]
+
+# Build hooks for credential embedding
+pre_build = "scripts.briefcase_hooks:pre_build_hook"
+post_build = "scripts.briefcase_hooks:post_build_hook"
 
 [tool.briefcase.app.accessiweather.linux.system.debian]
 system_requires = [
@@ -234,6 +244,10 @@ flatpak_sdk = "org.freedesktop.Sdk"
 requires = [
     # Add your Windows-specific app requirements here
 ]
+
+# Build hooks for credential embedding
+pre_build = "scripts.briefcase_hooks:pre_build_hook"
+post_build = "scripts.briefcase_hooks:post_build_hook"
 
 # Mobile deployments
 [tool.briefcase.app.accessiweather.iOS]

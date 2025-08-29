@@ -97,6 +97,17 @@ secrets.yaml
 *.env
 .*_env
 
+# AccessiBotApp configuration
+AccessiBotApp.txt
+AccessiBotApp Configuration.txt
+
+# GitHub App environment setup scripts (contain secrets)
+set_github_env.bat
+set_github_env.sh
+
+# Build-time credential embedding backups
+src/accessiweather/github_credentials.py.backup
+
 # API-related files
 *_swagger.json
 *_openapi.json
@@ -246,3 +257,7 @@ RELEASE_PROCESS.md
 
 # Legacy temporary wx repo directory (do not track)
 AccessiWeather-wx-legacy-tmp/
+
+
+# External soundpacks repository (do not track)
+accessiweather-soundpacks/
