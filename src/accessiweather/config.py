@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -42,10 +43,12 @@ class ConfigManager:
                 logger.info(f"Loading config from {self.config_file}")
                 with open(self.config_file, encoding="utf-8") as f:
                     data = json.load(f)
+
                     self._config = AppConfig.from_dict(data)
 
                     # Validate and fix configuration
                     self._validate_and_fix_config()
+
                     logger.info("Configuration loaded successfully")
             else:
                 logger.info("No config file found, creating default configuration")
@@ -91,6 +94,72 @@ class ConfigManager:
                 settings.visual_crossing_api_key = ""
                 config_changed = True
 
+        # Validate GitHub App configuration (guard attributes for compatibility)
+        app_id = getattr(settings, "github_app_id", "")
+        if app_id:
+            app_id = app_id.strip()
+            if not app_id:
+                logger.warning("Empty GitHub App ID found, clearing")
+                settings.github_app_id = ""
+                config_changed = True
+            elif not app_id.isdigit() or len(app_id) < 1:
+                logger.warning("GitHub App ID appears invalid (should be numeric)")
+                # Don't automatically clear - let user decide
+
+        private_key = getattr(settings, "github_app_private_key", "")
+        if private_key:
+            private_key = private_key.strip()
+            if not private_key:
+                logger.warning("Empty GitHub App private key found, clearing")
+                settings.github_app_private_key = ""
+                config_changed = True
+            else:
+                from .constants import (
+                    GITHUB_APP_PKCS8_PRIVATE_KEY_FOOTER,
+                    GITHUB_APP_PKCS8_PRIVATE_KEY_HEADER,
+                    GITHUB_APP_PRIVATE_KEY_FOOTER,
+                    GITHUB_APP_PRIVATE_KEY_HEADER,
+                )
+
+                pk = private_key.strip()
+                valid_pem = (
+                    pk.startswith(GITHUB_APP_PKCS8_PRIVATE_KEY_HEADER)
+                    and pk.endswith(GITHUB_APP_PKCS8_PRIVATE_KEY_FOOTER)
+                ) or (
+                    pk.startswith(GITHUB_APP_PRIVATE_KEY_HEADER)
+                    and pk.endswith(GITHUB_APP_PRIVATE_KEY_FOOTER)
+                )
+                if not valid_pem:
+                    # Check what's missing for clearer error message
+                    has_pkcs8_header = pk.startswith(GITHUB_APP_PKCS8_PRIVATE_KEY_HEADER)
+                    has_pkcs8_footer = pk.endswith(GITHUB_APP_PKCS8_PRIVATE_KEY_FOOTER)
+                    has_pkcs1_header = pk.startswith(GITHUB_APP_PRIVATE_KEY_HEADER)
+                    has_pkcs1_footer = pk.endswith(GITHUB_APP_PRIVATE_KEY_FOOTER)
+
+                    if not (has_pkcs8_header or has_pkcs1_header):
+                        logger.warning(
+                            "GitHub App private key missing PEM header. Expected '-----BEGIN PRIVATE KEY-----' (PKCS#8) or '-----BEGIN RSA PRIVATE KEY-----' (PKCS#1). Please use the .pem file downloaded from GitHub."
+                        )
+                    elif not (has_pkcs8_footer or has_pkcs1_footer):
+                        logger.warning(
+                            "GitHub App private key missing PEM footer. Expected '-----END PRIVATE KEY-----' (PKCS#8) or '-----END RSA PRIVATE KEY-----' (PKCS#1). Please use the .pem file downloaded from GitHub."
+                        )
+                    else:
+                        logger.warning(
+                            "GitHub App private key has mismatched PEM headers/footers. Please use the .pem file downloaded from GitHub."
+                        )
+
+        installation_id = getattr(settings, "github_app_installation_id", "")
+        if installation_id:
+            installation_id = installation_id.strip()
+            if not installation_id:
+                logger.warning("Empty GitHub App installation ID found, clearing")
+                settings.github_app_installation_id = ""
+                config_changed = True
+            elif not installation_id.isdigit() or len(installation_id) < 1:
+                logger.warning("GitHub App installation ID appears invalid (should be numeric)")
+                # Don't automatically clear - let user decide
+
         # Save config if changes were made
         if config_changed:
             logger.info("Configuration was corrected, saving changes")
@@ -106,6 +175,14 @@ class ConfigManager:
             logger.info(f"Saving config to {self.config_file}")
             with open(self.config_file, "w", encoding="utf-8") as f:
                 json.dump(self._config.to_dict(), f, indent=2, ensure_ascii=False)
+
+            # Restrict permissions on POSIX systems
+            try:
+                if os.name != "nt":
+                    os.chmod(self.config_file, 0o600)
+            except Exception:
+                logger.debug("Could not set strict permissions on config file", exc_info=True)
+
             logger.info("Configuration saved successfully")
             return True
 
@@ -123,11 +200,16 @@ class ConfigManager:
         """Update application settings."""
         config = self.get_config()
 
+        # Define sensitive keys that should be redacted in logs
+        secret_keys = {"github_app_private_key", "visual_crossing_api_key"}
+
         # Update settings attributes
         for key, value in kwargs.items():
             if hasattr(config.settings, key):
                 setattr(config.settings, key, value)
-                logger.info(f"Updated setting {key} = {value}")
+                # Redact sensitive values in logs
+                log_value = "***redacted***" if key in secret_keys else value
+                logger.info(f"Updated setting {key} = {log_value}")
             else:
                 logger.warning(f"Unknown setting: {key}")
 
@@ -319,4 +401,167 @@ class ConfigManager:
 
         except Exception as e:
             logger.error(f"Failed to import locations: {e}")
+            return False
+
+    def validate_github_app_config(self) -> tuple[bool, str]:
+        """Validate the GitHub App configuration fields.
+
+        Returns:
+            Tuple of (is_valid, message) where message contains validation details
+
+        """
+        config = self.get_config()
+        settings = config.settings
+
+        if not settings.github_app_id:
+            return False, "No GitHub App ID configured"
+
+        if not settings.github_app_private_key:
+            return False, "No GitHub App private key configured"
+
+        if not settings.github_app_installation_id:
+            return False, "No GitHub App installation ID configured"
+
+        # Validate app_id is numeric
+        if not settings.github_app_id.strip().isdigit():
+            return False, "GitHub App ID must be numeric"
+
+        # Validate private key has PEM format using constants
+        from .constants import (
+            GITHUB_APP_PKCS8_PRIVATE_KEY_FOOTER,
+            GITHUB_APP_PKCS8_PRIVATE_KEY_HEADER,
+            GITHUB_APP_PRIVATE_KEY_FOOTER,
+            GITHUB_APP_PRIVATE_KEY_HEADER,
+        )
+
+        private_key = settings.github_app_private_key.strip()
+        valid_pem = (
+            private_key.startswith(GITHUB_APP_PKCS8_PRIVATE_KEY_HEADER)
+            and private_key.endswith(GITHUB_APP_PKCS8_PRIVATE_KEY_FOOTER)
+        ) or (
+            private_key.startswith(GITHUB_APP_PRIVATE_KEY_HEADER)
+            and private_key.endswith(GITHUB_APP_PRIVATE_KEY_FOOTER)
+        )
+        if not valid_pem:
+            # Check what's missing for clearer error message
+            has_pkcs8_header = private_key.startswith(GITHUB_APP_PKCS8_PRIVATE_KEY_HEADER)
+            has_pkcs8_footer = private_key.endswith(GITHUB_APP_PKCS8_PRIVATE_KEY_FOOTER)
+            has_pkcs1_header = private_key.startswith(GITHUB_APP_PRIVATE_KEY_HEADER)
+            has_pkcs1_footer = private_key.endswith(GITHUB_APP_PRIVATE_KEY_FOOTER)
+
+            if not (has_pkcs8_header or has_pkcs1_header):
+                return (
+                    False,
+                    "GitHub App private key missing PEM header. Expected '-----BEGIN PRIVATE KEY-----' (PKCS#8) or '-----BEGIN RSA PRIVATE KEY-----' (PKCS#1). Please use the .pem file downloaded from GitHub.",
+                )
+            if not (has_pkcs8_footer or has_pkcs1_footer):
+                return (
+                    False,
+                    "GitHub App private key missing PEM footer. Expected '-----END PRIVATE KEY-----' (PKCS#8) or '-----END RSA PRIVATE KEY-----' (PKCS#1). Please use the .pem file downloaded from GitHub.",
+                )
+            return (
+                False,
+                "GitHub App private key has mismatched PEM headers/footers. Please use the .pem file downloaded from GitHub.",
+            )
+
+        # Validate installation_id is numeric
+        if not settings.github_app_installation_id.strip().isdigit():
+            return False, "GitHub App installation ID must be numeric"
+
+        return True, "GitHub App configuration is valid"
+
+    def set_github_app_config(self, app_id: str, private_key: str, installation_id: str) -> bool:
+        """Set the GitHub App configuration in the settings.
+
+        Args:
+            app_id: The GitHub App ID
+            private_key: The PEM-encoded private key
+            installation_id: The installation ID
+
+        Returns:
+            True if successful, False otherwise
+
+        """
+        try:
+            config = self.get_config()
+            config.settings.github_app_id = app_id.strip()
+            config.settings.github_app_private_key = private_key.strip()
+            config.settings.github_app_installation_id = installation_id.strip()
+            return self.save_config()
+        except Exception as e:
+            logger.error(f"Failed to set GitHub App configuration: {e}")
+            return False
+
+    def get_github_app_config(self) -> tuple[str, str, str]:
+        """Get the GitHub App configuration from the settings.
+
+        Returns:
+            Tuple of (app_id, private_key, installation_id), empty strings if not set
+
+        """
+        try:
+            settings = self.get_config().settings
+            return (
+                settings.github_app_id,
+                settings.github_app_private_key,
+                settings.github_app_installation_id,
+            )
+        except Exception as e:
+            logger.error(f"Failed to get GitHub App configuration: {e}")
+            return ("", "", "")
+
+    def clear_github_app_config(self) -> bool:
+        """Clear the GitHub App configuration from the settings.
+
+        Returns:
+            True if successful, False otherwise
+
+        """
+        return self.set_github_app_config("", "", "")
+
+    def has_github_app_config(self) -> bool:
+        """Check if GitHub submission is available.
+
+        Since all submissions are handled by the backend service, no local GitHub
+        credentials are required. Treat GitHub App config as available as long as
+        a backend URL can be resolved.
+        """
+        # If a backend URL is available (explicit or default), return True
+        try:
+            url = (self.get_github_backend_url() or "").strip()
+        except Exception:
+            url = ""
+        return bool(url)
+
+    def get_github_backend_url(self) -> str:
+        """Get the GitHub backend service URL.
+
+        Returns:
+            Backend service URL from config, or default URL if not set
+
+        """
+        config = self.get_config()
+        backend_url = config.settings.github_backend_url.strip()
+        if backend_url:
+            return backend_url
+
+        # Default backend URL
+        return "https://soundpack-backend.fly.dev"
+
+    def set_github_backend_url(self, backend_url: str) -> bool:
+        """Set the GitHub backend service URL.
+
+        Args:
+            backend_url: The backend service URL
+
+        Returns:
+            True if successful, False otherwise
+
+        """
+        try:
+            config = self.get_config()
+            config.settings.github_backend_url = backend_url.strip()
+            return self.save_config()
+        except Exception as e:
+            logger.error(f"Failed to set GitHub backend URL: {e}")
             return False
