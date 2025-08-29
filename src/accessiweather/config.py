@@ -94,9 +94,10 @@ class ConfigManager:
                 settings.visual_crossing_api_key = ""
                 config_changed = True
 
-        # Validate GitHub App configuration
-        if settings.github_app_id:
-            app_id = settings.github_app_id.strip()
+        # Validate GitHub App configuration (guard attributes for compatibility)
+        app_id = getattr(settings, "github_app_id", "")
+        if app_id:
+            app_id = app_id.strip()
             if not app_id:
                 logger.warning("Empty GitHub App ID found, clearing")
                 settings.github_app_id = ""
@@ -105,8 +106,9 @@ class ConfigManager:
                 logger.warning("GitHub App ID appears invalid (should be numeric)")
                 # Don't automatically clear - let user decide
 
-        if settings.github_app_private_key:
-            private_key = settings.github_app_private_key.strip()
+        private_key = getattr(settings, "github_app_private_key", "")
+        if private_key:
+            private_key = private_key.strip()
             if not private_key:
                 logger.warning("Empty GitHub App private key found, clearing")
                 settings.github_app_private_key = ""
@@ -147,8 +149,9 @@ class ConfigManager:
                             "GitHub App private key has mismatched PEM headers/footers. Please use the .pem file downloaded from GitHub."
                         )
 
-        if settings.github_app_installation_id:
-            installation_id = settings.github_app_installation_id.strip()
+        installation_id = getattr(settings, "github_app_installation_id", "")
+        if installation_id:
+            installation_id = installation_id.strip()
             if not installation_id:
                 logger.warning("Empty GitHub App installation ID found, clearing")
                 settings.github_app_installation_id = ""

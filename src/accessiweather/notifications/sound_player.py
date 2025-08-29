@@ -102,21 +102,6 @@ def play_sample_sound(pack_dir: str) -> None:
     play_notification_sound(DEFAULT_EVENT, pack_dir)
 
 
-def play_sound_file(path: Path) -> bool:
-    """Play a sound file directly from a path.
-
-    This is a public API for previewing sound files.
-
-    Args:
-        path: Path to the sound file to play
-
-    Returns:
-        bool: True if the sound was played successfully, False otherwise
-
-    """
-    return _play_sound_file(path)
-
-
 def get_available_sound_packs() -> dict[str, dict]:
     """Get all available sound packs with their metadata."""
     sound_packs: dict[str, dict] = {}
