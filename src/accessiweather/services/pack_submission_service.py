@@ -21,10 +21,10 @@ logger = logging.getLogger(__name__)
 
 
 class PackSubmissionService:
-    """Service to validate a sound pack and submit it to the community repo via GitHub REST API.
+    """Service to validate a sound pack and submit it to the community repo via backend.
 
-    This service uses GitHub App authentication for all API operations, providing
-    secure and authenticated access to the GitHub API without requiring user tokens.
+    All submissions are handled by the AccessiWeather backend service. No local GitHub
+    credentials (tokens or App keys) are required by the client.
     """
 
     def __init__(

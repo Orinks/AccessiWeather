@@ -186,18 +186,13 @@ requires = [
     # Add your macOS-specific app requirements here
 ]
 
-# Build hooks for credential embedding
-pre_build = "scripts.briefcase_hooks:pre_build_hook"
-post_build = "scripts.briefcase_hooks:post_build_hook"
+# (removed) GitHub App credential embedding hooks no longer needed
 
 [tool.briefcase.app.accessiweather.linux]
 requires = [
     # Add your Linux-specific app requirements here
 ]
 
-# Build hooks for credential embedding
-pre_build = "scripts.briefcase_hooks:pre_build_hook"
-post_build = "scripts.briefcase_hooks:post_build_hook"
 
 [tool.briefcase.app.accessiweather.linux.system.debian]
 system_requires = [
@@ -245,9 +240,7 @@ requires = [
     # Add your Windows-specific app requirements here
 ]
 
-# Build hooks for credential embedding
-pre_build = "scripts.briefcase_hooks:pre_build_hook"
-post_build = "scripts.briefcase_hooks:post_build_hook"
+# (removed) GitHub App credential embedding hooks no longer needed
 
 # Mobile deployments
 [tool.briefcase.app.accessiweather.iOS]
