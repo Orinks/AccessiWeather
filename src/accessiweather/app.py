@@ -136,12 +136,15 @@ class AccessiWeatherApp(toga.App):
             # Start periodic weather updates
             await self._start_background_updates()
 
-            # Play startup sound after app is fully initialized
-            logger.info("About to call _play_startup_sound")
-            await self._play_startup_sound()
-
         except Exception as e:
             logger.error(f"Failed to start background tasks: {e}")
+
+        # Play startup sound after app is fully initialized (separate try-catch)
+        try:
+            logger.info("About to call _play_startup_sound")
+            await self._play_startup_sound()
+        except Exception as e:
+            logger.error(f"Failed to play startup sound in on_running: {e}")
 
     async def _play_startup_sound(self):
         """Play the application startup sound."""
