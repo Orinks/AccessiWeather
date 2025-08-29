@@ -563,6 +563,15 @@ class SettingsDialog:
             except Exception as fallback_error:
                 logger.warning(f"Fallback focus also failed: {fallback_error}")
 
+    def _ensure_dialog_focus(self):
+        """Ensure focus remains within the dialog window."""
+        try:
+            if self.window and hasattr(self.window, "focus"):
+                self.window.focus()
+                logger.debug("Restored focus to settings dialog window")
+        except Exception as e:
+            logger.warning(f"Failed to restore dialog focus: {e}")
+
     def _return_focus_to_trigger(self):
         """Return focus to the element that triggered the dialog."""
         try:
@@ -574,11 +583,30 @@ class SettingsDialog:
         except Exception as e:
             logger.warning(f"Failed to return focus: {e}")
 
+    async def _show_dialog_error(self, title, message):
+        """Show error dialog relative to settings dialog to prevent focus loss."""
+        try:
+            # Try to use the dialog window for error display if possible
+            if self.window and hasattr(self.window, "error_dialog"):
+                await self.window.error_dialog(title, message)
+            else:
+                # Fallback to main window but restore focus afterward
+                await self.app.main_window.error_dialog(title, message)
+                # Restore focus to dialog after error dialog closes
+                self._ensure_dialog_focus()
+        except Exception as e:
+            logger.error(f"Failed to show error dialog: {e}")
+            # Last resort: just log the error
+            logger.error(f"{title}: {message}")
+
     async def _on_ok(self, widget):
         """Handle OK button press - save settings and close dialog."""
         logger.info("Settings dialog OK button pressed")
 
         try:
+            # Ensure focus stays in dialog during processing
+            self._ensure_dialog_focus()
+
             # Collect settings from UI
             new_settings = self._collect_settings_from_ui()
 
@@ -596,14 +624,14 @@ class SettingsDialog:
                 # No confirmation dialog - let focus return directly to main window
             else:
                 logger.error("Failed to save settings")
-                await self.app.main_window.error_dialog(
-                    "Settings Error", "Failed to save settings."
-                )
+                # Use dialog-relative error instead of main window error
+                await self._show_dialog_error("Settings Error", "Failed to save settings.")
 
         except Exception as e:
             logger.error(f"Error saving settings: {e}")
             # Don't close dialog on error, let user try again or cancel
-            await self.app.main_window.error_dialog("Settings Error", f"Error saving settings: {e}")
+            # Use dialog-relative error instead of main window error
+            await self._show_dialog_error("Settings Error", f"Error saving settings: {e}")
 
     async def _on_cancel(self, widget):
         """Handle Cancel button press - close dialog without saving."""
@@ -648,6 +676,9 @@ class SettingsDialog:
         The current pack selection is controlled by the selection widget in this Settings dialog.
         """
         try:
+            # Ensure focus stays in dialog before opening sub-dialog
+            self._ensure_dialog_focus()
+
             from .soundpack_manager import SoundPackManagerDialog
 
             # Preserve the currently selected pack from settings (authoritative)
@@ -657,7 +688,8 @@ class SettingsDialog:
             manager = SoundPackManagerDialog(self.app, current_pack_id)
             await manager.show()
 
-            # After the manager closes, just refresh the available pack list (packs may have changed)
+            # After the manager closes, restore focus to settings dialog and refresh pack list
+            self._ensure_dialog_focus()
             self._load_sound_packs()
             self.sound_pack_selection.items = self.sound_pack_options
 
@@ -672,7 +704,8 @@ class SettingsDialog:
 
         except Exception as e:
             logger.error(f"Failed to open sound pack manager: {e}")
-            self.app.main_window.error_dialog(
+            # Use dialog-relative error instead of main window error
+            await self._show_dialog_error(
                 "Sound Pack Manager Error", f"Failed to open sound pack manager: {e}"
             )
 
@@ -793,10 +826,13 @@ class SettingsDialog:
 
     async def _on_validate_visual_crossing_api_key(self, widget):
         """Handle Validate API Key button press - test the API key with a simple call."""
+        # Ensure focus stays in dialog during validation
+        self._ensure_dialog_focus()
+
         api_key = str(self.visual_crossing_api_key_input.value).strip()
 
         if not api_key:
-            await self.app.main_window.error_dialog(
+            await self._show_dialog_error(
                 "API Key Required", "Please enter your Visual Crossing API key before validating."
             )
             return
@@ -839,47 +875,48 @@ class SettingsDialog:
                         )
                     elif response.status_code == 401:
                         # Invalid API key
-                        await self.app.main_window.error_dialog(
+                        await self._show_dialog_error(
                             "Invalid API Key",
                             "❌ The API key you entered is invalid.\n\n"
                             "Please check your API key and try again. Make sure you copied it correctly from your Visual Crossing account.",
                         )
                     elif response.status_code == 429:
                         # Rate limit exceeded
-                        await self.app.main_window.error_dialog(
+                        await self._show_dialog_error(
                             "Rate Limit Exceeded",
                             "⚠️ Your API key is valid, but you've exceeded your rate limit.\n\n"
                             "Please wait a moment before making more requests, or check your Visual Crossing account usage.",
                         )
                     else:
                         # Other error
-                        await self.app.main_window.error_dialog(
+                        await self._show_dialog_error(
                             "API Error",
                             f"❌ API validation failed with status code {response.status_code}.\n\n"
                             "Please check your internet connection and try again.",
                         )
 
             except httpx.TimeoutException:
-                await self.app.main_window.error_dialog(
+                await self._show_dialog_error(
                     "Connection Timeout",
                     "⚠️ The validation request timed out.\n\n"
                     "Please check your internet connection and try again.",
                 )
             except httpx.RequestError as e:
-                await self.app.main_window.error_dialog(
+                await self._show_dialog_error(
                     "Connection Error",
                     f"❌ Failed to connect to Visual Crossing API.\n\n"
                     f"Error: {e}\n\n"
                     "Please check your internet connection and try again.",
                 )
             finally:
-                # Restore button state
+                # Restore button state and focus
                 self.validate_api_key_button.text = original_text
                 self.validate_api_key_button.enabled = True
+                self._ensure_dialog_focus()
 
         except Exception as e:
             logger.error(f"Failed to validate Visual Crossing API key: {e}")
-            await self.app.main_window.error_dialog(
+            await self._show_dialog_error(
                 "Validation Error",
                 f"❌ An unexpected error occurred while validating your API key.\n\nError: {e}",
             )
@@ -1074,6 +1111,9 @@ class SettingsDialog:
         """Handle check for updates button press."""
         logger.info("Manual update check requested")
 
+        # Ensure focus stays in dialog during update check
+        self._ensure_dialog_focus()
+
         try:
             # Disable the button during check
             if self.check_updates_button:
@@ -1164,9 +1204,23 @@ class SettingsDialog:
                 if self.update_status_label:
                     self.update_status_label.text = "No updates available"
 
-                await self.app.main_window.info_dialog(
-                    "No Updates", "You are running the latest version of AccessiWeather."
-                )
+                # Use dialog-relative info dialog to prevent focus loss
+                try:
+                    if self.window and hasattr(self.window, "info_dialog"):
+                        await self.window.info_dialog(
+                            "No Updates", "You are running the latest version of AccessiWeather."
+                        )
+                    else:
+                        await self.app.main_window.info_dialog(
+                            "No Updates", "You are running the latest version of AccessiWeather."
+                        )
+                        self._ensure_dialog_focus()
+                except Exception:
+                    # Fallback to main window dialog
+                    await self.app.main_window.info_dialog(
+                        "No Updates", "You are running the latest version of AccessiWeather."
+                    )
+                    self._ensure_dialog_focus()
 
             # Update last check info
             self._update_last_check_info()
@@ -1176,15 +1230,16 @@ class SettingsDialog:
             if self.update_status_label:
                 self.update_status_label.text = "Update check failed"
 
-            await self.app.main_window.error_dialog(
+            await self._show_dialog_error(
                 "Update Check Failed", f"Failed to check for updates: {str(e)}"
             )
 
         finally:
-            # Re-enable the button
+            # Re-enable the button and restore focus
             if self.check_updates_button:
                 self.check_updates_button.enabled = True
                 self.check_updates_button.text = "Check for Updates Now"
+            self._ensure_dialog_focus()
 
     async def _download_only(self, update_service, update_info):
         """Download an update without installing (for platforms that can't auto-install)."""
