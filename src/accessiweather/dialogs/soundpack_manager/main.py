@@ -384,15 +384,54 @@ class SoundPackManagerDialog:
                 with contextlib.suppress(Exception):
                     progress.window.close()
 
-            # Success
-            self.app.main_window.info_dialog(
-                "Sound Pack Shared",
-                f"Your sound pack has been submitted for review. PR: {pr_url}",
-            )
+            # Success - show info dialog and offer to open PR
+            asyncio.create_task(self._show_pack_shared_success(pr_url))
         except Exception as e:
             logger.error(f"Unexpected error sharing pack: {e}")
             with contextlib.suppress(Exception):
                 self.app.main_window.error_dialog("Share Pack", f"Unexpected error: {e}")
+
+    async def _show_pack_shared_success(self, pr_url: str) -> None:
+        """Show success message and offer to open PR in browser."""
+        try:
+            # Show success info dialog first
+            await self.app.main_window.info_dialog(
+                "Sound Pack Shared Successfully",
+                f"🎉 Your sound pack has been submitted for review!\n\nPull Request: {pr_url}",
+            )
+
+            # Ask if they want to open the PR in browser
+            should_open = await self.app.main_window.confirm_dialog(
+                "Open PR in Browser?",
+                "Would you like to open the pull request in your browser to track its progress?",
+            )
+
+            if should_open:
+                self._open_pr_in_browser(pr_url)
+
+        except Exception as e:
+            logger.error(f"Failed to show success dialog: {e}")
+            # Fallback to simple dialog
+            await self.app.main_window.info_dialog(
+                "Sound Pack Shared",
+                f"Your sound pack has been submitted for review. PR: {pr_url}",
+            )
+
+    def _open_pr_in_browser(self, pr_url: str) -> None:
+        """Open the PR URL in the default browser."""
+        try:
+            import webbrowser
+
+            webbrowser.open(pr_url)
+            logger.info(f"Opened PR in browser: {pr_url}")
+        except Exception as e:
+            logger.error(f"Failed to open PR in browser: {e}")
+            asyncio.create_task(
+                self.app.main_window.error_dialog(
+                    "Browser Error",
+                    f"Failed to open PR in browser: {e}\n\nYou can manually visit: {pr_url}",
+                )
+            )
 
     def _on_close(self, widget) -> None:
         try:
