@@ -136,8 +136,8 @@ class AccessiWeatherApp(toga.App):
             # Play startup sound after UI is ready but before background updates
             await self._play_startup_sound()
 
-            # Start periodic weather updates
-            await self._start_background_updates()
+            # Start periodic weather updates as a background task
+            asyncio.create_task(self._start_background_updates())
 
         except Exception as e:
             logger.error(f"Failed to start background tasks: {e}")
@@ -951,15 +951,19 @@ class AccessiWeatherApp(toga.App):
     # Weather data methods
     async def _refresh_weather_data(self):
         """Refresh weather data for the current location."""
+        logger.debug("_refresh_weather_data called")
+
         if self.is_updating:
             logger.info("Update already in progress, skipping")
             return
 
         current_location = self.config_manager.get_current_location()
         if not current_location:
+            logger.debug("No current location found")
             self._update_status("No location selected")
             return
 
+        logger.info(f"Starting weather data refresh for {current_location.name}")
         self.is_updating = True
         self._update_status(f"Updating weather for {current_location.name}...")
 
@@ -968,12 +972,17 @@ class AccessiWeatherApp(toga.App):
             if self.refresh_button:
                 self.refresh_button.enabled = False
 
+            logger.debug("About to call weather_client.get_weather_data")
             # Fetch weather data
             weather_data = await self.weather_client.get_weather_data(current_location)
+            logger.debug("weather_client.get_weather_data completed")
+
             self.current_weather_data = weather_data
 
+            logger.debug("About to update weather displays")
             # Update displays
             await self._update_weather_displays(weather_data)
+            logger.debug("Weather displays updated")
 
             self._update_status(f"Updated at {weather_data.last_updated.strftime('%I:%M %p')}")
             logger.info(f"Successfully updated weather for {current_location.name}")
@@ -984,6 +993,7 @@ class AccessiWeatherApp(toga.App):
             self._show_error_displays(str(e))
 
         finally:
+            logger.debug("_refresh_weather_data finally block")
             self.is_updating = False
             if self.refresh_button:
                 self.refresh_button.enabled = True
@@ -1130,6 +1140,7 @@ class AccessiWeatherApp(toga.App):
             )
 
             while True:
+                logger.debug(f"Background update loop: sleeping for {update_interval} seconds")
                 await asyncio.sleep(update_interval)
 
                 # Only update if we have a current location and not already updating
@@ -1139,7 +1150,26 @@ class AccessiWeatherApp(toga.App):
                     and self.config_manager.get_current_location()
                 ):
                     logger.info("Performing background weather update")
-                    await self._refresh_weather_data()
+                    try:
+                        # Add timeout to prevent hanging
+                        await asyncio.wait_for(self._refresh_weather_data(), timeout=60.0)
+                        logger.info("Background weather update completed successfully")
+                    except TimeoutError:
+                        logger.error("Background weather update timed out after 60 seconds")
+                        # Reset updating flag if it got stuck
+                        self.is_updating = False
+                        if self.refresh_button:
+                            self.refresh_button.enabled = True
+                    except Exception as e:
+                        logger.error(f"Background weather update failed: {e}")
+                        # Reset updating flag if it got stuck
+                        self.is_updating = False
+                        if self.refresh_button:
+                            self.refresh_button.enabled = True
+                else:
+                    logger.debug(
+                        f"Skipping background update - is_updating: {self.is_updating}, has_location: {bool(self.config_manager and self.config_manager.get_current_location())}"
+                    )
 
         except asyncio.CancelledError:
             logger.info("Background updates cancelled")
