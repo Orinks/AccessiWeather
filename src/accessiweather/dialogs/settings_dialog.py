@@ -648,7 +648,7 @@ class SettingsDialog:
         The current pack selection is controlled by the selection widget in this Settings dialog.
         """
         try:
-            from .soundpack_manager_dialog import SoundPackManagerDialog
+            from .soundpack_manager import SoundPackManagerDialog
 
             # Preserve the currently selected pack from settings (authoritative)
             current_pack_id = getattr(self.current_settings, "sound_pack", "default")
