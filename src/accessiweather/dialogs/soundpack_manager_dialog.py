@@ -132,13 +132,21 @@ class SoundPackManagerDialog:
         # Select current pack if available (for focus), but do not change app setting here
         if self.current_pack in self.sound_packs:
             self.selected_pack = self.current_pack
-            # Find and set the current pack in the detailed list
-            for item in self.pack_list.data:
-                if item.pack_id == self.current_pack:
-                    # Note: DetailedList selection is read-only, so we can't set it programmatically
-                    # Just update the pack details instead
+            for item in getattr(self.pack_list, "data", []):
+                if getattr(item, "pack_id", None) == self.current_pack:
                     break
             self._update_pack_details()
+
+        # Initialize button state
+        try:
+            if hasattr(self, "share_button"):
+                self.share_button.enabled = bool(self.selected_pack)
+            if hasattr(self, "browse_community_button"):
+                self.browse_community_button.enabled = (
+                    getattr(self, "community_service", None) is not None
+                )
+        except Exception:
+            pass
 
     def _create_pack_list_panel(self) -> toga.Box:
         """Create the sound pack list panel."""
@@ -301,6 +309,31 @@ class SoundPackManagerDialog:
         )
         button_box.add(self.create_button)
 
+        # Create with Wizard
+        self.create_wizard_button = toga.Button(
+            "Create with Wizard",
+            on_press=self._on_create_pack_wizard,
+            style=Pack(margin_right=10),
+        )
+        button_box.add(self.create_wizard_button)
+
+        # Browse Community Packs
+        self.browse_community_button = toga.Button(
+            "Browse Community",
+            on_press=self._on_browse_community_packs,
+            style=Pack(margin_right=10),
+        )
+        button_box.add(self.browse_community_button)
+
+        # Share selected pack to community repo (via backend)
+        self.share_button = toga.Button(
+            "Share Pack",
+            on_press=self._on_share_pack,
+            enabled=False,
+            style=Pack(margin_right=10),
+        )
+        button_box.add(self.share_button)
+
         # Duplicate Selected Pack
         self.duplicate_button = toga.Button(
             "Duplicate",
@@ -362,6 +395,9 @@ class SoundPackManagerDialog:
         self.delete_button.enabled = (
             self.selected_pack != "default"
         )  # Don't allow deleting default pack
+        # Enable Share when a pack is selected
+        if hasattr(self, "share_button"):
+            self.share_button.enabled = bool(self.selected_pack)
 
     def _update_pack_details(self) -> None:
         """Update the pack details display."""
@@ -799,6 +835,67 @@ class SoundPackManagerDialog:
             logger.error(f"Failed to create sound pack: {e}")
             self.app.main_window.error_dialog("Create Error", f"Failed to create sound pack: {e}")
 
+    def _on_create_pack_wizard(self, widget) -> None:
+        """Open the wizard to create a new sound pack with guided steps."""
+        try:
+            try:
+                from ..notifications.sound_pack_installer import SoundPackInstaller
+                from .soundpack_manager.constants import FRIENDLY_ALERT_CATEGORIES
+                from .soundpack_wizard_dialog import SoundPackWizardDialog
+            except Exception:
+                from accessiweather.dialogs.soundpack_manager.constants import (
+                    FRIENDLY_ALERT_CATEGORIES,
+                )
+                from accessiweather.dialogs.soundpack_wizard_dialog import SoundPackWizardDialog
+                from accessiweather.notifications.sound_pack_installer import (
+                    SoundPackInstaller,
+                )
+
+            installer = SoundPackInstaller(self.soundpacks_dir)
+
+            def _create_from_wizard(state) -> str:
+                # Derive a pack directory name from the provided pack name
+                pack_name = (getattr(state, "pack_name", "New Pack") or "New Pack").strip()
+                pack_id = pack_name.lower().replace(" ", "_").replace("-", "_")
+                info = {
+                    "name": pack_name,
+                    "author": (getattr(state, "author", "Unknown") or "Unknown").strip(),
+                    "description": (getattr(state, "description", "") or "").strip(),
+                }
+                ok, msg = installer.create_pack_template(pack_id, info)
+                if not ok:
+                    raise RuntimeError(msg)
+                return pack_id
+
+            def _on_complete(new_pack_id: str | None) -> None:
+                if not new_pack_id:
+                    return
+                try:
+                    self._load_sound_packs()
+                    self._refresh_pack_list()
+                    self.selected_pack = new_pack_id
+                    self.current_pack = new_pack_id
+                    self._update_pack_details()
+                    self.app.main_window.info_dialog(
+                        "Pack Created",
+                        f"Sound pack '{self.sound_packs[new_pack_id].get('name', new_pack_id)}' created.",
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to finalize wizard pack creation: {e}")
+
+            wizard = SoundPackWizardDialog(
+                app=self.app,
+                soundpacks_dir=self.soundpacks_dir,
+                friendly_categories=FRIENDLY_ALERT_CATEGORIES,
+                create_pack_callback=_create_from_wizard,
+                on_complete=_on_complete,
+            )
+            wizard.show()
+        except Exception as e:
+            logger.error(f"Failed to open sound pack wizard: {e}")
+            with contextlib.suppress(Exception):
+                self.app.main_window.error_dialog("Create Pack Wizard", f"Failed to open: {e}")
+
     def _on_duplicate_pack(self, widget) -> None:
         """Duplicate the currently selected pack into a new pack directory."""
         if not self.selected_pack or self.selected_pack not in self.sound_packs:
@@ -935,6 +1032,109 @@ class SoundPackManagerDialog:
     def _on_close(self, widget) -> None:
         """Close the dialog."""
         self.dialog.close()
+
+    def _on_browse_community_packs(self, widget) -> None:
+        """Open the community packs browser dialog."""
+        try:
+            from ..notifications.sound_pack_installer import SoundPackInstaller
+            from ..services.community_soundpack_service import CommunitySoundPackService
+            from .community_packs_browser_dialog import CommunityPacksBrowserDialog
+        except Exception:
+            # Lazy import fallback paths if relative fails
+            from accessiweather.dialogs.community_packs_browser_dialog import (
+                CommunityPacksBrowserDialog,
+            )
+            from accessiweather.notifications.sound_pack_installer import SoundPackInstaller
+            from accessiweather.services.community_soundpack_service import (
+                CommunitySoundPackService,
+            )
+
+        try:
+            # Ensure a service exists
+            if getattr(self, "community_service", None) is None:
+                self.community_service = CommunitySoundPackService()
+            installer = SoundPackInstaller(self.soundpacks_dir)
+            dlg = CommunityPacksBrowserDialog(
+                app=self.app,
+                service=self.community_service,
+                installer=installer,
+                on_installed=lambda name: self._handle_community_installed(name),
+            )
+            dlg.show()
+        except Exception as e:
+            logger.error(f"Failed to open community packs browser: {e}")
+            self.app.main_window.error_dialog(
+                "Community Packs", f"Failed to open community packs browser: {e}"
+            )
+
+    async def _on_share_pack(self, widget) -> None:
+        """Share the selected pack via backend submission service."""
+        try:
+            if not self.selected_pack or self.selected_pack not in self.sound_packs:
+                self.app.main_window.info_dialog(
+                    "Share Pack",
+                    "Please select a sound pack to share.",
+                )
+                return
+            pack_info = self.sound_packs[self.selected_pack]
+            pack_path = pack_info["path"]
+
+            # Validate pack quickly before packaging
+            from accessiweather.notifications.sound_player import validate_sound_pack
+
+            ok, msg = validate_sound_pack(pack_path)
+            if not ok:
+                self.app.main_window.error_dialog(
+                    "Share Pack", f"Sound pack validation failed: {msg}"
+                )
+                return
+
+            # Progress dialog
+            from .update_progress_dialog import UpdateProgressDialog
+
+            progress = UpdateProgressDialog(self.app, title="Sharing Sound Pack")
+            progress.show_and_prepare()
+
+            cancel_event = asyncio.Event()
+
+            def on_progress(pct: float, status: str) -> bool:
+                try:
+                    # Schedule UI updates
+                    asyncio.create_task(progress.update_progress(pct))
+                    asyncio.create_task(progress.set_status(status))
+                    return not progress.is_cancelled
+                except Exception:
+                    return True
+
+            # Submit via backend
+            from accessiweather.services.pack_submission_service import (
+                PackSubmissionService,
+            )
+
+            service = PackSubmissionService(config_manager=self.app.config_manager)
+
+            try:
+                pr_url = await service.submit_pack(pack_path, pack_info, on_progress, cancel_event)
+            except asyncio.CancelledError:
+                return
+            except Exception as e:
+                logger.error(f"Pack submission failed: {e}")
+                self.app.main_window.error_dialog("Share Pack", f"Submission failed: {e}")
+                return
+            finally:
+                # Close progress dialog
+                with contextlib.suppress(Exception):
+                    progress.window.close()
+
+            # Success
+            self.app.main_window.info_dialog(
+                "Sound Pack Shared",
+                f"Your sound pack has been submitted for review. PR: {pr_url}",
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error sharing pack: {e}")
+            with contextlib.suppress(Exception):
+                self.app.main_window.error_dialog("Share Pack", f"Unexpected error: {e}")
 
     async def show(self) -> str:
         """Show the dialog and return the selected pack."""
