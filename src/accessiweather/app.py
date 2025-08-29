@@ -136,8 +136,27 @@ class AccessiWeatherApp(toga.App):
             # Start periodic weather updates
             await self._start_background_updates()
 
+            # Play startup sound after app is fully initialized
+            await self._play_startup_sound()
+
         except Exception as e:
             logger.error(f"Failed to start background tasks: {e}")
+
+    async def _play_startup_sound(self):
+        """Play the application startup sound."""
+        try:
+            # Get current soundpack from settings
+            config = self.config_manager.get_config()
+            current_soundpack = getattr(config.settings, "sound_pack", "default")
+            sound_enabled = getattr(config.settings, "sound_enabled", True)
+
+            if sound_enabled:
+                from .notifications.sound_player import play_startup_sound
+
+                play_startup_sound(current_soundpack)
+                logger.info(f"Played startup sound from pack: {current_soundpack}")
+        except Exception as e:
+            logger.debug(f"Failed to play startup sound: {e}")
 
     def _initialize_components(self):
         """Initialize core application components."""
@@ -1242,6 +1261,9 @@ class AccessiWeatherApp(toga.App):
         try:
             logger.info("Application exit requested - performing cleanup")
 
+            # Play exit sound before cleanup
+            self._play_exit_sound()
+
             # Release single instance lock before exiting
             if self.single_instance_manager:
                 logger.debug("Releasing single instance lock")
@@ -1254,6 +1276,22 @@ class AccessiWeatherApp(toga.App):
         except Exception as e:
             logger.error(f"Error during application exit cleanup: {e}")
             return True  # Still allow exit even if cleanup fails
+
+    def _play_exit_sound(self):
+        """Play the application exit sound."""
+        try:
+            # Get current soundpack from settings
+            config = self.config_manager.get_config()
+            current_soundpack = getattr(config.settings, "sound_pack", "default")
+            sound_enabled = getattr(config.settings, "sound_enabled", True)
+
+            if sound_enabled:
+                from .notifications.sound_player import play_exit_sound
+
+                play_exit_sound(current_soundpack)
+                logger.info(f"Played exit sound from pack: {current_soundpack}")
+        except Exception as e:
+            logger.debug(f"Failed to play exit sound: {e}")
 
     def _on_test_notification_pressed(self, widget):
         """Send a test notification using desktop-notifier.
