@@ -133,30 +133,22 @@ class AccessiWeatherApp(toga.App):
                         except Exception as e2:
                             logger.warning(f"Could not set focus to any widget: {e2}")
 
+            # Play startup sound after UI is ready but before background updates
+            await self._play_startup_sound()
+
             # Start periodic weather updates
             await self._start_background_updates()
 
         except Exception as e:
             logger.error(f"Failed to start background tasks: {e}")
 
-        # Play startup sound after app is fully initialized (separate try-catch)
-        try:
-            logger.info("About to call _play_startup_sound")
-            await self._play_startup_sound()
-        except Exception as e:
-            logger.error(f"Failed to play startup sound in on_running: {e}")
-
     async def _play_startup_sound(self):
         """Play the application startup sound."""
-        logger.info("_play_startup_sound called")
         try:
             # Get current soundpack from settings
             config = self.config_manager.get_config()
             current_soundpack = getattr(config.settings, "sound_pack", "default")
             sound_enabled = getattr(config.settings, "sound_enabled", True)
-            logger.info(
-                f"Startup sound settings: enabled={sound_enabled}, pack={current_soundpack}"
-            )
 
             if sound_enabled:
                 from .notifications.sound_player import play_startup_sound
