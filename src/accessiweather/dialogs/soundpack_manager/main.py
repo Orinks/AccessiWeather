@@ -74,6 +74,13 @@ class SoundPackManagerDialog:
         self.simple_key_input = None
         self.simple_file_button = None
         self.simple_remove_button = None
+        # Additional UI components created by the UI builder
+        self.share_button = None
+        self.duplicate_button = None
+        self.edit_button = None
+        self.create_button = None
+        self.create_wizard_button = None
+        self.browse_community_button = None
 
         # Data containers
         self.sound_packs: dict = {}
@@ -320,6 +327,73 @@ class SoundPackManagerDialog:
         except Exception:
             pass
 
+    async def _on_share_pack(self, widget) -> None:
+        """Share the selected pack via backend submission service."""
+        try:
+            if not self.selected_pack or self.selected_pack not in self.sound_packs:
+                self.app.main_window.info_dialog(
+                    "Share Pack",
+                    "Please select a sound pack to share.",
+                )
+                return
+            pack_info = self.sound_packs[self.selected_pack]
+            pack_path = pack_info["path"]
+
+            # Validate pack quickly before packaging
+            from ...notifications.sound_player import validate_sound_pack
+
+            ok, msg = validate_sound_pack(pack_path)
+            if not ok:
+                self.app.main_window.error_dialog(
+                    "Share Pack", f"Sound pack validation failed: {msg}"
+                )
+                return
+
+            # Progress dialog
+            from ..update_progress_dialog import UpdateProgressDialog
+
+            progress = UpdateProgressDialog(self.app, title="Sharing Sound Pack")
+            progress.show_and_prepare()
+
+            cancel_event = asyncio.Event()
+
+            def on_progress(pct: float, status: str) -> bool:
+                try:
+                    # Schedule UI updates
+                    asyncio.create_task(progress.update_progress(pct))
+                    asyncio.create_task(progress.set_status(status))
+                    return not progress.is_cancelled
+                except Exception:
+                    return True
+
+            # Submit via backend
+            from ...services.pack_submission_service import PackSubmissionService
+
+            service = PackSubmissionService(config_manager=self.app.config_manager)
+
+            try:
+                pr_url = await service.submit_pack(pack_path, pack_info, on_progress, cancel_event)
+            except asyncio.CancelledError:
+                return
+            except Exception as e:
+                logger.error(f"Pack submission failed: {e}")
+                self.app.main_window.error_dialog("Share Pack", f"Submission failed: {e}")
+                return
+            finally:
+                # Close progress dialog
+                with contextlib.suppress(Exception):
+                    progress.window.close()
+
+            # Success
+            self.app.main_window.info_dialog(
+                "Sound Pack Shared",
+                f"Your sound pack has been submitted for review. PR: {pr_url}",
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error sharing pack: {e}")
+            with contextlib.suppress(Exception):
+                self.app.main_window.error_dialog("Share Pack", f"Unexpected error: {e}")
+
     def _on_close(self, widget) -> None:
         try:
             if getattr(self, "community_service", None):
@@ -328,6 +402,39 @@ class SoundPackManagerDialog:
             pass
         if self.dialog:
             self.dialog.close()
+
+    async def show(self) -> str:
+        """Show the dialog and return the selected pack."""
+        if self.dialog:
+            self.dialog.show()
+
+        # Set initial focus for accessibility after dialog is shown
+        await asyncio.sleep(0.3)
+
+        # Select first pack if available for better accessibility
+        if self.pack_list and hasattr(self.pack_list, "data") and len(self.pack_list.data) > 0:
+            try:
+                first_pack = self.pack_list.data[0]
+                self.pack_list.selection = first_pack
+                self._on_pack_selected(self.pack_list)
+                await asyncio.sleep(0.1)
+            except Exception as e:
+                logger.warning(f"Could not select first pack: {e}")
+
+        # Set focus to close button for predictable tab order
+        try:
+            if self.close_button:
+                self.close_button.focus()
+        except Exception as e:
+            logger.warning(f"Could not set focus to close button: {e}")
+            # Try import button as fallback
+            try:
+                if self.import_button:
+                    self.import_button.focus()
+            except Exception:
+                pass
+
+        return self.current_pack
 
 
 __all__ = ["SoundPackManagerDialog"]
