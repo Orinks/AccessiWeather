@@ -517,24 +517,18 @@ class ConfigManager:
         return self.set_github_app_config("", "", "")
 
     def has_github_app_config(self) -> bool:
-        """Check if all required GitHub App configuration fields are present.
+        """Check if GitHub submission is available.
 
-        First checks configuration file credentials, then falls back to
-        environment variables and build-time embedded credentials.
-
-        Returns:
-            True if all fields are configured from any source, False otherwise
-
+        Since all submissions are handled by the backend service, no local GitHub
+        credentials are required. Treat GitHub App config as available as long as
+        a backend URL can be resolved.
         """
-        # First check config file credentials
-        app_id, private_key, installation_id = self.get_github_app_config()
-        if app_id and private_key and installation_id:
-            return True
-
-        # Backend service handles authentication
-        from . import github_credentials
-
-        return github_credentials.has_github_app_credentials()
+        # If a backend URL is available (explicit or default), return True
+        try:
+            url = (self.get_github_backend_url() or "").strip()
+        except Exception:
+            url = ""
+        return bool(url)
 
     def get_github_backend_url(self) -> str:
         """Get the GitHub backend service URL.
