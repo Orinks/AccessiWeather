@@ -300,6 +300,9 @@ class AppSettings:
     sound_enabled: bool = True
     sound_pack: str = "default"
 
+    # GitHub backend settings
+    github_backend_url: str = ""
+
     # Alert notification settings
     alert_notifications_enabled: bool = True
     alert_notify_extreme: bool = True
@@ -330,6 +333,7 @@ class AppSettings:
             "debug_mode": self.debug_mode,
             "sound_enabled": self.sound_enabled,
             "sound_pack": self.sound_pack,
+            "github_backend_url": self.github_backend_url,
             "alert_notifications_enabled": self.alert_notifications_enabled,
             "alert_notify_extreme": self.alert_notify_extreme,
             "alert_notify_severe": self.alert_notify_severe,
@@ -361,6 +365,7 @@ class AppSettings:
             debug_mode=data.get("debug_mode", False),
             sound_enabled=data.get("sound_enabled", True),
             sound_pack=data.get("sound_pack", "default"),
+            github_backend_url=data.get("github_backend_url", ""),
             alert_notifications_enabled=data.get("alert_notifications_enabled", True),
             alert_notify_extreme=data.get("alert_notify_extreme", True),
             alert_notify_severe=data.get("alert_notify_severe", True),

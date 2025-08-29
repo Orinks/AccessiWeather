@@ -999,6 +999,7 @@ class SettingsDialog:
             debug_mode=self.debug_mode_switch.value,
             sound_enabled=sound_enabled,
             sound_pack=sound_pack,
+            github_backend_url="",  # Use default backend URL
         )
 
     def _initialize_update_info(self):

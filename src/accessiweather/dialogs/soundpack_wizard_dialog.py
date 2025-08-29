@@ -460,11 +460,11 @@ class SoundPackWizardDialog:
                     try:
                         from pathlib import Path as _Path
 
-                        from ..notifications.sound_player import play_sound_file
+                        from ..notifications.sound_player import _play_sound_file
 
                         src = self.state.sound_mappings.get(alert_key)
                         if src:
-                            play_sound_file(_Path(src))
+                            _play_sound_file(_Path(src))
                         else:
                             self.app.main_window.info_dialog(
                                 "No Sound", f"No custom sound chosen for {display_name}."
