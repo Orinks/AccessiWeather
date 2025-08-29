@@ -36,7 +36,12 @@ class SoundPackManagerDialog:
     """Dialog for managing sound packs."""
 
     def __init__(self, app: toga.App, current_pack: str = "default"):
-        """Initialize the sound pack manager dialog."""
+        """Initialize the sound pack manager dialog.
+
+        The dialog supports frictionless community submissions without requiring
+        user authentication, using GitHub App credentials for all operations
+        while providing optional submitter attribution.
+        """
         self.app = app
         self.current_pack = current_pack
         self.soundpacks_dir = Path(__file__).parent.parent / "soundpacks"
@@ -67,15 +72,13 @@ class SoundPackManagerDialog:
             self.community_service = None
         self.installer = SoundPackInstaller(self.soundpacks_dir)
 
-        # Pack submission service
-        try:
-            from ..services.pack_submission_service import (
-                PackSubmissionService,  # local import safety
-            )
+        # Pack submission service - always available for anonymous submissions
+        from ..config import ConfigManager
+        from ..services.pack_submission_service import PackSubmissionService
 
-            self.submission_service = PackSubmissionService()
-        except Exception:
-            self.submission_service = None
+        # Initialize with config manager for GitHub App authentication
+        config_manager = ConfigManager(self.app)
+        self.submission_service = PackSubmissionService(config_manager=config_manager)
 
         self._load_sound_packs()
         self._create_dialog()
@@ -140,11 +143,7 @@ class SoundPackManagerDialog:
                 return
 
             enable_share = False
-            if (
-                self.selected_pack
-                and self.selected_pack != "default"
-                and self.submission_service is not None
-            ):
+            if self.selected_pack and self.selected_pack != "default":
                 info = self.sound_packs.get(self.selected_pack) or {}
                 try:
                     meta = self._load_pack_meta(info)
@@ -476,6 +475,109 @@ class SoundPackManagerDialog:
 
         return self.current_pack
 
+    async def _get_submitter_attribution(self) -> tuple[str | None, str | None]:
+        """Show a dialog to collect optional submitter attribution information.
+
+        Returns:
+            Tuple of (submitter_name, submitter_email) or (None, None) if cancelled
+
+        """
+        # Create attribution dialog
+        attribution_win = toga.Window(
+            title="Community Attribution (Optional)", size=(520, 280), resizable=False
+        )
+
+        main_box = toga.Box(style=Pack(direction=COLUMN, padding=15))
+
+        # Header message
+        header_label = toga.Label(
+            "Help the community recognize your contribution!",
+            style=Pack(font_size=14, font_weight="bold", margin_bottom=10),
+        )
+        main_box.add(header_label)
+
+        info_label = toga.Label(
+            "Adding your name and email is completely optional but helps the community "
+            "recognize and connect with pack creators. This information will only be "
+            "included in the pull request description.",
+            style=Pack(margin_bottom=15, text_align="left"),
+        )
+        main_box.add(info_label)
+
+        # Name input
+        name_label = toga.Label("Your name (optional):", style=Pack(margin_bottom=5))
+        main_box.add(name_label)
+        name_input = toga.TextInput(
+            placeholder="e.g., John Smith", style=Pack(margin_bottom=10, width=400)
+        )
+        main_box.add(name_input)
+
+        # Email input
+        email_label = toga.Label("Your email (optional):", style=Pack(margin_bottom=5))
+        main_box.add(email_label)
+        email_input = toga.TextInput(
+            placeholder="e.g., john@example.com", style=Pack(margin_bottom=15, width=400)
+        )
+        main_box.add(email_input)
+
+        # Privacy notice
+        privacy_label = toga.Label(
+            "Privacy: This information is only used for attribution and is not stored or shared beyond the GitHub pull request.",
+            style=Pack(margin_bottom=15, font_style="italic", font_size=11),
+        )
+        main_box.add(privacy_label)
+
+        # Button row
+        button_box = toga.Box(style=Pack(direction=ROW, alignment="center"))
+
+        # Store result
+        result = {"name": None, "email": None, "cancelled": False}
+        done = asyncio.Event()
+
+        def _submit_with_attribution(_):
+            result["name"] = (name_input.value or "").strip()
+            result["email"] = (email_input.value or "").strip()
+            attribution_win.close()
+            done.set()
+
+        def _submit_anonymously(_):
+            result["name"] = ""
+            result["email"] = ""
+            attribution_win.close()
+            done.set()
+
+        def _cancel(_):
+            result["cancelled"] = True
+            attribution_win.close()
+            done.set()
+
+        submit_btn = toga.Button(
+            "Continue with Attribution",
+            on_press=_submit_with_attribution,
+            style=Pack(margin_right=10, background_color="#4CAF50", color="#ffffff"),
+        )
+        anonymous_btn = toga.Button(
+            "Submit Anonymously", on_press=_submit_anonymously, style=Pack(margin_right=10)
+        )
+        cancel_btn = toga.Button("Cancel", on_press=_cancel)
+
+        button_box.add(submit_btn)
+        button_box.add(anonymous_btn)
+        button_box.add(cancel_btn)
+        main_box.add(button_box)
+
+        attribution_win.content = main_box
+        self.app.windows.add(attribution_win)
+        attribution_win.show()
+
+        # Wait for dialog to close
+        await done.wait()
+
+        if result["cancelled"]:
+            return None, None
+
+        return result["name"], result["email"]
+
     def _build_share_confirmation_message(self, name: str, author: str) -> str:
         """Build the confirmation message for sharing a sound pack.
 
@@ -490,11 +592,11 @@ class SoundPackManagerDialog:
         return (
             f"You are about to share the sound pack '{name}' by {author}.\n\n"
             "This will:\n"
-            "- Fork the community repository to your GitHub account\n"
-            "- Create a new branch in your fork\n"
-            "- Upload your pack files using GitHub's API\n"
-            "- Create a Pull Request for review\n\n"
-            "This process uses GitHub's API directly and requires no local git tools.\n\n"
+            "- Create a submission using AccessiBot (no GitHub account needed)\n"
+            "- Prepare your pack for submission\n"
+            "- Create a Pull Request for community review\n"
+            "- Include optional attribution for community recognition\n\n"
+            "This process is completely frictionless and requires no authentication setup.\n\n"
             "Do you want to continue?"
         )
 
@@ -505,13 +607,6 @@ class SoundPackManagerDialog:
             return
 
         try:
-            if not getattr(self, "submission_service", None):
-                await self.app.main_window.info_dialog(
-                    "Share Pack",
-                    "Pack sharing is not available in this build.",
-                )
-                return
-
             if not self.selected_pack or self.selected_pack == "default":
                 await self.app.main_window.info_dialog(
                     "Share Pack",
@@ -546,7 +641,7 @@ class SoundPackManagerDialog:
             author = (meta.get("author") or "").strip()
             description = (meta.get("description") or "").strip()
 
-            # Basic metadata validation
+            # Basic metadata validation - focus on pack content
             missing = []
             if not name:
                 missing.append("name")
@@ -554,8 +649,9 @@ class SoundPackManagerDialog:
                 missing.append("author")
             if missing:
                 await self.app.main_window.error_dialog(
-                    "Incomplete Metadata",
-                    f"Please add the following to pack.json before sharing: {', '.join(missing)}",
+                    "Incomplete Pack Metadata",
+                    f"Please complete your pack by adding: {', '.join(missing)}\n\n"
+                    "Use the 'Edit' button to add missing information.",
                 )
                 return
 
@@ -575,14 +671,19 @@ class SoundPackManagerDialog:
             ok, msg = validate_sound_pack(pack_dir)
             if not ok:
                 await self.app.main_window.error_dialog(
-                    "Validation Failed",
-                    f"Please fix the following before sharing:\n{msg}",
+                    "Pack Quality Check Failed",
+                    f"Please fix the following to ensure pack quality:\n{msg}",
                 )
+                return
+
+            # Submitter attribution dialog
+            submitter_name, submitter_email = await self._get_submitter_attribution()
+            if submitter_name is None:  # User cancelled
                 return
 
             # Confirm
             body = self._build_share_confirmation_message(name, author)
-            proceed = await self.app.main_window.question_dialog("Share Pack", body)
+            proceed = await self.app.main_window.question_dialog("Share with Community", body)
             if not proceed:
                 return
 
@@ -612,9 +713,11 @@ class SoundPackManagerDialog:
                 return not progress.is_cancelled
 
             try:
-                pr_url = await self.submission_service.submit_pack(
+                pr_url = await self.submission_service.submit_pack_anonymous(
                     pack_path=pack_dir,
                     pack_meta=meta,
+                    submitter_name=submitter_name or "Anonymous",
+                    submitter_email=submitter_email or "",
                     progress_callback=_progress_cb,
                     cancel_event=cancel_event,
                 )

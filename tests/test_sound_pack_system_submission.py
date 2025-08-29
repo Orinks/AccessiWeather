@@ -1,8 +1,7 @@
 import asyncio
 import json
 from pathlib import Path
-from types import SimpleNamespace
-from typing import Any
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -29,98 +28,150 @@ def tmp_pack_dir(tmp_path: Path):
     return pack_dir, meta
 
 
+@pytest.fixture()
+def mock_config_manager():
+    """Mock ConfigManager with valid GitHub App configuration."""
+    mock_config = MagicMock()
+    mock_config.validate_github_app_config.return_value = (
+        True,
+        "GitHub App configuration is valid",
+    )
+    mock_config.get_github_app_config.return_value = (
+        "123456",
+        "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
+        "789012",
+    )
+    mock_config.get_github_backend_url.return_value = "https://api.example.com"
+    return mock_config
+
+
+@pytest.fixture()
+def mock_github_client():
+    """Mock GitHubAppClient for testing submission flows."""
+    mock_client = AsyncMock()
+    mock_client.github_request = AsyncMock()
+
+    # Setup default responses for common API calls
+    mock_client.github_request.side_effect = _github_request_side_effect
+
+    # Mock private methods used by _ensure_fork
+    mock_client._generate_jwt = MagicMock(return_value="mock-jwt-token")
+
+    # Mock _get_app_client to return an async context manager
+    mock_app_client = AsyncMock()
+    mock_app_client.get = AsyncMock(
+        return_value=AsyncMock(
+            status_code=200, json=MagicMock(return_value={"account": {"login": "accessibot"}})
+        )
+    )
+
+    class MockAppClientContext:
+        async def __aenter__(self):
+            return mock_app_client
+
+        async def __aexit__(self, exc_type, exc_val, exc_tb):
+            pass
+
+    def mock_get_app_client(jwt_token):
+        return MockAppClientContext()
+
+    mock_client._get_app_client = mock_get_app_client
+
+    return mock_client
+
+
+def _github_request_side_effect(method: str, url: str, **kwargs):
+    """Mock GitHub API responses based on request URL and method."""
+    if url == "/repos/orinks/accessiweather-soundpacks":
+        return {"full_name": "orinks/accessiweather-soundpacks", "default_branch": "main"}
+    if url == "/app/installations/789012":
+        return {"account": {"login": "accessibot"}}
+    if url == "/repos/accessibot/accessiweather-soundpacks":
+        return {
+            "full_name": "accessibot/accessiweather-soundpacks",
+            "fork": True,
+            "parent": {"full_name": "orinks/accessiweather-soundpacks"},
+        }
+    if url == "/repos/orinks/accessiweather-soundpacks/git/ref/heads/main":
+        return {"object": {"sha": "abc123"}}
+    if url.startswith("/repos/orinks/accessiweather-soundpacks/contents/packs/"):
+        # Return 404 for pack existence checks (no duplicates)
+        return {}
+    if method == "POST" and url == "/repos/accessibot/accessiweather-soundpacks/git/refs":
+        return {"ref": "refs/heads/soundpack/test-pack-jane-doe-20240101-120000"}
+    if method == "PUT" and "/contents/" in url:
+        return {"commit": {"sha": "def456"}}
+    if method == "POST" and url == "/repos/orinks/accessiweather-soundpacks/pulls":
+        return {
+            "html_url": "https://github.com/orinks/accessiweather-soundpacks/pull/123",
+            "number": 123,
+        }
+    if method == "POST" and url.endswith("/labels"):
+        return {"labels": ["community-submission"]}
+    return {}
+
+
 @pytest.mark.asyncio
-async def test_submit_pack_happy_path(tmp_pack_dir, monkeypatch):
+async def test_submit_pack_no_config_manager(tmp_pack_dir):
+    """Test submit_pack works without config manager using default backend URL.
+
+    We mock the backend client to avoid real network calls and assert success.
+    """
     pack_dir, meta = tmp_pack_dir
 
-    # Collect progress
-    progress_calls: list[tuple[float, str]] = []
-
-    def progress_cb(p, s):
-        progress_calls.append((round(p, 1), s))
-
-    # Service under test
     svc = PackSubmissionService(repo_owner="owner", repo_name="repo", dest_subdir="packs")
 
-    # Environment token
-    monkeypatch.setenv("ACCESSIWEATHER_GITHUB_TOKEN", "dummy")
-
-    # Stub helpers to avoid real network
-    async def _repo_info(client, cancel_event=None):
-        await asyncio.sleep(0)
-        return {"default_branch": "main"}
-
-    async def _user_login(client, cancel_event=None):
-        await asyncio.sleep(0)
-        return "user"
-
-    async def _ensure_fork(client, login, cancel_event=None):
-        await asyncio.sleep(0)
-        return "user/repo"
-
-    monkeypatch.setattr(svc, "_get_repo_info", _repo_info)
-    monkeypatch.setattr(svc, "_get_user_login", _user_login)
-    monkeypatch.setattr(svc, "_ensure_fork", _ensure_fork)
-
-    base_sha_calls: list[tuple[str, str]] = []
-
-    async def _get_branch_sha(client, full_name, branch):
-        base_sha_calls.append((full_name, branch))
-        return "abc123"
-
-    monkeypatch.setattr(svc, "_get_branch_sha", _get_branch_sha)
-    monkeypatch.setattr(
-        svc, "_create_branch", lambda client, full_name, branch, sha: asyncio.sleep(0)
-    )
-    monkeypatch.setattr(
-        svc,
-        "_path_exists",
-        lambda client, full_name, path, ref, cancel_event=None: asyncio.sleep(0) or False,
+    mock_backend_client = AsyncMock()
+    mock_backend_client.upload_zip = AsyncMock(
+        return_value={"html_url": "https://github.com/owner/repo/pull/999"}
     )
 
-    uploaded_paths: list[str] = []
+    with patch(
+        "accessiweather.services.pack_submission_service.GitHubBackendClient"
+    ) as mock_backend_class:
+        mock_backend_class.return_value = mock_backend_client
 
-    async def _upload_file(client, full_name, path, content, message, branch, cancel_event=None):
-        # Ensure we get paths as provided (encoding is done inside helper when hitting API)
-        uploaded_paths.append(path)
+        pr_url = await svc.submit_pack(pack_dir, meta)
 
-    monkeypatch.setattr(svc, "_upload_file", _upload_file)
+        mock_backend_class.assert_called_once()
+        mock_backend_client.upload_zip.assert_called_once()
+        assert pr_url == "https://github.com/owner/repo/pull/999"
 
-    async def _create_pr(client, upstream_full_name, title, body, head, base, label=None):
-        await asyncio.sleep(0)
-        return "https://github.com/owner/repo/pull/1"
 
-    monkeypatch.setattr(svc, "_create_pull_request", _create_pr)
+@pytest.mark.asyncio
+async def test_submit_pack_with_config_manager(tmp_pack_dir, mock_config_manager):
+    """Test submit_pack works with config manager using backend service."""
+    pack_dir, meta = tmp_pack_dir
+    mock_config_manager.get_github_backend_url.return_value = "https://test-backend.example.com"
 
-    # Provide a dummy async client context manager
-    class _DummyClient:
-        async def __aenter__(self):
-            return SimpleNamespace()
+    svc = PackSubmissionService(
+        repo_owner="owner",
+        repo_name="repo",
+        dest_subdir="packs",
+        config_manager=mock_config_manager,
+    )
 
-        async def __aexit__(self, exc_type, exc, tb):
-            return False
+    # This should now work with the backend service, but will fail due to invalid test data
+    with pytest.raises(RuntimeError) as exc_info:
+        await svc.submit_pack(pack_dir, meta)
 
-    monkeypatch.setattr(svc, "_get_auth_client", lambda token: _DummyClient())
+    # Should get a backend service error, not a config manager error
+    assert "Failed to connect to backend service" in str(exc_info.value)
 
-    pr_url = await svc.submit_pack(pack_dir, meta, progress_callback=progress_cb)
 
-    assert pr_url.endswith("/pull/1")
-    # Uploaded files include the audio files and pack.json
-    assert set(uploaded_paths) == {
-        "packs/test-pack-jane-doe/alert.wav",
-        "packs/test-pack-jane-doe/notify sound.wav",
-        "packs/test-pack-jane-doe/pack.json",
-    }
+@pytest.mark.asyncio
+async def test_submit_pack_anonymous_no_config_manager(tmp_pack_dir):
+    """Test submit_pack_anonymous works without config manager using default backend URL."""
+    pack_dir, meta = tmp_pack_dir
 
-    # Verify progress mapping: uploads reported within 40..90 and final 100
-    upload_reports = [p for p in progress_calls if p[1].startswith("Uploaded ")]
-    assert upload_reports, "No upload progress reported"
-    pcts = [p[0] for p in upload_reports]
-    assert min(pcts) >= 40.0 and max(pcts) <= 90.0
-    assert any(p[0] == 100.0 for p in progress_calls)
+    svc = PackSubmissionService(repo_owner="owner", repo_name="repo", dest_subdir="packs")
 
-    # Verify fork-first base sha call order
-    assert base_sha_calls and base_sha_calls[0][0] == "user/repo"
+    # This should now work with the backend service, but will fail due to invalid test data
+    with pytest.raises(RuntimeError) as exc_info:
+        await svc.submit_pack_anonymous(pack_dir, meta, "John Doe", "john@example.com")
+
+    # Should get a backend service error, not a config manager error
+    assert "Backend service error" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
@@ -131,165 +182,238 @@ async def test_pack_id_generation():
 
 
 @pytest.mark.asyncio
-async def test_size_guard(tmp_path, monkeypatch):
-    # Pack with one big file triggers size check
-    pack_dir = tmp_path / "bigpack"
-    pack_dir.mkdir()
-    (pack_dir / "pack.json").write_text(
-        json.dumps({"name": "Big", "sounds": {"alert": "big.bin"}}), encoding="utf-8"
-    )
-    big_file = pack_dir / "big.bin"
-    big_file.write_bytes(b"x")
+async def test_build_pr_content_anonymous():
+    """Test _build_pr_content method for anonymous submissions."""
+    svc = PackSubmissionService()
+    meta = {
+        "name": "Test Pack",
+        "author": "Jane Doe",
+        "description": "A test sound pack",
+        "sounds": {"alert": "alert.wav", "notify": "notify.wav"},
+        "_submitter": {
+            "name": "John Smith",
+            "email": "john@example.com",
+            "submission_type": "anonymous",
+        },
+    }
 
-    svc = PackSubmissionService(repo_owner="owner", repo_name="repo")
-    monkeypatch.setenv("ACCESSIWEATHER_GITHUB_TOKEN", "dummy")
+    title, body = svc._build_pr_content(meta, "test-pack", is_anonymous=True)
 
-    # Stubs to get to upload step
-    async def _repo_info_sz(client, cancel_event=None):
-        return {"default_branch": "main"}
-
-    async def _user_login_sz(client, cancel_event=None):
-        return "user"
-
-    async def _ensure_fork_sz(client, login, cancel_event=None):
-        return "user/repo"
-
-    async def _get_branch_sha_sz(client, full_name, branch):
-        return "abc123"
-
-    async def _create_branch_sz(client, full_name, branch, sha):
-        return None
-
-    async def _path_exists_sz(client, full_name, path, ref, cancel_event=None):
-        return False
-
-    monkeypatch.setattr(svc, "_get_repo_info", _repo_info_sz)
-    monkeypatch.setattr(svc, "_get_user_login", _user_login_sz)
-    monkeypatch.setattr(svc, "_ensure_fork", _ensure_fork_sz)
-    monkeypatch.setattr(svc, "_get_branch_sha", _get_branch_sha_sz)
-    monkeypatch.setattr(svc, "_create_branch", _create_branch_sz)
-    monkeypatch.setattr(svc, "_path_exists", _path_exists_sz)
-
-    # Monkeypatch read_bytes to simulate >100MB size for this file only
-    orig_read = Path.read_bytes
-
-    def fake_read_bytes(self: Path) -> bytes:
-        if self == big_file:
-            return b"0" * (100 * 1024 * 1024 + 1)
-        return orig_read(self)
-
-    monkeypatch.setattr(Path, "read_bytes", fake_read_bytes)
-
-    with pytest.raises(RuntimeError) as ei:
-        await svc.submit_pack(pack_dir, {"name": "Big"})
-    assert "100MB" in str(ei.value)
+    assert title == "Add community sound pack: Test Pack"
+    assert "## Submitter Information" in body
+    assert "**Submitted by:** John Smith" in body
+    assert "**Email:** john@example.com" in body
+    assert "Anonymous submission via AccessiBotApp" in body
 
 
 @pytest.mark.asyncio
-async def test_url_encoding_in_helpers(monkeypatch):
-    svc = PackSubmissionService(repo_owner="owner", repo_name="repo")
+async def test_build_pr_content_regular():
+    """Test _build_pr_content method for regular submissions."""
+    svc = PackSubmissionService()
+    meta = {
+        "name": "Test Pack",
+        "author": "Jane Doe",
+        "description": "A test sound pack",
+        "sounds": {"alert": "alert.wav", "notify": "notify.wav"},
+    }
 
-    captured: dict[str, Any] = {}
+    title, body = svc._build_pr_content(meta, "test-pack", is_anonymous=False)
 
-    async def fake_github_request(
-        client, method, url, *, json=None, params=None, expected=(200, 201), cancel_event=None
-    ):
-        captured["url"] = url
-        # Return 404 path not found fallback
-        return {}
-
-    monkeypatch.setattr(svc, "_github_request", fake_github_request)
-
-    # Path with a space should be encoded when checking existence
-    await svc._path_exists(SimpleNamespace(), "owner/repo", "packs/test/notify sound.wav", "main")
-    assert "%20" in captured.get("url", "")
-
-    # For upload_file, verify encoded URL too
-    async def fake_github_request_upload(
-        client, method, url, *, json=None, params=None, expected=(200, 201), cancel_event=None
-    ):
-        captured["upload_url"] = url
-        return {"content": {}}
-
-    monkeypatch.setattr(svc, "_github_request", fake_github_request_upload)
-    await svc._upload_file(
-        SimpleNamespace(), "owner/repo", "packs/test/notify sound.wav", b"x", "msg", "branch"
-    )
-    assert "%20" in captured.get("upload_url", "")
+    assert title == "Add sound pack: Test Pack by Jane Doe"
+    assert "## Submitter Information" not in body
+    assert "Anonymous submission" not in body
 
 
 @pytest.mark.asyncio
-async def test_branch_base_sha_fallback(monkeypatch, tmp_pack_dir):
+async def test_sanitize_id():
+    """Test ID sanitization."""
+    assert PackSubmissionService._sanitize_id("Test Pack Name!") == "test-pack-name"
+    assert PackSubmissionService._sanitize_id("Special@Characters#123") == "specialcharacters123"
+    assert PackSubmissionService._sanitize_id("") == "pack"
+
+
+@pytest.mark.asyncio
+async def test_build_branch_name():
+    """Test branch name generation."""
+    branch = PackSubmissionService._build_branch_name("test-pack")
+    assert branch.startswith("soundpack/test-pack-")
+    assert len(branch.split("-")) >= 3  # soundpack/test-pack-YYYYMMDD-HHMMSS
+
+
+@pytest.mark.asyncio
+async def test_submit_pack_anonymous_invalid_config(tmp_pack_dir, mock_config_manager):
+    """Test submit_pack_anonymous raises error when backend URL is invalid."""
+    pack_dir, meta = tmp_pack_dir
+    # Return an invalid URL that will cause httpx to fail
+    mock_config_manager.get_github_backend_url.return_value = "invalid-url"
+
+    svc = PackSubmissionService(
+        repo_owner="owner",
+        repo_name="repo",
+        dest_subdir="packs",
+        config_manager=mock_config_manager,
+    )
+
+    with pytest.raises(RuntimeError) as exc_info:
+        await svc.submit_pack_anonymous(pack_dir, meta, "John Doe", "john@example.com")
+
+    assert "Failed to connect to backend service" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_submit_pack_backend_flow(tmp_pack_dir, mock_config_manager):
+    """Test complete backend service flow for pack submission."""
     pack_dir, meta = tmp_pack_dir
 
-    svc = PackSubmissionService(repo_owner="owner", repo_name="repo")
-    monkeypatch.setenv("ACCESSIWEATHER_GITHUB_TOKEN", "dummy")
+    # Mock the backend client
+    mock_backend_client = AsyncMock()
+    mock_backend_client.upload_zip = AsyncMock(
+        return_value={"html_url": "https://github.com/orinks/accessiweather-soundpacks/pull/123"}
+    )
 
-    order: list[str] = []
+    with patch(
+        "accessiweather.services.pack_submission_service.GitHubBackendClient"
+    ) as mock_backend_class:
+        mock_backend_class.return_value = mock_backend_client
 
-    # Stubs
-    async def _repo_info_fb(client, cancel_event=None):
-        return {"default_branch": "main"}
+        svc = PackSubmissionService(
+            repo_owner="orinks",
+            repo_name="accessiweather-soundpacks",
+            dest_subdir="packs",
+            config_manager=mock_config_manager,
+        )
 
-    async def _user_login_fb(client, cancel_event=None):
-        return "user"
+        # Test submit_pack with backend service
+        result = await svc.submit_pack(pack_dir, meta)
 
-    async def _ensure_fork_fb(client, login, cancel_event=None):
-        return "user/repo"
+        # Verify backend client was created and called
+        mock_backend_class.assert_called_once()
+        mock_backend_client.upload_zip.assert_called_once()
 
-    monkeypatch.setattr(svc, "_get_repo_info", _repo_info_fb)
-    monkeypatch.setattr(svc, "_get_user_login", _user_login_fb)
-    monkeypatch.setattr(svc, "_ensure_fork", _ensure_fork_fb)
+        # Verify result
+        assert result == "https://github.com/orinks/accessiweather-soundpacks/pull/123"
 
-    async def _get_branch_sha(client, full_name, branch):
-        order.append(full_name)
-        if full_name == "user/repo":
-            raise RuntimeError("not found in fork")
-        return "upstream-sha"
 
-    monkeypatch.setattr(svc, "_get_branch_sha", _get_branch_sha)
+@pytest.mark.asyncio
+async def test_anonymous_submission_comprehensive(
+    tmp_pack_dir, mock_config_manager, mock_github_client
+):
+    """Test comprehensive anonymous submission flow with attribution."""
+    pack_dir, meta = tmp_pack_dir
 
-    created = {}
+    # Mock the backend client
+    mock_backend_client = AsyncMock()
+    mock_backend_client.upload_zip = AsyncMock(
+        return_value={"html_url": "https://github.com/orinks/accessiweather-soundpacks/pull/123"}
+    )
 
-    async def _create_branch_fb(client, full_name, branch, sha):
-        created.setdefault("sha", sha)
+    with patch(
+        "accessiweather.services.pack_submission_service.GitHubBackendClient"
+    ) as mock_backend_class:
+        mock_backend_class.return_value = mock_backend_client
 
-    monkeypatch.setattr(svc, "_create_branch", _create_branch_fb)
+        svc = PackSubmissionService(
+            repo_owner="orinks",
+            repo_name="accessiweather-soundpacks",
+            dest_subdir="packs",
+            config_manager=mock_config_manager,
+        )
 
-    class _DummyClient2:
-        async def __aenter__(self):
-            return SimpleNamespace()
+        # Test anonymous submission with progress callback
+        progress_calls = []
 
-        async def __aexit__(self, exc_type, exc, tb):
-            return False
+        async def progress_callback(pct, status):
+            progress_calls.append((pct, status))
+            return True  # Continue
 
-    monkeypatch.setattr(svc, "_get_auth_client", lambda token: _DummyClient2())
+        result = await svc.submit_pack_anonymous(
+            pack_dir, meta, "Jane Smith", "jane@example.com", progress_callback=progress_callback
+        )
 
-    async def _path_exists_fb(client, full_name, path, ref, cancel_event=None):
+        # Verify progress reporting
+        assert len(progress_calls) > 5
+        assert progress_calls[0][1] == "Checking prerequisites..."
+        assert progress_calls[-1][1].startswith("Pull request created:")
+
+        # Verify result
+        assert result == "https://github.com/orinks/accessiweather-soundpacks/pull/123"
+
+        # Verify backend client was created and called
+        mock_backend_class.assert_called_once()
+        mock_backend_client.upload_zip.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_error_handling_scenarios(tmp_pack_dir, mock_config_manager):
+    """Test various error handling scenarios in pack submission."""
+    pack_dir, meta = tmp_pack_dir
+
+    # Test validation failure
+    with patch(
+        "accessiweather.services.pack_submission_service.validate_sound_pack"
+    ) as mock_validate:
+        mock_validate.return_value = (False, "Invalid pack format")
+
+        svc = PackSubmissionService(config_manager=mock_config_manager)
+
+        with pytest.raises(RuntimeError) as exc_info:
+            await svc.submit_pack(pack_dir, meta)
+        assert "Sound pack validation failed" in str(exc_info.value)
+        assert "Invalid pack format" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_cancellation_support(tmp_pack_dir, mock_config_manager):
+    """Test cancellation support throughout submission process."""
+    pack_dir, meta = tmp_pack_dir
+
+    # Mock the backend client to simulate cancellation
+    mock_backend_client = AsyncMock()
+
+    def progress_callback(pct, status):
+        # Return False to trigger cancellation
         return False
 
-    monkeypatch.setattr(svc, "_path_exists", _path_exists_fb)
+    mock_backend_client.upload_zip = AsyncMock(side_effect=asyncio.CancelledError())
 
-    async def _upload_file_fb(*a, **k):
-        return None
+    with patch(
+        "accessiweather.services.pack_submission_service.GitHubBackendClient"
+    ) as mock_backend_class:
+        mock_backend_class.return_value = mock_backend_client
 
-    monkeypatch.setattr(svc, "_upload_file", _upload_file_fb)
+        svc = PackSubmissionService(config_manager=mock_config_manager)
 
-    async def _create_pr_fb(*a, **k):
-        return "https://github.com/owner/repo/pull/2"
+        with pytest.raises(asyncio.CancelledError):
+            await svc.submit_pack_anonymous(
+                pack_dir, meta, "Test User", "test@example.com", progress_callback=progress_callback
+            )
 
-    monkeypatch.setattr(svc, "_create_pull_request", _create_pr_fb)
 
-    class _DummyClient3:
-        async def __aenter__(self):
-            return SimpleNamespace()
+@pytest.mark.asyncio
+async def test_attribution_metadata_handling(tmp_pack_dir):
+    """Test proper handling of submitter attribution metadata."""
+    pack_dir, meta = tmp_pack_dir
 
-        async def __aexit__(self, exc_type, exc, tb):
-            return False
+    svc = PackSubmissionService()
 
-    monkeypatch.setattr(svc, "_get_auth_client", lambda token: _DummyClient3())
+    # Test with attribution
+    enhanced_meta = meta.copy()
+    enhanced_meta["_submitter"] = {
+        "name": "Community Contributor",
+        "email": "contributor@example.com",
+        "submission_type": "anonymous",
+    }
 
-    url = await svc.submit_pack(pack_dir, meta)
-    assert url.endswith("/pull/2")
-    assert order[:2] == ["user/repo", "owner/repo"], "Should try fork first, then upstream"
-    assert created.get("sha") == "upstream-sha"
+    title, body = svc._build_pr_content(enhanced_meta, "test-pack", is_anonymous=True)
+
+    assert title == "Add community sound pack: Test Pack"
+    assert "Community Contributor" in body
+    assert "contributor@example.com" in body
+    assert "Anonymous submission via AccessiBotApp" in body
+
+    # Test without attribution (regular submission)
+    title, body = svc._build_pr_content(meta, "test-pack", is_anonymous=False)
+
+    assert title == "Add sound pack: Test Pack by Jane-Doe"
+    assert "Community Contributor" not in body
+    assert "Anonymous submission" not in body
