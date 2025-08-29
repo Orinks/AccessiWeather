@@ -47,7 +47,7 @@ class SoundPackManagerDialog:
         self.selected_pack: str | None = None
 
         # Paths
-        self.soundpacks_dir = Path(__file__).parent.parent / "soundpacks"
+        self.soundpacks_dir = Path(__file__).parent.parent.parent / "soundpacks"
         self.soundpacks_dir.mkdir(exist_ok=True)
 
         # External services
