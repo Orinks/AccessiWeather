@@ -137,6 +137,7 @@ class AccessiWeatherApp(toga.App):
             await self._start_background_updates()
 
             # Play startup sound after app is fully initialized
+            logger.info("About to call _play_startup_sound")
             await self._play_startup_sound()
 
         except Exception as e:
@@ -144,11 +145,15 @@ class AccessiWeatherApp(toga.App):
 
     async def _play_startup_sound(self):
         """Play the application startup sound."""
+        logger.info("_play_startup_sound called")
         try:
             # Get current soundpack from settings
             config = self.config_manager.get_config()
             current_soundpack = getattr(config.settings, "sound_pack", "default")
             sound_enabled = getattr(config.settings, "sound_enabled", True)
+            logger.info(
+                f"Startup sound settings: enabled={sound_enabled}, pack={current_soundpack}"
+            )
 
             if sound_enabled:
                 from .notifications.sound_player import play_startup_sound
@@ -156,7 +161,7 @@ class AccessiWeatherApp(toga.App):
                 play_startup_sound(current_soundpack)
                 logger.info(f"Played startup sound from pack: {current_soundpack}")
         except Exception as e:
-            logger.debug(f"Failed to play startup sound: {e}")
+            logger.error(f"Failed to play startup sound: {e}")
 
     def _initialize_components(self):
         """Initialize core application components."""
