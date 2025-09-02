@@ -40,7 +40,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Cache pip dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~\AppData\Local\pip\Cache
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml') }}
@@ -99,7 +99,7 @@ jobs:
         python-version: "3.12"
 
     - name: Cache pip dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~\AppData\Local\pip\Cache
         key: ${{ runner.os }}-lint-pip-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml') }}
@@ -156,7 +156,7 @@ jobs:
         python-version: "3.12"
 
     - name: Cache pip dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~\AppData\Local\pip\Cache
         key: ${{ runner.os }}-security-pip-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml') }}

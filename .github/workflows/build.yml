@@ -51,7 +51,7 @@ jobs:
         python-version: ${{ env.PYTHON_VERSION }}
 
     - name: Cache pip dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~\AppData\Local\pip\Cache
         key: ${{ runner.os }}-build-pip-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml') }}
@@ -59,7 +59,7 @@ jobs:
           ${{ runner.os }}-build-pip-
 
     - name: Cache PyInstaller build cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       if: ${{ !github.event.inputs.skip_cache }}
       with:
         path: |
