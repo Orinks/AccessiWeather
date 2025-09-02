@@ -71,7 +71,7 @@ jobs:
         ACCESSIWEATHER_TEST_MODE: "1"
 
     - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       if: matrix.python-version == '3.12'
       with:
         file: ./coverage.xml
