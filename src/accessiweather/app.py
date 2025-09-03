@@ -168,9 +168,9 @@ class AccessiWeatherApp(toga.App):
 
         # Initialize update service
         try:
-            from .services import TUFUpdateService
+            from .services import GitHubUpdateService
 
-            self.update_service = TUFUpdateService(
+            self.update_service = GitHubUpdateService(
                 app_name="AccessiWeather",
                 config_dir=self.config_manager.config_dir if self.config_manager else None,
             )
@@ -928,10 +928,12 @@ class AccessiWeatherApp(toga.App):
             downloaded_file = await self.update_service.download_update(update_info)
 
             if downloaded_file:
+                # Treat any truthy return as a path to the downloaded file
+                downloaded_path = str(downloaded_file)
                 await self.main_window.info_dialog(
                     "Update Downloaded",
                     f"Update {update_info.version} has been downloaded successfully.\n\n"
-                    f"Location: {downloaded_file}\n\n"
+                    f"Location: {downloaded_path}\n\n"
                     "Please close the application and run the installer to complete the update.",
                 )
                 self._update_status(f"Update {update_info.version} downloaded")

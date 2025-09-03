@@ -53,6 +53,8 @@ class GitHubUpdateService:
         """
         self.app_name = app_name
         self.config_dir = Path(config_dir)
+        # Ensure the config directory exists before creating/using cache and settings files
+        self.config_dir.mkdir(parents=True, exist_ok=True)
         self.owner = owner
         self.repo = repo
         self.cache_path = self.config_dir / CACHE_FILENAME
@@ -71,7 +73,22 @@ class GitHubUpdateService:
     async def check_for_updates(
         self, method: str | None = None, current_version: str | None = None
     ) -> UpdateInfo | None:
-        """Compatibility wrapper for update check. Ignores method, uses current_version or '0.0.0'."""
+        """Compatibility wrapper for update check.
+
+        If `current_version` is None, default to the running package version.
+        The `method` parameter is ignored.
+        """
+        # Default current_version to the running package version if not provided
+        if current_version is None:
+            try:
+                # Local import to avoid import-time side effects
+                from ..version import __version__
+
+                current_version = __version__
+            except Exception:
+                # Fall back to a very old version to ensure any release is considered newer
+                current_version = "0.0.0"
+
         releases = await self._get_releases()
         filtered = self._filter_releases_by_channel(releases, self.settings.channel)
         latest = self._find_latest_release(filtered, current_version or "0.0.0")
@@ -247,6 +264,82 @@ class GitHubUpdateService:
 
     async def download_update(
         self,
+        asset_or_info,
+        dest_path=None,
+        progress_callback=None,
+        cancel_event=None,
+        expected_sha256=None,
+        checksums_url=None,
+        artifact_name=None,
+    ) -> str | bool:
+        """Compatibility wrapper to download an update."""
+        # Detect UpdateInfo safely
+        try:
+            is_update_info = isinstance(asset_or_info, UpdateInfo)
+        except Exception:
+            is_update_info = False
+
+        # New-style call: UpdateInfo instance provided
+        if is_update_info:
+            info: UpdateInfo = asset_or_info
+
+            # Support positional progress_callback passed in dest_path slot
+            if callable(dest_path) and progress_callback is None:
+                progress_callback = dest_path
+                dest_path = None
+
+            url = info.download_url
+
+            # Determine artifact name
+            name = artifact_name or getattr(info, "artifact_name", None)
+            if not name:
+                try:
+                    from urllib.parse import urlparse
+
+                    parsed = urlparse(url)
+                    name = Path(parsed.path).name or f"{self.app_name}-update"
+                except Exception:
+                    name = f"{self.app_name}-update"
+
+            # Destination under config_dir/updates
+            dest_dir = self.config_dir / "updates"
+            dest_dir.mkdir(parents=True, exist_ok=True)
+            file_path = dest_dir / name
+
+            # _download_asset returns str(dest_path) on success, or False on failure
+            return await self._download_asset(
+                url,
+                file_path,
+                progress_callback=progress_callback,
+                cancel_event=cancel_event,
+                expected_sha256=expected_sha256,
+                checksums_url=checksums_url,
+                artifact_name=name,
+            )
+
+        # Legacy call: asset_or_info is a URL and dest_path must be provided
+        if dest_path is None:
+            logger.error("dest_path is required when calling download_update with a URL")
+            return False
+
+        # Ensure parent directory exists for legacy dest_path
+        import contextlib
+
+        with contextlib.suppress(Exception):
+            Path(dest_path).parent.mkdir(parents=True, exist_ok=True)
+
+        return await self._download_asset(
+            asset_or_info,
+            dest_path,
+            progress_callback=progress_callback,
+            cancel_event=cancel_event,
+            expected_sha256=expected_sha256,
+            checksums_url=checksums_url,
+            artifact_name=artifact_name,
+        )
+
+    async def _download_asset(
+        self,
         asset_url,
         dest_path,
         progress_callback=None,
@@ -254,16 +347,23 @@ class GitHubUpdateService:
         expected_sha256=None,
         checksums_url=None,
         artifact_name=None,
-    ):
+    ) -> str | bool:
+        import contextlib
+        import hashlib
         from pathlib import Path
+
+        # Validate inputs for legacy path
+        if not asset_url or not dest_path:
+            logger.error("asset_url and dest_path are required for legacy download call")
+            return False
 
         # Check cancel_event at start
         if cancel_event and cancel_event.is_set():
             logger.info("Download cancelled before start")
             return False
+
         # Ensure parent directory exists
         Path(dest_path).parent.mkdir(parents=True, exist_ok=True)
-        import hashlib
 
         try:
             with open(dest_path, "wb") as f:
@@ -281,12 +381,18 @@ class GitHubUpdateService:
                             f.write(chunk)
                             downloaded += len(chunk)
                             if progress_callback:
-                                progress_callback(downloaded, total)
+                                # Don't fail download due to progress callback errors
+                                with contextlib.suppress(Exception):
+                                    progress_callback(downloaded, total)
                 except Exception as e:
                     logger.error(f"Download failed: {e}")
-                    f.close()
-                    Path(dest_path).unlink(missing_ok=True)
+                    try:
+                        f.close()
+                        Path(dest_path).unlink(missing_ok=True)
+                    except Exception:
+                        pass
                     return False
+
             # After download, verify SHA256 if provided
             if expected_sha256:
                 sha256 = hashlib.sha256()
@@ -298,6 +404,7 @@ class GitHubUpdateService:
                     logger.error(f"SHA256 mismatch: expected {expected_sha256}, got {digest}")
                     Path(dest_path).unlink(missing_ok=True)
                     return False
+
             # Alternatively, verify using checksums.txt asset if provided
             if checksums_url and artifact_name:
                 try:
@@ -326,10 +433,16 @@ class GitHubUpdateService:
                     logger.error(f"Failed to verify checksum from checksums.txt: {e}")
                     Path(dest_path).unlink(missing_ok=True)
                     return False
-            return True
+
+            # Return the destination path on success for callers that expect the path.
+            try:
+                return str(dest_path)
+            except Exception:
+                return dest_path
         except Exception as e:
             logger.error(f"Download failed: {e}")
-            Path(dest_path).unlink(missing_ok=True)
+            with contextlib.suppress(Exception):
+                Path(dest_path).unlink(missing_ok=True)
             return False
 
     def _load_settings(self):
