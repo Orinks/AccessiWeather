@@ -32,7 +32,6 @@ class SettingsDialog:
         # UI components
         self.option_container = None
         self.general_tab = None
-        self.display_tab = None
         self.advanced_tab = None
         self.updates_tab = None
 
@@ -47,9 +46,7 @@ class SettingsDialog:
         self.visual_crossing_config_box = None
         self.visual_crossing_api_key_input = None
         self.get_api_key_button = None
-
-        # Display tab controls
-        self.temperature_unit_selection = None
+        self.validate_api_key_button = None
 
         # Advanced tab controls
         self.minimize_to_tray_switch = None
@@ -65,11 +62,13 @@ class SettingsDialog:
         self.platform_info_label = None
         self.update_capability_label = None
 
-        # Sound settings controls
+        # Sound settings controls (Audio tab)
         self.sound_enabled_switch = None
         self.sound_pack_selection = None
-        self.preview_sound_button = None
         self.manage_soundpacks_button = None
+
+        # General tab controls (moved from Display)
+        self.temperature_unit_selection = None
 
     def __await__(self):
         """Make the dialog awaitable for modal behavior."""
@@ -120,11 +119,12 @@ class SettingsDialog:
         # Create tabbed interface
         self.option_container = toga.OptionContainer(style=Pack(flex=1))
 
-        # Create tabs
+        # Create tabs in new order
         self._create_general_tab()
-        self._create_display_tab()
-        self._create_advanced_tab()
+        self._create_data_sources_tab()
+        self._create_audio_tab()
         self._create_updates_tab()
+        self._create_advanced_tab()
 
         main_box.add(self.option_container)
 
@@ -163,88 +163,48 @@ class SettingsDialog:
                 self.update_capability_label.text = "Update capability unknown"
 
     def _create_general_tab(self):
-        """Create the General settings tab."""
+        """Create the General settings tab (core app settings)."""
         general_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
+        # Store reference to this tab container
+        self.general_tab = general_box
 
-        # Data Source Selection
-        general_box.add(toga.Label("Weather Data Source:", style=Pack(margin_bottom=5)))
+        # Temperature Unit Selection (moved from Display tab)
+        general_box.add(toga.Label("Temperature Display:", style=Pack(margin_bottom=5)))
 
-        # Define data source options
-        data_source_options = [
-            "Automatic (NWS for US, Open-Meteo for non-US)",
-            "National Weather Service (NWS)",
-            "Open-Meteo (International)",
-            "Visual Crossing (Global, requires API key)",
+        temp_unit_options = [
+            "Fahrenheit only",
+            "Celsius only",
+            "Both (Fahrenheit and Celsius)",
         ]
-
-        self.data_source_selection = toga.Selection(
-            items=data_source_options,
-            style=Pack(margin_bottom=15),
-            on_change=self._on_data_source_changed,
-        )
-
-        # Set current value based on stored configuration
-        data_source_map = {
-            "auto": 0,
-            "nws": 1,
-            "openmeteo": 2,
-            "visualcrossing": 3,
+        # Maintain mapping between display text and internal values
+        self.temperature_display_to_value = {
+            "Fahrenheit only": "f",
+            "Celsius only": "c",
+            "Both (Fahrenheit and Celsius)": "both",
+        }
+        # Reverse mapping for setting initial selection
+        self.temperature_value_to_display = {
+            v: k for k, v in self.temperature_display_to_value.items()
         }
 
+        self.temperature_unit_selection = toga.Selection(
+            items=temp_unit_options,
+            style=Pack(margin_bottom=15),
+            id="temperature_unit_selection",
+        )
+
         try:
-            current_data_source = self.current_settings.data_source
-            selected_index = data_source_map.get(current_data_source, 0)
-            self.data_source_selection.value = data_source_options[selected_index]
-        except (IndexError, AttributeError) as e:
-            logger.warning(f"Failed to set data source selection: {e}, using default")
-            self.data_source_selection.value = data_source_options[0]
-
-        general_box.add(self.data_source_selection)
-
-        # Visual Crossing API Key Configuration (initially hidden)
-        self.visual_crossing_config_box = toga.Box(style=Pack(direction=COLUMN))
-
-        self.visual_crossing_config_box.add(
-            toga.Label(
-                "Visual Crossing API Configuration:",
-                style=Pack(margin_top=15, margin_bottom=5, font_weight="bold"),
+            current_temp_unit = getattr(self.current_settings, "temperature_unit", "both")
+            display_value = self.temperature_value_to_display.get(
+                current_temp_unit,
+                "Both (Fahrenheit and Celsius)",
             )
-        )
+            self.temperature_unit_selection.value = display_value
+        except Exception as e:
+            logger.warning(f"Failed to set temperature unit selection: {e}, using default")
+            self.temperature_unit_selection.value = "Both (Fahrenheit and Celsius)"
 
-        # API Key input
-        self.visual_crossing_config_box.add(toga.Label("API Key:", style=Pack(margin_bottom=5)))
-        self.visual_crossing_api_key_input = toga.PasswordInput(
-            value=getattr(self.current_settings, "visual_crossing_api_key", ""),
-            placeholder="Enter your Visual Crossing API key",
-            style=Pack(margin_bottom=10),
-        )
-        self.visual_crossing_config_box.add(self.visual_crossing_api_key_input)
-
-        # API Key buttons row
-        api_key_buttons_row = toga.Box(style=Pack(direction=ROW, margin_bottom=15))
-
-        # API Key registration link button
-        self.get_api_key_button = toga.Button(
-            "Get Free API Key",
-            on_press=self._on_get_visual_crossing_api_key,
-            style=Pack(margin_right=10, width=150),
-        )
-        api_key_buttons_row.add(self.get_api_key_button)
-
-        # API Key validation button
-        self.validate_api_key_button = toga.Button(
-            "Validate API Key",
-            on_press=self._on_validate_visual_crossing_api_key,
-            style=Pack(width=150),
-        )
-        api_key_buttons_row.add(self.validate_api_key_button)
-
-        self.visual_crossing_config_box.add(api_key_buttons_row)
-
-        general_box.add(self.visual_crossing_config_box)
-
-        # Set initial visibility of Visual Crossing config based on current selection
-        self._update_visual_crossing_visibility()
+        general_box.add(self.temperature_unit_selection)
 
         # Update Interval
         general_box.add(toga.Label("Update Interval (minutes):", style=Pack(margin_bottom=5)))
@@ -272,115 +232,161 @@ class SettingsDialog:
         )
         general_box.add(self.enable_alerts_switch)
 
-        # Debug Mode
-        self.debug_mode_switch = toga.Switch(
-            "Enable Debug Mode",
-            value=getattr(self.current_settings, "debug_mode", False),
-            style=Pack(margin_bottom=10),
-            id="debug_mode_switch",
-        )
-        general_box.add(self.debug_mode_switch)
+        # Add tab to container
+        self.option_container.content.append("General", general_box)
 
-        # --- Sound Settings ---
-        general_box.add(
-            toga.Label("Sound Notifications:", style=Pack(margin_top=15, font_weight="bold"))
+    def _create_data_sources_tab(self):
+        """Create the Data Sources tab (weather APIs)."""
+        data_sources_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
+        # Keep a reference so we can re-insert children after removal
+        self.data_sources_container = data_sources_box
+        # Store reference to this tab container
+        self.data_sources_tab = data_sources_box
+
+        # Data Source Selection
+        data_sources_box.add(toga.Label("Weather Data Source:", style=Pack(margin_bottom=5)))
+
+        data_source_options = [
+            "Automatic (NWS for US, Open-Meteo for non-US)",
+            "National Weather Service (NWS)",
+            "Open-Meteo (International)",
+            "Visual Crossing (Global, requires API key)",
+        ]
+        # Maintain mapping between display text and internal values
+        self.data_source_display_to_value = {
+            "Automatic (NWS for US, Open-Meteo for non-US)": "auto",
+            "National Weather Service (NWS)": "nws",
+            "Open-Meteo (International)": "openmeteo",
+            "Visual Crossing (Global, requires API key)": "visualcrossing",
+        }
+        # Reverse mapping for setting initial selection
+        self.data_source_value_to_display = {
+            v: k for k, v in self.data_source_display_to_value.items()
+        }
+
+        self.data_source_selection = toga.Selection(
+            items=data_source_options,
+            style=Pack(margin_bottom=15),
+            id="data_source_selection",
+            on_change=self._on_data_source_changed,
         )
+
+        data_sources_box.add(self.data_source_selection)
+
+        try:
+            current_data_source = getattr(self.current_settings, "data_source", "auto")
+            display_value = self.data_source_value_to_display.get(
+                current_data_source,
+                data_source_options[0],
+            )
+            self.data_source_selection.value = display_value
+        except Exception as e:
+            logger.warning(f"Failed to set data source selection: {e}, using default")
+            self.data_source_selection.value = data_source_options[0]
+
+        # Visual Crossing API Key Configuration (initially hidden)
+        self.visual_crossing_config_box = toga.Box(style=Pack(direction=COLUMN))
+
+        self.visual_crossing_config_box.add(
+            toga.Label(
+                "Visual Crossing API Configuration:",
+                style=Pack(margin_top=15, margin_bottom=5, font_weight="bold"),
+            )
+        )
+
+        self.visual_crossing_config_box.add(toga.Label("API Key:", style=Pack(margin_bottom=5)))
+        self.visual_crossing_api_key_input = toga.PasswordInput(
+            value=getattr(self.current_settings, "visual_crossing_api_key", ""),
+            placeholder="Enter your Visual Crossing API key",
+            style=Pack(margin_bottom=10),
+            id="visual_crossing_api_key_input",
+        )
+        self.visual_crossing_config_box.add(self.visual_crossing_api_key_input)
+
+        api_key_buttons_row = toga.Box(style=Pack(direction=ROW, margin_bottom=15))
+
+        self.get_api_key_button = toga.Button(
+            "Get Free API Key",
+            on_press=self._on_get_visual_crossing_api_key,
+            style=Pack(margin_right=10, width=150),
+            id="get_visual_crossing_api_key_button",
+        )
+        api_key_buttons_row.add(self.get_api_key_button)
+
+        self.validate_api_key_button = toga.Button(
+            "Validate API Key",
+            on_press=self._on_validate_visual_crossing_api_key,
+            style=Pack(width=150),
+            id="validate_visual_crossing_api_key_button",
+        )
+        api_key_buttons_row.add(self.validate_api_key_button)
+
+        self.visual_crossing_config_box.add(api_key_buttons_row)
+
+        data_sources_box.add(self.visual_crossing_config_box)
+
+        # Set initial visibility of Visual Crossing config based on current selection
+        self._update_visual_crossing_visibility()
+
+        # Add tab to container
+        self.option_container.content.append("Data Sources", data_sources_box)
+
+    def _create_audio_tab(self):
+        """Create the Audio tab (sound notifications)."""
+        audio_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
+        # Store reference to this tab container
+        self.audio_tab = audio_box
+
+        audio_box.add(toga.Label("Sound Notifications:", style=Pack(font_weight="bold")))
 
         # Enable Sounds Switch
         self.sound_enabled_switch = toga.Switch(
             "Enable Sounds",
             value=getattr(self.current_settings, "sound_enabled", True),
-            style=Pack(margin_bottom=10),
+            style=Pack(margin_top=10, margin_bottom=10),
             id="sound_enabled_switch",
             on_change=self._on_sound_enabled_changed,
         )
-        general_box.add(self.sound_enabled_switch)
+        audio_box.add(self.sound_enabled_switch)
 
         # Sound Pack Selection (authoritative selector for active pack)
         self._load_sound_packs()
-
-        # Label for clarity
-        general_box.add(toga.Label("Active sound pack:", style=Pack(margin_bottom=5)))
+        audio_box.add(toga.Label("Active sound pack:", style=Pack(margin_bottom=5)))
 
         self.sound_pack_selection = toga.Selection(
             items=self.sound_pack_options,
             style=Pack(margin_bottom=10, width=200),
             id="sound_pack_selection",
         )
-        # Set current value
+        # Match enabled state to current settings on load
+        self.sound_pack_selection.enabled = self.sound_enabled_switch.value
+
         current_pack = getattr(self.current_settings, "sound_pack", "default")
+        found = False
         for k, v in self.sound_pack_map.items():
             if v == current_pack:
                 self.sound_pack_selection.value = k
+                found = True
                 break
-        else:
+        if not found and self.sound_pack_options:
             self.sound_pack_selection.value = self.sound_pack_options[0]
-        general_box.add(self.sound_pack_selection)
+        audio_box.add(self.sound_pack_selection)
 
-        # Manage Sound Packs Button
-        # Opens manager focused on the current pack for import/edit/organize only.
-        # Active pack selection remains controlled by the selector above.
         self.manage_soundpacks_button = toga.Button(
             "Manage Sound Packs...",
             on_press=self._on_manage_soundpacks,
             style=Pack(margin_bottom=10, width=180),
         )
-        general_box.add(self.manage_soundpacks_button)
+        audio_box.add(self.manage_soundpacks_button)
 
         # Add tab to container
-        self.option_container.content.append("General", general_box)
-
-    def _create_display_tab(self):
-        """Create the Display settings tab."""
-        display_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
-
-        # Temperature Unit Selection
-        display_box.add(toga.Label("Temperature Display:", style=Pack(margin_bottom=5)))
-
-        # Define temperature unit options
-        temp_unit_options = [
-            "Fahrenheit only",
-            "Celsius only",
-            "Both (Fahrenheit and Celsius)",
-        ]
-
-        self.temperature_unit_selection = toga.Selection(
-            items=temp_unit_options,
-            style=Pack(margin_bottom=15),
-            id="temperature_unit_selection",
-        )
-
-        # Set current value based on stored configuration
-        temp_unit_map = {
-            "f": 0,
-            "c": 1,
-            "both": 2,
-        }
-
-        try:
-            current_temp_unit = self.current_settings.temperature_unit
-            selected_index = temp_unit_map.get(current_temp_unit, 2)
-            self.temperature_unit_selection.value = temp_unit_options[selected_index]
-        except (IndexError, AttributeError) as e:
-            logger.warning(f"Failed to set temperature unit selection: {e}, using default")
-            self.temperature_unit_selection.value = temp_unit_options[2]  # Default to "Both"
-
-        display_box.add(self.temperature_unit_selection)
-
-        # Add placeholder for future display options
-        display_box.add(
-            toga.Label(
-                "Additional display options will be added in future versions.",
-                style=Pack(margin_top=20, font_style="italic"),
-            )
-        )
-
-        # Add tab to container
-        self.option_container.content.append("Display", display_box)
+        self.option_container.content.append("Audio", audio_box)
 
     def _create_advanced_tab(self):
-        """Create the Advanced settings tab."""
+        """Create the Advanced settings tab (power user settings)."""
         advanced_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
+        # Store reference to this tab container
+        self.advanced_tab = advanced_box
 
         # Minimize to Tray (note: not applicable to all platforms)
         self.minimize_to_tray_switch = toga.Switch(
@@ -391,10 +397,19 @@ class SettingsDialog:
         )
         advanced_box.add(self.minimize_to_tray_switch)
 
+        # Debug Mode (moved from General tab)
+        self.debug_mode_switch = toga.Switch(
+            "Enable Debug Mode",
+            value=getattr(self.current_settings, "debug_mode", False),
+            style=Pack(margin_bottom=10),
+            id="debug_mode_switch",
+        )
+        advanced_box.add(self.debug_mode_switch)
+
         # Add placeholder for future advanced options
         advanced_box.add(
             toga.Label(
-                "Additional advanced options will be added in future versions.",
+                "Additional power user options will be added in future versions.",
                 style=Pack(margin_top=20, font_style="italic"),
             )
         )
@@ -405,6 +420,8 @@ class SettingsDialog:
     def _create_updates_tab(self):
         """Create the Updates settings tab with full functionality."""
         updates_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
+        # Store reference to this tab container
+        self.updates_tab = updates_box
 
         # Auto-update settings
         self.auto_update_switch = toga.Switch(
@@ -546,13 +563,16 @@ class SettingsDialog:
     def _set_initial_focus(self):
         """Set initial focus to the first interactive control for accessibility."""
         try:
-            # Set focus to the first interactive control (data source selection)
-            # This ensures keyboard and screen reader users start at a logical point
-            if self.data_source_selection:
+            # Focus Temperature Unit first (now first control on General tab)
+            if self.temperature_unit_selection:
+                self.temperature_unit_selection.focus()
+                logger.debug("Set initial focus to temperature unit selection")
+            elif self.data_source_selection:
+                # Fallback to data source selection
                 self.data_source_selection.focus()
-                logger.debug("Set initial focus to data source selection")
+                logger.debug("Set initial focus to data source selection (fallback)")
             else:
-                logger.warning("Data source selection not available for focus")
+                logger.warning("No primary control available for focus")
         except Exception as e:
             logger.warning(f"Failed to set initial focus: {e}")
             # Fallback: try to focus the option container itself
@@ -718,30 +738,28 @@ class SettingsDialog:
         if not self.data_source_selection or not self.visual_crossing_config_box:
             return
 
-        selected_value = str(self.data_source_selection.value)
-        show_visual_crossing = "Visual Crossing" in selected_value
+        selected_display = str(self.data_source_selection.value)
+        # Map display back to internal value using mapping; default to 'auto'
+        selected_internal = self.data_source_display_to_value.get(selected_display, "auto")
+        show_visual_crossing = selected_internal == "visualcrossing"
 
-        # Show or hide the Visual Crossing configuration box by adding/removing from parent
-        parent_box = self.visual_crossing_config_box.parent
-        if parent_box:
+        # Use stored container to manage add/remove so it can be re-added reliably
+        container = getattr(self, "data_sources_container", None)
+        if not container:
+            container = self.visual_crossing_config_box.parent
+
+        if container:
             if show_visual_crossing:
-                # Make sure it's visible (add if not already present)
-                if self.visual_crossing_config_box not in parent_box.children:
-                    # Find the position after data source selection
-                    data_source_index = -1
-                    for i, child in enumerate(parent_box.children):
-                        if child == self.data_source_selection:
-                            data_source_index = i
-                            break
-
-                    if data_source_index >= 0:
-                        parent_box.insert(data_source_index + 1, self.visual_crossing_config_box)
-                    else:
-                        parent_box.add(self.visual_crossing_config_box)
+                if self.visual_crossing_config_box not in container.children:
+                    # Insert right after the data source selection control
+                    try:
+                        idx = container.children.index(self.data_source_selection)
+                        container.insert(idx + 1, self.visual_crossing_config_box)
+                    except ValueError:
+                        container.add(self.visual_crossing_config_box)
             else:
-                # Hide by removing from parent
-                if self.visual_crossing_config_box in parent_box.children:
-                    parent_box.remove(self.visual_crossing_config_box)
+                if self.visual_crossing_config_box in container.children:
+                    container.remove(self.visual_crossing_config_box)
 
     def _on_update_channel_changed(self, widget):
         """Handle update channel selection change."""
@@ -926,39 +944,19 @@ class SettingsDialog:
 
     def _collect_settings_from_ui(self) -> AppSettings:
         """Collect current settings from UI controls."""
-        # Map data source selection back to internal values
-
+        # Map data source selection back to internal value using mapping
         try:
-            # Get the selected value and map it directly to internal values
-            selected_value = str(self.data_source_selection.value)
-            if "Automatic" in selected_value:
-                data_source = "auto"
-            elif "National Weather Service" in selected_value:
-                data_source = "nws"
-            elif "Open-Meteo" in selected_value:
-                data_source = "openmeteo"
-            elif "Visual Crossing" in selected_value:
-                data_source = "visualcrossing"
-            else:
-                data_source = "auto"  # Default fallback
-        except (ValueError, AttributeError) as e:
+            selected_display = str(self.data_source_selection.value)
+            data_source = self.data_source_display_to_value.get(selected_display, "auto")
+        except Exception as e:
             logger.warning(f"Failed to get data source selection: {e}, using default")
             data_source = "auto"
 
-        # Map temperature unit selection back to internal values
-
+        # Map temperature unit selection back to internal value using mapping
         try:
-            # Get the selected value and map it directly to internal values
-            selected_value = str(self.temperature_unit_selection.value)
-            if "Fahrenheit only" in selected_value:
-                temperature_unit = "f"
-            elif "Celsius only" in selected_value:
-                temperature_unit = "c"
-            elif "Both" in selected_value:
-                temperature_unit = "both"
-            else:
-                temperature_unit = "both"  # Default fallback
-        except (ValueError, AttributeError) as e:
+            selected_display = str(self.temperature_unit_selection.value)
+            temperature_unit = self.temperature_display_to_value.get(selected_display, "both")
+        except Exception as e:
             logger.warning(f"Failed to get temperature unit selection: {e}, using default")
             temperature_unit = "both"
 
