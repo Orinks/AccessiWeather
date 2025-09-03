@@ -55,13 +55,10 @@ class SettingsDialog:
         # Updates tab controls
         self.auto_update_switch = None
         self.update_channel_selection = None
-        self.update_method_selection = None
         self.update_check_interval_input = None
         self.check_updates_button = None
         self.update_status_label = None
         self.last_check_label = None
-        self.platform_info_label = None
-        self.update_capability_label = None
 
         # Sound settings controls (Audio tab)
         self.sound_enabled_switch = None
@@ -166,11 +163,6 @@ class SettingsDialog:
             self._initialize_update_info()
         except Exception as e:
             logger.error(f"Failed to initialize update info: {e}")
-            # Set fallback text for platform info
-            if hasattr(self, "platform_info_label"):
-                self.platform_info_label.text = "Platform information unavailable"
-            if hasattr(self, "update_capability_label"):
-                self.update_capability_label.text = "Update capability unknown"
 
     def _create_general_tab(self):
         """Create the General settings tab (core app settings)."""
@@ -478,41 +470,7 @@ class SettingsDialog:
         # Update description based on current selection
         self._update_channel_description()
 
-        # Update method selection
-        updates_box.add(toga.Label("Update Method:", style=Pack(margin_bottom=5)))
-
-        update_method_options = [
-            "Automatic (TUF for stable, GitHub for beta/dev)",
-            "TUF Only (Secure, stable releases only)",
-            "GitHub Only (All releases, less secure)",
-        ]
-        self.update_method_selection = toga.Selection(
-            items=update_method_options,
-            style=Pack(margin_bottom=10),
-            id="update_method_selection",
-            on_change=self._on_update_method_changed,
-        )
-
-        # Set current value based on stored configuration or TUF availability
-        current_method = getattr(self.current_settings, "update_method", "auto")
-        if current_method == "tuf":
-            self.update_method_selection.value = "TUF Only (Secure, stable releases only)"
-        elif current_method == "github":
-            self.update_method_selection.value = "GitHub Only (All releases, less secure)"
-        else:
-            self.update_method_selection.value = "Automatic (TUF for stable, GitHub for beta/dev)"
-
-        updates_box.add(self.update_method_selection)
-
-        # Method description label
-        self.method_description_label = toga.Label(
-            "",
-            style=Pack(margin_bottom=15, font_size=11, font_style="italic"),
-        )
-        updates_box.add(self.method_description_label)
-
-        # Update description based on current selection
-        self._update_method_description()
+        # (Update Method selection removed — GitHub-only updates)
 
         # Check interval
         updates_box.add(toga.Label("Check Interval (hours):", style=Pack(margin_bottom=5)))
@@ -523,26 +481,7 @@ class SettingsDialog:
         )
         updates_box.add(self.update_check_interval_input)
 
-        # Platform information
-        platform_info_box = toga.Box(style=Pack(direction=COLUMN, margin_bottom=15))
-        platform_info_box.add(
-            toga.Label("Platform Information:", style=Pack(font_weight="bold", margin_bottom=5))
-        )
-
-        # We'll populate this with actual platform info when the dialog is shown
-        self.platform_info_label = toga.Label(
-            "Detecting platform...",
-            style=Pack(font_size=11, margin_bottom=5),
-        )
-        platform_info_box.add(self.platform_info_label)
-
-        self.update_capability_label = toga.Label(
-            "Checking update capability...",
-            style=Pack(font_size=11, margin_bottom=10),
-        )
-        platform_info_box.add(self.update_capability_label)
-
-        updates_box.add(platform_info_box)
+        # (Platform information section removed)
 
         # Check now button
         self.check_updates_button = toga.Button(
@@ -796,11 +735,8 @@ class SettingsDialog:
     def _on_update_channel_changed(self, widget):
         """Handle update channel selection change."""
         self._update_channel_description()
-        self._update_method_description()  # Method description may change based on channel
 
-    def _on_update_method_changed(self, widget):
-        """Handle update method selection change."""
-        self._update_method_description()
+    # (Update method change handler removed)
 
     def _update_channel_description(self):
         """Update the channel description based on current selection."""
@@ -810,7 +746,9 @@ class SettingsDialog:
         channel_value = str(self.update_channel_selection.value)
 
         if "Stable" in channel_value:
-            description = "🔒 Stable releases only. Maximum security with TUF verification. Recommended for most users."
+            description = (
+                "🔒 Stable releases only. Production-ready versions. Recommended for most users."
+            )
         elif "Beta" in channel_value:
             description = "🧪 Pre-release versions for testing. Includes new features before stable release. May contain bugs."
         elif "Development" in channel_value:
@@ -820,32 +758,7 @@ class SettingsDialog:
 
         self.channel_description_label.text = description
 
-    def _update_method_description(self):
-        """Update the method description based on current selection."""
-        if not hasattr(self, "method_description_label") or not self.method_description_label:
-            return
-
-        method_value = str(self.update_method_selection.value)
-        channel_value = str(self.update_channel_selection.value)
-
-        if "Automatic" in method_value:
-            if "Stable" in channel_value:
-                description = "🔄 Uses TUF for stable releases (secure) and GitHub for beta/dev releases (faster)."
-            else:
-                description = "🔄 Uses GitHub for beta/dev releases. TUF will be used when stable releases are available."
-        elif "TUF Only" in method_value:
-            if "Stable" in channel_value:
-                description = "🔐 Maximum security with cryptographic verification. Only stable releases available."
-            else:
-                description = "⚠️ TUF only provides stable releases. Beta/dev releases not available with this method."
-        elif "GitHub Only" in method_value:
-            description = (
-                "📦 All releases available but less secure than TUF. Good for beta testing."
-            )
-        else:
-            description = ""
-
-        self.method_description_label.text = description
+    # (Update method description removed)
 
     async def _on_get_visual_crossing_api_key(self, widget):
         """Handle Get API Key button press - open Visual Crossing registration page."""
@@ -974,6 +887,14 @@ class SettingsDialog:
             self.validate_api_key_button.text = original_text
             self.validate_api_key_button.enabled = True
 
+    def _map_channel_display_to_value(self, display: str) -> str:
+        """Map channel display text to internal value."""
+        if "Development" in display:
+            return "dev"
+        if "Beta" in display:
+            return "beta"
+        return "stable"
+
     def _collect_settings_from_ui(self) -> AppSettings:
         """Collect current settings from UI controls."""
         # Map data source selection back to internal value using mapping
@@ -1008,12 +929,7 @@ class SettingsDialog:
         update_channel = getattr(self, "update_channel_selection", None)
         if update_channel and hasattr(update_channel, "value"):
             channel_value = str(update_channel.value)
-            if "Development" in channel_value:
-                update_channel = "dev"
-            elif "Beta" in channel_value:
-                update_channel = "beta"
-            else:
-                update_channel = "stable"
+            update_channel = self._map_channel_display_to_value(channel_value)
         else:
             update_channel = "stable"
 
@@ -1029,18 +945,7 @@ class SettingsDialog:
         else:
             update_check_interval_hours = 24
 
-        # Get update method
-        update_method = getattr(self, "update_method_selection", None)
-        if update_method and hasattr(update_method, "value"):
-            method_value = str(update_method.value)
-            if "TUF Only" in method_value:
-                update_method = "tuf"
-            elif "GitHub Only" in method_value:
-                update_method = "github"
-            else:
-                update_method = "auto"
-        else:
-            update_method = "auto"
+        # (Update method selection removed)
 
         # Audio settings with tolerance for missing widgets
         sound_enabled_widget = getattr(self, "sound_enabled_switch", None)
@@ -1071,7 +976,6 @@ class SettingsDialog:
             auto_update_enabled=auto_update_enabled,
             update_channel=update_channel,
             update_check_interval_hours=update_check_interval_hours,
-            update_method=update_method,
             debug_mode=self.debug_mode_switch.value,
             sound_enabled=sound_enabled,
             sound_pack=sound_pack,
@@ -1079,61 +983,12 @@ class SettingsDialog:
         )
 
     def _initialize_update_info(self):
-        """Initialize update service and platform information."""
+        """Initialize update-related information (simplified for GitHub-only updates)."""
         try:
-            # Import here to avoid circular imports
-            from ..services import PlatformDetector
-
-            # Get platform information
-            platform_detector = PlatformDetector()
-            platform_info = platform_detector.get_platform_info()
-
-            # Update platform info labels
-            if hasattr(self, "platform_info_label"):
-                platform_text = (
-                    f"Platform: {platform_info.platform.title()} ({platform_info.architecture})"
-                )
-                deployment_text = f"Deployment: {platform_info.deployment_type.title()}"
-                self.platform_info_label.text = f"{platform_text}, {deployment_text}"
-
-            if hasattr(self, "update_capability_label"):
-                # Check TUF availability
-                tuf_available = False
-                update_method = "GitHub"
-
-                if self.update_service:
-                    tuf_available = self.update_service.tuf_available
-                    update_method = self.update_service.current_method.upper()
-                else:
-                    try:
-                        from ..services import TUFUpdateService
-
-                        temp_service = TUFUpdateService("AccessiWeather")
-                        tuf_available = temp_service.tuf_available
-                        update_method = temp_service.current_method.upper()
-                        temp_service.cleanup()
-                    except Exception:
-                        pass
-
-                if platform_info.update_capable:
-                    capability_text = f"Auto-updates: Supported via {update_method}"
-                else:
-                    capability_text = f"Auto-updates: Manual download via {update_method}"
-
-                if tuf_available:
-                    capability_text += " (TUF Secure)"
-
-                self.update_capability_label.text = capability_text
-
-            # Update last check information if available
+            # Only update the last check information in the simplified UI
             self._update_last_check_info()
-
         except Exception as e:
             logger.error(f"Failed to initialize update info: {e}")
-            if hasattr(self, "platform_info_label"):
-                self.platform_info_label.text = "Platform information unavailable"
-            if hasattr(self, "update_capability_label"):
-                self.update_capability_label.text = "Update capability unknown"
 
     def _update_last_check_info(self):
         """Update the last check information display."""
@@ -1168,32 +1023,22 @@ class SettingsDialog:
                 update_service = self.update_service
             else:
                 # Import and create update service
-                from ..services import TUFUpdateService
+                from ..services import GitHubUpdateService
 
-                update_service = TUFUpdateService(
+                update_service = GitHubUpdateService(
                     app_name="AccessiWeather",
                     config_dir=self.config_manager.config_dir if self.config_manager else None,
                 )
 
-            # Get selected channel and method
+            # Get selected channel (GitHub-only)
             channel_value = str(self.update_channel_selection.value)
-            if "Development" in channel_value:
-                channel = "dev"
-            elif "Beta" in channel_value:
-                channel = "beta"
-            else:
-                channel = "stable"
+            channel = self._map_channel_display_to_value(channel_value)
 
-            method_value = str(self.update_method_selection.value)
-            if "TUF Only" in method_value:
-                method = "tuf"
-            elif "GitHub Only" in method_value:
-                method = "github"
-            else:
-                method = "auto"
-
-            # Update service settings
-            update_service.update_settings(channel=channel, method=method)
+            # Update service settings (persist channel)
+            if hasattr(update_service, "settings") and hasattr(update_service.settings, "channel"):
+                update_service.settings.channel = channel
+                if hasattr(update_service, "save_settings"):
+                    update_service.save_settings()
 
             # Check for updates
             update_info = await update_service.check_for_updates()
@@ -1222,18 +1067,8 @@ class SettingsDialog:
                 )
 
                 if should_download:
-                    # Check platform capability
-                    from ..services import PlatformDetector
-
-                    platform_detector = PlatformDetector()
-                    platform_info = platform_detector.get_platform_info()
-
-                    if platform_info.update_capable:
-                        # Start update process
-                        await self._perform_update(update_service, update_info)
-                    else:
-                        # Platform not capable, just download
-                        await self._download_only(update_service, update_info)
+                    # Download only (installation is manual for GitHub updates)
+                    await self._download_only(update_service, update_info)
                 else:
                     if self.update_status_label:
                         self.update_status_label.text = "Update available (not downloaded)"
