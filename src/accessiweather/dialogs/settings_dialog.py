@@ -4,6 +4,7 @@ This module provides a comprehensive settings dialog with tabbed interface
 matching the functionality of the wxPython version.
 """
 
+import contextlib
 import logging
 
 import toga
@@ -127,6 +128,15 @@ class SettingsDialog:
         self._create_advanced_tab()
 
         main_box.add(self.option_container)
+
+        # Ensure General tab is selected initially for predictable UX
+        try:
+            if self.general_tab is not None:
+                self.option_container.current_tab = ("General", self.general_tab)
+        except Exception:
+            # Fallback to first tab index if tuple assignment isn't supported
+            with contextlib.suppress(Exception):
+                self.option_container.current_tab = 0
 
         # Button row
         button_box = toga.Box(style=Pack(direction=ROW, margin_top=10))
@@ -565,10 +575,17 @@ class SettingsDialog:
         try:
             # Focus Temperature Unit first (now first control on General tab)
             if self.temperature_unit_selection:
+                # Ensure General tab is selected before focusing
+                with contextlib.suppress(Exception):
+                    self.option_container.current_tab = ("General", self.general_tab)
+                with contextlib.suppress(Exception):
+                    self.option_container.current_tab = 0
                 self.temperature_unit_selection.focus()
                 logger.debug("Set initial focus to temperature unit selection")
             elif self.data_source_selection:
                 # Fallback to data source selection
+                with contextlib.suppress(Exception):
+                    self.option_container.current_tab = ("Data Sources", self.data_sources_tab)
                 self.data_source_selection.focus()
                 logger.debug("Set initial focus to data source selection (fallback)")
             else:
@@ -663,31 +680,46 @@ class SettingsDialog:
             self.window = None  # Clear reference to help with cleanup
 
     def _load_sound_packs(self):
-        """Load available sound packs."""
+        """Load available sound packs.
+
+        Always initializes self.sound_pack_options and self.sound_pack_map.
+        Falls back to Default on any error or if none are found.
+        """
         import json
         from pathlib import Path
 
-        soundpacks_dir = Path(__file__).parent.parent / "soundpacks"
+        # Always initialize
         self.sound_pack_options = []
         self.sound_pack_map = {}
-        if soundpacks_dir.exists():
-            for pack_dir in soundpacks_dir.iterdir():
-                if pack_dir.is_dir() and (pack_dir / "pack.json").exists():
-                    try:
-                        with open(pack_dir / "pack.json", encoding="utf-8") as f:
-                            meta = json.load(f)
-                        display_name = meta.get("name", pack_dir.name)
-                        self.sound_pack_options.append(display_name)
-                        self.sound_pack_map[display_name] = pack_dir.name
-                    except Exception:
-                        continue
+
+        try:
+            soundpacks_dir = Path(__file__).parent.parent / "soundpacks"
+            if soundpacks_dir.exists():
+                for pack_dir in soundpacks_dir.iterdir():
+                    if pack_dir.is_dir() and (pack_dir / "pack.json").exists():
+                        try:
+                            with open(pack_dir / "pack.json", encoding="utf-8") as f:
+                                meta = json.load(f)
+                            display_name = meta.get("name", pack_dir.name)
+                            # Map display name to internal pack id (directory name)
+                            self.sound_pack_options.append(display_name)
+                            self.sound_pack_map[display_name] = pack_dir.name
+                        except Exception as e:
+                            logger.warning(f"Failed to load sound pack at {pack_dir}: {e}")
+                            continue
+        except Exception as e:
+            logger.warning(f"Error scanning soundpacks: {e}")
+
+        # Fallback to Default if nothing was loaded
         if not self.sound_pack_options:
             self.sound_pack_options = ["Default"]
-            self.sound_pack_map["Default"] = "default"
+            self.sound_pack_map = {"Default": "default"}
 
     def _on_sound_enabled_changed(self, widget):
-        enabled = widget.value
-        self.sound_pack_selection.enabled = enabled
+        enabled = getattr(widget, "value", True)
+        sel = getattr(self, "sound_pack_selection", None)
+        if sel is not None:
+            sel.enabled = enabled
 
     async def _on_manage_soundpacks(self, widget):
         """Open the sound pack manager dialog.
@@ -743,10 +775,10 @@ class SettingsDialog:
         selected_internal = self.data_source_display_to_value.get(selected_display, "auto")
         show_visual_crossing = selected_internal == "visualcrossing"
 
-        # Use stored container to manage add/remove so it can be re-added reliably
-        container = getattr(self, "data_sources_container", None)
+        # Use a stable, known parent to manage add/remove so it can be re-added reliably
+        container = getattr(self, "data_sources_tab", None)
         if not container:
-            container = self.visual_crossing_config_box.parent
+            return
 
         if container:
             if show_visual_crossing:
@@ -1010,9 +1042,18 @@ class SettingsDialog:
         else:
             update_method = "auto"
 
-        sound_enabled = self.sound_enabled_switch.value
-        pack_display = self.sound_pack_selection.value
-        sound_pack = self.sound_pack_map.get(pack_display, "default")
+        # Audio settings with tolerance for missing widgets
+        sound_enabled_widget = getattr(self, "sound_enabled_switch", None)
+        sound_enabled = getattr(sound_enabled_widget, "value", True)
+
+        pack_selection_widget = getattr(self, "sound_pack_selection", None)
+        if pack_selection_widget is not None and hasattr(pack_selection_widget, "value"):
+            pack_display = pack_selection_widget.value
+        else:
+            pack_display = None
+        # Map display to internal pack id, default to 'default'
+        sound_pack_map = getattr(self, "sound_pack_map", {})
+        sound_pack = sound_pack_map.get(pack_display, "default")
 
         # Get Visual Crossing API key
         visual_crossing_api_key = ""
