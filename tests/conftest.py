@@ -5,8 +5,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-# Import only Toga helpers
-from tests.toga_test_helpers import *  # noqa: F401, F403
+# Import only Toga helpers (guarded to avoid heavy imports when unavailable)
+try:
+    from tests.toga_test_helpers import *  # noqa: F401, F403
+except Exception:
+    # If optional UI deps (e.g., toga) are not installed, allow non-UI tests to run
+    pass
 
 # Skip removed fixtures directories (basic_fixtures, sample_responses, gui_fixtures, mock_clients)
 
