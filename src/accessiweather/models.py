@@ -291,9 +291,9 @@ class AppSettings:
 
     # Update system settings
     auto_update_enabled: bool = True
-    update_channel: str = "stable"  # "stable", "beta", or "dev"
+    update_channel: str = "stable"  # GitHub release channel: "stable", "beta", or "dev"
     update_check_interval_hours: int = 24
-    update_method: str = "auto"  # "tuf", "github", or "auto"
+
     debug_mode: bool = False
 
     # Sound settings
@@ -329,7 +329,6 @@ class AppSettings:
             "auto_update_enabled": self.auto_update_enabled,
             "update_channel": self.update_channel,
             "update_check_interval_hours": self.update_check_interval_hours,
-            "update_method": self.update_method,
             "debug_mode": self.debug_mode,
             "sound_enabled": self.sound_enabled,
             "sound_pack": self.sound_pack,
@@ -361,7 +360,6 @@ class AppSettings:
             auto_update_enabled=data.get("auto_update_enabled", True),
             update_channel=data.get("update_channel", "stable"),
             update_check_interval_hours=data.get("update_check_interval_hours", 24),
-            update_method=data.get("update_method", "auto"),
             debug_mode=data.get("debug_mode", False),
             sound_enabled=data.get("sound_enabled", True),
             sound_pack=data.get("sound_pack", "default"),
