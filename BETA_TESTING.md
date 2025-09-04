@@ -15,7 +15,7 @@ Beta testing allows you to:
 ### Configuring Beta Updates in AccessiWeather
 
 1. **Open AccessiWeather**
-2. **Go to Settings** (Alt+S or from the File menu)
+2. **Go to Settings** (Ctrl+S or from the File menu)
 3. **Click on the "Updates" tab**
 4. **Configure your update preferences**:
    - **Update Channel**: Select `Beta (Pre-release testing)`
@@ -183,7 +183,7 @@ As a beta tester, you get:
 ### Switching Back to Stable
 If you need to switch back to stable releases:
 
-1. **Open AccessiWeather Settings** (Alt+S)
+1. **Open AccessiWeather Settings** (Ctrl+S)
 2. **Go to the "Updates" tab**
 3. **Change Update Channel** to `Stable (Production releases only)`
 4. **Click "OK"** to save

@@ -216,20 +216,42 @@ class GitHubUpdateService:
             logger.warning(f"Failed to save cache: {e}")
 
     def _filter_releases_by_channel(self, releases, channel):
+        """Filter releases based on channel with hierarchical inclusion.
+
+        Channel hierarchy (more permissive channels include releases from less permissive ones):
+        - stable: Only stable releases (prerelease=False)
+        - beta: Stable releases + beta/rc prereleases
+        - dev: All releases (stable + beta + alpha + dev)
+
+        Args:
+            releases: List of GitHub release objects
+            channel: Channel name ("stable", "beta", or "dev")
+
+        Returns:
+            List of releases appropriate for the specified channel
+
+        """
         channel = channel.lower()
         out = []
+
         for rel in releases:
             tag = rel.get("tag_name", "").lower()
             pre = rel.get("prerelease", False)
-            if (
-                channel == "stable"
-                and not pre
-                or channel == "beta"
-                and pre
-                and ("beta" in tag or "rc" in tag)
-                or channel == "dev"
-            ):
+
+            # Stable channel: only non-prerelease versions
+            if channel == "stable":
+                if not pre:
+                    out.append(rel)
+
+            # Beta channel: stable releases + beta/rc prereleases
+            elif channel == "beta":
+                if not pre or (pre and ("beta" in tag or "rc" in tag)):  # Include stable + beta/rc
+                    out.append(rel)
+
+            # Dev channel: all releases (stable + all prereleases)
+            elif channel == "dev":
                 out.append(rel)
+
         return out
 
     def _find_latest_release(self, releases, current_version):
@@ -249,18 +271,63 @@ class GitHubUpdateService:
     def _find_platform_asset(self, release):
         assets = release.get("assets", [])
         sys = platform.system().lower()
-        patterns = []
+
+        # Define priority extensions for each platform
+        priority_extensions = {}
+        platform_patterns = {}
+
         if "windows" in sys:
-            patterns = [".exe", ".msi", "windows", "win"]
+            priority_extensions = [".exe", ".msi"]
+            platform_patterns = ["windows", "win"]
         elif "linux" in sys:
-            patterns = [".tar.gz", ".deb", ".rpm", "linux"]
+            priority_extensions = [".appimage", ".tar.gz", ".deb", ".rpm"]
+            platform_patterns = ["linux"]
         elif "darwin" in sys or "mac" in sys:
-            patterns = [".dmg", ".pkg", "macos", "darwin"]
+            priority_extensions = [".dmg", ".pkg"]
+            platform_patterns = ["macos", "darwin", "mac"]
+
+        # Deny list - exclude these file types
+        deny_extensions = [
+            ".sha256",
+            ".sha512",
+            ".md5",
+            ".sig",
+            ".asc",
+            ".txt",
+            ".json",
+            ".xml",
+            ".plist",
+        ]
+        deny_patterns = ["checksum", "signature", "hash", "verify", "sum"]
+
+        # Filter out denied assets
+        filtered_assets = []
         for asset in assets:
             name = asset.get("name", "").lower()
-            if any(p in name for p in patterns):
+
+            # Skip if matches deny patterns
+            if any(ext in name for ext in deny_extensions):
+                continue
+            if any(pattern in name for pattern in deny_patterns):
+                continue
+
+            filtered_assets.append(asset)
+
+        # First pass: Look for priority extensions
+        for ext in priority_extensions:
+            for asset in filtered_assets:
+                name = asset.get("name", "").lower()
+                if name.endswith(ext):
+                    return asset
+
+        # Second pass: Look for platform patterns
+        for asset in filtered_assets:
+            name = asset.get("name", "").lower()
+            if any(pattern in name for pattern in platform_patterns):
                 return asset
-        return assets[0] if assets else None
+
+        # Fallback: Return first filtered asset or first asset if none filtered
+        return filtered_assets[0] if filtered_assets else (assets[0] if assets else None)
 
     async def download_update(
         self,

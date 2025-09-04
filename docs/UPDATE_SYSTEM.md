@@ -26,22 +26,19 @@ AccessiWeather provides a flexible, secure update system with multiple channels 
 
 ## 🔧 Update Methods
 
-### 🔄 Automatic (Recommended)
+AccessiWeather uses GitHub releases for all update channels. There is no user-configurable update method - all updates are delivered through GitHub's secure platform.
+
+### 🔄 Updates via GitHub
 - **All Channels**: Uses GitHub releases with channel filtering
 - **Intelligent Selection**: Automatically filters releases based on your selected channel
 - **Benefits**: Simplified and reliable - one update source for all channels
-
-### 📦 GitHub (All releases)
-- **Availability**: All release channels available
-- **Security**: HTTPS encryption, GitHub's security infrastructure
-- **Use Case**: Same as Automatic (for backward compatibility)
 
 ## ⚙️ Configuring Updates
 
 ### In-App Configuration
 
 1. **Open Settings**:
-   - Press `Alt+S` or
+   - Press `Ctrl+S` or
    - Go to File → Settings
 
 2. **Navigate to Updates Tab**:
@@ -49,7 +46,6 @@ AccessiWeather provides a flexible, secure update system with multiple channels 
 
 3. **Configure Your Preferences**:
    - **Update Channel**: Choose your desired channel
-   - **Update Method**: Select automatic (recommended) or specific method
    - **Auto-check**: Enable for automatic update notifications
    - **Check Interval**: Set how often to check (1-168 hours)
 
@@ -63,8 +59,7 @@ AccessiWeather provides a flexible, secure update system with multiple channels 
 - `Beta (Pre-release testing)` - New features, some bugs expected
 - `Development (Latest features, may be unstable)` - Cutting edge, use with caution
 
-#### Update Method Options
-- `GitHub (All releases)` - Recommended for all users
+
 
 ## 🔍 Checking for Updates
 
@@ -72,7 +67,7 @@ AccessiWeather provides a flexible, secure update system with multiple channels 
 - Enabled by default
 - Runs in background at configured interval
 - Shows notification when updates are available
-- Respects your channel and method preferences
+- Respects your channel preferences
 
 ### Manual Checks
 - Go to Settings → Updates tab
@@ -122,12 +117,6 @@ AccessiWeather provides a flexible, secure update system with multiple channels 
 
 ## 📊 Update Information
 
-### Platform Information
-The Updates tab shows:
-- **Platform**: Your operating system and architecture
-- **Deployment**: How AccessiWeather was installed (installer, portable, etc.)
-- **Update Capability**: Whether your installation supports updates
-
 ### Version Information
 - **Current Version**: Your installed version
 - **Available Version**: Latest version for your channel
@@ -138,7 +127,6 @@ The Updates tab shows:
 ### For Regular Users
 - **Use Stable Channel**: Most reliable experience
 - **Enable Auto-check**: Stay informed about updates
-- **Use GitHub Updates**: Reliable and straightforward
 
 ### For Beta Testers
 - **Use Beta Channel**: Get new features early

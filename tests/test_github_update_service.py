@@ -394,13 +394,22 @@ def test_channel_filtering(sample_releases, svc_sync):
     beta = svc_sync._filter_releases_by_channel(sample_releases, "beta")
     dev = svc_sync._filter_releases_by_channel(sample_releases, "dev")
 
+    # Stable channel: only non-prerelease versions
     assert all(not r.get("prerelease", False) for r in stable)
-    assert all(r.get("prerelease", False) for r in beta)
-    assert any(
+
+    # Beta channel: stable releases + beta/rc prereleases (hierarchical)
+    # Should include all stable releases
+    stable_in_beta = [r for r in beta if not r.get("prerelease", False)]
+    assert len(stable_in_beta) == len(stable)  # All stable releases included
+
+    # Should include beta/rc prereleases but not other prereleases
+    prerelease_in_beta = [r for r in beta if r.get("prerelease", False)]
+    assert all(
         "beta" in r.get("tag_name", "").lower() or "rc" in r.get("tag_name", "").lower()
-        for r in beta
+        for r in prerelease_in_beta
     )
-    # dev includes all
+
+    # Dev channel: includes all releases
     assert len(dev) == len(sample_releases)
 
 

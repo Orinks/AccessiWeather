@@ -2,6 +2,8 @@
 
 ## Channel Overview
 
+AccessiWeather uses a **hierarchical channel system** where more permissive channels include releases from less permissive ones:
+
 ### Stable Channel (GitHub)
 - **Method**: `github`
 - **Channel**: `stable`
@@ -9,6 +11,7 @@
 - **Audience**: All users
 - **Security**: GitHub security with HTTPS
 - **Frequency**: Major releases only
+- **Includes**: Only stable releases (prerelease=False)
 
 ### Beta Channel (GitHub)
 - **Method**: `github`
@@ -16,6 +19,7 @@
 - **Repository**: `orinks/accessiweather`
 - **Audience**: Beta testers
 - **Frequency**: Weekly/bi-weekly
+- **Includes**: Stable releases + beta/rc prereleases
 
 ### Development Channel (GitHub)
 - **Method**: `github`
@@ -23,6 +27,7 @@
 - **Repository**: `orinks/accessiweather`
 - **Audience**: Developers and early testers
 - **Frequency**: As needed
+- **Includes**: All releases (stable + beta + alpha + dev)
 
 ## User Configuration
 
@@ -74,6 +79,29 @@ update_service.update_settings(
 - Format: `v1.0.0-dev.20241224`, `v1.1.0-alpha.1`
 - GitHub: Marked as pre-release
 - Deployment: GitHub-only
+
+## Channel Filtering Logic
+
+The hierarchical channel system works as follows:
+
+### Example Release Set
+```
+v1.0.0        (stable, prerelease=False)
+v1.1.0        (stable, prerelease=False)
+v1.2.0-beta.1 (prerelease=True)
+v1.2.0-alpha.1(prerelease=True)
+v1.2.0-rc.1   (prerelease=True)
+```
+
+### Channel Results
+- **Stable**: `v1.0.0`, `v1.1.0` (only stable releases)
+- **Beta**: `v1.0.0`, `v1.1.0`, `v1.2.0-beta.1`, `v1.2.0-rc.1` (stable + beta/rc)
+- **Dev**: All releases (stable + beta + alpha + dev)
+
+**Key Points:**
+- Beta users get stable releases as fallbacks
+- Alpha releases only appear in dev channel
+- RC (release candidate) releases appear in beta and dev channels
 
 ## Release Process
 
