@@ -2,15 +2,13 @@
 
 ## ✅ What We've Implemented
 
-### 🎯 Three-Tier Update Channel System
-- **Stable Channel**: Production releases via TUF (maximum security)
+### 🎯 GitHub-Based Update Channel System
+- **Stable Channel**: Production releases via GitHub (stable and secure)
 - **Beta Channel**: Pre-release testing via GitHub (new features)
 - **Development Channel**: Latest builds via GitHub (cutting-edge)
 
-### 🔧 Flexible Update Methods
-- **Automatic**: TUF for stable, GitHub for beta/dev (recommended)
-- **TUF Only**: Maximum security, stable releases only
-- **GitHub Only**: All channels, standard security
+### 🔧 Simplified Update Methods
+- **GitHub (All releases)**: GitHub releases with intelligent channel filtering (recommended)
 
 ### 🖥️ Integrated Settings Interface
 - **In-App Configuration**: No external scripts needed
@@ -53,7 +51,7 @@
 
 ### Modified Files
 - `src/accessiweather/dialogs/settings_dialog.py` - Enhanced settings UI
-- `src/accessiweather/services/tuf_update_service.py` - Beta channel support
+- `src/accessiweather/services/github_update_service.py` - GitHub-only update service
 - `src/accessiweather/models.py` - Updated settings model
 
 ### Removed Files
@@ -64,14 +62,14 @@
 ### For Users
 - **No External Scripts**: Everything configured in-app
 - **Clear Guidance**: Descriptive labels and help text
-- **Flexible Options**: Choose your preferred balance of security vs. features
-- **Seamless Experience**: Automatic method selection based on channel
+- **Simplified Configuration**: No complex method selection needed
+- **Seamless Experience**: Single update source for all channels
 
 ### For Developers
 - **Rapid Deployment**: Beta releases deploy automatically
 - **Easy Testing**: Simple tag-based release process
 - **User Feedback**: Direct channel to beta testers
-- **Dual Security**: TUF for production, GitHub for testing
+- **Unified Approach**: Single, reliable update source
 
 ### For Beta Testers
 - **Early Access**: Get new features before general release
@@ -97,21 +95,21 @@
 ### Stable User (Default)
 ```
 Channel: Stable (Production releases only)
-Method: Automatic (TUF for stable, GitHub for beta/dev)
-Result: Maximum security, monthly updates via TUF
+Method: GitHub (All releases)
+Result: Reliable security, monthly updates via GitHub
 ```
 
 ### Beta Tester
 ```
 Channel: Beta (Pre-release testing)
-Method: Automatic (TUF for stable, GitHub for beta/dev)
-Result: Weekly beta releases via GitHub, stable fallback via TUF
+Method: GitHub (All releases)
+Result: Weekly beta releases via GitHub with stable channel available
 ```
 
 ### Developer
 ```
 Channel: Development (Latest features, may be unstable)
-Method: GitHub Only (All releases, less secure)
+Method: GitHub (All releases)
 Result: All releases via GitHub, immediate access to dev builds
 ```
 
@@ -120,7 +118,7 @@ Result: All releases via GitHub, immediate access to dev builds
 - **User Guide**: `docs/UPDATE_SYSTEM.md`
 - **Beta Testing**: `BETA_TESTING.md`
 - **Channel Config**: `update_channels.md`
-- **GitHub Releases**: https://github.com/joshuakitchen/accessiweather/releases
+- **GitHub Releases**: https://github.com/orinks/accessiweather/releases
 
 ---
 

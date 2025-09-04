@@ -19,7 +19,7 @@ Beta testing allows you to:
 3. **Click on the "Updates" tab**
 4. **Configure your update preferences**:
    - **Update Channel**: Select `Beta (Pre-release testing)`
-   - **Update Method**: Choose `Automatic (TUF for stable, GitHub for beta/dev)` (recommended)
+   - **Update Method**: Choose `GitHub (All releases)` (recommended)
    - **Check for updates automatically**: Enable this option
    - **Check Interval**: Set to `12 hours` for more frequent beta updates
 5. **Click "OK"** to save your settings
@@ -27,7 +27,7 @@ Beta testing allows you to:
 
 ### Understanding Update Channels
 
-- **🔒 Stable**: Production releases only, maximum security with TUF verification
+- **🔒 Stable**: Production releases only, production releases with GitHub security
 - **🧪 Beta**: Pre-release versions for testing, includes new features before stable release
 - **🛠️ Development**: Latest development builds, cutting-edge features but may be unstable
 
@@ -63,7 +63,7 @@ Beta testing allows you to:
    - Note any special testing instructions
 
 2. **Install the Update**
-   - Download from GitHub Releases
+   - All beta releases come from GitHub releases
    - Install over your existing version
    - Or use the portable version for side-by-side testing
 
@@ -89,7 +89,7 @@ Beta testing allows you to:
 ## 🐛 Reporting Issues
 
 ### Where to Report
-- **GitHub Issues**: https://github.com/joshuakitchen/accessiweather/issues
+- **GitHub Issues**: https://github.com/orinks/accessiweather/issues
 - **Use the "bug" label** for bugs
 - **Use the "beta-feedback" label** for general feedback
 

@@ -2,24 +2,25 @@
 
 ## Channel Overview
 
-### Stable Channel (TUF)
-- **Method**: `tuf`
-- **URL**: `https://orinks.net/updates/`
+### Stable Channel (GitHub)
+- **Method**: `github`
+- **Channel**: `stable`
+- **Repository**: `orinks/accessiweather`
 - **Audience**: All users
-- **Security**: Cryptographically signed
+- **Security**: GitHub security with HTTPS
 - **Frequency**: Major releases only
 
 ### Beta Channel (GitHub)
 - **Method**: `github`
-- **Channel**: `dev` (includes pre-releases)
-- **Repository**: `joshuakitchen/accessiweather`
+- **Channel**: `beta`
+- **Repository**: `orinks/accessiweather`
 - **Audience**: Beta testers
 - **Frequency**: Weekly/bi-weekly
 
 ### Development Channel (GitHub)
 - **Method**: `github`
 - **Channel**: `dev`
-- **Repository**: `joshuakitchen/accessiweather`
+- **Repository**: `orinks/accessiweather`
 - **Audience**: Developers and early testers
 - **Frequency**: As needed
 
@@ -29,33 +30,31 @@ Users can switch channels through the application settings interface:
 
 ### In-App Settings (Recommended)
 1. Open AccessiWeather
-2. Go to Settings (Alt+S or File → Settings)
+2. Go to Settings (Ctrl+S or File → Settings)
 3. Click on the "Updates" tab
 4. Select desired update channel:
    - **Stable (Production releases only)** - For most users
    - **Beta (Pre-release testing)** - For beta testers
    - **Development (Latest features, may be unstable)** - For developers
-5. Choose update method:
-   - **Automatic** - TUF for stable, GitHub for beta/dev (recommended)
-   - **TUF Only** - Maximum security, stable releases only
-   - **GitHub Only** - All releases, standard security
+5. Update method is automatically set to GitHub (All releases)
 6. Click "OK" to save settings
 
 ### Programmatic Configuration (Advanced)
 ```python
 # For beta testers
 update_service.update_settings(
-    method="auto",
+    method="github",
     channel="beta",
-    repo_owner="joshuakitchen",
+    repo_owner="orinks",
     repo_name="accessiweather"
 )
 
 # For stable users
 update_service.update_settings(
-    method="auto",
+    method="github",
     channel="stable",
-    tuf_repo_url="https://orinks.net/updates/"
+    repo_owner="orinks",
+    repo_name="accessiweather"
 )
 ```
 
@@ -64,32 +63,25 @@ update_service.update_settings(
 ### Stable Releases
 - Format: `v1.0.0`, `v1.1.0`, `v2.0.0`
 - GitHub: Not marked as pre-release
-- TUF: Deployed to production repository
+- Deployment: GitHub-only
 
 ### Beta Releases
 - Format: `v1.0.0-beta.1`, `v1.1.0-beta.2`
 - GitHub: Marked as pre-release
-- TUF: Not deployed (GitHub only)
+- Deployment: GitHub-only
 
 ### Development Releases
 - Format: `v1.0.0-dev.20241224`, `v1.1.0-alpha.1`
 - GitHub: Marked as pre-release
-- TUF: Not deployed (GitHub only)
+- Deployment: GitHub-only
 
 ## Release Process
 
-### For Beta/Dev Releases (GitHub)
+### For All Releases (GitHub)
 1. Update version in `pyproject.toml` and `version.py`
-2. Create git tag: `git tag v1.0.0-beta.1`
-3. Push tag: `git push origin v1.0.0-beta.1`
-4. GitHub Actions automatically builds and creates pre-release
-
-### For Stable Releases (TUF + GitHub)
-1. Create GitHub release first (for backup)
-2. Build with Briefcase: `briefcase package`
-3. Add to TUF: `cd tuf_repo && python repo_add_bundle.py 1.0.0`
-4. Upload TUF repository to orinks.net
-5. Test update process
+2. Create git tag: `git tag v1.0.0` (stable) or `git tag v1.0.0-beta.1` (beta/dev)
+3. Push tag: `git push origin v1.0.0`
+4. GitHub Actions automatically builds and creates release
 
 ## Testing Updates
 
@@ -109,12 +101,12 @@ update_service.update_settings(
 ```bash
 # Test GitHub updates programmatically
 python -c "
-from accessiweather.services import TUFUpdateService
+from accessiweather.services import GitHubUpdateService
 import asyncio
 
 async def test():
-    service = TUFUpdateService()
-    service.update_settings(method='auto', channel='beta')
+    service = GitHubUpdateService()
+    service.update_settings(method='github', channel='beta')
     update = await service.check_for_updates()
     print(f'Update available: {update}')
 
@@ -131,5 +123,5 @@ asyncio.run(test())
 
 ### Scheduled Stable Releases
 - Monthly stable releases from `main` branch
-- Automatic TUF deployment
+- Automatic GitHub deployment
 - Release notes generation from changelog
