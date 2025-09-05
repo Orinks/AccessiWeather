@@ -517,9 +517,40 @@ class GitHubUpdateService:
             try:
                 with open(self.settings_path, encoding="utf-8") as f:
                     data = json.load(f)
-                return UpdateSettings(**data)
+
+                # Check if settings have wrong owner - delete if so and use defaults
+                if (
+                    data.get("repo_owner") == "joshuakitchen"
+                    or data.get("owner") == "joshuakitchen"
+                ):
+                    logger.info("Found old settings with incorrect owner, using defaults")
+                    self.settings_path.unlink()
+                    return UpdateSettings(channel="stable", owner=DEFAULT_OWNER, repo=DEFAULT_REPO)
+
+                # Map old field names to new ones and filter valid fields
+                field_mapping = {
+                    "channel": "channel",
+                    "owner": "owner",
+                    "repo_owner": "owner",  # Old name -> new name
+                    "repo": "repo",
+                    "repo_name": "repo",  # Old name -> new name
+                }
+
+                filtered_data = {}
+                for old_key, value in data.items():
+                    if old_key in field_mapping:
+                        new_key = field_mapping[old_key]
+                        filtered_data[new_key] = value
+
+                return UpdateSettings(**filtered_data)
             except Exception as e:
                 logger.warning(f"Failed to load update settings: {e}")
+                # Delete the corrupted settings file and return defaults
+                try:
+                    self.settings_path.unlink()
+                    logger.info("Deleted corrupted update settings file")
+                except Exception:
+                    pass
         # Defaults
         return UpdateSettings(channel="stable", owner=DEFAULT_OWNER, repo=DEFAULT_REPO)
 

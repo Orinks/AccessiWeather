@@ -1,4 +1,3 @@
-
 # AI Development Rules for AccessiWeather Migration
 
 This document outlines the rules and procedures for the AI to follow during the migration of the AccessiWeather application from `wxPython` to `Toga`. The primary goal is to ensure a smooth, test-driven migration that results in a clean, maintainable, and well-documented codebase.
@@ -30,7 +29,7 @@ All tests should be written using the `pytest` framework.
 
 The migrated application must follow BeeWare/Toga and Briefcase best practices to ensure that it is cross-platform compatible and easily deployable. The following rules must be adhered to:
 
-1.  **Project Structure**: The project must follow the standard BeeWare project structure. The main application logic should be in `src/accessiweather/simple`.
+1.  **Project Structure**: The project must follow the standard BeeWare project structure. The main application logic should be in `src/accessiweather`.
 2.  **Asynchronous Operations**: All I/O-bound operations (e.g., network requests, file I/O) must be asynchronous, using `asyncio`.
 3.  **UI Layout**: The UI must be built using Toga's layout widgets (`toga.Box`, `toga.Pack`, etc.). Avoid using fixed-size widgets or absolute positioning.
 4.  **Styling**: Use Toga's styling capabilities to create a visually appealing and accessible user interface.
@@ -55,7 +54,7 @@ The final codebase must be of high quality and well-documented. The following ru
 
 1.  **PEP 8**: All code must adhere to the PEP 8 style guide.
 2.  **Type Hinting**: All functions and methods must have type hints.
-3.  **Docstrings**: All modules, classes, functions, and methods must have docstrings that explain their purpose, arguments, and return values.
+3.  **Docstrings**: All modules, classes, functions, methods must have docstrings that explain their purpose, arguments, and return values.
 4.  **Comments**: Use comments to explain complex or non-obvious code.
 5.  **Linting**: Use `ruff` and `mypy` to lint the code and ensure that it is free of errors.
 
