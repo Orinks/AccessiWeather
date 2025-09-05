@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "accessiweather"
-version = "0.9.4-dev"
+version = "0.9.4.dev0"
 description = "AccessiWeather: An accessible weather application that includes NOAA and Open-Meteo support with focus on screen reader compatibility"
 authors = [
     { name = "Orinks" }
@@ -129,9 +129,9 @@ max-complexity = 15
 # content below this line added by briefcase convert
 # This project was generated with 0.3.23 using template: https://github.com/beeware/briefcase-template @ v0.3.23
 [tool.briefcase]
-project_name = "Accessiweather"
+project_name = "AccessiWeather"
 bundle = "net.orinks.accessiweather"
-version = "0.0.1"
+version = "0.9.4.dev0"
 url = "http://accessiweather.orinks.net"
 license.file = "LICENSE"
 author = "Orinks"
