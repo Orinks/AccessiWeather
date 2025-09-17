@@ -408,13 +408,62 @@ class SettingsDialog:
         )
         advanced_box.add(self.debug_mode_switch)
 
-        # Add placeholder for future advanced options
+        # Section: Reset configuration
         advanced_box.add(
             toga.Label(
-                "Additional power user options will be added in future versions.",
-                style=Pack(margin_top=20, font_style="italic"),
+                "Reset Configuration",
+                style=Pack(margin_top=20, font_weight="bold"),
             )
         )
+        advanced_box.add(
+            toga.Label(
+                "Restore all settings to their default values.",
+                style=Pack(margin_top=5, margin_bottom=5, font_style="italic"),
+            )
+        )
+        self.reset_defaults_button = toga.Button(
+            "Reset all settings to defaults",
+            on_press=self._on_reset_to_defaults,
+            style=Pack(margin_top=5, width=240),
+            id="reset_defaults_button",
+        )
+        advanced_box.add(self.reset_defaults_button)
+
+        # Section: Full data reset
+        advanced_box.add(
+            toga.Label("Full Data Reset", style=Pack(margin_top=20, font_weight="bold"))
+        )
+        advanced_box.add(
+            toga.Label(
+                "Reset all application data: settings, locations, caches, and alert state.",
+                style=Pack(margin_top=5, margin_bottom=5, font_style="italic"),
+            )
+        )
+        self.full_reset_button = toga.Button(
+            "Reset all app data (settings, locations, caches)",
+            on_press=self._on_full_reset,
+            style=Pack(margin_top=5, width=340),
+            id="full_reset_button",
+        )
+        advanced_box.add(self.full_reset_button)
+
+        # Section: Configuration files
+        advanced_box.add(
+            toga.Label("Configuration Files", style=Pack(margin_top=20, font_weight="bold"))
+        )
+        advanced_box.add(
+            toga.Label(
+                "Open the configuration directory in your file explorer.",
+                style=Pack(margin_top=5, margin_bottom=5, font_style="italic"),
+            )
+        )
+        self.open_config_dir_button = toga.Button(
+            "Open config directory",
+            on_press=self._on_open_config_dir,
+            style=Pack(margin_top=5, width=240),
+            id="open_config_dir_button",
+        )
+        advanced_box.add(self.open_config_dir_button)
 
         # Add tab to container
         self.option_container.content.append("Advanced", advanced_box)
@@ -759,6 +808,215 @@ class SettingsDialog:
         self.channel_description_label.text = description
 
     # (Update method description removed)
+
+    def _apply_settings_to_ui(self):
+        """Apply current settings to UI controls after a reset or reload."""
+        try:
+            s = self.current_settings
+            # General
+            if getattr(self, "temperature_unit_selection", None):
+                self.temperature_unit_selection.value = self.temperature_value_to_display.get(
+                    getattr(s, "temperature_unit", "both"), "Both (Fahrenheit and Celsius)"
+                )
+            if getattr(self, "update_interval_input", None):
+                self.update_interval_input.value = getattr(s, "update_interval_minutes", 10)
+            if getattr(self, "show_detailed_forecast_switch", None):
+                self.show_detailed_forecast_switch.value = getattr(
+                    s, "show_detailed_forecast", True
+                )
+            if getattr(self, "enable_alerts_switch", None):
+                self.enable_alerts_switch.value = getattr(s, "enable_alerts", True)
+
+            # Data source + Visual Crossing
+            if getattr(self, "data_source_selection", None):
+                display = self.data_source_value_to_display.get(getattr(s, "data_source", "auto"))
+                if display:
+                    self.data_source_selection.value = display
+            if getattr(self, "visual_crossing_api_key_input", None) is not None:
+                self.visual_crossing_api_key_input.value = getattr(s, "visual_crossing_api_key", "")
+            # Update VC visibility based on selection
+            with contextlib.suppress(Exception):
+                self._update_visual_crossing_visibility()
+
+            # Audio
+            if getattr(self, "sound_enabled_switch", None) is not None:
+                self.sound_enabled_switch.value = getattr(s, "sound_enabled", True)
+            if getattr(self, "sound_pack_selection", None) is not None:
+                # Map internal pack id back to display name
+                target_pack = getattr(s, "sound_pack", "default")
+                display_name = None
+                for k, v in getattr(self, "sound_pack_map", {}).items():
+                    if v == target_pack:
+                        display_name = k
+                        break
+                if not display_name and getattr(self, "sound_pack_options", []):
+                    display_name = self.sound_pack_options[0]
+                if display_name:
+                    self.sound_pack_selection.value = display_name
+                # Keep selection enabled state in sync with switch
+                self.sound_pack_selection.enabled = bool(self.sound_enabled_switch.value)
+
+            # Updates
+            if getattr(self, "auto_update_switch", None) is not None:
+                self.auto_update_switch.value = getattr(s, "auto_update_enabled", True)
+            if getattr(self, "update_channel_selection", None) is not None:
+                ch = getattr(s, "update_channel", "stable")
+                if ch == "dev":
+                    self.update_channel_selection.value = (
+                        "Development (Latest features, may be unstable)"
+                    )
+                elif ch == "beta":
+                    self.update_channel_selection.value = "Beta (Pre-release testing)"
+                else:
+                    self.update_channel_selection.value = "Stable (Production releases only)"
+                # Refresh channel description text
+                with contextlib.suppress(Exception):
+                    self._update_channel_description()
+            if getattr(self, "update_check_interval_input", None) is not None:
+                self.update_check_interval_input.value = getattr(
+                    s, "update_check_interval_hours", 24
+                )
+
+            # Advanced
+            if getattr(self, "minimize_to_tray_switch", None) is not None:
+                self.minimize_to_tray_switch.value = getattr(s, "minimize_to_tray", False)
+            if getattr(self, "debug_mode_switch", None) is not None:
+                self.debug_mode_switch.value = getattr(s, "debug_mode", False)
+
+        except Exception as e:
+            logger.warning(f"Failed to apply settings to UI: {e}")
+
+    async def _on_reset_to_defaults(self, widget):
+        """Handle reset-to-defaults action from Advanced tab."""
+        try:
+            # Keep focus within dialog for accessibility during operation
+            self._ensure_dialog_focus()
+
+            logger.info("User requested reset of configuration to defaults")
+            success = False
+            with contextlib.suppress(Exception):
+                success = self.config_manager.reset_to_defaults()
+
+            if not success:
+                await self._show_dialog_error(
+                    "Settings Error",
+                    "Failed to reset configuration to defaults.",
+                )
+                return
+
+            # Reload current settings from config manager and update UI
+            with contextlib.suppress(Exception):
+                self.current_settings = self.config_manager.get_settings()
+            self._apply_settings_to_ui()
+
+            # Provide lightweight feedback in Updates tab label (if present)
+            if getattr(self, "update_status_label", None):
+                self.update_status_label.text = "Settings were reset to defaults"
+
+            # Show confirmation to the user via info dialog
+            try:
+                if self.window and hasattr(self.window, "info_dialog"):
+                    await self.window.info_dialog(
+                        "Settings Reset", "All settings were reset to defaults."
+                    )
+                else:
+                    await self.app.main_window.info_dialog(
+                        "Settings Reset", "All settings were reset to defaults."
+                    )
+                    self._ensure_dialog_focus()
+            except Exception:
+                # Fallback to main window dialog
+                await self.app.main_window.info_dialog(
+                    "Settings Reset", "All settings were reset to defaults."
+                )
+                self._ensure_dialog_focus()
+
+        except Exception as e:
+            logger.error(f"Failed during reset-to-defaults operation: {e}")
+            with contextlib.suppress(Exception):
+                await self._show_dialog_error(
+                    "Settings Error",
+                    f"An error occurred while resetting to defaults: {e}",
+                )
+
+    async def _on_full_reset(self, widget):
+        """Handle full data reset action from Advanced tab."""
+        try:
+            # Keep focus within dialog for accessibility during operation
+            self._ensure_dialog_focus()
+
+            logger.info("User requested full data reset")
+            success = False
+            with contextlib.suppress(Exception):
+                success = self.config_manager.reset_all_data()
+
+            if not success:
+                await self._show_dialog_error(
+                    "Data Reset Error",
+                    "Failed to reset all application data.",
+                )
+                return
+
+            # Reload current settings from config manager and update UI
+            with contextlib.suppress(Exception):
+                self.current_settings = self.config_manager.get_settings()
+            self._apply_settings_to_ui()
+
+            # Provide lightweight feedback in Updates tab label (if present)
+            if getattr(self, "update_status_label", None):
+                self.update_status_label.text = "All application data were reset"
+
+            # Show confirmation to the user via info dialog
+            try:
+                if self.window and hasattr(self.window, "info_dialog"):
+                    await self.window.info_dialog("Data Reset", "All application data were reset.")
+                else:
+                    await self.app.main_window.info_dialog(
+                        "Data Reset", "All application data were reset."
+                    )
+                    self._ensure_dialog_focus()
+            except Exception:
+                # Fallback to main window dialog
+                await self.app.main_window.info_dialog(
+                    "Data Reset", "All application data were reset."
+                )
+                self._ensure_dialog_focus()
+
+        except Exception as e:
+            logger.error(f"Failed during full data reset: {e}")
+            with contextlib.suppress(Exception):
+                await self._show_dialog_error(
+                    "Data Reset Error",
+                    f"An error occurred while resetting data: {e}",
+                )
+
+    async def _on_open_config_dir(self, widget):
+        """Open the application's configuration directory in the OS file explorer."""
+        try:
+            self._ensure_dialog_focus()
+            import os as _os
+            import platform as _platform
+            import subprocess as _subprocess
+            from pathlib import Path
+
+            path = Path(self.config_manager.config_dir)
+            with contextlib.suppress(Exception):
+                path.mkdir(parents=True, exist_ok=True)
+
+            system = _platform.system()
+            if system == "Windows":
+                _os.startfile(str(path))  # type: ignore[attr-defined]
+            elif system == "Darwin":
+                _subprocess.run(["open", str(path)], check=False)
+            else:
+                _subprocess.run(["xdg-open", str(path)], check=False)
+        except Exception as e:
+            logger.error(f"Failed to open config directory: {e}")
+            with contextlib.suppress(Exception):
+                await self._show_dialog_error(
+                    "Open Config Directory",
+                    f"Failed to open the configuration directory: {e}",
+                )
 
     async def _on_get_visual_crossing_api_key(self, widget):
         """Handle Get API Key button press - open Visual Crossing registration page."""

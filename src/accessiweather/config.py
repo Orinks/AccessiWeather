@@ -305,6 +305,36 @@ class ConfigManager:
         self._config = AppConfig.default()
         return self.save_config()
 
+    def reset_all_data(self) -> bool:
+        """Reset all application data (settings, locations, caches, state).
+
+        This removes all files under the app's config directory (alert state,
+        updater cache/settings, downloaded updates, and the main config), then
+        recreates a fresh default configuration file.
+        """
+        try:
+            import shutil
+
+            # Remove everything inside the config directory
+            for item in self.config_dir.iterdir():
+                try:
+                    if item.is_dir():
+                        shutil.rmtree(item, ignore_errors=True)
+                    else:
+                        item.unlink(missing_ok=True)
+                except Exception:
+                    # Continue best-effort; log but don't abort the whole reset
+                    logger.warning(f"Failed to remove {item}", exc_info=True)
+
+            # Recreate default config and persist
+            self._config = AppConfig.default()
+            # Ensure directory exists (it should, but be safe)
+            self.config_dir.mkdir(parents=True, exist_ok=True)
+            return self.save_config()
+        except Exception as e:
+            logger.error(f"Failed to reset all data: {e}")
+            return False
+
     def backup_config(self, backup_path: Path | None = None) -> bool:
         """Create a backup of the current configuration."""
         if backup_path is None:
