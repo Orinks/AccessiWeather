@@ -447,6 +447,24 @@ class SettingsDialog:
         )
         advanced_box.add(self.full_reset_button)
 
+        # Section: Configuration files
+        advanced_box.add(
+            toga.Label("Configuration Files", style=Pack(margin_top=20, font_weight="bold"))
+        )
+        advanced_box.add(
+            toga.Label(
+                "Open the configuration directory in your file explorer.",
+                style=Pack(margin_top=5, margin_bottom=5, font_style="italic"),
+            )
+        )
+        self.open_config_dir_button = toga.Button(
+            "Open config directory",
+            on_press=self._on_open_config_dir,
+            style=Pack(margin_top=5, width=240),
+            id="open_config_dir_button",
+        )
+        advanced_box.add(self.open_config_dir_button)
+
         # Add tab to container
         self.option_container.content.append("Advanced", advanced_box)
 
@@ -970,6 +988,34 @@ class SettingsDialog:
                 await self._show_dialog_error(
                     "Data Reset Error",
                     f"An error occurred while resetting data: {e}",
+                )
+
+    async def _on_open_config_dir(self, widget):
+        """Open the application's configuration directory in the OS file explorer."""
+        try:
+            self._ensure_dialog_focus()
+            import os as _os
+            import platform as _platform
+            import subprocess as _subprocess
+            from pathlib import Path
+
+            path = Path(self.config_manager.config_dir)
+            with contextlib.suppress(Exception):
+                path.mkdir(parents=True, exist_ok=True)
+
+            system = _platform.system()
+            if system == "Windows":
+                _os.startfile(str(path))  # type: ignore[attr-defined]
+            elif system == "Darwin":
+                _subprocess.run(["open", str(path)], check=False)
+            else:
+                _subprocess.run(["xdg-open", str(path)], check=False)
+        except Exception as e:
+            logger.error(f"Failed to open config directory: {e}")
+            with contextlib.suppress(Exception):
+                await self._show_dialog_error(
+                    "Open Config Directory",
+                    f"Failed to open the configuration directory: {e}",
                 )
 
     async def _on_get_visual_crossing_api_key(self, widget):

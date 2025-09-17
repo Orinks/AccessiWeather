@@ -933,3 +933,83 @@ def test_settings_dialog_has_reset_defaults_button(tmp_path):
 
     # Sanity: Advanced tab container exists and contains the button
     assert getattr(dlg, "advanced_tab", None) is not None
+
+
+def test_settings_dialog_has_open_config_dir_button(tmp_path):
+    """Advanced tab should include a button to open the config directory."""
+    from unittest.mock import MagicMock
+
+    import toga
+
+    from accessiweather.config import ConfigManager
+    from accessiweather.dialogs.settings_dialog import SettingsDialog
+
+    app = MagicMock()
+    app.paths = MagicMock()
+    app.paths.config = tmp_path
+    cm = ConfigManager(app)
+
+    dlg = SettingsDialog(app, cm)
+    dlg.current_settings = cm.get_settings()
+    dlg.option_container = toga.OptionContainer()
+    dlg._create_advanced_tab()
+
+    assert dlg.open_config_dir_button.id == "open_config_dir_button"
+    assert dlg.open_config_dir_button.text.startswith("Open config directory")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "platform_name,expect_startfile,expect_cmd",
+    [
+        ("Windows", True, None),
+        ("Darwin", False, "open"),
+        ("Linux", False, "xdg-open"),
+    ],
+)
+async def test_settings_dialog_open_config_dir_invokes_launcher(
+    tmp_path, monkeypatch, platform_name, expect_startfile, expect_cmd
+):
+    """Open-config-dir handler should invoke the appropriate OS launcher."""
+    import os
+    import platform
+    import subprocess
+
+    from accessiweather.config import ConfigManager
+    from accessiweather.dialogs.settings_dialog import SettingsDialog
+
+    # Prepare app and config manager
+    app = MagicMock()
+    app.paths = MagicMock()
+    app.paths.config = tmp_path
+    app.main_window = MagicMock()  # in case of error dialogs
+
+    cm = ConfigManager(app)
+
+    # Patch platform.system to desired value
+    monkeypatch.setattr(platform, "system", lambda: platform_name)
+
+    # Patch OS-specific launchers
+    startfile_called = MagicMock()
+    run_called = MagicMock()
+
+    if expect_startfile:
+        monkeypatch.setattr(os, "startfile", startfile_called, raising=False)
+    else:
+        monkeypatch.setattr(subprocess, "run", run_called, raising=True)
+
+    # Execute handler
+    dlg = SettingsDialog(app, cm)
+    dlg.current_settings = cm.get_settings()
+    await dlg._on_open_config_dir(None)
+
+    # Assert correct function used
+    if expect_startfile:
+        startfile_called.assert_called_once()
+        arg = startfile_called.call_args[0][0]
+        assert str(tmp_path) in str(arg)
+    else:
+        run_called.assert_called_once()
+        args = run_called.call_args[0][0]
+        assert args[0] == expect_cmd
+        assert str(tmp_path) in args[1]
