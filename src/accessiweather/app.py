@@ -213,8 +213,15 @@ class AccessiWeatherApp(toga.App):
         self.alert_manager = AlertManager(config_dir, alert_settings)
         self.alert_notification_system = AlertNotificationSystem(self.alert_manager, self._notifier)
 
-        # Initialize system tray
-        self._initialize_system_tray()
+        # Initialize system tray (only if enabled in settings)
+        try:
+            if bool(getattr(config.settings, "minimize_to_tray", False)):
+                self._initialize_system_tray()
+            else:
+                self.status_icon = None
+        except Exception:
+            # If something goes wrong, don't block startup; just disable tray
+            self.status_icon = None
 
         logger.info("Application components initialized")
 
@@ -1229,17 +1236,21 @@ class AccessiWeatherApp(toga.App):
     # System Tray Event Handlers
 
     async def _on_window_close(self, widget):
-        """Handle main window close event - minimize to tray instead of closing."""
+        """Handle main window close event - honor minimize_to_tray setting."""
         try:
-            if self.status_icon:
+            cfg = self.config_manager.get_config() if self.config_manager else None
+            minimize_to_tray = (
+                bool(getattr(cfg.settings, "minimize_to_tray", False)) if cfg else False
+            )
+            if minimize_to_tray and self.status_icon:
                 # Hide window to system tray instead of closing
                 logger.info("Window close requested - minimizing to system tray")
                 self.main_window.hide()
-                if hasattr(self.show_hide_command, "text"):
+                if hasattr(self, "show_hide_command") and hasattr(self.show_hide_command, "text"):
                     self.show_hide_command.text = "Show AccessiWeather"
                 return False  # Prevent default close behavior
-            # No system tray available, allow normal close
-            logger.info("No system tray available - allowing normal close")
+            # Setting disabled or no tray available, allow normal close
+            logger.info("Close requested - exiting application")
             return True
         except Exception as e:
             logger.error(f"Error handling window close: {e}")
