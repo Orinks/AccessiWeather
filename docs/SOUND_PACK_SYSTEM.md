@@ -35,34 +35,12 @@ Each sound pack is a directory containing:
 }
 ```
 
-### Core Sound Events
+### Required Sound Events
 
 - `alert` - Weather alerts and important notifications
 - `notify` - General notifications
-- `error` - Error conditions and failures
+- `error` - Error conditions
 - `success` - Successful operations
-- `startup` - Application startup sound
-- `exit` - Application exit sound
-
-### Weather-Specific Sound Events
-
-AccessiWeather supports specific sound mappings for different types of weather alerts:
-
-- `tornado_warning` - Tornado warnings (highest priority)
-- `thunderstorm_warning` - Severe thunderstorm warnings
-- `flood_warning` - Flood warnings
-- `heat_advisory` - Heat advisories and excessive heat warnings
-- `winter_storm_warning` - Winter storm warnings
-- `hurricane_warning` - Hurricane warnings
-- `wind_warning` - High wind warnings
-- `fire_warning` - Fire weather warnings
-- `air_quality_alert` - Air quality alerts
-- `fog_advisory` - Dense fog advisories
-- `ice_warning` - Ice storm warnings
-- `snow_warning` - Heavy snow warnings
-- `dust_warning` - Dust storm warnings
-- `warning` - Generic severe weather warnings
-- `watch` - Generic weather watches
 
 ## Built-in Sound Packs
 

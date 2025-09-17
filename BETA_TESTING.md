@@ -15,11 +15,11 @@ Beta testing allows you to:
 ### Configuring Beta Updates in AccessiWeather
 
 1. **Open AccessiWeather**
-2. **Go to Settings** (Ctrl+S or from the File menu)
+2. **Go to Settings** (Alt+S or from the File menu)
 3. **Click on the "Updates" tab**
 4. **Configure your update preferences**:
    - **Update Channel**: Select `Beta (Pre-release testing)`
-   - **Update Method**: Choose `GitHub (All releases)` (recommended)
+   - **Update Method**: Choose `Automatic (TUF for stable, GitHub for beta/dev)` (recommended)
    - **Check for updates automatically**: Enable this option
    - **Check Interval**: Set to `12 hours` for more frequent beta updates
 5. **Click "OK"** to save your settings
@@ -27,7 +27,7 @@ Beta testing allows you to:
 
 ### Understanding Update Channels
 
-- **🔒 Stable**: Production releases only, production releases with GitHub security
+- **🔒 Stable**: Production releases only, maximum security with TUF verification
 - **🧪 Beta**: Pre-release versions for testing, includes new features before stable release
 - **🛠️ Development**: Latest development builds, cutting-edge features but may be unstable
 
@@ -63,7 +63,7 @@ Beta testing allows you to:
    - Note any special testing instructions
 
 2. **Install the Update**
-   - All beta releases come from GitHub releases
+   - Download from GitHub Releases
    - Install over your existing version
    - Or use the portable version for side-by-side testing
 
@@ -89,7 +89,7 @@ Beta testing allows you to:
 ## 🐛 Reporting Issues
 
 ### Where to Report
-- **GitHub Issues**: https://github.com/orinks/accessiweather/issues
+- **GitHub Issues**: https://github.com/joshuakitchen/accessiweather/issues
 - **Use the "bug" label** for bugs
 - **Use the "beta-feedback" label** for general feedback
 
@@ -183,7 +183,7 @@ As a beta tester, you get:
 ### Switching Back to Stable
 If you need to switch back to stable releases:
 
-1. **Open AccessiWeather Settings** (Ctrl+S)
+1. **Open AccessiWeather Settings** (Alt+S)
 2. **Go to the "Updates" tab**
 3. **Change Update Channel** to `Stable (Production releases only)`
 4. **Click "OK"** to save

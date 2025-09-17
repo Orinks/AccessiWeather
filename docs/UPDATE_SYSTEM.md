@@ -1,12 +1,12 @@
 # AccessiWeather Update System Guide
 
-AccessiWeather provides a flexible, secure update system with multiple channels to ensure you always have the latest features and security updates.
+AccessiWeather features a sophisticated dual-channel update system that provides both maximum security for stable releases and rapid access to beta features for testers.
 
 ## 🔄 Update Channels
 
 ### 🔒 Stable Channel
 - **Purpose**: Production-ready releases for all users
-- **Security**: Production-ready releases with GitHub security
+- **Security**: Maximum security with TUF (The Update Framework) cryptographic verification
 - **Frequency**: Monthly or as needed for critical fixes
 - **Recommended for**: All users who want a reliable, tested experience
 
@@ -26,19 +26,27 @@ AccessiWeather provides a flexible, secure update system with multiple channels 
 
 ## 🔧 Update Methods
 
-AccessiWeather uses GitHub releases for all update channels. There is no user-configurable update method - all updates are delivered through GitHub's secure platform.
+### 🔄 Automatic (Recommended)
+- **Stable Channel**: Uses TUF for maximum security
+- **Beta/Dev Channels**: Uses GitHub for faster deployment
+- **Benefits**: Best of both worlds - security for stable, speed for testing
 
-### 🔄 Updates via GitHub
-- **All Channels**: Uses GitHub releases with channel filtering
-- **Intelligent Selection**: Automatically filters releases based on your selected channel
-- **Benefits**: Simplified and reliable - one update source for all channels
+### 🔐 TUF Only
+- **Security**: Maximum security with cryptographic verification
+- **Limitation**: Only stable releases available
+- **Use Case**: High-security environments, production systems
+
+### 📦 GitHub Only
+- **Availability**: All release channels available
+- **Security**: Standard GitHub security (HTTPS)
+- **Use Case**: Beta testing, when TUF is not available
 
 ## ⚙️ Configuring Updates
 
 ### In-App Configuration
 
 1. **Open Settings**:
-   - Press `Ctrl+S` or
+   - Press `Alt+S` or
    - Go to File → Settings
 
 2. **Navigate to Updates Tab**:
@@ -46,6 +54,7 @@ AccessiWeather uses GitHub releases for all update channels. There is no user-co
 
 3. **Configure Your Preferences**:
    - **Update Channel**: Choose your desired channel
+   - **Update Method**: Select automatic (recommended) or specific method
    - **Auto-check**: Enable for automatic update notifications
    - **Check Interval**: Set how often to check (1-168 hours)
 
@@ -59,7 +68,10 @@ AccessiWeather uses GitHub releases for all update channels. There is no user-co
 - `Beta (Pre-release testing)` - New features, some bugs expected
 - `Development (Latest features, may be unstable)` - Cutting edge, use with caution
 
-
+#### Update Method Options
+- `Automatic (TUF for stable, GitHub for beta/dev)` - Recommended for most users
+- `TUF Only (Secure, stable releases only)` - Maximum security, stable only
+- `GitHub Only (All releases, less secure)` - All channels, standard security
 
 ## 🔍 Checking for Updates
 
@@ -67,7 +79,7 @@ AccessiWeather uses GitHub releases for all update channels. There is no user-co
 - Enabled by default
 - Runs in background at configured interval
 - Shows notification when updates are available
-- Respects your channel preferences
+- Respects your channel and method preferences
 
 ### Manual Checks
 - Go to Settings → Updates tab
@@ -89,20 +101,29 @@ AccessiWeather uses GitHub releases for all update channels. There is no user-co
 
 ## 🛡️ Security Features
 
+### TUF (The Update Framework)
+- **Cryptographic Verification**: All stable releases are cryptographically signed
+- **Rollback Protection**: Prevents downgrade attacks
+- **Compromise Resilience**: Multiple keys required for malicious updates
+- **Metadata Security**: Update metadata is also signed and verified
+
 ### GitHub Releases
 - **HTTPS Security**: All downloads use encrypted connections
 - **GitHub Security**: Relies on GitHub's security infrastructure
-- **SHA256 Checksums**: Release assets include SHA256 checksums for verification
-- **Repository Security**: GitHub's security infrastructure and access controls
-- **Secure Infrastructure**: All updates delivered through GitHub's secure platform
+- **Checksums**: Release assets include SHA256 checksums for verification
 
 ## 🔧 Troubleshooting
 
 ### Update Check Fails
 1. **Check Internet Connection**: Ensure you have internet access
 2. **Check Firewall**: Make sure AccessiWeather can access the internet
-3. **Try Again**: Try checking for updates again
+3. **Try Different Method**: Switch from TUF to GitHub or vice versa
 4. **Check Logs**: Enable debug mode for detailed error information
+
+### TUF Not Available
+- **Cause**: TUF dependencies not installed or system incompatibility
+- **Solution**: Update method automatically falls back to GitHub
+- **Manual Fix**: Install tufup package: `pip install tufup`
 
 ### No Updates Found
 - **Stable Channel**: You may already have the latest stable version
@@ -117,6 +138,12 @@ AccessiWeather uses GitHub releases for all update channels. There is no user-co
 
 ## 📊 Update Information
 
+### Platform Information
+The Updates tab shows:
+- **Platform**: Your operating system and architecture
+- **Deployment**: How AccessiWeather was installed (installer, portable, etc.)
+- **Update Capability**: Whether your installation supports updates
+
 ### Version Information
 - **Current Version**: Your installed version
 - **Available Version**: Latest version for your channel
@@ -127,6 +154,7 @@ AccessiWeather uses GitHub releases for all update channels. There is no user-co
 ### For Regular Users
 - **Use Stable Channel**: Most reliable experience
 - **Enable Auto-check**: Stay informed about updates
+- **Use Automatic Method**: Best security and convenience
 
 ### For Beta Testers
 - **Use Beta Channel**: Get new features early
@@ -142,7 +170,8 @@ AccessiWeather uses GitHub releases for all update channels. There is no user-co
 
 - **Beta Testing Guide**: `BETA_TESTING.md`
 - **Release Channels Guide**: `update_channels.md`
-- **GitHub Releases**: https://github.com/orinks/accessiweather/releases
+- **GitHub Releases**: https://github.com/joshuakitchen/accessiweather/releases
+- **TUF Project**: https://theupdateframework.io/
 
 ## 📞 Support
 
@@ -150,7 +179,7 @@ If you encounter issues with the update system:
 
 1. **Check This Guide**: Review troubleshooting section
 2. **Enable Debug Mode**: Get detailed error information
-3. **GitHub Issues**: Report bugs at https://github.com/orinks/accessiweather/issues
+3. **GitHub Issues**: Report bugs at https://github.com/joshuakitchen/accessiweather/issues
 4. **Include Information**: Provide your platform, version, and error details
 
 ---

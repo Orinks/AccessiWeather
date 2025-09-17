@@ -50,17 +50,17 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         fetch-depth: 0  # Fetch full history for build metadata
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
     - name: Cache pip dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~\AppData\Local\pip\Cache
         key: ${{ runner.os }}-build-pip-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml') }}
@@ -68,7 +68,7 @@ jobs:
           ${{ runner.os }}-build-pip-
 
     - name: Cache Briefcase build cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       if: ${{ !github.event.inputs.skip_cache }}
       with:
         path: |
@@ -111,18 +111,10 @@ jobs:
 
         echo "Updated version to: $VERSION"
 
-    - name: Create Briefcase app scaffold
+    - name: Build Briefcase app
       run: |
-        echo "Creating Briefcase app scaffold..."
-        python installer/make.py create --platform windows
-      env:
-        DISPLAY: ""
-        ACCESSIWEATHER_TEST_MODE: "1"
-
-    - name: Create portable ZIP version (even if build fails)
-      run: |
-        echo "Creating portable ZIP version..."
-        python installer/make.py zip --platform windows || true
+        echo "Building Briefcase app for Windows..."
+        briefcase build windows app --no-input --log
       env:
         DISPLAY: ""
         ACCESSIWEATHER_TEST_MODE: "1"
@@ -130,15 +122,32 @@ jobs:
     - name: Package Briefcase app (MSI Installer)
       run: |
         echo "Packaging Briefcase app as MSI installer..."
-        python installer/make.py package --platform windows
+        briefcase package windows app --no-input --log --adhoc-sign
       env:
         DISPLAY: ""
         ACCESSIWEATHER_TEST_MODE: "1"
 
-    - name: Verify soundpack cleanup
+    - name: Create portable ZIP version
       run: |
-        echo "Verifying only default soundpack is included..."
-        python verify_soundpack_cleanup.py
+        VERSION="${{ steps.version.outputs.version }}"
+
+        # Find the built app directory
+        APP_DIR=$(find build -name "AccessiWeather" -type d | head -1)
+
+        if [ -z "$APP_DIR" ]; then
+          echo "Error: Could not find built app directory"
+          find build -type d -name "*" | head -10
+          exit 1
+        fi
+
+        echo "Found app directory: $APP_DIR"
+
+        # Create portable ZIP
+        cd "$APP_DIR"
+        powershell -Command "Compress-Archive -Path * -DestinationPath '../../AccessiWeather_Portable_v$VERSION.zip'"
+        cd ../..
+
+        echo "Created portable ZIP: AccessiWeather_Portable_v$VERSION.zip"
 
     - name: Verify build outputs and generate checksums
       run: |
@@ -147,7 +156,7 @@ jobs:
 
         # Check for MSI installer
         MSI_PATH=$(find dist -name "*.msi" | head -1)
-        ZIP_PATH="dist/AccessiWeather_Portable_v$VERSION.zip"
+        ZIP_PATH="AccessiWeather_Portable_v$VERSION.zip"
 
         BUILD_SUCCESS=true
 
@@ -183,21 +192,21 @@ jobs:
         fi
 
         # Generate checksums file
-        echo "AccessiWeather v$VERSION - Build Checksums" > dist/checksums.txt
-        echo "" >> dist/checksums.txt
+        echo "AccessiWeather v$VERSION - Build Checksums" > checksums.txt
+        echo "" >> checksums.txt
         if [ -n "$MSI_PATH" ]; then
-          echo "$MSI_HASH  $(basename "$MSI_PATH")" >> dist/checksums.txt
+          echo "$MSI_HASH  $(basename "$MSI_PATH")" >> checksums.txt
         fi
-        echo "$ZIP_HASH  AccessiWeather_Portable_v$VERSION.zip" >> dist/checksums.txt
-        echo "✓ Checksums saved to dist/checksums.txt"
+        echo "$ZIP_HASH  AccessiWeather_Portable_v$VERSION.zip" >> checksums.txt
+        echo "✓ Checksums saved to checksums.txt"
 
     - name: Upload portable build artifact
       uses: actions/upload-artifact@v4
       with:
         name: windows-portable-${{ steps.version.outputs.version }}
         path: |
-          dist/AccessiWeather_Portable_v${{ steps.version.outputs.version }}.zip
-          dist/checksums.txt
+          AccessiWeather_Portable_v${{ steps.version.outputs.version }}.zip
+          checksums.txt
         retention-days: 30
 
     - name: Upload MSI installer artifact
@@ -222,13 +231,13 @@ jobs:
 
     steps:
     - name: Download installer artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
         name: windows-installer-${{ needs.build.outputs.version }}
         path: artifacts/installer/
 
     - name: Download portable artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
         name: windows-portable-${{ needs.build.outputs.version }}
         path: artifacts/portable/

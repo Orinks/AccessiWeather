@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""A make-like utility for AccessiWeather using BeeWare Briefcase.
+"""A simple make-like utility for AccessiWeather using BeeWare Briefcase.
 
-This replaces the legacy PyInstaller/Inno Setup scripts and includes workarounds
-for Windows build issues to ensure a working CI/CD process for GitHub Pages deployment.
+This replaces the legacy PyInstaller/Inno Setup scripts.
 
 Usage examples:
   python installer/make.py create          # First-time platform scaffold
@@ -11,7 +10,6 @@ Usage examples:
   python installer/make.py dev             # Run app in development mode
   python installer/make.py test            # Run test suite in a Briefcase dev app
   python installer/make.py zip             # Create a temporary portable ZIP from the build
-  python installer/make.py verify          # Verify soundpack cleanup in built ZIP
   python installer/make.py status          # Show detected settings and versions
   python installer/make.py clean           # Clean Briefcase build artifacts (best-effort)
 
@@ -83,35 +81,6 @@ def _detect_default_platform() -> str:
     return "linux"
 
 
-def _cleanup_soundpacks(args: argparse.Namespace) -> None:
-    """Remove non-default soundpacks from build directory to keep only default soundpack."""
-    build_base = ROOT / "build" / "accessiweather" / args.platform / "app"
-    soundpacks_path = build_base / "src" / "app" / "accessiweather" / "soundpacks"
-
-    if not soundpacks_path.exists():
-        return
-
-    # Keep only the default soundpack
-    default_soundpacks = {"default", ".gitkeep"}
-
-    print("Cleaning up soundpacks (keeping only default)...")
-    removed_count = 0
-
-    for item in soundpacks_path.iterdir():
-        if item.name not in default_soundpacks:
-            if item.is_dir():
-                shutil.rmtree(item, ignore_errors=True)
-            else:
-                item.unlink(missing_ok=True)
-            print(f"  Removed: {item.name}")
-            removed_count += 1
-
-    if removed_count > 0:
-        print(f"  Cleaned up {removed_count} non-default soundpack(s)")
-    else:
-        print("  No non-default soundpacks found to clean")
-
-
 def cmd_status(args: argparse.Namespace) -> int:
     print("AccessiWeather make-like utility (Briefcase)")
     print(f"Root: {ROOT}")
@@ -133,25 +102,15 @@ def cmd_build(args: argparse.Namespace) -> int:
     if not _briefcase_exists():
         print("Error: Briefcase is not installed. Install with: pip install briefcase")
         return 1
-    # Use update+build for more robust builds, but ignore update failures
-    _briefcase("update", args.platform)  # Don't fail if update fails
-    result = _briefcase("build", args.platform, "--no-update")
-
-    # Clean up soundpacks after build (regardless of build success/failure)
-    _cleanup_soundpacks(args)
-
-    return result
+    # Update+build tends to be more robust during dev
+    return _briefcase("build", args.platform)
 
 
 def cmd_package(args: argparse.Namespace) -> int:
     if not _briefcase_exists():
         print("Error: Briefcase is not installed. Install with: pip install briefcase")
         return 1
-
-    # Ensure soundpacks are cleaned up before packaging
-    _cleanup_soundpacks(args)
-
-    return _briefcase("package", args.platform, "--adhoc-sign")
+    return _briefcase("package", args.platform)
 
 
 def cmd_dev(args: argparse.Namespace) -> int:
@@ -178,60 +137,35 @@ def cmd_zip(args: argparse.Namespace) -> int:
     version = _read_version()
     if args.platform != "windows":
         print("Note: ZIP recipe is primarily intended for Windows.")
-
-    # Find the built app directory more robustly
-    build_base = ROOT / "build" / "accessiweather" / args.platform / "app"
-    app_build_dir = build_base / "src"
-
+    app_build_dir = ROOT / args.platform / "AccessiWeather" / "build" / "AccessiWeather"
     if not app_build_dir.exists():
-        print(f"Error: build output not found at {app_build_dir}. Run build first.")
+        print(
+            f"Error: build output not found at {app_build_dir}. Run: briefcase build {args.platform}"
+        )
         return 1
-
-    # Ensure soundpacks are cleaned up before creating ZIP
-    _cleanup_soundpacks(args)
-
     dist_dir = ROOT / "dist"
     dist_dir.mkdir(parents=True, exist_ok=True)
     zip_path = dist_dir / f"AccessiWeather_Portable_v{version}.zip"
-
     # Create zip
     print(f"Creating ZIP: {zip_path}")
     if zip_path.exists():
         zip_path.unlink()
-
     shutil.make_archive(zip_path.with_suffix(""), "zip", app_build_dir)
     print("ZIP created.")
     return 0
 
 
-def cmd_verify(args: argparse.Namespace) -> int:
-    """Verify that built ZIP contains only default soundpack."""
-    dist_dir = ROOT / "dist"
-    zip_files = list(dist_dir.glob("AccessiWeather_Portable_v*.zip"))
-
-    if not zip_files:
-        print("Error: No portable ZIP files found in dist/")
-        return 1
-
-    # Use verification script
-    verify_script = ROOT / "verify_soundpack_cleanup.py"
-    if verify_script.exists():
-        return _run([sys.executable, str(verify_script)], cwd=ROOT)
-    print("Warning: verify_soundpack_cleanup.py not found")
-    return 0
-
-
 def cmd_clean(args: argparse.Namespace) -> int:
     """Clean Briefcase artifacts (best-effort)."""
-    # Try Briefcase clean first if available (newer versions)
+    # Try Briefcase clean first if available
     if TRY_BREF_CLEAN and _briefcase_exists():
-        code = _run([sys.executable, "-m", "briefcase", "clean", args.platform], cwd=ROOT)
+        code = _briefcase("clean", args.platform)
         if code == 0:
             return 0
-
     # Fallback: remove known build trees (non-destructive to sources)
     patterns = [
-        ROOT / "build",
+        ROOT / args.platform / "AccessiWeather" / "build",
+        ROOT / args.platform / "AccessiWeather" / "support",
         ROOT / "dist",
     ]
     for p in patterns:
@@ -279,9 +213,6 @@ def main() -> int:
     p_zip = sub.add_parser("zip", help="Create a portable ZIP from build output")
     add_common(p_zip)
     p_zip.set_defaults(func=cmd_zip)
-
-    p_verify = sub.add_parser("verify", help="Verify soundpack cleanup in built ZIP")
-    p_verify.set_defaults(func=cmd_verify)
 
     p_clean = sub.add_parser("clean", help="Clean Briefcase artifacts")
     add_common(p_clean)
