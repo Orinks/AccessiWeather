@@ -52,6 +52,7 @@ class WeatherClient:
         logger.info(f"Fetching weather data for {location.name}")
 
         # Determine which API to use based on data source and location
+        logger.debug("Determining API choice")
         api_choice = self._determine_api_choice(location)
         api_name = {
             "nws": "NWS",
@@ -60,6 +61,7 @@ class WeatherClient:
         }.get(api_choice, "NWS")
         logger.info(f"Using {api_name} API for {location.name} (data_source: {self.data_source})")
 
+        logger.debug("Creating WeatherData object")
         weather_data = WeatherData(location=location, last_updated=datetime.now())
 
         if api_choice == "visualcrossing":

@@ -7,6 +7,8 @@
         "alert": "soft_beep.wav",
         "notify": "gentle_chime.wav",
         "error": "low_tone.wav",
-        "success": "high_tone.wav"
+        "success": "high_tone.wav",
+        "startup": "gentle_chime.wav",
+        "exit": "low_tone.wav"
     }
 }

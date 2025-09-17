@@ -257,3 +257,7 @@ RELEASE_PROCESS.md
 
 # Legacy temporary wx repo directory (do not track)
 AccessiWeather-wx-legacy-tmp/
+
+
+# External soundpacks repository (do not track)
+accessiweather-soundpacks/

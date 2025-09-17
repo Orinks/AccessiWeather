@@ -1,12 +1,15 @@
 """Test configuration and fixtures for AccessiWeather Toga app tests."""
 
 # Import only Toga-compatible fixtures
+from contextlib import suppress
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-# Import only Toga helpers
-from tests.toga_test_helpers import *  # noqa: F401, F403
+# Import only Toga helpers (guarded to avoid heavy imports when unavailable)
+# If optional UI deps (e.g., toga) are not installed, allow non-UI tests to run
+with suppress(Exception):
+    from tests.toga_test_helpers import *  # noqa: F401, F403
 
 # Skip removed fixtures directories (basic_fixtures, sample_responses, gui_fixtures, mock_clients)
 

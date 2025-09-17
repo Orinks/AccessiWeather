@@ -133,11 +133,30 @@ class AccessiWeatherApp(toga.App):
                         except Exception as e2:
                             logger.warning(f"Could not set focus to any widget: {e2}")
 
-            # Start periodic weather updates
-            await self._start_background_updates()
+            # Play startup sound after UI is ready but before background updates
+            await self._play_startup_sound()
+
+            # Start periodic weather updates as a background task
+            asyncio.create_task(self._start_background_updates())
 
         except Exception as e:
             logger.error(f"Failed to start background tasks: {e}")
+
+    async def _play_startup_sound(self):
+        """Play the application startup sound."""
+        try:
+            # Get current soundpack from settings
+            config = self.config_manager.get_config()
+            current_soundpack = getattr(config.settings, "sound_pack", "default")
+            sound_enabled = getattr(config.settings, "sound_enabled", True)
+
+            if sound_enabled:
+                from .notifications.sound_player import play_startup_sound
+
+                play_startup_sound(current_soundpack)
+                logger.info(f"Played startup sound from pack: {current_soundpack}")
+        except Exception as e:
+            logger.error(f"Failed to play startup sound: {e}")
 
     def _initialize_components(self):
         """Initialize core application components."""
@@ -149,9 +168,9 @@ class AccessiWeatherApp(toga.App):
 
         # Initialize update service
         try:
-            from .services import TUFUpdateService
+            from .services import GitHubUpdateService
 
-            self.update_service = TUFUpdateService(
+            self.update_service = GitHubUpdateService(
                 app_name="AccessiWeather",
                 config_dir=self.config_manager.config_dir if self.config_manager else None,
             )
@@ -909,10 +928,12 @@ class AccessiWeatherApp(toga.App):
             downloaded_file = await self.update_service.download_update(update_info)
 
             if downloaded_file:
+                # Treat any truthy return as a path to the downloaded file
+                downloaded_path = str(downloaded_file)
                 await self.main_window.info_dialog(
                     "Update Downloaded",
                     f"Update {update_info.version} has been downloaded successfully.\n\n"
-                    f"Location: {downloaded_file}\n\n"
+                    f"Location: {downloaded_path}\n\n"
                     "Please close the application and run the installer to complete the update.",
                 )
                 self._update_status(f"Update {update_info.version} downloaded")
@@ -932,15 +953,19 @@ class AccessiWeatherApp(toga.App):
     # Weather data methods
     async def _refresh_weather_data(self):
         """Refresh weather data for the current location."""
+        logger.debug("_refresh_weather_data called")
+
         if self.is_updating:
             logger.info("Update already in progress, skipping")
             return
 
         current_location = self.config_manager.get_current_location()
         if not current_location:
+            logger.debug("No current location found")
             self._update_status("No location selected")
             return
 
+        logger.info(f"Starting weather data refresh for {current_location.name}")
         self.is_updating = True
         self._update_status(f"Updating weather for {current_location.name}...")
 
@@ -949,12 +974,17 @@ class AccessiWeatherApp(toga.App):
             if self.refresh_button:
                 self.refresh_button.enabled = False
 
+            logger.debug("About to call weather_client.get_weather_data")
             # Fetch weather data
             weather_data = await self.weather_client.get_weather_data(current_location)
+            logger.debug("weather_client.get_weather_data completed")
+
             self.current_weather_data = weather_data
 
+            logger.debug("About to update weather displays")
             # Update displays
             await self._update_weather_displays(weather_data)
+            logger.debug("Weather displays updated")
 
             self._update_status(f"Updated at {weather_data.last_updated.strftime('%I:%M %p')}")
             logger.info(f"Successfully updated weather for {current_location.name}")
@@ -965,6 +995,7 @@ class AccessiWeatherApp(toga.App):
             self._show_error_displays(str(e))
 
         finally:
+            logger.debug("_refresh_weather_data finally block")
             self.is_updating = False
             if self.refresh_button:
                 self.refresh_button.enabled = True
@@ -1111,6 +1142,7 @@ class AccessiWeatherApp(toga.App):
             )
 
             while True:
+                logger.debug(f"Background update loop: sleeping for {update_interval} seconds")
                 await asyncio.sleep(update_interval)
 
                 # Only update if we have a current location and not already updating
@@ -1120,7 +1152,26 @@ class AccessiWeatherApp(toga.App):
                     and self.config_manager.get_current_location()
                 ):
                     logger.info("Performing background weather update")
-                    await self._refresh_weather_data()
+                    try:
+                        # Add timeout to prevent hanging
+                        await asyncio.wait_for(self._refresh_weather_data(), timeout=60.0)
+                        logger.info("Background weather update completed successfully")
+                    except TimeoutError:
+                        logger.error("Background weather update timed out after 60 seconds")
+                        # Reset updating flag if it got stuck
+                        self.is_updating = False
+                        if self.refresh_button:
+                            self.refresh_button.enabled = True
+                    except Exception as e:
+                        logger.error(f"Background weather update failed: {e}")
+                        # Reset updating flag if it got stuck
+                        self.is_updating = False
+                        if self.refresh_button:
+                            self.refresh_button.enabled = True
+                else:
+                    logger.debug(
+                        f"Skipping background update - is_updating: {self.is_updating}, has_location: {bool(self.config_manager and self.config_manager.get_current_location())}"
+                    )
 
         except asyncio.CancelledError:
             logger.info("Background updates cancelled")
@@ -1242,6 +1293,9 @@ class AccessiWeatherApp(toga.App):
         try:
             logger.info("Application exit requested - performing cleanup")
 
+            # Play exit sound before cleanup
+            self._play_exit_sound()
+
             # Release single instance lock before exiting
             if self.single_instance_manager:
                 logger.debug("Releasing single instance lock")
@@ -1254,6 +1308,22 @@ class AccessiWeatherApp(toga.App):
         except Exception as e:
             logger.error(f"Error during application exit cleanup: {e}")
             return True  # Still allow exit even if cleanup fails
+
+    def _play_exit_sound(self):
+        """Play the application exit sound."""
+        try:
+            # Get current soundpack from settings
+            config = self.config_manager.get_config()
+            current_soundpack = getattr(config.settings, "sound_pack", "default")
+            sound_enabled = getattr(config.settings, "sound_enabled", True)
+
+            if sound_enabled:
+                from .notifications.sound_player import play_exit_sound
+
+                play_exit_sound(current_soundpack)
+                logger.info(f"Played exit sound from pack: {current_soundpack}")
+        except Exception as e:
+            logger.debug(f"Failed to play exit sound: {e}")
 
     def _on_test_notification_pressed(self, widget):
         """Send a test notification using desktop-notifier.

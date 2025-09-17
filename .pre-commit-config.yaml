@@ -27,12 +27,6 @@ repos:
         args: [--project=pyrightconfig.json]
         exclude: ^(tests/|docs/|setup.py|src/accessiweather/weather_gov_api_client/)
 
-
--   repo: https://github.com/GitGuardian/ggshield
-    rev: v1.21.0
-    hooks:
-    -   id: ggshield
-
 -   repo: local
     hooks:
     -   id: pytest-check
