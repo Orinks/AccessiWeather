@@ -732,3 +732,99 @@ class TestUIComponentInteraction:
         # Simulate scroll event
         scroll_widget.on_scroll(0, 100)
         scroll_widget.on_scroll.assert_called_once_with(0, 100)
+
+
+@pytest.mark.asyncio
+async def test_settings_dialog_reset_to_defaults_resets_config(tmp_path):
+    """SettingsDialog: reset-to-defaults should restore ConfigManager settings to defaults.
+
+    This verifies the Advanced tab action works via the handler without needing full UI.
+    """
+    import asyncio
+    from unittest.mock import AsyncMock, MagicMock
+
+    from accessiweather.config import ConfigManager
+    from accessiweather.dialogs.settings_dialog import SettingsDialog
+
+    # Mock app with required properties
+    app = MagicMock()
+    app.paths = MagicMock()
+    app.paths.config = tmp_path
+    app.loop = MagicMock()
+    app.loop.create_future.return_value = asyncio.Future()
+    app.main_window = MagicMock()
+    app.main_window.error_dialog = AsyncMock()
+
+    # Real ConfigManager with temp config dir
+    config_manager = ConfigManager(app)
+
+    # Set some non-default settings and persist them
+    assert (
+        config_manager.update_settings(
+            temperature_unit="f",
+            update_interval_minutes=42,
+            auto_update_enabled=False,
+            data_source="nws",
+            debug_mode=True,
+            sound_enabled=False,
+        )
+        is True
+    )
+
+    # Initialize SettingsDialog without creating a real window
+    dlg = SettingsDialog(app, config_manager)
+    dlg.current_settings = config_manager.get_settings()
+
+    # Provide a lightweight status label stub to observe feedback text
+    class _Stub:
+        def __init__(self):
+            self.text = ""
+
+    dlg.update_status_label = _Stub()
+
+    # Invoke the reset handler
+    await dlg._on_reset_to_defaults(None)
+
+    # Verify config has been reset to defaults
+    s = config_manager.get_settings()
+    assert s.temperature_unit == "both"
+    assert s.update_interval_minutes == 10
+    assert s.auto_update_enabled is True
+    assert s.data_source == "auto"
+    assert s.debug_mode is False
+    assert s.sound_enabled is True
+
+    # Verify user-facing confirmation text was set
+    assert dlg.update_status_label.text == "Settings were reset to defaults"
+
+
+def test_settings_dialog_has_reset_defaults_button(tmp_path):
+    """SettingsDialog UI should include the Reset-to-Defaults button on Advanced tab."""
+    from unittest.mock import MagicMock
+
+    from accessiweather.config import ConfigManager
+    from accessiweather.dialogs.settings_dialog import SettingsDialog
+
+    # Minimal app mock
+    app = MagicMock()
+    app.paths = MagicMock()
+    app.paths.config = tmp_path
+
+    cm = ConfigManager(app)
+
+    dlg = SettingsDialog(app, cm)
+    dlg.current_settings = cm.get_settings()
+
+    # Build just the Advanced tab in isolation to avoid needing a window
+    import toga
+
+    dlg.option_container = toga.OptionContainer()
+    dlg._create_advanced_tab()
+
+    # Verify the button exists and is wired with the expected id/text
+    assert getattr(dlg, "reset_defaults_button", None) is not None
+    assert dlg.reset_defaults_button.id == "reset_defaults_button"
+    assert dlg.reset_defaults_button.text == "Reset all settings to defaults"
+
+    # Sanity: Advanced tab container exists and contains the button
+    assert getattr(dlg, "advanced_tab", None) is not None
