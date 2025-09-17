@@ -877,6 +877,24 @@ class SettingsDialog:
             if getattr(self, "update_status_label", None):
                 self.update_status_label.text = "Settings were reset to defaults"
 
+            # Show confirmation to the user via info dialog
+            try:
+                if self.window and hasattr(self.window, "info_dialog"):
+                    await self.window.info_dialog(
+                        "Settings Reset", "All settings were reset to defaults."
+                    )
+                else:
+                    await self.app.main_window.info_dialog(
+                        "Settings Reset", "All settings were reset to defaults."
+                    )
+                    self._ensure_dialog_focus()
+            except Exception:
+                # Fallback to main window dialog
+                await self.app.main_window.info_dialog(
+                    "Settings Reset", "All settings were reset to defaults."
+                )
+                self._ensure_dialog_focus()
+
         except Exception as e:
             logger.error(f"Failed during reset-to-defaults operation: {e}")
             with contextlib.suppress(Exception):

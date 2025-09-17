@@ -754,6 +754,7 @@ async def test_settings_dialog_reset_to_defaults_resets_config(tmp_path):
     app.loop.create_future.return_value = asyncio.Future()
     app.main_window = MagicMock()
     app.main_window.error_dialog = AsyncMock()
+    app.main_window.info_dialog = AsyncMock()
 
     # Real ConfigManager with temp config dir
     config_manager = ConfigManager(app)
@@ -796,6 +797,11 @@ async def test_settings_dialog_reset_to_defaults_resets_config(tmp_path):
 
     # Verify user-facing confirmation text was set
     assert dlg.update_status_label.text == "Settings were reset to defaults"
+
+    # Verify confirmation dialog was shown
+    app.main_window.info_dialog.assert_called_once_with(
+        "Settings Reset", "All settings were reset to defaults."
+    )
 
 
 def test_settings_dialog_has_reset_defaults_button(tmp_path):
