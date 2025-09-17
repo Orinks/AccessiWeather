@@ -112,7 +112,10 @@ sys.modules.setdefault("packaging", _packaging_stub)
 sys.modules.setdefault("packaging.version", _version_mod)
 
 # Import the service module normally
-from accessiweather.services.github_update_service import GitHubUpdateService, UpdateInfo
+from accessiweather.services.github_update_service import (  # noqa: E402
+    GitHubUpdateService,
+    UpdateInfo,
+)
 
 
 # -----------------------------
@@ -127,6 +130,7 @@ class MockResponse:
         headers: dict | None = None,
         text: str = "",
     ):
+        """Initialize mock response."""
         self.status_code = status_code
         self._json = json_data
         self.headers = headers or {}
@@ -150,6 +154,7 @@ class MockStreamResponse:
         headers: dict | None = None,
         chunks: Iterable[bytes] = (b"",),
     ):
+        """Initialize mock stream response."""
         self.status_code = status_code
         self.headers = headers or {}
         self._chunks = list(chunks)
@@ -184,6 +189,7 @@ class QueueHttpClient:
         get_responses: list[MockResponse] | None = None,
         stream_resp: MockStreamResponse | None = None,
     ):
+        """Initialize queue-based http client stub."""
         self._get_responses = list(get_responses or [])
         self._get_calls = []
         self._stream_resp = stream_resp or MockStreamResponse()
@@ -216,7 +222,7 @@ def version_fixture(monkeypatch):
 
 @pytest.fixture
 def svc_sync(tmp_path):
-    """Synchronous service fixture for non-async tests."""
+    """Create synchronous service fixture for non-async tests."""
     return GitHubUpdateService(app_name="AccessiWeatherTest", config_dir=str(tmp_path))
 
 
@@ -747,6 +753,7 @@ class RaisingClient:
     """Mock client that raises specific exceptions."""
 
     def __init__(self, exception_to_raise):
+        """Initialize raising client with the provided exception."""
         self.exception_to_raise = exception_to_raise
 
     async def get(self, url: str, headers: dict | None = None):
