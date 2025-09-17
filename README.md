@@ -46,6 +46,35 @@ briefcase package
 
 Updates are delivered via GitHub Releases and integrated with the app’s Settings → Updates tab.
 
+### Using installer/make.py
+
+A convenience wrapper around Briefcase is provided at installer/make.py:
+
+```bash
+# Show environment and detected versions
+python installer/make.py status
+
+# First-time platform scaffold (windows|macOS|linux)
+python installer/make.py create --platform windows
+
+# Build and then package an installer (MSI/DMG/PKG depending on platform)
+python installer/make.py build --platform windows
+python installer/make.py package --platform windows
+
+# Run the app in development mode (same as `briefcase dev`)
+python installer/make.py dev
+
+# Run tests in a Briefcase dev app (falls back to pytest if needed)
+python installer/make.py test
+
+# Create a portable ZIP from the build output (Windows-focused helper)
+python installer/make.py zip --platform windows
+
+# Clean Briefcase artifacts
+python installer/make.py clean --platform windows
+```
+
+
 ## Configuration & Portable Mode
 
 - Default config/data lives in a user app data directory (platform-dependent)
@@ -164,52 +193,6 @@ accessiweather --portable
    - System tray behavior
    - Taskbar icon customization
 
-## Building Binaries
-
-AccessiWeather includes a PowerShell script to build Windows binaries and installers.
-
-### Prerequisites
-
-- Python 3.7+ (Python 3.11 recommended)
-- PowerShell 5.0+
-- [Inno Setup 6](https://jrsoftware.org/isdl.php) (for creating installers)
-
-### Building Steps
-
-1. Ensure Inno Setup is installed and in your PATH
-   ```powershell
-   # You can install Inno Setup using winget
-   winget install JRSoftware.InnoSetup
-   ```
-
-2. Run the build script from the project root directory
-   ```powershell
-   # Navigate to the project directory
-   cd path\to\AccessiWeather
-
-   # Run the build script
-   .\installer\build_installer.ps1
-   ```
-
-3. The script will:
-   - Check for processes that might interfere with the build
-   - Install PyInstaller if needed
-   - Build the executable using PyInstaller
-   - Create a portable ZIP archive
-   - Build an installer with Inno Setup
-
-4. After completion, you'll find the following in the `dist` directory:
-   - `AccessiWeather_Setup_v{version}.exe` - Windows installer
-   - `AccessiWeather_Portable_v{version}.zip` - Portable ZIP archive
-   - `AccessiWeather` folder - Standalone executable and dependencies
-
-   The version number is automatically extracted from `setup.py`.
-
-### Troubleshooting
-
-- If the script can't find Inno Setup, ensure it's installed and the `iscc` command is in your PATH
-- If you encounter file locking issues, the script will help identify and close interfering processes
-- For detailed logs, check the console output during the build process
 
 ## Requirements
 
