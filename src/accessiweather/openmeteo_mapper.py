@@ -6,8 +6,14 @@ into the internal data format expected by WeatherService and UI components.
 
 import logging
 import math
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, Optional
+from datetime import datetime, timedelta
+from typing import Any
+
+# For Python 3.10 compatibility
+try:
+    from datetime import UTC
+except ImportError:
+    UTC = UTC
 
 from .openmeteo_client import OpenMeteoApiClient
 
@@ -19,9 +25,8 @@ class OpenMeteoMapper:
 
     def __init__(self):
         """Initialize the mapper."""
-        pass
 
-    def map_current_conditions(self, openmeteo_data: Dict[str, Any]) -> Dict[str, Any]:
+    def map_current_conditions(self, openmeteo_data: dict[str, Any]) -> dict[str, Any]:
         """Map Open-Meteo current weather data to NWS-compatible format.
 
         Args:
@@ -29,6 +34,7 @@ class OpenMeteoMapper:
 
         Returns:
             Dictionary in NWS current conditions format
+
         """
         try:
             current = openmeteo_data.get("current", {})
@@ -40,8 +46,8 @@ class OpenMeteoMapper:
             # Map the data to NWS-like structure
             mapped_data = {
                 "properties": {
-                    "@id": f"open-meteo-current-{datetime.now(timezone.utc).isoformat()}",
-                    "timestamp": current.get("time", datetime.now(timezone.utc).isoformat()),
+                    "@id": f"open-meteo-current-{datetime.now(UTC).isoformat()}",
+                    "timestamp": current.get("time", datetime.now(UTC).isoformat()),
                     "temperature": {
                         "value": current.get("temperature_2m"),
                         "unitCode": self._get_temperature_unit_code(
@@ -85,7 +91,11 @@ class OpenMeteoMapper:
                         "qualityControl": "qc:V",
                     },
                     "barometricPressure": {
-                        "value": current.get("pressure_msl"),
+                        "value": (
+                            current.get("pressure_msl") * 100
+                            if current.get("pressure_msl") is not None
+                            else None
+                        ),
                         "unitCode": "wmoUnit:Pa",
                         "qualityControl": "qc:V",
                     },
@@ -132,9 +142,9 @@ class OpenMeteoMapper:
 
         except Exception as e:
             logger.error(f"Error mapping current conditions: {str(e)}")
-            raise ValueError(f"Failed to map current conditions: {str(e)}")
+            raise ValueError(f"Failed to map current conditions: {str(e)}") from e
 
-    def map_forecast(self, openmeteo_data: Dict[str, Any]) -> Dict[str, Any]:
+    def map_forecast(self, openmeteo_data: dict[str, Any]) -> dict[str, Any]:
         """Map Open-Meteo daily forecast data to NWS-compatible format.
 
         Args:
@@ -142,6 +152,7 @@ class OpenMeteoMapper:
 
         Returns:
             Dictionary in NWS forecast format
+
         """
         try:
             daily = openmeteo_data.get("daily", {})
@@ -230,7 +241,7 @@ class OpenMeteoMapper:
 
             mapped_data = {
                 "properties": {
-                    "updated": datetime.now(timezone.utc).isoformat(),
+                    "updated": datetime.now(UTC).isoformat(),
                     "units": {
                         "temperature": (
                             "F"
@@ -244,7 +255,7 @@ class OpenMeteoMapper:
                         "precipitation": daily_units.get("precipitation_sum", "in"),
                     },
                     "forecastGenerator": "Open-Meteo API",
-                    "generatedAt": datetime.now(timezone.utc).isoformat(),
+                    "generatedAt": datetime.now(UTC).isoformat(),
                     "periods": periods,
                 }
             }
@@ -254,9 +265,9 @@ class OpenMeteoMapper:
 
         except Exception as e:
             logger.error(f"Error mapping forecast: {str(e)}")
-            raise ValueError(f"Failed to map forecast: {str(e)}")
+            raise ValueError(f"Failed to map forecast: {str(e)}") from e
 
-    def map_hourly_forecast(self, openmeteo_data: Dict[str, Any]) -> Dict[str, Any]:
+    def map_hourly_forecast(self, openmeteo_data: dict[str, Any]) -> dict[str, Any]:
         """Map Open-Meteo hourly forecast data to NWS-compatible format.
 
         Args:
@@ -264,6 +275,7 @@ class OpenMeteoMapper:
 
         Returns:
             Dictionary in NWS hourly forecast format
+
         """
         try:
             hourly = openmeteo_data.get("hourly", {})
@@ -322,7 +334,7 @@ class OpenMeteoMapper:
 
             mapped_data = {
                 "properties": {
-                    "updated": datetime.now(timezone.utc).isoformat(),
+                    "updated": datetime.now(UTC).isoformat(),
                     "units": {
                         "temperature": (
                             "F"
@@ -336,7 +348,7 @@ class OpenMeteoMapper:
                         "precipitation": hourly_units.get("precipitation", "in"),
                     },
                     "forecastGenerator": "Open-Meteo API",
-                    "generatedAt": datetime.now(timezone.utc).isoformat(),
+                    "generatedAt": datetime.now(UTC).isoformat(),
                     "periods": periods,
                 }
             }
@@ -346,32 +358,30 @@ class OpenMeteoMapper:
 
         except Exception as e:
             logger.error(f"Error mapping hourly forecast: {str(e)}")
-            raise ValueError(f"Failed to map hourly forecast: {str(e)}")
+            raise ValueError(f"Failed to map hourly forecast: {str(e)}") from e
 
     def _get_temperature_unit_code(self, unit_str: str) -> str:
         """Convert temperature unit string to WMO unit code."""
         if "fahrenheit" in unit_str.lower() or "°f" in unit_str.lower():
             return "wmoUnit:degF"
-        else:
-            return "wmoUnit:degC"
+        return "wmoUnit:degC"
 
     def _get_wind_speed_unit_code(self, unit_str: str) -> str:
         """Convert wind speed unit string to WMO unit code."""
         unit_lower = unit_str.lower()
         if "mph" in unit_lower:
             return "wmoUnit:mi_h-1"
-        elif "kmh" in unit_lower or "km/h" in unit_lower:
+        if "kmh" in unit_lower or "km/h" in unit_lower:
             return "wmoUnit:km_h-1"
-        elif "m/s" in unit_lower or "ms" in unit_lower:
+        if "m/s" in unit_lower or "ms" in unit_lower:
             return "wmoUnit:m_s-1"
-        elif "kn" in unit_lower or "knot" in unit_lower:
+        if "kn" in unit_lower or "knot" in unit_lower:
             return "wmoUnit:kn"
-        else:
-            return "wmoUnit:m_s-1"  # Default
+        return "wmoUnit:m_s-1"  # Default
 
     def _calculate_dewpoint(
-        self, temperature: Optional[float], humidity: Optional[float]
-    ) -> Optional[float]:
+        self, temperature: float | None, humidity: float | None
+    ) -> float | None:
         """Calculate dewpoint from temperature and relative humidity."""
         if temperature is None or humidity is None:
             return None
@@ -392,29 +402,27 @@ class OpenMeteoMapper:
             # Convert back to Fahrenheit if original was Fahrenheit
             if temperature > 50:
                 return dewpoint_c * 9 / 5 + 32
-            else:
-                return dewpoint_c
+            return dewpoint_c
 
         except Exception:
             return None
 
-    def _cloud_cover_to_amount(self, cloud_cover: Optional[float]) -> str:
+    def _cloud_cover_to_amount(self, cloud_cover: float | None) -> str:
         """Convert cloud cover percentage to NWS cloud amount description."""
         if cloud_cover is None:
             return "UNK"
 
         if cloud_cover <= 12.5:
             return "CLR"  # Clear
-        elif cloud_cover <= 25:
+        if cloud_cover <= 25:
             return "FEW"  # Few
-        elif cloud_cover <= 50:
+        if cloud_cover <= 50:
             return "SCT"  # Scattered
-        elif cloud_cover <= 87.5:
+        if cloud_cover <= 87.5:
             return "BKN"  # Broken
-        else:
-            return "OVC"  # Overcast
+        return "OVC"  # Overcast
 
-    def _degrees_to_direction(self, degrees: Optional[float]) -> str:
+    def _degrees_to_direction(self, degrees: float | None) -> str:
         """Convert wind direction in degrees to cardinal direction."""
         if degrees is None:
             return "VAR"
@@ -447,7 +455,7 @@ class OpenMeteoMapper:
         return directions[index]
 
     def _create_detailed_forecast(
-        self, daily: Dict[str, Any], daily_units: Dict[str, Any], index: int, is_daytime: bool
+        self, daily: dict[str, Any], daily_units: dict[str, Any], index: int, is_daytime: bool
     ) -> str:
         """Create a detailed forecast description."""
         try:

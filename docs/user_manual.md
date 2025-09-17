@@ -61,7 +61,7 @@ AccessiWeather supports multiple weather data providers:
 - **Open-Meteo**: Free international weather service covering worldwide locations (no alerts)
 - **Automatic Selection**: Intelligently uses NWS for US locations and Open-Meteo for international locations (recommended)
 
-You can change your preferred data source in Settings → General → Weather Data Source.
+You can change your preferred data source in Settings → Data Sources → Weather Data Source.
 
 ### Location Management
 
@@ -162,28 +162,40 @@ When dynamic switching is enabled, the taskbar automatically shows contextually 
 
 ## Settings Configuration
 
-AccessiWeather provides extensive customization through a three-tab settings dialog:
+AccessiWeather provides extensive customization through a five-tab settings dialog:
 
 ### General Tab
-
-#### Weather Data Source
-- **National Weather Service**: US locations only, includes weather alerts
-- **Open-Meteo**: International locations, free service, no alerts
-- **Automatic**: Best of both - NWS for US, Open-Meteo for international (recommended)
-
-#### Update and Alert Settings
+Core application settings:
+- **Temperature Units**: Imperial, Metric, or Both
 - **Update Interval**: How often to refresh weather data (1-1440 minutes)
-- **Alert Radius**: Distance for monitoring weather alerts (5-100 miles)
-- **Precise Location Alerts**: County/township level vs. state-wide alerts
-- **Show Nationwide Location**: Display or hide the Nationwide weather view
-- **Auto-refresh National**: Automatically update national discussions
+- **Detailed Forecast**: Enable/disable detailed forecast information
+- **Alert Settings**: Configure weather alert preferences
 
-### Display Tab
+### Data Sources Tab
+Weather API configuration:
+- **Weather Data Source**:
+  - **National Weather Service**: US locations only, includes weather alerts
+  - **Open-Meteo**: International locations, free service, no alerts
+  - **Automatic**: Best of both - NWS for US, Open-Meteo for international (recommended)
+- **Visual Crossing API**: Setup and configuration for Visual Crossing weather service
 
-#### Measurement Units
-- **Imperial**: Fahrenheit temperatures, miles, inches
-- **Metric**: Celsius temperatures, kilometers, millimeters
-- **Both**: Display both imperial and metric values
+### Audio Tab
+Sound notification settings:
+- **Sound Enabled**: Enable/disable sound notifications
+- **Sound Pack Selection**: Choose from available sound packs
+- **Manage Sound Packs**: Add, remove, or configure sound packs
+
+### Updates Tab
+Update configuration:
+- **Auto-update**: Enable automatic update checking
+- **Channel Selection**: Choose Stable, Beta, or Development releases
+- **Check Interval**: How often to check for updates
+- **Manual Check**: Check for updates immediately
+
+### Advanced Tab
+Power user settings:
+- **Minimize to Tray**: Hide to system tray instead of closing
+- **Debug Mode**: Enable detailed logging for troubleshooting
 
 #### Taskbar Icon Customization
 - **Enable Taskbar Text**: Show weather information in the taskbar icon

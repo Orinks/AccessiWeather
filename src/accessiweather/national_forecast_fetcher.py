@@ -1,5 +1,8 @@
 """National forecast fetcher for AccessiWeather.
 
+DEPRECATED: This module is part of the legacy wxPython implementation and is no longer used.
+The Toga-based implementation handles national forecast data differently.
+
 This module provides a class for fetching national forecast data asynchronously.
 """
 
@@ -26,6 +29,7 @@ class NationalForecastFetcher:
 
         Args:
             service: The weather service to use for fetching data.
+
         """
         self.service = service
         self.thread = None
@@ -45,6 +49,7 @@ class NationalForecastFetcher:
             on_error: Callback function to call on error.
             force_refresh: Whether to force a refresh of the data.
             callback_timeout: Maximum time in seconds to wait for callbacks to complete.
+
         """
         logger.info("Starting national forecast fetch")
 

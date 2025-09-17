@@ -1,11 +1,11 @@
-"""Temperature utility functions for AccessiWeather.
+"""Temperature utility functions for AccessiWeather Simple.
 
-This module provides utility functions for temperature conversion and formatting.
+This module provides utility functions for temperature conversion and formatting,
+copied from the wx version for consistency.
 """
 
 import logging
 from enum import Enum
-from typing import Optional, Tuple, Union
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +34,7 @@ def celsius_to_fahrenheit(celsius: float) -> float:
 
     Returns:
         Temperature in Fahrenheit
+
     """
     return (celsius * 9 / 5) + 32
 
@@ -46,14 +47,15 @@ def fahrenheit_to_celsius(fahrenheit: float) -> float:
 
     Returns:
         Temperature in Celsius
+
     """
     return (fahrenheit - 32) * 5 / 9
 
 
 def format_temperature(
-    temperature: Optional[Union[int, float]],
+    temperature: int | float | None,
     unit: TemperatureUnit = TemperatureUnit.FAHRENHEIT,
-    temperature_c: Optional[Union[int, float]] = None,
+    temperature_c: int | float | None = None,
     precision: int = 1,
     smart_precision: bool = True,
 ) -> str:
@@ -68,6 +70,7 @@ def format_temperature(
 
     Returns:
         Formatted temperature string
+
     """
     if temperature is None and temperature_c is None:
         return "N/A"
@@ -93,15 +96,15 @@ def format_temperature(
     # Format based on user preference
     if unit == TemperatureUnit.FAHRENHEIT:
         return f"{temperature:.{f_precision}f}°{TEMP_UNIT_FAHRENHEIT}"
-    elif unit == TemperatureUnit.CELSIUS:
+    if unit == TemperatureUnit.CELSIUS:
         return f"{temperature_c:.{c_precision}f}°{TEMP_UNIT_CELSIUS}"
-    else:  # BOTH
-        return f"{temperature:.{f_precision}f}°{TEMP_UNIT_FAHRENHEIT} ({temperature_c:.{c_precision}f}°{TEMP_UNIT_CELSIUS})"
+    # BOTH
+    return f"{temperature:.{f_precision}f}°{TEMP_UNIT_FAHRENHEIT} ({temperature_c:.{c_precision}f}°{TEMP_UNIT_CELSIUS})"
 
 
 def get_temperature_values(
-    temperature: Optional[Union[int, float]], temperature_c: Optional[Union[int, float]] = None
-) -> Tuple[Optional[float], Optional[float]]:
+    temperature: int | float | None, temperature_c: int | float | None = None
+) -> tuple[float | None, float | None]:
     """Get both Fahrenheit and Celsius values from available temperature data.
 
     Args:
@@ -110,6 +113,7 @@ def get_temperature_values(
 
     Returns:
         Tuple of (fahrenheit, celsius) values
+
     """
     if temperature is None and temperature_c is None:
         return None, None

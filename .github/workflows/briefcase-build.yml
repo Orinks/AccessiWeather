@@ -1,0 +1,277 @@
+name: Build and Package with Briefcase
+
+on:
+  push:
+    branches: [ main, dev, feature/toga-migration ]  # Build on main, dev, and toga-migration branch pushes
+  workflow_dispatch:
+    inputs:
+      version_override:
+        description: 'Override version (optional)'
+        required: false
+        type: string
+      skip_cache:
+        description: 'Skip build cache'
+        required: false
+        type: boolean
+        default: false
+  workflow_run:
+    workflows: ["Continuous Integration"]
+    types:
+      - completed
+    branches: [ main, dev, feature/toga-migration ]  # Only trigger after CI on main, dev, and toga-migration branches
+
+permissions:
+  contents: read      # Read repository contents
+  actions: write      # Trigger repository dispatch events
+  packages: read      # Read packages (for caching)
+
+env:
+  # Build configuration
+  PYTHON_VERSION: "3.12"
+  FORCE_COLOR: "1"
+
+# Cancel active builds for a PR before starting another run
+concurrency:
+  group: ${{ github.workflow}}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Build Windows Application with Briefcase
+    runs-on: windows-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history for build metadata
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~\AppData\Local\pip\Cache
+        key: ${{ runner.os }}-build-pip-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-build-pip-
+
+    - name: Cache Briefcase build cache
+      uses: actions/cache@v3
+      if: ${{ !github.event.inputs.skip_cache }}
+      with:
+        path: |
+          build/
+          dist/
+          logs/
+        key: ${{ runner.os }}-briefcase-${{ hashFiles('src/**/*.py', 'pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-briefcase-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        pip install -e .[dev]
+        pip install briefcase
+
+    - name: Extract version
+      id: version
+      run: |
+        if [ -n "${{ github.event.inputs.version_override }}" ]; then
+          VERSION="${{ github.event.inputs.version_override }}"
+          # Remove 'v' prefix if present
+          VERSION=${VERSION#v}
+        else
+          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+        fi
+
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Building version: $VERSION"
+
+    - name: Update version in pyproject.toml
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+
+        # Update project version using sed (more reliable in CI)
+        sed -i "s/version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml
+
+        # Update briefcase version
+        sed -i "/\[tool\.briefcase\]/,/\[/ s/version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml
+
+        echo "Updated version to: $VERSION"
+
+    - name: Create Briefcase app scaffold
+      run: |
+        echo "Creating Briefcase app scaffold..."
+        python installer/make.py create --platform windows
+      env:
+        DISPLAY: ""
+        ACCESSIWEATHER_TEST_MODE: "1"
+
+    - name: Create portable ZIP version (even if build fails)
+      run: |
+        echo "Creating portable ZIP version..."
+        python installer/make.py zip --platform windows || true
+      env:
+        DISPLAY: ""
+        ACCESSIWEATHER_TEST_MODE: "1"
+
+    - name: Package Briefcase app (MSI Installer)
+      run: |
+        echo "Packaging Briefcase app as MSI installer..."
+        python installer/make.py package --platform windows
+      env:
+        DISPLAY: ""
+        ACCESSIWEATHER_TEST_MODE: "1"
+
+    - name: Verify soundpack cleanup
+      run: |
+        echo "Verifying only default soundpack is included..."
+        python verify_soundpack_cleanup.py
+
+    - name: Verify build outputs and generate checksums
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        echo "Verifying build outputs for version: $VERSION"
+
+        # Check for MSI installer
+        MSI_PATH=$(find dist -name "*.msi" | head -1)
+        ZIP_PATH="dist/AccessiWeather_Portable_v$VERSION.zip"
+
+        BUILD_SUCCESS=true
+
+        # Verify MSI installer
+        if [ -n "$MSI_PATH" ] && [ -f "$MSI_PATH" ]; then
+          MSI_SIZE=$(powershell -Command "(Get-Item '$MSI_PATH').Length")
+          MSI_SIZE_MB=$(echo "scale=2; $MSI_SIZE / 1024 / 1024" | bc -l)
+          MSI_HASH=$(powershell -Command "(Get-FileHash '$MSI_PATH' -Algorithm SHA256).Hash")
+          echo "✓ MSI Installer: $MSI_PATH ($MSI_SIZE_MB MB)"
+          echo "  SHA256: ${MSI_HASH:0:16}..."
+        else
+          echo "✗ Missing MSI installer"
+          echo "Contents of dist directory:"
+          find dist -type f | head -10
+          BUILD_SUCCESS=false
+        fi
+
+        # Verify portable ZIP
+        if [ -f "$ZIP_PATH" ]; then
+          ZIP_SIZE=$(powershell -Command "(Get-Item '$ZIP_PATH').Length")
+          ZIP_SIZE_MB=$(echo "scale=2; $ZIP_SIZE / 1024 / 1024" | bc -l)
+          ZIP_HASH=$(powershell -Command "(Get-FileHash '$ZIP_PATH' -Algorithm SHA256).Hash")
+          echo "✓ Portable ZIP: $ZIP_PATH ($ZIP_SIZE_MB MB)"
+          echo "  SHA256: ${ZIP_HASH:0:16}..."
+        else
+          echo "✗ Missing portable ZIP: $ZIP_PATH"
+          BUILD_SUCCESS=false
+        fi
+
+        if [ "$BUILD_SUCCESS" != "true" ]; then
+          echo "Build verification failed - missing required files"
+          exit 1
+        fi
+
+        # Generate checksums file
+        echo "AccessiWeather v$VERSION - Build Checksums" > dist/checksums.txt
+        echo "" >> dist/checksums.txt
+        if [ -n "$MSI_PATH" ]; then
+          echo "$MSI_HASH  $(basename "$MSI_PATH")" >> dist/checksums.txt
+        fi
+        echo "$ZIP_HASH  AccessiWeather_Portable_v$VERSION.zip" >> dist/checksums.txt
+        echo "✓ Checksums saved to dist/checksums.txt"
+
+    - name: Upload portable build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-portable-${{ steps.version.outputs.version }}
+        path: |
+          dist/AccessiWeather_Portable_v${{ steps.version.outputs.version }}.zip
+          dist/checksums.txt
+        retention-days: 30
+
+    - name: Upload MSI installer artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-installer-${{ steps.version.outputs.version }}
+        path: |
+          dist/*.msi
+        retention-days: 90
+
+    - name: Upload Briefcase logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: briefcase-build-logs
+        path: logs/*
+
+  validate:
+    name: Validate Build
+    runs-on: windows-latest
+    needs: build
+
+    steps:
+    - name: Download installer artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: windows-installer-${{ needs.build.outputs.version }}
+        path: artifacts/installer/
+
+    - name: Download portable artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: windows-portable-${{ needs.build.outputs.version }}
+        path: artifacts/portable/
+
+    - name: Validate build artifacts
+      run: |
+        VERSION="${{ needs.build.outputs.version }}"
+
+        echo "=== Build Validation ==="
+        echo "Version: $VERSION"
+
+        # Check installer artifacts
+        MSI_FILE=$(find artifacts/installer -name "*.msi" | head -1)
+
+        # Check portable artifacts
+        PORTABLE_FILE="artifacts/portable/AccessiWeather_Portable_v$VERSION.zip"
+        PORTABLE_CHECKSUMS="artifacts/portable/checksums.txt"
+
+        ALL_FILES_PRESENT=true
+
+        echo "Checking installer artifacts:"
+        if [ -n "$MSI_FILE" ] && [ -f "$MSI_FILE" ]; then
+          FILE_SIZE=$(powershell -Command "(Get-Item '$MSI_FILE').Length")
+          FILE_SIZE_MB=$(echo "scale=2; $FILE_SIZE / 1024 / 1024" | bc -l)
+          echo "✓ $(basename "$MSI_FILE") ($FILE_SIZE_MB MB)"
+        else
+          echo "✗ Missing: MSI installer"
+          ALL_FILES_PRESENT=false
+        fi
+
+        echo "Checking portable artifacts:"
+        if [ -f "$PORTABLE_FILE" ]; then
+          FILE_SIZE=$(powershell -Command "(Get-Item '$PORTABLE_FILE').Length")
+          FILE_SIZE_MB=$(echo "scale=2; $FILE_SIZE / 1024 / 1024" | bc -l)
+          echo "✓ AccessiWeather_Portable_v$VERSION.zip ($FILE_SIZE_MB MB)"
+        else
+          echo "✗ Missing: AccessiWeather_Portable_v$VERSION.zip"
+          ALL_FILES_PRESENT=false
+        fi
+
+        if [ "$ALL_FILES_PRESENT" = "true" ]; then
+          echo "✅ Build validation successful - separate artifacts created"
+        else
+          echo "❌ Build validation failed"
+          exit 1
+        fi

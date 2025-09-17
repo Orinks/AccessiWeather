@@ -1,4 +1,4 @@
-"""Configuration utilities for AccessiWeather
+"""Configuration utilities for AccessiWeather.
 
 This module provides utilities for handling configuration paths and migration.
 """
@@ -7,14 +7,14 @@ import logging
 import os
 import platform
 import sys
-from typing import Any, Dict, Optional
+from typing import Any
 
 # Get logger
 logger = logging.getLogger(__name__)
 
 
 def is_portable_mode() -> bool:
-    """Determine if the application is running in portable mode
+    """Determine if the application is running in portable mode.
 
     Portable mode is detected by checking if the executable is running from a
     non-standard location (not Program Files) and if the directory is writable.
@@ -24,6 +24,7 @@ def is_portable_mode() -> bool:
 
     Returns:
         True if running in portable mode, False otherwise
+
     """
     # Check for testing override first
     force_portable = os.environ.get("ACCESSIWEATHER_FORCE_PORTABLE", "").lower()
@@ -71,20 +72,21 @@ def is_portable_mode() -> bool:
         os.remove(test_file)
         logger.debug(f"Portable mode detected: directory {app_dir} is writable")
         return True
-    except (IOError, PermissionError) as e:
+    except (OSError, PermissionError) as e:
         # If we can't write to the directory, assume it's not portable
         logger.debug(f"Not in portable mode: directory {app_dir} is not writable ({e})")
         return False
 
 
-def get_config_dir(custom_dir: Optional[str] = None) -> str:
-    """Get the configuration directory path
+def get_config_dir(custom_dir: str | None = None) -> str:
+    """Get the configuration directory path.
 
     Args:
         custom_dir: Custom directory path (optional)
 
     Returns:
         Path to the configuration directory
+
     """
     if custom_dir is not None:
         logger.debug(f"Using custom config directory: {custom_dir}")
@@ -131,8 +133,8 @@ def get_config_dir(custom_dir: Optional[str] = None) -> str:
     return config_dir
 
 
-def ensure_config_defaults(config: Dict[str, Any]) -> Dict[str, Any]:
-    """Ensure configuration has all required default settings
+def ensure_config_defaults(config: dict[str, Any]) -> dict[str, Any]:
+    """Ensure configuration has all required default settings.
 
     This function adds missing default settings to the configuration
     without performing any migration logic.
@@ -142,6 +144,7 @@ def ensure_config_defaults(config: Dict[str, Any]) -> Dict[str, Any]:
 
     Returns:
         Dict: Configuration dictionary with defaults added
+
     """
     # Make a copy of the config to avoid modifying the original
     updated_config = config.copy()
@@ -154,10 +157,34 @@ def ensure_config_defaults(config: Dict[str, Any]) -> Dict[str, Any]:
 
     # Add data source setting if not present
     if "data_source" not in settings:
-        from accessiweather.gui.settings_dialog import DEFAULT_DATA_SOURCE
+        from accessiweather.constants import DEFAULT_DATA_SOURCE
 
         logger.info(f"Adding default data_source setting: {DEFAULT_DATA_SOURCE}")
         settings["data_source"] = DEFAULT_DATA_SOURCE
+
+    # Add update settings if not present
+    from accessiweather.constants import (
+        AUTO_UPDATE_CHECK_KEY,
+        DEFAULT_AUTO_UPDATE_CHECK,
+        DEFAULT_UPDATE_CHANNEL,
+        DEFAULT_UPDATE_CHECK_INTERVAL,
+        UPDATE_CHANNEL_KEY,
+        UPDATE_CHECK_INTERVAL_KEY,
+    )
+
+    if AUTO_UPDATE_CHECK_KEY not in settings:
+        logger.info(f"Adding default {AUTO_UPDATE_CHECK_KEY} setting: {DEFAULT_AUTO_UPDATE_CHECK}")
+        settings[AUTO_UPDATE_CHECK_KEY] = DEFAULT_AUTO_UPDATE_CHECK
+
+    if UPDATE_CHECK_INTERVAL_KEY not in settings:
+        logger.info(
+            f"Adding default {UPDATE_CHECK_INTERVAL_KEY} setting: {DEFAULT_UPDATE_CHECK_INTERVAL}"
+        )
+        settings[UPDATE_CHECK_INTERVAL_KEY] = DEFAULT_UPDATE_CHECK_INTERVAL
+
+    if UPDATE_CHANNEL_KEY not in settings:
+        logger.info(f"Adding default {UPDATE_CHANNEL_KEY} setting: {DEFAULT_UPDATE_CHANNEL}")
+        settings[UPDATE_CHANNEL_KEY] = DEFAULT_UPDATE_CHANNEL
 
     # Ensure api_keys section exists
     if "api_keys" not in updated_config:

@@ -5,7 +5,7 @@ templates based on weather conditions, alerts, and forecast data.
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from accessiweather.weather_condition_analyzer import WeatherConditionAnalyzer
 
@@ -27,11 +27,12 @@ class DynamicFormatManager:
         "forecast": "{location} {condition} → {forecast_condition}",
     }
 
-    def __init__(self, custom_templates: Optional[Dict[str, str]] = None):
+    def __init__(self, custom_templates: dict[str, str] | None = None):
         """Initialize the dynamic format manager.
 
         Args:
             custom_templates: Optional dictionary of custom format templates
+
         """
         self.analyzer = WeatherConditionAnalyzer()
         self.templates = self.DEFAULT_TEMPLATES.copy()
@@ -43,15 +44,15 @@ class DynamicFormatManager:
         # State management
         self.current_template_name = "default"
         self.current_format_string = self.templates["default"]
-        self.last_analysis: Optional[Dict[str, Any]] = None
+        self.last_analysis: dict[str, Any] | None = None
         self.update_count = 0
 
     def get_dynamic_format_string(
         self,
-        weather_data: Dict[str, Any],
-        alerts_data: Optional[list] = None,
-        forecast_data: Optional[Dict[str, Any]] = None,
-        user_format: Optional[str] = None,
+        weather_data: dict[str, Any],
+        alerts_data: list | None = None,
+        forecast_data: dict[str, Any] | None = None,
+        user_format: str | None = None,
     ) -> str:
         """Get the appropriate format string based on current conditions.
 
@@ -63,6 +64,7 @@ class DynamicFormatManager:
 
         Returns:
             Format string to use for the taskbar icon tooltip
+
         """
         try:
             # Analyze current weather conditions
@@ -86,7 +88,7 @@ class DynamicFormatManager:
             # Fall back to user format or default
             return user_format or self.templates["default"]
 
-    def _should_update_format(self, analysis: Dict[str, Any]) -> bool:
+    def _should_update_format(self, analysis: dict[str, Any]) -> bool:
         """Determine if the format string should be updated.
 
         Args:
@@ -94,6 +96,7 @@ class DynamicFormatManager:
 
         Returns:
             True if format should be updated, False otherwise
+
         """
         # Always update if this is the first analysis
         if self.last_analysis is None:
@@ -125,16 +128,13 @@ class DynamicFormatManager:
         current_priority = analysis.get("priority_score", 0)
         last_priority = self.last_analysis.get("priority_score", 0)
 
-        if abs(current_priority - last_priority) >= 20:
-            return True
-
-        return False
+        return abs(current_priority - last_priority) >= 20
 
     def _update_format_string(
         self,
-        analysis: Dict[str, Any],
-        user_format: Optional[str] = None,
-        forecast_data: Optional[Dict[str, Any]] = None,
+        analysis: dict[str, Any],
+        user_format: str | None = None,
+        forecast_data: dict[str, Any] | None = None,
     ):
         """Update the current format string based on analysis.
 
@@ -142,6 +142,7 @@ class DynamicFormatManager:
             analysis: Weather condition analysis
             user_format: Optional user-defined base format
             forecast_data: Optional forecast data for anticipatory updates
+
         """
         template_name = analysis.get("recommended_template", "default")
 
@@ -165,7 +166,7 @@ class DynamicFormatManager:
         self.current_format_string = format_string
 
     def _should_use_forecast_template(
-        self, analysis: Dict[str, Any], forecast_data: Dict[str, Any]
+        self, analysis: dict[str, Any], forecast_data: dict[str, Any]
     ) -> bool:
         """Determine if forecast template should be used.
 
@@ -175,6 +176,7 @@ class DynamicFormatManager:
 
         Returns:
             True if forecast template should be used
+
         """
         # Only use forecast template for normal conditions
         severity = analysis.get("severity")
@@ -201,7 +203,7 @@ class DynamicFormatManager:
             logger.debug(f"Error checking forecast template: {e}")
             return False
 
-    def _customize_alert_format(self, format_string: str, analysis: Dict[str, Any]) -> str:
+    def _customize_alert_format(self, format_string: str, analysis: dict[str, Any]) -> str:
         """Customize alert format string based on alert details.
 
         Args:
@@ -210,6 +212,7 @@ class DynamicFormatManager:
 
         Returns:
             Customized format string
+
         """
         try:
             primary_alert = analysis.get("primary_alert")
@@ -218,10 +221,13 @@ class DynamicFormatManager:
 
             # Customize based on alert severity
             severity = analysis.get("alert_severity")
-            if severity and severity.name in ["EXTREME", "SEVERE"]:
+            if (
+                severity
+                and severity.name in ["EXTREME", "SEVERE"]
+                and not format_string.startswith("⚠️")
+            ):
                 # Add warning emoji for severe alerts
-                if not format_string.startswith("⚠️"):
-                    format_string = f"⚠️ {format_string}"
+                format_string = f"⚠️ {format_string}"
 
             return format_string
 
@@ -235,6 +241,7 @@ class DynamicFormatManager:
         Args:
             name: Template name
             format_string: Format string template
+
         """
         self.templates[name] = format_string
         logger.debug(f"Added custom template '{name}': {format_string}")
@@ -247,6 +254,7 @@ class DynamicFormatManager:
 
         Returns:
             True if template was removed, False if not found
+
         """
         if name in self.DEFAULT_TEMPLATES:
             logger.warning(f"Cannot remove default template: {name}")
@@ -259,11 +267,12 @@ class DynamicFormatManager:
 
         return False
 
-    def get_available_templates(self) -> Dict[str, str]:
+    def get_available_templates(self) -> dict[str, str]:
         """Get all available format templates.
 
         Returns:
             Dictionary of template names and format strings
+
         """
         return self.templates.copy()
 
@@ -275,11 +284,12 @@ class DynamicFormatManager:
         self.update_count = 0
         logger.debug("Reset to default format template")
 
-    def get_current_state(self) -> Dict[str, Any]:
+    def get_current_state(self) -> dict[str, Any]:
         """Get current state information.
 
         Returns:
             Dictionary with current state information
+
         """
         return {
             "current_template_name": self.current_template_name,
@@ -297,6 +307,7 @@ class DynamicFormatManager:
 
         Returns:
             True if template was set, False if template not found
+
         """
         if template_name not in self.templates:
             logger.warning(f"Template not found: {template_name}")

@@ -58,40 +58,52 @@ class TestUnitUtils:
     def test_format_pressure_fahrenheit(self):
         """Test format_pressure function with Fahrenheit preference."""
         # Test with Fahrenheit preference
-        assert format_pressure(30.1, TemperatureUnit.FAHRENHEIT) == "30.10 inHg"
-        assert format_pressure(29.92, TemperatureUnit.FAHRENHEIT) == "29.92 inHg"
-        assert format_pressure(None, TemperatureUnit.FAHRENHEIT) == "N/A"
+        assert format_pressure(30.1, TemperatureUnit.FAHRENHEIT, precision=0) == "30 inHg"
+        assert format_pressure(29.92, TemperatureUnit.FAHRENHEIT, precision=0) == "30 inHg"
+        assert format_pressure(None, TemperatureUnit.FAHRENHEIT, precision=0) == "N/A"
 
         # Test with Fahrenheit preference but providing mb value
-        assert format_pressure(None, TemperatureUnit.FAHRENHEIT, pressure_mb=1019) == "30.09 inHg"
-        assert format_pressure(None, TemperatureUnit.FAHRENHEIT, pressure_mb=1013) == "29.91 inHg"
+        assert (
+            format_pressure(None, TemperatureUnit.FAHRENHEIT, pressure_mb=1019, precision=0)
+            == "30 inHg"
+        )
+        assert (
+            format_pressure(None, TemperatureUnit.FAHRENHEIT, pressure_mb=1013, precision=0)
+            == "30 inHg"
+        )
 
     def test_format_pressure_celsius(self):
         """Test format_pressure function with Celsius preference."""
         # Test with Celsius preference
-        assert format_pressure(30.1, TemperatureUnit.CELSIUS) == "1019.30 mb"
-        assert format_pressure(29.92, TemperatureUnit.CELSIUS) == "1013.21 mb"
-        assert format_pressure(None, TemperatureUnit.CELSIUS) == "N/A"
+        assert format_pressure(30.1, TemperatureUnit.CELSIUS, precision=0) == "1019 hPa"
+        assert format_pressure(29.92, TemperatureUnit.CELSIUS, precision=0) == "1013 hPa"
+        assert format_pressure(None, TemperatureUnit.CELSIUS, precision=0) == "N/A"
 
         # Test with Celsius preference but providing mb value
-        assert format_pressure(None, TemperatureUnit.CELSIUS, pressure_mb=1019) == "1019.00 mb"
-        assert format_pressure(None, TemperatureUnit.CELSIUS, pressure_mb=1013) == "1013.00 mb"
+        assert (
+            format_pressure(None, TemperatureUnit.CELSIUS, pressure_mb=1019, precision=0)
+            == "1019 hPa"
+        )
+        assert (
+            format_pressure(None, TemperatureUnit.CELSIUS, pressure_mb=1013, precision=0)
+            == "1013 hPa"
+        )
 
     def test_format_pressure_both(self):
         """Test format_pressure function with Both preference."""
         # Test with Both preference
-        assert format_pressure(30.1, TemperatureUnit.BOTH) == "30.10 inHg (1019.30 mb)"
-        assert format_pressure(29.92, TemperatureUnit.BOTH) == "29.92 inHg (1013.21 mb)"
-        assert format_pressure(None, TemperatureUnit.BOTH) == "N/A"
+        assert format_pressure(30.1, TemperatureUnit.BOTH, precision=0) == "30 inHg (1019 hPa)"
+        assert format_pressure(29.92, TemperatureUnit.BOTH, precision=0) == "30 inHg (1013 hPa)"
+        assert format_pressure(None, TemperatureUnit.BOTH, precision=0) == "N/A"
 
         # Test with Both preference but providing mb value
         assert (
-            format_pressure(None, TemperatureUnit.BOTH, pressure_mb=1019)
-            == "30.09 inHg (1019.00 mb)"
+            format_pressure(None, TemperatureUnit.BOTH, pressure_mb=1019, precision=0)
+            == "30 inHg (1019 hPa)"
         )
         assert (
-            format_pressure(None, TemperatureUnit.BOTH, pressure_mb=1013)
-            == "29.91 inHg (1013.00 mb)"
+            format_pressure(None, TemperatureUnit.BOTH, pressure_mb=1013, precision=0)
+            == "30 inHg (1013 hPa)"
         )
 
     def test_format_visibility_fahrenheit(self):
@@ -139,8 +151,14 @@ class TestUnitUtils:
         assert format_precipitation(None, TemperatureUnit.FAHRENHEIT) == "N/A"
 
         # Test with Fahrenheit preference but providing mm value
-        assert format_precipitation(None, TemperatureUnit.FAHRENHEIT, precip_mm=12.7) == "0.50 in"
-        assert format_precipitation(None, TemperatureUnit.FAHRENHEIT, precip_mm=31.75) == "1.25 in"
+        assert (
+            format_precipitation(None, TemperatureUnit.FAHRENHEIT, precipitation_mm=12.7)
+            == "0.50 in"
+        )
+        assert (
+            format_precipitation(None, TemperatureUnit.FAHRENHEIT, precipitation_mm=31.75)
+            == "1.25 in"
+        )
 
     def test_format_precipitation_celsius(self):
         """Test format_precipitation function with Celsius preference."""
@@ -150,8 +168,13 @@ class TestUnitUtils:
         assert format_precipitation(None, TemperatureUnit.CELSIUS) == "N/A"
 
         # Test with Celsius preference but providing mm value
-        assert format_precipitation(None, TemperatureUnit.CELSIUS, precip_mm=12.7) == "12.70 mm"
-        assert format_precipitation(None, TemperatureUnit.CELSIUS, precip_mm=31.75) == "31.75 mm"
+        assert (
+            format_precipitation(None, TemperatureUnit.CELSIUS, precipitation_mm=12.7) == "12.70 mm"
+        )
+        assert (
+            format_precipitation(None, TemperatureUnit.CELSIUS, precipitation_mm=31.75)
+            == "31.75 mm"
+        )
 
     def test_format_precipitation_both(self):
         """Test format_precipitation function with Both preference."""
@@ -162,9 +185,10 @@ class TestUnitUtils:
 
         # Test with Both preference but providing mm value
         assert (
-            format_precipitation(None, TemperatureUnit.BOTH, precip_mm=12.7) == "0.50 in (12.70 mm)"
+            format_precipitation(None, TemperatureUnit.BOTH, precipitation_mm=12.7)
+            == "0.50 in (12.70 mm)"
         )
         assert (
-            format_precipitation(None, TemperatureUnit.BOTH, precip_mm=31.75)
+            format_precipitation(None, TemperatureUnit.BOTH, precipitation_mm=31.75)
             == "1.25 in (31.75 mm)"
         )

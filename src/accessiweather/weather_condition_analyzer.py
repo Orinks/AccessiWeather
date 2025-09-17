@@ -6,7 +6,7 @@ appropriate format string templates for the taskbar icon tooltip.
 
 import logging
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -101,11 +101,10 @@ class WeatherConditionAnalyzer:
 
     def __init__(self):
         """Initialize the weather condition analyzer."""
-        pass
 
     def analyze_weather_conditions(
-        self, weather_data: Dict[str, Any], alerts_data: Optional[List[Dict[str, Any]]] = None
-    ) -> Dict[str, Any]:
+        self, weather_data: dict[str, Any], alerts_data: list[dict[str, Any]] | None = None
+    ) -> dict[str, Any]:
         """Analyze weather conditions and return analysis results.
 
         Args:
@@ -114,6 +113,7 @@ class WeatherConditionAnalyzer:
 
         Returns:
             Dictionary containing analysis results with recommended format template
+
         """
         try:
             analysis = {
@@ -137,7 +137,7 @@ class WeatherConditionAnalyzer:
 
             # Analyze weather code
             weather_code = weather_data.get("weather_code", 0)
-            if isinstance(weather_code, (list, tuple)) and weather_code:
+            if isinstance(weather_code, list | tuple) and weather_code:
                 weather_code = weather_code[0]
 
             category, severity = self.WEATHER_CODE_MAPPING.get(
@@ -176,7 +176,7 @@ class WeatherConditionAnalyzer:
                 "error": str(e),
             }
 
-    def _analyze_alerts(self, alerts_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _analyze_alerts(self, alerts_data: list[dict[str, Any]]) -> dict[str, Any]:
         """Analyze weather alerts and return alert-specific analysis.
 
         Args:
@@ -184,6 +184,7 @@ class WeatherConditionAnalyzer:
 
         Returns:
             Dictionary with alert analysis results
+
         """
         if not alerts_data:
             return {"has_alerts": False, "alert_severity": None}
@@ -207,7 +208,7 @@ class WeatherConditionAnalyzer:
             "recommended_template": "alert",
         }
 
-    def _analyze_temperature(self, weather_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_temperature(self, weather_data: dict[str, Any]) -> dict[str, Any]:
         """Analyze temperature conditions.
 
         Args:
@@ -215,6 +216,7 @@ class WeatherConditionAnalyzer:
 
         Returns:
             Dictionary with temperature analysis
+
         """
         temp = weather_data.get("temp", weather_data.get("temp_f"))
         if temp is None:
@@ -222,20 +224,20 @@ class WeatherConditionAnalyzer:
 
         if temp <= self.TEMPERATURE_THRESHOLDS["extreme_cold"]:
             return {"temperature_extreme": "extreme_cold"}
-        elif temp <= self.TEMPERATURE_THRESHOLDS["very_cold"]:
+        if temp <= self.TEMPERATURE_THRESHOLDS["very_cold"]:
             return {"temperature_extreme": "very_cold"}
-        elif temp <= self.TEMPERATURE_THRESHOLDS["cold"]:
+        if temp <= self.TEMPERATURE_THRESHOLDS["cold"]:
             return {"temperature_extreme": "cold"}
-        elif temp >= self.TEMPERATURE_THRESHOLDS["extreme_hot"]:
+        if temp >= self.TEMPERATURE_THRESHOLDS["extreme_hot"]:
             return {"temperature_extreme": "extreme_hot"}
-        elif temp >= self.TEMPERATURE_THRESHOLDS["very_hot"]:
+        if temp >= self.TEMPERATURE_THRESHOLDS["very_hot"]:
             return {"temperature_extreme": "very_hot"}
-        elif temp >= self.TEMPERATURE_THRESHOLDS["hot"]:
+        if temp >= self.TEMPERATURE_THRESHOLDS["hot"]:
             return {"temperature_extreme": "hot"}
 
         return {"temperature_extreme": None}
 
-    def _analyze_wind(self, weather_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_wind(self, weather_data: dict[str, Any]) -> dict[str, Any]:
         """Analyze wind conditions.
 
         Args:
@@ -243,6 +245,7 @@ class WeatherConditionAnalyzer:
 
         Returns:
             Dictionary with wind analysis
+
         """
         wind_speed = weather_data.get("wind_speed")
         if wind_speed is None:
@@ -250,13 +253,13 @@ class WeatherConditionAnalyzer:
 
         if wind_speed >= self.WIND_SPEED_THRESHOLDS["extreme"]:
             return {"wind_condition": "extreme"}
-        elif wind_speed >= self.WIND_SPEED_THRESHOLDS["very_strong"]:
+        if wind_speed >= self.WIND_SPEED_THRESHOLDS["very_strong"]:
             return {"wind_condition": "very_strong"}
-        elif wind_speed >= self.WIND_SPEED_THRESHOLDS["strong"]:
+        if wind_speed >= self.WIND_SPEED_THRESHOLDS["strong"]:
             return {"wind_condition": "strong"}
-        elif wind_speed >= self.WIND_SPEED_THRESHOLDS["moderate"]:
+        if wind_speed >= self.WIND_SPEED_THRESHOLDS["moderate"]:
             return {"wind_condition": "moderate"}
-        elif wind_speed >= self.WIND_SPEED_THRESHOLDS["light"]:
+        if wind_speed >= self.WIND_SPEED_THRESHOLDS["light"]:
             return {"wind_condition": "light"}
 
         return {"wind_condition": "calm"}
@@ -269,6 +272,7 @@ class WeatherConditionAnalyzer:
 
         Returns:
             WeatherSeverity enum value
+
         """
         severity_mapping = {
             "Extreme": WeatherSeverity.EXTREME,
@@ -278,7 +282,7 @@ class WeatherConditionAnalyzer:
         }
         return severity_mapping.get(severity_str, WeatherSeverity.NORMAL)
 
-    def _calculate_priority_score(self, analysis: Dict[str, Any]) -> int:
+    def _calculate_priority_score(self, analysis: dict[str, Any]) -> int:
         """Calculate priority score for condition analysis.
 
         Args:
@@ -286,6 +290,7 @@ class WeatherConditionAnalyzer:
 
         Returns:
             Priority score (higher = more important)
+
         """
         score = 0
 
@@ -314,7 +319,7 @@ class WeatherConditionAnalyzer:
 
         return score
 
-    def _determine_template(self, analysis: Dict[str, Any]) -> str:
+    def _determine_template(self, analysis: dict[str, Any]) -> str:
         """Determine the recommended format template based on analysis.
 
         Args:
@@ -322,6 +327,7 @@ class WeatherConditionAnalyzer:
 
         Returns:
             Template name string
+
         """
         # Alert template has highest priority
         if analysis.get("has_alerts"):

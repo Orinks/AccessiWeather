@@ -1,6 +1,6 @@
-# AccessiWeather (v0.9.3)
+# AccessiWeather (v0.9.4-dev)
 
-A desktop weather application with robust accessibility features and international weather support. Built using wxPython with a focus on screen reader compatibility and keyboard navigation.
+A desktop weather application with robust accessibility features and international weather support. Built using the BeeWare/Toga framework with a focus on screen reader compatibility and keyboard navigation.
 
 ## Features
 
@@ -142,9 +142,9 @@ AccessiWeather includes a PowerShell script to build Windows binaries and instal
 ## Requirements
 
 - **Python 3.7+** (Python 3.11+ recommended for best performance)
-- **wxPython 4.2.2+** (automatically installed with pip)
+- **Toga 0.5.1+** (BeeWare GUI framework, automatically installed with pip)
 - **Internet connection** for weather data access
-- **Windows 10+** (primary platform), Linux support experimental
+- **Windows 10+** (primary platform), Linux and macOS support available
 
 ## Weather Data Sources
 
@@ -218,6 +218,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - **National Weather Service**: For providing free, reliable weather data
 - **Open-Meteo**: For international weather data coverage
-- **wxPython Community**: For the accessible GUI framework
+- **BeeWare/Toga Community**: For the cross-platform GUI framework
 - **Accessibility Community**: For testing and feedback on screen reader compatibility
 Test auto-trigger: Sat, Jun  7, 2025  1:42:50 PM

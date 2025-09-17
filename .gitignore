@@ -44,7 +44,7 @@ ENV/
 venv.bak/
 env.bak/
 
-beeware-venv/
+.make-venv/
 
 # IDE specific files
 .idea/
@@ -60,6 +60,9 @@ beeware-venv/
 dmypy.json
 .pyre/
 .pytype/
+
+# Ruff cache
+.ruff_cache/
 
 # Tool-specific files (Aider, Roo, act, etc.)
 .aider.chat.history.md
@@ -89,9 +92,21 @@ logs/
 # IMPORTANT: Ensure config.sample.json or similar is checked in
 config.json
 alert_state.json
+update_state.json
 secrets.yaml
 *.env
 .*_env
+
+# AccessiBotApp configuration
+AccessiBotApp.txt
+AccessiBotApp Configuration.txt
+
+# GitHub App environment setup scripts (contain secrets)
+set_github_env.bat
+set_github_env.sh
+
+# Build-time credential embedding backups
+src/accessiweather/github_credentials.py.backup
 
 # API-related files
 *_swagger.json
@@ -133,8 +148,6 @@ scripts/prd.txt
 scripts/PRD*.txt
 scripts/example_prd.txt
 scripts/task-complexity-report.json
-tasks/
-tasks.json
 tasks.json.bak
 tasks/*.txt
 .cursor/rules/taskmaster.mdc
@@ -163,4 +176,88 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 dev-debug.log
+
 # Task files
+# tasks.json
+# tasks/
+
+# Testing and development files (root directory only, not tests/ directory)
+/test_*.py
+/debug_*.py
+/run_*.py
+/simple_test.py
+/validate_*.py
+/examine_*.py
+
+# Analysis and temporary data files
+*_analysis.json
+*_alert_analysis.json
+visual_crossing_alert_analysis.json
+commit_message.txt
+prd.txt
+enhanced_release_notes.md
+release_notes.md
+
+# Soundpack testing and creation files
+*.zip
+*_pack.zip
+*_sounds_pack.zip
+nature_sounds_pack.zip
+test_soundpack.zip
+
+# Temporary backup directories
+temp_backup/
+backup_*/
+
+# Screen reader and accessibility test logs
+screen_reader_test.log
+accessibility_test.log
+
+# Briefcase logs (already covered by logs/ but being specific)
+logs/briefcase.*.log
+
+# Test configuration directories
+test_config/
+
+# Eleven Labs SFX generated files
+*.mp3
+generated_sounds/
+sfx_output/
+temp_sounds/
+test_sounds/
+
+# Exclude generated audio files but keep soundpack audio files
+# (soundpack .wav files are intentionally tracked)
+/generated_*.wav
+/temp_*.wav
+/test_*.wav
+
+# Development markdown files (project-specific)
+TESTING_*.md
+*_SOLUTION.md
+BETA_RELEASE.md
+AGENTS.md
+CLAUDE.md
+knowledge.md
+RELEASE_README.md
+
+# PyInstaller spec files (project-specific)
+AccessiWeather.spec
+
+# TUF (The Update Framework) repository files
+# SECURITY: Never commit private keys or sensitive repository state
+tuf_repo/keystore/
+tuf_repo/repository/metadata/
+tuf_repo/.tufup-repo-config
+tuf_repo/repository/targets/
+
+# Private release documentation (contains sensitive deployment info)
+RELEASE_PROCESS.md
+
+
+# Legacy temporary wx repo directory (do not track)
+AccessiWeather-wx-legacy-tmp/
+
+
+# External soundpacks repository (do not track)
+accessiweather-soundpacks/

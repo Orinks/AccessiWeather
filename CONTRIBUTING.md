@@ -64,7 +64,7 @@ All UI components must be accessible to screen readers. Before submitting a pull
 ## Style Guidelines
 
 - Follow PEP 8 for Python code style with a 100 character line length
-- Use Black for code formatting and isort for import sorting
+- Use ruff for code formatting, linting, and import sorting
 - Run mypy for type checking
 - Include docstrings for all modules, classes, and functions
 - Use type hints where appropriate
@@ -72,9 +72,8 @@ All UI components must be accessible to screen readers. Before submitting a pull
 
 You can check your code with:
 ```bash
-python -m black src/accessiweather tests
-python -m isort src/accessiweather tests
-python -m flake8 src/accessiweather tests
+ruff check src/accessiweather tests
+ruff format src/accessiweather tests
 python -m mypy src/accessiweather
 ```
 
