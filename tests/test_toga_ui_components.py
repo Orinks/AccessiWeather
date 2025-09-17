@@ -732,3 +732,284 @@ class TestUIComponentInteraction:
         # Simulate scroll event
         scroll_widget.on_scroll(0, 100)
         scroll_widget.on_scroll.assert_called_once_with(0, 100)
+
+
+@pytest.mark.asyncio
+async def test_settings_dialog_reset_to_defaults_resets_config(tmp_path):
+    """SettingsDialog: reset-to-defaults should restore ConfigManager settings to defaults.
+
+    This verifies the Advanced tab action works via the handler without needing full UI.
+    """
+    import asyncio
+    from unittest.mock import AsyncMock, MagicMock
+
+    from accessiweather.config import ConfigManager
+    from accessiweather.dialogs.settings_dialog import SettingsDialog
+
+    # Mock app with required properties
+    app = MagicMock()
+    app.paths = MagicMock()
+    app.paths.config = tmp_path
+    app.loop = MagicMock()
+    app.loop.create_future.return_value = asyncio.Future()
+    app.main_window = MagicMock()
+    app.main_window.error_dialog = AsyncMock()
+    app.main_window.info_dialog = AsyncMock()
+
+    # Real ConfigManager with temp config dir
+    config_manager = ConfigManager(app)
+
+    # Set some non-default settings and persist them
+    assert (
+        config_manager.update_settings(
+            temperature_unit="f",
+            update_interval_minutes=42,
+            auto_update_enabled=False,
+            data_source="nws",
+            debug_mode=True,
+            sound_enabled=False,
+        )
+        is True
+    )
+
+    # Initialize SettingsDialog without creating a real window
+    dlg = SettingsDialog(app, config_manager)
+    dlg.current_settings = config_manager.get_settings()
+
+    # Provide a lightweight status label stub to observe feedback text
+    class _Stub:
+        def __init__(self):
+            self.text = ""
+
+    dlg.update_status_label = _Stub()
+
+    # Invoke the reset handler
+    await dlg._on_reset_to_defaults(None)
+
+    # Verify config has been reset to defaults
+    s = config_manager.get_settings()
+    assert s.temperature_unit == "both"
+    assert s.update_interval_minutes == 10
+    assert s.auto_update_enabled is True
+    assert s.data_source == "auto"
+    assert s.debug_mode is False
+    assert s.sound_enabled is True
+
+    # Verify user-facing confirmation text was set
+    assert dlg.update_status_label.text == "Settings were reset to defaults"
+
+    # Verify confirmation dialog was shown
+    app.main_window.info_dialog.assert_called_once_with(
+        "Settings Reset", "All settings were reset to defaults."
+    )
+
+
+def test_settings_dialog_has_full_reset_button(tmp_path):
+    """SettingsDialog UI should include the Full Data Reset button on Advanced tab."""
+    from unittest.mock import MagicMock
+
+    from accessiweather.config import ConfigManager
+    from accessiweather.dialogs.settings_dialog import SettingsDialog
+
+    app = MagicMock()
+    app.paths = MagicMock()
+    app.paths.config = tmp_path
+    cm = ConfigManager(app)
+
+    import toga
+
+    dlg = SettingsDialog(app, cm)
+    dlg.current_settings = cm.get_settings()
+    dlg.option_container = toga.OptionContainer()
+    dlg._create_advanced_tab()
+
+    assert dlg.full_reset_button.id == "full_reset_button"
+    assert dlg.full_reset_button.text.startswith("Reset all app data")
+
+
+@pytest.mark.asyncio
+async def test_settings_dialog_full_data_reset_clears_everything(tmp_path):
+    """Full data reset should delete config, caches, alert state, and restore defaults."""
+    import asyncio
+    import json
+    from unittest.mock import AsyncMock, MagicMock
+
+    from accessiweather.config import ConfigManager
+    from accessiweather.dialogs.settings_dialog import SettingsDialog
+
+    # Mock app
+    app = MagicMock()
+    app.paths = MagicMock()
+    app.paths.config = tmp_path
+    app.loop = MagicMock()
+    app.loop.create_future.return_value = asyncio.Future()
+    app.main_window = MagicMock()
+    app.main_window.error_dialog = AsyncMock()
+    app.main_window.info_dialog = AsyncMock()
+
+    cm = ConfigManager(app)
+
+    # Non-default settings and a location
+    assert (
+        cm.update_settings(
+            temperature_unit="f",
+            update_interval_minutes=42,
+            auto_update_enabled=False,
+            data_source="nws",
+            debug_mode=True,
+            sound_enabled=False,
+        )
+        is True
+    )
+    assert cm.add_location("Test City", 1.0, 2.0) is True
+    assert cm.set_current_location("Test City") is True
+
+    # Create additional persisted data in config dir
+    state_file = cm.config_dir / "alert_state.json"
+    state_file.write_text(json.dumps({"alert_states": []}), encoding="utf-8")
+    cache_file = cm.config_dir / "github_releases_cache.json"
+    cache_file.write_text("{}", encoding="utf-8")
+    settings_file = cm.config_dir / "update_settings.json"
+    settings_file.write_text("{}", encoding="utf-8")
+    updates_dir = cm.config_dir / "updates"
+    updates_dir.mkdir(parents=True, exist_ok=True)
+    (updates_dir / "dummy.bin").write_bytes(b"\x00\x01")
+
+    # Execute full reset via dialog handler
+    dlg = SettingsDialog(app, cm)
+    dlg.current_settings = cm.get_settings()
+    await dlg._on_full_reset(None)
+
+    # Verify defaults restored
+    s = cm.get_settings()
+    assert s.temperature_unit == "both"
+    assert s.update_interval_minutes == 10
+    assert s.auto_update_enabled is True
+    assert s.data_source == "auto"
+    assert s.debug_mode is False
+    assert s.sound_enabled is True
+    assert cm.get_all_locations() == []
+    assert cm.get_current_location() is None
+
+    # Verify auxiliary data removed
+    assert not state_file.exists()
+    assert not cache_file.exists()
+    assert not settings_file.exists()
+    assert not updates_dir.exists()
+
+    # Confirmation dialog shown
+    app.main_window.info_dialog.assert_called_once_with(
+        "Data Reset", "All application data were reset."
+    )
+
+
+def test_settings_dialog_has_reset_defaults_button(tmp_path):
+    """SettingsDialog UI should include the Reset-to-Defaults button on Advanced tab."""
+    from unittest.mock import MagicMock
+
+    from accessiweather.config import ConfigManager
+    from accessiweather.dialogs.settings_dialog import SettingsDialog
+
+    # Minimal app mock
+    app = MagicMock()
+    app.paths = MagicMock()
+    app.paths.config = tmp_path
+
+    cm = ConfigManager(app)
+
+    dlg = SettingsDialog(app, cm)
+    dlg.current_settings = cm.get_settings()
+
+    # Build just the Advanced tab in isolation to avoid needing a window
+    import toga
+
+    dlg.option_container = toga.OptionContainer()
+    dlg._create_advanced_tab()
+
+    # Verify the button exists and is wired with the expected id/text
+    assert getattr(dlg, "reset_defaults_button", None) is not None
+    assert dlg.reset_defaults_button.id == "reset_defaults_button"
+    assert dlg.reset_defaults_button.text == "Reset all settings to defaults"
+
+    # Sanity: Advanced tab container exists and contains the button
+    assert getattr(dlg, "advanced_tab", None) is not None
+
+
+def test_settings_dialog_has_open_config_dir_button(tmp_path):
+    """Advanced tab should include a button to open the config directory."""
+    from unittest.mock import MagicMock
+
+    import toga
+
+    from accessiweather.config import ConfigManager
+    from accessiweather.dialogs.settings_dialog import SettingsDialog
+
+    app = MagicMock()
+    app.paths = MagicMock()
+    app.paths.config = tmp_path
+    cm = ConfigManager(app)
+
+    dlg = SettingsDialog(app, cm)
+    dlg.current_settings = cm.get_settings()
+    dlg.option_container = toga.OptionContainer()
+    dlg._create_advanced_tab()
+
+    assert dlg.open_config_dir_button.id == "open_config_dir_button"
+    assert dlg.open_config_dir_button.text.startswith("Open config directory")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "platform_name,expect_startfile,expect_cmd",
+    [
+        ("Windows", True, None),
+        ("Darwin", False, "open"),
+        ("Linux", False, "xdg-open"),
+    ],
+)
+async def test_settings_dialog_open_config_dir_invokes_launcher(
+    tmp_path, monkeypatch, platform_name, expect_startfile, expect_cmd
+):
+    """Open-config-dir handler should invoke the appropriate OS launcher."""
+    import os
+    import platform
+    import subprocess
+
+    from accessiweather.config import ConfigManager
+    from accessiweather.dialogs.settings_dialog import SettingsDialog
+
+    # Prepare app and config manager
+    app = MagicMock()
+    app.paths = MagicMock()
+    app.paths.config = tmp_path
+    app.main_window = MagicMock()  # in case of error dialogs
+
+    cm = ConfigManager(app)
+
+    # Patch platform.system to desired value
+    monkeypatch.setattr(platform, "system", lambda: platform_name)
+
+    # Patch OS-specific launchers
+    startfile_called = MagicMock()
+    run_called = MagicMock()
+
+    if expect_startfile:
+        monkeypatch.setattr(os, "startfile", startfile_called, raising=False)
+    else:
+        monkeypatch.setattr(subprocess, "run", run_called, raising=True)
+
+    # Execute handler
+    dlg = SettingsDialog(app, cm)
+    dlg.current_settings = cm.get_settings()
+    await dlg._on_open_config_dir(None)
+
+    # Assert correct function used
+    if expect_startfile:
+        startfile_called.assert_called_once()
+        arg = startfile_called.call_args[0][0]
+        assert str(tmp_path) in str(arg)
+    else:
+        run_called.assert_called_once()
+        args = run_called.call_args[0][0]
+        assert args[0] == expect_cmd
+        assert str(tmp_path) in args[1]
