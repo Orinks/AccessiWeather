@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Comprehensive test runner for AccessiWeather project.
+"""Comprehensive test runner for AccessiWeather project.
 
 This script provides different test execution modes for various development
 and CI/CD scenarios, including unit tests, integration tests, and end-to-end tests.
@@ -243,7 +242,7 @@ def run_all_tests(coverage=True, verbose=True):
 
 
 def main():
-    """Main entry point for the test runner."""
+    """Run the test runner."""
     parser = argparse.ArgumentParser(description="AccessiWeather Test Runner")
     parser.add_argument(
         "test_type",

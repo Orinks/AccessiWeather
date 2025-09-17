@@ -94,10 +94,9 @@ class ConfigManager:
                 settings.visual_crossing_api_key = ""
                 config_changed = True
 
-        # Validate GitHub App configuration (guard attributes for compatibility)
-        app_id = getattr(settings, "github_app_id", "")
-        if app_id:
-            app_id = app_id.strip()
+        # Validate GitHub App configuration
+        if settings.github_app_id:
+            app_id = settings.github_app_id.strip()
             if not app_id:
                 logger.warning("Empty GitHub App ID found, clearing")
                 settings.github_app_id = ""
@@ -106,9 +105,8 @@ class ConfigManager:
                 logger.warning("GitHub App ID appears invalid (should be numeric)")
                 # Don't automatically clear - let user decide
 
-        private_key = getattr(settings, "github_app_private_key", "")
-        if private_key:
-            private_key = private_key.strip()
+        if settings.github_app_private_key:
+            private_key = settings.github_app_private_key.strip()
             if not private_key:
                 logger.warning("Empty GitHub App private key found, clearing")
                 settings.github_app_private_key = ""
@@ -149,9 +147,8 @@ class ConfigManager:
                             "GitHub App private key has mismatched PEM headers/footers. Please use the .pem file downloaded from GitHub."
                         )
 
-        installation_id = getattr(settings, "github_app_installation_id", "")
-        if installation_id:
-            installation_id = installation_id.strip()
+        if settings.github_app_installation_id:
+            installation_id = settings.github_app_installation_id.strip()
             if not installation_id:
                 logger.warning("Empty GitHub App installation ID found, clearing")
                 settings.github_app_installation_id = ""
@@ -520,18 +517,24 @@ class ConfigManager:
         return self.set_github_app_config("", "", "")
 
     def has_github_app_config(self) -> bool:
-        """Check if GitHub submission is available.
+        """Check if all required GitHub App configuration fields are present.
 
-        Since all submissions are handled by the backend service, no local GitHub
-        credentials are required. Treat GitHub App config as available as long as
-        a backend URL can be resolved.
+        First checks configuration file credentials, then falls back to
+        environment variables and build-time embedded credentials.
+
+        Returns:
+            True if all fields are configured from any source, False otherwise
+
         """
-        # If a backend URL is available (explicit or default), return True
-        try:
-            url = (self.get_github_backend_url() or "").strip()
-        except Exception:
-            url = ""
-        return bool(url)
+        # First check config file credentials
+        app_id, private_key, installation_id = self.get_github_app_config()
+        if app_id and private_key and installation_id:
+            return True
+
+        # Backend service handles authentication
+        from . import github_credentials
+
+        return github_credentials.has_github_app_credentials()
 
     def get_github_backend_url(self) -> str:
         """Get the GitHub backend service URL.

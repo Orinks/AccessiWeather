@@ -76,7 +76,6 @@ TAB_DISPLAY = "Display"
 TAB_ADVANCED = "Advanced"
 TAB_UPDATES = "Updates"
 
-
 # GitHub App configuration constants
 GITHUB_APP_ID_KEY = "github_app_id"
 GITHUB_APP_PRIVATE_KEY_KEY = "github_app_private_key"

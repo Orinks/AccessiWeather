@@ -104,17 +104,11 @@ class LocationManager:
             # Try to build a nice name from address components
             name_parts = []
 
-            # Add city/town/village/county - prioritize more specific locations
-            location_found = False
+            # Add city/town/village
             for key in ["city", "town", "village", "hamlet"]:
                 if key in address:
                     name_parts.append(address[key])
-                    location_found = True
                     break
-
-            # If no city/town found, check for county
-            if not location_found and "county" in address:
-                name_parts.append(address["county"])
 
             # Add state/province
             for key in ["state", "province", "region"]:

@@ -181,9 +181,9 @@ def preview_mapping(dlg, widget) -> None:
                 f"The sound file '{filename}' is not available in this pack.",
             )
             return
-        from ...notifications.sound_player import _play_sound_file
+        from ...notifications.sound_player import play_sound_file
 
-        _play_sound_file(sound_path)
+        play_sound_file(sound_path)
     except Exception as e:
         logger.error(f"Failed to preview mapping: {e}")
         dlg.app.main_window.error_dialog("Preview Error", f"Failed to preview mapping: {e}")

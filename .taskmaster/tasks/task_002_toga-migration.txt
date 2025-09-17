@@ -1,0 +1,43 @@
+# Task ID: 2
+# Title: Implement Main Window and Layout
+# Status: done
+# Dependencies: 1
+# Priority: high
+# Description: Create the main application window and implement the basic layout structure using Toga's MainWindow and Box layout system.
+# Details:
+1. Create a MainWindow class that inherits from toga.MainWindow
+2. Implement a basic Box layout for the main content area
+3. Add placeholders for major UI components (weather display, forecast, alerts)
+4. Implement a basic menu structure using Toga's Command and Group classes
+5. Ensure the window is resizable and has appropriate minimum dimensions
+
+# Test Strategy:
+1. Verify that the main window opens with the correct title and size
+2. Check that the basic layout structure is visible
+3. Ensure the menu is present and clickable
+4. Test window resizing behavior
+
+# Subtasks:
+## 1. Implement Main Window Creation [done]
+### Dependencies: None
+### Description: Set up the main application window using Toga's MainWindow class, ensuring it is properly instantiated and displayed as the application's primary interface.
+### Details:
+Use toga.MainWindow to create the main window, set its title, and call the show() method to display it. This forms the foundation for all subsequent UI elements.[1][3][5]
+
+## 2. Establish Layout System [done]
+### Dependencies: 2.1
+### Description: Implement the layout system for the main window using Toga's Box containers and style system to organize child components.
+### Details:
+Create a main Box container (e.g., toga.Box) and apply layout styles (such as COLUMN or ROW) to define how child widgets will be arranged within the window.[1][5]
+
+## 3. Add Component Placeholders [done]
+### Dependencies: 2.2
+### Description: Insert placeholder widgets (such as empty boxes or labels) into the layout to reserve space for future UI components.
+### Details:
+Add placeholder widgets to the main Box to represent where future components (buttons, text fields, etc.) will be placed. This helps visualize and test the layout structure before full implementation.[1][5]
+
+## 4. Define Menu Structure [done]
+### Dependencies: 2.1
+### Description: Implement the menu system for the main window, ensuring it integrates with Toga's application and window structure.
+### Details:
+Set up the menu for the main window, using Toga's built-in menu support. Define menu items and connect them to appropriate handlers as needed.[3][5]

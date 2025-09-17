@@ -221,10 +221,7 @@ def mock_weather_data():
 
 @pytest.fixture
 def mock_weather_client(mock_weather_data):
-    """Pytest fixture for mock weather client.
-
-    Return the same object as mock_weather_data to avoid timestamp-based flakiness.
-    """
+    """Pytest fixture for mock weather client."""
     client = Mock()
     client.get_weather_data = AsyncTestHelper.create_async_mock(return_value=mock_weather_data)
     return client

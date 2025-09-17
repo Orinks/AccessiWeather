@@ -408,6 +408,143 @@ def test_get_sound_file_for_candidates_resolution(tmp_path):
         assert p3.name == "alert.wav"
 
 
+class TestSoundPackManagerDialogUI:
+    """UI-focused tests for the SoundPackManagerDialog using toga-dummy."""
+
+    def setup_method(self):
+        import os
+
+        os.environ["TOGA_BACKEND"] = "toga_dummy"
+        toga.App.app = None
+        # Create a real Toga app/window under the dummy backend
+        self.app = toga.App("Test App", "org.example.test")
+        self.window = toga.MainWindow(title="Test Main Window")
+        # Add window to app and set as main window
+        self.app.windows.add(self.window)
+        self.app.main_window = self.window
+        # Ensure default dialog methods exist; tests will override as needed
+        from unittest.mock import MagicMock
+
+        # Provide defaults that won't crash if called unexpectedly
+        self.window.info_dialog = MagicMock()
+        self.window.error_dialog = MagicMock()
+        self.window.question_dialog = MagicMock(return_value=True)
+        self.window.open_file_dialog = MagicMock()
+
+    def teardown_method(self):
+        toga.App.app = None
+
+    def _create_pack(self, base_dir: Path, pack_id: str, sounds: dict[str, str]) -> Path:
+        pdir = base_dir / pack_id
+        pdir.mkdir(parents=True, exist_ok=True)
+        meta = {"name": pack_id.title(), "sounds": sounds}
+        (pdir / "pack.json").write_text(json.dumps(meta), encoding="utf-8")
+        # Touch files
+        for fn in sounds.values():
+            (pdir / fn).write_bytes(b"x")
+        return pdir
+
+    def test_mapping_selection_populates_from_existing_pack(self, tmp_path):
+        from accessiweather.dialogs.soundpack_manager_dialog import SoundPackManagerDialog
+
+        # Create pack with a hazard+type key present
+        self._create_pack(
+            tmp_path, "ui_test", {"thunderstorm_warning": "storm.wav", "alert": "alert.wav"}
+        )
+        dlg = SoundPackManagerDialog(self.app, current_pack="ui_test")
+        # Point dialog at our temp packs dir and reload
+        dlg.soundpacks_dir = tmp_path
+        dlg._load_sound_packs()
+        dlg._refresh_pack_list()
+        dlg.selected_pack = "ui_test"
+        dlg._update_pack_details()
+        # Verify the friendly sound list shows the hazard-friendly name
+        assert dlg.sound_selection is not None
+        items = dlg.sound_selection.items or []
+        names = []
+        for i in items:
+            dn = i.get("display_name") if isinstance(i, dict) else getattr(i, "display_name", None)
+            # Handle dataclass or Row wrapper gracefully
+            if hasattr(dn, "display_name"):
+                names.append(dn.display_name)
+            else:
+                names.append(str(dn))
+        assert any("Thunderstorm Warnings" in n for n in names)
+
+    def test_browse_mapping_stores_technical_key(self, tmp_path, monkeypatch):
+        from accessiweather.dialogs.soundpack_manager_dialog import SoundPackManagerDialog
+
+        pack_dir = self._create_pack(tmp_path, "ui_test", {"alert": "alert.wav"})
+        new_file = tmp_path / "flood.wav"
+        new_file.write_bytes(b"y")
+        dlg = SoundPackManagerDialog(self.app, current_pack="ui_test")
+        dlg.soundpacks_dir = tmp_path
+        dlg._load_sound_packs()
+        dlg._refresh_pack_list()
+        dlg.selected_pack = "ui_test"
+        dlg._update_pack_details()
+        # Choose the 'Flood Warnings' category
+        flood_item = None
+        for i in dlg.mapping_key_selection.items:
+            dn = i.get("display_name") if isinstance(i, dict) else getattr(i, "display_name", None)
+            # Handle Toga Row wrapper where display_name may be an AlertCategoryItem instance
+            dn_str = dn.display_name if hasattr(dn, "display_name") else dn
+            if dn_str == "Flood Warnings":
+                flood_item = i
+                break
+        assert flood_item is not None, "Flood Warnings item not found in mapping selection"
+        dlg.mapping_key_selection.value = flood_item
+
+        # Patch open_file_dialog to immediately invoke callback
+        def _fake_open_file_dialog(title=None, file_types=None, on_result=None):
+            if on_result:
+                on_result(None, str(new_file))
+
+        self.window.open_file_dialog = _fake_open_file_dialog
+        dlg._on_browse_mapping_file(dlg.mapping_browse_button)
+        # Verify pack.json stored technical key
+        meta = json.loads((pack_dir / "pack.json").read_text(encoding="utf-8"))
+        assert meta["sounds"].get("flood_warning") == "flood.wav"
+        assert dlg.mapping_file_input.value == "flood.wav"
+
+    def test_preview_mapping_uses_selected_key(self, tmp_path, monkeypatch):
+        from accessiweather.dialogs.soundpack_manager_dialog import SoundPackManagerDialog
+
+        # Add advisory mapping/file
+        pack_dir = self._create_pack(tmp_path, "ui_test", {"advisory": "adv.wav"})
+        dlg = SoundPackManagerDialog(self.app, current_pack="ui_test")
+        dlg.soundpacks_dir = tmp_path
+        dlg._load_sound_packs()
+        dlg._refresh_pack_list()
+        dlg.selected_pack = "ui_test"
+        dlg._update_pack_details()
+        # Choose 'Generic Advisory'
+        adv_item = None
+        for i in dlg.mapping_key_selection.items:
+            dn = i.get("display_name") if isinstance(i, dict) else getattr(i, "display_name", None)
+            dn_str = dn.display_name if hasattr(dn, "display_name") else dn
+            if dn_str == "Generic Advisory":
+                adv_item = i
+                break
+        assert adv_item is not None, "Generic Advisory item not found in mapping selection"
+        dlg.mapping_key_selection.value = adv_item
+        # Patch the low-level player to capture the path
+        played = {}
+
+        def _fake_play(path):
+            played["path"] = Path(path)
+
+        monkeypatch.setenv("TOGA_BACKEND", "toga_dummy")
+        # Monkeypatch import site by injecting our fake into module namespace
+        import importlib
+
+        sp_mod = importlib.import_module("accessiweather.notifications.sound_player")
+        monkeypatch.setattr(sp_mod, "_play_sound_file", lambda p: _fake_play(p), raising=True)
+        # Use the mapping preview button since the per-sound preview button was removed
+        dlg._on_preview_mapping(dlg.mapping_preview_button)
+        assert played.get("path") == pack_dir / "adv.wav"
+
+
 if __name__ == "__main__":
     pytest.main([__file__])
 

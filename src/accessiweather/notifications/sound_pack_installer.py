@@ -248,8 +248,6 @@ class SoundPackInstaller:
                     "notify": "notify.wav",
                     "error": "error.wav",
                     "success": "success.wav",
-                    "startup": "startup.wav",
-                    "exit": "exit.wav",
                 },
             }
 

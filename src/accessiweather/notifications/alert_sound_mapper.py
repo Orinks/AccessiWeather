@@ -33,6 +33,52 @@ KNOWN_SEVERITY_KEYS = [
 # Ultimate fallbacks for weather alerts
 GENERIC_FALLBACKS = ["alert", "notify"]
 
+# Canonical alert category keys that can be emitted by the mapper
+# These are the keys that sound packs should support and UI should reference
+CANONICAL_ALERT_KEYS = [
+    # Specific hazard types (from HAZARD_KEYWORDS)
+    "flood",
+    "tornado",
+    "heat",
+    "wind",
+    "winter",
+    "snow",
+    "ice",
+    "thunderstorm",
+    "hurricane",
+    "fire",
+    "fog",
+    "dust",
+    "air_quality",
+    # Combined hazard + type keys
+    "flood_warning",
+    "tornado_warning",
+    "heat_advisory",
+    "wind_warning",
+    "winter_storm_warning",
+    "snow_warning",
+    "ice_warning",
+    "thunderstorm_warning",
+    "hurricane_warning",
+    "fire_warning",
+    "fog_advisory",
+    "dust_warning",
+    "air_quality_alert",
+    # Alert types
+    "warning",
+    "watch",
+    "advisory",
+    "statement",
+    # Severity levels
+    "extreme",
+    "severe",
+    "moderate",
+    "minor",
+    # Generic fallbacks
+    "alert",
+    "notify",
+]
+
 
 def _contains_token(text: str | None, token: str) -> bool:
     if not text:

@@ -5,7 +5,7 @@ available community sound packs and downloads them as ZIP files for
 installation using SoundPackInstaller.
 
 Design notes:
-- Mirrors httpx async client usage and logging patterns from GitHubUpdateService
+- Mirrors httpx async client usage and logging patterns from TUFUpdateService
 - Provides simple in-memory caching for the list of packs
 - Supports authentication via GitHub App for higher rate limits when available
 - Gracefully handles rate limits and transient errors with lightweight retries
