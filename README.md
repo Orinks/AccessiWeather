@@ -7,6 +7,8 @@
 ![Platforms](https://img.shields.io/badge/Platforms-Windows%20%7C%20macOS%20%7C%20Linux-informational)
 ![Accessibility](https://img.shields.io/badge/Accessibility-Screen%20Reader%20Friendly-success)
 [![Download](https://img.shields.io/badge/Download-GitHub%20Pages-2ea44f)](https://orinks.github.io/AccessiWeather/)
+[![Latest Release](https://img.shields.io/github/v/release/Orinks/AccessiWeather?sort=semver)](https://github.com/Orinks/AccessiWeather/releases)
+
 
 
 A desktop weather application with robust accessibility features and international weather support. Built using the BeeWare/Toga framework with a focus on screen reader compatibility and keyboard navigation.
