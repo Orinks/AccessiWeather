@@ -283,7 +283,7 @@ class AppSettings:
     update_interval_minutes: int = 10
     show_detailed_forecast: bool = True
     enable_alerts: bool = True
-    minimize_to_tray: bool = True
+    minimize_to_tray: bool = False
     data_source: str = "auto"  # "nws", "openmeteo", "visualcrossing", or "auto"
 
     # API Keys
@@ -354,7 +354,7 @@ class AppSettings:
             update_interval_minutes=data.get("update_interval_minutes", 10),
             show_detailed_forecast=data.get("show_detailed_forecast", True),
             enable_alerts=data.get("enable_alerts", True),
-            minimize_to_tray=data.get("minimize_to_tray", True),
+            minimize_to_tray=data.get("minimize_to_tray", False),
             data_source=data.get("data_source", "auto"),
             visual_crossing_api_key=data.get("visual_crossing_api_key", ""),
             auto_update_enabled=data.get("auto_update_enabled", True),

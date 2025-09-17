@@ -879,7 +879,7 @@ class SettingsDialog:
 
             # Advanced
             if getattr(self, "minimize_to_tray_switch", None) is not None:
-                self.minimize_to_tray_switch.value = getattr(s, "minimize_to_tray", True)
+                self.minimize_to_tray_switch.value = getattr(s, "minimize_to_tray", False)
             if getattr(self, "debug_mode_switch", None) is not None:
                 self.debug_mode_switch.value = getattr(s, "debug_mode", False)
 

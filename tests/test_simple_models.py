@@ -400,7 +400,7 @@ class TestAppSettingsModel:
         assert settings.update_interval_minutes == 10
         assert settings.show_detailed_forecast is True
         assert settings.enable_alerts is True
-        assert settings.minimize_to_tray is True
+        assert settings.minimize_to_tray is False
         assert settings.data_source == "auto"
 
     def test_app_settings_custom_values(self):
