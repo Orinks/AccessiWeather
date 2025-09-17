@@ -2,6 +2,78 @@
 
 A desktop weather application with robust accessibility features and international weather support. Built using the BeeWare/Toga framework with a focus on screen reader compatibility and keyboard navigation.
 
+## Quickstart (Developers)
+
+- Prereqs: Python 3.10+ (3.12 recommended), Git
+- Create a virtual environment and install dev deps:
+
+```bash
+python -m venv .venv
+# Windows (bash)
+source .venv/Scripts/activate
+# macOS/Linux
+# source .venv/bin/activate
+pip install -e ".[dev]"
+```
+
+- Run the app with Briefcase during development:
+
+```bash
+briefcase dev
+```
+
+- Run tests and linters:
+
+```bash
+pytest -q
+ruff check --fix . && ruff format
+```
+
+## Packaging & Distribution (Briefcase)
+
+This project uses BeeWare Briefcase for packaging. Common commands:
+
+```bash
+# Create platform-specific project skeletons
+briefcase create
+
+# Build app artifacts
+briefcase build
+
+# Generate distributables (MSI/DMG/PKG/ZIP where supported)
+briefcase package
+```
+
+Updates are delivered via GitHub Releases and integrated with the app’s Settings → Updates tab.
+
+## Configuration & Portable Mode
+
+- Default config/data lives in a user app data directory (platform-dependent)
+- Portable mode stores configuration alongside the app; you can force it with:
+
+```bash
+accessiweather --portable
+```
+
+## Project Structure (high level)
+
+- src/accessiweather: main application package (Toga app, dialogs, services, clients)
+- tests: unit/integration tests (Toga dummy used where needed)
+- pyproject.toml: project metadata, Briefcase and Ruff configuration
+- pytest.ini: test configuration
+
+## Accessibility
+
+- Screen reader friendly text and focus management
+- Keyboard-first navigation across all dialogs and main views
+- Temperature display format: 84°F (29°C)
+
+## Notes
+
+- This README section reflects the current Toga + Briefcase workflow.
+- The legacy “Building Binaries” section below describes a historical PyInstaller/Inno Setup process; use Briefcase for packaging going forward.
+
+
 ## Features
 
 ### Weather Data Sources
