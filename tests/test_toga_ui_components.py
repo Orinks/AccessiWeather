@@ -804,6 +804,105 @@ async def test_settings_dialog_reset_to_defaults_resets_config(tmp_path):
     )
 
 
+def test_settings_dialog_has_full_reset_button(tmp_path):
+    """SettingsDialog UI should include the Full Data Reset button on Advanced tab."""
+    from unittest.mock import MagicMock
+
+    from accessiweather.config import ConfigManager
+    from accessiweather.dialogs.settings_dialog import SettingsDialog
+
+    app = MagicMock()
+    app.paths = MagicMock()
+    app.paths.config = tmp_path
+    cm = ConfigManager(app)
+
+    import toga
+
+    dlg = SettingsDialog(app, cm)
+    dlg.current_settings = cm.get_settings()
+    dlg.option_container = toga.OptionContainer()
+    dlg._create_advanced_tab()
+
+    assert dlg.full_reset_button.id == "full_reset_button"
+    assert dlg.full_reset_button.text.startswith("Reset all app data")
+
+
+@pytest.mark.asyncio
+async def test_settings_dialog_full_data_reset_clears_everything(tmp_path):
+    """Full data reset should delete config, caches, alert state, and restore defaults."""
+    import asyncio
+    import json
+    from unittest.mock import AsyncMock, MagicMock
+
+    from accessiweather.config import ConfigManager
+    from accessiweather.dialogs.settings_dialog import SettingsDialog
+
+    # Mock app
+    app = MagicMock()
+    app.paths = MagicMock()
+    app.paths.config = tmp_path
+    app.loop = MagicMock()
+    app.loop.create_future.return_value = asyncio.Future()
+    app.main_window = MagicMock()
+    app.main_window.error_dialog = AsyncMock()
+    app.main_window.info_dialog = AsyncMock()
+
+    cm = ConfigManager(app)
+
+    # Non-default settings and a location
+    assert (
+        cm.update_settings(
+            temperature_unit="f",
+            update_interval_minutes=42,
+            auto_update_enabled=False,
+            data_source="nws",
+            debug_mode=True,
+            sound_enabled=False,
+        )
+        is True
+    )
+    assert cm.add_location("Test City", 1.0, 2.0) is True
+    assert cm.set_current_location("Test City") is True
+
+    # Create additional persisted data in config dir
+    state_file = cm.config_dir / "alert_state.json"
+    state_file.write_text(json.dumps({"alert_states": []}), encoding="utf-8")
+    cache_file = cm.config_dir / "github_releases_cache.json"
+    cache_file.write_text("{}", encoding="utf-8")
+    settings_file = cm.config_dir / "update_settings.json"
+    settings_file.write_text("{}", encoding="utf-8")
+    updates_dir = cm.config_dir / "updates"
+    updates_dir.mkdir(parents=True, exist_ok=True)
+    (updates_dir / "dummy.bin").write_bytes(b"\x00\x01")
+
+    # Execute full reset via dialog handler
+    dlg = SettingsDialog(app, cm)
+    dlg.current_settings = cm.get_settings()
+    await dlg._on_full_reset(None)
+
+    # Verify defaults restored
+    s = cm.get_settings()
+    assert s.temperature_unit == "both"
+    assert s.update_interval_minutes == 10
+    assert s.auto_update_enabled is True
+    assert s.data_source == "auto"
+    assert s.debug_mode is False
+    assert s.sound_enabled is True
+    assert cm.get_all_locations() == []
+    assert cm.get_current_location() is None
+
+    # Verify auxiliary data removed
+    assert not state_file.exists()
+    assert not cache_file.exists()
+    assert not settings_file.exists()
+    assert not updates_dir.exists()
+
+    # Confirmation dialog shown
+    app.main_window.info_dialog.assert_called_once_with(
+        "Data Reset", "All application data were reset."
+    )
+
+
 def test_settings_dialog_has_reset_defaults_button(tmp_path):
     """SettingsDialog UI should include the Reset-to-Defaults button on Advanced tab."""
     from unittest.mock import MagicMock

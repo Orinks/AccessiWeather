@@ -429,6 +429,24 @@ class SettingsDialog:
         )
         advanced_box.add(self.reset_defaults_button)
 
+        # Section: Full data reset
+        advanced_box.add(
+            toga.Label("Full Data Reset", style=Pack(margin_top=20, font_weight="bold"))
+        )
+        advanced_box.add(
+            toga.Label(
+                "Reset all application data: settings, locations, caches, and alert state.",
+                style=Pack(margin_top=5, margin_bottom=5, font_style="italic"),
+            )
+        )
+        self.full_reset_button = toga.Button(
+            "Reset all app data (settings, locations, caches)",
+            on_press=self._on_full_reset,
+            style=Pack(margin_top=5, width=340),
+            id="full_reset_button",
+        )
+        advanced_box.add(self.full_reset_button)
+
         # Add tab to container
         self.option_container.content.append("Advanced", advanced_box)
 
@@ -901,6 +919,57 @@ class SettingsDialog:
                 await self._show_dialog_error(
                     "Settings Error",
                     f"An error occurred while resetting to defaults: {e}",
+                )
+
+    async def _on_full_reset(self, widget):
+        """Handle full data reset action from Advanced tab."""
+        try:
+            # Keep focus within dialog for accessibility during operation
+            self._ensure_dialog_focus()
+
+            logger.info("User requested full data reset")
+            success = False
+            with contextlib.suppress(Exception):
+                success = self.config_manager.reset_all_data()
+
+            if not success:
+                await self._show_dialog_error(
+                    "Data Reset Error",
+                    "Failed to reset all application data.",
+                )
+                return
+
+            # Reload current settings from config manager and update UI
+            with contextlib.suppress(Exception):
+                self.current_settings = self.config_manager.get_settings()
+            self._apply_settings_to_ui()
+
+            # Provide lightweight feedback in Updates tab label (if present)
+            if getattr(self, "update_status_label", None):
+                self.update_status_label.text = "All application data were reset"
+
+            # Show confirmation to the user via info dialog
+            try:
+                if self.window and hasattr(self.window, "info_dialog"):
+                    await self.window.info_dialog("Data Reset", "All application data were reset.")
+                else:
+                    await self.app.main_window.info_dialog(
+                        "Data Reset", "All application data were reset."
+                    )
+                    self._ensure_dialog_focus()
+            except Exception:
+                # Fallback to main window dialog
+                await self.app.main_window.info_dialog(
+                    "Data Reset", "All application data were reset."
+                )
+                self._ensure_dialog_focus()
+
+        except Exception as e:
+            logger.error(f"Failed during full data reset: {e}")
+            with contextlib.suppress(Exception):
+                await self._show_dialog_error(
+                    "Data Reset Error",
+                    f"An error occurred while resetting data: {e}",
                 )
 
     async def _on_get_visual_crossing_api_key(self, widget):
