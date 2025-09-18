@@ -10,7 +10,7 @@ from typing import Any
 
 import httpx
 
-from ..version import __version__ as APP_VERSION
+from .. import __version__ as APP_VERSION
 
 logger = logging.getLogger(__name__)
 

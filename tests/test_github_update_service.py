@@ -216,7 +216,7 @@ class QueueHttpClient:
 @pytest.fixture(autouse=True)
 def version_fixture(monkeypatch):
     """Fixture to set version for tests."""
-    monkeypatch.setattr("accessiweather.version.__version__", "0.0.0-test", raising=False)
+    monkeypatch.setattr("accessiweather.__version__", "0.0.0-test", raising=False)
     yield
 
 
