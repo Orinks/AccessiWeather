@@ -74,7 +74,8 @@ class AccessiWeatherApp(toga.App):
                 # Create a minimal main window to satisfy Toga's requirements
                 self.main_window = toga.MainWindow(title=self.formal_name)
                 self.main_window.content = toga.Box()
-                asyncio.create_task(self._handle_already_running())
+                _t = asyncio.create_task(self._handle_already_running())
+                _t.add_done_callback(self._task_done_callback)
                 return
 
             # Initialize core components
@@ -138,6 +139,8 @@ class AccessiWeatherApp(toga.App):
 
             # Start periodic weather updates as a background task and retain handle for cleanup
             self.update_task = asyncio.create_task(self._start_background_updates())
+            # Ensure exceptions are consumed to avoid "Task exception was never retrieved"
+            self.update_task.add_done_callback(self._task_done_callback)
 
         except Exception as e:
             logger.error(f"Failed to start background tasks: {e}")
@@ -146,6 +149,9 @@ class AccessiWeatherApp(toga.App):
         """Play the application startup sound."""
         try:
             # Get current soundpack from settings
+            if not self.config_manager:
+                logger.debug("Config manager unavailable; skipping startup sound")
+                return
             config = self.config_manager.get_config()
             current_soundpack = getattr(config.settings, "sound_pack", "default")
             sound_enabled = getattr(config.settings, "sound_enabled", True)
@@ -549,11 +555,13 @@ class AccessiWeatherApp(toga.App):
             if not config.locations:
                 logger.info("No locations found, adding default locations")
                 # Add both US and international test locations
-                asyncio.create_task(self._add_initial_locations())
+                _t = asyncio.create_task(self._add_initial_locations())
+                _t.add_done_callback(self._task_done_callback)
             else:
                 # Refresh weather for current location
                 if config.current_location:
-                    asyncio.create_task(self._refresh_weather_data())
+                    _t2 = asyncio.create_task(self._refresh_weather_data())
+                    _t2.add_done_callback(self._task_done_callback)
 
         except Exception as e:
             logger.error(f"Failed to load initial data: {e}")
@@ -1338,6 +1346,9 @@ class AccessiWeatherApp(toga.App):
         """Play the application exit sound."""
         try:
             # Get current soundpack from settings
+            if not self.config_manager:
+                logger.debug("Config manager unavailable; skipping exit sound")
+                return
             config = self.config_manager.get_config()
             current_soundpack = getattr(config.settings, "sound_pack", "default")
             sound_enabled = getattr(config.settings, "sound_enabled", True)
@@ -1349,6 +1360,16 @@ class AccessiWeatherApp(toga.App):
                 logger.info(f"Played exit sound from pack: {current_soundpack}")
         except Exception as e:
             logger.debug(f"Failed to play exit sound: {e}")
+
+    def _task_done_callback(self, task: asyncio.Task):
+        """Consume exceptions from background tasks to avoid unhandled warnings."""
+        try:
+            # Retrieve result to surface exceptions
+            _ = task.result()
+        except asyncio.CancelledError:
+            logger.debug("Async task cancelled")
+        except Exception as e:  # noqa: BLE001 - we want to log any exception here
+            logger.error(f"Async task failed: {e}")
 
     def _on_test_notification_pressed(self, widget):
         """Send a test notification using desktop-notifier.
