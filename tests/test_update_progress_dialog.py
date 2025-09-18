@@ -357,13 +357,13 @@ class TestUpdateNotificationDialog:
 
     def test_get_current_version(self, notification_dialog):
         """Test getting current version."""
-        with patch("accessiweather.version.__version__", "1.5.0"):
+        with patch("accessiweather.__version__", "1.5.0"):
             version = notification_dialog._get_current_version()
             assert version == "1.5.0"
 
-    def test_get_current_version_import_error(self, notification_dialog):
-        """Test getting current version with import error."""
-        with patch.dict("sys.modules", {"accessiweather.version": None}):
+    def test_get_current_version_missing(self, notification_dialog):
+        """Test getting current version when __version__ is missing."""
+        with patch("accessiweather.__version__", None):
             version = notification_dialog._get_current_version()
             assert version == "Unknown"
 

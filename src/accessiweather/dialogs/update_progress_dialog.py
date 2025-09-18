@@ -335,8 +335,8 @@ class UpdateNotificationDialog:
     def _get_current_version(self) -> str:
         """Get the current application version."""
         try:
-            from accessiweather.version import __version__
+            from accessiweather import __version__  # import from package
 
-            return __version__
-        except ImportError:
+            return __version__ or "Unknown"
+        except Exception:
             return "Unknown"
