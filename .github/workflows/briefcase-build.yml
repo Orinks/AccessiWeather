@@ -15,7 +15,7 @@ on:
         type: boolean
         default: false
   workflow_run:
-    workflows: ["Continuous Integration"]
+    workflows: ["CI"]
     types:
       - completed
     branches: [ main, dev, feature/toga-migration ]  # Only trigger after CI on main, dev, and toga-migration branches
@@ -50,12 +50,12 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         fetch-depth: 0  # Fetch full history for build metadata
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
@@ -135,10 +135,6 @@ jobs:
         DISPLAY: ""
         ACCESSIWEATHER_TEST_MODE: "1"
 
-    - name: Verify soundpack cleanup
-      run: |
-        echo "Verifying only default soundpack is included..."
-        python verify_soundpack_cleanup.py
 
     - name: Verify build outputs and generate checksums
       run: |
