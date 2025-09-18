@@ -193,7 +193,7 @@ jobs:
           echo "Fetching build info for branch: $branch" >&2
 
           local run_info=$(curl -s -H "Authorization: token ${{ github.token }}" \
-            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/build.yml/runs?branch=${branch}&status=success&per_page=1")
+            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/briefcase-build.yml/runs?branch=${branch}&status=success&per_page=1")
 
           local run_id=$(echo "$run_info" | jq -r '.workflow_runs[0].id // empty')
           local run_date=$(echo "$run_info" | jq -r '.workflow_runs[0].created_at // empty')
@@ -441,14 +441,14 @@ jobs:
         ## Stable Release (Main Branch)
 
         ### Direct Downloads:
-        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-installer-${MAIN_VERSION}.zip
-        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-portable-${MAIN_VERSION}.zip
+        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/briefcase-build/main/windows-installer-${MAIN_VERSION}.zip
+        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/briefcase-build/main/windows-portable-${MAIN_VERSION}.zip
 
         ## Development Release (${DEV_BRANCH_NAME^} Branch)
 
         ### Direct Downloads:
-        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/${DEV_BRANCH_NAME}/windows-installer-${DEV_VERSION}.zip
-        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/${DEV_BRANCH_NAME}/windows-portable-${DEV_VERSION}.zip
+        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/briefcase-build/${DEV_BRANCH_NAME}/windows-installer-${DEV_VERSION}.zip
+        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/briefcase-build/${DEV_BRANCH_NAME}/windows-portable-${DEV_VERSION}.zip
 
         ## How to Use
 
