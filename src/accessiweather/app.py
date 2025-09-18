@@ -136,8 +136,8 @@ class AccessiWeatherApp(toga.App):
             # Play startup sound after UI is ready but before background updates
             await self._play_startup_sound()
 
-            # Start periodic weather updates as a background task
-            asyncio.create_task(self._start_background_updates())
+            # Start periodic weather updates as a background task and retain handle for cleanup
+            self.update_task = asyncio.create_task(self._start_background_updates())
 
         except Exception as e:
             logger.error(f"Failed to start background tasks: {e}")
@@ -1235,14 +1235,17 @@ class AccessiWeatherApp(toga.App):
 
     # System Tray Event Handlers
 
-    async def _on_window_close(self, widget):
-        """Handle main window close event - honor minimize_to_tray setting."""
+    def _on_window_close(self, widget):
+        """Handle main window close event - honor minimize_to_tray setting.
+
+        Note: This handler is synchronous to match Toga's expected on_close signature.
+        """
         try:
             cfg = self.config_manager.get_config() if self.config_manager else None
             minimize_to_tray = (
                 bool(getattr(cfg.settings, "minimize_to_tray", False)) if cfg else False
             )
-            if minimize_to_tray and self.status_icon:
+            if minimize_to_tray and getattr(self, "status_icon", None):
                 # Hide window to system tray instead of closing
                 logger.info("Window close requested - minimizing to system tray")
                 self.main_window.hide()
@@ -1304,13 +1307,24 @@ class AccessiWeatherApp(toga.App):
         try:
             logger.info("Application exit requested - performing cleanup")
 
+            # Cancel background update task if running
+            try:
+                if getattr(self, "update_task", None) and not self.update_task.done():
+                    logger.info("Cancelling background update task")
+                    self.update_task.cancel()
+            except Exception as cancel_err:
+                logger.debug(f"Background task cancel error (non-fatal): {cancel_err}")
+
             # Play exit sound before cleanup
             self._play_exit_sound()
 
             # Release single instance lock before exiting
-            if self.single_instance_manager:
-                logger.debug("Releasing single instance lock")
-                self.single_instance_manager.release_lock()
+            if getattr(self, "single_instance_manager", None):
+                try:
+                    logger.debug("Releasing single instance lock")
+                    self.single_instance_manager.release_lock()
+                except Exception as lock_err:
+                    logger.debug(f"Single instance lock release error (non-fatal): {lock_err}")
 
             # Perform any other cleanup here
             logger.info("Application cleanup completed successfully")
