@@ -1,8 +1,6 @@
 name: Build and Package with Briefcase
 
 on:
-  push:
-    branches: [ main, feature/toga-migration ]  # Build on main and toga-migration branch pushes
   workflow_dispatch:
     inputs:
       version_override:
@@ -43,7 +41,7 @@ jobs:
   build:
     name: Build Windows Application with Briefcase
     runs-on: windows-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
 
     outputs:
       version: ${{ steps.version.outputs.version }}
