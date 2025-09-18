@@ -59,7 +59,7 @@ class GitHubUpdateService:
         self.repo = repo
         self.cache_path = self.config_dir / CACHE_FILENAME
         self.settings_path = self.config_dir / SETTINGS_FILENAME
-        from ..version import __version__
+        from .. import __version__
 
         self.http_client = httpx.AsyncClient(
             headers={"User-Agent": f"{self.app_name}/{__version__}"}, timeout=30.0
@@ -82,7 +82,7 @@ class GitHubUpdateService:
         if current_version is None:
             try:
                 # Local import to avoid import-time side effects
-                from ..version import __version__
+                from .. import __version__
 
                 current_version = __version__
             except Exception:

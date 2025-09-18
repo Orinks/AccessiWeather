@@ -32,6 +32,42 @@ from .utils import (
 )
 from .weather_client import WeatherClient
 
+# Package version is sourced from installed metadata, with fallback to pyproject.toml
+try:
+    from importlib.metadata import (
+        PackageNotFoundError,
+        version as _pkg_version,
+    )
+
+    try:
+        _v = _pkg_version("accessiweather")
+    except PackageNotFoundError:
+        _v = None
+except Exception:
+    _v = None
+
+
+def _read_pyproject_version() -> str | None:
+    try:
+        import tomllib
+        from pathlib import Path
+
+        root = Path(__file__).resolve().parents[2]
+        py = root / "pyproject.toml"
+        if not py.exists():
+            return None
+        with py.open("rb") as f:
+            data = tomllib.load(f)
+        return data.get("project", {}).get("version") or data.get("tool", {}).get(
+            "briefcase", {}
+        ).get("version")
+    except Exception:
+        return None
+
+
+__version__ = _v or _read_pyproject_version() or "0.0.0"
+
+
 __all__ = [
     # Main app
     "AccessiWeatherApp",

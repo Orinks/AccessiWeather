@@ -48,12 +48,12 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         fetch-depth: 0  # Fetch full history for build metadata
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
@@ -140,7 +140,6 @@ jobs:
       env:
         DISPLAY: ""
         ACCESSIWEATHER_TEST_MODE: "1"
-
 
 
     - name: Verify build outputs and generate checksums

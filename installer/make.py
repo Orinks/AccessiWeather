@@ -363,7 +363,7 @@ def cmd_clean(args: argparse.Namespace) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="AccessiWeather Briefcase make-like tool")
-    sub = parser.add_subparsers(dest="cmd", required=True)
+    sub = parser.add_subparsers(dest="cmd")
 
     def add_common(sp):
         sp.add_argument(
@@ -407,6 +407,10 @@ def main() -> int:
     p_clean.set_defaults(func=cmd_clean)
 
     args = parser.parse_args()
+    if not getattr(args, "cmd", None):
+        # Default headless behavior: show status (no UI), exit 0
+        default_args = argparse.Namespace(platform=_detect_default_platform())
+        return cmd_status(default_args)
     return args.func(args)
 
 

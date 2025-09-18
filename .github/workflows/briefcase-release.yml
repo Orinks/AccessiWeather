@@ -37,12 +37,12 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         fetch-depth: 0
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: "3.12"
 
@@ -105,8 +105,8 @@ jobs:
     - name: Build Briefcase application
       if: steps.check_release.outputs.exists == 'false'
       run: |
-        echo "Building Briefcase app for Windows..."
-        briefcase build windows app --no-input --log
+        echo "Building Briefcase app for Windows via installer/make.py..."
+        python installer/make.py build --platform windows
       env:
         DISPLAY: ""
         ACCESSIWEATHER_TEST_MODE: "1"
@@ -114,8 +114,8 @@ jobs:
     - name: Package Briefcase application (MSI)
       if: steps.check_release.outputs.exists == 'false'
       run: |
-        echo "Packaging Briefcase app as MSI installer..."
-        briefcase package windows app --no-input --log --adhoc-sign
+        echo "Packaging Briefcase app as MSI installer via installer/make.py..."
+        python installer/make.py package --platform windows
       env:
         DISPLAY: ""
         ACCESSIWEATHER_TEST_MODE: "1"
@@ -127,6 +127,9 @@ jobs:
         echo "Creating portable ZIP with make.py..."
         python installer/make.py zip --platform windows
         echo "Created portable ZIP: dist/AccessiWeather_Portable_v$VERSION.zip"
+      env:
+        DISPLAY: ""
+        ACCESSIWEATHER_TEST_MODE: "1"
 
     - name: Prepare release assets
       if: steps.check_release.outputs.exists == 'false'

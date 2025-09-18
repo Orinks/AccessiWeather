@@ -12,10 +12,10 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from accessiweather.config import ConfigManager
 
+from accessiweather import __version__ as APP_VERSION
 from accessiweather.constants import COMMUNITY_REPO_NAME, COMMUNITY_REPO_OWNER
 from accessiweather.notifications.sound_player import validate_sound_pack
 from accessiweather.services.github_backend_client import GitHubBackendClient
-from accessiweather.version import __version__ as APP_VERSION
 
 logger = logging.getLogger(__name__)
 
