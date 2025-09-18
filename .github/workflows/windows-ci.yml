@@ -64,4 +64,4 @@ jobs:
         PYTEST_DISABLE_PLUGIN_AUTOLOAD: 1
         ACCESSIWEATHER_TEST_MODE: "1"
       run: |
-        pytest -v --tb=short --maxfail=1
+        pytest -v -p pytest_asyncio --tb=short --maxfail=1
