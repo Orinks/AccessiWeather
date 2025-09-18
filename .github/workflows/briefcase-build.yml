@@ -1,8 +1,6 @@
 name: Build and Package with Briefcase
 
 on:
-  push:
-    branches: [ main, feature/toga-migration ]  # Build on main and toga-migration branch pushes
   workflow_dispatch:
     inputs:
       version_override:
@@ -43,7 +41,7 @@ jobs:
   build:
     name: Build Windows Application with Briefcase
     runs-on: windows-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
 
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -158,7 +156,7 @@ jobs:
         # Verify MSI installer
         if [ -n "$MSI_PATH" ] && [ -f "$MSI_PATH" ]; then
           MSI_SIZE=$(powershell -Command "(Get-Item '$MSI_PATH').Length")
-          MSI_SIZE_MB=$(echo "scale=2; $MSI_SIZE / 1024 / 1024" | bc -l)
+          MSI_SIZE_MB=$(powershell -Command "('{0:N2}' -f ((Get-Item '$MSI_PATH').Length / 1MB))")
           MSI_HASH=$(powershell -Command "(Get-FileHash '$MSI_PATH' -Algorithm SHA256).Hash")
           echo "✓ MSI Installer: $MSI_PATH ($MSI_SIZE_MB MB)"
           echo "  SHA256: ${MSI_HASH:0:16}..."
@@ -172,7 +170,7 @@ jobs:
         # Verify portable ZIP
         if [ -f "$ZIP_PATH" ]; then
           ZIP_SIZE=$(powershell -Command "(Get-Item '$ZIP_PATH').Length")
-          ZIP_SIZE_MB=$(echo "scale=2; $ZIP_SIZE / 1024 / 1024" | bc -l)
+          ZIP_SIZE_MB=$(powershell -Command "('{0:N2}' -f ((Get-Item '$ZIP_PATH').Length / 1MB))")
           ZIP_HASH=$(powershell -Command "(Get-FileHash '$ZIP_PATH' -Algorithm SHA256).Hash")
           echo "✓ Portable ZIP: $ZIP_PATH ($ZIP_SIZE_MB MB)"
           echo "  SHA256: ${ZIP_HASH:0:16}..."
@@ -256,7 +254,7 @@ jobs:
         echo "Checking installer artifacts:"
         if [ -n "$MSI_FILE" ] && [ -f "$MSI_FILE" ]; then
           FILE_SIZE=$(powershell -Command "(Get-Item '$MSI_FILE').Length")
-          FILE_SIZE_MB=$(echo "scale=2; $FILE_SIZE / 1024 / 1024" | bc -l)
+          FILE_SIZE_MB=$(powershell -Command "('{0:N2}' -f ((Get-Item '$MSI_FILE').Length / 1MB))")
           echo "✓ $(basename "$MSI_FILE") ($FILE_SIZE_MB MB)"
         else
           echo "✗ Missing: MSI installer"
@@ -266,7 +264,7 @@ jobs:
         echo "Checking portable artifacts:"
         if [ -f "$PORTABLE_FILE" ]; then
           FILE_SIZE=$(powershell -Command "(Get-Item '$PORTABLE_FILE').Length")
-          FILE_SIZE_MB=$(echo "scale=2; $FILE_SIZE / 1024 / 1024" | bc -l)
+          FILE_SIZE_MB=$(powershell -Command "('{0:N2}' -f ((Get-Item '$PORTABLE_FILE').Length / 1MB))")
           echo "✓ AccessiWeather_Portable_v$VERSION.zip ($FILE_SIZE_MB MB)"
         else
           echo "✗ Missing: AccessiWeather_Portable_v$VERSION.zip"

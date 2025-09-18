@@ -123,8 +123,10 @@ jobs:
     - name: Create portable ZIP version
       if: steps.check_release.outputs.exists == 'false'
       run: |
-        echo "Creating portable ZIP via installer/make.py..."
+        VERSION="${{ steps.version.outputs.version }}"
+        echo "Creating portable ZIP with make.py..."
         python installer/make.py zip --platform windows
+        echo "Created portable ZIP: dist/AccessiWeather_Portable_v$VERSION.zip"
       env:
         DISPLAY: ""
         ACCESSIWEATHER_TEST_MODE: "1"
@@ -166,8 +168,7 @@ jobs:
         for file in release-assets/*.{exe,msi,zip}; do
           if [ -f "$file" ]; then
             HASH=$(powershell -Command "(Get-FileHash '$file' -Algorithm SHA256).Hash")
-            SIZE=$(powershell -Command "(Get-Item '$file').Length")
-            SIZE_MB=$(echo "scale=2; $SIZE / 1024 / 1024" | bc -l)
+            SIZE_MB=$(powershell -Command "('{0:N2}' -f ((Get-Item '$file').Length / 1MB))")
             echo "$HASH  $(basename "$file") ($SIZE_MB MB)" >> "$CHECKSUM_FILE"
           fi
         done

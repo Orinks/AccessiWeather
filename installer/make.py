@@ -83,6 +83,125 @@ def _detect_default_platform() -> str:
     return "linux"
 
 
+# ---------------- Headless/autonomous helpers ----------------
+
+
+def _detect_python_env() -> tuple[Path, Path | None, bool]:
+    """Detect a suitable Python for building and whether a venv needs creation.
+
+    Returns a tuple: (python_exe, venv_dir_or_None, created_new_env)
+    - If the current interpreter is already a virtual environment, returns that
+      interpreter and (None, False) so we won't create/manage a new venv.
+    - Otherwise, prefers an existing .venv, then venv directory; if neither
+      exists, instructs to create venv at ./venv and returns (its python, Path, True).
+    """
+    in_venv = (hasattr(sys, "base_prefix") and sys.prefix != sys.base_prefix) or getattr(
+        sys, "real_prefix", None
+    )
+    if in_venv:
+        return Path(sys.executable), None, False
+
+    candidates = [ROOT / ".venv", ROOT / "venv"]
+    for vdir in candidates:
+        if vdir.exists():
+            py = _venv_python(vdir)
+            if py.exists():
+                return py, vdir, False
+    # None found: propose creating ./venv
+    vdir = ROOT / "venv"
+    return _venv_python(vdir), vdir, True
+
+
+def _venv_python(venv_dir: Path) -> Path:
+    """Return the path to the venv's Python executable."""
+    if platform.system().lower().startswith("win"):
+        return venv_dir / "Scripts" / "python.exe"
+    return venv_dir / "bin" / "python"
+
+
+def _ensure_venv(venv_dir: Path) -> int:
+    """Create a virtual environment at venv_dir if it doesn't exist."""
+    if venv_dir.exists():
+        return 0
+    print(f"Creating virtual environment at {venv_dir} ...")
+    return _run([sys.executable, "-m", "venv", str(venv_dir)], cwd=ROOT)
+
+
+def _pip(venv_py: Path, *args: str) -> int:
+    return _run([str(venv_py), "-m", "pip", *args], cwd=ROOT)
+
+
+def _briefcase_with(venv_py: Path, *args: str) -> int:
+    return _run([str(venv_py), "-m", "briefcase", *args], cwd=ROOT)
+
+
+def run_headless() -> int:
+    """Headless build: ensure deps, then package MSI and ZIP with Briefcase.
+
+    Behavior:
+    - Ensures ./venv exists and installs/updates build tools and Briefcase
+    - On Windows hosts: update+build windows, cleanup soundpacks, then package
+      MSI and ZIP: `briefcase package windows -p msi` and `-p zip`
+    - On non-Windows hosts: prints a note and exits (Windows packages require
+      Windows). CI should run this on a Windows runner.
+    """
+    host = platform.system().lower()
+    vpy, venv_dir, created = _detect_python_env()
+
+    # Ensure venv only if we decided to manage one
+    if venv_dir is not None:
+        if created:
+            print(f"Creating virtual environment at {venv_dir} ...")
+            code = _ensure_venv(venv_dir)
+            if code != 0:
+                return code
+        else:
+            print(f"Using existing virtual environment at {venv_dir}")
+    else:
+        print(f"Using active Python environment: {vpy}")
+
+    # Ensure packaging toolchain in the chosen environment
+    print("Upgrading pip/setuptools/wheel/build ...")
+    if _pip(vpy, "install", "-U", "pip", "setuptools", "wheel", "build") != 0:
+        return 1
+    print("Installing/Upgrading Briefcase ...")
+    if _pip(vpy, "install", "-U", "briefcase") != 0:
+        return 1
+
+    if host.startswith("win"):
+        # Prepare windows app build
+        print("Running Briefcase update/build for Windows ...")
+        _briefcase_with(vpy, "update", "windows")  # best-effort
+        build_code = _briefcase_with(vpy, "build", "windows", "--no-update")
+        if build_code != 0:
+            print("Build failed; attempting to re-create app template and rebuild ...")
+            # Some template versions require a re-create with current Briefcase
+            if _briefcase_with(vpy, "create", "windows", "app") != 0:
+                return 1
+            if _briefcase_with(vpy, "build", "windows", "--no-update") != 0:
+                return 1
+
+        # Clean up soundpacks in build tree prior to packaging
+        _cleanup_soundpacks(argparse.Namespace(platform="windows"))
+
+        print("Packaging Windows MSI ...")
+        if _briefcase_with(vpy, "package", "windows", "--adhoc-sign", "-p", "msi") != 0:
+            return 1
+
+        print("Packaging Windows ZIP ...")
+        if _briefcase_with(vpy, "package", "windows", "--adhoc-sign", "-p", "zip") != 0:
+            return 1
+
+        print("Headless packaging complete. Artifacts are in ./dist")
+        return 0
+
+    print(
+        "Non-Windows host detected; MSI/ZIP Windows packages are skipped.\n"
+        "Run this script on a Windows host (e.g., GitHub Actions windows-latest) to build installers."
+    )
+    return 0
+
+
 def _cleanup_soundpacks(args: argparse.Namespace) -> None:
     """Remove non-default soundpacks from build directory to keep only default soundpack."""
     build_base = ROOT / "build" / "accessiweather" / args.platform / "app"
@@ -296,4 +415,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    # Headless/autonomous default: when run without arguments, perform full build
+    # and package steps non-interactively for CI/CD and local use.
+    if len(sys.argv) == 1:
+        raise SystemExit(run_headless())
     raise SystemExit(main())

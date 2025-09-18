@@ -8,10 +8,18 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-# Set up toga-dummy backend for testing
-os.environ["TOGA_BACKEND"] = "toga_dummy"
+# Configure Toga backend for testing:
+# - Prefer 'toga_dummy' if available
+# - Otherwise fall back to platform backend (winforms on Windows CI)
+_backend = os.environ.get("TOGA_BACKEND")
+if not _backend:
+    try:
+        __import__("toga_dummy")
+        os.environ["TOGA_BACKEND"] = "toga_dummy"
+    except ModuleNotFoundError:
+        os.environ["TOGA_BACKEND"] = "toga_winforms"
 
-from accessiweather.models import (
+from accessiweather.models import (  # noqa: E402
     CurrentConditions,
     Forecast,
     ForecastPeriod,
@@ -241,11 +249,15 @@ def failing_weather_client():
 
 
 @pytest.fixture(autouse=True)
-def setup_toga_dummy():
-    """Automatically set up toga-dummy backend for all tests."""
-    os.environ["TOGA_BACKEND"] = "toga_dummy"
+def setup_toga_backend():
+    """Ensure a Toga backend is configured for tests. Prefer dummy if available."""
+    if not os.environ.get("TOGA_BACKEND"):
+        try:
+            __import__("toga_dummy")
+            os.environ["TOGA_BACKEND"] = "toga_dummy"
+        except ModuleNotFoundError:
+            os.environ["TOGA_BACKEND"] = "toga_winforms"
     yield
-    # Cleanup handled by OS environment
 
 
 @pytest.fixture
