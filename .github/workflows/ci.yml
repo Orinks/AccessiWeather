@@ -49,7 +49,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e .[dev]
         pip install ruff
-        pip install "toga-dummy==0.5.2"
+        pip install toga-dummy
 
     - name: Ruff check
       run: |
