@@ -124,24 +124,9 @@ jobs:
       if: steps.check_release.outputs.exists == 'false'
       run: |
         VERSION="${{ steps.version.outputs.version }}"
-
-        # Find the built app directory
-        APP_DIR=$(find build -name "AccessiWeather" -type d | head -1)
-
-        if [ -z "$APP_DIR" ]; then
-          echo "Error: Could not find built app directory"
-          find build -type d -name "*" | head -10
-          exit 1
-        fi
-
-        echo "Found app directory: $APP_DIR"
-
-        # Create portable ZIP
-        cd "$APP_DIR"
-        powershell -Command "Compress-Archive -Path * -DestinationPath '../../AccessiWeather_Portable_v$VERSION.zip'"
-        cd ../..
-
-        echo "Created portable ZIP: AccessiWeather_Portable_v$VERSION.zip"
+        echo "Creating portable ZIP with make.py..."
+        python installer/make.py zip --platform windows
+        echo "Created portable ZIP: dist/AccessiWeather_Portable_v$VERSION.zip"
 
     - name: Prepare release assets
       if: steps.check_release.outputs.exists == 'false'
@@ -162,7 +147,7 @@ jobs:
         fi
 
         # Copy portable ZIP
-        PORTABLE_SOURCE="AccessiWeather_Portable_v$VERSION.zip"
+        PORTABLE_SOURCE="dist/AccessiWeather_Portable_v$VERSION.zip"
         if [ -f "$PORTABLE_SOURCE" ]; then
           cp "$PORTABLE_SOURCE" "release-assets/"
           echo "✓ Copied portable ZIP"
@@ -180,8 +165,7 @@ jobs:
         for file in release-assets/*.{exe,msi,zip}; do
           if [ -f "$file" ]; then
             HASH=$(powershell -Command "(Get-FileHash '$file' -Algorithm SHA256).Hash")
-            SIZE=$(powershell -Command "(Get-Item '$file').Length")
-            SIZE_MB=$(echo "scale=2; $SIZE / 1024 / 1024" | bc -l)
+            SIZE_MB=$(powershell -Command "('{0:N2}' -f ((Get-Item '$file').Length / 1MB))")
             echo "$HASH  $(basename "$file") ($SIZE_MB MB)" >> "$CHECKSUM_FILE"
           fi
         done
