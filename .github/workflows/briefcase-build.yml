@@ -2,7 +2,7 @@ name: Build and Package with Briefcase
 
 on:
   push:
-    branches: [ main, dev, feature/toga-migration ]  # Build on main, dev, and toga-migration branch pushes
+    branches: [ main, feature/toga-migration ]  # Build on main and toga-migration branch pushes
   workflow_dispatch:
     inputs:
       version_override:
@@ -18,7 +18,7 @@ on:
     workflows: ["CI"]
     types:
       - completed
-    branches: [ main, dev, feature/toga-migration ]  # Only trigger after CI on main, dev, and toga-migration branches
+    branches: [ main, feature/toga-migration ]  # Only trigger after CI on main and toga-migration branches
 
 permissions:
   contents: read      # Read repository contents
@@ -115,6 +115,14 @@ jobs:
       run: |
         echo "Creating Briefcase app scaffold..."
         python installer/make.py create --platform windows
+      env:
+        DISPLAY: ""
+        ACCESSIWEATHER_TEST_MODE: "1"
+
+    - name: Build Briefcase app
+      run: |
+        echo "Building Briefcase app..."
+        python installer/make.py build --platform windows
       env:
         DISPLAY: ""
         ACCESSIWEATHER_TEST_MODE: "1"
