@@ -24,7 +24,7 @@ jobs:
         echo "Testing nightly.link URLs for branch: $BRANCH"
 
         # Test preview URL
-        PREVIEW_URL="https://nightly.link/Orinks/AccessiWeather/workflows/build/${BRANCH}?preview"
+        PREVIEW_URL="https://nightly.link/Orinks/AccessiWeather/workflows/briefcase-build/${BRANCH}?preview"
         echo "Testing preview URL: $PREVIEW_URL"
 
         RESPONSE=$(curl -s -w "%{http_code}" "$PREVIEW_URL")
@@ -44,8 +44,8 @@ jobs:
         echo ""
         echo "Testing direct download URLs:"
 
-        INSTALLER_URL="https://nightly.link/Orinks/AccessiWeather/workflows/build/${BRANCH}/windows-installer"
-        PORTABLE_URL="https://nightly.link/Orinks/AccessiWeather/workflows/build/${BRANCH}/windows-build"
+        INSTALLER_URL="https://nightly.link/Orinks/AccessiWeather/workflows/briefcase-build/${BRANCH}/windows-installer"
+        PORTABLE_URL="https://nightly.link/Orinks/AccessiWeather/workflows/briefcase-build/${BRANCH}/windows-portable"
 
         echo "Installer URL: $INSTALLER_URL"
         INSTALLER_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$INSTALLER_URL")
@@ -78,15 +78,15 @@ jobs:
         ## Branch: $BRANCH
 
         ### Preview URLs (shows available artifacts)
-        - https://nightly.link/Orinks/AccessiWeather/workflows/build/${BRANCH}?preview
+        - https://nightly.link/Orinks/AccessiWeather/workflows/briefcase-build/${BRANCH}?preview
 
         ### Direct Download URLs
-        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/${BRANCH}/windows-installer
-        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/${BRANCH}/windows-build
+        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/briefcase-build/${BRANCH}/windows-installer
+        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/briefcase-build/${BRANCH}/windows-portable
 
         ### Specific Version URLs (example with v0.9.3)
-        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/${BRANCH}/windows-installer-0.9.3.zip
-        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/${BRANCH}/windows-build-0.9.3.zip
+        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/briefcase-build/${BRANCH}/windows-installer-0.9.3.zip
+        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/briefcase-build/${BRANCH}/windows-portable-0.9.3.zip
 
         ## How to Use
 

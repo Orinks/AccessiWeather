@@ -11,6 +11,8 @@ import pytest
 with suppress(Exception):
     from tests.toga_test_helpers import *  # noqa: F401, F403
 
+# Explicitly load pytest-asyncio plugin even when autoload is disabled in CI
+
 # Skip removed fixtures directories (basic_fixtures, sample_responses, gui_fixtures, mock_clients)
 
 
