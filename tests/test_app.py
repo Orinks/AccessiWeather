@@ -192,6 +192,36 @@ class TestAccessiWeatherAppInitialization:
 
             mock_start_updates.assert_called_once()
 
+    @pytest.mark.asyncio
+    async def test_on_exit_cancels_background_task(self, mock_toga_app):
+        """on_exit should cancel a running background update task."""
+        app = mock_toga_app
+
+        cancelled = False
+
+        async def long_running():
+            nonlocal cancelled
+            try:
+                await asyncio.sleep(60)
+            except asyncio.CancelledError:
+                cancelled = True
+                raise
+
+        # Inject a long-running task
+        app.update_task = asyncio.create_task(long_running())
+        assert not app.update_task.done()
+
+        # Trigger exit cleanup
+        result = app.on_exit()
+        assert result is True
+
+        # Let the event loop process the cancellation
+        with pytest.raises(asyncio.CancelledError):
+            await app.update_task
+
+        # Verify the task was cancelled
+        assert cancelled or app.update_task.cancelled()
+
 
 class TestAccessiWeatherAppUICreation:
     """Test AccessiWeatherApp UI creation methods - new Toga-specific tests."""

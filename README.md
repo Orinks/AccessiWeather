@@ -1,6 +1,118 @@
 # AccessiWeather (v0.9.4-dev)
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+[![Built with BeeWare/Toga](https://img.shields.io/badge/Built%20with-BeeWare%20%2F%20Toga-ff6f00)](https://beeware.org/)
+[![Packaging: Briefcase](https://img.shields.io/badge/Packaging-Briefcase-6f42c1)](https://briefcase.readthedocs.io/)
+![Platforms](https://img.shields.io/badge/Platforms-Windows%20%7C%20macOS%20%7C%20Linux-informational)
+![Accessibility](https://img.shields.io/badge/Accessibility-Screen%20Reader%20Friendly-success)
+[![Download](https://img.shields.io/badge/Download-GitHub%20Pages-2ea44f)](https://orinks.github.io/AccessiWeather/)
+[![Latest Release](https://img.shields.io/github/v/release/Orinks/AccessiWeather?sort=semver)](https://github.com/Orinks/AccessiWeather/releases)
+
+
+
 A desktop weather application with robust accessibility features and international weather support. Built using the BeeWare/Toga framework with a focus on screen reader compatibility and keyboard navigation.
+
+## Quickstart (Developers)
+
+- Prereqs: Python 3.10+ (3.12 recommended), Git
+- Create a virtual environment and install dev deps:
+
+```bash
+python -m venv .venv
+# Windows (bash)
+source .venv/Scripts/activate
+# macOS/Linux
+# source .venv/bin/activate
+pip install -e ".[dev]"
+```
+
+- Run the app with Briefcase during development:
+
+```bash
+briefcase dev
+```
+
+- Run tests and linters:
+
+```bash
+pytest -q
+ruff check --fix . && ruff format
+```
+
+## Packaging & Distribution (Briefcase)
+
+This project uses BeeWare Briefcase for packaging. Common commands:
+
+```bash
+# Create platform-specific project skeletons
+briefcase create
+
+# Build app artifacts
+briefcase build
+
+# Generate distributables (MSI/DMG/PKG/ZIP where supported)
+briefcase package
+```
+
+Updates are delivered via GitHub Releases and integrated with the app’s Settings → Updates tab.
+
+### Using installer/make.py
+
+A convenience wrapper around Briefcase is provided at installer/make.py:
+
+```bash
+# Show environment and detected versions
+python installer/make.py status
+
+# First-time platform scaffold (windows|macOS|linux)
+python installer/make.py create --platform windows
+
+# Build and then package an installer (MSI/DMG/PKG depending on platform)
+python installer/make.py build --platform windows
+python installer/make.py package --platform windows
+
+# Run the app in development mode (same as `briefcase dev`)
+python installer/make.py dev
+
+# Run tests in a Briefcase dev app (falls back to pytest if needed)
+python installer/make.py test
+
+# Create a portable ZIP from the build output (Windows-focused helper)
+python installer/make.py zip --platform windows
+
+# Clean Briefcase artifacts
+python installer/make.py clean --platform windows
+```
+
+
+## Configuration & Portable Mode
+
+- Default config/data lives in a user app data directory (platform-dependent)
+- Portable mode stores configuration alongside the app; you can force it with:
+
+```bash
+accessiweather --portable
+```
+
+## Project Structure (high level)
+
+- src/accessiweather: main application package (Toga app, dialogs, services, clients)
+- tests: unit/integration tests (Toga dummy used where needed)
+- pyproject.toml: project metadata, Briefcase and Ruff configuration
+- pytest.ini: test configuration
+
+## Accessibility
+
+- Screen reader friendly text and focus management
+- Keyboard-first navigation across all dialogs and main views
+- Temperature display format: 84°F (29°C)
+
+## Notes
+
+- This README section reflects the current Toga + Briefcase workflow.
+- The legacy “Building Binaries” section below describes a historical PyInstaller/Inno Setup process; use Briefcase for packaging going forward.
+
 
 ## Features
 
@@ -92,52 +204,6 @@ accessiweather --portable
    - System tray behavior
    - Taskbar icon customization
 
-## Building Binaries
-
-AccessiWeather includes a PowerShell script to build Windows binaries and installers.
-
-### Prerequisites
-
-- Python 3.7+ (Python 3.11 recommended)
-- PowerShell 5.0+
-- [Inno Setup 6](https://jrsoftware.org/isdl.php) (for creating installers)
-
-### Building Steps
-
-1. Ensure Inno Setup is installed and in your PATH
-   ```powershell
-   # You can install Inno Setup using winget
-   winget install JRSoftware.InnoSetup
-   ```
-
-2. Run the build script from the project root directory
-   ```powershell
-   # Navigate to the project directory
-   cd path\to\AccessiWeather
-
-   # Run the build script
-   .\installer\build_installer.ps1
-   ```
-
-3. The script will:
-   - Check for processes that might interfere with the build
-   - Install PyInstaller if needed
-   - Build the executable using PyInstaller
-   - Create a portable ZIP archive
-   - Build an installer with Inno Setup
-
-4. After completion, you'll find the following in the `dist` directory:
-   - `AccessiWeather_Setup_v{version}.exe` - Windows installer
-   - `AccessiWeather_Portable_v{version}.zip` - Portable ZIP archive
-   - `AccessiWeather` folder - Standalone executable and dependencies
-
-   The version number is automatically extracted from `setup.py`.
-
-### Troubleshooting
-
-- If the script can't find Inno Setup, ensure it's installed and the `iscc` command is in your PATH
-- If you encounter file locking issues, the script will help identify and close interfering processes
-- For detailed logs, check the console output during the build process
 
 ## Requirements
 

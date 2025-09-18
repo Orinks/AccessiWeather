@@ -74,7 +74,8 @@ class AccessiWeatherApp(toga.App):
                 # Create a minimal main window to satisfy Toga's requirements
                 self.main_window = toga.MainWindow(title=self.formal_name)
                 self.main_window.content = toga.Box()
-                asyncio.create_task(self._handle_already_running())
+                _t = asyncio.create_task(self._handle_already_running())
+                _t.add_done_callback(self._task_done_callback)
                 return
 
             # Initialize core components
@@ -136,8 +137,10 @@ class AccessiWeatherApp(toga.App):
             # Play startup sound after UI is ready but before background updates
             await self._play_startup_sound()
 
-            # Start periodic weather updates as a background task
-            asyncio.create_task(self._start_background_updates())
+            # Start periodic weather updates as a background task and retain handle for cleanup
+            self.update_task = asyncio.create_task(self._start_background_updates())
+            # Ensure exceptions are consumed to avoid "Task exception was never retrieved"
+            self.update_task.add_done_callback(self._task_done_callback)
 
         except Exception as e:
             logger.error(f"Failed to start background tasks: {e}")
@@ -146,6 +149,9 @@ class AccessiWeatherApp(toga.App):
         """Play the application startup sound."""
         try:
             # Get current soundpack from settings
+            if not self.config_manager:
+                logger.debug("Config manager unavailable; skipping startup sound")
+                return
             config = self.config_manager.get_config()
             current_soundpack = getattr(config.settings, "sound_pack", "default")
             sound_enabled = getattr(config.settings, "sound_enabled", True)
@@ -549,11 +555,13 @@ class AccessiWeatherApp(toga.App):
             if not config.locations:
                 logger.info("No locations found, adding default locations")
                 # Add both US and international test locations
-                asyncio.create_task(self._add_initial_locations())
+                _t = asyncio.create_task(self._add_initial_locations())
+                _t.add_done_callback(self._task_done_callback)
             else:
                 # Refresh weather for current location
                 if config.current_location:
-                    asyncio.create_task(self._refresh_weather_data())
+                    _t2 = asyncio.create_task(self._refresh_weather_data())
+                    _t2.add_done_callback(self._task_done_callback)
 
         except Exception as e:
             logger.error(f"Failed to load initial data: {e}")
@@ -1235,14 +1243,17 @@ class AccessiWeatherApp(toga.App):
 
     # System Tray Event Handlers
 
-    async def _on_window_close(self, widget):
-        """Handle main window close event - honor minimize_to_tray setting."""
+    def _on_window_close(self, widget):
+        """Handle main window close event - honor minimize_to_tray setting.
+
+        Note: This handler is synchronous to match Toga's expected on_close signature.
+        """
         try:
             cfg = self.config_manager.get_config() if self.config_manager else None
             minimize_to_tray = (
                 bool(getattr(cfg.settings, "minimize_to_tray", False)) if cfg else False
             )
-            if minimize_to_tray and self.status_icon:
+            if minimize_to_tray and getattr(self, "status_icon", None):
                 # Hide window to system tray instead of closing
                 logger.info("Window close requested - minimizing to system tray")
                 self.main_window.hide()
@@ -1304,13 +1315,24 @@ class AccessiWeatherApp(toga.App):
         try:
             logger.info("Application exit requested - performing cleanup")
 
+            # Cancel background update task if running
+            try:
+                if getattr(self, "update_task", None) and not self.update_task.done():
+                    logger.info("Cancelling background update task")
+                    self.update_task.cancel()
+            except Exception as cancel_err:
+                logger.debug(f"Background task cancel error (non-fatal): {cancel_err}")
+
             # Play exit sound before cleanup
             self._play_exit_sound()
 
             # Release single instance lock before exiting
-            if self.single_instance_manager:
-                logger.debug("Releasing single instance lock")
-                self.single_instance_manager.release_lock()
+            if getattr(self, "single_instance_manager", None):
+                try:
+                    logger.debug("Releasing single instance lock")
+                    self.single_instance_manager.release_lock()
+                except Exception as lock_err:
+                    logger.debug(f"Single instance lock release error (non-fatal): {lock_err}")
 
             # Perform any other cleanup here
             logger.info("Application cleanup completed successfully")
@@ -1324,6 +1346,9 @@ class AccessiWeatherApp(toga.App):
         """Play the application exit sound."""
         try:
             # Get current soundpack from settings
+            if not self.config_manager:
+                logger.debug("Config manager unavailable; skipping exit sound")
+                return
             config = self.config_manager.get_config()
             current_soundpack = getattr(config.settings, "sound_pack", "default")
             sound_enabled = getattr(config.settings, "sound_enabled", True)
@@ -1335,6 +1360,16 @@ class AccessiWeatherApp(toga.App):
                 logger.info(f"Played exit sound from pack: {current_soundpack}")
         except Exception as e:
             logger.debug(f"Failed to play exit sound: {e}")
+
+    def _task_done_callback(self, task: asyncio.Task):
+        """Consume exceptions from background tasks to avoid unhandled warnings."""
+        try:
+            # Retrieve result to surface exceptions
+            _ = task.result()
+        except asyncio.CancelledError:
+            logger.debug("Async task cancelled")
+        except Exception as e:  # noqa: BLE001 - we want to log any exception here
+            logger.error(f"Async task failed: {e}")
 
     def _on_test_notification_pressed(self, widget):
         """Send a test notification using desktop-notifier.
