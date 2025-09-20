@@ -15,9 +15,11 @@ repos:
     hooks:
     -   id: ruff
         args: [--fix]
-        exclude: ^src/accessiweather/weather_gov_api_client/
+        files: ^(src/|tests/)
+        exclude: ^src/accessiweather/(weather_gov_api_client|weatherapi_client)/
     -   id: ruff-format
-        exclude: ^src/accessiweather/weather_gov_api_client/
+        files: ^(src/|tests/)
+        exclude: ^src/accessiweather/(weather_gov_api_client|weatherapi_client)/
 
 -   repo: https://github.com/RobertCraigie/pyright-python
     rev: v1.1.403
