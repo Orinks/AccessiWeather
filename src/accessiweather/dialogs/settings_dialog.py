@@ -1235,13 +1235,16 @@ class SettingsDialog:
         if hasattr(self, "visual_crossing_api_key_input") and self.visual_crossing_api_key_input:
             visual_crossing_api_key = str(self.visual_crossing_api_key_input.value).strip()
 
+        startup_switch = getattr(self, "startup_enabled_switch", None)
+        startup_enabled = getattr(startup_switch, "value", False)
+
         return AppSettings(
             temperature_unit=temperature_unit,
             update_interval_minutes=update_interval,
             show_detailed_forecast=self.show_detailed_forecast_switch.value,
             enable_alerts=self.enable_alerts_switch.value,
             minimize_to_tray=self.minimize_to_tray_switch.value,
-            startup_enabled=self.startup_enabled_switch.value,
+            startup_enabled=startup_enabled,
             data_source=data_source,
             visual_crossing_api_key=visual_crossing_api_key,
             auto_update_enabled=auto_update_enabled,
