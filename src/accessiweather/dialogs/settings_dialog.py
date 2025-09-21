@@ -699,9 +699,7 @@ class SettingsDialog:
                             with contextlib.suppress(Exception):
                                 self.config_manager.sync_startup_setting()
                         else:
-                            logger.info(
-                                f"Startup management successful: {startup_message}"
-                            )
+                            logger.info(f"Startup management successful: {startup_message}")
 
                 except Exception as e:
                     logger.error(f"Error handling startup setting change: {e}")
@@ -964,9 +962,7 @@ class SettingsDialog:
                 except Exception as e:
                     logger.warning(f"Failed to sync startup state: {e}")
                     # Fallback to setting value
-                    self.startup_enabled_switch.value = getattr(
-                        s, "startup_enabled", False
-                    )
+                    self.startup_enabled_switch.value = getattr(s, "startup_enabled", False)
             if getattr(self, "debug_mode_switch", None) is not None:
                 self.debug_mode_switch.value = getattr(s, "debug_mode", False)
 
