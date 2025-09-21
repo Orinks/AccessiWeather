@@ -24,6 +24,7 @@ class StartupManager:
     _LINUX_DESKTOP_FILENAME = "accessiweather.desktop"
 
     def __init__(self, platform_detector: PlatformDetector | None = None) -> None:
+        """Create a manager using an optional platform detector override."""
         self._platform_detector = platform_detector or PlatformDetector()
 
     def enable_startup(self) -> bool:

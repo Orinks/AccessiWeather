@@ -440,15 +440,15 @@ class ConfigManager:
 
         Returns:
             Tuple of (success, message) where message contains error details if failed
+
         """
         try:
             success = self._startup_manager.enable_startup()
             if success:
                 logger.info("Application startup enabled successfully")
                 return True, "Startup enabled successfully"
-            else:
-                logger.warning("Failed to enable application startup")
-                return False, "Failed to enable startup. Check permissions and try again."
+            logger.warning("Failed to enable application startup")
+            return False, "Failed to enable startup. Check permissions and try again."
         except Exception as e:
             logger.error(f"Error enabling startup: {e}")
             return False, f"Error enabling startup: {str(e)}"
@@ -458,15 +458,15 @@ class ConfigManager:
 
         Returns:
             Tuple of (success, message) where message contains error details if failed
+
         """
         try:
             success = self._startup_manager.disable_startup()
             if success:
                 logger.info("Application startup disabled successfully")
                 return True, "Startup disabled successfully"
-            else:
-                logger.warning("Failed to disable application startup")
-                return False, "Failed to disable startup. Check permissions and try again."
+            logger.warning("Failed to disable application startup")
+            return False, "Failed to disable startup. Check permissions and try again."
         except Exception as e:
             logger.error(f"Error disabling startup: {e}")
             return False, f"Error disabling startup: {str(e)}"
@@ -476,6 +476,7 @@ class ConfigManager:
 
         Returns:
             True if startup is enabled, False otherwise
+
         """
         try:
             return self._startup_manager.is_startup_enabled()
@@ -490,6 +491,7 @@ class ConfigManager:
 
         Returns:
             True if successful, False otherwise
+
         """
         try:
             actual_startup_enabled = self.is_startup_enabled()

@@ -330,7 +330,7 @@ class AppSettings:
                 return True
             if normalized in {"false", "0", "no", "off"}:
                 return False
-        if isinstance(value, (int, float)):
+        if isinstance(value, int | float):
             return bool(value)
         return default
 
