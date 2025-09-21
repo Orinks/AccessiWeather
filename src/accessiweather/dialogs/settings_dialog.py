@@ -4,6 +4,7 @@ This module provides a comprehensive settings dialog with tabbed interface
 matching the functionality of the wxPython version.
 """
 
+import asyncio
 import contextlib
 import logging
 
@@ -68,6 +69,7 @@ class SettingsDialog:
 
         # General tab controls (moved from Display)
         self.temperature_unit_selection = None
+        self.ok_button = None
 
     def __await__(self):
         """Make the dialog awaitable for modal behavior."""
@@ -91,6 +93,10 @@ class SettingsDialog:
                 minimizable=False,
                 closable=False,  # Prevent closing via X button to enforce modal behavior
             )
+
+            # Ensure startup configuration reflects actual system state before loading
+            with contextlib.suppress(Exception):
+                self.config_manager.sync_startup_setting()
 
             # Load current settings
             self.current_settings = self.config_manager.get_settings()
@@ -153,6 +159,7 @@ class SettingsDialog:
             "OK", on_press=self._on_ok, style=Pack(margin_right=0), id="ok_button"
         )
         button_box.add(ok_button)
+        self.ok_button = ok_button
 
         main_box.add(button_box)
 
@@ -645,14 +652,15 @@ class SettingsDialog:
             # Collect settings from UI
             new_settings = self._collect_settings_from_ui()
 
+            # Capture current startup flag before persisting changes
+            old_startup_enabled = self.config_manager.get_settings().startup_enabled
+
             # Update configuration
             success = self.config_manager.update_settings(**new_settings.to_dict())
 
             # Handle startup setting changes
             if success:
                 try:
-                    # Check if startup setting changed
-                    old_startup_enabled = self.current_settings.startup_enabled
                     new_startup_enabled = new_settings.startup_enabled
 
                     if old_startup_enabled != new_startup_enabled:
@@ -660,14 +668,25 @@ class SettingsDialog:
                             f"Startup setting changed: {old_startup_enabled} -> {new_startup_enabled}"
                         )
 
-                        if new_startup_enabled:
-                            startup_success, startup_message = (
-                                self.config_manager.enable_startup()
+                        loop = asyncio.get_running_loop()
+                        startup_method = (
+                            self.config_manager.enable_startup
+                            if new_startup_enabled
+                            else self.config_manager.disable_startup
+                        )
+
+                        # Prevent duplicate submissions while startup toggles
+                        ok_button = getattr(self, "ok_button", None)
+                        if ok_button is not None:
+                            ok_button.enabled = False
+
+                        try:
+                            startup_success, startup_message = await loop.run_in_executor(
+                                None, startup_method
                             )
-                        else:
-                            startup_success, startup_message = (
-                                self.config_manager.disable_startup()
-                            )
+                        finally:
+                            if ok_button is not None:
+                                ok_button.enabled = True
 
                         if not startup_success:
                             logger.warning(f"Startup management failed: {startup_message}")
@@ -677,6 +696,8 @@ class SettingsDialog:
                                 "Settings saved successfully, but startup setting could not be applied:\n\n"
                                 f"{startup_message}\n\nYou may need to check your system permissions.",
                             )
+                            with contextlib.suppress(Exception):
+                                self.config_manager.sync_startup_setting()
                         else:
                             logger.info(
                                 f"Startup management successful: {startup_message}"
@@ -690,6 +711,8 @@ class SettingsDialog:
                         "Settings saved successfully, but there was an error managing the startup setting:\n\n"
                         f"{str(e)}\n\nYou may need to check your system permissions.",
                     )
+                    with contextlib.suppress(Exception):
+                        self.config_manager.sync_startup_setting()
 
             if success:
                 logger.info("Settings saved successfully")
@@ -938,14 +961,6 @@ class SettingsDialog:
                 try:
                     actual_startup_enabled = self.config_manager.is_startup_enabled()
                     self.startup_enabled_switch.value = actual_startup_enabled
-                    # Update the setting if it's out of sync
-                    if actual_startup_enabled != getattr(s, "startup_enabled", False):
-                        logger.info(
-                            f"Syncing startup setting with actual state: {actual_startup_enabled}"
-                        )
-                        self.config_manager.update_settings(
-                            startup_enabled=actual_startup_enabled
-                        )
                 except Exception as e:
                     logger.warning(f"Failed to sync startup state: {e}")
                     # Fallback to setting value
