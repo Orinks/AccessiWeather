@@ -284,6 +284,7 @@ class AppSettings:
     show_detailed_forecast: bool = True
     enable_alerts: bool = True
     minimize_to_tray: bool = False
+    startup_enabled: bool = False
     data_source: str = "auto"  # "nws", "openmeteo", "visualcrossing", or "auto"
 
     # API Keys
@@ -316,6 +317,23 @@ class AppSettings:
     alert_max_notifications_per_hour: int = 10
     alert_ignored_categories: list[str] = field(default_factory=list)
 
+    @staticmethod
+    def _as_bool(value, default: bool) -> bool:
+        """Normalize common truthy/falsey representations to bool."""
+        if value is None:
+            return default
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"true", "1", "yes", "on"}:
+                return True
+            if normalized in {"false", "0", "no", "off"}:
+                return False
+        if isinstance(value, (int, float)):
+            return bool(value)
+        return default
+
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
         return {
@@ -324,6 +342,7 @@ class AppSettings:
             "show_detailed_forecast": self.show_detailed_forecast,
             "enable_alerts": self.enable_alerts,
             "minimize_to_tray": self.minimize_to_tray,
+            "startup_enabled": self.startup_enabled,
             "data_source": self.data_source,
             "visual_crossing_api_key": self.visual_crossing_api_key,
             "auto_update_enabled": self.auto_update_enabled,
@@ -355,6 +374,7 @@ class AppSettings:
             show_detailed_forecast=data.get("show_detailed_forecast", True),
             enable_alerts=data.get("enable_alerts", True),
             minimize_to_tray=data.get("minimize_to_tray", False),
+            startup_enabled=cls._as_bool(data.get("startup_enabled"), False),
             data_source=data.get("data_source", "auto"),
             visual_crossing_api_key=data.get("visual_crossing_api_key", ""),
             auto_update_enabled=data.get("auto_update_enabled", True),

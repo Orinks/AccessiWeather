@@ -4,6 +4,7 @@ This module provides a comprehensive settings dialog with tabbed interface
 matching the functionality of the wxPython version.
 """
 
+import asyncio
 import contextlib
 import logging
 
@@ -51,6 +52,7 @@ class SettingsDialog:
 
         # Advanced tab controls
         self.minimize_to_tray_switch = None
+        self.startup_enabled_switch = None
 
         # Updates tab controls
         self.auto_update_switch = None
@@ -67,6 +69,7 @@ class SettingsDialog:
 
         # General tab controls (moved from Display)
         self.temperature_unit_selection = None
+        self.ok_button = None
 
     def __await__(self):
         """Make the dialog awaitable for modal behavior."""
@@ -90,6 +93,10 @@ class SettingsDialog:
                 minimizable=False,
                 closable=False,  # Prevent closing via X button to enforce modal behavior
             )
+
+            # Ensure startup configuration reflects actual system state before loading
+            with contextlib.suppress(Exception):
+                self.config_manager.sync_startup_setting()
 
             # Load current settings
             self.current_settings = self.config_manager.get_settings()
@@ -152,6 +159,7 @@ class SettingsDialog:
             "OK", on_press=self._on_ok, style=Pack(margin_right=0), id="ok_button"
         )
         button_box.add(ok_button)
+        self.ok_button = ok_button
 
         main_box.add(button_box)
 
@@ -399,6 +407,15 @@ class SettingsDialog:
         )
         advanced_box.add(self.minimize_to_tray_switch)
 
+        # Launch at startup
+        self.startup_enabled_switch = toga.Switch(
+            "Launch automatically at startup",
+            value=getattr(self.current_settings, "startup_enabled", False),
+            style=Pack(margin_bottom=10),
+            id="startup_enabled_switch",
+        )
+        advanced_box.add(self.startup_enabled_switch)
+
         # Debug Mode (moved from General tab)
         self.debug_mode_switch = toga.Switch(
             "Enable Debug Mode",
@@ -635,8 +652,67 @@ class SettingsDialog:
             # Collect settings from UI
             new_settings = self._collect_settings_from_ui()
 
+            # Capture current startup flag before persisting changes
+            old_startup_enabled = self.config_manager.get_settings().startup_enabled
+
             # Update configuration
             success = self.config_manager.update_settings(**new_settings.to_dict())
+
+            # Handle startup setting changes
+            if success:
+                try:
+                    new_startup_enabled = new_settings.startup_enabled
+
+                    if old_startup_enabled != new_startup_enabled:
+                        logger.info(
+                            f"Startup setting changed: {old_startup_enabled} -> {new_startup_enabled}"
+                        )
+
+                        loop = asyncio.get_running_loop()
+                        startup_method = (
+                            self.config_manager.enable_startup
+                            if new_startup_enabled
+                            else self.config_manager.disable_startup
+                        )
+
+                        # Prevent duplicate submissions while startup toggles
+                        ok_button = getattr(self, "ok_button", None)
+                        if ok_button is not None:
+                            ok_button.enabled = False
+
+                        try:
+                            startup_success, startup_message = await loop.run_in_executor(
+                                None, startup_method
+                            )
+                        finally:
+                            if ok_button is not None:
+                                ok_button.enabled = True
+
+                        if not startup_success:
+                            logger.warning(f"Startup management failed: {startup_message}")
+                            # Show warning but don't prevent settings save
+                            await self._show_dialog_error(
+                                "Startup Setting Warning",
+                                "Settings saved successfully, but startup setting could not be applied:\n\n"
+                                f"{startup_message}\n\nYou may need to check your system permissions.",
+                            )
+                            with contextlib.suppress(Exception):
+                                self.config_manager.sync_startup_setting()
+                        else:
+                            logger.info(
+                                f"Startup management successful: {startup_message}"
+                            )
+
+                except Exception as e:
+                    logger.error(f"Error handling startup setting change: {e}")
+                    # Show warning but don't prevent settings save
+                    await self._show_dialog_error(
+                        "Startup Setting Error",
+                        "Settings saved successfully, but there was an error managing the startup setting:\n\n"
+                        f"{str(e)}\n\nYou may need to check your system permissions.",
+                    )
+                    with contextlib.suppress(Exception):
+                        self.config_manager.sync_startup_setting()
 
             if success:
                 logger.info("Settings saved successfully")
@@ -880,6 +956,17 @@ class SettingsDialog:
             # Advanced
             if getattr(self, "minimize_to_tray_switch", None) is not None:
                 self.minimize_to_tray_switch.value = getattr(s, "minimize_to_tray", False)
+            if getattr(self, "startup_enabled_switch", None) is not None:
+                # Sync with actual startup state to ensure UI reflects reality
+                try:
+                    actual_startup_enabled = self.config_manager.is_startup_enabled()
+                    self.startup_enabled_switch.value = actual_startup_enabled
+                except Exception as e:
+                    logger.warning(f"Failed to sync startup state: {e}")
+                    # Fallback to setting value
+                    self.startup_enabled_switch.value = getattr(
+                        s, "startup_enabled", False
+                    )
             if getattr(self, "debug_mode_switch", None) is not None:
                 self.debug_mode_switch.value = getattr(s, "debug_mode", False)
 
@@ -1223,12 +1310,16 @@ class SettingsDialog:
         if hasattr(self, "visual_crossing_api_key_input") and self.visual_crossing_api_key_input:
             visual_crossing_api_key = str(self.visual_crossing_api_key_input.value).strip()
 
+        startup_switch = getattr(self, "startup_enabled_switch", None)
+        startup_enabled = getattr(startup_switch, "value", False)
+
         return AppSettings(
             temperature_unit=temperature_unit,
             update_interval_minutes=update_interval,
             show_detailed_forecast=self.show_detailed_forecast_switch.value,
             enable_alerts=self.enable_alerts_switch.value,
             minimize_to_tray=self.minimize_to_tray_switch.value,
+            startup_enabled=startup_enabled,
             data_source=data_source,
             visual_crossing_api_key=visual_crossing_api_key,
             auto_update_enabled=auto_update_enabled,

@@ -15,6 +15,7 @@ from pathlib import Path
 import toga
 
 from .models import AppConfig, AppSettings, Location
+from .services import StartupManager
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,7 @@ class ConfigManager:
         self.config_file = self.app.paths.config / "accessiweather.json"
         self.config_dir = self.app.paths.config  # Add config_dir property
         self._config: AppConfig | None = None
+        self._startup_manager = StartupManager()
 
         # Ensure config directory exists
         self.config_file.parent.mkdir(parents=True, exist_ok=True)
@@ -431,6 +433,77 @@ class ConfigManager:
 
         except Exception as e:
             logger.error(f"Failed to import locations: {e}")
+            return False
+
+    def enable_startup(self) -> tuple[bool, str]:
+        """Enable application startup on boot.
+
+        Returns:
+            Tuple of (success, message) where message contains error details if failed
+        """
+        try:
+            success = self._startup_manager.enable_startup()
+            if success:
+                logger.info("Application startup enabled successfully")
+                return True, "Startup enabled successfully"
+            else:
+                logger.warning("Failed to enable application startup")
+                return False, "Failed to enable startup. Check permissions and try again."
+        except Exception as e:
+            logger.error(f"Error enabling startup: {e}")
+            return False, f"Error enabling startup: {str(e)}"
+
+    def disable_startup(self) -> tuple[bool, str]:
+        """Disable application startup on boot.
+
+        Returns:
+            Tuple of (success, message) where message contains error details if failed
+        """
+        try:
+            success = self._startup_manager.disable_startup()
+            if success:
+                logger.info("Application startup disabled successfully")
+                return True, "Startup disabled successfully"
+            else:
+                logger.warning("Failed to disable application startup")
+                return False, "Failed to disable startup. Check permissions and try again."
+        except Exception as e:
+            logger.error(f"Error disabling startup: {e}")
+            return False, f"Error disabling startup: {str(e)}"
+
+    def is_startup_enabled(self) -> bool:
+        """Check if application startup is currently enabled.
+
+        Returns:
+            True if startup is enabled, False otherwise
+        """
+        try:
+            return self._startup_manager.is_startup_enabled()
+        except Exception as e:
+            logger.error(f"Error checking startup status: {e}")
+            return False
+
+    def sync_startup_setting(self) -> bool:
+        """Synchronize the startup_enabled setting with actual startup state.
+
+        This checks the real startup status and updates the setting if needed.
+
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            actual_startup_enabled = self.is_startup_enabled()
+            current_setting = self.get_settings().startup_enabled
+
+            if actual_startup_enabled != current_setting:
+                logger.info(
+                    f"Syncing startup setting: actual={actual_startup_enabled}, setting={current_setting}"
+                )
+                return self.update_settings(startup_enabled=actual_startup_enabled)
+
+            return True
+        except Exception as e:
+            logger.error(f"Error syncing startup setting: {e}")
             return False
 
     def validate_github_app_config(self) -> tuple[bool, str]:
