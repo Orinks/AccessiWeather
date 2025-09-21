@@ -51,6 +51,7 @@ class SettingsDialog:
 
         # Advanced tab controls
         self.minimize_to_tray_switch = None
+        self.startup_enabled_switch = None
 
         # Updates tab controls
         self.auto_update_switch = None
@@ -398,6 +399,15 @@ class SettingsDialog:
             id="minimize_to_tray_switch",
         )
         advanced_box.add(self.minimize_to_tray_switch)
+
+        # Launch at startup
+        self.startup_enabled_switch = toga.Switch(
+            "Launch automatically at startup",
+            value=getattr(self.current_settings, "startup_enabled", False),
+            style=Pack(margin_bottom=10),
+            id="startup_enabled_switch",
+        )
+        advanced_box.add(self.startup_enabled_switch)
 
         # Debug Mode (moved from General tab)
         self.debug_mode_switch = toga.Switch(
@@ -880,6 +890,8 @@ class SettingsDialog:
             # Advanced
             if getattr(self, "minimize_to_tray_switch", None) is not None:
                 self.minimize_to_tray_switch.value = getattr(s, "minimize_to_tray", False)
+            if getattr(self, "startup_enabled_switch", None) is not None:
+                self.startup_enabled_switch.value = getattr(s, "startup_enabled", False)
             if getattr(self, "debug_mode_switch", None) is not None:
                 self.debug_mode_switch.value = getattr(s, "debug_mode", False)
 
@@ -1229,6 +1241,7 @@ class SettingsDialog:
             show_detailed_forecast=self.show_detailed_forecast_switch.value,
             enable_alerts=self.enable_alerts_switch.value,
             minimize_to_tray=self.minimize_to_tray_switch.value,
+            startup_enabled=self.startup_enabled_switch.value,
             data_source=data_source,
             visual_crossing_api_key=visual_crossing_api_key,
             auto_update_enabled=auto_update_enabled,
