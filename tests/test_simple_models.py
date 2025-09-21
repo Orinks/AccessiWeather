@@ -485,6 +485,20 @@ class TestAppSettingsModel:
         assert restored_settings.show_detailed_forecast == original_settings.show_detailed_forecast
         assert restored_settings.enable_alerts == original_settings.enable_alerts
 
+    def test_app_settings_roundtrip_preserves_startup_enabled_true(self):
+        """Ensure startup_enabled stays True after serialization and deserialization."""
+        original_settings = AppSettings(startup_enabled=True)
+
+        restored_settings = AppSettings.from_dict(original_settings.to_dict())
+
+        assert restored_settings.startup_enabled is True
+
+    def test_app_settings_missing_startup_enabled_defaults_to_false(self):
+        """Ensure missing startup_enabled falls back to the default False value."""
+        settings = AppSettings.from_dict({"temperature_unit": "f"})
+
+        assert settings.startup_enabled is False
+
 
 class TestAppConfigModel:
     """Test the AppConfig data model - adapted from existing test logic."""
