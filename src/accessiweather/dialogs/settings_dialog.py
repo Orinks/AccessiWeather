@@ -648,6 +648,49 @@ class SettingsDialog:
             # Update configuration
             success = self.config_manager.update_settings(**new_settings.to_dict())
 
+            # Handle startup setting changes
+            if success:
+                try:
+                    # Check if startup setting changed
+                    old_startup_enabled = self.current_settings.startup_enabled
+                    new_startup_enabled = new_settings.startup_enabled
+
+                    if old_startup_enabled != new_startup_enabled:
+                        logger.info(
+                            f"Startup setting changed: {old_startup_enabled} -> {new_startup_enabled}"
+                        )
+
+                        if new_startup_enabled:
+                            startup_success, startup_message = (
+                                self.config_manager.enable_startup()
+                            )
+                        else:
+                            startup_success, startup_message = (
+                                self.config_manager.disable_startup()
+                            )
+
+                        if not startup_success:
+                            logger.warning(f"Startup management failed: {startup_message}")
+                            # Show warning but don't prevent settings save
+                            await self._show_dialog_error(
+                                "Startup Setting Warning",
+                                "Settings saved successfully, but startup setting could not be applied:\n\n"
+                                f"{startup_message}\n\nYou may need to check your system permissions.",
+                            )
+                        else:
+                            logger.info(
+                                f"Startup management successful: {startup_message}"
+                            )
+
+                except Exception as e:
+                    logger.error(f"Error handling startup setting change: {e}")
+                    # Show warning but don't prevent settings save
+                    await self._show_dialog_error(
+                        "Startup Setting Error",
+                        "Settings saved successfully, but there was an error managing the startup setting:\n\n"
+                        f"{str(e)}\n\nYou may need to check your system permissions.",
+                    )
+
             if success:
                 logger.info("Settings saved successfully")
                 # Set result and close dialog
@@ -891,7 +934,24 @@ class SettingsDialog:
             if getattr(self, "minimize_to_tray_switch", None) is not None:
                 self.minimize_to_tray_switch.value = getattr(s, "minimize_to_tray", False)
             if getattr(self, "startup_enabled_switch", None) is not None:
-                self.startup_enabled_switch.value = getattr(s, "startup_enabled", False)
+                # Sync with actual startup state to ensure UI reflects reality
+                try:
+                    actual_startup_enabled = self.config_manager.is_startup_enabled()
+                    self.startup_enabled_switch.value = actual_startup_enabled
+                    # Update the setting if it's out of sync
+                    if actual_startup_enabled != getattr(s, "startup_enabled", False):
+                        logger.info(
+                            f"Syncing startup setting with actual state: {actual_startup_enabled}"
+                        )
+                        self.config_manager.update_settings(
+                            startup_enabled=actual_startup_enabled
+                        )
+                except Exception as e:
+                    logger.warning(f"Failed to sync startup state: {e}")
+                    # Fallback to setting value
+                    self.startup_enabled_switch.value = getattr(
+                        s, "startup_enabled", False
+                    )
             if getattr(self, "debug_mode_switch", None) is not None:
                 self.debug_mode_switch.value = getattr(s, "debug_mode", False)
 
