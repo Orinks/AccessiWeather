@@ -20,6 +20,7 @@ from .models import (
     WeatherAlerts,
     WeatherData,
 )
+from .utils.temperature_utils import TemperatureUnit, calculate_dewpoint
 from .visual_crossing_client import VisualCrossingApiError, VisualCrossingClient
 
 logger = logging.getLogger(__name__)
@@ -789,17 +790,57 @@ class WeatherClient:
     def _parse_openmeteo_current_conditions(self, data: dict) -> CurrentConditions:
         """Parse OpenMeteo current conditions data."""
         current = data.get("current", {})
+        units = data.get("current_units", {})
+
+        temp_f, temp_c = self._normalize_temperature(
+            current.get("temperature_2m"), units.get("temperature_2m")
+        )
+
+        humidity = current.get("relative_humidity_2m")
+        humidity = round(humidity) if humidity is not None else None
+
+        dewpoint_f = None
+        dewpoint_c = None
+        if temp_f is not None and humidity is not None:
+            dewpoint_f = calculate_dewpoint(temp_f, humidity, unit=TemperatureUnit.FAHRENHEIT)
+            if dewpoint_f is not None:
+                dewpoint_c = self._convert_f_to_c(dewpoint_f)
+
+        wind_speed_mph, wind_speed_kph = self._convert_wind_speed_to_mph_and_kph(
+            current.get("wind_speed_10m"), units.get("wind_speed_10m")
+        )
+
+        pressure_in, pressure_mb = self._normalize_pressure(
+            current.get("pressure_msl"), units.get("pressure_msl")
+        )
+
+        feels_like_f, feels_like_c = self._normalize_temperature(
+            current.get("apparent_temperature"), units.get("apparent_temperature")
+        )
+
+        timestamp = current.get("time")
+        last_updated = None
+        if timestamp:
+            try:
+                last_updated = datetime.fromisoformat(timestamp)
+            except ValueError:
+                logger.debug(f"Failed to parse OpenMeteo timestamp: {timestamp}")
 
         return CurrentConditions(
-            temperature_f=current.get("temperature_2m"),
-            temperature_c=self._convert_f_to_c(current.get("temperature_2m")),
+            temperature_f=temp_f,
+            temperature_c=temp_c,
             condition=self._weather_code_to_description(current.get("weather_code")),
-            humidity=current.get("relative_humidity_2m"),
-            wind_speed_mph=current.get("wind_speed_10m"),
-            wind_direction=self._degrees_to_cardinal(current.get("wind_direction_10m")),
-            pressure_mb=current.get("pressure_msl"),
-            feels_like_f=current.get("apparent_temperature"),
-            last_updated=datetime.now(),
+            humidity=humidity,
+            dewpoint_f=dewpoint_f,
+            dewpoint_c=dewpoint_c,
+            wind_speed_mph=wind_speed_mph,
+            wind_speed_kph=wind_speed_kph,
+            wind_direction=current.get("wind_direction_10m"),
+            pressure_in=pressure_in,
+            pressure_mb=pressure_mb,
+            feels_like_f=feels_like_f,
+            feels_like_c=feels_like_c,
+            last_updated=last_updated or datetime.now(),
         )
 
     def _parse_openmeteo_forecast(self, data: dict) -> Forecast:
@@ -882,7 +923,7 @@ class WeatherClient:
             return value * 2.237
         if unit_code.endswith(("km_h-1", "kmh")):
             return value * 0.621371
-        if unit_code.endswith("mi_h-1"):
+        if unit_code.endswith(("mi_h-1", "mph")):
             return value
         if unit_code.endswith("kn"):
             return value * 1.15078
@@ -900,7 +941,7 @@ class WeatherClient:
             return value * 3.6
         if unit_code.endswith(("km_h-1", "kmh")):
             return value
-        if unit_code.endswith("mi_h-1"):
+        if unit_code.endswith(("mi_h-1", "mph")):
             return value * 1.60934
         if unit_code.endswith("kn"):
             return value * 1.852
@@ -920,6 +961,45 @@ class WeatherClient:
 
     def _convert_pa_to_mb(self, pa: float | None) -> float | None:
         return pa / 100 if pa is not None else None
+
+    def _normalize_temperature(
+        self, value: float | None, unit: str | None
+    ) -> tuple[float | None, float | None]:
+        if value is None:
+            return None, None
+
+        unit_lower = (unit or "").lower()
+        if "f" in unit_lower:
+            temp_f = value
+            temp_c = self._convert_f_to_c(temp_f)
+        elif "c" in unit_lower:
+            temp_c = value
+            temp_f = (temp_c * 9 / 5) + 32
+        else:
+            temp_c = value
+            temp_f = (temp_c * 9 / 5) + 32
+        return temp_f, temp_c
+
+    def _normalize_pressure(
+        self, value: float | None, unit: str | None
+    ) -> tuple[float | None, float | None]:
+        if value is None:
+            return None, None
+
+        unit_lower = (unit or "").lower()
+        if "hpa" in unit_lower or "mb" in unit_lower:
+            pressure_mb = value
+            pressure_in = value * 0.0295299830714
+        elif "pa" in unit_lower:
+            pressure_mb = value / 100
+            pressure_in = self._convert_pa_to_inches(value)
+        elif "inch" in unit_lower or unit_lower.endswith("in"):
+            pressure_in = value
+            pressure_mb = value * 33.8639
+        else:
+            pressure_mb = value
+            pressure_in = None
+        return pressure_in, pressure_mb
 
     def _convert_f_to_c(self, fahrenheit: float | None) -> float | None:
         """Convert Fahrenheit to Celsius."""
