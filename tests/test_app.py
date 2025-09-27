@@ -67,7 +67,7 @@ class TestAccessiWeatherAppInitialization:
         assert app.location_selection is None
         assert app.current_conditions_metrics_box is None
         assert app.current_conditions_fallback is None
-        assert app.forecast_table is None
+        assert app.forecast_periods_box is None
         assert app.forecast_fallback is None
         assert app.alerts_table is None
         assert app.alerts_fallback is None
