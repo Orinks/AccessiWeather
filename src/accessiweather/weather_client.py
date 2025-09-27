@@ -921,11 +921,11 @@ class WeatherClient:
         unit_code = unit_code.lower()
         if unit_code.endswith(("m_s-1", "mps")):
             return value * 2.237
-        if unit_code.endswith(("km_h-1", "kmh")):
+        if unit_code.endswith(("km_h-1", "kmh", "km/h")):
             return value * 0.621371
-        if unit_code.endswith(("mi_h-1", "mph")):
+        if unit_code.endswith(("mi_h-1", "mph", "mp/h")):
             return value
-        if unit_code.endswith("kn"):
+        if unit_code.endswith(("kn", "kt")):
             return value * 1.15078
         return value
 
@@ -939,11 +939,11 @@ class WeatherClient:
         unit_code = unit_code.lower()
         if unit_code.endswith(("m_s-1", "mps")):
             return value * 3.6
-        if unit_code.endswith(("km_h-1", "kmh")):
+        if unit_code.endswith(("km_h-1", "kmh", "km/h")):
             return value
-        if unit_code.endswith(("mi_h-1", "mph")):
+        if unit_code.endswith(("mi_h-1", "mph", "mp/h")):
             return value * 1.60934
-        if unit_code.endswith("kn"):
+        if unit_code.endswith(("kn", "kt")):
             return value * 1.852
         return value
 
