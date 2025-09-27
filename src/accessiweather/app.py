@@ -17,12 +17,6 @@ from .config import ConfigManager
 from .dialogs import AddLocationDialog, SettingsDialog
 from .dialogs.discussion import ForecastDiscussionDialog
 from .display import WeatherPresenter
-from .display.weather_presenter import (
-    AlertsPresentation,
-    CurrentConditionsPresentation,
-    ForecastPeriodPresentation,
-    ForecastPresentation,
-)
 from .location_manager import LocationManager
 from .models import WeatherData
 from .single_instance import SingleInstanceManager
@@ -48,13 +42,9 @@ class AccessiWeatherApp(toga.App):
 
         # UI components
         self.location_selection: toga.Selection | None = None
-        self.current_conditions_metrics_box: toga.Box | None = None
-        self.current_conditions_fallback: toga.MultilineTextInput | None = None
-        self.forecast_periods_box: toga.Box | None = None
-        self.forecast_hourly_box: toga.Box | None = None
-        self.forecast_fallback: toga.MultilineTextInput | None = None
-        self.alerts_list_box: toga.Box | None = None
-        self.alerts_fallback: toga.MultilineTextInput | None = None
+        self.current_conditions_display: toga.MultilineTextInput | None = None
+        self.forecast_display: toga.MultilineTextInput | None = None
+        self.alerts_table: toga.Table | None = None
         self.refresh_button: toga.Button | None = None
         self.status_label: toga.Label | None = None
 
@@ -415,61 +405,21 @@ class AccessiWeatherApp(toga.App):
         )
         weather_box.add(conditions_label)
 
-        self.current_conditions_metrics_box = toga.Box(
-            style=Pack(direction=COLUMN, padding=(0, 0, 5, 5), background_color="#f5f5f5")
-        )
-        self.current_conditions_metrics_box.add(
-            toga.Label("No current conditions data available.", style=Pack(padding=5))
-        )
-        weather_box.add(self.current_conditions_metrics_box)
-
-        detailed_current_label = toga.Label(
-            "Detailed summary:", style=Pack(font_style="italic", padding_top=5)
-        )
-        detailed_current_label.accessible_name = "Current conditions detailed summary"
-        weather_box.add(detailed_current_label)
-        self.current_conditions_fallback = toga.MultilineTextInput(
+        self.current_conditions_display = toga.MultilineTextInput(
             readonly=True, style=Pack(height=120, margin_bottom=10)
         )
-        self.current_conditions_fallback.value = "Current conditions data not available."
-        weather_box.add(self.current_conditions_fallback)
+        self.current_conditions_display.value = "No current conditions data available."
+        weather_box.add(self.current_conditions_display)
 
         # Forecast section
         forecast_label = toga.Label("Forecast:", style=Pack(font_weight="bold", margin_bottom=5))
         weather_box.add(forecast_label)
 
-        self.forecast_periods_box = toga.Box(
-            style=Pack(direction=COLUMN, padding=(0, 0, 5, 5), background_color="#f5f5f5"),
+        self.forecast_display = toga.MultilineTextInput(
+            readonly=True, style=Pack(height=200, margin_bottom=10)
         )
-        self.forecast_periods_box.add(
-            toga.Label("No forecast data available.", style=Pack(padding=5))
-        )
-        weather_box.add(self.forecast_periods_box)
-
-        self.forecast_hourly_box = toga.Box(
-            style=Pack(direction=COLUMN, padding=(0, 0, 10, 5), background_color="#f5f5f5"),
-        )
-        self.forecast_hourly_box.add(
-            toga.Label(
-                "Next 6 hours:",
-                style=Pack(font_style="italic", padding=(5, 5, 0, 5)),
-            )
-        )
-        self.forecast_hourly_box.add(
-            toga.Label("Hourly data not available.", style=Pack(padding=(0, 5, 5, 5)))
-        )
-        weather_box.add(self.forecast_hourly_box)
-
-        forecast_summary_label = toga.Label(
-            "Forecast detailed summary:", style=Pack(font_style="italic")
-        )
-        forecast_summary_label.accessible_name = "Forecast detailed summary"
-        weather_box.add(forecast_summary_label)
-        self.forecast_fallback = toga.MultilineTextInput(
-            readonly=True, style=Pack(height=160, margin_bottom=10)
-        )
-        self.forecast_fallback.value = "Forecast data not available."
-        weather_box.add(self.forecast_fallback)
+        self.forecast_display.value = "No forecast data available."
+        weather_box.add(self.forecast_display)
 
         # Forecast discussion button
         self.discussion_button = toga.Button(
@@ -485,20 +435,13 @@ class AccessiWeatherApp(toga.App):
         )
         weather_box.add(alerts_label)
 
-        self.alerts_list_box = toga.Box(
-            style=Pack(direction=COLUMN, padding=(0, 0, 10, 5), background_color="#f5f5f5"),
+        self.alerts_table = toga.Table(
+            headings=["Event", "Severity", "Headline"],
+            data=[],
+            style=Pack(height=150, padding_bottom=10),
+            on_select=self._on_alert_selected,
         )
-        self.alerts_list_box.add(toga.Label("No active weather alerts.", style=Pack(padding=5)))
-        weather_box.add(self.alerts_list_box)
-
-        alerts_summary_label = toga.Label("Alert summary:", style=Pack(font_style="italic"))
-        alerts_summary_label.accessible_name = "Weather alert summary"
-        weather_box.add(alerts_summary_label)
-        self.alerts_fallback = toga.MultilineTextInput(
-            readonly=True, style=Pack(height=120, margin_bottom=10)
-        )
-        self.alerts_fallback.value = "Weather alerts for this location:\nNo active weather alerts."
-        weather_box.add(self.alerts_fallback)
+        weather_box.add(self.alerts_table)
 
         # Alert details button
         self.alert_details_button = toga.Button(
@@ -927,6 +870,47 @@ class AccessiWeatherApp(toga.App):
         except Exception as e:
             logger.error(f"Error handling alert selection: {e}")
 
+    async def on_view_alert_details(self, widget):
+        """Handle the View Alert Details button press."""
+        try:
+            if (
+                not self.alerts_table
+                or not self.alerts_table.selection
+                or not self.current_alerts_data
+            ):
+                await self.main_window.info_dialog(
+                    "No Selection", "Please select an alert from the table first."
+                )
+                return
+
+            selected_row = self.alerts_table.selection
+            try:
+                alert_index = self.alerts_table.data.index(selected_row)
+            except ValueError:
+                await self.main_window.error_dialog(
+                    "Error", "Selected alert is no longer available."
+                )
+                return
+
+            active_alerts = self.current_alerts_data.get_active_alerts()
+            if alert_index >= len(active_alerts):
+                await self.main_window.error_dialog(
+                    "Error", "Selected alert is no longer available."
+                )
+                return
+
+            alert = active_alerts[alert_index]
+
+            from .alert_details_dialog import AlertDetailsDialog
+
+            title = f"Alert Details - {alert.event or 'Weather Alert'}"
+            dialog = AlertDetailsDialog(self, title, alert)
+            await dialog.show()
+
+        except Exception as e:
+            logger.error(f"Error showing alert details: {e}")
+            await self.main_window.error_dialog("Error", f"Failed to show alert details: {e}")
+
     async def _on_about_pressed(self, widget):
         """Handle about menu item."""
         await self.main_window.info_dialog(
@@ -1080,19 +1064,33 @@ class AccessiWeatherApp(toga.App):
 
             presentation = self.presenter.present(weather_data)
 
-            self._render_current_conditions_section(
-                presentation.current,
-                weather_data.location.name,
-            )
-            self._render_forecast_section(
-                presentation.forecast,
-                weather_data.location.name,
-            )
-            self._render_alerts_section(presentation.alerts, weather_data.location.name)
+            location_name = weather_data.location.name
+
+            # Current conditions
+            if self.current_conditions_display:
+                if presentation.current:
+                    self.current_conditions_display.value = presentation.current.fallback_text
+                else:
+                    self.current_conditions_display.value = f"Current conditions for {location_name}:\nNo current weather data available."
+
+            # Forecast
+            if self.forecast_display:
+                if presentation.forecast:
+                    self.forecast_display.value = presentation.forecast.fallback_text
+                else:
+                    self.forecast_display.value = (
+                        f"Forecast for {location_name}:\nNo forecast data available."
+                    )
+
+            # Alerts table
+            alerts_table_data = self._convert_alerts_to_table_data(weather_data.alerts)
+            if self.alerts_table:
+                self.alerts_table.data = alerts_table_data
+
             self.current_alerts_data = weather_data.alerts
             if self.alert_details_button:
-                has_alerts = bool(weather_data.alerts and weather_data.alerts.has_alerts())
-                self.alert_details_button.enabled = has_alerts
+                self.alert_details_button.enabled = len(alerts_table_data) > 0
+
             await self._notify_new_alerts(weather_data.alerts)
 
             logger.info("Weather displays updated successfully")
@@ -1179,193 +1177,19 @@ class AccessiWeatherApp(toga.App):
         """Show error message in weather displays."""
         error_text = f"Error loading weather data: {error_message}"
 
-        if self.current_conditions_fallback:
-            self.current_conditions_fallback.value = error_text
-        if self.current_conditions_metrics_box:
-            self._set_box_children(
-                self.current_conditions_metrics_box,
-                [toga.Label("Unable to load current conditions.", style=Pack(padding=5))],
-            )
+        if self.current_conditions_display:
+            self.current_conditions_display.value = error_text
 
-        if self.forecast_periods_box:
-            self._set_box_children(
-                self.forecast_periods_box,
-                [toga.Label("Forecast unavailable due to error.", style=Pack(padding=5))],
-            )
-        if self.forecast_hourly_box:
-            self._set_box_children(
-                self.forecast_hourly_box,
-                [toga.Label("Hourly forecast unavailable.", style=Pack(padding=5))],
-            )
-        if self.forecast_fallback:
-            self.forecast_fallback.value = error_text
+        if self.forecast_display:
+            self.forecast_display.value = error_text
 
-        if self.alerts_list_box:
-            self._set_box_children(
-                self.alerts_list_box,
-                [toga.Label("No alerts available due to error.", style=Pack(padding=5))],
-            )
+        if self.alerts_table:
+            self.alerts_table.data = [("Error", "N/A", "No alerts available due to error")]
             self.current_alerts_data = None
-        if self.alerts_fallback:
-            self.alerts_fallback.value = error_text
 
         # Disable the view details button during errors
         if self.alert_details_button:
             self.alert_details_button.enabled = False
-
-    # ------------------------------------------------------------------
-    # Rendering helpers
-    # ------------------------------------------------------------------
-
-    def _render_current_conditions_section(
-        self,
-        presentation: CurrentConditionsPresentation | None,
-        location_name: str,
-    ) -> None:
-        default_text = (
-            f"Current conditions for {location_name}:\nNo current weather data available."
-        )
-
-        if self.current_conditions_fallback:
-            self.current_conditions_fallback.value = (
-                presentation.fallback_text if presentation else default_text
-            )
-
-        if not self.current_conditions_metrics_box:
-            return
-
-        if not presentation:
-            self._set_box_children(
-                self.current_conditions_metrics_box,
-                [
-                    toga.Label(
-                        "No current conditions data available.",
-                        style=Pack(padding=5),
-                    )
-                ],
-            )
-            return
-
-        metric_widgets = [
-            toga.Label(
-                presentation.description or "Unknown",
-                style=Pack(padding=5, font_weight="bold"),
-            )
-        ]
-        metric_widgets.extend(
-            toga.Label(f"{metric.label}: {metric.value}", style=Pack(padding=(0, 5)))
-            for metric in presentation.metrics
-        )
-        self._set_box_children(self.current_conditions_metrics_box, metric_widgets)
-
-    def _render_forecast_section(
-        self,
-        presentation: ForecastPresentation | None,
-        location_name: str,
-    ) -> None:
-        default_text = f"Forecast for {location_name}:\nNo forecast data available."
-
-        if self.forecast_periods_box:
-            if presentation and presentation.periods:
-                period_widgets = [
-                    self._build_forecast_period_widget(period) for period in presentation.periods
-                ]
-            else:
-                period_widgets = [toga.Label("No forecast data available.", style=Pack(padding=5))]
-            self._set_box_children(self.forecast_periods_box, period_widgets)
-
-        if self.forecast_hourly_box:
-            if presentation and presentation.hourly_periods:
-                hourly_widgets = [
-                    toga.Label(
-                        "Next 6 hours:", style=Pack(font_style="italic", padding=(5, 5, 0, 5))
-                    )
-                ]
-                for period in presentation.hourly_periods:
-                    parts = [period.time]
-                    if period.temperature:
-                        parts.append(period.temperature)
-                    if period.conditions:
-                        parts.append(period.conditions)
-                    if period.wind:
-                        parts.append(f"Wind {period.wind}")
-                    hourly_widgets.append(
-                        toga.Label(" - ".join(parts), style=Pack(padding=(0, 5, 0, 5)))
-                    )
-            else:
-                hourly_widgets = [
-                    toga.Label("Hourly data not available.", style=Pack(padding=(5, 5, 5, 5)))
-                ]
-            self._set_box_children(self.forecast_hourly_box, hourly_widgets)
-
-        if self.forecast_fallback:
-            self.forecast_fallback.value = (
-                presentation.fallback_text if presentation else default_text
-            )
-
-    def _render_alerts_section(
-        self,
-        presentation: AlertsPresentation | None,
-        location_name: str,
-    ) -> None:
-        default_text = f"Weather alerts for {location_name}:\nNo active weather alerts."
-        if self.alerts_fallback:
-            self.alerts_fallback.value = (
-                presentation.fallback_text if presentation else default_text
-            )
-
-    def _build_forecast_period_widget(self, period: ForecastPeriodPresentation) -> toga.Box:
-        """Construct a stacked layout for a single forecast period."""
-        title_text = period.name or "Unknown period"
-        container = toga.Box(style=Pack(direction=COLUMN, padding=5))
-        container.accessible_name = f"{title_text} forecast"
-
-        title_label = toga.Label(title_text, style=Pack(font_weight="bold"))
-        title_label.accessible_name = f"{title_text}"
-        container.add(title_label)
-
-        if period.temperature:
-            container.add(
-                toga.Label(
-                    f"Temperature: {period.temperature}",
-                    style=Pack(padding_left=5),
-                )
-            )
-
-        if period.conditions:
-            container.add(
-                toga.Label(
-                    f"Conditions: {period.conditions}",
-                    style=Pack(padding_left=5),
-                )
-            )
-
-        if period.wind:
-            container.add(
-                toga.Label(
-                    f"Wind: {period.wind}",
-                    style=Pack(padding_left=5),
-                )
-            )
-
-        if period.details:
-            container.add(
-                toga.Label(
-                    period.details,
-                    style=Pack(padding_left=5),
-                )
-            )
-
-        return container
-
-    @staticmethod
-    def _set_box_children(box: toga.Box | None, widgets: list[toga.Widget]) -> None:
-        if not box:
-            return
-        for child in list(box.children):
-            box.remove(child)
-        for widget in widgets:
-            box.add(widget)
 
     async def _start_background_updates(self):
         """Start background weather updates."""

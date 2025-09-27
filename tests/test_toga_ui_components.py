@@ -72,21 +72,22 @@ class TestTogaUIComponents:
         assert settings_button.text == "Settings"
         assert settings_button.enabled is True
 
-    def test_forecast_stacked_layout(self, mock_widgets):
-        """Test forecast stacked layout widget."""
-        forecast_box = mock_widgets.create_widget(
-            "Box",
-            direction="COLUMN",
-            children=[
-                mock_widgets.create_widget("Label", text="Today: 78°F"),
-                mock_widgets.create_widget("Label", text="Tomorrow: 75°F"),
-                mock_widgets.create_widget("Label", text="Wednesday: 72°F"),
+    def test_forecast_table(self, mock_widgets):
+        """Test forecast table widget."""
+        forecast_table = mock_widgets.create_widget(
+            "Table",
+            headings=["Day", "High", "Low", "Condition"],
+            data=[
+                ["Today", "78°F", "58°F", "Sunny"],
+                ["Tomorrow", "75°F", "55°F", "Partly Cloudy"],
+                ["Wednesday", "72°F", "52°F", "Cloudy"],
             ],
         )
 
-        assert forecast_box.widget_type == "Box"
-        assert forecast_box.direction == "COLUMN"
-        assert len(forecast_box.children) == 3
+        assert forecast_table.widget_type == "Table"
+        assert len(forecast_table.headings) == 4
+        assert len(forecast_table.data) == 3
+        assert forecast_table.data[0][0] == "Today"
 
     def test_alert_notification_widget(self, mock_widgets):
         """Test alert notification widget."""
