@@ -192,6 +192,9 @@ class MockTogaWidgets:
             widget.headings = kwargs.get("headings", [])
             widget.data = kwargs.get("data", [])
             widget.on_select = kwargs.get("on_select", Mock())
+        elif widget_type == "Box":
+            widget.direction = kwargs.get("direction", "COLUMN")
+            widget.children = kwargs.get("children", [])
 
         return widget
 

@@ -20,6 +20,7 @@ from .models import (
     WeatherAlerts,
     WeatherData,
 )
+from .utils.temperature_utils import TemperatureUnit, calculate_dewpoint
 from .visual_crossing_client import VisualCrossingApiError, VisualCrossingClient
 
 logger = logging.getLogger(__name__)
@@ -620,23 +621,56 @@ class WeatherClient:
         """Parse NWS current conditions data."""
         props = data.get("properties", {})
 
-        # Convert Celsius to Fahrenheit if needed
         temp_c = props.get("temperature", {}).get("value")
-        temp_f = None
-        if temp_c is not None:
-            temp_f = (temp_c * 9 / 5) + 32
+        temp_f = (temp_c * 9 / 5) + 32 if temp_c is not None else None
+
+        humidity = props.get("relativeHumidity", {}).get("value")
+        humidity = round(humidity) if humidity is not None else None
+
+        dewpoint_c = props.get("dewpoint", {}).get("value")
+        dewpoint_f = (dewpoint_c * 9 / 5) + 32 if dewpoint_c is not None else None
+
+        visibility_m = props.get("visibility", {}).get("value")
+        visibility_miles = visibility_m / 1609.344 if visibility_m is not None else None
+        visibility_km = visibility_m / 1000 if visibility_m is not None else None
+
+        wind_speed = props.get("windSpeed", {})
+        wind_speed_value = wind_speed.get("value")
+        wind_speed_unit = wind_speed.get("unitCode")
+        wind_speed_mph, wind_speed_kph = self._convert_wind_speed_to_mph_and_kph(
+            wind_speed_value, wind_speed_unit
+        )
+
+        wind_direction = props.get("windDirection", {}).get("value")
+
+        pressure_pa = props.get("barometricPressure", {}).get("value")
+        pressure_in = self._convert_pa_to_inches(pressure_pa)
+
+        timestamp = props.get("timestamp")
+        last_updated = None
+        if timestamp:
+            try:
+                last_updated = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+            except ValueError:
+                logger.debug(f"Failed to parse observation timestamp: {timestamp}")
 
         return CurrentConditions(
             temperature_f=temp_f,
             temperature_c=temp_c,
             condition=props.get("textDescription"),
-            humidity=props.get("relativeHumidity", {}).get("value"),
-            wind_speed_mph=self._convert_mps_to_mph(props.get("windSpeed", {}).get("value")),
-            wind_direction=props.get("windDirection", {}).get("value"),
-            pressure_in=self._convert_pa_to_inches(
-                props.get("barometricPressure", {}).get("value")
-            ),
-            last_updated=datetime.now(),
+            humidity=humidity,
+            dewpoint_f=dewpoint_f,
+            dewpoint_c=dewpoint_c,
+            wind_speed_mph=wind_speed_mph,
+            wind_speed_kph=wind_speed_kph,
+            wind_direction=wind_direction,
+            pressure_in=pressure_in,
+            pressure_mb=self._convert_pa_to_mb(pressure_pa),
+            feels_like_f=None,
+            feels_like_c=None,
+            visibility_miles=visibility_miles,
+            visibility_km=visibility_km,
+            last_updated=last_updated or datetime.now(),
         )
 
     def _parse_nws_forecast(self, data: dict) -> Forecast:
@@ -756,17 +790,57 @@ class WeatherClient:
     def _parse_openmeteo_current_conditions(self, data: dict) -> CurrentConditions:
         """Parse OpenMeteo current conditions data."""
         current = data.get("current", {})
+        units = data.get("current_units", {})
+
+        temp_f, temp_c = self._normalize_temperature(
+            current.get("temperature_2m"), units.get("temperature_2m")
+        )
+
+        humidity = current.get("relative_humidity_2m")
+        humidity = round(humidity) if humidity is not None else None
+
+        dewpoint_f = None
+        dewpoint_c = None
+        if temp_f is not None and humidity is not None:
+            dewpoint_f = calculate_dewpoint(temp_f, humidity, unit=TemperatureUnit.FAHRENHEIT)
+            if dewpoint_f is not None:
+                dewpoint_c = self._convert_f_to_c(dewpoint_f)
+
+        wind_speed_mph, wind_speed_kph = self._convert_wind_speed_to_mph_and_kph(
+            current.get("wind_speed_10m"), units.get("wind_speed_10m")
+        )
+
+        pressure_in, pressure_mb = self._normalize_pressure(
+            current.get("pressure_msl"), units.get("pressure_msl")
+        )
+
+        feels_like_f, feels_like_c = self._normalize_temperature(
+            current.get("apparent_temperature"), units.get("apparent_temperature")
+        )
+
+        timestamp = current.get("time")
+        last_updated = None
+        if timestamp:
+            try:
+                last_updated = datetime.fromisoformat(timestamp)
+            except ValueError:
+                logger.debug(f"Failed to parse OpenMeteo timestamp: {timestamp}")
 
         return CurrentConditions(
-            temperature_f=current.get("temperature_2m"),
-            temperature_c=self._convert_f_to_c(current.get("temperature_2m")),
+            temperature_f=temp_f,
+            temperature_c=temp_c,
             condition=self._weather_code_to_description(current.get("weather_code")),
-            humidity=current.get("relative_humidity_2m"),
-            wind_speed_mph=current.get("wind_speed_10m"),
-            wind_direction=self._degrees_to_cardinal(current.get("wind_direction_10m")),
-            pressure_mb=current.get("pressure_msl"),
-            feels_like_f=current.get("apparent_temperature"),
-            last_updated=datetime.now(),
+            humidity=humidity,
+            dewpoint_f=dewpoint_f,
+            dewpoint_c=dewpoint_c,
+            wind_speed_mph=wind_speed_mph,
+            wind_speed_kph=wind_speed_kph,
+            wind_direction=current.get("wind_direction_10m"),
+            pressure_in=pressure_in,
+            pressure_mb=pressure_mb,
+            feels_like_f=feels_like_f,
+            feels_like_c=feels_like_c,
+            last_updated=last_updated or datetime.now(),
         )
 
     def _parse_openmeteo_forecast(self, data: dict) -> Forecast:
@@ -836,9 +910,96 @@ class WeatherClient:
         """Convert meters per second to miles per hour."""
         return mps * 2.237 if mps is not None else None
 
+    def _convert_wind_speed_to_mph(
+        self, value: float | None, unit_code: str | None
+    ) -> float | None:
+        """Normalize WMO wind speed units to miles per hour."""
+        if value is None:
+            return None
+        if not unit_code:
+            return value
+        unit_code = unit_code.lower()
+        if unit_code.endswith(("m_s-1", "mps")):
+            return value * 2.237
+        if unit_code.endswith(("km_h-1", "kmh", "km/h")):
+            return value * 0.621371
+        if unit_code.endswith(("mi_h-1", "mph", "mp/h")):
+            return value
+        if unit_code.endswith(("kn", "kt")):
+            return value * 1.15078
+        return value
+
+    def _convert_wind_speed_to_kph(
+        self, value: float | None, unit_code: str | None
+    ) -> float | None:
+        if value is None:
+            return None
+        if not unit_code:
+            return value
+        unit_code = unit_code.lower()
+        if unit_code.endswith(("m_s-1", "mps")):
+            return value * 3.6
+        if unit_code.endswith(("km_h-1", "kmh", "km/h")):
+            return value
+        if unit_code.endswith(("mi_h-1", "mph", "mp/h")):
+            return value * 1.60934
+        if unit_code.endswith(("kn", "kt")):
+            return value * 1.852
+        return value
+
+    def _convert_wind_speed_to_mph_and_kph(
+        self, value: float | None, unit_code: str | None
+    ) -> tuple[float | None, float | None]:
+        return (
+            self._convert_wind_speed_to_mph(value, unit_code),
+            self._convert_wind_speed_to_kph(value, unit_code),
+        )
+
     def _convert_pa_to_inches(self, pa: float | None) -> float | None:
         """Convert pascals to inches of mercury."""
         return pa * 0.0002953 if pa is not None else None
+
+    def _convert_pa_to_mb(self, pa: float | None) -> float | None:
+        return pa / 100 if pa is not None else None
+
+    def _normalize_temperature(
+        self, value: float | None, unit: str | None
+    ) -> tuple[float | None, float | None]:
+        if value is None:
+            return None, None
+
+        unit_lower = (unit or "").lower()
+        if "f" in unit_lower:
+            temp_f = value
+            temp_c = self._convert_f_to_c(temp_f)
+        elif "c" in unit_lower:
+            temp_c = value
+            temp_f = (temp_c * 9 / 5) + 32
+        else:
+            temp_c = value
+            temp_f = (temp_c * 9 / 5) + 32
+        return temp_f, temp_c
+
+    def _normalize_pressure(
+        self, value: float | None, unit: str | None
+    ) -> tuple[float | None, float | None]:
+        if value is None:
+            return None, None
+
+        unit_lower = (unit or "").lower()
+        if "hpa" in unit_lower or "mb" in unit_lower:
+            pressure_mb = value
+            pressure_in = value * 0.0295299830714
+        elif "pa" in unit_lower:
+            pressure_mb = value / 100
+            pressure_in = self._convert_pa_to_inches(value)
+        elif "inch" in unit_lower or unit_lower.endswith("in"):
+            pressure_in = value
+            pressure_mb = value * 33.8639
+        else:
+            pressure_mb = value
+            pressure_in = None
+        return pressure_in, pressure_mb
 
     def _convert_f_to_c(self, fahrenheit: float | None) -> float | None:
         """Convert Fahrenheit to Celsius."""

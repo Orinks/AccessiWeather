@@ -16,7 +16,7 @@ from .alert_notification_system import AlertNotificationSystem
 from .config import ConfigManager
 from .dialogs import AddLocationDialog, SettingsDialog
 from .dialogs.discussion import ForecastDiscussionDialog
-from .display import WxStyleWeatherFormatter
+from .display import WeatherPresenter
 from .location_manager import LocationManager
 from .models import WeatherData
 from .single_instance import SingleInstanceManager
@@ -36,7 +36,7 @@ class AccessiWeatherApp(toga.App):
         self.config_manager: ConfigManager | None = None
         self.weather_client: WeatherClient | None = None
         self.location_manager: LocationManager | None = None
-        self.formatter: WxStyleWeatherFormatter | None = None
+        self.presenter: WeatherPresenter | None = None
         self.update_service = None  # Will be initialized after config_manager
         self.single_instance_manager = None  # Will be initialized in startup
 
@@ -44,7 +44,7 @@ class AccessiWeatherApp(toga.App):
         self.location_selection: toga.Selection | None = None
         self.current_conditions_display: toga.MultilineTextInput | None = None
         self.forecast_display: toga.MultilineTextInput | None = None
-        self.alerts_display: toga.MultilineTextInput | None = None
+        self.alerts_table: toga.Table | None = None
         self.refresh_button: toga.Button | None = None
         self.status_label: toga.Label | None = None
 
@@ -199,7 +199,7 @@ class AccessiWeatherApp(toga.App):
 
         # Formatter
         config = self.config_manager.get_config()
-        self.formatter = WxStyleWeatherFormatter(config.settings)
+        self.presenter = WeatherPresenter(config.settings)
 
         # Notification system
         from .notifications.toast_notifier import SafeDesktopNotifier
@@ -399,7 +399,7 @@ class AccessiWeatherApp(toga.App):
         """Create the weather display section."""
         weather_box = toga.Box(style=Pack(direction=COLUMN, flex=1))
 
-        # Current conditions
+        # Current conditions section
         conditions_label = toga.Label(
             "Current Conditions:", style=Pack(font_weight="bold", margin_top=10, margin_bottom=5)
         )
@@ -411,7 +411,7 @@ class AccessiWeatherApp(toga.App):
         self.current_conditions_display.value = "No current conditions data available."
         weather_box.add(self.current_conditions_display)
 
-        # Forecast
+        # Forecast section
         forecast_label = toga.Label("Forecast:", style=Pack(font_weight="bold", margin_bottom=5))
         weather_box.add(forecast_label)
 
@@ -448,7 +448,7 @@ class AccessiWeatherApp(toga.App):
             "View Alert Details",
             on_press=self._on_alert_details_pressed,
             style=Pack(padding_bottom=10),
-            enabled=False,  # Disabled until an alert is selected
+            enabled=False,
         )
         weather_box.add(self.alert_details_button)
 
@@ -870,6 +870,47 @@ class AccessiWeatherApp(toga.App):
         except Exception as e:
             logger.error(f"Error handling alert selection: {e}")
 
+    async def on_view_alert_details(self, widget):
+        """Handle the View Alert Details button press."""
+        try:
+            if (
+                not self.alerts_table
+                or not self.alerts_table.selection
+                or not self.current_alerts_data
+            ):
+                await self.main_window.info_dialog(
+                    "No Selection", "Please select an alert from the table first."
+                )
+                return
+
+            selected_row = self.alerts_table.selection
+            try:
+                alert_index = self.alerts_table.data.index(selected_row)
+            except ValueError:
+                await self.main_window.error_dialog(
+                    "Error", "Selected alert is no longer available."
+                )
+                return
+
+            active_alerts = self.current_alerts_data.get_active_alerts()
+            if alert_index >= len(active_alerts):
+                await self.main_window.error_dialog(
+                    "Error", "Selected alert is no longer available."
+                )
+                return
+
+            alert = active_alerts[alert_index]
+
+            from .alert_details_dialog import AlertDetailsDialog
+
+            title = f"Alert Details - {alert.event or 'Weather Alert'}"
+            dialog = AlertDetailsDialog(self, title, alert)
+            await dialog.show()
+
+        except Exception as e:
+            logger.error(f"Error showing alert details: {e}")
+            await self.main_window.error_dialog("Error", f"Failed to show alert details: {e}")
+
     async def _on_about_pressed(self, widget):
         """Handle about menu item."""
         await self.main_window.info_dialog(
@@ -1018,31 +1059,39 @@ class AccessiWeatherApp(toga.App):
     async def _update_weather_displays(self, weather_data: WeatherData):
         """Update the weather display widgets with new data."""
         try:
-            # Format weather data
-            current_text = self.formatter.format_current_conditions(
-                weather_data.current, weather_data.location
-            )
-            forecast_text = self.formatter.format_forecast(
-                weather_data.forecast, weather_data.location, weather_data.hourly_forecast
-            )
-            # For alerts, we need to handle the table format differently
-            # The WxStyleWeatherFormatter returns a string, but we need table data
-            if self.alerts_table:
-                # Convert alerts data to table format for the simple app
-                alerts_table_data = self._convert_alerts_to_table_data(weather_data.alerts)
-                self.alerts_table.data = alerts_table_data
-                self.current_alerts_data = weather_data.alerts
-                if self.alert_details_button:
-                    self.alert_details_button.enabled = len(alerts_table_data) > 0
-                # Trigger notifications for new alerts
-                await self._notify_new_alerts(weather_data.alerts)
+            if not self.presenter:
+                raise RuntimeError("Weather presenter is not initialized")
 
-            # Update displays
+            presentation = self.presenter.present(weather_data)
+
+            location_name = weather_data.location.name
+
+            # Current conditions
             if self.current_conditions_display:
-                self.current_conditions_display.value = current_text
+                if presentation.current:
+                    self.current_conditions_display.value = presentation.current.fallback_text
+                else:
+                    self.current_conditions_display.value = f"Current conditions for {location_name}:\nNo current weather data available."
 
+            # Forecast
             if self.forecast_display:
-                self.forecast_display.value = forecast_text
+                if presentation.forecast:
+                    self.forecast_display.value = presentation.forecast.fallback_text
+                else:
+                    self.forecast_display.value = (
+                        f"Forecast for {location_name}:\nNo forecast data available."
+                    )
+
+            # Alerts table
+            alerts_table_data = self._convert_alerts_to_table_data(weather_data.alerts)
+            if self.alerts_table:
+                self.alerts_table.data = alerts_table_data
+
+            self.current_alerts_data = weather_data.alerts
+            if self.alert_details_button:
+                self.alert_details_button.enabled = len(alerts_table_data) > 0
+
+            await self._notify_new_alerts(weather_data.alerts)
 
             logger.info("Weather displays updated successfully")
 
@@ -1192,40 +1241,6 @@ class AccessiWeatherApp(toga.App):
             logger.info("Background updates cancelled")
         except Exception as e:
             logger.error(f"Background update error: {e}")
-
-    async def on_view_alert_details(self, widget):
-        """Handle the View Alert Details button press."""
-        try:
-            if not self.alerts_table.selection or not self.current_alerts_data:
-                await self.main_window.info_dialog(
-                    "No Selection", "Please select an alert from the table first."
-                )
-                return
-
-            # Get the selected row index
-            selected_row = self.alerts_table.selection
-            alert_index = self.alerts_table.data.index(selected_row)
-
-            # Get the alert from the original alerts data
-            active_alerts = self.current_alerts_data.get_active_alerts()
-            if alert_index >= len(active_alerts):
-                await self.main_window.error_dialog(
-                    "Error", "Selected alert is no longer available."
-                )
-                return
-
-            alert = active_alerts[alert_index]
-
-            # Create and show the comprehensive alert details dialog
-            from .alert_details_dialog import AlertDetailsDialog
-
-            title = f"Alert Details - {alert.event or 'Weather Alert'}"
-            dialog = AlertDetailsDialog(self, title, alert)
-            await dialog.show()
-
-        except Exception as e:
-            logger.error(f"Error showing alert details: {e}")
-            await self.main_window.error_dialog("Error", f"Failed to show alert details: {e}")
 
     def _show_error_dialog(self, title: str, message: str):
         """Show an error dialog (synchronous fallback)."""
