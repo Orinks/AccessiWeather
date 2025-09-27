@@ -28,6 +28,8 @@ class CurrentConditions:
     temperature_c: float | None = None
     condition: str | None = None
     humidity: int | None = None
+    dewpoint_f: float | None = None
+    dewpoint_c: float | None = None
     wind_speed_mph: float | None = None
     wind_speed_kph: float | None = None
     wind_direction: str | None = None

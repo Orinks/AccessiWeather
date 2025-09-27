@@ -239,7 +239,10 @@ class WeatherPresenter:
             metrics.append(Metric("UV Index", f"{current.uv_index} ({uv_desc})"))
 
         if current.last_updated:
-            metrics.append(Metric("Last updated", current.last_updated.strftime("%I:%M %p")))
+            timestamp = current.last_updated
+            if timestamp.tzinfo is not None:
+                timestamp = timestamp.astimezone()
+            metrics.append(Metric("Last updated", timestamp.strftime("%I:%M %p")))
 
         fallback_lines = [f"Current Conditions: {description}", f"Temperature: {temperature_str}"]
         for metric in metrics[1:]:  # already added temperature
@@ -433,6 +436,13 @@ class WeatherPresenter:
         ):
             return None
 
+        speed_mph = current.wind_speed_mph
+        if speed_mph is None and current.wind_speed_kph is not None:
+            speed_mph = current.wind_speed_kph * 0.621371
+
+        if speed_mph is not None and abs(speed_mph) < 0.5:
+            return "Calm"
+
         direction = None
         if current.wind_direction is not None:
             if isinstance(current.wind_direction, int | float):
@@ -458,16 +468,27 @@ class WeatherPresenter:
         unit_pref: TemperatureUnit,
         precision: int,
     ) -> str | None:
-        if current.temperature_f is None or current.humidity is None:
-            return None
-        dewpoint_f = calculate_dewpoint(
-            current.temperature_f,
-            current.humidity,
-            unit=TemperatureUnit.FAHRENHEIT,
+        dewpoint_f = current.dewpoint_f
+        dewpoint_c = current.dewpoint_c
+
+        if dewpoint_f is None and dewpoint_c is None:
+            if current.temperature_f is None or current.humidity is None:
+                return None
+            dewpoint_f = calculate_dewpoint(
+                current.temperature_f,
+                current.humidity,
+                unit=TemperatureUnit.FAHRENHEIT,
+            )
+            if dewpoint_f is None:
+                return None
+            dewpoint_c = (dewpoint_f - 32) * 5 / 9
+
+        return format_temperature(
+            dewpoint_f,
+            unit_pref,
+            temperature_c=dewpoint_c,
+            precision=precision,
         )
-        if dewpoint_f is None:
-            return None
-        return format_temperature(dewpoint_f, unit_pref, precision=precision)
 
     def _format_pressure(
         self,

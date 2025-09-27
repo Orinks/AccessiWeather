@@ -626,6 +626,13 @@ class WeatherClient:
         humidity = props.get("relativeHumidity", {}).get("value")
         humidity = round(humidity) if humidity is not None else None
 
+        dewpoint_c = props.get("dewpoint", {}).get("value")
+        dewpoint_f = (dewpoint_c * 9 / 5) + 32 if dewpoint_c is not None else None
+
+        visibility_m = props.get("visibility", {}).get("value")
+        visibility_miles = visibility_m / 1609.344 if visibility_m is not None else None
+        visibility_km = visibility_m / 1000 if visibility_m is not None else None
+
         wind_speed = props.get("windSpeed", {})
         wind_speed_value = wind_speed.get("value")
         wind_speed_unit = wind_speed.get("unitCode")
@@ -651,6 +658,8 @@ class WeatherClient:
             temperature_c=temp_c,
             condition=props.get("textDescription"),
             humidity=humidity,
+            dewpoint_f=dewpoint_f,
+            dewpoint_c=dewpoint_c,
             wind_speed_mph=wind_speed_mph,
             wind_speed_kph=wind_speed_kph,
             wind_direction=wind_direction,
@@ -658,6 +667,8 @@ class WeatherClient:
             pressure_mb=self._convert_pa_to_mb(pressure_pa),
             feels_like_f=None,
             feels_like_c=None,
+            visibility_miles=visibility_miles,
+            visibility_km=visibility_km,
             last_updated=last_updated or datetime.now(),
         )
 
