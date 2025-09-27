@@ -7,7 +7,7 @@ with straightforward, direct API calls and simple data models.
 
 from .app import AccessiWeatherApp, main
 from .config import ConfigManager
-from .display import DetailedWeatherFormatter
+from .display import WeatherPresenter
 from .formatters import WeatherFormatter
 from .location_manager import LocationManager
 from .models import (
@@ -77,7 +77,7 @@ __all__ = [
     "WeatherClient",
     "LocationManager",
     "WeatherFormatter",
-    "DetailedWeatherFormatter",
+    "WeatherPresenter",
     # Data models
     "Location",
     "CurrentConditions",

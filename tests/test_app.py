@@ -61,13 +61,16 @@ class TestAccessiWeatherAppInitialization:
         assert app.config_manager is None
         assert app.weather_client is None
         assert app.location_manager is None
-        assert app.formatter is None
+        assert app.presenter is None
 
         # Check UI components are None initially
         assert app.location_selection is None
-        assert app.current_conditions_display is None
-        assert app.forecast_display is None
-        assert app.alerts_display is None
+        assert app.current_conditions_metrics_box is None
+        assert app.current_conditions_fallback is None
+        assert app.forecast_table is None
+        assert app.forecast_fallback is None
+        assert app.alerts_table is None
+        assert app.alerts_fallback is None
         assert app.refresh_button is None
         assert app.status_label is None
 
@@ -138,7 +141,7 @@ class TestAccessiWeatherAppInitialization:
             patch("accessiweather.app.ConfigManager") as mock_config_manager_class,
             patch("accessiweather.app.WeatherClient") as mock_weather_client_class,
             patch("accessiweather.app.LocationManager") as mock_location_manager_class,
-            patch("accessiweather.app.DetailedWeatherFormatter") as mock_formatter_class,
+            patch("accessiweather.app.WeatherPresenter") as mock_presenter_class,
             patch("accessiweather.app.AlertManager"),
             patch("accessiweather.app.AlertNotificationSystem"),
             patch.object(app, "_initialize_system_tray"),
@@ -156,8 +159,8 @@ class TestAccessiWeatherAppInitialization:
             mock_location_manager = Mock()
             mock_location_manager_class.return_value = mock_location_manager
 
-            mock_formatter = Mock()
-            mock_formatter_class.return_value = mock_formatter
+            mock_presenter = Mock()
+            mock_presenter_class.return_value = mock_presenter
 
             app._initialize_components()
 
@@ -165,7 +168,7 @@ class TestAccessiWeatherAppInitialization:
             assert app.config_manager == mock_config_manager
             assert app.weather_client == mock_weather_client
             assert app.location_manager == mock_location_manager
-            assert app.formatter == mock_formatter
+            assert app.presenter == mock_presenter
 
     @pytest.mark.asyncio
     async def test_on_running_success(self, mock_toga_app):
@@ -371,7 +374,7 @@ def test_accessiweather_app_basic_functionality():
         assert app.config_manager is None
         assert app.weather_client is None
         assert app.location_manager is None
-        assert app.formatter is None
+        assert app.presenter is None
         assert app.is_updating is False
 
         # Test utility methods

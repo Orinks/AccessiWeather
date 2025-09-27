@@ -4,8 +4,8 @@ This package provides display components and formatters that match the wx versio
 output exactly while being organized into clean, modular components.
 """
 
-from .detailed_text_formatter import DetailedWeatherFormatter
+from .weather_presenter import WeatherPresenter
 
 __all__ = [
-    "DetailedWeatherFormatter",
+    "WeatherPresenter",
 ]

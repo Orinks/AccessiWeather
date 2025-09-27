@@ -16,7 +16,12 @@ from .alert_notification_system import AlertNotificationSystem
 from .config import ConfigManager
 from .dialogs import AddLocationDialog, SettingsDialog
 from .dialogs.discussion import ForecastDiscussionDialog
-from .display import DetailedWeatherFormatter
+from .display import WeatherPresenter
+from .display.weather_presenter import (
+    AlertsPresentation,
+    CurrentConditionsPresentation,
+    ForecastPresentation,
+)
 from .location_manager import LocationManager
 from .models import WeatherData
 from .single_instance import SingleInstanceManager
@@ -36,15 +41,19 @@ class AccessiWeatherApp(toga.App):
         self.config_manager: ConfigManager | None = None
         self.weather_client: WeatherClient | None = None
         self.location_manager: LocationManager | None = None
-        self.formatter: DetailedWeatherFormatter | None = None
+        self.presenter: WeatherPresenter | None = None
         self.update_service = None  # Will be initialized after config_manager
         self.single_instance_manager = None  # Will be initialized in startup
 
         # UI components
         self.location_selection: toga.Selection | None = None
-        self.current_conditions_display: toga.MultilineTextInput | None = None
-        self.forecast_display: toga.MultilineTextInput | None = None
-        self.alerts_display: toga.MultilineTextInput | None = None
+        self.current_conditions_metrics_box: toga.Box | None = None
+        self.current_conditions_fallback: toga.MultilineTextInput | None = None
+        self.forecast_table: toga.Table | None = None
+        self.forecast_hourly_box: toga.Box | None = None
+        self.forecast_fallback: toga.MultilineTextInput | None = None
+        self.alerts_table: toga.Table | None = None
+        self.alerts_fallback: toga.MultilineTextInput | None = None
         self.refresh_button: toga.Button | None = None
         self.status_label: toga.Label | None = None
 
@@ -199,7 +208,7 @@ class AccessiWeatherApp(toga.App):
 
         # Formatter
         config = self.config_manager.get_config()
-        self.formatter = DetailedWeatherFormatter(config.settings)
+        self.presenter = WeatherPresenter(config.settings)
 
         # Notification system
         from .notifications.toast_notifier import SafeDesktopNotifier
@@ -399,27 +408,62 @@ class AccessiWeatherApp(toga.App):
         """Create the weather display section."""
         weather_box = toga.Box(style=Pack(direction=COLUMN, flex=1))
 
-        # Current conditions
+        # Current conditions section
         conditions_label = toga.Label(
             "Current Conditions:", style=Pack(font_weight="bold", margin_top=10, margin_bottom=5)
         )
         weather_box.add(conditions_label)
 
-        self.current_conditions_display = toga.MultilineTextInput(
+        self.current_conditions_metrics_box = toga.Box(
+            style=Pack(direction=COLUMN, padding=(0, 0, 5, 5), background_color="#f5f5f5")
+        )
+        self.current_conditions_metrics_box.add(
+            toga.Label("No current conditions data available.", style=Pack(padding=5))
+        )
+        weather_box.add(self.current_conditions_metrics_box)
+
+        weather_box.add(
+            toga.Label("Screen reader summary:", style=Pack(font_style="italic", padding_top=5))
+        )
+        self.current_conditions_fallback = toga.MultilineTextInput(
             readonly=True, style=Pack(height=120, margin_bottom=10)
         )
-        self.current_conditions_display.value = "No current conditions data available."
-        weather_box.add(self.current_conditions_display)
+        self.current_conditions_fallback.value = "Current conditions data not available."
+        weather_box.add(self.current_conditions_fallback)
 
-        # Forecast
+        # Forecast section
         forecast_label = toga.Label("Forecast:", style=Pack(font_weight="bold", margin_bottom=5))
         weather_box.add(forecast_label)
 
-        self.forecast_display = toga.MultilineTextInput(
-            readonly=True, style=Pack(height=200, margin_bottom=10)
+        self.forecast_table = toga.Table(
+            headings=["Period", "Temperature", "Conditions", "Wind"],
+            data=[],
+            style=Pack(height=200, margin_bottom=5),
         )
-        self.forecast_display.value = "No forecast data available."
-        weather_box.add(self.forecast_display)
+        weather_box.add(self.forecast_table)
+
+        self.forecast_hourly_box = toga.Box(
+            style=Pack(direction=COLUMN, padding=(0, 0, 10, 5), background_color="#f5f5f5"),
+        )
+        self.forecast_hourly_box.add(
+            toga.Label(
+                "Next 6 hours:",
+                style=Pack(font_style="italic", padding=(5, 5, 0, 5)),
+            )
+        )
+        self.forecast_hourly_box.add(
+            toga.Label("Hourly data not available.", style=Pack(padding=(0, 5, 5, 5)))
+        )
+        weather_box.add(self.forecast_hourly_box)
+
+        weather_box.add(
+            toga.Label("Forecast screen reader summary:", style=Pack(font_style="italic"))
+        )
+        self.forecast_fallback = toga.MultilineTextInput(
+            readonly=True, style=Pack(height=160, margin_bottom=10)
+        )
+        self.forecast_fallback.value = "Forecast data not available."
+        weather_box.add(self.forecast_fallback)
 
         # Forecast discussion button
         self.discussion_button = toga.Button(
@@ -442,6 +486,13 @@ class AccessiWeatherApp(toga.App):
             on_select=self._on_alert_selected,
         )
         weather_box.add(self.alerts_table)
+
+        weather_box.add(toga.Label("Alert screen reader summary:", style=Pack(font_style="italic")))
+        self.alerts_fallback = toga.MultilineTextInput(
+            readonly=True, style=Pack(height=120, margin_bottom=10)
+        )
+        self.alerts_fallback.value = "Weather alerts for this location:\nNo active weather alerts."
+        weather_box.add(self.alerts_fallback)
 
         # Alert details button
         self.alert_details_button = toga.Button(
@@ -1018,31 +1069,29 @@ class AccessiWeatherApp(toga.App):
     async def _update_weather_displays(self, weather_data: WeatherData):
         """Update the weather display widgets with new data."""
         try:
-            # Format weather data
-            current_text = self.formatter.format_current_conditions(
-                weather_data.current, weather_data.location
+            if not self.presenter:
+                raise RuntimeError("Weather presenter is not initialized")
+
+            presentation = self.presenter.present(weather_data)
+
+            self._render_current_conditions_section(
+                presentation.current,
+                weather_data.location.name,
             )
-            forecast_text = self.formatter.format_forecast(
-                weather_data.forecast, weather_data.location, weather_data.hourly_forecast
+            self._render_forecast_section(
+                presentation.forecast,
+                weather_data.location.name,
             )
-            # For alerts, we need to handle the table format differently
-            # The detailed text formatter returns a string, but we need table data
+            self._render_alerts_section(presentation.alerts, weather_data.location.name)
+
+            # For alerts, update notifications and tables
             if self.alerts_table:
-                # Convert alerts data to table format for the simple app
                 alerts_table_data = self._convert_alerts_to_table_data(weather_data.alerts)
                 self.alerts_table.data = alerts_table_data
                 self.current_alerts_data = weather_data.alerts
                 if self.alert_details_button:
                     self.alert_details_button.enabled = len(alerts_table_data) > 0
-                # Trigger notifications for new alerts
                 await self._notify_new_alerts(weather_data.alerts)
-
-            # Update displays
-            if self.current_conditions_display:
-                self.current_conditions_display.value = current_text
-
-            if self.forecast_display:
-                self.forecast_display.value = forecast_text
 
             logger.info("Weather displays updated successfully")
 
@@ -1128,19 +1177,148 @@ class AccessiWeatherApp(toga.App):
         """Show error message in weather displays."""
         error_text = f"Error loading weather data: {error_message}"
 
-        if self.current_conditions_display:
-            self.current_conditions_display.value = error_text
+        if self.current_conditions_fallback:
+            self.current_conditions_fallback.value = error_text
+        if self.current_conditions_metrics_box:
+            self._set_box_children(
+                self.current_conditions_metrics_box,
+                [toga.Label("Unable to load current conditions.", style=Pack(padding=5))],
+            )
 
-        if self.forecast_display:
-            self.forecast_display.value = error_text
+        if self.forecast_table:
+            self.forecast_table.data = []
+        if self.forecast_hourly_box:
+            self._set_box_children(
+                self.forecast_hourly_box,
+                [toga.Label("Hourly forecast unavailable.", style=Pack(padding=5))],
+            )
+        if self.forecast_fallback:
+            self.forecast_fallback.value = error_text
 
         if self.alerts_table:
             self.alerts_table.data = [("Error", "N/A", "No alerts available due to error")]
             self.current_alerts_data = None
+        if self.alerts_fallback:
+            self.alerts_fallback.value = error_text
 
         # Disable the view details button during errors
         if self.alert_details_button:
             self.alert_details_button.enabled = False
+
+    # ------------------------------------------------------------------
+    # Rendering helpers
+    # ------------------------------------------------------------------
+
+    def _render_current_conditions_section(
+        self,
+        presentation: CurrentConditionsPresentation | None,
+        location_name: str,
+    ) -> None:
+        default_text = (
+            f"Current conditions for {location_name}:\nNo current weather data available."
+        )
+
+        if self.current_conditions_fallback:
+            self.current_conditions_fallback.value = (
+                presentation.fallback_text if presentation else default_text
+            )
+
+        if not self.current_conditions_metrics_box:
+            return
+
+        if not presentation:
+            self._set_box_children(
+                self.current_conditions_metrics_box,
+                [
+                    toga.Label(
+                        "No current conditions data available.",
+                        style=Pack(padding=5),
+                    )
+                ],
+            )
+            return
+
+        metric_widgets = [
+            toga.Label(
+                presentation.description or "Unknown",
+                style=Pack(padding=5, font_weight="bold"),
+            )
+        ]
+        metric_widgets.extend(
+            toga.Label(f"{metric.label}: {metric.value}", style=Pack(padding=(0, 5)))
+            for metric in presentation.metrics
+        )
+        self._set_box_children(self.current_conditions_metrics_box, metric_widgets)
+
+    def _render_forecast_section(
+        self,
+        presentation: ForecastPresentation | None,
+        location_name: str,
+    ) -> None:
+        default_text = f"Forecast for {location_name}:\nNo forecast data available."
+
+        if self.forecast_table:
+            if presentation:
+                self.forecast_table.data = [
+                    (
+                        period.name,
+                        period.temperature or "N/A",
+                        period.conditions or "N/A",
+                        period.wind or "",
+                    )
+                    for period in presentation.periods
+                ]
+            else:
+                self.forecast_table.data = []
+
+        if self.forecast_hourly_box:
+            if presentation and presentation.hourly_periods:
+                hourly_widgets = [
+                    toga.Label(
+                        "Next 6 hours:", style=Pack(font_style="italic", padding=(5, 5, 0, 5))
+                    )
+                ]
+                for period in presentation.hourly_periods:
+                    parts = [period.time]
+                    if period.temperature:
+                        parts.append(period.temperature)
+                    if period.conditions:
+                        parts.append(period.conditions)
+                    if period.wind:
+                        parts.append(f"Wind {period.wind}")
+                    hourly_widgets.append(
+                        toga.Label(" - ".join(parts), style=Pack(padding=(0, 5, 0, 5)))
+                    )
+            else:
+                hourly_widgets = [
+                    toga.Label("Hourly data not available.", style=Pack(padding=(5, 5, 5, 5)))
+                ]
+            self._set_box_children(self.forecast_hourly_box, hourly_widgets)
+
+        if self.forecast_fallback:
+            self.forecast_fallback.value = (
+                presentation.fallback_text if presentation else default_text
+            )
+
+    def _render_alerts_section(
+        self,
+        presentation: AlertsPresentation | None,
+        location_name: str,
+    ) -> None:
+        default_text = f"Weather alerts for {location_name}:\nNo active weather alerts."
+        if self.alerts_fallback:
+            self.alerts_fallback.value = (
+                presentation.fallback_text if presentation else default_text
+            )
+
+    @staticmethod
+    def _set_box_children(box: toga.Box | None, widgets: list[toga.Widget]) -> None:
+        if not box:
+            return
+        for child in list(box.children):
+            box.remove(child)
+        for widget in widgets:
+            box.add(widget)
 
     async def _start_background_updates(self):
         """Start background weather updates."""
