@@ -1,7 +1,7 @@
-"""WX-style weather data formatter for AccessiWeather Simple.
+"""Detailed text formatter for AccessiWeather Simple.
 
-This module provides weather data formatting that exactly matches the wx version's
-display output for consistency and familiarity.
+This module produces accessibility-first textual weather summaries matching the
+legacy layout expectations while living in the modern Toga app.
 """
 
 import logging
@@ -27,8 +27,8 @@ from ..utils import (
 logger = logging.getLogger(__name__)
 
 
-class WxStyleWeatherFormatter:
-    """Weather data formatter that matches the wx version's output exactly."""
+class DetailedWeatherFormatter:
+    """Weather data formatter that provides the detailed text experience."""
 
     def __init__(self, settings: AppSettings):
         """Initialize the instance."""
@@ -155,9 +155,7 @@ class WxStyleWeatherFormatter:
                 unit=TemperatureUnit.FAHRENHEIT,
             )
             if dewpoint_f is not None:
-                dewpoint_str = format_temperature(
-                    dewpoint_f, unit_pref, precision=precision
-                )
+                dewpoint_str = format_temperature(dewpoint_f, unit_pref, precision=precision)
                 text += f"Dewpoint: {dewpoint_str}\n"
 
         text += f"Pressure: {pressure_str}"

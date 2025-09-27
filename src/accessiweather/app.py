@@ -16,7 +16,7 @@ from .alert_notification_system import AlertNotificationSystem
 from .config import ConfigManager
 from .dialogs import AddLocationDialog, SettingsDialog
 from .dialogs.discussion import ForecastDiscussionDialog
-from .display import WxStyleWeatherFormatter
+from .display import DetailedWeatherFormatter
 from .location_manager import LocationManager
 from .models import WeatherData
 from .single_instance import SingleInstanceManager
@@ -36,7 +36,7 @@ class AccessiWeatherApp(toga.App):
         self.config_manager: ConfigManager | None = None
         self.weather_client: WeatherClient | None = None
         self.location_manager: LocationManager | None = None
-        self.formatter: WxStyleWeatherFormatter | None = None
+        self.formatter: DetailedWeatherFormatter | None = None
         self.update_service = None  # Will be initialized after config_manager
         self.single_instance_manager = None  # Will be initialized in startup
 
@@ -199,7 +199,7 @@ class AccessiWeatherApp(toga.App):
 
         # Formatter
         config = self.config_manager.get_config()
-        self.formatter = WxStyleWeatherFormatter(config.settings)
+        self.formatter = DetailedWeatherFormatter(config.settings)
 
         # Notification system
         from .notifications.toast_notifier import SafeDesktopNotifier
@@ -1026,7 +1026,7 @@ class AccessiWeatherApp(toga.App):
                 weather_data.forecast, weather_data.location, weather_data.hourly_forecast
             )
             # For alerts, we need to handle the table format differently
-            # The WxStyleWeatherFormatter returns a string, but we need table data
+            # The detailed text formatter returns a string, but we need table data
             if self.alerts_table:
                 # Convert alerts data to table format for the simple app
                 alerts_table_data = self._convert_alerts_to_table_data(weather_data.alerts)

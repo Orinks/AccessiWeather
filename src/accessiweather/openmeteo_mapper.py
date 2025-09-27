@@ -63,9 +63,7 @@ class OpenMeteoMapper:
                             current.get("relative_humidity_2m"),
                             temperature_unit,
                         ),
-                        "unitCode": self._get_temperature_unit_code(
-                            temperature_unit
-                        ),
+                        "unitCode": self._get_temperature_unit_code(temperature_unit),
                         "qualityControl": "qc:V",
                     },
                     "apparentTemperature": {

@@ -1,16 +1,16 @@
-"""Unit tests for WxStyleWeatherFormatter accuracy-sensitive output."""
+"""Unit tests for DetailedWeatherFormatter accuracy-sensitive output."""
 
 import pytest
 
-from accessiweather.display import WxStyleWeatherFormatter
+from accessiweather.display import DetailedWeatherFormatter
 from accessiweather.models import AppSettings, CurrentConditions, Location
 
 
 @pytest.mark.unit
-def test_wx_formatter_includes_precise_dewpoint():
+def test_detailed_formatter_includes_precise_dewpoint():
     """Formatter should surface dewpoint derived from temperature and humidity."""
     settings = AppSettings(temperature_unit="both")
-    formatter = WxStyleWeatherFormatter(settings)
+    formatter = DetailedWeatherFormatter(settings)
     location = Location(name="Test City", latitude=40.0, longitude=-75.0)
 
     conditions = CurrentConditions(

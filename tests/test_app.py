@@ -138,7 +138,7 @@ class TestAccessiWeatherAppInitialization:
             patch("accessiweather.app.ConfigManager") as mock_config_manager_class,
             patch("accessiweather.app.WeatherClient") as mock_weather_client_class,
             patch("accessiweather.app.LocationManager") as mock_location_manager_class,
-            patch("accessiweather.app.WxStyleWeatherFormatter") as mock_formatter_class,
+            patch("accessiweather.app.DetailedWeatherFormatter") as mock_formatter_class,
             patch("accessiweather.app.AlertManager"),
             patch("accessiweather.app.AlertNotificationSystem"),
             patch.object(app, "_initialize_system_tray"),

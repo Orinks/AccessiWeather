@@ -11,7 +11,6 @@ from accessiweather.utils.temperature_utils import (
     get_temperature_values,
 )
 
-
 pytestmark = pytest.mark.unit
 
 

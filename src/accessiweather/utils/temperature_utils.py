@@ -56,7 +56,11 @@ def fahrenheit_to_celsius(fahrenheit: float) -> float:
 def _normalize_dewpoint_unit(unit: TemperatureUnit | str | None) -> TemperatureUnit:
     """Normalize a dewpoint unit preference to a supported enum value."""
     if isinstance(unit, TemperatureUnit):
-        return TemperatureUnit.CELSIUS if unit == TemperatureUnit.CELSIUS else TemperatureUnit.FAHRENHEIT
+        return (
+            TemperatureUnit.CELSIUS
+            if unit == TemperatureUnit.CELSIUS
+            else TemperatureUnit.FAHRENHEIT
+        )
 
     if isinstance(unit, str):
         normalized = unit.strip().lower()

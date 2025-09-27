@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from accessiweather.display import WxStyleWeatherFormatter
+from accessiweather.display import DetailedWeatherFormatter
 from accessiweather.models import Location
 from accessiweather.utils import convert_wind_direction_to_cardinal
 from accessiweather.weather_client import WeatherClient
@@ -84,7 +84,7 @@ class TestWeatherDataFetching:
         from accessiweather.models import AppSettings, CurrentConditions
 
         settings = AppSettings()
-        formatter = WxStyleWeatherFormatter(settings)
+        formatter = DetailedWeatherFormatter(settings)
         location = Location("Test City", 40.0, -75.0)
 
         # Create conditions with numeric wind direction (the bug we fixed)
@@ -286,12 +286,12 @@ def test_weather_fetching_components_available():
 
 def test_wind_direction_bug_is_fixed():
     """Test that the wind direction formatting bug is fixed."""
-    from accessiweather.display import WxStyleWeatherFormatter
+    from accessiweather.display import DetailedWeatherFormatter
     from accessiweather.models import AppSettings, CurrentConditions, Location
 
     # This test verifies the specific bug that was causing crashes
     settings = AppSettings()
-    formatter = WxStyleWeatherFormatter(settings)
+    formatter = DetailedWeatherFormatter(settings)
     location = Location("Test", 40.0, -75.0)
 
     # Create conditions with numeric wind direction (the problematic case)
