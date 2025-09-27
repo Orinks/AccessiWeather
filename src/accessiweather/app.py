@@ -53,7 +53,7 @@ class AccessiWeatherApp(toga.App):
         self.forecast_periods_box: toga.Box | None = None
         self.forecast_hourly_box: toga.Box | None = None
         self.forecast_fallback: toga.MultilineTextInput | None = None
-        self.alerts_table: toga.Table | None = None
+        self.alerts_list_box: toga.Box | None = None
         self.alerts_fallback: toga.MultilineTextInput | None = None
         self.refresh_button: toga.Button | None = None
         self.status_label: toga.Label | None = None
@@ -485,13 +485,11 @@ class AccessiWeatherApp(toga.App):
         )
         weather_box.add(alerts_label)
 
-        self.alerts_table = toga.Table(
-            headings=["Event", "Severity", "Headline"],
-            data=[],
-            style=Pack(height=150, padding_bottom=10),
-            on_select=self._on_alert_selected,
+        self.alerts_list_box = toga.Box(
+            style=Pack(direction=COLUMN, padding=(0, 0, 10, 5), background_color="#f5f5f5"),
         )
-        weather_box.add(self.alerts_table)
+        self.alerts_list_box.add(toga.Label("No active weather alerts.", style=Pack(padding=5)))
+        weather_box.add(self.alerts_list_box)
 
         alerts_summary_label = toga.Label("Alert summary:", style=Pack(font_style="italic"))
         alerts_summary_label.accessible_name = "Weather alert summary"
@@ -507,7 +505,7 @@ class AccessiWeatherApp(toga.App):
             "View Alert Details",
             on_press=self._on_alert_details_pressed,
             style=Pack(padding_bottom=10),
-            enabled=False,  # Disabled until an alert is selected
+            enabled=False,
         )
         weather_box.add(self.alert_details_button)
 
@@ -1091,15 +1089,11 @@ class AccessiWeatherApp(toga.App):
                 weather_data.location.name,
             )
             self._render_alerts_section(presentation.alerts, weather_data.location.name)
-
-            # For alerts, update notifications and tables
-            if self.alerts_table:
-                alerts_table_data = self._convert_alerts_to_table_data(weather_data.alerts)
-                self.alerts_table.data = alerts_table_data
-                self.current_alerts_data = weather_data.alerts
-                if self.alert_details_button:
-                    self.alert_details_button.enabled = len(alerts_table_data) > 0
-                await self._notify_new_alerts(weather_data.alerts)
+            self.current_alerts_data = weather_data.alerts
+            if self.alert_details_button:
+                has_alerts = bool(weather_data.alerts and weather_data.alerts.has_alerts())
+                self.alert_details_button.enabled = has_alerts
+            await self._notify_new_alerts(weather_data.alerts)
 
             logger.info("Weather displays updated successfully")
 
@@ -1206,8 +1200,11 @@ class AccessiWeatherApp(toga.App):
         if self.forecast_fallback:
             self.forecast_fallback.value = error_text
 
-        if self.alerts_table:
-            self.alerts_table.data = [("Error", "N/A", "No alerts available due to error")]
+        if self.alerts_list_box:
+            self._set_box_children(
+                self.alerts_list_box,
+                [toga.Label("No alerts available due to error.", style=Pack(padding=5))],
+            )
             self.current_alerts_data = None
         if self.alerts_fallback:
             self.alerts_fallback.value = error_text
@@ -1420,40 +1417,6 @@ class AccessiWeatherApp(toga.App):
             logger.info("Background updates cancelled")
         except Exception as e:
             logger.error(f"Background update error: {e}")
-
-    async def on_view_alert_details(self, widget):
-        """Handle the View Alert Details button press."""
-        try:
-            if not self.alerts_table.selection or not self.current_alerts_data:
-                await self.main_window.info_dialog(
-                    "No Selection", "Please select an alert from the table first."
-                )
-                return
-
-            # Get the selected row index
-            selected_row = self.alerts_table.selection
-            alert_index = self.alerts_table.data.index(selected_row)
-
-            # Get the alert from the original alerts data
-            active_alerts = self.current_alerts_data.get_active_alerts()
-            if alert_index >= len(active_alerts):
-                await self.main_window.error_dialog(
-                    "Error", "Selected alert is no longer available."
-                )
-                return
-
-            alert = active_alerts[alert_index]
-
-            # Create and show the comprehensive alert details dialog
-            from .alert_details_dialog import AlertDetailsDialog
-
-            title = f"Alert Details - {alert.event or 'Weather Alert'}"
-            dialog = AlertDetailsDialog(self, title, alert)
-            await dialog.show()
-
-        except Exception as e:
-            logger.error(f"Error showing alert details: {e}")
-            await self.main_window.error_dialog("Error", f"Failed to show alert details: {e}")
 
     def _show_error_dialog(self, title: str, message: str):
         """Show an error dialog (synchronous fallback)."""
