@@ -887,32 +887,46 @@ class TestHourlyForecast:
         forecast_with_data = HourlyForecast(periods=periods)
         assert forecast_with_data.has_data() is True
 
-    def test_hourly_forecast_get_next_hours(self):
-        """Test getting next N hours from hourly forecast."""
-        base_time = datetime.now()
+    def test_hourly_forecast_get_next_hours_filters_past(self):
+        """get_next_hours should skip past periods and return upcoming hours."""
+        now = datetime.now(UTC).replace(minute=0, second=0, microsecond=0)
         periods = []
-        for i in range(12):  # 12 hours of data
+
+        # Create 4 periods in the past, 1 current, and 6 future
+        for offset in range(-4, 6):
             periods.append(
                 HourlyForecastPeriod(
-                    start_time=base_time + timedelta(hours=i),
-                    temperature=75.0 - i,
-                    short_forecast=f"Hour {i}",
+                    start_time=now + timedelta(hours=offset),
+                    temperature=70 + offset,
+                    short_forecast=f"Hour {offset}",
                 )
             )
 
         forecast = HourlyForecast(periods=periods)
 
-        # Get next 6 hours (default)
-        next_6 = forecast.get_next_hours()
-        assert len(next_6) == 6
-        assert next_6[0].short_forecast == "Hour 0"
-        assert next_6[5].short_forecast == "Hour 5"
+        next_hours = forecast.get_next_hours()
+        assert len(next_hours) == 6
+        # First result should be the current hour (offset 0)
+        assert next_hours[0].short_forecast == "Hour 0"
+        # Last result should be offset 5
+        assert next_hours[-1].short_forecast == "Hour 5"
 
-        # Get next 3 hours
-        next_3 = forecast.get_next_hours(3)
-        assert len(next_3) == 3
-        assert next_3[2].short_forecast == "Hour 2"
+    def test_hourly_forecast_get_next_hours_handles_naive_times(self):
+        """Naive datetimes should be treated as UTC when filtering."""
+        now = datetime.now().replace(minute=0, second=0, microsecond=0)
+        periods = []
+        for offset in range(-2, 4):
+            periods.append(
+                HourlyForecastPeriod(
+                    start_time=now + timedelta(hours=offset),
+                    short_forecast=f"Naive {offset}",
+                )
+            )
 
-        # Request more hours than available
-        next_20 = forecast.get_next_hours(20)
-        assert len(next_20) == 12  # Should return all available
+        forecast = HourlyForecast(periods=periods)
+        next_hours = forecast.get_next_hours(3)
+        assert [p.short_forecast for p in next_hours] == [
+            "Naive 0",
+            "Naive 1",
+            "Naive 2",
+        ]

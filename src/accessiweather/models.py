@@ -5,7 +5,7 @@ replacing the complex service layer architecture with straightforward data struc
 """
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 
 @dataclass
@@ -124,7 +124,53 @@ class HourlyForecast:
             List of hourly forecast periods, up to the requested count
 
         """
-        return self.periods[:count]
+        if not self.periods:
+            return []
+
+        def _to_timestamp(dt: datetime | None, *, as_utc: bool) -> float | None:
+            if dt is None:
+                return None
+            if as_utc:
+                dt = dt.replace(tzinfo=UTC) if dt.tzinfo is None else dt.astimezone(UTC)
+                return dt.timestamp()
+            # Treat naive times as local clock values
+            if dt.tzinfo is not None:
+                dt = dt.astimezone()
+            return dt.timestamp()
+
+        has_aware_times = any(
+            p.start_time and p.start_time.tzinfo is not None for p in self.periods
+        )
+        now_reference = datetime.now(UTC) if has_aware_times else datetime.now()
+        now_ts = now_reference.timestamp()
+        tolerance = timedelta(hours=1)
+        tolerance_seconds = tolerance.total_seconds()
+
+        sortable_periods: list[tuple[HourlyForecastPeriod, float]] = []
+        unordered_periods: list[HourlyForecastPeriod] = []
+        for period in self.periods:
+            ts = _to_timestamp(period.start_time, as_utc=has_aware_times)
+            if ts is None:
+                unordered_periods.append(period)
+            else:
+                sortable_periods.append((period, ts))
+
+        sortable_periods.sort(key=lambda item: item[1])
+
+        upcoming: list[HourlyForecastPeriod] = []
+        for period, ts in sortable_periods:
+            if ts >= now_ts - tolerance_seconds:
+                upcoming.append(period)
+                if len(upcoming) == count:
+                    break
+
+        if upcoming:
+            return upcoming[:count]
+
+        # If there are no future periods, fall back to the earliest ordered data (including
+        # any periods without start times) to avoid returning an empty list.
+        fallback = [period for period, _ in sortable_periods] + unordered_periods
+        return fallback[:count]
 
 
 @dataclass
