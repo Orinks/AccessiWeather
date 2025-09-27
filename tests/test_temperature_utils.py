@@ -1,12 +1,18 @@
 """Tests for temperature utility functions."""
 
+import pytest
+
 from accessiweather.utils.temperature_utils import (
     TemperatureUnit,
+    calculate_dewpoint,
     celsius_to_fahrenheit,
     fahrenheit_to_celsius,
     format_temperature,
     get_temperature_values,
 )
+
+
+pytestmark = pytest.mark.unit
 
 
 class TestTemperatureUtils:
@@ -106,3 +112,21 @@ class TestTemperatureUtils:
         f, c = get_temperature_values(None, None)
         assert f is None
         assert c is None
+
+    def test_calculate_dewpoint_fahrenheit(self):
+        """Dewpoint calculation returns Fahrenheit when requested."""
+        dewpoint = calculate_dewpoint(77.0, 65.0, unit=TemperatureUnit.FAHRENHEIT)
+        assert dewpoint is not None
+        assert dewpoint == pytest.approx(64.31, rel=1e-3)
+
+    def test_calculate_dewpoint_celsius(self):
+        """Dewpoint calculation returns Celsius when requested."""
+        dewpoint = calculate_dewpoint(25.0, 65.0, unit=TemperatureUnit.CELSIUS)
+        assert dewpoint is not None
+        assert dewpoint == pytest.approx(17.95, rel=1e-3)
+
+    def test_calculate_dewpoint_invalid_inputs(self):
+        """Dewpoint calculation handles humidity edge cases gracefully."""
+        assert calculate_dewpoint(None, 65.0) is None
+        assert calculate_dewpoint(77.0, None) is None
+        assert calculate_dewpoint(77.0, 0.0) is None

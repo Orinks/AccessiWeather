@@ -5,7 +5,6 @@ into the internal data format expected by WeatherService and UI components.
 """
 
 import logging
-import math
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -16,6 +15,7 @@ except ImportError:
     UTC = UTC
 
 from .openmeteo_client import OpenMeteoApiClient
+from .utils import TemperatureUnit, calculate_dewpoint
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +44,8 @@ class OpenMeteoMapper:
             logger.debug(f"Open-Meteo current units: {current_units}")
 
             # Map the data to NWS-like structure
+            temperature_unit = current_units.get("temperature_2m", "°C")
+
             mapped_data = {
                 "properties": {
                     "@id": f"open-meteo-current-{datetime.now(UTC).isoformat()}",
@@ -57,10 +59,12 @@ class OpenMeteoMapper:
                     },
                     "dewpoint": {
                         "value": self._calculate_dewpoint(
-                            current.get("temperature_2m"), current.get("relative_humidity_2m")
+                            current.get("temperature_2m"),
+                            current.get("relative_humidity_2m"),
+                            temperature_unit,
                         ),
                         "unitCode": self._get_temperature_unit_code(
-                            current_units.get("temperature_2m", "°F")
+                            temperature_unit
                         ),
                         "qualityControl": "qc:V",
                     },
@@ -380,31 +384,23 @@ class OpenMeteoMapper:
         return "wmoUnit:m_s-1"  # Default
 
     def _calculate_dewpoint(
-        self, temperature: float | None, humidity: float | None
+        self,
+        temperature: float | None,
+        humidity: float | None,
+        unit_hint: str | TemperatureUnit | None = None,
     ) -> float | None:
         """Calculate dewpoint from temperature and relative humidity."""
         if temperature is None or humidity is None:
             return None
 
         try:
-            # Magnus formula approximation
-            a = 17.27
-            b = 237.7
-
-            # Convert Fahrenheit to Celsius if needed
-            temp_c = temperature
-            if temperature > 50:  # Assume Fahrenheit if > 50
-                temp_c = (temperature - 32) * 5 / 9
-
-            alpha = ((a * temp_c) / (b + temp_c)) + math.log(humidity / 100.0)
-            dewpoint_c = (b * alpha) / (a - alpha)
-
-            # Convert back to Fahrenheit if original was Fahrenheit
-            if temperature > 50:
-                return dewpoint_c * 9 / 5 + 32
-            return dewpoint_c
-
+            return calculate_dewpoint(
+                temperature,
+                humidity,
+                unit=unit_hint or TemperatureUnit.CELSIUS,
+            )
         except Exception:
+            logger.debug("Failed to calculate dewpoint from Open-Meteo data", exc_info=True)
             return None
 
     def _cloud_cover_to_amount(self, cloud_cover: float | None) -> str:

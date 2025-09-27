@@ -17,6 +17,7 @@ from ..models import (
 )
 from ..utils import (
     TemperatureUnit,
+    calculate_dewpoint,
     convert_wind_direction_to_cardinal,
     format_pressure,
     format_temperature,
@@ -147,13 +148,17 @@ class WxStyleWeatherFormatter:
         text += f"Wind: {wind_dir_str} at {wind_speed_str}\n"
 
         # Add dewpoint if available (calculated from temperature and humidity)
-        if current.temperature_f is not None and current.humidity is not None:
-            dewpoint_f = self._calculate_dewpoint(current.temperature_f, current.humidity)
-            dewpoint_c = (dewpoint_f - 32) * 5 / 9
-            dewpoint_str = format_temperature(
-                dewpoint_f, unit_pref, temperature_c=dewpoint_c, precision=precision
+        if temperature_f is not None and current.humidity is not None:
+            dewpoint_f = calculate_dewpoint(
+                temperature_f,
+                current.humidity,
+                unit=TemperatureUnit.FAHRENHEIT,
             )
-            text += f"Dewpoint: {dewpoint_str}\n"
+            if dewpoint_f is not None:
+                dewpoint_str = format_temperature(
+                    dewpoint_f, unit_pref, precision=precision
+                )
+                text += f"Dewpoint: {dewpoint_str}\n"
 
         text += f"Pressure: {pressure_str}"
 
@@ -261,21 +266,6 @@ class WxStyleWeatherFormatter:
                 text += f"Expires: {expires_str}\n"
 
         return text.rstrip()  # Remove trailing newlines
-
-    def _calculate_dewpoint(self, temperature_f: float, humidity: float) -> float:
-        """Calculate dewpoint from temperature and humidity."""
-        # Convert to Celsius for calculation
-        temp_c = (temperature_f - 32) * 5 / 9
-
-        # Magnus formula approximation
-        a = 17.27
-        b = 237.7
-
-        alpha = ((a * temp_c) / (b + temp_c)) + (humidity / 100.0)
-        dewpoint_c = (b * alpha) / (a - alpha)
-
-        # Convert back to Fahrenheit
-        return (dewpoint_c * 9 / 5) + 32
 
     def _get_uv_description(self, uv_index: float) -> str:
         """Get UV index description."""

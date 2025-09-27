@@ -6,6 +6,7 @@ and other common operations, copied from the wx version for consistency.
 
 from .temperature_utils import (
     TemperatureUnit,
+    calculate_dewpoint,
     celsius_to_fahrenheit,
     fahrenheit_to_celsius,
     format_temperature,
@@ -23,6 +24,7 @@ from .unit_utils import (
 __all__ = [
     # Temperature utilities
     "TemperatureUnit",
+    "calculate_dewpoint",
     "celsius_to_fahrenheit",
     "fahrenheit_to_celsius",
     "format_temperature",
