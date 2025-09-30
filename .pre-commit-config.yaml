@@ -29,6 +29,12 @@ repos:
 
 -   repo: local
     hooks:
+    -   id: pytest-last-failed
+        name: pytest-last-failed
+        entry: python -m pytest --lf --ff -m "unit" --maxfail=1 -q
+        language: system
+        pass_filenames: false
+        always_run: true
     -   id: pytest-check
         name: pytest-check
         entry: python -m pytest tests/ -m "unit" --maxfail=5 -x
