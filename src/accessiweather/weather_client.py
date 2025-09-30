@@ -5,21 +5,27 @@ from NWS and OpenMeteo APIs without complex service layer abstractions.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
+from typing import Sequence
 
 import httpx
 
+from .cache import WeatherDataCache
 from .models import (
+    AppSettings,
     CurrentConditions,
+    EnvironmentalConditions,
     Forecast,
     ForecastPeriod,
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
+    TrendInsight,
     WeatherAlert,
     WeatherAlerts,
     WeatherData,
 )
+from .services import EnvironmentalDataClient, MeteoAlarmClient
 from .utils.temperature_utils import TemperatureUnit, calculate_dewpoint
 from .visual_crossing_client import VisualCrossingApiError, VisualCrossingClient
 
@@ -34,6 +40,11 @@ class WeatherClient:
         user_agent: str = "AccessiWeather/1.0",
         data_source: str = "auto",
         visual_crossing_api_key: str = "",
+        settings: AppSettings | None = None,
+        *,
+        meteoalarm_client: MeteoAlarmClient | None = None,
+        environmental_client: EnvironmentalDataClient | None = None,
+        offline_cache: WeatherDataCache | None = None,
     ):
         """Initialize the instance."""
         self.user_agent = user_agent
@@ -42,11 +53,38 @@ class WeatherClient:
         self.timeout = 10.0
         self.data_source = data_source  # "auto", "nws", "openmeteo", "visualcrossing"
         self.visual_crossing_api_key = visual_crossing_api_key
+        self.settings = settings or AppSettings()
+        self.alerts_enabled = bool(self.settings.enable_alerts)
+        self.international_alerts_enabled = bool(self.settings.international_alerts_enabled)
+        self.international_alerts_provider = (
+            (self.settings.international_alerts_provider or "meteosalarm").strip().lower()
+        )
+        self.trend_insights_enabled = bool(self.settings.trend_insights_enabled)
+        self.trend_hours = max(1, int(self.settings.trend_hours or 24))
+        self.air_quality_enabled = bool(self.settings.air_quality_enabled)
+        self.pollen_enabled = bool(self.settings.pollen_enabled)
+        self.air_quality_notify_threshold = int(self.settings.air_quality_notify_threshold or 0)
+        self.offline_cache = offline_cache
+        if self.offline_cache:
+            try:
+                self.offline_cache.purge_expired()
+            except Exception as exc:  # noqa: BLE001
+                logger.debug(f"Weather cache purge failed: {exc}")
 
         # Initialize Visual Crossing client if API key is provided
         self.visual_crossing_client = None
         if visual_crossing_api_key:
             self.visual_crossing_client = VisualCrossingClient(visual_crossing_api_key, user_agent)
+
+        # Secondary data providers
+        self.meteoalarm_client = meteoalarm_client
+        if self.international_alerts_enabled and self.meteoalarm_client is None:
+            if self.international_alerts_provider == "meteosalarm":
+                self.meteoalarm_client = MeteoAlarmClient(user_agent=user_agent, timeout=self.timeout)
+
+        self.environmental_client = environmental_client
+        if (self.air_quality_enabled or self.pollen_enabled) and self.environmental_client is None:
+            self.environmental_client = EnvironmentalDataClient(user_agent=user_agent, timeout=self.timeout)
 
     async def get_weather_data(self, location: Location) -> WeatherData:
         """Get complete weather data for a location."""
@@ -258,6 +296,17 @@ class WeatherClient:
                         f"Both NWS and Open-Meteo failed for {location.name}: NWS={e}, OpenMeteo={e2}"
                     )
                     self._set_empty_weather_data(weather_data)
+
+        await self._populate_environmental_metrics(weather_data, location)
+        await self._merge_international_alerts(weather_data, location)
+        self._apply_trend_insights(weather_data)
+        self._persist_weather_data(location, weather_data)
+
+        if not weather_data.has_any_data() and self.offline_cache:
+            cached = self.offline_cache.load(location)
+            if cached:
+                logger.info(f"Using cached weather data for {location.name}")
+                return cached
 
         return weather_data
 
@@ -602,7 +651,7 @@ class WeatherClient:
             params = {
                 "latitude": location.latitude,
                 "longitude": location.longitude,
-                "hourly": "temperature_2m,weather_code,wind_speed_10m,wind_direction_10m",
+                "hourly": "temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,pressure_msl",
                 "temperature_unit": "fahrenheit",
                 "wind_speed_unit": "mph",
                 "timezone": "auto",
@@ -878,6 +927,7 @@ class WeatherClient:
         weather_codes = hourly.get("weather_code", [])
         wind_speeds = hourly.get("wind_speed_10m", [])
         wind_directions = hourly.get("wind_direction_10m", [])
+        pressures = hourly.get("pressure_msl", [])
 
         for i, time_str in enumerate(times):
             # Parse time
@@ -895,6 +945,8 @@ class WeatherClient:
             weather_code = weather_codes[i] if i < len(weather_codes) else None
             wind_speed = wind_speeds[i] if i < len(wind_speeds) else None
             wind_direction = wind_directions[i] if i < len(wind_directions) else None
+            pressure_mb = pressures[i] if i < len(pressures) else None
+            pressure_in = pressure_mb * 0.0295299830714 if pressure_mb is not None else None
 
             period = HourlyForecastPeriod(
                 start_time=start_time or datetime.now(),
@@ -903,10 +955,243 @@ class WeatherClient:
                 short_forecast=self._weather_code_to_description(weather_code),
                 wind_speed=f"{wind_speed} mph" if wind_speed is not None else None,
                 wind_direction=self._degrees_to_cardinal(wind_direction),
+                pressure_mb=pressure_mb,
+                pressure_in=pressure_in,
             )
             periods.append(period)
 
         return HourlyForecast(periods=periods, generated_at=datetime.now())
+
+    async def _populate_environmental_metrics(
+        self, weather_data: WeatherData, location: Location
+    ) -> None:
+        if not self.environmental_client:
+            return
+        if not (self.air_quality_enabled or self.pollen_enabled):
+            return
+        try:
+            environmental = await self.environmental_client.fetch(
+                location,
+                include_air_quality=self.air_quality_enabled,
+                include_pollen=self.pollen_enabled,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.debug(f"Environmental metrics failed: {exc}")
+            return
+
+        if not environmental:
+            return
+
+        weather_data.environmental = environmental
+        if (
+            self.air_quality_notify_threshold
+            and environmental.air_quality_index is not None
+            and environmental.air_quality_index >= self.air_quality_notify_threshold
+        ):
+            self._maybe_generate_air_quality_alert(weather_data, environmental)
+
+    async def _merge_international_alerts(
+        self, weather_data: WeatherData, location: Location
+    ) -> None:
+        if not self.international_alerts_enabled:
+            return
+        if self._is_us_location(location):
+            return
+        if not self.meteoalarm_client:
+            return
+        try:
+            alerts = await self.meteoalarm_client.fetch_alerts(location)
+        except Exception as exc:  # noqa: BLE001
+            logger.debug(f"MeteoAlarm fetch failed: {exc}")
+            return
+
+        if not alerts or not alerts.has_alerts():
+            return
+
+        existing = weather_data.alerts.alerts if weather_data.alerts else []
+        combined: dict[str, WeatherAlert] = {alert.get_unique_id(): alert for alert in existing}
+        for alert in alerts.alerts:
+            combined.setdefault(alert.get_unique_id(), alert)
+        weather_data.alerts = WeatherAlerts(alerts=list(combined.values()))
+
+    def _apply_trend_insights(self, weather_data: WeatherData) -> None:
+        if not self.trend_insights_enabled:
+            weather_data.trend_insights = []
+            return
+
+        insights: list[TrendInsight] = []
+        temp_insight = self._compute_temperature_trend(weather_data)
+        if temp_insight:
+            insights.append(temp_insight)
+        pressure_insight = self._compute_pressure_trend(weather_data)
+        if pressure_insight:
+            insights.append(pressure_insight)
+        weather_data.trend_insights = insights
+
+    def _persist_weather_data(self, location: Location, weather_data: WeatherData) -> None:
+        if not self.offline_cache:
+            return
+        if not weather_data.has_any_data():
+            return
+        if weather_data.stale:
+            return
+        try:
+            self.offline_cache.store(location, weather_data)
+        except Exception as exc:  # noqa: BLE001
+            logger.debug(f"Failed to persist weather data cache: {exc}")
+
+    def _maybe_generate_air_quality_alert(
+        self, weather_data: WeatherData, environmental: EnvironmentalConditions
+    ) -> None:
+        if not self.alerts_enabled:
+            return
+        severity = self._air_quality_severity(environmental.air_quality_index or 0.0)
+        description = (
+            f"Air quality index is {environmental.air_quality_index:.0f}"
+            if environmental.air_quality_index is not None
+            else "Air quality threshold exceeded"
+        )
+        if environmental.air_quality_category:
+            description += f" ({environmental.air_quality_category})"
+
+        alert = WeatherAlert(
+            title="Air Quality Alert",
+            description=description,
+            severity=severity,
+            urgency="Expected",
+            certainty="Observed",
+            event="Air Quality Alert",
+            headline=f"Air quality {environmental.air_quality_category or ''}".strip(),
+            instruction="Consider limiting outdoor exposure and using air filtration indoors.",
+            areas=[weather_data.location.name],
+            source="AirQuality",
+        )
+
+        alerts = weather_data.alerts.alerts if weather_data.alerts else []
+        combined: dict[str, WeatherAlert] = {alert.get_unique_id(): alert for alert in alerts}
+        combined[alert.get_unique_id()] = alert
+        weather_data.alerts = WeatherAlerts(alerts=list(combined.values()))
+
+    def _air_quality_severity(self, value: float) -> str:
+        if value >= 300:
+            return "Extreme"
+        if value >= 200:
+            return "Severe"
+        if value >= 150:
+            return "Moderate"
+        if value >= 100:
+            return "Minor"
+        return "Unknown"
+
+    def _compute_temperature_trend(self, weather_data: WeatherData) -> TrendInsight | None:
+        current = weather_data.current
+        hourly = weather_data.hourly_forecast.periods if weather_data.hourly_forecast else []
+        if current is None or not hourly:
+            return None
+
+        base = current.temperature_f
+        unit = "°F"
+        if base is None:
+            base = current.temperature_c
+            unit = "°C"
+        if base is None:
+            return None
+
+        target_period = self._period_for_hours_ahead(hourly, self.trend_hours)
+        if not target_period or target_period.temperature is None:
+            return None
+
+        change = target_period.temperature - base
+        direction, sparkline = self._trend_descriptor(change, minor=1.0 if unit == "°F" else 0.5, strong=3.0 if unit == "°F" else 1.5)
+        summary = (
+            f"Temperature {direction} {change:+.1f}{unit} over {self.trend_hours}h"
+        )
+        return TrendInsight(
+            metric="temperature",
+            direction=direction,
+            change=round(change, 1),
+            unit=unit,
+            timeframe_hours=self.trend_hours,
+            summary=summary,
+            sparkline=sparkline,
+        )
+
+    def _compute_pressure_trend(self, weather_data: WeatherData) -> TrendInsight | None:
+        current = weather_data.current
+        hourly = weather_data.hourly_forecast.periods if weather_data.hourly_forecast else []
+        if current is None or not hourly:
+            return None
+
+        base_mb = current.pressure_mb
+        base_in = current.pressure_in
+        target_period = self._period_for_hours_ahead(hourly, self.trend_hours)
+        if not target_period:
+            return None
+
+        future_mb = target_period.pressure_mb
+        future_in = target_period.pressure_in
+
+        value_pairs = []
+        if base_mb is not None and future_mb is not None:
+            value_pairs.append((base_mb, future_mb, "mb"))
+        if base_in is not None and future_in is not None:
+            value_pairs.append((base_in, future_in, "inHg"))
+        if not value_pairs:
+            return None
+
+        base, future, unit = value_pairs[0]
+        change = future - base
+        direction, sparkline = self._trend_descriptor(
+            change,
+            minor=0.5 if unit == "mb" else 0.02,
+            strong=1.5 if unit == "mb" else 0.05,
+        )
+        summary = f"Pressure {direction} {change:+.2f}{unit} over {self.trend_hours}h"
+        return TrendInsight(
+            metric="pressure",
+            direction=direction,
+            change=round(change, 2),
+            unit=unit,
+            timeframe_hours=self.trend_hours,
+            summary=summary,
+            sparkline=sparkline,
+        )
+
+    def _trend_descriptor(self, change: float, *, minor: float, strong: float) -> tuple[str, str]:
+        if change >= strong:
+            return "rising", "↑↑"
+        if change >= minor:
+            return "rising", "↑"
+        if change <= -strong:
+            return "falling", "↓↓"
+        if change <= -minor:
+            return "falling", "↓"
+        return "steady", "→"
+
+    def _period_for_hours_ahead(
+        self, periods: Sequence[HourlyForecastPeriod], hours_ahead: int
+    ) -> HourlyForecastPeriod | None:
+        if not periods:
+            return None
+        target = self._normalize_datetime(datetime.now()) + timedelta(hours=hours_ahead)
+        closest = None
+        best_delta = None
+        for period in periods:
+            start = self._normalize_datetime(period.start_time)
+            if start is None:
+                continue
+            delta = abs((start - target).total_seconds())
+            if best_delta is None or delta < best_delta:
+                closest = period
+                best_delta = delta
+        return closest
+
+    def _normalize_datetime(self, value: datetime | None) -> datetime | None:
+        if value is None:
+            return None
+        if value.tzinfo is None:
+            return value
+        return value.astimezone().replace(tzinfo=None)
 
     # Utility methods
     def _convert_mps_to_mph(self, mps: float | None) -> float | None:

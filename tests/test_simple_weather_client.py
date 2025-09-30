@@ -1,9 +1,19 @@
 """Tests for WeatherClient parsing helpers."""
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
+from accessiweather.models import (
+    AppSettings,
+    CurrentConditions,
+    HourlyForecast,
+    HourlyForecastPeriod,
+    Location,
+    WeatherAlert,
+    WeatherAlerts,
+    WeatherData,
+)
 from accessiweather.weather_client import WeatherClient
 
 
@@ -79,6 +89,63 @@ def test_parse_openmeteo_current_conditions_converts_units():
     assert current.feels_like_c == pytest.approx(17.333, rel=1e-3)
     assert current.dewpoint_f is not None
     assert current.last_updated == datetime(2025, 9, 27, 0, 30)
+
+
+@pytest.mark.unit
+def test_weather_client_computes_temperature_trend():
+    settings = AppSettings(trend_insights_enabled=True, trend_hours=24)
+    client = WeatherClient(settings=settings)
+    location = Location(name="Test", latitude=35.0, longitude=140.0)
+    weather_data = WeatherData(
+        location=location,
+        current=CurrentConditions(temperature_f=70.0, pressure_mb=1015.0, pressure_in=29.97),
+        hourly_forecast=HourlyForecast(
+            periods=[
+                HourlyForecastPeriod(
+                    start_time=datetime.now() + timedelta(hours=24),
+                    temperature=80.0,
+                    temperature_unit="F",
+                    pressure_mb=1012.0,
+                    pressure_in=29.88,
+                )
+            ]
+        ),
+    )
+
+    client._apply_trend_insights(weather_data)
+
+    assert weather_data.trend_insights
+    metrics = {trend.metric for trend in weather_data.trend_insights}
+    assert "temperature" in metrics
+
+
+@pytest.mark.asyncio
+async def test_weather_client_merges_meteoalarm_alerts():
+    class DummyMeteoAlarm:
+        async def fetch_alerts(self, location):
+            return WeatherAlerts(
+                alerts=[
+                    WeatherAlert(
+                        title="Storm Warning",
+                        description="Severe storm expected",
+                        severity="Severe",
+                        urgency="Immediate",
+                        certainty="Likely",
+                        source="MeteoAlarm",
+                    )
+                ]
+            )
+
+    settings = AppSettings(international_alerts_enabled=True)
+    client = WeatherClient(settings=settings, meteoalarm_client=DummyMeteoAlarm())
+    location = Location(name="Paris", latitude=48.8566, longitude=2.3522)
+    weather_data = WeatherData(location=location, alerts=WeatherAlerts(alerts=[]))
+
+    await client._merge_international_alerts(weather_data, location)
+
+    assert weather_data.alerts is not None
+    assert weather_data.alerts.alerts
+    assert weather_data.alerts.alerts[0].source == "MeteoAlarm"
 
 
 @pytest.mark.unit

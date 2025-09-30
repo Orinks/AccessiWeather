@@ -13,11 +13,13 @@ from datetime import datetime
 from ..models import (
     AppSettings,
     CurrentConditions,
+    EnvironmentalConditions,
     Forecast,
     ForecastPeriod,
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
+    TrendInsight,
     WeatherAlert,
     WeatherAlerts,
     WeatherData,
@@ -116,6 +118,8 @@ class WeatherPresentation:
     current: CurrentConditionsPresentation | None = None
     forecast: ForecastPresentation | None = None
     alerts: AlertsPresentation | None = None
+    trend_summary: list[str] = field(default_factory=list)
+    status_messages: list[str] = field(default_factory=list)
 
 
 class WeatherPresenter:
@@ -134,7 +138,13 @@ class WeatherPresenter:
         unit_pref = self._get_temperature_unit_preference()
 
         current = (
-            self._build_current_conditions(weather_data.current, weather_data.location, unit_pref)
+            self._build_current_conditions(
+                weather_data.current,
+                weather_data.location,
+                unit_pref,
+                weather_data.environmental,
+                weather_data.trend_insights,
+            )
             if weather_data.current
             else None
         )
@@ -154,6 +164,8 @@ class WeatherPresenter:
             else None
         )
         summary_text = self._build_summary(weather_data, unit_pref)
+        trend_summary = self._format_trend_lines(weather_data.trend_insights)
+        status_messages = self._build_status_messages(weather_data)
 
         return WeatherPresentation(
             location_name=weather_data.location.name,
@@ -161,15 +173,22 @@ class WeatherPresenter:
             current=current,
             forecast=forecast,
             alerts=alerts,
+            trend_summary=trend_summary,
+            status_messages=status_messages,
         )
 
     def present_current(
-        self, current: CurrentConditions | None, location: Location
+        self,
+        current: CurrentConditions | None,
+        location: Location,
+        *,
+        environmental: EnvironmentalConditions | None = None,
+        trends: Iterable[TrendInsight] | None = None,
     ) -> CurrentConditionsPresentation | None:
         if not current or not current.has_data():
             return None
         unit_pref = self._get_temperature_unit_preference()
-        return self._build_current_conditions(current, location, unit_pref)
+        return self._build_current_conditions(current, location, unit_pref, environmental, trends)
 
     def present_forecast(
         self,
@@ -198,6 +217,8 @@ class WeatherPresenter:
         current: CurrentConditions,
         location: Location,
         unit_pref: TemperatureUnit,
+        environmental: EnvironmentalConditions | None = None,
+        trends: Iterable[TrendInsight] | None = None,
     ) -> CurrentConditionsPresentation:
         title = f"Current conditions for {location.name}"
         description = current.condition or "Unknown"
@@ -243,6 +264,42 @@ class WeatherPresenter:
             if timestamp.tzinfo is not None:
                 timestamp = timestamp.astimezone()
             metrics.append(Metric("Last updated", timestamp.strftime("%I:%M %p")))
+
+        if environmental:
+            if environmental.air_quality_index is not None:
+                aq_label = (
+                    f"{environmental.air_quality_index:.0f}"
+                    if environmental.air_quality_index is not None
+                    else ""
+                )
+                if environmental.air_quality_category:
+                    aq_label = f"{aq_label} ({environmental.air_quality_category})" if aq_label else environmental.air_quality_category
+                if environmental.air_quality_pollutant:
+                    pollutant = environmental.air_quality_pollutant
+                    aq_label = f"{aq_label} – {pollutant}" if aq_label else pollutant
+                metrics.append(Metric("Air Quality", aq_label or "Data unavailable"))
+            if environmental.pollen_index is not None or environmental.pollen_primary_allergen:
+                pollen_value = (
+                    f"{environmental.pollen_index:.0f}" if environmental.pollen_index is not None else ""
+                )
+                if environmental.pollen_category:
+                    pollen_value = (
+                        f"{pollen_value} ({environmental.pollen_category})"
+                        if pollen_value
+                        else environmental.pollen_category
+                    )
+                if environmental.pollen_primary_allergen:
+                    pollen_value = (
+                        f"{pollen_value} – {environmental.pollen_primary_allergen}"
+                        if pollen_value
+                        else environmental.pollen_primary_allergen
+                    )
+                metrics.append(Metric("Pollen", pollen_value or "Data unavailable"))
+
+        if trends:
+            for trend in trends:
+                summary = trend.summary or self._describe_trend(trend)
+                metrics.append(Metric(f"{trend.metric.title()} trend", summary))
 
         fallback_lines = [f"Current Conditions: {description}", f"Temperature: {temperature_str}"]
         for metric in metrics[1:]:  # already added temperature
@@ -411,8 +468,66 @@ class WeatherPresenter:
             if active_count > 0:
                 parts.append(f"{active_count} alert{'s' if active_count != 1 else ''}")
 
+
+        trend_lines = self._format_trend_lines(weather_data.trend_insights)
+        if trend_lines:
+            parts.append(trend_lines[0])
+
+        if weather_data.stale:
+            stale_message = "Cached data"
+            if weather_data.stale_since:
+                stale_message = f"Cached {self._format_timestamp(weather_data.stale_since)}"
+            parts.append(stale_message)
         return " - ".join(parts)
 
+
+    def _format_trend_lines(self, trends: Iterable[TrendInsight] | None) -> list[str]:
+        lines: list[str] = []
+        if not trends:
+            return lines
+        for trend in trends:
+            summary = trend.summary or self._describe_trend(trend)
+            if trend.sparkline:
+                summary = f"{summary} {trend.sparkline}".strip()
+            if summary:
+                lines.append(summary)
+        return lines
+
+    def _build_status_messages(self, weather_data: WeatherData) -> list[str]:
+        messages: list[str] = []
+        if weather_data.stale:
+            timestamp = (
+                self._format_timestamp(weather_data.stale_since)
+                if weather_data.stale_since
+                else None
+            )
+            reason = weather_data.stale_reason or "cached data"
+            if timestamp:
+                messages.append(f"Showing cached data from {timestamp} ({reason}).")
+            else:
+                messages.append(f"Showing cached weather data ({reason}).")
+        return messages
+
+    def _format_timestamp(self, value: datetime) -> str:
+        ref = value.astimezone() if value.tzinfo else value
+        return ref.strftime("%b %d %I:%M %p")
+
+    def _describe_trend(self, trend: TrendInsight) -> str:
+        direction = (trend.direction or "steady").capitalize()
+        timeframe = trend.timeframe_hours or 24
+        change_text = ""
+        if trend.change is not None:
+            if trend.unit in {"°F", "°C"}:
+                change_text = f"{trend.change:+.1f}{trend.unit}"
+            elif trend.unit:
+                change_text = f"{trend.change:+.2f}{trend.unit}"
+            else:
+                change_text = f"{trend.change:+.1f}"
+        pieces = [direction]
+        if change_text:
+            pieces.append(change_text)
+        pieces.append(f"over {timeframe}h")
+        return " ".join(pieces)
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------

@@ -389,9 +389,74 @@ class SettingsDialog:
         )
         audio_box.add(self.manage_soundpacks_button)
 
-        # Add tab to container
-        self.option_container.content.append("Audio", audio_box)
+        audio_box.add(toga.Label("Alert sound overrides:", style=Pack(font_weight="bold", margin_top=15)))
+        self.alert_sound_override_inputs: dict[str, toga.TextInput] = {}
+        current_overrides = getattr(self.current_settings, "alert_sound_overrides", {}) or {}
+        override_entries = [
+            ("extreme", "Extreme severity"),
+            ("severe", "Severe severity"),
+            ("moderate", "Moderate severity"),
+            ("minor", "Minor severity"),
+            ("unknown", "Unknown severity"),
+            ("default", "Fallback sound"),
+        ]
+        for key, label in override_entries:
+            row = toga.Box(style=Pack(direction=ROW, alignment="baseline", padding_bottom=6))
+            row.add(toga.Label(f"{label}:", style=Pack(width=170)))
+            input_widget = toga.TextInput(
+                value=str(current_overrides.get(key, "")),
+                placeholder="Sound event key",
+                style=Pack(flex=1),
+            )
+            self.alert_sound_override_inputs[key] = input_widget
+            row.add(input_widget)
+            audio_box.add(row)
+        startup_switch = getattr(self, "startup_enabled_switch", None)
+        startup_enabled = getattr(startup_switch, "value", False)
 
+        overrides: dict[str, str] = {}
+        override_inputs = getattr(self, "alert_sound_override_inputs", {}) or {}
+        for key, widget in override_inputs.items():
+            value = getattr(widget, "value", "")
+            if value and value.strip():
+                overrides[key] = value.strip()
+
+        tts_enabled = bool(getattr(getattr(self, "alert_tts_switch", None), "value", False))
+        tts_voice = str(getattr(getattr(self, "alert_tts_voice_input", None), "value", "")).strip()
+        tts_rate_text = str(getattr(getattr(self, "alert_tts_rate_input", None), "value", "")).strip()
+        try:
+            tts_rate = int(tts_rate_text) if tts_rate_text else 0
+        except ValueError:
+            tts_rate = getattr(self.current_settings, "alert_tts_rate", 0)
+        self.alert_tts_switch = toga.Switch(
+            "Enable text-to-speech summaries",
+            value=bool(getattr(self.current_settings, "alert_tts_enabled", False)),
+            style=Pack(margin_bottom=8),
+        )
+        audio_box.add(self.alert_tts_switch)
+
+        tts_voice_row = toga.Box(style=Pack(direction=ROW, alignment="baseline", padding_bottom=6))
+        tts_voice_row.add(toga.Label("Voice id:", style=Pack(width=170)))
+        self.alert_tts_voice_input = toga.TextInput(
+            value=str(getattr(self.current_settings, "alert_tts_voice", "")),
+            placeholder="Platform-specific voice id",
+            style=Pack(flex=1),
+        )
+        tts_voice_row.add(self.alert_tts_voice_input)
+        audio_box.add(tts_voice_row)
+
+        tts_rate_row = toga.Box(style=Pack(direction=ROW, alignment="baseline", padding_bottom=6))
+        tts_rate_row.add(toga.Label("Voice rate:", style=Pack(width=170)))
+        rate_value = getattr(self.current_settings, "alert_tts_rate", 0)
+        self.alert_tts_rate_input = toga.TextInput(
+            value=str(rate_value if rate_value else ""),
+            placeholder="e.g. 200",
+            style=Pack(width=120),
+        )
+        tts_rate_row.add(self.alert_tts_rate_input)
+        audio_box.add(tts_rate_row)
+            alert_ignored_categories=self._collect_ignored_categories(),
+            alert_sound_overrides=overrides,
     def _create_advanced_tab(self):
         """Create the Advanced settings tab (power user settings)."""
         advanced_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
