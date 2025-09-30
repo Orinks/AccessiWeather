@@ -11,9 +11,9 @@ import toga
 from toga.style import Pack
 from travertino.constants import COLUMN, ROW
 
-from .cache import WeatherDataCache
 from .alert_manager import AlertManager
 from .alert_notification_system import AlertNotificationSystem
+from .cache import WeatherDataCache
 from .config import ConfigManager
 from .dialogs import AddLocationDialog, SettingsDialog
 from .dialogs.discussion import ForecastDiscussionDialog

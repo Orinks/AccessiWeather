@@ -536,9 +536,7 @@ class AppSettings:
             alert_tts_voice=data.get("alert_tts_voice", ""),
             alert_tts_rate=data.get("alert_tts_rate", 0),
             international_alerts_enabled=data.get("international_alerts_enabled", True),
-            international_alerts_provider=data.get(
-                "international_alerts_provider", "meteosalarm"
-            ),
+            international_alerts_provider=data.get("international_alerts_provider", "meteosalarm"),
             trend_insights_enabled=data.get("trend_insights_enabled", True),
             trend_hours=data.get("trend_hours", 24),
             air_quality_enabled=data.get("air_quality_enabled", True),

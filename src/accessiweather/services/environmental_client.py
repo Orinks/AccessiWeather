@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable
 from datetime import datetime
-from typing import Any, Iterable
+from typing import Any
 
 import httpx
 
@@ -149,7 +150,9 @@ class EnvironmentalDataClient:
             elif label == "Weed":
                 environmental.pollen_weed_index = value
 
-            if timestamp and (environmental.updated_at is None or timestamp > environmental.updated_at):
+            if timestamp and (
+                environmental.updated_at is None or timestamp > environmental.updated_at
+            ):
                 environmental.updated_at = timestamp
 
             if value > primary_value:
@@ -170,7 +173,7 @@ class EnvironmentalDataClient:
         latest_value: float | None = None
         latest_timestamp: datetime | None = None
 
-        for time_str, raw_value in zip(times, series):
+        for time_str, raw_value in zip(times, series, strict=False):
             value = self._coerce_float(raw_value)
             timestamp = self._parse_iso(time_str)
             if value is None:

@@ -11,9 +11,9 @@ from .display import WeatherPresenter
 from .formatters import WeatherFormatter
 from .location_manager import LocationManager
 from .models import (
+    AlertAudioSettings,
     AppConfig,
     AppSettings,
-    AlertAudioSettings,
     CurrentConditions,
     EnvironmentalConditions,
     Forecast,

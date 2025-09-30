@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable
 from datetime import datetime
-from typing import Any, Iterable
+from typing import Any
 from xml.etree import ElementTree as ET
 
 import httpx
@@ -29,7 +30,6 @@ class MeteoAlarmClient:
 
     async def fetch_alerts(self, location: Location) -> WeatherAlerts:
         """Fetch alerts for the provided location."""
-
         if location is None:
             return WeatherAlerts(alerts=[])
 
@@ -209,7 +209,9 @@ class MeteoAlarmClient:
 
     def _select_info(self, infos: Iterable[ET.Element]) -> ET.Element | None:
         def _lang(element: ET.Element) -> str:
-            lang = element.findtext("cap:language", namespaces=self.CAP_NS) or element.findtext("language")
+            lang = element.findtext("cap:language", namespaces=self.CAP_NS) or element.findtext(
+                "language"
+            )
             return (lang or "").lower()
 
         english = [info for info in infos if _lang(info).startswith("en")]

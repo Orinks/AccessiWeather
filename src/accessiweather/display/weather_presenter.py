@@ -273,14 +273,20 @@ class WeatherPresenter:
                     else ""
                 )
                 if environmental.air_quality_category:
-                    aq_label = f"{aq_label} ({environmental.air_quality_category})" if aq_label else environmental.air_quality_category
+                    aq_label = (
+                        f"{aq_label} ({environmental.air_quality_category})"
+                        if aq_label
+                        else environmental.air_quality_category
+                    )
                 if environmental.air_quality_pollutant:
                     pollutant = environmental.air_quality_pollutant
                     aq_label = f"{aq_label} – {pollutant}" if aq_label else pollutant
                 metrics.append(Metric("Air Quality", aq_label or "Data unavailable"))
             if environmental.pollen_index is not None or environmental.pollen_primary_allergen:
                 pollen_value = (
-                    f"{environmental.pollen_index:.0f}" if environmental.pollen_index is not None else ""
+                    f"{environmental.pollen_index:.0f}"
+                    if environmental.pollen_index is not None
+                    else ""
                 )
                 if environmental.pollen_category:
                     pollen_value = (
@@ -468,7 +474,6 @@ class WeatherPresenter:
             if active_count > 0:
                 parts.append(f"{active_count} alert{'s' if active_count != 1 else ''}")
 
-
         trend_lines = self._format_trend_lines(weather_data.trend_insights)
         if trend_lines:
             parts.append(trend_lines[0])
@@ -479,7 +484,6 @@ class WeatherPresenter:
                 stale_message = f"Cached {self._format_timestamp(weather_data.stale_since)}"
             parts.append(stale_message)
         return " - ".join(parts)
-
 
     def _format_trend_lines(self, trends: Iterable[TrendInsight] | None) -> list[str]:
         lines: list[str] = []
@@ -528,6 +532,7 @@ class WeatherPresenter:
             pieces.append(change_text)
         pieces.append(f"over {timeframe}h")
         return " ".join(pieces)
+
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------

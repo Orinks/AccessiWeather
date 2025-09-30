@@ -1,10 +1,10 @@
 """Unit tests for WeatherPresenter accuracy-sensitive output."""
 
+from datetime import datetime
+
 import pytest
 
 from accessiweather.display import WeatherPresenter
-from datetime import datetime
-
 from accessiweather.models import (
     AppSettings,
     CurrentConditions,

@@ -304,7 +304,9 @@ def _deserialize_hourly(data: dict | None) -> HourlyForecast | None:
         return None
     periods_data = data.get("periods") or []
     periods = [_deserialize_hourly_period(p) for p in periods_data if isinstance(p, dict)]
-    return HourlyForecast(periods=periods, generated_at=_deserialize_datetime(data.get("generated_at")))
+    return HourlyForecast(
+        periods=periods, generated_at=_deserialize_datetime(data.get("generated_at"))
+    )
 
 
 def _serialize_alert(alert: WeatherAlert) -> dict:

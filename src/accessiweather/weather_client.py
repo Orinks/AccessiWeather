@@ -5,8 +5,8 @@ from NWS and OpenMeteo APIs without complex service layer abstractions.
 """
 
 import logging
+from collections.abc import Sequence
 from datetime import datetime, timedelta
-from typing import Sequence
 
 import httpx
 
@@ -80,11 +80,15 @@ class WeatherClient:
         self.meteoalarm_client = meteoalarm_client
         if self.international_alerts_enabled and self.meteoalarm_client is None:
             if self.international_alerts_provider == "meteosalarm":
-                self.meteoalarm_client = MeteoAlarmClient(user_agent=user_agent, timeout=self.timeout)
+                self.meteoalarm_client = MeteoAlarmClient(
+                    user_agent=user_agent, timeout=self.timeout
+                )
 
         self.environmental_client = environmental_client
         if (self.air_quality_enabled or self.pollen_enabled) and self.environmental_client is None:
-            self.environmental_client = EnvironmentalDataClient(user_agent=user_agent, timeout=self.timeout)
+            self.environmental_client = EnvironmentalDataClient(
+                user_agent=user_agent, timeout=self.timeout
+            )
 
     async def get_weather_data(self, location: Location) -> WeatherData:
         """Get complete weather data for a location."""
@@ -1102,10 +1106,10 @@ class WeatherClient:
             return None
 
         change = target_period.temperature - base
-        direction, sparkline = self._trend_descriptor(change, minor=1.0 if unit == "°F" else 0.5, strong=3.0 if unit == "°F" else 1.5)
-        summary = (
-            f"Temperature {direction} {change:+.1f}{unit} over {self.trend_hours}h"
+        direction, sparkline = self._trend_descriptor(
+            change, minor=1.0 if unit == "°F" else 0.5, strong=3.0 if unit == "°F" else 1.5
         )
+        summary = f"Temperature {direction} {change:+.1f}{unit} over {self.trend_hours}h"
         return TrendInsight(
             metric="temperature",
             direction=direction,

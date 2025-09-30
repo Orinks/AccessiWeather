@@ -19,7 +19,6 @@ def speak_async(text: str, *, voice: str | None = None, rate: int | None = None)
 
     Returns True if speech was started successfully.
     """
-
     if not text:
         return False
 
