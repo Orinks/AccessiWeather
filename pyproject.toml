@@ -95,6 +95,7 @@ ignore = [
     "D103",   # Missing docstring in public function
     "D104",   # Missing docstring in public package
     "D105",   # Missing docstring in magic method
+    "UP038",  # Do not use union types in isinstance checks at runtime
 ]
 
 [tool.ruff.lint.per-file-ignores]

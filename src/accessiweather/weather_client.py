@@ -561,7 +561,10 @@ class WeatherClient:
                 response.raise_for_status()
                 data = response.json()
 
-                return self._parse_openmeteo_current_conditions(data)
+                current = self._parse_openmeteo_current_conditions(data)
+                if isinstance(current.wind_direction, (int, float)):
+                    current.wind_direction = self._degrees_to_cardinal(current.wind_direction)
+                return current
 
         except Exception as e:
             logger.error(f"Failed to get OpenMeteo current conditions: {e}")
@@ -976,8 +979,8 @@ class WeatherClient:
             temp_c = value
             temp_f = (temp_c * 9 / 5) + 32
         else:
-            temp_c = value
-            temp_f = (temp_c * 9 / 5) + 32
+            temp_f = value
+            temp_c = self._convert_f_to_c(temp_f)
         return temp_f, temp_c
 
     def _normalize_pressure(
