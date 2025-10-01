@@ -598,7 +598,7 @@ class WeatherClient:
             params = {
                 "latitude": location.latitude,
                 "longitude": location.longitude,
-                "hourly": "temperature_2m,weather_code,wind_speed_10m,wind_direction_10m",
+                "hourly": "temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,pressure_msl",
                 "temperature_unit": "fahrenheit",
                 "wind_speed_unit": "mph",
                 "timezone": "auto",
@@ -801,6 +801,7 @@ class WeatherClient:
         weather_codes = hourly.get("weather_code", [])
         wind_speeds = hourly.get("wind_speed_10m", [])
         wind_directions = hourly.get("wind_direction_10m", [])
+        pressures = hourly.get("pressure_msl", [])
 
         for i, time_str in enumerate(times):
             # Parse time
@@ -818,6 +819,8 @@ class WeatherClient:
             weather_code = weather_codes[i] if i < len(weather_codes) else None
             wind_speed = wind_speeds[i] if i < len(wind_speeds) else None
             wind_direction = wind_directions[i] if i < len(wind_directions) else None
+            pressure_mb = pressures[i] if i < len(pressures) else None
+            pressure_in = pressure_mb * 0.0295299830714 if pressure_mb is not None else None
 
             period = HourlyForecastPeriod(
                 start_time=start_time or datetime.now(),
@@ -826,6 +829,8 @@ class WeatherClient:
                 short_forecast=self._weather_code_to_description(weather_code),
                 wind_speed=f"{wind_speed} mph" if wind_speed is not None else None,
                 wind_direction=self._degrees_to_cardinal(wind_direction),
+                pressure_mb=pressure_mb,
+                pressure_in=pressure_in,
             )
             periods.append(period)
 

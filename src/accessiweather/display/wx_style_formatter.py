@@ -50,7 +50,10 @@ class WxStyleWeatherFormatter:
         return 0 if unit_pref == TemperatureUnit.BOTH else 1
 
     def format_current_conditions(
-        self, current: CurrentConditions | None, location: Location
+        self,
+        current: CurrentConditions | None,
+        location: Location,
+        hourly_forecast: HourlyForecast | None = None,
     ) -> str:
         """Format current conditions exactly like the wx version."""
         if not current or not current.has_data():
@@ -157,6 +160,11 @@ class WxStyleWeatherFormatter:
 
         text += f"Pressure: {pressure_str}"
 
+        # Trends (next 6 hours): temperature and pressure, if hourly data available
+        trend_line = self._format_trends_line(current, hourly_forecast, unit_pref)
+        if trend_line:
+            text += f"\n{trend_line}"
+
         # Add visibility if available
         if visibility_str != "N/A":
             text += f"\nVisibility: {visibility_str}"
@@ -167,6 +175,90 @@ class WxStyleWeatherFormatter:
             text += f"\nUV Index: {current.uv_index} ({uv_desc})"
 
         return text
+
+    def _format_trends_line(
+        self,
+        current: CurrentConditions | None,
+        hourly_forecast: HourlyForecast | None,
+        unit_pref: TemperatureUnit,
+    ) -> str:
+        """Build a one-line trend summary for next 6 hours (temp and pressure)."""
+        if not current or not hourly_forecast or not hourly_forecast.has_data():
+            return ""
+
+        next_hours = hourly_forecast.get_next_hours(6)
+        if not next_hours:
+            return ""
+
+        # Use the last available period within next 6 hours
+        target = None
+        for p in reversed(next_hours):
+            if p and (
+                p.temperature is not None or p.pressure_in is not None or p.pressure_mb is not None
+            ):
+                target = p
+                break
+        if target is None:
+            return ""
+
+        parts: list[str] = []
+
+        # Temperature trend (prefer Fahrenheit)
+        base_f = current.temperature_f
+        fut_f = None
+        if target.temperature is not None:
+            fut_f = (
+                target.temperature
+                if target.temperature_unit == "F"
+                else (target.temperature * 9 / 5) + 32
+            )
+        if base_f is None and current.temperature_c is not None:
+            base_f = (current.temperature_c * 9 / 5) + 32
+        if base_f is not None and fut_f is not None:
+            delta_f = fut_f - base_f
+            if unit_pref == TemperatureUnit.CELSIUS:
+                delta_c = (delta_f) * 5 / 9
+                parts.append(
+                    f"Temp {self._dir_arrow(delta_c, minor=0.5, strong=1.5)} {delta_c:+.1f}°C"
+                )
+            elif unit_pref == TemperatureUnit.BOTH:
+                parts.append(
+                    f"Temp {self._dir_arrow(delta_f, minor=1.0, strong=3.0)} {delta_f:+.0f}°F"
+                )
+            else:
+                parts.append(
+                    f"Temp {self._dir_arrow(delta_f, minor=1.0, strong=3.0)} {delta_f:+.0f}°F"
+                )
+
+        # Pressure trend (prefer inHg if available)
+        base_in = current.pressure_in
+        base_mb = current.pressure_mb
+        fut_in = target.pressure_in
+        fut_mb = target.pressure_mb
+
+        if base_in is not None and fut_in is not None:
+            delta_in = fut_in - base_in
+            parts.append(
+                f"Pressure {self._dir_arrow(delta_in, minor=0.02, strong=0.05)} {delta_in:+.2f} inHg"
+            )
+        elif base_mb is not None and fut_mb is not None:
+            delta_mb = fut_mb - base_mb
+            parts.append(
+                f"Pressure {self._dir_arrow(delta_mb, minor=0.5, strong=1.5)} {delta_mb:+.1f} mb"
+            )
+
+        return f"Trend (next 6h): {'; '.join(parts)}" if parts else ""
+
+    def _dir_arrow(self, change: float, *, minor: float, strong: float) -> str:
+        if change >= strong:
+            return "rising ⬆⬆"
+        if change >= minor:
+            return "rising ⬆"
+        if change <= -strong:
+            return "falling ⬇⬇"
+        if change <= -minor:
+            return "falling ⬇"
+        return "steady →"
 
     def format_forecast(
         self,
