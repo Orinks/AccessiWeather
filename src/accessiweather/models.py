@@ -93,6 +93,7 @@ class HourlyForecastPeriod:
     wind_direction: str | None = None
     icon: str | None = None
     end_time: datetime | None = None
+    # Optional pressure fields for trend computation
     pressure_mb: float | None = None
     pressure_in: float | None = None
 
