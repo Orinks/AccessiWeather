@@ -1,6 +1,6 @@
 """Unit tests for WeatherPresenter accuracy-sensitive output."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -9,6 +9,8 @@ from accessiweather.models import (
     AppSettings,
     CurrentConditions,
     EnvironmentalConditions,
+    HourlyForecast,
+    HourlyForecastPeriod,
     Location,
     TrendInsight,
     WeatherData,
@@ -111,3 +113,54 @@ def test_presenter_includes_trend_summary_and_status():
     assert presentation.trend_summary[0].startswith("Temperature rising")
     assert presentation.status_messages
     assert "cached" in presentation.status_messages[0].lower()
+
+
+@pytest.mark.unit
+def test_presenter_backfills_pressure_trend_from_hourly():
+    settings = AppSettings()
+    presenter = WeatherPresenter(settings)
+    location = Location(name="Pressure Ville", latitude=30.0, longitude=-95.0)
+    now = datetime.now()
+
+    current = CurrentConditions(
+        temperature_f=72.0,
+        pressure_in=29.80,
+        pressure_mb=29.80 * 33.8639,
+        condition="Fair",
+    )
+
+    hourly = HourlyForecast(
+        periods=[
+            HourlyForecastPeriod(
+                start_time=now + timedelta(hours=6),
+                pressure_in=29.90,
+                pressure_mb=29.90 * 33.8639,
+            )
+        ]
+    )
+
+    current_presentation = presenter.present_current(
+        current,
+        location,
+        hourly_forecast=hourly,
+    )
+
+    assert current_presentation is not None
+    pressure_metric = next(
+        (metric for metric in current_presentation.metrics if metric.label == "Pressure trend"),
+        None,
+    )
+    assert pressure_metric is not None
+    assert "inHg over next 6h" in pressure_metric.value
+    assert "Rising" in pressure_metric.value
+
+    weather_data = WeatherData(
+        location=location,
+        current=current,
+        hourly_forecast=hourly,
+        trend_insights=[],
+    )
+
+    presentation = presenter.present(weather_data)
+    assert presentation.trend_summary
+    assert any(line.startswith("Pressure rising") for line in presentation.trend_summary)

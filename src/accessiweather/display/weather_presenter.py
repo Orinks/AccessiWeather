@@ -142,8 +142,9 @@ class WeatherPresenter:
                 weather_data.current,
                 weather_data.location,
                 unit_pref,
-                weather_data.environmental,
-                weather_data.trend_insights,
+                environmental=weather_data.environmental,
+                trends=weather_data.trend_insights,
+                hourly_forecast=weather_data.hourly_forecast,
             )
             if weather_data.current
             else None
@@ -164,7 +165,11 @@ class WeatherPresenter:
             else None
         )
         summary_text = self._build_summary(weather_data, unit_pref)
-        trend_summary = self._format_trend_lines(weather_data.trend_insights)
+        trend_summary = self._format_trend_lines(
+            weather_data.trend_insights,
+            current=weather_data.current,
+            hourly_forecast=weather_data.hourly_forecast,
+        )
         status_messages = self._build_status_messages(weather_data)
 
         return WeatherPresentation(
@@ -184,11 +189,19 @@ class WeatherPresenter:
         *,
         environmental: EnvironmentalConditions | None = None,
         trends: Iterable[TrendInsight] | None = None,
+        hourly_forecast: HourlyForecast | None = None,
     ) -> CurrentConditionsPresentation | None:
         if not current or not current.has_data():
             return None
         unit_pref = self._get_temperature_unit_preference()
-        return self._build_current_conditions(current, location, unit_pref, environmental, trends)
+        return self._build_current_conditions(
+            current,
+            location,
+            unit_pref,
+            environmental=environmental,
+            trends=trends,
+            hourly_forecast=hourly_forecast,
+        )
 
     def present_forecast(
         self,
@@ -219,6 +232,7 @@ class WeatherPresenter:
         unit_pref: TemperatureUnit,
         environmental: EnvironmentalConditions | None = None,
         trends: Iterable[TrendInsight] | None = None,
+        hourly_forecast: HourlyForecast | None = None,
     ) -> CurrentConditionsPresentation:
         title = f"Current conditions for {location.name}"
         description = current.condition or "Unknown"
@@ -302,10 +316,23 @@ class WeatherPresenter:
                     )
                 metrics.append(Metric("Pollen", pollen_value or "Data unavailable"))
 
+        pressure_trend_present = False
         if trends:
             for trend in trends:
                 summary = trend.summary or self._describe_trend(trend)
+                if trend.sparkline:
+                    summary = f"{summary} {trend.sparkline}".strip()
                 metrics.append(Metric(f"{trend.metric.title()} trend", summary))
+                metric_name = getattr(trend, "metric", "")
+                if isinstance(metric_name, str) and metric_name.lower() == "pressure":
+                    pressure_trend_present = True
+
+        if not pressure_trend_present:
+            legacy_pressure_trend = self._compute_pressure_trend_from_hourly(
+                current, hourly_forecast
+            )
+            if legacy_pressure_trend:
+                metrics.append(Metric("Pressure trend", legacy_pressure_trend["value"]))
 
         fallback_lines = [f"Current Conditions: {description}", f"Temperature: {temperature_str}"]
         for metric in metrics[1:]:  # already added temperature
@@ -474,7 +501,11 @@ class WeatherPresenter:
             if active_count > 0:
                 parts.append(f"{active_count} alert{'s' if active_count != 1 else ''}")
 
-        trend_lines = self._format_trend_lines(weather_data.trend_insights)
+        trend_lines = self._format_trend_lines(
+            weather_data.trend_insights,
+            current=weather_data.current,
+            hourly_forecast=weather_data.hourly_forecast,
+        )
         if trend_lines:
             parts.append(trend_lines[0])
 
@@ -485,16 +516,34 @@ class WeatherPresenter:
             parts.append(stale_message)
         return " - ".join(parts)
 
-    def _format_trend_lines(self, trends: Iterable[TrendInsight] | None) -> list[str]:
+    def _format_trend_lines(
+        self,
+        trends: Iterable[TrendInsight] | None,
+        *,
+        current: CurrentConditions | None = None,
+        hourly_forecast: HourlyForecast | None = None,
+    ) -> list[str]:
         lines: list[str] = []
-        if not trends:
-            return lines
-        for trend in trends:
-            summary = trend.summary or self._describe_trend(trend)
-            if trend.sparkline:
-                summary = f"{summary} {trend.sparkline}".strip()
-            if summary:
-                lines.append(summary)
+        pressure_present = False
+
+        if trends:
+            for trend in trends:
+                summary = trend.summary or self._describe_trend(trend)
+                if trend.sparkline:
+                    summary = f"{summary} {trend.sparkline}".strip()
+                if summary:
+                    lines.append(summary)
+                metric_name = getattr(trend, "metric", "")
+                if isinstance(metric_name, str) and metric_name.lower() == "pressure":
+                    pressure_present = True
+
+        if (not pressure_present) and current and hourly_forecast:
+            legacy_pressure = self._compute_pressure_trend_from_hourly(current, hourly_forecast)
+            if legacy_pressure:
+                summary = legacy_pressure["summary"]
+                if summary and summary not in lines:
+                    lines.append(summary)
+
         return lines
 
     def _build_status_messages(self, weather_data: WeatherData) -> list[str]:
@@ -532,6 +581,81 @@ class WeatherPresenter:
             pieces.append(change_text)
         pieces.append(f"over {timeframe}h")
         return " ".join(pieces)
+
+    def _compute_pressure_trend_from_hourly(
+        self,
+        current: CurrentConditions,
+        hourly_forecast: HourlyForecast | None,
+    ) -> dict[str, str] | None:
+        if not hourly_forecast or not hourly_forecast.has_data():
+            return None
+
+        next_hours = hourly_forecast.get_next_hours(6)
+        if not next_hours:
+            return None
+
+        target: HourlyForecastPeriod | None = None
+        for period in reversed(next_hours):
+            if not period:
+                continue
+            if period.pressure_in is not None or period.pressure_mb is not None:
+                target = period
+                break
+
+        if target is None:
+            return None
+
+        base_in = current.pressure_in
+        base_mb = current.pressure_mb
+        future_in = target.pressure_in
+        future_mb = target.pressure_mb
+
+        descriptor: str | None = None
+        magnitude: str | None = None
+        change: float | None = None
+
+        if base_in is not None and future_in is not None:
+            change = future_in - base_in
+            descriptor = self._direction_descriptor(change, minor=0.02, strong=0.05)
+            magnitude = f"{change:+.2f} inHg"
+        elif base_mb is not None and future_mb is not None:
+            change = future_mb - base_mb
+            descriptor = self._direction_descriptor(change, minor=0.5, strong=1.5)
+            magnitude = f"{change:+.1f} mb"
+
+        if descriptor is None or magnitude is None or change is None:
+            return None
+
+        direction_word, arrow = self._split_direction_descriptor(descriptor)
+        window_hours = 6
+        arrow_part = f" {arrow}" if arrow else ""
+        value = (
+            f"{direction_word.title()}{arrow_part} {magnitude} over next {window_hours}h"
+        ).strip()
+        summary = f"Pressure {descriptor} {magnitude} over next {window_hours}h".strip()
+
+        return {"summary": summary, "value": value}
+
+    @staticmethod
+    def _direction_descriptor(change: float, *, minor: float, strong: float) -> str:
+        if change >= strong:
+            return "rising ⬆⬆"
+        if change >= minor:
+            return "rising ⬆"
+        if change <= -strong:
+            return "falling ⬇⬇"
+        if change <= -minor:
+            return "falling ⬇"
+        return "steady →"
+
+    @staticmethod
+    def _split_direction_descriptor(descriptor: str) -> tuple[str, str]:
+        if not descriptor:
+            return "steady", ""
+        if " " in descriptor:
+            direction, arrow = descriptor.split(" ", 1)
+            return direction, arrow.strip()
+        return descriptor, ""
 
     # ------------------------------------------------------------------
     # Helpers
