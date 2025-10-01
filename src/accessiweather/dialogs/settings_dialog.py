@@ -397,7 +397,7 @@ class SettingsDialog:
             ("default", "Fallback sound"),
         ]
         for key, label in override_entries:
-            row = toga.Box(style=Pack(direction=ROW, alignment="baseline", padding_bottom=6))
+            row = toga.Box(style=Pack(direction=ROW, alignment="center", padding_bottom=6))
             row.add(toga.Label(f"{label}:", style=Pack(width=170)))
             input_widget = toga.TextInput(
                 value=str(current_overrides.get(key, "")),
@@ -416,7 +416,7 @@ class SettingsDialog:
         )
         audio_box.add(self.alert_tts_switch)
 
-        tts_voice_row = toga.Box(style=Pack(direction=ROW, alignment="baseline", padding_bottom=6))
+        tts_voice_row = toga.Box(style=Pack(direction=ROW, alignment="center", padding_bottom=6))
         tts_voice_row.add(toga.Label("Voice id:", style=Pack(width=170)))
         self.alert_tts_voice_input = toga.TextInput(
             value=str(getattr(self.current_settings, "alert_tts_voice", "")),
@@ -426,7 +426,7 @@ class SettingsDialog:
         tts_voice_row.add(self.alert_tts_voice_input)
         audio_box.add(tts_voice_row)
 
-        tts_rate_row = toga.Box(style=Pack(direction=ROW, alignment="baseline", padding_bottom=6))
+        tts_rate_row = toga.Box(style=Pack(direction=ROW, alignment="center", padding_bottom=6))
         tts_rate_row.add(toga.Label("Voice rate:", style=Pack(width=170)))
         rate_value = getattr(self.current_settings, "alert_tts_rate", 0)
         self.alert_tts_rate_input = toga.TextInput(
@@ -1384,6 +1384,86 @@ class SettingsDialog:
         except ValueError:
             tts_rate = getattr(self.current_settings, "alert_tts_rate", 0)
 
+        # Alert preferences (widgets may not exist if Alerts UI not present)
+        alerts_enabled = bool(
+            getattr(
+                getattr(self, "alert_notifications_switch", None),
+                "value",
+                getattr(self.current_settings, "alert_notifications_enabled", True),
+            )
+        )
+        notify_extreme = bool(
+            getattr(
+                getattr(self, "alert_notify_extreme_switch", None),
+                "value",
+                getattr(self.current_settings, "alert_notify_extreme", True),
+            )
+        )
+        notify_severe = bool(
+            getattr(
+                getattr(self, "alert_notify_severe_switch", None),
+                "value",
+                getattr(self.current_settings, "alert_notify_severe", True),
+            )
+        )
+        notify_moderate = bool(
+            getattr(
+                getattr(self, "alert_notify_moderate_switch", None),
+                "value",
+                getattr(self.current_settings, "alert_notify_moderate", True),
+            )
+        )
+        notify_minor = bool(
+            getattr(
+                getattr(self, "alert_notify_minor_switch", None),
+                "value",
+                getattr(self.current_settings, "alert_notify_minor", False),
+            )
+        )
+        notify_unknown = bool(
+            getattr(
+                getattr(self, "alert_notify_unknown_switch", None),
+                "value",
+                getattr(self.current_settings, "alert_notify_unknown", False),
+            )
+        )
+
+        def _as_int(val, default: int) -> int:
+            try:
+                return int(val)
+            except (TypeError, ValueError):
+                return default
+
+        global_cooldown = _as_int(
+            getattr(getattr(self, "alert_global_cooldown_input", None), "value", None),
+            getattr(self.current_settings, "alert_global_cooldown_minutes", 5),
+        )
+        per_alert_cooldown = _as_int(
+            getattr(getattr(self, "alert_per_alert_cooldown_input", None), "value", None),
+            getattr(self.current_settings, "alert_per_alert_cooldown_minutes", 60),
+        )
+        escalation_cooldown = _as_int(
+            getattr(getattr(self, "alert_escalation_cooldown_input", None), "value", None),
+            getattr(self.current_settings, "alert_escalation_cooldown_minutes", 15),
+        )
+        max_per_hour = _as_int(
+            getattr(getattr(self, "alert_max_notifications_input", None), "value", None),
+            getattr(self.current_settings, "alert_max_notifications_per_hour", 10),
+        )
+
+        # Ignored categories
+        if hasattr(self, "_collect_ignored_categories"):
+            try:
+                ignored_categories = list(self._collect_ignored_categories())  # type: ignore[attr-defined]
+            except Exception:
+                ignored_categories = list(
+                    getattr(self.current_settings, "alert_ignored_categories", [])
+                )
+        else:
+            ignored_categories = list(
+                getattr(self.current_settings, "alert_ignored_categories", [])
+            )
+
         return AppSettings(
             temperature_unit=temperature_unit,
             update_interval_minutes=update_interval,
@@ -1400,17 +1480,17 @@ class SettingsDialog:
             sound_enabled=sound_enabled,
             sound_pack=sound_pack,
             github_backend_url="",  # Use default backend URL
-            alert_notifications_enabled=self.alert_notifications_switch.value,
-            alert_notify_extreme=self.alert_notify_extreme_switch.value,
-            alert_notify_severe=self.alert_notify_severe_switch.value,
-            alert_notify_moderate=self.alert_notify_moderate_switch.value,
-            alert_notify_minor=self.alert_notify_minor_switch.value,
-            alert_notify_unknown=self.alert_notify_unknown_switch.value,
-            alert_global_cooldown_minutes=int(self.alert_global_cooldown_input.value),
-            alert_per_alert_cooldown_minutes=int(self.alert_per_alert_cooldown_input.value),
-            alert_escalation_cooldown_minutes=int(self.alert_escalation_cooldown_input.value),
-            alert_max_notifications_per_hour=int(self.alert_max_notifications_input.value),
-            alert_ignored_categories=self._collect_ignored_categories(),
+            alert_notifications_enabled=alerts_enabled,
+            alert_notify_extreme=notify_extreme,
+            alert_notify_severe=notify_severe,
+            alert_notify_moderate=notify_moderate,
+            alert_notify_minor=notify_minor,
+            alert_notify_unknown=notify_unknown,
+            alert_global_cooldown_minutes=global_cooldown,
+            alert_per_alert_cooldown_minutes=per_alert_cooldown,
+            alert_escalation_cooldown_minutes=escalation_cooldown,
+            alert_max_notifications_per_hour=max_per_hour,
+            alert_ignored_categories=ignored_categories,
             alert_sound_overrides=overrides,
             alert_tts_enabled=tts_enabled,
             alert_tts_voice=tts_voice,
