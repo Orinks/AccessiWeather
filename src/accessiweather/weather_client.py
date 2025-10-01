@@ -78,11 +78,12 @@ class WeatherClient:
 
         # Secondary data providers
         self.meteoalarm_client = meteoalarm_client
-        if self.international_alerts_enabled and self.meteoalarm_client is None:
-            if self.international_alerts_provider == "meteosalarm":
-                self.meteoalarm_client = MeteoAlarmClient(
-                    user_agent=user_agent, timeout=self.timeout
-                )
+        if (
+            self.international_alerts_enabled
+            and self.meteoalarm_client is None
+            and self.international_alerts_provider == "meteosalarm"
+        ):
+            self.meteoalarm_client = MeteoAlarmClient(user_agent=user_agent, timeout=self.timeout)
 
         self.environmental_client = environmental_client
         if (self.air_quality_enabled or self.pollen_enabled) and self.environmental_client is None:

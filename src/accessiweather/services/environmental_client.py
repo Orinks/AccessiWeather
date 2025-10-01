@@ -21,6 +21,13 @@ class EnvironmentalDataClient:
     POLLEN_ENDPOINT = "https://pollen-api.open-meteo.com/v1/pollen"
 
     def __init__(self, user_agent: str = "AccessiWeather/2.0", timeout: float = 10.0):
+        """Initialize the client.
+
+        Args:
+            user_agent: HTTP User-Agent header value.
+            timeout: Request timeout in seconds.
+
+        """
         self.user_agent = user_agent
         self.timeout = timeout
 

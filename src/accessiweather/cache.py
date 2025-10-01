@@ -474,6 +474,13 @@ class WeatherDataCache:
     """Persist the latest weather data per location for offline fallback."""
 
     def __init__(self, cache_dir: str | Path, max_age_minutes: int = 180):
+        """Initialize the cache.
+
+        Args:
+            cache_dir: Directory where cache files are stored.
+            max_age_minutes: Age threshold before cached entries expire.
+
+        """
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.max_age = timedelta(minutes=max_age_minutes)

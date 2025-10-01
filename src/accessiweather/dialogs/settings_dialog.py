@@ -7,7 +7,6 @@ matching the functionality of the wxPython version.
 import asyncio
 import contextlib
 import logging
-from dataclasses import replace
 
 import toga
 from toga.style import Pack
