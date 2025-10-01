@@ -67,6 +67,8 @@ class SettingsDialog:
 
         # General tab controls (moved from Display)
         self.temperature_unit_selection = None
+        # Environmental controls
+        self.air_quality_threshold_input = None
 
     def __await__(self):
         """Make the dialog awaitable for modal behavior."""
@@ -233,6 +235,22 @@ class SettingsDialog:
             id="enable_alerts_switch",
         )
         general_box.add(self.enable_alerts_switch)
+
+        # Air Quality alert threshold (AQI)
+        aq_default = getattr(self.current_settings, "air_quality_notify_threshold", 3)
+        try:
+            aq_default = int(aq_default)
+        except Exception:
+            aq_default = 3
+        general_box.add(
+            toga.Label("Air Quality alert threshold (US AQI):", style=Pack(margin_bottom=5))
+        )
+        self.air_quality_threshold_input = toga.NumberInput(
+            value=aq_default,
+            style=Pack(margin_bottom=15),
+            id="air_quality_threshold_input",
+        )
+        general_box.add(self.air_quality_threshold_input)
 
         # Add tab to container
         self.option_container.content.append("General", general_box)
@@ -826,6 +844,13 @@ class SettingsDialog:
                 )
             if getattr(self, "enable_alerts_switch", None):
                 self.enable_alerts_switch.value = getattr(s, "enable_alerts", True)
+            if getattr(self, "air_quality_threshold_input", None):
+                try:
+                    self.air_quality_threshold_input.value = int(
+                        getattr(s, "air_quality_notify_threshold", 3)
+                    )
+                except Exception:
+                    self.air_quality_threshold_input.value = 3
 
             # Data source + Visual Crossing
             if getattr(self, "data_source_selection", None):
@@ -1223,6 +1248,15 @@ class SettingsDialog:
         if hasattr(self, "visual_crossing_api_key_input") and self.visual_crossing_api_key_input:
             visual_crossing_api_key = str(self.visual_crossing_api_key_input.value).strip()
 
+        # Air quality alert threshold (clamp to 0..500)
+        aq_threshold = 3
+        if getattr(self, "air_quality_threshold_input", None) is not None:
+            try:
+                aq_threshold = int(self.air_quality_threshold_input.value)
+            except (TypeError, ValueError):
+                aq_threshold = getattr(self.current_settings, "air_quality_notify_threshold", 3)
+        aq_threshold = max(0, min(500, aq_threshold))
+
         return AppSettings(
             temperature_unit=temperature_unit,
             update_interval_minutes=update_interval,
@@ -1238,6 +1272,7 @@ class SettingsDialog:
             sound_enabled=sound_enabled,
             sound_pack=sound_pack,
             github_backend_url="",  # Use default backend URL
+            air_quality_notify_threshold=aq_threshold,
         )
 
     def _initialize_update_info(self):

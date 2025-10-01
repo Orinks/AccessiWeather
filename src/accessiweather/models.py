@@ -300,6 +300,11 @@ class AppSettings:
     sound_enabled: bool = True
     sound_pack: str = "default"
 
+    # Environmental metrics
+    # AQI threshold at/above which to generate a local air quality alert
+    # (US AQI scale, typical useful values: 0-500; default kept low for backward compatibility)
+    air_quality_notify_threshold: int = 3
+
     # GitHub backend settings
     github_backend_url: str = ""
 
@@ -333,6 +338,7 @@ class AppSettings:
             "sound_enabled": self.sound_enabled,
             "sound_pack": self.sound_pack,
             "github_backend_url": self.github_backend_url,
+            "air_quality_notify_threshold": self.air_quality_notify_threshold,
             "alert_notifications_enabled": self.alert_notifications_enabled,
             "alert_notify_extreme": self.alert_notify_extreme,
             "alert_notify_severe": self.alert_notify_severe,
@@ -364,6 +370,7 @@ class AppSettings:
             sound_enabled=data.get("sound_enabled", True),
             sound_pack=data.get("sound_pack", "default"),
             github_backend_url=data.get("github_backend_url", ""),
+            air_quality_notify_threshold=data.get("air_quality_notify_threshold", 3),
             alert_notifications_enabled=data.get("alert_notifications_enabled", True),
             alert_notify_extreme=data.get("alert_notify_extreme", True),
             alert_notify_severe=data.get("alert_notify_severe", True),
