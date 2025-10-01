@@ -7,6 +7,7 @@ matching the functionality of the wxPython version.
 import asyncio
 import contextlib
 import logging
+from dataclasses import replace
 
 import toga
 from toga.style import Pack
@@ -344,12 +345,10 @@ class SettingsDialog:
     def _create_audio_tab(self):
         """Create the Audio tab (sound notifications)."""
         audio_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
-        # Store reference to this tab container
         self.audio_tab = audio_box
 
         audio_box.add(toga.Label("Sound Notifications:", style=Pack(font_weight="bold")))
 
-        # Enable Sounds Switch
         self.sound_enabled_switch = toga.Switch(
             "Enable Sounds",
             value=getattr(self.current_settings, "sound_enabled", True),
@@ -359,7 +358,6 @@ class SettingsDialog:
         )
         audio_box.add(self.sound_enabled_switch)
 
-        # Sound Pack Selection (authoritative selector for active pack)
         self._load_sound_packs()
         audio_box.add(toga.Label("Active sound pack:", style=Pack(margin_bottom=5)))
 
@@ -368,18 +366,15 @@ class SettingsDialog:
             style=Pack(margin_bottom=10, width=200),
             id="sound_pack_selection",
         )
-        # Match enabled state to current settings on load
         self.sound_pack_selection.enabled = self.sound_enabled_switch.value
 
         current_pack = getattr(self.current_settings, "sound_pack", "default")
-        found = False
-        for k, v in self.sound_pack_map.items():
-            if v == current_pack:
-                self.sound_pack_selection.value = k
-                found = True
-                break
-        if not found and self.sound_pack_options:
-            self.sound_pack_selection.value = self.sound_pack_options[0]
+        display_value = next(
+            (name for name, pack_id in self.sound_pack_map.items() if pack_id == current_pack),
+            self.sound_pack_options[0] if self.sound_pack_options else "Default",
+        )
+        if self.sound_pack_options:
+            self.sound_pack_selection.value = display_value
         audio_box.add(self.sound_pack_selection)
 
         self.manage_soundpacks_button = toga.Button(
@@ -389,7 +384,9 @@ class SettingsDialog:
         )
         audio_box.add(self.manage_soundpacks_button)
 
-        audio_box.add(toga.Label("Alert sound overrides:", style=Pack(font_weight="bold", margin_top=15)))
+        audio_box.add(
+            toga.Label("Alert sound overrides:", style=Pack(font_weight="bold", margin_top=15))
+        )
         self.alert_sound_override_inputs: dict[str, toga.TextInput] = {}
         current_overrides = getattr(self.current_settings, "alert_sound_overrides", {}) or {}
         override_entries = [
@@ -411,23 +408,8 @@ class SettingsDialog:
             self.alert_sound_override_inputs[key] = input_widget
             row.add(input_widget)
             audio_box.add(row)
-        startup_switch = getattr(self, "startup_enabled_switch", None)
-        startup_enabled = getattr(startup_switch, "value", False)
 
-        overrides: dict[str, str] = {}
-        override_inputs = getattr(self, "alert_sound_override_inputs", {}) or {}
-        for key, widget in override_inputs.items():
-            value = getattr(widget, "value", "")
-            if value and value.strip():
-                overrides[key] = value.strip()
-
-        tts_enabled = bool(getattr(getattr(self, "alert_tts_switch", None), "value", False))
-        tts_voice = str(getattr(getattr(self, "alert_tts_voice_input", None), "value", "")).strip()
-        tts_rate_text = str(getattr(getattr(self, "alert_tts_rate_input", None), "value", "")).strip()
-        try:
-            tts_rate = int(tts_rate_text) if tts_rate_text else 0
-        except ValueError:
-            tts_rate = getattr(self.current_settings, "alert_tts_rate", 0)
+        audio_box.add(toga.Label("Alert narration:", style=Pack(font_weight="bold", margin_top=15)))
         self.alert_tts_switch = toga.Switch(
             "Enable text-to-speech summaries",
             value=bool(getattr(self.current_settings, "alert_tts_enabled", False)),
@@ -455,12 +437,12 @@ class SettingsDialog:
         )
         tts_rate_row.add(self.alert_tts_rate_input)
         audio_box.add(tts_rate_row)
-            alert_ignored_categories=self._collect_ignored_categories(),
-            alert_sound_overrides=overrides,
+
+        self.option_container.content.append("Audio", audio_box)
+
     def _create_advanced_tab(self):
         """Create the Advanced settings tab (power user settings)."""
         advanced_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
-        # Store reference to this tab container
         self.advanced_tab = advanced_box
 
         # Minimize to Tray (note: not applicable to all platforms)
@@ -994,6 +976,18 @@ class SettingsDialog:
                     self.sound_pack_selection.value = display_name
                 # Keep selection enabled state in sync with switch
                 self.sound_pack_selection.enabled = bool(self.sound_enabled_switch.value)
+            if getattr(self, "alert_sound_override_inputs", None):
+                overrides = getattr(s, "alert_sound_overrides", {}) or {}
+                for key, widget in self.alert_sound_override_inputs.items():
+                    if widget is not None:
+                        widget.value = str(overrides.get(key, ""))
+            if getattr(self, "alert_tts_switch", None):
+                self.alert_tts_switch.value = getattr(s, "alert_tts_enabled", False)
+            if getattr(self, "alert_tts_voice_input", None):
+                self.alert_tts_voice_input.value = getattr(s, "alert_tts_voice", "")
+            if getattr(self, "alert_tts_rate_input", None):
+                rate_value = getattr(s, "alert_tts_rate", 0)
+                self.alert_tts_rate_input.value = str(rate_value if rate_value else "")
 
             # Updates
             if getattr(self, "auto_update_switch", None) is not None:
@@ -1374,6 +1368,23 @@ class SettingsDialog:
         startup_switch = getattr(self, "startup_enabled_switch", None)
         startup_enabled = getattr(startup_switch, "value", False)
 
+        overrides: dict[str, str] = {}
+        for key, widget in getattr(self, "alert_sound_override_inputs", {}).items():
+            value = getattr(widget, "value", "")
+            if value and value.strip():
+                overrides[key] = value.strip()
+
+        tts_switch = getattr(self, "alert_tts_switch", None)
+        tts_enabled = bool(getattr(tts_switch, "value", False))
+        tts_voice_input = getattr(self, "alert_tts_voice_input", None)
+        tts_voice = str(getattr(tts_voice_input, "value", "")).strip()
+        tts_rate_input = getattr(self, "alert_tts_rate_input", None)
+        tts_rate_text = str(getattr(tts_rate_input, "value", "")).strip()
+        try:
+            tts_rate = int(tts_rate_text) if tts_rate_text else 0
+        except ValueError:
+            tts_rate = getattr(self.current_settings, "alert_tts_rate", 0)
+
         return AppSettings(
             temperature_unit=temperature_unit,
             update_interval_minutes=update_interval,
@@ -1390,6 +1401,38 @@ class SettingsDialog:
             sound_enabled=sound_enabled,
             sound_pack=sound_pack,
             github_backend_url="",  # Use default backend URL
+            alert_notifications_enabled=self.alert_notifications_switch.value,
+            alert_notify_extreme=self.alert_notify_extreme_switch.value,
+            alert_notify_severe=self.alert_notify_severe_switch.value,
+            alert_notify_moderate=self.alert_notify_moderate_switch.value,
+            alert_notify_minor=self.alert_notify_minor_switch.value,
+            alert_notify_unknown=self.alert_notify_unknown_switch.value,
+            alert_global_cooldown_minutes=int(self.alert_global_cooldown_input.value),
+            alert_per_alert_cooldown_minutes=int(self.alert_per_alert_cooldown_input.value),
+            alert_escalation_cooldown_minutes=int(self.alert_escalation_cooldown_input.value),
+            alert_max_notifications_per_hour=int(self.alert_max_notifications_input.value),
+            alert_ignored_categories=self._collect_ignored_categories(),
+            alert_sound_overrides=overrides,
+            alert_tts_enabled=tts_enabled,
+            alert_tts_voice=tts_voice,
+            alert_tts_rate=tts_rate,
+            international_alerts_enabled=getattr(
+                self.current_settings, "international_alerts_enabled", True
+            ),
+            international_alerts_provider=getattr(
+                self.current_settings, "international_alerts_provider", "meteosalarm"
+            ),
+            trend_insights_enabled=getattr(self.current_settings, "trend_insights_enabled", True),
+            trend_hours=getattr(self.current_settings, "trend_hours", 24),
+            air_quality_enabled=getattr(self.current_settings, "air_quality_enabled", True),
+            pollen_enabled=getattr(self.current_settings, "pollen_enabled", True),
+            air_quality_notify_threshold=getattr(
+                self.current_settings, "air_quality_notify_threshold", 3
+            ),
+            offline_cache_enabled=getattr(self.current_settings, "offline_cache_enabled", True),
+            offline_cache_max_age_minutes=getattr(
+                self.current_settings, "offline_cache_max_age_minutes", 180
+            ),
         )
 
     def _initialize_update_info(self):

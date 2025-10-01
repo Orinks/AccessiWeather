@@ -6,6 +6,7 @@ with a simplified architecture that avoids complex service layers and threading 
 
 import asyncio
 import logging
+from pathlib import Path
 
 import toga
 from toga.style import Pack
@@ -189,7 +190,20 @@ class AccessiWeatherApp(toga.App):
         # Weather client with data source and API keys from config
         data_source = config.settings.data_source if config.settings else "auto"
         visual_crossing_api_key = config.settings.visual_crossing_api_key if config.settings else ""
-        cache_dir = self.config_manager.config_dir / "weather_cache"
+        config_dir_value = getattr(self.config_manager, "config_dir", None)
+        cache_root: Path | None = None
+        if config_dir_value is not None:
+            try:
+                cache_root = Path(config_dir_value)
+            except (TypeError, ValueError):
+                cache_root = None
+        if cache_root is None:
+            fallback_dir = getattr(self.paths, "config", None)
+            try:
+                cache_root = Path(fallback_dir) if fallback_dir is not None else Path.cwd()
+            except (TypeError, ValueError):
+                cache_root = Path.cwd()
+        cache_dir = cache_root / "weather_cache"
         offline_cache = WeatherDataCache(cache_dir)
         self.weather_client = WeatherClient(
             user_agent="AccessiWeather/2.0",
