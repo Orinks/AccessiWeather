@@ -6,6 +6,7 @@ with a simplified architecture that avoids complex service layers and threading 
 
 import asyncio
 import logging
+from pathlib import Path
 
 import toga
 from toga.style import Pack
@@ -13,6 +14,7 @@ from travertino.constants import COLUMN, ROW
 
 from .alert_manager import AlertManager
 from .alert_notification_system import AlertNotificationSystem
+from .cache import WeatherDataCache
 from .config import ConfigManager
 from .dialogs import AddLocationDialog, SettingsDialog
 from .dialogs.discussion import ForecastDiscussionDialog
@@ -188,10 +190,27 @@ class AccessiWeatherApp(toga.App):
         # Weather client with data source and API keys from config
         data_source = config.settings.data_source if config.settings else "auto"
         visual_crossing_api_key = config.settings.visual_crossing_api_key if config.settings else ""
+        config_dir_value = getattr(self.config_manager, "config_dir", None)
+        cache_root: Path | None = None
+        if config_dir_value is not None:
+            try:
+                cache_root = Path(config_dir_value)
+            except (TypeError, ValueError):
+                cache_root = None
+        if cache_root is None:
+            fallback_dir = getattr(self.paths, "config", None)
+            try:
+                cache_root = Path(fallback_dir) if fallback_dir is not None else Path.cwd()
+            except (TypeError, ValueError):
+                cache_root = Path.cwd()
+        cache_dir = cache_root / "weather_cache"
+        offline_cache = WeatherDataCache(cache_dir)
         self.weather_client = WeatherClient(
             user_agent="AccessiWeather/2.0",
             data_source=data_source,
             visual_crossing_api_key=visual_crossing_api_key,
+            settings=config.settings,
+            offline_cache=offline_cache,
         )
 
         # Location manager
@@ -217,7 +236,10 @@ class AccessiWeatherApp(toga.App):
         config_dir = str(self.paths.config)
         alert_settings = config.settings.to_alert_settings()
         self.alert_manager = AlertManager(config_dir, alert_settings)
-        self.alert_notification_system = AlertNotificationSystem(self.alert_manager, self._notifier)
+        audio_settings = config.settings.to_alert_audio_settings()
+        self.alert_notification_system = AlertNotificationSystem(
+            self.alert_manager, self._notifier, audio_settings=audio_settings
+        )
 
         # Initialize system tray (only if enabled in settings)
         try:
@@ -681,9 +703,12 @@ class AccessiWeatherApp(toga.App):
                             getattr(config.settings, "sound_enabled", True)
                         )
                         self._notifier.soundpack = getattr(config.settings, "sound_pack", "default")
-                    if self.alert_manager:
-                        # Update alert manager sound and notification-related settings
-                        self.alert_manager.update_settings(config.settings.to_alert_settings())
+                    if self.alert_notification_system:
+                        alert_settings = config.settings.to_alert_settings()
+                        audio_settings = config.settings.to_alert_audio_settings()
+                        self.alert_notification_system.update_settings(
+                            alert_settings, audio_settings=audio_settings
+                        )
                     logger.info("Settings updated successfully and applied to runtime components")
                 except Exception as apply_err:
                     logger.warning(
@@ -1039,10 +1064,16 @@ class AccessiWeatherApp(toga.App):
 
             logger.debug("About to update weather displays")
             # Update displays
-            await self._update_weather_displays(weather_data)
+            presentation = await self._update_weather_displays(weather_data)
             logger.debug("Weather displays updated")
 
-            self._update_status(f"Updated at {weather_data.last_updated.strftime('%I:%M %p')}")
+            if presentation and presentation.status_messages:
+                self._update_status(presentation.status_messages[0])
+            elif weather_data.stale and weather_data.stale_since:
+                stale_time = weather_data.stale_since.astimezone().strftime("%I:%M %p")
+                self._update_status(f"Showing cached data from {stale_time}")
+            else:
+                self._update_status(f"Updated at {weather_data.last_updated.strftime('%I:%M %p')}")
             logger.info(f"Successfully updated weather for {current_location.name}")
 
         except Exception as e:
@@ -1069,7 +1100,16 @@ class AccessiWeatherApp(toga.App):
             # Current conditions
             if self.current_conditions_display:
                 if presentation.current:
-                    self.current_conditions_display.value = presentation.current.fallback_text
+                    current_text = presentation.current.fallback_text
+                    if presentation.trend_summary:
+                        trend_lines = "\n".join(f"• {line}" for line in presentation.trend_summary)
+                        current_text += f"\n\nTrends:\n{trend_lines}"
+                    if presentation.status_messages:
+                        status_lines = "\n".join(
+                            f"• {line}" for line in presentation.status_messages
+                        )
+                        current_text += f"\n\nStatus:\n{status_lines}"
+                    self.current_conditions_display.value = current_text
                 else:
                     self.current_conditions_display.value = f"Current conditions for {location_name}:\nNo current weather data available."
 
@@ -1094,10 +1134,12 @@ class AccessiWeatherApp(toga.App):
             await self._notify_new_alerts(weather_data.alerts)
 
             logger.info("Weather displays updated successfully")
+            return presentation
 
         except Exception as e:
             logger.error(f"Failed to update weather displays: {e}")
             self._show_error_displays(f"Display error: {e}")
+            return None
 
     def _convert_alerts_to_table_data(self, alerts):
         """Convert WeatherAlerts to table data format."""

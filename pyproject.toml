@@ -56,28 +56,57 @@ respect-gitignore = true
 
 # Exclude auto-generated and build directories
 exclude = [
+    # VCS & IDE
     ".git",
+    ".github",
+    ".idea",
+    ".vscode",
+
+    # Python caches & coverage
     "__pycache__",
+    "**/__pycache__/",
+    ".pytest_cache",
+    "**/.pytest_cache/",
+    ".mypy_cache",
+    "**/.mypy_cache/",
+    ".ruff_cache",
+    "**/.ruff_cache/",
+    ".coverage",
+    "coverage.xml",
+    "htmlcov",
+
+    # Virtual environments (any name/prefix)
+    ".venv",
+    ".venv-wsl",
+    ".venv*",
+    "venv",
+    "venv*",
+    "env",
+    "env*",
+    "**/.venv*/",
+    "**/venv*/",
+    "**/env*/",
+
+    # Build & dist artifacts
     "build",
     "dist",
-    "src/accessiweather/weather_gov_api_client",
-    "src/accessiweather/weatherapi_client",
-    ".venv",
-    "venv",
-    "env",
-    ".eggs",
     "*.egg-info",
-    ".tox",
-    ".coverage",
-    "htmlcov",
-    ".pytest_cache",
-    ".mypy_cache",
-    ".ruff_cache",
-    "temp_backup",
+    ".eggs",
+    "*.dist-info",
+    "src/accessiweather.dist-info",
     "installer/build",
     "installer/dist",
+
+    # Project-specific generated content
+    "src/accessiweather/weather_gov_api_client",
+    "src/accessiweather/weatherapi_client",
     "docs",
-    ".github"
+    "temp_backup",
+    "accessiweather.log",
+    "*.log",
+
+    # Third-party (if present)
+    "node_modules"
 ]
 
 [tool.ruff.lint]

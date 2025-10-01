@@ -93,6 +93,9 @@ class HourlyForecastPeriod:
     wind_direction: str | None = None
     icon: str | None = None
     end_time: datetime | None = None
+    # Optional pressure fields for trend computation
+    pressure_mb: float | None = None
+    pressure_in: float | None = None
 
     def has_data(self) -> bool:
         """Check if we have any meaningful hourly forecast data."""
@@ -101,6 +104,7 @@ class HourlyForecastPeriod:
                 self.temperature is not None,
                 self.short_forecast is not None,
                 self.wind_speed is not None,
+                self.pressure_mb is not None,
             ]
         )
 
@@ -176,6 +180,47 @@ class HourlyForecast:
 
 
 @dataclass
+class TrendInsight:
+    """Summary of a metric trend over a timeframe."""
+
+    metric: str
+    direction: str
+    change: float | None = None
+    unit: str | None = None
+    timeframe_hours: int = 24
+    summary: str | None = None
+    sparkline: str | None = None
+
+
+@dataclass
+class EnvironmentalConditions:
+    """Supplemental environmental metrics such as air quality and pollen."""
+
+    air_quality_index: float | None = None
+    air_quality_category: str | None = None
+    air_quality_pollutant: str | None = None
+    pollen_index: float | None = None
+    pollen_category: str | None = None
+    pollen_tree_index: float | None = None
+    pollen_grass_index: float | None = None
+    pollen_weed_index: float | None = None
+    pollen_primary_allergen: str | None = None
+    updated_at: datetime | None = None
+    sources: list[str] = field(default_factory=list)
+
+    def has_data(self) -> bool:
+        return any(
+            [
+                self.air_quality_index is not None,
+                self.pollen_index is not None,
+                self.pollen_tree_index is not None,
+                self.pollen_grass_index is not None,
+                self.pollen_weed_index is not None,
+            ]
+        )
+
+
+@dataclass
 class WeatherAlert:
     """Weather alert/warning."""
 
@@ -191,6 +236,7 @@ class WeatherAlert:
     expires: datetime | None = None
     areas: list[str] = field(default_factory=list)
     id: str | None = None  # NWS alert ID for unique identification
+    source: str | None = None
 
     def __post_init__(self):
         if self.areas is None:
@@ -210,6 +256,8 @@ class WeatherAlert:
             self.severity or "unknown",
             self.headline or self.title or "unknown",
         ]
+        if self.source:
+            key_parts.append(self.source)
         return "-".join(part.lower().replace(" ", "_") for part in key_parts)
 
     def get_content_hash(self) -> str:
@@ -295,6 +343,11 @@ class WeatherData:
     discussion: str | None = None
     alerts: WeatherAlerts | None = None
     last_updated: datetime | None = None
+    environmental: EnvironmentalConditions | None = None
+    trend_insights: list[TrendInsight] = field(default_factory=list)
+    stale: bool = False
+    stale_since: datetime | None = None
+    stale_reason: str | None = None
 
     def has_any_data(self) -> bool:
         """Check if we have any weather data."""
@@ -304,6 +357,7 @@ class WeatherData:
                 self.forecast and self.forecast.has_data(),
                 self.hourly_forecast and self.hourly_forecast.has_data(),
                 self.alerts and self.alerts.has_alerts(),
+                self.environmental and self.environmental.has_data(),
             ]
         )
 
@@ -364,6 +418,28 @@ class AppSettings:
     alert_escalation_cooldown_minutes: int = 15
     alert_max_notifications_per_hour: int = 10
     alert_ignored_categories: list[str] = field(default_factory=list)
+    # Advanced alert audio options
+    alert_sound_overrides: dict[str, str] = field(default_factory=dict)
+    alert_tts_enabled: bool = False
+    alert_tts_voice: str = ""
+    alert_tts_rate: int = 0
+
+    # International alert integration
+    international_alerts_enabled: bool = True
+    international_alerts_provider: str = "meteosalarm"
+
+    # Trend insight configuration
+    trend_insights_enabled: bool = True
+    trend_hours: int = 24
+
+    # Environmental metrics
+    air_quality_enabled: bool = True
+    pollen_enabled: bool = True
+    air_quality_notify_threshold: int = 3
+
+    # Offline cache
+    offline_cache_enabled: bool = True
+    offline_cache_max_age_minutes: int = 180
 
     @staticmethod
     def _as_bool(value, default: bool) -> bool:
@@ -411,6 +487,19 @@ class AppSettings:
             "alert_escalation_cooldown_minutes": self.alert_escalation_cooldown_minutes,
             "alert_max_notifications_per_hour": self.alert_max_notifications_per_hour,
             "alert_ignored_categories": self.alert_ignored_categories,
+            "alert_sound_overrides": self.alert_sound_overrides,
+            "alert_tts_enabled": self.alert_tts_enabled,
+            "alert_tts_voice": self.alert_tts_voice,
+            "alert_tts_rate": self.alert_tts_rate,
+            "international_alerts_enabled": self.international_alerts_enabled,
+            "international_alerts_provider": self.international_alerts_provider,
+            "trend_insights_enabled": self.trend_insights_enabled,
+            "trend_hours": self.trend_hours,
+            "air_quality_enabled": self.air_quality_enabled,
+            "pollen_enabled": self.pollen_enabled,
+            "air_quality_notify_threshold": self.air_quality_notify_threshold,
+            "offline_cache_enabled": self.offline_cache_enabled,
+            "offline_cache_max_age_minutes": self.offline_cache_max_age_minutes,
         }
 
     @classmethod
@@ -443,6 +532,19 @@ class AppSettings:
             alert_escalation_cooldown_minutes=data.get("alert_escalation_cooldown_minutes", 15),
             alert_max_notifications_per_hour=data.get("alert_max_notifications_per_hour", 10),
             alert_ignored_categories=data.get("alert_ignored_categories", []),
+            alert_sound_overrides=data.get("alert_sound_overrides", {}),
+            alert_tts_enabled=data.get("alert_tts_enabled", False),
+            alert_tts_voice=data.get("alert_tts_voice", ""),
+            alert_tts_rate=data.get("alert_tts_rate", 0),
+            international_alerts_enabled=data.get("international_alerts_enabled", True),
+            international_alerts_provider=data.get("international_alerts_provider", "meteosalarm"),
+            trend_insights_enabled=data.get("trend_insights_enabled", True),
+            trend_hours=data.get("trend_hours", 24),
+            air_quality_enabled=data.get("air_quality_enabled", True),
+            pollen_enabled=data.get("pollen_enabled", True),
+            air_quality_notify_threshold=data.get("air_quality_notify_threshold", 3),
+            offline_cache_enabled=data.get("offline_cache_enabled", True),
+            offline_cache_max_age_minutes=data.get("offline_cache_max_age_minutes", 180),
         )
 
     def to_alert_settings(self):
@@ -473,6 +575,25 @@ class AppSettings:
             settings.min_severity_priority = 6  # Effectively disable notifications
 
         return settings
+
+    def to_alert_audio_settings(self) -> "AlertAudioSettings":
+        """Convert to audio-specific alert preferences."""
+        return AlertAudioSettings(
+            sound_overrides=dict(self.alert_sound_overrides or {}),
+            tts_enabled=bool(self.alert_tts_enabled),
+            tts_voice=self.alert_tts_voice or None,
+            tts_rate=self.alert_tts_rate or None,
+        )
+
+
+@dataclass
+class AlertAudioSettings:
+    """Audio preferences for alert notifications."""
+
+    sound_overrides: dict[str, str] = field(default_factory=dict)
+    tts_enabled: bool = False
+    tts_voice: str | None = None
+    tts_rate: int | None = None
 
 
 @dataclass

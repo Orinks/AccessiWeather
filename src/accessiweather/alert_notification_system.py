@@ -9,7 +9,7 @@ import asyncio
 import logging
 
 from .alert_manager import AlertManager, AlertSettings
-from .models import WeatherAlert, WeatherAlerts
+from .models import AlertAudioSettings, WeatherAlert, WeatherAlerts
 from .notifications.toast_notifier import SafeDesktopNotifier
 
 logger = logging.getLogger(__name__)
@@ -18,10 +18,16 @@ logger = logging.getLogger(__name__)
 class AlertNotificationSystem:
     """Enhanced notification system with user controls and accessibility features."""
 
-    def __init__(self, alert_manager: AlertManager, notifier: SafeDesktopNotifier | None = None):
+    def __init__(
+        self,
+        alert_manager: AlertManager,
+        notifier: SafeDesktopNotifier | None = None,
+        audio_settings: AlertAudioSettings | None = None,
+    ):
         """Initialize the instance."""
         self.alert_manager = alert_manager
         self.notifier = notifier or SafeDesktopNotifier()
+        self.audio_settings = audio_settings or AlertAudioSettings()
 
         # Notification templates for different reasons
         self.notification_templates = {
@@ -137,6 +143,15 @@ class AlertNotificationSystem:
                 # Fallback if mapper not available
                 sound_candidates = None
 
+            override_event = self._get_override_event(alert, reason)
+            if override_event:
+                if sound_candidates:
+                    sound_candidates = [override_event] + [
+                        candidate for candidate in sound_candidates if candidate != override_event
+                    ]
+                else:
+                    sound_candidates = [override_event]
+
             # Send the notification, providing candidate-based sound selection
             success = self.notifier.send_notification(
                 title=title,
@@ -150,15 +165,34 @@ class AlertNotificationSystem:
             else:
                 logger.warning(f"Failed to send alert notification: {title[:50]}...")
 
+            if self.audio_settings.tts_enabled:
+                try:
+                    from .notifications.tts import speak_async
+
+                    speech = self._format_tts_message(alert, reason)
+                    speak_async(
+                        speech,
+                        voice=self.audio_settings.tts_voice or None,
+                        rate=self.audio_settings.tts_rate or None,
+                    )
+                except Exception as tts_exc:  # noqa: BLE001
+                    logger.debug(f"TTS playback failed: {tts_exc}")
+
             return success
 
         except Exception as e:
             logger.error(f"Error formatting/sending alert notification: {e}")
             return False
 
-    def update_settings(self, settings: AlertSettings):
+    def update_settings(
+        self,
+        settings: AlertSettings,
+        audio_settings: AlertAudioSettings | None = None,
+    ):
         """Update alert notification settings."""
         self.alert_manager.update_settings(settings)
+        if audio_settings is not None:
+            self.audio_settings = audio_settings
         logger.info("Alert notification settings updated")
 
     def get_settings(self) -> AlertSettings:
@@ -210,6 +244,34 @@ class AlertNotificationSystem:
         except Exception as e:
             logger.error(f"Error sending test notification: {e}")
             return False
+
+    def _get_override_event(self, alert: WeatherAlert, reason: str) -> str | None:
+        overrides = getattr(self.audio_settings, "sound_overrides", {}) or {}
+        if not overrides:
+            return None
+        severity_key = (alert.severity or "").lower()
+        if severity_key in overrides:
+            return overrides[severity_key]
+        if reason in overrides:
+            return overrides[reason]
+        return overrides.get("default")
+
+    def _format_tts_message(self, alert: WeatherAlert, reason: str) -> str:
+        parts = [alert.event or alert.title or "Weather alert"]
+        severity = (alert.severity or "").lower()
+        if severity and severity != "unknown":
+            parts.append(severity)
+        reason_map = {
+            "new_alert": "has been issued",
+            "escalation": "has escalated",
+            "reminder": "remains in effect",
+            "content_changed": "has been updated",
+        }
+        if reason_map.get(reason):
+            parts.append(reason_map[reason])
+        if alert.areas:
+            parts.append(f"for {alert.areas[0]}")
+        return " ".join(parts)
 
 
 class AlertNotificationPreferences:

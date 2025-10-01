@@ -11,14 +11,17 @@ from .display import WeatherPresenter
 from .formatters import WeatherFormatter
 from .location_manager import LocationManager
 from .models import (
+    AlertAudioSettings,
     AppConfig,
     AppSettings,
     CurrentConditions,
+    EnvironmentalConditions,
     Forecast,
     ForecastPeriod,
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
+    TrendInsight,
     WeatherAlert,
     WeatherAlerts,
     WeatherData,
@@ -85,11 +88,14 @@ __all__ = [
     "Forecast",
     "HourlyForecastPeriod",
     "HourlyForecast",
+    "EnvironmentalConditions",
+    "TrendInsight",
     "WeatherAlert",
     "WeatherAlerts",
     "WeatherData",
     "AppSettings",
     "AppConfig",
+    "AlertAudioSettings",
     # Utilities
     "TemperatureUnit",
     "format_temperature",
