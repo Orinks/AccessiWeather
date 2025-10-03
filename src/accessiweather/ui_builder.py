@@ -10,7 +10,7 @@ import toga
 from toga.style import Pack
 from travertino.constants import COLUMN, ROW
 
-from . import event_handlers
+from . import app_helpers, event_handlers
 
 if TYPE_CHECKING:  # pragma: no cover - circular import guard
     from .app import AccessiWeatherApp
@@ -137,7 +137,7 @@ def create_location_section(app: AccessiWeatherApp) -> toga.Box:
 
     location_label = toga.Label("Location:", style=Pack(width=80, margin_right=10))
 
-    location_names = app._get_location_choices()
+    location_names = app_helpers.get_location_choices(app)
 
     app.location_selection = toga.Selection(
         items=location_names,
