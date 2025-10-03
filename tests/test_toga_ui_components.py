@@ -5,6 +5,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
+import accessiweather.dialogs.settings_tabs as settings_tabs
+
 # Set up Toga dummy backend
 os.environ["TOGA_BACKEND"] = "toga_dummy"
 
@@ -821,7 +823,7 @@ def test_settings_dialog_has_full_reset_button(tmp_path):
     dlg = SettingsDialog(app, cm)
     dlg.current_settings = cm.get_settings()
     dlg.option_container = toga.OptionContainer()
-    dlg._create_advanced_tab()
+    settings_tabs.create_advanced_tab(dlg)
 
     assert dlg.full_reset_button.id == "full_reset_button"
     assert dlg.full_reset_button.text.startswith("Reset all app data")
@@ -924,7 +926,7 @@ def test_settings_dialog_has_reset_defaults_button(tmp_path):
     import toga
 
     dlg.option_container = toga.OptionContainer()
-    dlg._create_advanced_tab()
+    settings_tabs.create_advanced_tab(dlg)
 
     # Verify the button exists and is wired with the expected id/text
     assert getattr(dlg, "reset_defaults_button", None) is not None
@@ -952,7 +954,7 @@ def test_settings_dialog_has_open_config_dir_button(tmp_path):
     dlg = SettingsDialog(app, cm)
     dlg.current_settings = cm.get_settings()
     dlg.option_container = toga.OptionContainer()
-    dlg._create_advanced_tab()
+    settings_tabs.create_advanced_tab(dlg)
 
     assert dlg.open_config_dir_button.id == "open_config_dir_button"
     assert dlg.open_config_dir_button.text.startswith("Open config directory")
