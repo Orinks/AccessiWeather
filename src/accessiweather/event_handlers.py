@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 import toga
 
+from . import app_helpers
 from .alert_details_dialog import AlertDetailsDialog
 from .dialogs import AddLocationDialog, SettingsDialog
 from .dialogs.discussion import ForecastDiscussionDialog
@@ -34,7 +35,7 @@ async def on_location_changed(app: AccessiWeatherApp, widget: toga.Selection) ->
         await refresh_weather_data(app)
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Failed to handle location change: %s", exc)
-        app._update_status(f"Error changing location: {exc}")
+        app_helpers.update_status(app, f"Error changing location: {exc}")
 
 
 async def on_add_location_pressed(app: AccessiWeatherApp, widget: toga.Button) -> None:
@@ -46,7 +47,7 @@ async def on_add_location_pressed(app: AccessiWeatherApp, widget: toga.Button) -
         location_added = await add_dialog.show_and_wait()
 
         if location_added:
-            app._update_location_selection()
+            app_helpers.update_location_selection(app)
             await refresh_weather_data(app)
             logger.info("Location added successfully")
         else:
@@ -87,7 +88,7 @@ async def on_remove_location_pressed(app: AccessiWeatherApp, widget: toga.Button
         app.config_manager.remove_location(selected_location)
         logger.info("Location removed: %s", selected_location)
 
-        app._update_location_selection()
+        app_helpers.update_location_selection(app)
         await refresh_weather_data(app)
 
     except Exception as exc:  # pragma: no cover - defensive logging
@@ -133,12 +134,12 @@ async def refresh_weather_data(app: AccessiWeatherApp) -> None:
     current_location = app.config_manager.get_current_location()
     if not current_location:
         logger.debug("No current location found")
-        app._update_status("No location selected")
+        app_helpers.update_status(app, "No location selected")
         return
 
     logger.info("Starting weather data refresh for %s", current_location.name)
     app.is_updating = True
-    app._update_status(f"Updating weather for {current_location.name}...")
+    app_helpers.update_status(app, f"Updating weather for {current_location.name}...")
 
     try:
         if app.refresh_button:
@@ -155,14 +156,14 @@ async def refresh_weather_data(app: AccessiWeatherApp) -> None:
         logger.debug("Weather displays updated")
 
         if presentation and presentation.status_messages:
-            app._update_status(presentation.status_messages[-1])
+            app_helpers.update_status(app, presentation.status_messages[-1])
         else:
-            app._update_status(f"Weather updated for {current_location.name}")
+            app_helpers.update_status(app, f"Weather updated for {current_location.name}")
 
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Failed to refresh weather data: %s", exc)
-        app._show_error_displays(str(exc))
-        app._update_status(f"Failed to update weather: {exc}")
+        app_helpers.show_error_displays(app, str(exc))
+        app_helpers.update_status(app, f"Failed to update weather: {exc}")
     finally:
         app.is_updating = False
         if app.refresh_button:
@@ -216,7 +217,7 @@ async def update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherD
 
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Failed to update weather displays: %s", exc)
-        app._show_error_displays(f"Display error: {exc}")
+        app_helpers.show_error_displays(app, f"Display error: {exc}")
         return None
 
 
@@ -280,7 +281,7 @@ async def on_settings_pressed(app: AccessiWeatherApp, widget: toga.Button) -> No
         settings_saved = await show_settings_dialog(app)
 
         if settings_saved:
-            app._update_location_selection()
+            app_helpers.update_location_selection(app)
             try:
                 config = app.config_manager.get_config()
                 if app._notifier:
@@ -433,7 +434,7 @@ async def on_check_updates_pressed(app: AccessiWeatherApp, widget: toga.Command)
         return
 
     try:
-        app._update_status("Checking for updates...")
+        app_helpers.update_status(app, "Checking for updates...")
 
         update_info = await app.update_service.check_for_updates()
 
@@ -456,12 +457,12 @@ async def on_check_updates_pressed(app: AccessiWeatherApp, widget: toga.Command)
             if should_download:
                 await download_update(app, update_info)
             else:
-                app._update_status("Update check completed")
+                app_helpers.update_status(app, "Update check completed")
         else:
             await app.main_window.info_dialog(
                 "No Updates Available", "You are running the latest version of AccessiWeather."
             )
-            app._update_status("No updates available")
+            app_helpers.update_status(app, "No updates available")
 
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Update check failed: %s", exc)
@@ -469,13 +470,13 @@ async def on_check_updates_pressed(app: AccessiWeatherApp, widget: toga.Command)
             "Update Check Failed",
             f"Failed to check for updates: {exc}\n\nPlease check your internet connection and try again.",
         )
-        app._update_status("Update check failed")
+        app_helpers.update_status(app, "Update check failed")
 
 
 async def download_update(app: AccessiWeatherApp, update_info: Any) -> None:
     """Download an available update."""
     try:
-        app._update_status(f"Downloading update {update_info.version}...")
+        app_helpers.update_status(app, f"Downloading update {update_info.version}...")
 
         downloaded_file = await app.update_service.download_update(update_info)
 
@@ -487,17 +488,17 @@ async def download_update(app: AccessiWeatherApp, update_info: Any) -> None:
                 f"Location: {downloaded_path}\n\n"
                 "Please close the application and run the installer to complete the update.",
             )
-            app._update_status(f"Update {update_info.version} downloaded")
+            app_helpers.update_status(app, f"Update {update_info.version} downloaded")
         else:
             await app.main_window.error_dialog(
                 "Download Failed", "Failed to download the update. Please try again later."
             )
-            app._update_status("Update download failed")
+            app_helpers.update_status(app, "Update download failed")
 
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Update download failed: %s", exc)
         await app.main_window.error_dialog("Download Failed", f"Failed to download update: {exc}")
-        app._update_status("Update download failed")
+        app_helpers.update_status(app, "Update download failed")
 
 
 # System tray handlers ---------------------------------------------------------
@@ -584,9 +585,9 @@ def on_test_notification_pressed(app: AccessiWeatherApp, widget: toga.Button) ->
                 sound_event="notify",
             )
             logger.info("Test notification sent successfully.")
-            app._update_status("Test notification sent.")
+            app_helpers.update_status(app, "Test notification sent.")
         else:
             logger.warning("Notifier not initialized; cannot send test notification")
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Failed to send test notification: %s", exc)
-        app._update_status(f"Failed to send test notification: {exc}")
+        app_helpers.update_status(app, f"Failed to send test notification: {exc}")
