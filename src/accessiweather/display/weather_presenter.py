@@ -115,11 +115,22 @@ class WeatherPresentation:
 
     location_name: str
     summary_text: str
-    current: CurrentConditionsPresentation | None = None
+    current_conditions: CurrentConditionsPresentation | None = None
     forecast: ForecastPresentation | None = None
     alerts: AlertsPresentation | None = None
     trend_summary: list[str] = field(default_factory=list)
     status_messages: list[str] = field(default_factory=list)
+
+    @property
+    def current(self) -> CurrentConditionsPresentation | None:  # pragma: no cover - compat
+        """Backward-compatible alias for older presentation attribute name."""
+        return self.current_conditions
+
+    @current.setter
+    def current(
+        self, value: CurrentConditionsPresentation | None
+    ) -> None:  # pragma: no cover - compat
+        self.current_conditions = value
 
 
 class WeatherPresenter:
@@ -175,7 +186,7 @@ class WeatherPresenter:
         return WeatherPresentation(
             location_name=weather_data.location.name,
             summary_text=summary_text,
-            current=current,
+            current_conditions=current,
             forecast=forecast,
             alerts=alerts,
             trend_summary=trend_summary,
