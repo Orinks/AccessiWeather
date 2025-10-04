@@ -72,6 +72,7 @@ class CurrentConditionsPresentation:
     description: str
     metrics: list[Metric] = field(default_factory=list)
     fallback_text: str = ""
+    trends: list[str] = field(default_factory=list)
 
 
 @dataclass(slots=True)
@@ -345,6 +346,12 @@ class WeatherPresenter:
             if legacy_pressure_trend:
                 metrics.append(Metric("Pressure trend", legacy_pressure_trend["value"]))
 
+        trend_lines = self._format_trend_lines(
+            trends,
+            current=current,
+            hourly_forecast=hourly_forecast,
+        )
+
         fallback_lines = [f"Current Conditions: {description}", f"Temperature: {temperature_str}"]
         for metric in metrics[1:]:  # already added temperature
             fallback_lines.append(f"{metric.label}: {metric.value}")
@@ -355,6 +362,7 @@ class WeatherPresenter:
             description=description,
             metrics=metrics,
             fallback_text=fallback_text,
+            trends=trend_lines,
         )
 
     def _build_forecast(
