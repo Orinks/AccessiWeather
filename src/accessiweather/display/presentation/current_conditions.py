@@ -43,7 +43,8 @@ def build_current_conditions(
     temperature_str = format_temperature_pair(
         current.temperature_f, current.temperature_c, unit_pref, precision
     )
-    metrics: list[Metric] = [Metric("Temperature", temperature_str)]
+    temperature_value = temperature_str if temperature_str is not None else "N/A"
+    metrics: list[Metric] = [Metric("Temperature", temperature_value)]
 
     if current.feels_like_f is not None or current.feels_like_c is not None:
         feels_like = format_temperature_pair(
@@ -132,19 +133,23 @@ def build_current_conditions(
             metrics.append(Metric("Pressure trend", legacy_pressure_trend["value"]))
 
     fallback_lines = [f"Current Conditions: {description}"]
-    if temperature_str is not None:
-        fallback_lines.append(f"Temperature: {temperature_str}")
-    else:
-        fallback_lines.append("Temperature: N/A")
+    fallback_lines.append(f"Temperature: {temperature_value}")
     for metric in metrics[1:]:  # already added temperature
         fallback_lines.append(f"{metric.label}: {metric.value}")
     fallback_text = "\n".join(fallback_lines)
+
+    trend_lines = format_trend_lines(
+        trends,
+        current=current,
+        hourly_forecast=hourly_forecast,
+    )
 
     return CurrentConditionsPresentation(
         title=title,
         description=description,
         metrics=metrics,
         fallback_text=fallback_text,
+        trends=trend_lines,
     )
 
 
