@@ -96,7 +96,14 @@ def show_error_displays(app: AccessiWeatherApp, error_message: str) -> None:
         app.forecast_display.value = error_text
 
     if app.alerts_table:
-        app.alerts_table.data = [("Error", "N/A", "No alerts available due to error")]
+        app.alerts_table.data = [
+            {
+                "alert_id": "error",
+                "event": "Error",
+                "severity": "N/A",
+                "headline": "No alerts available due to error",
+            }
+        ]
         app.current_alerts_data = None
 
     if app.alert_details_button:
