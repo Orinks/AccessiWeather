@@ -499,6 +499,52 @@ class TestAppSettingsModel:
 
         assert settings.startup_enabled is False
 
+    def test_app_settings_from_dict_normalizes_boolean_inputs(self):
+        """AppSettings.from_dict should coerce diverse truthy/falsey values."""
+        settings = AppSettings.from_dict(
+            {
+                "show_detailed_forecast": "false",
+                "enable_alerts": "true",
+                "minimize_to_tray": 1,
+                "startup_enabled": "True",
+                "auto_update_enabled": 0,
+                "debug_mode": "no",
+                "sound_enabled": "YES",
+                "alert_notifications_enabled": "off",
+                "alert_notify_extreme": "false",
+                "alert_notify_severe": "TRUE",
+                "alert_notify_moderate": "0",
+                "alert_notify_minor": "1",
+                "alert_notify_unknown": "On",
+                "alert_tts_enabled": "off",
+                "international_alerts_enabled": "OFF",
+                "trend_insights_enabled": 1,
+                "air_quality_enabled": 0,
+                "pollen_enabled": "true",
+                "offline_cache_enabled": "False",
+            }
+        )
+
+        assert settings.show_detailed_forecast is False
+        assert settings.enable_alerts is True
+        assert settings.minimize_to_tray is True
+        assert settings.startup_enabled is True
+        assert settings.auto_update_enabled is False
+        assert settings.debug_mode is False
+        assert settings.sound_enabled is True
+        assert settings.alert_notifications_enabled is False
+        assert settings.alert_notify_extreme is False
+        assert settings.alert_notify_severe is True
+        assert settings.alert_notify_moderate is False
+        assert settings.alert_notify_minor is True
+        assert settings.alert_notify_unknown is True
+        assert settings.alert_tts_enabled is False
+        assert settings.international_alerts_enabled is False
+        assert settings.trend_insights_enabled is True
+        assert settings.air_quality_enabled is False
+        assert settings.pollen_enabled is True
+        assert settings.offline_cache_enabled is False
+
 
 class TestAppConfigModel:
     """Test the AppConfig data model - adapted from existing test logic."""
@@ -930,3 +976,48 @@ class TestHourlyForecast:
             "Naive 1",
             "Naive 2",
         ]
+
+
+class TestModelsPackageStructure:
+    """Verify the models package exports and layout remain compatible."""
+
+    def test_models_can_be_imported_from_package_modules(self):
+        """Ensure models import paths remain available after refactor."""
+        from accessiweather.models import Location as ReExportedLocation
+        from accessiweather.models.alerts import WeatherAlert, WeatherAlerts
+        from accessiweather.models.config import AppConfig, AppSettings
+        from accessiweather.models.errors import ApiError
+        from accessiweather.models.weather import CurrentConditions, Location, WeatherData
+
+        assert Location is ReExportedLocation
+        assert CurrentConditions is not None
+        assert WeatherAlert is not None
+        assert WeatherAlerts is not None
+        assert AppSettings is not None
+        assert AppConfig is not None
+        assert ApiError is not None
+        assert WeatherData is not None
+
+    def test_backward_compatibility_imports(self):
+        """Ensure legacy import paths still resolve after refactor."""
+        from accessiweather.models import (
+            ApiError,
+            AppConfig,
+            AppSettings,
+            CurrentConditions,
+            Location,
+            WeatherAlert,
+            WeatherAlerts,
+            WeatherData,
+        )
+
+        location = Location("Test City", 1.0, 2.0)
+
+        assert isinstance(location, Location)
+        assert ApiError is not None
+        assert AppConfig is not None
+        assert AppSettings is not None
+        assert CurrentConditions is not None
+        assert WeatherAlert is not None
+        assert WeatherAlerts is not None
+        assert WeatherData is not None
