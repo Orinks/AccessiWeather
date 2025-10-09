@@ -143,15 +143,6 @@ class AlertNotificationSystem:
                 # Fallback if mapper not available
                 sound_candidates = None
 
-            override_event = self._get_override_event(alert, reason)
-            if override_event:
-                if sound_candidates:
-                    sound_candidates = [override_event] + [
-                        candidate for candidate in sound_candidates if candidate != override_event
-                    ]
-                else:
-                    sound_candidates = [override_event]
-
             # Send the notification, providing candidate-based sound selection
             success = self.notifier.send_notification(
                 title=title,
@@ -244,17 +235,6 @@ class AlertNotificationSystem:
         except Exception as e:
             logger.error(f"Error sending test notification: {e}")
             return False
-
-    def _get_override_event(self, alert: WeatherAlert, reason: str) -> str | None:
-        overrides = getattr(self.audio_settings, "sound_overrides", {}) or {}
-        if not overrides:
-            return None
-        severity_key = (alert.severity or "").lower()
-        if severity_key in overrides:
-            return overrides[severity_key]
-        if reason in overrides:
-            return overrides[reason]
-        return overrides.get("default")
 
     def _format_tts_message(self, alert: WeatherAlert, reason: str) -> str:
         parts = [alert.event or alert.title or "Weather alert"]
