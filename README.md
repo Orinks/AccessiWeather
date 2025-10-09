@@ -208,7 +208,7 @@ accessiweather --portable
 ## Requirements
 
 - **Python 3.7+** (Python 3.11+ recommended for best performance)
-- **Toga 0.5.1+** (BeeWare GUI framework, automatically installed with pip)
+- **Toga** (BeeWare GUI framework, automatically installed with pip)
 - **Internet connection** for weather data access
 - **Windows 10+** (primary platform), Linux and macOS support available
 

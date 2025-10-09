@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import json
 import logging
@@ -12,9 +13,35 @@ import webbrowser
 from datetime import datetime
 from pathlib import Path
 
+try:
+    import importlib.metadata as importlib_metadata
+except ImportError:  # pragma: no cover - fallback for Python <3.8
+    try:  # pragma: no cover - optional dependency
+        import importlib_metadata  # type: ignore[import-not-found]
+    except ImportError:  # pragma: no cover - metadata unavailable
+        importlib_metadata = None  # type: ignore[assignment]
+
 from . import settings_handlers
 
 logger = logging.getLogger(__name__)
+
+
+async def _call_dialog_method(dialog, method_name, *args, **kwargs):
+    """Call a dialog message method using the dialog window when available."""
+    try:
+        if dialog.window and hasattr(dialog.window, method_name):
+            method = getattr(dialog.window, method_name)
+            result = await method(*args, **kwargs)
+        else:
+            method = getattr(dialog.app.main_window, method_name)
+            result = await method(*args, **kwargs)
+    except Exception:
+        method = getattr(dialog.app.main_window, method_name)
+        result = await method(*args, **kwargs)
+    finally:
+        with contextlib.suppress(Exception):
+            dialog._ensure_dialog_focus()
+    return result
 
 
 async def reset_to_defaults(dialog):
@@ -42,21 +69,12 @@ async def reset_to_defaults(dialog):
         if getattr(dialog, "update_status_label", None):
             dialog.update_status_label.text = "Settings were reset to defaults"
 
-        try:
-            if dialog.window and hasattr(dialog.window, "info_dialog"):
-                await dialog.window.info_dialog(
-                    "Settings Reset", "All settings were reset to defaults."
-                )
-            else:
-                await dialog.app.main_window.info_dialog(
-                    "Settings Reset", "All settings were reset to defaults."
-                )
-                dialog._ensure_dialog_focus()
-        except Exception:
-            await dialog.app.main_window.info_dialog(
-                "Settings Reset", "All settings were reset to defaults."
-            )
-            dialog._ensure_dialog_focus()
+        await _call_dialog_method(
+            dialog,
+            "info_dialog",
+            "Settings Reset",
+            "All settings were reset to defaults.",
+        )
 
     except Exception as exc:
         logger.error("Failed during reset-to-defaults operation: %s", exc)
@@ -92,19 +110,12 @@ async def full_data_reset(dialog):
         if getattr(dialog, "update_status_label", None):
             dialog.update_status_label.text = "All application data were reset"
 
-        try:
-            if dialog.window and hasattr(dialog.window, "info_dialog"):
-                await dialog.window.info_dialog("Data Reset", "All application data were reset.")
-            else:
-                await dialog.app.main_window.info_dialog(
-                    "Data Reset", "All application data were reset."
-                )
-                dialog._ensure_dialog_focus()
-        except Exception:
-            await dialog.app.main_window.info_dialog(
-                "Data Reset", "All application data were reset."
-            )
-            dialog._ensure_dialog_focus()
+        await _call_dialog_method(
+            dialog,
+            "info_dialog",
+            "Data Reset",
+            "All application data were reset.",
+        )
 
     except Exception as exc:
         logger.error("Failed during full data reset: %s", exc)
@@ -145,7 +156,9 @@ async def get_visual_crossing_api_key(dialog):
     try:
         webbrowser.open("https://www.visualcrossing.com/weather-query-builder/")
 
-        await dialog.app.main_window.info_dialog(
+        await _call_dialog_method(
+            dialog,
+            "info_dialog",
             "Visual Crossing API Key",
             "The Visual Crossing Weather Query Builder page has been opened in your browser.\n\n"
             "To get your free API key:\n"
@@ -158,7 +171,9 @@ async def get_visual_crossing_api_key(dialog):
 
     except Exception as exc:
         logger.error("Failed to open Visual Crossing registration page: %s", exc)
-        await dialog.app.main_window.error_dialog(
+        await _call_dialog_method(
+            dialog,
+            "error_dialog",
             "Error",
             "Failed to open the Visual Crossing registration page. "
             "Please visit https://www.visualcrossing.com/weather-query-builder/ manually.",
@@ -170,6 +185,7 @@ async def validate_visual_crossing_api_key(dialog):
     dialog._ensure_dialog_focus()
 
     api_key = str(dialog.visual_crossing_api_key_input.value).strip()
+    # API keys must never be logged or echoed back in errors; treat as highly sensitive.
     if not api_key:
         await dialog._show_dialog_error(
             "API Key Required", "Please enter your Visual Crossing API key before validating."
@@ -204,11 +220,40 @@ async def validate_visual_crossing_api_key(dialog):
             "elements": "temp",
         }
 
+        max_attempts = 3
+        backoff_schedule = [0.5, 1.0]
+
         async with httpx.AsyncClient(timeout=10.0) as http_client:
-            response = await http_client.get(url, params=params)
+            response = None
+            for attempt in range(1, max_attempts + 1):
+                try:
+                    response = await http_client.get(url, params=params)
+                    break
+                except (httpx.TimeoutException, httpx.RequestError) as exc:
+                    if attempt == max_attempts:
+                        raise
+
+                    logger.info(
+                        "Visual Crossing API validation attempt %s failed (%s); retrying.",
+                        attempt,
+                        exc,
+                    )
+
+                    if dialog.validate_api_key_button:
+                        dialog.validate_api_key_button.text = (
+                            f"Retrying... ({attempt + 1}/{max_attempts})"
+                        )
+
+                    await asyncio.sleep(backoff_schedule[attempt - 1])
+
+                    if dialog.validate_api_key_button:
+                        dialog.validate_api_key_button.text = "Validating..."
+
 
         if response.status_code == 200:
-            await dialog.app.main_window.info_dialog(
+            await _call_dialog_method(
+                dialog,
+                "info_dialog",
                 "API Key Valid",
                 "✅ Your Visual Crossing API key is valid and working!\n\n"
                 "You can now use Visual Crossing as your weather data source.",
@@ -295,9 +340,21 @@ async def check_for_updates(dialog):
             if dialog.update_status_label:
                 dialog.update_status_label.text = f"Update available: v{update_info.version}"
 
+            current_version = getattr(dialog.app, "version", None)
+            if not current_version and importlib_metadata is not None:
+                try:
+                    current_version = importlib_metadata.version("accessiweather")
+                except importlib_metadata.PackageNotFoundError:  # type: ignore[attr-defined]
+                    current_version = None
+                except Exception as exc:  # pragma: no cover - defensive logging path
+                    logger.debug("Failed to resolve current version from metadata: %s", exc)
+                    current_version = None
+
+            current_version_display = str(current_version) if current_version else "unknown"
+
             message = (
                 f"Update Available: Version {update_info.version}\n\n"
-                f"Current version: 2.0\n"
+                f"Current version: {current_version_display}\n"
                 f"New version: {update_info.version}\n\n"
             )
 
@@ -307,7 +364,9 @@ async def check_for_updates(dialog):
                 if len(notes) > 500:
                     message += "..."
 
-            should_download = await dialog.app.main_window.question_dialog(
+            should_download = await _call_dialog_method(
+                dialog,
+                "question_dialog",
                 "Update Available",
                 message + "\n\nWould you like to download and install this update?",
             )
@@ -322,21 +381,12 @@ async def check_for_updates(dialog):
             if dialog.update_status_label:
                 dialog.update_status_label.text = "No updates available"
 
-            try:
-                if dialog.window and hasattr(dialog.window, "info_dialog"):
-                    await dialog.window.info_dialog(
-                        "No Updates", "You are running the latest version of AccessiWeather."
-                    )
-                else:
-                    await dialog.app.main_window.info_dialog(
-                        "No Updates", "You are running the latest version of AccessiWeather."
-                    )
-                    dialog._ensure_dialog_focus()
-            except Exception:
-                await dialog.app.main_window.info_dialog(
-                    "No Updates", "You are running the latest version of AccessiWeather."
-                )
-                dialog._ensure_dialog_focus()
+            await _call_dialog_method(
+                dialog,
+                "info_dialog",
+                "No Updates",
+                "You are running the latest version of AccessiWeather.",
+            )
 
         update_last_check_info(dialog)
 
@@ -368,7 +418,9 @@ async def download_update(dialog, update_service, update_info):
             if dialog.update_status_label:
                 dialog.update_status_label.text = f"Update {update_info.version} downloaded"
 
-            await dialog.app.main_window.info_dialog(
+            await _call_dialog_method(
+                dialog,
+                "info_dialog",
                 "Update Downloaded",
                 f"Update {update_info.version} has been downloaded successfully.\n\n"
                 f"Location: {downloaded_file}\n\n"
@@ -378,8 +430,11 @@ async def download_update(dialog, update_service, update_info):
             if dialog.update_status_label:
                 dialog.update_status_label.text = "Update download failed"
 
-            await dialog.app.main_window.error_dialog(
-                "Download Failed", "Failed to download the update. Please try again later."
+            await _call_dialog_method(
+                dialog,
+                "error_dialog",
+                "Download Failed",
+                "Failed to download the update. Please try again later.",
             )
 
     except Exception as exc:
@@ -387,8 +442,11 @@ async def download_update(dialog, update_service, update_info):
         if dialog.update_status_label:
             dialog.update_status_label.text = "Update download failed"
 
-        await dialog.app.main_window.error_dialog(
-            "Download Failed", f"Failed to download update: {exc}"
+        await _call_dialog_method(
+            dialog,
+            "error_dialog",
+            "Download Failed",
+            f"Failed to download update: {exc}",
         )
 
 
@@ -421,7 +479,9 @@ async def download_and_install_update(dialog, update_service, update_info):
         if success:
             await progress_dialog.complete_success("Update installed successfully")
 
-            restart_choice = await dialog.app.main_window.question_dialog(
+            restart_choice = await _call_dialog_method(
+                dialog,
+                "question_dialog",
                 "Restart Required",
                 "The update has been installed successfully. "
                 "AccessiWeather needs to restart to complete the update. "
@@ -434,8 +494,11 @@ async def download_and_install_update(dialog, update_service, update_info):
                 if dialog.window:
                     dialog.window.close()
                     dialog.window = None
-                await dialog.app.main_window.info_dialog(
-                    "Restart", "Please restart AccessiWeather manually to complete the update."
+                await _call_dialog_method(
+                    dialog,
+                    "info_dialog",
+                    "Restart",
+                    "Please restart AccessiWeather manually to complete the update.",
                 )
         else:
             await progress_dialog.complete_error("Failed to install update")
@@ -445,8 +508,11 @@ async def download_and_install_update(dialog, update_service, update_info):
 
     except Exception as exc:
         logger.error("Failed to perform update: %s", exc)
-        await dialog.app.main_window.error_dialog(
-            "Update Failed", f"Failed to perform update: {exc}"
+        await _call_dialog_method(
+            dialog,
+            "error_dialog",
+            "Update Failed",
+            f"Failed to perform update: {exc}",
         )
 
 
@@ -467,10 +533,41 @@ def update_last_check_info(dialog):
     placeholder = "Last check: Not implemented yet"
     last_check_ts: float | None = None
     last_status: str | None = None
+    max_json_bytes = 1_000_000  # 1MB safety limit
 
     try:
         service = getattr(dialog, "update_service", None)
         cache_data = None
+
+        def _safe_load_json(path: Path) -> dict | None:
+            try:
+                if path.stat().st_size > max_json_bytes:
+                    logger.warning(
+                        "Skipping update metadata at %s because the file exceeds %s bytes",
+                        path,
+                        max_json_bytes,
+                    )
+                    return None
+            except OSError as exc:  # pragma: no cover - filesystem edge cases
+                logger.debug("Could not stat update metadata file %s: %s", path, exc)
+                return None
+
+            try:
+                with open(path, "r", encoding="utf-8") as fh:
+                    data = json.load(fh)
+            except (json.JSONDecodeError, ValueError) as exc:
+                logger.warning("Malformed JSON in update metadata %s: %s", path, exc)
+                return None
+            except OSError as exc:
+                logger.warning("Failed to read update metadata %s: %s", path, exc)
+                return None
+
+            if not isinstance(data, dict):
+                logger.warning(
+                    "Unexpected data type for update metadata %s: %s", path, type(data).__name__
+                )
+                return None
+            return data
 
         # Prefer in-memory cache when available
         if service is not None and getattr(service, "_cache", None):
@@ -485,15 +582,20 @@ def update_last_check_info(dialog):
                 cache_path = Path(dialog.config_manager.config_dir) / "github_releases_cache.json"
 
             if cache_path and cache_path.exists():
-                try:
-                    with open(cache_path, encoding="utf-8") as fh:
-                        cache_data = json.load(fh)
-                except Exception as exc:  # pragma: no cover - best-effort load
-                    logger.warning("Failed to load update cache: %s", exc)
+                cache_data = _safe_load_json(cache_path)
 
         if isinstance(cache_data, dict):
-            last_check_ts = cache_data.get("last_check") or cache_data.get("lastCheck")
-            last_status = cache_data.get("last_status") or cache_data.get("status")
+            candidate_ts = cache_data.get("last_check") or cache_data.get("lastCheck")
+            if isinstance(candidate_ts, (int, float, str)):
+                last_check_ts = candidate_ts
+            elif candidate_ts is not None:
+                logger.debug("Ignoring unexpected last check value type: %s", type(candidate_ts))
+
+            candidate_status = cache_data.get("last_status") or cache_data.get("status")
+            if isinstance(candidate_status, str):
+                last_status = candidate_status
+            elif candidate_status is not None:
+                logger.debug("Ignoring unexpected last status type: %s", type(candidate_status))
 
         # Look for metadata persisted in settings (if any)
         settings_data = None
@@ -507,11 +609,7 @@ def update_last_check_info(dialog):
                 settings_path = Path(dialog.config_manager.config_dir) / "update_settings.json"
 
             if settings_path and settings_path.exists():
-                try:
-                    with open(settings_path, encoding="utf-8") as fh:
-                        settings_data = json.load(fh)
-                except Exception as exc:  # pragma: no cover - best-effort load
-                    logger.warning("Failed to load update settings metadata: %s", exc)
+                settings_data = _safe_load_json(settings_path)
 
         if isinstance(settings_data, dict):
             last_check_ts = (
@@ -524,6 +622,14 @@ def update_last_check_info(dialog):
                 or settings_data.get("last_check_status")
                 or settings_data.get("last_status")
             )
+
+            if last_check_ts is not None and not isinstance(last_check_ts, (int, float, str)):
+                logger.debug("Ignoring unexpected last_check_ts type from settings: %s", type(last_check_ts))
+                last_check_ts = None
+
+            if last_status is not None and not isinstance(last_status, str):
+                logger.debug("Ignoring unexpected last_status type from settings: %s", type(last_status))
+                last_status = None
 
         display_text = placeholder
 

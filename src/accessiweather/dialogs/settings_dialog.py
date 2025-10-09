@@ -70,6 +70,7 @@ class SettingsDialog:
         # General tab controls (moved from Display)
         self.temperature_unit_selection = None
         self.ok_button = None
+        self.cancel_button = None
         # Environmental controls
         self.air_quality_threshold_input = None
 
@@ -155,6 +156,7 @@ class SettingsDialog:
             "Cancel", on_press=self._on_cancel, style=Pack(margin_right=10), id="cancel_button"
         )
         button_box.add(cancel_button)
+        self.cancel_button = cancel_button
 
         # OK button
         ok_button = toga.Button(
@@ -231,14 +233,15 @@ class SettingsDialog:
             if self.window and hasattr(self.window, "error_dialog"):
                 await self.window.error_dialog(title, message)
             else:
-                # Fallback to main window but restore focus afterward
+                # Fallback to main window
                 await self.app.main_window.error_dialog(title, message)
-                # Restore focus to dialog after error dialog closes
-                self._ensure_dialog_focus()
         except Exception as e:
             logger.error(f"Failed to show error dialog: {e}")
             # Last resort: just log the error
             logger.error(f"{title}: {message}")
+        finally:
+            # Restore focus after any dialog interaction
+            self._ensure_dialog_focus()
 
     async def _on_ok(self, widget):
         """Handle OK button press - save settings and close dialog."""
@@ -276,8 +279,11 @@ class SettingsDialog:
 
                         # Prevent duplicate submissions while startup toggles
                         ok_button = getattr(self, "ok_button", None)
+                        cancel_button = getattr(self, "cancel_button", None)
                         if ok_button is not None:
                             ok_button.enabled = False
+                        if cancel_button is not None:
+                            cancel_button.enabled = False
 
                         try:
                             startup_success, startup_message = await loop.run_in_executor(
@@ -286,6 +292,8 @@ class SettingsDialog:
                         finally:
                             if ok_button is not None:
                                 ok_button.enabled = True
+                            if cancel_button is not None:
+                                cancel_button.enabled = True
 
                         if not startup_success:
                             logger.warning(f"Startup management failed: {startup_message}")
@@ -299,6 +307,18 @@ class SettingsDialog:
                                 self.config_manager.sync_startup_setting()
                         else:
                             logger.info(f"Startup management successful: {startup_message}")
+                            try:
+                                synced = self.config_manager.sync_startup_setting()
+                                if not synced:
+                                    logger.warning(
+                                        "Startup sync reported failure after toggle completion"
+                                    )
+                                # Refresh current settings and UI so switch reflects actual state.
+                                with contextlib.suppress(Exception):
+                                    self.current_settings = self.config_manager.get_settings()
+                                settings_handlers.apply_settings_to_ui(self)
+                            except Exception as sync_exc:
+                                logger.warning("Failed to refresh startup switch state: %s", sync_exc)
 
                 except Exception as e:
                     logger.error(f"Error handling startup setting change: {e}")

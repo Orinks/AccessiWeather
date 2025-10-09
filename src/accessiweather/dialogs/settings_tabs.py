@@ -153,6 +153,7 @@ def create_data_sources_tab(dialog):
         placeholder="Enter your Visual Crossing API key",
         style=Pack(margin_bottom=10),
         id="visual_crossing_api_key_input",
+        # Reminder: never log or echo this API key; the widget masks the value intentionally.
     )
     dialog.visual_crossing_config_box.add(dialog.visual_crossing_api_key_input)
 
@@ -239,7 +240,7 @@ def create_audio_tab(dialog):
         ("default", "Fallback sound"),
     ]
     for key, label in override_entries:
-        row = toga.Box(style=Pack(direction=ROW, alignment="center", padding_bottom=6))
+        row = toga.Box(style=Pack(direction=ROW, align_items="center", padding_bottom=6))
         row.add(toga.Label(f"{label}:", style=Pack(width=170)))
         input_widget = toga.TextInput(
             value=str(current_overrides.get(key, "")),
@@ -258,7 +259,7 @@ def create_audio_tab(dialog):
     )
     audio_box.add(dialog.alert_tts_switch)
 
-    tts_voice_row = toga.Box(style=Pack(direction=ROW, alignment="center", padding_bottom=6))
+    tts_voice_row = toga.Box(style=Pack(direction=ROW, align_items="center", padding_bottom=6))
     tts_voice_row.add(toga.Label("Voice id:", style=Pack(width=170)))
     dialog.alert_tts_voice_input = toga.TextInput(
         value=str(getattr(dialog.current_settings, "alert_tts_voice", "")),
@@ -268,7 +269,7 @@ def create_audio_tab(dialog):
     tts_voice_row.add(dialog.alert_tts_voice_input)
     audio_box.add(tts_voice_row)
 
-    tts_rate_row = toga.Box(style=Pack(direction=ROW, alignment="center", padding_bottom=6))
+    tts_rate_row = toga.Box(style=Pack(direction=ROW, align_items="center", padding_bottom=6))
     tts_rate_row.add(toga.Label("Voice rate:", style=Pack(width=170)))
     rate_value = getattr(dialog.current_settings, "alert_tts_rate", 0)
     dialog.alert_tts_rate_input = toga.TextInput(
