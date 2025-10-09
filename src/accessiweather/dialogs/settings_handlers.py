@@ -8,6 +8,7 @@ import logging
 from ..models import AppSettings
 
 logger = logging.getLogger(__name__)
+LOG_PREFIX = "SettingsHandlers"
 
 
 def apply_settings_to_ui(dialog):
@@ -122,14 +123,14 @@ def apply_settings_to_ui(dialog):
                 actual_startup = dialog.config_manager.is_startup_enabled()
                 dialog.startup_enabled_switch.value = actual_startup
             except Exception as exc:  # pragma: no cover - platform failures
-                logger.warning("Failed to sync startup state: %s", exc)
+                logger.warning("%s: Failed to sync startup state: %s", LOG_PREFIX, exc)
                 dialog.startup_enabled_switch.value = getattr(settings, "startup_enabled", False)
 
         if getattr(dialog, "debug_mode_switch", None) is not None:
             dialog.debug_mode_switch.value = getattr(settings, "debug_mode", False)
 
     except Exception as exc:  # pragma: no cover - defensive logging
-        logger.warning("Failed to apply settings to UI: %s", exc)
+        logger.warning("%s: Failed to apply settings to UI: %s", LOG_PREFIX, exc)
 
 
 def map_channel_display_to_value(display: str) -> str:
@@ -147,14 +148,14 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         selected_display = str(dialog.data_source_selection.value)
         data_source = dialog.data_source_display_to_value.get(selected_display, "auto")
     except Exception as exc:  # pragma: no cover - defensive fallback
-        logger.warning("Failed to get data source selection: %s", exc)
+        logger.warning("%s: Failed to get data source selection: %s", LOG_PREFIX, exc)
         data_source = "auto"
 
     try:
         selected_display = str(dialog.temperature_unit_selection.value)
         temperature_unit = dialog.temperature_display_to_value.get(selected_display, "both")
     except Exception as exc:  # pragma: no cover
-        logger.warning("Failed to get temperature unit selection: %s", exc)
+        logger.warning("%s: Failed to get temperature unit selection: %s", LOG_PREFIX, exc)
         temperature_unit = "both"
 
     try:

@@ -188,7 +188,7 @@ resources = [
 entry_point = "accessiweather:main"
 
 requires = [
-    "toga>=0.5.1",
+    "toga",
     "playsound",
     "httpx>=0.20.0",
     "python-dateutil",

@@ -1,15 +1,21 @@
 """UI components and accessibility tests for Toga AccessiWeather."""
 
+import asyncio
 import os
+from contextlib import suppress
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+import toga
 
 import accessiweather.dialogs.settings_tabs as settings_tabs
 
 # Set up Toga dummy backend
 os.environ["TOGA_BACKEND"] = "toga_dummy"
 
+from accessiweather.dialogs.settings_dialog import SettingsDialog
+from accessiweather.models.config import AppSettings
 from tests.toga_test_helpers import (
     MockTogaWidgets,
     WeatherDataFactory,
@@ -200,6 +206,120 @@ class TestTogaUIComponents:
         assert styled_widget.style.background_color == "#FFFFFF"
         assert styled_widget.style.font_size == 14
         assert styled_widget.style.font_weight == "bold"
+
+    def test_settings_dialog_show_and_prepare(self, tmp_path):
+        """Ensure the settings dialog renders without alignment issues on Toga 0.5.x."""
+
+        class DummyPaths:
+            def __init__(self, base_path: Path):
+                self.config = base_path
+
+        class DummyConfigManager:
+            def __init__(self, config_dir: Path):
+                self.config_dir = config_dir
+                self._settings = AppSettings()
+
+            def get_settings(self):
+                return self._settings
+
+            def sync_startup_setting(self):
+                return True
+
+            def is_startup_enabled(self):
+                return bool(getattr(self._settings, "startup_enabled", False))
+
+        loop = asyncio.new_event_loop()
+        app = MagicMock()
+        app.loop = loop
+        app.paths = DummyPaths(tmp_path)
+        app.main_window = MagicMock()
+
+        config_manager = DummyConfigManager(tmp_path)
+        dialog = SettingsDialog(app, config_manager)
+
+        try:
+            asyncio.set_event_loop(loop)
+            dialog.show_and_prepare()
+            assert dialog.window is not None
+            assert dialog.option_container is not None
+            assert dialog.visual_crossing_api_key_input is not None
+            assert dialog.startup_enabled_switch is not None
+        finally:
+            if dialog.window is not None:
+                with suppress(Exception):
+                    dialog.window.close()
+            asyncio.set_event_loop(None)
+            loop.close()
+
+    def test_settings_dialog_accessibility_metadata(self, tmp_path):
+        """Ensure key settings widgets expose aria labels and descriptions."""
+
+        class DummyPaths:
+            def __init__(self, base_path: Path):
+                self.config = base_path
+
+        class DummyConfigManager:
+            def __init__(self, config_dir: Path):
+                self.config_dir = config_dir
+                self._settings = AppSettings()
+
+            def get_settings(self):
+                return self._settings
+
+            def sync_startup_setting(self):
+                return True
+
+            def is_startup_enabled(self):
+                return bool(getattr(self._settings, "startup_enabled", False))
+
+        app = MagicMock()
+        app.paths = DummyPaths(tmp_path)
+        config_manager = DummyConfigManager(tmp_path)
+        dialog = SettingsDialog(app, config_manager)
+
+        dialog.current_settings = config_manager.get_settings()
+        dialog.option_container = toga.OptionContainer()
+
+        settings_tabs.create_general_tab(dialog)
+        settings_tabs.create_data_sources_tab(dialog)
+        settings_tabs.create_audio_tab(dialog)
+        settings_tabs.create_updates_tab(dialog)
+
+        assert dialog.temperature_unit_selection.aria_label == "Temperature unit selection"
+        assert (
+            dialog.temperature_unit_selection.aria_description
+            == "Choose Fahrenheit, Celsius, or both for weather displays."
+        )
+
+        assert dialog.data_source_selection.aria_label == "Weather data source selection"
+        assert (
+            dialog.data_source_selection.aria_description
+            == "Select the provider used for fetching weather data."
+        )
+
+        assert dialog.sound_pack_selection.aria_label == "Sound pack selection"
+        assert (
+            dialog.sound_pack_selection.aria_description
+            == "Choose the notification sound pack used for alerts."
+        )
+
+        assert dialog.auto_update_switch.aria_label == "Automatic update checks toggle"
+        assert (
+            dialog.auto_update_switch.aria_description
+            == "Enable to allow AccessiWeather to check for updates in the background."
+        )
+
+        assert dialog.update_channel_selection.aria_label == "Update channel selection"
+        assert (
+            dialog.update_channel_selection.aria_description
+            == "Choose which release channel to follow for application updates."
+        )
+
+        assert dialog.visual_crossing_api_key_input.aria_label == "Visual Crossing API key input"
+        assert (
+            dialog.visual_crossing_api_key_input.aria_description
+            == "Enter the Visual Crossing API key to enable that weather data source."
+        )
 
     def test_widget_event_handling(self, mock_widgets):
         """Test widget event handling."""

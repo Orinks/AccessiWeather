@@ -60,7 +60,7 @@ AccessiWeather has been completely rewritten using the BeeWare/Toga framework to
 
 1. **Update dependencies**:
    ```bash
-   pip install toga>=0.5.1
+   pip install toga
    # wxPython is no longer required
    ```
 
