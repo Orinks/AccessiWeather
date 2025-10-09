@@ -200,12 +200,6 @@ def collect_settings_from_ui(dialog) -> AppSettings:
 
     startup_enabled = getattr(dialog.startup_enabled_switch, "value", False)
 
-    overrides: dict[str, str] = {}
-    for key, widget in getattr(dialog, "alert_sound_override_inputs", {}).items():
-        value = getattr(widget, "value", "")
-        if value and value.strip():
-            overrides[key] = value.strip()
-
     tts_enabled = bool(getattr(getattr(dialog, "alert_tts_switch", None), "value", False))
     tts_voice = str(getattr(getattr(dialog, "alert_tts_voice_input", None), "value", "")).strip()
     tts_rate_text = str(getattr(getattr(dialog, "alert_tts_rate_input", None), "value", "")).strip()
@@ -325,7 +319,6 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         alert_escalation_cooldown_minutes=escalation_cooldown,
         alert_max_notifications_per_hour=max_per_hour,
         alert_ignored_categories=ignored_categories,
-        alert_sound_overrides=overrides,
         alert_tts_enabled=tts_enabled,
         alert_tts_voice=tts_voice,
         alert_tts_rate=tts_rate,
