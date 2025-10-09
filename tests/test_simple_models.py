@@ -538,7 +538,6 @@ class TestAppSettingsModel:
         assert settings.alert_notify_moderate is False
         assert settings.alert_notify_minor is True
         assert settings.alert_notify_unknown is True
-        assert settings.alert_tts_enabled is False
         assert settings.international_alerts_enabled is False
         assert settings.trend_insights_enabled is True
         assert settings.air_quality_enabled is False

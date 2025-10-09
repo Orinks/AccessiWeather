@@ -36,10 +36,7 @@ async def on_settings_pressed(app: AccessiWeatherApp, widget: toga.Button) -> No
                     app._notifier.soundpack = getattr(config.settings, "sound_pack", "default")
                 if app.alert_notification_system:
                     alert_settings = config.settings.to_alert_settings()
-                    audio_settings = config.settings.to_alert_audio_settings()
-                    app.alert_notification_system.update_settings(
-                        alert_settings, audio_settings=audio_settings
-                    )
+                    app.alert_notification_system.update_settings(alert_settings)
                 logger.info("Settings updated successfully and applied to runtime components")
             except Exception as apply_err:  # pragma: no cover - defensive logging
                 logger.warning(

@@ -8,7 +8,7 @@ This package provides dataclasses for weather information, alerts, and configura
 from .alerts import WeatherAlert, WeatherAlerts
 
 # Configuration models
-from .config import AlertAudioSettings, AppConfig, AppSettings
+from .config import AppConfig, AppSettings
 
 # Error models
 from .errors import ApiError
@@ -38,6 +38,5 @@ __all__ = [
     "WeatherData",
     "ApiError",
     "AppSettings",
-    "AlertAudioSettings",
     "AppConfig",
 ]
