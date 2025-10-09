@@ -242,60 +242,6 @@ def create_audio_tab(dialog):
     )
     audio_box.add(dialog.manage_soundpacks_button)
 
-    audio_box.add(
-        toga.Label("Alert sound overrides:", style=Pack(font_weight="bold", margin_top=15))
-    )
-    dialog.alert_sound_override_inputs = {}
-    current_overrides = getattr(dialog.current_settings, "alert_sound_overrides", {}) or {}
-    override_entries = [
-        ("extreme", "Extreme severity"),
-        ("severe", "Severe severity"),
-        ("moderate", "Moderate severity"),
-        ("minor", "Minor severity"),
-        ("unknown", "Unknown severity"),
-        ("default", "Fallback sound"),
-    ]
-    for key, label in override_entries:
-        row = toga.Box(style=Pack(direction=ROW, align_items="center", margin_bottom=6))
-        row.add(toga.Label(f"{label}:", style=Pack(width=170)))
-        input_widget = toga.TextInput(
-            value=str(current_overrides.get(key, "")),
-            placeholder="Sound event key",
-            style=Pack(flex=1),
-        )
-        dialog.alert_sound_override_inputs[key] = input_widget
-        row.add(input_widget)
-        audio_box.add(row)
-
-    audio_box.add(toga.Label("Alert narration:", style=Pack(font_weight="bold", margin_top=15)))
-    dialog.alert_tts_switch = toga.Switch(
-        "Enable text-to-speech summaries",
-        value=bool(getattr(dialog.current_settings, "alert_tts_enabled", False)),
-        style=Pack(margin_bottom=8),
-    )
-    audio_box.add(dialog.alert_tts_switch)
-
-    tts_voice_row = toga.Box(style=Pack(direction=ROW, align_items="center", margin_bottom=6))
-    tts_voice_row.add(toga.Label("Voice id:", style=Pack(width=170)))
-    dialog.alert_tts_voice_input = toga.TextInput(
-        value=str(getattr(dialog.current_settings, "alert_tts_voice", "")),
-        placeholder="Platform-specific voice id",
-        style=Pack(flex=1),
-    )
-    tts_voice_row.add(dialog.alert_tts_voice_input)
-    audio_box.add(tts_voice_row)
-
-    tts_rate_row = toga.Box(style=Pack(direction=ROW, align_items="center", margin_bottom=6))
-    tts_rate_row.add(toga.Label("Voice rate:", style=Pack(width=170)))
-    rate_value = getattr(dialog.current_settings, "alert_tts_rate", 0)
-    dialog.alert_tts_rate_input = toga.TextInput(
-        value=str(rate_value if rate_value else ""),
-        placeholder="e.g. 200",
-        style=Pack(width=120),
-    )
-    tts_rate_row.add(dialog.alert_tts_rate_input)
-    audio_box.add(tts_rate_row)
-
     dialog.option_container.content.append("Audio", audio_box)
 
 

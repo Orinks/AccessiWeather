@@ -516,7 +516,6 @@ class TestAppSettingsModel:
                 "alert_notify_moderate": "0",
                 "alert_notify_minor": "1",
                 "alert_notify_unknown": "On",
-                "alert_tts_enabled": "off",
                 "international_alerts_enabled": "OFF",
                 "trend_insights_enabled": 1,
                 "air_quality_enabled": 0,
