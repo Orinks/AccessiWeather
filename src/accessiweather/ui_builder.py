@@ -196,7 +196,7 @@ def create_weather_display_section(app: AccessiWeatherApp) -> toga.Box:
     app.alerts_table = toga.Table(
         headings=["Event", "Severity", "Headline"],
         data=[],
-        style=Pack(height=150, padding_bottom=10),
+        style=Pack(height=150, margin_bottom=10),
         on_select=lambda widget: event_handlers.on_alert_selected(app, widget),
     )
     weather_box.add(app.alerts_table)
@@ -206,7 +206,7 @@ def create_weather_display_section(app: AccessiWeatherApp) -> toga.Box:
         on_press=lambda widget: asyncio.create_task(
             event_handlers.on_alert_details_pressed(app, widget)
         ),
-        style=Pack(padding_bottom=10),
+        style=Pack(margin_bottom=10),
         enabled=False,
     )
     weather_box.add(app.alert_details_button)
@@ -216,14 +216,14 @@ def create_weather_display_section(app: AccessiWeatherApp) -> toga.Box:
 
 def create_control_buttons_section(app: AccessiWeatherApp) -> toga.Box:
     """Create the control buttons section (matching wx interface)."""
-    buttons_box = toga.Box(style=Pack(direction=ROW, padding_top=10))
+    buttons_box = toga.Box(style=Pack(direction=ROW, margin_top=10))
 
     app.add_button = toga.Button(
         "Add",
         on_press=lambda widget: asyncio.create_task(
             event_handlers.on_add_location_pressed(app, widget)
         ),
-        style=Pack(padding_right=5),
+        style=Pack(margin_right=5),
     )
     buttons_box.add(app.add_button)
 
@@ -232,14 +232,14 @@ def create_control_buttons_section(app: AccessiWeatherApp) -> toga.Box:
         on_press=lambda widget: asyncio.create_task(
             event_handlers.on_remove_location_pressed(app, widget)
         ),
-        style=Pack(padding_right=5),
+        style=Pack(margin_right=5),
     )
     buttons_box.add(app.remove_button)
 
     app.refresh_button = toga.Button(
         "Refresh",
         on_press=lambda widget: asyncio.create_task(event_handlers.on_refresh_pressed(app, widget)),
-        style=Pack(padding_right=5),
+        style=Pack(margin_right=5),
     )
     buttons_box.add(app.refresh_button)
 

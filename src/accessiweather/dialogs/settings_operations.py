@@ -24,6 +24,7 @@ except ImportError:  # pragma: no cover - fallback for Python <3.8
 from . import settings_handlers
 
 logger = logging.getLogger(__name__)
+LOG_PREFIX = "SettingsOperations"
 
 
 async def _call_dialog_method(dialog, method_name, *args, **kwargs):
@@ -49,7 +50,7 @@ async def reset_to_defaults(dialog):
     try:
         dialog._ensure_dialog_focus()
 
-        logger.info("User requested reset of configuration to defaults")
+        logger.info("%s: Reset to defaults requested", LOG_PREFIX)
         success = False
         with contextlib.suppress(Exception):
             success = dialog.config_manager.reset_to_defaults()
@@ -77,7 +78,7 @@ async def reset_to_defaults(dialog):
         )
 
     except Exception as exc:
-        logger.error("Failed during reset-to-defaults operation: %s", exc)
+        logger.exception("%s: Failed during reset-to-defaults operation", LOG_PREFIX)
         with contextlib.suppress(Exception):
             await dialog._show_dialog_error(
                 "Settings Error",
@@ -90,7 +91,7 @@ async def full_data_reset(dialog):
     try:
         dialog._ensure_dialog_focus()
 
-        logger.info("User requested full data reset")
+        logger.info("%s: Full data reset requested", LOG_PREFIX)
         success = False
         with contextlib.suppress(Exception):
             success = dialog.config_manager.reset_all_data()
@@ -118,7 +119,7 @@ async def full_data_reset(dialog):
         )
 
     except Exception as exc:
-        logger.error("Failed during full data reset: %s", exc)
+        logger.exception("%s: Failed during full data reset", LOG_PREFIX)
         with contextlib.suppress(Exception):
             await dialog._show_dialog_error(
                 "Data Reset Error",
@@ -130,9 +131,44 @@ async def open_config_directory(dialog):
     """Open the application's configuration directory using the OS explorer."""
     try:
         dialog._ensure_dialog_focus()
-        path = Path(dialog.config_manager.config_dir)
-        with contextlib.suppress(Exception):
+
+        raw_path = Path(dialog.config_manager.config_dir)
+        try:
+            path = raw_path.expanduser().resolve()
+        except Exception as exc:
+            logger.warning(
+                "%s: Failed to resolve config directory path %s: %s",
+                LOG_PREFIX,
+                raw_path,
+                exc,
+            )
+            await dialog._show_dialog_error(
+                "Open Config Directory",
+                "The configuration directory could not be resolved. Please verify your configuration path.",
+            )
+            return
+
+        try:
             path.mkdir(parents=True, exist_ok=True)
+        except Exception as exc:
+            logger.exception("%s: Failed to create config directory %s", LOG_PREFIX, path)
+            await dialog._show_dialog_error(
+                "Open Config Directory",
+                f"Failed to create the configuration directory:\n{exc}",
+            )
+            return
+
+        if not path.is_dir():
+            logger.error(
+                "%s: Configuration path exists but is not a directory: %s",
+                LOG_PREFIX,
+                path,
+            )
+            await dialog._show_dialog_error(
+                "Open Config Directory",
+                "The configuration directory could not be opened because the path is not a directory.",
+            )
+            return
 
         system = platform.system()
         if system == "Windows":
@@ -143,7 +179,7 @@ async def open_config_directory(dialog):
             subprocess.run(["xdg-open", str(path)], check=False)
 
     except Exception as exc:
-        logger.error("Failed to open config directory: %s", exc)
+        logger.exception("%s: Failed to open config directory", LOG_PREFIX)
         with contextlib.suppress(Exception):
             await dialog._show_dialog_error(
                 "Open Config Directory",
@@ -169,8 +205,8 @@ async def get_visual_crossing_api_key(dialog):
             "Free accounts include 1000 weather records per day.",
         )
 
-    except Exception as exc:
-        logger.error("Failed to open Visual Crossing registration page: %s", exc)
+    except Exception:
+        logger.exception("%s: Failed to open Visual Crossing registration page", LOG_PREFIX)
         await _call_dialog_method(
             dialog,
             "error_dialog",
@@ -197,7 +233,7 @@ async def validate_visual_crossing_api_key(dialog):
     try:
         import httpx
     except ImportError as exc:  # pragma: no cover - dependency missing in env
-        logger.error("httpx is required to validate the API key: %s", exc)
+        logger.error("%s: httpx is required to validate the API key: %s", LOG_PREFIX, exc)
         await dialog._show_dialog_error(
             "Validation Error",
             "❌ Validation requires the 'httpx' dependency. Please install the development requirements.",
@@ -206,6 +242,11 @@ async def validate_visual_crossing_api_key(dialog):
 
     try:
         from ..visual_crossing_client import VisualCrossingClient
+
+        def _redact_secret(text: str | None) -> str:
+            if not text:
+                return ""
+            return str(text).replace(api_key, "***")
 
         if dialog.validate_api_key_button:
             dialog.validate_api_key_button.text = "Validating..."
@@ -234,9 +275,10 @@ async def validate_visual_crossing_api_key(dialog):
                         raise
 
                     logger.info(
-                        "Visual Crossing API validation attempt %s failed (%s); retrying.",
+                        "%s: Visual Crossing validation attempt %s failed (%s); retrying",
+                        LOG_PREFIX,
                         attempt,
-                        exc,
+                        _redact_secret(str(exc)),
                     )
 
                     if dialog.validate_api_key_button:
@@ -248,7 +290,6 @@ async def validate_visual_crossing_api_key(dialog):
 
                     if dialog.validate_api_key_button:
                         dialog.validate_api_key_button.text = "Validating..."
-
 
         if response.status_code == 200:
             await _call_dialog_method(
@@ -287,14 +328,19 @@ async def validate_visual_crossing_api_key(dialog):
         await dialog._show_dialog_error(
             "Connection Error",
             f"❌ Failed to connect to Visual Crossing API.\n\n"
-            f"Error: {exc}\n\n"
+            f"Error: {_redact_secret(str(exc))}\n\n"
             "Please check your internet connection and try again.",
         )
     except Exception as exc:
-        logger.error("Failed to validate Visual Crossing API key: %s", exc)
+        logger.error(
+            "%s: Failed to validate Visual Crossing API key: %s",
+            LOG_PREFIX,
+            _redact_secret(str(exc)),
+        )
         await dialog._show_dialog_error(
             "Validation Error",
-            f"❌ An unexpected error occurred while validating your API key.\n\nError: {exc}",
+            "❌ An unexpected error occurred while validating your API key.\n\n"
+            f"Error: {_redact_secret(str(exc))}",
         )
     finally:
         if dialog.validate_api_key_button:
@@ -305,8 +351,13 @@ async def validate_visual_crossing_api_key(dialog):
 
 async def check_for_updates(dialog):
     """Trigger an update check using the configured update service."""
-    logger.info("Manual update check requested")
+    logger.info("%s: Manual update check requested", LOG_PREFIX)
     dialog._ensure_dialog_focus()
+
+    timeout_seconds = 25.0
+    max_attempts = 2
+    backoff_seconds = 2.0
+    final_status = "Ready to check for updates"
 
     try:
         if dialog.check_updates_button:
@@ -315,6 +366,7 @@ async def check_for_updates(dialog):
 
         if dialog.update_status_label:
             dialog.update_status_label.text = "Checking for updates..."
+        final_status = "Checking for updates..."
 
         if dialog.update_service:
             update_service = dialog.update_service
@@ -334,11 +386,43 @@ async def check_for_updates(dialog):
             if hasattr(update_service, "save_settings"):
                 update_service.save_settings()
 
-        update_info = await update_service.check_for_updates()
+        update_info = None
+
+        for attempt in range(1, max_attempts + 1):
+            try:
+                update_info = await asyncio.wait_for(
+                    update_service.check_for_updates(), timeout=timeout_seconds
+                )
+                break
+            except Exception as exc:  # noqa: BLE001 - determine retryability
+                is_timeout = isinstance(exc, (asyncio.TimeoutError, OSError))
+                is_httpx_error = False
+                try:  # Optional dependency guard
+                    import httpx  # type: ignore
+
+                    is_httpx_error = isinstance(exc, (httpx.TimeoutException, httpx.RequestError))
+                except Exception:  # pragma: no cover - httpx unavailable
+                    is_httpx_error = False
+
+                if not (is_timeout or is_httpx_error):
+                    raise
+
+                logger.warning(
+                    "%s: Update check attempt %s failed: %s",
+                    LOG_PREFIX,
+                    attempt,
+                    exc,
+                )
+
+                if attempt == max_attempts:
+                    raise
+
+                await asyncio.sleep(backoff_seconds * attempt)
 
         if update_info:
+            final_status = f"Update available: v{update_info.version}"
             if dialog.update_status_label:
-                dialog.update_status_label.text = f"Update available: v{update_info.version}"
+                dialog.update_status_label.text = final_status
 
             current_version = getattr(dialog.app, "version", None)
             if not current_version and importlib_metadata is not None:
@@ -347,7 +431,11 @@ async def check_for_updates(dialog):
                 except importlib_metadata.PackageNotFoundError:  # type: ignore[attr-defined]
                     current_version = None
                 except Exception as exc:  # pragma: no cover - defensive logging path
-                    logger.debug("Failed to resolve current version from metadata: %s", exc)
+                    logger.debug(
+                        "%s: Failed to resolve current version from metadata: %s",
+                        LOG_PREFIX,
+                        exc,
+                    )
                     current_version = None
 
             current_version_display = str(current_version) if current_version else "unknown"
@@ -374,12 +462,14 @@ async def check_for_updates(dialog):
             if should_download:
                 await download_update(dialog, update_service, update_info)
             else:
+                final_status = "Update available (not downloaded)"
                 if dialog.update_status_label:
-                    dialog.update_status_label.text = "Update available (not downloaded)"
+                    dialog.update_status_label.text = final_status
 
         else:
+            final_status = "No updates available"
             if dialog.update_status_label:
-                dialog.update_status_label.text = "No updates available"
+                dialog.update_status_label.text = final_status
 
             await _call_dialog_method(
                 dialog,
@@ -388,13 +478,12 @@ async def check_for_updates(dialog):
                 "You are running the latest version of AccessiWeather.",
             )
 
-        update_last_check_info(dialog)
+        if dialog.update_status_label:
+            final_status = dialog.update_status_label.text
 
     except Exception as exc:
-        logger.error("Failed to check for updates: %s", exc)
-        if dialog.update_status_label:
-            dialog.update_status_label.text = "Update check failed"
-
+        final_status = "Update check failed"
+        logger.exception("%s: Failed to check for updates", LOG_PREFIX)
         await dialog._show_dialog_error(
             "Update Check Failed", f"Failed to check for updates: {exc}"
         )
@@ -403,20 +492,64 @@ async def check_for_updates(dialog):
         if dialog.check_updates_button:
             dialog.check_updates_button.enabled = True
             dialog.check_updates_button.text = "Check for Updates Now"
+        if dialog.update_status_label:
+            dialog.update_status_label.text = final_status
+        try:
+            update_last_check_info(dialog)
+        except Exception as exc:  # pragma: no cover - defensive call
+            logger.debug("%s: Failed to refresh update metadata: %s", LOG_PREFIX, exc)
         dialog._ensure_dialog_focus()
 
 
 async def download_update(dialog, update_service, update_info):
     """Download an update without automatically installing it."""
+    timeout_seconds = 30.0
+    max_attempts = 2
+    backoff_seconds = 2.0
+    final_status = f"Downloading update {update_info.version}..."
+    logger.info("%s: Downloading update %s", LOG_PREFIX, getattr(update_info, "version", "unknown"))
+
     try:
         if dialog.update_status_label:
-            dialog.update_status_label.text = f"Downloading update {update_info.version}..."
+            dialog.update_status_label.text = final_status
 
-        downloaded_file = await update_service.download_update(update_info)
+        downloaded_file = None
+
+        for attempt in range(1, max_attempts + 1):
+            try:
+                downloaded_file = await asyncio.wait_for(
+                    update_service.download_update(update_info), timeout=timeout_seconds
+                )
+                break
+            except Exception as exc:  # noqa: BLE001 - inspect transient failures
+                is_timeout = isinstance(exc, (asyncio.TimeoutError, OSError))
+                is_httpx_error = False
+                try:
+                    import httpx  # type: ignore
+
+                    is_httpx_error = isinstance(exc, (httpx.TimeoutException, httpx.RequestError))
+                except Exception:  # pragma: no cover - httpx unavailable
+                    is_httpx_error = False
+
+                if not (is_timeout or is_httpx_error):
+                    raise
+
+                logger.warning(
+                    "%s: Update download attempt %s failed: %s",
+                    LOG_PREFIX,
+                    attempt,
+                    exc,
+                )
+
+                if attempt == max_attempts:
+                    raise
+
+                await asyncio.sleep(backoff_seconds * attempt)
 
         if downloaded_file:
+            final_status = f"Update {update_info.version} downloaded"
             if dialog.update_status_label:
-                dialog.update_status_label.text = f"Update {update_info.version} downloaded"
+                dialog.update_status_label.text = final_status
 
             await _call_dialog_method(
                 dialog,
@@ -427,8 +560,9 @@ async def download_update(dialog, update_service, update_info):
                 "Please close the application and run the installer to complete the update.",
             )
         else:
+            final_status = "Update download failed"
             if dialog.update_status_label:
-                dialog.update_status_label.text = "Update download failed"
+                dialog.update_status_label.text = final_status
 
             await _call_dialog_method(
                 dialog,
@@ -438,16 +572,18 @@ async def download_update(dialog, update_service, update_info):
             )
 
     except Exception as exc:
-        logger.error("Update download failed: %s", exc)
-        if dialog.update_status_label:
-            dialog.update_status_label.text = "Update download failed"
-
+        final_status = "Update download failed"
+        logger.exception("%s: Update download failed", LOG_PREFIX)
         await _call_dialog_method(
             dialog,
             "error_dialog",
             "Download Failed",
             f"Failed to download update: {exc}",
         )
+    finally:
+        if dialog.update_status_label:
+            dialog.update_status_label.text = final_status
+        dialog._ensure_dialog_focus()
 
 
 async def download_and_install_update(dialog, update_service, update_info):
@@ -507,7 +643,7 @@ async def download_and_install_update(dialog, update_service, update_info):
         progress_dialog.close()
 
     except Exception as exc:
-        logger.error("Failed to perform update: %s", exc)
+        logger.exception("%s: Failed to perform update", LOG_PREFIX)
         await _call_dialog_method(
             dialog,
             "error_dialog",
@@ -521,7 +657,7 @@ def initialize_update_info(dialog):
     try:
         update_last_check_info(dialog)
     except Exception as exc:  # pragma: no cover - defensive logging
-        logger.error("Failed to initialize update info: %s", exc)
+        logger.debug("%s: Failed to initialize update info: %s", LOG_PREFIX, exc)
 
 
 def update_last_check_info(dialog):
@@ -543,28 +679,36 @@ def update_last_check_info(dialog):
             try:
                 if path.stat().st_size > max_json_bytes:
                     logger.warning(
-                        "Skipping update metadata at %s because the file exceeds %s bytes",
+                        "%s: Skipping update metadata at %s because the file exceeds %s bytes",
+                        LOG_PREFIX,
                         path,
                         max_json_bytes,
                     )
                     return None
             except OSError as exc:  # pragma: no cover - filesystem edge cases
-                logger.debug("Could not stat update metadata file %s: %s", path, exc)
+                logger.debug(
+                    "%s: Could not stat update metadata file %s: %s", LOG_PREFIX, path, exc
+                )
                 return None
 
             try:
-                with open(path, "r", encoding="utf-8") as fh:
+                with open(path, encoding="utf-8") as fh:
                     data = json.load(fh)
             except (json.JSONDecodeError, ValueError) as exc:
-                logger.warning("Malformed JSON in update metadata %s: %s", path, exc)
+                logger.warning(
+                    "%s: Malformed JSON in update metadata %s: %s", LOG_PREFIX, path, exc
+                )
                 return None
             except OSError as exc:
-                logger.warning("Failed to read update metadata %s: %s", path, exc)
+                logger.warning("%s: Failed to read update metadata %s: %s", LOG_PREFIX, path, exc)
                 return None
 
             if not isinstance(data, dict):
                 logger.warning(
-                    "Unexpected data type for update metadata %s: %s", path, type(data).__name__
+                    "%s: Unexpected data type for update metadata %s: %s",
+                    LOG_PREFIX,
+                    path,
+                    type(data).__name__,
                 )
                 return None
             return data
@@ -589,13 +733,21 @@ def update_last_check_info(dialog):
             if isinstance(candidate_ts, (int, float, str)):
                 last_check_ts = candidate_ts
             elif candidate_ts is not None:
-                logger.debug("Ignoring unexpected last check value type: %s", type(candidate_ts))
+                logger.debug(
+                    "%s: Ignoring unexpected last check value type: %s",
+                    LOG_PREFIX,
+                    type(candidate_ts),
+                )
 
             candidate_status = cache_data.get("last_status") or cache_data.get("status")
             if isinstance(candidate_status, str):
                 last_status = candidate_status
             elif candidate_status is not None:
-                logger.debug("Ignoring unexpected last status type: %s", type(candidate_status))
+                logger.debug(
+                    "%s: Ignoring unexpected last status type: %s",
+                    LOG_PREFIX,
+                    type(candidate_status),
+                )
 
         # Look for metadata persisted in settings (if any)
         settings_data = None
@@ -624,11 +776,19 @@ def update_last_check_info(dialog):
             )
 
             if last_check_ts is not None and not isinstance(last_check_ts, (int, float, str)):
-                logger.debug("Ignoring unexpected last_check_ts type from settings: %s", type(last_check_ts))
+                logger.debug(
+                    "%s: Ignoring unexpected last_check_ts type from settings: %s",
+                    LOG_PREFIX,
+                    type(last_check_ts),
+                )
                 last_check_ts = None
 
             if last_status is not None and not isinstance(last_status, str):
-                logger.debug("Ignoring unexpected last_status type from settings: %s", type(last_status))
+                logger.debug(
+                    "%s: Ignoring unexpected last_status type from settings: %s",
+                    LOG_PREFIX,
+                    type(last_status),
+                )
                 last_status = None
 
         display_text = placeholder
@@ -642,7 +802,7 @@ def update_last_check_info(dialog):
                 if last_status:
                     display_text += f" ({last_status})"
             except Exception as exc:  # pragma: no cover - formatting guard
-                logger.warning("Failed to format last check timestamp: %s", exc)
+                logger.warning("%s: Failed to format last check timestamp: %s", LOG_PREFIX, exc)
                 if last_status:
                     display_text = f"Last check status: {last_status}"
         elif last_status:
@@ -650,6 +810,6 @@ def update_last_check_info(dialog):
 
         label.text = display_text
 
-    except Exception as exc:  # pragma: no cover
-        logger.error("Failed to update last check info: %s", exc)
+    except Exception:  # pragma: no cover
+        logger.exception("%s: Failed to update last check info", LOG_PREFIX)
         label.text = placeholder

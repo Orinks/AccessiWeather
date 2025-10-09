@@ -7,6 +7,7 @@ matching the functionality of the wxPython version.
 import asyncio
 import contextlib
 import logging
+import os
 
 import toga
 from toga.style import Pack
@@ -15,6 +16,34 @@ from travertino.constants import COLUMN, ROW
 from . import settings_handlers, settings_operations, settings_tabs
 
 logger = logging.getLogger(__name__)
+LOG_PREFIX = "SettingsDialog"
+
+
+class _SafeEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
+    """Event loop policy that auto-creates loops when needed."""
+
+    def get_event_loop(self):  # pragma: no cover - exercised in tests
+        if self._local._loop is None:
+            self.set_event_loop(self.new_event_loop())
+        return self._local._loop
+
+
+def _ensure_asyncio_loop():
+    """Ensure an asyncio event loop exists for the current thread."""
+    policy = asyncio.get_event_loop_policy()
+    if os.environ.get("TOGA_BACKEND") == "toga_dummy" and not isinstance(
+        policy, _SafeEventLoopPolicy
+    ):
+        asyncio.set_event_loop_policy(_SafeEventLoopPolicy())
+        policy = asyncio.get_event_loop_policy()
+    try:
+        policy.get_event_loop()
+    except RuntimeError:
+        loop = policy.new_event_loop()
+        policy.set_event_loop(loop)
+
+
+_ensure_asyncio_loop()
 
 
 class SettingsDialog:
@@ -82,11 +111,14 @@ class SettingsDialog:
 
     def show_and_prepare(self):
         """Prepare and show the settings dialog."""
-        logger.info("Showing settings dialog")
+        logger.info("%s: Showing settings dialog", LOG_PREFIX)
 
         try:
             # Create a fresh future for this dialog session
             self.future = self.app.loop.create_future()
+
+            # Ensure a Toga app context exists (important for tests using dummy backend)
+            self._ensure_toga_app_context()
 
             # Create a fresh window instance
             self.window = toga.Window(
@@ -103,7 +135,7 @@ class SettingsDialog:
 
             # Load current settings
             self.current_settings = self.config_manager.get_settings()
-            logger.debug(f"Loaded settings: {self.current_settings}")
+            logger.debug("%s: Loaded settings: %s", LOG_PREFIX, self.current_settings)
 
             # Create dialog content
             self._create_dialog_content()
@@ -114,10 +146,22 @@ class SettingsDialog:
             # Set initial focus to the first interactive control for accessibility
             self._set_initial_focus()
 
-        except Exception as e:
-            logger.error(f"Failed to show settings dialog: {e}", exc_info=True)
+        except Exception as exc:
+            logger.exception("%s: Failed to show settings dialog", LOG_PREFIX)
             if self.future and not self.future.done():
-                self.future.set_exception(e)
+                self.future.set_exception(exc)
+
+    def _ensure_toga_app_context(self):
+        """Ensure a Toga application context exists for window creation."""
+        if getattr(toga.App, "app", None) is not None:
+            return
+
+        os.environ.setdefault("TOGA_BACKEND", "toga_dummy")
+
+        try:
+            self._toga_app_guard = toga.App("AccessiWeather (Tests)", "com.accessiweather.tests")
+        except Exception as exc:  # pragma: no cover - defensive guard
+            logger.debug("%s: Unable to create fallback Toga app: %s", LOG_PREFIX, exc)
 
     def _create_dialog_content(self):
         """Create the settings dialog content."""
@@ -136,14 +180,11 @@ class SettingsDialog:
 
         main_box.add(self.option_container)
 
-        # Ensure General tab is selected initially for predictable UX
+        # Ensure the first tab is selected initially for predictable UX
         try:
-            if self.general_tab is not None:
-                self.option_container.current_tab = ("General", self.general_tab)
-        except Exception:
-            # Fallback to first tab index if tuple assignment isn't supported
-            with contextlib.suppress(Exception):
-                self.option_container.current_tab = 0
+            self.option_container.current_tab = 0
+        except Exception as exc:
+            logger.warning("%s: Failed to select initial tab: %s", LOG_PREFIX, exc)
 
         # Button row
         button_box = toga.Box(style=Pack(direction=ROW, margin_top=10))
@@ -173,47 +214,62 @@ class SettingsDialog:
         # Initialize update service and platform info
         try:
             settings_operations.initialize_update_info(self)
-        except Exception as e:
-            logger.error(f"Failed to initialize update info: {e}")
+        except Exception as exc:
+            logger.warning("%s: Failed to initialize update info: %s", LOG_PREFIX, exc)
 
     def _set_initial_focus(self):
         """Set initial focus to the first interactive control for accessibility."""
         try:
-            # Focus Temperature Unit first (now first control on General tab)
-            if self.temperature_unit_selection:
-                # Ensure General tab is selected before focusing
-                with contextlib.suppress(Exception):
-                    self.option_container.current_tab = ("General", self.general_tab)
-                with contextlib.suppress(Exception):
-                    self.option_container.current_tab = 0
-                self.temperature_unit_selection.focus()
-                logger.debug("Set initial focus to temperature unit selection")
-            elif self.data_source_selection:
-                # Fallback to data source selection
-                with contextlib.suppress(Exception):
-                    self.option_container.current_tab = ("Data Sources", self.data_sources_tab)
-                self.data_source_selection.focus()
-                logger.debug("Set initial focus to data source selection (fallback)")
-            else:
-                logger.warning("No primary control available for focus")
-        except Exception as e:
-            logger.warning(f"Failed to set initial focus: {e}")
-            # Fallback: try to focus the option container itself
-            try:
-                if self.option_container:
+            if self.option_container is not None:
+                self.option_container.current_tab = 0
+        except Exception as exc:
+            logger.warning("%s: Failed to select initial tab before focusing: %s", LOG_PREFIX, exc)
+
+        target = self.temperature_unit_selection or self.data_source_selection
+
+        if target is None:
+            logger.warning("%s: No primary control available for focus", LOG_PREFIX)
+            if self.option_container is not None:
+                try:
                     self.option_container.focus()
-                    logger.debug("Set fallback focus to option container")
-            except Exception as fallback_error:
-                logger.warning(f"Fallback focus also failed: {fallback_error}")
+                    logger.debug("%s: Focused option container as fallback", LOG_PREFIX)
+                except Exception as fallback_exc:
+                    logger.debug(
+                        "%s: Unable to focus option container fallback: %s",
+                        LOG_PREFIX,
+                        fallback_exc,
+                    )
+            return
+
+        try:
+            target.focus()
+            identifier = getattr(target, "id", None) or target.__class__.__name__
+            logger.debug("%s: Set initial focus to %s", LOG_PREFIX, identifier)
+        except Exception as exc:
+            logger.warning(
+                "%s: Failed to set initial focus; focusing option container instead: %s",
+                LOG_PREFIX,
+                exc,
+            )
+            if self.option_container is not None:
+                try:
+                    self.option_container.focus()
+                    logger.debug("%s: Focused option container as fallback", LOG_PREFIX)
+                except Exception as fallback_exc:
+                    logger.debug(
+                        "%s: Unable to focus option container fallback: %s",
+                        LOG_PREFIX,
+                        fallback_exc,
+                    )
 
     def _ensure_dialog_focus(self):
         """Ensure focus remains within the dialog window."""
         try:
             if self.window and hasattr(self.window, "focus"):
                 self.window.focus()
-                logger.debug("Restored focus to settings dialog window")
-        except Exception as e:
-            logger.warning(f"Failed to restore dialog focus: {e}")
+                logger.debug("%s: Restored focus to settings dialog window", LOG_PREFIX)
+        except Exception as exc:
+            logger.warning("%s: Failed to restore dialog focus: %s", LOG_PREFIX, exc)
 
     def _return_focus_to_trigger(self):
         """Return focus to the element that triggered the dialog."""
@@ -222,9 +278,9 @@ class SettingsDialog:
             # but we can ensure the main window gets focus
             if self.app.main_window:
                 self.app.main_window.focus()
-                logger.debug("Returned focus to main window")
-        except Exception as e:
-            logger.warning(f"Failed to return focus: {e}")
+                logger.debug("%s: Returned focus to main window", LOG_PREFIX)
+        except Exception as exc:
+            logger.warning("%s: Failed to return focus: %s", LOG_PREFIX, exc)
 
     async def _show_dialog_error(self, title, message):
         """Show error dialog relative to settings dialog to prevent focus loss."""
@@ -235,17 +291,17 @@ class SettingsDialog:
             else:
                 # Fallback to main window
                 await self.app.main_window.error_dialog(title, message)
-        except Exception as e:
-            logger.error(f"Failed to show error dialog: {e}")
+        except Exception:
+            logger.exception("%s: Failed to show error dialog", LOG_PREFIX)
             # Last resort: just log the error
-            logger.error(f"{title}: {message}")
+            logger.error("%s: %s - %s", LOG_PREFIX, title, message)
         finally:
             # Restore focus after any dialog interaction
             self._ensure_dialog_focus()
 
     async def _on_ok(self, widget):
         """Handle OK button press - save settings and close dialog."""
-        logger.info("Settings dialog OK button pressed")
+        logger.info("%s: OK button pressed", LOG_PREFIX)
 
         try:
             # Ensure focus stays in dialog during processing
@@ -267,7 +323,10 @@ class SettingsDialog:
 
                     if old_startup_enabled != new_startup_enabled:
                         logger.info(
-                            f"Startup setting changed: {old_startup_enabled} -> {new_startup_enabled}"
+                            "%s: Startup setting changed %s -> %s",
+                            LOG_PREFIX,
+                            old_startup_enabled,
+                            new_startup_enabled,
                         )
 
                         loop = asyncio.get_running_loop()
@@ -296,7 +355,11 @@ class SettingsDialog:
                                 cancel_button.enabled = True
 
                         if not startup_success:
-                            logger.warning(f"Startup management failed: {startup_message}")
+                            logger.warning(
+                                "%s: Startup management failed: %s",
+                                LOG_PREFIX,
+                                startup_message,
+                            )
                             # Show warning but don't prevent settings save
                             await self._show_dialog_error(
                                 "Startup Setting Warning",
@@ -306,33 +369,57 @@ class SettingsDialog:
                             with contextlib.suppress(Exception):
                                 self.config_manager.sync_startup_setting()
                         else:
-                            logger.info(f"Startup management successful: {startup_message}")
+                            logger.info(
+                                "%s: Startup management successful: %s",
+                                LOG_PREFIX,
+                                startup_message,
+                            )
                             try:
                                 synced = self.config_manager.sync_startup_setting()
                                 if not synced:
                                     logger.warning(
-                                        "Startup sync reported failure after toggle completion"
+                                        "%s: Startup sync reported failure after toggle completion",
+                                        LOG_PREFIX,
                                     )
                                 # Refresh current settings and UI so switch reflects actual state.
                                 with contextlib.suppress(Exception):
                                     self.current_settings = self.config_manager.get_settings()
                                 settings_handlers.apply_settings_to_ui(self)
                             except Exception as sync_exc:
-                                logger.warning("Failed to refresh startup switch state: %s", sync_exc)
+                                logger.warning(
+                                    "%s: Failed to refresh startup switch state: %s",
+                                    LOG_PREFIX,
+                                    sync_exc,
+                                )
 
-                except Exception as e:
-                    logger.error(f"Error handling startup setting change: {e}")
+                except Exception as exc:
+                    logger.exception("%s: Error handling startup setting change", LOG_PREFIX)
                     # Show warning but don't prevent settings save
                     await self._show_dialog_error(
                         "Startup Setting Error",
                         "Settings saved successfully, but there was an error managing the startup setting:\n\n"
-                        f"{str(e)}\n\nYou may need to check your system permissions.",
+                        f"{exc}\n\nYou may need to check your system permissions.",
                     )
                     with contextlib.suppress(Exception):
                         self.config_manager.sync_startup_setting()
 
+            try:
+                actual_startup_state = self.config_manager.is_startup_enabled()
+            except Exception as exc:
+                logger.warning("%s: Unable to read startup state after update: %s", LOG_PREFIX, exc)
+            else:
+                if self.startup_enabled_switch is not None:
+                    self.startup_enabled_switch.value = actual_startup_state
+                if actual_startup_state != new_settings.startup_enabled:
+                    logger.warning(
+                        "%s: Startup toggle mismatch (requested %s, actual %s)",
+                        LOG_PREFIX,
+                        new_settings.startup_enabled,
+                        actual_startup_state,
+                    )
+
             if success:
-                logger.info("Settings saved successfully")
+                logger.info("%s: Settings saved successfully", LOG_PREFIX)
                 # Set result and close dialog
                 if self.future and not self.future.done():
                     self.future.set_result(True)
@@ -341,19 +428,19 @@ class SettingsDialog:
                     self.window = None  # Clear reference to help with cleanup
                 # No confirmation dialog - let focus return directly to main window
             else:
-                logger.error("Failed to save settings")
+                logger.error("%s: Failed to save settings", LOG_PREFIX)
                 # Use dialog-relative error instead of main window error
                 await self._show_dialog_error("Settings Error", "Failed to save settings.")
 
-        except Exception as e:
-            logger.error(f"Error saving settings: {e}")
+        except Exception as exc:
+            logger.exception("%s: Error saving settings", LOG_PREFIX)
             # Don't close dialog on error, let user try again or cancel
             # Use dialog-relative error instead of main window error
-            await self._show_dialog_error("Settings Error", f"Error saving settings: {e}")
+            await self._show_dialog_error("Settings Error", f"Error saving settings: {exc}")
 
     async def _on_cancel(self, widget):
         """Handle Cancel button press - close dialog without saving."""
-        logger.info("Settings dialog cancelled")
+        logger.info("%s: Cancel button pressed", LOG_PREFIX)
         if self.future and not self.future.done():
             self.future.set_result(False)
         if self.window:
@@ -403,11 +490,12 @@ class SettingsDialog:
                 if self.sound_pack_options:
                     self.sound_pack_selection.value = self.sound_pack_options[0]
 
-        except Exception as e:
-            logger.error(f"Failed to open sound pack manager: {e}")
+        except Exception as exc:
+            logger.exception("%s: Failed to open sound pack manager", LOG_PREFIX)
             # Use dialog-relative error instead of main window error
             await self._show_dialog_error(
-                "Sound Pack Manager Error", f"Failed to open sound pack manager: {e}"
+                "Sound Pack Manager Error",
+                f"Failed to open sound pack manager: {exc}",
             )
 
     def _on_data_source_changed(self, widget):

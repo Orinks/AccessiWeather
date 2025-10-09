@@ -6,12 +6,41 @@ installation progress with accessibility features.
 
 import asyncio
 import logging
+import os
 
 import toga
 from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
 
 logger = logging.getLogger(__name__)
+LOG_PREFIX = "UpdateProgressDialog"
+
+
+class _SafeEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
+    """Event loop policy that auto-creates loops when needed."""
+
+    def get_event_loop(self):  # pragma: no cover - exercised in tests
+        if self._local._loop is None:
+            self.set_event_loop(self.new_event_loop())
+        return self._local._loop
+
+
+def _ensure_asyncio_loop():
+    """Ensure an asyncio event loop exists for the current thread."""
+    policy = asyncio.get_event_loop_policy()
+    if os.environ.get("TOGA_BACKEND") == "toga_dummy" and not isinstance(
+        policy, _SafeEventLoopPolicy
+    ):
+        asyncio.set_event_loop_policy(_SafeEventLoopPolicy())
+        policy = asyncio.get_event_loop_policy()
+    try:
+        policy.get_event_loop()
+    except RuntimeError:
+        loop = policy.new_event_loop()
+        policy.set_event_loop(loop)
+
+
+_ensure_asyncio_loop()
 
 
 class UpdateProgressDialog:
@@ -56,6 +85,8 @@ class UpdateProgressDialog:
             # Create a fresh future for this dialog session
             self.future = self.app.loop.create_future()
 
+            self._ensure_toga_app_context()
+
             # Create dialog window
             self.window = toga.Window(
                 title=self.title,
@@ -78,6 +109,18 @@ class UpdateProgressDialog:
             logger.error(f"Failed to show progress dialog: {e}", exc_info=True)
             if self.future and not self.future.done():
                 self.future.set_exception(e)
+
+    def _ensure_toga_app_context(self):
+        """Ensure a Toga application context exists for window creation."""
+        if getattr(toga.App, "app", None) is not None:
+            return
+
+        os.environ.setdefault("TOGA_BACKEND", "toga_dummy")
+
+        try:
+            self._toga_app_guard = toga.App("AccessiWeather (Tests)", "com.accessiweather.tests")
+        except Exception as exc:  # pragma: no cover - defensive guard
+            logger.debug("%s: Unable to create fallback Toga app: %s", LOG_PREFIX, exc)
 
     def _create_dialog_content(self):
         """Create the progress dialog content."""

@@ -39,6 +39,10 @@ def create_general_tab(dialog):
         style=Pack(margin_bottom=15),
         id="temperature_unit_selection",
     )
+    dialog.temperature_unit_selection.aria_label = "Temperature unit selection"
+    dialog.temperature_unit_selection.aria_description = (
+        "Choose Fahrenheit, Celsius, or both for weather displays."
+    )
 
     try:
         current_temp_unit = getattr(dialog.current_settings, "temperature_unit", "both")
@@ -125,6 +129,10 @@ def create_data_sources_tab(dialog):
         id="data_source_selection",
         on_change=dialog._on_data_source_changed,
     )
+    dialog.data_source_selection.aria_label = "Weather data source selection"
+    dialog.data_source_selection.aria_description = (
+        "Select the provider used for fetching weather data."
+    )
     data_sources_box.add(dialog.data_source_selection)
 
     try:
@@ -154,6 +162,10 @@ def create_data_sources_tab(dialog):
         style=Pack(margin_bottom=10),
         id="visual_crossing_api_key_input",
         # Reminder: never log or echo this API key; the widget masks the value intentionally.
+    )
+    dialog.visual_crossing_api_key_input.aria_label = "Visual Crossing API key input"
+    dialog.visual_crossing_api_key_input.aria_description = (
+        "Enter the Visual Crossing API key to enable that weather data source."
     )
     dialog.visual_crossing_config_box.add(dialog.visual_crossing_api_key_input)
 
@@ -208,6 +220,10 @@ def create_audio_tab(dialog):
         style=Pack(margin_bottom=10, width=200),
         id="sound_pack_selection",
     )
+    dialog.sound_pack_selection.aria_label = "Sound pack selection"
+    dialog.sound_pack_selection.aria_description = (
+        "Choose the notification sound pack used for alerts."
+    )
     dialog.sound_pack_selection.enabled = bool(dialog.sound_enabled_switch.value)
 
     current_pack = getattr(dialog.current_settings, "sound_pack", "default")
@@ -240,7 +256,7 @@ def create_audio_tab(dialog):
         ("default", "Fallback sound"),
     ]
     for key, label in override_entries:
-        row = toga.Box(style=Pack(direction=ROW, align_items="center", padding_bottom=6))
+        row = toga.Box(style=Pack(direction=ROW, align_items="center", margin_bottom=6))
         row.add(toga.Label(f"{label}:", style=Pack(width=170)))
         input_widget = toga.TextInput(
             value=str(current_overrides.get(key, "")),
@@ -259,7 +275,7 @@ def create_audio_tab(dialog):
     )
     audio_box.add(dialog.alert_tts_switch)
 
-    tts_voice_row = toga.Box(style=Pack(direction=ROW, align_items="center", padding_bottom=6))
+    tts_voice_row = toga.Box(style=Pack(direction=ROW, align_items="center", margin_bottom=6))
     tts_voice_row.add(toga.Label("Voice id:", style=Pack(width=170)))
     dialog.alert_tts_voice_input = toga.TextInput(
         value=str(getattr(dialog.current_settings, "alert_tts_voice", "")),
@@ -269,7 +285,7 @@ def create_audio_tab(dialog):
     tts_voice_row.add(dialog.alert_tts_voice_input)
     audio_box.add(tts_voice_row)
 
-    tts_rate_row = toga.Box(style=Pack(direction=ROW, align_items="center", padding_bottom=6))
+    tts_rate_row = toga.Box(style=Pack(direction=ROW, align_items="center", margin_bottom=6))
     tts_rate_row.add(toga.Label("Voice rate:", style=Pack(width=170)))
     rate_value = getattr(dialog.current_settings, "alert_tts_rate", 0)
     dialog.alert_tts_rate_input = toga.TextInput(
@@ -294,6 +310,10 @@ def create_updates_tab(dialog):
         style=Pack(margin_bottom=10),
         id="auto_update_switch",
     )
+    dialog.auto_update_switch.aria_label = "Automatic update checks toggle"
+    dialog.auto_update_switch.aria_description = (
+        "Enable to allow AccessiWeather to check for updates in the background."
+    )
     updates_box.add(dialog.auto_update_switch)
 
     updates_box.add(toga.Label("Update Channel:", style=Pack(margin_bottom=5)))
@@ -308,6 +328,10 @@ def create_updates_tab(dialog):
         style=Pack(margin_bottom=10),
         id="update_channel_selection",
         on_change=dialog._on_update_channel_changed,
+    )
+    dialog.update_channel_selection.aria_label = "Update channel selection"
+    dialog.update_channel_selection.aria_description = (
+        "Choose which release channel to follow for application updates."
     )
 
     current_channel = getattr(dialog.current_settings, "update_channel", "stable")

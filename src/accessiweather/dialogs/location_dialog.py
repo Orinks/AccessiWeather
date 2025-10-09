@@ -120,13 +120,13 @@ class AddLocationDialog:
 
         self.name_input = toga.TextInput(
             placeholder="Enter a descriptive name for this location",
-            style=Pack(width=400, padding_bottom=5),
+            style=Pack(width=400, margin_bottom=5),
         )
         section.add(self.name_input)
 
         help_text = toga.Label(
             "This name will appear in your location list",
-            style=Pack(font_style="italic", font_size=10, padding_bottom=10),
+            style=Pack(font_style="italic", font_size=10, margin_bottom=10),
         )
         section.add(help_text)
 
@@ -134,17 +134,17 @@ class AddLocationDialog:
 
     def _create_search_section(self) -> toga.Box:
         """Create the location search section."""
-        section = toga.Box(style=Pack(direction=COLUMN, padding_bottom=10))
+        section = toga.Box(style=Pack(direction=COLUMN, margin_bottom=10))
 
         search_label = toga.Label(
-            "Search for Location:", style=Pack(font_weight="bold", padding_bottom=5)
+            "Search for Location:", style=Pack(font_weight="bold", margin_bottom=5)
         )
         section.add(search_label)
 
-        search_box = toga.Box(style=Pack(direction=ROW, padding_bottom=5))
+        search_box = toga.Box(style=Pack(direction=ROW, margin_bottom=5))
 
         self.search_input = toga.TextInput(
-            placeholder="Enter address, city, or ZIP code", style=Pack(flex=1, padding_right=10)
+            placeholder="Enter address, city, or ZIP code", style=Pack(flex=1, margin_right=10)
         )
         search_box.add(self.search_input)
 
@@ -158,7 +158,7 @@ class AddLocationDialog:
 
         search_help = toga.Label(
             "Search for an address to automatically fill coordinates",
-            style=Pack(font_style="italic", font_size=10, padding_bottom=10),
+            style=Pack(font_style="italic", font_size=10, margin_bottom=10),
         )
         section.add(search_help)
 
@@ -166,17 +166,17 @@ class AddLocationDialog:
 
     def _create_results_section(self) -> toga.Box:
         """Create the search results section."""
-        section = toga.Box(style=Pack(direction=COLUMN, padding_bottom=10))
+        section = toga.Box(style=Pack(direction=COLUMN, margin_bottom=10))
 
         results_label = toga.Label(
-            "Search Results:", style=Pack(font_weight="bold", padding_bottom=5)
+            "Search Results:", style=Pack(font_weight="bold", margin_bottom=5)
         )
         section.add(results_label)
 
         self.results_table = toga.Table(
             headings=["Location", "Coordinates"],
             data=[],
-            style=Pack(height=150, padding_bottom=10),
+            style=Pack(height=150, margin_bottom=10),
             on_select=self._on_result_selected,
         )
         section.add(self.results_table)
@@ -185,18 +185,18 @@ class AddLocationDialog:
 
     def _create_coordinates_section(self) -> toga.Box:
         """Create the manual coordinates section."""
-        section = toga.Box(style=Pack(direction=COLUMN, padding_bottom=10))
+        section = toga.Box(style=Pack(direction=COLUMN, margin_bottom=10))
 
         coords_label = toga.Label(
-            "Manual Coordinates:", style=Pack(font_weight="bold", padding_bottom=5)
+            "Manual Coordinates:", style=Pack(font_weight="bold", margin_bottom=5)
         )
         section.add(coords_label)
 
-        coords_box = toga.Box(style=Pack(direction=ROW, padding_bottom=5))
+        coords_box = toga.Box(style=Pack(direction=ROW, margin_bottom=5))
 
         self.coordinates_input = toga.TextInput(
             placeholder="e.g., 40.7128, -74.0060 or 40.7128°N, 74.0060°W",
-            style=Pack(flex=1, padding_right=10),
+            style=Pack(flex=1, margin_right=10),
         )
 
         coords_box.add(self.coordinates_input)
@@ -210,7 +210,7 @@ class AddLocationDialog:
 
         coords_help = toga.Label(
             "Enter latitude and longitude manually if search doesn't work",
-            style=Pack(font_style="italic", font_size=10, padding_bottom=10),
+            style=Pack(font_style="italic", font_size=10, margin_bottom=10),
         )
         section.add(coords_help)
 
@@ -218,10 +218,10 @@ class AddLocationDialog:
 
     def _create_status_section(self) -> toga.Box:
         """Create the status display section."""
-        section = toga.Box(style=Pack(direction=COLUMN, padding_bottom=15))
+        section = toga.Box(style=Pack(direction=COLUMN, margin_bottom=15))
 
         self.status_label = toga.Label(
-            "Ready to add location", style=Pack(font_style="italic", padding_bottom=5)
+            "Ready to add location", style=Pack(font_style="italic", margin_bottom=5)
         )
         section.add(self.status_label)
 
@@ -229,14 +229,14 @@ class AddLocationDialog:
 
     def _create_buttons_section(self) -> toga.Box:
         """Create the dialog buttons section."""
-        section = toga.Box(style=Pack(direction=ROW, padding_top=10))
+        section = toga.Box(style=Pack(direction=ROW, margin_top=10))
 
         # Spacer to push buttons to the right
         spacer = toga.Box(style=Pack(flex=1))
         section.add(spacer)
 
         self.cancel_button = toga.Button(
-            "Cancel", on_press=self._on_cancel_pressed, style=Pack(padding_right=10)
+            "Cancel", on_press=self._on_cancel_pressed, style=Pack(margin_right=10)
         )
 
         section.add(self.cancel_button)

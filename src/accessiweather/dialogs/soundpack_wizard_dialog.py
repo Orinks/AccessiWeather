@@ -340,7 +340,7 @@ class SoundPackWizardDialog:
                 key.replace("_", " ").title(),
             )
             row = toga.Box(style=Pack(direction=ROW, margin_bottom=6))
-            label = toga.Label(friendly + ":", style=Pack(width=220, padding_top=6))
+            label = toga.Label(friendly + ":", style=Pack(width=220, margin_top=6))
             file_display = toga.TextInput(readonly=True, style=Pack(flex=1, margin_right=8))
             existing = (self.state.sound_mappings or {}).get(key)
             if existing:
@@ -411,7 +411,7 @@ class SoundPackWizardDialog:
             record_btn = toga.Button("Record", enabled=False, style=Pack(margin_right=8))
             record_hint = toga.Label(
                 "Recording coming soon",
-                style=Pack(padding_top=6, margin_left=4, font_style="italic"),
+                style=Pack(margin_top=6, margin_left=4, font_style="italic"),
             )
             preview_btn = toga.Button("Preview", on_press=_preview_factory(key, friendly))
 
