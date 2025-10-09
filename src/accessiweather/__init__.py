@@ -7,18 +7,21 @@ with straightforward, direct API calls and simple data models.
 
 from .app import AccessiWeatherApp, main
 from .config import ConfigManager
-from .display import WxStyleWeatherFormatter
+from .display import WeatherPresenter
 from .formatters import WeatherFormatter
 from .location_manager import LocationManager
 from .models import (
+    AlertAudioSettings,
     AppConfig,
     AppSettings,
     CurrentConditions,
+    EnvironmentalConditions,
     Forecast,
     ForecastPeriod,
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
+    TrendInsight,
     WeatherAlert,
     WeatherAlerts,
     WeatherData,
@@ -77,7 +80,7 @@ __all__ = [
     "WeatherClient",
     "LocationManager",
     "WeatherFormatter",
-    "WxStyleWeatherFormatter",
+    "WeatherPresenter",
     # Data models
     "Location",
     "CurrentConditions",
@@ -85,11 +88,14 @@ __all__ = [
     "Forecast",
     "HourlyForecastPeriod",
     "HourlyForecast",
+    "EnvironmentalConditions",
+    "TrendInsight",
     "WeatherAlert",
     "WeatherAlerts",
     "WeatherData",
     "AppSettings",
     "AppConfig",
+    "AlertAudioSettings",
     # Utilities
     "TemperatureUnit",
     "format_temperature",

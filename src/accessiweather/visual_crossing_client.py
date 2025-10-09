@@ -5,7 +5,7 @@ implementing methods to fetch current conditions, forecast, and hourly data.
 """
 
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 
 import httpx
 
@@ -19,6 +19,7 @@ from .models import (
     WeatherAlert,
     WeatherAlerts,
 )
+from .utils.temperature_utils import TemperatureUnit, calculate_dewpoint
 
 logger = logging.getLogger(__name__)
 
@@ -199,18 +200,62 @@ class VisualCrossingClient:
         current = data.get("currentConditions", {})
 
         temp_f = current.get("temp")
+        temp_c = self._convert_f_to_c(temp_f)
+
+        humidity = current.get("humidity")
+        humidity = round(humidity) if humidity is not None else None
+
+        dewpoint_f = current.get("dew")
+        dewpoint_c = self._convert_f_to_c(dewpoint_f) if dewpoint_f is not None else None
+        if dewpoint_f is None and temp_f is not None and humidity is not None:
+            dewpoint_f = calculate_dewpoint(temp_f, humidity, unit=TemperatureUnit.FAHRENHEIT)
+            if dewpoint_f is not None:
+                dewpoint_c = self._convert_f_to_c(dewpoint_f)
+
+        wind_speed_mph = current.get("windspeed")
+        wind_speed_kph = wind_speed_mph * 1.60934 if wind_speed_mph is not None else None
+
+        wind_direction = current.get("winddir")
+
+        pressure_in = current.get("pressure")
+        pressure_mb = pressure_in * 33.8639 if pressure_in is not None else None
+
+        visibility_miles = current.get("visibility")
+        visibility_km = visibility_miles * 1.60934 if visibility_miles is not None else None
+
+        feels_like_f = current.get("feelslike")
+        feels_like_c = self._convert_f_to_c(feels_like_f)
+
+        timestamp = current.get("datetimeEpoch")
+        last_updated = None
+        if timestamp is not None:
+            try:
+                last_updated = datetime.fromtimestamp(timestamp, tz=UTC)
+            except (OSError, ValueError):
+                logger.debug(f"Failed to parse Visual Crossing epoch: {timestamp}")
+        elif current.get("datetime"):
+            try:
+                last_updated = datetime.fromisoformat(current["datetime"])
+            except ValueError:
+                logger.debug(f"Failed to parse Visual Crossing datetime: {current['datetime']}")
 
         return CurrentConditions(
             temperature_f=temp_f,
-            temperature_c=self._convert_f_to_c(temp_f),
+            temperature_c=temp_c,
             condition=current.get("conditions"),
-            humidity=current.get("humidity"),
-            wind_speed_mph=current.get("windspeed"),
-            wind_direction=self._degrees_to_cardinal(current.get("winddir")),
-            pressure_mb=current.get("pressure"),
-            feels_like_f=current.get("feelslike"),
-            feels_like_c=self._convert_f_to_c(current.get("feelslike")),
-            last_updated=datetime.now(),
+            humidity=humidity,
+            dewpoint_f=dewpoint_f,
+            dewpoint_c=dewpoint_c,
+            wind_speed_mph=wind_speed_mph,
+            wind_speed_kph=wind_speed_kph,
+            wind_direction=wind_direction,
+            pressure_in=pressure_in,
+            pressure_mb=pressure_mb,
+            feels_like_f=feels_like_f,
+            feels_like_c=feels_like_c,
+            visibility_miles=visibility_miles,
+            visibility_km=visibility_km,
+            last_updated=last_updated or datetime.now(),
         )
 
     def _parse_forecast(self, data: dict) -> Forecast:

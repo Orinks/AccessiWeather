@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from accessiweather.display import WxStyleWeatherFormatter
+from accessiweather.display import WeatherPresenter
 from accessiweather.models import Location
 from accessiweather.utils import convert_wind_direction_to_cardinal
 from accessiweather.weather_client import WeatherClient
@@ -79,12 +79,12 @@ class TestWeatherDataFetching:
         assert convert_wind_direction_to_cardinal(None) == "N/A"
         assert convert_wind_direction_to_cardinal(360) == "N"  # Should wrap around
 
-    def test_formatter_handles_numeric_wind_direction(self):
-        """Test that the formatter correctly handles numeric wind directions."""
+    def test_presenter_handles_numeric_wind_direction(self):
+        """Test that the presenter correctly handles numeric wind directions."""
         from accessiweather.models import AppSettings, CurrentConditions
 
         settings = AppSettings()
-        formatter = WxStyleWeatherFormatter(settings)
+        presenter = WeatherPresenter(settings)
         location = Location("Test City", 40.0, -75.0)
 
         # Create conditions with numeric wind direction (the bug we fixed)
@@ -96,13 +96,14 @@ class TestWeatherDataFetching:
             wind_direction=330,  # This is numeric, not string
         )
 
-        # This should not crash (it used to crash before the fix)
-        formatted = formatter.format_current_conditions(conditions, location)
+        presentation = presenter.present_current(conditions, location)
 
-        # Should contain the converted wind direction
-        assert "NNW" in formatted
-        assert "15" in formatted  # Wind speed
-        assert "Clear" in formatted
+        assert presentation is not None
+        wind_metric = next((m for m in presentation.metrics if m.label == "Wind"), None)
+        assert wind_metric is not None
+        assert "NNW" in wind_metric.value
+        assert "15" in wind_metric.value
+        assert presentation.description == "Clear"
 
     @pytest.mark.asyncio
     async def test_openmeteo_fallback(self):
@@ -286,12 +287,12 @@ def test_weather_fetching_components_available():
 
 def test_wind_direction_bug_is_fixed():
     """Test that the wind direction formatting bug is fixed."""
-    from accessiweather.display import WxStyleWeatherFormatter
+    from accessiweather.display import WeatherPresenter
     from accessiweather.models import AppSettings, CurrentConditions, Location
 
     # This test verifies the specific bug that was causing crashes
     settings = AppSettings()
-    formatter = WxStyleWeatherFormatter(settings)
+    presenter = WeatherPresenter(settings)
     location = Location("Test", 40.0, -75.0)
 
     # Create conditions with numeric wind direction (the problematic case)
@@ -303,10 +304,13 @@ def test_wind_direction_bug_is_fixed():
 
     # This should not crash (it used to crash before the fix)
     try:
-        formatted = formatter.format_current_conditions(conditions, location)
-        assert "NNW" in formatted or "W at" in formatted  # Should convert to cardinal
+        presentation = presenter.present_current(conditions, location)
+        assert presentation is not None
+        wind_metric = next((m for m in presentation.metrics if m.label == "Wind"), None)
+        assert wind_metric is not None
+        assert "NNW" in wind_metric.value or "W at" in wind_metric.value
         success = True
     except Exception:
         success = False
 
-    assert success, "Wind direction formatting should not crash with numeric input"
+    assert success, "Wind direction presentation should not fail with numeric input"
