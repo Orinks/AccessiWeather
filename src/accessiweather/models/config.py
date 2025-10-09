@@ -37,10 +37,6 @@ class AppSettings:
     alert_escalation_cooldown_minutes: int = 15
     alert_max_notifications_per_hour: int = 10
     alert_ignored_categories: list[str] = field(default_factory=list)
-    alert_sound_overrides: dict[str, str] = field(default_factory=dict)
-    alert_tts_enabled: bool = False
-    alert_tts_voice: str = ""
-    alert_tts_rate: int = 0
     international_alerts_enabled: bool = True
     international_alerts_provider: str = "meteosalarm"
     trend_insights_enabled: bool = True
@@ -97,10 +93,6 @@ class AppSettings:
             "alert_escalation_cooldown_minutes": self.alert_escalation_cooldown_minutes,
             "alert_max_notifications_per_hour": self.alert_max_notifications_per_hour,
             "alert_ignored_categories": self.alert_ignored_categories,
-            "alert_sound_overrides": self.alert_sound_overrides,
-            "alert_tts_enabled": self.alert_tts_enabled,
-            "alert_tts_voice": self.alert_tts_voice,
-            "alert_tts_rate": self.alert_tts_rate,
             "international_alerts_enabled": self.international_alerts_enabled,
             "international_alerts_provider": self.international_alerts_provider,
             "trend_insights_enabled": self.trend_insights_enabled,
@@ -142,10 +134,6 @@ class AppSettings:
             alert_escalation_cooldown_minutes=data.get("alert_escalation_cooldown_minutes", 15),
             alert_max_notifications_per_hour=data.get("alert_max_notifications_per_hour", 10),
             alert_ignored_categories=data.get("alert_ignored_categories", []),
-            alert_sound_overrides=data.get("alert_sound_overrides", {}),
-            alert_tts_enabled=cls._as_bool(data.get("alert_tts_enabled"), False),
-            alert_tts_voice=data.get("alert_tts_voice", ""),
-            alert_tts_rate=data.get("alert_tts_rate", 0),
             international_alerts_enabled=cls._as_bool(
                 data.get("international_alerts_enabled"), True
             ),
@@ -186,25 +174,6 @@ class AppSettings:
             settings.min_severity_priority = 6
 
         return settings
-
-    def to_alert_audio_settings(self) -> AlertAudioSettings:
-        """Convert to audio-specific alert preferences."""
-        return AlertAudioSettings(
-            sound_overrides=dict(self.alert_sound_overrides or {}),
-            tts_enabled=bool(self.alert_tts_enabled),
-            tts_voice=self.alert_tts_voice or None,
-            tts_rate=self.alert_tts_rate or None,
-        )
-
-
-@dataclass
-class AlertAudioSettings:
-    """Audio preferences for alert notifications."""
-
-    sound_overrides: dict[str, str] = field(default_factory=dict)
-    tts_enabled: bool = False
-    tts_voice: str | None = None
-    tts_rate: int | None = None
 
 
 @dataclass

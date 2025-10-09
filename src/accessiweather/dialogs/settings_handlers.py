@@ -77,22 +77,6 @@ def apply_settings_to_ui(dialog):
                 dialog.sound_enabled_switch.value
             )
 
-        if getattr(dialog, "alert_sound_override_inputs", None):
-            overrides = getattr(settings, "alert_sound_overrides", {}) or {}
-            for key, widget in dialog.alert_sound_override_inputs.items():
-                if widget is not None:
-                    widget.value = str(overrides.get(key, ""))
-
-        if getattr(dialog, "alert_tts_switch", None):
-            dialog.alert_tts_switch.value = getattr(settings, "alert_tts_enabled", False)
-
-        if getattr(dialog, "alert_tts_voice_input", None):
-            dialog.alert_tts_voice_input.value = getattr(settings, "alert_tts_voice", "")
-
-        if getattr(dialog, "alert_tts_rate_input", None):
-            rate_value = getattr(settings, "alert_tts_rate", 0)
-            dialog.alert_tts_rate_input.value = str(rate_value if rate_value else "")
-
         if getattr(dialog, "auto_update_switch", None) is not None:
             dialog.auto_update_switch.value = getattr(settings, "auto_update_enabled", True)
 
@@ -199,20 +183,6 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         visual_crossing_api_key = str(dialog.visual_crossing_api_key_input.value or "").strip()
 
     startup_enabled = getattr(dialog.startup_enabled_switch, "value", False)
-
-    overrides: dict[str, str] = {}
-    for key, widget in getattr(dialog, "alert_sound_override_inputs", {}).items():
-        value = getattr(widget, "value", "")
-        if value and value.strip():
-            overrides[key] = value.strip()
-
-    tts_enabled = bool(getattr(getattr(dialog, "alert_tts_switch", None), "value", False))
-    tts_voice = str(getattr(getattr(dialog, "alert_tts_voice_input", None), "value", "")).strip()
-    tts_rate_text = str(getattr(getattr(dialog, "alert_tts_rate_input", None), "value", "")).strip()
-    try:
-        tts_rate = int(tts_rate_text) if tts_rate_text else 0
-    except ValueError:
-        tts_rate = getattr(dialog.current_settings, "alert_tts_rate", 0)
 
     alerts_enabled = bool(
         getattr(
@@ -325,10 +295,6 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         alert_escalation_cooldown_minutes=escalation_cooldown,
         alert_max_notifications_per_hour=max_per_hour,
         alert_ignored_categories=ignored_categories,
-        alert_sound_overrides=overrides,
-        alert_tts_enabled=tts_enabled,
-        alert_tts_voice=tts_voice,
-        alert_tts_rate=tts_rate,
         international_alerts_enabled=getattr(
             dialog.current_settings, "international_alerts_enabled", True
         ),

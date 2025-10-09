@@ -84,10 +84,7 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     config_dir = str(app.paths.config)
     alert_settings = config.settings.to_alert_settings()
     app.alert_manager = AlertManager(config_dir, alert_settings)
-    audio_settings = config.settings.to_alert_audio_settings()
-    app.alert_notification_system = AlertNotificationSystem(
-        app.alert_manager, app._notifier, audio_settings=audio_settings
-    )
+    app.alert_notification_system = AlertNotificationSystem(app.alert_manager, app._notifier)
 
     try:
         if bool(getattr(config.settings, "minimize_to_tray", False)):
