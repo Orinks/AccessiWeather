@@ -76,7 +76,10 @@ async def get_openmeteo_current_conditions(
         params = {
             "latitude": location.latitude,
             "longitude": location.longitude,
-            "current": "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,pressure_msl",
+            "current": (
+                "temperature_2m,relative_humidity_2m,apparent_temperature,"
+                "weather_code,wind_speed_10m,wind_direction_10m,pressure_msl"
+            ),
             "daily": "sunrise,sunset",
             "temperature_unit": "fahrenheit",
             "wind_speed_unit": "mph",
@@ -123,7 +126,10 @@ async def get_openmeteo_forecast(
         params = {
             "latitude": location.latitude,
             "longitude": location.longitude,
-            "daily": "temperature_2m_max,temperature_2m_min,weather_code,wind_speed_10m_max,wind_direction_10m_dominant",
+            "daily": (
+                "temperature_2m_max,temperature_2m_min,weather_code,"
+                "wind_speed_10m_max,wind_direction_10m_dominant"
+            ),
             "temperature_unit": "fahrenheit",
             "wind_speed_unit": "mph",
             "timezone": "auto",

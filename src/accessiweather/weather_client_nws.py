@@ -34,7 +34,13 @@ async def get_nws_all_data_parallel(
     user_agent: str,
     timeout: float,
     client: httpx.AsyncClient,
-) -> tuple[CurrentConditions | None, Forecast | None, str | None, WeatherAlerts | None, HourlyForecast | None]:
+) -> tuple[
+    CurrentConditions | None,
+    Forecast | None,
+    str | None,
+    WeatherAlerts | None,
+    HourlyForecast | None,
+]:
     """Fetch all NWS data in parallel with optimized grid data caching.
     
     Returns: (current, forecast, discussion, alerts, hourly_forecast)
@@ -53,7 +59,9 @@ async def get_nws_all_data_parallel(
             get_nws_current_conditions(location, nws_base_url, user_agent, timeout, client)
         )
         forecast_task = asyncio.create_task(
-            get_nws_forecast_and_discussion(location, nws_base_url, user_agent, timeout, client, grid_data)
+            get_nws_forecast_and_discussion(
+                location, nws_base_url, user_agent, timeout, client, grid_data
+            )
         )
         alerts_task = asyncio.create_task(
             get_nws_alerts(location, nws_base_url, user_agent, timeout, client)

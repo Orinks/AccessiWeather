@@ -189,7 +189,8 @@ class WeatherClient:
                         logger.info(f"Successfully fetched NWS fallback data for {location.name}")
                     except Exception as e2:
                         logger.error(
-                            f"Both Visual Crossing and NWS failed for {location.name}: VC={e}, NWS={e2}"
+                            f"Both Visual Crossing and NWS failed for {location.name}: "
+                            f"VC={e}, NWS={e2}"
                         )
                         self._set_empty_weather_data(weather_data)
                 else:
@@ -214,7 +215,8 @@ class WeatherClient:
                         )
                     except Exception as e2:
                         logger.error(
-                            f"Both Visual Crossing and Open-Meteo failed for {location.name}: VC={e}, OM={e2}"
+                            f"Both Visual Crossing and Open-Meteo failed for "
+                            f"{location.name}: VC={e}, OM={e2}"
                         )
                         self._set_empty_weather_data(weather_data)
 
@@ -222,7 +224,11 @@ class WeatherClient:
             # Use Open-Meteo API with parallel fetching
             try:
                 client = self._get_http_client()
-                current, forecast, hourly_forecast = await openmeteo_client.get_openmeteo_all_data_parallel(
+                (
+                    current,
+                    forecast,
+                    hourly_forecast,
+                ) = await openmeteo_client.get_openmeteo_all_data_parallel(
                     location, self.openmeteo_base_url, self.timeout, client
                 )
 
@@ -239,10 +245,18 @@ class WeatherClient:
 
                 # Try NWS as fallback if location is in US
                 if self._is_us_location(location):
-                    logger.info(f"Trying NWS fallback for US location: {location.name}")
+                    logger.info(
+                        f"Trying NWS fallback for US location: {location.name}"
+                    )
                     try:
                         client = self._get_http_client()
-                        current, forecast, discussion, alerts, hourly_forecast = await nws_client.get_nws_all_data_parallel(
+                        (
+                            current,
+                            forecast,
+                            discussion,
+                            alerts,
+                            hourly_forecast,
+                        ) = await nws_client.get_nws_all_data_parallel(
                             location, self.nws_base_url, self.user_agent, self.timeout, client
                         )
 
@@ -252,22 +266,32 @@ class WeatherClient:
                         weather_data.discussion = discussion
                         weather_data.alerts = alerts
 
-                        logger.info(f"Successfully fetched NWS fallback data for {location.name}")
+                        logger.info(
+                            f"Successfully fetched NWS fallback data for {location.name}"
+                        )
                     except Exception as e2:
                         logger.error(
-                            f"Both Open-Meteo and NWS failed for {location.name}: OpenMeteo={e}, NWS={e2}"
+                            f"Both Open-Meteo and NWS failed for {location.name}: "
+                            f"OpenMeteo={e}, NWS={e2}"
                         )
                         self._set_empty_weather_data(weather_data)
                 else:
                     logger.error(
-                        f"Open-Meteo failed for international location {location.name}: {e}"
+                        f"Open-Meteo failed for international location "
+                        f"{location.name}: {e}"
                     )
                     self._set_empty_weather_data(weather_data)
         else:
             # Use NWS API with parallel fetching
             try:
                 client = self._get_http_client()
-                current, forecast, discussion, alerts, hourly_forecast = await nws_client.get_nws_all_data_parallel(
+                (
+                    current,
+                    forecast,
+                    discussion,
+                    alerts,
+                    hourly_forecast,
+                ) = await nws_client.get_nws_all_data_parallel(
                     location, self.nws_base_url, self.user_agent, self.timeout, client
                 )
 
@@ -285,7 +309,11 @@ class WeatherClient:
                     )
                     try:
                         client = self._get_http_client()
-                        current, forecast, hourly_forecast = await openmeteo_client.get_openmeteo_all_data_parallel(
+                        (
+                            current,
+                            forecast,
+                            hourly_forecast,
+                        ) = await openmeteo_client.get_openmeteo_all_data_parallel(
                             location, self.openmeteo_base_url, self.timeout, client
                         )
 
@@ -299,14 +327,19 @@ class WeatherClient:
 
                         # Check if Open-Meteo returned valid data
                         if current is None and forecast is None:
-                            logger.error(f"Open-Meteo also returned empty data for {location.name}")
+                            logger.error(
+                                f"Open-Meteo also returned empty data for {location.name}"
+                            )
                             self._set_empty_weather_data(weather_data)
                         else:
                             logger.info(
-                                f"Successfully fetched Open-Meteo fallback data for {location.name}"
+                                f"Successfully fetched Open-Meteo fallback data "
+                                f"for {location.name}"
                             )
                     except Exception as e2:
-                        logger.error(f"Both NWS and Open-Meteo failed for {location.name}: {e2}")
+                        logger.error(
+                            f"Both NWS and Open-Meteo failed for {location.name}: {e2}"
+                        )
                         self._set_empty_weather_data(weather_data)
                 else:
                     logger.info(f"Successfully fetched NWS data for {location.name}")
@@ -318,7 +351,11 @@ class WeatherClient:
                 logger.info(f"Trying Open-Meteo fallback for {location.name}")
                 try:
                     client = self._get_http_client()
-                    current, forecast, hourly_forecast = await openmeteo_client.get_openmeteo_all_data_parallel(
+                    (
+                        current,
+                        forecast,
+                        hourly_forecast,
+                    ) = await openmeteo_client.get_openmeteo_all_data_parallel(
                         location, self.openmeteo_base_url, self.timeout, client
                     )
 
@@ -335,7 +372,8 @@ class WeatherClient:
                     )
                 except Exception as e2:
                     logger.error(
-                        f"Both NWS and Open-Meteo failed for {location.name}: NWS={e}, OpenMeteo={e2}"
+                        f"Both NWS and Open-Meteo failed for {location.name}: "
+                        f"NWS={e}, OpenMeteo={e2}"
                     )
                     self._set_empty_weather_data(weather_data)
 
