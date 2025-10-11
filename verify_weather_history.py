@@ -7,6 +7,7 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
+
 def verify_imports():
     """Verify all imports work correctly."""
     print("✓ Checking imports...")
@@ -16,12 +17,14 @@ def verify_imports():
             HistoricalWeatherData,
             WeatherComparison,
         )
+
         print("  ✓ weather_history imports OK")
     except ImportError as e:
         print(f"  ✗ Import error: {e}")
         return False
 
     return True
+
 
 def verify_api_structure():
     """Verify API call structure is correct."""
@@ -53,6 +56,7 @@ def verify_api_structure():
 
     return True
 
+
 def verify_integration():
     """Verify integration points are correctly set up."""
     print("\n✓ Checking integration points...")
@@ -74,6 +78,7 @@ def verify_integration():
             return False
 
     return True
+
 
 def verify_compilation():
     """Verify all Python files compile."""
@@ -97,6 +102,7 @@ def verify_compilation():
             return False
 
     return True
+
 
 def verify_test_file():
     """Verify test file exists and has correct structure."""
@@ -124,6 +130,7 @@ def verify_test_file():
             print(f"  ✗ Missing test class: {class_name}")
 
     return True
+
 
 def main():
     """Run all verification checks."""
@@ -158,6 +165,7 @@ def main():
         print("✗ SOME CHECKS FAILED")
         print("=" * 70)
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())
