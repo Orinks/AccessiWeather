@@ -149,16 +149,6 @@ class OpenMeteoMapper:
                     "sunset": (
                         daily.get("sunset", [None])[0] if daily and daily.get("sunset") else None
                     ),
-                    # Moonrise/moonset/moon_phase from daily data (today's values)
-                    "moonrise": (
-                        daily.get("moonrise", [None])[0] if daily and daily.get("moonrise") else None
-                    ),
-                    "moonset": (
-                        daily.get("moonset", [None])[0] if daily and daily.get("moonset") else None
-                    ),
-                    "moon_phase": (
-                        daily.get("moon_phase", [None])[0] if daily and daily.get("moon_phase") else None
-                    ),
                 }
             }
 

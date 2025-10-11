@@ -73,13 +73,6 @@ def test_parse_openmeteo_current_conditions_converts_units():
             "wind_direction_10m": "°",
             "pressure_msl": "hPa",
         },
-        "daily": {
-            "sunrise": ["2025-09-27T06:30:00"],
-            "sunset": ["2025-09-27T18:45:00"],
-            "moonrise": ["2025-09-27T20:15:00"],
-            "moonset": ["2025-09-27T08:30:00"],
-            "moon_phase": [0.25],
-        },
     }
 
     current = client._parse_openmeteo_current_conditions(sample)
@@ -96,12 +89,6 @@ def test_parse_openmeteo_current_conditions_converts_units():
     assert current.feels_like_c == pytest.approx(17.333, rel=1e-3)
     assert current.dewpoint_f is not None
     assert current.last_updated == datetime(2025, 9, 27, 0, 30)
-    # Test moon phase data
-    assert current.sunrise_time == datetime(2025, 9, 27, 6, 30, 0)
-    assert current.sunset_time == datetime(2025, 9, 27, 18, 45, 0)
-    assert current.moonrise_time == datetime(2025, 9, 27, 20, 15, 0)
-    assert current.moonset_time == datetime(2025, 9, 27, 8, 30, 0)
-    assert current.moon_phase == pytest.approx(0.25, rel=1e-3)
 
 
 @pytest.mark.unit

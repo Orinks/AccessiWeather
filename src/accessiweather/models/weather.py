@@ -42,9 +42,6 @@ class CurrentConditions:
     uv_index: float | None = None
     sunrise_time: datetime | None = None
     sunset_time: datetime | None = None
-    moonrise_time: datetime | None = None
-    moonset_time: datetime | None = None
-    moon_phase: float | None = None
     last_updated: datetime | None = None
 
     def has_data(self) -> bool:
