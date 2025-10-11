@@ -1,4 +1,5 @@
-"""Tests for configuration management in the simplified AccessiWeather application.
+"""
+Tests for configuration management in the simplified AccessiWeather application.
 
 This module provides comprehensive tests for the ConfigManager in the simplified
 AccessiWeather implementation, adapted from existing configuration test logic while

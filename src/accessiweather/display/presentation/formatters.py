@@ -202,12 +202,15 @@ def get_uv_description(uv_index: float) -> str:
 
 
 def format_sun_time(sun_time: datetime | None) -> str | None:
-    """Format sunrise or sunset time for display.
+    """
+    Format sunrise or sunset time for display.
 
     Args:
+    ----
         sun_time: Datetime object for sunrise or sunset
 
     Returns:
+    -------
         Formatted time string (e.g., "6:32 AM") or None if time is not available
 
     """

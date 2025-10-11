@@ -1,4 +1,5 @@
-"""Notification module for NOAA weather alerts, watches, and warnings.
+"""
+Notification module for NOAA weather alerts, watches, and warnings.
 
 This module provides functionality to display desktop notifications
 for weather alerts.

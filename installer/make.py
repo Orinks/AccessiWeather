@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""A make-like utility for AccessiWeather using BeeWare Briefcase.
+"""
+A make-like utility for AccessiWeather using BeeWare Briefcase.
 
 This replaces the legacy PyInstaller/Inno Setup scripts and includes workarounds
 for Windows build issues to ensure a working CI/CD process for GitHub Pages deployment.
@@ -87,7 +88,8 @@ def _detect_default_platform() -> str:
 
 
 def _detect_python_env() -> tuple[Path, Path | None, bool]:
-    """Detect a suitable Python for building and whether a venv needs creation.
+    """
+    Detect a suitable Python for building and whether a venv needs creation.
 
     Returns a tuple: (python_exe, venv_dir_or_None, created_new_env)
     - If the current interpreter is already a virtual environment, returns that
@@ -136,7 +138,8 @@ def _briefcase_with(venv_py: Path, *args: str) -> int:
 
 
 def run_headless() -> int:
-    """Headless build: ensure deps, then package MSI and ZIP with Briefcase.
+    """
+    Headless build: ensure deps, then package MSI and ZIP with Briefcase.
 
     Behavior:
     - Ensures ./venv exists and installs/updates build tools and Briefcase

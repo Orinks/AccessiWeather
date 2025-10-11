@@ -1,4 +1,5 @@
-"""Community Sound Packs browser dialog.
+"""
+Community Sound Packs browser dialog.
 
 Provides a modal UI to browse, search, and install community sound packs
 fetched via CommunitySoundPackService. Downloads are shown with a progress
@@ -27,9 +28,11 @@ logger = logging.getLogger(__name__)
 
 
 class CommunityPacksBrowserDialog:
-    """Modal dialog to browse community sound packs and install them.
+    """
+    Modal dialog to browse community sound packs and install them.
 
     Args:
+    ----
         app: The Toga app
         service: Service used to fetch and download packs
         installer: Installer used to install a downloaded ZIP

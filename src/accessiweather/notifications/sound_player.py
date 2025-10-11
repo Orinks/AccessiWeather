@@ -186,7 +186,8 @@ def get_sound_pack_sounds(pack_dir: str) -> dict[str, str]:
 
 
 def get_sound_file_for_candidates(candidates: list[str], pack_dir: str) -> Path | None:
-    """Resolve a sound file trying multiple candidate event keys, with fallbacks.
+    """
+    Resolve a sound file trying multiple candidate event keys, with fallbacks.
 
     Tries the given pack first across all candidates, then falls back to the
     default pack. If still nothing is found, falls back to the default 'alert'
@@ -241,9 +242,11 @@ def play_notification_sound_candidates(candidates: list[str], pack_dir: str) -> 
 
 
 def validate_sound_pack(pack_path: Path) -> tuple[bool, str]:
-    """Validate a sound pack directory.
+    """
+    Validate a sound pack directory.
 
-    Returns:
+    Returns
+    -------
         tuple: (is_valid, error_message)
 
     """

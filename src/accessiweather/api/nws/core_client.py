@@ -1,4 +1,5 @@
-"""Core client operations for NWS API wrapper.
+"""
+Core client operations for NWS API wrapper.
 
 This module handles the foundational API client operations including
 initialization, client setup, and core request handling.
@@ -22,9 +23,11 @@ class NwsCoreClient:
     BASE_URL = "https://api.weather.gov"
 
     def __init__(self, wrapper_instance):
-        """Initialize the core client with reference to the main wrapper.
+        """
+        Initialize the core client with reference to the main wrapper.
 
         Args:
+        ----
             wrapper_instance: The main NwsApiWrapper instance
 
         """
@@ -48,16 +51,20 @@ class NwsCoreClient:
         logger.info(f"Initialized NWS API wrapper with User-Agent: {user_agent_string}")
 
     def make_api_request(self, module_func, **kwargs) -> Any:
-        """Call a function from the generated NWS client modules and handle exceptions.
+        """
+        Call a function from the generated NWS client modules and handle exceptions.
 
         Args:
+        ----
             module_func: The API function to call
             **kwargs: Arguments to pass to the function
 
         Returns:
+        -------
             The response from the API call
 
         Raises:
+        ------
             NoaaApiError: For various API error conditions
 
         """

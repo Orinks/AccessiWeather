@@ -1,4 +1,5 @@
-"""Weather data operations for NWS API wrapper.
+"""
+Weather data operations for NWS API wrapper.
 
 This module handles weather data retrieval including current conditions,
 forecasts, hourly forecasts, and observation stations.
@@ -17,26 +18,32 @@ class NwsWeatherData:
     """Handles NWS weather data operations."""
 
     def __init__(self, wrapper_instance):
-        """Initialize with reference to the main wrapper.
+        """
+        Initialize with reference to the main wrapper.
 
         Args:
+        ----
             wrapper_instance: The main NwsApiWrapper instance
 
         """
         self.wrapper = wrapper_instance
 
     def get_current_conditions(self, lat: float, lon: float, **kwargs) -> dict[str, Any]:
-        """Get current weather conditions for a location from the nearest observation station.
+        """
+        Get current weather conditions for a location from the nearest observation station.
 
         Args:
+        ----
             lat: Latitude
             lon: Longitude
             **kwargs: Additional arguments including force_refresh
 
         Returns:
+        -------
             Current conditions data dictionary
 
         Raises:
+        ------
             ApiClientError: For client-related errors
 
         """
@@ -91,17 +98,21 @@ class NwsWeatherData:
             raise ApiClientError(f"Unable to retrieve current conditions data: {str(e)}") from e
 
     def get_forecast(self, lat: float, lon: float, **kwargs) -> dict[str, Any]:
-        """Get forecast for a location.
+        """
+        Get forecast for a location.
 
         Args:
+        ----
             lat: Latitude
             lon: Longitude
             **kwargs: Additional arguments including force_refresh
 
         Returns:
+        -------
             Forecast data dictionary
 
         Raises:
+        ------
             ApiClientError: For client-related errors
             NoaaApiError: For API-related errors
 
@@ -158,17 +169,21 @@ class NwsWeatherData:
             raise ApiClientError(f"Unable to retrieve forecast data: {str(e)}") from e
 
     def get_hourly_forecast(self, lat: float, lon: float, **kwargs) -> dict[str, Any]:
-        """Get hourly forecast for a location.
+        """
+        Get hourly forecast for a location.
 
         Args:
+        ----
             lat: Latitude
             lon: Longitude
             **kwargs: Additional arguments including force_refresh
 
         Returns:
+        -------
             Hourly forecast data dictionary
 
         Raises:
+        ------
             ApiClientError: For client-related errors
 
         """
@@ -224,17 +239,21 @@ class NwsWeatherData:
             raise ApiClientError(f"Unable to retrieve hourly forecast data: {str(e)}") from e
 
     def get_stations(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
-        """Get observation stations for a location.
+        """
+        Get observation stations for a location.
 
         Args:
+        ----
             lat: Latitude
             lon: Longitude
             force_refresh: Whether to force refresh cached data
 
         Returns:
+        -------
             Stations data dictionary
 
         Raises:
+        ------
             ApiClientError: For client-related errors
 
         """

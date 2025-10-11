@@ -1,4 +1,5 @@
-"""Services package for the simple AccessiWeather Toga application.
+"""
+Services package for the simple AccessiWeather Toga application.
 
 This package contains service modules for update management, platform detection,
 and other application services.

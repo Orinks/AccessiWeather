@@ -21,9 +21,11 @@ class MeteoAlarmClient:
     CAP_NS = {"cap": "urn:oasis:names:tc:emergency:cap:1.2", "atom": "http://www.w3.org/2005/Atom"}
 
     def __init__(self, user_agent: str = "AccessiWeather/2.0", timeout: float = 10.0):
-        """Initialize the client.
+        """
+        Initialize the client.
 
         Args:
+        ----
             user_agent: HTTP User-Agent header value.
             timeout: Request timeout in seconds.
 

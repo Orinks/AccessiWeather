@@ -1,4 +1,5 @@
-"""Alerts and discussion functionality for WeatherService.
+"""
+Alerts and discussion functionality for WeatherService.
 
 This module handles weather alerts and forecast discussion retrieval,
 including alert processing delegation.
@@ -22,9 +23,11 @@ class AlertsDiscussionHandler:
         nws_client: NoaaApiClient | NoaaApiWrapper,
         api_client_manager,  # Type hint would create circular import
     ):
-        """Initialize the alerts and discussion handler.
+        """
+        Initialize the alerts and discussion handler.
 
         Args:
+        ----
             nws_client: The NWS API client
             api_client_manager: The API client manager instance
 
@@ -41,9 +44,11 @@ class AlertsDiscussionHandler:
         radius: float = 50,
         precise_location: bool = True,
     ) -> dict[str, Any]:
-        """Get weather alerts for a location.
+        """
+        Get weather alerts for a location.
 
         Args:
+        ----
             lat: Latitude of the location.
             lon: Longitude of the location.
             force_refresh: Whether to force a refresh of the data from the API
@@ -54,9 +59,11 @@ class AlertsDiscussionHandler:
                              or for the entire state.
 
         Returns:
+        -------
             Dictionary containing weather alerts.
 
         Raises:
+        ------
             ApiClientError: If there was an error retrieving the alerts.
 
         """
@@ -97,18 +104,22 @@ class AlertsDiscussionHandler:
             raise ApiClientError(f"Unable to retrieve alerts data: {str(e)}") from e
 
     def get_discussion(self, lat: float, lon: float, force_refresh: bool = False) -> str | None:
-        """Get forecast discussion for a location.
+        """
+        Get forecast discussion for a location.
 
         Args:
+        ----
             lat: Latitude of the location.
             lon: Longitude of the location.
             force_refresh: Whether to force a refresh of the data from the API
                 instead of using cache.
 
         Returns:
+        -------
             String containing forecast discussion text, or None if not available.
 
         Raises:
+        ------
             ApiClientError: If there was an error retrieving the discussion.
 
         """
@@ -125,14 +136,17 @@ class AlertsDiscussionHandler:
             raise ApiClientError(f"Unable to retrieve forecast discussion data: {str(e)}") from e
 
     def process_alerts(self, alerts_data: dict[str, Any]) -> tuple[list[dict[str, Any]], int, int]:
-        """Process alerts data and return processed alerts with counts.
+        """
+        Process alerts data and return processed alerts with counts.
 
         This method delegates to the WeatherNotifier for processing.
 
         Args:
+        ----
             alerts_data: Raw alerts data from the API.
 
         Returns:
+        -------
             Tuple containing:
             - List of processed alert objects
             - Number of new alerts

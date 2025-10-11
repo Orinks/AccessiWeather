@@ -1,4 +1,5 @@
-"""Cache module for AccessiWeather.
+"""
+Cache module for AccessiWeather.
 
 This module provides caching functionality to reduce API calls and improve performance.
 """
@@ -41,9 +42,11 @@ class Cache:
     """A simple in-memory cache with TTL support."""
 
     def __init__(self, default_ttl: int = 300):
-        """Initialize the cache.
+        """
+        Initialize the cache.
 
         Args:
+        ----
             default_ttl: Default time-to-live in seconds (default: 5 minutes)
 
         """
@@ -52,12 +55,15 @@ class Cache:
         logger.debug(f"Initialized cache with default TTL of {default_ttl} seconds")
 
     def get(self, key: str) -> Any | None:
-        """Get a value from the cache.
+        """
+        Get a value from the cache.
 
         Args:
+        ----
             key: The cache key
 
         Returns:
+        -------
             The cached value or None if not found or expired
 
         """
@@ -78,9 +84,11 @@ class Cache:
         return entry.value
 
     def set(self, key: str, value: Any, ttl: float | None = None) -> None:
-        """Set a value in the cache.
+        """
+        Set a value in the cache.
 
         Args:
+        ----
             key: The cache key
             value: The value to cache
             ttl: Time-to-live in seconds (uses default_ttl if None)
@@ -94,12 +102,15 @@ class Cache:
         logger.debug(f"Cached value for '{key}' with TTL of {ttl} seconds")
 
     def has_key(self, key: str) -> bool:
-        """Check if a key exists in the cache and is not expired.
+        """
+        Check if a key exists in the cache and is not expired.
 
         Args:
+        ----
             key: The cache key
 
         Returns:
+        -------
             True if the key exists and is not expired, False otherwise
 
         """
@@ -118,9 +129,11 @@ class Cache:
         return True
 
     def invalidate(self, key: str) -> None:
-        """Invalidate a specific cache entry.
+        """
+        Invalidate a specific cache entry.
 
         Args:
+        ----
             key: The cache key to invalidate
 
         """
@@ -478,9 +491,11 @@ class WeatherDataCache:
     """Persist the latest weather data per location for offline fallback."""
 
     def __init__(self, cache_dir: str | Path, max_age_minutes: int = 180):
-        """Initialize the cache.
+        """
+        Initialize the cache.
 
         Args:
+        ----
             cache_dir: Directory where cache files are stored.
             max_age_minutes: Age threshold before cached entries expire.
 

@@ -1,4 +1,5 @@
-"""Dialog components for the simple AccessiWeather Toga application.
+"""
+Dialog components for the simple AccessiWeather Toga application.
 
 This package contains dialog windows for user interaction, including
 settings, location management, and information display dialogs.

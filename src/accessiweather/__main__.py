@@ -1,4 +1,5 @@
-"""Main entry point for running the module directly.
+"""
+Main entry point for running the module directly.
 
 Allows running the module with `python -m accessiweather`
 """

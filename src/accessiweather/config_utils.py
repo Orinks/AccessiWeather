@@ -1,4 +1,5 @@
-"""Configuration utilities for AccessiWeather.
+"""
+Configuration utilities for AccessiWeather.
 
 This module provides utilities for handling configuration paths and migration.
 """
@@ -14,7 +15,8 @@ logger = logging.getLogger(__name__)
 
 
 def is_portable_mode() -> bool:
-    """Determine if the application is running in portable mode.
+    """
+    Determine if the application is running in portable mode.
 
     Portable mode is detected by checking if the executable is running from a
     non-standard location (not Program Files) and if the directory is writable.
@@ -22,7 +24,8 @@ def is_portable_mode() -> bool:
     For testing purposes, portable mode can be forced by setting the
     ACCESSIWEATHER_FORCE_PORTABLE environment variable to "1" or "true".
 
-    Returns:
+    Returns
+    -------
         True if running in portable mode, False otherwise
 
     """
@@ -79,12 +82,15 @@ def is_portable_mode() -> bool:
 
 
 def get_config_dir(custom_dir: str | None = None) -> str:
-    """Get the configuration directory path.
+    """
+    Get the configuration directory path.
 
     Args:
+    ----
         custom_dir: Custom directory path (optional)
 
     Returns:
+    -------
         Path to the configuration directory
 
     """
@@ -134,15 +140,18 @@ def get_config_dir(custom_dir: str | None = None) -> str:
 
 
 def ensure_config_defaults(config: dict[str, Any]) -> dict[str, Any]:
-    """Ensure configuration has all required default settings.
+    """
+    Ensure configuration has all required default settings.
 
     This function adds missing default settings to the configuration
     without performing any migration logic.
 
     Args:
+    ----
         config: Configuration dictionary to update
 
     Returns:
+    -------
         Dict: Configuration dictionary with defaults added
 
     """

@@ -1,4 +1,5 @@
-"""Notification service for AccessiWeather.
+"""
+Notification service for AccessiWeather.
 
 This module provides a service layer for notification-related operations,
 separating business logic from UI concerns.
@@ -15,9 +16,11 @@ class NotificationService:
     """Service for notification-related operations."""
 
     def __init__(self, notifier: WeatherNotifier):
-        """Initialize the notification service.
+        """
+        Initialize the notification service.
 
         Args:
+        ----
             notifier: The notifier to use for notification operations.
 
         """
@@ -30,9 +33,11 @@ class NotificationService:
         new_count: int = 0,
         updated_count: int = 0,
     ) -> None:
-        """Notify the user of weather alerts.
+        """
+        Notify the user of weather alerts.
 
         Args:
+        ----
             alerts: List of alert objects.
             count: Optional count of alerts to notify about. If None, all alerts are notified.
             new_count: Number of new alerts (default: 0)
@@ -50,12 +55,15 @@ class NotificationService:
         self.notifier.notify_alerts(count, new_count, updated_count)
 
     def process_alerts(self, alerts_data: dict) -> tuple[list[dict], int, int]:
-        """Process alerts data and notify the user.
+        """
+        Process alerts data and notify the user.
 
         Args:
+        ----
             alerts_data: Raw alerts data from the API.
 
         Returns:
+        -------
             Tuple containing:
             - List of processed alert objects
             - Number of new alerts
@@ -76,9 +84,11 @@ class NotificationService:
         return processed_alerts, new_count, updated_count
 
     def get_sorted_alerts(self) -> list[dict]:
-        """Get a sorted list of active alerts.
+        """
+        Get a sorted list of active alerts.
 
-        Returns:
+        Returns
+        -------
             List of alert objects sorted by severity.
 
         """

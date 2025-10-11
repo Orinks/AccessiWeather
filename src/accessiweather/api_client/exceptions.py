@@ -1,4 +1,5 @@
-"""Exception classes for AccessiWeather API Client.
+"""
+Exception classes for AccessiWeather API Client.
 
 This module contains all exception classes and constants used by the API client
 for error handling and location type identification.
@@ -39,9 +40,11 @@ class NoaaApiError(ApiClientError):
         error_type: str | None = None,
         url: str | None = None,
     ):
-        """Initialize the NoaaApiError.
+        """
+        Initialize the NoaaApiError.
 
         Args:
+        ----
             message: Error message
             status_code: HTTP status code if applicable
             error_type: Type of error (use class constants)
