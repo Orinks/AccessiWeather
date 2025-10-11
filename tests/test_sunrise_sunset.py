@@ -13,7 +13,7 @@ class TestSunriseSunset:
         """Test that CurrentConditions can store sunrise and sunset times."""
         sunrise = datetime(2024, 6, 15, 6, 30, 0, tzinfo=UTC)
         sunset = datetime(2024, 6, 15, 20, 45, 0, tzinfo=UTC)
-        
+
         conditions = CurrentConditions(
             temperature_f=75.0,
             temperature_c=23.9,
@@ -21,7 +21,7 @@ class TestSunriseSunset:
             sunrise_time=sunrise,
             sunset_time=sunset,
         )
-        
+
         assert conditions.sunrise_time == sunrise
         assert conditions.sunset_time == sunset
         assert conditions.temperature_f == 75.0
@@ -33,7 +33,7 @@ class TestSunriseSunset:
             temperature_c=23.9,
             condition="Clear",
         )
-        
+
         assert conditions.sunrise_time is None
         assert conditions.sunset_time is None
 
@@ -41,7 +41,7 @@ class TestSunriseSunset:
         """Test formatting sunrise/sunset time with timezone-aware datetime."""
         sun_time = datetime(2024, 6, 15, 6, 30, 0, tzinfo=UTC)
         formatted = format_sun_time(sun_time)
-        
+
         # Should return a formatted time string
         assert formatted is not None
         assert ":" in formatted
@@ -57,7 +57,7 @@ class TestSunriseSunset:
         # Test morning time
         sun_time = datetime(2024, 6, 15, 6, 5, 0, tzinfo=UTC)
         formatted = format_sun_time(sun_time)
-        
+
         # Should not have leading zero on hour
         assert formatted is not None
         # Check it doesn't start with 0 (e.g., should be "6:05 AM" not "06:05 AM")
