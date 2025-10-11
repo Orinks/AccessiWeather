@@ -33,6 +33,11 @@ from .utils import (
     format_wind_speed,
 )
 from .weather_client import WeatherClient
+from .weather_history import (
+    WeatherComparison,
+    WeatherHistoryEntry,
+    WeatherHistoryTracker,
+)
 
 # Package version is sourced from installed metadata, with fallback to pyproject.toml
 try:
@@ -94,6 +99,10 @@ __all__ = [
     "WeatherData",
     "AppSettings",
     "AppConfig",
+    # Weather History
+    "WeatherHistoryEntry",
+    "WeatherHistoryTracker",
+    "WeatherComparison",
     # Utilities
     "TemperatureUnit",
     "format_temperature",

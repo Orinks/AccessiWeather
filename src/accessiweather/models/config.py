@@ -46,6 +46,8 @@ class AppSettings:
     air_quality_notify_threshold: int = 3
     offline_cache_enabled: bool = True
     offline_cache_max_age_minutes: int = 180
+    weather_history_enabled: bool = True
+    weather_history_retention_days: int = 30
 
     @staticmethod
     def _as_bool(value, default: bool) -> bool:
@@ -102,6 +104,8 @@ class AppSettings:
             "air_quality_notify_threshold": self.air_quality_notify_threshold,
             "offline_cache_enabled": self.offline_cache_enabled,
             "offline_cache_max_age_minutes": self.offline_cache_max_age_minutes,
+            "weather_history_enabled": self.weather_history_enabled,
+            "weather_history_retention_days": self.weather_history_retention_days,
         }
 
     @classmethod
@@ -145,6 +149,8 @@ class AppSettings:
             air_quality_notify_threshold=data.get("air_quality_notify_threshold", 3),
             offline_cache_enabled=cls._as_bool(data.get("offline_cache_enabled"), True),
             offline_cache_max_age_minutes=data.get("offline_cache_max_age_minutes", 180),
+            weather_history_enabled=cls._as_bool(data.get("weather_history_enabled"), True),
+            weather_history_retention_days=data.get("weather_history_retention_days", 30),
         )
 
     def to_alert_settings(self):
