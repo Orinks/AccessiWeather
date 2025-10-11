@@ -16,7 +16,7 @@ on:
     workflows: ["CI"]
     types:
       - completed
-    branches: [ main, feature/toga-migration ]  # Only trigger after CI on main and toga-migration branches
+    branches: [ main, dev, feature/toga-migration ]  # Trigger after CI on main, dev and toga-migration branches
 
 permissions:
   contents: read      # Read repository contents

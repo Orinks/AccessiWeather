@@ -1,5 +1,8 @@
 name: Release with Briefcase
 
+# This workflow creates official releases from the main branch
+# Triggered by: pushes to main (excluding docs), or manual dispatch
+
 on:
   push:
     branches: [ main, feature/toga-migration ]  # Releases from main and toga-migration branches
@@ -22,6 +25,11 @@ on:
 permissions:
   contents: write      # Required to create releases and upload assets
   actions: read        # Required to read workflow artifacts
+
+# Prevent concurrent releases
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   FORCE_COLOR: "1"
