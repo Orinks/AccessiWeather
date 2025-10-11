@@ -2,8 +2,8 @@
 
 from datetime import UTC, datetime
 
-from accessiweather.models import CurrentConditions
 from accessiweather.display.presentation.formatters import format_sun_time
+from accessiweather.models import CurrentConditions
 
 
 class TestSunriseSunset:
