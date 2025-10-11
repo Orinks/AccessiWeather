@@ -32,6 +32,25 @@ from .weather_client_parsers import (
 logger = logging.getLogger(__name__)
 
 
+def _parse_iso_datetime(value: str | None) -> datetime | None:
+    """Parse an ISO 8601 datetime string, including Zulu-formatted values."""
+    if not value:
+        return None
+
+    candidates = [value]
+    if value.endswith("Z"):
+        candidates.append(value[:-1] + "+00:00")
+
+    for candidate in candidates:
+        try:
+            return datetime.fromisoformat(candidate)
+        except ValueError:
+            continue
+
+    logger.debug("Failed to parse ISO datetime value: %s", value)
+    return None
+
+
 async def _client_get(
     client: httpx.AsyncClient,
     url: str,
@@ -236,13 +255,7 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         current.get("apparent_temperature"), units.get("apparent_temperature")
     )
 
-    timestamp = current.get("time")
-    last_updated = None
-    if timestamp:
-        try:
-            last_updated = datetime.fromisoformat(timestamp)
-        except ValueError:
-            logger.debug(f"Failed to parse OpenMeteo timestamp: {timestamp}")
+    last_updated = _parse_iso_datetime(current.get("time"))
 
     # Parse sunrise and sunset times from daily data (today's values)
     sunrise_time = None
@@ -251,15 +264,9 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         sunrise_list = daily.get("sunrise", [])
         sunset_list = daily.get("sunset", [])
         if sunrise_list and len(sunrise_list) > 0:
-            try:
-                sunrise_time = datetime.fromisoformat(sunrise_list[0])
-            except (ValueError, TypeError):
-                logger.debug(f"Failed to parse sunrise time: {sunrise_list[0]}")
+            sunrise_time = _parse_iso_datetime(sunrise_list[0])
         if sunset_list and len(sunset_list) > 0:
-            try:
-                sunset_time = datetime.fromisoformat(sunset_list[0])
-            except (ValueError, TypeError):
-                logger.debug(f"Failed to parse sunset time: {sunset_list[0]}")
+            sunset_time = _parse_iso_datetime(sunset_list[0])
 
     return CurrentConditions(
         temperature_f=temp_f,
@@ -316,13 +323,7 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
     pressures = hourly.get("pressure_msl", [])
 
     for i, time_str in enumerate(times):
-        start_time = None
-        if time_str:
-            try:
-                start_time = datetime.fromisoformat(time_str)
-            except ValueError:
-                logger.warning(f"Failed to parse OpenMeteo time: {time_str}")
-                start_time = datetime.now()
+        start_time = _parse_iso_datetime(time_str) or datetime.now()
 
         temperature = temperatures[i] if i < len(temperatures) else None
         weather_code = weather_codes[i] if i < len(weather_codes) else None
