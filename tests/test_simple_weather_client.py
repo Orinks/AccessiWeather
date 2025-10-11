@@ -73,6 +73,10 @@ def test_parse_openmeteo_current_conditions_converts_units():
             "wind_direction_10m": "°",
             "pressure_msl": "hPa",
         },
+        "daily": {
+            "sunrise": ["2025-09-27T06:45"],
+            "sunset": ["2025-09-27T18:15"],
+        },
     }
 
     current = client._parse_openmeteo_current_conditions(sample)
@@ -88,6 +92,8 @@ def test_parse_openmeteo_current_conditions_converts_units():
     assert current.feels_like_f == pytest.approx(63.2, rel=1e-3)
     assert current.feels_like_c == pytest.approx(17.333, rel=1e-3)
     assert current.dewpoint_f is not None
+    assert current.sunrise_time == datetime(2025, 9, 27, 6, 45)
+    assert current.sunset_time == datetime(2025, 9, 27, 18, 15)
     assert current.last_updated == datetime(2025, 9, 27, 0, 30)
 
 
