@@ -361,6 +361,20 @@ class TestWeatherDataModel:
 
         assert weather_data.last_updated == last_updated
 
+    def test_weather_data_current_conditions_alias(self):
+        """WeatherData.current_conditions should mirror the current attribute."""
+        location = Location("Alias City", 41.0, -74.0)
+        current = CurrentConditions(temperature_f=70.0, condition="Clear")
+        weather_data = WeatherData(location=location, current=current)
+
+        assert weather_data.current_conditions is current
+
+        updated = CurrentConditions(temperature_f=68.0, condition="Cloudy")
+        weather_data.current_conditions = updated
+
+        assert weather_data.current is updated
+        assert weather_data.current_conditions is updated
+
 
 class TestApiErrorModel:
     """Test the ApiError data model - adapted from existing test logic."""

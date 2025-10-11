@@ -263,6 +263,15 @@ class WeatherData:
     stale_since: datetime | None = None
     stale_reason: str | None = None
 
+    @property
+    def current_conditions(self) -> CurrentConditions | None:
+        """Backward-compatible accessor for current conditions."""
+        return self.current
+
+    @current_conditions.setter
+    def current_conditions(self, value: CurrentConditions | None) -> None:
+        self.current = value
+
     def has_any_data(self) -> bool:
         """Check if we have any weather data."""
         return any(
