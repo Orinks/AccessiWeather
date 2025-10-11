@@ -1,4 +1,5 @@
-"""API Client package for AccessiWeather.
+"""
+API Client package for AccessiWeather.
 
 This package contains modular API client components extracted from the original
 large api_client.py file for better maintainability and separation of concerns.

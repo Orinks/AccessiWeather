@@ -1,4 +1,5 @@
-"""Weather service for AccessiWeather.
+"""
+Weather service for AccessiWeather.
 
 This module provides a service layer for weather-related operations,
 separating business logic from UI concerns.
@@ -33,9 +34,11 @@ class WeatherService:
         openmeteo_client: OpenMeteoApiClient | None = None,
         config: dict[str, Any] | None = None,
     ):
-        """Initialize the weather service.
+        """
+        Initialize the weather service.
 
         Args:
+        ----
             nws_client: The NWS API client to use for weather data retrieval.
             openmeteo_client: The Open-Meteo API client to use for international weather data.
             config: Configuration dictionary containing settings like data_source.
@@ -115,12 +118,15 @@ class WeatherService:
         self.national_forecast_handler.national_data_timestamp = value
 
     def get_national_forecast_data(self, force_refresh: bool = False) -> dict:
-        """Get nationwide forecast data, including national discussion summaries.
+        """
+        Get nationwide forecast data, including national discussion summaries.
 
         Args:
+        ----
             force_refresh: Whether to force a refresh of the data
 
         Returns:
+        -------
             Dictionary containing national forecast data with structure:
             {
                 "national_discussion_summaries": {
@@ -137,24 +143,29 @@ class WeatherService:
             }
 
         Raises:
+        ------
             ApiClientError: If there was an error retrieving the data
 
         """
         return self.national_forecast_handler.get_national_forecast_data(force_refresh)
 
     def get_forecast(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
-        """Get forecast data for a location.
+        """
+        Get forecast data for a location.
 
         Args:
+        ----
             lat: Latitude of the location.
             lon: Longitude of the location.
             force_refresh: Whether to force a refresh of the data from the API
                 instead of using cache.
 
         Returns:
+        -------
             Dictionary containing forecast data.
 
         Raises:
+        ------
             ApiClientError: If there was an error retrieving the forecast.
 
         """
@@ -163,52 +174,64 @@ class WeatherService:
     def get_hourly_forecast(
         self, lat: float, lon: float, force_refresh: bool = False
     ) -> dict[str, Any]:
-        """Get hourly forecast data for a location.
+        """
+        Get hourly forecast data for a location.
 
         Args:
+        ----
             lat: Latitude of the location.
             lon: Longitude of the location.
             force_refresh: Whether to force a refresh of the data from the API
                 instead of using cache.
 
         Returns:
+        -------
             Dictionary containing hourly forecast data.
 
         Raises:
+        ------
             ApiClientError: If there was an error retrieving the hourly forecast.
 
         """
         return self.weather_data_retrieval.get_hourly_forecast(lat, lon, force_refresh)
 
     def get_stations(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
-        """Get observation stations for a location.
+        """
+        Get observation stations for a location.
 
         Args:
+        ----
             lat: Latitude of the location.
             lon: Longitude of the location.
             force_refresh: Whether to force a refresh of the data from the API
                 instead of using cache.
 
         Returns:
+        -------
             Dictionary containing observation stations data.
 
         Raises:
+        ------
             ApiClientError: If there was an error retrieving the stations.
 
         """
         return self.weather_data_retrieval.get_stations(lat, lon, force_refresh)
 
     def get_point_data(self, lat: float, lon: float) -> dict[str, Any]:
-        """Get NWS point data for a location.
+        """
+        Get NWS point data for a location.
 
         Args:
+        ----
             lat: Latitude of the location.
             lon: Longitude of the location.
 
         Returns:
+        -------
             Dictionary containing NWS point data.
 
         Raises:
+        ------
             ApiClientError: If there was an error retrieving the point data.
 
         """
@@ -217,18 +240,22 @@ class WeatherService:
     def get_current_conditions(
         self, lat: float, lon: float, force_refresh: bool = False
     ) -> dict[str, Any]:
-        """Get current weather conditions for a location.
+        """
+        Get current weather conditions for a location.
 
         Args:
+        ----
             lat: Latitude of the location.
             lon: Longitude of the location.
             force_refresh: Whether to force a refresh of the data from the API
                 instead of using cache.
 
         Returns:
+        -------
             Dictionary containing current weather conditions.
 
         Raises:
+        ------
             ApiClientError: If there was an error retrieving the current conditions.
 
         """
@@ -243,9 +270,11 @@ class WeatherService:
         radius: float = 50,
         precise_location: bool = True,
     ) -> dict[str, Any]:
-        """Get weather alerts for a location.
+        """
+        Get weather alerts for a location.
 
         Args:
+        ----
             lat: Latitude of the location.
             lon: Longitude of the location.
             force_refresh: Whether to force a refresh of the data from the API
@@ -256,9 +285,11 @@ class WeatherService:
                              or for the entire state.
 
         Returns:
+        -------
             Dictionary containing weather alerts.
 
         Raises:
+        ------
             ApiClientError: If there was an error retrieving the alerts.
 
         """
@@ -267,32 +298,39 @@ class WeatherService:
         )
 
     def get_discussion(self, lat: float, lon: float, force_refresh: bool = False) -> str | None:
-        """Get forecast discussion for a location.
+        """
+        Get forecast discussion for a location.
 
         Args:
+        ----
             lat: Latitude of the location.
             lon: Longitude of the location.
             force_refresh: Whether to force a refresh of the data from the API
                 instead of using cache.
 
         Returns:
+        -------
             String containing forecast discussion text, or None if not available.
 
         Raises:
+        ------
             ApiClientError: If there was an error retrieving the discussion.
 
         """
         return self.alerts_discussion_handler.get_discussion(lat, lon, force_refresh)
 
     def process_alerts(self, alerts_data: dict[str, Any]) -> tuple[list[dict[str, Any]], int, int]:
-        """Process alerts data and return processed alerts with counts.
+        """
+        Process alerts data and return processed alerts with counts.
 
         This method delegates to the WeatherNotifier for processing.
 
         Args:
+        ----
             alerts_data: Raw alerts data from the API.
 
         Returns:
+        -------
             Tuple containing:
             - List of processed alert objects
             - Number of new alerts

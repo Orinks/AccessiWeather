@@ -1,4 +1,5 @@
-"""Open-Meteo API wrapper for AccessiWeather.
+"""
+Open-Meteo API wrapper for AccessiWeather.
 
 This module provides the OpenMeteoApiWrapper class that handles Open-Meteo-specific
 weather API operations, inheriting from BaseApiWrapper for shared functionality.
@@ -23,9 +24,11 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
     """Open-Meteo-specific API wrapper that handles Open-Meteo weather operations."""
 
     def __init__(self, **kwargs):
-        """Initialize the Open-Meteo API wrapper.
+        """
+        Initialize the Open-Meteo API wrapper.
 
         Args:
+        ----
             **kwargs: Arguments passed to BaseApiWrapper
 
         """

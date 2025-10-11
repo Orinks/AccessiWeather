@@ -1,4 +1,5 @@
-"""Simplified weather API client for AccessiWeather.
+"""
+Simplified weather API client for AccessiWeather.
 
 This module provides a direct, async weather API client that fetches data
 from NWS and OpenMeteo APIs without complex service layer abstractions.

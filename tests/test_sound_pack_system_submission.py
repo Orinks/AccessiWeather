@@ -113,7 +113,8 @@ def _github_request_side_effect(method: str, url: str, **kwargs):
 
 @pytest.mark.asyncio
 async def test_submit_pack_no_config_manager(tmp_pack_dir):
-    """Test submit_pack works without config manager using default backend URL.
+    """
+    Test submit_pack works without config manager using default backend URL.
 
     We mock the backend client to avoid real network calls and assert success.
     """

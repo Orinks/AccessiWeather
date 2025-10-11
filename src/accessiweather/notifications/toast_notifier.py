@@ -1,4 +1,5 @@
-"""Toast notification module for AccessiWeather.
+"""
+Toast notification module for AccessiWeather.
 
 This module provides cross-platform toast notification functionality
 with safe error handling for test environments.
@@ -24,7 +25,8 @@ except ImportError as e:
 
 
 class SafeDesktopNotifier:
-    """A wrapper around desktop-notifier that provides synchronous interface.
+    """
+    A wrapper around desktop-notifier that provides synchronous interface.
 
     This class wraps the async desktop-notifier API to provide a synchronous
     interface compatible with the existing codebase.
@@ -138,7 +140,8 @@ class SafeDesktopNotifier:
         sound_event: str | None = None,
         sound_candidates: list[str] | None = None,
     ) -> bool:
-        """Send a notification synchronously.
+        """
+        Send a notification synchronously.
 
         Optionally specify a specific sound_event or a list of sound_candidates
         to determine which sound to play. candidates take precedence over event.
@@ -175,7 +178,8 @@ class SafeDesktopNotifier:
 
 
 class SafeToastNotifier:
-    """A wrapper around the notification system that handles exceptions.
+    """
+    A wrapper around the notification system that handles exceptions.
 
     Provides cross-platform notification support using desktop-notifier.
     """

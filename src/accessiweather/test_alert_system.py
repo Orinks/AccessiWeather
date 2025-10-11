@@ -1,4 +1,5 @@
-"""Test script for the enhanced alert system.
+"""
+Test script for the enhanced alert system.
 
 This module provides tests for the AlertManager, AlertNotificationSystem,
 and integration with the main application.

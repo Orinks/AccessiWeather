@@ -1,4 +1,5 @@
-"""Temperature utility functions for AccessiWeather Simple.
+"""
+Temperature utility functions for AccessiWeather Simple.
 
 This module provides utility functions for temperature conversion and formatting,
 copied from the wx version for consistency.
@@ -28,12 +29,15 @@ TEMP_UNIT_CELSIUS = "C"
 
 
 def celsius_to_fahrenheit(celsius: float) -> float:
-    """Convert Celsius to Fahrenheit.
+    """
+    Convert Celsius to Fahrenheit.
 
     Args:
+    ----
         celsius: Temperature in Celsius
 
     Returns:
+    -------
         Temperature in Fahrenheit
 
     """
@@ -41,12 +45,15 @@ def celsius_to_fahrenheit(celsius: float) -> float:
 
 
 def fahrenheit_to_celsius(fahrenheit: float) -> float:
-    """Convert Fahrenheit to Celsius.
+    """
+    Convert Fahrenheit to Celsius.
 
     Args:
+    ----
         fahrenheit: Temperature in Fahrenheit
 
     Returns:
+    -------
         Temperature in Celsius
 
     """
@@ -78,14 +85,17 @@ def calculate_dewpoint(
     *,
     unit: TemperatureUnit | str = TemperatureUnit.FAHRENHEIT,
 ) -> float | None:
-    """Calculate dewpoint temperature using the Magnus approximation.
+    """
+    Calculate dewpoint temperature using the Magnus approximation.
 
     Args:
+    ----
         temperature: Temperature measurement corresponding to the provided unit.
         humidity: Relative humidity percentage (0-100).
         unit: Unit of the provided temperature measurement.
 
     Returns:
+    -------
         Dewpoint in the same unit family as requested, or None when inputs are invalid.
 
     """
@@ -137,9 +147,11 @@ def format_temperature(
     precision: int = 1,
     smart_precision: bool = True,
 ) -> str:
-    """Format temperature for display based on user preference.
+    """
+    Format temperature for display based on user preference.
 
     Args:
+    ----
         temperature: Temperature value (assumed to be in Fahrenheit if temperature_c is None)
         unit: Temperature unit preference
         temperature_c: Temperature in Celsius (if available)
@@ -147,6 +159,7 @@ def format_temperature(
         smart_precision: If True, use 0 decimals for whole numbers
 
     Returns:
+    -------
         Formatted temperature string
 
     """
@@ -183,13 +196,16 @@ def format_temperature(
 def get_temperature_values(
     temperature: int | float | None, temperature_c: int | float | None = None
 ) -> tuple[float | None, float | None]:
-    """Get both Fahrenheit and Celsius values from available temperature data.
+    """
+    Get both Fahrenheit and Celsius values from available temperature data.
 
     Args:
+    ----
         temperature: Temperature value (assumed to be in Fahrenheit if temperature_c is None)
         temperature_c: Temperature in Celsius (if available)
 
     Returns:
+    -------
         Tuple of (fahrenheit, celsius) values
 
     """

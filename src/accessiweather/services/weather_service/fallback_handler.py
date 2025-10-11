@@ -1,4 +1,5 @@
-"""Fallback API handling for WeatherService.
+"""
+Fallback API handling for WeatherService.
 
 This module handles API fallback logic when the primary API fails,
 providing resilient weather data retrieval.
@@ -25,9 +26,11 @@ class FallbackHandler:
         openmeteo_mapper: OpenMeteoMapper,
         api_client_manager,  # Type hint would create circular import
     ):
-        """Initialize the fallback handler.
+        """
+        Initialize the fallback handler.
 
         Args:
+        ----
             nws_client: The NWS API client
             openmeteo_client: The Open-Meteo API client
             openmeteo_mapper: The Open-Meteo data mapper
@@ -42,9 +45,11 @@ class FallbackHandler:
     def try_fallback_api(
         self, lat: float, lon: float, method_name: str, *args, **kwargs
     ) -> dict[str, Any] | None:
-        """Try fallback API when the primary API fails.
+        """
+        Try fallback API when the primary API fails.
 
         Args:
+        ----
             lat: Latitude of the location
             lon: Longitude of the location
             method_name: Name of the method to call on the fallback API
@@ -52,6 +57,7 @@ class FallbackHandler:
             **kwargs: Additional keyword arguments to pass to the method
 
         Returns:
+        -------
             Dictionary containing the fallback API response, or None if fallback fails
 
         """

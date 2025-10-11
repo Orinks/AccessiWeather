@@ -104,6 +104,10 @@ async def test_auto_mode_enriches_with_visual_crossing_alerts():
     # Setup
     location = Location(name="New York", latitude=40.7128, longitude=-74.0060)
     client = WeatherClient(data_source="auto", visual_crossing_api_key="test_key")
+    client.air_quality_enabled = False
+    client.pollen_enabled = False
+    client.air_quality_notify_threshold = 0
+    client.environmental_client = None
 
     # Mock NWS data
     nws_current = CurrentConditions(temperature_f=72.0, temperature_c=22.2, condition="Clear")
@@ -112,6 +116,7 @@ async def test_auto_mode_enriches_with_visual_crossing_alerts():
     # Mock Visual Crossing alerts
     vc_alert = WeatherAlert(
         id="vc-alert-1",
+        title="Heat Advisory until 8 PM",
         event="Heat Advisory",
         severity="Moderate",
         headline="Heat Advisory until 8 PM",
@@ -284,10 +289,15 @@ async def test_visual_crossing_alerts_merged_with_existing():
     """Test that Visual Crossing alerts are merged with existing alerts, not replaced."""
     location = Location(name="New York", latitude=40.7128, longitude=-74.0060)
     client = WeatherClient(data_source="auto", visual_crossing_api_key="test_key")
+    client.air_quality_enabled = False
+    client.pollen_enabled = False
+    client.air_quality_notify_threshold = 0
+    client.environmental_client = None
 
     # Mock NWS alert
     nws_alert = WeatherAlert(
         id="nws-alert-1",
+        title="Flood Warning until midnight",
         event="Flood Warning",
         severity="Severe",
         headline="Flood Warning until midnight",
@@ -299,6 +309,7 @@ async def test_visual_crossing_alerts_merged_with_existing():
     # Mock Visual Crossing alert (different)
     vc_alert = WeatherAlert(
         id="vc-alert-1",
+        title="Heat Advisory until 8 PM",
         event="Heat Advisory",
         severity="Moderate",
         headline="Heat Advisory until 8 PM",

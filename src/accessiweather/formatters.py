@@ -1,4 +1,5 @@
-"""Legacy-compatible text formatter wrappers.
+"""
+Legacy-compatible text formatter wrappers.
 
 These thin wrappers keep existing call-sites working while the application migrates
 to the structured :class:`WeatherPresenter` API.

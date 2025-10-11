@@ -1,4 +1,5 @@
-"""Logging configuration for AccessiWeather application.
+"""
+Logging configuration for AccessiWeather application.
 
 This module sets up logging for the application with both console and file output.
 """
@@ -10,9 +11,11 @@ from pathlib import Path
 
 
 def setup_logging(log_level=logging.INFO):
-    """Set up logging for the application.
+    """
+    Set up logging for the application.
 
     Args:
+    ----
         log_level: Logging level (default: INFO)
 
     """

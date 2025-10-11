@@ -1,4 +1,5 @@
-"""Provider coordinator for weather API operations.
+"""
+Provider coordinator for weather API operations.
 
 This module provides the NoaaApiWrapper class that coordinates between different
 weather API providers (NWS and Open-Meteo) while maintaining backward compatibility
@@ -15,7 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 class NoaaApiWrapper:
-    """Provider coordinator for weather API operations.
+    """
+    Provider coordinator for weather API operations.
 
     This class coordinates between different weather API providers (NWS and Open-Meteo)
     while maintaining backward compatibility with the original NoaaApiWrapper interface.
@@ -33,9 +35,11 @@ class NoaaApiWrapper:
         retry_initial_wait: float = 5.0,
         preferred_provider: str = "auto",
     ):
-        """Initialize the weather API coordinator.
+        """
+        Initialize the weather API coordinator.
 
         Args:
+        ----
             user_agent: User agent string for API requests
             contact_info: Optional contact information for API identification
             enable_caching: Whether to enable caching of API responses
@@ -73,13 +77,16 @@ class NoaaApiWrapper:
         logger.info(f"Available providers: NWS, Open-Meteo")
 
     def _select_provider(self, lat: float, lon: float) -> str:
-        """Select the appropriate weather provider based on location and configuration.
+        """
+        Select the appropriate weather provider based on location and configuration.
 
         Args:
+        ----
             lat: Latitude
             lon: Longitude
 
         Returns:
+        -------
             Provider name ("nws" or "openmeteo")
 
         """
@@ -99,12 +106,15 @@ class NoaaApiWrapper:
         return "nws"
 
     def _get_provider_wrapper(self, provider: str):
-        """Get the wrapper instance for the specified provider.
+        """
+        Get the wrapper instance for the specified provider.
 
         Args:
+        ----
             provider: Provider name ("nws" or "openmeteo")
 
         Returns:
+        -------
             Provider wrapper instance
 
         """
@@ -117,15 +127,18 @@ class NoaaApiWrapper:
     def _execute_with_fallback(
         self, method_name: str, lat: float, lon: float, **kwargs
     ) -> dict[str, Any]:
-        """Execute a method with provider fallback logic.
+        """
+        Execute a method with provider fallback logic.
 
         Args:
+        ----
             method_name: Name of the method to call
             lat: Latitude
             lon: Longitude
             **kwargs: Additional arguments for the method
 
         Returns:
+        -------
             Result from the successful provider
 
         """
@@ -156,42 +169,51 @@ class NoaaApiWrapper:
 
     # Core weather data methods - delegate to appropriate provider
     def get_current_conditions(self, lat: float, lon: float, **kwargs) -> dict[str, Any]:
-        """Get current weather conditions for a location.
+        """
+        Get current weather conditions for a location.
 
         Args:
+        ----
             lat: Latitude
             lon: Longitude
             **kwargs: Additional arguments (force_refresh, etc.)
 
         Returns:
+        -------
             Current weather conditions data
 
         """
         return self._execute_with_fallback("get_current_conditions", lat, lon, **kwargs)
 
     def get_forecast(self, lat: float, lon: float, **kwargs) -> dict[str, Any]:
-        """Get forecast for a location.
+        """
+        Get forecast for a location.
 
         Args:
+        ----
             lat: Latitude
             lon: Longitude
             **kwargs: Additional arguments (force_refresh, etc.)
 
         Returns:
+        -------
             Forecast data
 
         """
         return self._execute_with_fallback("get_forecast", lat, lon, **kwargs)
 
     def get_hourly_forecast(self, lat: float, lon: float, **kwargs) -> dict[str, Any]:
-        """Get hourly forecast for a location.
+        """
+        Get hourly forecast for a location.
 
         Args:
+        ----
             lat: Latitude
             lon: Longitude
             **kwargs: Additional arguments (force_refresh, etc.)
 
         Returns:
+        -------
             Hourly forecast data
 
         """
@@ -252,9 +274,11 @@ class NoaaApiWrapper:
         return self._select_provider(lat, lon)
 
     def set_preferred_provider(self, provider: str) -> None:
-        """Set the preferred provider.
+        """
+        Set the preferred provider.
 
         Args:
+        ----
             provider: Provider name ("nws", "openmeteo", "auto")
 
         """

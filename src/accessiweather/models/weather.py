@@ -122,12 +122,15 @@ class HourlyForecast:
         return len(self.periods) > 0
 
     def get_next_hours(self, count: int = 6) -> list[HourlyForecastPeriod]:
-        """Get the next N hours of forecast data.
+        """
+        Get the next N hours of forecast data.
 
         Args:
+        ----
             count: Number of hours to return (default: 6)
 
         Returns:
+        -------
             List of hourly forecast periods, up to the requested count
 
         """

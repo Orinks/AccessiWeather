@@ -1,4 +1,5 @@
-"""Format string parser for customizable text display.
+"""
+Format string parser for customizable text display.
 
 This module provides functionality to parse format strings with placeholders
 and substitute them with actual values.
@@ -12,7 +13,8 @@ logger = logging.getLogger(__name__)
 
 
 class FormatStringParser:
-    """Parser for format strings with placeholders.
+    """
+    Parser for format strings with placeholders.
 
     This class provides functionality to parse format strings with placeholders
     enclosed in curly braces (e.g., {temp}) and substitute them with actual values.
@@ -45,12 +47,15 @@ class FormatStringParser:
         self.placeholder_pattern = re.compile(r"\{([a-zA-Z_]+)\}")
 
     def get_placeholders(self, format_string: str) -> list[str]:
-        """Extract placeholders from a format string.
+        """
+        Extract placeholders from a format string.
 
         Args:
+        ----
             format_string: The format string to parse.
 
         Returns:
+        -------
             List of placeholder names found in the format string.
 
         """
@@ -61,12 +66,15 @@ class FormatStringParser:
         return self.placeholder_pattern.findall(format_string)
 
     def validate_format_string(self, format_string: str) -> tuple[bool, str | None]:
-        """Validate a format string.
+        """
+        Validate a format string.
 
         Args:
+        ----
             format_string: The format string to validate.
 
         Returns:
+        -------
             Tuple of (is_valid, error_message). If the format string is valid,
             is_valid will be True and error_message will be None. Otherwise,
             is_valid will be False and error_message will contain a description
@@ -94,13 +102,16 @@ class FormatStringParser:
         return True, None
 
     def format_string(self, format_string: str, data: dict[str, Any]) -> str:
-        """Format a string by substituting placeholders with values from data.
+        """
+        Format a string by substituting placeholders with values from data.
 
         Args:
+        ----
             format_string: The format string with placeholders.
             data: Dictionary containing values to substitute for placeholders.
 
         Returns:
+        -------
             The formatted string with placeholders replaced by values.
 
         """
@@ -128,9 +139,11 @@ class FormatStringParser:
 
     @classmethod
     def get_supported_placeholders_help(cls) -> str:
-        """Get a help string describing all supported placeholders.
+        """
+        Get a help string describing all supported placeholders.
 
-        Returns:
+        Returns
+        -------
             A formatted string with all supported placeholders and their descriptions.
 
         """

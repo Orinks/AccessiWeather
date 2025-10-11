@@ -1,4 +1,5 @@
-"""API package for AccessiWeather.
+"""
+API package for AccessiWeather.
 
 This package contains modular API components extracted from the original
 large api_wrapper.py file for better maintainability and separation of concerns.

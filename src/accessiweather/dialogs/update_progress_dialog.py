@@ -1,4 +1,5 @@
-"""Update progress dialog for AccessiWeather Toga application.
+"""
+Update progress dialog for AccessiWeather Toga application.
 
 This module provides a progress dialog for displaying update download and
 installation progress with accessibility features.
@@ -47,9 +48,11 @@ class UpdateProgressDialog:
     """Dialog for displaying update progress with accessibility features."""
 
     def __init__(self, app, title: str = "Updating AccessiWeather"):
-        """Initialize the update progress dialog.
+        """
+        Initialize the update progress dialog.
 
         Args:
+        ----
             app: The main application instance
             title: Dialog title
 
@@ -178,9 +181,11 @@ class UpdateProgressDialog:
             logger.warning(f"Could not set initial focus: {e}")
 
     async def update_progress(self, progress: float, downloaded: int = 0, total: int = 0):
-        """Update the progress display.
+        """
+        Update the progress display.
 
         Args:
+        ----
             progress: Progress percentage (0-100)
             downloaded: Bytes downloaded
             total: Total bytes to download
@@ -225,9 +230,11 @@ class UpdateProgressDialog:
             logger.error(f"Failed to update progress: {e}")
 
     async def set_status(self, status: str, detail: str = ""):
-        """Set the status and detail text.
+        """
+        Set the status and detail text.
 
         Args:
+        ----
             status: Main status message
             detail: Optional detail message
 
@@ -262,9 +269,11 @@ class UpdateProgressDialog:
             self.future.set_result("cancelled")
 
     async def complete_success(self, message: str = "Update completed successfully"):
-        """Complete the dialog with success.
+        """
+        Complete the dialog with success.
 
         Args:
+        ----
             message: Success message to display
 
         """
@@ -289,9 +298,11 @@ class UpdateProgressDialog:
             logger.error(f"Failed to complete success: {e}")
 
     async def complete_error(self, error_message: str):
-        """Complete the dialog with an error.
+        """
+        Complete the dialog with an error.
 
         Args:
+        ----
             error_message: Error message to display
 
         """
@@ -327,9 +338,11 @@ class UpdateNotificationDialog:
     """Simple notification dialog for update availability."""
 
     def __init__(self, app, update_info, platform_info):
-        """Initialize the notification dialog.
+        """
+        Initialize the notification dialog.
 
         Args:
+        ----
             app: The main application instance
             update_info: Information about the available update
             platform_info: Platform information
@@ -340,9 +353,11 @@ class UpdateNotificationDialog:
         self.platform_info = platform_info
 
     async def show(self) -> str:
-        """Show the update notification dialog.
+        """
+        Show the update notification dialog.
 
-        Returns:
+        Returns
+        -------
             User's choice: 'download', 'later', or 'skip'
 
         """

@@ -1,4 +1,5 @@
-"""Alerts and discussions operations for NWS API wrapper.
+"""
+Alerts and discussions operations for NWS API wrapper.
 
 This module handles weather alerts, forecast discussions, and national
 weather products from various centers.
@@ -17,9 +18,11 @@ class NwsAlertsDiscussions:
     """Handles NWS alerts and discussions operations."""
 
     def __init__(self, wrapper_instance):
-        """Initialize with reference to the main wrapper.
+        """
+        Initialize with reference to the main wrapper.
 
         Args:
+        ----
             wrapper_instance: The main NwsApiWrapper instance
 
         """
@@ -33,9 +36,11 @@ class NwsAlertsDiscussions:
         precise_location: bool = True,
         force_refresh: bool = False,
     ) -> dict[str, Any]:
-        """Get alerts for a location.
+        """
+        Get alerts for a location.
 
         Args:
+        ----
             lat: Latitude
             lon: Longitude
             radius: Search radius in miles
@@ -43,9 +48,11 @@ class NwsAlertsDiscussions:
             force_refresh: Whether to force refresh cached data
 
         Returns:
+        -------
             Alerts data dictionary
 
         Raises:
+        ------
             ApiClientError: For client-related errors
 
         """
@@ -196,14 +203,17 @@ class NwsAlertsDiscussions:
             raise ApiClientError(f"Unable to retrieve alerts data: {str(e)}") from e
 
     def get_discussion(self, lat: float, lon: float, force_refresh: bool = False) -> str | None:
-        """Get forecast discussion for a location.
+        """
+        Get forecast discussion for a location.
 
         Args:
+        ----
             lat: Latitude
             lon: Longitude
             force_refresh: Whether to force refresh cached data
 
         Returns:
+        -------
             Discussion text or None if not available
 
         """
@@ -265,14 +275,17 @@ class NwsAlertsDiscussions:
     def get_national_product(
         self, product_type: str, location: str, force_refresh: bool = False
     ) -> str | None:
-        """Get a national product from a specific center.
+        """
+        Get a national product from a specific center.
 
         Args:
+        ----
             product_type: Type of product to retrieve
             location: Location identifier
             force_refresh: Whether to force refresh cached data
 
         Returns:
+        -------
             Product text or None if not available
 
         """
@@ -321,12 +334,15 @@ class NwsAlertsDiscussions:
             return None
 
     def get_national_forecast_data(self, force_refresh: bool = False) -> dict[str, Any]:
-        """Get national forecast data from various centers.
+        """
+        Get national forecast data from various centers.
 
         Args:
+        ----
             force_refresh: Whether to force refresh cached data
 
         Returns:
+        -------
             Dictionary containing national forecast data from various centers
 
         """

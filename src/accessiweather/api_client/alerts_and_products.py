@@ -1,4 +1,5 @@
-"""Alerts and national products functionality for NOAA API client.
+"""
+Alerts and national products functionality for NOAA API client.
 
 This module provides methods for weather alerts, location identification,
 and national weather products retrieval.
@@ -12,7 +13,8 @@ logger = logging.getLogger(__name__)
 
 
 class AlertsAndProductsMixin:
-    """Mixin class providing alerts and national products functionality.
+    """
+    Mixin class providing alerts and national products functionality.
 
     This mixin expects the following methods to be provided by the implementing class:
     - _make_request(endpoint_or_url, params=None, use_full_url=False, force_refresh=False)
@@ -57,9 +59,11 @@ class AlertsAndProductsMixin:
         precise_location: bool = True,
         force_refresh: bool = False,
     ) -> dict[str, Any]:
-        """Get active weather alerts for the given coordinates.
+        """
+        Get active weather alerts for the given coordinates.
 
         Args:
+        ----
             lat: Latitude of the location
             lon: Longitude of the location
             radius: Radius in miles to search for alerts
@@ -69,6 +73,7 @@ class AlertsAndProductsMixin:
             force_refresh: If True, bypass cache and fetch fresh data
 
         Returns:
+        -------
             Dictionary containing alert data
 
         """
@@ -126,13 +131,16 @@ class AlertsAndProductsMixin:
         )
 
     def get_alerts_direct(self, url: str, force_refresh: bool = False) -> dict[str, Any]:
-        """Get active weather alerts directly from a provided URL.
+        """
+        Get active weather alerts directly from a provided URL.
 
         Args:
+        ----
             url: Full URL to the alerts endpoint
             force_refresh: If True, bypass cache and fetch fresh data
 
         Returns:
+        -------
             Dictionary containing alert data
 
         """
@@ -140,14 +148,17 @@ class AlertsAndProductsMixin:
         return self._make_request(url, use_full_url=True, force_refresh=force_refresh)
 
     def get_discussion(self, lat: float, lon: float, force_refresh: bool = False) -> str | None:
-        """Get the forecast discussion for a location.
+        """
+        Get the forecast discussion for a location.
 
         Args:
+        ----
             lat: Latitude
             lon: Longitude
             force_refresh: If True, bypass cache and fetch fresh data
 
         Returns:
+        -------
             Text of the forecast discussion or None if not available
 
         """
@@ -223,14 +234,17 @@ class AlertsAndProductsMixin:
     def get_national_product(
         self, product_type: str, location: str, force_refresh: bool = False
     ) -> str | None:
-        """Get a national product from a specific center.
+        """
+        Get a national product from a specific center.
 
         Args:
+        ----
             product_type: Product type code (e.g., "FXUS01")
             location: Location code (e.g., "KWNH")
             force_refresh: Whether to force a refresh of the data
 
         Returns:
+        -------
             Text of the product or None if not available
 
         """
@@ -269,9 +283,11 @@ class AlertsAndProductsMixin:
             return None
 
     def get_national_forecast_data(self, force_refresh: bool = False) -> dict[str, Any]:
-        """Get national forecast data from various centers.
+        """
+        Get national forecast data from various centers.
 
-        Returns:
+        Returns
+        -------
             Dictionary containing national forecast data
 
         """
@@ -297,9 +313,11 @@ class AlertsAndProductsMixin:
         }
 
     def get_national_discussion_summary(self, force_refresh: bool = False) -> dict:
-        """Fetch and summarize the latest WPC Short Range and SPC Day 1 discussions.
+        """
+        Fetch and summarize the latest WPC Short Range and SPC Day 1 discussions.
 
-        Returns:
+        Returns
+        -------
             dict: Summary of WPC and SPC discussions
 
         """
