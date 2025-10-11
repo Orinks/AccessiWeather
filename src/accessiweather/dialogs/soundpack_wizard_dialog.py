@@ -1,4 +1,5 @@
-"""Wizard dialog for creating a new sound pack.
+"""
+Wizard dialog for creating a new sound pack.
 
 Extracted from SoundPackManagerDialog to a dedicated module.
 """
@@ -31,7 +32,8 @@ class WizardState:
 
 
 class SoundPackWizardDialog:
-    """Guided wizard for creating a new sound pack.
+    """
+    Guided wizard for creating a new sound pack.
 
     Parameters
     ----------

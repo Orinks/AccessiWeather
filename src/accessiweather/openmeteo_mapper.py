@@ -1,4 +1,5 @@
-"""Data mapper for Open-Meteo API responses.
+"""
+Data mapper for Open-Meteo API responses.
 
 This module provides functionality to transform Open-Meteo API responses
 into the internal data format expected by WeatherService and UI components.
@@ -27,21 +28,26 @@ class OpenMeteoMapper:
         """Initialize the mapper."""
 
     def map_current_conditions(self, openmeteo_data: dict[str, Any]) -> dict[str, Any]:
-        """Map Open-Meteo current weather data to NWS-compatible format.
+        """
+        Map Open-Meteo current weather data to NWS-compatible format.
 
         Args:
+        ----
             openmeteo_data: Raw response from Open-Meteo current weather API
 
         Returns:
+        -------
             Dictionary in NWS current conditions format
 
         """
         try:
             current = openmeteo_data.get("current", {})
             current_units = openmeteo_data.get("current_units", {})
+            daily = openmeteo_data.get("daily", {})
 
             logger.debug(f"Open-Meteo current data keys: {list(current.keys())}")
             logger.debug(f"Open-Meteo current units: {current_units}")
+            logger.debug(f"Open-Meteo daily data keys: {list(daily.keys()) if daily else 'None'}")
 
             # Map the data to NWS-like structure
             temperature_unit = current_units.get("temperature_2m", "°C")
@@ -136,6 +142,13 @@ class OpenMeteoMapper:
                             "rawString": str(current.get("weather_code", 0)),
                         }
                     ],
+                    # Sunrise/sunset from daily data (today's values)
+                    "sunrise": (
+                        daily.get("sunrise", [None])[0] if daily and daily.get("sunrise") else None
+                    ),
+                    "sunset": (
+                        daily.get("sunset", [None])[0] if daily and daily.get("sunset") else None
+                    ),
                 }
             }
 
@@ -147,12 +160,15 @@ class OpenMeteoMapper:
             raise ValueError(f"Failed to map current conditions: {str(e)}") from e
 
     def map_forecast(self, openmeteo_data: dict[str, Any]) -> dict[str, Any]:
-        """Map Open-Meteo daily forecast data to NWS-compatible format.
+        """
+        Map Open-Meteo daily forecast data to NWS-compatible format.
 
         Args:
+        ----
             openmeteo_data: Raw response from Open-Meteo forecast API
 
         Returns:
+        -------
             Dictionary in NWS forecast format
 
         """
@@ -270,12 +286,15 @@ class OpenMeteoMapper:
             raise ValueError(f"Failed to map forecast: {str(e)}") from e
 
     def map_hourly_forecast(self, openmeteo_data: dict[str, Any]) -> dict[str, Any]:
-        """Map Open-Meteo hourly forecast data to NWS-compatible format.
+        """
+        Map Open-Meteo hourly forecast data to NWS-compatible format.
 
         Args:
+        ----
             openmeteo_data: Raw response from Open-Meteo hourly forecast API
 
         Returns:
+        -------
             Dictionary in NWS hourly forecast format
 
         """

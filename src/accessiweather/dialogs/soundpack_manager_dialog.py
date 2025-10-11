@@ -1,4 +1,5 @@
-"""Compatibility adapter for the Sound Pack Manager dialog.
+"""
+Compatibility adapter for the Sound Pack Manager dialog.
 
 This module re-exports the new modular implementation to preserve existing
 imports (tests and callers may import SoundPackManagerDialog from here).

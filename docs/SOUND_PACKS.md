@@ -94,7 +94,24 @@ Currently supported sound types:
 
 ## Creating Custom Sound Packs
 
-### Method 1: Manual Creation
+### Method 1: Creation Wizard (Recommended)
+
+The Sound Pack Manager includes a built-in wizard to guide you through creating custom sound packs:
+
+1. Open the Sound Pack Manager
+2. Click the **"Create Sound Pack"** button
+3. Follow the wizard steps:
+   - Enter pack name, author, and description
+   - Select which alert categories you want custom sounds for
+   - Choose audio files for each selected category
+   - Preview sounds before finalizing
+4. The wizard will create and configure your new sound pack
+
+**Note:** The wizard is the recommended way to create sound packs through the UI, ensuring proper structure and validation.
+
+### Method 2: Manual Creation (Advanced)
+
+For advanced users or automated workflows:
 
 1. Create a new directory in `src/accessiweather/soundpacks/`
 2. Name the directory with a unique identifier (e.g., `my_custom_pack`)
@@ -102,7 +119,9 @@ Currently supported sound types:
 4. Add your WAV audio files to the directory
 5. Restart AccessiWeather to detect the new pack
 
-### Method 2: ZIP Import
+### Method 3: ZIP Import
+
+To import pre-made sound packs:
 
 1. Create a ZIP file containing:
    - `pack.json` file

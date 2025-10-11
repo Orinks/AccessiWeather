@@ -41,10 +41,12 @@ async def get_openmeteo_current_conditions(
             "latitude": location.latitude,
             "longitude": location.longitude,
             "current": "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,pressure_msl",
+            "daily": "sunrise,sunset",
             "temperature_unit": "fahrenheit",
             "wind_speed_unit": "mph",
             "precipitation_unit": "inch",
             "timezone": "auto",
+            "forecast_days": 1,
         }
 
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
@@ -126,6 +128,7 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
     """Parse Open-Meteo current condition payload into a CurrentConditions model."""
     current = data.get("current", {})
     units = data.get("current_units", {})
+    daily = data.get("daily", {})
 
     temp_f, temp_c = normalize_temperature(
         current.get("temperature_2m"), units.get("temperature_2m")
@@ -161,6 +164,23 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         except ValueError:
             logger.debug(f"Failed to parse OpenMeteo timestamp: {timestamp}")
 
+    # Parse sunrise and sunset times from daily data (today's values)
+    sunrise_time = None
+    sunset_time = None
+    if daily:
+        sunrise_list = daily.get("sunrise", [])
+        sunset_list = daily.get("sunset", [])
+        if sunrise_list and len(sunrise_list) > 0:
+            try:
+                sunrise_time = datetime.fromisoformat(sunrise_list[0])
+            except (ValueError, TypeError):
+                logger.debug(f"Failed to parse sunrise time: {sunrise_list[0]}")
+        if sunset_list and len(sunset_list) > 0:
+            try:
+                sunset_time = datetime.fromisoformat(sunset_list[0])
+            except (ValueError, TypeError):
+                logger.debug(f"Failed to parse sunset time: {sunset_list[0]}")
+
     return CurrentConditions(
         temperature_f=temp_f,
         temperature_c=temp_c,
@@ -175,6 +195,8 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         pressure_mb=pressure_mb,
         feels_like_f=feels_like_f,
         feels_like_c=feels_like_c,
+        sunrise_time=sunrise_time,
+        sunset_time=sunset_time,
         last_updated=last_updated or datetime.now(),
     )
 

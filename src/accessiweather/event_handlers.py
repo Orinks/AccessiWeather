@@ -1,4 +1,5 @@
-"""Event handler implementations for AccessiWeather.
+"""
+Event handler implementations for AccessiWeather.
 
 This module re-exports handlers from the handlers package for backward
 compatibility.

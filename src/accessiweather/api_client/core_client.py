@@ -1,4 +1,5 @@
-"""Core NOAA API client for AccessiWeather.
+"""
+Core NOAA API client for AccessiWeather.
 
 This module provides the base NoaaApiClient class with core functionality including
 initialization, configuration, HTTP request handling, caching, and rate limiting.
@@ -41,9 +42,11 @@ class NoaaApiClient(AlertsAndProductsMixin):
         enable_caching: bool = False,
         cache_ttl: int = 300,
     ):
-        """Initialize the NOAA API client.
+        """
+        Initialize the NOAA API client.
 
         Args:
+        ----
             user_agent: User agent string for API requests
             contact_info: Optional contact information (website or email)
                           for API identification. If None, uses the app name.
@@ -76,14 +79,17 @@ class NoaaApiClient(AlertsAndProductsMixin):
             logger.info(f"Caching enabled with TTL of {cache_ttl} seconds")
 
     def get_point_data(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
-        """Get metadata about a specific lat/lon point.
+        """
+        Get metadata about a specific lat/lon point.
 
         Args:
+        ----
             lat: Latitude
             lon: Longitude
             force_refresh: If True, bypass cache and fetch fresh data
 
         Returns:
+        -------
             Dict containing point metadata
 
         """
@@ -98,9 +104,11 @@ class NoaaApiClient(AlertsAndProductsMixin):
         use_full_url: bool = False,
         force_refresh: bool = False,
     ) -> dict[str, Any]:
-        """Make a request to the NOAA API.
+        """
+        Make a request to the NOAA API.
 
         Args:
+        ----
             endpoint_or_url: API endpoint path or full URL if use_full_url
                              is True
             params: Query parameters
@@ -108,9 +116,11 @@ class NoaaApiClient(AlertsAndProductsMixin):
             force_refresh: Whether to force a refresh of the data
 
         Returns:
+        -------
             Dict containing the API response
 
         Raises:
+        ------
             NoaaApiError: If the API request fails
 
         """
@@ -255,14 +265,17 @@ class NoaaApiClient(AlertsAndProductsMixin):
             ) from e
 
     def get_forecast(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
-        """Get forecast for a location.
+        """
+        Get forecast for a location.
 
         Args:
+        ----
             lat: Latitude
             lon: Longitude
             force_refresh: Whether to force a refresh of the data
 
         Returns:
+        -------
             Dict containing forecast data
 
         """
@@ -294,14 +307,17 @@ class NoaaApiClient(AlertsAndProductsMixin):
     def get_hourly_forecast(
         self, lat: float, lon: float, force_refresh: bool = False
     ) -> dict[str, Any]:
-        """Get hourly forecast for a location.
+        """
+        Get hourly forecast for a location.
 
         Args:
+        ----
             lat: Latitude
             lon: Longitude
             force_refresh: Whether to force a refresh of the data
 
         Returns:
+        -------
             Dict containing hourly forecast data
 
         """
@@ -333,14 +349,17 @@ class NoaaApiClient(AlertsAndProductsMixin):
             raise
 
     def get_stations(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
-        """Get observation stations for a location.
+        """
+        Get observation stations for a location.
 
         Args:
+        ----
             lat: Latitude
             lon: Longitude
             force_refresh: Whether to force a refresh of the data
 
         Returns:
+        -------
             Dict containing observation stations data
 
         """
@@ -371,14 +390,17 @@ class NoaaApiClient(AlertsAndProductsMixin):
     def get_current_conditions(
         self, lat: float, lon: float, force_refresh: bool = False
     ) -> dict[str, Any]:
-        """Get current weather conditions for a location from the nearest observation station.
+        """
+        Get current weather conditions for a location from the nearest observation station.
 
         Args:
+        ----
             lat: Latitude
             lon: Longitude
             force_refresh: Whether to force a refresh of the data
 
         Returns:
+        -------
             Dict containing current weather conditions
 
         """
@@ -414,15 +436,18 @@ class NoaaApiClient(AlertsAndProductsMixin):
     def identify_location_type(
         self, lat: float, lon: float, force_refresh: bool = False
     ) -> tuple[str | None, str | None]:
-        """Identify the type of location (county, state, etc.) for the given coordinates.
+        """
+        Identify the type of location (county, state, etc.) for the given coordinates.
 
         Args:
+        ----
             lat: Latitude of the location
             lon: Longitude of the location
             force_refresh: Whether to force a refresh of the data from the API
                 instead of using cache
 
         Returns:
+        -------
             Tuple of (location_type, location_id) where location_type is one of
             'county', 'forecast', 'fire', or None if the type cannot be determined.
             location_id is the UGC code for the location or None.

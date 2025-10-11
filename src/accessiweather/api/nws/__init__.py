@@ -1,4 +1,5 @@
-"""NWS API wrapper package for AccessiWeather.
+"""
+NWS API wrapper package for AccessiWeather.
 
 This package provides a modular NWS API wrapper that delegates operations
 to specialized modules while maintaining backward compatibility.
@@ -18,16 +19,19 @@ logger = logging.getLogger(__name__)
 
 
 class NwsApiWrapper(BaseApiWrapper):
-    """NWS-specific API wrapper that handles National Weather Service operations.
+    """
+    NWS-specific API wrapper that handles National Weather Service operations.
 
     This class delegates operations to specialized modules for better maintainability
     while preserving the exact same public interface for backward compatibility.
     """
 
     def __init__(self, **kwargs):
-        """Initialize the NWS API wrapper.
+        """
+        Initialize the NWS API wrapper.
 
         Args:
+        ----
             **kwargs: Arguments passed to BaseApiWrapper
 
         """
@@ -53,7 +57,8 @@ class NwsApiWrapper(BaseApiWrapper):
         return self.core_client.client
 
     def _make_api_request(self, module_func, **kwargs) -> Any:
-        """Call a function from the generated NWS client modules and handle exceptions.
+        """
+        Call a function from the generated NWS client modules and handle exceptions.
 
         Delegates to the core client module.
         """

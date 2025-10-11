@@ -1,4 +1,5 @@
-"""Unit utility functions for AccessiWeather Simple.
+"""
+Unit utility functions for AccessiWeather Simple.
 
 This module provides utility functions for formatting wind speed, pressure, and other units,
 copied from the wx version for consistency.
@@ -17,15 +18,18 @@ def format_wind_speed(
     wind_speed_kph: int | float | None = None,
     precision: int = 1,
 ) -> str:
-    """Format wind speed for display based on user preference.
+    """
+    Format wind speed for display based on user preference.
 
     Args:
+    ----
         wind_speed_mph: Wind speed in miles per hour
         unit: Temperature unit preference (used to determine display format)
         wind_speed_kph: Wind speed in kilometers per hour (if available)
         precision: Number of decimal places to display
 
     Returns:
+    -------
         Formatted wind speed string
 
     """
@@ -53,15 +57,18 @@ def format_pressure(
     pressure_mb: int | float | None = None,
     precision: int = 2,
 ) -> str:
-    """Format pressure for display based on user preference.
+    """
+    Format pressure for display based on user preference.
 
     Args:
+    ----
         pressure_inhg: Pressure in inches of mercury
         unit: Temperature unit preference (used to determine display format)
         pressure_mb: Pressure in millibars/hPa (if available)
         precision: Number of decimal places to display
 
     Returns:
+    -------
         Formatted pressure string
 
     """
@@ -89,15 +96,18 @@ def format_visibility(
     visibility_km: int | float | None = None,
     precision: int = 1,
 ) -> str:
-    """Format visibility for display based on user preference.
+    """
+    Format visibility for display based on user preference.
 
     Args:
+    ----
         visibility_miles: Visibility in miles
         unit: Temperature unit preference (used to determine display format)
         visibility_km: Visibility in kilometers (if available)
         precision: Number of decimal places to display
 
     Returns:
+    -------
         Formatted visibility string
 
     """
@@ -125,15 +135,18 @@ def format_precipitation(
     precipitation_mm: int | float | None = None,
     precision: int = 2,
 ) -> str:
-    """Format precipitation for display based on user preference.
+    """
+    Format precipitation for display based on user preference.
 
     Args:
+    ----
         precipitation_inches: Precipitation in inches
         unit: Temperature unit preference (used to determine display format)
         precipitation_mm: Precipitation in millimeters (if available)
         precision: Number of decimal places to display
 
     Returns:
+    -------
         Formatted precipitation string
 
     """
@@ -156,12 +169,15 @@ def format_precipitation(
 
 
 def convert_wind_direction_to_cardinal(degrees: float | None) -> str:
-    """Convert wind direction from degrees to cardinal direction.
+    """
+    Convert wind direction from degrees to cardinal direction.
 
     Args:
+    ----
         degrees: Wind direction in degrees (0-360)
 
     Returns:
+    -------
         Cardinal direction (N, NE, E, SE, S, SW, W, NW)
 
     """
@@ -193,14 +209,17 @@ def convert_wind_direction_to_cardinal(degrees: float | None) -> str:
 def format_combined_wind(
     wind_speed: float | None, wind_direction: float | str | None, speed_unit: str = "mph"
 ) -> str:
-    """Format combined wind speed and direction for display.
+    """
+    Format combined wind speed and direction for display.
 
     Args:
+    ----
         wind_speed: Wind speed value
         wind_direction: Wind direction (degrees or cardinal)
         speed_unit: Unit for wind speed display
 
     Returns:
+    -------
         Formatted wind string (e.g., "15 mph NW")
 
     """

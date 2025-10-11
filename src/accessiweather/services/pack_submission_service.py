@@ -21,7 +21,8 @@ logger = logging.getLogger(__name__)
 
 
 class PackSubmissionService:
-    """Service to validate a sound pack and submit it to the community repo via backend.
+    """
+    Service to validate a sound pack and submit it to the community repo via backend.
 
     All submissions are handled by the AccessiWeather backend service. No local GitHub
     credentials (tokens or App keys) are required by the client.
@@ -36,9 +37,11 @@ class PackSubmissionService:
         default_base_branch: str = "main",
         config_manager: ConfigManager | None = None,
     ) -> None:
-        """Initialize the submission service.
+        """
+        Initialize the submission service.
 
         Args:
+        ----
             repo_owner: GitHub org/user that hosts community packs
             repo_name: Repository name for packs
             dest_subdir: Subdirectory within repo to place packs
@@ -55,9 +58,11 @@ class PackSubmissionService:
         self.config_manager = config_manager
 
     def _get_backend_client(self) -> GitHubBackendClient:
-        """Get a configured backend client.
+        """
+        Get a configured backend client.
 
-        Returns:
+        Returns
+        -------
             GitHubBackendClient instance
 
         """
@@ -80,21 +85,25 @@ class PackSubmissionService:
         progress_callback: Callable[[float, str], bool | None] | None = None,
         cancel_event: asyncio.Event | None = None,
     ) -> str:
-        """Submit a sound pack as a GitHub PR using the backend service.
+        """
+        Submit a sound pack as a GitHub PR using the backend service.
 
         All submissions now go through the backend service for consistency and security.
         No local GitHub App credentials are required.
 
         Args:
+        ----
             pack_path: Path to the sound pack directory
             pack_meta: Pack metadata dictionary
             progress_callback: Optional progress callback function
             cancel_event: Optional cancellation event
 
         Returns:
+        -------
             URL of the created pull request
 
         Raises:
+        ------
             RuntimeError: If backend service fails or pack validation fails
             asyncio.CancelledError: If operation is cancelled
 
@@ -132,13 +141,15 @@ class PackSubmissionService:
         progress_callback: Callable[[float, str], bool | None] | None = None,
         cancel_event: asyncio.Event | None = None,
     ) -> str:
-        """Submit a sound pack with submitter attribution using the backend service.
+        """
+        Submit a sound pack with submitter attribution using the backend service.
 
         This method includes submitter attribution in the pull request description,
         allowing users to get credit for their contributions while using the backend
         service for all GitHub operations.
 
         Args:
+        ----
             pack_path: Path to the sound pack directory
             pack_meta: Pack metadata dictionary
             submitter_name: Name of the person submitting the pack
@@ -147,9 +158,11 @@ class PackSubmissionService:
             cancel_event: Optional cancellation event
 
         Returns:
+        -------
             URL of the created pull request
 
         Raises:
+        ------
             RuntimeError: If backend service fails or pack validation fails
             asyncio.CancelledError: If operation is cancelled
 

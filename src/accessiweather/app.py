@@ -1,4 +1,5 @@
-"""Simple AccessiWeather Toga application.
+"""
+Simple AccessiWeather Toga application.
 
 This module provides the main Toga application class following BeeWare best practices,
 with a simplified architecture that avoids complex service layers and threading issues.

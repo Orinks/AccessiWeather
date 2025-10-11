@@ -1,4 +1,5 @@
-"""Alert-to-sound mapping utilities.
+"""
+Alert-to-sound mapping utilities.
 
 This module provides a small, dependency-free mapper that determines which
 sound "event" key should be used for a given WeatherAlert. It produces an
@@ -104,7 +105,8 @@ def _extract_hazard(alert: WeatherAlert) -> str | None:
 
 
 def _normalize_event_to_key(text: str | None) -> str | None:
-    """Normalize an alert event/title/headline to a pack key.
+    """
+    Normalize an alert event/title/headline to a pack key.
 
     Example: "Excessive Heat Watch" -> "excessive_heat_watch"
     """
@@ -123,7 +125,8 @@ def _normalize_event_to_key(text: str | None) -> str | None:
 
 
 def get_candidate_sound_events(alert: WeatherAlert) -> list[str]:
-    """Return an ordered list of candidate sound event keys for an alert.
+    """
+    Return an ordered list of candidate sound event keys for an alert.
 
     Order of preference:
     - Exact normalized event key from alert.event (e.g., excessive_heat_watch)

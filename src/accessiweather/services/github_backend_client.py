@@ -1,4 +1,5 @@
-"""GitHub App backend service client for AccessiWeather.
+"""
+GitHub App backend service client for AccessiWeather.
 
 This module provides a client for communicating with the AccessiWeather GitHub App
 backend service, which handles GitHub App authentication and soundpack submissions.
@@ -16,7 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 class GitHubBackendClient:
-    """Client for the AccessiWeather GitHub App backend service.
+    """
+    Client for the AccessiWeather GitHub App backend service.
 
     This client communicates with a backend service that handles GitHub App
     authentication and soundpack submission, eliminating the need to manage
@@ -30,9 +32,11 @@ class GitHubBackendClient:
         user_agent: str | None = None,
         timeout: float = 30.0,
     ) -> None:
-        """Initialize the GitHub backend client.
+        """
+        Initialize the GitHub backend client.
 
         Args:
+        ----
             backend_url: Base URL of the GitHub App backend service
             user_agent: Optional user-agent string
             timeout: Request timeout in seconds
@@ -49,14 +53,17 @@ class GitHubBackendClient:
         *,
         cancel_event: asyncio.Event | None = None,
     ) -> dict[str, Any]:
-        """Upload a ZIP soundpack to the backend which will create a PR.
+        """
+        Upload a ZIP soundpack to the backend which will create a PR.
 
         Args:
+        ----
             zip_bytes: Bytes of the ZIP file containing pack.json and audio files
             filename: Name to send for the multipart file
             cancel_event: Optional cancellation event
 
         Returns:
+        -------
             Dictionary containing PR information from the backend
 
         """
@@ -140,12 +147,15 @@ class GitHubBackendClient:
             raise RuntimeError(f"Unexpected error communicating with backend: {e}") from e
 
     async def health_check(self, *, cancel_event: asyncio.Event | None = None) -> bool:
-        """Check if the backend service is available.
+        """
+        Check if the backend service is available.
 
         Args:
+        ----
             cancel_event: Optional cancellation event
 
         Returns:
+        -------
             True if backend is healthy, False otherwise
 
         """

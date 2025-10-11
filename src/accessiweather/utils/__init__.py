@@ -1,4 +1,5 @@
-"""Utility modules for AccessiWeather Simple.
+"""
+Utility modules for AccessiWeather Simple.
 
 This package provides utility functions for temperature conversion, unit formatting,
 and other common operations, copied from the wx version for consistency.

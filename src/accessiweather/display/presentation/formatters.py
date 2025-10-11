@@ -201,6 +201,28 @@ def get_uv_description(uv_index: float) -> str:
     return "Extreme"
 
 
+def format_sun_time(sun_time: datetime | None) -> str | None:
+    """
+    Format sunrise or sunset time for display.
+
+    Args:
+    ----
+        sun_time: Datetime object for sunrise or sunset
+
+    Returns:
+    -------
+        Formatted time string (e.g., "6:32 AM") or None if time is not available
+
+    """
+    if sun_time is None:
+        return None
+    # Convert to local timezone if the datetime is timezone-aware
+    local_time = sun_time
+    if sun_time.tzinfo is not None:
+        local_time = sun_time.astimezone()
+    return local_time.strftime("%I:%M %p").lstrip("0")
+
+
 def wrap_text(text: str, width: int) -> str:
     """Wrap long text blocks to make fallback text easier to read."""
     return textwrap.fill(text, width=width, break_long_words=False)

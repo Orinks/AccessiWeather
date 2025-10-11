@@ -117,9 +117,14 @@ accessiweather --portable
 ## Features
 
 ### Weather Data Sources
-- **Multiple weather providers**: Choose between National Weather Service (NWS), Open-Meteo, or automatic selection
+- **Multiple weather providers**: Choose between National Weather Service (NWS), Open-Meteo, Visual Crossing, or automatic selection
 - **International support**: Open-Meteo integration provides free weather data for locations worldwide
-- **Automatic provider selection**: Uses NWS for US locations (with alerts) and Open-Meteo for international locations
+- **Smart automatic mode**: Intelligently combines the best features from multiple sources:
+  - Uses NWS for US locations with forecast discussions
+  - Uses Open-Meteo for international locations
+  - Enriches all data with sunrise/sunset times from Open-Meteo (global)
+  - Adds NWS forecast discussions for US locations when available
+  - Includes Visual Crossing alerts globally when API key is configured
 - **Real-time weather data**: Current conditions, forecasts, and alerts from trusted sources
 
 ### Location Management
@@ -189,16 +194,22 @@ accessiweather --portable
 2. **Configure weather data source** (optional):
    - Go to Settings → General tab
    - Choose your preferred weather data source:
-     - **National Weather Service**: US locations only (includes alerts)
-     - **Open-Meteo**: International locations (no alerts)
-     - **Automatic**: Best of both (recommended)
+     - **National Weather Service**: US locations only (includes alerts and discussions)
+     - **Open-Meteo**: International locations (includes sunrise/sunset)
+     - **Visual Crossing**: Global coverage with API key (alerts, forecasts)
+     - **Automatic**: Smart multi-source mode (recommended)
 
 3. **NOAA API setup** (required for NWS data):
    - The application will prompt for your contact information
    - This is required by NOAA's terms of service for API access
    - Your information is stored locally and only sent to NOAA
 
-4. **Customize settings** (optional):
+4. **Visual Crossing API key** (optional for enhanced global alerts):
+   - Sign up at https://www.visualcrossing.com for a free API key
+   - Enter your API key in Settings → General tab
+   - Enables global weather alerts when using automatic mode
+
+5. **Customize settings** (optional):
    - Update interval (1-1440 minutes)
    - Temperature units (Fahrenheit, Celsius, or both)
    - Alert radius and precision
@@ -217,20 +228,29 @@ accessiweather --portable
 
 ### National Weather Service (NWS)
 - **Coverage**: United States only
-- **Features**: Weather alerts, watches, warnings, detailed forecasts
+- **Features**: Weather alerts, watches, warnings, detailed forecasts, forecast discussions
 - **API**: Free, no registration required
 - **Contact info**: Required by NOAA terms of service
 
 ### Open-Meteo
 - **Coverage**: Worldwide
-- **Features**: Current conditions, forecasts (no alerts)
+- **Features**: Current conditions, forecasts, sunrise/sunset times
 - **API**: Free, no registration required
-- **Limitations**: No severe weather alerts available
+- **Limitations**: No severe weather alerts or forecast discussions
+
+### Visual Crossing
+- **Coverage**: Worldwide
+- **Features**: Weather alerts, current conditions, forecasts
+- **API**: Free tier available, requires API key
+- **Best for**: Global weather alerts
 
 ### Automatic Mode (Recommended)
-- **US locations**: Uses NWS (includes alerts)
-- **International locations**: Uses Open-Meteo
-- **Best of both**: Maximum coverage with alerts where available
+- **Smart multi-source**: Combines the best features from each provider
+- **Primary data**: NWS for US locations, Open-Meteo for international
+- **Enrichment**: Adds sunrise/sunset from Open-Meteo globally
+- **Discussions**: Includes NWS forecast discussions for US locations
+- **Alerts**: Uses Visual Crossing for global alerts when API key is configured
+- **Best of all**: Maximum features with intelligent source selection
 
 ## Known Issues
 

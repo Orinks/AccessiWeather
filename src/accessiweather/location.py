@@ -1,4 +1,5 @@
-"""Location handling for AccessiWeather.
+"""
+Location handling for AccessiWeather.
 
 This module handles location storage and retrieval.
 """
@@ -28,9 +29,11 @@ class LocationManager:
         show_nationwide: bool = True,
         data_source: str = "nws",
     ):
-        """Initialize the location manager.
+        """
+        Initialize the location manager.
 
         Args:
+        ----
             config_dir: Directory for config files, defaults to user's home directory
             show_nationwide: Whether to show the Nationwide location
             data_source: The data source to use ('nws' or 'auto')
@@ -207,11 +210,13 @@ class LocationManager:
     def set_locations(
         self, locations: dict[str, dict[str, float]], current: str | None = None
     ) -> None:
-        """Set all locations and optionally the current location.
+        """
+        Set all locations and optionally the current location.
 
         This is used when initializing from saved config or in tests.
 
         Args:
+        ----
             locations: Dictionary of location names to coordinate dictionaries
             current: Current location name (must be in locations dict)
 
@@ -248,17 +253,20 @@ class LocationManager:
         self._save_locations()
 
     def add_location(self, name: str, lat: float, lon: float) -> bool:
-        """Add a new location. Cannot overwrite Nationwide location.
+        """
+        Add a new location. Cannot overwrite Nationwide location.
 
         Validates that the location is within the US NWS coverage area when using NWS data source.
         When using WeatherAPI, allows locations worldwide.
 
         Args:
+        ----
             name: Location name
             lat: Latitude
             lon: Longitude
 
         Returns:
+        -------
             True if location was added successfully, False otherwise
 
         """
@@ -293,12 +301,15 @@ class LocationManager:
         return True
 
     def remove_location(self, name: str) -> bool:
-        """Remove a location. Cannot remove Nationwide location.
+        """
+        Remove a location. Cannot remove Nationwide location.
 
         Args:
+        ----
             name: Location name to remove
 
         Returns:
+        -------
             True if location was removed, False otherwise
 
         """
@@ -353,12 +364,15 @@ class LocationManager:
         return False
 
     def set_current_location(self, name: str) -> bool:
-        """Set the current location.
+        """
+        Set the current location.
 
         Args:
+        ----
             name: Location name
 
         Returns:
+        -------
             True if successful, False if location doesn't exist
 
         """
@@ -370,9 +384,11 @@ class LocationManager:
         return False
 
     def update_data_source(self, data_source: str) -> None:
-        """Update the data source and reinitialize the geocoding service.
+        """
+        Update the data source and reinitialize the geocoding service.
 
         Args:
+        ----
             data_source: The new data source to use ('nws' or 'auto')
 
         """
@@ -387,9 +403,11 @@ class LocationManager:
         )
 
     def get_current_location(self) -> tuple[str, float, float] | None:
-        """Get the current location.
+        """
+        Get the current location.
 
-        Returns:
+        Returns
+        -------
             Tuple of (name, lat, lon) if current location exists, None otherwise
 
         """
@@ -400,18 +418,22 @@ class LocationManager:
         return None
 
     def get_current_location_name(self) -> str | None:
-        """Get the name of the current location.
+        """
+        Get the name of the current location.
 
-        Returns:
+        Returns
+        -------
             Name of current location if it exists, None otherwise
 
         """
         return self.current_location if self.current_location in self.saved_locations else None
 
     def get_all_locations(self) -> list[str]:
-        """Get all saved location names.
+        """
+        Get all saved location names.
 
-        Returns:
+        Returns
+        -------
             List of location names
 
         """
@@ -430,21 +452,26 @@ class LocationManager:
         # Never remove or overwrite Nationwide; do not save yet (callers will save)
 
     def is_nationwide_location(self, name: str) -> bool:
-        """Check if a location is the Nationwide location.
+        """
+        Check if a location is the Nationwide location.
 
         Args:
+        ----
             name: Location name to check
 
         Returns:
+        -------
             True if the location is the Nationwide location, False otherwise
 
         """
         return name == NATIONWIDE_LOCATION_NAME
 
     def set_show_nationwide(self, show: bool) -> None:
-        """Set whether to show the Nationwide location.
+        """
+        Set whether to show the Nationwide location.
 
         Args:
+        ----
             show: Whether to show the Nationwide location
 
         """

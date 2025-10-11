@@ -1,4 +1,5 @@
-"""Location service for AccessiWeather.
+"""
+Location service for AccessiWeather.
 
 This module provides a service layer for location-related operations,
 separating business logic from UI concerns.
@@ -15,59 +16,72 @@ class LocationService:
     """Service for location-related operations."""
 
     def __init__(self, location_manager: LocationManager):
-        """Initialize the location service.
+        """
+        Initialize the location service.
 
         Args:
+        ----
             location_manager: The location manager to use for location operations.
 
         """
         self.location_manager = location_manager
 
     def update_data_source(self, data_source: str) -> None:
-        """Update the data source used by the location manager.
+        """
+        Update the data source used by the location manager.
 
         Args:
+        ----
             data_source: The data source to use ('nws', 'weatherapi', or 'auto')
 
         """
         self.location_manager.update_data_source(data_source)
 
     def get_current_location(self) -> tuple[str, float, float] | None:
-        """Get the current location.
+        """
+        Get the current location.
 
-        Returns:
+        Returns
+        -------
             Tuple of (name, lat, lon) or None if no current location.
 
         """
         return self.location_manager.get_current_location()
 
     def get_current_location_name(self) -> str | None:
-        """Get the name of the current location.
+        """
+        Get the name of the current location.
 
-        Returns:
+        Returns
+        -------
             Name of the current location or None if no current location.
 
         """
         return self.location_manager.get_current_location_name()
 
     def get_all_locations(self) -> list[str]:
-        """Get all saved locations.
+        """
+        Get all saved locations.
 
-        Returns:
+        Returns
+        -------
             List of location names.
 
         """
         return self.location_manager.get_all_locations()
 
     def add_location(self, name: str, lat: float, lon: float) -> bool:
-        """Add a new location.
+        """
+        Add a new location.
 
         Args:
+        ----
             name: Name of the location.
             lat: Latitude of the location.
             lon: Longitude of the location.
 
         Returns:
+        -------
             True if the location was added successfully, False if it's outside the US NWS coverage area.
 
         """
@@ -75,12 +89,15 @@ class LocationService:
         return self.location_manager.add_location(name, lat, lon)
 
     def remove_location(self, name: str) -> bool:
-        """Remove a location.
+        """
+        Remove a location.
 
         Args:
+        ----
             name: Name of the location to remove.
 
         Returns:
+        -------
             True if the location was removed, False otherwise.
 
         """
@@ -88,9 +105,11 @@ class LocationService:
         return self.location_manager.remove_location(name)
 
     def set_current_location(self, name: str) -> None:
-        """Set the current location.
+        """
+        Set the current location.
 
         Args:
+        ----
             name: Name of the location to set as current.
 
         """
@@ -98,12 +117,15 @@ class LocationService:
         self.location_manager.set_current_location(name)
 
     def get_location_coordinates(self, name: str) -> tuple[float, float] | None:
-        """Get the coordinates for a location.
+        """
+        Get the coordinates for a location.
 
         Args:
+        ----
             name: Name of the location.
 
         Returns:
+        -------
             Tuple of (lat, lon) or None if location not found.
 
         """
@@ -121,12 +143,15 @@ class LocationService:
         return (NATIONWIDE_LOCATION_NAME, NATIONWIDE_LAT, NATIONWIDE_LON)
 
     def is_nationwide_location(self, name: str) -> bool:
-        """Check if a location is the Nationwide location.
+        """
+        Check if a location is the Nationwide location.
 
         Args:
+        ----
             name: Name of the location to check.
 
         Returns:
+        -------
             True if the location is the Nationwide location, False otherwise.
 
         """

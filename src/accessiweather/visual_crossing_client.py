@@ -1,4 +1,5 @@
-"""Visual Crossing Weather API client for AccessiWeather.
+"""
+Visual Crossing Weather API client for AccessiWeather.
 
 This module provides a client for the Visual Crossing Weather API,
 implementing methods to fetch current conditions, forecast, and hourly data.

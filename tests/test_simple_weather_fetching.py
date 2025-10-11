@@ -1,4 +1,5 @@
-"""Tests for weather data fetching in the simplified AccessiWeather application.
+"""
+Tests for weather data fetching in the simplified AccessiWeather application.
 
 This module tests the weather data fetching functionality that was fixed,
 including the wind direction formatting bug and API integration.

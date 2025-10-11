@@ -1,4 +1,5 @@
-"""Geocoding service for AccessiWeather.
+"""
+Geocoding service for AccessiWeather.
 
 This module provides geocoding functionality to convert addresses and zip codes to coordinates.
 """
@@ -24,9 +25,11 @@ class GeocodingService:
     def __init__(
         self, user_agent: str = "AccessiWeather", timeout: int = 10, data_source: str = "nws"
     ):
-        """Initialize the geocoding service.
+        """
+        Initialize the geocoding service.
 
         Args:
+        ----
             user_agent: User agent string for API requests
             timeout: Timeout in seconds for geocoding requests
             data_source: The data source to use ('nws' or 'auto')
@@ -36,24 +39,30 @@ class GeocodingService:
         self.data_source = data_source
 
     def is_zip_code(self, text: str) -> bool:
-        """Check if the given text is a valid US ZIP code.
+        """
+        Check if the given text is a valid US ZIP code.
 
         Args:
+        ----
             text: Text to check
 
         Returns:
+        -------
             True if the text is a valid US ZIP code, False otherwise
 
         """
         return bool(self.ZIP_CODE_PATTERN.match(text))
 
     def format_zip_code(self, zip_code: str) -> str:
-        """Format a ZIP code for geocoding.
+        """
+        Format a ZIP code for geocoding.
 
         Args:
+        ----
             zip_code: ZIP code to format
 
         Returns:
+        -------
             Formatted ZIP code string for geocoding
 
         """
@@ -65,12 +74,15 @@ class GeocodingService:
         return f"{zip_code}, USA"
 
     def geocode_address(self, address: str) -> tuple[float, float, str] | None:
-        """Convert an address or zip code to coordinates, filtering for US locations.
+        """
+        Convert an address or zip code to coordinates, filtering for US locations.
 
         Args:
+        ----
             address: Address or zip code to geocode
 
         Returns:
+        -------
             Tuple of (latitude, longitude, display_name) if successful and within
             the US NWS coverage area, None otherwise
 
@@ -130,7 +142,8 @@ class GeocodingService:
             return None
 
     def validate_coordinates(self, lat: float, lon: float, us_only: bool | None = None) -> bool:
-        """Validate if coordinates are within the US NWS coverage area or globally valid.
+        """
+        Validate if coordinates are within the US NWS coverage area or globally valid.
 
         This method performs a reverse geocoding lookup to determine if the
         given coordinates are within the US (when us_only=True) or are valid
@@ -140,12 +153,14 @@ class GeocodingService:
         to restrict validation to US locations (True for 'nws', False for others).
 
         Args:
+        ----
             lat: Latitude
             lon: Longitude
             us_only: Whether to restrict validation to US locations only
                      If None, uses data_source to determine (default: None)
 
         Returns:
+        -------
             True if coordinates are valid according to the criteria, False otherwise
 
         """
@@ -207,13 +222,16 @@ class GeocodingService:
             return True
 
     def suggest_locations(self, query: str, limit: int = 5) -> list[str]:
-        """Suggest location completions based on partial input, filtering for US locations.
+        """
+        Suggest location completions based on partial input, filtering for US locations.
 
         Args:
+        ----
             query: Partial address or location name
             limit: Maximum number of suggestions to return
 
         Returns:
+        -------
             List of suggested location strings (US locations only)
 
         """

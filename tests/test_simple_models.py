@@ -1,4 +1,5 @@
-"""Tests for data models in the simplified AccessiWeather application.
+"""
+Tests for data models in the simplified AccessiWeather application.
 
 This module provides comprehensive tests for the data models in the simplified
 AccessiWeather implementation, adapted from existing test logic while updating

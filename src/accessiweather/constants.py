@@ -1,4 +1,5 @@
-"""Constants and configuration values for AccessiWeather.
+"""
+Constants and configuration values for AccessiWeather.
 
 This module centralizes all settings keys, default values, and configuration
 constants used throughout the application.

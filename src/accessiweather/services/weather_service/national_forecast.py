@@ -1,4 +1,5 @@
-"""National forecast functionality for WeatherService.
+"""
+National forecast functionality for WeatherService.
 
 This module handles national forecast data operations including
 caching and retrieval of nationwide forecast discussions.
@@ -24,12 +25,15 @@ class NationalForecastHandler:
         self.cache_expiry = 3600  # 1 hour in seconds
 
     def get_national_forecast_data(self, force_refresh: bool = False) -> dict:
-        """Get nationwide forecast data, including national discussion summaries.
+        """
+        Get nationwide forecast data, including national discussion summaries.
 
         Args:
+        ----
             force_refresh: Whether to force a refresh of the data
 
         Returns:
+        -------
             Dictionary containing national forecast data with structure:
             {
                 "national_discussion_summaries": {
@@ -46,6 +50,7 @@ class NationalForecastHandler:
             }
 
         Raises:
+        ------
             ApiClientError: If there was an error retrieving the data
 
         """

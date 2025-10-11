@@ -1,4 +1,5 @@
-"""Point data and location operations for NWS API wrapper.
+"""
+Point data and location operations for NWS API wrapper.
 
 This module handles geographic point data retrieval, transformation,
 and location type identification operations.
@@ -17,26 +18,32 @@ class NwsPointLocation:
     """Handles NWS point data and location identification operations."""
 
     def __init__(self, wrapper_instance):
-        """Initialize with reference to the main wrapper.
+        """
+        Initialize with reference to the main wrapper.
 
         Args:
+        ----
             wrapper_instance: The main NwsApiWrapper instance
 
         """
         self.wrapper = wrapper_instance
 
     def get_point_data(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
-        """Get metadata about a specific lat/lon point.
+        """
+        Get metadata about a specific lat/lon point.
 
         Args:
+        ----
             lat: Latitude
             lon: Longitude
             force_refresh: Whether to force refresh cached data
 
         Returns:
+        -------
             Point data dictionary
 
         Raises:
+        ------
             NoaaApiError: For API-related errors
 
         """
@@ -65,12 +72,15 @@ class NwsPointLocation:
         )
 
     def _transform_point_data(self, point_data: Any) -> dict[str, Any]:
-        """Transform point data from the generated client format.
+        """
+        Transform point data from the generated client format.
 
         Args:
+        ----
             point_data: Raw point data from the API
 
         Returns:
+        -------
             Transformed point data dictionary
 
         """
@@ -135,14 +145,17 @@ class NwsPointLocation:
     def identify_location_type(
         self, lat: float, lon: float, force_refresh: bool = False
     ) -> tuple[str | None, str | None]:
-        """Identify the type of location (county, state, etc.) for the given coordinates.
+        """
+        Identify the type of location (county, state, etc.) for the given coordinates.
 
         Args:
+        ----
             lat: Latitude
             lon: Longitude
             force_refresh: Whether to force refresh cached data
 
         Returns:
+        -------
             Tuple of (location_type, location_id) or (None, None) if unable to identify
 
         """
