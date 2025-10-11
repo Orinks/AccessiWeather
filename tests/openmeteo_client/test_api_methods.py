@@ -40,6 +40,9 @@ def test_get_current_weather_success(openmeteo_client):
                 "daily": [
                     "sunrise",
                     "sunset",
+                    "moonrise",
+                    "moonset",
+                    "moon_phase",
                 ],
                 "temperature_unit": "fahrenheit",
                 "wind_speed_unit": "mph",
