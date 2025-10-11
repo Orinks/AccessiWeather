@@ -1,5 +1,8 @@
 name: Beta Release
 
+# This workflow creates pre-release builds for beta testing
+# Triggered by: tags matching beta/alpha/rc/dev patterns, or manual dispatch
+
 on:
   push:
     tags:
@@ -22,6 +25,11 @@ on:
 permissions:
   contents: write
   actions: read
+
+# Prevent concurrent beta releases
+concurrency:
+  group: beta-release-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   FORCE_COLOR: "1"
