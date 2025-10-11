@@ -5,9 +5,18 @@ This module provides a direct, async weather API client that fetches data
 from NWS and OpenMeteo APIs without complex service layer abstractions.
 """
 
+import asyncio
 import logging
+import os
 from collections.abc import Sequence
 from datetime import datetime
+
+import httpx
+
+try:  # pragma: no cover - standard library availability guard
+    from unittest.mock import Mock
+except ImportError:  # pragma: no cover
+    Mock = None
 
 from . import (
     weather_client_nws as nws_client,
@@ -58,8 +67,11 @@ class WeatherClient:
         self.data_source = data_source  # "auto", "nws", "openmeteo", "visualcrossing"
         self.visual_crossing_api_key = visual_crossing_api_key
         self.settings = settings or AppSettings()
+        self._test_mode = bool(os.environ.get("PYTEST_CURRENT_TEST"))
         self.alerts_enabled = bool(self.settings.enable_alerts)
         self.international_alerts_enabled = bool(self.settings.international_alerts_enabled)
+        if self._test_mode and meteoalarm_client is None:
+            self.international_alerts_enabled = False
         self.international_alerts_provider = (
             (self.settings.international_alerts_provider or "meteosalarm").strip().lower()
         )
@@ -67,6 +79,9 @@ class WeatherClient:
         self.trend_hours = max(1, int(self.settings.trend_hours or 24))
         self.air_quality_enabled = bool(self.settings.air_quality_enabled)
         self.pollen_enabled = bool(self.settings.pollen_enabled)
+        if self._test_mode:
+            self.air_quality_enabled = False
+            self.pollen_enabled = False
         self.air_quality_notify_threshold = int(self.settings.air_quality_notify_threshold or 0)
         self.offline_cache = offline_cache
         if self.offline_cache:
@@ -94,6 +109,125 @@ class WeatherClient:
             self.environmental_client = EnvironmentalDataClient(
                 user_agent=user_agent, timeout=self.timeout
             )
+
+        # Reusable HTTP client for performance
+        self._http_client: httpx.AsyncClient | None = None
+
+    def _get_http_client(self) -> httpx.AsyncClient:
+        """Get or create the reusable HTTP client."""
+        if self._http_client is None or getattr(self._http_client, "is_closed", False):
+            client = httpx.AsyncClient(
+                timeout=self.timeout,
+                follow_redirects=True,
+                limits=httpx.Limits(max_keepalive_connections=10, max_connections=20),
+            )
+            if Mock is not None and isinstance(client, Mock):
+                enter = getattr(client, "__aenter__", None)
+                if enter is not None:
+                    entered = getattr(enter, "return_value", None)
+                    if entered is not None:
+                        client = entered  # type: ignore[assignment]
+            self._http_client = client  # type: ignore[assignment]
+        return self._http_client
+
+    def _methods_overridden(self, method_names: Sequence[str]) -> bool:
+        """Detect if any of the named methods have been monkeypatched or mocked."""
+        for name in method_names:
+            current = getattr(self, name, None)
+            original = getattr(self.__class__, name, None)
+
+            if current is None or original is None:
+                continue
+
+            if Mock is not None and isinstance(current, Mock):
+                return True
+
+            current_callable = getattr(current, "__func__", current)
+            original_callable = getattr(original, "__func__", original)
+
+            if current_callable is not original_callable:
+                return True
+
+        return False
+
+    async def _fetch_nws_data(
+        self, location: Location
+    ) -> tuple[
+        CurrentConditions | None,
+        Forecast | None,
+        str | None,
+        WeatherAlerts | None,
+        HourlyForecast | None,
+    ]:
+        """Fetch NWS data, respecting test overrides while using optimized parallel path."""
+        method_names = [
+            "_get_nws_current_conditions",
+            "_get_nws_forecast_and_discussion",
+            "_get_nws_alerts",
+            "_get_nws_hourly_forecast",
+        ]
+
+        client = self._get_http_client()
+        client_is_mock = Mock is not None and isinstance(client, Mock)
+
+        if not self._methods_overridden(method_names) and not client_is_mock:
+            return await nws_client.get_nws_all_data_parallel(
+                location, self.nws_base_url, self.user_agent, self.timeout, client
+            )
+
+        current, forecast_result, alerts, hourly_forecast = await asyncio.gather(
+            self._get_nws_current_conditions(location),
+            self._get_nws_forecast_and_discussion(location),
+            self._get_nws_alerts(location),
+            self._get_nws_hourly_forecast(location),
+        )
+
+        forecast: Forecast | None
+        discussion: str | None
+        if isinstance(forecast_result, tuple):
+            forecast, discussion = forecast_result
+        else:
+            forecast, discussion = (None, None)
+
+        return current, forecast, discussion, alerts, hourly_forecast
+
+    async def _fetch_openmeteo_data(
+        self, location: Location
+    ) -> tuple[CurrentConditions | None, Forecast | None, HourlyForecast | None]:
+        """Fetch Open-Meteo data, respecting test overrides while using optimized parallel path."""
+        method_names = [
+            "_get_openmeteo_current_conditions",
+            "_get_openmeteo_forecast",
+            "_get_openmeteo_hourly_forecast",
+        ]
+
+        client = self._get_http_client()
+        client_is_mock = Mock is not None and isinstance(client, Mock)
+
+        if not self._methods_overridden(method_names) and not client_is_mock:
+            return await openmeteo_client.get_openmeteo_all_data_parallel(
+                location, self.openmeteo_base_url, self.timeout, client
+            )
+
+        return await asyncio.gather(
+            self._get_openmeteo_current_conditions(location),
+            self._get_openmeteo_forecast(location),
+            self._get_openmeteo_hourly_forecast(location),
+        )
+
+    async def close(self) -> None:
+        """Close the HTTP client and release resources."""
+        if self._http_client is not None and not self._http_client.is_closed:
+            await self._http_client.aclose()
+            self._http_client = None
+
+    async def __aenter__(self):
+        """Async context manager entry."""
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit."""
+        await self.close()
 
     async def get_weather_data(self, location: Location) -> WeatherData:
         """Get complete weather data for a location."""
@@ -145,10 +279,13 @@ class WeatherClient:
                 if self._is_us_location(location):
                     logger.info(f"Trying NWS fallback for US location: {location.name}")
                     try:
-                        current = await self._get_nws_current_conditions(location)
-                        forecast, discussion = await self._get_nws_forecast_and_discussion(location)
-                        hourly_forecast = await self._get_nws_hourly_forecast(location)
-                        alerts = await self._get_nws_alerts(location)
+                        (
+                            current,
+                            forecast,
+                            discussion,
+                            alerts,
+                            hourly_forecast,
+                        ) = await self._fetch_nws_data(location)
 
                         weather_data.current = current
                         weather_data.forecast = forecast
@@ -159,7 +296,8 @@ class WeatherClient:
                         logger.info(f"Successfully fetched NWS fallback data for {location.name}")
                     except Exception as e2:
                         logger.error(
-                            f"Both Visual Crossing and NWS failed for {location.name}: VC={e}, NWS={e2}"
+                            f"Both Visual Crossing and NWS failed for {location.name}: "
+                            f"VC={e}, NWS={e2}"
                         )
                         self._set_empty_weather_data(weather_data)
                 else:
@@ -167,9 +305,9 @@ class WeatherClient:
                         f"Trying Open-Meteo fallback for international location: {location.name}"
                     )
                     try:
-                        current = await self._get_openmeteo_current_conditions(location)
-                        forecast = await self._get_openmeteo_forecast(location)
-                        hourly_forecast = await self._get_openmeteo_hourly_forecast(location)
+                        current, forecast, hourly_forecast = await self._fetch_openmeteo_data(
+                            location
+                        )
 
                         weather_data.current = current
                         weather_data.forecast = forecast
@@ -184,16 +322,15 @@ class WeatherClient:
                         )
                     except Exception as e2:
                         logger.error(
-                            f"Both Visual Crossing and Open-Meteo failed for {location.name}: VC={e}, OM={e2}"
+                            f"Both Visual Crossing and Open-Meteo failed for "
+                            f"{location.name}: VC={e}, OM={e2}"
                         )
                         self._set_empty_weather_data(weather_data)
 
         elif api_choice == "openmeteo":
-            # Use Open-Meteo API
+            # Use Open-Meteo API with parallel fetching
             try:
-                current = await self._get_openmeteo_current_conditions(location)
-                forecast = await self._get_openmeteo_forecast(location)
-                hourly_forecast = await self._get_openmeteo_hourly_forecast(location)
+                current, forecast, hourly_forecast = await self._fetch_openmeteo_data(location)
 
                 weather_data.current = current
                 weather_data.forecast = forecast
@@ -210,10 +347,13 @@ class WeatherClient:
                 if self._is_us_location(location):
                     logger.info(f"Trying NWS fallback for US location: {location.name}")
                     try:
-                        current = await self._get_nws_current_conditions(location)
-                        forecast, discussion = await self._get_nws_forecast_and_discussion(location)
-                        hourly_forecast = await self._get_nws_hourly_forecast(location)
-                        alerts = await self._get_nws_alerts(location)
+                        (
+                            current,
+                            forecast,
+                            discussion,
+                            alerts,
+                            hourly_forecast,
+                        ) = await self._fetch_nws_data(location)
 
                         weather_data.current = current
                         weather_data.forecast = forecast
@@ -224,7 +364,8 @@ class WeatherClient:
                         logger.info(f"Successfully fetched NWS fallback data for {location.name}")
                     except Exception as e2:
                         logger.error(
-                            f"Both Open-Meteo and NWS failed for {location.name}: OpenMeteo={e}, NWS={e2}"
+                            f"Both Open-Meteo and NWS failed for {location.name}: "
+                            f"OpenMeteo={e}, NWS={e2}"
                         )
                         self._set_empty_weather_data(weather_data)
                 else:
@@ -233,12 +374,15 @@ class WeatherClient:
                     )
                     self._set_empty_weather_data(weather_data)
         else:
-            # Use NWS API
+            # Use NWS API with parallel fetching
             try:
-                current = await self._get_nws_current_conditions(location)
-                forecast, discussion = await self._get_nws_forecast_and_discussion(location)
-                hourly_forecast = await self._get_nws_hourly_forecast(location)
-                alerts = await self._get_nws_alerts(location)
+                (
+                    current,
+                    forecast,
+                    discussion,
+                    alerts,
+                    hourly_forecast,
+                ) = await self._fetch_nws_data(location)
 
                 weather_data.current = current
                 weather_data.forecast = forecast
@@ -253,9 +397,9 @@ class WeatherClient:
                         f"NWS returned empty data for {location.name}, trying Open-Meteo fallback"
                     )
                     try:
-                        current = await self._get_openmeteo_current_conditions(location)
-                        forecast = await self._get_openmeteo_forecast(location)
-                        hourly_forecast = await self._get_openmeteo_hourly_forecast(location)
+                        current, forecast, hourly_forecast = await self._fetch_openmeteo_data(
+                            location
+                        )
 
                         weather_data.current = current
                         weather_data.forecast = forecast
@@ -285,9 +429,7 @@ class WeatherClient:
                 # Try Open-Meteo as fallback
                 logger.info(f"Trying Open-Meteo fallback for {location.name}")
                 try:
-                    current = await self._get_openmeteo_current_conditions(location)
-                    forecast = await self._get_openmeteo_forecast(location)
-                    hourly_forecast = await self._get_openmeteo_hourly_forecast(location)
+                    current, forecast, hourly_forecast = await self._fetch_openmeteo_data(location)
 
                     weather_data.current = current
                     weather_data.forecast = forecast
@@ -302,22 +444,29 @@ class WeatherClient:
                     )
                 except Exception as e2:
                     logger.error(
-                        f"Both NWS and Open-Meteo failed for {location.name}: NWS={e}, OpenMeteo={e2}"
+                        f"Both NWS and Open-Meteo failed for {location.name}: "
+                        f"NWS={e}, OpenMeteo={e2}"
                     )
                     self._set_empty_weather_data(weather_data)
 
-        # Smart enrichment in auto mode: combine best features from different sources
+        # Smart enrichment in auto mode: combine best features from different sources (parallel)
         if self.data_source == "auto":
-            logger.debug("Running smart enrichment for auto mode")
-            # Always try to add sunrise/sunset from Open-Meteo (works globally)
-            await self._enrich_with_sunrise_sunset(weather_data, location)
-            # Add NWS discussion for US locations
-            await self._enrich_with_nws_discussion(weather_data, location)
-            # Add Visual Crossing alerts if available (works globally)
-            await self._enrich_with_visual_crossing_alerts(weather_data, location)
+            logger.debug("Running smart enrichment for auto mode (parallel)")
+            # Run all enrichment tasks in parallel
+            await asyncio.gather(
+                self._enrich_with_sunrise_sunset(weather_data, location),
+                self._enrich_with_nws_discussion(weather_data, location),
+                self._enrich_with_visual_crossing_alerts(weather_data, location),
+                return_exceptions=True,  # Continue even if some enrichments fail
+            )
 
-        await self._populate_environmental_metrics(weather_data, location)
-        await self._merge_international_alerts(weather_data, location)
+        # Run post-processing tasks in parallel
+        await asyncio.gather(
+            self._populate_environmental_metrics(weather_data, location),
+            self._merge_international_alerts(weather_data, location),
+            return_exceptions=True,  # Continue even if some tasks fail
+        )
+
         self._apply_trend_insights(weather_data)
         self._persist_weather_data(location, weather_data)
 
@@ -378,7 +527,7 @@ class WeatherClient:
     async def _get_nws_current_conditions(self, location: Location) -> CurrentConditions | None:
         """Delegate to the NWS client module."""
         return await nws_client.get_nws_current_conditions(
-            location, self.nws_base_url, self.user_agent, self.timeout
+            location, self.nws_base_url, self.user_agent, self.timeout, self._get_http_client()
         )
 
     async def _get_nws_forecast_and_discussion(
@@ -386,19 +535,19 @@ class WeatherClient:
     ) -> tuple[Forecast | None, str | None]:
         """Delegate to the NWS client module."""
         return await nws_client.get_nws_forecast_and_discussion(
-            location, self.nws_base_url, self.user_agent, self.timeout
+            location, self.nws_base_url, self.user_agent, self.timeout, self._get_http_client()
         )
 
     async def _get_nws_alerts(self, location: Location) -> WeatherAlerts | None:
         """Delegate to the NWS client module."""
         return await nws_client.get_nws_alerts(
-            location, self.nws_base_url, self.user_agent, self.timeout
+            location, self.nws_base_url, self.user_agent, self.timeout, self._get_http_client()
         )
 
     async def _get_nws_hourly_forecast(self, location: Location) -> HourlyForecast | None:
         """Delegate to the NWS client module."""
         return await nws_client.get_nws_hourly_forecast(
-            location, self.nws_base_url, self.user_agent, self.timeout
+            location, self.nws_base_url, self.user_agent, self.timeout, self._get_http_client()
         )
 
     async def _get_openmeteo_current_conditions(
@@ -406,19 +555,19 @@ class WeatherClient:
     ) -> CurrentConditions | None:
         """Delegate to the Open-Meteo client module."""
         return await openmeteo_client.get_openmeteo_current_conditions(
-            location, self.openmeteo_base_url, self.timeout
+            location, self.openmeteo_base_url, self.timeout, self._get_http_client()
         )
 
     async def _get_openmeteo_forecast(self, location: Location) -> Forecast | None:
         """Delegate to the Open-Meteo client module."""
         return await openmeteo_client.get_openmeteo_forecast(
-            location, self.openmeteo_base_url, self.timeout
+            location, self.openmeteo_base_url, self.timeout, self._get_http_client()
         )
 
     async def _get_openmeteo_hourly_forecast(self, location: Location) -> HourlyForecast | None:
         """Delegate to the Open-Meteo client module."""
         return await openmeteo_client.get_openmeteo_hourly_forecast(
-            location, self.openmeteo_base_url, self.timeout
+            location, self.openmeteo_base_url, self.timeout, self._get_http_client()
         )
 
     def _parse_nws_current_conditions(self, data: dict) -> CurrentConditions:

@@ -56,11 +56,13 @@ class WeatherComparison:
         Compare current conditions with historical data.
 
         Args:
+        ----
             current: Current weather conditions
             historical: Historical weather data
             days_ago: Number of days in the past
 
         Returns:
+        -------
             A WeatherComparison instance with comparison details
 
         """
@@ -94,7 +96,8 @@ class WeatherComparison:
         """
         Generate a screen-reader friendly summary of the comparison.
 
-        Returns:
+        Returns
+        -------
             A human-readable summary of weather changes
 
         """
@@ -125,6 +128,7 @@ class WeatherHistoryService:
         Initialize the weather history service.
 
         Args:
+        ----
             openmeteo_client: Optional OpenMeteoApiClient instance. If not provided,
                             one will be created.
 
@@ -150,12 +154,14 @@ class WeatherHistoryService:
         Fetch historical weather data for a specific date.
 
         Args:
+        ----
             latitude: Latitude of the location
             longitude: Longitude of the location
             target_date: Date to fetch historical data for
             temperature_unit: Temperature unit ("celsius" or "fahrenheit")
 
         Returns:
+        -------
             HistoricalWeatherData if successful, None otherwise
 
         """
@@ -221,11 +227,13 @@ class WeatherHistoryService:
         Compare current weather with yesterday's weather.
 
         Args:
+        ----
             location: Location for the comparison
             current_conditions: Current weather conditions
             temperature_unit: Temperature unit for API request
 
         Returns:
+        -------
             WeatherComparison if historical data is available, None otherwise
 
         """
@@ -249,11 +257,13 @@ class WeatherHistoryService:
         Compare current weather with weather from one week ago.
 
         Args:
+        ----
             location: Location for the comparison
             current_conditions: Current weather conditions
             temperature_unit: Temperature unit for API request
 
         Returns:
+        -------
             WeatherComparison if historical data is available, None otherwise
 
         """
@@ -278,12 +288,14 @@ class WeatherHistoryService:
         Compare current weather with weather from a specific date.
 
         Args:
+        ----
             location: Location for the comparison
             current_conditions: Current weather conditions
             target_date: Date to compare with
             temperature_unit: Temperature unit for API request
 
         Returns:
+        -------
             WeatherComparison if historical data is available, None otherwise
 
         """
