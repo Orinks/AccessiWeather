@@ -37,7 +37,7 @@ Added a reusable `httpx.AsyncClient` with connection pooling:
 class WeatherClient:
     def __init__(self, ...):
         self._http_client: httpx.AsyncClient | None = None
-    
+
     def _get_http_client(self) -> httpx.AsyncClient:
         """Get or create the reusable HTTP client."""
         if self._http_client is None or self._http_client.is_closed:
@@ -69,7 +69,7 @@ async def get_nws_all_data_parallel(
 ) -> tuple[CurrentConditions | None, Forecast | None, str | None, WeatherAlerts | None, HourlyForecast | None]:
     # Fetch grid data once
     grid_data = await fetch_grid_data(...)
-    
+
     # Fetch all other data in parallel, reusing grid_data
     current, (forecast, discussion), alerts, hourly = await asyncio.gather(
         get_nws_current_conditions(...),

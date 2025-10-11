@@ -60,13 +60,13 @@ Improvement:          62.5% reduction in time
   - Added `close()`, `__aenter__()`, `__aexit__()` for context manager
   - Updated `get_weather_data()` to use parallel fetching
   - Parallelized enrichment calls in auto mode
-  
+
 - **`src/accessiweather/weather_client_nws.py`**
   - Added `get_nws_all_data_parallel()` for concurrent NWS data fetching
   - Updated all methods to accept optional `client` parameter
   - Updated `get_nws_forecast_and_discussion()` to accept `grid_data` parameter
   - Updated `get_nws_hourly_forecast()` to accept `grid_data` parameter
-  
+
 - **`src/accessiweather/weather_client_openmeteo.py`**
   - Added `get_openmeteo_all_data_parallel()` for concurrent Open-Meteo fetching
   - Updated all methods to accept optional `client` parameter
