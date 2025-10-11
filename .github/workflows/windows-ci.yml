@@ -65,3 +65,16 @@ jobs:
         ACCESSIWEATHER_TEST_MODE: "1"
       run: |
         pytest -v -p pytest_asyncio --tb=short --maxfail=1
+
+    - name: CI Summary
+      if: always()
+      run: |
+        echo "=== CI Workflow Summary ==="
+        echo "Branch: ${{ github.ref_name }}"
+        echo "Commit: ${{ github.sha }}"
+        echo "Event: ${{ github.event_name }}"
+        if [ "${{ job.status }}" = "success" ]; then
+          echo "✅ All checks passed!"
+        else
+          echo "❌ Some checks failed"
+        fi
