@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import datetime
 from typing import Any
@@ -27,19 +28,67 @@ from .weather_client_parsers import (
 logger = logging.getLogger(__name__)
 
 
+async def get_nws_all_data_parallel(
+    location: Location,
+    nws_base_url: str,
+    user_agent: str,
+    timeout: float,
+    client: httpx.AsyncClient,
+) -> tuple[CurrentConditions | None, Forecast | None, str | None, WeatherAlerts | None, HourlyForecast | None]:
+    """Fetch all NWS data in parallel with optimized grid data caching.
+    
+    Returns: (current, forecast, discussion, alerts, hourly_forecast)
+    """
+    try:
+        # First, fetch grid data once
+        grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+        headers = {"User-Agent": user_agent}
+        
+        response = await client.get(grid_url, headers=headers)
+        response.raise_for_status()
+        grid_data = response.json()
+        
+        # Now fetch all other data in parallel, reusing grid_data
+        current_task = asyncio.create_task(
+            get_nws_current_conditions(location, nws_base_url, user_agent, timeout, client)
+        )
+        forecast_task = asyncio.create_task(
+            get_nws_forecast_and_discussion(location, nws_base_url, user_agent, timeout, client, grid_data)
+        )
+        alerts_task = asyncio.create_task(
+            get_nws_alerts(location, nws_base_url, user_agent, timeout, client)
+        )
+        hourly_task = asyncio.create_task(
+            get_nws_hourly_forecast(location, nws_base_url, user_agent, timeout, client, grid_data)
+        )
+        
+        # Gather all results
+        current = await current_task
+        forecast, discussion = await forecast_task
+        alerts = await alerts_task
+        hourly_forecast = await hourly_task
+        
+        return current, forecast, discussion, alerts, hourly_forecast
+        
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Failed to get NWS data in parallel: {exc}")
+        return None, None, None, None, None
+
+
 async def get_nws_current_conditions(
     location: Location,
     nws_base_url: str,
     user_agent: str,
     timeout: float,
+    client: httpx.AsyncClient | None = None,
 ) -> CurrentConditions | None:
     """Fetch current conditions from the NWS API for the given location."""
     try:
         grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+        headers = {"User-Agent": user_agent}
 
-        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
-            headers = {"User-Agent": user_agent}
-
+        # Use provided client or create a new one
+        if client is not None:
             response = await client.get(grid_url, headers=headers)
             response.raise_for_status()
             grid_data = response.json()
@@ -61,6 +110,29 @@ async def get_nws_current_conditions(
             obs_data = response.json()
 
             return parse_nws_current_conditions(obs_data)
+        else:
+            async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+                response = await new_client.get(grid_url, headers=headers)
+                response.raise_for_status()
+                grid_data = response.json()
+
+                stations_url = grid_data["properties"]["observationStations"]
+                response = await new_client.get(stations_url, headers=headers)
+                response.raise_for_status()
+                stations_data = response.json()
+
+                if not stations_data["features"]:
+                    logger.warning("No observation stations found")
+                    return None
+
+                station_id = stations_data["features"][0]["properties"]["stationIdentifier"]
+                obs_url = f"{nws_base_url}/stations/{station_id}/observations/latest"
+
+                response = await new_client.get(obs_url, headers=headers)
+                response.raise_for_status()
+                obs_data = response.json()
+
+                return parse_nws_current_conditions(obs_data)
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS current conditions: {exc}")
@@ -72,17 +144,21 @@ async def get_nws_forecast_and_discussion(
     nws_base_url: str,
     user_agent: str,
     timeout: float,
+    client: httpx.AsyncClient | None = None,
+    grid_data: dict[str, Any] | None = None,
 ) -> tuple[Forecast | None, str | None]:
     """Fetch forecast and discussion from the NWS API for the given location."""
     try:
-        grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+        headers = {"User-Agent": user_agent}
 
-        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
-            headers = {"User-Agent": user_agent}
-
-            response = await client.get(grid_url, headers=headers)
-            response.raise_for_status()
-            grid_data = response.json()
+        # Use provided client or create a new one
+        if client is not None:
+            # Fetch grid data if not provided
+            if grid_data is None:
+                grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+                response = await client.get(grid_url, headers=headers)
+                response.raise_for_status()
+                grid_data = response.json()
 
             forecast_url = grid_data["properties"]["forecast"]
             response = await client.get(forecast_url, headers=headers)
@@ -92,6 +168,22 @@ async def get_nws_forecast_and_discussion(
             discussion = await get_nws_discussion(client, headers, grid_data, nws_base_url)
 
             return parse_nws_forecast(forecast_data), discussion
+        else:
+            grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+
+            async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+                response = await new_client.get(grid_url, headers=headers)
+                response.raise_for_status()
+                grid_data = response.json()
+
+                forecast_url = grid_data["properties"]["forecast"]
+                response = await new_client.get(forecast_url, headers=headers)
+                response.raise_for_status()
+                forecast_data = response.json()
+
+                discussion = await get_nws_discussion(new_client, headers, grid_data, nws_base_url)
+
+                return parse_nws_forecast(forecast_data), discussion
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS forecast and discussion: {exc}")
@@ -165,6 +257,7 @@ async def get_nws_alerts(
     nws_base_url: str,
     user_agent: str,
     timeout: float,
+    client: httpx.AsyncClient | None = None,
 ) -> WeatherAlerts | None:
     """Fetch weather alerts from the NWS API."""
     try:
@@ -174,14 +267,20 @@ async def get_nws_alerts(
             "status": "actual",
             "message_type": "alert",
         }
+        headers = {"User-Agent": user_agent}
 
-        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
-            headers = {"User-Agent": user_agent}
+        # Use provided client or create a new one
+        if client is not None:
             response = await client.get(alerts_url, params=params, headers=headers)
             response.raise_for_status()
             alerts_data = response.json()
-
             return parse_nws_alerts(alerts_data)
+        else:
+            async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+                response = await new_client.get(alerts_url, params=params, headers=headers)
+                response.raise_for_status()
+                alerts_data = response.json()
+                return parse_nws_alerts(alerts_data)
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS alerts: {exc}")
@@ -193,16 +292,21 @@ async def get_nws_hourly_forecast(
     nws_base_url: str,
     user_agent: str,
     timeout: float,
+    client: httpx.AsyncClient | None = None,
+    grid_data: dict[str, Any] | None = None,
 ) -> HourlyForecast | None:
     """Fetch hourly forecast from the NWS API."""
     try:
-        grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+        headers = {"User-Agent": user_agent}
 
-        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
-            headers = {"User-Agent": user_agent}
-            response = await client.get(grid_url, headers=headers)
-            response.raise_for_status()
-            grid_data = response.json()
+        # Use provided client or create a new one
+        if client is not None:
+            # Fetch grid data if not provided
+            if grid_data is None:
+                grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+                response = await client.get(grid_url, headers=headers)
+                response.raise_for_status()
+                grid_data = response.json()
 
             hourly_forecast_url = grid_data.get("properties", {}).get("forecastHourly")
             if not hourly_forecast_url:
@@ -214,6 +318,24 @@ async def get_nws_hourly_forecast(
             hourly_data = response.json()
 
             return parse_nws_hourly_forecast(hourly_data)
+        else:
+            grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+
+            async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+                response = await new_client.get(grid_url, headers=headers)
+                response.raise_for_status()
+                grid_data = response.json()
+
+                hourly_forecast_url = grid_data.get("properties", {}).get("forecastHourly")
+                if not hourly_forecast_url:
+                    logger.warning("No hourly forecast URL found in grid data")
+                    return None
+
+                response = await new_client.get(hourly_forecast_url, headers=headers)
+                response.raise_for_status()
+                hourly_data = response.json()
+
+                return parse_nws_hourly_forecast(hourly_data)
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS hourly forecast: {exc}")
