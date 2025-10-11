@@ -16,6 +16,8 @@ from ...utils import TemperatureUnit
 from ..weather_presenter import CurrentConditionsPresentation, Metric
 from .formatters import (
     format_dewpoint,
+    format_moon_phase,
+    format_moon_time,
     format_pressure_value,
     format_sun_time,
     format_temperature_pair,
@@ -84,6 +86,18 @@ def build_current_conditions(
     sunset_str = format_sun_time(current.sunset_time)
     if sunset_str:
         metrics.append(Metric("Sunset", sunset_str))
+
+    moonrise_str = format_moon_time(current.moonrise_time)
+    if moonrise_str:
+        metrics.append(Metric("Moonrise", moonrise_str))
+
+    moonset_str = format_moon_time(current.moonset_time)
+    if moonset_str:
+        metrics.append(Metric("Moonset", moonset_str))
+
+    moon_phase_str = format_moon_phase(current.moon_phase)
+    if moon_phase_str:
+        metrics.append(Metric("Moon Phase", moon_phase_str))
 
     if current.last_updated:
         metrics.append(Metric("Last updated", format_timestamp(current.last_updated)))

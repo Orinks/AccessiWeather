@@ -193,6 +193,9 @@ class OpenMeteoApiClient:
             "daily": [
                 "sunrise",
                 "sunset",
+                "moonrise",
+                "moonset",
+                "moon_phase",
             ],
             "temperature_unit": temperature_unit,
             "wind_speed_unit": wind_speed_unit,
