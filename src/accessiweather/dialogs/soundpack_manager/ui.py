@@ -178,13 +178,8 @@ def create_button_panel(dlg) -> toga.Box:
 
     button_box.add(toga.Box(style=Pack(flex=1)))
 
-    dlg.create_button = toga.Button(
-        "Create New", on_press=dlg._on_create_pack, style=Pack(margin_right=10)
-    )
-    button_box.add(dlg.create_button)
-
     dlg.create_wizard_button = toga.Button(
-        "Create with Wizard", on_press=dlg._on_create_pack_wizard, style=Pack(margin_right=10)
+        "Create Sound Pack", on_press=dlg._on_create_pack_wizard, style=Pack(margin_right=10)
     )
     button_box.add(dlg.create_wizard_button)
 
