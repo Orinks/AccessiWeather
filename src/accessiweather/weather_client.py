@@ -314,7 +314,7 @@ class WeatherClient:
             await self._enrich_with_nws_discussion(weather_data, location)
             # Add Visual Crossing alerts if available (works globally)
             await self._enrich_with_visual_crossing_alerts(weather_data, location)
-        
+
         await self._populate_environmental_metrics(weather_data, location)
         await self._merge_international_alerts(weather_data, location)
         self._apply_trend_insights(weather_data)
@@ -455,15 +455,17 @@ class WeatherClient:
         # Only fetch NWS discussion for US locations
         if not self._is_us_location(location):
             return
-        
+
         # If we already have a discussion, don't overwrite it unless it's a generic message
-        if weather_data.discussion and not weather_data.discussion.startswith("Forecast discussion not available"):
+        if weather_data.discussion and not weather_data.discussion.startswith(
+            "Forecast discussion not available"
+        ):
             return
-        
+
         try:
             logger.debug(f"Fetching forecast discussion from NWS for {location.name}")
             _, discussion = await self._get_nws_forecast_and_discussion(location)
-            
+
             if discussion:
                 weather_data.discussion = discussion
                 logger.info("Added forecast discussion from NWS")
@@ -477,23 +479,25 @@ class WeatherClient:
         # Only use Visual Crossing for alerts if we have a client
         if not self.visual_crossing_client:
             return
-        
+
         try:
             logger.debug(f"Fetching alerts from Visual Crossing for {location.name}")
             vc_alerts_data = await self.visual_crossing_client.get_alerts(location)
-            
+
             if vc_alerts_data and vc_alerts_data.has_alerts():
                 logger.info(f"Adding {len(vc_alerts_data.alerts)} alerts from Visual Crossing")
-                
+
                 # Merge with existing alerts (if any)
                 existing = weather_data.alerts.alerts if weather_data.alerts else []
-                combined: dict[str, WeatherAlert] = {alert.get_unique_id(): alert for alert in existing}
-                
+                combined: dict[str, WeatherAlert] = {
+                    alert.get_unique_id(): alert for alert in existing
+                }
+
                 for alert in vc_alerts_data.alerts:
                     combined.setdefault(alert.get_unique_id(), alert)
-                
+
                 weather_data.alerts = WeatherAlerts(alerts=list(combined.values()))
-                
+
                 # Process alerts for notifications
                 await self._process_visual_crossing_alerts(vc_alerts_data, location)
         except Exception as exc:  # noqa: BLE001
@@ -505,24 +509,30 @@ class WeatherClient:
         """Enrich weather data with sunrise/sunset from Open-Meteo if not already present."""
         if not weather_data.current:
             return
-        
+
         # If we already have sunrise/sunset data, don't fetch it again
         if weather_data.current.sunrise_time and weather_data.current.sunset_time:
             return
-        
+
         try:
             # Fetch sunrise/sunset from Open-Meteo
             logger.debug(f"Fetching sunrise/sunset from Open-Meteo for {location.name}")
             openmeteo_current = await self._get_openmeteo_current_conditions(location)
-            
-            if openmeteo_current and (openmeteo_current.sunrise_time or openmeteo_current.sunset_time):
+
+            if openmeteo_current and (
+                openmeteo_current.sunrise_time or openmeteo_current.sunset_time
+            ):
                 # Merge sunrise/sunset into existing current conditions
                 if openmeteo_current.sunrise_time:
                     weather_data.current.sunrise_time = openmeteo_current.sunrise_time
-                    logger.info(f"Added sunrise time from Open-Meteo: {openmeteo_current.sunrise_time}")
+                    logger.info(
+                        f"Added sunrise time from Open-Meteo: {openmeteo_current.sunrise_time}"
+                    )
                 if openmeteo_current.sunset_time:
                     weather_data.current.sunset_time = openmeteo_current.sunset_time
-                    logger.info(f"Added sunset time from Open-Meteo: {openmeteo_current.sunset_time}")
+                    logger.info(
+                        f"Added sunset time from Open-Meteo: {openmeteo_current.sunset_time}"
+                    )
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"Failed to fetch sunrise/sunset from Open-Meteo: {exc}")
 
