@@ -17,6 +17,7 @@ from ..weather_presenter import CurrentConditionsPresentation, Metric
 from .formatters import (
     format_dewpoint,
     format_pressure_value,
+    format_sun_time,
     format_temperature_pair,
     format_timestamp,
     format_visibility_value,
@@ -75,6 +76,14 @@ def build_current_conditions(
     if current.uv_index is not None:
         uv_desc = get_uv_description(current.uv_index)
         metrics.append(Metric("UV Index", f"{current.uv_index} ({uv_desc})"))
+
+    sunrise_str = format_sun_time(current.sunrise_time)
+    if sunrise_str:
+        metrics.append(Metric("Sunrise", sunrise_str))
+
+    sunset_str = format_sun_time(current.sunset_time)
+    if sunset_str:
+        metrics.append(Metric("Sunset", sunset_str))
 
     if current.last_updated:
         metrics.append(Metric("Last updated", format_timestamp(current.last_updated)))

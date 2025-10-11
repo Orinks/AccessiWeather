@@ -40,6 +40,8 @@ class CurrentConditions:
     visibility_miles: float | None = None
     visibility_km: float | None = None
     uv_index: float | None = None
+    sunrise_time: datetime | None = None
+    sunset_time: datetime | None = None
     last_updated: datetime | None = None
 
     def has_data(self) -> bool:
