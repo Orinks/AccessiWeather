@@ -42,6 +42,7 @@ class AccessiWeatherApp(toga.App):
         self.presenter: WeatherPresenter | None = None
         self.update_service = None  # Will be initialized after config_manager
         self.single_instance_manager = None  # Will be initialized in startup
+        self.weather_history_service = None  # Weather history comparison service
 
         # UI components
         self.location_selection: toga.Selection | None = None
