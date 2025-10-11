@@ -211,37 +211,34 @@ The application uses a centralized thread management system:
 
 ## Recent Features
 
-### Weather History Tracker (v0.9.4-dev)
+### Weather History Comparisons (v0.9.4-dev)
 
-A new feature that tracks weather conditions over time and allows comparison with historical data.
+A feature that compares current weather with historical data using Open-Meteo's archive API.
 
 **Key Components:**
-- `weather_history.py`: Core implementation with `WeatherHistoryTracker`, `WeatherHistoryEntry`, and `WeatherComparison` classes
-- Persistent storage in JSON format
-- Automatic cleanup of old entries
+- `weather_history.py`: Core implementation with `WeatherHistoryService`, `HistoricalWeatherData`, and `WeatherComparison` classes
+- API-based historical data (no local storage)
 - Screen-reader friendly comparison summaries
 
 **Configuration:**
-- `weather_history_enabled`: Enable/disable history tracking (default: True)
-- `weather_history_retention_days`: Days to retain history (default: 30)
+- `weather_history_enabled`: Enable/disable history comparisons (default: True)
 
 **Usage Example:**
 ```python
-from accessiweather.weather_history import WeatherHistoryTracker
+from accessiweather.weather_history import WeatherHistoryService
 
-tracker = WeatherHistoryTracker(history_file="weather_history.json", max_days=30)
-tracker.add_entry(location=location, conditions=conditions)
-tracker.save()
+service = WeatherHistoryService()
 
 # Compare with yesterday
-comparison = tracker.get_comparison_for_yesterday("Location Name", current_conditions)
-summary = comparison.get_accessible_summary()
+comparison = service.compare_with_yesterday(location, current_conditions)
+if comparison:
+    summary = comparison.get_accessible_summary()
 ```
 
 **Documentation:**
 - Full documentation: `docs/weather_history_feature.md`
 - Demo script: `examples/weather_history_demo.py`
-- Tests: `tests/test_weather_history.py` and `tests/test_weather_history_integration.py`
+- Tests: `tests/test_weather_history.py`
 
 ## Code Style
 

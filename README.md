@@ -135,7 +135,7 @@ accessiweather --portable
 - **Hourly forecasts**: Short-term detailed predictions
 - **Weather alerts**: Active watches, warnings, and advisories (NWS locations only)
 - **Weather discussions**: In-depth analysis from Weather Prediction Center and Storm Prediction Center
-- **Weather history tracking**: Compare current weather with past days (yesterday, last week)
+- **Weather history comparisons**: Compare current weather with historical data via Open-Meteo archive API
 - **Configurable updates**: Customizable refresh intervals (1-1440 minutes)
 
 ### System Integration

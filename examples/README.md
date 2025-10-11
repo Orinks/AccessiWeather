@@ -6,15 +6,14 @@ This directory contains example scripts and demonstrations of AccessiWeather fea
 
 ### weather_history_demo.py
 
-Demonstrates the Weather History Tracker feature that allows tracking and comparing weather conditions over time.
+Demonstrates the Weather History Comparison feature that uses Open-Meteo's archive API to compare current weather with historical data.
 
 **Features shown:**
-- Initializing the weather history tracker
-- Adding weather history entries
-- Saving and loading history from file
-- Comparing current weather with past days (yesterday, last week)
+- Initializing the weather history service
+- Fetching historical weather from Open-Meteo archive API
+- Comparing current weather with past days (yesterday, last week, custom dates)
 - Generating accessible summaries for screen readers
-- Automatic cleanup of old entries
+- No local storage or background recording required
 
 **Running the demo:**
 ```bash
@@ -24,25 +23,13 @@ python3 examples/weather_history_demo.py
 
 **Sample output:**
 ```
-======================================================================
-Weather History Tracker Demo
-======================================================================
-
-1. Initializing Weather History Tracker...
-   ✓ Tracker created with 30-day retention
-
-2. Creating location...
-   ✓ Location: New York City
-
-...
-
-7. Comparing with Yesterday:
-   Temperature: 8.0 degrees warmer
-   Condition: Changed
-   Previous: Partly Cloudy
+Comparing with Yesterday:
+   Fetching historical data from Open-Meteo archive API...
+   ✓ Historical data retrieved
+   Temperature difference: +11.0°F
 
    Accessible Summary:
-   "Compared to yesterday: 8.0 degrees warmer. Changed from Partly Cloudy to Sunny."
+   "Compared to yesterday: 11.0 degrees warmer. Changed from Overcast to Sunny."
 ```
 
 ## Creating New Examples
