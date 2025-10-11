@@ -15,6 +15,7 @@ class Location:
     name: str
     latitude: float
     longitude: float
+    timezone: str | None = None
 
     def __str__(self) -> str:
         return self.name
@@ -24,15 +25,18 @@ class Location:
 class CurrentConditions:
     """Current weather conditions."""
 
+    temperature: float | None = None
     temperature_f: float | None = None
     temperature_c: float | None = None
     condition: str | None = None
     humidity: int | None = None
+    wind_speed: float | None = None
     dewpoint_f: float | None = None
     dewpoint_c: float | None = None
     wind_speed_mph: float | None = None
     wind_speed_kph: float | None = None
     wind_direction: str | None = None
+    pressure: float | None = None
     pressure_in: float | None = None
     pressure_mb: float | None = None
     feels_like_f: float | None = None
@@ -48,11 +52,32 @@ class CurrentConditions:
         """Check if we have any meaningful weather data."""
         return any(
             [
+                self.temperature is not None,
                 self.temperature_f is not None,
                 self.temperature_c is not None,
                 self.condition is not None,
             ]
         )
+
+    def __post_init__(self) -> None:
+        """Backfill unit-agnostic fields when only unit-specific data is provided."""
+        if self.temperature is None:
+            if self.temperature_f is not None:
+                self.temperature = self.temperature_f
+            elif self.temperature_c is not None:
+                self.temperature = self.temperature_c
+
+        if self.wind_speed is None:
+            if self.wind_speed_mph is not None:
+                self.wind_speed = self.wind_speed_mph
+            elif self.wind_speed_kph is not None:
+                self.wind_speed = self.wind_speed_kph
+
+        if self.pressure is None:
+            if self.pressure_in is not None:
+                self.pressure = self.pressure_in
+            elif self.pressure_mb is not None:
+                self.pressure = self.pressure_mb
 
 
 @dataclass
