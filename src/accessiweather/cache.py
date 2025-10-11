@@ -184,6 +184,8 @@ def _serialize_current(current: CurrentConditions | None) -> dict | None:
         "visibility_miles": current.visibility_miles,
         "visibility_km": current.visibility_km,
         "uv_index": current.uv_index,
+        "sunrise_time": _serialize_datetime(current.sunrise_time),
+        "sunset_time": _serialize_datetime(current.sunset_time),
         "last_updated": _serialize_datetime(current.last_updated),
     }
 
@@ -208,6 +210,8 @@ def _deserialize_current(data: dict | None) -> CurrentConditions | None:
         visibility_miles=data.get("visibility_miles"),
         visibility_km=data.get("visibility_km"),
         uv_index=data.get("uv_index"),
+        sunrise_time=_deserialize_datetime(data.get("sunrise_time")),
+        sunset_time=_deserialize_datetime(data.get("sunset_time")),
         last_updated=_deserialize_datetime(data.get("last_updated")),
     )
 
