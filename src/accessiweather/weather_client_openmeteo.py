@@ -41,10 +41,12 @@ async def get_openmeteo_current_conditions(
             "latitude": location.latitude,
             "longitude": location.longitude,
             "current": "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,pressure_msl",
+            "daily": "sunrise,sunset",
             "temperature_unit": "fahrenheit",
             "wind_speed_unit": "mph",
             "precipitation_unit": "inch",
             "timezone": "auto",
+            "forecast_days": 1,
         }
 
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
