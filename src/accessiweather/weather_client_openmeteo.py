@@ -176,7 +176,7 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         moonrise_list = daily.get("moonrise", [])
         moonset_list = daily.get("moonset", [])
         moon_phase_list = daily.get("moon_phase", [])
-        
+
         if sunrise_list and len(sunrise_list) > 0:
             try:
                 sunrise_time = datetime.fromisoformat(sunrise_list[0])

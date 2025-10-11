@@ -264,27 +264,26 @@ def format_moon_phase(moon_phase: float | None) -> str | None:
     """
     if moon_phase is None:
         return None
-    
+
     # Normalize to 0-1 range
     phase = moon_phase % 1.0
-    
+
     # Define moon phase names with their approximate ranges
     if phase < 0.03 or phase > 0.97:
         return "New Moon"
-    elif phase < 0.22:
+    if phase < 0.22:
         return "Waxing Crescent"
-    elif phase < 0.28:
+    if phase < 0.28:
         return "First Quarter"
-    elif phase < 0.47:
+    if phase < 0.47:
         return "Waxing Gibbous"
-    elif phase < 0.53:
+    if phase < 0.53:
         return "Full Moon"
-    elif phase < 0.72:
+    if phase < 0.72:
         return "Waning Gibbous"
-    elif phase < 0.78:
+    if phase < 0.78:
         return "Last Quarter"
-    else:
-        return "Waning Crescent"
+    return "Waning Crescent"
 
 
 def wrap_text(text: str, width: int) -> str:
