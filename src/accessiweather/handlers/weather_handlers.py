@@ -85,6 +85,25 @@ async def update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherD
                     current_text += "\n\nTrends:\n" + "\n".join(
                         f"• {trend}" for trend in trend_lines
                     )
+
+                # Add weather history comparison if enabled
+                if (
+                    app.weather_history_service
+                    and weather_data.location
+                    and weather_data.current_conditions
+                ):
+                    try:
+                        # Try to get yesterday's comparison
+                        comparison = app.weather_history_service.compare_with_yesterday(
+                            weather_data.location, weather_data.current_conditions
+                        )
+                        if comparison:
+                            history_text = comparison.get_accessible_summary()
+                            current_text += f"\n\nHistory:\n• {history_text}"
+                            logger.debug("Added weather history comparison to display")
+                    except Exception as hist_exc:
+                        logger.debug(f"Could not fetch weather history: {hist_exc}")
+
                 if presentation.status_messages:
                     status_lines = "\n".join(f"• {line}" for line in presentation.status_messages)
                     current_text += f"\n\nStatus:\n{status_lines}"
@@ -175,3 +194,80 @@ async def notify_new_alerts(app: AccessiWeatherApp, alerts: Any) -> None:
                     break
         except Exception as fallback_error:  # pragma: no cover - defensive logging
             logger.error("Fallback notification also failed: %s", fallback_error)
+
+
+async def on_view_weather_history(app: AccessiWeatherApp, widget: toga.Widget) -> None:
+    """Show weather history comparison dialog."""
+    logger.info("View weather history pressed")
+
+    if not app.weather_history_service:
+        await app.main_window.dialog(
+            toga.InfoDialog(
+                "Weather History",
+                "Weather history comparison is currently disabled. "
+                "Enable it in Settings to compare current weather with historical data.",
+            )
+        )
+        return
+
+    current_location = app.config_manager.get_current_location()
+    if not current_location:
+        await app.main_window.dialog(
+            toga.InfoDialog(
+                "Weather History", "No location selected. Please select a location first."
+            )
+        )
+        return
+
+    if not app.current_weather_data or not app.current_weather_data.current_conditions:
+        await app.main_window.dialog(
+            toga.InfoDialog(
+                "Weather History",
+                "No current weather data available. Please refresh weather data first.",
+            )
+        )
+        return
+
+    try:
+        # Fetch historical comparisons
+        app_helpers.update_status(app, "Fetching historical weather data...")
+
+        yesterday_comp = app.weather_history_service.compare_with_yesterday(
+            current_location, app.current_weather_data.current_conditions
+        )
+
+        week_comp = app.weather_history_service.compare_with_last_week(
+            current_location, app.current_weather_data.current_conditions
+        )
+
+        # Build message
+        message_parts = [f"Weather History for {current_location.name}\n"]
+
+        if yesterday_comp:
+            message_parts.append("Yesterday:")
+            message_parts.append(yesterday_comp.get_accessible_summary())
+            message_parts.append("")
+        else:
+            message_parts.append("Yesterday: No historical data available")
+            message_parts.append("")
+
+        if week_comp:
+            message_parts.append("Last Week:")
+            message_parts.append(week_comp.get_accessible_summary())
+        else:
+            message_parts.append("Last Week: No historical data available")
+
+        message = "\n".join(message_parts)
+
+        await app.main_window.dialog(toga.InfoDialog("Weather History", message))
+
+        app_helpers.update_status(app, "Weather history displayed")
+
+    except Exception as exc:
+        logger.error("Failed to fetch weather history: %s", exc)
+        await app.main_window.dialog(
+            toga.InfoDialog(
+                "Weather History Error", f"Could not fetch historical weather data: {exc}"
+            )
+        )
+        app_helpers.update_status(app, "Failed to fetch weather history")

@@ -289,7 +289,14 @@ def create_menu_system(app: AccessiWeatherApp) -> None:
         group=toga.Group.VIEW,
     )
 
-    app.commands.add(settings_cmd, exit_cmd, add_location_cmd, refresh_cmd)
+    history_cmd = toga.Command(
+        lambda widget: asyncio.create_task(event_handlers.on_view_weather_history(app, widget)),
+        text="View Weather History",
+        tooltip="Compare current weather with historical data",
+        group=toga.Group.VIEW,
+    )
+
+    app.commands.add(settings_cmd, exit_cmd, add_location_cmd, refresh_cmd, history_cmd)
 
     if toga.Command.ABOUT in app.commands:
         app.commands[toga.Command.ABOUT].action = lambda widget: asyncio.create_task(
