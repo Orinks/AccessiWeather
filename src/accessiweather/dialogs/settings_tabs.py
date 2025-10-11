@@ -350,6 +350,18 @@ def create_advanced_tab(dialog):
     )
     advanced_box.add(dialog.startup_enabled_switch)
 
+    dialog.weather_history_enabled_switch = toga.Switch(
+        "Enable weather history comparisons",
+        value=getattr(dialog.current_settings, "weather_history_enabled", True),
+        style=Pack(margin_bottom=10),
+        id="weather_history_enabled_switch",
+    )
+    dialog.weather_history_enabled_switch.aria_label = "Weather history comparisons toggle"
+    dialog.weather_history_enabled_switch.aria_description = (
+        "Enable or disable comparing current weather with historical data from Open-Meteo archive API"
+    )
+    advanced_box.add(dialog.weather_history_enabled_switch)
+
     dialog.debug_mode_switch = toga.Switch(
         "Enable Debug Mode",
         value=getattr(dialog.current_settings, "debug_mode", False),

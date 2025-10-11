@@ -17,6 +17,7 @@ from .config import ConfigManager
 from .display import WeatherPresenter
 from .location_manager import LocationManager
 from .weather_client import WeatherClient
+from .weather_history import WeatherHistoryService
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle guard
     from .app import AccessiWeatherApp
@@ -85,6 +86,13 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     alert_settings = config.settings.to_alert_settings()
     app.alert_manager = AlertManager(config_dir, alert_settings)
     app.alert_notification_system = AlertNotificationSystem(app.alert_manager, app._notifier)
+
+    # Initialize weather history service
+    if config.settings.weather_history_enabled:
+        app.weather_history_service = WeatherHistoryService()
+        logger.info("Weather history service initialized")
+    else:
+        app.weather_history_service = None
 
     try:
         if bool(getattr(config.settings, "minimize_to_tray", False)):
