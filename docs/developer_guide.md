@@ -209,6 +209,40 @@ The application uses a centralized thread management system:
 3. Ensure all tests pass before committing.
 4. Update documentation (like this guide) to reflect the new feature or changes.
 
+## Recent Features
+
+### Weather History Tracker (v0.9.4-dev)
+
+A new feature that tracks weather conditions over time and allows comparison with historical data.
+
+**Key Components:**
+- `weather_history.py`: Core implementation with `WeatherHistoryTracker`, `WeatherHistoryEntry`, and `WeatherComparison` classes
+- Persistent storage in JSON format
+- Automatic cleanup of old entries
+- Screen-reader friendly comparison summaries
+
+**Configuration:**
+- `weather_history_enabled`: Enable/disable history tracking (default: True)
+- `weather_history_retention_days`: Days to retain history (default: 30)
+
+**Usage Example:**
+```python
+from accessiweather.weather_history import WeatherHistoryTracker
+
+tracker = WeatherHistoryTracker(history_file="weather_history.json", max_days=30)
+tracker.add_entry(location=location, conditions=conditions)
+tracker.save()
+
+# Compare with yesterday
+comparison = tracker.get_comparison_for_yesterday("Location Name", current_conditions)
+summary = comparison.get_accessible_summary()
+```
+
+**Documentation:**
+- Full documentation: `docs/weather_history_feature.md`
+- Demo script: `examples/weather_history_demo.py`
+- Tests: `tests/test_weather_history.py` and `tests/test_weather_history_integration.py`
+
 ## Code Style
 
 This project follows PEP 8 guidelines for Python code style. Key points:
