@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Demo script for Weather History feature using Open-Meteo archive API.
+"""
+Demo script for Weather History feature using Open-Meteo archive API.
 
 This script demonstrates the weather history comparison functionality
 using Open-Meteo's historical weather API.
@@ -7,7 +8,7 @@ using Open-Meteo's historical weather API.
 
 import sys
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -46,7 +47,7 @@ class MockModels:
 sys.modules["accessiweather.models"] = MockModels()
 
 # Now import weather_history
-from weather_history import WeatherHistoryService, HistoricalWeatherData, WeatherComparison
+from weather_history import WeatherHistoryService  # noqa: E402
 
 
 def create_mock_client():
@@ -58,7 +59,10 @@ def create_mock_client():
         target_date = params["start_date"]
 
         # Yesterday's weather (cooler, cloudy)
-        if "2025-10-10" in target_date or (datetime.now() - timedelta(days=1)).date().isoformat() in target_date:
+        if (
+            "2025-10-10" in target_date
+            or (datetime.now() - timedelta(days=1)).date().isoformat() in target_date
+        ):
             return {
                 "daily": {
                     "time": [target_date],
@@ -71,7 +75,7 @@ def create_mock_client():
                 }
             }
         # Last week (rainy, cold)
-        elif (datetime.now() - timedelta(days=7)).date().isoformat() in target_date:
+        if (datetime.now() - timedelta(days=7)).date().isoformat() in target_date:
             return {
                 "daily": {
                     "time": [target_date],
@@ -167,7 +171,7 @@ def main():
             print(f"   Previous: {yesterday_comp.previous_condition}")
         print()
         print("   Accessible Summary:")
-        print(f"   \"{yesterday_comp.get_accessible_summary()}\"")
+        print(f'   "{yesterday_comp.get_accessible_summary()}"')
     else:
         print("   ✗ No historical data available")
     print()
@@ -185,7 +189,7 @@ def main():
             print(f"   Previous: {week_comp.previous_condition}")
         print()
         print("   Accessible Summary:")
-        print(f"   \"{week_comp.get_accessible_summary()}\"")
+        print(f'   "{week_comp.get_accessible_summary()}"')
     else:
         print("   ✗ No historical data available")
     print()
@@ -201,7 +205,7 @@ def main():
         print(f"   Temperature difference: {custom_comp.temperature_difference:+.1f}°F")
         print()
         print("   Accessible Summary:")
-        print(f"   \"{custom_comp.get_accessible_summary()}\"")
+        print(f'   "{custom_comp.get_accessible_summary()}"')
     else:
         print("   ✗ No historical data available")
     print()
