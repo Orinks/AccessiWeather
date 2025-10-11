@@ -39,9 +39,11 @@ class OpenMeteoMapper:
         try:
             current = openmeteo_data.get("current", {})
             current_units = openmeteo_data.get("current_units", {})
+            daily = openmeteo_data.get("daily", {})
 
             logger.debug(f"Open-Meteo current data keys: {list(current.keys())}")
             logger.debug(f"Open-Meteo current units: {current_units}")
+            logger.debug(f"Open-Meteo daily data keys: {list(daily.keys()) if daily else 'None'}")
 
             # Map the data to NWS-like structure
             temperature_unit = current_units.get("temperature_2m", "°C")
@@ -136,6 +138,13 @@ class OpenMeteoMapper:
                             "rawString": str(current.get("weather_code", 0)),
                         }
                     ],
+                    # Sunrise/sunset from daily data (today's values)
+                    "sunrise": (
+                        daily.get("sunrise", [None])[0] if daily and daily.get("sunrise") else None
+                    ),
+                    "sunset": (
+                        daily.get("sunset", [None])[0] if daily and daily.get("sunset") else None
+                    ),
                 }
             }
 

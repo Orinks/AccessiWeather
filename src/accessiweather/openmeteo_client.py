@@ -179,10 +179,15 @@ class OpenMeteoApiClient:
                 "wind_direction_10m",
                 "wind_gusts_10m",
             ],
+            "daily": [
+                "sunrise",
+                "sunset",
+            ],
             "temperature_unit": temperature_unit,
             "wind_speed_unit": wind_speed_unit,
             "precipitation_unit": precipitation_unit,
             "timezone": "auto",
+            "forecast_days": 1,
         }
 
         return self._make_request("forecast", params)
