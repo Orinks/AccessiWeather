@@ -1,4 +1,5 @@
-"""Tests for utility functions in the simplified AccessiWeather application.
+"""
+Tests for utility functions in the simplified AccessiWeather application.
 
 This module provides comprehensive tests for the utility functions in the simplified
 AccessiWeather implementation, adapted from the existing wxPython test suite while

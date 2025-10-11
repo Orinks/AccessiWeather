@@ -1,4 +1,5 @@
-"""Alert management system for AccessiWeather.
+"""
+Alert management system for AccessiWeather.
 
 This module provides comprehensive alert state tracking, change detection,
 and notification management following the design principles for unique
@@ -247,9 +248,11 @@ class AlertManager:
         return True, "allowed"
 
     def process_alerts(self, alerts: WeatherAlerts) -> list[tuple[WeatherAlert, str]]:
-        """Process incoming alerts and return list of alerts to notify.
+        """
+        Process incoming alerts and return list of alerts to notify.
 
-        Returns:
+        Returns
+        -------
             List of tuples (alert, notification_reason) for alerts that should trigger notifications.
 
         """
@@ -328,7 +331,8 @@ class AlertManager:
         return notifications_to_send
 
     def _get_previous_severity_priority(self, state: AlertState) -> int:
-        """Get the severity priority from the previous version of an alert.
+        """
+        Get the severity priority from the previous version of an alert.
 
         This is a simplified implementation - in a more sophisticated system,
         we might store the previous alert data.

@@ -1,4 +1,5 @@
-"""Simple location management for AccessiWeather.
+"""
+Simple location management for AccessiWeather.
 
 This module provides simple location management functionality,
 replacing the complex location service with direct operations.

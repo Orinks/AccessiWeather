@@ -24,7 +24,8 @@ logger = logging.getLogger(__name__)
 
 
 class SoundPackManagerDialog:
-    """Orchestrates the modular Sound Pack Manager dialog.
+    """
+    Orchestrates the modular Sound Pack Manager dialog.
 
     This class wires UI components (built in ui.py) with state, mapping, and
     filesystem operations implemented in sibling modules. It replaces the
@@ -32,7 +33,8 @@ class SoundPackManagerDialog:
     """
 
     def __init__(self, app: toga.App, current_pack: str = "default") -> None:
-        """Construct the dialog orchestrator.
+        """
+        Construct the dialog orchestrator.
 
         Parameters
         ----------

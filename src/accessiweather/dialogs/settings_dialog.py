@@ -1,4 +1,5 @@
-"""Settings dialog for AccessiWeather Toga application.
+"""
+Settings dialog for AccessiWeather Toga application.
 
 This module provides a comprehensive settings dialog with tabbed interface
 matching the functionality of the wxPython version.
@@ -458,7 +459,8 @@ class SettingsDialog:
             sel.enabled = enabled
 
     async def _on_manage_soundpacks(self, widget):
-        """Open the sound pack manager dialog.
+        """
+        Open the sound pack manager dialog.
 
         Note: The Sound Pack Manager is for importing, editing, and managing packs.
         The current pack selection is controlled by the selection widget in this Settings dialog.

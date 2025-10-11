@@ -1,4 +1,5 @@
-"""Platform detection module for AccessiWeather update system.
+"""
+Platform detection module for AccessiWeather update system.
 
 This module provides functionality to detect the current platform, deployment type,
 and determine appropriate update artifacts for Briefcase-packaged applications.
@@ -33,9 +34,11 @@ class PlatformDetector:
         self._platform_info: PlatformInfo | None = None
 
     def get_platform_info(self) -> PlatformInfo:
-        """Get comprehensive platform information.
+        """
+        Get comprehensive platform information.
 
-        Returns:
+        Returns
+        -------
             PlatformInfo object with platform details
 
         """
@@ -112,12 +115,15 @@ class PlatformDetector:
         return Path(__file__).parent.parent.parent.parent
 
     def _detect_deployment_type(self, app_directory: Path) -> str:
-        """Detect whether the app is portable or installed.
+        """
+        Detect whether the app is portable or installed.
 
         Args:
+        ----
             app_directory: Directory where the app is running from
 
         Returns:
+        -------
             'portable' or 'installed'
 
         """
@@ -156,12 +162,15 @@ class PlatformDetector:
         return "portable"
 
     def _is_briefcase_app(self, app_directory: Path) -> bool:
-        """Check if this is a Briefcase-packaged application.
+        """
+        Check if this is a Briefcase-packaged application.
 
         Args:
+        ----
             app_directory: Directory where the app is running from
 
         Returns:
+        -------
             True if this appears to be a Briefcase app
 
         """
@@ -194,13 +203,16 @@ class PlatformDetector:
         return False
 
     def _is_update_capable(self, deployment_type: str, app_directory: Path) -> bool:
-        """Determine if the app can perform auto-updates.
+        """
+        Determine if the app can perform auto-updates.
 
         Args:
+        ----
             deployment_type: 'portable' or 'installed'
             app_directory: Directory where the app is running from
 
         Returns:
+        -------
             True if auto-updates are possible
 
         """
@@ -221,12 +233,15 @@ class PlatformDetector:
         return False
 
     def get_update_artifacts(self, version: str) -> dict[str, str]:
-        """Get the appropriate update artifacts for the current platform.
+        """
+        Get the appropriate update artifacts for the current platform.
 
         Args:
+        ----
             version: Version string (e.g., "1.0.0")
 
         Returns:
+        -------
             Dictionary mapping artifact types to filenames
 
         """
@@ -250,18 +265,22 @@ class PlatformDetector:
         return artifacts.get(platform_info.platform, artifacts["linux"])
 
     def is_portable(self) -> bool:
-        """Check if the current deployment is portable.
+        """
+        Check if the current deployment is portable.
 
-        Returns:
+        Returns
+        -------
             True if running from a portable deployment
 
         """
         return self.get_platform_info().deployment_type == "portable"
 
     def is_update_capable(self) -> bool:
-        """Check if auto-updates are possible.
+        """
+        Check if auto-updates are possible.
 
-        Returns:
+        Returns
+        -------
             True if auto-updates are possible
 
         """

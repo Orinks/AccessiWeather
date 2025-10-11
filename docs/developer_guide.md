@@ -209,6 +209,37 @@ The application uses a centralized thread management system:
 3. Ensure all tests pass before committing.
 4. Update documentation (like this guide) to reflect the new feature or changes.
 
+## Recent Features
+
+### Weather History Comparisons (v0.9.4-dev)
+
+A feature that compares current weather with historical data using Open-Meteo's archive API.
+
+**Key Components:**
+- `weather_history.py`: Core implementation with `WeatherHistoryService`, `HistoricalWeatherData`, and `WeatherComparison` classes
+- API-based historical data (no local storage)
+- Screen-reader friendly comparison summaries
+
+**Configuration:**
+- `weather_history_enabled`: Enable/disable history comparisons (default: True)
+
+**Usage Example:**
+```python
+from accessiweather.weather_history import WeatherHistoryService
+
+service = WeatherHistoryService()
+
+# Compare with yesterday
+comparison = service.compare_with_yesterday(location, current_conditions)
+if comparison:
+    summary = comparison.get_accessible_summary()
+```
+
+**Documentation:**
+- Full documentation: `docs/weather_history_feature.md`
+- Demo script: `examples/weather_history_demo.py`
+- Tests: `tests/test_weather_history.py`
+
 ## Code Style
 
 This project follows PEP 8 guidelines for Python code style. Key points:

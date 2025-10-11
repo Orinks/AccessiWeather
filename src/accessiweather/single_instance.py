@@ -1,4 +1,5 @@
-"""Single instance manager for AccessiWeather Toga application.
+"""
+Single instance manager for AccessiWeather Toga application.
 
 This module provides functionality to ensure only one instance of the application
 can run at a time using a lock file approach, since Toga/BeeWare does not provide
@@ -19,9 +20,11 @@ class SingleInstanceManager:
     """Manages single instance functionality using a lock file approach."""
 
     def __init__(self, app: toga.App, lock_filename: str = "accessiweather.lock"):
-        """Initialize the single instance manager.
+        """
+        Initialize the single instance manager.
 
         Args:
+        ----
             app: The Toga application instance
             lock_filename: Name of the lock file to create
 
@@ -32,9 +35,11 @@ class SingleInstanceManager:
         self._lock_acquired = False
 
     def try_acquire_lock(self) -> bool:
-        """Try to acquire the single instance lock.
+        """
+        Try to acquire the single instance lock.
 
-        Returns:
+        Returns
+        -------
             bool: True if lock was acquired successfully, False if another instance is running
 
         """
@@ -68,9 +73,11 @@ class SingleInstanceManager:
             return True
 
     def _is_lock_file_stale(self) -> bool:
-        """Check if the lock file is stale (from a crashed instance).
+        """
+        Check if the lock file is stale (from a crashed instance).
 
-        Returns:
+        Returns
+        -------
             bool: True if the lock file is stale and should be removed
 
         """
@@ -114,12 +121,15 @@ class SingleInstanceManager:
             return False
 
     def _is_process_running(self, pid: int) -> bool:
-        """Check if a process with the given PID is running.
+        """
+        Check if a process with the given PID is running.
 
         Args:
+        ----
             pid: Process ID to check
 
         Returns:
+        -------
             bool: True if the process is running, False otherwise
 
         """

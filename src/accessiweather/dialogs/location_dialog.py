@@ -1,4 +1,5 @@
-"""Location dialog for AccessiWeather Simple.
+"""
+Location dialog for AccessiWeather Simple.
 
 This module provides dialogs for adding and managing locations in the Toga application.
 """
@@ -19,9 +20,11 @@ class AddLocationDialog:
     """Dialog for adding a new location with search functionality."""
 
     def __init__(self, app, config_manager):
-        """Initialize the add location dialog.
+        """
+        Initialize the add location dialog.
 
         Args:
+        ----
             app: The main application instance
             config_manager: Configuration manager instance
 

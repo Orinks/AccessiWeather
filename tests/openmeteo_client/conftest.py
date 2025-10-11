@@ -133,4 +133,9 @@ SAMPLE_HOURLY_FORECAST_DATA = {
 @pytest.fixture
 def openmeteo_client():
     """Create an OpenMeteoApiClient instance for testing."""
-    return OpenMeteoApiClient(user_agent="TestClient", timeout=30.0, max_retries=3, retry_delay=1.0)
+    return OpenMeteoApiClient(
+        user_agent="TestClient",
+        timeout=30.0,
+        max_retries=3,
+        retry_delay=0.0,
+    )

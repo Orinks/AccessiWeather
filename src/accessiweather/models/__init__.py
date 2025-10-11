@@ -1,4 +1,5 @@
-"""Data models for AccessiWeather.
+"""
+Data models for AccessiWeather.
 
 This package provides dataclasses for weather information, alerts, and configuration.
 """

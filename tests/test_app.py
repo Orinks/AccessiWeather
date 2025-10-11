@@ -1,4 +1,5 @@
-"""Tests for the simplified AccessiWeather Toga application.
+"""
+Tests for the simplified AccessiWeather Toga application.
 
 This module provides comprehensive tests for the AccessiWeatherApp in the simplified
 implementation, focusing on app initialization, UI components, event handlers,

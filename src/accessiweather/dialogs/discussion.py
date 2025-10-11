@@ -1,4 +1,5 @@
-"""Toga dialog for displaying forecast discussion text.
+"""
+Toga dialog for displaying forecast discussion text.
 
 This dialog displays the National Weather Service Area Forecast Discussion (AFD)
 with enhanced accessibility features and user experience improvements.
@@ -18,9 +19,11 @@ class ForecastDiscussionDialog:
     """Dialog for displaying NWS Area Forecast Discussion with accessibility features."""
 
     def __init__(self, app, discussion_text: str, location_name: str = None):
-        """Initialize the forecast discussion dialog.
+        """
+        Initialize the forecast discussion dialog.
 
         Args:
+        ----
             app: The main application instance
             discussion_text: The AFD text to display
             location_name: The name of the location for the AFD

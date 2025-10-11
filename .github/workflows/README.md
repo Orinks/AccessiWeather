@@ -5,8 +5,8 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 ## Core Workflows
 
 ### 1. CI (`windows-ci.yml`)
-**Purpose**: Lint, format check, and test the code  
-**Triggers**: 
+**Purpose**: Lint, format check, and test the code
+**Triggers**:
 - Push to `main` or `dev` branches
 - Pull requests to `main` or `dev`
 - Manual dispatch
@@ -22,7 +22,7 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 ---
 
 ### 2. Build and Package (`briefcase-build.yml`)
-**Purpose**: Build Windows installers and portable versions  
+**Purpose**: Build Windows installers and portable versions
 **Triggers**:
 - After successful CI workflow (on `main`, `dev`, or `feature/toga-migration`)
 - Manual dispatch (with optional version override)
@@ -39,7 +39,7 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 ---
 
 ### 3. Update GitHub Pages (`update-pages.yml`)
-**Purpose**: Update the download page with latest build info  
+**Purpose**: Update the download page with latest build info
 **Triggers**:
 - After successful Build workflow (on `main` or `dev`)
 - After releases are published/edited
@@ -56,7 +56,7 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 ## Release Workflows
 
 ### 4. Official Release (`briefcase-release.yml`)
-**Purpose**: Create official releases from main branch  
+**Purpose**: Create official releases from main branch
 **Triggers**:
 - Push to `main` or `feature/toga-migration` (excluding docs)
 - Manual dispatch with version input
@@ -72,7 +72,7 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 ---
 
 ### 5. Beta Release (`beta-release.yml`)
-**Purpose**: Create pre-release builds for testing  
+**Purpose**: Create pre-release builds for testing
 **Triggers**:
 - Push tags matching: `v*-beta.*`, `v*-alpha.*`, `v*-rc.*`, `v*-dev.*`
 - Manual dispatch with beta version input
@@ -88,7 +88,7 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 ## Testing Workflows
 
 ### 6. Test nightly.link (`test-nightly-link.yml`)
-**Purpose**: Test nightly.link integration  
+**Purpose**: Test nightly.link integration
 **Triggers**: Manual dispatch only
 
 **What it does**:

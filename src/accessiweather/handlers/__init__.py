@@ -33,6 +33,7 @@ from .weather_handlers import (
     convert_alerts_to_table_data,
     notify_new_alerts,
     on_refresh_pressed,
+    on_view_weather_history,
     refresh_weather_data,
     update_weather_displays,
 )
@@ -47,6 +48,7 @@ __all__ = [
     "update_weather_displays",
     "convert_alerts_to_table_data",
     "notify_new_alerts",
+    "on_view_weather_history",
     "on_settings_pressed",
     "show_settings_dialog",
     "on_discussion_pressed",

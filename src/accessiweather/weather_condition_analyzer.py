@@ -1,4 +1,5 @@
-"""Weather condition analysis engine for dynamic taskbar icon customization.
+"""
+Weather condition analysis engine for dynamic taskbar icon customization.
 
 This module provides functionality to analyze weather data and determine
 appropriate format string templates for the taskbar icon tooltip.
@@ -105,13 +106,16 @@ class WeatherConditionAnalyzer:
     def analyze_weather_conditions(
         self, weather_data: dict[str, Any], alerts_data: list[dict[str, Any]] | None = None
     ) -> dict[str, Any]:
-        """Analyze weather conditions and return analysis results.
+        """
+        Analyze weather conditions and return analysis results.
 
         Args:
+        ----
             weather_data: Current weather data dictionary
             alerts_data: Optional list of active weather alerts
 
         Returns:
+        -------
             Dictionary containing analysis results with recommended format template
 
         """
@@ -177,12 +181,15 @@ class WeatherConditionAnalyzer:
             }
 
     def _analyze_alerts(self, alerts_data: list[dict[str, Any]]) -> dict[str, Any]:
-        """Analyze weather alerts and return alert-specific analysis.
+        """
+        Analyze weather alerts and return alert-specific analysis.
 
         Args:
+        ----
             alerts_data: List of active weather alerts
 
         Returns:
+        -------
             Dictionary with alert analysis results
 
         """
@@ -209,12 +216,15 @@ class WeatherConditionAnalyzer:
         }
 
     def _analyze_temperature(self, weather_data: dict[str, Any]) -> dict[str, Any]:
-        """Analyze temperature conditions.
+        """
+        Analyze temperature conditions.
 
         Args:
+        ----
             weather_data: Weather data dictionary
 
         Returns:
+        -------
             Dictionary with temperature analysis
 
         """
@@ -238,12 +248,15 @@ class WeatherConditionAnalyzer:
         return {"temperature_extreme": None}
 
     def _analyze_wind(self, weather_data: dict[str, Any]) -> dict[str, Any]:
-        """Analyze wind conditions.
+        """
+        Analyze wind conditions.
 
         Args:
+        ----
             weather_data: Weather data dictionary
 
         Returns:
+        -------
             Dictionary with wind analysis
 
         """
@@ -265,12 +278,15 @@ class WeatherConditionAnalyzer:
         return {"wind_condition": "calm"}
 
     def _map_alert_severity(self, severity_str: str) -> WeatherSeverity:
-        """Map alert severity string to WeatherSeverity enum.
+        """
+        Map alert severity string to WeatherSeverity enum.
 
         Args:
+        ----
             severity_str: Alert severity string
 
         Returns:
+        -------
             WeatherSeverity enum value
 
         """
@@ -283,12 +299,15 @@ class WeatherConditionAnalyzer:
         return severity_mapping.get(severity_str, WeatherSeverity.NORMAL)
 
     def _calculate_priority_score(self, analysis: dict[str, Any]) -> int:
-        """Calculate priority score for condition analysis.
+        """
+        Calculate priority score for condition analysis.
 
         Args:
+        ----
             analysis: Analysis dictionary
 
         Returns:
+        -------
             Priority score (higher = more important)
 
         """
@@ -320,12 +339,15 @@ class WeatherConditionAnalyzer:
         return score
 
     def _determine_template(self, analysis: dict[str, Any]) -> str:
-        """Determine the recommended format template based on analysis.
+        """
+        Determine the recommended format template based on analysis.
 
         Args:
+        ----
             analysis: Analysis dictionary
 
         Returns:
+        -------
             Template name string
 
         """

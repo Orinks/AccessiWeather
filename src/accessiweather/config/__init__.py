@@ -1,4 +1,5 @@
-"""Configuration helpers and manager for AccessiWeather.
+"""
+Configuration helpers and manager for AccessiWeather.
 
 This package exposes :class:`ConfigManager` while housing focused helper modules
 that implement specific groups of configuration operations.

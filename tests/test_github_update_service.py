@@ -1,4 +1,5 @@
-"""Tests for GitHubUpdateService.
+"""
+Tests for GitHubUpdateService.
 
 Covers: initialization, releases fetching with ETag/pagination, channel filtering,
 latest version selection, platform asset selection (Windows), download flow,
@@ -178,7 +179,8 @@ class MockStreamResponse:
 
 
 class QueueHttpClient:
-    """Minimal async http client stub supporting get() and stream().
+    """
+    Minimal async http client stub supporting get() and stream().
 
     - get() returns queued responses in order
     - stream() returns a configured MockStreamResponse

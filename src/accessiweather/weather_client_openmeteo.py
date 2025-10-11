@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
+import inspect
 import logging
 from datetime import datetime
+from typing import Any
 
 import httpx
 
@@ -29,10 +32,59 @@ from .weather_client_parsers import (
 logger = logging.getLogger(__name__)
 
 
+async def _client_get(
+    client: httpx.AsyncClient,
+    url: str,
+    *,
+    params: dict[str, Any] | None = None,
+) -> httpx.Response:
+    """Call AsyncClient.get allowing for mocked synchronous responses in tests."""
+    response = client.get(url, params=params)
+    if inspect.isawaitable(response):
+        return await response
+    return response
+
+
+async def get_openmeteo_all_data_parallel(
+    location: Location,
+    openmeteo_base_url: str,
+    timeout: float,
+    client: httpx.AsyncClient,
+) -> tuple[CurrentConditions | None, Forecast | None, HourlyForecast | None]:
+    """
+    Fetch all Open-Meteo data in parallel.
+
+    Returns: (current, forecast, hourly_forecast)
+    """
+    try:
+        # Fetch all data in parallel
+        current_task = asyncio.create_task(
+            get_openmeteo_current_conditions(location, openmeteo_base_url, timeout, client)
+        )
+        forecast_task = asyncio.create_task(
+            get_openmeteo_forecast(location, openmeteo_base_url, timeout, client)
+        )
+        hourly_task = asyncio.create_task(
+            get_openmeteo_hourly_forecast(location, openmeteo_base_url, timeout, client)
+        )
+
+        # Gather all results
+        current = await current_task
+        forecast = await forecast_task
+        hourly_forecast = await hourly_task
+
+        return current, forecast, hourly_forecast
+
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Failed to get Open-Meteo data in parallel: {exc}")
+        return None, None, None
+
+
 async def get_openmeteo_current_conditions(
     location: Location,
     openmeteo_base_url: str,
     timeout: float,
+    client: httpx.AsyncClient | None = None,
 ) -> CurrentConditions | None:
     """Fetch current conditions from the Open-Meteo API."""
     try:
@@ -40,7 +92,10 @@ async def get_openmeteo_current_conditions(
         params = {
             "latitude": location.latitude,
             "longitude": location.longitude,
-            "current": "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,pressure_msl",
+            "current": (
+                "temperature_2m,relative_humidity_2m,apparent_temperature,"
+                "weather_code,wind_speed_10m,wind_direction_10m,pressure_msl"
+            ),
             "daily": "sunrise,sunset",
             "temperature_unit": "fahrenheit",
             "wind_speed_unit": "mph",
@@ -49,8 +104,18 @@ async def get_openmeteo_current_conditions(
             "forecast_days": 1,
         }
 
-        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
-            response = await client.get(url, params=params)
+        # Use provided client or create a new one
+        if client is not None:
+            response = await _client_get(client, url, params=params)
+            response.raise_for_status()
+            data = response.json()
+
+            current = parse_openmeteo_current_conditions(data)
+            if isinstance(current.wind_direction, (int, float)):
+                current.wind_direction = degrees_to_cardinal(current.wind_direction)
+            return current
+        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+            response = await new_client.get(url, params=params)
             response.raise_for_status()
             data = response.json()
 
@@ -68,6 +133,7 @@ async def get_openmeteo_forecast(
     location: Location,
     openmeteo_base_url: str,
     timeout: float,
+    client: httpx.AsyncClient | None = None,
 ) -> Forecast | None:
     """Fetch daily forecast from the Open-Meteo API."""
     try:
@@ -75,18 +141,26 @@ async def get_openmeteo_forecast(
         params = {
             "latitude": location.latitude,
             "longitude": location.longitude,
-            "daily": "temperature_2m_max,temperature_2m_min,weather_code,wind_speed_10m_max,wind_direction_10m_dominant",
+            "daily": (
+                "temperature_2m_max,temperature_2m_min,weather_code,"
+                "wind_speed_10m_max,wind_direction_10m_dominant"
+            ),
             "temperature_unit": "fahrenheit",
             "wind_speed_unit": "mph",
             "timezone": "auto",
             "forecast_days": 7,
         }
 
-        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
-            response = await client.get(url, params=params)
+        # Use provided client or create a new one
+        if client is not None:
+            response = await _client_get(client, url, params=params)
             response.raise_for_status()
             data = response.json()
-
+            return parse_openmeteo_forecast(data)
+        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+            response = await new_client.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
             return parse_openmeteo_forecast(data)
 
     except Exception as exc:  # noqa: BLE001
@@ -98,6 +172,7 @@ async def get_openmeteo_hourly_forecast(
     location: Location,
     openmeteo_base_url: str,
     timeout: float,
+    client: httpx.AsyncClient | None = None,
 ) -> HourlyForecast | None:
     """Fetch hourly forecast from the Open-Meteo API."""
     try:
@@ -112,11 +187,16 @@ async def get_openmeteo_hourly_forecast(
             "forecast_days": 2,
         }
 
-        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
-            response = await client.get(url, params=params)
+        # Use provided client or create a new one
+        if client is not None:
+            response = await _client_get(client, url, params=params)
             response.raise_for_status()
             data = response.json()
-
+            return parse_openmeteo_hourly_forecast(data)
+        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+            response = await new_client.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
             return parse_openmeteo_hourly_forecast(data)
 
     except Exception as exc:  # noqa: BLE001

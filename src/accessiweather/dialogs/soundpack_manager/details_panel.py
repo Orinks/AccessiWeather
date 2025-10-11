@@ -12,7 +12,8 @@ if TYPE_CHECKING:  # pragma: no cover - import only for type checking
 
 
 class DetailsPanel:
-    """Encapsulates the details panel UI and related logic.
+    """
+    Encapsulates the details panel UI and related logic.
 
     This class only constructs the panel; event handlers remain on the main dialog to
     preserve behavior without deep refactors.

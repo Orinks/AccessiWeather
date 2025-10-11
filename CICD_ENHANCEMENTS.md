@@ -9,7 +9,7 @@
 
 ### 2. Re-enabled GitHub Pages Workflow
 - **Fixed**: `update-pages.yml` was disabled for testing, now re-enabled
-- **Triggers**: 
+- **Triggers**:
   - Automatically after successful builds on `main` or `dev`
   - After releases are published/edited
   - Manual dispatch when needed
