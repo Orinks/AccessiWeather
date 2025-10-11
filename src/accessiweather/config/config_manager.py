@@ -1,4 +1,5 @@
-"""Simple configuration management for AccessiWeather.
+"""
+Simple configuration management for AccessiWeather.
 
 This module provides simple configuration loading and saving using Toga's paths API,
 replacing the complex configuration system with straightforward JSON-based storage.
@@ -172,9 +173,11 @@ class ConfigManager:
         return self._import_export.import_locations(import_path)
 
     def enable_startup(self) -> tuple[bool, str]:
-        """Enable application startup on boot.
+        """
+        Enable application startup on boot.
 
-        Returns:
+        Returns
+        -------
             Tuple of (success, message) where message contains error details if failed
 
         """
@@ -190,9 +193,11 @@ class ConfigManager:
             return False, f"Error enabling startup: {str(e)}"
 
     def disable_startup(self) -> tuple[bool, str]:
-        """Disable application startup on boot.
+        """
+        Disable application startup on boot.
 
-        Returns:
+        Returns
+        -------
             Tuple of (success, message) where message contains error details if failed
 
         """
@@ -208,9 +213,11 @@ class ConfigManager:
             return False, f"Error disabling startup: {str(e)}"
 
     def is_startup_enabled(self) -> bool:
-        """Check if application startup is currently enabled.
+        """
+        Check if application startup is currently enabled.
 
-        Returns:
+        Returns
+        -------
             True if startup is enabled, False otherwise
 
         """
@@ -221,11 +228,13 @@ class ConfigManager:
             return False
 
     def sync_startup_setting(self) -> bool:
-        """Synchronize the startup_enabled setting with actual startup state.
+        """
+        Synchronize the startup_enabled setting with actual startup state.
 
         This checks the real startup status and updates the setting if needed.
 
-        Returns:
+        Returns
+        -------
             True if successful, False otherwise
 
         """

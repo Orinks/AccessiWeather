@@ -1,4 +1,5 @@
-"""Community Sound Pack service for browsing and downloading packs from GitHub.
+"""
+Community Sound Pack service for browsing and downloading packs from GitHub.
 
 This module provides an async service that queries a GitHub repository for
 available community sound packs and downloads them as ZIP files for
@@ -62,9 +63,11 @@ class CommunitySoundPackService:
         cache_duration_seconds: int = 300,
         user_agent: str = "AccessiWeather-CommunityPacks/1.0",
     ) -> None:
-        """Initialize the community packs service.
+        """
+        Initialize the community packs service.
 
         Args:
+        ----
             repo_owner: GitHub org/user that hosts community packs
             repo_name: Repository name for packs
             timeout: HTTP timeout in seconds
@@ -89,7 +92,8 @@ class CommunitySoundPackService:
             await self._http.aclose()
 
     async def fetch_available_packs(self, force_refresh: bool = False) -> list[CommunityPack]:
-        """Fetch a list of available community packs.
+        """
+        Fetch a list of available community packs.
 
         Strategy:
         1) Try curated index.json in the repo root via GitHub API contents
@@ -203,9 +207,11 @@ class CommunitySoundPackService:
         progress_callback: Callable[[float, int, int], asyncio.Future | bool | None] | None = None,
         max_retries: int = 2,
     ) -> Path:
-        """Download a community pack ZIP to the destination directory.
+        """
+        Download a community pack ZIP to the destination directory.
 
         Args:
+        ----
             pack: CommunityPack to download
             dest_dir: Directory to store the downloaded ZIP
             progress_callback: Optional callback(progress, downloaded_bytes, total_bytes) -> bool | None.
@@ -213,6 +219,7 @@ class CommunitySoundPackService:
             max_retries: Number of simple retries for transient errors
 
         Returns:
+        -------
             Path to the downloaded ZIP file.
 
         """

@@ -1,4 +1,5 @@
-"""Enhanced alert notification system for AccessiWeather.
+"""
+Enhanced alert notification system for AccessiWeather.
 
 This module provides a comprehensive notification system that integrates
 with the AlertManager to provide user-controlled, accessible notifications
@@ -54,9 +55,11 @@ class AlertNotificationSystem:
         logger.info("AlertNotificationSystem initialized")
 
     async def process_and_notify(self, alerts: WeatherAlerts) -> int:
-        """Process alerts and send notifications for qualifying alerts.
+        """
+        Process alerts and send notifications for qualifying alerts.
 
-        Returns:
+        Returns
+        -------
             Number of notifications sent.
 
         """
@@ -90,13 +93,16 @@ class AlertNotificationSystem:
             return 0
 
     async def _send_alert_notification(self, alert: WeatherAlert, reason: str) -> bool:
-        """Send a notification for a specific alert.
+        """
+        Send a notification for a specific alert.
 
         Args:
+        ----
             alert: The weather alert to notify about
             reason: The reason for notification (new_alert, escalation, etc.)
 
         Returns:
+        -------
             True if notification was sent successfully
 
         """
@@ -182,12 +188,15 @@ class AlertNotificationSystem:
         logger.info("Alert notification state cleared")
 
     async def test_notification(self, severity: str = "Moderate") -> bool:
-        """Send a test notification to verify the system is working.
+        """
+        Send a test notification to verify the system is working.
 
         Args:
+        ----
             severity: Severity level for the test alert
 
         Returns:
+        -------
             True if test notification was sent successfully
 
         """

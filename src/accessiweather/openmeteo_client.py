@@ -1,4 +1,5 @@
-"""Open-Meteo API client for AccessiWeather.
+"""
+Open-Meteo API client for AccessiWeather.
 
 This module provides a client for the Open-Meteo weather API, which offers
 free weather data without requiring an API key.
@@ -31,7 +32,8 @@ class OpenMeteoNetworkError(OpenMeteoError):
 
 
 class OpenMeteoApiClient:
-    """Client for the Open-Meteo weather API.
+    """
+    Client for the Open-Meteo weather API.
 
     Open-Meteo provides free weather data without requiring an API key.
     It supports current conditions, hourly forecasts, and daily forecasts.
@@ -46,9 +48,11 @@ class OpenMeteoApiClient:
         max_retries: int = 3,
         retry_delay: float = 1.0,
     ):
-        """Initialize the Open-Meteo API client.
+        """
+        Initialize the Open-Meteo API client.
 
         Args:
+        ----
             user_agent: User agent string for API requests
             timeout: Request timeout in seconds
             max_retries: Maximum number of retries for failed requests
@@ -73,16 +77,20 @@ class OpenMeteoApiClient:
             self.client.close()
 
     def _make_request(self, endpoint: str, params: dict[str, Any]) -> dict[str, Any]:
-        """Make a request to the Open-Meteo API.
+        """
+        Make a request to the Open-Meteo API.
 
         Args:
+        ----
             endpoint: API endpoint (e.g., "forecast")
             params: Query parameters
 
         Returns:
+        -------
             JSON response as a dictionary
 
         Raises:
+        ------
             OpenMeteoApiError: If the API returns an error
             OpenMeteoNetworkError: If there's a network error
 
@@ -149,9 +157,11 @@ class OpenMeteoApiClient:
         wind_speed_unit: str = "mph",
         precipitation_unit: str = "inch",
     ) -> dict[str, Any]:
-        """Get current weather conditions for a location.
+        """
+        Get current weather conditions for a location.
 
         Args:
+        ----
             latitude: Latitude of the location
             longitude: Longitude of the location
             temperature_unit: Temperature unit ("celsius" or "fahrenheit")
@@ -159,6 +169,7 @@ class OpenMeteoApiClient:
             precipitation_unit: Precipitation unit ("mm" or "inch")
 
         Returns:
+        -------
             Dictionary containing current weather data
 
         """
@@ -201,9 +212,11 @@ class OpenMeteoApiClient:
         wind_speed_unit: str = "mph",
         precipitation_unit: str = "inch",
     ) -> dict[str, Any]:
-        """Get daily forecast for a location.
+        """
+        Get daily forecast for a location.
 
         Args:
+        ----
             latitude: Latitude of the location
             longitude: Longitude of the location
             days: Number of forecast days (1-16)
@@ -212,6 +225,7 @@ class OpenMeteoApiClient:
             precipitation_unit: Precipitation unit ("mm" or "inch")
 
         Returns:
+        -------
             Dictionary containing daily forecast data
 
         """
@@ -250,9 +264,11 @@ class OpenMeteoApiClient:
         wind_speed_unit: str = "mph",
         precipitation_unit: str = "inch",
     ) -> dict[str, Any]:
-        """Get hourly forecast for a location.
+        """
+        Get hourly forecast for a location.
 
         Args:
+        ----
             latitude: Latitude of the location
             longitude: Longitude of the location
             hours: Number of forecast hours (max 384 = 16 days)
@@ -261,6 +277,7 @@ class OpenMeteoApiClient:
             precipitation_unit: Precipitation unit ("mm" or "inch")
 
         Returns:
+        -------
             Dictionary containing hourly forecast data
 
         """
@@ -293,12 +310,15 @@ class OpenMeteoApiClient:
 
     @staticmethod
     def get_weather_description(weather_code: int) -> str:
-        """Get weather description from Open-Meteo weather code.
+        """
+        Get weather description from Open-Meteo weather code.
 
         Args:
+        ----
             weather_code: Open-Meteo weather code
 
         Returns:
+        -------
             Human-readable weather description
 
         """

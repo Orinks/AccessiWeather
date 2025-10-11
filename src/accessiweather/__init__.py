@@ -1,4 +1,5 @@
-"""Simple AccessiWeather package.
+"""
+Simple AccessiWeather package.
 
 This package provides a simplified, async-first implementation of AccessiWeather
 using BeeWare/Toga best practices, replacing the complex service layer architecture

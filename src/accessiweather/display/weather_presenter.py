@@ -1,4 +1,5 @@
-"""Weather presentation helpers for AccessiWeather.
+"""
+Weather presentation helpers for AccessiWeather.
 
 Provides structured view models for current conditions, forecasts, and alerts while
 maintaining accessible fallback text for screen reader users.

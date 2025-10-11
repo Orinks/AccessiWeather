@@ -1,4 +1,5 @@
-"""Data mapper for Open-Meteo API responses.
+"""
+Data mapper for Open-Meteo API responses.
 
 This module provides functionality to transform Open-Meteo API responses
 into the internal data format expected by WeatherService and UI components.
@@ -27,12 +28,15 @@ class OpenMeteoMapper:
         """Initialize the mapper."""
 
     def map_current_conditions(self, openmeteo_data: dict[str, Any]) -> dict[str, Any]:
-        """Map Open-Meteo current weather data to NWS-compatible format.
+        """
+        Map Open-Meteo current weather data to NWS-compatible format.
 
         Args:
+        ----
             openmeteo_data: Raw response from Open-Meteo current weather API
 
         Returns:
+        -------
             Dictionary in NWS current conditions format
 
         """
@@ -156,12 +160,15 @@ class OpenMeteoMapper:
             raise ValueError(f"Failed to map current conditions: {str(e)}") from e
 
     def map_forecast(self, openmeteo_data: dict[str, Any]) -> dict[str, Any]:
-        """Map Open-Meteo daily forecast data to NWS-compatible format.
+        """
+        Map Open-Meteo daily forecast data to NWS-compatible format.
 
         Args:
+        ----
             openmeteo_data: Raw response from Open-Meteo forecast API
 
         Returns:
+        -------
             Dictionary in NWS forecast format
 
         """
@@ -279,12 +286,15 @@ class OpenMeteoMapper:
             raise ValueError(f"Failed to map forecast: {str(e)}") from e
 
     def map_hourly_forecast(self, openmeteo_data: dict[str, Any]) -> dict[str, Any]:
-        """Map Open-Meteo hourly forecast data to NWS-compatible format.
+        """
+        Map Open-Meteo hourly forecast data to NWS-compatible format.
 
         Args:
+        ----
             openmeteo_data: Raw response from Open-Meteo hourly forecast API
 
         Returns:
+        -------
             Dictionary in NWS hourly forecast format
 
         """

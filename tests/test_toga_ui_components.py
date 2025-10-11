@@ -858,7 +858,8 @@ class TestUIComponentInteraction:
 
 @pytest.mark.asyncio
 async def test_settings_dialog_reset_to_defaults_resets_config(tmp_path):
-    """SettingsDialog: reset-to-defaults should restore ConfigManager settings to defaults.
+    """
+    SettingsDialog: reset-to-defaults should restore ConfigManager settings to defaults.
 
     This verifies the Advanced tab action works via the handler without needing full UI.
     """

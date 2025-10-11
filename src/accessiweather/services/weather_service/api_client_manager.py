@@ -1,4 +1,5 @@
-"""API client management for WeatherService.
+"""
+API client management for WeatherService.
 
 This module handles API client initialization, configuration, and data source
 selection logic for the weather service.
@@ -25,9 +26,11 @@ class ApiClientManager:
         openmeteo_client: OpenMeteoApiClient | None = None,
         config: dict[str, Any] | None = None,
     ):
-        """Initialize the API client manager.
+        """
+        Initialize the API client manager.
 
         Args:
+        ----
             nws_client: The NWS API client to use for weather data retrieval.
             openmeteo_client: The Open-Meteo API client to use for international weather data.
             config: Configuration dictionary containing settings like data_source.
@@ -39,9 +42,11 @@ class ApiClientManager:
         self.config = config or {}
 
     def _get_temperature_unit_preference(self) -> str:
-        """Get the user's temperature unit preference for Open-Meteo API calls.
+        """
+        Get the user's temperature unit preference for Open-Meteo API calls.
 
-        Returns:
+        Returns
+        -------
             str: "celsius" or "fahrenheit" for Open-Meteo API
 
         """
@@ -61,9 +66,11 @@ class ApiClientManager:
         return "fahrenheit"
 
     def _get_data_source(self) -> str:
-        """Get the configured data source.
+        """
+        Get the configured data source.
 
-        Returns:
+        Returns
+        -------
             String indicating which data source to use ('nws', 'openmeteo', or 'auto')
 
         """
@@ -74,16 +81,19 @@ class ApiClientManager:
         return str(data_source)
 
     def _is_location_in_us(self, lat: float, lon: float) -> bool:
-        """Check if a location is within the United States.
+        """
+        Check if a location is within the United States.
 
         This method uses the geocoding service to determine if the given coordinates
         are within the United States.
 
         Args:
+        ----
             lat: Latitude
             lon: Longitude
 
         Returns:
+        -------
             True if the location is within the US, False otherwise
 
         """
@@ -103,13 +113,16 @@ class ApiClientManager:
         return is_us
 
     def _should_use_openmeteo(self, lat: float, lon: float) -> bool:
-        """Determine if Open-Meteo should be used for the given location.
+        """
+        Determine if Open-Meteo should be used for the given location.
 
         Args:
+        ----
             lat: Latitude of the location
             lon: Longitude of the location
 
         Returns:
+        -------
             True if Open-Meteo should be used, False if NWS should be used
 
         """

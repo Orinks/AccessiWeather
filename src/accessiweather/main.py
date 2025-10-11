@@ -1,4 +1,5 @@
-"""Main entry point for AccessiWeather application.
+"""
+Main entry point for AccessiWeather application.
 
 This module provides the main entry point for the AccessiWeather application,
 handling configuration, logging setup, and launching the Toga-based GUI.
@@ -20,15 +21,18 @@ def setup_logging(
     backup_count: int = 3,
     log_level: int = logging.INFO,
 ) -> logging.Logger:
-    """Set up logging configuration with rotating file handler.
+    """
+    Set up logging configuration with rotating file handler.
 
     Args:
+    ----
         log_filename: Name of the log file (default: "accessiweather.log")
         max_bytes: Maximum size per log file in bytes (default: 5MB)
         backup_count: Number of backup files to keep (default: 3)
         log_level: Logging level (default: logging.INFO)
 
     Returns:
+    -------
         Configured logger instance
 
     """
@@ -60,18 +64,21 @@ def main(
     enable_caching: bool = True,
     portable_mode: bool = False,
 ):
-    """Create and return the Toga application instance.
+    """
+    Create and return the Toga application instance.
 
     This function constructs the app and returns it to the caller. The caller is
     responsible for invoking app.main_loop() when appropriate (e.g., CLI entrypoint).
 
     Args:
+    ----
         config_dir: Configuration directory, defaults to ~/.accessiweather
         debug_mode: Whether to enable debug mode with additional logging and alert testing features
         enable_caching: Whether to enable API response caching
         portable_mode: Whether to run in portable mode (saves config to local directory)
 
     Returns:
+    -------
         The constructed Toga app instance.
 
     """

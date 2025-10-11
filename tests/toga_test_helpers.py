@@ -232,7 +232,8 @@ def mock_weather_data():
 
 @pytest.fixture
 def mock_weather_client(mock_weather_data):
-    """Pytest fixture for mock weather client.
+    """
+    Pytest fixture for mock weather client.
 
     Return the same object as mock_weather_data to avoid timestamp-based flakiness.
     """

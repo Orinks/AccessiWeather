@@ -118,6 +118,8 @@ ignore = [
     "E501",   # line too long (handled by formatter)
     "F541",   # f-string is missing placeholders
     "C901",   # too complex (we'll handle this gradually)
+    "D203",   # No blank line before class docstring; prefer D211 instead
+    "D212",   # Use D213 convention for multi-line docstrings
     "D100",   # Missing docstring in public module
     "D101",   # Missing docstring in public class
     "D102",   # Missing docstring in public method
