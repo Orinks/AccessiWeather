@@ -187,9 +187,9 @@ from .weather_history import WeatherHistoryService
 
 def initialize_components(app: AccessiWeatherApp) -> None:
     """Initialize core application components."""
-    
+
     # ... existing initialization ...
-    
+
     # Initialize weather history service
     config = app.config_manager.get_config()
     if config.settings.weather_history_enabled:
@@ -206,10 +206,10 @@ Add to weather presenter:
 ```python
 def format_current_conditions(self, weather_data: WeatherData, app) -> str:
     """Format current conditions with history comparison."""
-    
+
     parts = []
     # ... existing formatting ...
-    
+
     # Add history comparison if available
     if app.weather_history_service and app.current_location:
         try:
@@ -221,7 +221,7 @@ def format_current_conditions(self, weather_data: WeatherData, app) -> str:
                 parts.append("\n" + comparison.get_accessible_summary())
         except Exception as e:
             logger.debug(f"Could not get weather comparison: {e}")
-    
+
     return "\n".join(parts)
 ```
 
@@ -232,11 +232,11 @@ Add menu command for viewing history:
 ```python
 async def view_weather_history(app, widget=None):
     """Show weather history comparison."""
-    
+
     if not app.weather_history_service:
         # Show message that feature is disabled
         return
-    
+
     # Get comparisons
     yesterday_comp = app.weather_history_service.compare_with_yesterday(
         app.current_location, current_conditions
@@ -244,7 +244,7 @@ async def view_weather_history(app, widget=None):
     week_comp = app.weather_history_service.compare_with_last_week(
         app.current_location, current_conditions
     )
-    
+
     # Display in dialog
     # ...
 ```
@@ -280,7 +280,7 @@ Comparing with Yesterday:
    Fetching historical data from Open-Meteo archive API...
    ✓ Historical data retrieved
    Temperature difference: +11.0°F
-   
+
    Accessible Summary:
    "Compared to yesterday: 11.0 degrees warmer. Changed from Overcast to Sunny."
 ```

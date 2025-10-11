@@ -52,11 +52,11 @@ from weather_history import WeatherHistoryService, HistoricalWeatherData, Weathe
 def create_mock_client():
     """Create a mock Open-Meteo client for demonstration."""
     mock_client = MagicMock()
-    
+
     # Mock responses for different dates
     def mock_request(endpoint, params):
         target_date = params["start_date"]
-        
+
         # Yesterday's weather (cooler, cloudy)
         if "2025-10-10" in target_date or (datetime.now() - timedelta(days=1)).date().isoformat() in target_date:
             return {
@@ -95,7 +95,7 @@ def create_mock_client():
                 "wind_direction_10m_dominant": [270],
             }
         }
-    
+
     def mock_weather_desc(code):
         descriptions = {
             0: "Clear sky",
@@ -105,10 +105,10 @@ def create_mock_client():
             61: "Slight rain",
         }
         return descriptions.get(code, f"Weather code {code}")
-    
+
     mock_client._make_request = MagicMock(side_effect=mock_request)
     mock_client.get_weather_description = MagicMock(side_effect=mock_weather_desc)
-    
+
     return mock_client
 
 
@@ -158,7 +158,7 @@ def main():
     print("4. Comparing with Yesterday:")
     print("   Fetching historical data from Open-Meteo archive API...")
     yesterday_comp = service.compare_with_yesterday(location, today_weather)
-    
+
     if yesterday_comp:
         print(f"   ✓ Historical data retrieved")
         print(f"   Temperature difference: {yesterday_comp.temperature_difference:+.1f}°F")
@@ -176,7 +176,7 @@ def main():
     print("5. Comparing with Last Week:")
     print("   Fetching historical data from Open-Meteo archive API...")
     week_comp = service.compare_with_last_week(location, today_weather)
-    
+
     if week_comp:
         print(f"   ✓ Historical data retrieved")
         print(f"   Temperature difference: {week_comp.temperature_difference:+.1f}°F")
@@ -195,7 +195,7 @@ def main():
     print("   Fetching historical data from Open-Meteo archive API...")
     custom_date = (datetime.now() - timedelta(days=5)).date()
     custom_comp = service.compare_with_date(location, today_weather, custom_date)
-    
+
     if custom_comp:
         print(f"   ✓ Historical data retrieved for {custom_date}")
         print(f"   Temperature difference: {custom_comp.temperature_difference:+.1f}°F")

@@ -1,4 +1,5 @@
-"""Weather history comparison functionality using Open-Meteo archive API.
+"""
+Weather history comparison functionality using Open-Meteo archive API.
 
 This module provides functionality to compare current weather conditions with
 historical data from Open-Meteo's archive endpoint. No local storage required.
@@ -51,7 +52,8 @@ class WeatherComparison:
         historical: HistoricalWeatherData,
         days_ago: int,
     ) -> WeatherComparison:
-        """Compare current conditions with historical data.
+        """
+        Compare current conditions with historical data.
 
         Args:
             current: Current weather conditions
@@ -89,7 +91,8 @@ class WeatherComparison:
         )
 
     def get_accessible_summary(self) -> str:
-        """Generate a screen-reader friendly summary of the comparison.
+        """
+        Generate a screen-reader friendly summary of the comparison.
 
         Returns:
             A human-readable summary of weather changes
@@ -118,7 +121,8 @@ class WeatherHistoryService:
     """Service for fetching historical weather data and making comparisons."""
 
     def __init__(self, openmeteo_client=None):
-        """Initialize the weather history service.
+        """
+        Initialize the weather history service.
 
         Args:
             openmeteo_client: Optional OpenMeteoApiClient instance. If not provided,
@@ -142,7 +146,8 @@ class WeatherHistoryService:
         target_date: date,
         temperature_unit: str = "fahrenheit",
     ) -> HistoricalWeatherData | None:
-        """Fetch historical weather data for a specific date.
+        """
+        Fetch historical weather data for a specific date.
 
         Args:
             latitude: Latitude of the location
@@ -212,7 +217,8 @@ class WeatherHistoryService:
         current_conditions: CurrentConditions,
         temperature_unit: str = "fahrenheit",
     ) -> WeatherComparison | None:
-        """Compare current weather with yesterday's weather.
+        """
+        Compare current weather with yesterday's weather.
 
         Args:
             location: Location for the comparison
@@ -239,7 +245,8 @@ class WeatherHistoryService:
         current_conditions: CurrentConditions,
         temperature_unit: str = "fahrenheit",
     ) -> WeatherComparison | None:
-        """Compare current weather with weather from one week ago.
+        """
+        Compare current weather with weather from one week ago.
 
         Args:
             location: Location for the comparison
@@ -267,7 +274,8 @@ class WeatherHistoryService:
         target_date: date,
         temperature_unit: str = "fahrenheit",
     ) -> WeatherComparison | None:
-        """Compare current weather with weather from a specific date.
+        """
+        Compare current weather with weather from a specific date.
 
         Args:
             location: Location for the comparison

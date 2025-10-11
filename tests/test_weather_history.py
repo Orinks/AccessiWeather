@@ -1,7 +1,7 @@
 """Tests for weather history feature using Open-Meteo archive API."""
 
-from datetime import date, datetime, timedelta
-from unittest.mock import MagicMock, patch
+from datetime import date, datetime
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -219,8 +219,7 @@ class TestWeatherHistoryService:
     @pytest.fixture
     def mock_openmeteo_client(self):
         """Create a mock Open-Meteo client."""
-        client = MagicMock()
-        return client
+        return MagicMock()
 
     @pytest.fixture
     def service(self, mock_openmeteo_client):

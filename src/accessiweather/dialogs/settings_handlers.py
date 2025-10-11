@@ -114,7 +114,9 @@ def apply_settings_to_ui(dialog):
             dialog.debug_mode_switch.value = getattr(settings, "debug_mode", False)
 
         if getattr(dialog, "weather_history_enabled_switch", None) is not None:
-            dialog.weather_history_enabled_switch.value = getattr(settings, "weather_history_enabled", True)
+            dialog.weather_history_enabled_switch.value = getattr(
+                settings, "weather_history_enabled", True
+            )
 
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.warning("%s: Failed to apply settings to UI: %s", LOG_PREFIX, exc)
