@@ -1,65 +1,75 @@
-# Weather History Tracker Feature
+# Weather History Comparison Feature
 
 ## Overview
 
-The Weather History Tracker feature allows AccessiWeather to track and compare weather conditions over time. Users can see how today's weather compares to yesterday or last week, providing valuable context and insights.
+The Weather History Comparison feature allows AccessiWeather to compare current weather conditions with historical data using Open-Meteo's archive API. This provides users with context about how today's weather compares to past days without requiring local storage or background recording.
 
-## Features
+## Key Features
 
-### Automatic History Tracking
-- **Daily Snapshots**: Automatically records weather conditions at each update
-- **Persistent Storage**: Saves history to a JSON file for retrieval across sessions
-- **Configurable Retention**: Keeps history for a configurable number of days (default: 30 days)
-- **Automatic Cleanup**: Removes old entries beyond the retention period
+### API-Based Historical Data
+- **Open-Meteo Archive API**: Leverages Open-Meteo's robust historical weather endpoint
+- **Decades of Data**: Access historical weather data going back many years
+- **No Local Storage**: No JSON files, databases, or cleanup required
+- **Instant Access**: Works immediately for all users without prior setup
 
 ### Weather Comparison
 - **Yesterday Comparison**: Compare current weather with yesterday's conditions
-- **Last Week Comparison**: Compare current weather with conditions from 7 days ago
-- **Detailed Insights**: Shows temperature differences, condition changes, humidity changes, and wind speed changes
-- **Accessible Summaries**: Screen-reader friendly summaries of weather changes
+- **Last Week Comparison**: Compare with weather from 7 days ago
+- **Custom Date**: Compare with any specific date in the past
+- **Accessible Summaries**: Screen-reader friendly natural language descriptions
 
 ### Accessibility
 
-The feature is designed with accessibility as a priority:
-- **Screen Reader Friendly**: All comparisons generate human-readable summaries
-- **Clear Language**: Uses natural language like "5 degrees warmer than yesterday"
-- **Contextual Information**: Provides relevant time references ("yesterday", "last week", "5 days ago")
+The feature was designed with accessibility as a priority:
+- **Natural Language**: Uses plain English descriptions
+- **Clear Context**: Always provides time references ("yesterday", "last week", "5 days ago")
+- **Concise**: Brief but informative summaries
+- **Screen Reader Optimized**: Designed for optimal screen reader experience
+
+## Architecture
+
+### Components
+
+1. **HistoricalWeatherData**: Data model for historical weather snapshots
+2. **WeatherComparison**: Comparison logic and accessible summary generation
+3. **WeatherHistoryService**: Service for fetching historical data and making comparisons
+
+### How It Works
+
+```
+Current Weather + Open-Meteo Archive API → Historical Data → Comparison → Accessible Summary
+```
+
+The service:
+1. Receives current weather conditions and a location
+2. Calls Open-Meteo's archive endpoint for historical data
+3. Compares current conditions with historical data
+4. Generates an accessible natural language summary
 
 ## Configuration
 
-The feature can be configured through `AppSettings`:
-
-```python
-from accessiweather.models import AppSettings
-
-settings = AppSettings(
-    weather_history_enabled=True,           # Enable/disable history tracking
-    weather_history_retention_days=30,      # Days to keep history (default: 30)
-)
-```
-
 ### Settings
+
+Only one setting is needed in `AppSettings`:
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
-| `weather_history_enabled` | bool | True | Enable or disable weather history tracking |
-| `weather_history_retention_days` | int | 30 | Number of days to retain weather history |
+| `weather_history_enabled` | bool | True | Enable/disable weather history comparisons |
+
+No retention period setting needed since data comes from the API.
 
 ## Usage
 
 ### Basic Usage
 
 ```python
-from accessiweather.weather_history import WeatherHistoryTracker
+from accessiweather.weather_history import WeatherHistoryService
 from accessiweather.models import Location, CurrentConditions
 
-# Initialize tracker
-tracker = WeatherHistoryTracker(
-    history_file="/path/to/weather_history.json",
-    max_days=30
-)
+# Initialize service
+service = WeatherHistoryService()
 
-# Create location and conditions
+# Create location and current conditions
 location = Location(
     name="New York",
     latitude=40.7128,
@@ -67,7 +77,7 @@ location = Location(
     timezone="America/New_York"
 )
 
-conditions = CurrentConditions(
+current_conditions = CurrentConditions(
     temperature=75.0,
     condition="Sunny",
     humidity=60,
@@ -76,201 +86,232 @@ conditions = CurrentConditions(
     pressure=30.1
 )
 
-# Add current weather to history
-tracker.add_entry(location=location, conditions=conditions)
-
-# Save history
-tracker.save()
-```
-
-### Comparing Weather
-
-```python
 # Compare with yesterday
-comparison = tracker.get_comparison_for_yesterday("New York", current_conditions)
-
+comparison = service.compare_with_yesterday(location, current_conditions)
 if comparison:
-    print(f"Temperature: {comparison.temperature_description}")
-    print(f"Condition changed: {comparison.condition_changed}")
-    
-    # Get accessible summary
-    summary = comparison.get_accessible_summary()
-    print(summary)
+    print(comparison.get_accessible_summary())
     # Output: "Compared to yesterday: 5.0 degrees warmer. Changed from Cloudy to Sunny."
-
-# Compare with last week
-week_comparison = tracker.get_comparison_for_last_week("New York", current_conditions)
 ```
 
-### Custom Comparisons
+### Comparing with Different Time Periods
 
 ```python
-from datetime import datetime, timedelta
+# Compare with last week
+week_comparison = service.compare_with_last_week(location, current_conditions)
 
-# Get entry for a specific day
-target_date = (datetime.now() - timedelta(days=3)).date()
-entry = tracker.get_entry_for_location_and_day("New York", target_date)
-
-if entry:
-    # Create custom comparison
-    from accessiweather.weather_history import WeatherComparison
-    comparison = WeatherComparison.compare(current_conditions, entry)
+# Compare with custom date
+from datetime import date
+target_date = date(2025, 9, 1)
+custom_comparison = service.compare_with_date(location, current_conditions, target_date)
 ```
 
 ## Data Model
 
-### WeatherHistoryEntry
+### HistoricalWeatherData
 
-Represents a single weather observation:
+Historical weather snapshot from Open-Meteo:
 
 ```python
 @dataclass
-class WeatherHistoryEntry:
-    location_name: str
-    temperature: float
+class HistoricalWeatherData:
+    date: date
+    temperature_max: float
+    temperature_min: float
+    temperature_mean: float  # Used for comparison
     condition: str
-    humidity: int
+    humidity: int | None
     wind_speed: float
-    wind_direction: str
-    pressure: float
-    timestamp: datetime
+    wind_direction: int | None
+    pressure: float | None
 ```
 
 ### WeatherComparison
 
-Contains comparison results:
+Comparison results:
 
 ```python
 @dataclass
 class WeatherComparison:
-    temperature_difference: float       # Temperature change in degrees
+    temperature_difference: float       # Temperature change
     temperature_description: str        # Human-readable description
     condition_changed: bool            # Whether condition changed
     previous_condition: str            # Previous weather condition
-    condition_description: str | None  # Description of condition change
-    humidity_difference: int           # Humidity change in percent
-    wind_speed_difference: float       # Wind speed change
+    condition_description: str | None  # Description of change
     days_ago: int                      # Days since comparison point
 ```
 
-## Storage Format
+## API Endpoint
 
-Weather history is stored in JSON format:
+The feature uses Open-Meteo's archive endpoint:
 
-```json
-{
-  "version": "1.0",
-  "entries": [
-    {
-      "location_name": "New York",
-      "temperature": 75.0,
-      "condition": "Sunny",
-      "humidity": 60,
-      "wind_speed": 10.0,
-      "wind_direction": "NW",
-      "pressure": 30.1,
-      "timestamp": "2025-01-10T12:00:00"
-    }
-  ]
-}
+```
+https://api.open-meteo.com/v1/archive
 ```
 
-## Implementation Details
+Parameters:
+- `latitude`, `longitude`: Location coordinates
+- `start_date`, `end_date`: Date range (ISO format)
+- `daily`: Requested weather variables
+- `temperature_unit`: celsius or fahrenheit
+- `timezone`: Timezone for results
 
-### Architecture
+## Advantages Over Local Tracking
 
-The feature consists of three main classes:
+### Immediate Benefits
+- ✅ No setup required - works immediately for all users
+- ✅ No background recording needed
+- ✅ No local storage files to manage
+- ✅ No cleanup of old entries required
+- ✅ Access to historical data even for new installations
 
-1. **WeatherHistoryEntry**: Data model for a single weather observation
-2. **WeatherHistoryTracker**: Manages storage, retrieval, and cleanup of history
-3. **WeatherComparison**: Handles comparison logic and generates summaries
+### Long-Term Benefits
+- ✅ Decades of historical data available
+- ✅ No storage limitations
+- ✅ Always up-to-date with API improvements
+- ✅ Lower maintenance burden
+- ✅ Consistent data quality
 
-### Design Decisions
+### Trade-offs
+- ⚠️ Requires API call for each comparison
+- ⚠️ Dependent on Open-Meteo API availability
+- ✅ Open-Meteo has generous rate limits
 
-- **JSON Storage**: Simple, human-readable format for easy debugging and portability
-- **Automatic Cleanup**: Prevents unbounded growth of history files
-- **Timezone Aware**: Uses Python's datetime for proper timezone handling
-- **Type Safety**: Uses dataclasses with type hints for better IDE support
+## Integration
 
-### Integration Points
+### App Initialization
 
-The feature integrates with:
-- **AppSettings**: Configuration management
-- **Location**: Location data model
-- **CurrentConditions**: Weather data model
-- **ConfigManager**: Settings persistence (through AppSettings)
+Add to `app_initialization.py`:
+
+```python
+from .weather_history import WeatherHistoryService
+
+def initialize_components(app: AccessiWeatherApp) -> None:
+    """Initialize core application components."""
+    
+    # ... existing initialization ...
+    
+    # Initialize weather history service
+    config = app.config_manager.get_config()
+    if config.settings.weather_history_enabled:
+        app.weather_history_service = WeatherHistoryService()
+        logger.info("Weather history service initialized")
+    else:
+        app.weather_history_service = None
+```
+
+### Display in UI
+
+Add to weather presenter:
+
+```python
+def format_current_conditions(self, weather_data: WeatherData, app) -> str:
+    """Format current conditions with history comparison."""
+    
+    parts = []
+    # ... existing formatting ...
+    
+    # Add history comparison if available
+    if app.weather_history_service and app.current_location:
+        try:
+            comparison = app.weather_history_service.compare_with_yesterday(
+                app.current_location,
+                weather_data.current_conditions
+            )
+            if comparison:
+                parts.append("\n" + comparison.get_accessible_summary())
+        except Exception as e:
+            logger.debug(f"Could not get weather comparison: {e}")
+    
+    return "\n".join(parts)
+```
+
+### Menu Command
+
+Add menu command for viewing history:
+
+```python
+async def view_weather_history(app, widget=None):
+    """Show weather history comparison."""
+    
+    if not app.weather_history_service:
+        # Show message that feature is disabled
+        return
+    
+    # Get comparisons
+    yesterday_comp = app.weather_history_service.compare_with_yesterday(
+        app.current_location, current_conditions
+    )
+    week_comp = app.weather_history_service.compare_with_last_week(
+        app.current_location, current_conditions
+    )
+    
+    # Display in dialog
+    # ...
+```
 
 ## Testing
 
 The feature includes comprehensive tests:
 
-### Unit Tests (`test_weather_history.py`)
-- Entry creation and serialization
-- Tracker initialization and basic operations
-- Comparison logic and summaries
-- Cleanup of old entries
+### Unit Tests
 
-### Integration Tests (`test_weather_history_integration.py`)
-- Full workflow: add, save, load, compare
-- Multi-location tracking
-- Automatic cleanup on load
-- Convenience methods
+- `test_weather_history.py`: Tests all classes and methods
+- Mock Open-Meteo API responses
+- Test comparison logic
+- Test accessible summary generation
 
 ### Running Tests
 
 ```bash
-# Run all weather history tests
 pytest tests/test_weather_history.py -v
-pytest tests/test_weather_history_integration.py -v
+```
 
-# Run with coverage
-pytest tests/test_weather_history*.py --cov=accessiweather.weather_history
+## Demo
+
+Run the demonstration script:
+
+```bash
+python3 examples/weather_history_demo.py
+```
+
+Example output:
+```
+Comparing with Yesterday:
+   Fetching historical data from Open-Meteo archive API...
+   ✓ Historical data retrieved
+   Temperature difference: +11.0°F
+   
+   Accessible Summary:
+   "Compared to yesterday: 11.0 degrees warmer. Changed from Overcast to Sunny."
+```
+
+## Error Handling
+
+The service handles errors gracefully:
+
+- **API Errors**: Returns `None` if API call fails
+- **Missing Data**: Returns `None` if no historical data available
+- **Network Issues**: Logs error and returns `None`
+
+Calling code should check for `None` return values:
+
+```python
+comparison = service.compare_with_yesterday(location, conditions)
+if comparison:
+    print(comparison.get_accessible_summary())
+else:
+    print("Historical data not available")
 ```
 
 ## Future Enhancements
 
-Potential improvements for future versions:
+Potential additions:
 
-1. **Graphing**: Visual representation of temperature trends
-2. **Statistics**: Calculate averages, highs, lows over time
-3. **Anomaly Detection**: Alert users to unusual weather patterns
-4. **Export**: Export history to CSV or other formats
-5. **Cloud Sync**: Optional cloud backup of weather history
-6. **Hourly Tracking**: Track weather at hourly intervals instead of just daily
-7. **Comparison Presets**: Quick access to common comparisons (yesterday, last week, same day last month)
-
-## Accessibility Considerations
-
-The feature was designed with accessibility in mind:
-
-- **Natural Language**: Uses plain English descriptions
-- **Context**: Always provides time context ("yesterday", "5 days ago")
-- **Conciseness**: Summaries are brief but informative
-- **Significance Threshold**: Only mentions significant changes (e.g., humidity ≥10%, wind ≥5mph)
-- **Consistent Format**: Predictable structure for screen reader users
-
-## Troubleshooting
-
-### History Not Saving
-
-Check that:
-- The history file path is writable
-- The parent directory exists
-- There's sufficient disk space
-
-### Old Entries Not Cleaned Up
-
-Ensure that:
-- `cleanup_old_entries()` is called after loading
-- The `max_days` setting is correct
-- The system clock is accurate
-
-### Comparison Returns None
-
-This happens when:
-- No history exists for the requested date
-- The location name doesn't match exactly
-- The entry was cleaned up due to age
+1. **Extended Comparisons**: Compare with same day last month/year
+2. **Statistical Analysis**: Show averages, trends over time
+3. **Visual Graphs**: Chart temperature trends
+4. **Anomaly Detection**: Identify unusual weather patterns
+5. **Caching**: Cache recent API responses to reduce calls
 
 ## License
 

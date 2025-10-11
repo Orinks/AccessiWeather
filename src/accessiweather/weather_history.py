@@ -1,17 +1,15 @@
-"""Weather history tracking and comparison functionality.
+"""Weather history comparison functionality using Open-Meteo archive API.
 
-This module provides functionality to track weather history over time,
-allowing users to compare current weather conditions with past observations.
+This module provides functionality to compare current weather conditions with
+historical data from Open-Meteo's archive endpoint. No local storage required.
 Designed with accessibility in mind for screen reader users.
 """
 
 from __future__ import annotations
 
-import json
 import logging
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -21,123 +19,51 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
-class WeatherHistoryEntry:
-    """A single weather history entry for a specific time and location."""
+class HistoricalWeatherData:
+    """Historical weather data for a specific date."""
 
-    location_name: str
-    temperature: float
+    date: date
+    temperature_max: float
+    temperature_min: float
+    temperature_mean: float
     condition: str
-    humidity: int
+    humidity: int | None
     wind_speed: float
-    wind_direction: str
-    pressure: float
-    timestamp: datetime
-
-    @classmethod
-    def from_current_conditions(
-        cls,
-        location: Location,
-        conditions: CurrentConditions,
-        timestamp: datetime | None = None,
-    ) -> WeatherHistoryEntry:
-        """Create a history entry from current conditions.
-
-        Args:
-            location: The location for this entry
-            conditions: Current weather conditions
-            timestamp: Optional timestamp (defaults to now)
-
-        Returns:
-            A new WeatherHistoryEntry instance
-
-        """
-        if timestamp is None:
-            timestamp = datetime.now()
-
-        return cls(
-            location_name=location.name,
-            temperature=conditions.temperature,
-            condition=conditions.condition,
-            humidity=conditions.humidity,
-            wind_speed=conditions.wind_speed,
-            wind_direction=conditions.wind_direction,
-            pressure=conditions.pressure,
-            timestamp=timestamp,
-        )
-
-    def to_dict(self) -> dict:
-        """Convert entry to dictionary for JSON serialization.
-
-        Returns:
-            Dictionary representation of the entry
-
-        """
-        data = asdict(self)
-        # Convert datetime to ISO format string
-        data["timestamp"] = self.timestamp.isoformat()
-        return data
-
-    @classmethod
-    def from_dict(cls, data: dict) -> WeatherHistoryEntry:
-        """Create entry from dictionary.
-
-        Args:
-            data: Dictionary containing entry data
-
-        Returns:
-            A new WeatherHistoryEntry instance
-
-        """
-        # Parse timestamp from ISO format
-        timestamp_str = data.get("timestamp", "")
-        if isinstance(timestamp_str, str):
-            timestamp = datetime.fromisoformat(timestamp_str)
-        else:
-            timestamp = datetime.now()
-
-        return cls(
-            location_name=data.get("location_name", ""),
-            temperature=float(data.get("temperature", 0.0)),
-            condition=data.get("condition", ""),
-            humidity=int(data.get("humidity", 0)),
-            wind_speed=float(data.get("wind_speed", 0.0)),
-            wind_direction=data.get("wind_direction", ""),
-            pressure=float(data.get("pressure", 0.0)),
-            timestamp=timestamp,
-        )
+    wind_direction: int | None
+    pressure: float | None
 
 
 @dataclass
 class WeatherComparison:
-    """Comparison between current weather and a historical entry."""
+    """Comparison between current weather and historical data."""
 
     temperature_difference: float
     temperature_description: str
     condition_changed: bool
     previous_condition: str
     condition_description: str | None
-    humidity_difference: int
-    wind_speed_difference: float
     days_ago: int
 
     @classmethod
     def compare(
         cls,
         current: CurrentConditions,
-        previous: WeatherHistoryEntry,
+        historical: HistoricalWeatherData,
+        days_ago: int,
     ) -> WeatherComparison:
-        """Compare current conditions with a historical entry.
+        """Compare current conditions with historical data.
 
         Args:
             current: Current weather conditions
-            previous: Historical weather entry to compare against
+            historical: Historical weather data
+            days_ago: Number of days in the past
 
         Returns:
             A WeatherComparison instance with comparison details
 
         """
-        # Calculate temperature difference
-        temp_diff = current.temperature - previous.temperature
+        # Use mean temperature for comparison
+        temp_diff = current.temperature - historical.temperature_mean
 
         # Generate temperature description
         if abs(temp_diff) < 1.0:
@@ -148,26 +74,17 @@ class WeatherComparison:
             temp_desc = f"{abs(temp_diff):.1f} degrees cooler"
 
         # Check condition change
-        condition_changed = current.condition != previous.condition
+        condition_changed = current.condition != historical.condition
         condition_desc = None
         if condition_changed:
-            condition_desc = f"Changed from {previous.condition} to {current.condition}"
-
-        # Calculate other differences
-        humidity_diff = current.humidity - previous.humidity
-        wind_diff = current.wind_speed - previous.wind_speed
-
-        # Calculate days ago
-        days_ago = (datetime.now() - previous.timestamp).days
+            condition_desc = f"Changed from {historical.condition} to {current.condition}"
 
         return cls(
             temperature_difference=temp_diff,
             temperature_description=temp_desc,
             condition_changed=condition_changed,
-            previous_condition=previous.condition,
+            previous_condition=historical.condition,
             condition_description=condition_desc,
-            humidity_difference=humidity_diff,
-            wind_speed_difference=wind_diff,
             days_ago=days_ago,
         )
 
@@ -194,193 +111,180 @@ class WeatherComparison:
         if self.condition_changed and self.condition_description:
             parts.append(self.condition_description)
 
-        # Humidity change if significant
-        if abs(self.humidity_difference) >= 10:
-            if self.humidity_difference > 0:
-                parts.append(f"Humidity increased by {self.humidity_difference} percent")
-            else:
-                parts.append(f"Humidity decreased by {abs(self.humidity_difference)} percent")
-
-        # Wind change if significant
-        if abs(self.wind_speed_difference) >= 5.0:
-            if self.wind_speed_difference > 0:
-                parts.append(
-                    f"Wind speed increased by {self.wind_speed_difference:.1f} miles per hour"
-                )
-            else:
-                parts.append(
-                    f"Wind speed decreased by {abs(self.wind_speed_difference):.1f} miles per hour"
-                )
-
         return ". ".join(parts) + "."
 
 
-class WeatherHistoryTracker:
-    """Tracks and manages weather history over time."""
+class WeatherHistoryService:
+    """Service for fetching historical weather data and making comparisons."""
 
-    def __init__(self, history_file: str, max_days: int = 30):
-        """Initialize the weather history tracker.
+    def __init__(self, openmeteo_client=None):
+        """Initialize the weather history service.
 
         Args:
-            history_file: Path to the JSON file for storing history
-            max_days: Maximum number of days to retain history (default: 30)
+            openmeteo_client: Optional OpenMeteoApiClient instance. If not provided,
+                            one will be created.
 
         """
-        self.history_file = history_file
-        self.max_days = max_days
-        self.history: list[WeatherHistoryEntry] = []
+        if openmeteo_client is None:
+            from .openmeteo_client import OpenMeteoApiClient
 
-        # Try to load existing history
-        self.load()
+            self.openmeteo_client = OpenMeteoApiClient(
+                user_agent="AccessiWeather/2.0",
+                timeout=30.0,
+            )
+        else:
+            self.openmeteo_client = openmeteo_client
 
-    def add_entry(
+    def get_historical_weather(
         self,
-        location: Location,
-        conditions: CurrentConditions,
-        timestamp: datetime | None = None,
-    ) -> None:
-        """Add a new weather history entry.
+        latitude: float,
+        longitude: float,
+        target_date: date,
+        temperature_unit: str = "fahrenheit",
+    ) -> HistoricalWeatherData | None:
+        """Fetch historical weather data for a specific date.
 
         Args:
-            location: Location for this entry
-            conditions: Current weather conditions
-            timestamp: Optional timestamp (defaults to now)
+            latitude: Latitude of the location
+            longitude: Longitude of the location
+            target_date: Date to fetch historical data for
+            temperature_unit: Temperature unit ("celsius" or "fahrenheit")
+
+        Returns:
+            HistoricalWeatherData if successful, None otherwise
 
         """
-        entry = WeatherHistoryEntry.from_current_conditions(
-            location=location,
-            conditions=conditions,
-            timestamp=timestamp,
-        )
-
-        self.history.append(entry)
-        logger.debug(f"Added weather history entry for {location.name} at {entry.timestamp}")
-
-    def save(self) -> None:
-        """Save weather history to file."""
         try:
-            # Ensure directory exists
-            path = Path(self.history_file)
-            path.parent.mkdir(parents=True, exist_ok=True)
-
-            # Convert entries to dictionaries
-            data = {
-                "version": "1.0",
-                "entries": [entry.to_dict() for entry in self.history],
+            # Use Open-Meteo archive endpoint for historical data
+            params = {
+                "latitude": latitude,
+                "longitude": longitude,
+                "start_date": target_date.isoformat(),
+                "end_date": target_date.isoformat(),
+                "daily": [
+                    "weather_code",
+                    "temperature_2m_max",
+                    "temperature_2m_min",
+                    "temperature_2m_mean",
+                    "wind_speed_10m_max",
+                    "wind_direction_10m_dominant",
+                ],
+                "temperature_unit": temperature_unit,
+                "timezone": "auto",
             }
 
-            # Write to file
-            with open(self.history_file, "w") as f:
-                json.dump(data, f, indent=2)
+            # Call archive endpoint (different from forecast)
+            response = self.openmeteo_client._make_request("archive", params)
 
-            logger.debug(f"Saved {len(self.history)} weather history entries")
+            if not response or "daily" not in response:
+                logger.warning(f"No historical data available for {target_date}")
+                return None
+
+            daily = response["daily"]
+
+            # Extract data for the requested date
+            if not daily.get("time") or len(daily["time"]) == 0:
+                return None
+
+            # Get weather description from code
+            weather_code = daily.get("weather_code", [0])[0]
+            condition = self.openmeteo_client.get_weather_description(weather_code)
+
+            return HistoricalWeatherData(
+                date=target_date,
+                temperature_max=daily.get("temperature_2m_max", [0])[0],
+                temperature_min=daily.get("temperature_2m_min", [0])[0],
+                temperature_mean=daily.get("temperature_2m_mean", [0])[0],
+                condition=condition,
+                humidity=None,  # Not available in archive endpoint
+                wind_speed=daily.get("wind_speed_10m_max", [0])[0],
+                wind_direction=daily.get("wind_direction_10m_dominant", [None])[0],
+                pressure=None,  # Not available in archive endpoint
+            )
 
         except Exception as e:
-            logger.error(f"Failed to save weather history: {e}")
-
-    def load(self) -> None:
-        """Load weather history from file."""
-        try:
-            if not Path(self.history_file).exists():
-                logger.debug("No existing weather history file found")
-                return
-
-            with open(self.history_file) as f:
-                data = json.load(f)
-
-            # Load entries
-            entries = data.get("entries", [])
-            self.history = [WeatherHistoryEntry.from_dict(entry) for entry in entries]
-
-            logger.info(f"Loaded {len(self.history)} weather history entries")
-
-            # Cleanup old entries after loading
-            self.cleanup_old_entries()
-
-        except Exception as e:
-            logger.error(f"Failed to load weather history: {e}")
-            self.history = []
-
-    def get_entry_for_location_and_day(
-        self,
-        location_name: str,
-        target_date: date,
-    ) -> WeatherHistoryEntry | None:
-        """Get the most recent entry for a location on a specific day.
-
-        Args:
-            location_name: Name of the location
-            target_date: Target date to search for
-
-        Returns:
-            The most recent entry for that day, or None if not found
-
-        """
-        matching_entries = [
-            entry
-            for entry in self.history
-            if entry.location_name == location_name and entry.timestamp.date() == target_date
-        ]
-
-        if not matching_entries:
+            logger.error(f"Failed to fetch historical weather data: {e}")
             return None
 
-        # Return the most recent entry from that day
-        return max(matching_entries, key=lambda e: e.timestamp)
-
-    def cleanup_old_entries(self) -> None:
-        """Remove entries older than max_days."""
-        cutoff_date = datetime.now() - timedelta(days=self.max_days)
-
-        initial_count = len(self.history)
-        self.history = [entry for entry in self.history if entry.timestamp >= cutoff_date]
-
-        removed_count = initial_count - len(self.history)
-        if removed_count > 0:
-            logger.info(f"Removed {removed_count} old weather history entries")
-
-    def get_comparison_for_yesterday(
+    def compare_with_yesterday(
         self,
-        location_name: str,
+        location: Location,
         current_conditions: CurrentConditions,
+        temperature_unit: str = "fahrenheit",
     ) -> WeatherComparison | None:
-        """Get comparison with yesterday's weather.
+        """Compare current weather with yesterday's weather.
 
         Args:
-            location_name: Name of the location
+            location: Location for the comparison
             current_conditions: Current weather conditions
+            temperature_unit: Temperature unit for API request
 
         Returns:
-            WeatherComparison if yesterday's data exists, None otherwise
+            WeatherComparison if historical data is available, None otherwise
 
         """
         yesterday = (datetime.now() - timedelta(days=1)).date()
-        yesterday_entry = self.get_entry_for_location_and_day(location_name, yesterday)
+        historical = self.get_historical_weather(
+            location.latitude, location.longitude, yesterday, temperature_unit
+        )
 
-        if yesterday_entry is None:
+        if historical is None:
             return None
 
-        return WeatherComparison.compare(current_conditions, yesterday_entry)
+        return WeatherComparison.compare(current_conditions, historical, days_ago=1)
 
-    def get_comparison_for_last_week(
+    def compare_with_last_week(
         self,
-        location_name: str,
+        location: Location,
         current_conditions: CurrentConditions,
+        temperature_unit: str = "fahrenheit",
     ) -> WeatherComparison | None:
-        """Get comparison with weather from one week ago.
+        """Compare current weather with weather from one week ago.
 
         Args:
-            location_name: Name of the location
+            location: Location for the comparison
             current_conditions: Current weather conditions
+            temperature_unit: Temperature unit for API request
 
         Returns:
-            WeatherComparison if last week's data exists, None otherwise
+            WeatherComparison if historical data is available, None otherwise
 
         """
         last_week = (datetime.now() - timedelta(days=7)).date()
-        last_week_entry = self.get_entry_for_location_and_day(location_name, last_week)
+        historical = self.get_historical_weather(
+            location.latitude, location.longitude, last_week, temperature_unit
+        )
 
-        if last_week_entry is None:
+        if historical is None:
             return None
 
-        return WeatherComparison.compare(current_conditions, last_week_entry)
+        return WeatherComparison.compare(current_conditions, historical, days_ago=7)
+
+    def compare_with_date(
+        self,
+        location: Location,
+        current_conditions: CurrentConditions,
+        target_date: date,
+        temperature_unit: str = "fahrenheit",
+    ) -> WeatherComparison | None:
+        """Compare current weather with weather from a specific date.
+
+        Args:
+            location: Location for the comparison
+            current_conditions: Current weather conditions
+            target_date: Date to compare with
+            temperature_unit: Temperature unit for API request
+
+        Returns:
+            WeatherComparison if historical data is available, None otherwise
+
+        """
+        days_ago = (datetime.now().date() - target_date).days
+        historical = self.get_historical_weather(
+            location.latitude, location.longitude, target_date, temperature_unit
+        )
+
+        if historical is None:
+            return None
+
+        return WeatherComparison.compare(current_conditions, historical, days_ago=days_ago)

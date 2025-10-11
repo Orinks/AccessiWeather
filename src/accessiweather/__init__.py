@@ -34,9 +34,9 @@ from .utils import (
 )
 from .weather_client import WeatherClient
 from .weather_history import (
+    HistoricalWeatherData,
     WeatherComparison,
-    WeatherHistoryEntry,
-    WeatherHistoryTracker,
+    WeatherHistoryService,
 )
 
 # Package version is sourced from installed metadata, with fallback to pyproject.toml
@@ -100,8 +100,8 @@ __all__ = [
     "AppSettings",
     "AppConfig",
     # Weather History
-    "WeatherHistoryEntry",
-    "WeatherHistoryTracker",
+    "HistoricalWeatherData",
+    "WeatherHistoryService",
     "WeatherComparison",
     # Utilities
     "TemperatureUnit",
