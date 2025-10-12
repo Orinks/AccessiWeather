@@ -336,6 +336,7 @@ AccessiWeather is designed with comprehensive accessibility support:
 - **Arrow Keys**: Navigate lists, dropdowns, and text
 - **Enter / Space**: Activate buttons and controls
 - **Alt+Down**: Open dropdown menus
+- **Delete**: Remove selected item (locations, sound packs)
 
 ### System Tray Shortcuts
 - **Enter**: Focus application or show context menu
@@ -346,6 +347,10 @@ AccessiWeather is designed with comprehensive accessibility support:
 - **Home / End**: Move to beginning/end of lists or text
 - **Page Up / Page Down**: Scroll through long content
 - **Ctrl+A**: Select all text in text controls
+
+### Context-Specific Shortcuts
+- **Delete on Location Selection**: Remove the currently selected location (requires at least one location to remain)
+- **Delete on Sound Pack List**: Remove the selected sound pack (cannot delete the default pack)
 
 ## Usage Tips and Best Practices
 

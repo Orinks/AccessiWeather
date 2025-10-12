@@ -69,6 +69,35 @@ def create_pack_list_panel(dlg) -> toga.Box:
     dlg.pack_list = toga.DetailedList(
         on_select=dlg._on_pack_selected, style=Pack(flex=1, margin_bottom=10)
     )
+
+    # Add keyboard shortcut for Delete key to remove sound pack
+    def on_pack_list_key_down(widget, key, modifiers=None):
+        """Handle keyboard shortcuts for pack list."""
+        if key == "Delete" or key == "Del":
+            # Import the delete function and call it
+            from . import ops as ops_mod
+
+            ops_mod.delete_pack(dlg, widget)
+            return True
+        return False
+
+    try:
+        dlg.pack_list.on_key_down = on_pack_list_key_down
+        logger.info("Keyboard shortcuts enabled for sound pack list")
+    except AttributeError:
+        # on_key_down might not be available on all platforms
+        logger.warning("Keyboard shortcuts not available for sound pack list on this platform")
+
+    # Add accessibility description for keyboard shortcut
+    try:
+        dlg.pack_list.aria_label = "Sound pack selection"
+        dlg.pack_list.aria_description = (
+            "Select a sound pack. Press Delete to remove the selected sound pack (except default)."
+        )
+    except AttributeError:
+        # aria properties might not be available on all platforms
+        pass
+
     panel.add(dlg.pack_list)
 
     dlg.import_button = toga.Button(

@@ -1,6 +1,6 @@
 """Tests for keyboard shortcuts in AccessiWeather."""
 
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -30,13 +30,18 @@ class TestLocationSelectionKeyboardShortcuts:
         from accessiweather.handlers.location_handlers import on_remove_location_pressed
 
         # Mock the remove handler to be called on Delete key
-        with patch("accessiweather.app_helpers.update_location_selection"):
-            with patch("accessiweather.handlers.weather_handlers.refresh_weather_data", new_callable=AsyncMock):
-                # Call the remove handler directly (simulating Delete key press)
-                await on_remove_location_pressed(mock_app, Mock())
+        with (
+            patch("accessiweather.app_helpers.update_location_selection"),
+            patch(
+                "accessiweather.handlers.weather_handlers.refresh_weather_data",
+                new_callable=AsyncMock,
+            ),
+        ):
+            # Call the remove handler directly (simulating Delete key press)
+            await on_remove_location_pressed(mock_app, Mock())
 
-                # Verify the location was removed
-                mock_app.config_manager.remove_location.assert_called_once_with("Location 2")
+            # Verify the location was removed
+            mock_app.config_manager.remove_location.assert_called_once_with("Location 2")
 
     @pytest.mark.asyncio
     async def test_location_selection_delete_key_with_no_selection(self):
@@ -155,9 +160,7 @@ class TestKeyboardShortcutAccessibility:
 
         async def mock_handler(widget, key):
             """Mock keyboard handler."""
-            if key == "Delete":
-                return True
-            return False
+            return key == "Delete"
 
         # Simulate calling the handler
         import asyncio

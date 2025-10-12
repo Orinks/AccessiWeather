@@ -147,6 +147,31 @@ def create_location_section(app: AccessiWeatherApp) -> toga.Box:
         ),
     )
 
+    # Add keyboard shortcut for Delete key to remove location
+    def on_location_key_down(widget, key, modifiers=None):
+        """Handle keyboard shortcuts for location selection."""
+        if key == "Delete" or key == "Del":
+            asyncio.create_task(event_handlers.on_remove_location_pressed(app, widget))
+            return True
+        return False
+
+    try:
+        app.location_selection.on_key_down = on_location_key_down
+        logger.info("Keyboard shortcuts enabled for location selection")
+    except AttributeError:
+        # on_key_down might not be available on all platforms
+        logger.warning("Keyboard shortcuts not available for location selection on this platform")
+
+    # Add accessibility description for keyboard shortcut
+    try:
+        app.location_selection.aria_label = "Location selection"
+        app.location_selection.aria_description = (
+            "Select your weather location. Press Delete to remove the selected location."
+        )
+    except AttributeError:
+        # aria properties might not be available on all platforms
+        pass
+
     current_location = app.config_manager.get_current_location()
     if current_location and current_location.name in location_names:
         app.location_selection.value = current_location.name
