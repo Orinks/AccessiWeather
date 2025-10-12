@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 import toga
 
-from . import background_tasks, event_handlers, ui_builder
+from . import app_helpers, background_tasks, event_handlers, ui_builder
 from .alert_manager import AlertManager
 from .alert_notification_system import AlertNotificationSystem
 from .cache import WeatherDataCache
@@ -122,12 +122,10 @@ def load_initial_data(app: AccessiWeatherApp) -> None:
         config = app.config_manager.get_config()
 
         if not config.locations:
-            logger.info("No locations found, adding default locations")
-            task = asyncio.create_task(background_tasks.add_initial_locations(app))
+            logger.info("No locations configured; waiting for user to add one")
+            app_helpers.update_status(app, "Add a location to get started.")
+        elif config.current_location:
+            task = asyncio.create_task(event_handlers.refresh_weather_data(app))
             task.add_done_callback(background_tasks.task_done_callback)
-        else:
-            if config.current_location:
-                task = asyncio.create_task(event_handlers.refresh_weather_data(app))
-                task.add_done_callback(background_tasks.task_done_callback)
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Failed to load initial data: %s", exc)
