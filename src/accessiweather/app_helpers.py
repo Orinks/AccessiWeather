@@ -12,6 +12,23 @@ if TYPE_CHECKING:  # pragma: no cover - import cycle guard
 logger = logging.getLogger(__name__)
 
 
+def is_delete_key(key: object) -> bool:
+    """Return True if the provided key represents the Delete key."""
+    key_value = getattr(key, "value", key)
+    if not isinstance(key_value, str):
+        key_value = str(key_value)
+
+    normalized = key_value.strip().lower()
+    if normalized.startswith("<") and normalized.endswith(">"):
+        normalized = normalized[1:-1]
+
+    for prefix in ("key.", "vk_"):
+        if normalized.startswith(prefix):
+            normalized = normalized[len(prefix) :]
+
+    return normalized in {"delete", "del"}
+
+
 async def play_startup_sound(app: AccessiWeatherApp) -> None:
     """Play the application startup sound if enabled."""
     try:

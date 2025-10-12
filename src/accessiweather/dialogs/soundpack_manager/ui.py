@@ -7,6 +7,7 @@ import toga
 from toga.style import Pack
 from travertino.constants import COLUMN, ROW
 
+from ... import app_helpers
 from .constants import FRIENDLY_ALERT_CATEGORIES, AlertCategoryItem
 
 logger = logging.getLogger(__name__)
@@ -73,7 +74,7 @@ def create_pack_list_panel(dlg) -> toga.Box:
     # Add keyboard shortcut for Delete key to remove sound pack
     def on_pack_list_key_down(widget, key, modifiers=None):
         """Handle keyboard shortcuts for pack list."""
-        if key == "Delete" or key == "Del":
+        if app_helpers.is_delete_key(key):
             # Import the delete function and call it
             from . import ops as ops_mod
 
