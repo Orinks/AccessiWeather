@@ -56,6 +56,7 @@ except Exception:
 
 
 def _read_pyproject_version() -> str | None:
+    """Read version from pyproject.toml (project.version is the single source of truth)."""
     try:
         import tomllib
         from pathlib import Path
@@ -66,9 +67,7 @@ def _read_pyproject_version() -> str | None:
             return None
         with py.open("rb") as f:
             data = tomllib.load(f)
-        return data.get("project", {}).get("version") or data.get("tool", {}).get(
-            "briefcase", {}
-        ).get("version")
+        return data.get("project", {}).get("version")
     except Exception:
         return None
 
