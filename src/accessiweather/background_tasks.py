@@ -74,37 +74,3 @@ def task_done_callback(task: asyncio.Task) -> None:
         logger.debug("Async task cancelled")
     except Exception as exc:  # noqa: BLE001
         logger.error("Async task failed: %s", exc)
-
-
-async def add_initial_locations(app: AccessiWeatherApp) -> None:
-    """Add initial locations for first-time users."""
-    try:
-        location = await app.location_manager.get_current_location_from_ip()
-
-        if location:
-            app.config_manager.add_location(location.name, location.latitude, location.longitude)
-            logger.info("Added current location from IP: %s", location.name)
-
-        test_locations = [
-            ("New York, NY", 40.7128, -74.0060),
-            ("Los Angeles, CA", 34.0522, -118.2437),
-            ("Tokyo, Japan", 35.6762, 139.6503),
-            ("London, UK", 51.5074, -0.1278),
-            ("Sydney, Australia", -33.8688, 151.2093),
-            ("Paris, France", 48.8566, 2.3522),
-        ]
-
-        for name, lat, lon in test_locations:
-            app.config_manager.add_location(name, lat, lon)
-            logger.info("Added test location: %s", name)
-
-        if location:
-            app.config_manager.set_current_location(location.name)
-        else:
-            app.config_manager.set_current_location("Tokyo, Japan")
-
-        app._update_location_selection()
-        await event_handlers.refresh_weather_data(app)
-
-    except Exception as exc:  # pragma: no cover - defensive logging
-        logger.error("Failed to add initial locations: %s", exc)

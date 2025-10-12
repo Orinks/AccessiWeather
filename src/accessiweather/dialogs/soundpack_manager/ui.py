@@ -7,6 +7,7 @@ import toga
 from toga.style import Pack
 from travertino.constants import COLUMN, ROW
 
+from ... import app_helpers
 from .constants import FRIENDLY_ALERT_CATEGORIES, AlertCategoryItem
 
 logger = logging.getLogger(__name__)
@@ -46,6 +47,14 @@ def create_dialog_ui(dlg) -> None:
 
     dlg.dialog.content = main_box
 
+    delete_pack_cmd = toga.Command(
+        dlg._on_delete_pack,
+        text="Delete Sound Pack",
+        tooltip="Delete the selected sound pack",
+        shortcut=toga.Key.MOD_1 + toga.Key.D.value,
+    )
+    dlg.dialog.commands.add(delete_pack_cmd)
+
     # Populate the pack list with loaded sound packs
     dlg._refresh_pack_list()
 
@@ -70,10 +79,10 @@ def create_pack_list_panel(dlg) -> toga.Box:
         on_select=dlg._on_pack_selected, style=Pack(flex=1, margin_bottom=10)
     )
 
-    # Add keyboard shortcut for Delete key to remove sound pack
+    # Add keyboard shortcut for Delete key to remove sound pack where supported
     def on_pack_list_key_down(widget, key, modifiers=None):
         """Handle keyboard shortcuts for pack list."""
-        if key == "Delete" or key == "Del":
+        if app_helpers.is_delete_key(key):
             # Import the delete function and call it
             from . import ops as ops_mod
 
@@ -92,7 +101,8 @@ def create_pack_list_panel(dlg) -> toga.Box:
     try:
         dlg.pack_list.aria_label = "Sound pack selection"
         dlg.pack_list.aria_description = (
-            "Select a sound pack. Press Delete to remove the selected sound pack (except default)."
+            "Select a sound pack. Press Ctrl or Command+D to delete the selected sound pack (except default), "
+            "or use the Delete key where supported."
         )
     except AttributeError:
         # aria properties might not be available on all platforms

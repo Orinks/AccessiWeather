@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 import toga
 
 from .. import app_helpers
+from ..dialogs.weather_history_dialog import WeatherHistoryDialog
 from ..models import WeatherData
 
 if TYPE_CHECKING:  # pragma: no cover - circular import guard
@@ -240,28 +241,22 @@ async def on_view_weather_history(app: AccessiWeatherApp, widget: toga.Widget) -
             current_location, app.current_weather_data.current_conditions
         )
 
-        # Build message
-        message_parts = [f"Weather History for {current_location.name}\n"]
+        sections: list[tuple[str, str]] = []
 
         if yesterday_comp:
-            message_parts.append("Yesterday:")
-            message_parts.append(yesterday_comp.get_accessible_summary())
-            message_parts.append("")
+            sections.append(("Yesterday", yesterday_comp.get_accessible_summary()))
         else:
-            message_parts.append("Yesterday: No historical data available")
-            message_parts.append("")
+            sections.append(("Yesterday", "No historical data available."))
 
         if week_comp:
-            message_parts.append("Last Week:")
-            message_parts.append(week_comp.get_accessible_summary())
+            sections.append(("Last Week", week_comp.get_accessible_summary()))
         else:
-            message_parts.append("Last Week: No historical data available")
+            sections.append(("Last Week", "No historical data available."))
 
-        message = "\n".join(message_parts)
+        dialog = WeatherHistoryDialog(app, current_location.name, sections)
+        await dialog.show_and_focus()
 
-        await app.main_window.dialog(toga.InfoDialog("Weather History", message))
-
-        app_helpers.update_status(app, "Weather history displayed")
+        app_helpers.update_status(app, "Weather history dialog opened")
 
     except Exception as exc:
         logger.error("Failed to fetch weather history: %s", exc)

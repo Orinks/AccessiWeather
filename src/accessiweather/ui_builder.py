@@ -147,10 +147,10 @@ def create_location_section(app: AccessiWeatherApp) -> toga.Box:
         ),
     )
 
-    # Add keyboard shortcut for Delete key to remove location
+    # Add keyboard shortcut for Delete key to remove location on supported platforms
     def on_location_key_down(widget, key, modifiers=None):
         """Handle keyboard shortcuts for location selection."""
-        if key == "Delete" or key == "Del":
+        if app_helpers.is_delete_key(key):
             asyncio.create_task(event_handlers.on_remove_location_pressed(app, widget))
             return True
         return False
@@ -166,7 +166,8 @@ def create_location_section(app: AccessiWeatherApp) -> toga.Box:
     try:
         app.location_selection.aria_label = "Location selection"
         app.location_selection.aria_description = (
-            "Select your weather location. Press Delete to remove the selected location."
+            "Select your weather location. Press Ctrl or Command+D to remove the selected location, "
+            "or use the Remove button. The Delete key also works on platforms that support it."
         )
     except AttributeError:
         # aria properties might not be available on all platforms
@@ -306,6 +307,13 @@ def create_menu_system(app: AccessiWeatherApp) -> None:
         tooltip="Add a new location",
         group=location_group,
     )
+    remove_location_cmd = toga.Command(
+        lambda widget: asyncio.create_task(event_handlers.on_remove_location_pressed(app, widget)),
+        text="Remove Location",
+        tooltip="Remove the selected location",
+        group=location_group,
+        shortcut=toga.Key.MOD_1 + toga.Key.D.value,
+    )
 
     refresh_cmd = toga.Command(
         lambda widget: asyncio.create_task(event_handlers.on_refresh_pressed(app, widget)),
@@ -321,7 +329,14 @@ def create_menu_system(app: AccessiWeatherApp) -> None:
         group=toga.Group.VIEW,
     )
 
-    app.commands.add(settings_cmd, exit_cmd, add_location_cmd, refresh_cmd, history_cmd)
+    app.commands.add(
+        settings_cmd,
+        exit_cmd,
+        add_location_cmd,
+        remove_location_cmd,
+        refresh_cmd,
+        history_cmd,
+    )
 
     if toga.Command.ABOUT in app.commands:
         app.commands[toga.Command.ABOUT].action = lambda widget: asyncio.create_task(
