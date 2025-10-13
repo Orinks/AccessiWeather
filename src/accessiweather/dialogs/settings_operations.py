@@ -21,6 +21,7 @@ except ImportError:  # pragma: no cover - fallback for Python <3.8
     except ImportError:  # pragma: no cover - metadata unavailable
         importlib_metadata = None  # type: ignore[assignment]
 
+from ..notifications.sound_player import SOUNDPACKS_DIR
 from . import settings_handlers
 
 logger = logging.getLogger(__name__)
@@ -184,6 +185,66 @@ async def open_config_directory(dialog):
             await dialog._show_dialog_error(
                 "Open Config Directory",
                 f"Failed to open the configuration directory: {exc}",
+            )
+
+
+async def open_soundpacks_directory(dialog):
+    """Open the directory that stores sound packs."""
+    try:
+        dialog._ensure_dialog_focus()
+
+        raw_path = SOUNDPACKS_DIR
+        try:
+            path = raw_path.expanduser().resolve()
+        except Exception as exc:
+            logger.warning(
+                "%s: Failed to resolve sound packs directory %s: %s",
+                LOG_PREFIX,
+                raw_path,
+                exc,
+            )
+            await dialog._show_dialog_error(
+                "Open Sound Packs Folder",
+                "The sound packs location could not be resolved.",
+            )
+            return
+
+        try:
+            path.mkdir(parents=True, exist_ok=True)
+        except Exception as exc:
+            logger.exception("%s: Failed to ensure sound packs directory %s", LOG_PREFIX, path)
+            await dialog._show_dialog_error(
+                "Open Sound Packs Folder",
+                f"Failed to create the sound packs folder:\n{exc}",
+            )
+            return
+
+        if not path.is_dir():
+            logger.error(
+                "%s: Sound packs path exists but is not a directory: %s",
+                LOG_PREFIX,
+                path,
+            )
+            await dialog._show_dialog_error(
+                "Open Sound Packs Folder",
+                "The sound packs location is not a directory, so it cannot be opened.",
+            )
+            return
+
+        system = platform.system()
+        if system == "Windows":
+            os.startfile(str(path))  # type: ignore[attr-defined]
+        elif system == "Darwin":
+            subprocess.run(["open", str(path)], check=False)
+        else:
+            subprocess.run(["xdg-open", str(path)], check=False)
+
+    except Exception as exc:
+        logger.exception("%s: Failed to open sound packs directory", LOG_PREFIX)
+        with contextlib.suppress(Exception):
+            await dialog._show_dialog_error(
+                "Open Sound Packs Folder",
+                f"Failed to open the sound packs folder: {exc}",
             )
 
 

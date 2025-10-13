@@ -420,6 +420,21 @@ def create_advanced_tab(dialog):
     )
     advanced_box.add(dialog.open_config_dir_button)
 
+    advanced_box.add(toga.Label("Sound Pack Files", style=Pack(margin_top=20, font_weight="bold")))
+    advanced_box.add(
+        toga.Label(
+            "Open the folder where your sound packs are stored.",
+            style=Pack(margin_top=5, margin_bottom=5, font_style="italic"),
+        )
+    )
+    dialog.open_soundpacks_dir_button = toga.Button(
+        "Open sound packs folder",
+        on_press=dialog._on_open_soundpacks_dir,
+        style=Pack(margin_top=5, width=260),
+        id="open_soundpacks_dir_button",
+    )
+    advanced_box.add(dialog.open_soundpacks_dir_button)
+
     dialog.option_container.content.append("Advanced", advanced_box)
 
 

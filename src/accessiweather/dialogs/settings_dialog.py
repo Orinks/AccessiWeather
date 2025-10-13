@@ -581,6 +581,9 @@ class SettingsDialog:
     async def _on_open_config_dir(self, widget):
         await settings_operations.open_config_directory(self)
 
+    async def _on_open_soundpacks_dir(self, widget):
+        await settings_operations.open_soundpacks_directory(self)
+
     async def _on_get_visual_crossing_api_key(self, widget):
         await settings_operations.get_visual_crossing_api_key(self)
 
