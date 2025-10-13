@@ -9,6 +9,8 @@ name: Update GitHub Pages
 # This prevents duplicate runs and ensures build artifacts are available when updating pages.
 
 on:
+  push:
+    branches: [main]
   # Trigger when build workflow completes successfully on main or dev branches
   workflow_run:
     workflows: ["Build and Package with Briefcase"]
@@ -71,6 +73,9 @@ jobs:
           # For manual triggers, use the current branch
           TARGET_BRANCH="${{ github.ref_name }}"
           echo "Using current branch from manual trigger: $TARGET_BRANCH"
+        elif [ "${{ github.event_name }}" = "push" ]; then
+          TARGET_BRANCH="${{ github.ref_name }}"
+          echo "Using push branch: $TARGET_BRANCH"
         else
           # Fallback to current branch
           TARGET_BRANCH="${{ github.ref_name }}"
