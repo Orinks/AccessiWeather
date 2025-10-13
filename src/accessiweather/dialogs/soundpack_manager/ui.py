@@ -53,7 +53,9 @@ def create_dialog_ui(dlg) -> None:
         tooltip="Delete the selected sound pack",
         shortcut=toga.Key.MOD_1 + toga.Key.D.value,
     )
-    dlg.dialog.commands.add(delete_pack_cmd)
+    commands = getattr(dlg.dialog, "commands", None)
+    if commands is not None:
+        commands.add(delete_pack_cmd)
 
     # Populate the pack list with loaded sound packs
     dlg._refresh_pack_list()
