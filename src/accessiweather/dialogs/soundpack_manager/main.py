@@ -132,7 +132,7 @@ class SoundPackManagerDialog:
         if getattr(self, "delete_button", None):
             self.delete_button.enabled = bool(pack_id and pack_id != "default")
         if getattr(self, "share_button", None):
-            self.share_button.enabled = bool(pack_id)
+            self.share_button.enabled = bool(pack_id and pack_id != "default")
 
     def _on_sound_selected(self, widget) -> None:
         # Enable preview button only if the actual sound file exists
@@ -334,7 +334,36 @@ class SoundPackManagerDialog:
                     "Please select a sound pack to share.",
                 )
                 return
-            pack_info = self.sound_packs[self.selected_pack]
+            pack_id = self.selected_pack
+            pack_info = self.sound_packs[pack_id]
+            pack_display_name = pack_info.get("name", pack_id)
+
+            if pack_id == "default":
+                await self.app.main_window.info_dialog(
+                    "Share Pack",
+                    "The default sound pack comes preinstalled and cannot be shared with the community.",
+                )
+                return
+
+            try:
+                confirmed = await self.app.main_window.question_dialog(
+                    "Confirm Share",
+                    (
+                        f"Are you sure you want to share '{pack_display_name}' with the community?\n\n"
+                        "This will submit a pull request for review."
+                    ),
+                )
+            except Exception as dialog_error:
+                logger.error("Failed to show share confirmation dialog: %s", dialog_error)
+                await self.app.main_window.info_dialog(
+                    "Share Pack",
+                    "Unable to confirm sharing right now. Submission cancelled.",
+                )
+                return
+
+            if not confirmed:
+                return
+
             pack_path = pack_info["path"]
 
             # Validate pack quickly before packaging
