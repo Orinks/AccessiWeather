@@ -108,6 +108,18 @@ async def update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherD
                 if presentation.status_messages:
                     status_lines = "\n".join(f"• {line}" for line in presentation.status_messages)
                     current_text += f"\n\nStatus:\n{status_lines}"
+                if presentation.air_quality:
+                    aq_lines: list[str] = []
+                    if presentation.air_quality.summary:
+                        aq_lines.append(f"• {presentation.air_quality.summary}")
+                    if presentation.air_quality.guidance:
+                        aq_lines.append(f"• Advice: {presentation.air_quality.guidance}")
+                    if presentation.air_quality.updated_at:
+                        aq_lines.append(f"• {presentation.air_quality.updated_at}")
+                    if presentation.air_quality.sources:
+                        aq_lines.append("• Sources: " + ", ".join(presentation.air_quality.sources))
+                    if aq_lines:
+                        current_text += "\n\nAir quality update:\n" + "\n".join(aq_lines)
                 app.current_conditions_display.value = current_text
             else:
                 app.current_conditions_display.value = (

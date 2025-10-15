@@ -1,6 +1,6 @@
 """Unit tests for WeatherPresenter accuracy-sensitive output."""
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -84,9 +84,65 @@ def test_presenter_includes_environmental_metrics():
     aq_metric = next((m for m in presentation.metrics if m.label == "Air Quality"), None)
     assert aq_metric is not None
     assert "105" in aq_metric.value
+    assert "Advice:" in aq_metric.value
+    assert "Air Quality:" in presentation.fallback_text
     pollen_metric = next((m for m in presentation.metrics if m.label == "Pollen"), None)
     assert pollen_metric is not None
     assert "High" in pollen_metric.value
+
+
+@pytest.mark.unit
+def test_presenter_builds_accessible_air_quality_panel():
+    settings = AppSettings()
+    presenter = WeatherPresenter(settings)
+    location = Location(name="AQ Town", latitude=40.0, longitude=-74.0)
+    weather_data = WeatherData(
+        location=location,
+        current=CurrentConditions(condition="Clear", temperature_f=72.0),
+        environmental=EnvironmentalConditions(
+            air_quality_index=135,
+            air_quality_category="Unhealthy for Sensitive Groups",
+            air_quality_pollutant="PM2_5",
+            updated_at=datetime(2025, 1, 1, 15, 0, tzinfo=UTC),
+            sources=["Open-Meteo Air Quality"],
+        ),
+    )
+
+    presentation = presenter.present(weather_data)
+
+    assert presentation.air_quality is not None
+    air_panel = presentation.air_quality
+    assert "135" in air_panel.summary
+    assert "Unhealthy for Sensitive Groups" in air_panel.summary
+    assert "PM2.5" in air_panel.summary
+    assert air_panel.guidance is not None
+    assert "sensitive" in air_panel.guidance.lower()
+    assert air_panel.fallback_text.startswith("Air quality for AQ Town")
+    assert "Open-Meteo Air Quality" in air_panel.sources
+    assert presentation.current_conditions is not None
+    current_aq_metric = next(
+        (m for m in presentation.current_conditions.metrics if m.label == "Air Quality"),
+        None,
+    )
+    assert current_aq_metric is not None
+    assert "Advice:" in current_aq_metric.value
+    assert "Air Quality:" in presentation.current_conditions.fallback_text
+
+
+@pytest.mark.unit
+def test_presenter_skips_air_quality_panel_when_unavailable():
+    settings = AppSettings()
+    presenter = WeatherPresenter(settings)
+    location = Location(name="No AQ City", latitude=10.0, longitude=20.0)
+    weather_data = WeatherData(
+        location=location,
+        current=CurrentConditions(condition="Cloudy"),
+        environmental=EnvironmentalConditions(),
+    )
+
+    presentation = presenter.present(weather_data)
+
+    assert presentation.air_quality is None
 
 
 @pytest.mark.unit

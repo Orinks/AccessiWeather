@@ -70,6 +70,7 @@ class TestAccessiWeatherAppInitialization:
         assert app.location_selection is None
         assert app.current_conditions_display is None
         assert app.forecast_display is None
+        assert getattr(app, "air_quality_display", None) is None
         assert app.alerts_table is None
         assert app.refresh_button is None
         assert app.status_label is None

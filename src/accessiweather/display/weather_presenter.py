@@ -23,6 +23,7 @@ from ..models import (
     WeatherData,
 )
 from ..utils import TemperatureUnit
+from .presentation.environmental import AirQualityPresentation, build_air_quality_panel
 
 
 @dataclass(slots=True)
@@ -109,6 +110,7 @@ class WeatherPresentation:
     current_conditions: CurrentConditionsPresentation | None = None
     forecast: ForecastPresentation | None = None
     alerts: AlertsPresentation | None = None
+    air_quality: AirQualityPresentation | None = None
     trend_summary: list[str] = field(default_factory=list)
     status_messages: list[str] = field(default_factory=list)
 
@@ -139,6 +141,12 @@ class WeatherPresenter:
         """Build a structured presentation for the given weather data."""
         unit_pref = self._get_temperature_unit_preference()
 
+        air_quality_panel = (
+            build_air_quality_panel(weather_data.location, weather_data.environmental)
+            if weather_data.environmental
+            else None
+        )
+
         current = (
             self._build_current_conditions(
                 weather_data.current,
@@ -147,6 +155,7 @@ class WeatherPresenter:
                 environmental=weather_data.environmental,
                 trends=weather_data.trend_insights,
                 hourly_forecast=weather_data.hourly_forecast,
+                air_quality=air_quality_panel,
             )
             if weather_data.current
             else None
@@ -180,6 +189,7 @@ class WeatherPresenter:
             current_conditions=current,
             forecast=forecast,
             alerts=alerts,
+            air_quality=air_quality_panel,
             trend_summary=trend_summary,
             status_messages=status_messages,
         )
@@ -196,6 +206,9 @@ class WeatherPresenter:
         if not current or not current.has_data():
             return None
         unit_pref = self._get_temperature_unit_preference()
+        air_quality_panel = (
+            build_air_quality_panel(location, environmental) if environmental else None
+        )
         return self._build_current_conditions(
             current,
             location,
@@ -203,6 +216,7 @@ class WeatherPresenter:
             environmental=environmental,
             trends=trends,
             hourly_forecast=hourly_forecast,
+            air_quality=air_quality_panel,
         )
 
     def present_forecast(
@@ -236,6 +250,7 @@ class WeatherPresenter:
         environmental: EnvironmentalConditions | None = None,
         trends: Iterable[TrendInsight] | None = None,
         hourly_forecast: HourlyForecast | None = None,
+        air_quality: AirQualityPresentation | None = None,
     ) -> CurrentConditionsPresentation:
         return build_current_conditions(
             current,
@@ -244,6 +259,7 @@ class WeatherPresenter:
             environmental=environmental,
             trends=trends,
             hourly_forecast=hourly_forecast,
+            air_quality=air_quality,
         )
 
     def _build_forecast(

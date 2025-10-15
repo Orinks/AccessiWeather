@@ -14,6 +14,7 @@ from ...models import (
 )
 from ...utils import TemperatureUnit
 from ..weather_presenter import CurrentConditionsPresentation, Metric
+from .environmental import AirQualityPresentation
 from .formatters import (
     format_dewpoint,
     format_pressure_value,
@@ -35,6 +36,7 @@ def build_current_conditions(
     environmental: EnvironmentalConditions | None = None,
     trends: Iterable[TrendInsight] | None = None,
     hourly_forecast: HourlyForecast | None = None,
+    air_quality: AirQualityPresentation | None = None,
 ) -> CurrentConditionsPresentation:
     """Create a structured presentation for the current weather."""
     title = f"Current conditions for {location.name}"
@@ -89,22 +91,23 @@ def build_current_conditions(
         metrics.append(Metric("Last updated", format_timestamp(current.last_updated)))
 
     if environmental:
-        if environmental.air_quality_index is not None:
-            aq_label = (
-                f"{environmental.air_quality_index:.0f}"
-                if environmental.air_quality_index is not None
-                else ""
-            )
+        aq_value_parts: list[str] = []
+        summary_value: str | None = None
+        if air_quality and air_quality.summary:
+            summary_value = air_quality.summary
+        elif environmental.air_quality_index is not None:
+            aq_label = f"{environmental.air_quality_index:.0f}"
             if environmental.air_quality_category:
-                aq_label = (
-                    f"{aq_label} ({environmental.air_quality_category})"
-                    if aq_label
-                    else environmental.air_quality_category
-                )
+                aq_label = f"{aq_label} ({environmental.air_quality_category})"
             if environmental.air_quality_pollutant:
-                pollutant = environmental.air_quality_pollutant
-                aq_label = f"{aq_label} – {pollutant}" if aq_label else pollutant
-            metrics.append(Metric("Air Quality", aq_label or "Data unavailable"))
+                aq_label = f"{aq_label} – {environmental.air_quality_pollutant}"
+            summary_value = aq_label
+        if summary_value:
+            aq_value_parts.append(summary_value)
+        if air_quality and air_quality.guidance:
+            aq_value_parts.append(f"Advice: {air_quality.guidance}")
+        if aq_value_parts:
+            metrics.append(Metric("Air Quality", " | ".join(aq_value_parts)))
         if environmental.pollen_index is not None or environmental.pollen_primary_allergen:
             pollen_value = (
                 f"{environmental.pollen_index:.0f}"
