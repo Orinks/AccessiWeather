@@ -168,6 +168,11 @@ class TestWeatherDataFetching:
         assert client._weather_code_to_description(0) == "Clear sky"
         assert client._weather_code_to_description(1) == "Mainly clear"
         assert client._weather_code_to_description(61) == "Slight rain"
+        assert client._weather_code_to_description(80) == "Slight rain showers"
+        assert client._weather_code_to_description(81) == "Moderate rain showers"
+        assert client._weather_code_to_description(82) == "Violent rain showers"
+        assert client._weather_code_to_description(85) == "Slight snow showers"
+        assert client._weather_code_to_description(86) == "Heavy snow showers"
         assert client._weather_code_to_description(95) == "Thunderstorm"
         assert "Weather code" in client._weather_code_to_description(999)  # Unknown code
 
