@@ -65,6 +65,11 @@ class CurrentConditionsPresentation:
     fallback_text: str = ""
     trends: list[str] = field(default_factory=list)
 
+    @property
+    def trend_summary(self) -> list[str]:  # pragma: no cover - backward compatibility
+        """Alias for legacy callers expecting ``trend_summary``."""
+        return self.trends
+
 
 @dataclass(slots=True)
 class ForecastPresentation:
@@ -250,6 +255,7 @@ class WeatherPresenter:
         location: Location,
         unit_pref: TemperatureUnit,
         *,
+        settings: AppSettings | None = None,
         environmental: EnvironmentalConditions | None = None,
         trends: Iterable[TrendInsight] | None = None,
         hourly_forecast: HourlyForecast | None = None,
@@ -259,7 +265,7 @@ class WeatherPresenter:
             current,
             location,
             unit_pref,
-            settings=self.settings,
+            settings=settings or self.settings,
             environmental=environmental,
             trends=trends,
             hourly_forecast=hourly_forecast,

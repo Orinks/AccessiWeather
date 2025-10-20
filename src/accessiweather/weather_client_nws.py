@@ -294,10 +294,6 @@ async def get_nws_alerts(
             "message_type": "alert",
         }
         headers = {"User-Agent": user_agent}
-        feature_headers = headers.copy()
-        feature_headers["Feature-Flags"] = "forecast_temperature_qv, forecast_wind_speed_qv"
-        feature_headers = headers.copy()
-        feature_headers["Feature-Flags"] = "forecast_temperature_qv, forecast_wind_speed_qv"
 
         # Use provided client or create a new one
         if client is not None:
@@ -327,6 +323,8 @@ async def get_nws_hourly_forecast(
     """Fetch hourly forecast from the NWS API."""
     try:
         headers = {"User-Agent": user_agent}
+        feature_headers = headers.copy()
+        feature_headers["Feature-Flags"] = "forecast_temperature_qv, forecast_wind_speed_qv"
 
         # Use provided client or create a new one
         if client is not None:
