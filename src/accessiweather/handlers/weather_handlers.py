@@ -134,6 +134,15 @@ async def update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherD
                     f"Forecast for {location_name}:\nNo forecast data available."
                 )
 
+        aviation_display = getattr(app, "aviation_display", None)
+        if aviation_display is not None:
+            if presentation.aviation:
+                aviation_display.value = presentation.aviation.fallback_text
+            else:
+                aviation_display.value = (
+                    f"Aviation weather for {location_name}:\nNo aviation data available."
+                )
+
         alerts_table_data = convert_alerts_to_table_data(weather_data.alerts)
         if app.alerts_table:
             app.alerts_table.data = alerts_table_data

@@ -28,6 +28,7 @@ from . import (
 from .cache import WeatherDataCache
 from .models import (
     AppSettings,
+    AviationData,
     CurrentConditions,
     EnvironmentalConditions,
     Forecast,
@@ -40,6 +41,7 @@ from .models import (
     WeatherData,
 )
 from .services import EnvironmentalDataClient, MeteoAlarmClient
+from .utils import decode_taf_text
 from .visual_crossing_client import VisualCrossingApiError, VisualCrossingClient
 
 logger = logging.getLogger(__name__)
@@ -464,6 +466,7 @@ class WeatherClient:
         await asyncio.gather(
             self._populate_environmental_metrics(weather_data, location),
             self._merge_international_alerts(weather_data, location),
+            self._enrich_with_aviation_data(weather_data, location),
             return_exceptions=True,  # Continue even if some tasks fail
         )
 
@@ -621,6 +624,41 @@ class WeatherClient:
                 logger.info("Added forecast discussion from NWS")
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"Failed to fetch NWS discussion: {exc}")
+
+    async def _enrich_with_aviation_data(
+        self, weather_data: WeatherData, location: Location
+    ) -> None:
+        """Populate aviation data for US locations using NWS products."""
+        if not self._is_us_location(location):
+            return
+        if weather_data.aviation and weather_data.aviation.has_taf():
+            return
+
+        try:
+            client = self._get_http_client()
+            station_id, station_name = await nws_client.get_nws_primary_station_info(
+                location, self.nws_base_url, self.user_agent, self.timeout, client
+            )
+            if not station_id:
+                return
+
+            raw_taf = await nws_client.get_nws_tafs(
+                station_id, self.nws_base_url, self.user_agent, self.timeout, client
+            )
+            aviation = weather_data.aviation or AviationData()
+            aviation.station_id = aviation.station_id or station_id
+            if station_name:
+                aviation.airport_name = station_name
+            elif not aviation.airport_name:
+                aviation.airport_name = station_id
+
+            if raw_taf:
+                aviation.raw_taf = raw_taf
+                aviation.decoded_taf = decode_taf_text(raw_taf)
+
+            weather_data.aviation = aviation
+        except Exception as exc:  # noqa: BLE001
+            logger.debug(f"Failed to fetch aviation data: {exc}")
 
     async def _enrich_with_visual_crossing_alerts(
         self, weather_data: WeatherData, location: Location

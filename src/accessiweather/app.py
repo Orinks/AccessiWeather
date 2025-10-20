@@ -48,6 +48,7 @@ class AccessiWeatherApp(toga.App):
         self.location_selection: toga.Selection | None = None
         self.current_conditions_display: toga.MultilineTextInput | None = None
         self.forecast_display: toga.MultilineTextInput | None = None
+        self.aviation_display: toga.MultilineTextInput | None = None
         self.alerts_table: toga.Table | None = None
         self.refresh_button: toga.Button | None = None
         self.status_label: toga.Label | None = None

@@ -1,6 +1,7 @@
 """Tests for WeatherClient parsing helpers."""
 
 from datetime import UTC, datetime, timedelta
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -152,6 +153,37 @@ async def test_weather_client_merges_meteoalarm_alerts():
     assert weather_data.alerts is not None
     assert weather_data.alerts.alerts
     assert weather_data.alerts.alerts[0].source == "MeteoAlarm"
+
+
+@pytest.mark.asyncio
+async def test_enrich_with_aviation_data_populates_taf():
+    settings = AppSettings()
+    client = WeatherClient(settings=settings)
+    location = Location(name="Dulles", latitude=38.9445, longitude=-77.4558)
+    weather_data = WeatherData(location=location)
+
+    taf_text = "TAF KIAD 010000Z 0100/0206 17008KT P6SM SCT040"
+
+    with (
+        patch(
+            "accessiweather.weather_client_nws.get_nws_primary_station_info",
+            new=AsyncMock(return_value=("KIAD", "Dulles International")),
+        ) as station_mock,
+        patch(
+            "accessiweather.weather_client_nws.get_nws_tafs",
+            new=AsyncMock(return_value=taf_text),
+        ) as taf_mock,
+    ):
+        await client._enrich_with_aviation_data(weather_data, location)
+
+    station_mock.assert_awaited()
+    taf_mock.assert_awaited_once()
+
+    aviation = weather_data.aviation
+    assert aviation is not None
+    assert aviation.station_id == "KIAD"
+    assert aviation.raw_taf == taf_text
+    assert aviation.decoded_taf is not None
 
 
 @pytest.mark.unit

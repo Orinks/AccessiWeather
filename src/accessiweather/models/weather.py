@@ -252,6 +252,7 @@ class AviationData:
 
     raw_taf: str | None = None
     decoded_taf: str | None = None
+    station_id: str | None = None
     airport_name: str | None = None
     active_sigmets: list[dict] = field(default_factory=list)
     active_cwas: list[dict] = field(default_factory=list)

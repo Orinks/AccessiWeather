@@ -13,6 +13,7 @@ from accessiweather.display import WeatherPresenter
 from accessiweather.handlers.weather_handlers import update_weather_displays
 from accessiweather.models import (
     AppSettings,
+    AviationData,
     CurrentConditions,
     EnvironmentalConditions,
     Location,
@@ -55,6 +56,7 @@ def _create_app():
         presenter=presenter,
         current_conditions_display=DummyText(),
         forecast_display=DummyText(),
+        aviation_display=DummyText(),
         alerts_table=DummyTable(),
         alert_details_button=DummyButton(),
         weather_history_service=None,
@@ -109,3 +111,25 @@ async def test_update_weather_displays_handles_missing_air_quality():
     await update_weather_displays(app, weather_data)
 
     assert "Air Quality:" not in app.current_conditions_display.value
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_update_weather_displays_populates_aviation_summary():
+    app = _create_app()
+    location = Location(name="Flight Town", latitude=39.8561, longitude=-104.6737)
+    weather_data = WeatherData(
+        location=location,
+        aviation=AviationData(
+            raw_taf="TAF KDEN 010000Z 0100/0206 34010KT P6SM FEW080",
+            station_id="KDEN",
+            airport_name="Denver International",
+        ),
+    )
+
+    await update_weather_displays(app, weather_data)
+
+    aviation_text = app.aviation_display.value
+    assert "Aviation weather for" in aviation_text
+    assert "Terminal Aerodrome Forecast" in aviation_text
+    assert "KDEN" in aviation_text

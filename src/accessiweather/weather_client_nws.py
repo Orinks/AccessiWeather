@@ -162,6 +162,58 @@ async def get_nws_current_conditions(
         return None
 
 
+async def get_nws_primary_station_info(
+    location: Location,
+    nws_base_url: str,
+    user_agent: str,
+    timeout: float,
+    client: httpx.AsyncClient | None = None,
+) -> tuple[str | None, str | None]:
+    """Return the primary observation station identifier and name for a location."""
+    try:
+        headers = {"User-Agent": user_agent}
+        grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+
+        if client is not None:
+            response = await _client_get(client, grid_url, headers=headers)
+            response.raise_for_status()
+            grid_data = response.json()
+            stations_url = grid_data.get("properties", {}).get("observationStations")
+            if not stations_url:
+                logger.debug("No observationStations URL in NWS grid data")
+                return None, None
+
+            response = await _client_get(client, stations_url, headers=headers)
+            response.raise_for_status()
+            stations_data = response.json()
+        else:
+            async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+                response = await new_client.get(grid_url, headers=headers)
+                response.raise_for_status()
+                grid_data = response.json()
+                stations_url = grid_data.get("properties", {}).get("observationStations")
+                if not stations_url:
+                    logger.debug("No observationStations URL in NWS grid data")
+                    return None, None
+
+                response = await new_client.get(stations_url, headers=headers)
+                response.raise_for_status()
+                stations_data = response.json()
+
+        features = stations_data.get("features", [])
+        if not features:
+            logger.debug("No observation station features returned")
+            return None, None
+
+        station_props = features[0].get("properties", {})
+        station_id = station_props.get("stationIdentifier")
+        station_name = station_props.get("name")
+        return station_id, station_name
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Failed to look up primary station info: {exc}")
+        return None, None
+
+
 async def get_nws_forecast_and_discussion(
     location: Location,
     nws_base_url: str,

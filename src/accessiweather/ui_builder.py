@@ -216,6 +216,17 @@ def create_weather_display_section(app: AccessiWeatherApp) -> toga.Box:
     )
     weather_box.add(app.discussion_button)
 
+    aviation_label = toga.Label(
+        "Aviation Weather (TAF):", style=Pack(font_weight="bold", margin_bottom=5)
+    )
+    weather_box.add(aviation_label)
+
+    app.aviation_display = toga.MultilineTextInput(
+        readonly=True, style=Pack(height=140, margin_bottom=10)
+    )
+    app.aviation_display.value = "No aviation weather data available."
+    weather_box.add(app.aviation_display)
+
     alerts_label = toga.Label("Weather Alerts:", style=Pack(font_weight="bold", margin_bottom=5))
     weather_box.add(alerts_label)
 
