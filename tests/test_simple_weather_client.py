@@ -186,6 +186,30 @@ async def test_enrich_with_aviation_data_populates_taf():
     assert aviation.decoded_taf is not None
 
 
+@pytest.mark.asyncio
+async def test_get_aviation_weather_returns_decoded_taf():
+    client = WeatherClient()
+    taf_text = "TAF KIAD 010000Z 0100/0206 17008KT P6SM SCT040"
+
+    with patch(
+        "accessiweather.weather_client.nws_client.get_nws_tafs",
+        new=AsyncMock(return_value=taf_text),
+    ) as taf_mock:
+        aviation = await client.get_aviation_weather("kiad")
+
+    taf_mock.assert_awaited_once()
+    assert aviation.station_id == "KIAD"
+    assert aviation.raw_taf == taf_text
+    assert aviation.decoded_taf is not None
+
+
+@pytest.mark.asyncio
+async def test_get_aviation_weather_requires_station():
+    client = WeatherClient()
+    with pytest.raises(ValueError):
+        await client.get_aviation_weather("")
+
+
 @pytest.mark.unit
 def test_parse_visual_crossing_current_conditions():
     from accessiweather.visual_crossing_client import VisualCrossingClient

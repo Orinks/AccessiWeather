@@ -27,6 +27,7 @@ from .handlers import (
     on_tray_refresh,
     on_tray_settings,
     on_view_alert_details,
+    on_view_aviation_pressed,
     on_view_weather_history,
     refresh_weather_data,
     show_remove_confirmation_dialog,
@@ -52,6 +53,7 @@ __all__ = [
     "on_alert_details_pressed",
     "on_alert_selected",
     "on_view_alert_details",
+    "on_view_aviation_pressed",
     "on_about_pressed",
     "on_check_updates_pressed",
     "download_update",
@@ -61,4 +63,5 @@ __all__ = [
     "on_tray_exit",
     "test_alert_notification",
     "on_test_notification_pressed",
+    "on_view_aviation_pressed",
 ]

@@ -642,23 +642,65 @@ class WeatherClient:
             if not station_id:
                 return
 
-            raw_taf = await nws_client.get_nws_tafs(
-                station_id, self.nws_base_url, self.user_agent, self.timeout, client
-            )
-            aviation = weather_data.aviation or AviationData()
-            aviation.station_id = aviation.station_id or station_id
+            aviation = await self.get_aviation_weather(station_id)
             if station_name:
                 aviation.airport_name = station_name
-            elif not aviation.airport_name:
-                aviation.airport_name = station_id
-
-            if raw_taf:
-                aviation.raw_taf = raw_taf
-                aviation.decoded_taf = decode_taf_text(raw_taf)
 
             weather_data.aviation = aviation
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"Failed to fetch aviation data: {exc}")
+
+    async def get_aviation_weather(
+        self,
+        station_id: str,
+        *,
+        include_sigmets: bool = False,
+        atsu: str | None = None,
+        include_cwas: bool = False,
+        cwsu_id: str | None = None,
+    ) -> AviationData:
+        """Fetch aviation weather products for a specific ICAO station identifier."""
+        station = (station_id or "").strip().upper()
+        if not station:
+            raise ValueError("station_id must be a non-empty ICAO identifier.")
+
+        client = self._get_http_client()
+        aviation = AviationData(station_id=station, airport_name=station)
+
+        raw_taf: str | None
+        try:
+            raw_taf = await nws_client.get_nws_tafs(
+                station, self.nws_base_url, self.user_agent, self.timeout, client
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.error("Failed to fetch TAF for %s: %s", station, exc)
+            raise
+
+        if raw_taf:
+            aviation.raw_taf = raw_taf
+            aviation.decoded_taf = decode_taf_text(raw_taf)
+
+        if include_sigmets:
+            try:
+                aviation.active_sigmets = await nws_client.get_nws_sigmets(
+                    self.nws_base_url,
+                    self.user_agent,
+                    self.timeout,
+                    client,
+                    atsu=atsu,
+                )
+            except Exception as exc:  # noqa: BLE001
+                logger.debug("Failed to fetch SIGMET data for %s: %s", station, exc)
+
+        if include_cwas and cwsu_id:
+            try:
+                aviation.active_cwas = await nws_client.get_nws_cwas(
+                    cwsu_id, self.nws_base_url, self.user_agent, self.timeout, client
+                )
+            except Exception as exc:  # noqa: BLE001
+                logger.debug("Failed to fetch CWA data for CWSU %s: %s", cwsu_id, exc)
+
+        return aviation
 
     async def _enrich_with_visual_crossing_alerts(
         self, weather_data: WeatherData, location: Location
