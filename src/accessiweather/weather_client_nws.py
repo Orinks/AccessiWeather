@@ -370,7 +370,6 @@ async def get_nws_tafs(
     client: httpx.AsyncClient,
 ) -> str | None:
     """Fetch the most recent Terminal Aerodrome Forecast for a station."""
-
     del timeout  # The caller manages the async client lifecycle.
 
     taf_url = f"{nws_base_url}/stations/{station_id}/tafs"
@@ -404,7 +403,6 @@ async def get_nws_sigmets(
     atsu: str | None = None,
 ) -> list[dict[str, Any]]:
     """Fetch active SIGMET or AIRMET advisories."""
-
     del timeout
 
     sigmet_url = f"{nws_base_url}/aviation/sigmets"
@@ -431,7 +429,6 @@ async def get_nws_cwas(
     client: httpx.AsyncClient,
 ) -> list[dict[str, Any]]:
     """Fetch Center Weather Advisories for a CWSU identifier."""
-
     del timeout
 
     cwa_url = f"{nws_base_url}/aviation/cwsus/{cwsu_id}/cwas"
@@ -457,7 +454,6 @@ async def get_nws_radar_profiler(
     client: httpx.AsyncClient,
 ) -> dict[str, Any] | None:
     """Fetch metadata for a radar wind profiler station."""
-
     del timeout
 
     profiler_url = f"{nws_base_url}/radar/profilers/{station_id}"
@@ -482,7 +478,6 @@ async def get_nws_marine_forecast(
     client: httpx.AsyncClient,
 ) -> dict[str, Any] | None:
     """Fetch a marine zone forecast."""
-
     del timeout
 
     marine_url = f"{nws_base_url}/zones/{zone_type}/{zone_id}/forecast"

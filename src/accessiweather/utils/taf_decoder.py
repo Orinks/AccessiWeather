@@ -64,7 +64,6 @@ _INTENSITY = {"+": "heavy", "-": "light"}
 
 def decode_taf_text(raw_taf: str) -> str:
     """Decode a raw TAF string into an accessible textual summary."""
-
     if not raw_taf:
         return "No TAF available."
 
@@ -242,7 +241,9 @@ def _segment_intro(segment: dict[str, Any]) -> str:
         probability = segment.get("prob")
         period = segment.get("period")
         qualifier = segment.get("qualifier")
-        prefix = f"Probability {probability}%" if probability is not None else "Probability forecast"
+        prefix = (
+            f"Probability {probability}%" if probability is not None else "Probability forecast"
+        )
         if qualifier == "tempo":
             prefix += " of temporary conditions"
         if isinstance(period, str):
@@ -556,11 +557,7 @@ def _format_from_time(token: str) -> str:
 
 
 def _format_day(day: int) -> str:
-    suffix = "th"
-    if 10 <= day % 100 <= 20:
-        suffix = "th"
-    else:
-        suffix = {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+    suffix = "th" if 10 <= day % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
     return f"{day}{suffix}"
 
 

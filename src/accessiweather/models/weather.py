@@ -258,7 +258,6 @@ class AviationData:
 
     def has_taf(self) -> bool:
         """Return ``True`` when a TAF is available."""
-
         return any(
             [
                 bool(self.raw_taf and self.raw_taf.strip()),
@@ -306,4 +305,3 @@ class WeatherData:
                 self.aviation and self.aviation.has_taf(),
             ]
         )
-
