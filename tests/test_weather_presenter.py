@@ -43,6 +43,40 @@ def test_presenter_includes_precise_dewpoint_in_metrics():
 
 
 @pytest.mark.unit
+def test_presenter_respects_metric_visibility_preferences():
+    settings = AppSettings(
+        temperature_unit="both",
+        show_dewpoint=False,
+        show_visibility=False,
+        show_uv_index=False,
+    )
+    presenter = WeatherPresenter(settings)
+    location = Location(name="Hidden Metrics", latitude=35.0, longitude=-80.0)
+
+    conditions = CurrentConditions(
+        temperature_f=75.0,
+        humidity=60,
+        dewpoint_f=60.0,
+        dewpoint_c=15.5,
+        visibility_miles=8.0,
+        visibility_km=12.8,
+        uv_index=5.0,
+    )
+
+    presentation = presenter.present_current(conditions, location)
+
+    assert presentation is not None
+    labels = {metric.label for metric in presentation.metrics}
+    assert "Dewpoint" not in labels
+    assert "Visibility" not in labels
+    assert "UV Index" not in labels
+    fallback = presentation.fallback_text
+    assert "Dewpoint" not in fallback
+    assert "Visibility" not in fallback
+    assert "UV Index" not in fallback
+
+
+@pytest.mark.unit
 def test_presenter_reports_calm_wind_when_speed_is_zero():
     settings = AppSettings(temperature_unit="fahrenheit")
     presenter = WeatherPresenter(settings)
@@ -220,3 +254,52 @@ def test_presenter_backfills_pressure_trend_from_hourly():
     presentation = presenter.present(weather_data)
     assert presentation.trend_summary
     assert any(line.startswith("Pressure rising") for line in presentation.trend_summary)
+
+
+@pytest.mark.unit
+def test_presenter_omits_pressure_trend_when_disabled():
+    settings = AppSettings(show_pressure_trend=False)
+    presenter = WeatherPresenter(settings)
+    location = Location(name="No Pressure", latitude=30.0, longitude=-95.0)
+    now = datetime.now()
+
+    current = CurrentConditions(
+        temperature_f=72.0,
+        pressure_in=29.80,
+        pressure_mb=29.80 * 33.8639,
+        condition="Fair",
+        uv_index=6.0,
+    )
+
+    hourly = HourlyForecast(
+        periods=[
+            HourlyForecastPeriod(
+                start_time=now + timedelta(hours=6),
+                pressure_in=29.90,
+                pressure_mb=29.90 * 33.8639,
+            )
+        ]
+    )
+
+    trends = [
+        TrendInsight(
+            metric="pressure",
+            direction="rising",
+            change=0.1,
+            unit="inHg",
+            timeframe_hours=6,
+            summary="Pressure rising +0.10inHg over 6h",
+        )
+    ]
+
+    presentation = presenter.present_current(
+        current,
+        location,
+        trends=trends,
+        hourly_forecast=hourly,
+    )
+
+    assert presentation is not None
+    labels = {metric.label for metric in presentation.metrics}
+    assert "Pressure trend" not in labels
+    assert all("Pressure" not in line for line in presentation.trend_summary)

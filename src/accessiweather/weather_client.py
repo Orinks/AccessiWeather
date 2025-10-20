@@ -77,6 +77,7 @@ class WeatherClient:
         )
         self.trend_insights_enabled = bool(self.settings.trend_insights_enabled)
         self.trend_hours = max(1, int(self.settings.trend_hours or 24))
+        self.show_pressure_trend = bool(getattr(self.settings, "show_pressure_trend", True))
         self.air_quality_enabled = bool(self.settings.air_quality_enabled)
         self.pollen_enabled = bool(self.settings.pollen_enabled)
         if self._test_mode:
@@ -739,7 +740,12 @@ class WeatherClient:
         weather_data.alerts = WeatherAlerts(alerts=list(combined.values()))
 
     def _apply_trend_insights(self, weather_data: WeatherData) -> None:
-        trends.apply_trend_insights(weather_data, self.trend_insights_enabled, self.trend_hours)
+        trends.apply_trend_insights(
+            weather_data,
+            self.trend_insights_enabled,
+            self.trend_hours,
+            include_pressure=self.show_pressure_trend,
+        )
 
     def _persist_weather_data(self, location: Location, weather_data: WeatherData) -> None:
         if not self.offline_cache:

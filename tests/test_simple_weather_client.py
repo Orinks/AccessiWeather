@@ -76,6 +76,7 @@ def test_parse_openmeteo_current_conditions_converts_units():
         "daily": {
             "sunrise": ["2025-09-27T06:45"],
             "sunset": ["2025-09-27T18:15"],
+            "uv_index_max": [7.5],
         },
     }
 
@@ -95,6 +96,7 @@ def test_parse_openmeteo_current_conditions_converts_units():
     assert current.sunrise_time == datetime(2025, 9, 27, 6, 45)
     assert current.sunset_time == datetime(2025, 9, 27, 18, 15)
     assert current.last_updated == datetime(2025, 9, 27, 0, 30)
+    assert current.uv_index == pytest.approx(7.5, rel=1e-3)
 
 
 @pytest.mark.unit
@@ -122,6 +124,38 @@ def test_weather_client_computes_temperature_trend():
 
     assert weather_data.trend_insights
     metrics = {trend.metric for trend in weather_data.trend_insights}
+    assert "temperature" in metrics
+
+
+@pytest.mark.unit
+def test_weather_client_skips_pressure_trend_when_disabled():
+    settings = AppSettings(
+        trend_insights_enabled=True,
+        trend_hours=24,
+        show_pressure_trend=False,
+    )
+    client = WeatherClient(settings=settings)
+    location = Location(name="Test", latitude=35.0, longitude=140.0)
+    weather_data = WeatherData(
+        location=location,
+        current=CurrentConditions(temperature_f=70.0, pressure_mb=1015.0, pressure_in=29.97),
+        hourly_forecast=HourlyForecast(
+            periods=[
+                HourlyForecastPeriod(
+                    start_time=datetime.now() + timedelta(hours=24),
+                    temperature=80.0,
+                    temperature_unit="F",
+                    pressure_mb=1012.0,
+                    pressure_in=29.88,
+                )
+            ]
+        ),
+    )
+
+    client._apply_trend_insights(weather_data)
+
+    metrics = {trend.metric for trend in weather_data.trend_insights}
+    assert "pressure" not in metrics
     assert "temperature" in metrics
 
 

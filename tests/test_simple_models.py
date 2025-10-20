@@ -417,6 +417,10 @@ class TestAppSettingsModel:
         assert settings.enable_alerts is True
         assert settings.minimize_to_tray is False
         assert settings.data_source == "auto"
+        assert settings.show_dewpoint is True
+        assert settings.show_pressure_trend is True
+        assert settings.show_visibility is True
+        assert settings.show_uv_index is True
 
     def test_app_settings_custom_values(self):
         """Test AppSettings with custom values."""
@@ -427,6 +431,10 @@ class TestAppSettingsModel:
             enable_alerts=False,
             minimize_to_tray=False,
             data_source="nws",
+            show_dewpoint=False,
+            show_pressure_trend=False,
+            show_visibility=False,
+            show_uv_index=False,
         )
 
         assert settings.temperature_unit == "f"
@@ -435,6 +443,10 @@ class TestAppSettingsModel:
         assert settings.enable_alerts is False
         assert settings.minimize_to_tray is False
         assert settings.data_source == "nws"
+        assert settings.show_dewpoint is False
+        assert settings.show_pressure_trend is False
+        assert settings.show_visibility is False
+        assert settings.show_uv_index is False
 
     def test_app_settings_serialization(self):
         """Test AppSettings to_dict serialization."""
@@ -448,6 +460,10 @@ class TestAppSettingsModel:
         assert settings_dict["update_interval_minutes"] == 20
         assert settings_dict["show_detailed_forecast"] is True  # Default value
         assert settings_dict["data_source"] == "openmeteo"
+        assert settings_dict["show_dewpoint"] is True
+        assert settings_dict["show_pressure_trend"] is True
+        assert settings_dict["show_visibility"] is True
+        assert settings_dict["show_uv_index"] is True
 
     def test_app_settings_deserialization(self):
         """Test AppSettings from_dict deserialization."""
@@ -458,6 +474,10 @@ class TestAppSettingsModel:
             "enable_alerts": True,
             "minimize_to_tray": False,
             "data_source": "nws",
+            "show_dewpoint": False,
+            "show_pressure_trend": False,
+            "show_visibility": False,
+            "show_uv_index": False,
         }
 
         settings = AppSettings.from_dict(settings_dict)
@@ -468,6 +488,10 @@ class TestAppSettingsModel:
         assert settings.enable_alerts is True
         assert settings.minimize_to_tray is False
         assert settings.data_source == "nws"
+        assert settings.show_dewpoint is False
+        assert settings.show_pressure_trend is False
+        assert settings.show_visibility is False
+        assert settings.show_uv_index is False
 
     def test_app_settings_partial_deserialization(self):
         """Test AppSettings deserialization with missing fields (should use defaults)."""
@@ -481,11 +505,19 @@ class TestAppSettingsModel:
         assert settings.show_detailed_forecast is True
         assert settings.enable_alerts is True
         assert settings.data_source == "auto"
+        assert settings.show_dewpoint is True
+        assert settings.show_pressure_trend is True
+        assert settings.show_visibility is True
+        assert settings.show_uv_index is True
 
     def test_app_settings_roundtrip_serialization(self):
         """Test roundtrip serialization (to_dict -> from_dict)."""
         original_settings = AppSettings(
-            temperature_unit="both", update_interval_minutes=12, show_detailed_forecast=False
+            temperature_unit="both",
+            update_interval_minutes=12,
+            show_detailed_forecast=False,
+            show_dewpoint=False,
+            show_pressure_trend=False,
         )
 
         # Serialize and deserialize
@@ -499,6 +531,8 @@ class TestAppSettingsModel:
         )
         assert restored_settings.show_detailed_forecast == original_settings.show_detailed_forecast
         assert restored_settings.enable_alerts == original_settings.enable_alerts
+        assert restored_settings.show_dewpoint == original_settings.show_dewpoint
+        assert restored_settings.show_pressure_trend == original_settings.show_pressure_trend
 
     def test_app_settings_roundtrip_preserves_startup_enabled_true(self):
         """Ensure startup_enabled stays True after serialization and deserialization."""
@@ -536,6 +570,10 @@ class TestAppSettingsModel:
                 "air_quality_enabled": 0,
                 "pollen_enabled": "true",
                 "offline_cache_enabled": "False",
+                "show_dewpoint": "0",
+                "show_pressure_trend": "false",
+                "show_visibility": "yes",
+                "show_uv_index": "On",
             }
         )
 
@@ -557,6 +595,10 @@ class TestAppSettingsModel:
         assert settings.air_quality_enabled is False
         assert settings.pollen_enabled is True
         assert settings.offline_cache_enabled is False
+        assert settings.show_dewpoint is False
+        assert settings.show_pressure_trend is False
+        assert settings.show_visibility is True
+        assert settings.show_uv_index is True
 
 
 class TestAppConfigModel:

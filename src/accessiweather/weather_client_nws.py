@@ -65,6 +65,8 @@ async def get_nws_all_data_parallel(
         # First, fetch grid data once
         grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
         headers = {"User-Agent": user_agent}
+        feature_headers = headers.copy()
+        feature_headers["Feature-Flags"] = "forecast_temperature_qv, forecast_wind_speed_qv"
 
         response = await _client_get(client, grid_url, headers=headers)
         response.raise_for_status()
@@ -173,6 +175,8 @@ async def get_nws_forecast_and_discussion(
     """Fetch forecast and discussion from the NWS API for the given location."""
     try:
         headers = {"User-Agent": user_agent}
+        feature_headers = headers.copy()
+        feature_headers["Feature-Flags"] = "forecast_temperature_qv, forecast_wind_speed_qv"
 
         # Use provided client or create a new one
         if client is not None:
@@ -184,7 +188,7 @@ async def get_nws_forecast_and_discussion(
                 grid_data = response.json()
 
             forecast_url = grid_data["properties"]["forecast"]
-            response = await _client_get(client, forecast_url, headers=headers)
+            response = await _client_get(client, forecast_url, headers=feature_headers)
             response.raise_for_status()
             forecast_data = response.json()
 
@@ -199,7 +203,7 @@ async def get_nws_forecast_and_discussion(
             grid_data = response.json()
 
             forecast_url = grid_data["properties"]["forecast"]
-            response = await new_client.get(forecast_url, headers=headers)
+            response = await new_client.get(forecast_url, headers=feature_headers)
             response.raise_for_status()
             forecast_data = response.json()
 
@@ -319,6 +323,8 @@ async def get_nws_hourly_forecast(
     """Fetch hourly forecast from the NWS API."""
     try:
         headers = {"User-Agent": user_agent}
+        feature_headers = headers.copy()
+        feature_headers["Feature-Flags"] = "forecast_temperature_qv, forecast_wind_speed_qv"
 
         # Use provided client or create a new one
         if client is not None:
@@ -334,7 +340,7 @@ async def get_nws_hourly_forecast(
                 logger.warning("No hourly forecast URL found in grid data")
                 return None
 
-            response = await _client_get(client, hourly_forecast_url, headers=headers)
+            response = await _client_get(client, hourly_forecast_url, headers=feature_headers)
             response.raise_for_status()
             hourly_data = response.json()
 
@@ -351,7 +357,7 @@ async def get_nws_hourly_forecast(
                 logger.warning("No hourly forecast URL found in grid data")
                 return None
 
-            response = await new_client.get(hourly_forecast_url, headers=headers)
+            response = await new_client.get(hourly_forecast_url, headers=feature_headers)
             response.raise_for_status()
             hourly_data = response.json()
 
@@ -378,6 +384,14 @@ def parse_nws_current_conditions(data: dict) -> CurrentConditions:
     visibility_m = props.get("visibility", {}).get("value")
     visibility_miles = visibility_m / 1609.344 if visibility_m is not None else None
     visibility_km = visibility_m / 1000 if visibility_m is not None else None
+
+    uv_index_value = props.get("uvIndex", {}).get("value")
+    uv_index = None
+    if uv_index_value is not None:
+        try:
+            uv_index = float(uv_index_value)
+        except (TypeError, ValueError):
+            uv_index = None
 
     wind_speed = props.get("windSpeed", {})
     wind_speed_value = wind_speed.get("value")
@@ -415,6 +429,7 @@ def parse_nws_current_conditions(data: dict) -> CurrentConditions:
         feels_like_c=None,
         visibility_miles=visibility_miles,
         visibility_km=visibility_km,
+        uv_index=uv_index,
         last_updated=last_updated or datetime.now(),
     )
 

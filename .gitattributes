@@ -22,4 +22,7 @@ src/accessiweather/formatters.py merge=ours
 src/accessiweather/location_manager.py merge=ours
 
 # If dev deletes files we still keep, preserve ours
-* -diff
+
+# Allow Git to detect text files normally so diffs are generated and tools that
+# rely on textual patches (including PR automation) function correctly.
+* text=auto
