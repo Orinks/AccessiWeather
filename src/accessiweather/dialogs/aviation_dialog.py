@@ -12,7 +12,7 @@ import asyncio
 import contextlib
 import logging
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import toga
 from toga.style import Pack
@@ -42,7 +42,8 @@ class AviationDialog:
         self.status_label: toga.Label | None = None
         self.raw_taf_display: toga.MultilineTextInput | None = None
         self.decoded_taf_display: toga.MultilineTextInput | None = None
-        self.advisories_display: toga.MultilineTextInput | None = None
+        self.advisories_table: toga.Table | None = None
+        self.advisories_info: toga.Label | None = None
 
         self._fetch_task: asyncio.Task | None = None
 
@@ -108,12 +109,17 @@ class AviationDialog:
 
         advisories_box = toga.Box(style=Pack(direction=COLUMN))
         advisories_box.add(toga.Label("Advisories", style=Pack(font_weight="bold")))
-        self.advisories_display = toga.MultilineTextInput(
-            value="No SIGMET or CWA advisories loaded.",
-            readonly=True,
-            style=Pack(height=120),
+        self.advisories_table = toga.Table(
+            headings=["Type", "Event", "Valid", "Summary"],
+            data=[],
+            style=Pack(height=180),
         )
-        advisories_box.add(self.advisories_display)
+        advisories_box.add(self.advisories_table)
+        self.advisories_info = toga.Label(
+            "No advisories available.",
+            style=Pack(font_style="italic", margin_top=6),
+        )
+        advisories_box.add(self.advisories_info)
         main_box.add(advisories_box)
 
         self.window.content = main_box
@@ -178,7 +184,9 @@ class AviationDialog:
         self._set_status(f"Fetching aviation weather for {code}…")
 
         try:
-            aviation = await self.app.weather_client.get_aviation_weather(code)
+            aviation = await self.app.weather_client.get_aviation_weather(
+                code, include_sigmets=True, include_cwas=True
+            )
         except asyncio.CancelledError:  # pragma: no cover - cooperative cancel
             raise
         except Exception as exc:  # pragma: no cover - defensive logging
@@ -207,8 +215,10 @@ class AviationDialog:
                 self.raw_taf_display.value = "No TAF available."
             if self.decoded_taf_display:
                 self.decoded_taf_display.value = "No decoded TAF available."
-            if self.advisories_display:
-                self.advisories_display.value = "No advisories available."
+            if self.advisories_table is not None:
+                self.advisories_table.data = []
+            if self.advisories_info is not None:
+                self.advisories_info.value = "No advisories available."
             return
 
         airport_label = aviation.airport_name or aviation.station_id or code
@@ -220,27 +230,7 @@ class AviationDialog:
         if self.decoded_taf_display:
             self.decoded_taf_display.value = aviation.decoded_taf or "Unable to decode TAF."
 
-        if self.advisories_display:
-            advisory_lines: list[str] = []
-            if aviation.active_sigmets:
-                advisory_lines.append("SIGMET / AIRMET Advisories:")
-                for entry in aviation.active_sigmets:
-                    description = (
-                        entry.get("description") or entry.get("summary") or entry.get("text") or ""
-                    ).strip()
-                    name = entry.get("name") or entry.get("event") or "SIGMET"
-                    advisory_lines.append(f"- {name}: {description or 'No description provided.'}")
-            if aviation.active_cwas:
-                advisory_lines.append("Center Weather Advisories:")
-                for entry in aviation.active_cwas:
-                    description = (
-                        entry.get("description") or entry.get("summary") or entry.get("text") or ""
-                    ).strip()
-                    name = entry.get("event") or entry.get("hazard") or "CWA"
-                    advisory_lines.append(f"- {name}: {description or 'No description provided.'}")
-            if not advisory_lines:
-                advisory_lines.append("No advisories available.")
-            self.advisories_display.value = "\n".join(advisory_lines)
+        self._update_advisories_table(aviation)
 
     def _set_status(self, message: str, *, is_error: bool = False) -> None:
         """Update the status label text and color."""
@@ -257,3 +247,62 @@ class AviationDialog:
         if self.station_input:
             with contextlib.suppress(Exception):
                 self.station_input.focus()
+
+    def _update_advisories_table(self, aviation: AviationData) -> None:
+        rows: list[dict[str, str]] = []
+        rows.extend(self._build_advisory_rows("SIGMET", aviation.active_sigmets))
+        rows.extend(self._build_advisory_rows("CWA", aviation.active_cwas))
+
+        if self.advisories_table is not None:
+            self.advisories_table.data = rows
+
+        if self.advisories_info is not None:
+            if rows:
+                self.advisories_info.value = f"{len(rows)} advisories loaded."
+            else:
+                self.advisories_info.value = "No advisories available."
+
+    def _build_advisory_rows(
+        self, advisory_type: str, advisories: list[dict[str, Any]] | None
+    ) -> list[dict[str, str]]:
+        if not advisories:
+            return []
+
+        rows: list[dict[str, str]] = []
+        for entry in advisories[:20]:  # cap for readability
+            event_name = (
+                entry.get("event") or entry.get("name") or entry.get("hazard") or advisory_type
+            )
+            summary = (
+                entry.get("description") or entry.get("summary") or entry.get("text") or ""
+            ).strip()
+            rows.append(
+                {
+                    "Type": advisory_type,
+                    "Event": event_name,
+                    "Valid": self._format_advisory_window(entry),
+                    "Summary": summary[:200] or "No description provided.",
+                }
+            )
+        return rows
+
+    def _format_advisory_window(self, entry: dict[str, Any]) -> str:
+        start = self._format_aviation_time(
+            entry.get("startTime")
+            or entry.get("beginTime")
+            or entry.get("validTimeStart")
+            or entry.get("issueTime")
+        )
+        end = self._format_aviation_time(
+            entry.get("endTime")
+            or entry.get("expires")
+            or entry.get("validTimeEnd")
+            or entry.get("validUntil")
+        )
+        if start and end:
+            return f"{start} → {end}"
+        if end:
+            return f"Until {end}"
+        if start:
+            return start
+        return "--"

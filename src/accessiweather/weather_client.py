@@ -10,6 +10,7 @@ import logging
 import os
 from collections.abc import Sequence
 from datetime import datetime
+from typing import Any
 
 import httpx
 
@@ -45,6 +46,87 @@ from .utils import decode_taf_text
 from .visual_crossing_client import VisualCrossingApiError, VisualCrossingClient
 
 logger = logging.getLogger(__name__)
+
+
+def _normalize_token(value: Any) -> str | None:
+    if value is None:
+        return None
+    token = str(value).strip().upper()
+    return token or None
+
+
+def _extract_strings(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        normalized = value.strip().upper()
+        return [normalized] if normalized else []
+    if isinstance(value, (list, tuple, set)):
+        strings: list[str] = []
+        for item in value:
+            strings.extend(_extract_strings(item))
+        return strings
+    if isinstance(value, dict):
+        strings: list[str] = []
+        for item in value.values():
+            strings.extend(_extract_strings(item))
+        return strings
+    try:
+        return _extract_strings(str(value))
+    except Exception:
+        return []
+
+
+def _filter_advisories(entries: list[dict[str, Any]], tokens: set[str]) -> list[dict[str, Any]]:
+    if not entries:
+        return []
+    normalized_tokens = {token for token in tokens if token}
+    if not normalized_tokens:
+        return entries
+
+    keys = (
+        "fir",
+        "area",
+        "regions",
+        "airspace",
+        "name",
+        "event",
+        "hazard",
+        "description",
+        "summary",
+        "text",
+        "issuingOffice",
+        "cwsu",
+        "cwsuId",
+        "stationId",
+        "stations",
+    )
+
+    filtered: list[dict[str, Any]] = []
+    for entry in entries:
+        candidates: list[str] = []
+        for key in keys:
+            candidates.extend(_extract_strings(entry.get(key)))
+        if not candidates:
+            candidates = _extract_strings(entry)
+
+        matches = any(
+            token in candidate
+            for token in normalized_tokens
+            for candidate in candidates
+            if candidate
+        )
+        if matches:
+            filtered.append(entry)
+
+    return filtered
+
+
+def _default_atsu(props: dict[str, Any]) -> str | None:
+    country = _normalize_token(props.get("country"))
+    if country in {"US", "USA"}:
+        return "KKCI"
+    return None
 
 
 class WeatherClient:
@@ -667,6 +749,19 @@ class WeatherClient:
         client = self._get_http_client()
         aviation = AviationData(station_id=station, airport_name=station)
 
+        station_metadata: dict[str, Any] | None = None
+        try:
+            station_metadata = await nws_client.get_nws_station_metadata(
+                station, self.nws_base_url, self.user_agent, self.timeout, client
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("Failed to fetch station metadata for %s: %s", station, exc)
+
+        metadata_props: dict[str, Any] = (station_metadata or {}).get("properties", {})
+        airport_name = metadata_props.get("name")
+        if airport_name:
+            aviation.airport_name = airport_name
+
         raw_taf: str | None
         try:
             raw_taf = await nws_client.get_nws_tafs(
@@ -680,25 +775,54 @@ class WeatherClient:
             aviation.raw_taf = raw_taf
             aviation.decoded_taf = decode_taf_text(raw_taf)
 
+        tokens: set[str] = {station}
+
+        derived_cwsu = _normalize_token(cwsu_id) or _normalize_token(metadata_props.get("cwa"))
+        if derived_cwsu:
+            tokens.add(derived_cwsu)
+
+        tokens.update(
+            token
+            for token in (
+                _normalize_token(metadata_props.get("wfo")),
+                _normalize_token(metadata_props.get("state")),
+            )
+            if token
+        )
+
+        if aviation.airport_name:
+            for part in aviation.airport_name.replace("-", " ").split():
+                normalized = _normalize_token(part)
+                if normalized and len(normalized) > 2:
+                    tokens.add(normalized)
+
+        sigmet_atsu = _normalize_token(atsu) or _default_atsu(metadata_props)
+
         if include_sigmets:
             try:
-                aviation.active_sigmets = await nws_client.get_nws_sigmets(
+                sigmets = await nws_client.get_nws_sigmets(
                     self.nws_base_url,
                     self.user_agent,
                     self.timeout,
                     client,
-                    atsu=atsu,
+                    atsu=sigmet_atsu,
                 )
+                aviation.active_sigmets = _filter_advisories(sigmets, tokens)
             except Exception as exc:  # noqa: BLE001
                 logger.debug("Failed to fetch SIGMET data for %s: %s", station, exc)
 
-        if include_cwas and cwsu_id:
-            try:
-                aviation.active_cwas = await nws_client.get_nws_cwas(
-                    cwsu_id, self.nws_base_url, self.user_agent, self.timeout, client
-                )
-            except Exception as exc:  # noqa: BLE001
-                logger.debug("Failed to fetch CWA data for CWSU %s: %s", cwsu_id, exc)
+        if include_cwas:
+            target_cwsu = derived_cwsu
+            if target_cwsu:
+                try:
+                    cwas = await nws_client.get_nws_cwas(
+                        target_cwsu, self.nws_base_url, self.user_agent, self.timeout, client
+                    )
+                    aviation.active_cwas = _filter_advisories(cwas, tokens)
+                except Exception as exc:  # noqa: BLE001
+                    logger.debug("Failed to fetch CWA data for %s: %s", target_cwsu, exc)
+            else:
+                aviation.active_cwas = []
 
         return aviation
 

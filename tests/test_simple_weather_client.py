@@ -173,11 +173,18 @@ async def test_enrich_with_aviation_data_populates_taf():
             "accessiweather.weather_client_nws.get_nws_tafs",
             new=AsyncMock(return_value=taf_text),
         ) as taf_mock,
+        patch(
+            "accessiweather.weather_client_nws.get_nws_station_metadata",
+            new=AsyncMock(
+                return_value={"properties": {"name": "Dulles International", "cwa": "ZDC"}}
+            ),
+        ) as metadata_mock,
     ):
         await client._enrich_with_aviation_data(weather_data, location)
 
     station_mock.assert_awaited()
     taf_mock.assert_awaited_once()
+    metadata_mock.assert_awaited_once()
 
     aviation = weather_data.aviation
     assert aviation is not None
@@ -191,10 +198,16 @@ async def test_get_aviation_weather_returns_decoded_taf():
     client = WeatherClient()
     taf_text = "TAF KIAD 010000Z 0100/0206 17008KT P6SM SCT040"
 
-    with patch(
-        "accessiweather.weather_client.nws_client.get_nws_tafs",
-        new=AsyncMock(return_value=taf_text),
-    ) as taf_mock:
+    with (
+        patch(
+            "accessiweather.weather_client.nws_client.get_nws_tafs",
+            new=AsyncMock(return_value=taf_text),
+        ) as taf_mock,
+        patch(
+            "accessiweather.weather_client.nws_client.get_nws_station_metadata",
+            new=AsyncMock(return_value={"properties": {"name": "Dulles International"}}),
+        ),
+    ):
         aviation = await client.get_aviation_weather("kiad")
 
     taf_mock.assert_awaited_once()
@@ -208,6 +221,73 @@ async def test_get_aviation_weather_requires_station():
     client = WeatherClient()
     with pytest.raises(ValueError):
         await client.get_aviation_weather("")
+
+
+@pytest.mark.asyncio
+async def test_get_aviation_weather_filters_advisories():
+    client = WeatherClient()
+    taf_text = "TAF KJFK 010000Z 0100/0206 17008KT P6SM SCT040"
+    sigmets = [
+        {
+            "name": "SIGMET ALPHA",
+            "description": "Impacts CWA ZNY and station KJFK",
+            "regions": ["ZNY"],
+        },
+        {
+            "name": "SIGMET BRAVO",
+            "description": "Western region ZOA",
+            "regions": ["ZOA"],
+        },
+    ]
+    cwas = [
+        {
+            "event": "CWA 101",
+            "description": "Advisory covering ZNY area with low ceilings",
+            "cwsuId": "ZNY",
+        },
+        {
+            "event": "CWA 202",
+            "description": "Applies to ZSE",
+            "cwsuId": "ZSE",
+        },
+    ]
+
+    with (
+        patch(
+            "accessiweather.weather_client.nws_client.get_nws_tafs",
+            new=AsyncMock(return_value=taf_text),
+        ),
+        patch(
+            "accessiweather.weather_client.nws_client.get_nws_station_metadata",
+            new=AsyncMock(
+                return_value={
+                    "properties": {
+                        "name": "John F. Kennedy International",
+                        "cwa": "ZNY",
+                        "country": "US",
+                    }
+                }
+            ),
+        ),
+        patch(
+            "accessiweather.weather_client.nws_client.get_nws_sigmets",
+            new=AsyncMock(return_value=sigmets),
+        ) as sigmet_mock,
+        patch(
+            "accessiweather.weather_client.nws_client.get_nws_cwas",
+            new=AsyncMock(return_value=cwas),
+        ) as cwa_mock,
+    ):
+        aviation = await client.get_aviation_weather(
+            "KJFK", include_sigmets=True, include_cwas=True
+        )
+
+    sigmet_mock.assert_awaited_once()
+    cwa_mock.assert_awaited_once()
+    assert len(aviation.active_sigmets) == 1
+    assert aviation.active_sigmets[0]["name"] == "SIGMET ALPHA"
+    assert len(aviation.active_cwas) == 1
+    assert aviation.active_cwas[0]["event"] == "CWA 101"
 
 
 @pytest.mark.unit

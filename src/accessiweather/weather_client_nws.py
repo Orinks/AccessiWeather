@@ -214,6 +214,35 @@ async def get_nws_primary_station_info(
         return None, None
 
 
+async def get_nws_station_metadata(
+    station_id: str,
+    nws_base_url: str,
+    user_agent: str,
+    timeout: float,
+    client: httpx.AsyncClient | None = None,
+) -> dict[str, Any] | None:
+    """Fetch metadata for a specific station."""
+    if not station_id:
+        return None
+
+    headers = {"User-Agent": user_agent}
+    station_url = f"{nws_base_url}/stations/{station_id}"
+
+    try:
+        if client is not None:
+            response = await _client_get(client, station_url, headers=headers)
+            response.raise_for_status()
+            return response.json()
+
+        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+            response = await new_client.get(station_url, headers=headers)
+            response.raise_for_status()
+            return response.json()
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"Failed to fetch station metadata for {station_id}: {exc}")
+        return None
+
+
 async def get_nws_forecast_and_discussion(
     location: Location,
     nws_base_url: str,
