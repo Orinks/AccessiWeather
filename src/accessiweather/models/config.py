@@ -41,6 +41,10 @@ class AppSettings:
     international_alerts_provider: str = "meteosalarm"
     trend_insights_enabled: bool = True
     trend_hours: int = 24
+    show_dewpoint: bool = True
+    show_pressure_trend: bool = True
+    show_visibility: bool = True
+    show_uv_index: bool = True
     air_quality_enabled: bool = True
     pollen_enabled: bool = True
     air_quality_notify_threshold: int = 3
@@ -98,6 +102,10 @@ class AppSettings:
             "international_alerts_provider": self.international_alerts_provider,
             "trend_insights_enabled": self.trend_insights_enabled,
             "trend_hours": self.trend_hours,
+            "show_dewpoint": self.show_dewpoint,
+            "show_pressure_trend": self.show_pressure_trend,
+            "show_visibility": self.show_visibility,
+            "show_uv_index": self.show_uv_index,
             "air_quality_enabled": self.air_quality_enabled,
             "pollen_enabled": self.pollen_enabled,
             "air_quality_notify_threshold": self.air_quality_notify_threshold,
@@ -142,6 +150,10 @@ class AppSettings:
             international_alerts_provider=data.get("international_alerts_provider", "meteosalarm"),
             trend_insights_enabled=cls._as_bool(data.get("trend_insights_enabled"), True),
             trend_hours=data.get("trend_hours", 24),
+            show_dewpoint=cls._as_bool(data.get("show_dewpoint"), True),
+            show_pressure_trend=cls._as_bool(data.get("show_pressure_trend"), True),
+            show_visibility=cls._as_bool(data.get("show_visibility"), True),
+            show_uv_index=cls._as_bool(data.get("show_uv_index"), True),
             air_quality_enabled=cls._as_bool(data.get("air_quality_enabled"), True),
             pollen_enabled=cls._as_bool(data.get("pollen_enabled"), True),
             air_quality_notify_threshold=data.get("air_quality_notify_threshold", 3),

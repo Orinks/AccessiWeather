@@ -115,7 +115,7 @@ async def get_openmeteo_current_conditions(
                 "temperature_2m,relative_humidity_2m,apparent_temperature,"
                 "weather_code,wind_speed_10m,wind_direction_10m,pressure_msl"
             ),
-            "daily": "sunrise,sunset",
+            "daily": "sunrise,sunset,uv_index_max",
             "temperature_unit": "fahrenheit",
             "wind_speed_unit": "mph",
             "precipitation_unit": "inch",
@@ -268,6 +268,15 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         if sunset_list and len(sunset_list) > 0:
             sunset_time = _parse_iso_datetime(sunset_list[0])
 
+    uv_index = None
+    if daily:
+        uv_values = daily.get("uv_index_max") or []
+        if uv_values:
+            try:
+                uv_index = float(uv_values[0]) if uv_values[0] is not None else None
+            except (TypeError, ValueError):
+                uv_index = None
+
     return CurrentConditions(
         temperature_f=temp_f,
         temperature_c=temp_c,
@@ -285,6 +294,7 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         sunrise_time=sunrise_time,
         sunset_time=sunset_time,
         last_updated=last_updated or datetime.now(),
+        uv_index=uv_index,
     )
 
 

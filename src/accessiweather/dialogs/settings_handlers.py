@@ -25,6 +25,20 @@ def apply_settings_to_ui(dialog):
         if getattr(dialog, "update_interval_input", None):
             dialog.update_interval_input.value = getattr(settings, "update_interval_minutes", 10)
 
+        if getattr(dialog, "show_dewpoint_switch", None):
+            dialog.show_dewpoint_switch.value = getattr(settings, "show_dewpoint", True)
+
+        if getattr(dialog, "show_visibility_switch", None):
+            dialog.show_visibility_switch.value = getattr(settings, "show_visibility", True)
+
+        if getattr(dialog, "show_uv_index_switch", None):
+            dialog.show_uv_index_switch.value = getattr(settings, "show_uv_index", True)
+
+        if getattr(dialog, "show_pressure_trend_switch", None):
+            dialog.show_pressure_trend_switch.value = getattr(
+                settings, "show_pressure_trend", True
+            )
+
         if getattr(dialog, "show_detailed_forecast_switch", None):
             dialog.show_detailed_forecast_switch.value = getattr(
                 settings, "show_detailed_forecast", True
@@ -133,6 +147,17 @@ def map_channel_display_to_value(display: str) -> str:
 
 def collect_settings_from_ui(dialog) -> AppSettings:
     """Read current widget values and return an AppSettings instance."""
+    current_settings = getattr(dialog, "current_settings", AppSettings())
+
+    def _switch_value(attr: str, default: bool) -> bool:
+        widget = getattr(dialog, attr, None)
+        if widget is None or not hasattr(widget, "value"):
+            return default
+        try:
+            return bool(widget.value)
+        except Exception:  # pragma: no cover - defensive fallback
+            return default
+
     try:
         selected_display = str(dialog.data_source_selection.value)
         data_source = dialog.data_source_display_to_value.get(selected_display, "auto")
@@ -193,42 +218,42 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         getattr(
             getattr(dialog, "alert_notifications_switch", None),
             "value",
-            getattr(dialog.current_settings, "alert_notifications_enabled", True),
+            getattr(current_settings, "alert_notifications_enabled", True),
         )
     )
     notify_extreme = bool(
         getattr(
             getattr(dialog, "alert_notify_extreme_switch", None),
             "value",
-            getattr(dialog.current_settings, "alert_notify_extreme", True),
+            getattr(current_settings, "alert_notify_extreme", True),
         )
     )
     notify_severe = bool(
         getattr(
             getattr(dialog, "alert_notify_severe_switch", None),
             "value",
-            getattr(dialog.current_settings, "alert_notify_severe", True),
+            getattr(current_settings, "alert_notify_severe", True),
         )
     )
     notify_moderate = bool(
         getattr(
             getattr(dialog, "alert_notify_moderate_switch", None),
             "value",
-            getattr(dialog.current_settings, "alert_notify_moderate", True),
+            getattr(current_settings, "alert_notify_moderate", True),
         )
     )
     notify_minor = bool(
         getattr(
             getattr(dialog, "alert_notify_minor_switch", None),
             "value",
-            getattr(dialog.current_settings, "alert_notify_minor", False),
+            getattr(current_settings, "alert_notify_minor", False),
         )
     )
     notify_unknown = bool(
         getattr(
             getattr(dialog, "alert_notify_unknown_switch", None),
             "value",
-            getattr(dialog.current_settings, "alert_notify_unknown", False),
+            getattr(current_settings, "alert_notify_unknown", False),
         )
     )
 
@@ -240,19 +265,19 @@ def collect_settings_from_ui(dialog) -> AppSettings:
 
     global_cooldown = _as_int(
         getattr(getattr(dialog, "alert_global_cooldown_input", None), "value", None),
-        getattr(dialog.current_settings, "alert_global_cooldown_minutes", 5),
+        getattr(current_settings, "alert_global_cooldown_minutes", 5),
     )
     per_alert_cooldown = _as_int(
         getattr(getattr(dialog, "alert_per_alert_cooldown_input", None), "value", None),
-        getattr(dialog.current_settings, "alert_per_alert_cooldown_minutes", 60),
+        getattr(current_settings, "alert_per_alert_cooldown_minutes", 60),
     )
     escalation_cooldown = _as_int(
         getattr(getattr(dialog, "alert_escalation_cooldown_input", None), "value", None),
-        getattr(dialog.current_settings, "alert_escalation_cooldown_minutes", 15),
+        getattr(current_settings, "alert_escalation_cooldown_minutes", 15),
     )
     max_per_hour = _as_int(
         getattr(getattr(dialog, "alert_max_notifications_input", None), "value", None),
-        getattr(dialog.current_settings, "alert_max_notifications_per_hour", 10),
+        getattr(current_settings, "alert_max_notifications_per_hour", 10),
     )
 
     if hasattr(dialog, "_collect_ignored_categories"):
@@ -260,18 +285,31 @@ def collect_settings_from_ui(dialog) -> AppSettings:
             ignored_categories = list(dialog._collect_ignored_categories())  # type: ignore[attr-defined]
         except Exception:
             ignored_categories = list(
-                getattr(dialog.current_settings, "alert_ignored_categories", [])
+                getattr(current_settings, "alert_ignored_categories", [])
             )
     else:
-        ignored_categories = list(getattr(dialog.current_settings, "alert_ignored_categories", []))
+        ignored_categories = list(getattr(current_settings, "alert_ignored_categories", []))
 
     aq_threshold = 3
     if getattr(dialog, "air_quality_threshold_input", None) is not None:
         try:
             aq_threshold = int(dialog.air_quality_threshold_input.value)
         except (TypeError, ValueError):
-            aq_threshold = getattr(dialog.current_settings, "air_quality_notify_threshold", 3)
+            aq_threshold = getattr(current_settings, "air_quality_notify_threshold", 3)
     aq_threshold = max(0, min(500, aq_threshold))
+
+    show_dewpoint = _switch_value(
+        "show_dewpoint_switch", getattr(current_settings, "show_dewpoint", True)
+    )
+    show_visibility = _switch_value(
+        "show_visibility_switch", getattr(current_settings, "show_visibility", True)
+    )
+    show_uv_index = _switch_value(
+        "show_uv_index_switch", getattr(current_settings, "show_uv_index", True)
+    )
+    show_pressure_trend = _switch_value(
+        "show_pressure_trend_switch", getattr(current_settings, "show_pressure_trend", True)
+    )
 
     return AppSettings(
         temperature_unit=temperature_unit,
@@ -301,19 +339,23 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         alert_max_notifications_per_hour=max_per_hour,
         alert_ignored_categories=ignored_categories,
         international_alerts_enabled=getattr(
-            dialog.current_settings, "international_alerts_enabled", True
+            current_settings, "international_alerts_enabled", True
         ),
         international_alerts_provider=getattr(
-            dialog.current_settings, "international_alerts_provider", "meteosalarm"
+            current_settings, "international_alerts_provider", "meteosalarm"
         ),
-        trend_insights_enabled=getattr(dialog.current_settings, "trend_insights_enabled", True),
-        trend_hours=getattr(dialog.current_settings, "trend_hours", 24),
-        air_quality_enabled=getattr(dialog.current_settings, "air_quality_enabled", True),
-        pollen_enabled=getattr(dialog.current_settings, "pollen_enabled", True),
+        trend_insights_enabled=getattr(current_settings, "trend_insights_enabled", True),
+        trend_hours=getattr(current_settings, "trend_hours", 24),
+        show_dewpoint=show_dewpoint,
+        show_pressure_trend=show_pressure_trend,
+        show_visibility=show_visibility,
+        show_uv_index=show_uv_index,
+        air_quality_enabled=getattr(current_settings, "air_quality_enabled", True),
+        pollen_enabled=getattr(current_settings, "pollen_enabled", True),
         air_quality_notify_threshold=aq_threshold,
-        offline_cache_enabled=getattr(dialog.current_settings, "offline_cache_enabled", True),
+        offline_cache_enabled=getattr(current_settings, "offline_cache_enabled", True),
         offline_cache_max_age_minutes=getattr(
-            dialog.current_settings, "offline_cache_max_age_minutes", 180
+            current_settings, "offline_cache_max_age_minutes", 180
         ),
         weather_history_enabled=dialog.weather_history_enabled_switch.value,
     )

@@ -152,6 +152,7 @@ class WeatherPresenter:
                 weather_data.current,
                 weather_data.location,
                 unit_pref,
+                settings=self.settings,
                 environmental=weather_data.environmental,
                 trends=weather_data.trend_insights,
                 hourly_forecast=weather_data.hourly_forecast,
@@ -180,6 +181,7 @@ class WeatherPresenter:
             weather_data.trend_insights,
             current=weather_data.current,
             hourly_forecast=weather_data.hourly_forecast,
+            include_pressure=getattr(self.settings, "show_pressure_trend", True),
         )
         status_messages = self._build_status_messages(weather_data)
 
@@ -213,6 +215,7 @@ class WeatherPresenter:
             current,
             location,
             unit_pref,
+            settings=self.settings,
             environmental=environmental,
             trends=trends,
             hourly_forecast=hourly_forecast,
@@ -256,6 +259,7 @@ class WeatherPresenter:
             current,
             location,
             unit_pref,
+            settings=self.settings,
             environmental=environmental,
             trends=trends,
             hourly_forecast=hourly_forecast,
