@@ -13,6 +13,7 @@ from .temperature_utils import (
     format_temperature,
     get_temperature_values,
 )
+from .taf_decoder import decode_taf_text
 from .unit_utils import (
     convert_wind_direction_to_cardinal,
     format_combined_wind,
@@ -30,6 +31,8 @@ __all__ = [
     "fahrenheit_to_celsius",
     "format_temperature",
     "get_temperature_values",
+    # Aviation decoding
+    "decode_taf_text",
     # Unit utilities
     "format_wind_speed",
     "format_pressure",

@@ -362,6 +362,142 @@ async def get_nws_hourly_forecast(
         return None
 
 
+async def get_nws_tafs(
+    station_id: str,
+    nws_base_url: str,
+    user_agent: str,
+    timeout: float,
+    client: httpx.AsyncClient,
+) -> str | None:
+    """Fetch the most recent Terminal Aerodrome Forecast for a station."""
+
+    del timeout  # The caller manages the async client lifecycle.
+
+    taf_url = f"{nws_base_url}/stations/{station_id}/tafs"
+    headers = {"User-Agent": user_agent}
+
+    try:
+        response = await _client_get(client, taf_url, headers=headers)
+        response.raise_for_status()
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Failed to fetch TAF for {station_id}: {exc}")
+        return None
+
+    data = response.json()
+    features = data.get("features", [])
+    for feature in features:
+        properties = feature.get("properties", {})
+        raw_message = properties.get("rawMessage")
+        if raw_message:
+            return raw_message.strip()
+
+    logger.debug(f"No TAF message returned for station {station_id}")
+    return None
+
+
+async def get_nws_sigmets(
+    nws_base_url: str,
+    user_agent: str,
+    timeout: float,
+    client: httpx.AsyncClient,
+    *,
+    atsu: str | None = None,
+) -> list[dict[str, Any]]:
+    """Fetch active SIGMET or AIRMET advisories."""
+
+    del timeout
+
+    sigmet_url = f"{nws_base_url}/aviation/sigmets"
+    headers = {"User-Agent": user_agent}
+    params: dict[str, Any] | None = {"atsu": atsu} if atsu else None
+
+    try:
+        response = await _client_get(client, sigmet_url, headers=headers, params=params)
+        response.raise_for_status()
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Failed to fetch SIGMET data: {exc}")
+        return []
+
+    data = response.json()
+    features = data.get("features", [])
+    return [feature.get("properties", feature) for feature in features]
+
+
+async def get_nws_cwas(
+    cwsu_id: str,
+    nws_base_url: str,
+    user_agent: str,
+    timeout: float,
+    client: httpx.AsyncClient,
+) -> list[dict[str, Any]]:
+    """Fetch Center Weather Advisories for a CWSU identifier."""
+
+    del timeout
+
+    cwa_url = f"{nws_base_url}/aviation/cwsus/{cwsu_id}/cwas"
+    headers = {"User-Agent": user_agent}
+
+    try:
+        response = await _client_get(client, cwa_url, headers=headers)
+        response.raise_for_status()
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Failed to fetch CWA data for {cwsu_id}: {exc}")
+        return []
+
+    data = response.json()
+    features = data.get("features", [])
+    return [feature.get("properties", feature) for feature in features]
+
+
+async def get_nws_radar_profiler(
+    station_id: str,
+    nws_base_url: str,
+    user_agent: str,
+    timeout: float,
+    client: httpx.AsyncClient,
+) -> dict[str, Any] | None:
+    """Fetch metadata for a radar wind profiler station."""
+
+    del timeout
+
+    profiler_url = f"{nws_base_url}/radar/profilers/{station_id}"
+    headers = {"User-Agent": user_agent}
+
+    try:
+        response = await _client_get(client, profiler_url, headers=headers)
+        response.raise_for_status()
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Failed to fetch radar profiler {station_id}: {exc}")
+        return None
+
+    return response.json()
+
+
+async def get_nws_marine_forecast(
+    zone_type: str,
+    zone_id: str,
+    nws_base_url: str,
+    user_agent: str,
+    timeout: float,
+    client: httpx.AsyncClient,
+) -> dict[str, Any] | None:
+    """Fetch a marine zone forecast."""
+
+    del timeout
+
+    marine_url = f"{nws_base_url}/zones/{zone_type}/{zone_id}/forecast"
+    headers = {"User-Agent": user_agent}
+
+    try:
+        response = await _client_get(client, marine_url, headers=headers)
+        response.raise_for_status()
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Failed to fetch marine forecast for {zone_type}/{zone_id}: {exc}")
+        return None
+
+    return response.json()
+
+
 def parse_nws_current_conditions(data: dict) -> CurrentConditions:
     """Parse NWS current conditions payload into a CurrentConditions model."""
     props = data.get("properties", {})
