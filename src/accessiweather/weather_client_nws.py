@@ -540,18 +540,70 @@ async def get_nws_tafs(
         response = await _client_get(client, taf_url, headers=headers)
         response.raise_for_status()
     except Exception as exc:  # noqa: BLE001
-        logger.error(f"Failed to fetch TAF for {station_id}: {exc}")
+        logger.debug("NWS TAF request failed for %s: %s", station_id, exc)
+        response = None
+
+    raw_taf: str | None = None
+    if response is not None:
+        try:
+            data = response.json()
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("Failed to parse NWS TAF response for %s: %s", station_id, exc)
+            data = None
+
+        if isinstance(data, dict):
+            features = data.get("features")
+            if isinstance(features, list):
+                for feature in features:
+                    properties = feature.get("properties", {})
+                    raw_message = properties.get("rawMessage") or properties.get("rawTAF")
+                    if raw_message:
+                        raw_taf = str(raw_message).strip()
+                        if raw_taf:
+                            return raw_taf
+
+        logger.debug(
+            "NWS TAF response for %s did not include a raw message. Falling back to AviationWeather.gov.",
+            station_id,
+        )
+
+    # Fallback to the AviationWeather.gov JSON API which provides rawTAF fields.
+    awc_url = "https://aviationweather.gov/api/data/taf"
+    awc_headers = {
+        "User-Agent": user_agent,
+        "Accept": "application/json",
+    }
+    params = {"ids": station_id, "format": "json"}
+
+    try:
+        awc_response = await _client_get(client, awc_url, headers=awc_headers, params=params)
+        awc_response.raise_for_status()
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Failed to fetch TAF from AviationWeather for %s: %s", station_id, exc)
         return None
 
-    data = response.json()
-    features = data.get("features", [])
-    for feature in features:
-        properties = feature.get("properties", {})
-        raw_message = properties.get("rawMessage")
-        if raw_message:
-            return raw_message.strip()
+    try:
+        awc_data = awc_response.json()
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Failed to decode AviationWeather TAF JSON for %s: %s", station_id, exc)
+        return None
 
-    logger.debug(f"No TAF message returned for station {station_id}")
+    entries: list[dict[str, Any]] = []
+    if isinstance(awc_data, list):
+        entries = [entry for entry in awc_data if isinstance(entry, dict)]
+    elif isinstance(awc_data, dict):
+        raw_entries = awc_data.get("data") or awc_data.get("results") or awc_data.get("tafs")
+        if isinstance(raw_entries, list):
+            entries = [entry for entry in raw_entries if isinstance(entry, dict)]
+
+    for entry in entries:
+        raw_message = entry.get("rawTAF") or entry.get("raw_taf")
+        if raw_message:
+            cleaned = str(raw_message).strip()
+            if cleaned:
+                return cleaned
+
+    logger.debug("AviationWeather API returned no usable TAF data for %s", station_id)
     return None
 
 
