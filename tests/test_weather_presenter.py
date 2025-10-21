@@ -7,6 +7,7 @@ import pytest
 from accessiweather.display import WeatherPresenter
 from accessiweather.models import (
     AppSettings,
+    AviationData,
     CurrentConditions,
     EnvironmentalConditions,
     HourlyForecast,
@@ -302,4 +303,29 @@ def test_presenter_omits_pressure_trend_when_disabled():
     assert presentation is not None
     labels = {metric.label for metric in presentation.metrics}
     assert "Pressure trend" not in labels
-    assert all("Pressure" not in line for line in presentation.trend_summary)
+    if presentation.trend_summary:
+        assert all("Pressure" not in line for line in presentation.trend_summary)
+
+
+@pytest.mark.unit
+def test_presenter_builds_aviation_section_from_taf():
+    settings = AppSettings()
+    presenter = WeatherPresenter(settings)
+    location = Location(name="Queens", latitude=40.6413, longitude=-73.7781)
+    weather_data = WeatherData(
+        location=location,
+        aviation=AviationData(
+            raw_taf="TAF KJFK 010000Z 0100/0206 18012KT P6SM FEW050",
+            station_id="KJFK",
+            airport_name="John F. Kennedy International",
+        ),
+    )
+
+    presentation = presenter.present(weather_data)
+
+    assert presentation.aviation is not None
+    aviation = presentation.aviation
+    assert aviation.station_id == "KJFK"
+    assert aviation.taf_summary is not None
+    assert "Terminal Aerodrome Forecast" in aviation.fallback_text
+    assert "KJFK" in aviation.fallback_text

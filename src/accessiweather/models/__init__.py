@@ -14,6 +14,7 @@ from .config import AppConfig, AppSettings
 # Error models
 from .errors import ApiError
 from .weather import (
+    AviationData,
     CurrentConditions,
     EnvironmentalConditions,
     Forecast,
@@ -34,6 +35,7 @@ __all__ = [
     "HourlyForecast",
     "TrendInsight",
     "EnvironmentalConditions",
+    "AviationData",
     "WeatherAlert",
     "WeatherAlerts",
     "WeatherData",

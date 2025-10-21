@@ -13,6 +13,7 @@ from accessiweather.display import WeatherPresenter
 from accessiweather.handlers.weather_handlers import update_weather_displays
 from accessiweather.models import (
     AppSettings,
+    AviationData,
     CurrentConditions,
     EnvironmentalConditions,
     Location,
@@ -55,6 +56,7 @@ def _create_app():
         presenter=presenter,
         current_conditions_display=DummyText(),
         forecast_display=DummyText(),
+        aviation_display=DummyText(),
         alerts_table=DummyTable(),
         alert_details_button=DummyButton(),
         weather_history_service=None,
@@ -109,3 +111,76 @@ async def test_update_weather_displays_handles_missing_air_quality():
     await update_weather_displays(app, weather_data)
 
     assert "Air Quality:" not in app.current_conditions_display.value
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_update_weather_displays_populates_aviation_summary():
+    app = _create_app()
+    location = Location(name="Flight Town", latitude=39.8561, longitude=-104.6737)
+    weather_data = WeatherData(
+        location=location,
+        aviation=AviationData(
+            raw_taf="TAF KDEN 010000Z 0100/0206 34010KT P6SM FEW080",
+            station_id="KDEN",
+            airport_name="Denver International",
+        ),
+    )
+
+    await update_weather_displays(app, weather_data)
+
+    aviation_text = app.aviation_display.value
+    assert "Aviation weather for" in aviation_text
+    assert "Terminal Aerodrome Forecast" in aviation_text
+    assert "KDEN" in aviation_text
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_update_weather_displays_omits_placeholders_when_sections_missing():
+    app = _create_app()
+    location = Location(name="Partial Town", latitude=35.0, longitude=-120.0)
+    weather_data = WeatherData(
+        location=location,
+        current=CurrentConditions(condition="Clear", temperature_f=70.0),
+        forecast=None,
+        alerts=None,
+        aviation=None,
+    )
+
+    await update_weather_displays(app, weather_data)
+
+    assert "No forecast data available" not in app.forecast_display.value
+    assert app.forecast_display.value == ""
+    assert "No aviation data available" not in app.aviation_display.value
+    assert app.aviation_display.value == ""
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_update_weather_displays_clears_aviation_after_nil_response():
+    app = _create_app()
+    location = Location(name="Aviation City", latitude=33.6367, longitude=-84.4281)
+
+    initial_weather = WeatherData(
+        location=location,
+        aviation=AviationData(
+            raw_taf="TAF KATL 010000Z 0100/0206 20010KT P6SM SCT050",
+            decoded_taf="Forecast for station KATL. Winds 200 at 10 knots.",
+            station_id="KATL",
+            airport_name="Hartsfield-Jackson Atlanta",
+        ),
+    )
+
+    await update_weather_displays(app, initial_weather)
+    assert app.aviation_display.value
+    assert "Terminal Aerodrome Forecast" in app.aviation_display.value
+
+    nil_weather = WeatherData(
+        location=location,
+        aviation=AviationData(station_id="KATL", airport_name="Hartsfield-Jackson Atlanta"),
+    )
+
+    await update_weather_displays(app, nil_weather)
+
+    assert app.aviation_display.value == ""

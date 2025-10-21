@@ -76,8 +76,6 @@ async def update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherD
     try:
         presentation = app.presenter.present(weather_data)
 
-        location_name = weather_data.location.name if weather_data.location else "Unknown"
-
         if app.current_conditions_display:
             if presentation.current_conditions:
                 current_text = presentation.current_conditions.fallback_text
@@ -122,17 +120,21 @@ async def update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherD
                         current_text += "\n\nAir quality update:\n" + "\n".join(aq_lines)
                 app.current_conditions_display.value = current_text
             else:
-                app.current_conditions_display.value = (
-                    f"Current conditions for {location_name}:\nNo current weather data available."
-                )
+                # Avoid inventing "no data" messages when the API simply omitted a section.
+                app.current_conditions_display.value = ""
 
         if app.forecast_display:
             if presentation.forecast:
                 app.forecast_display.value = presentation.forecast.fallback_text
             else:
-                app.forecast_display.value = (
-                    f"Forecast for {location_name}:\nNo forecast data available."
-                )
+                app.forecast_display.value = ""
+
+        aviation_display = getattr(app, "aviation_display", None)
+        if aviation_display is not None:
+            if presentation.aviation:
+                aviation_display.value = presentation.aviation.fallback_text
+            else:
+                aviation_display.value = ""
 
         alerts_table_data = convert_alerts_to_table_data(weather_data.alerts)
         if app.alerts_table:

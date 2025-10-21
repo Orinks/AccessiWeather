@@ -188,12 +188,18 @@ def degrees_to_cardinal(degrees: float | None) -> str | None:
     return directions[index]
 
 
-def weather_code_to_description(code: int | None) -> str | None:
+def weather_code_to_description(code: int | str | None) -> str | None:
     """Convert an Open-Meteo weather code to a human-readable description."""
     if code is None:
         return None
 
-    return OPEN_METEO_WEATHER_CODE_DESCRIPTIONS.get(code, f"Weather code {code}")
+    try:
+        normalized = int(code)
+    except (TypeError, ValueError):
+        logger.debug("Unable to parse weather code '%s' as integer", code)
+        return f"Weather code {code}"
+
+    return OPEN_METEO_WEATHER_CODE_DESCRIPTIONS.get(normalized, f"Weather code {normalized}")
 
 
 def format_date_name(date_str: str, index: int) -> str:
