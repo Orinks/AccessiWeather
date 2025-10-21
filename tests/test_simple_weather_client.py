@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from accessiweather import weather_client_nws
 from accessiweather.models import (
     AppSettings,
     CurrentConditions,
@@ -171,6 +172,61 @@ def test_openmeteo_client_weather_description_accepts_string_codes():
     """OpenMeteo client should provide descriptions for stringified codes."""
     assert OpenMeteoApiClient.get_weather_description(80) == "Slight rain showers"
     assert OpenMeteoApiClient.get_weather_description("80") == "Slight rain showers"
+
+
+@pytest.mark.unit
+def test_parse_nws_forecast_handles_qv_payloads():
+    data = {
+        "properties": {
+            "periods": [
+                {
+                    "name": "Today",
+                    "temperature": {"value": 70},
+                    "temperatureUnit": {"value": "F"},
+                    "shortForecast": "Sunny",
+                    "windSpeed": {"value": 15, "unitCode": "wmoUnit:km_h-1"},
+                    "windDirection": {"value": 220},
+                }
+            ]
+        }
+    }
+
+    forecast = weather_client_nws.parse_nws_forecast(data)
+
+    assert len(forecast.periods) == 1
+    period = forecast.periods[0]
+    assert period.temperature == 70.0
+    assert period.temperature_unit == "F"
+    assert period.wind_speed.startswith("9")  # 15 km/h -> ~9 mph
+    assert period.wind_direction == "220"
+
+
+@pytest.mark.unit
+def test_parse_nws_hourly_forecast_handles_qv_payloads():
+    data = {
+        "properties": {
+            "periods": [
+                {
+                    "startTime": "2025-01-01T00:00:00+00:00",
+                    "endTime": "2025-01-01T01:00:00+00:00",
+                    "temperature": {"value": 65},
+                    "temperatureUnit": {"value": "F"},
+                    "shortForecast": "Clear",
+                    "windSpeed": {"value": 10, "unitCode": "wmoUnit:mi_h-1"},
+                    "windDirection": {"value": "NW"},
+                }
+            ]
+        }
+    }
+
+    hourly = weather_client_nws.parse_nws_hourly_forecast(data)
+
+    assert len(hourly.periods) == 1
+    period = hourly.periods[0]
+    assert period.temperature == 65.0
+    assert period.temperature_unit == "F"
+    assert period.wind_speed.startswith("10")
+    assert period.wind_direction == "NW"
 
 
 @pytest.mark.unit

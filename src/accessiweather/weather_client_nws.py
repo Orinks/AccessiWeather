@@ -29,6 +29,80 @@ from .weather_client_parsers import (
 logger = logging.getLogger(__name__)
 
 
+def _extract_scalar(value: Any) -> Any:
+    """Recursively extract a scalar value from nested NWS response objects."""
+    if isinstance(value, dict):
+        if "value" in value:
+            return _extract_scalar(value["value"])
+        if "values" in value and isinstance(value["values"], list):
+            for item in value["values"]:
+                extracted = _extract_scalar(item)
+                if extracted is not None:
+                    return extracted
+        return None
+    if isinstance(value, list):
+        for item in value:
+            extracted = _extract_scalar(item)
+            if extracted is not None:
+                return extracted
+        return None
+    return value
+
+
+def _extract_float(value: Any) -> float | None:
+    """Extract a float from an NWS response value."""
+    scalar = _extract_scalar(value)
+    if isinstance(scalar, (int, float)):
+        return float(scalar)
+    if isinstance(scalar, str):
+        try:
+            return float(scalar)
+        except ValueError:
+            return None
+    return None
+
+
+def _format_unit(unit_code: str | None) -> str | None:
+    """Return a human-readable suffix for WMO unit codes."""
+    if not unit_code:
+        return None
+    unit = unit_code.split(":")[-1]
+    replacements = {
+        "km_h-1": " km/h",
+        "m_s-1": " m/s",
+        "mi_h-1": " mph",
+        "kn": " kn",
+        "kt": " kt",
+    }
+    return replacements.get(unit, f" {unit}")
+
+
+def _format_wind_speed(value: Any) -> str | None:
+    """Format NWS wind speed objects into a readable string."""
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        unit_code = value.get("unitCode")
+        numeric = _extract_float(value.get("value"))
+        if numeric is None:
+            return None
+        mph, kph = convert_wind_speed_to_mph_and_kph(numeric, unit_code)
+        if mph is not None and kph is not None:
+            return f"{round(mph)} mph ({round(kph)} km/h)"
+        if mph is not None:
+            return f"{round(mph)} mph"
+        if kph is not None:
+            return f"{round(kph)} km/h"
+        suffix = _format_unit(unit_code)
+        return f"{numeric}{suffix}" if suffix else str(numeric)
+    scalar = _extract_scalar(value)
+    if scalar is None:
+        return None
+    if isinstance(scalar, (int, float)):
+        return f"{scalar}"
+    return str(scalar)
+
+
 async def _client_get(
     client: httpx.AsyncClient,
     url: str,
@@ -651,14 +725,20 @@ def parse_nws_forecast(data: dict) -> Forecast:
     periods = []
 
     for period_data in data.get("properties", {}).get("periods", []):
+        temperature = _extract_float(period_data.get("temperature"))
+        temperature_unit = _extract_scalar(period_data.get("temperatureUnit")) or "F"
+
+        wind_direction_value = _extract_scalar(period_data.get("windDirection"))
+        wind_direction = str(wind_direction_value) if wind_direction_value is not None else None
+
         period = ForecastPeriod(
             name=period_data.get("name", ""),
-            temperature=period_data.get("temperature"),
-            temperature_unit=period_data.get("temperatureUnit", "F"),
+            temperature=temperature,
+            temperature_unit=str(temperature_unit),
             short_forecast=period_data.get("shortForecast"),
             detailed_forecast=period_data.get("detailedForecast"),
-            wind_speed=period_data.get("windSpeed"),
-            wind_direction=period_data.get("windDirection"),
+            wind_speed=_format_wind_speed(period_data.get("windSpeed")),
+            wind_direction=wind_direction,
             icon=period_data.get("icon"),
         )
         periods.append(period)
@@ -742,14 +822,20 @@ def parse_nws_hourly_forecast(data: dict) -> HourlyForecast:
             except ValueError:
                 logger.warning(f"Failed to parse end time: {end_time_str}")
 
+        temperature = _extract_float(period_data.get("temperature"))
+        temperature_unit = _extract_scalar(period_data.get("temperatureUnit")) or "F"
+
+        wind_direction_value = _extract_scalar(period_data.get("windDirection"))
+        wind_direction = str(wind_direction_value) if wind_direction_value is not None else None
+
         period = HourlyForecastPeriod(
             start_time=start_time or datetime.now(),
             end_time=end_time,
-            temperature=period_data.get("temperature"),
-            temperature_unit=period_data.get("temperatureUnit", "F"),
+            temperature=temperature,
+            temperature_unit=str(temperature_unit),
             short_forecast=period_data.get("shortForecast"),
-            wind_speed=period_data.get("windSpeed"),
-            wind_direction=period_data.get("windDirection"),
+            wind_speed=_format_wind_speed(period_data.get("windSpeed")),
+            wind_direction=wind_direction,
             icon=period_data.get("icon"),
         )
         periods.append(period)
