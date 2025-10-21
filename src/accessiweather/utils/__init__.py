@@ -5,6 +5,7 @@ This package provides utility functions for temperature conversion, unit formatt
 and other common operations, copied from the wx version for consistency.
 """
 
+from .taf_decoder import decode_taf_text
 from .temperature_utils import (
     TemperatureUnit,
     calculate_dewpoint,
@@ -30,6 +31,8 @@ __all__ = [
     "fahrenheit_to_celsius",
     "format_temperature",
     "get_temperature_values",
+    # Aviation decoding
+    "decode_taf_text",
     # Unit utilities
     "format_wind_speed",
     "format_pressure",

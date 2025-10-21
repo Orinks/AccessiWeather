@@ -7,6 +7,7 @@ from .alert_handlers import (
     on_alert_selected,
     on_view_alert_details,
 )
+from .aviation_handlers import on_view_aviation_pressed
 from .location_handlers import (
     on_add_location_pressed,
     on_location_changed,
@@ -55,6 +56,7 @@ __all__ = [
     "on_alert_details_pressed",
     "on_alert_selected",
     "on_view_alert_details",
+    "on_view_aviation_pressed",
     "on_about_pressed",
     "on_check_updates_pressed",
     "download_update",

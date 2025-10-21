@@ -13,6 +13,10 @@ from accessiweather.display import WeatherPresenter
 from accessiweather.models import Location
 from accessiweather.utils import convert_wind_direction_to_cardinal
 from accessiweather.weather_client import WeatherClient
+from accessiweather.weather_client_parsers import (
+    OPEN_METEO_WEATHER_CODE_DESCRIPTIONS,
+    weather_code_to_description,
+)
 
 
 class TestWeatherDataFetching:
@@ -175,6 +179,20 @@ class TestWeatherDataFetching:
         assert client._weather_code_to_description(86) == "Heavy snow showers"
         assert client._weather_code_to_description(95) == "Thunderstorm"
         assert "Weather code" in client._weather_code_to_description(999)  # Unknown code
+
+    @pytest.mark.parametrize(
+        ("code", "expected"), tuple(OPEN_METEO_WEATHER_CODE_DESCRIPTIONS.items())
+    )
+    def test_weather_code_conversion_covers_all_known_codes(self, code, expected):
+        """Ensure every known Open-Meteo weather code has a friendly description."""
+        assert weather_code_to_description(code) == expected
+        # API sometimes delivers codes as strings; ensure those work too.
+        assert weather_code_to_description(str(code)) == expected
+
+    def test_weather_code_conversion_accepts_string_input(self):
+        """WeatherClient helper should gracefully handle string weather codes."""
+        client = WeatherClient()
+        assert client._weather_code_to_description("80") == "Slight rain showers"
 
     def test_unit_conversions(self):
         """Test unit conversion utilities in weather client."""

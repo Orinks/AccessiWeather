@@ -247,6 +247,27 @@ class EnvironmentalConditions:
 
 
 @dataclass
+class AviationData:
+    """Aviation specific forecast and advisory data."""
+
+    raw_taf: str | None = None
+    decoded_taf: str | None = None
+    station_id: str | None = None
+    airport_name: str | None = None
+    active_sigmets: list[dict] = field(default_factory=list)
+    active_cwas: list[dict] = field(default_factory=list)
+
+    def has_taf(self) -> bool:
+        """Return ``True`` when a TAF is available."""
+        return any(
+            [
+                bool(self.raw_taf and self.raw_taf.strip()),
+                bool(self.decoded_taf and self.decoded_taf.strip()),
+            ]
+        )
+
+
+@dataclass
 class WeatherData:
     """Complete weather data for a location."""
 
@@ -258,6 +279,7 @@ class WeatherData:
     alerts: WeatherAlerts | None = None
     last_updated: datetime | None = None
     environmental: EnvironmentalConditions | None = None
+    aviation: AviationData | None = None
     trend_insights: list[TrendInsight] = field(default_factory=list)
     stale: bool = False
     stale_since: datetime | None = None
@@ -281,5 +303,6 @@ class WeatherData:
                 self.hourly_forecast and self.hourly_forecast.has_data(),
                 self.alerts and self.alerts.has_alerts(),
                 self.environmental and self.environmental.has_data(),
+                self.aviation and self.aviation.has_taf(),
             ]
         )

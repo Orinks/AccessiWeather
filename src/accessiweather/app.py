@@ -51,6 +51,7 @@ class AccessiWeatherApp(toga.App):
         self.alerts_table: toga.Table | None = None
         self.refresh_button: toga.Button | None = None
         self.status_label: toga.Label | None = None
+        self.aviation_dialog = None
 
         # Background update task
         self.update_task: asyncio.Task | None = None
