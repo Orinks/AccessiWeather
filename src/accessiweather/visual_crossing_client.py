@@ -10,6 +10,7 @@ from datetime import UTC, datetime
 
 import httpx
 
+from .api.visualcrossing import VisualCrossingTimelineClient, VisualCrossingTimelineRequest
 from .models import (
     CurrentConditions,
     Forecast,
@@ -38,7 +39,13 @@ class VisualCrossingApiError(Exception):
 class VisualCrossingClient:
     """Client for Visual Crossing Weather API."""
 
-    def __init__(self, api_key: str, user_agent: str = "AccessiWeather/1.0"):
+    def __init__(
+        self,
+        api_key: str,
+        user_agent: str = "AccessiWeather/1.0",
+        *,
+        use_timeline_api: bool = False,
+    ):
         """Initialize the instance."""
         self.api_key = api_key
         self.user_agent = user_agent
@@ -46,9 +53,51 @@ class VisualCrossingClient:
             "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline"
         )
         self.timeout = 15.0
+        self.use_timeline_api = use_timeline_api
+        self._timeline_client: VisualCrossingTimelineClient | None = None
+        if self.use_timeline_api:
+            self._timeline_client = VisualCrossingTimelineClient(
+                api_key=self.api_key,
+                user_agent=self.user_agent,
+                timeout_seconds=self.timeout,
+            )
+
+    def _timeline_location(self, location: Location) -> str:
+        """Return the Visual Crossing API location string."""
+        return f"{location.latitude},{location.longitude}"
+
+    async def _fetch_timeline_data(
+        self,
+        location: Location,
+        *,
+        include: str | None = None,
+        elements: str | None = None,
+    ) -> dict | None:
+        """Fetch data via the generated timeline client when enabled."""
+        if not self._timeline_client:
+            return None
+
+        request = VisualCrossingTimelineRequest(
+            location=self._timeline_location(location),
+            include=include,
+            elements=elements,
+        )
+
+        timeline = await self._timeline_client.fetch(request)
+        return timeline.to_dict() if timeline else None
 
     async def get_current_conditions(self, location: Location) -> CurrentConditions | None:
         """Get current weather conditions from Visual Crossing API."""
+        if self.use_timeline_api:
+            timeline_data = await self._fetch_timeline_data(
+                location,
+                include="current",
+                elements="temp,feelslike,humidity,windspeed,winddir,pressure,conditions,datetime,visibility,dew",
+            )
+            if timeline_data:
+                return self._parse_current_conditions(timeline_data)
+            logger.debug("Timeline client did not return current data; falling back to REST.")
+
         try:
             # Use current time for specific current conditions
             url = f"{self.base_url}/{location.latitude},{location.longitude}"
@@ -87,6 +136,16 @@ class VisualCrossingClient:
 
     async def get_forecast(self, location: Location) -> Forecast | None:
         """Get weather forecast from Visual Crossing API."""
+        if self.use_timeline_api:
+            timeline_data = await self._fetch_timeline_data(
+                location,
+                include="days",
+                elements="datetime,tempmax,tempmin,temp,conditions,description,windspeed,winddir,icon",
+            )
+            if timeline_data and timeline_data.get("days"):
+                return self._parse_forecast(timeline_data)
+            logger.debug("Timeline client did not return daily forecast; falling back to REST.")
+
         try:
             url = f"{self.base_url}/{location.latitude},{location.longitude}"
             params = {
@@ -124,6 +183,16 @@ class VisualCrossingClient:
 
     async def get_hourly_forecast(self, location: Location) -> HourlyForecast | None:
         """Get hourly weather forecast from Visual Crossing API."""
+        if self.use_timeline_api:
+            timeline_data = await self._fetch_timeline_data(
+                location,
+                include="days,hours",
+                elements="datetime,temp,conditions,windspeed,winddir,icon,pressure,precipprob,humidity",
+            )
+            if timeline_data and timeline_data.get("days"):
+                return self._parse_hourly_forecast(timeline_data)
+            logger.debug("Timeline client did not return hourly forecast; falling back to REST.")
+
         try:
             url = f"{self.base_url}/{location.latitude},{location.longitude}"
             params = {
@@ -161,6 +230,17 @@ class VisualCrossingClient:
 
     async def get_alerts(self, location: Location) -> WeatherAlerts:
         """Get weather alerts from Visual Crossing API."""
+        if self.use_timeline_api:
+            timeline_data = await self._fetch_timeline_data(
+                location,
+                include="alerts",
+            )
+            if timeline_data and timeline_data.get("alerts"):
+                alerts = self._parse_alerts(timeline_data)
+                if alerts:
+                    return alerts
+            logger.debug("Timeline client did not return alerts; falling back to REST.")
+
         try:
             url = f"{self.base_url}/{location.latitude},{location.longitude}"
             params = {

@@ -26,6 +26,15 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def timeline_enabled() -> bool:
+    """Determine whether to exercise the generated timeline client."""
+    cli_flags = {"--timeline", "--use-timeline"}
+    if any(flag in sys.argv[1:] for flag in cli_flags):
+        return True
+    env_value = os.getenv("VISUAL_CROSSING_USE_TIMELINE", "").strip().lower()
+    return env_value in {"1", "true", "yes", "on"}
+
+
 async def test_visual_crossing_alerts():
     """Test Visual Crossing alerts end-to-end."""
     # Get API key from environment or prompt user
@@ -39,6 +48,8 @@ async def test_visual_crossing_alerts():
     print("=" * 80)
     print("VISUAL CROSSING ALERTS DEBUG TEST")
     print("=" * 80)
+    use_timeline = timeline_enabled()
+    print(f"Mode: {'Timeline client' if use_timeline else 'Legacy REST client'}")
 
     # Test locations - choose areas that commonly have weather alerts
     # Include both US and international locations
@@ -72,8 +83,13 @@ async def test_visual_crossing_alerts():
         # Step 1: Test direct Visual Crossing API call
         print("\n1. Testing direct Visual Crossing API call...")
         try:
-            vc_client = VisualCrossingClient(api_key)
+            vc_client = VisualCrossingClient(api_key, use_timeline_api=use_timeline)
             alerts = await vc_client.get_alerts(location)
+
+            baseline_alerts = None
+            if use_timeline:
+                baseline_client = VisualCrossingClient(api_key, use_timeline_api=False)
+                baseline_alerts = await baseline_client.get_alerts(location)
 
             print(f"   ✓ API call successful")
             print(f"   ✓ Alerts object type: {type(alerts)}")
@@ -90,6 +106,13 @@ async def test_visual_crossing_alerts():
             else:
                 print("   ℹ No alerts found for this location")
 
+            if baseline_alerts is not None:
+                baseline_count = len(baseline_alerts.alerts) if baseline_alerts else 0
+                timeline_count = len(alerts.alerts) if alerts else 0
+                print(
+                    f"   ⇄ Legacy/Timeline comparison → legacy={baseline_count}, timeline={timeline_count}"
+                )
+
         except Exception as e:
             print(f"   ✗ API call failed: {e}")
             continue
@@ -100,6 +123,10 @@ async def test_visual_crossing_alerts():
             weather_client = WeatherClient(
                 data_source="visualcrossing", visual_crossing_api_key=api_key
             )
+            if use_timeline and weather_client.visual_crossing_client:
+                weather_client.visual_crossing_client = VisualCrossingClient(
+                    api_key, user_agent=weather_client.user_agent, use_timeline_api=True
+                )
 
             weather_data = await weather_client.get_weather_data(location)
 
@@ -190,6 +217,7 @@ async def compare_alert_sources():
     print("COMPARING ALERT SOURCES")
     print(f"Location: {location.name}")
     print(f"{'=' * 80}")
+    use_timeline = timeline_enabled()
 
     # Test NWS alerts
     print("\n1. Testing NWS alerts...")
@@ -212,6 +240,10 @@ async def compare_alert_sources():
     print("\n2. Testing Visual Crossing alerts...")
     try:
         vc_client = WeatherClient(data_source="visualcrossing", visual_crossing_api_key=api_key)
+        if use_timeline and vc_client.visual_crossing_client:
+            vc_client.visual_crossing_client = VisualCrossingClient(
+                api_key, user_agent=vc_client.user_agent, use_timeline_api=True
+            )
         vc_weather = await vc_client.get_weather_data(location)
 
         print(

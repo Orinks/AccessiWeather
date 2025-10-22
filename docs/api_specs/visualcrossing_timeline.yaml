@@ -1,0 +1,258 @@
+openapi: 3.1.0
+info:
+  title: Visual Crossing Timeline API (AccessiWeather Sketch)
+  description: >
+    Minimal OpenAPI description covering the Visual Crossing timeline endpoint that
+    AccessiWeather uses for current conditions, daily forecasts, hourly forecasts,
+    and alert data. This draft covers the subset of fields we currently parse.
+  version: 0.1.0
+servers:
+  - url: https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services
+paths:
+  /timeline/{location}:
+    get:
+      summary: Retrieve timeline weather data
+      description: >
+        Fetches weather information for a location. The API supports coordinate
+        pairs (`latitude,longitude`) or place names. Results include current conditions,
+        multi-day forecasts, optional hourly data, and weather alerts.
+      operationId: getTimeline
+      parameters:
+        - name: location
+          in: path
+          required: true
+          description: >
+            Location query; may be supplied as `lat,lon`, a postal code, or a free-form place
+            name resolved by Visual Crossing.
+          schema:
+            type: string
+        - name: key
+          in: query
+          required: true
+          description: Visual Crossing API key.
+          schema:
+            type: string
+        - name: unitGroup
+          in: query
+          description: >
+            Preferred measurement system for the response. Common values are `us` (imperial)
+            and `metric`.
+          schema:
+            type: string
+            enum: [us, metric, uk]
+        - name: include
+          in: query
+          description: >
+            Comma separated list of sections to include in the response, e.g. `current`, `days`,
+            `hours`, `alerts`.
+          schema:
+            type: string
+        - name: elements
+          in: query
+          description: >
+            Comma separated list of individual data elements to include. When omitted the service
+            returns a default set.
+          schema:
+            type: string
+        - name: startDateTime
+          in: query
+          description: >
+            Optional ISO 8601 timestamp marking the start of the period queried. Omit to use the
+            current time.
+          schema:
+            type: string
+            format: date-time
+        - name: endDateTime
+          in: query
+          description: >
+            Optional ISO 8601 timestamp marking the end of the period queried. Omit to let the
+            service determine a default range.
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Timeline weather data for the requested location.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimelineResponse"
+        "400":
+          description: Bad request; parameters are invalid or missing.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Authentication failure; API key missing or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Rate limit exceeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    TimelineResponse:
+      type: object
+      description: >
+        Primary payload returned by the Visual Crossing timeline endpoint. Only fields currently
+        consumed by AccessiWeather are modeled here.
+      properties:
+        resolvedAddress:
+          type: string
+          description: Canonicalized location label.
+        timezone:
+          type: string
+          description: IANA timezone identifier for the location.
+        currentConditions:
+          $ref: "#/components/schemas/CurrentConditions"
+        days:
+          type: array
+          items:
+            $ref: "#/components/schemas/DayForecast"
+        hours:
+          type: array
+          items:
+            $ref: "#/components/schemas/HourForecast"
+        alerts:
+          type: array
+          description: Weather alerts associated with the location.
+          items:
+            $ref: "#/components/schemas/WeatherAlert"
+      required: [resolvedAddress, timezone]
+    CurrentConditions:
+      type: object
+      properties:
+        datetime:
+          type: string
+          description: Local timestamp of the observation.
+        temp:
+          type: number
+          format: float
+        feelslike:
+          type: number
+          format: float
+        humidity:
+          type: number
+          format: float
+        windspeed:
+          type: number
+          format: float
+        winddir:
+          type: number
+          format: float
+        pressure:
+          type: number
+          format: float
+        conditions:
+          type: string
+        icon:
+          type: string
+    DayForecast:
+      type: object
+      properties:
+        datetime:
+          type: string
+          description: Date for the forecast period (YYYY-MM-DD).
+        tempmax:
+          type: number
+          format: float
+        tempmin:
+          type: number
+          format: float
+        temp:
+          type: number
+          format: float
+        humidity:
+          type: number
+          format: float
+        precipprob:
+          type: number
+          format: float
+        preciptype:
+          type: array
+          items:
+            type: string
+        windspeed:
+          type: number
+          format: float
+        winddir:
+          type: number
+          format: float
+        description:
+          type: string
+        conditions:
+          type: string
+        icon:
+          type: string
+    HourForecast:
+      type: object
+      properties:
+        datetime:
+          type: string
+          description: ISO 8601 timestamp for the hour.
+        temp:
+          type: number
+          format: float
+        humidity:
+          type: number
+          format: float
+        precipprob:
+          type: number
+          format: float
+        windspeed:
+          type: number
+          format: float
+        winddir:
+          type: number
+          format: float
+        pressure:
+          type: number
+          format: float
+        conditions:
+          type: string
+        icon:
+          type: string
+    WeatherAlert:
+      type: object
+      properties:
+        event:
+          type: string
+          description: Alert title or event name.
+        headline:
+          type: string
+        severity:
+          type: string
+        description:
+          type: string
+        onset:
+          type: string
+          format: date-time
+        ends:
+          type: string
+          format: date-time
+        id:
+          type: string
+        effective:
+          type: string
+          format: date-time
+    ErrorResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+        message:
+          type: string
+        details:
+          type: string

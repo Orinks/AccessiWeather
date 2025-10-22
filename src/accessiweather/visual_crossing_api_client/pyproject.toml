@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "visual-crossing-timeline-api-accessi-weather-sketch-client"
+version = "0.1.0"
+description = "A client library for accessing Visual Crossing Timeline API (AccessiWeather Sketch)"
+authors = []
+readme = "README.md"
+packages = [
+    { include = "visual_crossing_timeline_api_accessi_weather_sketch_client" },
+]
+include = ["CHANGELOG.md", "visual_crossing_timeline_api_accessi_weather_sketch_client/py.typed"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+httpx = ">=0.23.0,<0.29.0"
+attrs = ">=22.2.0"
+python-dateutil = "^2.8.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["F", "I", "UP"]
