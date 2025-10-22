@@ -230,6 +230,60 @@ def test_parse_nws_hourly_forecast_handles_qv_payloads():
 
 
 @pytest.mark.unit
+def test_parse_nws_hourly_forecast_converts_celsius_payloads():
+    data = {
+        "properties": {
+            "periods": [
+                {
+                    "startTime": "2025-01-01T00:00:00+00:00",
+                    "endTime": "2025-01-01T01:00:00+00:00",
+                    "temperature": {"unitCode": "wmoUnit:degC", "value": 7.7777777778},
+                    # temperatureUnit intentionally omitted to mimic Feature-Flag payloads
+                    "shortForecast": "Cloudy",
+                    "windSpeed": {"unitCode": "wmoUnit:km_h-1", "value": 28.0},
+                    "windDirection": "SW",
+                }
+            ]
+        }
+    }
+
+    hourly = weather_client_nws.parse_nws_hourly_forecast(data)
+
+    assert len(hourly.periods) == 1
+    period = hourly.periods[0]
+    assert period.temperature == pytest.approx(46.0, rel=1e-3)
+    assert period.temperature_unit == "F"
+    assert period.wind_speed.startswith("17")
+    assert period.wind_direction == "SW"
+
+
+@pytest.mark.unit
+def test_parse_nws_forecast_converts_celsius_payloads():
+    data = {
+        "properties": {
+            "periods": [
+                {
+                    "name": "Today",
+                    "temperature": {"unitCode": "wmoUnit:degC", "value": 10},
+                    "shortForecast": "Rain Showers Likely",
+                    "windSpeed": {"unitCode": "wmoUnit:km_h-1", "value": 30.0},
+                    "windDirection": "SW",
+                }
+            ]
+        }
+    }
+
+    forecast = weather_client_nws.parse_nws_forecast(data)
+
+    assert len(forecast.periods) == 1
+    period = forecast.periods[0]
+    assert period.temperature == pytest.approx(50.0, rel=1e-3)
+    assert period.temperature_unit == "F"
+    assert period.wind_speed.startswith("19")
+    assert period.wind_direction == "SW"
+
+
+@pytest.mark.unit
 def test_weather_client_computes_temperature_trend():
     settings = AppSettings(trend_insights_enabled=True, trend_hours=24)
     client = WeatherClient(settings=settings)
