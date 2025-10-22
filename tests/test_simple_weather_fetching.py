@@ -5,6 +5,7 @@ This module tests the weather data fetching functionality that was fixed,
 including the wind direction formatting bug and API integration.
 """
 
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -162,35 +163,64 @@ class TestWeatherDataFetching:
         }
         stations_response = {
             "features": [
-                {"properties": {"stationIdentifier": "COAM8"}},
-                {"properties": {"stationIdentifier": "KCTB"}},
+                {
+                    "properties": {
+                        "stationIdentifier": "COAM8",
+                        "distance": {"value": 14056.0},
+                    }
+                },
+                {
+                    "properties": {
+                        "stationIdentifier": "KCTB",
+                        "distance": {"value": 45000.0},
+                    }
+                },
             ]
         }
+        recent_iso = (datetime.now(UTC) - timedelta(minutes=15)).isoformat().replace("+00:00", "Z")
         empty_observation = {
             "properties": {
-                "temperature": {"value": None},
+                "timestamp": recent_iso,
+                "temperature": {"value": 2.0, "qualityControl": "Z"},
                 "textDescription": "",
-                "windSpeed": {"value": 3.708, "unitCode": "wmoUnit:km_h-1"},
+                "windSpeed": {"value": 3.708, "unitCode": "wmoUnit:km_h-1", "qualityControl": "V"},
             }
         }
         usable_observation = {
             "properties": {
-                "temperature": {"value": 6.0, "unitCode": "wmoUnit:degC"},
+                "timestamp": recent_iso,
+                "temperature": {"value": 6.0, "unitCode": "wmoUnit:degC", "qualityControl": "V"},
                 "textDescription": "Clear",
-                "windSpeed": {"value": 5.544, "unitCode": "wmoUnit:km_h-1"},
-                "windDirection": {"value": 130},
-                "barometricPressure": {"value": 101862.57},
+                "windSpeed": {"value": 5.544, "unitCode": "wmoUnit:km_h-1", "qualityControl": "V"},
+                "windDirection": {"value": 130, "qualityControl": "V"},
+                "barometricPressure": {"value": 101862.57, "qualityControl": "V"},
             }
         }
 
+        def _make_response(payload):
+            response = MagicMock()
+            response.status_code = 200
+            response.json = lambda: payload
+            response.raise_for_status = MagicMock()
+            return response
+
+        called_urls: list[str] = []
+
+        def _mock_get(url, *args, **kwargs):
+            called_urls.append(url)
+            if url.endswith("/points/48.1703,-111.9461"):
+                return _make_response(grid_response)
+            if url == "https://api.weather.gov/gridpoints/TFX/82,179/stations":
+                return _make_response(stations_response)
+            if url.endswith("/stations/COAM8/observations/latest"):
+                return _make_response(empty_observation)
+            if url.endswith("/stations/KCTB/observations/latest"):
+                return _make_response(usable_observation)
+            raise AssertionError(f"Unexpected URL requested: {url}")
+
         with patch("httpx.AsyncClient") as mock_client:
             mock_client_instance = mock_client.return_value.__aenter__.return_value
-            mock_client_instance.get.side_effect = [
-                MagicMock(status_code=200, json=lambda: grid_response),
-                MagicMock(status_code=200, json=lambda: stations_response),
-                MagicMock(status_code=200, json=lambda: empty_observation),
-                MagicMock(status_code=200, json=lambda: usable_observation),
-            ]
+            mock_client_instance.get.side_effect = _mock_get
 
             current = await client._get_nws_current_conditions(location)
             await client.close()
@@ -199,7 +229,167 @@ class TestWeatherDataFetching:
         assert current.has_data()
         assert pytest.approx(current.temperature_c or 0.0, rel=1e-2) == 6.0
         assert current.condition == "Clear"
-        assert mock_client_instance.get.call_count == 4
+        assert "https://api.weather.gov/stations/KCTB/observations/latest" in called_urls
+        assert "https://api.weather.gov/stations/COAM8/observations/latest" not in called_urls, (
+            "Raw station should be skipped when airport data is available"
+        )
+
+    @pytest.mark.asyncio
+    async def test_nws_station_selection_falls_back_after_invalid_airport(self):
+        """If the preferred airport report is invalid, use the next station with good QC."""
+        client = WeatherClient()
+        location = Location("Fallback Town", 40.0, -105.0)
+
+        grid_response = {
+            "properties": {
+                "observationStations": "https://api.weather.gov/gridpoints/DEN/42,60/stations",
+            }
+        }
+        stations_response = {
+            "features": [
+                {
+                    "properties": {
+                        "stationIdentifier": "KDEN",
+                        "distance": {"value": 31000.0},
+                    }
+                },
+                {
+                    "properties": {
+                        "stationIdentifier": "BRRM8",
+                        "distance": {"value": 25000.0},
+                    }
+                },
+            ]
+        }
+
+        recent_iso = (datetime.now(UTC) - timedelta(minutes=20)).isoformat().replace("+00:00", "Z")
+        invalid_airport_observation = {
+            "properties": {
+                "timestamp": recent_iso,
+                "temperature": {"value": 18.0, "unitCode": "wmoUnit:degC", "qualityControl": "Z"},
+                "textDescription": "",
+                "windSpeed": {"value": 5.0, "unitCode": "wmoUnit:km_h-1", "qualityControl": "V"},
+            }
+        }
+        valid_mesonet_observation = {
+            "properties": {
+                "timestamp": recent_iso,
+                "temperature": {"value": 13.0, "unitCode": "wmoUnit:degC", "qualityControl": "V"},
+                "textDescription": "Mostly sunny",
+                "windSpeed": {"value": 10.0, "unitCode": "wmoUnit:km_h-1", "qualityControl": "V"},
+                "relativeHumidity": {"value": 40.0, "qualityControl": "V"},
+            }
+        }
+
+        def _make_response(payload):
+            response = MagicMock()
+            response.status_code = 200
+            response.json = lambda: payload
+            response.raise_for_status = MagicMock()
+            return response
+
+        request_log: list[str] = []
+
+        def _mock_get(url, *args, **kwargs):
+            request_log.append(url)
+            if url.endswith("/points/40.0,-105.0"):
+                return _make_response(grid_response)
+            if url == "https://api.weather.gov/gridpoints/DEN/42,60/stations":
+                return _make_response(stations_response)
+            if url.endswith("/stations/KDEN/observations/latest"):
+                return _make_response(invalid_airport_observation)
+            if url.endswith("/stations/BRRM8/observations/latest"):
+                return _make_response(valid_mesonet_observation)
+            raise AssertionError(f"Unexpected URL requested: {url}")
+
+        with patch("httpx.AsyncClient") as mock_client:
+            mock_client_instance = mock_client.return_value.__aenter__.return_value
+            mock_client_instance.get.side_effect = _mock_get
+
+            current = await client._get_nws_current_conditions(location)
+            await client.close()
+
+        assert current is not None
+        assert pytest.approx(current.temperature_c or 0.0, rel=1e-2) == 13.0
+        assert "Mostly sunny" in (current.condition or "")
+        assert "https://api.weather.gov/stations/KDEN/observations/latest" in request_log
+        assert "https://api.weather.gov/stations/BRRM8/observations/latest" in request_log
+
+    @pytest.mark.asyncio
+    async def test_nws_station_selection_ignores_stale_reports(self):
+        """Stations with stale timestamps should be skipped in favour of fresher data."""
+        client = WeatherClient()
+        location = Location("Stale City", 35.0, -97.0)
+
+        grid_response = {
+            "properties": {
+                "observationStations": "https://api.weather.gov/gridpoints/OUN/56,80/stations",
+            }
+        }
+        stations_response = {
+            "features": [
+                {
+                    "properties": {
+                        "stationIdentifier": "KOKC",
+                        "distance": {"value": 12000.0},
+                    }
+                },
+                {
+                    "properties": {
+                        "stationIdentifier": "KOUN",
+                        "distance": {"value": 18000.0},
+                    }
+                },
+            ]
+        }
+
+        stale_iso = (datetime.now(UTC) - timedelta(hours=4)).isoformat().replace("+00:00", "Z")
+        fresh_iso = (datetime.now(UTC) - timedelta(minutes=10)).isoformat().replace("+00:00", "Z")
+        stale_observation = {
+            "properties": {
+                "timestamp": stale_iso,
+                "temperature": {"value": 30.0, "unitCode": "wmoUnit:degC", "qualityControl": "V"},
+                "textDescription": "Hot",
+                "windSpeed": {"value": 8.0, "unitCode": "wmoUnit:km_h-1", "qualityControl": "V"},
+            }
+        }
+        fresh_observation = {
+            "properties": {
+                "timestamp": fresh_iso,
+                "temperature": {"value": 24.0, "unitCode": "wmoUnit:degC", "qualityControl": "V"},
+                "textDescription": "Warm",
+                "windSpeed": {"value": 12.0, "unitCode": "wmoUnit:km_h-1", "qualityControl": "V"},
+            }
+        }
+
+        def _make_response(payload):
+            response = MagicMock()
+            response.status_code = 200
+            response.json = lambda: payload
+            response.raise_for_status = MagicMock()
+            return response
+
+        def _mock_get(url, *args, **kwargs):
+            if url.endswith("/points/35.0,-97.0"):
+                return _make_response(grid_response)
+            if url == "https://api.weather.gov/gridpoints/OUN/56,80/stations":
+                return _make_response(stations_response)
+            if url.endswith("/stations/KOKC/observations/latest"):
+                return _make_response(stale_observation)
+            if url.endswith("/stations/KOUN/observations/latest"):
+                return _make_response(fresh_observation)
+            raise AssertionError(f"Unexpected URL requested: {url}")
+
+        with patch("httpx.AsyncClient") as mock_client:
+            mock_client_instance = mock_client.return_value.__aenter__.return_value
+            mock_client_instance.get.side_effect = _mock_get
+
+            current = await client._get_nws_current_conditions(location)
+            await client.close()
+
+        assert current is not None
+        assert pytest.approx(current.temperature_c or 0.0, rel=1e-2) == 24.0
+        assert current.condition == "Warm"
 
     @pytest.mark.asyncio
     async def test_nws_current_missing_primary_fields_uses_openmeteo(self):
