@@ -28,6 +28,8 @@ from .weather_client_parsers import (
 
 logger = logging.getLogger(__name__)
 
+MAX_STATION_OBSERVATION_ATTEMPTS = 5
+
 
 def _extract_scalar(value: Any) -> Any:
     """Recursively extract a scalar value from nested NWS response objects."""
@@ -246,6 +248,60 @@ async def get_nws_current_conditions(
         grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
         headers = {"User-Agent": user_agent}
 
+        async def _select_best_observation(
+            features: list[dict[str, Any]],
+            http_client: httpx.AsyncClient,
+        ) -> CurrentConditions | None:
+            """Return the first observation with meaningful data, keeping a fallback."""
+            if not features:
+                return None
+
+            fallback: CurrentConditions | None = None
+            attempts = 0
+
+            for feature in features:
+                if attempts >= MAX_STATION_OBSERVATION_ATTEMPTS:
+                    break
+
+                props = feature.get("properties", {}) or {}
+                station_id = props.get("stationIdentifier")
+                if not station_id:
+                    continue
+
+                obs_url = f"{nws_base_url}/stations/{station_id}/observations/latest"
+                attempts += 1
+
+                try:
+                    response = await _client_get(http_client, obs_url, headers=headers)
+                    response.raise_for_status()
+                except Exception as exc:  # noqa: BLE001
+                    logger.debug("Failed to fetch observation for %s: %s", station_id, exc)
+                    continue
+
+                try:
+                    obs_data = response.json()
+                except Exception as exc:  # noqa: BLE001
+                    logger.debug("Invalid observation payload for %s: %s", station_id, exc)
+                    continue
+
+                try:
+                    current = parse_nws_current_conditions(obs_data)
+                except Exception as exc:  # noqa: BLE001
+                    logger.debug("Failed to parse observation for %s: %s", station_id, exc)
+                    continue
+
+                has_temperature = (
+                    current.temperature_f is not None or current.temperature_c is not None
+                )
+                has_description = bool(current.condition and current.condition.strip())
+                if has_temperature or has_description:
+                    return current
+
+                if fallback is None:
+                    fallback = current
+
+            return fallback
+
         # Use provided client or create a new one
         if client is not None:
             response = await _client_get(client, grid_url, headers=headers)
@@ -261,14 +317,15 @@ async def get_nws_current_conditions(
                 logger.warning("No observation stations found")
                 return None
 
-            station_id = stations_data["features"][0]["properties"]["stationIdentifier"]
-            obs_url = f"{nws_base_url}/stations/{station_id}/observations/latest"
-
-            response = await _client_get(client, obs_url, headers=headers)
-            response.raise_for_status()
-            obs_data = response.json()
-
-            return parse_nws_current_conditions(obs_data)
+            current = await _select_best_observation(stations_data["features"], client)
+            if current is None:
+                logger.warning(
+                    "No usable observations found for %s (lat=%s, lon=%s)",
+                    location.name,
+                    location.latitude,
+                    location.longitude,
+                )
+            return current
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
             response = await new_client.get(grid_url, headers=headers)
             response.raise_for_status()
@@ -283,14 +340,15 @@ async def get_nws_current_conditions(
                 logger.warning("No observation stations found")
                 return None
 
-            station_id = stations_data["features"][0]["properties"]["stationIdentifier"]
-            obs_url = f"{nws_base_url}/stations/{station_id}/observations/latest"
-
-            response = await new_client.get(obs_url, headers=headers)
-            response.raise_for_status()
-            obs_data = response.json()
-
-            return parse_nws_current_conditions(obs_data)
+            current = await _select_best_observation(stations_data["features"], new_client)
+            if current is None:
+                logger.warning(
+                    "No usable observations found for %s (lat=%s, lon=%s)",
+                    location.name,
+                    location.latitude,
+                    location.longitude,
+                )
+            return current
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS current conditions: {exc}")
