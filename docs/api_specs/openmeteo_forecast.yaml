@@ -1,0 +1,510 @@
+openapi: 3.1.0
+info:
+  title: Open-Meteo Forecast & Archive API (AccessiWeather Sketch)
+  version: 0.1.0
+  description: >
+    Minimal OpenAPI schema describing the Open-Meteo forecast and archive endpoints used by
+    AccessiWeather. This document focuses on the response shapes required for current conditions,
+    daily and hourly forecasts, and historical comparisons.
+servers:
+  - url: https://api.open-meteo.com/v1
+paths:
+  /forecast:
+    get:
+      summary: Retrieve forecast and current conditions
+      description: >
+        Fetches current, hourly, and daily forecast data for a given location. The specific data
+        returned depends on the `current`, `hourly`, and `daily` parameters supplied.
+      operationId: getForecast
+      parameters:
+        - $ref: "#/components/parameters/Latitude"
+        - $ref: "#/components/parameters/Longitude"
+        - $ref: "#/components/parameters/CurrentParam"
+        - $ref: "#/components/parameters/HourlyParam"
+        - $ref: "#/components/parameters/DailyParam"
+        - $ref: "#/components/parameters/TemperatureUnit"
+        - $ref: "#/components/parameters/WindSpeedUnit"
+        - $ref: "#/components/parameters/PrecipitationUnit"
+        - $ref: "#/components/parameters/Timezone"
+        - $ref: "#/components/parameters/ForecastDays"
+      responses:
+        "200":
+          description: Forecast payload containing requested data.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForecastResponse"
+        "400":
+          description: Invalid parameters supplied.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenMeteoError"
+        "500":
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenMeteoError"
+  /archive:
+    get:
+      summary: Retrieve historical weather data
+      description: >
+        Provides historical daily weather statistics for the specified period. Used to compare
+        current conditions against past weather.
+      operationId: getArchive
+      parameters:
+        - $ref: "#/components/parameters/Latitude"
+        - $ref: "#/components/parameters/Longitude"
+        - $ref: "#/components/parameters/StartDate"
+        - $ref: "#/components/parameters/EndDate"
+        - $ref: "#/components/parameters/DailyParam"
+        - $ref: "#/components/parameters/TemperatureUnit"
+        - $ref: "#/components/parameters/Timezone"
+      responses:
+        "200":
+          description: Historical weather payload.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArchiveResponse"
+        "400":
+          description: Invalid parameters supplied.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenMeteoError"
+        "500":
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenMeteoError"
+components:
+  parameters:
+    Latitude:
+      name: latitude
+      in: query
+      required: true
+      schema:
+        type: number
+        format: float
+      description: Decimal latitude of the location.
+    Longitude:
+      name: longitude
+      in: query
+      required: true
+      schema:
+        type: number
+        format: float
+      description: Decimal longitude of the location.
+    CurrentParam:
+      name: current
+      in: query
+      schema:
+        type: string
+      description: Comma-separated list of current weather variables to include.
+    HourlyParam:
+      name: hourly
+      in: query
+      schema:
+        type: string
+      description: Comma-separated list of hourly variables to include.
+    DailyParam:
+      name: daily
+      in: query
+      schema:
+        type: string
+      description: Comma-separated list of daily variables to include.
+    TemperatureUnit:
+      name: temperature_unit
+      in: query
+      schema:
+        type: string
+        enum: [celsius, fahrenheit]
+      description: Preferred temperature unit.
+    WindSpeedUnit:
+      name: wind_speed_unit
+      in: query
+      schema:
+        type: string
+        enum: [kmh, ms, mph, kn]
+      description: Preferred wind speed unit.
+    PrecipitationUnit:
+      name: precipitation_unit
+      in: query
+      schema:
+        type: string
+        enum: [mm, inch]
+      description: Preferred precipitation unit.
+    Timezone:
+      name: timezone
+      in: query
+      schema:
+        type: string
+      description: Timezone identifier or `auto`.
+    ForecastDays:
+      name: forecast_days
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+      description: Number of forecast days to retrieve.
+    StartDate:
+      name: start_date
+      in: query
+      required: true
+      schema:
+        type: string
+        format: date
+      description: Start date of the historical period (inclusive).
+    EndDate:
+      name: end_date
+      in: query
+      required: true
+      schema:
+        type: string
+        format: date
+      description: End date of the historical period (inclusive).
+  schemas:
+    ForecastResponse:
+      type: object
+      description: Forecast payload containing the requested sections.
+      additionalProperties: true
+      properties:
+        latitude:
+          type: number
+          format: float
+        longitude:
+          type: number
+          format: float
+        generationtime_ms:
+          type: number
+          format: float
+        utc_offset_seconds:
+          type: integer
+        timezone:
+          type: string
+        timezone_abbreviation:
+          type: string
+        elevation:
+          type: number
+          format: float
+        current_units:
+          $ref: "#/components/schemas/CurrentUnits"
+        current:
+          $ref: "#/components/schemas/CurrentData"
+        hourly_units:
+          $ref: "#/components/schemas/HourlyUnits"
+        hourly:
+          $ref: "#/components/schemas/HourlyData"
+        daily_units:
+          $ref: "#/components/schemas/DailyUnits"
+        daily:
+          $ref: "#/components/schemas/DailyData"
+    ArchiveResponse:
+      type: object
+      description: Historical daily data payload.
+      additionalProperties: true
+      properties:
+        latitude:
+          type: number
+          format: float
+        longitude:
+          type: number
+          format: float
+        generationtime_ms:
+          type: number
+          format: float
+        utc_offset_seconds:
+          type: integer
+        timezone:
+          type: string
+        timezone_abbreviation:
+          type: string
+        elevation:
+          type: number
+          format: float
+        daily_units:
+          $ref: "#/components/schemas/ArchiveDailyUnits"
+        daily:
+          $ref: "#/components/schemas/ArchiveDailyData"
+    CurrentUnits:
+      type: object
+      additionalProperties: true
+      properties:
+        time:
+          type: string
+        interval:
+          type: string
+        temperature_2m:
+          type: string
+        relative_humidity_2m:
+          type: string
+        apparent_temperature:
+          type: string
+        is_day:
+          type: string
+        precipitation:
+          type: string
+        weather_code:
+          type: string
+        cloud_cover:
+          type: string
+        pressure_msl:
+          type: string
+        surface_pressure:
+          type: string
+        wind_speed_10m:
+          type: string
+        wind_direction_10m:
+          type: string
+        wind_gusts_10m:
+          type: string
+    CurrentData:
+      type: object
+      additionalProperties: true
+      properties:
+        time:
+          type: string
+          format: date-time
+        interval:
+          type: integer
+        temperature_2m:
+          type: number
+          format: float
+        relative_humidity_2m:
+          type: number
+          format: float
+        apparent_temperature:
+          type: number
+          format: float
+        is_day:
+          type: integer
+        precipitation:
+          type: number
+          format: float
+        weather_code:
+          type: integer
+        cloud_cover:
+          type: number
+          format: float
+        pressure_msl:
+          type: number
+          format: float
+        surface_pressure:
+          type: number
+          format: float
+        wind_speed_10m:
+          type: number
+          format: float
+        wind_direction_10m:
+          type: number
+          format: float
+        wind_gusts_10m:
+          type: number
+          format: float
+    HourlyUnits:
+      type: object
+      additionalProperties: true
+      properties:
+        time:
+          type: string
+        temperature_2m:
+          type: string
+        weather_code:
+          type: string
+        wind_speed_10m:
+          type: string
+        wind_direction_10m:
+          type: string
+        pressure_msl:
+          type: string
+        relative_humidity_2m:
+          type: string
+        apparent_temperature:
+          type: string
+    HourlyData:
+      type: object
+      additionalProperties: true
+      properties:
+        time:
+          type: array
+          items:
+            type: string
+            format: date-time
+        temperature_2m:
+          type: array
+          items:
+            type: number
+            format: float
+        weather_code:
+          type: array
+          items:
+            type: integer
+        wind_speed_10m:
+          type: array
+          items:
+            type: number
+            format: float
+        wind_direction_10m:
+          type: array
+          items:
+            type: number
+            format: float
+        pressure_msl:
+          type: array
+          items:
+            type: number
+            format: float
+        relative_humidity_2m:
+          type: array
+          items:
+            type: number
+            format: float
+        apparent_temperature:
+          type: array
+          items:
+            type: number
+            format: float
+    DailyUnits:
+      type: object
+      additionalProperties: true
+      properties:
+        time:
+          type: string
+        temperature_2m_max:
+          type: string
+        temperature_2m_min:
+          type: string
+        temperature_2m_mean:
+          type: string
+        uv_index_max:
+          type: string
+        sunrise:
+          type: string
+        sunset:
+          type: string
+        wind_speed_10m_max:
+          type: string
+        wind_direction_10m_dominant:
+          type: string
+        weather_code:
+          type: string
+    DailyData:
+      type: object
+      additionalProperties: true
+      properties:
+        time:
+          type: array
+          items:
+            type: string
+            format: date
+        weather_code:
+          type: array
+          items:
+            type: integer
+        temperature_2m_max:
+          type: array
+          items:
+            type: number
+            format: float
+        temperature_2m_min:
+          type: array
+          items:
+            type: number
+            format: float
+        temperature_2m_mean:
+          type: array
+          items:
+            type: number
+            format: float
+        uv_index_max:
+          type: array
+          items:
+            type: number
+            format: float
+        sunrise:
+          type: array
+          items:
+            type: string
+            format: date-time
+        sunset:
+          type: array
+          items:
+            type: string
+            format: date-time
+        wind_speed_10m_max:
+          type: array
+          items:
+            type: number
+            format: float
+        wind_direction_10m_dominant:
+          type: array
+          items:
+            type: number
+            format: float
+    ArchiveDailyUnits:
+      type: object
+      additionalProperties: true
+      properties:
+        time:
+          type: string
+        weather_code:
+          type: string
+        temperature_2m_max:
+          type: string
+        temperature_2m_min:
+          type: string
+        temperature_2m_mean:
+          type: string
+        wind_speed_10m_max:
+          type: string
+        wind_direction_10m_dominant:
+          type: string
+    ArchiveDailyData:
+      type: object
+      additionalProperties: true
+      properties:
+        time:
+          type: array
+          items:
+            type: string
+            format: date
+        weather_code:
+          type: array
+          items:
+            type: integer
+        temperature_2m_max:
+          type: array
+          items:
+            type: number
+            format: float
+        temperature_2m_min:
+          type: array
+          items:
+            type: number
+            format: float
+        temperature_2m_mean:
+          type: array
+          items:
+            type: number
+            format: float
+        wind_speed_10m_max:
+          type: array
+          items:
+            type: number
+            format: float
+        wind_direction_10m_dominant:
+          type: array
+          items:
+            type: number
+            format: float
+    OpenMeteoError:
+      type: object
+      additionalProperties: true
+      properties:
+        reason:
+          type: string
+        error:
+          type: string

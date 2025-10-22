@@ -176,6 +176,7 @@ class WeatherClient:
         meteoalarm_client: MeteoAlarmClient | None = None,
         environmental_client: EnvironmentalDataClient | None = None,
         offline_cache: WeatherDataCache | None = None,
+        use_openmeteo_schemas: bool = True,
     ):
         """Initialize the instance."""
         self.user_agent = user_agent
@@ -185,6 +186,7 @@ class WeatherClient:
         self.data_source = data_source  # "auto", "nws", "openmeteo", "visualcrossing"
         self.visual_crossing_api_key = visual_crossing_api_key
         self.settings = settings or AppSettings()
+        self.use_openmeteo_schemas = use_openmeteo_schemas
         self._test_mode = bool(os.environ.get("PYTEST_CURRENT_TEST"))
         self.alerts_enabled = bool(self.settings.enable_alerts)
         self.international_alerts_enabled = bool(self.settings.international_alerts_enabled)
@@ -325,7 +327,11 @@ class WeatherClient:
 
         if not self._methods_overridden(method_names) and not client_is_mock:
             return await openmeteo_client.get_openmeteo_all_data_parallel(
-                location, self.openmeteo_base_url, self.timeout, client
+                location,
+                self.openmeteo_base_url,
+                self.timeout,
+                client,
+                use_generated_models=self.use_openmeteo_schemas,
             )
 
         return await asyncio.gather(
@@ -675,19 +681,31 @@ class WeatherClient:
     ) -> CurrentConditions | None:
         """Delegate to the Open-Meteo client module."""
         return await openmeteo_client.get_openmeteo_current_conditions(
-            location, self.openmeteo_base_url, self.timeout, self._get_http_client()
+            location,
+            self.openmeteo_base_url,
+            self.timeout,
+            self._get_http_client(),
+            use_generated_models=self.use_openmeteo_schemas,
         )
 
     async def _get_openmeteo_forecast(self, location: Location) -> Forecast | None:
         """Delegate to the Open-Meteo client module."""
         return await openmeteo_client.get_openmeteo_forecast(
-            location, self.openmeteo_base_url, self.timeout, self._get_http_client()
+            location,
+            self.openmeteo_base_url,
+            self.timeout,
+            self._get_http_client(),
+            use_generated_models=self.use_openmeteo_schemas,
         )
 
     async def _get_openmeteo_hourly_forecast(self, location: Location) -> HourlyForecast | None:
         """Delegate to the Open-Meteo client module."""
         return await openmeteo_client.get_openmeteo_hourly_forecast(
-            location, self.openmeteo_base_url, self.timeout, self._get_http_client()
+            location,
+            self.openmeteo_base_url,
+            self.timeout,
+            self._get_http_client(),
+            use_generated_models=self.use_openmeteo_schemas,
         )
 
     def _parse_nws_current_conditions(self, data: dict) -> CurrentConditions:

@@ -18,6 +18,7 @@ from .models import (
     HourlyForecastPeriod,
     Location,
 )
+from .openmeteo_client import OpenMeteoApiClient
 from .utils.temperature_utils import TemperatureUnit, calculate_dewpoint
 from .weather_client_parsers import (
     convert_f_to_c,
@@ -30,6 +31,8 @@ from .weather_client_parsers import (
 )
 
 logger = logging.getLogger(__name__)
+
+_schema_normaliser: OpenMeteoApiClient | None = None
 
 
 def _parse_iso_datetime(value: str | None) -> datetime | None:
@@ -51,6 +54,14 @@ def _parse_iso_datetime(value: str | None) -> datetime | None:
     return None
 
 
+def _normalise_with_generated_models(endpoint: str, payload: dict[str, Any]) -> dict[str, Any]:
+    """Normalise payloads using the generated OpenAPI models when requested."""
+    global _schema_normaliser  # noqa: PLW0603
+    if _schema_normaliser is None:
+        _schema_normaliser = OpenMeteoApiClient(use_generated_models=True)
+    return _schema_normaliser._coerce_with_generated_model(endpoint, payload)
+
+
 async def _client_get(
     client: httpx.AsyncClient,
     url: str,
@@ -69,6 +80,8 @@ async def get_openmeteo_all_data_parallel(
     openmeteo_base_url: str,
     timeout: float,
     client: httpx.AsyncClient,
+    *,
+    use_generated_models: bool = False,
 ) -> tuple[CurrentConditions | None, Forecast | None, HourlyForecast | None]:
     """
     Fetch all Open-Meteo data in parallel.
@@ -78,13 +91,31 @@ async def get_openmeteo_all_data_parallel(
     try:
         # Fetch all data in parallel
         current_task = asyncio.create_task(
-            get_openmeteo_current_conditions(location, openmeteo_base_url, timeout, client)
+            get_openmeteo_current_conditions(
+                location,
+                openmeteo_base_url,
+                timeout,
+                client,
+                use_generated_models=use_generated_models,
+            )
         )
         forecast_task = asyncio.create_task(
-            get_openmeteo_forecast(location, openmeteo_base_url, timeout, client)
+            get_openmeteo_forecast(
+                location,
+                openmeteo_base_url,
+                timeout,
+                client,
+                use_generated_models=use_generated_models,
+            )
         )
         hourly_task = asyncio.create_task(
-            get_openmeteo_hourly_forecast(location, openmeteo_base_url, timeout, client)
+            get_openmeteo_hourly_forecast(
+                location,
+                openmeteo_base_url,
+                timeout,
+                client,
+                use_generated_models=use_generated_models,
+            )
         )
 
         # Gather all results
@@ -104,6 +135,8 @@ async def get_openmeteo_current_conditions(
     openmeteo_base_url: str,
     timeout: float,
     client: httpx.AsyncClient | None = None,
+    *,
+    use_generated_models: bool = False,
 ) -> CurrentConditions | None:
     """Fetch current conditions from the Open-Meteo API."""
     try:
@@ -128,7 +161,8 @@ async def get_openmeteo_current_conditions(
             response = await _client_get(client, url, params=params)
             response.raise_for_status()
             data = response.json()
-
+            if use_generated_models:
+                data = _normalise_with_generated_models("forecast", data)
             current = parse_openmeteo_current_conditions(data)
             if isinstance(current.wind_direction, (int, float)):
                 current.wind_direction = degrees_to_cardinal(current.wind_direction)
@@ -137,6 +171,8 @@ async def get_openmeteo_current_conditions(
             response = await new_client.get(url, params=params)
             response.raise_for_status()
             data = response.json()
+            if use_generated_models:
+                data = _normalise_with_generated_models("forecast", data)
 
             current = parse_openmeteo_current_conditions(data)
             if isinstance(current.wind_direction, (int, float)):
@@ -153,6 +189,8 @@ async def get_openmeteo_forecast(
     openmeteo_base_url: str,
     timeout: float,
     client: httpx.AsyncClient | None = None,
+    *,
+    use_generated_models: bool = False,
 ) -> Forecast | None:
     """Fetch daily forecast from the Open-Meteo API."""
     try:
@@ -175,11 +213,15 @@ async def get_openmeteo_forecast(
             response = await _client_get(client, url, params=params)
             response.raise_for_status()
             data = response.json()
+            if use_generated_models:
+                data = _normalise_with_generated_models("forecast", data)
             return parse_openmeteo_forecast(data)
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
             response = await new_client.get(url, params=params)
             response.raise_for_status()
             data = response.json()
+            if use_generated_models:
+                data = _normalise_with_generated_models("forecast", data)
             return parse_openmeteo_forecast(data)
 
     except Exception as exc:  # noqa: BLE001
@@ -192,6 +234,8 @@ async def get_openmeteo_hourly_forecast(
     openmeteo_base_url: str,
     timeout: float,
     client: httpx.AsyncClient | None = None,
+    *,
+    use_generated_models: bool = False,
 ) -> HourlyForecast | None:
     """Fetch hourly forecast from the Open-Meteo API."""
     try:
@@ -211,11 +255,15 @@ async def get_openmeteo_hourly_forecast(
             response = await _client_get(client, url, params=params)
             response.raise_for_status()
             data = response.json()
+            if use_generated_models:
+                data = _normalise_with_generated_models("forecast", data)
             return parse_openmeteo_hourly_forecast(data)
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
             response = await new_client.get(url, params=params)
             response.raise_for_status()
             data = response.json()
+            if use_generated_models:
+                data = _normalise_with_generated_models("forecast", data)
             return parse_openmeteo_hourly_forecast(data)
 
     except Exception as exc:  # noqa: BLE001

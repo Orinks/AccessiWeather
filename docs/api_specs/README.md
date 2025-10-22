@@ -25,3 +25,19 @@ and avoid manual edits.
 * Instantiate `VisualCrossingClient(..., use_timeline_api=True)` to exercise the generated
   timeline client path alongside the existing HTTPX implementation.
 * Add contract tests that pin the JSON payloads we expect against the generated models.
+
+## Open-Meteo Forecast & Archive
+
+`openmeteo_forecast.yaml` captures the sections of the Open-Meteo `/forecast` and `/archive`
+endpoints that AccessiWeather consumes. Regenerate the client with:
+
+```bash
+openapi-python-client generate \
+  --path docs/api_specs/openmeteo_forecast.yaml \
+  --output-path src/accessiweather/open_meteo_api_client \
+  --overwrite
+```
+
+After regeneration you can enable schema validation in the existing API client via
+`OpenMeteoApiClient(use_generated_models=True)` and run the accompanying tests in
+`tests/test_openmeteo_generated_models.py`.

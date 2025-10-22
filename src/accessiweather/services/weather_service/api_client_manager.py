@@ -37,7 +37,7 @@ class ApiClientManager:
 
         """
         self.nws_client = nws_client
-        self.openmeteo_client = openmeteo_client or OpenMeteoApiClient()
+        self.openmeteo_client = openmeteo_client or OpenMeteoApiClient(use_generated_models=True)
         self.openmeteo_mapper = OpenMeteoMapper()
         self.config = config or {}
 

@@ -49,6 +49,7 @@ class OpenMeteoApiClient:
         timeout: float = 30.0,
         max_retries: int = 3,
         retry_delay: float = 1.0,
+        use_generated_models: bool = False,
     ):
         """
         Initialize the Open-Meteo API client.
@@ -59,12 +60,15 @@ class OpenMeteoApiClient:
             timeout: Request timeout in seconds
             max_retries: Maximum number of retries for failed requests
             retry_delay: Delay between retries in seconds
+            use_generated_models: When True, normalise responses using the generated
+                OpenAPI models before handing them to parsers
 
         """
         self.user_agent = user_agent
         self.timeout = timeout
         self.max_retries = max_retries
         self.retry_delay = retry_delay
+        self.use_generated_models = use_generated_models
 
         # Create HTTP client
         self.client = httpx.Client(
@@ -118,6 +122,8 @@ class OpenMeteoApiClient:
 
                 # Parse JSON response
                 data: dict[str, Any] = response.json()
+                if self.use_generated_models:
+                    data = self._coerce_with_generated_model(endpoint, data)
                 logger.debug(f"Received response with keys: {list(data.keys())}")
                 return data
 
@@ -150,6 +156,41 @@ class OpenMeteoApiClient:
 
         # This should never be reached due to the exception handling above
         raise OpenMeteoApiError("Request failed after all retries")
+
+    def _coerce_with_generated_model(
+        self, endpoint: str, payload: dict[str, Any]
+    ) -> dict[str, Any]:
+        """
+        Validate and normalise responses using the generated OpenAPI models.
+
+        Args:
+        ----
+            endpoint: API endpoint name.
+            payload: Raw JSON dictionary.
+
+        Returns:
+        -------
+            The original payload if coercion fails, otherwise the normalised dict produced by
+            the generated model.
+
+        """
+        try:
+            if endpoint == "forecast":
+                from .open_meteo_api_client.open_meteo_forecast_archive_api_accessi_weather_sketch_client.models.forecast_response import (
+                    ForecastResponse,
+                )
+
+                return ForecastResponse.from_dict(payload).to_dict()
+
+            if endpoint == "archive":
+                from .open_meteo_api_client.open_meteo_forecast_archive_api_accessi_weather_sketch_client.models.archive_response import (
+                    ArchiveResponse,
+                )
+
+                return ArchiveResponse.from_dict(payload).to_dict()
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("Failed to normalise Open-Meteo %s payload: %s", endpoint, exc)
+        return payload
 
     def get_current_weather(
         self,

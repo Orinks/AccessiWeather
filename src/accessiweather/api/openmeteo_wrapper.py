@@ -35,11 +35,14 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
         super().__init__(**kwargs)
 
         # Initialize the Open-Meteo client
+        use_generated_models = bool(kwargs.get("use_generated_models", False))
+
         self.openmeteo_client = OpenMeteoApiClient(
             user_agent=self.user_agent,
             timeout=30.0,
             max_retries=self.max_retries,
             retry_delay=1.0,
+            use_generated_models=use_generated_models,
         )
 
         logger.info(f"Initialized Open-Meteo API wrapper with User-Agent: {self.user_agent}")

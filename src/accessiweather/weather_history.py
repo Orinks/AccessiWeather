@@ -139,6 +139,7 @@ class WeatherHistoryService:
             self.openmeteo_client = OpenMeteoApiClient(
                 user_agent="AccessiWeather/2.0",
                 timeout=30.0,
+                use_generated_models=True,
             )
         else:
             self.openmeteo_client = openmeteo_client

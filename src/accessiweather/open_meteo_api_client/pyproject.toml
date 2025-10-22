@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "open-meteo-forecast-archive-api-accessi-weather-sketch-client"
+version = "0.1.0"
+description = "A client library for accessing Open-Meteo Forecast & Archive API (AccessiWeather Sketch)"
+authors = []
+readme = "README.md"
+packages = [
+    { include = "open_meteo_forecast_archive_api_accessi_weather_sketch_client" },
+]
+include = ["CHANGELOG.md", "open_meteo_forecast_archive_api_accessi_weather_sketch_client/py.typed"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+httpx = ">=0.23.0,<0.29.0"
+attrs = ">=22.2.0"
+python-dateutil = "^2.8.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["F", "I", "UP"]

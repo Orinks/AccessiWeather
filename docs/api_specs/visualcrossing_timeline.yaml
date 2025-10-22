@@ -133,10 +133,14 @@ components:
       required: [resolvedAddress, timezone]
     CurrentConditions:
       type: object
+      additionalProperties: true
       properties:
         datetime:
           type: string
           description: Local timestamp of the observation.
+        datetimeEpoch:
+          type: integer
+          description: Epoch seconds for the observation time.
         temp:
           type: number
           format: float
@@ -146,35 +150,10 @@ components:
         humidity:
           type: number
           format: float
-        windspeed:
+        dew:
           type: number
           format: float
-        winddir:
-          type: number
-          format: float
-        pressure:
-          type: number
-          format: float
-        conditions:
-          type: string
-        icon:
-          type: string
-    DayForecast:
-      type: object
-      properties:
-        datetime:
-          type: string
-          description: Date for the forecast period (YYYY-MM-DD).
-        tempmax:
-          type: number
-          format: float
-        tempmin:
-          type: number
-          format: float
-        temp:
-          type: number
-          format: float
-        humidity:
+        precip:
           type: number
           format: float
         precipprob:
@@ -184,10 +163,142 @@ components:
           type: array
           items:
             type: string
+        snow:
+          type: number
+          format: float
+        snowdepth:
+          type: number
+          format: float
+        windgust:
+          type: number
+          format: float
         windspeed:
           type: number
           format: float
         winddir:
+          type: number
+          format: float
+        pressure:
+          type: number
+          format: float
+        visibility:
+          type: number
+          format: float
+        cloudcover:
+          type: number
+          format: float
+        solarradiation:
+          type: number
+          format: float
+        solarenergy:
+          type: number
+          format: float
+        uvindex:
+          type: number
+          format: float
+        conditions:
+          type: string
+        stations:
+          type: array
+          items:
+            type: string
+        icon:
+          type: string
+        sunrise:
+          type: string
+        sunriseEpoch:
+          type: integer
+        sunset:
+          type: string
+        sunsetEpoch:
+          type: integer
+        source:
+          type: string
+    DayForecast:
+      type: object
+      additionalProperties: true
+      properties:
+        datetime:
+          type: string
+          description: Date for the forecast period (YYYY-MM-DD).
+        datetimeEpoch:
+          type: integer
+        tempmax:
+          type: number
+          format: float
+        tempmin:
+          type: number
+          format: float
+        temp:
+          type: number
+          format: float
+        feelslikemax:
+          type: number
+          format: float
+        feelslikemin:
+          type: number
+          format: float
+        feelslike:
+          type: number
+          format: float
+        dew:
+          type: number
+          format: float
+        humidity:
+          type: number
+          format: float
+        precip:
+          type: number
+          format: float
+        precipprob:
+          type: number
+          format: float
+        preciptype:
+          type: array
+          items:
+            type: string
+        snow:
+          type: number
+          format: float
+        snowdepth:
+          type: number
+          format: float
+        windgust:
+          type: number
+          format: float
+        windspeed:
+          type: number
+          format: float
+        winddir:
+          type: number
+          format: float
+        pressure:
+          type: number
+          format: float
+        cloudcover:
+          type: number
+          format: float
+        visibility:
+          type: number
+          format: float
+        solarradiation:
+          type: number
+          format: float
+        solarenergy:
+          type: number
+          format: float
+        uvindex:
+          type: number
+          format: float
+        sunrise:
+          type: string
+        sunriseEpoch:
+          type: integer
+        sunset:
+          type: string
+        sunsetEpoch:
+          type: integer
+        moonphase:
           type: number
           format: float
         description:
@@ -196,19 +307,52 @@ components:
           type: string
         icon:
           type: string
+        stations:
+          type: array
+          items:
+            type: string
+        hours:
+          type: array
+          items:
+            $ref: "#/components/schemas/HourForecast"
     HourForecast:
       type: object
+      additionalProperties: true
       properties:
         datetime:
           type: string
           description: ISO 8601 timestamp for the hour.
+        datetimeEpoch:
+          type: integer
         temp:
+          type: number
+          format: float
+        feelslike:
+          type: number
+          format: float
+        dew:
           type: number
           format: float
         humidity:
           type: number
           format: float
+        precip:
+          type: number
+          format: float
         precipprob:
+          type: number
+          format: float
+        preciptype:
+          type: array
+          items:
+            type: string
+        snow:
+          type: number
+          format: float
+        snowdepth:
+          type: number
+          format: float
+        windgust:
           type: number
           format: float
         windspeed:
@@ -224,8 +368,28 @@ components:
           type: string
         icon:
           type: string
+        cloudcover:
+          type: number
+          format: float
+        visibility:
+          type: number
+          format: float
+        solarradiation:
+          type: number
+          format: float
+        solarenergy:
+          type: number
+          format: float
+        uvindex:
+          type: number
+          format: float
+        stations:
+          type: array
+          items:
+            type: string
     WeatherAlert:
       type: object
+      additionalProperties: true
       properties:
         event:
           type: string
@@ -245,6 +409,60 @@ components:
         id:
           type: string
         effective:
+          type: string
+          format: date-time
+        status:
+          type: string
+        messageType:
+          type: string
+        source:
+          type: string
+        regions:
+          type: array
+          items:
+            type: string
+        countries:
+          type: array
+          items:
+            type: string
+        states:
+          type: array
+          items:
+            type: string
+        zones:
+          type: array
+          items:
+            type: string
+        areas:
+          type: array
+          items:
+            type: string
+        instruction:
+          type: string
+        response:
+          type: string
+        certainty:
+          type: string
+        urgency:
+          type: string
+        sent:
+          type: string
+          format: date-time
+        onsetEpoch:
+          type: integer
+        endsEpoch:
+          type: integer
+        effectiveEpoch:
+          type: integer
+        expiresEpoch:
+          type: integer
+        references:
+          type: array
+          items:
+            type: string
+        sourceUrl:
+          type: string
+        expires:
           type: string
           format: date-time
     ErrorResponse:
