@@ -406,6 +406,7 @@ class WeatherClient:
                             hourly_forecast,
                         ) = await self._fetch_nws_data(location)
 
+                        current = await self._augment_current_with_openmeteo(current, location)
                         weather_data.current = current
                         weather_data.forecast = forecast
                         weather_data.hourly_forecast = hourly_forecast
@@ -474,6 +475,7 @@ class WeatherClient:
                             hourly_forecast,
                         ) = await self._fetch_nws_data(location)
 
+                        current = await self._augment_current_with_openmeteo(current, location)
                         weather_data.current = current
                         weather_data.forecast = forecast
                         weather_data.hourly_forecast = hourly_forecast
@@ -503,6 +505,7 @@ class WeatherClient:
                     hourly_forecast,
                 ) = await self._fetch_nws_data(location)
 
+                current = await self._augment_current_with_openmeteo(current, location)
                 weather_data.current = current
                 weather_data.forecast = forecast
                 weather_data.hourly_forecast = hourly_forecast
@@ -510,7 +513,7 @@ class WeatherClient:
                 weather_data.alerts = alerts
 
                 # Check if we actually got valid data
-                if current is None and forecast is None:
+                if (current is None or not current.has_data()) and forecast is None:
                     # If essential data is missing, try Open-Meteo fallback
                     logger.info(
                         f"NWS returned empty data for {location.name}, trying Open-Meteo fallback"
@@ -717,6 +720,82 @@ class WeatherClient:
     def _parse_openmeteo_hourly_forecast(self, data: dict) -> HourlyForecast:
         """Delegate to the Open-Meteo client module."""
         return openmeteo_client.parse_openmeteo_hourly_forecast(data)
+
+    async def _augment_current_with_openmeteo(
+        self,
+        current: CurrentConditions | None,
+        location: Location,
+    ) -> CurrentConditions | None:
+        """Fill missing current-condition fields using Open-Meteo data when available."""
+        if current is not None and current.has_data():
+            return current
+
+        try:
+            fallback = await self._get_openmeteo_current_conditions(location)
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("Open-Meteo current conditions fallback failed: %s", exc)
+            return current
+
+        if fallback is None:
+            return current
+
+        if current is None:
+            logger.info(
+                "Using Open-Meteo current conditions for %s due to missing NWS data", location.name
+            )
+            return fallback
+
+        logger.info(
+            "Supplementing NWS current conditions with Open-Meteo data for %s", location.name
+        )
+        return self._merge_current_conditions(current, fallback)
+
+    def _merge_current_conditions(
+        self,
+        primary: CurrentConditions | None,
+        fallback: CurrentConditions,
+    ) -> CurrentConditions:
+        """Merge missing fields from fallback conditions into the primary instance."""
+        if primary is None:
+            return fallback
+
+        for field in [
+            "temperature",
+            "temperature_f",
+            "temperature_c",
+            "condition",
+            "humidity",
+            "dewpoint_f",
+            "dewpoint_c",
+            "wind_speed",
+            "wind_speed_mph",
+            "wind_speed_kph",
+            "wind_direction",
+            "pressure",
+            "pressure_in",
+            "pressure_mb",
+            "feels_like_f",
+            "feels_like_c",
+            "visibility_miles",
+            "visibility_km",
+            "uv_index",
+            "sunrise_time",
+            "sunset_time",
+            "moon_phase",
+            "moonrise_time",
+            "moonset_time",
+            "last_updated",
+        ]:
+            value = getattr(primary, field, None)
+            if value not in (None, ""):
+                continue
+            fallback_value = getattr(fallback, field, None)
+            if fallback_value in (None, ""):
+                continue
+            setattr(primary, field, fallback_value)
+
+        primary.__post_init__()
+        return primary
 
     async def _enrich_with_nws_discussion(
         self, weather_data: WeatherData, location: Location
