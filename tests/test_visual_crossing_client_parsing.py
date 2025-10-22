@@ -2,20 +2,107 @@
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
+import copy
+from datetime import UTC, datetime
 
 import pytest
 
 from accessiweather.visual_crossing_client import VisualCrossingClient
 
-FIXTURE_PATH = Path(__file__).with_name("visual_crossing_akron_forecast.json")
+AKRON_SAMPLE = {
+    "address": "Akron, OH",
+    "timezone": "America/New_York",
+    "latitude": 41.0814,
+    "longitude": -81.519,
+    "currentConditions": {
+        "datetimeEpoch": 1726665600,
+        "datetime": "2024-09-18T08:00:00-04:00",
+        "temp": 68.0,
+        "feelslike": 67.0,
+        "humidity": 72.0,
+        "windspeed": 6.0,
+        "winddir": 210.0,
+        "pressure": 30.01,
+        "visibility": 9.9,
+        "dew": 58.0,
+        "conditions": "Partly Cloudy",
+    },
+    "days": [
+        {
+            "datetime": "2024-09-18",
+            "tempmax": 78.0,
+            "tempmin": 59.0,
+            "temp": 68.0,
+            "conditions": "Partly Cloudy",
+            "description": "Partly cloudy throughout the day with a gentle breeze.",
+            "windspeed": 10.0,
+            "winddir": 215.0,
+            "icon": "partly-cloudy-day",
+            "sunrise": "2024-09-18T06:45:00-04:00",
+            "sunriseEpoch": 1726656300,
+            "sunset": "2024-09-18T18:15:00-04:00",
+            "sunsetEpoch": 1726697700,
+            "moonrise": "2024-09-18T11:20:00-04:00",
+            "moonriseEpoch": 1726672800,
+            "moonset": "2024-09-18T22:05:00-04:00",
+            "moonsetEpoch": 1726711500,
+            "moonphase": 0.48,
+            "hours": [
+                {
+                    "datetime": "08:00:00",
+                    "temp": 65.0,
+                    "conditions": "Partly Cloudy",
+                    "windspeed": 8.0,
+                    "winddir": 210.0,
+                    "icon": "partly-cloudy-day",
+                    "pressure": 1016.0,
+                    "precipprob": 10.0,
+                    "humidity": 70.0,
+                },
+                {
+                    "datetime": "14:00:00",
+                    "temp": 77.0,
+                    "conditions": "Mostly Sunny",
+                    "windspeed": 12.0,
+                    "winddir": 220.0,
+                    "icon": "clear-day",
+                    "pressure": 1010.0,
+                    "precipprob": 15.0,
+                    "humidity": 55.0,
+                },
+            ],
+        },
+        {
+            "datetime": "2024-09-19",
+            "tempmax": 80.0,
+            "tempmin": 60.0,
+            "temp": 70.0,
+            "conditions": "Sunny",
+            "description": "Sunny with high clouds late.",
+            "windspeed": 9.0,
+            "winddir": 200.0,
+            "icon": "clear-day",
+            "hours": [],
+        },
+    ],
+    "alerts": [
+        {
+            "event": "Heat Advisory",
+            "severity": "moderate",
+            "headline": "Heat Advisory for Summit County",
+            "description": "Temperatures are expected to feel hotter during the afternoon.",
+            "onset": "2024-09-18T17:00:00Z",
+            "expires": "2024-09-19T00:00:00Z",
+            "id": "alert-001",
+        }
+    ],
+}
 
 
 @pytest.fixture(scope="module")
 def visual_crossing_payload() -> dict:
-    """Load the captured Visual Crossing sample payload for Akron, Ohio."""
-    return json.loads(FIXTURE_PATH.read_text())
+    """Provide a reusable copy of the captured Visual Crossing sample payload."""
+    return copy.deepcopy(AKRON_SAMPLE)
 
 
 @pytest.fixture
@@ -71,6 +158,11 @@ def test_visual_crossing_current_conditions_fahrenheit_fields(
     assert current.dewpoint_f == pytest.approx(58.0)
     assert current.dewpoint_c == pytest.approx(14.4, abs=0.1)
     assert current.visibility_miles == pytest.approx(9.9)
+    assert current.sunrise_time == datetime.fromtimestamp(1726656300, tz=UTC)
+    assert current.sunset_time == datetime.fromtimestamp(1726697700, tz=UTC)
+    assert current.moonrise_time == datetime.fromtimestamp(1726672800, tz=UTC)
+    assert current.moonset_time == datetime.fromtimestamp(1726711500, tz=UTC)
+    assert current.moon_phase == "Full Moon"
 
 
 def test_visual_crossing_alerts_normalise_severity(
