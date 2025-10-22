@@ -183,6 +183,12 @@ class OpenMeteoMapper:
             daily = openmeteo_data.get("daily", {})
             daily_units = openmeteo_data.get("daily_units", {})
 
+            logger.debug(
+                "Open-Meteo forecast raw daily keys=%s day_count=%s",
+                list(daily.keys()) if isinstance(daily, dict) else None,
+                len(daily.get("time", [])) if isinstance(daily, dict) else 0,
+            )
+
             if not daily:
                 return {"properties": {"periods": []}}
 
