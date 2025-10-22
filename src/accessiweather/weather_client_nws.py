@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 import logging
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import httpx
@@ -28,7 +28,83 @@ from .weather_client_parsers import (
 
 logger = logging.getLogger(__name__)
 
-MAX_STATION_OBSERVATION_ATTEMPTS = 5
+MAX_STATION_OBSERVATION_ATTEMPTS = 10
+MAX_OBSERVATION_AGE = timedelta(hours=2)
+VALID_QC_CODES = {"V", "C", None}
+
+
+def _parse_iso_datetime(value: Any) -> datetime | None:
+    """Parse ISO formatted timestamps, handling trailing Z."""
+    if not isinstance(value, str) or not value:
+        return None
+    text = value.strip()
+    if not text:
+        return None
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        return datetime.fromisoformat(text)
+    except ValueError:
+        return None
+
+
+def _station_sort_key(feature: dict[str, Any]) -> tuple[int, float, str]:
+    """Prefer ICAO stations (Kxxx) first, then other 4-letter, then everything else."""
+    props = feature.get("properties", {}) or {}
+    station_id = str(props.get("stationIdentifier") or "").upper()
+    distance = props.get("distance", {}) or {}
+    distance_value = distance.get("value")
+    try:
+        distance_value = float(distance_value)
+    except (TypeError, ValueError):
+        distance_value = float("inf")
+
+    if len(station_id) == 4 and station_id.startswith("K"):
+        priority = 0
+    elif len(station_id) == 4:
+        priority = 1
+    else:
+        priority = 2
+    return (priority, distance_value, station_id)
+
+
+def _scrub_measurements(properties: dict[str, Any]) -> None:
+    """Set measurement values with failing QC codes to None so they are ignored downstream."""
+    keys = (
+        "temperature",
+        "dewpoint",
+        "windSpeed",
+        "windGust",
+        "barometricPressure",
+        "seaLevelPressure",
+        "visibility",
+        "relativeHumidity",
+        "windDirection",
+        "windChill",
+        "heatIndex",
+    )
+    for key in keys:
+        measurement = properties.get(key)
+        if isinstance(measurement, dict):
+            qc = measurement.get("qualityControl")
+            if qc not in VALID_QC_CODES:
+                measurement["value"] = None
+
+
+def _current_data_score(current: CurrentConditions) -> int:
+    """Score how much usable data is present to compare fallbacks."""
+    values = [
+        current.temperature_f,
+        current.temperature_c,
+        current.condition if current.condition and current.condition.strip() else None,
+        current.humidity,
+        current.dewpoint_f,
+        current.wind_speed_mph,
+        current.pressure_in,
+        current.visibility_miles,
+        current.uv_index,
+    ]
+    return sum(1 for value in values if value not in (None, ""))
 
 
 def _extract_scalar(value: Any) -> Any:
@@ -257,9 +333,12 @@ async def get_nws_current_conditions(
                 return None
 
             fallback: CurrentConditions | None = None
+            fallback_rank: tuple[int, int, int] | None = None
             attempts = 0
 
-            for feature in features:
+            sorted_features = sorted(features, key=_station_sort_key)
+
+            for feature in sorted_features:
                 if attempts >= MAX_STATION_OBSERVATION_ATTEMPTS:
                     break
 
@@ -284,7 +363,22 @@ async def get_nws_current_conditions(
                     logger.debug("Invalid observation payload for %s: %s", station_id, exc)
                     continue
 
+                obs_props = obs_data.get("properties", {}) or {}
+                timestamp = _parse_iso_datetime(obs_props.get("timestamp"))
+                stale = False
+                if timestamp is not None:
+                    if timestamp.tzinfo is None:
+                        timestamp_utc = timestamp.replace(tzinfo=UTC)
+                    else:
+                        timestamp_utc = timestamp.astimezone(UTC)
+                    age = datetime.now(UTC) - timestamp_utc
+                    if age > MAX_OBSERVATION_AGE:
+                        stale = True
+                else:
+                    stale = True
+
                 try:
+                    _scrub_measurements(obs_props)
                     current = parse_nws_current_conditions(obs_data)
                 except Exception as exc:  # noqa: BLE001
                     logger.debug("Failed to parse observation for %s: %s", station_id, exc)
@@ -294,11 +388,18 @@ async def get_nws_current_conditions(
                     current.temperature_f is not None or current.temperature_c is not None
                 )
                 has_description = bool(current.condition and current.condition.strip())
-                if has_temperature or has_description:
+                score = _current_data_score(current)
+
+                if not stale and (has_temperature or has_description):
                     return current
 
-                if fallback is None:
+                if score == 0:
+                    continue
+
+                rank = (1 if stale else 0, -score, attempts)
+                if fallback_rank is None or rank < fallback_rank:
                     fallback = current
+                    fallback_rank = rank
 
             return fallback
 
