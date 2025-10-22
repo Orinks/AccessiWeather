@@ -21,6 +21,12 @@ class HourlyUnits:
         pressure_msl (Union[Unset, str]):
         relative_humidity_2m (Union[Unset, str]):
         apparent_temperature (Union[Unset, str]):
+        precipitation (Union[Unset, str]):
+        precipitation_probability (Union[Unset, str]):
+        surface_pressure (Union[Unset, str]):
+        cloud_cover (Union[Unset, str]):
+        wind_gusts_10m (Union[Unset, str]):
+        is_day (Union[Unset, str]):
     """
 
     time: Union[Unset, str] = UNSET
@@ -31,6 +37,12 @@ class HourlyUnits:
     pressure_msl: Union[Unset, str] = UNSET
     relative_humidity_2m: Union[Unset, str] = UNSET
     apparent_temperature: Union[Unset, str] = UNSET
+    precipitation: Union[Unset, str] = UNSET
+    precipitation_probability: Union[Unset, str] = UNSET
+    surface_pressure: Union[Unset, str] = UNSET
+    cloud_cover: Union[Unset, str] = UNSET
+    wind_gusts_10m: Union[Unset, str] = UNSET
+    is_day: Union[Unset, str] = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -49,6 +61,18 @@ class HourlyUnits:
         relative_humidity_2m = self.relative_humidity_2m
 
         apparent_temperature = self.apparent_temperature
+
+        precipitation = self.precipitation
+
+        precipitation_probability = self.precipitation_probability
+
+        surface_pressure = self.surface_pressure
+
+        cloud_cover = self.cloud_cover
+
+        wind_gusts_10m = self.wind_gusts_10m
+
+        is_day = self.is_day
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -69,6 +93,18 @@ class HourlyUnits:
             field_dict["relative_humidity_2m"] = relative_humidity_2m
         if apparent_temperature is not UNSET:
             field_dict["apparent_temperature"] = apparent_temperature
+        if precipitation is not UNSET:
+            field_dict["precipitation"] = precipitation
+        if precipitation_probability is not UNSET:
+            field_dict["precipitation_probability"] = precipitation_probability
+        if surface_pressure is not UNSET:
+            field_dict["surface_pressure"] = surface_pressure
+        if cloud_cover is not UNSET:
+            field_dict["cloud_cover"] = cloud_cover
+        if wind_gusts_10m is not UNSET:
+            field_dict["wind_gusts_10m"] = wind_gusts_10m
+        if is_day is not UNSET:
+            field_dict["is_day"] = is_day
 
         return field_dict
 
@@ -91,6 +127,18 @@ class HourlyUnits:
 
         apparent_temperature = d.pop("apparent_temperature", UNSET)
 
+        precipitation = d.pop("precipitation", UNSET)
+
+        precipitation_probability = d.pop("precipitation_probability", UNSET)
+
+        surface_pressure = d.pop("surface_pressure", UNSET)
+
+        cloud_cover = d.pop("cloud_cover", UNSET)
+
+        wind_gusts_10m = d.pop("wind_gusts_10m", UNSET)
+
+        is_day = d.pop("is_day", UNSET)
+
         hourly_units = cls(
             time=time,
             temperature_2m=temperature_2m,
@@ -100,6 +148,12 @@ class HourlyUnits:
             pressure_msl=pressure_msl,
             relative_humidity_2m=relative_humidity_2m,
             apparent_temperature=apparent_temperature,
+            precipitation=precipitation,
+            precipitation_probability=precipitation_probability,
+            surface_pressure=surface_pressure,
+            cloud_cover=cloud_cover,
+            wind_gusts_10m=wind_gusts_10m,
+            is_day=is_day,
         )
 
         hourly_units.additional_properties = d

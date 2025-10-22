@@ -12,10 +12,36 @@ LIMITATIONS:
 
 import logging
 import time
+from datetime import date as _date
 from typing import Any
 
 import httpx
 
+from .open_meteo_api_client.open_meteo_forecast_archive_api_accessi_weather_sketch_client.api.default import (
+    get_archive,
+    get_forecast,
+)
+from .open_meteo_api_client.open_meteo_forecast_archive_api_accessi_weather_sketch_client.client import (
+    Client as GeneratedOpenMeteoClient,
+)
+from .open_meteo_api_client.open_meteo_forecast_archive_api_accessi_weather_sketch_client.models.get_archive_temperature_unit import (
+    GetArchiveTemperatureUnit,
+)
+from .open_meteo_api_client.open_meteo_forecast_archive_api_accessi_weather_sketch_client.models.get_forecast_precipitation_unit import (
+    GetForecastPrecipitationUnit,
+)
+from .open_meteo_api_client.open_meteo_forecast_archive_api_accessi_weather_sketch_client.models.get_forecast_temperature_unit import (
+    GetForecastTemperatureUnit,
+)
+from .open_meteo_api_client.open_meteo_forecast_archive_api_accessi_weather_sketch_client.models.get_forecast_wind_speed_unit import (
+    GetForecastWindSpeedUnit,
+)
+from .open_meteo_api_client.open_meteo_forecast_archive_api_accessi_weather_sketch_client.models.open_meteo_error import (
+    OpenMeteoError as GeneratedOpenMeteoError,
+)
+from .open_meteo_api_client.open_meteo_forecast_archive_api_accessi_weather_sketch_client.types import (
+    UNSET,
+)
 from .weather_client_parsers import weather_code_to_description
 
 logger = logging.getLogger(__name__)
@@ -101,30 +127,19 @@ class OpenMeteoApiClient:
             OpenMeteoNetworkError: If there's a network error
 
         """
-        url = f"{self.BASE_URL}/{endpoint}"
-
         for attempt in range(self.max_retries + 1):
             try:
-                logger.debug(f"Making request to {url} with params: {params}")
-                response = self.client.get(url, params=params)
+                logger.debug("Calling Open-Meteo %s with params: %s", endpoint, params)
+                if endpoint == "forecast":
+                    data = self._request_forecast(params)
+                elif endpoint == "archive":
+                    data = self._request_archive(params)
+                else:
+                    raise OpenMeteoApiError(f"Unsupported Open-Meteo endpoint: {endpoint}")
 
-                # Check for HTTP errors
-                if response.status_code == 400:
-                    error_data = response.json() if response.content else {}
-                    error_msg = error_data.get("reason", "Bad request")
-                    raise OpenMeteoApiError(f"API error: {error_msg}")
-                if response.status_code == 429:
-                    raise OpenMeteoApiError("Rate limit exceeded")
-                if response.status_code >= 500:
-                    raise OpenMeteoApiError(f"Server error: {response.status_code}")
-
-                response.raise_for_status()
-
-                # Parse JSON response
-                data: dict[str, Any] = response.json()
-                if self.use_generated_models:
-                    data = self._coerce_with_generated_model(endpoint, data)
-                logger.debug(f"Received response with keys: {list(data.keys())}")
+                logger.debug(
+                    "Received Open-Meteo %s response keys: %s", endpoint, list(data.keys())
+                )
                 return data
 
             except httpx.TimeoutException as e:
@@ -157,23 +172,120 @@ class OpenMeteoApiClient:
         # This should never be reached due to the exception handling above
         raise OpenMeteoApiError("Request failed after all retries")
 
+    @staticmethod
+    def _csv_or_unset(value: Any) -> Any:
+        if value is None:
+            return UNSET
+        if isinstance(value, list | tuple):
+            filtered = [str(item) for item in value if item is not None]
+            return UNSET if not filtered else ",".join(filtered)
+        return value
+
+    @staticmethod
+    def _map_temperature_unit(value: Any):
+        if value is None:
+            return UNSET
+        try:
+            return GetForecastTemperatureUnit(str(value))
+        except ValueError:
+            logger.debug("Unsupported temperature unit: %s", value)
+            return UNSET
+
+    @staticmethod
+    def _map_wind_speed_unit(value: Any):
+        if value is None:
+            return UNSET
+        try:
+            return GetForecastWindSpeedUnit(str(value))
+        except ValueError:
+            logger.debug("Unsupported wind speed unit: %s", value)
+            return UNSET
+
+    @staticmethod
+    def _map_precipitation_unit(value: Any):
+        if value is None:
+            return UNSET
+        try:
+            return GetForecastPrecipitationUnit(str(value))
+        except ValueError:
+            logger.debug("Unsupported precipitation unit: %s", value)
+            return UNSET
+
+    def _request_forecast(self, params: dict[str, Any]) -> dict[str, Any]:
+        with GeneratedOpenMeteoClient(
+            base_url=self.BASE_URL,
+            timeout=httpx.Timeout(self.timeout),
+            follow_redirects=True,
+            headers={"User-Agent": self.user_agent},
+        ) as client:
+            result = get_forecast.sync(
+                client=client,
+                latitude=float(params["latitude"]),
+                longitude=float(params["longitude"]),
+                current=self._csv_or_unset(params.get("current")),
+                hourly=self._csv_or_unset(params.get("hourly")),
+                daily=self._csv_or_unset(params.get("daily")),
+                temperature_unit=self._map_temperature_unit(params.get("temperature_unit")),
+                wind_speed_unit=self._map_wind_speed_unit(params.get("wind_speed_unit")),
+                precipitation_unit=self._map_precipitation_unit(params.get("precipitation_unit")),
+                timezone=params.get("timezone", UNSET) or UNSET,
+                forecast_days=params.get("forecast_days", UNSET),
+                forecast_hours=params.get("forecast_hours", UNSET),
+            )
+
+        if result is None:
+            raise OpenMeteoApiError("Empty response from Open-Meteo forecast endpoint")
+        if isinstance(result, GeneratedOpenMeteoError):
+            reason = result.reason or result.error or "Unknown Open-Meteo error"
+            raise OpenMeteoApiError(reason)
+
+        return result.to_dict()
+
+    def _request_archive(self, params: dict[str, Any]) -> dict[str, Any]:
+        start_date = _date.fromisoformat(params["start_date"])
+        end_date = _date.fromisoformat(params["end_date"])
+
+        daily_values = params.get("daily")
+        daily = self._csv_or_unset(daily_values)
+
+        temperature_unit = params.get("temperature_unit")
+        temp_enum = UNSET
+        if temperature_unit is not None:
+            try:
+                temp_enum = GetArchiveTemperatureUnit(str(temperature_unit))
+            except ValueError:
+                logger.debug("Unsupported archive temperature unit: %s", temperature_unit)
+                temp_enum = UNSET
+
+        with GeneratedOpenMeteoClient(
+            base_url=self.BASE_URL,
+            timeout=httpx.Timeout(self.timeout),
+            follow_redirects=True,
+            headers={"User-Agent": self.user_agent},
+        ) as client:
+            result = get_archive.sync(
+                client=client,
+                latitude=float(params["latitude"]),
+                longitude=float(params["longitude"]),
+                start_date=start_date,
+                end_date=end_date,
+                daily=daily,
+                temperature_unit=temp_enum,
+                timezone=params.get("timezone", UNSET) or UNSET,
+            )
+
+        if result is None:
+            raise OpenMeteoApiError("Empty response from Open-Meteo archive endpoint")
+        if isinstance(result, GeneratedOpenMeteoError):
+            reason = result.reason or result.error or "Unknown Open-Meteo error"
+            raise OpenMeteoApiError(reason)
+
+        return result.to_dict()
+
     def _coerce_with_generated_model(
         self, endpoint: str, payload: dict[str, Any]
     ) -> dict[str, Any]:
-        """
-        Validate and normalise responses using the generated OpenAPI models.
-
-        Args:
-        ----
-            endpoint: API endpoint name.
-            payload: Raw JSON dictionary.
-
-        Returns:
-        -------
-            The original payload if coercion fails, otherwise the normalised dict produced by
-            the generated model.
-
-        """
+        """Normalise payloads using the generated models (retained for compatibility)."""
         try:
             if endpoint == "forecast":
                 from .open_meteo_api_client.open_meteo_forecast_archive_api_accessi_weather_sketch_client.models.forecast_response import (

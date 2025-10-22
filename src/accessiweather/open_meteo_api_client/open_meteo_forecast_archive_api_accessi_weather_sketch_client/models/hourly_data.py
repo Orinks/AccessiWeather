@@ -21,8 +21,14 @@ class HourlyData:
         wind_speed_10m (Union[Unset, list[float]]):
         wind_direction_10m (Union[Unset, list[float]]):
         pressure_msl (Union[Unset, list[float]]):
+        surface_pressure (Union[Unset, list[float]]):
         relative_humidity_2m (Union[Unset, list[float]]):
         apparent_temperature (Union[Unset, list[float]]):
+        precipitation (Union[Unset, list[float]]):
+        precipitation_probability (Union[Unset, list[float]]):
+        cloud_cover (Union[Unset, list[float]]):
+        wind_gusts_10m (Union[Unset, list[float]]):
+        is_day (Union[Unset, list[int]]):
     """
 
     time: Union[Unset, list[datetime.datetime]] = UNSET
@@ -31,8 +37,14 @@ class HourlyData:
     wind_speed_10m: Union[Unset, list[float]] = UNSET
     wind_direction_10m: Union[Unset, list[float]] = UNSET
     pressure_msl: Union[Unset, list[float]] = UNSET
+    surface_pressure: Union[Unset, list[float]] = UNSET
     relative_humidity_2m: Union[Unset, list[float]] = UNSET
     apparent_temperature: Union[Unset, list[float]] = UNSET
+    precipitation: Union[Unset, list[float]] = UNSET
+    precipitation_probability: Union[Unset, list[float]] = UNSET
+    cloud_cover: Union[Unset, list[float]] = UNSET
+    wind_gusts_10m: Union[Unset, list[float]] = UNSET
+    is_day: Union[Unset, list[int]] = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -63,6 +75,10 @@ class HourlyData:
         if not isinstance(self.pressure_msl, Unset):
             pressure_msl = self.pressure_msl
 
+        surface_pressure: Union[Unset, list[float]] = UNSET
+        if not isinstance(self.surface_pressure, Unset):
+            surface_pressure = self.surface_pressure
+
         relative_humidity_2m: Union[Unset, list[float]] = UNSET
         if not isinstance(self.relative_humidity_2m, Unset):
             relative_humidity_2m = self.relative_humidity_2m
@@ -70,6 +86,26 @@ class HourlyData:
         apparent_temperature: Union[Unset, list[float]] = UNSET
         if not isinstance(self.apparent_temperature, Unset):
             apparent_temperature = self.apparent_temperature
+
+        precipitation: Union[Unset, list[float]] = UNSET
+        if not isinstance(self.precipitation, Unset):
+            precipitation = self.precipitation
+
+        precipitation_probability: Union[Unset, list[float]] = UNSET
+        if not isinstance(self.precipitation_probability, Unset):
+            precipitation_probability = self.precipitation_probability
+
+        cloud_cover: Union[Unset, list[float]] = UNSET
+        if not isinstance(self.cloud_cover, Unset):
+            cloud_cover = self.cloud_cover
+
+        wind_gusts_10m: Union[Unset, list[float]] = UNSET
+        if not isinstance(self.wind_gusts_10m, Unset):
+            wind_gusts_10m = self.wind_gusts_10m
+
+        is_day: Union[Unset, list[int]] = UNSET
+        if not isinstance(self.is_day, Unset):
+            is_day = self.is_day
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -86,10 +122,22 @@ class HourlyData:
             field_dict["wind_direction_10m"] = wind_direction_10m
         if pressure_msl is not UNSET:
             field_dict["pressure_msl"] = pressure_msl
+        if surface_pressure is not UNSET:
+            field_dict["surface_pressure"] = surface_pressure
         if relative_humidity_2m is not UNSET:
             field_dict["relative_humidity_2m"] = relative_humidity_2m
         if apparent_temperature is not UNSET:
             field_dict["apparent_temperature"] = apparent_temperature
+        if precipitation is not UNSET:
+            field_dict["precipitation"] = precipitation
+        if precipitation_probability is not UNSET:
+            field_dict["precipitation_probability"] = precipitation_probability
+        if cloud_cover is not UNSET:
+            field_dict["cloud_cover"] = cloud_cover
+        if wind_gusts_10m is not UNSET:
+            field_dict["wind_gusts_10m"] = wind_gusts_10m
+        if is_day is not UNSET:
+            field_dict["is_day"] = is_day
 
         return field_dict
 
@@ -113,9 +161,21 @@ class HourlyData:
 
         pressure_msl = cast(list[float], d.pop("pressure_msl", UNSET))
 
+        surface_pressure = cast(list[float], d.pop("surface_pressure", UNSET))
+
         relative_humidity_2m = cast(list[float], d.pop("relative_humidity_2m", UNSET))
 
         apparent_temperature = cast(list[float], d.pop("apparent_temperature", UNSET))
+
+        precipitation = cast(list[float], d.pop("precipitation", UNSET))
+
+        precipitation_probability = cast(list[float], d.pop("precipitation_probability", UNSET))
+
+        cloud_cover = cast(list[float], d.pop("cloud_cover", UNSET))
+
+        wind_gusts_10m = cast(list[float], d.pop("wind_gusts_10m", UNSET))
+
+        is_day = cast(list[int], d.pop("is_day", UNSET))
 
         hourly_data = cls(
             time=time,
@@ -124,8 +184,14 @@ class HourlyData:
             wind_speed_10m=wind_speed_10m,
             wind_direction_10m=wind_direction_10m,
             pressure_msl=pressure_msl,
+            surface_pressure=surface_pressure,
             relative_humidity_2m=relative_humidity_2m,
             apparent_temperature=apparent_temperature,
+            precipitation=precipitation,
+            precipitation_probability=precipitation_probability,
+            cloud_cover=cloud_cover,
+            wind_gusts_10m=wind_gusts_10m,
+            is_day=is_day,
         )
 
         hourly_data.additional_properties = d

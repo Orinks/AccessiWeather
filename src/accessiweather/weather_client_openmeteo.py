@@ -32,8 +32,6 @@ from .weather_client_parsers import (
 
 logger = logging.getLogger(__name__)
 
-_schema_normaliser: OpenMeteoApiClient | None = None
-
 
 def _parse_iso_datetime(value: str | None) -> datetime | None:
     """Parse an ISO 8601 datetime string, including Zulu-formatted values."""
@@ -54,22 +52,15 @@ def _parse_iso_datetime(value: str | None) -> datetime | None:
     return None
 
 
-def _normalise_with_generated_models(endpoint: str, payload: dict[str, Any]) -> dict[str, Any]:
-    """Normalise payloads using the generated OpenAPI models when requested."""
-    global _schema_normaliser  # noqa: PLW0603
-    if _schema_normaliser is None:
-        _schema_normaliser = OpenMeteoApiClient(use_generated_models=True)
-    return _schema_normaliser._coerce_with_generated_model(endpoint, payload)
-
-
 async def _client_get(
     client: httpx.AsyncClient,
     url: str,
     *,
     params: dict[str, Any] | None = None,
+    headers: dict[str, str] | None = None,
 ) -> httpx.Response:
     """Call AsyncClient.get allowing for mocked synchronous responses in tests."""
-    response = client.get(url, params=params)
+    response = client.get(url, params=params, headers=headers)
     if inspect.isawaitable(response):
         return await response
     return response
@@ -81,6 +72,7 @@ async def get_openmeteo_all_data_parallel(
     timeout: float,
     client: httpx.AsyncClient,
     *,
+    user_agent: str = "AccessiWeather",
     use_generated_models: bool = False,
 ) -> tuple[CurrentConditions | None, Forecast | None, HourlyForecast | None]:
     """
@@ -96,6 +88,7 @@ async def get_openmeteo_all_data_parallel(
                 openmeteo_base_url,
                 timeout,
                 client,
+                user_agent=user_agent,
                 use_generated_models=use_generated_models,
             )
         )
@@ -105,6 +98,7 @@ async def get_openmeteo_all_data_parallel(
                 openmeteo_base_url,
                 timeout,
                 client,
+                user_agent=user_agent,
                 use_generated_models=use_generated_models,
             )
         )
@@ -114,6 +108,7 @@ async def get_openmeteo_all_data_parallel(
                 openmeteo_base_url,
                 timeout,
                 client,
+                user_agent=user_agent,
                 use_generated_models=use_generated_models,
             )
         )
@@ -136,6 +131,7 @@ async def get_openmeteo_current_conditions(
     timeout: float,
     client: httpx.AsyncClient | None = None,
     *,
+    user_agent: str = "AccessiWeather",
     use_generated_models: bool = False,
 ) -> CurrentConditions | None:
     """Fetch current conditions from the Open-Meteo API."""
@@ -158,21 +154,33 @@ async def get_openmeteo_current_conditions(
 
         # Use provided client or create a new one
         if client is not None:
-            response = await _client_get(client, url, params=params)
+            response = await _client_get(
+                client,
+                url,
+                params=params,
+                headers={"User-Agent": user_agent},
+            )
             response.raise_for_status()
             data = response.json()
             if use_generated_models:
-                data = _normalise_with_generated_models("forecast", data)
+                normaliser = OpenMeteoApiClient(use_generated_models=True)
+                data = normaliser._coerce_with_generated_model("forecast", data)
+
             current = parse_openmeteo_current_conditions(data)
             if isinstance(current.wind_direction, (int, float)):
                 current.wind_direction = degrees_to_cardinal(current.wind_direction)
             return current
-        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+        async with httpx.AsyncClient(
+            timeout=timeout,
+            follow_redirects=True,
+            headers={"User-Agent": user_agent},
+        ) as new_client:
             response = await new_client.get(url, params=params)
             response.raise_for_status()
             data = response.json()
             if use_generated_models:
-                data = _normalise_with_generated_models("forecast", data)
+                normaliser = OpenMeteoApiClient(use_generated_models=True)
+                data = normaliser._coerce_with_generated_model("forecast", data)
 
             current = parse_openmeteo_current_conditions(data)
             if isinstance(current.wind_direction, (int, float)):
@@ -190,6 +198,7 @@ async def get_openmeteo_forecast(
     timeout: float,
     client: httpx.AsyncClient | None = None,
     *,
+    user_agent: str = "AccessiWeather",
     use_generated_models: bool = False,
 ) -> Forecast | None:
     """Fetch daily forecast from the Open-Meteo API."""
@@ -210,18 +219,29 @@ async def get_openmeteo_forecast(
 
         # Use provided client or create a new one
         if client is not None:
-            response = await _client_get(client, url, params=params)
+            response = await _client_get(
+                client,
+                url,
+                params=params,
+                headers={"User-Agent": user_agent},
+            )
             response.raise_for_status()
             data = response.json()
             if use_generated_models:
-                data = _normalise_with_generated_models("forecast", data)
+                normaliser = OpenMeteoApiClient(use_generated_models=True)
+                data = normaliser._coerce_with_generated_model("forecast", data)
             return parse_openmeteo_forecast(data)
-        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+        async with httpx.AsyncClient(
+            timeout=timeout,
+            follow_redirects=True,
+            headers={"User-Agent": user_agent},
+        ) as new_client:
             response = await new_client.get(url, params=params)
             response.raise_for_status()
             data = response.json()
             if use_generated_models:
-                data = _normalise_with_generated_models("forecast", data)
+                normaliser = OpenMeteoApiClient(use_generated_models=True)
+                data = normaliser._coerce_with_generated_model("forecast", data)
             return parse_openmeteo_forecast(data)
 
     except Exception as exc:  # noqa: BLE001
@@ -235,6 +255,7 @@ async def get_openmeteo_hourly_forecast(
     timeout: float,
     client: httpx.AsyncClient | None = None,
     *,
+    user_agent: str = "AccessiWeather",
     use_generated_models: bool = False,
 ) -> HourlyForecast | None:
     """Fetch hourly forecast from the Open-Meteo API."""
@@ -252,18 +273,29 @@ async def get_openmeteo_hourly_forecast(
 
         # Use provided client or create a new one
         if client is not None:
-            response = await _client_get(client, url, params=params)
+            response = await _client_get(
+                client,
+                url,
+                params=params,
+                headers={"User-Agent": user_agent},
+            )
             response.raise_for_status()
             data = response.json()
             if use_generated_models:
-                data = _normalise_with_generated_models("forecast", data)
+                normaliser = OpenMeteoApiClient(use_generated_models=True)
+                data = normaliser._coerce_with_generated_model("forecast", data)
             return parse_openmeteo_hourly_forecast(data)
-        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+        async with httpx.AsyncClient(
+            timeout=timeout,
+            follow_redirects=True,
+            headers={"User-Agent": user_agent},
+        ) as new_client:
             response = await new_client.get(url, params=params)
             response.raise_for_status()
             data = response.json()
             if use_generated_models:
-                data = _normalise_with_generated_models("forecast", data)
+                normaliser = OpenMeteoApiClient(use_generated_models=True)
+                data = normaliser._coerce_with_generated_model("forecast", data)
             return parse_openmeteo_hourly_forecast(data)
 
     except Exception as exc:  # noqa: BLE001

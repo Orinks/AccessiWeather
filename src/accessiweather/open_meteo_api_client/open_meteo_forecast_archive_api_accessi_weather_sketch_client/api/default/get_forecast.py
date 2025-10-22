@@ -25,6 +25,7 @@ def _get_kwargs(
     precipitation_unit: Union[Unset, GetForecastPrecipitationUnit] = UNSET,
     timezone: Union[Unset, str] = UNSET,
     forecast_days: Union[Unset, int] = UNSET,
+    forecast_hours: Union[Unset, int] = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -59,6 +60,8 @@ def _get_kwargs(
     params["timezone"] = timezone
 
     params["forecast_days"] = forecast_days
+
+    params["forecast_hours"] = forecast_hours
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -119,6 +122,7 @@ def sync_detailed(
     precipitation_unit: Union[Unset, GetForecastPrecipitationUnit] = UNSET,
     timezone: Union[Unset, str] = UNSET,
     forecast_days: Union[Unset, int] = UNSET,
+    forecast_hours: Union[Unset, int] = UNSET,
 ) -> Response[Union[ForecastResponse, OpenMeteoError]]:
     """Retrieve forecast and current conditions
 
@@ -136,6 +140,7 @@ def sync_detailed(
         precipitation_unit (Union[Unset, GetForecastPrecipitationUnit]):
         timezone (Union[Unset, str]):
         forecast_days (Union[Unset, int]):
+        forecast_hours (Union[Unset, int]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -156,6 +161,7 @@ def sync_detailed(
         precipitation_unit=precipitation_unit,
         timezone=timezone,
         forecast_days=forecast_days,
+        forecast_hours=forecast_hours,
     )
 
     response = client.get_httpx_client().request(
@@ -178,6 +184,7 @@ def sync(
     precipitation_unit: Union[Unset, GetForecastPrecipitationUnit] = UNSET,
     timezone: Union[Unset, str] = UNSET,
     forecast_days: Union[Unset, int] = UNSET,
+    forecast_hours: Union[Unset, int] = UNSET,
 ) -> Optional[Union[ForecastResponse, OpenMeteoError]]:
     """Retrieve forecast and current conditions
 
@@ -195,6 +202,7 @@ def sync(
         precipitation_unit (Union[Unset, GetForecastPrecipitationUnit]):
         timezone (Union[Unset, str]):
         forecast_days (Union[Unset, int]):
+        forecast_hours (Union[Unset, int]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -216,6 +224,7 @@ def sync(
         precipitation_unit=precipitation_unit,
         timezone=timezone,
         forecast_days=forecast_days,
+        forecast_hours=forecast_hours,
     ).parsed
 
 
@@ -232,6 +241,7 @@ async def asyncio_detailed(
     precipitation_unit: Union[Unset, GetForecastPrecipitationUnit] = UNSET,
     timezone: Union[Unset, str] = UNSET,
     forecast_days: Union[Unset, int] = UNSET,
+    forecast_hours: Union[Unset, int] = UNSET,
 ) -> Response[Union[ForecastResponse, OpenMeteoError]]:
     """Retrieve forecast and current conditions
 
@@ -249,6 +259,7 @@ async def asyncio_detailed(
         precipitation_unit (Union[Unset, GetForecastPrecipitationUnit]):
         timezone (Union[Unset, str]):
         forecast_days (Union[Unset, int]):
+        forecast_hours (Union[Unset, int]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -269,6 +280,7 @@ async def asyncio_detailed(
         precipitation_unit=precipitation_unit,
         timezone=timezone,
         forecast_days=forecast_days,
+        forecast_hours=forecast_hours,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -289,6 +301,7 @@ async def asyncio(
     precipitation_unit: Union[Unset, GetForecastPrecipitationUnit] = UNSET,
     timezone: Union[Unset, str] = UNSET,
     forecast_days: Union[Unset, int] = UNSET,
+    forecast_hours: Union[Unset, int] = UNSET,
 ) -> Optional[Union[ForecastResponse, OpenMeteoError]]:
     """Retrieve forecast and current conditions
 
@@ -306,6 +319,7 @@ async def asyncio(
         precipitation_unit (Union[Unset, GetForecastPrecipitationUnit]):
         timezone (Union[Unset, str]):
         forecast_days (Union[Unset, int]):
+        forecast_hours (Union[Unset, int]):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -328,5 +342,6 @@ async def asyncio(
             precipitation_unit=precipitation_unit,
             timezone=timezone,
             forecast_days=forecast_days,
+            forecast_hours=forecast_hours,
         )
     ).parsed

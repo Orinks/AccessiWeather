@@ -331,6 +331,7 @@ class WeatherClient:
                 self.openmeteo_base_url,
                 self.timeout,
                 client,
+                user_agent=self.user_agent,
                 use_generated_models=self.use_openmeteo_schemas,
             )
 
@@ -685,6 +686,7 @@ class WeatherClient:
             self.openmeteo_base_url,
             self.timeout,
             self._get_http_client(),
+            user_agent=self.user_agent,
             use_generated_models=self.use_openmeteo_schemas,
         )
 
@@ -695,6 +697,7 @@ class WeatherClient:
             self.openmeteo_base_url,
             self.timeout,
             self._get_http_client(),
+            user_agent=self.user_agent,
             use_generated_models=self.use_openmeteo_schemas,
         )
 
@@ -705,6 +708,7 @@ class WeatherClient:
             self.openmeteo_base_url,
             self.timeout,
             self._get_http_client(),
+            user_agent=self.user_agent,
             use_generated_models=self.use_openmeteo_schemas,
         )
 

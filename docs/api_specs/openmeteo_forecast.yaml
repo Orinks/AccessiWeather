@@ -27,6 +27,7 @@ paths:
         - $ref: "#/components/parameters/PrecipitationUnit"
         - $ref: "#/components/parameters/Timezone"
         - $ref: "#/components/parameters/ForecastDays"
+        - $ref: "#/components/parameters/ForecastHours"
       responses:
         "200":
           description: Forecast payload containing requested data.
@@ -150,6 +151,13 @@ components:
         type: integer
         minimum: 1
       description: Number of forecast days to retrieve.
+    ForecastHours:
+      name: forecast_hours
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+      description: Number of forecast hours to retrieve.
     StartDate:
       name: start_date
       in: query
@@ -324,6 +332,18 @@ components:
           type: string
         apparent_temperature:
           type: string
+        precipitation:
+          type: string
+        precipitation_probability:
+          type: string
+        surface_pressure:
+          type: string
+        cloud_cover:
+          type: string
+        wind_gusts_10m:
+          type: string
+        is_day:
+          type: string
     HourlyData:
       type: object
       additionalProperties: true
@@ -357,6 +377,11 @@ components:
           items:
             type: number
             format: float
+        surface_pressure:
+          type: array
+          items:
+            type: number
+            format: float
         relative_humidity_2m:
           type: array
           items:
@@ -367,6 +392,30 @@ components:
           items:
             type: number
             format: float
+        precipitation:
+          type: array
+          items:
+            type: number
+            format: float
+        precipitation_probability:
+          type: array
+          items:
+            type: number
+            format: float
+        cloud_cover:
+          type: array
+          items:
+            type: number
+            format: float
+        wind_gusts_10m:
+          type: array
+          items:
+            type: number
+            format: float
+        is_day:
+          type: array
+          items:
+            type: integer
     DailyUnits:
       type: object
       additionalProperties: true
@@ -390,6 +439,16 @@ components:
         wind_direction_10m_dominant:
           type: string
         weather_code:
+          type: string
+        apparent_temperature_max:
+          type: string
+        apparent_temperature_min:
+          type: string
+        precipitation_sum:
+          type: string
+        precipitation_probability_max:
+          type: string
+        wind_gusts_10m_max:
           type: string
     DailyData:
       type: object
@@ -440,6 +499,31 @@ components:
             type: number
             format: float
         wind_direction_10m_dominant:
+          type: array
+          items:
+            type: number
+            format: float
+        apparent_temperature_max:
+          type: array
+          items:
+            type: number
+            format: float
+        apparent_temperature_min:
+          type: array
+          items:
+            type: number
+            format: float
+        precipitation_sum:
+          type: array
+          items:
+            type: number
+            format: float
+        precipitation_probability_max:
+          type: array
+          items:
+            type: number
+            format: float
+        wind_gusts_10m_max:
           type: array
           items:
             type: number

@@ -23,6 +23,11 @@ class DailyUnits:
         wind_speed_10m_max (Union[Unset, str]):
         wind_direction_10m_dominant (Union[Unset, str]):
         weather_code (Union[Unset, str]):
+        apparent_temperature_max (Union[Unset, str]):
+        apparent_temperature_min (Union[Unset, str]):
+        precipitation_sum (Union[Unset, str]):
+        precipitation_probability_max (Union[Unset, str]):
+        wind_gusts_10m_max (Union[Unset, str]):
     """
 
     time: Union[Unset, str] = UNSET
@@ -35,6 +40,11 @@ class DailyUnits:
     wind_speed_10m_max: Union[Unset, str] = UNSET
     wind_direction_10m_dominant: Union[Unset, str] = UNSET
     weather_code: Union[Unset, str] = UNSET
+    apparent_temperature_max: Union[Unset, str] = UNSET
+    apparent_temperature_min: Union[Unset, str] = UNSET
+    precipitation_sum: Union[Unset, str] = UNSET
+    precipitation_probability_max: Union[Unset, str] = UNSET
+    wind_gusts_10m_max: Union[Unset, str] = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -57,6 +67,16 @@ class DailyUnits:
         wind_direction_10m_dominant = self.wind_direction_10m_dominant
 
         weather_code = self.weather_code
+
+        apparent_temperature_max = self.apparent_temperature_max
+
+        apparent_temperature_min = self.apparent_temperature_min
+
+        precipitation_sum = self.precipitation_sum
+
+        precipitation_probability_max = self.precipitation_probability_max
+
+        wind_gusts_10m_max = self.wind_gusts_10m_max
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -81,6 +101,16 @@ class DailyUnits:
             field_dict["wind_direction_10m_dominant"] = wind_direction_10m_dominant
         if weather_code is not UNSET:
             field_dict["weather_code"] = weather_code
+        if apparent_temperature_max is not UNSET:
+            field_dict["apparent_temperature_max"] = apparent_temperature_max
+        if apparent_temperature_min is not UNSET:
+            field_dict["apparent_temperature_min"] = apparent_temperature_min
+        if precipitation_sum is not UNSET:
+            field_dict["precipitation_sum"] = precipitation_sum
+        if precipitation_probability_max is not UNSET:
+            field_dict["precipitation_probability_max"] = precipitation_probability_max
+        if wind_gusts_10m_max is not UNSET:
+            field_dict["wind_gusts_10m_max"] = wind_gusts_10m_max
 
         return field_dict
 
@@ -107,6 +137,16 @@ class DailyUnits:
 
         weather_code = d.pop("weather_code", UNSET)
 
+        apparent_temperature_max = d.pop("apparent_temperature_max", UNSET)
+
+        apparent_temperature_min = d.pop("apparent_temperature_min", UNSET)
+
+        precipitation_sum = d.pop("precipitation_sum", UNSET)
+
+        precipitation_probability_max = d.pop("precipitation_probability_max", UNSET)
+
+        wind_gusts_10m_max = d.pop("wind_gusts_10m_max", UNSET)
+
         daily_units = cls(
             time=time,
             temperature_2m_max=temperature_2m_max,
@@ -118,6 +158,11 @@ class DailyUnits:
             wind_speed_10m_max=wind_speed_10m_max,
             wind_direction_10m_dominant=wind_direction_10m_dominant,
             weather_code=weather_code,
+            apparent_temperature_max=apparent_temperature_max,
+            apparent_temperature_min=apparent_temperature_min,
+            precipitation_sum=precipitation_sum,
+            precipitation_probability_max=precipitation_probability_max,
+            wind_gusts_10m_max=wind_gusts_10m_max,
         )
 
         daily_units.additional_properties = d

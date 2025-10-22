@@ -25,6 +25,11 @@ class DailyData:
         sunset (Union[Unset, list[datetime.datetime]]):
         wind_speed_10m_max (Union[Unset, list[float]]):
         wind_direction_10m_dominant (Union[Unset, list[float]]):
+        apparent_temperature_max (Union[Unset, list[float]]):
+        apparent_temperature_min (Union[Unset, list[float]]):
+        precipitation_sum (Union[Unset, list[float]]):
+        precipitation_probability_max (Union[Unset, list[float]]):
+        wind_gusts_10m_max (Union[Unset, list[float]]):
     """
 
     time: Union[Unset, list[datetime.date]] = UNSET
@@ -37,6 +42,11 @@ class DailyData:
     sunset: Union[Unset, list[datetime.datetime]] = UNSET
     wind_speed_10m_max: Union[Unset, list[float]] = UNSET
     wind_direction_10m_dominant: Union[Unset, list[float]] = UNSET
+    apparent_temperature_max: Union[Unset, list[float]] = UNSET
+    apparent_temperature_min: Union[Unset, list[float]] = UNSET
+    precipitation_sum: Union[Unset, list[float]] = UNSET
+    precipitation_probability_max: Union[Unset, list[float]] = UNSET
+    wind_gusts_10m_max: Union[Unset, list[float]] = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -89,6 +99,26 @@ class DailyData:
         if not isinstance(self.wind_direction_10m_dominant, Unset):
             wind_direction_10m_dominant = self.wind_direction_10m_dominant
 
+        apparent_temperature_max: Union[Unset, list[float]] = UNSET
+        if not isinstance(self.apparent_temperature_max, Unset):
+            apparent_temperature_max = self.apparent_temperature_max
+
+        apparent_temperature_min: Union[Unset, list[float]] = UNSET
+        if not isinstance(self.apparent_temperature_min, Unset):
+            apparent_temperature_min = self.apparent_temperature_min
+
+        precipitation_sum: Union[Unset, list[float]] = UNSET
+        if not isinstance(self.precipitation_sum, Unset):
+            precipitation_sum = self.precipitation_sum
+
+        precipitation_probability_max: Union[Unset, list[float]] = UNSET
+        if not isinstance(self.precipitation_probability_max, Unset):
+            precipitation_probability_max = self.precipitation_probability_max
+
+        wind_gusts_10m_max: Union[Unset, list[float]] = UNSET
+        if not isinstance(self.wind_gusts_10m_max, Unset):
+            wind_gusts_10m_max = self.wind_gusts_10m_max
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
@@ -112,6 +142,16 @@ class DailyData:
             field_dict["wind_speed_10m_max"] = wind_speed_10m_max
         if wind_direction_10m_dominant is not UNSET:
             field_dict["wind_direction_10m_dominant"] = wind_direction_10m_dominant
+        if apparent_temperature_max is not UNSET:
+            field_dict["apparent_temperature_max"] = apparent_temperature_max
+        if apparent_temperature_min is not UNSET:
+            field_dict["apparent_temperature_min"] = apparent_temperature_min
+        if precipitation_sum is not UNSET:
+            field_dict["precipitation_sum"] = precipitation_sum
+        if precipitation_probability_max is not UNSET:
+            field_dict["precipitation_probability_max"] = precipitation_probability_max
+        if wind_gusts_10m_max is not UNSET:
+            field_dict["wind_gusts_10m_max"] = wind_gusts_10m_max
 
         return field_dict
 
@@ -153,6 +193,16 @@ class DailyData:
 
         wind_direction_10m_dominant = cast(list[float], d.pop("wind_direction_10m_dominant", UNSET))
 
+        apparent_temperature_max = cast(list[float], d.pop("apparent_temperature_max", UNSET))
+
+        apparent_temperature_min = cast(list[float], d.pop("apparent_temperature_min", UNSET))
+
+        precipitation_sum = cast(list[float], d.pop("precipitation_sum", UNSET))
+
+        precipitation_probability_max = cast(list[float], d.pop("precipitation_probability_max", UNSET))
+
+        wind_gusts_10m_max = cast(list[float], d.pop("wind_gusts_10m_max", UNSET))
+
         daily_data = cls(
             time=time,
             weather_code=weather_code,
@@ -164,6 +214,11 @@ class DailyData:
             sunset=sunset,
             wind_speed_10m_max=wind_speed_10m_max,
             wind_direction_10m_dominant=wind_direction_10m_dominant,
+            apparent_temperature_max=apparent_temperature_max,
+            apparent_temperature_min=apparent_temperature_min,
+            precipitation_sum=precipitation_sum,
+            precipitation_probability_max=precipitation_probability_max,
+            wind_gusts_10m_max=wind_gusts_10m_max,
         )
 
         daily_data.additional_properties = d
