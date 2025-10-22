@@ -45,12 +45,41 @@ class LocationManager:
                 response.raise_for_status()
                 data = response.json()
 
-                locations = []
+                candidates: list[tuple[float, Location]] = []
+                fallbacks: list[tuple[float, Location]] = []
                 for item in data:
+                    score = self._score_geocoding_result(item)
                     location = self._parse_geocoding_result(item)
                     if location:
-                        locations.append(location)
+                        if score > 0:
+                            candidates.append((score, location))
+                        else:
+                            fallbacks.append((score, location))
 
+                if not candidates and not fallbacks:
+                    logger.info(f"No suitable locations found for query: {query}")
+                    return []
+
+                # Sort by score (highest first) and deduplicate by name to keep results tidy.
+                primary_pool = candidates if candidates else fallbacks
+                primary_pool.sort(key=lambda entry: entry[0], reverse=True)
+                unique_locations: dict[str, Location] = {}
+
+                def add_from_pool(pool: list[tuple[float, Location]]) -> None:
+                    for _, location in pool:
+                        key = location.name.lower()
+                        if key not in unique_locations:
+                            unique_locations[key] = location
+                        if len(unique_locations) >= limit:
+                            break
+
+                add_from_pool(primary_pool)
+
+                if candidates and fallbacks and len(unique_locations) < limit:
+                    fallbacks.sort(key=lambda entry: entry[0], reverse=True)
+                    add_from_pool(fallbacks)
+
+                locations = list(unique_locations.values())
                 logger.info(f"Found {len(locations)} locations for query: {query}")
                 return locations
 
@@ -142,6 +171,68 @@ class LocationManager:
         except Exception as e:
             logger.error(f"Failed to parse geocoding result: {e}")
             return None
+
+    def _score_geocoding_result(self, data: dict) -> float:
+        """
+        Compute a relevance score for a geocoding result.
+
+        We prefer populated places (city/town/village) and de-prioritize large
+        administrative boundaries (province/country) that tend to have coarse centroids.
+        """
+        addresstype = (data.get("addresstype") or "").lower()
+        result_class = (data.get("class") or "").lower()
+        extratags = data.get("extratags") or {}
+
+        priority_map = {
+            "city": 120,
+            "town": 110,
+            "village": 100,
+            "hamlet": 90,
+            "municipality": 85,
+            "suburb": 80,
+            "borough": 75,
+            "county": 60,
+            "state_district": 40,
+            "state": 35,
+            "province": 25,
+            "region": 20,
+            "country": 10,
+        }
+
+        score = priority_map.get(addresstype, 0)
+
+        # Favor explicit place classifications over administrative boundaries.
+        if result_class == "place":
+            score += 15
+        elif result_class == "boundary":
+            score -= 10
+
+        # Extratags often carry a more precise "place" hint; use it if present.
+        place_hint = (extratags.get("place") or "").lower()
+        if place_hint in {"city", "town", "village", "hamlet", "municipality"}:
+            score += 20
+        elif place_hint in {"province", "state", "region"}:
+            score -= 15
+
+        # Higher place_rank indicates finer-grained features.
+        try:
+            place_rank = float(data.get("place_rank", 0))
+        except (TypeError, ValueError):
+            place_rank = 0.0
+        score += place_rank * 0.5
+
+        # Importance ranges roughly 0-1; boost slightly to break ties.
+        try:
+            importance = float(data.get("importance", 0.0))
+        except (TypeError, ValueError):
+            importance = 0.0
+        score += importance * 5
+
+        # Discard extremely coarse matches (province/country) unless nothing else is available.
+        if score <= 25 and addresstype in {"country", "province", "state", "region"}:
+            return 0.0
+
+        return score
 
     def validate_coordinates(self, latitude: float, longitude: float) -> bool:
         """Validate that coordinates are within valid ranges."""
