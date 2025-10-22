@@ -85,6 +85,14 @@ def _format_wind_speed(value: Any) -> str | None:
         unit_code = value.get("unitCode")
         numeric = _extract_float(value.get("value"))
         if numeric is None:
+            # Quantized payloads sometimes expose only min/max values
+            max_value = _extract_float(value.get("maxValue"))
+            min_value = _extract_float(value.get("minValue"))
+            if max_value is not None:
+                numeric = max_value
+            elif min_value is not None:
+                numeric = min_value
+        if numeric is None:
             return None
         mph, kph = convert_wind_speed_to_mph_and_kph(numeric, unit_code)
         if mph is not None and kph is not None:
@@ -101,6 +109,57 @@ def _format_wind_speed(value: Any) -> str | None:
     if isinstance(scalar, (int, float)):
         return f"{scalar}"
     return str(scalar)
+
+
+def _normalize_temperature_unit(unit: Any) -> str | None:
+    """Normalize temperature unit hints to ``F`` or ``C``."""
+    raw = _extract_scalar(unit)
+    if not isinstance(raw, str):
+        return None
+    normalized = raw.strip().lower()
+    if ":" in normalized:
+        normalized = normalized.split(":", 1)[-1]
+    normalized = normalized.replace("degree", "")
+    normalized = normalized.replace("deg", "")
+    normalized = normalized.replace("fahrenheit", "f")
+    normalized = normalized.replace("celsius", "c")
+    normalized = normalized.replace("wmounit", "")
+    normalized = normalized.replace("°", "")
+    normalized = normalized.replace("_", "")
+    if normalized.endswith("f"):
+        return "F"
+    if normalized.endswith("c"):
+        return "C"
+    if normalized in {"f", "c"}:
+        return normalized.upper()
+    return None
+
+
+def _extract_temperature(measurement: Any, unit_hint: Any = None) -> tuple[float | None, str]:
+    """Extract and normalize a temperature measurement to Fahrenheit."""
+    unit = _normalize_temperature_unit(unit_hint) or "F"
+
+    numeric = None
+    if isinstance(measurement, dict):
+        numeric = _extract_float(measurement.get("value"))
+        if numeric is None:
+            numeric = _extract_float(measurement.get("maxValue"))
+        if numeric is None:
+            numeric = _extract_float(measurement.get("minValue"))
+        measurement_unit = _normalize_temperature_unit(measurement.get("unitCode"))
+        if measurement_unit is not None:
+            unit = measurement_unit
+    else:
+        numeric = _extract_float(measurement)
+
+    if numeric is None:
+        return None, unit
+
+    if unit == "C":
+        numeric = (numeric * 9 / 5) + 32
+        unit = "F"
+
+    return numeric, unit
 
 
 async def _client_get(
@@ -777,8 +836,9 @@ def parse_nws_forecast(data: dict) -> Forecast:
     periods = []
 
     for period_data in data.get("properties", {}).get("periods", []):
-        temperature = _extract_float(period_data.get("temperature"))
-        temperature_unit = _extract_scalar(period_data.get("temperatureUnit")) or "F"
+        temperature, temperature_unit = _extract_temperature(
+            period_data.get("temperature"), period_data.get("temperatureUnit")
+        )
 
         wind_direction_value = _extract_scalar(period_data.get("windDirection"))
         wind_direction = str(wind_direction_value) if wind_direction_value is not None else None
@@ -874,8 +934,9 @@ def parse_nws_hourly_forecast(data: dict) -> HourlyForecast:
             except ValueError:
                 logger.warning(f"Failed to parse end time: {end_time_str}")
 
-        temperature = _extract_float(period_data.get("temperature"))
-        temperature_unit = _extract_scalar(period_data.get("temperatureUnit")) or "F"
+        temperature, temperature_unit = _extract_temperature(
+            period_data.get("temperature"), period_data.get("temperatureUnit")
+        )
 
         wind_direction_value = _extract_scalar(period_data.get("windDirection"))
         wind_direction = str(wind_direction_value) if wind_direction_value is not None else None
