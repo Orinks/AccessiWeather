@@ -44,6 +44,8 @@ class OpenMeteoMapper:
             current = openmeteo_data.get("current", {})
             current_units = openmeteo_data.get("current_units", {})
             daily = openmeteo_data.get("daily", {})
+            uv_index_values = daily.get("uv_index_max") if daily else None
+            uv_index_value = uv_index_values[0] if uv_index_values else None
 
             logger.debug(f"Open-Meteo current data keys: {list(current.keys())}")
             logger.debug(f"Open-Meteo current units: {current_units}")
@@ -115,6 +117,11 @@ class OpenMeteoMapper:
                     "visibility": {
                         "value": None,  # Open-Meteo doesn't provide visibility
                         "unitCode": "wmoUnit:m",
+                        "qualityControl": "qc:Z",
+                    },
+                    "uvIndex": {
+                        "value": uv_index_value,
+                        "unitCode": "unit:dimensionless",
                         "qualityControl": "qc:Z",
                     },
                     "cloudLayers": (

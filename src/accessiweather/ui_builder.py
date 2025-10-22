@@ -328,6 +328,12 @@ def create_menu_system(app: AccessiWeatherApp) -> None:
         tooltip="Compare current weather with historical data",
         group=toga.Group.VIEW,
     )
+    aviation_cmd = toga.Command(
+        lambda widget: asyncio.create_task(event_handlers.on_view_aviation_pressed(app, widget)),
+        text="Aviation Weather…",
+        tooltip="Open the aviation weather viewer",
+        group=toga.Group.VIEW,
+    )
 
     app.commands.add(
         settings_cmd,
@@ -336,6 +342,7 @@ def create_menu_system(app: AccessiWeatherApp) -> None:
         remove_location_cmd,
         refresh_cmd,
         history_cmd,
+        aviation_cmd,
     )
 
     if toga.Command.ABOUT in app.commands:

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from ...models import (
+    AppSettings,
     CurrentConditions,
     EnvironmentalConditions,
     HourlyForecast,
@@ -33,6 +34,7 @@ def build_current_conditions(
     location: Location,
     unit_pref: TemperatureUnit,
     *,
+    settings: AppSettings | None = None,
     environmental: EnvironmentalConditions | None = None,
     trends: Iterable[TrendInsight] | None = None,
     hourly_forecast: HourlyForecast | None = None,
@@ -42,6 +44,11 @@ def build_current_conditions(
     title = f"Current conditions for {location.name}"
     description = current.condition or "Unknown"
     precision = get_temperature_precision(unit_pref)
+
+    show_dewpoint = getattr(settings, "show_dewpoint", True) if settings else True
+    show_visibility = getattr(settings, "show_visibility", True) if settings else True
+    show_uv_index = getattr(settings, "show_uv_index", True) if settings else True
+    show_pressure_trend = getattr(settings, "show_pressure_trend", True) if settings else True
 
     temperature_str = format_temperature_pair(
         current.temperature_f, current.temperature_c, unit_pref, precision
@@ -64,7 +71,7 @@ def build_current_conditions(
         metrics.append(Metric("Wind", wind_value))
 
     dewpoint_value = format_dewpoint(current, unit_pref, precision)
-    if dewpoint_value:
+    if show_dewpoint and dewpoint_value:
         metrics.append(Metric("Dewpoint", dewpoint_value))
 
     pressure_value = format_pressure_value(current, unit_pref)
@@ -72,10 +79,10 @@ def build_current_conditions(
         metrics.append(Metric("Pressure", pressure_value))
 
     visibility_value = format_visibility_value(current, unit_pref)
-    if visibility_value:
+    if show_visibility and visibility_value:
         metrics.append(Metric("Visibility", visibility_value))
 
-    if current.uv_index is not None:
+    if show_uv_index and current.uv_index is not None:
         uv_desc = get_uv_description(current.uv_index)
         metrics.append(Metric("UV Index", f"{current.uv_index} ({uv_desc})"))
 
@@ -86,6 +93,17 @@ def build_current_conditions(
     sunset_str = format_sun_time(current.sunset_time)
     if sunset_str:
         metrics.append(Metric("Sunset", sunset_str))
+
+    if current.moon_phase:
+        metrics.append(Metric("Moon phase", current.moon_phase))
+
+    moonrise_str = format_sun_time(current.moonrise_time)
+    if moonrise_str:
+        metrics.append(Metric("Moonrise", moonrise_str))
+
+    moonset_str = format_sun_time(current.moonset_time)
+    if moonset_str:
+        metrics.append(Metric("Moonset", moonset_str))
 
     if current.last_updated:
         metrics.append(Metric("Last updated", format_timestamp(current.last_updated)))
@@ -134,12 +152,15 @@ def build_current_conditions(
             summary = trend.summary or describe_trend(trend)
             if trend.sparkline:
                 summary = f"{summary} {trend.sparkline}".strip()
-            metrics.append(Metric(f"{trend.metric.title()} trend", summary))
             metric_name = getattr(trend, "metric", "")
-            if isinstance(metric_name, str) and metric_name.lower() == "pressure":
+            is_pressure = isinstance(metric_name, str) and metric_name.lower() == "pressure"
+            if is_pressure and not show_pressure_trend:
+                continue
+            metrics.append(Metric(f"{trend.metric.title()} trend", summary))
+            if is_pressure:
                 pressure_trend_present = True
 
-    if not pressure_trend_present:
+    if show_pressure_trend and not pressure_trend_present:
         legacy_pressure_trend = compute_pressure_trend_from_hourly(current, hourly_forecast)
         if legacy_pressure_trend:
             metrics.append(Metric("Pressure trend", legacy_pressure_trend["value"]))
@@ -154,6 +175,7 @@ def build_current_conditions(
         trends,
         current=current,
         hourly_forecast=hourly_forecast,
+        include_pressure=show_pressure_trend,
     )
 
     return CurrentConditionsPresentation(
@@ -170,6 +192,7 @@ def format_trend_lines(
     *,
     current: CurrentConditions | None = None,
     hourly_forecast: HourlyForecast | None = None,
+    include_pressure: bool = True,
 ) -> list[str]:
     """Generate human readable summaries for trend insights."""
     lines: list[str] = []
@@ -180,13 +203,16 @@ def format_trend_lines(
             summary = trend.summary or describe_trend(trend)
             if trend.sparkline:
                 summary = f"{summary} {trend.sparkline}".strip()
+            metric_name = getattr(trend, "metric", "")
+            is_pressure = isinstance(metric_name, str) and metric_name.lower() == "pressure"
+            if is_pressure and not include_pressure:
+                continue
             if summary:
                 lines.append(summary)
-            metric_name = getattr(trend, "metric", "")
-            if isinstance(metric_name, str) and metric_name.lower() == "pressure":
+            if is_pressure:
                 pressure_present = True
 
-    if (not pressure_present) and current and hourly_forecast:
+    if include_pressure and (not pressure_present) and current and hourly_forecast:
         legacy_pressure = compute_pressure_trend_from_hourly(current, hourly_forecast)
         if legacy_pressure:
             summary = legacy_pressure["summary"]

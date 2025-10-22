@@ -16,7 +16,7 @@ from typing import Any
 
 import httpx
 
-from .weather_client_parsers import OPEN_METEO_WEATHER_CODE_DESCRIPTIONS
+from .weather_client_parsers import weather_code_to_description
 
 logger = logging.getLogger(__name__)
 
@@ -311,7 +311,7 @@ class OpenMeteoApiClient:
         return self._make_request("forecast", params)
 
     @staticmethod
-    def get_weather_description(weather_code: int) -> str:
+    def get_weather_description(weather_code: int | str) -> str:
         """
         Get weather description from Open-Meteo weather code.
 
@@ -324,9 +324,15 @@ class OpenMeteoApiClient:
             Human-readable weather description
 
         """
-        return OPEN_METEO_WEATHER_CODE_DESCRIPTIONS.get(
-            weather_code, f"Unknown weather code: {weather_code}"
-        )
+        description = weather_code_to_description(weather_code)
+        if description is None:
+            return "Unknown weather code: None"
+
+        if description.startswith("Weather code "):
+            suffix = description.split("Weather code ", 1)[1]
+            return f"Unknown weather code: {suffix}"
+
+        return description
 
     def close(self):
         """Close the HTTP client."""

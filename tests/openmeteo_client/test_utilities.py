@@ -26,7 +26,14 @@ def test_get_weather_description():
 def test_get_weather_description_unknown_code():
     """Test weather description for unknown codes."""
     result = OpenMeteoApiClient.get_weather_description(999)
-    assert "Unknown" in result or result == "Clear sky"  # Fallback behavior
+    assert result == "Unknown weather code: 999"
+
+
+@pytest.mark.unit
+def test_get_weather_description_none_code():
+    """Weather description should gracefully handle None codes."""
+    result = OpenMeteoApiClient.get_weather_description(None)
+    assert result == "Unknown weather code: None"
 
 
 # Test coordinate validation

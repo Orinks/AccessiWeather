@@ -15,6 +15,8 @@ def apply_trend_insights(
     weather_data: WeatherData,
     trend_insights_enabled: bool,
     trend_hours: int,
+    *,
+    include_pressure: bool = True,
 ) -> None:
     """Populate trend insights on the provided WeatherData instance."""
     if not trend_insights_enabled:
@@ -28,9 +30,10 @@ def apply_trend_insights(
     if temp_insight:
         insights.append(temp_insight)
 
-    pressure_insight = compute_pressure_trend(weather_data, trend_hours)
-    if pressure_insight:
-        insights.append(pressure_insight)
+    if include_pressure:
+        pressure_insight = compute_pressure_trend(weather_data, trend_hours)
+        if pressure_insight:
+            insights.append(pressure_insight)
 
     weather_data.trend_insights = insights
 

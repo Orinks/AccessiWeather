@@ -64,6 +64,61 @@ def create_general_tab(dialog):
     )
     general_box.add(dialog.update_interval_input)
 
+    general_box.add(
+        toga.Label(
+            "Metric visibility:",
+            style=Pack(margin_bottom=5, font_weight="bold"),
+        )
+    )
+
+    dialog.show_dewpoint_switch = toga.Switch(
+        "Show dewpoint",
+        value=getattr(dialog.current_settings, "show_dewpoint", True),
+        style=Pack(margin_bottom=8),
+        id="show_dewpoint_switch",
+    )
+    dialog.show_dewpoint_switch.aria_label = "Toggle dewpoint metric"
+    dialog.show_dewpoint_switch.aria_description = (
+        "Include the dewpoint measurement in the current conditions overview."
+    )
+    general_box.add(dialog.show_dewpoint_switch)
+
+    dialog.show_visibility_switch = toga.Switch(
+        "Show visibility",
+        value=getattr(dialog.current_settings, "show_visibility", True),
+        style=Pack(margin_bottom=8),
+        id="show_visibility_switch",
+    )
+    dialog.show_visibility_switch.aria_label = "Toggle visibility metric"
+    dialog.show_visibility_switch.aria_description = (
+        "Include the horizontal visibility reading in the current conditions overview."
+    )
+    general_box.add(dialog.show_visibility_switch)
+
+    dialog.show_uv_index_switch = toga.Switch(
+        "Show UV index",
+        value=getattr(dialog.current_settings, "show_uv_index", True),
+        style=Pack(margin_bottom=8),
+        id="show_uv_index_switch",
+    )
+    dialog.show_uv_index_switch.aria_label = "Toggle UV index metric"
+    dialog.show_uv_index_switch.aria_description = (
+        "Include the ultraviolet index rating in the current conditions overview."
+    )
+    general_box.add(dialog.show_uv_index_switch)
+
+    dialog.show_pressure_trend_switch = toga.Switch(
+        "Show pressure trend",
+        value=getattr(dialog.current_settings, "show_pressure_trend", True),
+        style=Pack(margin_bottom=15),
+        id="show_pressure_trend_switch",
+    )
+    dialog.show_pressure_trend_switch.aria_label = "Toggle pressure trend metric"
+    dialog.show_pressure_trend_switch.aria_description = (
+        "Include the barometric pressure trend analysis in the current conditions overview."
+    )
+    general_box.add(dialog.show_pressure_trend_switch)
+
     dialog.show_detailed_forecast_switch = toga.Switch(
         "Show detailed forecast information",
         value=dialog.current_settings.show_detailed_forecast,

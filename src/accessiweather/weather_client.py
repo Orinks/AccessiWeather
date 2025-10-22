@@ -8,8 +8,10 @@ from NWS and OpenMeteo APIs without complex service layer abstractions.
 import asyncio
 import logging
 import os
+import re
 from collections.abc import Sequence
 from datetime import datetime
+from typing import Any
 
 import httpx
 
@@ -28,6 +30,7 @@ from . import (
 from .cache import WeatherDataCache
 from .models import (
     AppSettings,
+    AviationData,
     CurrentConditions,
     EnvironmentalConditions,
     Forecast,
@@ -40,9 +43,124 @@ from .models import (
     WeatherData,
 )
 from .services import EnvironmentalDataClient, MeteoAlarmClient
+from .utils import decode_taf_text
 from .visual_crossing_client import VisualCrossingApiError, VisualCrossingClient
 
 logger = logging.getLogger(__name__)
+
+
+def _normalize_token(value: Any) -> str | None:
+    if value is None:
+        return None
+    token = str(value).strip().upper()
+    return token or None
+
+
+def _taf_indicates_no_data(raw_taf: str) -> bool:
+    """
+    Determine whether the provided raw TAF string represents a NIL/no-data report.
+
+    The NWS TAF feed uses the token ``NIL`` (and occasionally phrases such as
+    ``NO TAF`` or ``NO DATA``) to indicate that no forecast is available. We
+    strip common header prefixes and examine the remaining tokens to detect this.
+    """
+    if not raw_taf:
+        return True
+
+    tokens = [token.rstrip("=").upper() for token in raw_taf.split()]
+    index = 0
+
+    while index < len(tokens) and tokens[index] in {"TAF", "AMD", "COR"}:
+        index += 1
+
+    if index < len(tokens) and len(tokens[index]) == 4 and tokens[index].isalpha():
+        index += 1
+
+    if index < len(tokens) and re.fullmatch(r"\d{6}Z", tokens[index]):
+        index += 1
+
+    if index < len(tokens) and re.fullmatch(r"\d{4}/\d{4}", tokens[index]):
+        index += 1
+
+    if index < len(tokens) and tokens[index] == "NIL":
+        return True
+
+    remaining = " ".join(tokens[index:])
+    return "NO TAF" in remaining or "NO DATA" in remaining
+
+
+def _extract_strings(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        normalized = value.strip().upper()
+        return [normalized] if normalized else []
+    if isinstance(value, (list, tuple, set)):
+        strings: list[str] = []
+        for item in value:
+            strings.extend(_extract_strings(item))
+        return strings
+    if isinstance(value, dict):
+        strings: list[str] = []
+        for item in value.values():
+            strings.extend(_extract_strings(item))
+        return strings
+    try:
+        return _extract_strings(str(value))
+    except Exception:
+        return []
+
+
+def _filter_advisories(entries: list[dict[str, Any]], tokens: set[str]) -> list[dict[str, Any]]:
+    if not entries:
+        return []
+    normalized_tokens = {token for token in tokens if token}
+    if not normalized_tokens:
+        return entries
+
+    keys = (
+        "fir",
+        "area",
+        "regions",
+        "airspace",
+        "name",
+        "event",
+        "hazard",
+        "description",
+        "summary",
+        "text",
+        "issuingOffice",
+        "cwsu",
+        "cwsuId",
+        "stationId",
+        "stations",
+    )
+
+    filtered: list[dict[str, Any]] = []
+    for entry in entries:
+        candidates: list[str] = []
+        for key in keys:
+            candidates.extend(_extract_strings(entry.get(key)))
+        if not candidates:
+            candidates = _extract_strings(entry)
+
+        matches = any(
+            token in candidate
+            for token in normalized_tokens
+            for candidate in candidates
+            if candidate
+        )
+        if matches:
+            filtered.append(entry)
+
+    return filtered
+
+
+def _default_atsu(props: dict[str, Any]) -> str | None:
+    country = _normalize_token(props.get("country"))
+    if country in {"US", "USA"}:
+        return "KKCI"
+    return None
 
 
 class WeatherClient:
@@ -77,6 +195,7 @@ class WeatherClient:
         )
         self.trend_insights_enabled = bool(self.settings.trend_insights_enabled)
         self.trend_hours = max(1, int(self.settings.trend_hours or 24))
+        self.show_pressure_trend = bool(getattr(self.settings, "show_pressure_trend", True))
         self.air_quality_enabled = bool(self.settings.air_quality_enabled)
         self.pollen_enabled = bool(self.settings.pollen_enabled)
         if self._test_mode:
@@ -287,6 +406,7 @@ class WeatherClient:
                             hourly_forecast,
                         ) = await self._fetch_nws_data(location)
 
+                        current = await self._augment_current_with_openmeteo(current, location)
                         weather_data.current = current
                         weather_data.forecast = forecast
                         weather_data.hourly_forecast = hourly_forecast
@@ -355,6 +475,7 @@ class WeatherClient:
                             hourly_forecast,
                         ) = await self._fetch_nws_data(location)
 
+                        current = await self._augment_current_with_openmeteo(current, location)
                         weather_data.current = current
                         weather_data.forecast = forecast
                         weather_data.hourly_forecast = hourly_forecast
@@ -384,6 +505,7 @@ class WeatherClient:
                     hourly_forecast,
                 ) = await self._fetch_nws_data(location)
 
+                current = await self._augment_current_with_openmeteo(current, location)
                 weather_data.current = current
                 weather_data.forecast = forecast
                 weather_data.hourly_forecast = hourly_forecast
@@ -391,7 +513,7 @@ class WeatherClient:
                 weather_data.alerts = alerts
 
                 # Check if we actually got valid data
-                if current is None and forecast is None:
+                if (current is None or not current.has_data()) and forecast is None:
                     # If essential data is missing, try Open-Meteo fallback
                     logger.info(
                         f"NWS returned empty data for {location.name}, trying Open-Meteo fallback"
@@ -464,6 +586,7 @@ class WeatherClient:
         await asyncio.gather(
             self._populate_environmental_metrics(weather_data, location),
             self._merge_international_alerts(weather_data, location),
+            self._enrich_with_aviation_data(weather_data, location),
             return_exceptions=True,  # Continue even if some tasks fail
         )
 
@@ -598,6 +721,82 @@ class WeatherClient:
         """Delegate to the Open-Meteo client module."""
         return openmeteo_client.parse_openmeteo_hourly_forecast(data)
 
+    async def _augment_current_with_openmeteo(
+        self,
+        current: CurrentConditions | None,
+        location: Location,
+    ) -> CurrentConditions | None:
+        """Fill missing current-condition fields using Open-Meteo data when available."""
+        if current is not None and current.has_data():
+            return current
+
+        try:
+            fallback = await self._get_openmeteo_current_conditions(location)
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("Open-Meteo current conditions fallback failed: %s", exc)
+            return current
+
+        if fallback is None:
+            return current
+
+        if current is None:
+            logger.info(
+                "Using Open-Meteo current conditions for %s due to missing NWS data", location.name
+            )
+            return fallback
+
+        logger.info(
+            "Supplementing NWS current conditions with Open-Meteo data for %s", location.name
+        )
+        return self._merge_current_conditions(current, fallback)
+
+    def _merge_current_conditions(
+        self,
+        primary: CurrentConditions | None,
+        fallback: CurrentConditions,
+    ) -> CurrentConditions:
+        """Merge missing fields from fallback conditions into the primary instance."""
+        if primary is None:
+            return fallback
+
+        for field in [
+            "temperature",
+            "temperature_f",
+            "temperature_c",
+            "condition",
+            "humidity",
+            "dewpoint_f",
+            "dewpoint_c",
+            "wind_speed",
+            "wind_speed_mph",
+            "wind_speed_kph",
+            "wind_direction",
+            "pressure",
+            "pressure_in",
+            "pressure_mb",
+            "feels_like_f",
+            "feels_like_c",
+            "visibility_miles",
+            "visibility_km",
+            "uv_index",
+            "sunrise_time",
+            "sunset_time",
+            "moon_phase",
+            "moonrise_time",
+            "moonset_time",
+            "last_updated",
+        ]:
+            value = getattr(primary, field, None)
+            if value not in (None, ""):
+                continue
+            fallback_value = getattr(fallback, field, None)
+            if fallback_value in (None, ""):
+                continue
+            setattr(primary, field, fallback_value)
+
+        primary.__post_init__()
+        return primary
+
     async def _enrich_with_nws_discussion(
         self, weather_data: WeatherData, location: Location
     ) -> None:
@@ -621,6 +820,135 @@ class WeatherClient:
                 logger.info("Added forecast discussion from NWS")
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"Failed to fetch NWS discussion: {exc}")
+
+    async def _enrich_with_aviation_data(
+        self, weather_data: WeatherData, location: Location
+    ) -> None:
+        """Populate aviation data for US locations using NWS products."""
+        if not self._is_us_location(location):
+            return
+        if weather_data.aviation and weather_data.aviation.has_taf():
+            return
+
+        try:
+            client = self._get_http_client()
+            station_id, station_name = await nws_client.get_nws_primary_station_info(
+                location, self.nws_base_url, self.user_agent, self.timeout, client
+            )
+            if not station_id:
+                return
+
+            aviation = await self.get_aviation_weather(station_id)
+            if station_name:
+                aviation.airport_name = station_name
+
+            weather_data.aviation = aviation
+        except Exception as exc:  # noqa: BLE001
+            logger.debug(f"Failed to fetch aviation data: {exc}")
+
+    async def get_aviation_weather(
+        self,
+        station_id: str,
+        *,
+        include_sigmets: bool = False,
+        atsu: str | None = None,
+        include_cwas: bool = False,
+        cwsu_id: str | None = None,
+    ) -> AviationData:
+        """Fetch aviation weather products for a specific ICAO station identifier."""
+        station = (station_id or "").strip().upper()
+        if not station:
+            raise ValueError("station_id must be a non-empty ICAO identifier.")
+
+        client = self._get_http_client()
+        aviation = AviationData(station_id=station, airport_name=station)
+
+        station_metadata: dict[str, Any] | None = None
+        try:
+            station_metadata = await nws_client.get_nws_station_metadata(
+                station, self.nws_base_url, self.user_agent, self.timeout, client
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("Failed to fetch station metadata for %s: %s", station, exc)
+
+        metadata_props: dict[str, Any] = (station_metadata or {}).get("properties", {})
+        airport_name = metadata_props.get("name")
+        if airport_name:
+            aviation.airport_name = airport_name
+
+        raw_taf: str | None
+        try:
+            raw_taf = await nws_client.get_nws_tafs(
+                station, self.nws_base_url, self.user_agent, self.timeout, client
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.error("Failed to fetch TAF for %s: %s", station, exc)
+            raise
+
+        if raw_taf:
+            cleaned_taf = raw_taf.strip()
+            if not cleaned_taf or _taf_indicates_no_data(cleaned_taf):
+                aviation.raw_taf = None
+                aviation.decoded_taf = None
+            else:
+                decoded_taf = decode_taf_text(cleaned_taf)
+                if decoded_taf and decoded_taf.lower().startswith("no taf available"):
+                    aviation.raw_taf = None
+                    aviation.decoded_taf = None
+                else:
+                    aviation.raw_taf = cleaned_taf
+                    aviation.decoded_taf = decoded_taf
+
+        tokens: set[str] = {station}
+
+        derived_cwsu = _normalize_token(cwsu_id) or _normalize_token(metadata_props.get("cwa"))
+        if derived_cwsu:
+            tokens.add(derived_cwsu)
+
+        tokens.update(
+            token
+            for token in (
+                _normalize_token(metadata_props.get("wfo")),
+                _normalize_token(metadata_props.get("state")),
+            )
+            if token
+        )
+
+        if aviation.airport_name:
+            for part in aviation.airport_name.replace("-", " ").split():
+                normalized = _normalize_token(part)
+                if normalized and len(normalized) > 2:
+                    tokens.add(normalized)
+
+        sigmet_atsu = _normalize_token(atsu) or _default_atsu(metadata_props)
+
+        if include_sigmets:
+            try:
+                sigmets = await nws_client.get_nws_sigmets(
+                    self.nws_base_url,
+                    self.user_agent,
+                    self.timeout,
+                    client,
+                    atsu=sigmet_atsu,
+                )
+                aviation.active_sigmets = _filter_advisories(sigmets, tokens)
+            except Exception as exc:  # noqa: BLE001
+                logger.debug("Failed to fetch SIGMET data for %s: %s", station, exc)
+
+        if include_cwas:
+            target_cwsu = derived_cwsu
+            if target_cwsu:
+                try:
+                    cwas = await nws_client.get_nws_cwas(
+                        target_cwsu, self.nws_base_url, self.user_agent, self.timeout, client
+                    )
+                    aviation.active_cwas = _filter_advisories(cwas, tokens)
+                except Exception as exc:  # noqa: BLE001
+                    logger.debug("Failed to fetch CWA data for %s: %s", target_cwsu, exc)
+            else:
+                aviation.active_cwas = []
+
+        return aviation
 
     async def _enrich_with_visual_crossing_alerts(
         self, weather_data: WeatherData, location: Location
@@ -739,7 +1067,12 @@ class WeatherClient:
         weather_data.alerts = WeatherAlerts(alerts=list(combined.values()))
 
     def _apply_trend_insights(self, weather_data: WeatherData) -> None:
-        trends.apply_trend_insights(weather_data, self.trend_insights_enabled, self.trend_hours)
+        trends.apply_trend_insights(
+            weather_data,
+            self.trend_insights_enabled,
+            self.trend_hours,
+            include_pressure=self.show_pressure_trend,
+        )
 
     def _persist_weather_data(self, location: Location, weather_data: WeatherData) -> None:
         if not self.offline_cache:
@@ -854,7 +1187,7 @@ class WeatherClient:
     def _degrees_to_cardinal(self, degrees: float | None) -> str | None:
         return parsers.degrees_to_cardinal(degrees)
 
-    def _weather_code_to_description(self, code: int | None) -> str | None:
+    def _weather_code_to_description(self, code: int | str | None) -> str | None:
         return parsers.weather_code_to_description(code)
 
     def _format_date_name(self, date_str: str, index: int) -> str:

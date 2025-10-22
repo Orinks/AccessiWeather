@@ -28,6 +28,141 @@ from .weather_client_parsers import (
 
 logger = logging.getLogger(__name__)
 
+MAX_STATION_OBSERVATION_ATTEMPTS = 5
+
+
+def _extract_scalar(value: Any) -> Any:
+    """Recursively extract a scalar value from nested NWS response objects."""
+    if isinstance(value, dict):
+        if "value" in value:
+            return _extract_scalar(value["value"])
+        if "values" in value and isinstance(value["values"], list):
+            for item in value["values"]:
+                extracted = _extract_scalar(item)
+                if extracted is not None:
+                    return extracted
+        return None
+    if isinstance(value, list):
+        for item in value:
+            extracted = _extract_scalar(item)
+            if extracted is not None:
+                return extracted
+        return None
+    return value
+
+
+def _extract_float(value: Any) -> float | None:
+    """Extract a float from an NWS response value."""
+    scalar = _extract_scalar(value)
+    if isinstance(scalar, (int, float)):
+        return float(scalar)
+    if isinstance(scalar, str):
+        try:
+            return float(scalar)
+        except ValueError:
+            return None
+    return None
+
+
+def _format_unit(unit_code: str | None) -> str | None:
+    """Return a human-readable suffix for WMO unit codes."""
+    if not unit_code:
+        return None
+    unit = unit_code.split(":")[-1]
+    replacements = {
+        "km_h-1": " km/h",
+        "m_s-1": " m/s",
+        "mi_h-1": " mph",
+        "kn": " kn",
+        "kt": " kt",
+    }
+    return replacements.get(unit, f" {unit}")
+
+
+def _format_wind_speed(value: Any) -> str | None:
+    """Format NWS wind speed objects into a readable string."""
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        unit_code = value.get("unitCode")
+        numeric = _extract_float(value.get("value"))
+        if numeric is None:
+            # Quantized payloads sometimes expose only min/max values
+            max_value = _extract_float(value.get("maxValue"))
+            min_value = _extract_float(value.get("minValue"))
+            if max_value is not None:
+                numeric = max_value
+            elif min_value is not None:
+                numeric = min_value
+        if numeric is None:
+            return None
+        mph, kph = convert_wind_speed_to_mph_and_kph(numeric, unit_code)
+        if mph is not None and kph is not None:
+            return f"{round(mph)} mph ({round(kph)} km/h)"
+        if mph is not None:
+            return f"{round(mph)} mph"
+        if kph is not None:
+            return f"{round(kph)} km/h"
+        suffix = _format_unit(unit_code)
+        return f"{numeric}{suffix}" if suffix else str(numeric)
+    scalar = _extract_scalar(value)
+    if scalar is None:
+        return None
+    if isinstance(scalar, (int, float)):
+        return f"{scalar}"
+    return str(scalar)
+
+
+def _normalize_temperature_unit(unit: Any) -> str | None:
+    """Normalize temperature unit hints to ``F`` or ``C``."""
+    raw = _extract_scalar(unit)
+    if not isinstance(raw, str):
+        return None
+    normalized = raw.strip().lower()
+    if ":" in normalized:
+        normalized = normalized.split(":", 1)[-1]
+    normalized = normalized.replace("degree", "")
+    normalized = normalized.replace("deg", "")
+    normalized = normalized.replace("fahrenheit", "f")
+    normalized = normalized.replace("celsius", "c")
+    normalized = normalized.replace("wmounit", "")
+    normalized = normalized.replace("°", "")
+    normalized = normalized.replace("_", "")
+    if normalized.endswith("f"):
+        return "F"
+    if normalized.endswith("c"):
+        return "C"
+    if normalized in {"f", "c"}:
+        return normalized.upper()
+    return None
+
+
+def _extract_temperature(measurement: Any, unit_hint: Any = None) -> tuple[float | None, str]:
+    """Extract and normalize a temperature measurement to Fahrenheit."""
+    unit = _normalize_temperature_unit(unit_hint) or "F"
+
+    numeric = None
+    if isinstance(measurement, dict):
+        numeric = _extract_float(measurement.get("value"))
+        if numeric is None:
+            numeric = _extract_float(measurement.get("maxValue"))
+        if numeric is None:
+            numeric = _extract_float(measurement.get("minValue"))
+        measurement_unit = _normalize_temperature_unit(measurement.get("unitCode"))
+        if measurement_unit is not None:
+            unit = measurement_unit
+    else:
+        numeric = _extract_float(measurement)
+
+    if numeric is None:
+        return None, unit
+
+    if unit == "C":
+        numeric = (numeric * 9 / 5) + 32
+        unit = "F"
+
+    return numeric, unit
+
 
 async def _client_get(
     client: httpx.AsyncClient,
@@ -65,6 +200,8 @@ async def get_nws_all_data_parallel(
         # First, fetch grid data once
         grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
         headers = {"User-Agent": user_agent}
+        feature_headers = headers.copy()
+        feature_headers["Feature-Flags"] = "forecast_temperature_qv, forecast_wind_speed_qv"
 
         response = await _client_get(client, grid_url, headers=headers)
         response.raise_for_status()
@@ -111,6 +248,60 @@ async def get_nws_current_conditions(
         grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
         headers = {"User-Agent": user_agent}
 
+        async def _select_best_observation(
+            features: list[dict[str, Any]],
+            http_client: httpx.AsyncClient,
+        ) -> CurrentConditions | None:
+            """Return the first observation with meaningful data, keeping a fallback."""
+            if not features:
+                return None
+
+            fallback: CurrentConditions | None = None
+            attempts = 0
+
+            for feature in features:
+                if attempts >= MAX_STATION_OBSERVATION_ATTEMPTS:
+                    break
+
+                props = feature.get("properties", {}) or {}
+                station_id = props.get("stationIdentifier")
+                if not station_id:
+                    continue
+
+                obs_url = f"{nws_base_url}/stations/{station_id}/observations/latest"
+                attempts += 1
+
+                try:
+                    response = await _client_get(http_client, obs_url, headers=headers)
+                    response.raise_for_status()
+                except Exception as exc:  # noqa: BLE001
+                    logger.debug("Failed to fetch observation for %s: %s", station_id, exc)
+                    continue
+
+                try:
+                    obs_data = response.json()
+                except Exception as exc:  # noqa: BLE001
+                    logger.debug("Invalid observation payload for %s: %s", station_id, exc)
+                    continue
+
+                try:
+                    current = parse_nws_current_conditions(obs_data)
+                except Exception as exc:  # noqa: BLE001
+                    logger.debug("Failed to parse observation for %s: %s", station_id, exc)
+                    continue
+
+                has_temperature = (
+                    current.temperature_f is not None or current.temperature_c is not None
+                )
+                has_description = bool(current.condition and current.condition.strip())
+                if has_temperature or has_description:
+                    return current
+
+                if fallback is None:
+                    fallback = current
+
+            return fallback
+
         # Use provided client or create a new one
         if client is not None:
             response = await _client_get(client, grid_url, headers=headers)
@@ -126,14 +317,15 @@ async def get_nws_current_conditions(
                 logger.warning("No observation stations found")
                 return None
 
-            station_id = stations_data["features"][0]["properties"]["stationIdentifier"]
-            obs_url = f"{nws_base_url}/stations/{station_id}/observations/latest"
-
-            response = await _client_get(client, obs_url, headers=headers)
-            response.raise_for_status()
-            obs_data = response.json()
-
-            return parse_nws_current_conditions(obs_data)
+            current = await _select_best_observation(stations_data["features"], client)
+            if current is None:
+                logger.warning(
+                    "No usable observations found for %s (lat=%s, lon=%s)",
+                    location.name,
+                    location.latitude,
+                    location.longitude,
+                )
+            return current
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
             response = await new_client.get(grid_url, headers=headers)
             response.raise_for_status()
@@ -148,17 +340,99 @@ async def get_nws_current_conditions(
                 logger.warning("No observation stations found")
                 return None
 
-            station_id = stations_data["features"][0]["properties"]["stationIdentifier"]
-            obs_url = f"{nws_base_url}/stations/{station_id}/observations/latest"
-
-            response = await new_client.get(obs_url, headers=headers)
-            response.raise_for_status()
-            obs_data = response.json()
-
-            return parse_nws_current_conditions(obs_data)
+            current = await _select_best_observation(stations_data["features"], new_client)
+            if current is None:
+                logger.warning(
+                    "No usable observations found for %s (lat=%s, lon=%s)",
+                    location.name,
+                    location.latitude,
+                    location.longitude,
+                )
+            return current
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS current conditions: {exc}")
+        return None
+
+
+async def get_nws_primary_station_info(
+    location: Location,
+    nws_base_url: str,
+    user_agent: str,
+    timeout: float,
+    client: httpx.AsyncClient | None = None,
+) -> tuple[str | None, str | None]:
+    """Return the primary observation station identifier and name for a location."""
+    try:
+        headers = {"User-Agent": user_agent}
+        grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+
+        if client is not None:
+            response = await _client_get(client, grid_url, headers=headers)
+            response.raise_for_status()
+            grid_data = response.json()
+            stations_url = grid_data.get("properties", {}).get("observationStations")
+            if not stations_url:
+                logger.debug("No observationStations URL in NWS grid data")
+                return None, None
+
+            response = await _client_get(client, stations_url, headers=headers)
+            response.raise_for_status()
+            stations_data = response.json()
+        else:
+            async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+                response = await new_client.get(grid_url, headers=headers)
+                response.raise_for_status()
+                grid_data = response.json()
+                stations_url = grid_data.get("properties", {}).get("observationStations")
+                if not stations_url:
+                    logger.debug("No observationStations URL in NWS grid data")
+                    return None, None
+
+                response = await new_client.get(stations_url, headers=headers)
+                response.raise_for_status()
+                stations_data = response.json()
+
+        features = stations_data.get("features", [])
+        if not features:
+            logger.debug("No observation station features returned")
+            return None, None
+
+        station_props = features[0].get("properties", {})
+        station_id = station_props.get("stationIdentifier")
+        station_name = station_props.get("name")
+        return station_id, station_name
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Failed to look up primary station info: {exc}")
+        return None, None
+
+
+async def get_nws_station_metadata(
+    station_id: str,
+    nws_base_url: str,
+    user_agent: str,
+    timeout: float,
+    client: httpx.AsyncClient | None = None,
+) -> dict[str, Any] | None:
+    """Fetch metadata for a specific station."""
+    if not station_id:
+        return None
+
+    headers = {"User-Agent": user_agent}
+    station_url = f"{nws_base_url}/stations/{station_id}"
+
+    try:
+        if client is not None:
+            response = await _client_get(client, station_url, headers=headers)
+            response.raise_for_status()
+            return response.json()
+
+        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+            response = await new_client.get(station_url, headers=headers)
+            response.raise_for_status()
+            return response.json()
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"Failed to fetch station metadata for {station_id}: {exc}")
         return None
 
 
@@ -173,6 +447,8 @@ async def get_nws_forecast_and_discussion(
     """Fetch forecast and discussion from the NWS API for the given location."""
     try:
         headers = {"User-Agent": user_agent}
+        feature_headers = headers.copy()
+        feature_headers["Feature-Flags"] = "forecast_temperature_qv, forecast_wind_speed_qv"
 
         # Use provided client or create a new one
         if client is not None:
@@ -184,7 +460,7 @@ async def get_nws_forecast_and_discussion(
                 grid_data = response.json()
 
             forecast_url = grid_data["properties"]["forecast"]
-            response = await _client_get(client, forecast_url, headers=headers)
+            response = await _client_get(client, forecast_url, headers=feature_headers)
             response.raise_for_status()
             forecast_data = response.json()
 
@@ -199,7 +475,7 @@ async def get_nws_forecast_and_discussion(
             grid_data = response.json()
 
             forecast_url = grid_data["properties"]["forecast"]
-            response = await new_client.get(forecast_url, headers=headers)
+            response = await new_client.get(forecast_url, headers=feature_headers)
             response.raise_for_status()
             forecast_data = response.json()
 
@@ -319,6 +595,8 @@ async def get_nws_hourly_forecast(
     """Fetch hourly forecast from the NWS API."""
     try:
         headers = {"User-Agent": user_agent}
+        feature_headers = headers.copy()
+        feature_headers["Feature-Flags"] = "forecast_temperature_qv, forecast_wind_speed_qv"
 
         # Use provided client or create a new one
         if client is not None:
@@ -334,7 +612,7 @@ async def get_nws_hourly_forecast(
                 logger.warning("No hourly forecast URL found in grid data")
                 return None
 
-            response = await _client_get(client, hourly_forecast_url, headers=headers)
+            response = await _client_get(client, hourly_forecast_url, headers=feature_headers)
             response.raise_for_status()
             hourly_data = response.json()
 
@@ -351,7 +629,7 @@ async def get_nws_hourly_forecast(
                 logger.warning("No hourly forecast URL found in grid data")
                 return None
 
-            response = await new_client.get(hourly_forecast_url, headers=headers)
+            response = await new_client.get(hourly_forecast_url, headers=feature_headers)
             response.raise_for_status()
             hourly_data = response.json()
 
@@ -360,6 +638,189 @@ async def get_nws_hourly_forecast(
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS hourly forecast: {exc}")
         return None
+
+
+async def get_nws_tafs(
+    station_id: str,
+    nws_base_url: str,
+    user_agent: str,
+    timeout: float,
+    client: httpx.AsyncClient,
+) -> str | None:
+    """Fetch the most recent Terminal Aerodrome Forecast for a station."""
+    del timeout  # The caller manages the async client lifecycle.
+
+    taf_url = f"{nws_base_url}/stations/{station_id}/tafs"
+    headers = {"User-Agent": user_agent}
+
+    try:
+        response = await _client_get(client, taf_url, headers=headers)
+        response.raise_for_status()
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("NWS TAF request failed for %s: %s", station_id, exc)
+        response = None
+
+    raw_taf: str | None = None
+    if response is not None:
+        try:
+            data = response.json()
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("Failed to parse NWS TAF response for %s: %s", station_id, exc)
+            data = None
+
+        if isinstance(data, dict):
+            features = data.get("features")
+            if isinstance(features, list):
+                for feature in features:
+                    properties = feature.get("properties", {})
+                    raw_message = properties.get("rawMessage") or properties.get("rawTAF")
+                    if raw_message:
+                        raw_taf = str(raw_message).strip()
+                        if raw_taf:
+                            return raw_taf
+
+        logger.debug(
+            "NWS TAF response for %s did not include a raw message. Falling back to AviationWeather.gov.",
+            station_id,
+        )
+
+    # Fallback to the AviationWeather.gov JSON API which provides rawTAF fields.
+    awc_url = "https://aviationweather.gov/api/data/taf"
+    awc_headers = {
+        "User-Agent": user_agent,
+        "Accept": "application/json",
+    }
+    params = {"ids": station_id, "format": "json"}
+
+    try:
+        awc_response = await _client_get(client, awc_url, headers=awc_headers, params=params)
+        awc_response.raise_for_status()
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Failed to fetch TAF from AviationWeather for %s: %s", station_id, exc)
+        return None
+
+    try:
+        awc_data = awc_response.json()
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Failed to decode AviationWeather TAF JSON for %s: %s", station_id, exc)
+        return None
+
+    entries: list[dict[str, Any]] = []
+    if isinstance(awc_data, list):
+        entries = [entry for entry in awc_data if isinstance(entry, dict)]
+    elif isinstance(awc_data, dict):
+        raw_entries = awc_data.get("data") or awc_data.get("results") or awc_data.get("tafs")
+        if isinstance(raw_entries, list):
+            entries = [entry for entry in raw_entries if isinstance(entry, dict)]
+
+    for entry in entries:
+        raw_message = entry.get("rawTAF") or entry.get("raw_taf")
+        if raw_message:
+            cleaned = str(raw_message).strip()
+            if cleaned:
+                return cleaned
+
+    logger.debug("AviationWeather API returned no usable TAF data for %s", station_id)
+    return None
+
+
+async def get_nws_sigmets(
+    nws_base_url: str,
+    user_agent: str,
+    timeout: float,
+    client: httpx.AsyncClient,
+    *,
+    atsu: str | None = None,
+) -> list[dict[str, Any]]:
+    """Fetch active SIGMET or AIRMET advisories."""
+    del timeout
+
+    sigmet_url = f"{nws_base_url}/aviation/sigmets"
+    headers = {"User-Agent": user_agent}
+    params: dict[str, Any] | None = {"atsu": atsu} if atsu else None
+
+    try:
+        response = await _client_get(client, sigmet_url, headers=headers, params=params)
+        response.raise_for_status()
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Failed to fetch SIGMET data: {exc}")
+        return []
+
+    data = response.json()
+    features = data.get("features", [])
+    return [feature.get("properties", feature) for feature in features]
+
+
+async def get_nws_cwas(
+    cwsu_id: str,
+    nws_base_url: str,
+    user_agent: str,
+    timeout: float,
+    client: httpx.AsyncClient,
+) -> list[dict[str, Any]]:
+    """Fetch Center Weather Advisories for a CWSU identifier."""
+    del timeout
+
+    cwa_url = f"{nws_base_url}/aviation/cwsus/{cwsu_id}/cwas"
+    headers = {"User-Agent": user_agent}
+
+    try:
+        response = await _client_get(client, cwa_url, headers=headers)
+        response.raise_for_status()
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Failed to fetch CWA data for {cwsu_id}: {exc}")
+        return []
+
+    data = response.json()
+    features = data.get("features", [])
+    return [feature.get("properties", feature) for feature in features]
+
+
+async def get_nws_radar_profiler(
+    station_id: str,
+    nws_base_url: str,
+    user_agent: str,
+    timeout: float,
+    client: httpx.AsyncClient,
+) -> dict[str, Any] | None:
+    """Fetch metadata for a radar wind profiler station."""
+    del timeout
+
+    profiler_url = f"{nws_base_url}/radar/profilers/{station_id}"
+    headers = {"User-Agent": user_agent}
+
+    try:
+        response = await _client_get(client, profiler_url, headers=headers)
+        response.raise_for_status()
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Failed to fetch radar profiler {station_id}: {exc}")
+        return None
+
+    return response.json()
+
+
+async def get_nws_marine_forecast(
+    zone_type: str,
+    zone_id: str,
+    nws_base_url: str,
+    user_agent: str,
+    timeout: float,
+    client: httpx.AsyncClient,
+) -> dict[str, Any] | None:
+    """Fetch a marine zone forecast."""
+    del timeout
+
+    marine_url = f"{nws_base_url}/zones/{zone_type}/{zone_id}/forecast"
+    headers = {"User-Agent": user_agent}
+
+    try:
+        response = await _client_get(client, marine_url, headers=headers)
+        response.raise_for_status()
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Failed to fetch marine forecast for {zone_type}/{zone_id}: {exc}")
+        return None
+
+    return response.json()
 
 
 def parse_nws_current_conditions(data: dict) -> CurrentConditions:
@@ -378,6 +839,14 @@ def parse_nws_current_conditions(data: dict) -> CurrentConditions:
     visibility_m = props.get("visibility", {}).get("value")
     visibility_miles = visibility_m / 1609.344 if visibility_m is not None else None
     visibility_km = visibility_m / 1000 if visibility_m is not None else None
+
+    uv_index_value = props.get("uvIndex", {}).get("value")
+    uv_index = None
+    if uv_index_value is not None:
+        try:
+            uv_index = float(uv_index_value)
+        except (TypeError, ValueError):
+            uv_index = None
 
     wind_speed = props.get("windSpeed", {})
     wind_speed_value = wind_speed.get("value")
@@ -415,6 +884,7 @@ def parse_nws_current_conditions(data: dict) -> CurrentConditions:
         feels_like_c=None,
         visibility_miles=visibility_miles,
         visibility_km=visibility_km,
+        uv_index=uv_index,
         last_updated=last_updated or datetime.now(),
     )
 
@@ -424,14 +894,21 @@ def parse_nws_forecast(data: dict) -> Forecast:
     periods = []
 
     for period_data in data.get("properties", {}).get("periods", []):
+        temperature, temperature_unit = _extract_temperature(
+            period_data.get("temperature"), period_data.get("temperatureUnit")
+        )
+
+        wind_direction_value = _extract_scalar(period_data.get("windDirection"))
+        wind_direction = str(wind_direction_value) if wind_direction_value is not None else None
+
         period = ForecastPeriod(
             name=period_data.get("name", ""),
-            temperature=period_data.get("temperature"),
-            temperature_unit=period_data.get("temperatureUnit", "F"),
+            temperature=temperature,
+            temperature_unit=str(temperature_unit),
             short_forecast=period_data.get("shortForecast"),
             detailed_forecast=period_data.get("detailedForecast"),
-            wind_speed=period_data.get("windSpeed"),
-            wind_direction=period_data.get("windDirection"),
+            wind_speed=_format_wind_speed(period_data.get("windSpeed")),
+            wind_direction=wind_direction,
             icon=period_data.get("icon"),
         )
         periods.append(period)
@@ -515,14 +992,21 @@ def parse_nws_hourly_forecast(data: dict) -> HourlyForecast:
             except ValueError:
                 logger.warning(f"Failed to parse end time: {end_time_str}")
 
+        temperature, temperature_unit = _extract_temperature(
+            period_data.get("temperature"), period_data.get("temperatureUnit")
+        )
+
+        wind_direction_value = _extract_scalar(period_data.get("windDirection"))
+        wind_direction = str(wind_direction_value) if wind_direction_value is not None else None
+
         period = HourlyForecastPeriod(
             start_time=start_time or datetime.now(),
             end_time=end_time,
-            temperature=period_data.get("temperature"),
-            temperature_unit=period_data.get("temperatureUnit", "F"),
+            temperature=temperature,
+            temperature_unit=str(temperature_unit),
             short_forecast=period_data.get("shortForecast"),
-            wind_speed=period_data.get("windSpeed"),
-            wind_direction=period_data.get("windDirection"),
+            wind_speed=_format_wind_speed(period_data.get("windSpeed")),
+            wind_direction=wind_direction,
             icon=period_data.get("icon"),
         )
         periods.append(period)

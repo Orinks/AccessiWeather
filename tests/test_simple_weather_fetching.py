@@ -5,14 +5,24 @@ This module tests the weather data fetching functionality that was fixed,
 including the wind direction formatting bug and API integration.
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from accessiweather.display import WeatherPresenter
-from accessiweather.models import Location
+from accessiweather.models import (
+    CurrentConditions,
+    Forecast,
+    HourlyForecast,
+    Location,
+    WeatherAlerts,
+)
 from accessiweather.utils import convert_wind_direction_to_cardinal
 from accessiweather.weather_client import WeatherClient
+from accessiweather.weather_client_parsers import (
+    OPEN_METEO_WEATHER_CODE_DESCRIPTIONS,
+    weather_code_to_description,
+)
 
 
 class TestWeatherDataFetching:
@@ -140,6 +150,99 @@ class TestWeatherDataFetching:
             assert "Mainly clear" in current.condition
 
     @pytest.mark.asyncio
+    async def test_nws_current_conditions_uses_station_with_data(self):
+        """The client should walk the station list until it finds usable observations."""
+        client = WeatherClient()
+        location = Location("Conrad, MT", 48.1703, -111.9461)
+
+        grid_response = {
+            "properties": {
+                "observationStations": "https://api.weather.gov/gridpoints/TFX/82,179/stations",
+            }
+        }
+        stations_response = {
+            "features": [
+                {"properties": {"stationIdentifier": "COAM8"}},
+                {"properties": {"stationIdentifier": "KCTB"}},
+            ]
+        }
+        empty_observation = {
+            "properties": {
+                "temperature": {"value": None},
+                "textDescription": "",
+                "windSpeed": {"value": 3.708, "unitCode": "wmoUnit:km_h-1"},
+            }
+        }
+        usable_observation = {
+            "properties": {
+                "temperature": {"value": 6.0, "unitCode": "wmoUnit:degC"},
+                "textDescription": "Clear",
+                "windSpeed": {"value": 5.544, "unitCode": "wmoUnit:km_h-1"},
+                "windDirection": {"value": 130},
+                "barometricPressure": {"value": 101862.57},
+            }
+        }
+
+        with patch("httpx.AsyncClient") as mock_client:
+            mock_client_instance = mock_client.return_value.__aenter__.return_value
+            mock_client_instance.get.side_effect = [
+                MagicMock(status_code=200, json=lambda: grid_response),
+                MagicMock(status_code=200, json=lambda: stations_response),
+                MagicMock(status_code=200, json=lambda: empty_observation),
+                MagicMock(status_code=200, json=lambda: usable_observation),
+            ]
+
+            current = await client._get_nws_current_conditions(location)
+            await client.close()
+
+        assert current is not None
+        assert current.has_data()
+        assert pytest.approx(current.temperature_c or 0.0, rel=1e-2) == 6.0
+        assert current.condition == "Clear"
+        assert mock_client_instance.get.call_count == 4
+
+    @pytest.mark.asyncio
+    async def test_nws_current_missing_primary_fields_uses_openmeteo(self):
+        """Missing NWS temperature/condition should be filled with Open-Meteo data."""
+        client = WeatherClient(data_source="nws")
+        location = Location("Data Gap", 40.0, -75.0)
+
+        nws_current = CurrentConditions(wind_speed_mph=7.0)
+        forecast = Forecast(periods=[])
+        alerts = WeatherAlerts(alerts=[])
+        hourly = HourlyForecast(periods=[])
+        discussion = "Sample discussion"
+
+        client._fetch_nws_data = AsyncMock(
+            return_value=(nws_current, forecast, discussion, alerts, hourly)
+        )
+        openmeteo_current = CurrentConditions(
+            temperature_f=42.0,
+            temperature_c=5.5556,
+            condition="Clear sky",
+            humidity=51,
+        )
+        client._get_openmeteo_current_conditions = AsyncMock(return_value=openmeteo_current)
+        client._enrich_with_sunrise_sunset = AsyncMock()
+        client._enrich_with_nws_discussion = AsyncMock()
+        client._enrich_with_visual_crossing_alerts = AsyncMock()
+        client._populate_environmental_metrics = AsyncMock()
+        client._merge_international_alerts = AsyncMock()
+        client._enrich_with_aviation_data = AsyncMock()
+        client._apply_trend_insights = MagicMock()
+        client._persist_weather_data = MagicMock()
+
+        weather_data = await client.get_weather_data(location)
+        await client.close()
+
+        assert weather_data.current is not None
+        assert weather_data.current.temperature_f == pytest.approx(42.0)
+        assert weather_data.current.condition == "Clear sky"
+        assert weather_data.current.wind_speed_mph == pytest.approx(7.0)
+        assert weather_data.current.has_data()
+        client._get_openmeteo_current_conditions.assert_awaited_once()
+
+    @pytest.mark.asyncio
     async def test_weather_client_error_handling(self):
         """Test weather client error handling."""
         client = WeatherClient()
@@ -175,6 +278,20 @@ class TestWeatherDataFetching:
         assert client._weather_code_to_description(86) == "Heavy snow showers"
         assert client._weather_code_to_description(95) == "Thunderstorm"
         assert "Weather code" in client._weather_code_to_description(999)  # Unknown code
+
+    @pytest.mark.parametrize(
+        ("code", "expected"), tuple(OPEN_METEO_WEATHER_CODE_DESCRIPTIONS.items())
+    )
+    def test_weather_code_conversion_covers_all_known_codes(self, code, expected):
+        """Ensure every known Open-Meteo weather code has a friendly description."""
+        assert weather_code_to_description(code) == expected
+        # API sometimes delivers codes as strings; ensure those work too.
+        assert weather_code_to_description(str(code)) == expected
+
+    def test_weather_code_conversion_accepts_string_input(self):
+        """WeatherClient helper should gracefully handle string weather codes."""
+        client = WeatherClient()
+        assert client._weather_code_to_description("80") == "Slight rain showers"
 
     def test_unit_conversions(self):
         """Test unit conversion utilities in weather client."""

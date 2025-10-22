@@ -187,9 +187,12 @@ class PackSubmissionService:
         await report(5.0, "Checking prerequisites...")
 
         # Use backend service for all submissions
-        return await self._submit_pack_via_backend(
-            pack_path, pack_meta, submitter_name, submitter_email, report, cancel_event
-        )
+        try:
+            return await self._submit_pack_via_backend(
+                pack_path, pack_meta, submitter_name, submitter_email, report, cancel_event
+            )
+        except RuntimeError as exc:
+            raise RuntimeError(f"Backend service error: {exc}") from exc
 
     async def _submit_pack_via_backend(
         self,
