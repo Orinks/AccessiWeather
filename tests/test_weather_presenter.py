@@ -44,6 +44,30 @@ def test_presenter_includes_precise_dewpoint_in_metrics():
 
 
 @pytest.mark.unit
+def test_presenter_includes_moon_metrics_when_available():
+    settings = AppSettings(temperature_unit="fahrenheit")
+    presenter = WeatherPresenter(settings)
+    location = Location(name="Lunar City", latitude=40.0, longitude=-75.0)
+    conditions = CurrentConditions(
+        temperature_f=72.0,
+        condition="Clear",
+        moon_phase="Waning Crescent",
+        moonrise_time=datetime(2025, 9, 27, 4, 15, tzinfo=UTC),
+        moonset_time=datetime(2025, 9, 27, 16, 58, tzinfo=UTC),
+    )
+
+    presentation = presenter.present_current(conditions, location)
+
+    assert presentation is not None
+    labels = {metric.label for metric in presentation.metrics}
+    assert {"Moon phase", "Moonrise", "Moonset"}.issubset(labels)
+    fallback = presentation.fallback_text
+    assert "Moon phase: Waning Crescent" in fallback
+    assert "Moonrise:" in fallback
+    assert "Moonset:" in fallback
+
+
+@pytest.mark.unit
 def test_presenter_respects_metric_visibility_preferences():
     settings = AppSettings(
         temperature_unit="both",
