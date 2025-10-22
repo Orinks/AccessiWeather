@@ -48,9 +48,7 @@ def build_current_conditions(
     show_dewpoint = getattr(settings, "show_dewpoint", True) if settings else True
     show_visibility = getattr(settings, "show_visibility", True) if settings else True
     show_uv_index = getattr(settings, "show_uv_index", True) if settings else True
-    show_pressure_trend = (
-        getattr(settings, "show_pressure_trend", True) if settings else True
-    )
+    show_pressure_trend = getattr(settings, "show_pressure_trend", True) if settings else True
 
     temperature_str = format_temperature_pair(
         current.temperature_f, current.temperature_c, unit_pref, precision
@@ -95,6 +93,17 @@ def build_current_conditions(
     sunset_str = format_sun_time(current.sunset_time)
     if sunset_str:
         metrics.append(Metric("Sunset", sunset_str))
+
+    if current.moon_phase:
+        metrics.append(Metric("Moon phase", current.moon_phase))
+
+    moonrise_str = format_sun_time(current.moonrise_time)
+    if moonrise_str:
+        metrics.append(Metric("Moonrise", moonrise_str))
+
+    moonset_str = format_sun_time(current.moonset_time)
+    if moonset_str:
+        metrics.append(Metric("Moonset", moonset_str))
 
     if current.last_updated:
         metrics.append(Metric("Last updated", format_timestamp(current.last_updated)))

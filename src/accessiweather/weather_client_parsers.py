@@ -18,6 +18,7 @@ __all__ = [
     "degrees_to_cardinal",
     "weather_code_to_description",
     "format_date_name",
+    "describe_moon_phase",
 ]
 
 logger = logging.getLogger(__name__)
@@ -214,3 +215,31 @@ def format_date_name(date_str: str, index: int) -> str:
     except (ValueError, TypeError):
         logger.debug("Failed to format date '%s' at index %s", date_str, index)
         return f"Day {index + 1}"
+
+
+def describe_moon_phase(value: float | int | str | None) -> str | None:
+    """Convert a numeric moon phase fraction to a descriptive label."""
+    if value is None:
+        return None
+
+    try:
+        fraction = float(value) % 1.0
+    except (TypeError, ValueError):
+        logger.debug("Unable to parse moon phase value '%s'", value)
+        return None
+
+    phases = [
+        (0.0625, "New Moon"),
+        (0.1875, "Waxing Crescent"),
+        (0.3125, "First Quarter"),
+        (0.4375, "Waxing Gibbous"),
+        (0.5625, "Full Moon"),
+        (0.6875, "Waning Gibbous"),
+        (0.8125, "Last Quarter"),
+        (0.9375, "Waning Crescent"),
+    ]
+
+    for threshold, name in phases:
+        if fraction < threshold:
+            return name
+    return "New Moon"

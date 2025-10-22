@@ -21,6 +21,7 @@ from .models import (
     WeatherAlerts,
 )
 from .utils.temperature_utils import TemperatureUnit, calculate_dewpoint
+from .weather_client_parsers import describe_moon_phase
 
 logger = logging.getLogger(__name__)
 
@@ -240,6 +241,65 @@ class VisualCrossingClient:
             except ValueError:
                 logger.debug(f"Failed to parse Visual Crossing datetime: {current['datetime']}")
 
+        sunrise_time = None
+        sunset_time = None
+        moonrise_time = None
+        moonset_time = None
+        moon_phase = None
+        days = data.get("days", [])
+        if days:
+            day_data = days[0]
+
+            sunrise_epoch = day_data.get("sunriseEpoch")
+            if sunrise_epoch is not None:
+                try:
+                    sunrise_time = datetime.fromtimestamp(sunrise_epoch, tz=UTC)
+                except (OSError, ValueError):
+                    logger.debug(f"Failed to parse sunrise epoch: {sunrise_epoch}")
+            if sunrise_time is None and day_data.get("sunrise"):
+                try:
+                    sunrise_time = datetime.fromisoformat(day_data["sunrise"])
+                except ValueError:
+                    logger.debug(f"Failed to parse sunrise time: {day_data['sunrise']}")
+
+            sunset_epoch = day_data.get("sunsetEpoch")
+            if sunset_epoch is not None:
+                try:
+                    sunset_time = datetime.fromtimestamp(sunset_epoch, tz=UTC)
+                except (OSError, ValueError):
+                    logger.debug(f"Failed to parse sunset epoch: {sunset_epoch}")
+            if sunset_time is None and day_data.get("sunset"):
+                try:
+                    sunset_time = datetime.fromisoformat(day_data["sunset"])
+                except ValueError:
+                    logger.debug(f"Failed to parse sunset time: {day_data['sunset']}")
+
+            moonrise_epoch = day_data.get("moonriseEpoch")
+            if moonrise_epoch is not None:
+                try:
+                    moonrise_time = datetime.fromtimestamp(moonrise_epoch, tz=UTC)
+                except (OSError, ValueError):
+                    logger.debug(f"Failed to parse moonrise epoch: {moonrise_epoch}")
+            if moonrise_time is None and day_data.get("moonrise"):
+                try:
+                    moonrise_time = datetime.fromisoformat(day_data["moonrise"])
+                except ValueError:
+                    logger.debug(f"Failed to parse moonrise time: {day_data['moonrise']}")
+
+            moonset_epoch = day_data.get("moonsetEpoch")
+            if moonset_epoch is not None:
+                try:
+                    moonset_time = datetime.fromtimestamp(moonset_epoch, tz=UTC)
+                except (OSError, ValueError):
+                    logger.debug(f"Failed to parse moonset epoch: {moonset_epoch}")
+            if moonset_time is None and day_data.get("moonset"):
+                try:
+                    moonset_time = datetime.fromisoformat(day_data["moonset"])
+                except ValueError:
+                    logger.debug(f"Failed to parse moonset time: {day_data['moonset']}")
+
+            moon_phase = describe_moon_phase(day_data.get("moonphase"))
+
         return CurrentConditions(
             temperature_f=temp_f,
             temperature_c=temp_c,
@@ -256,6 +316,11 @@ class VisualCrossingClient:
             feels_like_c=feels_like_c,
             visibility_miles=visibility_miles,
             visibility_km=visibility_km,
+            sunrise_time=sunrise_time,
+            sunset_time=sunset_time,
+            moon_phase=moon_phase,
+            moonrise_time=moonrise_time,
+            moonset_time=moonset_time,
             last_updated=last_updated or datetime.now(),
         )
 
