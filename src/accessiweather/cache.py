@@ -513,6 +513,7 @@ class WeatherDataCache:
                     "name": location.name,
                     "latitude": location.latitude,
                     "longitude": location.longitude,
+                    **({"country_code": location.country_code} if location.country_code else {}),
                 },
                 "weather": _serialize_weather_data(weather),
             }
@@ -543,7 +544,12 @@ class WeatherDataCache:
         loc_name = location_data.get("name", location.name)
         loc_lat = location_data.get("latitude", location.latitude)
         loc_lon = location_data.get("longitude", location.longitude)
-        normalized_location = Location(name=loc_name, latitude=loc_lat, longitude=loc_lon)
+        normalized_location = Location(
+            name=loc_name,
+            latitude=loc_lat,
+            longitude=loc_lon,
+            country_code=location_data.get("country_code"),
+        )
 
         weather_payload = payload.get("weather")
         if not isinstance(weather_payload, dict):

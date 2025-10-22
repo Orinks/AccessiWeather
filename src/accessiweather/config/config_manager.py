@@ -116,9 +116,11 @@ class ConfigManager:
         """Update application settings."""
         return self._settings.update_settings(**kwargs)
 
-    def add_location(self, name: str, latitude: float, longitude: float) -> bool:
+    def add_location(
+        self, name: str, latitude: float, longitude: float, country_code: str | None = None
+    ) -> bool:
         """Add a new location."""
-        return self._locations.add_location(name, latitude, longitude)
+        return self._locations.add_location(name, latitude, longitude, country_code)
 
     def remove_location(self, name: str) -> bool:
         """Remove a location."""

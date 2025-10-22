@@ -260,6 +260,23 @@ class TestConfigManagerLocations:
         assert len(locations) == 1  # Should still be only one
         assert locations[0].latitude == 40.0  # Original coordinates
 
+    def test_add_location_with_country_code(self, config_manager):
+        """Locations should persist country codes when provided."""
+        result = config_manager.add_location(
+            "Toronto, Ontario", 43.6535, -79.3839, country_code="ca"
+        )
+
+        assert result is True
+
+        current = config_manager.get_current_location()
+        assert current is not None
+        assert current.country_code == "CA"
+
+        reloaded = ConfigManager(config_manager.app)
+        reloaded.load_config()
+        reloaded_locations = reloaded.get_all_locations()
+        assert reloaded_locations[0].country_code == "CA"
+
     def test_add_multiple_locations(self, config_manager):
         """Test adding multiple locations."""
         config_manager.add_location("Philadelphia, PA", 39.9526, -75.1652)

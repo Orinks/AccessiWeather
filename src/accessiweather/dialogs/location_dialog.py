@@ -379,8 +379,23 @@ class AddLocationDialog:
             return
 
         try:
+            country_code = None
+            if self.selected_location and getattr(self.selected_location, "country_code", None):
+                country_code = self.selected_location.country_code
+            elif not self.selected_location:
+                try:
+                    reverse_location = await self.location_manager.reverse_geocode(
+                        latitude, longitude
+                    )
+                    if reverse_location and reverse_location.country_code:
+                        country_code = reverse_location.country_code
+                except Exception as geo_exc:  # pragma: no cover - best effort enrichment
+                    logger.debug("Reverse geocoding for country code failed: %s", geo_exc)
+
             # Add location
-            success = self.config_manager.add_location(name, latitude, longitude)
+            success = self.config_manager.add_location(
+                name, latitude, longitude, country_code=country_code
+            )
 
             if success:
                 self._update_status("Location saved successfully!")

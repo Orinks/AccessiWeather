@@ -24,7 +24,13 @@ class LocationOperations:
     def logger(self) -> logging.Logger:
         return self._manager._get_logger()
 
-    def add_location(self, name: str, latitude: float, longitude: float) -> bool:
+    def add_location(
+        self,
+        name: str,
+        latitude: float,
+        longitude: float,
+        country_code: str | None = None,
+    ) -> bool:
         """Add a new location if it doesn't already exist."""
         config = self._manager.get_config()
 
@@ -33,7 +39,12 @@ class LocationOperations:
                 self.logger.warning(f"Location {name} already exists")
                 return False
 
-        new_location = Location(name=name, latitude=latitude, longitude=longitude)
+        new_location = Location(
+            name=name,
+            latitude=latitude,
+            longitude=longitude,
+            country_code=country_code,
+        )
         config.locations.append(new_location)
 
         if config.current_location is None:

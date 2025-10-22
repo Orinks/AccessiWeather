@@ -157,6 +157,10 @@ class LocationManager:
             if country and country != "United States":
                 name_parts.append(country)
 
+            country_code = address.get("country_code")
+            if country_code:
+                country_code = country_code.upper()
+
             # Use constructed name or fall back to display name
             if name_parts:
                 name = ", ".join(name_parts)
@@ -166,7 +170,7 @@ class LocationManager:
                 if len(name) > 50:
                     name = name[:47] + "..."
 
-            return Location(name=name, latitude=lat, longitude=lon)
+            return Location(name=name, latitude=lat, longitude=lon, country_code=country_code)
 
         except Exception as e:
             logger.error(f"Failed to parse geocoding result: {e}")
@@ -390,7 +394,10 @@ class LocationManager:
                     name = ", ".join(name_parts) if name_parts else "Current Location"
 
                     location = Location(
-                        name=name, latitude=data.get("lat", 0.0), longitude=data.get("lon", 0.0)
+                        name=name,
+                        latitude=data.get("lat", 0.0),
+                        longitude=data.get("lon", 0.0),
+                        country_code=(data.get("countryCode") or "").upper() or None,
                     )
 
                     logger.info(f"Detected location from IP: {location.name}")

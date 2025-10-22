@@ -208,6 +208,7 @@ class AppConfig:
                     "name": loc.name,
                     "latitude": loc.latitude,
                     "longitude": loc.longitude,
+                    **({"country_code": loc.country_code} if loc.country_code else {}),
                 }
                 for loc in self.locations
             ],
@@ -215,6 +216,11 @@ class AppConfig:
                 "name": self.current_location.name,
                 "latitude": self.current_location.latitude,
                 "longitude": self.current_location.longitude,
+                **(
+                    {"country_code": self.current_location.country_code}
+                    if self.current_location.country_code
+                    else {}
+                ),
             }
             if self.current_location
             else None,
@@ -232,6 +238,7 @@ class AppConfig:
                     name=loc_data["name"],
                     latitude=loc_data["latitude"],
                     longitude=loc_data["longitude"],
+                    country_code=loc_data.get("country_code"),
                 )
             )
 
@@ -242,6 +249,7 @@ class AppConfig:
                 name=loc_data["name"],
                 latitude=loc_data["latitude"],
                 longitude=loc_data["longitude"],
+                country_code=loc_data.get("country_code"),
             )
 
         return cls(
