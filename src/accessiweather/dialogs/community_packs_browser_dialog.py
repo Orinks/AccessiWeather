@@ -38,6 +38,7 @@ class CommunityPacksBrowserDialog:
         service: Service used to fetch and download packs
         installer: Installer used to install a downloaded ZIP
         on_installed: Optional callback fired with pack display name after install
+
     """
 
     def __init__(
@@ -121,9 +122,7 @@ class CommunityPacksBrowserDialog:
 
         # Header with search + refresh
         header = toga.Box(style=Pack(direction=ROW, margin_bottom=8))
-        hint_label = toga.Label(
-            "Filter packs:", style=Pack(margin_right=6, alignment="center", baseline=True)
-        )
+        hint_label = toga.Label("Filter packs:", style=Pack(margin_right=6, alignment="center"))
         header.add(hint_label)
         self.search_input = toga.TextInput(
             placeholder="Search by name or author",
@@ -378,9 +377,7 @@ class CommunityPacksBrowserDialog:
             self._select_by_key(first_key)
         else:
             self._update_details(None)
-            message = (
-                "You may be offline or rate-limited. Try Refresh or adjust search criteria."
-            )
+            message = "You may be offline or rate-limited. Try Refresh or adjust search criteria."
             if self._use_detailed_list and self.pack_list:
                 self.pack_list.data.append(
                     {
@@ -551,9 +548,7 @@ class CommunityPacksBrowserDialog:
             details.append("")
             details.append(f"More info: {pack.repository_url}")
 
-        asyncio.create_task(
-            self.app.main_window.info_dialog("Pack Details", "\n".join(details))
-        )
+        asyncio.create_task(self.app.main_window.info_dialog("Pack Details", "\n".join(details)))
 
     def _on_download(self, widget) -> None:
         pack = self._get_selected_pack()
