@@ -59,6 +59,7 @@ class CommunityPacksBrowserDialog:
         self.refresh_button: toga.Button | None = None
 
         self._packs: list[CommunityPack] = []
+        self._pack_lookup: dict[str, CommunityPack] = {}
 
     def show(self) -> None:
         self.window = toga.Window(
@@ -72,6 +73,11 @@ class CommunityPacksBrowserDialog:
             placeholder="Search by name or author", style=Pack(flex=1, margin_right=8)
         )
         self.search_input.on_change = self._on_search
+        with contextlib.suppress(AttributeError):
+            self.search_input.aria_label = "Search community sound packs"
+            self.search_input.aria_description = (
+                "Type part of a pack name or author, then press Enter to filter the list."
+            )
         self.refresh_button = toga.Button(
             "Refresh", on_press=self._on_refresh, style=Pack(width=100)
         )
@@ -152,17 +158,20 @@ class CommunityPacksBrowserDialog:
         if not self.pack_list:
             return
         self.pack_list.data.clear()
+        self._pack_lookup.clear()
         ft = (filter_text or "").strip().lower()
         added = 0
         for p in self._packs:
             if ft and (ft not in p.name.lower()) and (ft not in p.author.lower()):
                 continue
             size_str = f"{(p.file_size or 0) / (1024 * 1024):.1f} MB" if p.file_size else "?"
+            pack_key = f"{p.name}::{p.author}::{p.version}"
+            self._pack_lookup[pack_key] = p
             self.pack_list.data.append(
                 {
                     "title": p.name,
                     "subtitle": self._format_accessible_summary(p, size_str),
-                    "pack": p,
+                    "pack_key": pack_key,
                 }
             )
             added += 1
@@ -176,6 +185,8 @@ class CommunityPacksBrowserDialog:
                     ),
                 }
             )
+        if self.download_button:
+            self.download_button.enabled = False
 
     def _on_search(self, widget):
         ft = widget.value or ""
@@ -198,16 +209,14 @@ class CommunityPacksBrowserDialog:
         if not self.pack_list or not self.pack_list.selection:
             return None
         row = self.pack_list.selection
-        candidate = getattr(row, "pack", None)
-        if isinstance(candidate, CommunityPack):
-            return candidate
-        # Fallback: match by title if custom attribute missing
+        key = getattr(row, "pack_key", None)
+        if key and key in self._pack_lookup:
+            return self._pack_lookup[key]
         title = getattr(row, "title", None)
-        if not title:
-            return None
-        for pack in self._packs:
-            if pack.name == title:
-                return pack
+        if title:
+            for pack in self._packs:
+                if pack.name == title:
+                    return pack
         return None
 
     def _format_accessible_summary(self, p: CommunityPack, size: str) -> str:
