@@ -73,11 +73,12 @@ class CommunityPacksBrowserDialog:
             placeholder="Search by name or author", style=Pack(flex=1, margin_right=8)
         )
         self.search_input.on_change = self._on_search
+        hint_label = toga.Label(
+            "Filter packs:", style=Pack(margin_right=6, alignment="center", baseline=True)
+        )
+        header._children.insert(0, hint_label)
         with contextlib.suppress(AttributeError):
-            self.search_input.aria_label = "Search community sound packs"
-            self.search_input.aria_description = (
-                "Type part of a pack name or author, then press Enter to filter the list."
-            )
+            self.search_input.aria_label = "Filter community sound packs"
         self.refresh_button = toga.Button(
             "Refresh", on_press=self._on_refresh, style=Pack(width=100)
         )
