@@ -10,6 +10,7 @@ import toga
 from toga.style.pack import Pack
 
 from ...notifications.sound_pack_installer import SoundPackInstaller
+from ...services.community_soundpack_service import CommunitySoundPackService
 from ..community_packs_browser_dialog import CommunityPacksBrowserDialog
 from . import (
     mappings as map_mod,
@@ -53,8 +54,8 @@ class SoundPackManagerDialog:
         self.soundpacks_dir.mkdir(exist_ok=True)
 
         # External services
-        self.community_service = None
         self.installer = SoundPackInstaller(self.soundpacks_dir)
+        self.community_service = self._create_community_service()
 
         # UI component placeholders used by the subpanels
         self.dialog: toga.Window | None = None
@@ -106,6 +107,13 @@ class SoundPackManagerDialog:
 
     def _save_pack_meta(self, pack_info: dict, meta: dict) -> None:
         ops_mod.save_pack_meta(pack_info, meta)
+
+    def _create_community_service(self) -> CommunitySoundPackService | None:
+        try:
+            return CommunitySoundPackService()
+        except Exception as exc:
+            logger.warning("Community packs disabled - failed to initialize service: %s", exc)
+            return None
 
     # UI creation
     def _create_dialog(self) -> None:
@@ -304,6 +312,21 @@ class SoundPackManagerDialog:
 
     # Community integration
     def _on_browse_community_packs(self, widget) -> None:
+        if getattr(self, "community_service", None) is None:
+            try:
+                self.community_service = CommunitySoundPackService()
+                if getattr(self, "browse_community_button", None):
+                    self.browse_community_button.enabled = True
+            except Exception as exc:
+                logger.error("Unable to start community service: %s", exc)
+                asyncio.create_task(
+                    self.app.main_window.error_dialog(
+                        "Community Sound Packs",
+                        "Community packs are temporarily unavailable. Please try again later.",
+                    )
+                )
+                return
+
         dlg = CommunityPacksBrowserDialog(
             app=self.app,
             service=getattr(self, "community_service", None),
