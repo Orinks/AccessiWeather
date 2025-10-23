@@ -35,9 +35,7 @@ def apply_settings_to_ui(dialog):
             dialog.show_uv_index_switch.value = getattr(settings, "show_uv_index", True)
 
         if getattr(dialog, "show_pressure_trend_switch", None):
-            dialog.show_pressure_trend_switch.value = getattr(
-                settings, "show_pressure_trend", True
-            )
+            dialog.show_pressure_trend_switch.value = getattr(settings, "show_pressure_trend", True)
 
         if getattr(dialog, "show_detailed_forecast_switch", None):
             dialog.show_detailed_forecast_switch.value = getattr(
@@ -284,9 +282,7 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         try:
             ignored_categories = list(dialog._collect_ignored_categories())  # type: ignore[attr-defined]
         except Exception:
-            ignored_categories = list(
-                getattr(current_settings, "alert_ignored_categories", [])
-            )
+            ignored_categories = list(getattr(current_settings, "alert_ignored_categories", []))
     else:
         ignored_categories = list(getattr(current_settings, "alert_ignored_categories", []))
 
