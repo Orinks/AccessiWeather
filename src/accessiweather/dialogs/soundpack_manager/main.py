@@ -504,8 +504,10 @@ class SoundPackManagerDialog:
         if self.pack_list and hasattr(self.pack_list, "data") and len(self.pack_list.data) > 0:
             try:
                 first_pack = self.pack_list.data[0]
-                self.pack_list.selection = first_pack
-                self._on_pack_selected(self.pack_list)
+                from types import SimpleNamespace
+
+                dummy_widget = SimpleNamespace(selection=first_pack)
+                self._on_pack_selected(dummy_widget)
                 await asyncio.sleep(0.1)
             except Exception as e:
                 logger.warning(f"Could not select first pack: {e}")

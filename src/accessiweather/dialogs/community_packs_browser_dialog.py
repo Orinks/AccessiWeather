@@ -374,7 +374,7 @@ class CommunityPacksBrowserDialog:
                 first_key = key
 
         if first_key:
-            self._select_by_key(first_key)
+            self._apply_initial_selection(first_key)
         else:
             self._update_details(None)
             message = "You may be offline or rate-limited. Try Refresh or adjust search criteria."
@@ -430,23 +430,11 @@ class CommunityPacksBrowserDialog:
         self._update_details(pack)
         self._set_buttons_enabled(self._pack_has_download_source(pack))
 
-    def _select_by_key(self, key: str) -> None:
-        """Select a row by pack key and update details/buttons."""
+    def _apply_initial_selection(self, key: str) -> None:
+        """Initialize selection state without modifying widget selection directly."""
         pack = self._pack_index.get(key)
         if pack is None:
             return
-
-        if self._use_detailed_list and self.pack_list:
-            for row in self.pack_list.data:
-                if getattr(row, "pack_key", None) == key:
-                    self.pack_list.selection = row
-                    break
-        elif self.pack_table:
-            for row in self.pack_table.data:
-                if getattr(row, "pack_key", None) == key:
-                    self.pack_table.selection = row
-                    break
-
         self._selected_key = key
         self._update_details(pack)
         self._set_buttons_enabled(self._pack_has_download_source(pack))
