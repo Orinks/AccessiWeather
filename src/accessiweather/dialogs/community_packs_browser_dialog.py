@@ -69,14 +69,14 @@ class CommunityPacksBrowserDialog:
 
         # Header with search and refresh
         header = toga.Box(style=Pack(direction=ROW, margin_bottom=8))
+        hint_label = toga.Label(
+            "Filter packs:", style=Pack(margin_right=6, alignment="center", baseline=True)
+        )
+        header.add(hint_label)
         self.search_input = toga.TextInput(
             placeholder="Search by name or author", style=Pack(flex=1, margin_right=8)
         )
         self.search_input.on_change = self._on_search
-        hint_label = toga.Label(
-            "Filter packs:", style=Pack(margin_right=6, alignment="center", baseline=True)
-        )
-        header._children.insert(0, hint_label)
         with contextlib.suppress(AttributeError):
             self.search_input.aria_label = "Filter community sound packs"
         self.refresh_button = toga.Button(
