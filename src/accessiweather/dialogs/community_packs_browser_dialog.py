@@ -55,11 +55,13 @@ class CommunityPacksBrowserDialog:
 
         self.window: toga.Window | None = None
         self.pack_list: toga.DetailedList | None = None
+        self.pack_table: toga.Table | None = None
         self.search_input: toga.TextInput | None = None
         self.refresh_button: toga.Button | None = None
 
         self._packs: list[CommunityPack] = []
         self._pack_lookup: dict[str, CommunityPack] = {}
+        self._use_detailed_list = True
 
     def show(self) -> None:
         self.window = toga.Window(
@@ -86,18 +88,37 @@ class CommunityPacksBrowserDialog:
         header.add(self.refresh_button)
         main.add(header)
 
-        # List of packs (detailed list provides better screen reader support)
-        self.pack_list = toga.DetailedList(
-            on_select=self._on_select_row,
-            style=Pack(flex=1, margin_bottom=8),
-        )
-        with contextlib.suppress(AttributeError):
-            self.pack_list.aria_label = "Community sound packs"
-            self.pack_list.aria_description = (
-                "Browse available community sound packs. Each entry announces name, version, author, size, "
-                "and a short description. Use the arrow keys to explore and press Enter to select."
+        # List of packs (DetailedList preferred; fallback to Table where unavailable)
+        self._use_detailed_list = True
+        try:
+            self.pack_list = toga.DetailedList(
+                on_select=self._on_select_row,
+                style=Pack(flex=1, margin_bottom=8),
             )
-        main.add(self.pack_list)
+            with contextlib.suppress(AttributeError):
+                self.pack_list.aria_label = "Community sound packs"
+                self.pack_list.aria_description = (
+                    "Browse available community sound packs. Each entry announces name, version, author, size, "
+                    "and a short description. Use the arrow keys to explore and press Enter to select."
+                )
+            main.add(self.pack_list)
+        except Exception as exc:
+            logger.warning("DetailedList unavailable, falling back to Table: %s", exc)
+            self._use_detailed_list = False
+            self.pack_list = None
+            self.pack_table = toga.Table(
+                headings=["Name", "Author", "Version", "Description", "Size"],
+                style=Pack(flex=1, margin_bottom=8),
+                multiple_select=False,
+                on_select=self._on_select_row,
+            )
+            with contextlib.suppress(AttributeError):
+                self.pack_table.aria_label = "Community sound packs"
+                self.pack_table.aria_description = (
+                    "Browse available community sound packs. Columns include name, author, version, description, "
+                    "and size. Use the arrow keys to explore and press Enter to select."
+                )
+            main.add(self.pack_table)
 
         # Button row
         buttons = toga.Box(style=Pack(direction=ROW))
@@ -135,14 +156,26 @@ class CommunityPacksBrowserDialog:
 
     async def _load_packs(self, force: bool = False):
         try:
-            if self.pack_list:
+            if self._use_detailed_list and self.pack_list:
                 self.pack_list.data.clear()
+            elif not self._use_detailed_list and self.pack_table:
+                self.pack_table.data.clear()
             # Loading state
-            if self.pack_list:
+            if self._use_detailed_list and self.pack_list:
                 self.pack_list.data.append(
                     {
                         "title": "Loading…",
                         "subtitle": "Fetching community packs",
+                    }
+                )
+            elif self.pack_table:
+                self.pack_table.data.append(
+                    {
+                        "Name": "Loading…",
+                        "Author": "",
+                        "Version": "",
+                        "Description": "Fetching community packs",
+                        "Size": "",
                     }
                 )
             packs = await self.service.fetch_available_packs(force_refresh=force)
@@ -156,9 +189,15 @@ class CommunityPacksBrowserDialog:
                 )
 
     async def _populate_list(self, filter_text: str = ""):
-        if not self.pack_list:
+        view = self.pack_list if self._use_detailed_list else self.pack_table
+        if not view:
             return
-        self.pack_list.data.clear()
+
+        if self._use_detailed_list and self.pack_list:
+            self.pack_list.data.clear()
+        elif self.pack_table:
+            self.pack_table.data.clear()
+
         self._pack_lookup.clear()
         ft = (filter_text or "").strip().lower()
         added = 0
@@ -168,24 +207,44 @@ class CommunityPacksBrowserDialog:
             size_str = f"{(p.file_size or 0) / (1024 * 1024):.1f} MB" if p.file_size else "?"
             pack_key = f"{p.name}::{p.author}::{p.version}"
             self._pack_lookup[pack_key] = p
-            self.pack_list.data.append(
-                {
-                    "title": p.name,
-                    "subtitle": self._format_accessible_summary(p, size_str),
-                    "pack_key": pack_key,
-                }
-            )
+            if self._use_detailed_list and self.pack_list:
+                self.pack_list.data.append(
+                    {
+                        "title": p.name,
+                        "subtitle": self._format_accessible_summary(p, size_str),
+                        "pack_key": pack_key,
+                    }
+                )
+            elif self.pack_table:
+                self.pack_table.data.append(
+                    {
+                        "Name": p.name,
+                        "Author": p.author,
+                        "Version": p.version,
+                        "Description": (p.description or "").replace("\n", " ")[:120],
+                        "Size": size_str,
+                        "pack_key": pack_key,
+                    }
+                )
             added += 1
+
         if added == 0:
-            # Empty-state guidance when no packs are available or filtered out
-            self.pack_list.data.append(
-                {
-                    "title": "No community packs found",
-                    "subtitle": (
-                        "You may be offline or rate-limited. Try Refresh or adjust search criteria."
-                    ),
-                }
-            )
+            message = "You may be offline or rate-limited. Try Refresh or adjust search criteria."
+            if self._use_detailed_list and self.pack_list:
+                self.pack_list.data.append(
+                    {"title": "No community packs found", "subtitle": message}
+                )
+            elif self.pack_table:
+                self.pack_table.data.append(
+                    {
+                        "Name": "No community packs found",
+                        "Author": "",
+                        "Version": "",
+                        "Description": message,
+                        "Size": "",
+                    }
+                )
+
         if self.download_button:
             self.download_button.enabled = False
 
@@ -207,17 +266,36 @@ class CommunityPacksBrowserDialog:
         self.download_button.enabled = has_download_source
 
     def _get_selected_pack(self) -> CommunityPack | None:
-        if not self.pack_list or not self.pack_list.selection:
+        if self._use_detailed_list:
+            if not self.pack_list or not self.pack_list.selection:
+                return None
+            row = self.pack_list.selection
+            key = getattr(row, "pack_key", None)
+            if key and key in self._pack_lookup:
+                return self._pack_lookup[key]
+            title = getattr(row, "title", None)
+            if title:
+                for pack in self._packs:
+                    if pack.name == title:
+                        return pack
             return None
-        row = self.pack_list.selection
+
+        if not self.pack_table or not self.pack_table.selection:
+            return None
+        row = self.pack_table.selection
         key = getattr(row, "pack_key", None)
         if key and key in self._pack_lookup:
             return self._pack_lookup[key]
-        title = getattr(row, "title", None)
-        if title:
-            for pack in self._packs:
-                if pack.name == title:
-                    return pack
+        name = getattr(row, "Name", None)
+        author = getattr(row, "Author", None)
+        version = getattr(row, "Version", None)
+        for pack in self._packs:
+            if (
+                pack.name == name
+                and pack.author == (author or pack.author)
+                and pack.version == (version or pack.version)
+            ):
+                return pack
         return None
 
     def _format_accessible_summary(self, p: CommunityPack, size: str) -> str:
