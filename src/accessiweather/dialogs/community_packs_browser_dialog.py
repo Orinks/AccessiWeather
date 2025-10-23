@@ -191,7 +191,10 @@ class CommunityPacksBrowserDialog:
         self.preview_button.enabled = has_sel
         # Enable Download only if a pack is selected and has a valid download_url
         selected = self._get_selected_pack() if has_sel else None
-        self.download_button.enabled = bool(selected and selected.download_url)
+        has_download_source = bool(
+            selected and (selected.download_url or getattr(selected, "repo_path", None))
+        )
+        self.download_button.enabled = has_download_source
 
     def _get_selected_pack(self) -> CommunityPack | None:
         if not self.table or not self.table.selection:
