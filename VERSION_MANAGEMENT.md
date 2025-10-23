@@ -77,7 +77,7 @@ That's it! The version will automatically propagate to:
 Modified:
   - pyproject.toml (removed duplicate, updated to 0.4.0)
   - src/accessiweather/__init__.py (simplified version reading)
-  
+
 Added:
   - tests/test_version_management.py (new test suite)
 ```
