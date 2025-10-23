@@ -9,20 +9,21 @@ indicator using the same UX pattern as UpdateProgressDialog.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 from collections.abc import Callable
 from pathlib import Path
 
 import toga
 from toga.style import Pack
-from toga.style.pack import COLUMN, ROW
+from travertino.constants import COLUMN, ROW
 
-from accessiweather.dialogs.update_progress_dialog import UpdateProgressDialog
-from accessiweather.notifications.sound_pack_installer import SoundPackInstaller
-from accessiweather.services.community_soundpack_service import (
+from ..notifications.sound_pack_installer import SoundPackInstaller
+from ..services.community_soundpack_service import (
     CommunityPack,
     CommunitySoundPackService,
 )
+from .update_progress_dialog import UpdateProgressDialog
 
 logger = logging.getLogger(__name__)
 
@@ -37,13 +38,12 @@ class CommunityPacksBrowserDialog:
         service: Service used to fetch and download packs
         installer: Installer used to install a downloaded ZIP
         on_installed: Optional callback fired with pack display name after install
-
     """
 
     def __init__(
         self,
         app: toga.App,
-        service: CommunitySoundPackService,
+        service: CommunitySoundPackService | None,
         installer: SoundPackInstaller,
         on_installed: Callable[[str], None] | None = None,
     ) -> None:
@@ -53,186 +53,341 @@ class CommunityPacksBrowserDialog:
         self.installer = installer
         self.on_installed = on_installed
 
+        # Window + UI controls
         self.window: toga.Window | None = None
-        self.pack_list: toga.DetailedList | None = None
-        self.pack_table: toga.Table | None = None
         self.search_input: toga.TextInput | None = None
         self.refresh_button: toga.Button | None = None
+        self.pack_list: toga.DetailedList | None = None
+        self.pack_table: toga.Table | None = None
+        self._use_detailed_list: bool = True
+        self.details_name_label: toga.Label | None = None
+        self.details_author_label: toga.Label | None = None
+        self.details_version_label: toga.Label | None = None
+        self.details_size_label: toga.Label | None = None
+        self.details_repo_label: toga.Label | None = None
+        self.details_description_label: toga.Label | None = None
+        self.install_button: toga.Button | None = None
+        self.preview_button: toga.Button | None = None
+        self.status_label: toga.Label | None = None
 
+        # Data/state
         self._packs: list[CommunityPack] = []
-        self._pack_lookup: dict[str, CommunityPack] = {}
-        self._use_detailed_list = True
+        self._pack_index: dict[str, CommunityPack] = {}
+        self._selected_key: str | None = None
+        self._loading_task: asyncio.Task | None = None
 
+    # Public API -----------------------------------------------------
     def show(self) -> None:
-        self.window = toga.Window(
-            title="Browse Community Sound Packs", size=(760, 520), resizable=False
-        )
-        main = toga.Box(style=Pack(direction=COLUMN, padding=10))
+        """Show the dialog window."""
+        if self.window is None:
+            self._build_window()
 
-        # Header with search and refresh
+        if not self.window:
+            return
+
+        self._reset_ui()
+
+        # Add to app window list if needed
+        try:
+            if self.window not in getattr(self.app, "windows", []):
+                self.app.windows.add(self.window)
+        except Exception:
+            with contextlib.suppress(Exception):
+                self.app.windows.add(self.window)
+
+        self.window.show()
+        asyncio.create_task(self._focus_search())
+
+        if self.service is None:
+            asyncio.create_task(
+                self._show_error(
+                    "Community sound packs are currently unavailable. Please try again later."
+                )
+            )
+            return
+
+        self._start_loading()
+
+    # UI construction ------------------------------------------------
+    def _build_window(self) -> None:
+        """Construct window and UI controls once."""
+        self.window = toga.Window(
+            title="Browse Community Sound Packs",
+            size=(820, 560),
+            resizable=True,
+        )
+
+        root = toga.Box(style=Pack(direction=COLUMN, padding=12, flex=1))
+
+        # Header with search + refresh
         header = toga.Box(style=Pack(direction=ROW, margin_bottom=8))
         hint_label = toga.Label(
             "Filter packs:", style=Pack(margin_right=6, alignment="center", baseline=True)
         )
         header.add(hint_label)
         self.search_input = toga.TextInput(
-            placeholder="Search by name or author", style=Pack(flex=1, margin_right=8)
+            placeholder="Search by name or author",
+            style=Pack(flex=1, margin_right=8),
+            on_change=self._on_search,
         )
-        self.search_input.on_change = self._on_search
         with contextlib.suppress(AttributeError):
             self.search_input.aria_label = "Filter community sound packs"
         self.refresh_button = toga.Button(
-            "Refresh", on_press=self._on_refresh, style=Pack(width=100)
+            "Refresh",
+            on_press=self._on_refresh,
+            style=Pack(width=110),
         )
         header.add(self.search_input)
         header.add(self.refresh_button)
-        main.add(header)
+        root.add(header)
 
-        # List of packs (DetailedList preferred; fallback to Table where unavailable)
+        # Main content split: list + details
+        content = toga.Box(style=Pack(direction=ROW, flex=1, margin_bottom=8))
+
+        # Pack list panel
+        list_panel = toga.Box(style=Pack(direction=COLUMN, flex=1, margin_right=10))
+        list_panel.add(
+            toga.Label("Available Packs", style=Pack(font_weight="bold", margin_bottom=6))
+        )
         self._use_detailed_list = True
         try:
             self.pack_list = toga.DetailedList(
                 on_select=self._on_select_row,
-                style=Pack(flex=1, margin_bottom=8),
+                style=Pack(flex=1),
             )
             with contextlib.suppress(AttributeError):
                 self.pack_list.aria_label = "Community sound packs"
                 self.pack_list.aria_description = (
-                    "Browse available community sound packs. Each entry announces name, version, author, size, "
-                    "and a short description. Use the arrow keys to explore and press Enter to select."
+                    "Browse available community sound packs. Each entry announces name, version, author, "
+                    "size, and a short description. Use the arrow keys to explore and press Enter to select."
                 )
-            main.add(self.pack_list)
+            list_panel.add(self.pack_list)
+            self.pack_table = None
         except Exception as exc:
             logger.warning("DetailedList unavailable, falling back to Table: %s", exc)
             self._use_detailed_list = False
             self.pack_list = None
             self.pack_table = toga.Table(
                 headings=["Name", "Author", "Version", "Description", "Size"],
-                style=Pack(flex=1, margin_bottom=8),
+                style=Pack(flex=1),
                 multiple_select=False,
                 on_select=self._on_select_row,
             )
             with contextlib.suppress(AttributeError):
                 self.pack_table.aria_label = "Community sound packs"
                 self.pack_table.aria_description = (
-                    "Browse available community sound packs. Columns include name, author, version, description, "
-                    "and size. Use the arrow keys to explore and press Enter to select."
+                    "Browse available community sound packs. Columns include name, author, version, "
+                    "description, and size. Use the arrow keys to explore and press Enter to select."
                 )
-            main.add(self.pack_table)
+            list_panel.add(self.pack_table)
+        content.add(list_panel)
 
-        # Button row
-        buttons = toga.Box(style=Pack(direction=ROW))
-        buttons.add(toga.Box(style=Pack(flex=1)))
-        self.download_button = toga.Button(
+        # Details panel
+        details_panel = toga.Box(style=Pack(direction=COLUMN, flex=1.4, padding=10))
+        details_panel.add(
+            toga.Label("Pack Details", style=Pack(font_weight="bold", margin_bottom=6))
+        )
+        self.details_name_label = toga.Label("Select a pack to view details.")
+        self.details_author_label = toga.Label("")
+        self.details_version_label = toga.Label("")
+        self.details_size_label = toga.Label("")
+        self.details_repo_label = toga.Label("", style=Pack(margin_bottom=6))
+        self.details_description_label = toga.Label(
+            "",
+            style=Pack(flex=1, padding_top=6),
+        )
+        details_panel.add(self.details_name_label)
+        details_panel.add(self.details_author_label)
+        details_panel.add(self.details_version_label)
+        details_panel.add(self.details_size_label)
+        details_panel.add(self.details_repo_label)
+        details_panel.add(toga.Label("Description:", style=Pack(font_weight="bold", margin_top=10)))
+        details_panel.add(self.details_description_label)
+        content.add(details_panel)
+
+        root.add(content)
+
+        # Status label
+        self.status_label = toga.Label("", style=Pack(margin_bottom=6))
+        root.add(self.status_label)
+
+        # Footer buttons
+        button_row = toga.Box(style=Pack(direction=ROW))
+        button_row.add(toga.Box(style=Pack(flex=1)))
+        self.install_button = toga.Button(
             "Download & Install",
             on_press=self._on_download,
             enabled=False,
             style=Pack(margin_right=10),
         )
         self.preview_button = toga.Button(
-            "Preview Details", on_press=self._on_preview, enabled=False, style=Pack(margin_right=10)
+            "Preview Details",
+            on_press=self._on_preview,
+            enabled=False,
+            style=Pack(margin_right=10),
         )
-        close_button = toga.Button("Close", on_press=lambda w: self.window.close())
-        buttons.add(self.download_button)
-        buttons.add(self.preview_button)
-        buttons.add(close_button)
-        main.add(buttons)
+        close_button = toga.Button("Close", on_press=lambda _: self._request_close())
+        button_row.add(self.install_button)
+        button_row.add(self.preview_button)
+        button_row.add(close_button)
+        root.add(button_row)
 
-        self.window.content = main
-        self.app.windows.add(self.window)
-        self.window.show()
-        # Focus search for accessibility
-        asyncio.create_task(self._focus_search())
-        # Load packs
-        asyncio.create_task(self._load_packs())
+        self.window.content = root
+        with contextlib.suppress(Exception):
+            self.window.on_close = self._on_close
 
-    async def _focus_search(self):
-        await asyncio.sleep(0.2)
+    # Helpers --------------------------------------------------------
+    def _reset_ui(self) -> None:
+        """Reset UI to initial state before loading data."""
+        self._selected_key = None
+        self._packs.clear()
+        self._pack_index.clear()
+
+        if self.pack_list is not None:
+            with contextlib.suppress(Exception):
+                self.pack_list.data.clear()
+        if self.pack_table is not None:
+            with contextlib.suppress(Exception):
+                self.pack_table.data.clear()
+
+        self._update_details(None)
+        self._set_status("")
+        self._set_buttons_enabled(False)
+
+    def _start_loading(self, force: bool = False) -> None:
+        """Kick off async load of community packs."""
+        if self.service is None:
+            return
+        if self._loading_task and not self._loading_task.done():
+            self._loading_task.cancel()
+        self._loading_task = asyncio.create_task(self._load_packs(force=force))
+
+    async def _focus_search(self) -> None:
+        await asyncio.sleep(0.25)
         try:
             if self.search_input:
                 self.search_input.focus()
         except Exception:
             pass
 
-    async def _load_packs(self, force: bool = False):
+    async def _load_packs(self, force: bool = False) -> None:
+        """Fetch packs and populate the list."""
+        if self.service is None:
+            return
+
+        self._set_status("Loading community packs...")
+        self._set_buttons_enabled(False)
+        if self.refresh_button:
+            self.refresh_button.enabled = False
+
+        self._show_loading_state()
+
         try:
-            if self._use_detailed_list and self.pack_list:
+            packs = await self.service.fetch_available_packs(force_refresh=force)
+            self._packs = list(packs)
+            self._pack_index = {self._pack_key(pack): pack for pack in self._packs}
+            filter_text = self.search_input.value if self.search_input else ""
+            self._populate_list(filter_text)
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            logger.error("Failed to load community packs: %s", exc)
+            await self._show_error(f"Failed to load community packs: {exc}")
+        finally:
+            if self.refresh_button:
+                self.refresh_button.enabled = True
+            self._set_status("")
+
+    def _show_loading_state(self) -> None:
+        """Display a temporary loading row."""
+        if self._use_detailed_list and self.pack_list:
+            with contextlib.suppress(Exception):
                 self.pack_list.data.clear()
-            elif not self._use_detailed_list and self.pack_table:
-                self.pack_table.data.clear()
-            # Loading state
-            if self._use_detailed_list and self.pack_list:
                 self.pack_list.data.append(
                     {
-                        "title": "Loading…",
+                        "title": "Loading...",
                         "subtitle": "Fetching community packs",
+                        "pack_key": None,
                     }
                 )
-            elif self.pack_table:
+        elif self.pack_table:
+            with contextlib.suppress(Exception):
+                self.pack_table.data.clear()
                 self.pack_table.data.append(
                     {
-                        "Name": "Loading…",
+                        "Name": "Loading...",
                         "Author": "",
                         "Version": "",
                         "Description": "Fetching community packs",
                         "Size": "",
+                        "pack_key": None,
                     }
                 )
-            packs = await self.service.fetch_available_packs(force_refresh=force)
-            self._packs = packs
-            await self._populate_list()
-        except Exception as e:
-            logger.error(f"Failed to load community packs: {e}")
-            with contextlib.suppress(Exception):
-                await self.app.main_window.error_dialog(
-                    "Community Packs", f"Failed to load community packs: {e}"
-                )
 
-    async def _populate_list(self, filter_text: str = ""):
-        view = self.pack_list if self._use_detailed_list else self.pack_table
-        if not view:
+    def _populate_list(self, filter_text: str = "") -> None:
+        """Populate the list/table with packs matching the filter."""
+        view = None
+        if self._use_detailed_list and self.pack_list:
+            view = self.pack_list.data
+        elif self.pack_table:
+            view = self.pack_table.data
+        if view is None:
             return
 
-        if self._use_detailed_list and self.pack_list:
-            self.pack_list.data.clear()
-        elif self.pack_table:
-            self.pack_table.data.clear()
+        with contextlib.suppress(Exception):
+            view.clear()
 
-        self._pack_lookup.clear()
+        self._selected_key = None
+        self._set_buttons_enabled(False)
+
         ft = (filter_text or "").strip().lower()
-        added = 0
-        for p in self._packs:
-            if ft and (ft not in p.name.lower()) and (ft not in p.author.lower()):
+        first_key: str | None = None
+
+        for pack in self._packs:
+            if ft and ft not in pack.name.lower() and ft not in pack.author.lower():
                 continue
-            size_str = f"{(p.file_size or 0) / (1024 * 1024):.1f} MB" if p.file_size else "?"
-            pack_key = f"{p.name}::{p.author}::{p.version}"
-            self._pack_lookup[pack_key] = p
+
+            key = self._pack_key(pack)
+            size_str = f"{(pack.file_size or 0) / (1024 * 1024):.1f} MB" if pack.file_size else "?"
+            summary = self._format_accessible_summary(pack, size_str)
+
             if self._use_detailed_list and self.pack_list:
                 self.pack_list.data.append(
                     {
-                        "title": p.name,
-                        "subtitle": self._format_accessible_summary(p, size_str),
-                        "pack_key": pack_key,
+                        "title": pack.name,
+                        "subtitle": summary,
+                        "pack_key": key,
                     }
                 )
             elif self.pack_table:
                 self.pack_table.data.append(
                     {
-                        "Name": p.name,
-                        "Author": p.author,
-                        "Version": p.version,
-                        "Description": (p.description or "").replace("\n", " ")[:120],
+                        "Name": pack.name,
+                        "Author": pack.author,
+                        "Version": pack.version,
+                        "Description": (pack.description or "").replace("\n", " ")[:120],
                         "Size": size_str,
-                        "pack_key": pack_key,
+                        "pack_key": key,
                     }
                 )
-            added += 1
 
-        if added == 0:
-            message = "You may be offline or rate-limited. Try Refresh or adjust search criteria."
+            if first_key is None:
+                first_key = key
+
+        if first_key:
+            self._select_by_key(first_key)
+        else:
+            self._update_details(None)
+            message = (
+                "You may be offline or rate-limited. Try Refresh or adjust search criteria."
+            )
             if self._use_detailed_list and self.pack_list:
                 self.pack_list.data.append(
-                    {"title": "No community packs found", "subtitle": message}
+                    {
+                        "title": "No community packs found",
+                        "subtitle": message,
+                        "pack_key": None,
+                    }
                 )
             elif self.pack_table:
                 self.pack_table.data.append(
@@ -242,133 +397,225 @@ class CommunityPacksBrowserDialog:
                         "Version": "",
                         "Description": message,
                         "Size": "",
+                        "pack_key": None,
                     }
                 )
 
-        if self.download_button:
-            self.download_button.enabled = False
+    def _on_search(self, widget) -> None:
+        self._populate_list(widget.value or "")
 
-    def _on_search(self, widget):
-        ft = widget.value or ""
-        asyncio.create_task(self._populate_list(ft))
+    def _on_refresh(self, widget) -> None:
+        if self.service is None:
+            asyncio.create_task(
+                self._show_error(
+                    "Community sound packs are currently unavailable. Please try again later."
+                )
+            )
+            return
+        self._start_loading(force=True)
 
-    def _on_refresh(self, widget):
-        asyncio.create_task(self._load_packs(force=True))
-
-    def _on_select_row(self, widget):
-        has_sel = bool(widget.selection)
-        self.preview_button.enabled = has_sel
-        # Enable Download only if a pack is selected and has a valid download_url
-        selected = self._get_selected_pack() if has_sel else None
-        has_download_source = bool(
-            selected and (selected.download_url or getattr(selected, "repo_path", None))
-        )
-        self.download_button.enabled = has_download_source
-
-    def _get_selected_pack(self) -> CommunityPack | None:
-        if self._use_detailed_list:
-            if not self.pack_list or not self.pack_list.selection:
-                return None
-            row = self.pack_list.selection
-            key = getattr(row, "pack_key", None)
-            if key and key in self._pack_lookup:
-                return self._pack_lookup[key]
-            title = getattr(row, "title", None)
-            if title:
-                for pack in self._packs:
-                    if pack.name == title:
-                        return pack
-            return None
-
-        if not self.pack_table or not self.pack_table.selection:
-            return None
-        row = self.pack_table.selection
+    def _on_select_row(self, widget) -> None:
+        row = getattr(widget, "selection", None)
         key = getattr(row, "pack_key", None)
-        if key and key in self._pack_lookup:
-            return self._pack_lookup[key]
-        name = getattr(row, "Name", None)
-        author = getattr(row, "Author", None)
-        version = getattr(row, "Version", None)
-        for pack in self._packs:
-            if (
-                pack.name == name
-                and pack.author == (author or pack.author)
-                and pack.version == (version or pack.version)
-            ):
-                return pack
-        return None
+        if not key:
+            self._selected_key = None
+            self._update_details(None)
+            self._set_buttons_enabled(False)
+            return
 
-    def _format_accessible_summary(self, p: CommunityPack, size: str) -> str:
-        desc = (p.description or "").replace("\n", " ").strip()
-        summary = f"Version {p.version} by {p.author}. Size {size}."
+        self._selected_key = key
+        pack = self._pack_index.get(key)
+        if pack is None:
+            self._update_details(None)
+            self._set_buttons_enabled(False)
+            return
+
+        self._update_details(pack)
+        self._set_buttons_enabled(self._pack_has_download_source(pack))
+
+    def _select_by_key(self, key: str) -> None:
+        """Select a row by pack key and update details/buttons."""
+        pack = self._pack_index.get(key)
+        if pack is None:
+            return
+
+        if self._use_detailed_list and self.pack_list:
+            for row in self.pack_list.data:
+                if getattr(row, "pack_key", None) == key:
+                    self.pack_list.selection = row
+                    break
+        elif self.pack_table:
+            for row in self.pack_table.data:
+                if getattr(row, "pack_key", None) == key:
+                    self.pack_table.selection = row
+                    break
+
+        self._selected_key = key
+        self._update_details(pack)
+        self._set_buttons_enabled(self._pack_has_download_source(pack))
+
+    def _update_details(self, pack: CommunityPack | None) -> None:
+        """Update the right-hand details panel based on selection."""
+        if not self.details_name_label:
+            return
+
+        if pack is None:
+            self.details_name_label.text = "Select a community sound pack to view details."
+            if self.details_author_label:
+                self.details_author_label.text = ""
+            if self.details_version_label:
+                self.details_version_label.text = ""
+            if self.details_size_label:
+                self.details_size_label.text = ""
+            if self.details_repo_label:
+                self.details_repo_label.text = ""
+            if self.details_description_label:
+                self.details_description_label.text = ""
+            return
+
+        self.details_name_label.text = pack.name
+        if self.details_author_label:
+            self.details_author_label.text = f"Author: {pack.author}"
+        if self.details_version_label:
+            self.details_version_label.text = f"Version: {pack.version}"
+        if self.details_size_label:
+            if pack.file_size:
+                mb = pack.file_size / (1024 * 1024)
+                self.details_size_label.text = f"Size: {mb:.1f} MB"
+            else:
+                self.details_size_label.text = "Size: Unknown"
+        if self.details_repo_label:
+            if pack.repository_url:
+                self.details_repo_label.text = f"Repository: {pack.repository_url}"
+            else:
+                self.details_repo_label.text = ""
+        if self.details_description_label:
+            desc = pack.description or "No description provided."
+            self.details_description_label.text = desc.replace("\r\n", "\n")
+
+    def _pack_has_download_source(self, pack: CommunityPack) -> bool:
+        return bool(pack.download_url or getattr(pack, "repo_path", None))
+
+    def _set_buttons_enabled(self, enabled: bool) -> None:
+        if self.install_button:
+            self.install_button.enabled = enabled
+        if self.preview_button:
+            self.preview_button.enabled = enabled
+
+    def _set_status(self, message: str) -> None:
+        if self.status_label is not None:
+            self.status_label.text = message
+
+    def _pack_key(self, pack: CommunityPack) -> str:
+        """Create a stable key for list items."""
+        return "|".join(
+            filter(
+                None,
+                [
+                    pack.name,
+                    pack.author,
+                    pack.version,
+                    pack.release_tag or "",
+                ],
+            )
+        )
+
+    def _format_accessible_summary(self, pack: CommunityPack, size: str) -> str:
+        desc = (pack.description or "").replace("\n", " ").strip()
+        summary = f"Version {pack.version} by {pack.author}. Size {size}."
         if desc:
             summary = f"{summary} {desc}"
-        if getattr(p, "repo_path", None) and not p.download_url:
+        if getattr(pack, "repo_path", None) and not pack.download_url:
             summary = f"{summary} Downloads directly from repository contents."
         return summary
 
-    def _format_pack_details(self, p: CommunityPack) -> str:
-        parts = [
-            f"Name: {p.name}",
-            f"Author: {p.author}",
-            f"Version: {p.version}",
-        ]
-        if p.description:
-            parts.append("")
-            parts.append(p.description)
-        if p.repository_url:
-            parts.append("")
-            parts.append(f"More info: {p.repository_url}")
-        return "\n".join(parts)
+    def _get_selected_pack(self) -> CommunityPack | None:
+        if self._selected_key:
+            return self._pack_index.get(self._selected_key)
+        return None
 
-    def _on_preview(self, widget):
-        p = self._get_selected_pack()
-        if not p:
+    def _on_preview(self, widget) -> None:
+        pack = self._get_selected_pack()
+        if not pack:
             return
+
+        details = [
+            f"Name: {pack.name}",
+            f"Author: {pack.author}",
+            f"Version: {pack.version}",
+        ]
+        if pack.description:
+            details.append("")
+            details.append(pack.description)
+        if pack.repository_url:
+            details.append("")
+            details.append(f"More info: {pack.repository_url}")
+
         asyncio.create_task(
-            self.app.main_window.info_dialog("Pack Details", self._format_pack_details(p))
+            self.app.main_window.info_dialog("Pack Details", "\n".join(details))
         )
 
-    def _on_download(self, widget):
-        p = self._get_selected_pack()
-        if not p:
+    def _on_download(self, widget) -> None:
+        pack = self._get_selected_pack()
+        if not pack:
             return
-        asyncio.create_task(self._download_and_install(p))
+        asyncio.create_task(self._download_and_install(pack))
 
-    async def _download_and_install(self, p: CommunityPack):
+    async def _download_and_install(self, pack: CommunityPack) -> None:
+        """Download the selected pack and install it."""
+        progress = UpdateProgressDialog(self.app, title=f"Downloading {pack.name}")
+        progress.show_and_prepare()
+
         try:
-            progress = UpdateProgressDialog(self.app, title=f"Downloading {p.name}")
-            progress.show_and_prepare()
 
-            async def cb(pc: float, downloaded: int, total: int):
-                await progress.update_progress(pc, downloaded, total)
+            async def on_progress(pct: float, downloaded: int, total: int) -> bool:
+                await progress.update_progress(pct, downloaded, total)
                 return not progress.is_cancelled
 
-            # Download to a temp directory
             tmp_dir = Path(self.installer.soundpacks_dir) / "_downloads"
-            zip_path = await self.service.download_pack(p, tmp_dir, cb)
+            zip_path = await self.service.download_pack(pack, tmp_dir, on_progress)  # type: ignore[union-attr]
 
             if progress.is_cancelled:
                 await progress.complete_error("Download cancelled")
                 return
 
-            # Install from ZIP (offload to thread to avoid blocking UI)
-            await progress.set_status("Installing...", f"Installing pack {p.name}")
+            await progress.set_status("Installing...", f"Installing pack {pack.name}")
             ok, msg = await asyncio.to_thread(self.installer.install_from_zip, zip_path, None)
             if ok:
                 await progress.complete_success("Installed successfully")
-                # Notify parent to refresh; pass the pack display name
                 if self.on_installed:
                     with contextlib.suppress(Exception):
-                        # If installer returned a quoted success message, still send p.name per contract
-                        self.on_installed(p.name)
+                        self.on_installed(pack.name)
+                self._set_status(f"Installed {pack.name}")
             else:
                 await progress.complete_error(msg)
-        except Exception as e:
-            logger.error(f"Failed to download/install pack: {e}")
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            logger.error("Failed to download/install pack: %s", exc)
             with contextlib.suppress(Exception):
-                await progress.complete_error(str(e))
+                await progress.complete_error(str(exc))
+        finally:
+            with contextlib.suppress(Exception):
+                progress.window.close()
+
+    async def _show_error(self, message: str) -> None:
+        """Show an error dialog if the main window is available."""
+        with contextlib.suppress(Exception):
+            await self.app.main_window.error_dialog("Community Packs", message)
+        self._set_status(message)
+
+    def _request_close(self) -> None:
+        """Close the window from a button press."""
+        if self.window is not None:
+            with contextlib.suppress(Exception):
+                self.window.close()
+
+    def _on_close(self, widget=None) -> None:
+        """Handle window close by cancelling pending work."""
+        if self._loading_task and not self._loading_task.done():
+            self._loading_task.cancel()
+        self._loading_task = None
 
 
-# Local contextlib
-import contextlib  # noqa: E402
+__all__ = ["CommunityPacksBrowserDialog"]
