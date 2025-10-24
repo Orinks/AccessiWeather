@@ -31,7 +31,7 @@ AccessiWeather is a cross-platform, accessible desktop weather application built
 ## Toga Framework Specifics
 
 ### Critical Patterns
-1. **OptionContainer API**: Use `option_container.content.append((title, widget))` NOT `.add(title, widget)`
+1. **OptionContainer API**: Use `option_container.content.append(title, widget)` with TWO separate arguments, NOT `.add(title, widget)` or tuple format
 2. **Accessibility**: ALL UI elements MUST have `aria_label` and `aria_description` attributes
 3. **Testing**: Use Toga dummy backend (`toga_dummy` package) for unit tests
    - Set `TOGA_BACKEND=toga_dummy` environment variable
@@ -40,7 +40,7 @@ AccessiWeather is a cross-platform, accessible desktop weather application built
 5. **Main Thread**: UI updates must happen on main thread, use `app.add_background_task()` for background work
 
 ### Common Gotchas
-- OptionContainer doesn't support `.add()` method - use `.content.append()` tuple format
+- OptionContainer: Use `.content.append(title, widget)` with two arguments, NOT tuple format `(title, widget)`
 - Toga Selection widget (dropdown) uses `.items` list and `.value` property
 - Modal dialogs: Create with `toga.Window`, show with `.show()`, close with `.close()`
 - Focus management: Call `.focus()` on widgets for accessibility (may fail silently on some platforms)

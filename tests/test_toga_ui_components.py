@@ -281,6 +281,7 @@ class TestTogaUIComponents:
         dialog.option_container = toga.OptionContainer()
 
         settings_tabs.create_general_tab(dialog)
+        settings_tabs.create_display_tab(dialog)
         settings_tabs.create_data_sources_tab(dialog)
         settings_tabs.create_audio_tab(dialog)
         settings_tabs.create_updates_tab(dialog)
