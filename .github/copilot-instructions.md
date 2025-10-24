@@ -55,11 +55,12 @@ briefcase dev
 # Run tests (uses pytest with Toga dummy backend)
 pytest -v -p pytest_asyncio
 
-# Format code (required before commit)
+# Auto-fix linting issues and format code (run BEFORE committing)
+ruff check --fix .
 ruff format .
 
-# Lint code
-ruff check --fix .
+# Or run both in one line (recommended workflow)
+ruff check --fix . && ruff format .
 
 # Type checking (optional, can be noisy)
 pyright

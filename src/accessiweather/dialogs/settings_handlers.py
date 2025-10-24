@@ -352,16 +352,25 @@ def collect_settings_from_ui(dialog) -> AppSettings:
     return AppSettings(
         temperature_unit=temperature_unit,
         update_interval_minutes=update_interval,
-        show_detailed_forecast=dialog.show_detailed_forecast_switch.value,
-        enable_alerts=dialog.enable_alerts_switch.value,
-        minimize_to_tray=dialog.minimize_to_tray_switch.value,
+        show_detailed_forecast=_switch_value(
+            "show_detailed_forecast_switch",
+            getattr(current_settings, "show_detailed_forecast", True),
+        ),
+        enable_alerts=_switch_value(
+            "enable_alerts_switch", getattr(current_settings, "enable_alerts", True)
+        ),
+        minimize_to_tray=_switch_value(
+            "minimize_to_tray_switch", getattr(current_settings, "minimize_to_tray", False)
+        ),
         startup_enabled=startup_enabled,
         data_source=data_source,
         visual_crossing_api_key=visual_crossing_api_key,
         auto_update_enabled=auto_update_enabled,
         update_channel=update_channel,
         update_check_interval_hours=update_check_interval_hours,
-        debug_mode=dialog.debug_mode_switch.value,
+        debug_mode=_switch_value(
+            "debug_mode_switch", getattr(current_settings, "debug_mode", False)
+        ),
         sound_enabled=sound_enabled,
         sound_pack=sound_pack,
         github_backend_url="",
@@ -395,5 +404,8 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         offline_cache_max_age_minutes=getattr(
             current_settings, "offline_cache_max_age_minutes", 180
         ),
-        weather_history_enabled=dialog.weather_history_enabled_switch.value,
+        weather_history_enabled=_switch_value(
+            "weather_history_enabled_switch",
+            getattr(current_settings, "weather_history_enabled", True),
+        ),
     )

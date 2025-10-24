@@ -1360,6 +1360,7 @@ class TestNotificationSettingsHandlers:
 
         # Create all necessary tabs
         settings_tabs.create_general_tab(dialog)
+        settings_tabs.create_display_tab(dialog)
         settings_tabs.create_data_sources_tab(dialog)
         settings_tabs.create_notifications_tab(dialog)
         settings_tabs.create_audio_tab(dialog)
