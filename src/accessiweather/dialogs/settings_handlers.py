@@ -130,6 +130,48 @@ def apply_settings_to_ui(dialog):
                 settings, "weather_history_enabled", True
             )
 
+        # Notification settings
+        if getattr(dialog, "alert_notifications_enabled_switch", None) is not None:
+            dialog.alert_notifications_enabled_switch.value = getattr(
+                settings, "alert_notifications_enabled", True
+            )
+
+        if getattr(dialog, "alert_notify_extreme_switch", None) is not None:
+            dialog.alert_notify_extreme_switch.value = getattr(
+                settings, "alert_notify_extreme", True
+            )
+
+        if getattr(dialog, "alert_notify_severe_switch", None) is not None:
+            dialog.alert_notify_severe_switch.value = getattr(settings, "alert_notify_severe", True)
+
+        if getattr(dialog, "alert_notify_moderate_switch", None) is not None:
+            dialog.alert_notify_moderate_switch.value = getattr(
+                settings, "alert_notify_moderate", True
+            )
+
+        if getattr(dialog, "alert_notify_minor_switch", None) is not None:
+            dialog.alert_notify_minor_switch.value = getattr(settings, "alert_notify_minor", False)
+
+        if getattr(dialog, "alert_notify_unknown_switch", None) is not None:
+            dialog.alert_notify_unknown_switch.value = getattr(
+                settings, "alert_notify_unknown", False
+            )
+
+        if getattr(dialog, "alert_global_cooldown_input", None) is not None:
+            dialog.alert_global_cooldown_input.value = getattr(
+                settings, "alert_global_cooldown_minutes", 5
+            )
+
+        if getattr(dialog, "alert_per_alert_cooldown_input", None) is not None:
+            dialog.alert_per_alert_cooldown_input.value = getattr(
+                settings, "alert_per_alert_cooldown_minutes", 60
+            )
+
+        if getattr(dialog, "alert_max_notifications_input", None) is not None:
+            dialog.alert_max_notifications_input.value = getattr(
+                settings, "alert_max_notifications_per_hour", 10
+            )
+
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.warning("%s: Failed to apply settings to UI: %s", LOG_PREFIX, exc)
 
@@ -214,7 +256,7 @@ def collect_settings_from_ui(dialog) -> AppSettings:
 
     alerts_enabled = bool(
         getattr(
-            getattr(dialog, "alert_notifications_switch", None),
+            getattr(dialog, "alert_notifications_enabled_switch", None),
             "value",
             getattr(current_settings, "alert_notifications_enabled", True),
         )
