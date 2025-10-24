@@ -144,20 +144,22 @@ class SoundPackManagerDialog:
 
     def _on_sound_selected(self, widget) -> None:
         # Enable preview button only if the actual sound file exists
+        button = getattr(self, "preview_button", None)
         if widget.value is None:
-            if getattr(self, "preview_button", None):
-                self.preview_button.enabled = False
+            if button is not None:
+                button.enabled = False
             return
         if self.selected_pack and self.selected_pack in self.sound_packs:
             pack_info = self.sound_packs[self.selected_pack]
             try:
                 sound_path = pack_info["path"] / widget.value.sound_file
-                self.preview_button.enabled = sound_path.exists() and sound_path.stat().st_size > 0
+                if button is not None:
+                    button.enabled = sound_path.exists() and sound_path.stat().st_size > 0
             except Exception:
-                self.preview_button.enabled = False
-        else:
-            if getattr(self, "preview_button", None):
-                self.preview_button.enabled = False
+                if button is not None:
+                    button.enabled = False
+        elif button is not None:
+            button.enabled = False
 
     def _on_preview_sound(self, widget) -> None:
         map_mod.preview_selected_sound(self, widget)
