@@ -7,6 +7,8 @@ import shutil
 import zipfile
 from pathlib import Path
 
+import toga
+
 logger = logging.getLogger(__name__)
 
 
@@ -38,13 +40,13 @@ def copy_into_pack_if_needed(src: Path, dst_dir: Path) -> str:
 # Operations
 
 
-def import_pack_file(dlg, widget, path: str | None = None) -> None:
+async def import_pack_file(dlg, widget, path: str | None = None) -> None:
     if not path:
         return
     try:
         with zipfile.ZipFile(path, "r") as zip_file:
             if "pack.json" not in zip_file.namelist():
-                dlg.app.main_window.error_dialog(
+                await dlg.app.main_window.error_dialog(
                     "Invalid Sound Pack",
                     "The selected file is not a valid sound pack. Missing pack.json file.",
                 )
@@ -55,11 +57,25 @@ def import_pack_file(dlg, widget, path: str | None = None) -> None:
             pack_id = pack_name.lower().replace(" ", "_").replace("-", "_")
             pack_dir = dlg.soundpacks_dir / pack_id
             if pack_dir.exists():
-                result = dlg.app.main_window.question_dialog(
-                    "Pack Already Exists",
-                    f"A sound pack named '{pack_name}' already exists. Do you want to overwrite it?",
-                )
-                if not result:
+                try:
+                    overwrite = await dlg.app.main_window.question_dialog(
+                        "Pack Already Exists",
+                        (
+                            f"A sound pack named '{pack_name}' already exists. "
+                            "Do you want to overwrite it?"
+                        ),
+                    )
+                except Exception as dialog_error:
+                    logger.error(
+                        "Failed to confirm overwrite for '%s': %s", pack_name, dialog_error
+                    )
+                    await dlg.app.main_window.error_dialog(
+                        "Import Error",
+                        "Unable to confirm overwrite. The sound pack was not imported.",
+                    )
+                    return
+
+                if not overwrite:
                     return
                 shutil.rmtree(pack_dir)
             pack_dir.mkdir(exist_ok=True)
@@ -67,12 +83,12 @@ def import_pack_file(dlg, widget, path: str | None = None) -> None:
             dlg._load_sound_packs()
             dlg._refresh_pack_list()
             dlg._update_pack_details()
-            dlg.app.main_window.info_dialog(
+            await dlg.app.main_window.info_dialog(
                 "Import Successful", f"Sound pack '{pack_name}' has been imported successfully."
             )
     except Exception as e:
-        logger.error(f"Failed to import sound pack: {e}")
-        dlg.app.main_window.error_dialog("Import Error", f"Failed to import sound pack: {e}")
+        logger.error("Failed to import sound pack '%s': %s", path, e)
+        await dlg.app.main_window.error_dialog("Import Error", f"Failed to import sound pack: {e}")
 
 
 def create_pack(dlg) -> None:
@@ -169,29 +185,51 @@ def duplicate_pack(dlg) -> None:
         dlg.app.main_window.error_dialog("Duplicate Error", f"Failed to duplicate sound pack: {e}")
 
 
-def delete_pack(dlg, widget) -> None:
+async def delete_pack(dlg, widget) -> None:
     if not dlg.selected_pack or dlg.selected_pack == "default":
         return
     pack_info = dlg.sound_packs.get(dlg.selected_pack, {})
     pack_name = pack_info.get("name", dlg.selected_pack)
-    result = dlg.app.main_window.question_dialog(
-        "Delete Sound Pack",
-        f"Are you sure you want to delete the sound pack '{pack_name}'? This action cannot be undone.",
-    )
-    if result:
-        try:
-            pack_path = pack_info.get("path")
-            if pack_path and pack_path.exists():
-                shutil.rmtree(pack_path)
-            dlg._load_sound_packs()
-            dlg._refresh_pack_list()
-            dlg.selected_pack = None
-            dlg._update_pack_details()
-            dlg.select_button.enabled = False
-            dlg.delete_button.enabled = False
-            dlg.app.main_window.info_dialog(
-                "Pack Deleted", f"Sound pack '{pack_name}' has been deleted."
+    try:
+        confirm = await dlg.app.main_window.dialog(
+            toga.QuestionDialog(
+                "Delete Sound Pack",
+                (
+                    f"Are you sure you want to delete the sound pack '{pack_name}'?"
+                    " This action cannot be undone."
+                ),
             )
-        except Exception as e:
-            logger.error(f"Failed to delete sound pack: {e}")
-            dlg.app.main_window.error_dialog("Delete Error", f"Failed to delete sound pack: {e}")
+        )
+    except Exception as exc:
+        logger.error("Failed to show delete confirmation dialog: %s", exc)
+        await dlg.app.main_window.error_dialog("Delete Error", f"Unable to confirm deletion: {exc}")
+        return
+
+    if not confirm:
+        return
+
+    try:
+        pack_path = pack_info.get("path")
+        if pack_path and pack_path.exists():
+            shutil.rmtree(pack_path)
+        dlg._load_sound_packs()
+        dlg._refresh_pack_list()
+        dlg.selected_pack = None
+        dlg._update_pack_details()
+        for btn_name in (
+            "select_button",
+            "delete_button",
+            "duplicate_button",
+            "edit_button",
+            "share_button",
+            "preview_button",
+        ):
+            btn = getattr(dlg, btn_name, None)
+            if btn is not None:
+                btn.enabled = False
+        await dlg.app.main_window.info_dialog(
+            "Pack Deleted", f"Sound pack '{pack_name}' has been deleted."
+        )
+    except Exception as e:
+        logger.error(f"Failed to delete sound pack: {e}")
+        await dlg.app.main_window.error_dialog("Delete Error", f"Failed to delete sound pack: {e}")

@@ -19,10 +19,13 @@ import base64
 import contextlib
 import json
 import logging
+import shutil
 import tempfile
+import zipfile
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import httpx
 
@@ -47,6 +50,9 @@ class CommunityPack:
     download_count: int | None = None
     created_date: str | None = None  # ISO 8601 string
     preview_image_url: str | None = None
+    repo_path: str | None = None
+    tree_sha: str | None = None
+    ref: str | None = "main"
 
     def __str__(self) -> str:
         return f"{self.name} {self.version} by {self.author}"
@@ -195,10 +201,92 @@ class CommunitySoundPackService:
             except Exception as e:
                 logger.error(f"Failed to fetch releases: {e}")
 
+        # Final fallback: scan repository directories for packs (no releases yet)
+        if not packs:
+            try:
+                repo_packs = await self._fetch_repo_directory_packs()
+                packs.extend(repo_packs)
+            except Exception as e:
+                logger.error(f"Failed to discover packs from repository contents: {e}")
+
         # Cache results
         self._cached_packs = packs
         self._cached_at = now
         return packs
+
+    async def _fetch_repo_directory_packs(self) -> list[CommunityPack]:
+        """Discover packs from /packs when no curated index or releases exist."""
+        ref = "main"
+        contents_url = f"https://api.github.com/repos/{self.repo_owner}/{self.repo_name}/contents/packs?ref={ref}"
+        resp = await self._http.get(contents_url)
+        if resp.status_code != 200:
+            logger.debug("Repository contents fallback unavailable (status %s)", resp.status_code)
+            return []
+
+        entries: list[dict[str, Any]] = resp.json()  # type: ignore[assignment]
+        packs: list[CommunityPack] = []
+        for entry in entries:
+            if entry.get("type") != "dir":
+                continue
+            dir_name = entry.get("name") or "unknown"
+            repo_path = entry.get("path") or f"packs/{dir_name}"
+            tree_sha = entry.get("sha")
+
+            pack_json_url = (
+                f"https://raw.githubusercontent.com/"
+                f"{self.repo_owner}/{self.repo_name}/{ref}/{repo_path}/pack.json"
+            )
+            try:
+                pack_resp = await self._http.get(pack_json_url)
+                if pack_resp.status_code != 200:
+                    logger.debug("Skipping pack %s: pack.json not found", dir_name)
+                    continue
+                pack_meta = pack_resp.json()
+            except Exception as exc:
+                logger.debug("Skipping pack %s: failed to parse pack.json (%s)", dir_name, exc)
+                continue
+
+            total_size = await self._calculate_tree_size(tree_sha)
+            packs.append(
+                CommunityPack(
+                    name=pack_meta.get("name") or dir_name,
+                    author=pack_meta.get("author", "Unknown"),
+                    description=pack_meta.get("description", ""),
+                    version=str(pack_meta.get("version", "1.0")),
+                    download_url="",  # zip generated on demand
+                    file_size=total_size,
+                    repository_url=(
+                        f"https://github.com/{self.repo_owner}/{self.repo_name}/tree/{ref}/{repo_path}"
+                    ),
+                    release_tag=ref,
+                    download_count=None,
+                    created_date=None,
+                    preview_image_url=pack_meta.get("preview_image_url"),
+                    repo_path=repo_path,
+                    tree_sha=tree_sha,
+                    ref=ref,
+                )
+            )
+        return packs
+
+    async def _calculate_tree_size(self, tree_sha: str | None) -> int | None:
+        if not tree_sha:
+            return None
+        tree_url = f"https://api.github.com/repos/{self.repo_owner}/{self.repo_name}/git/trees/{tree_sha}?recursive=1"
+        try:
+            resp = await self._http.get(tree_url)
+            if resp.status_code != 200:
+                return None
+            data = resp.json()
+            tree_entries = data.get("tree", [])
+            total = 0
+            for item in tree_entries:
+                if item.get("type") == "blob":
+                    total += int(item.get("size") or 0)
+            return total
+        except Exception as exc:
+            logger.debug("Failed to calculate tree size for %s: %s", tree_sha, exc)
+            return None
 
     async def download_pack(
         self,
@@ -235,6 +323,30 @@ class CommunitySoundPackService:
                 i += 1
             final_path = dest_dir / f"{base_name}_{i}.zip"
 
+        if pack.download_url:
+            return await self._download_from_url(
+                pack,
+                final_path,
+                progress_callback=progress_callback,
+                max_retries=max_retries,
+            )
+
+        if pack.repo_path:
+            return await self._download_repo_pack(
+                pack,
+                final_path,
+                progress_callback=progress_callback,
+            )
+
+        raise RuntimeError(f"Pack {pack.name} has no download source")
+
+    async def _download_from_url(
+        self,
+        pack: CommunityPack,
+        final_path: Path,
+        progress_callback: Callable[[float, int, int], asyncio.Future | bool | None] | None,
+        max_retries: int,
+    ) -> Path:
         attempt = 0
         last_exc: Exception | None = None
         while attempt <= max_retries:
@@ -247,8 +359,9 @@ class CommunitySoundPackService:
                     total = int(resp.headers.get("Content-Length", "0") or 0)
                     downloaded = 0
 
+                    parent_dir = str(final_path.parent)
                     with tempfile.NamedTemporaryFile(
-                        delete=False, suffix=".zip", dir=str(dest_dir)
+                        delete=False, suffix=".zip", dir=parent_dir
                     ) as tmp:
                         tmp_path = Path(tmp.name)
                         async for chunk in resp.aiter_bytes(chunk_size=65536):
@@ -290,3 +403,85 @@ class CommunitySoundPackService:
 
         # Exhausted retries
         raise RuntimeError(f"Failed to download {pack.name}: {last_exc}")
+
+    async def _download_repo_pack(
+        self,
+        pack: CommunityPack,
+        final_path: Path,
+        progress_callback: Callable[[float, int, int], asyncio.Future | bool | None] | None,
+    ) -> Path:
+        ref = pack.ref or "main"
+        tree_entries = await self._fetch_tree_entries(pack)
+        if not tree_entries:
+            raise RuntimeError(f"No files found for {pack.name}")
+
+        total_bytes = sum(
+            int(item.get("size") or 0) for item in tree_entries if item.get("type") == "blob"
+        )
+        downloaded = 0
+
+        staging_dir = Path(tempfile.mkdtemp(prefix="aw_pack_", dir=str(final_path.parent)))
+        try:
+            for item in tree_entries:
+                if item.get("type") != "blob":
+                    continue
+                rel_path = item.get("path") or ""
+                target_path = staging_dir / rel_path
+                target_path.parent.mkdir(parents=True, exist_ok=True)
+                raw_url = (
+                    f"https://raw.githubusercontent.com/{self.repo_owner}/{self.repo_name}/"
+                    f"{ref}/{pack.repo_path}/{rel_path}"
+                )
+                async with self._http.stream("GET", raw_url) as resp:
+                    if resp.status_code != 200:
+                        raise RuntimeError(
+                            f"Failed to download {rel_path} (status {resp.status_code})"
+                        )
+                    with target_path.open("wb") as f:
+                        async for chunk in resp.aiter_bytes(chunk_size=65536):
+                            if not chunk:
+                                continue
+                            f.write(chunk)
+                            downloaded += len(chunk)
+                            if progress_callback is not None:
+                                pct = (downloaded / total_bytes * 100.0) if total_bytes else 0.0
+                                try:
+                                    res = progress_callback(pct, downloaded, total_bytes)
+                                    if asyncio.iscoroutine(res):
+                                        res = await res  # type: ignore[assignment]
+                                    if res is False:
+                                        raise asyncio.CancelledError(
+                                            "Download cancelled by callback"
+                                        )
+                                except Exception as cb_err:
+                                    logger.debug("Progress callback error ignored: %s", cb_err)
+            # Bundle into zip
+            with zipfile.ZipFile(final_path, "w", compression=zipfile.ZIP_DEFLATED) as zipf:
+                for file_path in staging_dir.rglob("*"):
+                    if file_path.is_file():
+                        zipf.write(file_path, arcname=file_path.relative_to(staging_dir))
+            return final_path
+        except Exception:
+            with contextlib.suppress(Exception):
+                if final_path.exists():
+                    final_path.unlink()
+            raise
+        finally:
+            shutil.rmtree(staging_dir, ignore_errors=True)
+
+    async def _fetch_tree_entries(self, pack: CommunityPack) -> list[dict[str, Any]]:
+        tree_sha = pack.tree_sha
+        if not tree_sha:
+            return []
+        tree_url = f"https://api.github.com/repos/{self.repo_owner}/{self.repo_name}/git/trees/{tree_sha}?recursive=1"
+        resp = await self._http.get(tree_url)
+        if resp.status_code != 200:
+            logger.error(
+                "Failed to fetch tree %s for pack %s (status %s)",
+                tree_sha,
+                pack.name,
+                resp.status_code,
+            )
+            return []
+        data = resp.json()
+        return data.get("tree", []) or []

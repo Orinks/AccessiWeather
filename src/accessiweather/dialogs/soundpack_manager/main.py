@@ -144,30 +144,43 @@ class SoundPackManagerDialog:
 
     def _on_sound_selected(self, widget) -> None:
         # Enable preview button only if the actual sound file exists
+        button = getattr(self, "preview_button", None)
         if widget.value is None:
-            if getattr(self, "preview_button", None):
-                self.preview_button.enabled = False
+            if button is not None:
+                button.enabled = False
             return
         if self.selected_pack and self.selected_pack in self.sound_packs:
             pack_info = self.sound_packs[self.selected_pack]
             try:
                 sound_path = pack_info["path"] / widget.value.sound_file
-                self.preview_button.enabled = sound_path.exists() and sound_path.stat().st_size > 0
+                if button is not None:
+                    button.enabled = sound_path.exists() and sound_path.stat().st_size > 0
             except Exception:
-                self.preview_button.enabled = False
-        else:
-            if getattr(self, "preview_button", None):
-                self.preview_button.enabled = False
+                if button is not None:
+                    button.enabled = False
+        elif button is not None:
+            button.enabled = False
 
     def _on_preview_sound(self, widget) -> None:
         map_mod.preview_selected_sound(self, widget)
 
     def _on_import_pack(self, widget) -> None:
         try:
+
+            def _handle_import_result(dialog_widget, path=None):
+                if not path:
+                    return
+                try:
+                    loop = asyncio.get_running_loop()
+                except RuntimeError:
+                    logger.error("Import result received without active event loop")
+                    return
+                loop.create_task(ops_mod.import_pack_file(self, dialog_widget, path))
+
             self.app.main_window.open_file_dialog(
                 title="Select Sound Pack ZIP File",
                 file_types=["zip"],
-                on_result=lambda w, path=None: ops_mod.import_pack_file(self, w, path),
+                on_result=_handle_import_result,
             )
         except Exception as e:
             logger.error(f"Failed to open import dialog: {e}")
@@ -199,7 +212,13 @@ class SoundPackManagerDialog:
         map_mod.preview_mapping(self, widget)
 
     def _on_delete_pack(self, widget) -> None:
-        ops_mod.delete_pack(self, widget)
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            logger.error("Delete pack requested without active event loop")
+            return
+
+        loop.create_task(ops_mod.delete_pack(self, widget))
 
     def _on_duplicate_pack(self, widget) -> None:
         ops_mod.duplicate_pack(self)
@@ -504,8 +523,10 @@ class SoundPackManagerDialog:
         if self.pack_list and hasattr(self.pack_list, "data") and len(self.pack_list.data) > 0:
             try:
                 first_pack = self.pack_list.data[0]
-                self.pack_list.selection = first_pack
-                self._on_pack_selected(self.pack_list)
+                from types import SimpleNamespace
+
+                dummy_widget = SimpleNamespace(selection=first_pack)
+                self._on_pack_selected(dummy_widget)
                 await asyncio.sleep(0.1)
             except Exception as e:
                 logger.warning(f"Could not select first pack: {e}")
