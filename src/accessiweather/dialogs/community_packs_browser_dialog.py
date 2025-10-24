@@ -570,6 +570,15 @@ class CommunityPacksBrowserDialog:
                     with contextlib.suppress(Exception):
                         self.on_installed(pack.name)
                 self._set_status(f"Installed {pack.name}")
+                asyncio.create_task(
+                    self.app.main_window.info_dialog(
+                        "Sound Pack Installed",
+                        (
+                            f'"{pack.name}" has been installed.\n\n'
+                            "Switch to the Sound Pack Manager or Settings > General to activate it."
+                        ),
+                    )
+                )
             else:
                 await progress.complete_error(msg)
         except asyncio.CancelledError:

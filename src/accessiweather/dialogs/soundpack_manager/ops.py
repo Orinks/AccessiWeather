@@ -187,8 +187,17 @@ def delete_pack(dlg, widget) -> None:
             dlg._refresh_pack_list()
             dlg.selected_pack = None
             dlg._update_pack_details()
-            dlg.select_button.enabled = False
-            dlg.delete_button.enabled = False
+            for btn_name in (
+                "select_button",
+                "delete_button",
+                "duplicate_button",
+                "edit_button",
+                "share_button",
+                "preview_button",
+            ):
+                btn = getattr(dlg, btn_name, None)
+                if btn is not None:
+                    btn.enabled = False
             dlg.app.main_window.info_dialog(
                 "Pack Deleted", f"Sound pack '{pack_name}' has been deleted."
             )
