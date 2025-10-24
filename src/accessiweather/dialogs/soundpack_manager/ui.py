@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import logging
 
@@ -96,7 +97,13 @@ def create_pack_list_panel(dlg) -> toga.Box:
             # Import the delete function and call it
             from . import ops as ops_mod
 
-            ops_mod.delete_pack(dlg, widget)
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                logger.error("Delete shortcut triggered without active event loop")
+                return False
+
+            loop.create_task(ops_mod.delete_pack(dlg, widget))
             return True
         return False
 

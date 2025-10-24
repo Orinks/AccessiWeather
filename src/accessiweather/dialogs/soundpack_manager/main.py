@@ -166,10 +166,21 @@ class SoundPackManagerDialog:
 
     def _on_import_pack(self, widget) -> None:
         try:
+
+            def _handle_import_result(dialog_widget, path=None):
+                if not path:
+                    return
+                try:
+                    loop = asyncio.get_running_loop()
+                except RuntimeError:
+                    logger.error("Import result received without active event loop")
+                    return
+                loop.create_task(ops_mod.import_pack_file(self, dialog_widget, path))
+
             self.app.main_window.open_file_dialog(
                 title="Select Sound Pack ZIP File",
                 file_types=["zip"],
-                on_result=lambda w, path=None: ops_mod.import_pack_file(self, w, path),
+                on_result=_handle_import_result,
             )
         except Exception as e:
             logger.error(f"Failed to open import dialog: {e}")
@@ -201,7 +212,13 @@ class SoundPackManagerDialog:
         map_mod.preview_mapping(self, widget)
 
     def _on_delete_pack(self, widget) -> None:
-        ops_mod.delete_pack(self, widget)
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            logger.error("Delete pack requested without active event loop")
+            return
+
+        loop.create_task(ops_mod.delete_pack(self, widget))
 
     def _on_duplicate_pack(self, widget) -> None:
         ops_mod.duplicate_pack(self)
