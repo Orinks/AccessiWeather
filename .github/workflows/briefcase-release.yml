@@ -246,7 +246,7 @@ jobs:
 
     - name: Upload Briefcase logs on failure
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: briefcase-release-logs
         path: logs/*
