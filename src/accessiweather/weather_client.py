@@ -636,6 +636,10 @@ class WeatherClient:
 
     def _is_us_location(self, location: Location) -> bool:
         """Check if location is within the United States (rough approximation)."""
+        country_code = getattr(location, "country_code", None)
+        if country_code:
+            return country_code.upper() == "US"
+
         # Continental US bounds (approximate)
         return 24.0 <= location.latitude <= 49.0 and -125.0 <= location.longitude <= -66.0
 

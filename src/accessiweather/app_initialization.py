@@ -62,6 +62,12 @@ def initialize_components(app: AccessiWeatherApp) -> None:
             cache_root = Path.cwd()
     cache_dir = cache_root / "weather_cache"
     offline_cache = WeatherDataCache(cache_dir)
+    debug_enabled = bool(getattr(config.settings, "debug_mode", False))
+    log_level = logging.DEBUG if debug_enabled else logging.INFO
+    root_logger = logging.getLogger()
+    root_logger.setLevel(log_level)
+    for handler in root_logger.handlers:
+        handler.setLevel(log_level)
     app.weather_client = WeatherClient(
         user_agent="AccessiWeather/2.0",
         data_source=data_source,

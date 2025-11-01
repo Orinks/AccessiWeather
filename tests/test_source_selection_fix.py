@@ -241,11 +241,21 @@ class TestSourceSelectionFixes:
         assert client._is_us_location(Location("NYC", 40.7128, -74.0060)) is True
         assert client._is_us_location(Location("LA", 34.0522, -118.2437)) is True
         assert client._is_us_location(Location("Miami", 25.7617, -80.1918)) is True
+        assert (
+            client._is_us_location(Location("Buffalo, NY", 42.8864, -78.8784, country_code="US"))
+            is True
+        )
 
         # Test international locations
         assert client._is_us_location(Location("London", 51.5074, -0.1278)) is False
         assert client._is_us_location(Location("Tokyo", 35.6762, 139.6503)) is False
         assert client._is_us_location(Location("Sydney", -33.8688, 151.2093)) is False
+        assert (
+            client._is_us_location(
+                Location("Toronto, Ontario, Canada", 43.6535, -79.3839, country_code="CA")
+            )
+            is False
+        )
 
     def test_config_default_values(self):
         """Test that default configuration has correct values."""

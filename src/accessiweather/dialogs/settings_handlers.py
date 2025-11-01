@@ -130,6 +130,48 @@ def apply_settings_to_ui(dialog):
                 settings, "weather_history_enabled", True
             )
 
+        # Notification settings
+        if getattr(dialog, "alert_notifications_enabled_switch", None) is not None:
+            dialog.alert_notifications_enabled_switch.value = getattr(
+                settings, "alert_notifications_enabled", True
+            )
+
+        if getattr(dialog, "alert_notify_extreme_switch", None) is not None:
+            dialog.alert_notify_extreme_switch.value = getattr(
+                settings, "alert_notify_extreme", True
+            )
+
+        if getattr(dialog, "alert_notify_severe_switch", None) is not None:
+            dialog.alert_notify_severe_switch.value = getattr(settings, "alert_notify_severe", True)
+
+        if getattr(dialog, "alert_notify_moderate_switch", None) is not None:
+            dialog.alert_notify_moderate_switch.value = getattr(
+                settings, "alert_notify_moderate", True
+            )
+
+        if getattr(dialog, "alert_notify_minor_switch", None) is not None:
+            dialog.alert_notify_minor_switch.value = getattr(settings, "alert_notify_minor", False)
+
+        if getattr(dialog, "alert_notify_unknown_switch", None) is not None:
+            dialog.alert_notify_unknown_switch.value = getattr(
+                settings, "alert_notify_unknown", False
+            )
+
+        if getattr(dialog, "alert_global_cooldown_input", None) is not None:
+            dialog.alert_global_cooldown_input.value = getattr(
+                settings, "alert_global_cooldown_minutes", 5
+            )
+
+        if getattr(dialog, "alert_per_alert_cooldown_input", None) is not None:
+            dialog.alert_per_alert_cooldown_input.value = getattr(
+                settings, "alert_per_alert_cooldown_minutes", 60
+            )
+
+        if getattr(dialog, "alert_max_notifications_input", None) is not None:
+            dialog.alert_max_notifications_input.value = getattr(
+                settings, "alert_max_notifications_per_hour", 10
+            )
+
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.warning("%s: Failed to apply settings to UI: %s", LOG_PREFIX, exc)
 
@@ -214,7 +256,7 @@ def collect_settings_from_ui(dialog) -> AppSettings:
 
     alerts_enabled = bool(
         getattr(
-            getattr(dialog, "alert_notifications_switch", None),
+            getattr(dialog, "alert_notifications_enabled_switch", None),
             "value",
             getattr(current_settings, "alert_notifications_enabled", True),
         )
@@ -310,16 +352,25 @@ def collect_settings_from_ui(dialog) -> AppSettings:
     return AppSettings(
         temperature_unit=temperature_unit,
         update_interval_minutes=update_interval,
-        show_detailed_forecast=dialog.show_detailed_forecast_switch.value,
-        enable_alerts=dialog.enable_alerts_switch.value,
-        minimize_to_tray=dialog.minimize_to_tray_switch.value,
+        show_detailed_forecast=_switch_value(
+            "show_detailed_forecast_switch",
+            getattr(current_settings, "show_detailed_forecast", True),
+        ),
+        enable_alerts=_switch_value(
+            "enable_alerts_switch", getattr(current_settings, "enable_alerts", True)
+        ),
+        minimize_to_tray=_switch_value(
+            "minimize_to_tray_switch", getattr(current_settings, "minimize_to_tray", False)
+        ),
         startup_enabled=startup_enabled,
         data_source=data_source,
         visual_crossing_api_key=visual_crossing_api_key,
         auto_update_enabled=auto_update_enabled,
         update_channel=update_channel,
         update_check_interval_hours=update_check_interval_hours,
-        debug_mode=dialog.debug_mode_switch.value,
+        debug_mode=_switch_value(
+            "debug_mode_switch", getattr(current_settings, "debug_mode", False)
+        ),
         sound_enabled=sound_enabled,
         sound_pack=sound_pack,
         github_backend_url="",
@@ -353,5 +404,8 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         offline_cache_max_age_minutes=getattr(
             current_settings, "offline_cache_max_age_minutes", 180
         ),
-        weather_history_enabled=dialog.weather_history_enabled_switch.value,
+        weather_history_enabled=_switch_value(
+            "weather_history_enabled_switch",
+            getattr(current_settings, "weather_history_enabled", True),
+        ),
     )

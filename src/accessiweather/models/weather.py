@@ -16,9 +16,14 @@ class Location:
     latitude: float
     longitude: float
     timezone: str | None = None
+    country_code: str | None = None
 
     def __str__(self) -> str:
         return self.name
+
+    def __post_init__(self) -> None:
+        if self.country_code:
+            self.country_code = self.country_code.upper()
 
 
 @dataclass

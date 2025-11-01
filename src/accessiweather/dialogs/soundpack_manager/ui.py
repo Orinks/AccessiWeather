@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import logging
 
@@ -46,6 +47,14 @@ def create_dialog_ui(dlg) -> None:
     main_box.add(button_box)
 
     dlg.dialog.content = main_box
+    with contextlib.suppress(Exception):
+        dlg.dialog.on_close = dlg._on_close
+    try:
+        if dlg.dialog not in getattr(dlg.app, "windows", []):
+            dlg.app.windows.add(dlg.dialog)
+    except Exception:
+        with contextlib.suppress(Exception):
+            dlg.app.windows.add(dlg.dialog)
 
     delete_pack_cmd = toga.Command(
         dlg._on_delete_pack,
@@ -88,7 +97,26 @@ def create_pack_list_panel(dlg) -> toga.Box:
             # Import the delete function and call it
             from . import ops as ops_mod
 
-            ops_mod.delete_pack(dlg, widget)
+            result = ops_mod.delete_pack(dlg, widget)
+
+            if (
+                asyncio.isfuture(result)
+                or asyncio.iscoroutine(result)
+                or hasattr(result, "__await__")
+            ):
+                try:
+                    loop = asyncio.get_running_loop()
+                except RuntimeError:
+                    logger.debug(
+                        "No running event loop for delete shortcut; executing handler synchronously"
+                    )
+                    try:
+                        asyncio.run(result)
+                    except Exception as exc:  # pragma: no cover - defensive logging
+                        logger.error("Failed to execute delete pack handler: %s", exc)
+                        return False
+                else:
+                    loop.create_task(result)
             return True
         return False
 

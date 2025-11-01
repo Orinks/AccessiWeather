@@ -281,6 +281,7 @@ class TestTogaUIComponents:
         dialog.option_container = toga.OptionContainer()
 
         settings_tabs.create_general_tab(dialog)
+        settings_tabs.create_display_tab(dialog)
         settings_tabs.create_data_sources_tab(dialog)
         settings_tabs.create_audio_tab(dialog)
         settings_tabs.create_updates_tab(dialog)
@@ -1136,3 +1137,308 @@ async def test_settings_dialog_open_config_dir_invokes_launcher(
         args = run_called.call_args[0][0]
         assert args[0] == expect_cmd
         assert str(tmp_path) in args[1]
+
+
+class TestNotificationsTab:
+    """Tests for the notifications tab in settings dialog."""
+
+    @pytest.fixture
+    def dialog_with_notifications_tab(self, tmp_path):
+        """Create a settings dialog with notifications tab initialized."""
+
+        class DummyPaths:
+            def __init__(self, tmp_path):
+                self.config = tmp_path
+
+        class DummyConfigManager:
+            def __init__(self, tmp_path):
+                self._settings = AppSettings()
+                self._tmp_path = tmp_path
+
+            def get_settings(self):
+                return self._settings
+
+            def save_settings(self, settings):
+                self._settings = settings
+                return True
+
+            def is_startup_enabled(self):
+                return bool(getattr(self._settings, "startup_enabled", False))
+
+        app = MagicMock()
+        app.paths = DummyPaths(tmp_path)
+        config_manager = DummyConfigManager(tmp_path)
+        dialog = SettingsDialog(app, config_manager)
+        dialog.current_settings = config_manager.get_settings()
+        dialog.option_container = toga.OptionContainer()
+
+        # Create the notifications tab
+        settings_tabs.create_notifications_tab(dialog)
+
+        return dialog
+
+    def test_notifications_tab_creates_all_severity_switches(self, dialog_with_notifications_tab):
+        """Test that all severity level switches are created."""
+        dialog = dialog_with_notifications_tab
+
+        assert hasattr(dialog, "alert_notifications_enabled_switch")
+        assert hasattr(dialog, "alert_notify_extreme_switch")
+        assert hasattr(dialog, "alert_notify_severe_switch")
+        assert hasattr(dialog, "alert_notify_moderate_switch")
+        assert hasattr(dialog, "alert_notify_minor_switch")
+        assert hasattr(dialog, "alert_notify_unknown_switch")
+
+        # Verify they are actual switch widgets
+        assert isinstance(dialog.alert_notifications_enabled_switch, toga.Switch)
+        assert isinstance(dialog.alert_notify_extreme_switch, toga.Switch)
+        assert isinstance(dialog.alert_notify_severe_switch, toga.Switch)
+        assert isinstance(dialog.alert_notify_moderate_switch, toga.Switch)
+        assert isinstance(dialog.alert_notify_minor_switch, toga.Switch)
+        assert isinstance(dialog.alert_notify_unknown_switch, toga.Switch)
+
+    def test_notifications_tab_creates_cooldown_inputs(self, dialog_with_notifications_tab):
+        """Test that all cooldown input fields are created."""
+        dialog = dialog_with_notifications_tab
+
+        assert hasattr(dialog, "alert_global_cooldown_input")
+        assert hasattr(dialog, "alert_per_alert_cooldown_input")
+        assert hasattr(dialog, "alert_max_notifications_input")
+
+        # Verify they are actual number input widgets
+        assert isinstance(dialog.alert_global_cooldown_input, toga.NumberInput)
+        assert isinstance(dialog.alert_per_alert_cooldown_input, toga.NumberInput)
+        assert isinstance(dialog.alert_max_notifications_input, toga.NumberInput)
+
+    def test_notifications_tab_default_values(self, dialog_with_notifications_tab):
+        """Test that notification switches have correct default values."""
+        dialog = dialog_with_notifications_tab
+
+        # Master switch should be enabled by default
+        assert dialog.alert_notifications_enabled_switch.value is True
+
+        # High severity should be enabled
+        assert dialog.alert_notify_extreme_switch.value is True
+        assert dialog.alert_notify_severe_switch.value is True
+        assert dialog.alert_notify_moderate_switch.value is True
+
+        # Low severity should be disabled
+        assert dialog.alert_notify_minor_switch.value is False
+        assert dialog.alert_notify_unknown_switch.value is False
+
+        # Check cooldown defaults
+        assert dialog.alert_global_cooldown_input.value == 5
+        assert dialog.alert_per_alert_cooldown_input.value == 60
+        assert dialog.alert_max_notifications_input.value == 10
+
+    def test_notifications_tab_accessibility_labels(self, dialog_with_notifications_tab):
+        """Test that notification switches have proper accessibility labels."""
+        dialog = dialog_with_notifications_tab
+
+        assert dialog.alert_notifications_enabled_switch.aria_label == "Toggle alert notifications"
+        assert dialog.alert_notify_extreme_switch.aria_label == "Notify for extreme severity alerts"
+        assert dialog.alert_notify_severe_switch.aria_label == "Notify for severe severity alerts"
+        assert (
+            dialog.alert_notify_moderate_switch.aria_label == "Notify for moderate severity alerts"
+        )
+        assert dialog.alert_notify_minor_switch.aria_label == "Notify for minor severity alerts"
+        assert dialog.alert_notify_unknown_switch.aria_label == "Notify for unknown severity alerts"
+
+    def test_notifications_tab_accessibility_descriptions(self, dialog_with_notifications_tab):
+        """Test that notification switches have proper accessibility descriptions."""
+        dialog = dialog_with_notifications_tab
+
+        assert "Master control" in dialog.alert_notifications_enabled_switch.aria_description
+        assert "life-threatening" in dialog.alert_notify_extreme_switch.aria_description.lower()
+        assert "significant hazards" in dialog.alert_notify_severe_switch.aria_description.lower()
+        assert "may be hazardous" in dialog.alert_notify_moderate_switch.aria_description.lower()
+        assert "low impact" in dialog.alert_notify_minor_switch.aria_description.lower()
+        assert (
+            "without a defined severity"
+            in dialog.alert_notify_unknown_switch.aria_description.lower()
+        )
+
+    def test_notifications_tab_added_to_option_container(self, dialog_with_notifications_tab):
+        """Test that the notifications tab is added to the option container."""
+        dialog = dialog_with_notifications_tab
+
+        # Check that tab was added to option container
+        assert dialog.option_container.content is not None
+        assert len(dialog.option_container.content) > 0
+
+        # Verify notifications tab exists
+        assert hasattr(dialog, "notifications_tab")
+        assert dialog.notifications_tab is not None
+
+    def test_notifications_tab_respects_custom_settings(self, tmp_path):
+        """Test that the notifications tab respects custom settings."""
+
+        class DummyPaths:
+            def __init__(self, tmp_path):
+                self.config = tmp_path
+
+        class DummyConfigManager:
+            def __init__(self, tmp_path):
+                # Create custom settings with Minor enabled
+                self._settings = AppSettings(
+                    alert_notifications_enabled=False,
+                    alert_notify_extreme=False,
+                    alert_notify_severe=False,
+                    alert_notify_moderate=False,
+                    alert_notify_minor=True,
+                    alert_notify_unknown=True,
+                    alert_global_cooldown_minutes=10,
+                    alert_per_alert_cooldown_minutes=120,
+                    alert_max_notifications_per_hour=5,
+                )
+                self._tmp_path = tmp_path
+
+            def get_settings(self):
+                return self._settings
+
+            def save_settings(self, settings):
+                self._settings = settings
+                return True
+
+            def is_startup_enabled(self):
+                return False
+
+        app = MagicMock()
+        app.paths = DummyPaths(tmp_path)
+        config_manager = DummyConfigManager(tmp_path)
+        dialog = SettingsDialog(app, config_manager)
+        dialog.current_settings = config_manager.get_settings()
+        dialog.option_container = toga.OptionContainer()
+
+        # Create the notifications tab
+        settings_tabs.create_notifications_tab(dialog)
+
+        # Verify custom values
+        assert dialog.alert_notifications_enabled_switch.value is False
+        assert dialog.alert_notify_extreme_switch.value is False
+        assert dialog.alert_notify_severe_switch.value is False
+        assert dialog.alert_notify_moderate_switch.value is False
+        assert dialog.alert_notify_minor_switch.value is True
+        assert dialog.alert_notify_unknown_switch.value is True
+        assert dialog.alert_global_cooldown_input.value == 10
+        assert dialog.alert_per_alert_cooldown_input.value == 120
+        assert dialog.alert_max_notifications_input.value == 5
+
+
+class TestNotificationSettingsHandlers:
+    """Tests for notification settings handlers (apply and collect)."""
+
+    @pytest.fixture
+    def dialog_setup(self, tmp_path):
+        """Create a fully initialized settings dialog."""
+        from accessiweather.dialogs import settings_handlers
+
+        class DummyPaths:
+            def __init__(self, tmp_path):
+                self.config = tmp_path
+
+        class DummyConfigManager:
+            def __init__(self, tmp_path):
+                self._settings = AppSettings()
+                self._tmp_path = tmp_path
+
+            def get_settings(self):
+                return self._settings
+
+            def save_settings(self, settings):
+                self._settings = settings
+                return True
+
+            def is_startup_enabled(self):
+                return bool(getattr(self._settings, "startup_enabled", False))
+
+        app = MagicMock()
+        app.paths = DummyPaths(tmp_path)
+        config_manager = DummyConfigManager(tmp_path)
+        dialog = SettingsDialog(app, config_manager)
+        dialog.current_settings = config_manager.get_settings()
+        dialog.option_container = toga.OptionContainer()
+
+        # Create all necessary tabs
+        settings_tabs.create_general_tab(dialog)
+        settings_tabs.create_display_tab(dialog)
+        settings_tabs.create_data_sources_tab(dialog)
+        settings_tabs.create_notifications_tab(dialog)
+        settings_tabs.create_audio_tab(dialog)
+        settings_tabs.create_updates_tab(dialog)
+        settings_tabs.create_advanced_tab(dialog)
+
+        return dialog, settings_handlers
+
+    def test_apply_settings_populates_notification_switches(self, dialog_setup):
+        """Test that apply_settings_to_ui properly populates notification switches."""
+        dialog, settings_handlers = dialog_setup
+
+        # Set custom values in current_settings
+        dialog.current_settings.alert_notifications_enabled = False
+        dialog.current_settings.alert_notify_extreme = False
+        dialog.current_settings.alert_notify_minor = True
+        dialog.current_settings.alert_global_cooldown_minutes = 15
+
+        # Apply settings
+        settings_handlers.apply_settings_to_ui(dialog)
+
+        # Verify switches were updated
+        assert dialog.alert_notifications_enabled_switch.value is False
+        assert dialog.alert_notify_extreme_switch.value is False
+        assert dialog.alert_notify_minor_switch.value is True
+        assert dialog.alert_global_cooldown_input.value == 15
+
+    def test_collect_settings_reads_notification_switches(self, dialog_setup):
+        """Test that collect_settings_from_ui properly reads notification switches."""
+        dialog, settings_handlers = dialog_setup
+
+        # Modify switch values
+        dialog.alert_notifications_enabled_switch.value = False
+        dialog.alert_notify_extreme_switch.value = False
+        dialog.alert_notify_minor_switch.value = True
+        dialog.alert_notify_unknown_switch.value = True
+        dialog.alert_global_cooldown_input.value = 20
+        dialog.alert_per_alert_cooldown_input.value = 90
+        dialog.alert_max_notifications_input.value = 15
+
+        # Collect settings
+        collected = settings_handlers.collect_settings_from_ui(dialog)
+
+        # Verify collected values
+        assert collected.alert_notifications_enabled is False
+        assert collected.alert_notify_extreme is False
+        assert collected.alert_notify_minor is True
+        assert collected.alert_notify_unknown is True
+        assert collected.alert_global_cooldown_minutes == 20
+        assert collected.alert_per_alert_cooldown_minutes == 90
+        assert collected.alert_max_notifications_per_hour == 15
+
+    def test_settings_roundtrip_notifications(self, dialog_setup):
+        """Test that notification settings survive a full apply->modify->collect cycle."""
+        dialog, settings_handlers = dialog_setup
+
+        # Set initial values
+        dialog.current_settings.alert_notify_minor = True
+        dialog.current_settings.alert_notify_moderate = False
+        dialog.current_settings.alert_global_cooldown_minutes = 8
+
+        # Apply to UI
+        settings_handlers.apply_settings_to_ui(dialog)
+
+        # Verify UI updated
+        assert dialog.alert_notify_minor_switch.value is True
+        assert dialog.alert_notify_moderate_switch.value is False
+        assert dialog.alert_global_cooldown_input.value == 8
+
+        # Modify in UI
+        dialog.alert_notify_minor_switch.value = False
+        dialog.alert_notify_moderate_switch.value = True
+        dialog.alert_global_cooldown_input.value = 12
+
+        # Collect from UI
+        collected = settings_handlers.collect_settings_from_ui(dialog)
+
+        # Verify collected matches modifications
+        assert collected.alert_notify_minor is False
+        assert collected.alert_notify_moderate is True
+        assert collected.alert_global_cooldown_minutes == 12

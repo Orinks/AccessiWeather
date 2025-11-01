@@ -104,6 +104,18 @@ class SettingsDialog:
         # Environmental controls
         self.air_quality_threshold_input = None
 
+        # Notifications tab controls
+        self.notifications_tab = None
+        self.alert_notifications_enabled_switch = None
+        self.alert_notify_extreme_switch = None
+        self.alert_notify_severe_switch = None
+        self.alert_notify_moderate_switch = None
+        self.alert_notify_minor_switch = None
+        self.alert_notify_unknown_switch = None
+        self.alert_global_cooldown_input = None
+        self.alert_per_alert_cooldown_input = None
+        self.alert_max_notifications_input = None
+
     def __await__(self):
         """Make the dialog awaitable for modal behavior."""
         if self.future is None:
@@ -174,7 +186,9 @@ class SettingsDialog:
 
         # Create tabs in new order
         settings_tabs.create_general_tab(self)
+        settings_tabs.create_display_tab(self)
         settings_tabs.create_data_sources_tab(self)
+        settings_tabs.create_notifications_tab(self)
         settings_tabs.create_audio_tab(self)
         settings_tabs.create_updates_tab(self)
         settings_tabs.create_advanced_tab(self)
@@ -226,7 +240,8 @@ class SettingsDialog:
         except Exception as exc:
             logger.warning("%s: Failed to select initial tab before focusing: %s", LOG_PREFIX, exc)
 
-        target = self.temperature_unit_selection or self.data_source_selection
+        # Focus on the first control in the General tab (first tab shown)
+        target = self.update_interval_input or self.data_source_selection
 
         if target is None:
             logger.warning("%s: No primary control available for focus", LOG_PREFIX)

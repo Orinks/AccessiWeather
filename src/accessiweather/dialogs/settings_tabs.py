@@ -18,7 +18,46 @@ def create_general_tab(dialog):
     general_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
     dialog.general_tab = general_box
 
-    general_box.add(toga.Label("Temperature Display:", style=Pack(margin_bottom=5)))
+    general_box.add(toga.Label("Update Interval (minutes):", style=Pack(margin_bottom=5)))
+    dialog.update_interval_input = toga.NumberInput(
+        value=dialog.current_settings.update_interval_minutes,
+        style=Pack(margin_bottom=15),
+    )
+    dialog.update_interval_input.aria_label = "Update interval"
+    dialog.update_interval_input.aria_description = (
+        "Set how often the app should refresh weather data in minutes."
+    )
+    general_box.add(dialog.update_interval_input)
+
+    aq_default = getattr(dialog.current_settings, "air_quality_notify_threshold", 3)
+    try:
+        aq_default = int(aq_default)
+    except Exception:  # pragma: no cover - fallback path
+        aq_default = 3
+
+    general_box.add(
+        toga.Label("Air Quality alert threshold (US AQI):", style=Pack(margin_bottom=5))
+    )
+    dialog.air_quality_threshold_input = toga.NumberInput(
+        value=aq_default,
+        style=Pack(margin_bottom=15),
+        id="air_quality_threshold_input",
+    )
+    dialog.air_quality_threshold_input.aria_label = "Air quality threshold"
+    dialog.air_quality_threshold_input.aria_description = (
+        "Set the US AQI level at which air quality alerts should be triggered."
+    )
+    general_box.add(dialog.air_quality_threshold_input)
+
+    dialog.option_container.content.append("General", general_box)
+
+
+def create_display_tab(dialog):
+    """Build the Display tab for visual presentation settings."""
+    display_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
+    dialog.display_tab = display_box
+
+    display_box.add(toga.Label("Temperature Display:", style=Pack(margin_bottom=5)))
 
     temp_unit_options = [
         "Fahrenheit only",
@@ -55,19 +94,18 @@ def create_general_tab(dialog):
         logger.warning("Failed to set temperature unit selection: %s", exc)
         dialog.temperature_unit_selection.value = "Both (Fahrenheit and Celsius)"
 
-    general_box.add(dialog.temperature_unit_selection)
+    display_box.add(dialog.temperature_unit_selection)
 
-    general_box.add(toga.Label("Update Interval (minutes):", style=Pack(margin_bottom=5)))
-    dialog.update_interval_input = toga.NumberInput(
-        value=dialog.current_settings.update_interval_minutes,
-        style=Pack(margin_bottom=15),
-    )
-    general_box.add(dialog.update_interval_input)
-
-    general_box.add(
+    display_box.add(
         toga.Label(
-            "Metric visibility:",
-            style=Pack(margin_bottom=5, font_weight="bold"),
+            "Metric Visibility:",
+            style=Pack(margin_bottom=8, font_weight="bold"),
+        )
+    )
+    display_box.add(
+        toga.Label(
+            "Select which weather metrics to display:",
+            style=Pack(margin_bottom=10, font_size=9),
         )
     )
 
@@ -81,7 +119,7 @@ def create_general_tab(dialog):
     dialog.show_dewpoint_switch.aria_description = (
         "Include the dewpoint measurement in the current conditions overview."
     )
-    general_box.add(dialog.show_dewpoint_switch)
+    display_box.add(dialog.show_dewpoint_switch)
 
     dialog.show_visibility_switch = toga.Switch(
         "Show visibility",
@@ -93,7 +131,7 @@ def create_general_tab(dialog):
     dialog.show_visibility_switch.aria_description = (
         "Include the horizontal visibility reading in the current conditions overview."
     )
-    general_box.add(dialog.show_visibility_switch)
+    display_box.add(dialog.show_visibility_switch)
 
     dialog.show_uv_index_switch = toga.Switch(
         "Show UV index",
@@ -105,7 +143,7 @@ def create_general_tab(dialog):
     dialog.show_uv_index_switch.aria_description = (
         "Include the ultraviolet index rating in the current conditions overview."
     )
-    general_box.add(dialog.show_uv_index_switch)
+    display_box.add(dialog.show_uv_index_switch)
 
     dialog.show_pressure_trend_switch = toga.Switch(
         "Show pressure trend",
@@ -117,7 +155,7 @@ def create_general_tab(dialog):
     dialog.show_pressure_trend_switch.aria_description = (
         "Include the barometric pressure trend analysis in the current conditions overview."
     )
-    general_box.add(dialog.show_pressure_trend_switch)
+    display_box.add(dialog.show_pressure_trend_switch)
 
     dialog.show_detailed_forecast_switch = toga.Switch(
         "Show detailed forecast information",
@@ -125,33 +163,11 @@ def create_general_tab(dialog):
         style=Pack(margin_bottom=10),
         id="show_detailed_forecast_switch",
     )
-    general_box.add(dialog.show_detailed_forecast_switch)
+    dialog.show_detailed_forecast_switch.aria_label = "Toggle detailed forecast"
+    dialog.show_detailed_forecast_switch.aria_description = "Show extended details in weather forecasts including wind, precipitation, and other metrics."
+    display_box.add(dialog.show_detailed_forecast_switch)
 
-    dialog.enable_alerts_switch = toga.Switch(
-        "Enable weather alerts",
-        value=dialog.current_settings.enable_alerts,
-        style=Pack(margin_bottom=10),
-        id="enable_alerts_switch",
-    )
-    general_box.add(dialog.enable_alerts_switch)
-
-    aq_default = getattr(dialog.current_settings, "air_quality_notify_threshold", 3)
-    try:
-        aq_default = int(aq_default)
-    except Exception:  # pragma: no cover - fallback path
-        aq_default = 3
-
-    general_box.add(
-        toga.Label("Air Quality alert threshold (US AQI):", style=Pack(margin_bottom=5))
-    )
-    dialog.air_quality_threshold_input = toga.NumberInput(
-        value=aq_default,
-        style=Pack(margin_bottom=15),
-        id="air_quality_threshold_input",
-    )
-    general_box.add(dialog.air_quality_threshold_input)
-
-    dialog.option_container.content.append("General", general_box)
+    dialog.option_container.content.append("Display", display_box)
 
 
 def create_data_sources_tab(dialog):
@@ -520,3 +536,209 @@ def load_sound_packs(dialog):
     if not dialog.sound_pack_options:
         dialog.sound_pack_options = ["Default"]
         dialog.sound_pack_map = {"Default": "default"}
+
+
+def create_notifications_tab(dialog):
+    """Build the Notifications tab for alert configuration."""
+    notifications_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
+    dialog.notifications_tab = notifications_box
+
+    # Title and description
+    notifications_box.add(
+        toga.Label(
+            "Alert Notification Settings",
+            style=Pack(margin_bottom=5, font_weight="bold", font_size=12),
+        )
+    )
+    notifications_box.add(
+        toga.Label(
+            "Configure which weather alerts trigger notifications based on severity.",
+            style=Pack(margin_bottom=15, font_size=9),
+        )
+    )
+
+    # Master enable alerts switch
+    dialog.enable_alerts_switch = toga.Switch(
+        "Enable weather alerts",
+        value=dialog.current_settings.enable_alerts,
+        style=Pack(margin_bottom=10),
+        id="enable_alerts_switch",
+    )
+    dialog.enable_alerts_switch.aria_label = "Toggle weather alerts"
+    dialog.enable_alerts_switch.aria_description = (
+        "Master control to enable or disable all weather alert functionality."
+    )
+    notifications_box.add(dialog.enable_alerts_switch)
+
+    # Alert notifications enabled master switch
+    dialog.alert_notifications_enabled_switch = toga.Switch(
+        "Enable alert notifications",
+        value=getattr(dialog.current_settings, "alert_notifications_enabled", True),
+        style=Pack(margin_bottom=15),
+        id="alert_notifications_enabled_switch",
+    )
+    dialog.alert_notifications_enabled_switch.aria_label = "Toggle alert notifications"
+    dialog.alert_notifications_enabled_switch.aria_description = (
+        "Master control to enable or disable all weather alert notifications."
+    )
+    notifications_box.add(dialog.alert_notifications_enabled_switch)
+
+    # Severity level section
+    notifications_box.add(
+        toga.Label(
+            "Alert Severity Levels:",
+            style=Pack(margin_bottom=8, font_weight="bold"),
+        )
+    )
+    notifications_box.add(
+        toga.Label(
+            "Select which severity levels should trigger notifications:",
+            style=Pack(margin_bottom=10, font_size=9),
+        )
+    )
+
+    # Extreme severity switch
+    dialog.alert_notify_extreme_switch = toga.Switch(
+        "Extreme - Life-threatening events (e.g., Tornado Warning)",
+        value=getattr(dialog.current_settings, "alert_notify_extreme", True),
+        style=Pack(margin_bottom=8),
+        id="alert_notify_extreme_switch",
+    )
+    dialog.alert_notify_extreme_switch.aria_label = "Notify for extreme severity alerts"
+    dialog.alert_notify_extreme_switch.aria_description = "Receive notifications for extreme severity weather events that pose life-threatening danger."
+    notifications_box.add(dialog.alert_notify_extreme_switch)
+
+    # Severe severity switch
+    dialog.alert_notify_severe_switch = toga.Switch(
+        "Severe - Significant hazards (e.g., Severe Thunderstorm Warning)",
+        value=getattr(dialog.current_settings, "alert_notify_severe", True),
+        style=Pack(margin_bottom=8),
+        id="alert_notify_severe_switch",
+    )
+    dialog.alert_notify_severe_switch.aria_label = "Notify for severe severity alerts"
+    dialog.alert_notify_severe_switch.aria_description = (
+        "Receive notifications for severe weather events that pose significant hazards."
+    )
+    notifications_box.add(dialog.alert_notify_severe_switch)
+
+    # Moderate severity switch
+    dialog.alert_notify_moderate_switch = toga.Switch(
+        "Moderate - Potentially hazardous (e.g., Winter Weather Advisory)",
+        value=getattr(dialog.current_settings, "alert_notify_moderate", True),
+        style=Pack(margin_bottom=8),
+        id="alert_notify_moderate_switch",
+    )
+    dialog.alert_notify_moderate_switch.aria_label = "Notify for moderate severity alerts"
+    dialog.alert_notify_moderate_switch.aria_description = (
+        "Receive notifications for moderate severity weather events that may be hazardous."
+    )
+    notifications_box.add(dialog.alert_notify_moderate_switch)
+
+    # Minor severity switch
+    dialog.alert_notify_minor_switch = toga.Switch(
+        "Minor - Low impact events (e.g., Frost Advisory, Fog Advisory)",
+        value=getattr(dialog.current_settings, "alert_notify_minor", False),
+        style=Pack(margin_bottom=8),
+        id="alert_notify_minor_switch",
+    )
+    dialog.alert_notify_minor_switch.aria_label = "Notify for minor severity alerts"
+    dialog.alert_notify_minor_switch.aria_description = (
+        "Receive notifications for minor severity weather events with low impact."
+    )
+    notifications_box.add(dialog.alert_notify_minor_switch)
+
+    # Unknown severity switch
+    dialog.alert_notify_unknown_switch = toga.Switch(
+        "Unknown - Uncategorized alerts",
+        value=getattr(dialog.current_settings, "alert_notify_unknown", False),
+        style=Pack(margin_bottom=15),
+        id="alert_notify_unknown_switch",
+    )
+    dialog.alert_notify_unknown_switch.aria_label = "Notify for unknown severity alerts"
+    dialog.alert_notify_unknown_switch.aria_description = (
+        "Receive notifications for alerts without a defined severity level."
+    )
+    notifications_box.add(dialog.alert_notify_unknown_switch)
+
+    # Cooldown and rate limiting section
+    notifications_box.add(
+        toga.Label(
+            "Rate Limiting:",
+            style=Pack(margin_bottom=8, margin_top=10, font_weight="bold"),
+        )
+    )
+    notifications_box.add(
+        toga.Label(
+            "Prevent notification spam by setting cooldown periods:",
+            style=Pack(margin_bottom=10, font_size=9),
+        )
+    )
+
+    # Global cooldown
+    notifications_box.add(
+        toga.Label(
+            "Global cooldown (minutes):",
+            style=Pack(margin_bottom=5),
+        )
+    )
+    notifications_box.add(
+        toga.Label(
+            "Minimum time between any notifications",
+            style=Pack(margin_bottom=5, font_size=9),
+        )
+    )
+    dialog.alert_global_cooldown_input = toga.NumberInput(
+        value=getattr(dialog.current_settings, "alert_global_cooldown_minutes", 5),
+        min=0,
+        max=60,
+        style=Pack(margin_bottom=12),
+        id="alert_global_cooldown_input",
+    )
+    notifications_box.add(dialog.alert_global_cooldown_input)
+
+    # Per-alert cooldown
+    notifications_box.add(
+        toga.Label(
+            "Per-alert cooldown (minutes):",
+            style=Pack(margin_bottom=5),
+        )
+    )
+    notifications_box.add(
+        toga.Label(
+            "Minimum time between notifications for the same alert",
+            style=Pack(margin_bottom=5, font_size=9),
+        )
+    )
+    dialog.alert_per_alert_cooldown_input = toga.NumberInput(
+        value=getattr(dialog.current_settings, "alert_per_alert_cooldown_minutes", 60),
+        min=0,
+        max=1440,
+        style=Pack(margin_bottom=12),
+        id="alert_per_alert_cooldown_input",
+    )
+    notifications_box.add(dialog.alert_per_alert_cooldown_input)
+
+    # Max notifications per hour
+    notifications_box.add(
+        toga.Label(
+            "Maximum notifications per hour:",
+            style=Pack(margin_bottom=5),
+        )
+    )
+    notifications_box.add(
+        toga.Label(
+            "Total notification limit per hour",
+            style=Pack(margin_bottom=5, font_size=9),
+        )
+    )
+    dialog.alert_max_notifications_input = toga.NumberInput(
+        value=getattr(dialog.current_settings, "alert_max_notifications_per_hour", 10),
+        min=1,
+        max=100,
+        style=Pack(margin_bottom=15),
+        id="alert_max_notifications_input",
+    )
+    notifications_box.add(dialog.alert_max_notifications_input)
+
+    # Add the tab to the option container
+    dialog.option_container.content.append("Notifications", notifications_box)
