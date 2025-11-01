@@ -4,6 +4,7 @@ Configuration utilities for AccessiWeather.
 This module provides utilities for handling configuration paths and migration.
 """
 
+import copy
 import logging
 import os
 import platform
@@ -41,29 +42,41 @@ def is_portable_mode() -> bool:
         return False
 
     # Get the directory of the executable
-    if getattr(sys, "frozen", False):
-        app_dir = os.path.dirname(sys.executable)
+    # Use ntpath for Windows paths when PROGRAMFILES is set (handles cross-platform testing)
+    program_files = os.environ.get("PROGRAMFILES", "")
+    if program_files and "\\" in sys.executable:
+        # Windows path detected, use ntpath for proper handling
+        import ntpath
+
+        if getattr(sys, "frozen", False):
+            app_dir = ntpath.dirname(sys.executable)
+        else:
+            app_dir = ntpath.dirname(ntpath.abspath(__file__))
     else:
-        app_dir = os.path.dirname(os.path.abspath(__file__))
+        # Use standard os.path for the current platform
+        if getattr(sys, "frozen", False):
+            app_dir = os.path.dirname(sys.executable)
+        else:
+            app_dir = os.path.dirname(os.path.abspath(__file__))
 
     logger.debug(f"Checking portable mode for app directory: {app_dir}")
 
     # Check if we're running from Program Files (standard installation)
-    program_files = os.environ.get("PROGRAMFILES", "")
     program_files_x86 = os.environ.get("PROGRAMFILES(X86)", "")
 
     # Normalize paths for comparison (handle case sensitivity and path separators)
-    app_dir_normalized = os.path.normpath(app_dir).lower()
+    # Replace backslashes with forward slashes for consistent comparison
+    app_dir_normalized = os.path.normpath(app_dir).lower().replace("\\", "/")
 
     # Check if app_dir starts with any Program Files path
     program_files_paths = []
     if program_files:
-        program_files_paths.append(os.path.normpath(program_files).lower())
+        program_files_paths.append(os.path.normpath(program_files).lower().replace("\\", "/"))
     if program_files_x86:
-        program_files_paths.append(os.path.normpath(program_files_x86).lower())
+        program_files_paths.append(os.path.normpath(program_files_x86).lower().replace("\\", "/"))
 
     for pf_path in program_files_paths:
-        if app_dir_normalized.startswith(pf_path + os.sep) or app_dir_normalized == pf_path:
+        if app_dir_normalized.startswith(pf_path + "/") or app_dir_normalized == pf_path:
             logger.debug(f"Not in portable mode: app directory is under Program Files ({pf_path})")
             return False
 
@@ -155,8 +168,8 @@ def ensure_config_defaults(config: dict[str, Any]) -> dict[str, Any]:
         Dict: Configuration dictionary with defaults added
 
     """
-    # Make a copy of the config to avoid modifying the original
-    updated_config = config.copy()
+    # Make a deep copy of the config to avoid modifying the original
+    updated_config = copy.deepcopy(config)
 
     # Ensure settings section exists
     if "settings" not in updated_config:

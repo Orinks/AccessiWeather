@@ -28,12 +28,12 @@ from accessiweather.cache import (
     _serialize_datetime,
     _serialize_forecast,
 )
+from accessiweather.models.config import Location
 from accessiweather.models.weather import (
     CurrentConditions,
     Forecast,
     ForecastPeriod,
 )
-from accessiweather.models.config import Location
 
 
 class TestCacheEntry:
@@ -204,9 +204,7 @@ class TestSerializationHelpers:
 
     def test_safe_location_key(self):
         """Should create safe filename from location."""
-        location = Location(
-            name="New York, NY", latitude=40.7128, longitude=-74.0060
-        )
+        location = Location(name="New York, NY", latitude=40.7128, longitude=-74.0060)
         key = _safe_location_key(location)
 
         assert key is not None
@@ -218,9 +216,7 @@ class TestSerializationHelpers:
 
     def test_safe_location_key_special_chars(self):
         """Should handle location names with special characters."""
-        location = Location(
-            name="São Paulo, Brazil!", latitude=-23.5505, longitude=-46.6333
-        )
+        location = Location(name="São Paulo, Brazil!", latitude=-23.5505, longitude=-46.6333)
         key = _safe_location_key(location)
 
         assert key is not None
@@ -341,9 +337,7 @@ class TestWeatherDataCache:
     @pytest.fixture
     def sample_location(self):
         """Create sample location."""
-        return Location(
-            name="Test City", latitude=40.7128, longitude=-74.0060
-        )
+        return Location(name="Test City", latitude=40.7128, longitude=-74.0060)
 
     @pytest.fixture
     def sample_weather_data(self, sample_location):
@@ -375,9 +369,7 @@ class TestWeatherDataCache:
 
             assert cache.cache_dir.exists()
 
-    def test_store_weather_data(
-        self, temp_cache_dir, sample_location, sample_weather_data
-    ):
+    def test_store_weather_data(self, temp_cache_dir, sample_location, sample_weather_data):
         """Should persist weather data to file."""
         cache = WeatherDataCache(cache_dir=temp_cache_dir)
         cache.store(sample_location, sample_weather_data)
@@ -393,9 +385,7 @@ class TestWeatherDataCache:
             assert "saved_at" in data
             assert data["location"]["name"] == "Test City"
 
-    def test_load_weather_data(
-        self, temp_cache_dir, sample_location, sample_weather_data
-    ):
+    def test_load_weather_data(self, temp_cache_dir, sample_location, sample_weather_data):
         """Should load persisted weather data."""
         cache = WeatherDataCache(cache_dir=temp_cache_dir, max_age_minutes=180)
 

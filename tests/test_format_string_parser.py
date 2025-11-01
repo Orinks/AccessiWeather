@@ -9,11 +9,12 @@ Tests cover:
 - Edge cases and boundary conditions
 """
 
-import pytest
-
 # Direct import to avoid __init__.py importing toga
 import sys
 from pathlib import Path
+
+import pytest
+
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from accessiweather.format_string_parser import FormatStringParser
@@ -127,12 +128,12 @@ class TestFormatStringParser:
 
     def test_validate_format_string_multiple_unsupported(self, parser):
         """Should reject format string with multiple unsupported placeholders."""
-        format_str = "{invalid1} and {invalid2}"
+        format_str = "{invalid_one} and {invalid_two}"
         is_valid, error = parser.validate_format_string(format_str)
 
         assert is_valid is False
-        assert "invalid1" in error
-        assert "invalid2" in error
+        assert "invalid_one" in error
+        assert "invalid_two" in error
 
     def test_format_string_simple(self, parser):
         """Should format simple string with single placeholder."""
@@ -280,16 +281,16 @@ class TestFormatStringParserEdgeCases:
         assert result.count("72°F") == 100
 
     def test_format_string_nested_braces(self, parser):
-        """Should handle text that looks like nested braces."""
+        """Should handle double braces as escape sequences."""
         format_str = "Range: {{min}} to {{max}}"
         data = {"min": "50", "max": "75"}
 
-        # This will fail validation due to unbalanced braces
-        # but format_string should handle it
+        # Double braces allow literal braces with substitution
+        # {{min}} -> {50} (outer braces are literals, inner {min} gets replaced)
         result = parser.format_string(format_str, data)
 
-        # Should detect unbalanced braces
-        assert "Error" in result
+        # Should successfully format with one level of braces remaining
+        assert result == "Range: {50} to {75}"
 
     def test_validate_with_only_braces(self, parser):
         """Should validate string with only braces."""

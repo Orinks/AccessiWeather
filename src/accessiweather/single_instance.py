@@ -8,6 +8,7 @@ built-in single-instance management.
 
 import logging
 import os
+import subprocess
 import time
 from pathlib import Path
 
@@ -136,8 +137,6 @@ class SingleInstanceManager:
         try:
             # Cross-platform way to check if process is running
             if os.name == "nt":  # Windows
-                import subprocess
-
                 result = subprocess.run(
                     ["tasklist", "/FI", f"PID eq {pid}"], capture_output=True, text=True, timeout=5
                 )
@@ -146,7 +145,9 @@ class SingleInstanceManager:
             # Send signal 0 to check if process exists
             os.kill(pid, 0)
             return True
-        except (OSError, subprocess.TimeoutExpired, subprocess.SubprocessError):
+        except Exception:
+            # Catch all exceptions to avoid blocking the app
+            # This includes OSError, subprocess errors, and any other unexpected issues
             return False
 
     def _create_lock_file(self) -> None:

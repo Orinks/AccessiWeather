@@ -10,14 +10,14 @@ Tests cover:
 - Data source-specific behavior (NWS vs. auto)
 """
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
-
-from geopy.exc import GeocoderServiceError, GeocoderTimedOut
-
 # Direct import to avoid __init__.py importing toga
 import sys
 from pathlib import Path
+from unittest.mock import Mock, patch
+
+import pytest
+from geopy.exc import GeocoderServiceError, GeocoderTimedOut
+
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from accessiweather.geocoding import GeocodingService
@@ -117,9 +117,7 @@ class TestAddressGeocoding:
         mock_location.latitude = 40.7128
         mock_location.longitude = -74.0060
         mock_location.address = "New York, NY, USA"
-        mock_location.raw = {
-            "address": {"country_code": "us"}
-        }
+        mock_location.raw = {"address": {"country_code": "us"}}
 
         with patch.object(service.geolocator, "geocode", return_value=mock_location):
             result = service.geocode_address("New York, NY")
@@ -143,9 +141,7 @@ class TestAddressGeocoding:
         mock_location.latitude = 51.5074
         mock_location.longitude = -0.1278
         mock_location.address = "London, UK"
-        mock_location.raw = {
-            "address": {"country_code": "gb"}
-        }
+        mock_location.raw = {"address": {"country_code": "gb"}}
 
         with patch.object(service.geolocator, "geocode", return_value=mock_location):
             result = service.geocode_address("London, UK")
@@ -159,9 +155,7 @@ class TestAddressGeocoding:
         mock_location.latitude = 51.5074
         mock_location.longitude = -0.1278
         mock_location.address = "London, UK"
-        mock_location.raw = {
-            "address": {"country_code": "gb"}
-        }
+        mock_location.raw = {"address": {"country_code": "gb"}}
 
         with patch.object(service.geolocator, "geocode", return_value=mock_location):
             result = service.geocode_address("London, UK")
@@ -177,9 +171,7 @@ class TestAddressGeocoding:
         mock_location.latitude = 40.7128
         mock_location.longitude = -74.0060
         mock_location.address = "New York, NY 10001, USA"
-        mock_location.raw = {
-            "address": {"country_code": "us"}
-        }
+        mock_location.raw = {"address": {"country_code": "us"}}
 
         with patch.object(service.geolocator, "geocode", return_value=mock_location):
             result = service.geocode_address("10001")
@@ -188,11 +180,7 @@ class TestAddressGeocoding:
 
     def test_geocode_address_timeout(self, service):
         """Should handle geocoder timeout gracefully."""
-        with patch.object(
-            service.geolocator,
-            "geocode",
-            side_effect=GeocoderTimedOut("Timeout")
-        ):
+        with patch.object(service.geolocator, "geocode", side_effect=GeocoderTimedOut("Timeout")):
             result = service.geocode_address("New York, NY")
 
             assert result is None
@@ -200,9 +188,7 @@ class TestAddressGeocoding:
     def test_geocode_address_service_error(self, service):
         """Should handle geocoder service error gracefully."""
         with patch.object(
-            service.geolocator,
-            "geocode",
-            side_effect=GeocoderServiceError("Service error")
+            service.geolocator, "geocode", side_effect=GeocoderServiceError("Service error")
         ):
             result = service.geocode_address("New York, NY")
 
@@ -210,11 +196,7 @@ class TestAddressGeocoding:
 
     def test_geocode_address_unexpected_error(self, service):
         """Should handle unexpected errors gracefully."""
-        with patch.object(
-            service.geolocator,
-            "geocode",
-            side_effect=Exception("Unexpected error")
-        ):
+        with patch.object(service.geolocator, "geocode", side_effect=Exception("Unexpected error")):
             result = service.geocode_address("New York, NY")
 
             assert result is None
@@ -238,9 +220,7 @@ class TestAddressGeocoding:
         mock_location.latitude = 40.7128
         mock_location.longitude = -74.0060
         mock_location.address = "New York, NY, USA"
-        mock_location.raw = {
-            "address": {"country_code": "us"}
-        }
+        mock_location.raw = {"address": {"country_code": "us"}}
 
         with patch.object(service.geolocator, "geocode", return_value=mock_location):
             result = service.geocode_address("  New York, NY  ")
@@ -274,9 +254,7 @@ class TestCoordinateValidation:
     def test_validate_coordinates_us_location_success(self, service):
         """Should validate US coordinates successfully."""
         mock_location = Mock()
-        mock_location.raw = {
-            "address": {"country_code": "us"}
-        }
+        mock_location.raw = {"address": {"country_code": "us"}}
 
         with patch.object(service.geolocator, "reverse", return_value=mock_location):
             result = service.validate_coordinates(40.7128, -74.0060, us_only=True)
@@ -286,9 +264,7 @@ class TestCoordinateValidation:
     def test_validate_coordinates_non_us_location(self, service):
         """Should reject non-US coordinates when us_only=True."""
         mock_location = Mock()
-        mock_location.raw = {
-            "address": {"country_code": "gb"}
-        }
+        mock_location.raw = {"address": {"country_code": "gb"}}
 
         with patch.object(service.geolocator, "reverse", return_value=mock_location):
             result = service.validate_coordinates(51.5074, -0.1278, us_only=True)
@@ -304,11 +280,7 @@ class TestCoordinateValidation:
 
     def test_validate_coordinates_timeout(self, service):
         """Should return True on timeout to avoid false negatives."""
-        with patch.object(
-            service.geolocator,
-            "reverse",
-            side_effect=GeocoderTimedOut("Timeout")
-        ):
+        with patch.object(service.geolocator, "reverse", side_effect=GeocoderTimedOut("Timeout")):
             result = service.validate_coordinates(40.7128, -74.0060, us_only=True)
 
             # Should return True to avoid removing valid locations
@@ -317,9 +289,7 @@ class TestCoordinateValidation:
     def test_validate_coordinates_service_error(self, service):
         """Should return True on service error to avoid false negatives."""
         with patch.object(
-            service.geolocator,
-            "reverse",
-            side_effect=GeocoderServiceError("Service error")
+            service.geolocator, "reverse", side_effect=GeocoderServiceError("Service error")
         ):
             result = service.validate_coordinates(40.7128, -74.0060, us_only=True)
 
@@ -329,9 +299,7 @@ class TestCoordinateValidation:
         """Should use us_only=True when data_source is 'nws' and us_only is None."""
         service = GeocodingService(data_source="nws")
         mock_location = Mock()
-        mock_location.raw = {
-            "address": {"country_code": "us"}
-        }
+        mock_location.raw = {"address": {"country_code": "us"}}
 
         with patch.object(service.geolocator, "reverse", return_value=mock_location):
             result = service.validate_coordinates(40.7128, -74.0060)
@@ -399,18 +367,9 @@ class TestLocationSuggestions:
     def test_suggest_locations_filters_us_only_nws(self, service):
         """Should filter for US locations only when using NWS."""
         mock_locations = [
-            Mock(
-                address="New York, USA",
-                raw={"address": {"country_code": "us"}}
-            ),
-            Mock(
-                address="York, UK",
-                raw={"address": {"country_code": "gb"}}
-            ),
-            Mock(
-                address="New York, Australia",
-                raw={"address": {"country_code": "au"}}
-            ),
+            Mock(address="New York, USA", raw={"address": {"country_code": "us"}}),
+            Mock(address="York, UK", raw={"address": {"country_code": "gb"}}),
+            Mock(address="New York, Australia", raw={"address": {"country_code": "au"}}),
         ]
 
         with patch.object(service.geolocator, "geocode", return_value=mock_locations):
@@ -424,14 +383,8 @@ class TestLocationSuggestions:
         """Should allow worldwide locations when using auto data source."""
         service = GeocodingService(data_source="auto")
         mock_locations = [
-            Mock(
-                address="New York, USA",
-                raw={"address": {"country_code": "us"}}
-            ),
-            Mock(
-                address="York, UK",
-                raw={"address": {"country_code": "gb"}}
-            ),
+            Mock(address="New York, USA", raw={"address": {"country_code": "us"}}),
+            Mock(address="York, UK", raw={"address": {"country_code": "gb"}}),
         ]
 
         with patch.object(service.geolocator, "geocode", return_value=mock_locations):
@@ -458,10 +411,7 @@ class TestLocationSuggestions:
     def test_suggest_locations_zip_code(self, service):
         """Should format ZIP code for suggestions."""
         mock_locations = [
-            Mock(
-                address="New York, NY 10001, USA",
-                raw={"address": {"country_code": "us"}}
-            )
+            Mock(address="New York, NY 10001, USA", raw={"address": {"country_code": "us"}})
         ]
 
         with patch.object(service.geolocator, "geocode", return_value=mock_locations):
@@ -478,11 +428,7 @@ class TestLocationSuggestions:
 
     def test_suggest_locations_timeout(self, service):
         """Should return empty list on timeout."""
-        with patch.object(
-            service.geolocator,
-            "geocode",
-            side_effect=GeocoderTimedOut("Timeout")
-        ):
+        with patch.object(service.geolocator, "geocode", side_effect=GeocoderTimedOut("Timeout")):
             suggestions = service.suggest_locations("New York")
 
             assert suggestions == []
@@ -490,9 +436,7 @@ class TestLocationSuggestions:
     def test_suggest_locations_service_error(self, service):
         """Should return empty list on service error."""
         with patch.object(
-            service.geolocator,
-            "geocode",
-            side_effect=GeocoderServiceError("Service error")
+            service.geolocator, "geocode", side_effect=GeocoderServiceError("Service error")
         ):
             suggestions = service.suggest_locations("New York")
 
@@ -500,12 +444,7 @@ class TestLocationSuggestions:
 
     def test_suggest_locations_strips_whitespace(self, service):
         """Should strip whitespace from query."""
-        mock_locations = [
-            Mock(
-                address="New York, USA",
-                raw={"address": {"country_code": "us"}}
-            )
-        ]
+        mock_locations = [Mock(address="New York, USA", raw={"address": {"country_code": "us"}})]
 
         with patch.object(service.geolocator, "geocode", return_value=mock_locations):
             suggestions = service.suggest_locations("  New York  ")

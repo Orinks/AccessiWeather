@@ -11,10 +11,10 @@ Tests cover:
 """
 
 import os
-import time
 import sys
+import time
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -128,8 +128,8 @@ class TestLockAcquisition:
         """Should return True on exception to avoid blocking."""
         manager = SingleInstanceManager(mock_app)
 
-        # Mock to raise exception
-        with patch.object(mock_app.paths.data, "mkdir", side_effect=Exception("Test error")):
+        # Mock _create_lock_file to raise exception
+        with patch.object(manager, "_create_lock_file", side_effect=Exception("Test error")):
             result = manager.try_acquire_lock()
 
             # Should return True to allow app to start

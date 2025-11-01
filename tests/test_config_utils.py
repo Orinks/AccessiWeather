@@ -10,13 +10,9 @@ Tests cover:
 """
 
 import os
-import platform
 import sys
-import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch
-
-import pytest
+from unittest.mock import patch
 
 # Direct import to avoid __init__.py importing toga
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -177,12 +173,7 @@ class TestEnsureConfigDefaults:
 
     def test_ensure_config_defaults_existing_settings(self):
         """Should not overwrite existing settings."""
-        config = {
-            "settings": {
-                "data_source": "custom_source",
-                "custom_key": "custom_value"
-            }
-        }
+        config = {"settings": {"data_source": "custom_source", "custom_key": "custom_value"}}
 
         result = ensure_config_defaults(config)
 
@@ -192,17 +183,13 @@ class TestEnsureConfigDefaults:
 
     def test_ensure_config_defaults_adds_missing_settings(self):
         """Should add missing default settings."""
-        config = {
-            "settings": {
-                "some_key": "some_value"
-            }
-        }
+        config = {"settings": {"some_key": "some_value"}}
 
         result = ensure_config_defaults(config)
 
         # Should add missing defaults
         assert "data_source" in result["settings"]
-        assert "auto_update_check" in result["settings"]
+        assert "auto_update_check_enabled" in result["settings"]
         assert "update_check_interval_hours" in result["settings"]
         assert "update_channel" in result["settings"]
 
@@ -236,12 +223,12 @@ class TestEnsureConfigDefaults:
         result = ensure_config_defaults(config)
 
         settings = result["settings"]
-        assert "auto_update_check" in settings
+        assert "auto_update_check_enabled" in settings
         assert "update_check_interval_hours" in settings
         assert "update_channel" in settings
 
         # Verify types
-        assert isinstance(settings["auto_update_check"], bool)
+        assert isinstance(settings["auto_update_check_enabled"], bool)
         assert isinstance(settings["update_check_interval_hours"], int)
         assert isinstance(settings["update_channel"], str)
 
@@ -277,24 +264,16 @@ class TestConfigUtilsEdgeCases:
         read_only_dir = tmp_path / "readonly"
         read_only_dir.mkdir()
 
-        with patch("sys.executable", str(read_only_dir / "app.exe")):
-            # Mock open to raise PermissionError
-            with patch("builtins.open", side_effect=PermissionError("No write access")):
-                result = is_portable_mode()
-                assert result is False
+        with (
+            patch("sys.executable", str(read_only_dir / "app.exe")),
+            patch("builtins.open", side_effect=PermissionError("No write access")),
+        ):
+            result = is_portable_mode()
+            assert result is False
 
     def test_ensure_config_defaults_with_nested_config(self):
         """Should handle configs with nested structures."""
-        config = {
-            "settings": {
-                "nested": {
-                    "key": "value"
-                }
-            },
-            "other_section": {
-                "data": "test"
-            }
-        }
+        config = {"settings": {"nested": {"key": "value"}}, "other_section": {"data": "test"}}
 
         result = ensure_config_defaults(config)
 
