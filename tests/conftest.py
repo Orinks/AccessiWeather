@@ -1,38 +1,20 @@
 """Test configuration and fixtures for AccessiWeather Toga app tests."""
 
-# Mock toga and desktop-notifier BEFORE any other imports
+# Configure toga-dummy backend for testing
+import os
 import sys
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-# Create comprehensive toga mock with all commonly used submodules
-toga_mock = MagicMock()
-toga_mock.style = MagicMock()
-toga_mock.style.pack = MagicMock()
-toga_mock.style.Pack = MagicMock(return_value=MagicMock())
-toga_mock.style.pack.COLUMN = "column"
-toga_mock.style.pack.ROW = "row"
-toga_mock.App = MagicMock()
-toga_mock.Box = MagicMock()
-toga_mock.Button = MagicMock()
-toga_mock.Label = MagicMock()
-toga_mock.TextInput = MagicMock()
+# Set toga to use the dummy backend for headless testing
+os.environ["TOGA_BACKEND"] = "toga_dummy"
 
-sys.modules['toga'] = toga_mock
-sys.modules['toga.style'] = toga_mock.style
-sys.modules['toga.style.pack'] = toga_mock.style.pack
+# Mock desktop-notifier (not provided by toga-dummy)
 sys.modules['desktop-notifier'] = MagicMock()
 sys.modules['desktop_notifier'] = MagicMock()
 
-# Mock travertino
-travertino_mock = MagicMock()
-travertino_mock.constants = MagicMock()
-travertino_mock.constants.COLUMN = "column"
-travertino_mock.constants.ROW = "row"
-sys.modules['travertino'] = travertino_mock
-sys.modules['travertino.constants'] = travertino_mock.constants
-
 # Import only Toga-compatible fixtures
 from contextlib import suppress
+from unittest.mock import patch
 
 import pytest
 
