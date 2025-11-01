@@ -1,10 +1,19 @@
 """Test configuration and fixtures for AccessiWeather Toga app tests."""
 
-# Import only Toga-compatible fixtures
+# Configure toga-dummy backend for testing
+import os
+import sys
 from contextlib import suppress
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+# Set toga to use the dummy backend for headless testing
+os.environ["TOGA_BACKEND"] = "toga_dummy"
+
+# Mock desktop-notifier (not provided by toga-dummy)
+sys.modules["desktop-notifier"] = MagicMock()
+sys.modules["desktop_notifier"] = MagicMock()
 
 # Import only Toga helpers (guarded to avoid heavy imports when unavailable)
 # If optional UI deps (e.g., toga) are not installed, allow non-UI tests to run
