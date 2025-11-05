@@ -163,7 +163,17 @@ class GitHubUpdateService:
 
     async def _get_releases(self) -> list[dict[str, Any]]:
         """Maintain backward compatibility for tests that access the old helper."""
-        return await self.release_manager.get_releases()
+        try:
+            return await self.release_manager.get_releases()
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:  # noqa: BLE001 - fall back to cache when possible
+            cache = self.release_manager._cache or {}
+            cached_releases = cache.get("releases", [])
+            if cached_releases:
+                logger.warning("Using cached releases after fetch failure: %s", exc)
+                return cached_releases
+            raise
 
     def _filter_releases_by_channel(
         self, releases: list[dict[str, Any]], channel: str
@@ -191,15 +201,20 @@ class GitHubUpdateService:
         checksums_url: str | None = None,
         artifact_name: str | None = None,
     ) -> str | bool:
-        return await self.download_manager._download_asset(  # type: ignore[attr-defined]
-            asset_url,
-            dest_path,
-            progress_callback=progress_callback,
-            cancel_event=cancel_event,
-            expected_sha256=expected_sha256,
-            checksums_url=checksums_url,
-            artifact_name=artifact_name,
-        )
+        try:
+            return await self.download_manager._download_asset(  # type: ignore[attr-defined]
+                asset_url,
+                dest_path,
+                progress_callback=progress_callback,
+                cancel_event=cancel_event,
+                expected_sha256=expected_sha256,
+                checksums_url=checksums_url,
+                artifact_name=artifact_name,
+            )
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            return False
 
     def _load_settings(self) -> UpdateSettings:
         return self.settings_manager.load_settings()

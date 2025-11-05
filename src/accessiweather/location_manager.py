@@ -10,6 +10,11 @@ import logging
 import httpx
 
 from .models import Location
+from .utils.retry_utils import (
+    RETRYABLE_EXCEPTIONS,
+    async_retry_with_backoff,
+    is_retryable_http_error,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +27,7 @@ class LocationManager:
         self.timeout = 10.0
         self.geocoding_base_url = "https://nominatim.openstreetmap.org"
 
+    @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=15.0)
     async def search_locations(self, query: str, limit: int = 5) -> list[Location]:
         """Search for locations using geocoding service."""
         logger.info(f"Searching for locations: {query}")
@@ -85,8 +91,11 @@ class LocationManager:
 
         except Exception as e:
             logger.error(f"Failed to search locations: {e}")
+            if isinstance(e, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(e):
+                raise
             return []
 
+    @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=15.0)
     async def reverse_geocode(self, latitude: float, longitude: float) -> Location | None:
         """Get location name from coordinates."""
         logger.info(f"Reverse geocoding: {latitude}, {longitude}")
@@ -118,6 +127,8 @@ class LocationManager:
 
         except Exception as e:
             logger.error(f"Failed to reverse geocode: {e}")
+            if isinstance(e, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(e):
+                raise
             return None
 
     def _parse_geocoding_result(self, data: dict) -> Location | None:
@@ -370,6 +381,7 @@ class LocationManager:
             Location("Denver, CO", 39.7392, -104.9903),
         ]
 
+    @async_retry_with_backoff(max_attempts=2, base_delay=0.5, timeout=12.0)
     async def get_current_location_from_ip(self) -> Location | None:
         """Get approximate location from IP address (for initial setup)."""
         try:
@@ -405,5 +417,7 @@ class LocationManager:
 
         except Exception as e:
             logger.error(f"Failed to get location from IP: {e}")
+            if isinstance(e, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(e):
+                raise
 
         return None

@@ -10,6 +10,7 @@ from typing import Any
 import httpx
 
 from ..models import EnvironmentalConditions, Location
+from ..utils.retry_utils import async_retry_with_backoff
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,7 @@ class EnvironmentalDataClient:
         self.user_agent = user_agent
         self.timeout = timeout
 
+    @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=15.0)
     async def fetch(
         self,
         location: Location,

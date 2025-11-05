@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import hashlib
 import logging
@@ -10,6 +11,8 @@ from pathlib import Path
 from typing import Protocol
 
 import httpx
+
+from ...utils.retry_utils import async_retry_with_backoff
 
 logger = logging.getLogger(__name__)
 
@@ -74,15 +77,20 @@ class DownloadManager:
             dest_dir.mkdir(parents=True, exist_ok=True)
             file_path = dest_dir / name
 
-            return await self._download_asset(
-                url,
-                file_path,
-                progress_callback=progress_callback,
-                cancel_event=cancel_event,
-                expected_sha256=expected_sha256,
-                checksums_url=checksums_url,
-                artifact_name=name,
-            )
+            try:
+                return await self._download_asset(
+                    url,
+                    file_path,
+                    progress_callback=progress_callback,
+                    cancel_event=cancel_event,
+                    expected_sha256=expected_sha256,
+                    checksums_url=checksums_url,
+                    artifact_name=name,
+                )
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                return False
 
         if dest_path is None:
             logger.error("dest_path is required when calling download_update with a URL")
@@ -91,16 +99,22 @@ class DownloadManager:
         with contextlib.suppress(Exception):
             Path(dest_path).parent.mkdir(parents=True, exist_ok=True)
 
-        return await self._download_asset(
-            asset_or_info,
-            dest_path,
-            progress_callback=progress_callback,
-            cancel_event=cancel_event,
-            expected_sha256=expected_sha256,
-            checksums_url=checksums_url,
-            artifact_name=artifact_name,
-        )
+        try:
+            return await self._download_asset(
+                asset_or_info,
+                dest_path,
+                progress_callback=progress_callback,
+                cancel_event=cancel_event,
+                expected_sha256=expected_sha256,
+                checksums_url=checksums_url,
+                artifact_name=artifact_name,
+            )
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            return False
 
+    @async_retry_with_backoff(max_attempts=3, base_delay=2.0, timeout=300.0)
     async def _download_asset(
         self,
         asset_url: str,
@@ -149,7 +163,7 @@ class DownloadManager:
                         dest_path.unlink(missing_ok=True)
                     except Exception:  # noqa: BLE001 - best effort cleanup
                         pass
-                    return False
+                    raise
 
             if expected_sha256 and not self._verify_sha256(dest_path, expected_sha256):
                 return False
@@ -169,7 +183,7 @@ class DownloadManager:
             logger.error(f"Download failed: {exc}")
             with contextlib.suppress(Exception):
                 dest_path.unlink(missing_ok=True)
-            return False
+            raise
 
     @staticmethod
     def _verify_sha256(dest_path: Path, expected_sha256: str) -> bool:
@@ -188,6 +202,7 @@ class DownloadManager:
             return False
         return True
 
+    @async_retry_with_backoff(max_attempts=2, base_delay=1.0, timeout=15.0)
     async def _verify_checksums_txt(
         self,
         dest_path: Path,
@@ -222,4 +237,4 @@ class DownloadManager:
         except Exception as exc:  # noqa: BLE001 - log and fail to ensure caller cleans up
             logger.error(f"Failed to verify checksum from checksums.txt: {exc}")
             dest_path.unlink(missing_ok=True)
-            return False
+            raise
