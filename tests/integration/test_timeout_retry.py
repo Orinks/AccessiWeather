@@ -4,7 +4,6 @@ import asyncio
 
 import httpx
 import pytest
-from pytest_mock import MockerFixture
 
 from accessiweather.models import Location
 from accessiweather.weather_client import WeatherClient
@@ -72,17 +71,20 @@ async def test_nws_fetch_with_timeout_simulation(test_location: Location, monkey
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_nws_fetch_timeout_exhausted(test_location: Location, mocker: MockerFixture):
+async def test_nws_fetch_timeout_exhausted(test_location: Location, monkeypatch):
     """Test NWS data fetch returns None tuple when all retries exhausted."""
+    from unittest.mock import AsyncMock
+
     client = WeatherClient()
 
     # Mock to always timeout
     async def always_timeout(*args, **kwargs):
         raise httpx.TimeoutException("Persistent timeout")
 
-    mocker.patch(
+    mock = AsyncMock(side_effect=always_timeout)
+    monkeypatch.setattr(
         "accessiweather.weather_client_nws.get_nws_all_data_parallel",
-        side_effect=always_timeout,
+        mock,
     )
 
     result = await client._fetch_nws_data(test_location)
@@ -95,10 +97,10 @@ async def test_nws_fetch_timeout_exhausted(test_location: Location, mocker: Mock
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_openmeteo_fetch_with_timeout_simulation(
-    test_location: Location, mocker: MockerFixture
-):
+async def test_openmeteo_fetch_with_timeout_simulation(test_location: Location, monkeypatch):
     """Test Open-Meteo data fetch handles timeout with retry."""
+    from unittest.mock import AsyncMock
+
     client = WeatherClient()
 
     call_count = 0
@@ -110,9 +112,10 @@ async def test_openmeteo_fetch_with_timeout_simulation(
             raise httpx.ConnectError("Simulated connection error")
         return None, None, None
 
-    mocker.patch(
+    mock = AsyncMock(side_effect=mock_fetch)
+    monkeypatch.setattr(
         "accessiweather.weather_client_openmeteo.get_openmeteo_all_data_parallel",
-        side_effect=mock_fetch,
+        mock,
     )
 
     result = await client._fetch_openmeteo_data(test_location)
@@ -125,16 +128,19 @@ async def test_openmeteo_fetch_with_timeout_simulation(
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_openmeteo_fetch_timeout_exhausted(test_location: Location, mocker: MockerFixture):
+async def test_openmeteo_fetch_timeout_exhausted(test_location: Location, monkeypatch):
     """Test Open-Meteo fetch returns None tuple when retries exhausted."""
+    from unittest.mock import AsyncMock
+
     client = WeatherClient()
 
     async def always_fails(*args, **kwargs):
         raise httpx.ConnectError("Connection refused")
 
-    mocker.patch(
+    mock = AsyncMock(side_effect=always_fails)
+    monkeypatch.setattr(
         "accessiweather.weather_client_openmeteo.get_openmeteo_all_data_parallel",
-        side_effect=always_fails,
+        mock,
     )
 
     result = await client._fetch_openmeteo_data(test_location)
@@ -146,8 +152,10 @@ async def test_openmeteo_fetch_timeout_exhausted(test_location: Location, mocker
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_retry_delay_timing(test_location: Location, mocker: MockerFixture):
+async def test_retry_delay_timing(test_location: Location, monkeypatch):
     """Test that retry delay follows exponential backoff."""
+    from unittest.mock import AsyncMock
+
     client = WeatherClient()
 
     call_times = []
@@ -158,9 +166,10 @@ async def test_retry_delay_timing(test_location: Location, mocker: MockerFixture
             raise httpx.TimeoutException("Timeout")
         return None, None, None, None, None
 
-    mocker.patch(
+    mock = AsyncMock(side_effect=track_calls)
+    monkeypatch.setattr(
         "accessiweather.weather_client_nws.get_nws_all_data_parallel",
-        side_effect=track_calls,
+        mock,
     )
 
     await client._fetch_nws_data(test_location)
