@@ -67,29 +67,13 @@ jobs:
     - name: Ruff lint
       run: ruff check .
 
-    - name: Run tests with coverage
+    - name: Run tests
       env:
         PYTHONPATH: src
         PYTEST_DISABLE_PLUGIN_AUTOLOAD: 1
         ACCESSIWEATHER_TEST_MODE: "1"
       run: |
-        pytest -v -p pytest_asyncio -p pytest_cov --tb=short --maxfail=1
-
-    - name: Coverage summary
-      if: always()
-      run: |
-        if [ -f .coverage ]; then
-          coverage report --show-missing
-        else
-          echo "Skipping coverage summary; .coverage file not found."
-        fi
-
-    - name: Upload coverage report
-      if: ${{ success() }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-html
-        path: htmlcov/
+        pytest -v -p pytest_asyncio --tb=short --maxfail=1
 
     - name: CI Summary
       if: always()
