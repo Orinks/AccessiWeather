@@ -1,5 +1,6 @@
 """Test configuration and fixtures for AccessiWeather Toga app tests."""
 
+# Import pytest-mock early to avoid module rewriting conflicts
 # Configure toga-dummy backend for testing
 import os
 import sys
@@ -7,6 +8,7 @@ from contextlib import suppress
 from unittest.mock import MagicMock, patch
 
 import pytest
+import pytest_mock  # noqa: F401
 
 # Set toga to use the dummy backend for headless testing
 os.environ["TOGA_BACKEND"] = "toga_dummy"
