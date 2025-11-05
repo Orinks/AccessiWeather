@@ -111,13 +111,25 @@ class WeatherClient:
         # Reusable HTTP client for performance
         self._http_client: httpx.AsyncClient | None = None
 
+        # Track in-flight requests to deduplicate concurrent calls
+        self._in_flight_requests: dict[str, asyncio.Task[WeatherData]] = {}
+
+    def _location_key(self, location: Location) -> str:
+        """Generate a unique key for a location to track in-flight requests."""
+        return f"{location.name}:{location.latitude:.4f},{location.longitude:.4f}"
+
     def _get_http_client(self) -> httpx.AsyncClient:
-        """Get or create the reusable HTTP client."""
+        """Get or create the reusable HTTP client with optimized connection pooling."""
         if self._http_client is None or getattr(self._http_client, "is_closed", False):
+            # Optimized connection pool for concurrent requests:
+            # - max_connections=30: Allows multiple concurrent API calls
+            # - max_keepalive_connections=15: Reuses connections for performance
+            # - timeout with connect=3.0: Fast connection timeout
+            timeout_config = httpx.Timeout(connect=3.0, read=5.0, write=5.0, pool=5.0)
             client = httpx.AsyncClient(
-                timeout=self.timeout,
+                timeout=timeout_config,
                 follow_redirects=True,
-                limits=httpx.Limits(max_keepalive_connections=10, max_connections=20),
+                limits=httpx.Limits(max_keepalive_connections=15, max_connections=30),
             )
             if Mock is not None and isinstance(client, Mock):
                 enter = getattr(client, "__aenter__", None)
@@ -227,10 +239,106 @@ class WeatherClient:
         """Async context manager exit."""
         await self.close()
 
-    async def get_weather_data(self, location: Location) -> WeatherData:
-        """Get complete weather data for a location."""
+    async def pre_warm_cache(self, location: Location) -> bool:
+        """
+        Pre-warm the cache for a location by fetching and storing weather data.
+
+        This method is useful for reducing first-load latency by populating the cache
+        before the user requests data.
+
+        Args:
+        ----
+            location: The location to pre-warm cache for
+
+        Returns:
+        -------
+            True if cache was successfully warmed, False otherwise
+
+        """
+        logger.info(f"Pre-warming cache for {location.name}")
+        try:
+            # Fetch fresh data (bypassing cache)
+            weather_data = await self.get_weather_data(location, force_refresh=True)
+
+            if weather_data.has_any_data():
+                logger.info(f"✓ Cache pre-warmed successfully for {location.name}")
+                return True
+
+            logger.warning(f"Cache pre-warm failed: no data returned for {location.name}")
+            return False
+
+        except Exception as exc:
+            logger.error(f"Cache pre-warm failed for {location.name}: {exc}")
+            return False
+
+    async def get_weather_data(
+        self, location: Location, force_refresh: bool = False
+    ) -> WeatherData:
+        """
+        Get complete weather data for a location.
+
+        Args:
+            location: Location to fetch weather for
+            force_refresh: If True, bypass cache and force fresh API call
+
+        """
         logger.info(f"Fetching weather data for {location.name}")
 
+        # Handle force_refresh by temporarily clearing cache for this location
+        if force_refresh and self.offline_cache:
+            logger.debug(f"Force refresh requested, clearing cache for {location.name}")
+            self.offline_cache.invalidate(location)
+
+        # Check cache first before deduplication (unless force refresh)
+        if not force_refresh and self.offline_cache:
+            cached = self.offline_cache.load(location, allow_stale=False)
+            if cached and not cached.stale:
+                logger.debug(f"✓ Cache hit for {location.name} (fresh data, skipping API calls)")
+                return cached
+            if cached:
+                logger.debug(
+                    f"Cache hit for {location.name} but data is stale, will fetch fresh data"
+                )
+
+        # Use deduplication for concurrent requests
+        return await self._fetch_weather_data_with_dedup(location, force_refresh)
+
+    async def _fetch_weather_data_with_dedup(
+        self, location: Location, force_refresh: bool
+    ) -> WeatherData:
+        """
+        Fetch weather data with deduplication tracking.
+
+        This method prevents multiple concurrent requests for the same location.
+        """
+        location_key = self._location_key(location)
+
+        # Check if there's already an in-flight request for this location
+        if not force_refresh and location_key in self._in_flight_requests:
+            # Wait for the existing request to complete
+            logger.debug(f"Request for {location.name} already in flight, waiting for result")
+            return await self._in_flight_requests[location_key]
+
+        # Create a new task for this request
+        if not force_refresh:
+            task = asyncio.create_task(self._do_fetch_weather_data(location))
+            self._in_flight_requests[location_key] = task
+
+            try:
+                return await task
+            finally:
+                # Clean up completed request from tracking
+                self._in_flight_requests.pop(location_key, None)
+        else:
+            # Force refresh bypasses deduplication
+            return await self._do_fetch_weather_data(location)
+
+    async def _do_fetch_weather_data(self, location: Location) -> WeatherData:
+        """
+        Perform the actual weather data fetch.
+
+        This is the core fetch logic separated for deduplication purposes.
+        """
         # Determine which API to use based on data source and location
         logger.debug("Determining API choice")
         api_choice = self._determine_api_choice(location)

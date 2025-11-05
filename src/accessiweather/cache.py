@@ -573,6 +573,20 @@ class WeatherDataCache:
             except Exception:  # noqa: BLE001
                 path.unlink(missing_ok=True)
 
+    def invalidate(self, location: Location) -> None:
+        """
+        Invalidate cache entry for a specific location.
+
+        Args:
+        ----
+            location: The location to invalidate cache for
+
+        """
+        path = self._path_for_location(location)
+        if path.exists():
+            path.unlink(missing_ok=True)
+            logger.debug(f"Invalidated cache for location '{location.name}'")
+
     def _path_for_location(self, location: Location) -> Path:
         filename = f"{_safe_location_key(location)}.json"
         return self.cache_dir / filename

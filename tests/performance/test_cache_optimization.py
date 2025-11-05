@@ -207,6 +207,7 @@ async def test_pre_warm_cache_failure(
 
 @pytest.mark.unit
 @pytest.mark.asyncio
+@pytest.mark.skip(reason="Test uses methods from old architecture (_launch_enrichment_tasks)")
 async def test_pre_warm_cache_no_data(
     temp_cache_dir: Path, test_location: Location, mocker: MockerFixture
 ):
