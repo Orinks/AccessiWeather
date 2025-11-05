@@ -38,8 +38,10 @@ async def test_timeout_configuration(test_location: Location):
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_nws_fetch_with_timeout_simulation(test_location: Location, mocker: MockerFixture):
+async def test_nws_fetch_with_timeout_simulation(test_location: Location, monkeypatch):
     """Test NWS data fetch handles timeout with retry."""
+    from unittest.mock import AsyncMock
+
     client = WeatherClient()
 
     # Mock the parallel fetch to simulate timeout on first attempt
@@ -53,9 +55,10 @@ async def test_nws_fetch_with_timeout_simulation(test_location: Location, mocker
         # Return None values on retry success
         return None, None, None, None, None
 
-    mocker.patch(
+    mock = AsyncMock(side_effect=mock_fetch)
+    monkeypatch.setattr(
         "accessiweather.weather_client_nws.get_nws_all_data_parallel",
-        side_effect=mock_fetch,
+        mock,
     )
 
     result = await client._fetch_nws_data(test_location)
