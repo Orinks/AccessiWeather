@@ -8,7 +8,6 @@ import time
 from pathlib import Path
 
 import pytest
-from pytest_mock import MockerFixture
 
 from accessiweather.cache import WeatherDataCache
 from accessiweather.models import CurrentConditions, Location, WeatherData
@@ -78,7 +77,7 @@ async def test_app_startup_with_multiple_locations(
     weather_client: WeatherClient,
     multiple_locations: list[Location],
     sample_weather_data,
-    mocker: MockerFixture,
+    mocker,
 ) -> None:
     """
     Test app startup performance with multiple locations.
@@ -121,7 +120,7 @@ async def test_rapid_location_switches(
     weather_client: WeatherClient,
     multiple_locations: list[Location],
     sample_weather_data,
-    mocker: MockerFixture,
+    mocker,
 ) -> None:
     """
     Test rapid location switching performance.
@@ -175,7 +174,7 @@ async def test_concurrent_refresh_deduplication(
     weather_client: WeatherClient,
     multiple_locations: list[Location],
     sample_weather_data,
-    mocker: MockerFixture,
+    mocker,
 ) -> None:
     """
     Test that concurrent refreshes for the same location are deduplicated.
@@ -221,7 +220,7 @@ async def test_cache_pre_warming_effectiveness(
     weather_client: WeatherClient,
     multiple_locations: list[Location],
     sample_weather_data,
-    mocker: MockerFixture,
+    mocker,
 ) -> None:
     """
     Test cache pre-warming reduces subsequent fetch times.
@@ -268,7 +267,7 @@ async def test_force_refresh_bypasses_optimizations(
     weather_client: WeatherClient,
     multiple_locations: list[Location],
     sample_weather_data,
-    mocker: MockerFixture,
+    mocker,
 ) -> None:
     """
     Test that force_refresh bypasses cache and deduplication.
@@ -318,7 +317,7 @@ async def test_mixed_cache_and_fresh_requests(
     weather_client: WeatherClient,
     multiple_locations: list[Location],
     sample_weather_data,
-    mocker: MockerFixture,
+    mocker,
 ) -> None:
     """
     Test mixed scenario with cache hits and fresh fetches.
@@ -361,7 +360,7 @@ async def test_concurrent_different_locations(
     weather_client: WeatherClient,
     multiple_locations: list[Location],
     sample_weather_data,
-    mocker: MockerFixture,
+    mocker,
 ) -> None:
     """
     Test concurrent requests for different locations are not deduplicated.
@@ -406,7 +405,7 @@ async def test_performance_under_load(
     weather_client: WeatherClient,
     multiple_locations: list[Location],
     sample_weather_data,
-    mocker: MockerFixture,
+    mocker,
 ) -> None:
     """
     Test performance under heavy concurrent load.

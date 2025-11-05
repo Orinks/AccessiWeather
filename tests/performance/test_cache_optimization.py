@@ -5,7 +5,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from pytest_mock import MockerFixture
 
 from accessiweather.cache import WeatherDataCache
 from accessiweather.models import CurrentConditions, Location, WeatherData
@@ -44,7 +43,7 @@ async def test_cache_hit_skips_api_calls(
     temp_cache_dir: Path,
     test_location: Location,
     sample_weather_data: WeatherData,
-    mocker: MockerFixture,
+    mocker,
 ):
     """Test that fresh cache hits skip API calls entirely."""
     cache = WeatherDataCache(cache_dir=temp_cache_dir, max_age_minutes=5)
@@ -79,7 +78,7 @@ async def test_stale_cache_triggers_refresh(
     temp_cache_dir: Path,
     test_location: Location,
     sample_weather_data: WeatherData,
-    mocker: MockerFixture,
+    mocker,
 ):
     """Test that stale cache triggers API refresh."""
     # Create cache with 0-minute max_age (immediately stale)
@@ -124,7 +123,7 @@ async def test_force_refresh_bypasses_cache(
     temp_cache_dir: Path,
     test_location: Location,
     sample_weather_data: WeatherData,
-    mocker: MockerFixture,
+    mocker,
 ):
     """Test that force_refresh=True bypasses cache."""
     cache = WeatherDataCache(cache_dir=temp_cache_dir, max_age_minutes=60)
@@ -151,9 +150,7 @@ async def test_force_refresh_bypasses_cache(
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_pre_warm_cache_success(
-    temp_cache_dir: Path, test_location: Location, mocker: MockerFixture
-):
+async def test_pre_warm_cache_success(temp_cache_dir: Path, test_location: Location, mocker):
     """Test successful cache pre-warming."""
     cache = WeatherDataCache(cache_dir=temp_cache_dir, max_age_minutes=60)
     client = WeatherClient(offline_cache=cache)
@@ -182,9 +179,7 @@ async def test_pre_warm_cache_success(
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_pre_warm_cache_failure(
-    temp_cache_dir: Path, test_location: Location, mocker: MockerFixture
-):
+async def test_pre_warm_cache_failure(temp_cache_dir: Path, test_location: Location, mocker):
     """Test cache pre-warming when all APIs fail."""
     cache = WeatherDataCache(cache_dir=temp_cache_dir, max_age_minutes=60)
     client = WeatherClient(offline_cache=cache)
@@ -208,9 +203,7 @@ async def test_pre_warm_cache_failure(
 @pytest.mark.unit
 @pytest.mark.asyncio
 @pytest.mark.skip(reason="Test uses methods from old architecture (_launch_enrichment_tasks)")
-async def test_pre_warm_cache_no_data(
-    temp_cache_dir: Path, test_location: Location, mocker: MockerFixture
-):
+async def test_pre_warm_cache_no_data(temp_cache_dir: Path, test_location: Location, mocker):
     """Test cache pre-warming when APIs return no data and enrichments fail."""
     cache = WeatherDataCache(cache_dir=temp_cache_dir, max_age_minutes=60)
     client = WeatherClient(offline_cache=cache)
@@ -234,9 +227,7 @@ async def test_pre_warm_cache_no_data(
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_cache_miss_fetches_data(
-    temp_cache_dir: Path, test_location: Location, mocker: MockerFixture
-):
+async def test_cache_miss_fetches_data(temp_cache_dir: Path, test_location: Location, mocker):
     """Test that cache miss triggers data fetch."""
     cache = WeatherDataCache(cache_dir=temp_cache_dir, max_age_minutes=60)
     client = WeatherClient(offline_cache=cache)
@@ -286,7 +277,7 @@ async def test_multiple_cache_hits(
     temp_cache_dir: Path,
     test_location: Location,
     sample_weather_data: WeatherData,
-    mocker: MockerFixture,
+    mocker,
 ):
     """Test that multiple requests use cached data."""
     cache = WeatherDataCache(cache_dir=temp_cache_dir, max_age_minutes=60)
