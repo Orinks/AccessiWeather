@@ -47,6 +47,22 @@ from .utils import decode_taf_text
 from .utils.retry import APITimeoutError, retry_with_backoff
 from .visual_crossing_client import VisualCrossingApiError, VisualCrossingClient
 
+# Import performance timers for measuring operations
+try:
+    from .performance.timer import measure_async
+except ImportError:
+    # Fallback if performance module not available
+    def measure_async(name: str):  # type: ignore[no-redef]
+        """Provide dummy async context manager."""
+        from contextlib import asynccontextmanager
+
+        @asynccontextmanager
+        async def _dummy():
+            yield
+
+        return _dummy()
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -375,12 +391,73 @@ class WeatherClient:
         """Async context manager exit."""
         await self.close()
 
-    async def get_weather_data(self, location: Location) -> WeatherData:
-        """Get complete weather data for a location."""
-        logger.info(f"Fetching weather data for {location.name}")
+    async def pre_warm_cache(self, location: Location) -> bool:
+        """
+        Pre-warm the cache for a location by fetching and storing weather data.
 
-        # Determine which API to use based on data source and location
-        logger.debug("Determining API choice")
+        This method is useful for reducing first-load latency by populating the cache
+        before the user requests data.
+
+        Args:
+        ----
+            location: The location to pre-warm cache for
+
+        Returns:
+        -------
+            True if cache was successfully warmed, False otherwise
+
+        """
+        logger.info(f"Pre-warming cache for {location.name}")
+        try:
+            # Fetch fresh data (bypassing cache)
+            weather_data = await self.get_weather_data(location, force_refresh=True)
+
+            if weather_data.has_any_data():
+                logger.info(f"✓ Cache pre-warmed successfully for {location.name}")
+                return True
+
+            logger.warning(f"Cache pre-warm failed: no data returned for {location.name}")
+            return False
+
+        except Exception as exc:
+            logger.error(f"Cache pre-warm failed for {location.name}: {exc}")
+            return False
+
+    async def get_weather_data(
+        self, location: Location, *, force_refresh: bool = False
+    ) -> WeatherData:
+        """
+        Get complete weather data for a location.
+
+        Args:
+        ----
+            location: The location to fetch weather data for
+            force_refresh: If True, bypass cache and fetch fresh data
+
+        Returns:
+        -------
+            WeatherData object with current conditions, forecast, and alerts
+
+        """
+        async with measure_async(f"get_weather_data({location.name})"):
+            logger.info(f"Fetching weather data for {location.name}")
+
+            # Check cache first (unless force_refresh is True)
+            if not force_refresh and self.offline_cache:
+                async with measure_async(f"cache_check({location.name})"):
+                    cached = self.offline_cache.load(location, allow_stale=False)
+                    if cached and not cached.stale:
+                        logger.info(
+                            f"✓ Cache hit for {location.name} (fresh data, skipping API calls)"
+                        )
+                        return cached
+                    if cached:
+                        logger.debug(
+                            f"Cache hit for {location.name} but data is stale, will fetch fresh data"
+                        )
+
+            # Determine which API to use based on data source and location
+            logger.debug("Determining API choice")
         api_choice = self._determine_api_choice(location)
         api_name = {
             "nws": "NWS",
@@ -598,20 +675,20 @@ class WeatherClient:
                     )
                     self._set_empty_weather_data(weather_data)
 
-        # Launch enrichment tasks immediately (don't await yet - run concurrently with core)
-        logger.debug("Launching enrichment tasks concurrently")
-        enrichment_tasks = self._launch_enrichment_tasks(weather_data, location)
+            # Launch enrichment tasks immediately (don't await yet - run concurrently with core)
+            logger.debug("Launching enrichment tasks concurrently")
+            enrichment_tasks = self._launch_enrichment_tasks(weather_data, location)
 
-        # Await enrichment completion
-        await self._await_enrichments(enrichment_tasks, weather_data)
+            # Await enrichment completion
+            await self._await_enrichments(enrichment_tasks, weather_data)
 
-        if not weather_data.has_any_data() and self.offline_cache:
-            cached = self.offline_cache.load(location)
-            if cached:
-                logger.info(f"Using cached weather data for {location.name}")
-                return cached
+            if not weather_data.has_any_data() and self.offline_cache:
+                cached = self.offline_cache.load(location)
+                if cached:
+                    logger.info(f"Using cached weather data for {location.name}")
+                    return cached
 
-        return weather_data
+            return weather_data
 
     async def _process_visual_crossing_alerts(
         self, alerts: WeatherAlerts, location: Location

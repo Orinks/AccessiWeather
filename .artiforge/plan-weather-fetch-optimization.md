@@ -3,6 +3,31 @@
 **Project**: AccessiWeather
 **Goal**: Reduce weather data fetch latency by 50%+ during startup and refresh operations
 **Generated**: 2025-11-05
+**Last Updated**: 2025-01-XX (Step 3 completed)
+
+---
+
+## Progress Summary
+
+✅ **Step 1**: Performance instrumentation - COMPLETED
+- Added timer module with measure() context managers and timed() decorators
+- Configured performance logger with ACCESSIWEATHER_PERFORMANCE env var
+- 9 unit tests passing
+
+✅ **Step 2**: Enrichment parallelization - COMPLETED
+- Refactored _launch_enrichment_tasks() and _await_enrichments() helpers
+- Added pending_enrichments field to WeatherData model
+- 4 unit tests passing
+
+✅ **Step 3**: Timeout & retry logic - COMPLETED
+- Created retry utility with exponential backoff (retry_with_backoff)
+- Updated HTTP client to use httpx.Timeout(5.0, connect=3.0)
+- Wrapped API fetches with retry logic (max 1 retry, 1s delay)
+- 16 new tests (9 unit + 7 integration) passing
+- **Total: 29 performance tests passing**
+
+🔄 **Step 4**: Cache optimization - NEXT
+⏸️ **Steps 5-9**: Pending
 
 ---
 
@@ -18,7 +43,7 @@ This plan addresses performance bottlenecks in weather data fetching, particular
 
 ---
 
-## Step 1: Add Performance Instrumentation
+## Step 1: Add Performance Instrumentation ✅ COMPLETED
 
 ### Action
 Instrument the existing weather fetch pipeline to record detailed timing metrics for each async call (core fetches, each enrichment, cache lookup, and UI update).
@@ -40,9 +65,16 @@ Accurate measurements are required to validate that our optimizations actually r
 - Write a unit test `tests/performance/test_timer.py` that verifies the logger receives a record after the context exits.
 - Run the app in a test environment and assert that the log contains entries for at least `fetch_current_conditions`, `fetch_forecast`, and `enrich_alerts`.
 
+### Completed Implementation
+- ✅ Created `src/accessiweather/performance/timer.py` with measure() and measure_async() context managers
+- ✅ Added timed() and timed_async() decorators with double-wrap prevention
+- ✅ Configured performance logger in `logging_config.py` (enabled with ACCESSIWEATHER_PERFORMANCE=1)
+- ✅ Imported timers in weather_handlers.py (ready for instrumentation)
+- ✅ 9 unit tests in `tests/performance/test_timer.py` passing
+
 ---
 
-## Step 2: Refactor Core + Enrichment Parallelization
+## Step 2: Refactor Core + Enrichment Parallelization ✅ COMPLETED
 
 ### Action
 Refactor `WeatherClient.get_weather_data` to launch enrichment tasks **concurrently** with core data fetches instead of waiting for all core data to finish first.
@@ -69,9 +101,16 @@ Current sequential flow causes unnecessary idle time; many enrichment APIs can s
 - Add unit tests mocking each core and enrichment coroutine (using `pytest-mock`) to confirm that `get_weather_data` returns early with core data while enrichment tasks are still pending.
 - Verify that callbacks attached to enrichment tasks are invoked exactly once.
 
+### Completed Implementation
+- ✅ Created _launch_enrichment_tasks() helper in WeatherClient
+- ✅ Created _await_enrichments() helper with error handling
+- ✅ Added pending_enrichments field to WeatherData model
+- ✅ Refactored enrichment flow to use consolidated helpers
+- ✅ 4 unit tests in `tests/performance/test_parallel_fetch.py` passing
+
 ---
 
-## Step 3: Implement Per-API Timeout & Retry Logic
+## Step 3: Implement Per-API Timeout & Retry Logic ✅ COMPLETED
 
 ### Action
 Introduce per‑API timeout handling and retry logic using `httpx.AsyncClient`'s built‑in timeout feature.
@@ -98,6 +137,16 @@ Slow or unresponsive APIs currently block the whole fetch; setting sensible time
 ### Testing
 - Write integration tests (marked `@pytest.mark.integration`) that spin up a local `httpx.MockTransport` which delays response >5 s to trigger timeout and verify fallback behavior.
 - Ensure that retry is exercised by simulating a timeout on the first call and a successful response on the second.
+
+### Completed Implementation
+- ✅ Created `src/accessiweather/utils/retry.py` with retry_with_backoff() function
+- ✅ Added APITimeoutError custom exception with original_error tracking
+- ✅ Updated _get_http_client() to use httpx.Timeout(5.0, connect=3.0)
+- ✅ Wrapped _fetch_nws_data() with retry logic (max 1 retry, 1s delay)
+- ✅ Wrapped _fetch_openmeteo_data() with retry logic (max 1 retry, 1s delay)
+- ✅ Added error logging for exhausted retries
+- ✅ 9 unit tests in `tests/utils/test_retry.py` passing
+- ✅ 7 integration tests in `tests/integration/test_timeout_retry.py` passing
 
 ---
 
