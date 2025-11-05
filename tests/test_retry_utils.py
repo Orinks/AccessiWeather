@@ -59,7 +59,7 @@ async def test_async_retry_retries_and_succeeds(monkeypatch: pytest.MonkeyPatch,
         return 42
 
     logger = logging.getLogger("test.retry.success")
-    caplog.set_level(logging.WARNING, logger.name)
+    caplog.set_level(logging.INFO, logger.name)  # Changed to INFO to capture success message
 
     decorated = async_retry_with_backoff(
         max_attempts=3,
@@ -97,16 +97,12 @@ async def test_async_retry_exhausts_attempts(monkeypatch: pytest.MonkeyPatch) ->
 async def test_async_retry_timeout_enforced(monkeypatch: pytest.MonkeyPatch) -> None:
     attempts = {"count": 0}
 
-    async def fake_sleep(_: float) -> None:
-        return None
-
-    monkeypatch.setattr("accessiweather.utils.retry_utils.asyncio.sleep", fake_sleep)
-
+    # Don't patch asyncio.sleep - we want the timeout to actually trigger
     async def slow() -> None:
         attempts["count"] += 1
-        await asyncio.sleep(0.05)
+        await asyncio.sleep(0.1)  # Sleep longer than timeout
 
-    decorated = async_retry_with_backoff(max_attempts=2, base_delay=0.01, timeout=0.01)(slow)
+    decorated = async_retry_with_backoff(max_attempts=2, base_delay=0.001, timeout=0.01)(slow)
 
     with pytest.raises(asyncio.TimeoutError):
         await decorated()
