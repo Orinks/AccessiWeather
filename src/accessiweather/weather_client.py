@@ -44,6 +44,7 @@ from .models import (
 )
 from .services import EnvironmentalDataClient, MeteoAlarmClient
 from .utils import decode_taf_text
+from .utils.retry import APITimeoutError, retry_with_backoff
 from .visual_crossing_client import VisualCrossingApiError, VisualCrossingClient
 
 logger = logging.getLogger(__name__)
@@ -233,10 +234,13 @@ class WeatherClient:
         self._http_client: httpx.AsyncClient | None = None
 
     def _get_http_client(self) -> httpx.AsyncClient:
-        """Get or create the reusable HTTP client."""
+        """Get or create the reusable HTTP client with optimized timeout configuration."""
         if self._http_client is None or getattr(self._http_client, "is_closed", False):
+            # Use structured timeout: 3s for connection, 5s total
+            # This prevents slow/unresponsive APIs from blocking the entire fetch
+            timeout = httpx.Timeout(5.0, connect=3.0)
             client = httpx.AsyncClient(
-                timeout=self.timeout,
+                timeout=timeout,
                 follow_redirects=True,
                 limits=httpx.Limits(max_keepalive_connections=10, max_connections=20),
             )
@@ -278,7 +282,7 @@ class WeatherClient:
         WeatherAlerts | None,
         HourlyForecast | None,
     ]:
-        """Fetch NWS data, respecting test overrides while using optimized parallel path."""
+        """Fetch NWS data with retry logic and optimized parallel fetching."""
         method_names = [
             "_get_nws_current_conditions",
             "_get_nws_forecast_and_discussion",
@@ -290,9 +294,21 @@ class WeatherClient:
         client_is_mock = Mock is not None and isinstance(client, Mock)
 
         if not self._methods_overridden(method_names) and not client_is_mock:
-            return await nws_client.get_nws_all_data_parallel(
-                location, self.nws_base_url, self.user_agent, self.timeout, client
-            )
+            # Use retry wrapper for the parallel fetch
+            try:
+                return await retry_with_backoff(
+                    nws_client.get_nws_all_data_parallel,
+                    location,
+                    self.nws_base_url,
+                    self.user_agent,
+                    self.timeout,
+                    client,
+                    max_retries=1,
+                    initial_delay=1.0,
+                )
+            except APITimeoutError as exc:
+                logger.error(f"NWS API timeout after retries: {exc}")
+                return None, None, None, None, None
 
         current, forecast_result, alerts, hourly_forecast = await asyncio.gather(
             self._get_nws_current_conditions(location),
@@ -313,7 +329,7 @@ class WeatherClient:
     async def _fetch_openmeteo_data(
         self, location: Location
     ) -> tuple[CurrentConditions | None, Forecast | None, HourlyForecast | None]:
-        """Fetch Open-Meteo data, respecting test overrides while using optimized parallel path."""
+        """Fetch Open-Meteo data with retry logic and optimized parallel fetching."""
         method_names = [
             "_get_openmeteo_current_conditions",
             "_get_openmeteo_forecast",
@@ -324,9 +340,20 @@ class WeatherClient:
         client_is_mock = Mock is not None and isinstance(client, Mock)
 
         if not self._methods_overridden(method_names) and not client_is_mock:
-            return await openmeteo_client.get_openmeteo_all_data_parallel(
-                location, self.openmeteo_base_url, self.timeout, client
-            )
+            # Use retry wrapper for the parallel fetch
+            try:
+                return await retry_with_backoff(
+                    openmeteo_client.get_openmeteo_all_data_parallel,
+                    location,
+                    self.openmeteo_base_url,
+                    self.timeout,
+                    client,
+                    max_retries=1,
+                    initial_delay=1.0,
+                )
+            except APITimeoutError as exc:
+                logger.error(f"Open-Meteo API timeout after retries: {exc}")
+                return None, None, None
 
         return await asyncio.gather(
             self._get_openmeteo_current_conditions(location),
