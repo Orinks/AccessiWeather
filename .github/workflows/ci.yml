@@ -20,7 +20,7 @@ env:
 
 jobs:
   test:
-    name: Lint and Test (Ubuntu)
+    name: Lint and Test (Windows)
     runs-on: ubuntu-latest
 
     steps:
@@ -60,11 +60,6 @@ jobs:
         ACCESSIWEATHER_TEST_MODE: "1"
       run: |
         python installer/make.py
-
-    - name: Ruff auto-fix
-      run: |
-        ruff format .
-        ruff check --fix .
 
     - name: Ruff format check
       run: ruff format --check .

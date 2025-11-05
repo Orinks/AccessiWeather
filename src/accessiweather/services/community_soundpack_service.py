@@ -31,6 +31,8 @@ import httpx
 
 from accessiweather.constants import COMMUNITY_REPO_NAME, COMMUNITY_REPO_OWNER
 
+from ..utils.retry_utils import async_retry_with_backoff, is_retryable_http_error
+
 logger = logging.getLogger(__name__)
 
 
@@ -97,6 +99,7 @@ class CommunitySoundPackService:
         with contextlib.suppress(Exception):
             await self._http.aclose()
 
+    @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=45.0)
     async def fetch_available_packs(self, force_refresh: bool = False) -> list[CommunityPack]:
         """
         Fetch a list of available community packs.
@@ -149,8 +152,10 @@ class CommunitySoundPackService:
                     except Exception as e:  # fall back to releases
                         logger.warning(f"Failed to parse curated index.json: {e}")
                 # If content not present, fall through to releases
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.info(f"Curated index.json not available or failed: {e}")
+            if isinstance(e, httpx.RequestError) or is_retryable_http_error(e):
+                raise
 
         # Fallback to releases if packs still empty
         if not packs:
@@ -198,22 +203,27 @@ class CommunitySoundPackService:
                     logger.warning("GitHub API rate limit reached while fetching releases.")
                 else:
                     logger.warning(f"Unexpected GitHub API status: {resp.status_code}")
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error(f"Failed to fetch releases: {e}")
+                if isinstance(e, httpx.RequestError) or is_retryable_http_error(e):
+                    raise
 
         # Final fallback: scan repository directories for packs (no releases yet)
         if not packs:
             try:
                 repo_packs = await self._fetch_repo_directory_packs()
                 packs.extend(repo_packs)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error(f"Failed to discover packs from repository contents: {e}")
+                if isinstance(e, httpx.RequestError) or is_retryable_http_error(e):
+                    raise
 
         # Cache results
         self._cached_packs = packs
         self._cached_at = now
         return packs
 
+    @async_retry_with_backoff(max_attempts=2, base_delay=1.0, timeout=30.0)
     async def _fetch_repo_directory_packs(self) -> list[CommunityPack]:
         """Discover packs from /packs when no curated index or releases exist."""
         ref = "main"
@@ -269,6 +279,7 @@ class CommunitySoundPackService:
             )
         return packs
 
+    @async_retry_with_backoff(max_attempts=2, base_delay=1.0, timeout=15.0)
     async def _calculate_tree_size(self, tree_sha: str | None) -> int | None:
         if not tree_sha:
             return None
@@ -284,8 +295,10 @@ class CommunitySoundPackService:
                 if item.get("type") == "blob":
                     total += int(item.get("size") or 0)
             return total
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             logger.debug("Failed to calculate tree size for %s: %s", tree_sha, exc)
+            if isinstance(exc, httpx.RequestError) or is_retryable_http_error(exc):
+                raise
             return None
 
     async def download_pack(
@@ -404,6 +417,12 @@ class CommunitySoundPackService:
         # Exhausted retries
         raise RuntimeError(f"Failed to download {pack.name}: {last_exc}")
 
+    @async_retry_with_backoff(
+        max_attempts=2,
+        base_delay=1.0,
+        timeout=120.0,
+        retryable_exceptions=(RuntimeError,),
+    )
     async def _download_repo_pack(
         self,
         pack: CommunityPack,
@@ -469,6 +488,12 @@ class CommunitySoundPackService:
         finally:
             shutil.rmtree(staging_dir, ignore_errors=True)
 
+    @async_retry_with_backoff(
+        max_attempts=2,
+        base_delay=1.0,
+        timeout=15.0,
+        retryable_exceptions=(RuntimeError,),
+    )
     async def _fetch_tree_entries(self, pack: CommunityPack) -> list[dict[str, Any]]:
         tree_sha = pack.tree_sha
         if not tree_sha:
@@ -482,6 +507,6 @@ class CommunitySoundPackService:
                 pack.name,
                 resp.status_code,
             )
-            return []
+            raise RuntimeError(f"Tree fetch failed with status {resp.status_code}")
         data = resp.json()
         return data.get("tree", []) or []

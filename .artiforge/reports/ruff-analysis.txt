@@ -1,0 +1,2607 @@
+warning: The following rules have been removed and ignoring them has no effect:
+    - UP038
+
+C901 `show` is too complex (17 > 15)
+  --> src/accessiweather/alert_details_dialog.py:35:15
+   |
+33 |         self.dialog_window = None
+34 |
+35 |     async def show(self):
+   |               ^^^^
+36 |         """Show the alert details dialog."""
+37 |         try:
+   |
+
+PLR0912 Too many branches (19 > 12)
+  --> src/accessiweather/alert_details_dialog.py:35:15
+   |
+33 |         self.dialog_window = None
+34 |
+35 |     async def show(self):
+   |               ^^^^
+36 |         """Show the alert details dialog."""
+37 |         try:
+   |
+
+PLR0915 Too many statements (107 > 50)
+  --> src/accessiweather/alert_details_dialog.py:35:15
+   |
+33 |         self.dialog_window = None
+34 |
+35 |     async def show(self):
+   |               ^^^^
+36 |         """Show the alert details dialog."""
+37 |         try:
+   |
+
+PLR0911 Too many return statements (7 > 6)
+   --> src/accessiweather/alert_manager.py:221:9
+    |
+219 |         return datetime.now(UTC) - alert_state.last_notified > cooldown_period
+220 |
+221 |     def _should_notify_alert(self, alert: WeatherAlert) -> tuple[bool, str]:
+    |         ^^^^^^^^^^^^^^^^^^^^
+222 |         """Determine if we should notify for this alert and why."""
+223 |         # Check if notifications are enabled
+    |
+
+PLR0912 Too many branches (13 > 12)
+   --> src/accessiweather/alert_manager.py:250:9
+    |
+248 |         return True, "allowed"
+249 |
+250 |     def process_alerts(self, alerts: WeatherAlerts) -> list[tuple[WeatherAlert, str]]:
+    |         ^^^^^^^^^^^^^^
+251 |         """
+252 |         Process incoming alerts and return list of alerts to notify.
+    |
+
+PLR5501 [*] Use `elif` instead of `else` then `if`, to reduce indentation
+   --> src/accessiweather/alert_manager.py:303:13
+    |
+301 |                       logger.debug(f"Alert changed but in cooldown: {alert_id}")
+302 |
+303 | /             else:
+304 | |                 # Same alert, no changes - check if we should re-notify
+305 | |                 if self._can_send_alert_notification(existing_state, False):
+    | |________________^
+306 |                       notifications_to_send.append((alert, "reminder"))
+307 |                       logger.debug(f"Alert reminder: {alert_id}")
+    |
+help: Convert to `elif`
+
+PLR2004 Magic value used in comparison, consider replacing `3600` with a constant variable
+   --> src/accessiweather/alert_manager.py:360:86
+    |
+358 |             1
+359 |             for state in self.alert_states.values()
+360 |             if state.last_notified and (now - state.last_notified).total_seconds() < 3600
+    |                                                                                      ^^^^
+361 |         )
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `100` with a constant variable
+   --> src/accessiweather/alert_notification_system.py:123:51
+    |
+121 |                 headline=alert.headline or alert.title or "A weather alert has been issued.",
+122 |                 description=alert.description[:100] + "..."
+123 |                 if len(alert.description or "") > 100
+    |                                                   ^^^
+124 |                 else alert.description or "",
+125 |                 severity=alert.severity or "Unknown",
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+   --> src/accessiweather/alert_notification_system.py:132:39
+    |
+130 |             if alert.areas:
+131 |                 location_text = ", ".join(alert.areas[:2])  # Limit to first 2 areas
+132 |                 if len(alert.areas) > 2:
+    |                                       ^
+133 |                     location_text += f" and {len(alert.areas) - 2} more areas"
+134 |                 message += f"\n\nAffected areas: {location_text}"
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `5` with a constant variable
+   --> src/accessiweather/alert_notification_system.py:291:65
+    |
+289 |         """Update preferences from AlertSettings object."""
+290 |         # Map minimum priority back to individual severity flags
+291 |         self.notify_extreme = settings.min_severity_priority <= 5
+    |                                                                 ^
+292 |         self.notify_severe = settings.min_severity_priority <= 4
+293 |         self.notify_moderate = settings.min_severity_priority <= 3
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `4` with a constant variable
+   --> src/accessiweather/alert_notification_system.py:292:64
+    |
+290 |         # Map minimum priority back to individual severity flags
+291 |         self.notify_extreme = settings.min_severity_priority <= 5
+292 |         self.notify_severe = settings.min_severity_priority <= 4
+    |                                                                ^
+293 |         self.notify_moderate = settings.min_severity_priority <= 3
+294 |         self.notify_minor = settings.min_severity_priority <= 2
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `3` with a constant variable
+   --> src/accessiweather/alert_notification_system.py:293:66
+    |
+291 |         self.notify_extreme = settings.min_severity_priority <= 5
+292 |         self.notify_severe = settings.min_severity_priority <= 4
+293 |         self.notify_moderate = settings.min_severity_priority <= 3
+    |                                                                  ^
+294 |         self.notify_minor = settings.min_severity_priority <= 2
+295 |         self.notify_unknown = settings.min_severity_priority <= 1
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+   --> src/accessiweather/alert_notification_system.py:294:63
+    |
+292 |         self.notify_severe = settings.min_severity_priority <= 4
+293 |         self.notify_moderate = settings.min_severity_priority <= 3
+294 |         self.notify_minor = settings.min_severity_priority <= 2
+    |                                                               ^
+295 |         self.notify_unknown = settings.min_severity_priority <= 1
+    |
+
+PLR0913 Too many arguments in function definition (8 > 5)
+  --> src/accessiweather/api/base_wrapper.py:37:9
+   |
+35 |     """
+36 |
+37 |     def __init__(
+   |         ^^^^^^^^
+38 |         self,
+39 |         user_agent: str = "AccessiWeather",
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `429` with a constant variable
+   --> src/accessiweather/api/base_wrapper.py:177:46
+    |
+176 |             except httpx.HTTPStatusError as e:
+177 |                 if e.response.status_code == 429:  # Rate limited
+    |                                              ^^^
+178 |                     self._handle_rate_limit(url, retry_count)
+179 |                     retry_count += 1
+    |
+
+C901 `get_alerts` is too complex (18 > 15)
+  --> src/accessiweather/api/nws/alerts_discussions.py:31:9
+   |
+29 |         self.wrapper = wrapper_instance
+30 |
+31 |     def get_alerts(
+   |         ^^^^^^^^^^
+32 |         self,
+33 |         lat: float,
+   |
+
+PLR0915 Too many statements (72 > 50)
+  --> src/accessiweather/api/nws/alerts_discussions.py:31:9
+   |
+29 |         self.wrapper = wrapper_instance
+30 |
+31 |     def get_alerts(
+   |         ^^^^^^^^^^
+32 |         self,
+33 |         lat: float,
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `404` with a constant variable
+  --> src/accessiweather/api/nws/core_client.py:82:31
+   |
+80 |             url = kwargs.get("url", self.BASE_URL)
+81 |
+82 |             if status_code == 404:
+   |                               ^^^
+83 |                 error_msg = f"Resource not found (404) at {url}"
+84 |                 raise NoaaApiError(
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `429` with a constant variable
+  --> src/accessiweather/api/nws/core_client.py:90:31
+   |
+88 |                     status_code=status_code,
+89 |                 ) from e
+90 |             if status_code == 429:
+   |                               ^^^
+91 |                 error_msg = f"Rate limit exceeded (429) for {url}"
+92 |                 raise NoaaApiError(
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `500` with a constant variable
+   --> src/accessiweather/api/nws/core_client.py:98:31
+    |
+ 96 |                     status_code=status_code,
+ 97 |                 ) from e
+ 98 |             if status_code >= 500:
+    |                               ^^^
+ 99 |                 error_msg = f"Server error ({status_code}) at {url}"
+100 |                 raise NoaaApiError(
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+   --> src/accessiweather/api_client/alerts_and_products.py:101:84
+    |
+ 99 |             if location_type == "state":
+100 |                 state = location_id
+101 |             elif location_type == "county" and location_id and len(location_id) >= 2:
+    |                                                                                    ^
+102 |                 # Extract state from county code (first two characters)
+103 |                 state = location_id[:2]
+    |
+
+C901 `_make_request` is too complex (18 > 15)
+   --> src/accessiweather/api_client/core_client.py:100:9
+    |
+ 98 |         return self._make_request(endpoint, force_refresh=force_refresh)
+ 99 |
+100 |     def _make_request(
+    |         ^^^^^^^^^^^^^
+101 |         self,
+102 |         endpoint_or_url: str,
+    |
+
+PLR0912 Too many branches (17 > 12)
+   --> src/accessiweather/api_client/core_client.py:100:9
+    |
+ 98 |         return self._make_request(endpoint, force_refresh=force_refresh)
+ 99 |
+100 |     def _make_request(
+    |         ^^^^^^^^^^^^^
+101 |         self,
+102 |         endpoint_or_url: str,
+    |
+
+PLR0915 Too many statements (73 > 50)
+   --> src/accessiweather/api_client/core_client.py:100:9
+    |
+ 98 |         return self._make_request(endpoint, force_refresh=force_refresh)
+ 99 |
+100 |     def _make_request(
+    |         ^^^^^^^^^^^^^
+101 |         self,
+102 |         endpoint_or_url: str,
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `404` with a constant variable
+   --> src/accessiweather/api_client/core_client.py:175:44
+    |
+174 |                 # Handle HTTP errors
+175 |                 if response.status_code == 404:
+    |                                            ^^^
+176 |                     error_msg = f"Resource not found (404) for {request_url}"
+177 |                     logger.error(error_msg)
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `429` with a constant variable
+   --> src/accessiweather/api_client/core_client.py:184:44
+    |
+182 |                         url=request_url,
+183 |                     )
+184 |                 if response.status_code == 429:
+    |                                            ^^^
+185 |                     error_msg = f"Rate limit exceeded (429) for {request_url}"
+186 |                     logger.error(error_msg)
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `500` with a constant variable
+   --> src/accessiweather/api_client/core_client.py:193:44
+    |
+191 |                         url=request_url,
+192 |                     )
+193 |                 if response.status_code >= 500:
+    |                                            ^^^
+194 |                     error_msg = f"Server error ({response.status_code}) for {request_url}"
+195 |                     logger.error(error_msg)
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `400` with a constant variable
+   --> src/accessiweather/api_client/core_client.py:202:44
+    |
+200 |                         url=request_url,
+201 |                     )
+202 |                 if response.status_code >= 400:
+    |                                            ^^^
+203 |                     error_msg = f"Client error ({response.status_code}) for {request_url}"
+204 |                     logger.error(error_msg)
+    |
+
+PLR0913 Too many arguments in function definition (9 > 5)
+  --> src/accessiweather/api_wrapper.py:26:9
+   |
+24 |     """
+25 |
+26 |     def __init__(
+   |         ^^^^^^^^
+27 |         self,
+28 |         user_agent: str = "AccessiWeather",
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `24.0` with a constant variable
+   --> src/accessiweather/api_wrapper.py:100:16
+    |
+ 98 |             # Auto-selection logic: Use NWS for US locations, Open-Meteo for international
+ 99 |             # US boundaries (approximate): lat 24-49, lon -125 to -66
+100 |             if 24.0 <= lat <= 49.0 and -125.0 <= lon <= -66.0:
+    |                ^^^^
+101 |                 logger.debug(f"Auto-selected NWS for US location: ({lat}, {lon})")
+102 |                 return "nws"
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `49.0` with a constant variable
+   --> src/accessiweather/api_wrapper.py:100:31
+    |
+ 98 |             # Auto-selection logic: Use NWS for US locations, Open-Meteo for international
+ 99 |             # US boundaries (approximate): lat 24-49, lon -125 to -66
+100 |             if 24.0 <= lat <= 49.0 and -125.0 <= lon <= -66.0:
+    |                               ^^^^
+101 |                 logger.debug(f"Auto-selected NWS for US location: ({lat}, {lon})")
+102 |                 return "nws"
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `-125.0` with a constant variable
+   --> src/accessiweather/api_wrapper.py:100:40
+    |
+ 98 |             # Auto-selection logic: Use NWS for US locations, Open-Meteo for international
+ 99 |             # US boundaries (approximate): lat 24-49, lon -125 to -66
+100 |             if 24.0 <= lat <= 49.0 and -125.0 <= lon <= -66.0:
+    |                                        ^^^^^^
+101 |                 logger.debug(f"Auto-selected NWS for US location: ({lat}, {lon})")
+102 |                 return "nws"
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `-66.0` with a constant variable
+   --> src/accessiweather/api_wrapper.py:100:57
+    |
+ 98 |             # Auto-selection logic: Use NWS for US locations, Open-Meteo for international
+ 99 |             # US boundaries (approximate): lat 24-49, lon -125 to -66
+100 |             if 24.0 <= lat <= 49.0 and -125.0 <= lon <= -66.0:
+    |                                                         ^^^^^
+101 |                 logger.debug(f"Auto-selected NWS for US location: ({lat}, {lon})")
+102 |                 return "nws"
+    |
+
+PLR0915 Too many statements (59 > 50)
+  --> src/accessiweather/app_initialization.py:29:5
+   |
+29 | def initialize_components(app: AccessiWeatherApp) -> None:
+   |     ^^^^^^^^^^^^^^^^^^^^^
+30 |     """Initialize core application components for the given app instance."""
+31 |     logger.info("Initializing application components")
+   |
+
+PLR0911 Too many return statements (9 > 6)
+  --> src/accessiweather/config/github_config.py:32:9
+   |
+30 |         return self._manager._get_logger()
+31 |
+32 |     def validate_github_app_config(self) -> tuple[bool, str]:
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+33 |         """Validate the GitHub App configuration fields."""
+34 |         settings = self._manager.get_config().settings
+   |
+
+C901 `_validate_and_fix_config` is too complex (18 > 15)
+  --> src/accessiweather/config/settings.py:34:9
+   |
+32 |         return self._manager._get_logger()
+33 |
+34 |     def _validate_and_fix_config(self) -> None:
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^
+35 |         """Validate and correct configuration values in-place when possible."""
+36 |         config = self._manager._config
+   |
+
+PLR0912 Too many branches (20 > 12)
+  --> src/accessiweather/config/settings.py:34:9
+   |
+32 |         return self._manager._get_logger()
+33 |
+34 |     def _validate_and_fix_config(self) -> None:
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^
+35 |         """Validate and correct configuration values in-place when possible."""
+36 |         config = self._manager._config
+   |
+
+PLR0915 Too many statements (62 > 50)
+  --> src/accessiweather/config/settings.py:34:9
+   |
+32 |         return self._manager._get_logger()
+33 |
+34 |     def _validate_and_fix_config(self) -> None:
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^
+35 |         """Validate and correct configuration values in-place when possible."""
+36 |         config = self._manager._config
+   |
+
+PLR5501 [*] Use `elif` instead of `else` then `if`, to reduce indentation
+  --> src/accessiweather/config/settings.py:58:9
+   |
+56 |                   settings.data_source = "auto"
+57 |                   config_changed = True
+58 | /         else:
+59 | |             if settings.visual_crossing_api_key:
+   | |____________^
+60 |                   self.logger.info(
+61 |                       f"Clearing Visual Crossing API key for data_source '{settings.data_source}'"
+   |
+help: Convert to `elif`
+
+PLR0912 Too many branches (13 > 12)
+  --> src/accessiweather/config_utils.py:18:5
+   |
+18 | def is_portable_mode() -> bool:
+   |     ^^^^^^^^^^^^^^^^
+19 |     """
+20 |     Determine if the application is running in portable mode.
+   |
+
+PLR5501 [*] Use `elif` instead of `else` then `if`, to reduce indentation
+  --> src/accessiweather/config_utils.py:55:5
+   |
+53 |           else:
+54 |               app_dir = ntpath.dirname(ntpath.abspath(__file__))
+55 | /     else:
+56 | |         # Use standard os.path for the current platform
+57 | |         if getattr(sys, "frozen", False):
+   | |________^
+58 |               app_dir = os.path.dirname(sys.executable)
+59 |           else:
+   |
+help: Convert to `elif`
+
+PLR0915 Too many statements (65 > 50)
+   --> src/accessiweather/dialogs/community_packs_browser_dialog.py:113:9
+    |
+112 |     # UI construction ------------------------------------------------
+113 |     def _build_window(self) -> None:
+    |         ^^^^^^^^^^^^^
+114 |         """Construct window and UI controls once."""
+115 |         self.window = toga.Window(
+    |
+
+PLR0912 Too many branches (16 > 12)
+   --> src/accessiweather/dialogs/community_packs_browser_dialog.py:442:9
+    |
+440 |         self._set_buttons_enabled(self._pack_has_download_source(pack))
+441 |
+442 |     def _update_details(self, pack: CommunityPack | None) -> None:
+    |         ^^^^^^^^^^^^^^^
+443 |         """Update the right-hand details panel based on selection."""
+444 |         if not self.details_name_label:
+    |
+
+PLR0912 Too many branches (14 > 12)
+   --> src/accessiweather/dialogs/location_dialog.py:345:15
+    |
+343 |         )
+344 |
+345 |     async def _on_save_pressed(self, widget):
+    |               ^^^^^^^^^^^^^^^^
+346 |         """Handle save button press."""
+347 |         # Validate inputs
+    |
+
+C901 `_on_ok` is too complex (19 > 15)
+   --> src/accessiweather/dialogs/settings_dialog.py:318:15
+    |
+316 |             self._ensure_dialog_focus()
+317 |
+318 |     async def _on_ok(self, widget):
+    |               ^^^^^^
+319 |         """Handle OK button press - save settings and close dialog."""
+320 |         logger.info("%s: OK button pressed", LOG_PREFIX)
+    |
+
+PLR0912 Too many branches (21 > 12)
+   --> src/accessiweather/dialogs/settings_dialog.py:318:15
+    |
+316 |             self._ensure_dialog_focus()
+317 |
+318 |     async def _on_ok(self, widget):
+    |               ^^^^^^
+319 |         """Handle OK button press - save settings and close dialog."""
+320 |         logger.info("%s: OK button pressed", LOG_PREFIX)
+    |
+
+PLR0915 Too many statements (71 > 50)
+   --> src/accessiweather/dialogs/settings_dialog.py:318:15
+    |
+316 |             self._ensure_dialog_focus()
+317 |
+318 |     async def _on_ok(self, widget):
+    |               ^^^^^^
+319 |         """Handle OK button press - save settings and close dialog."""
+320 |         logger.info("%s: OK button pressed", LOG_PREFIX)
+    |
+
+PLR5501 [*] Use `elif` instead of `else` then `if`, to reduce indentation
+   --> src/accessiweather/dialogs/settings_dialog.py:546:13
+    |
+544 |                       except ValueError:
+545 |                           container.add(self.visual_crossing_config_box)
+546 | /             else:
+547 | |                 if self.visual_crossing_config_box in container.children:
+    | |________________^
+548 |                       container.remove(self.visual_crossing_config_box)
+    |
+help: Convert to `elif`
+
+C901 `apply_settings_to_ui` is too complex (40 > 15)
+  --> src/accessiweather/dialogs/settings_handlers.py:14:5
+   |
+14 | def apply_settings_to_ui(dialog):
+   |     ^^^^^^^^^^^^^^^^^^^^
+15 |     """Populate dialog widgets from the dialog's working settings copy."""
+16 |     try:
+   |
+
+PLR0912 Too many branches (40 > 12)
+  --> src/accessiweather/dialogs/settings_handlers.py:14:5
+   |
+14 | def apply_settings_to_ui(dialog):
+   |     ^^^^^^^^^^^^^^^^^^^^
+15 |     """Populate dialog widgets from the dialog's working settings copy."""
+16 |     try:
+   |
+
+PLR0915 Too many statements (92 > 50)
+  --> src/accessiweather/dialogs/settings_handlers.py:14:5
+   |
+14 | def apply_settings_to_ui(dialog):
+   |     ^^^^^^^^^^^^^^^^^^^^
+15 |     """Populate dialog widgets from the dialog's working settings copy."""
+16 |     try:
+   |
+
+C901 `collect_settings_from_ui` is too complex (18 > 15)
+   --> src/accessiweather/dialogs/settings_handlers.py:188:5
+    |
+188 | def collect_settings_from_ui(dialog) -> AppSettings:
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^
+189 |     """Read current widget values and return an AppSettings instance."""
+190 |     current_settings = getattr(dialog, "current_settings", AppSettings())
+    |
+
+PLR0912 Too many branches (15 > 12)
+   --> src/accessiweather/dialogs/settings_handlers.py:188:5
+    |
+188 | def collect_settings_from_ui(dialog) -> AppSettings:
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^
+189 |     """Read current widget values and return an AppSettings instance."""
+190 |     current_settings = getattr(dialog, "current_settings", AppSettings())
+    |
+
+PLR0915 Too many statements (78 > 50)
+   --> src/accessiweather/dialogs/settings_handlers.py:188:5
+    |
+188 | def collect_settings_from_ui(dialog) -> AppSettings:
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^
+189 |     """Read current widget values and return an AppSettings instance."""
+190 |     current_settings = getattr(dialog, "current_settings", AppSettings())
+    |
+
+C901 `validate_visual_crossing_api_key` is too complex (18 > 15)
+   --> src/accessiweather/dialogs/settings_operations.py:280:11
+    |
+280 | async def validate_visual_crossing_api_key(dialog):
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+281 |     """Validate the Visual Crossing API key entered by the user."""
+282 |     dialog._ensure_dialog_focus()
+    |
+
+PLR0912 Too many branches (17 > 12)
+   --> src/accessiweather/dialogs/settings_operations.py:280:11
+    |
+280 | async def validate_visual_crossing_api_key(dialog):
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+281 |     """Validate the Visual Crossing API key entered by the user."""
+282 |     dialog._ensure_dialog_focus()
+    |
+
+PLR0915 Too many statements (59 > 50)
+   --> src/accessiweather/dialogs/settings_operations.py:280:11
+    |
+280 | async def validate_visual_crossing_api_key(dialog):
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+281 |     """Validate the Visual Crossing API key entered by the user."""
+282 |     dialog._ensure_dialog_focus()
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `200` with a constant variable
+   --> src/accessiweather/dialogs/settings_operations.py:355:36
+    |
+353 |                         dialog.validate_api_key_button.text = "Validating..."
+354 |
+355 |         if response.status_code == 200:
+    |                                    ^^^
+356 |             await _call_dialog_method(
+357 |                 dialog,
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `401` with a constant variable
+   --> src/accessiweather/dialogs/settings_operations.py:363:38
+    |
+361 |                 "You can now use Visual Crossing as your weather data source.",
+362 |             )
+363 |         elif response.status_code == 401:
+    |                                      ^^^
+364 |             await dialog._show_dialog_error(
+365 |                 "Invalid API Key",
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `429` with a constant variable
+   --> src/accessiweather/dialogs/settings_operations.py:369:38
+    |
+367 |                 "Please check your API key and try again. Make sure you copied it correctly from your Visual Crossing account.",
+368 |             )
+369 |         elif response.status_code == 429:
+    |                                      ^^^
+370 |             await dialog._show_dialog_error(
+371 |                 "Rate Limit Exceeded",
+    |
+
+C901 `check_for_updates` is too complex (26 > 15)
+   --> src/accessiweather/dialogs/settings_operations.py:413:11
+    |
+413 | async def check_for_updates(dialog):
+    |           ^^^^^^^^^^^^^^^^^
+414 |     """Trigger an update check using the configured update service."""
+415 |     logger.info("%s: Manual update check requested", LOG_PREFIX)
+    |
+
+PLR0912 Too many branches (29 > 12)
+   --> src/accessiweather/dialogs/settings_operations.py:413:11
+    |
+413 | async def check_for_updates(dialog):
+    |           ^^^^^^^^^^^^^^^^^
+414 |     """Trigger an update check using the configured update service."""
+415 |     logger.info("%s: Manual update check requested", LOG_PREFIX)
+    |
+
+PLR0915 Too many statements (94 > 50)
+   --> src/accessiweather/dialogs/settings_operations.py:413:11
+    |
+413 | async def check_for_updates(dialog):
+    |           ^^^^^^^^^^^^^^^^^
+414 |     """Trigger an update check using the configured update service."""
+415 |     logger.info("%s: Manual update check requested", LOG_PREFIX)
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `500` with a constant variable
+   --> src/accessiweather/dialogs/settings_operations.py:513:33
+    |
+511 |                 notes = update_info.release_notes
+512 |                 message += f"Release Notes:\n{notes[:500]}"
+513 |                 if len(notes) > 500:
+    |                                 ^^^
+514 |                     message += "..."
+    |
+
+PLR0912 Too many branches (13 > 12)
+   --> src/accessiweather/dialogs/settings_operations.py:565:11
+    |
+565 | async def download_update(dialog, update_service, update_info):
+    |           ^^^^^^^^^^^^^^^
+566 |     """Download an update without automatically installing it."""
+567 |     timeout_seconds = 30.0
+    |
+
+C901 `update_last_check_info` is too complex (31 > 15)
+   --> src/accessiweather/dialogs/settings_operations.py:724:5
+    |
+724 | def update_last_check_info(dialog):
+    |     ^^^^^^^^^^^^^^^^^^^^^^
+725 |     """Refresh the last-update label with any available data."""
+726 |     label = getattr(dialog, "last_check_label", None)
+    |
+
+PLR0912 Too many branches (25 > 12)
+   --> src/accessiweather/dialogs/settings_operations.py:724:5
+    |
+724 | def update_last_check_info(dialog):
+    |     ^^^^^^^^^^^^^^^^^^^^^^
+725 |     """Refresh the last-update label with any available data."""
+726 |     label = getattr(dialog, "last_check_label", None)
+    |
+
+PLR0915 Too many statements (86 > 50)
+   --> src/accessiweather/dialogs/settings_operations.py:724:5
+    |
+724 | def update_last_check_info(dialog):
+    |     ^^^^^^^^^^^^^^^^^^^^^^
+725 |     """Refresh the last-update label with any available data."""
+726 |     label = getattr(dialog, "last_check_label", None)
+    |
+
+PLR0911 Too many return statements (7 > 6)
+   --> src/accessiweather/dialogs/soundpack_manager/main.py:370:15
+    |
+368 |             pass
+369 |
+370 |     async def _on_share_pack(self, widget) -> None:
+    |               ^^^^^^^^^^^^^^
+371 |         """Share the selected pack via backend submission service."""
+372 |         try:
+    |
+
+C901 `update_pack_details` is too complex (20 > 15)
+  --> src/accessiweather/dialogs/soundpack_manager/state.py:54:5
+   |
+54 | def update_pack_details(dlg) -> None:
+   |     ^^^^^^^^^^^^^^^^^^^
+55 |     """Update the right-hand details and mapping selection based on selected pack."""
+56 |     if not dlg.selected_pack or dlg.selected_pack not in dlg.sound_packs:
+   |
+
+PLR0912 Too many branches (20 > 12)
+  --> src/accessiweather/dialogs/soundpack_manager/state.py:54:5
+   |
+54 | def update_pack_details(dlg) -> None:
+   |     ^^^^^^^^^^^^^^^^^^^
+55 |     """Update the right-hand details and mapping selection based on selected pack."""
+56 |     if not dlg.selected_pack or dlg.selected_pack not in dlg.sound_packs:
+   |
+
+PLR0915 Too many statements (57 > 50)
+  --> src/accessiweather/dialogs/soundpack_manager/state.py:54:5
+   |
+54 | def update_pack_details(dlg) -> None:
+   |     ^^^^^^^^^^^^^^^^^^^
+55 |     """Update the right-hand details and mapping selection based on selected pack."""
+56 |     if not dlg.selected_pack or dlg.selected_pack not in dlg.sound_packs:
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+   --> src/accessiweather/dialogs/soundpack_wizard_dialog.py:185:35
+    |
+183 |         if self.current_step == 1:
+184 |             self._build_step1()
+185 |         elif self.current_step == 2:
+    |                                   ^
+186 |             self._build_step2()
+187 |         elif self.current_step == 3:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `3` with a constant variable
+   --> src/accessiweather/dialogs/soundpack_wizard_dialog.py:187:35
+    |
+185 |         elif self.current_step == 2:
+186 |             self._build_step2()
+187 |         elif self.current_step == 3:
+    |                                   ^
+188 |             self._build_step3()
+189 |         else:
+    |
+
+PLR0911 Too many return statements (7 > 6)
+   --> src/accessiweather/dialogs/soundpack_wizard_dialog.py:237:9
+    |
+235 |         self.content_box.add(form)
+236 |
+237 |     def _validate_current_step(self) -> bool:
+    |         ^^^^^^^^^^^^^^^^^^^^^^
+238 |         if self.current_step == 1:
+239 |             self.state.pack_name = (self.name_input.value or "").strip()
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+   --> src/accessiweather/dialogs/soundpack_wizard_dialog.py:255:33
+    |
+253 |                 )
+254 |             return True
+255 |         if self.current_step == 2:
+    |                                 ^
+256 |             if not getattr(self, "category_checks", None):
+257 |                 self.state.selected_alert_keys = []
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `3` with a constant variable
+   --> src/accessiweather/dialogs/soundpack_wizard_dialog.py:268:33
+    |
+266 |                 return False
+267 |             return True
+268 |         if self.current_step == 3:
+    |                                 ^
+269 |             return True
+270 |         if self.current_step == 4:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `4` with a constant variable
+   --> src/accessiweather/dialogs/soundpack_wizard_dialog.py:270:33
+    |
+268 |         if self.current_step == 3:
+269 |             return True
+270 |         if self.current_step == 4:
+    |                                 ^
+271 |             return True
+272 |         return True
+    |
+
+PLR0915 Too many statements (65 > 50)
+   --> src/accessiweather/dialogs/soundpack_wizard_dialog.py:327:9
+    |
+326 |     # Step 3: Sound assignment
+327 |     def _build_step3(self) -> None:
+    |         ^^^^^^^^^^^^
+328 |         outer = toga.Box(style=Pack(direction=COLUMN, flex=1))
+329 |         help_lbl = toga.Label(
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `100` with a constant variable
+   --> src/accessiweather/dialogs/update_progress_dialog.py:202:30
+    |
+200 |             if progress < 1:
+201 |                 status = "Preparing update..."
+202 |             elif progress >= 100:
+    |                              ^^^
+203 |                 status = "Finalizing update..."
+204 |             else:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `100` with a constant variable
+   --> src/accessiweather/dialogs/update_progress_dialog.py:224:35
+    |
+222 |             # Start/stop activity indicator based on progress
+223 |             if self.progress_indicator:
+224 |                 if 0 < progress < 100:
+    |                                   ^^^
+225 |                     self.progress_indicator.start()
+226 |                 else:
+    |
+
+C901 `build_current_conditions` is too complex (34 > 15)
+  --> src/accessiweather/display/presentation/current_conditions.py:32:5
+   |
+32 | def build_current_conditions(
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^
+33 |     current: CurrentConditions,
+34 |     location: Location,
+   |
+
+PLR0913 Too many arguments in function definition (8 > 5)
+  --> src/accessiweather/display/presentation/current_conditions.py:32:5
+   |
+32 | def build_current_conditions(
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^
+33 |     current: CurrentConditions,
+34 |     location: Location,
+   |
+
+PLR0912 Too many branches (33 > 12)
+  --> src/accessiweather/display/presentation/current_conditions.py:32:5
+   |
+32 | def build_current_conditions(
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^
+33 |     current: CurrentConditions,
+34 |     location: Location,
+   |
+
+PLR0915 Too many statements (94 > 50)
+  --> src/accessiweather/display/presentation/current_conditions.py:32:5
+   |
+32 | def build_current_conditions(
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^
+33 |     current: CurrentConditions,
+34 |     location: Location,
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `0.5` with a constant variable
+  --> src/accessiweather/display/presentation/formatters.py:45:51
+   |
+43 |         speed_mph = current.wind_speed_kph * 0.621371
+44 |
+45 |     if speed_mph is not None and abs(speed_mph) < 0.5:
+   |                                                   ^^^
+46 |         return "Calm"
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `3` with a constant variable
+   --> src/accessiweather/display/presentation/formatters.py:193:19
+    |
+191 | def get_uv_description(uv_index: float) -> str:
+192 |     """Describe a numeric UV index value."""
+193 |     if uv_index < 3:
+    |                   ^
+194 |         return "Low"
+195 |     if uv_index < 6:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `6` with a constant variable
+   --> src/accessiweather/display/presentation/formatters.py:195:19
+    |
+193 |     if uv_index < 3:
+194 |         return "Low"
+195 |     if uv_index < 6:
+    |                   ^
+196 |         return "Moderate"
+197 |     if uv_index < 8:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `8` with a constant variable
+   --> src/accessiweather/display/presentation/formatters.py:197:19
+    |
+195 |     if uv_index < 6:
+196 |         return "Moderate"
+197 |     if uv_index < 8:
+    |                   ^
+198 |         return "High"
+199 |     if uv_index < 11:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `11` with a constant variable
+   --> src/accessiweather/display/presentation/formatters.py:199:19
+    |
+197 |     if uv_index < 8:
+198 |         return "High"
+199 |     if uv_index < 11:
+    |                   ^^
+200 |         return "Very High"
+201 |     return "Extreme"
+    |
+
+PLR0913 Too many arguments in function definition (8 > 5)
+   --> src/accessiweather/display/weather_presenter.py:271:9
+    |
+269 |     # ------------------------------------------------------------------
+270 |
+271 |     def _build_current_conditions(
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+272 |         self,
+273 |         current: CurrentConditions,
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `20` with a constant variable
+   --> src/accessiweather/dynamic_format_manager.py:140:57
+    |
+138 |         last_priority = self.last_analysis.get("priority_score", 0)
+139 |
+140 |         return abs(current_priority - last_priority) >= 20
+    |                                                         ^^
+141 |
+142 |     def _update_format_string(
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+   --> src/accessiweather/dynamic_format_manager.py:197:74
+    |
+195 |         # Only use forecast template for normal conditions
+196 |         severity = analysis.get("severity")
+197 |         if analysis.get("has_alerts") or (severity and severity.value >= 2):
+    |                                                                          ^
+198 |             return False
+    |
+
+PLR0911 Too many return statements (8 > 6)
+   --> src/accessiweather/geocoding.py:144:9
+    |
+142 |             return None
+143 |
+144 |     def validate_coordinates(self, lat: float, lon: float, us_only: bool | None = None) -> bool:
+    |         ^^^^^^^^^^^^^^^^^^^^
+145 |         """
+146 |         Validate if coordinates are within the US NWS coverage area or globally valid.
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `-90` with a constant variable
+   --> src/accessiweather/geocoding.py:171:17
+    |
+169 |             us_only = self.data_source == "nws"
+170 |         # Basic validation for all cases
+171 |         if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
+    |                 ^^^
+172 |             logger.warning(
+173 |                 f"Coordinates ({lat}, {lon}) are outside valid range "
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `90` with a constant variable
+   --> src/accessiweather/geocoding.py:171:31
+    |
+169 |             us_only = self.data_source == "nws"
+170 |         # Basic validation for all cases
+171 |         if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
+    |                               ^^
+172 |             logger.warning(
+173 |                 f"Coordinates ({lat}, {lon}) are outside valid range "
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `-180` with a constant variable
+   --> src/accessiweather/geocoding.py:171:43
+    |
+169 |             us_only = self.data_source == "nws"
+170 |         # Basic validation for all cases
+171 |         if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
+    |                                           ^^^^
+172 |             logger.warning(
+173 |                 f"Coordinates ({lat}, {lon}) are outside valid range "
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `180` with a constant variable
+   --> src/accessiweather/geocoding.py:171:58
+    |
+169 |             us_only = self.data_source == "nws"
+170 |         # Basic validation for all cases
+171 |         if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
+    |                                                          ^^^
+172 |             logger.warning(
+173 |                 f"Coordinates ({lat}, {lon}) are outside valid range "
+    |
+
+PLR0911 Too many return statements (7 > 6)
+   --> src/accessiweather/geocoding.py:224:9
+    |
+222 |             return True
+223 |
+224 |     def suggest_locations(self, query: str, limit: int = 5) -> list[str]:
+    |         ^^^^^^^^^^^^^^^^^
+225 |         """
+226 |         Suggest location completions based on partial input, filtering for US locations.
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+   --> src/accessiweather/geocoding.py:242:42
+    |
+240 |             query = query.strip()
+241 |
+242 |             if not query or len(query) < 2:
+    |                                          ^
+243 |                 return []
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `500` with a constant variable
+  --> src/accessiweather/handlers/update_handlers.py:64:53
+   |
+62 |             if update_info.release_notes:
+63 |                 message += f"Release Notes:\n{update_info.release_notes[:500]}"
+64 |                 if len(update_info.release_notes) > 500:
+   |                                                     ^^^
+65 |                     message += "..."
+   |
+
+C901 `update_weather_displays` is too complex (21 > 15)
+  --> src/accessiweather/handlers/weather_handlers.py:74:11
+   |
+74 | async def update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherData) -> Any:
+   |           ^^^^^^^^^^^^^^^^^^^^^^^
+75 |     """Update UI widgets with new weather data."""
+76 |     try:
+   |
+
+PLR0912 Too many branches (23 > 12)
+  --> src/accessiweather/handlers/weather_handlers.py:74:11
+   |
+74 | async def update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherData) -> Any:
+   |           ^^^^^^^^^^^^^^^^^^^^^^^
+75 |     """Update UI widgets with new weather data."""
+76 |     try:
+   |
+
+PLR0915 Too many statements (58 > 50)
+  --> src/accessiweather/handlers/weather_handlers.py:74:11
+   |
+74 | async def update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherData) -> Any:
+   |           ^^^^^^^^^^^^^^^^^^^^^^^
+75 |     """Update UI widgets with new weather data."""
+76 |     try:
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `80` with a constant variable
+   --> src/accessiweather/handlers/weather_handlers.py:171:28
+    |
+169 |         headline = alert.headline or "No headline available"
+170 |
+171 |         if len(headline) > 80:
+    |                            ^^
+172 |             headline = headline[:77] + "..."
+    |
+
+C901 `_load_locations` is too complex (20 > 15)
+  --> src/accessiweather/location.py:69:9
+   |
+67 |                 self._save_locations()
+68 |
+69 |     def _load_locations(self) -> None:
+   |         ^^^^^^^^^^^^^^^
+70 |         """Load saved locations from file and validate them."""
+71 |         try:
+   |
+
+PLR0912 Too many branches (25 > 12)
+  --> src/accessiweather/location.py:69:9
+   |
+67 |                 self._save_locations()
+68 |
+69 |     def _load_locations(self) -> None:
+   |         ^^^^^^^^^^^^^^^
+70 |         """Load saved locations from file and validate them."""
+71 |         try:
+   |
+
+PLR0915 Too many statements (62 > 50)
+  --> src/accessiweather/location.py:69:9
+   |
+67 |                 self._save_locations()
+68 |
+69 |     def _load_locations(self) -> None:
+   |         ^^^^^^^^^^^^^^^
+70 |         """Load saved locations from file and validate them."""
+71 |         try:
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `-90` with a constant variable
+  --> src/accessiweather/location.py:94:37
+   |
+92 |                         if lat is not None and lon is not None:
+93 |                             # Basic validation for all data sources
+94 |                             if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
+   |                                     ^^^
+95 |                                 logger.warning(
+96 |                                     f"Location '{name}' has coordinates ({lat}, {lon}) "
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `90` with a constant variable
+  --> src/accessiweather/location.py:94:51
+   |
+92 |                         if lat is not None and lon is not None:
+93 |                             # Basic validation for all data sources
+94 |                             if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
+   |                                                   ^^
+95 |                                 logger.warning(
+96 |                                     f"Location '{name}' has coordinates ({lat}, {lon}) "
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `-180` with a constant variable
+  --> src/accessiweather/location.py:94:63
+   |
+92 |                         if lat is not None and lon is not None:
+93 |                             # Basic validation for all data sources
+94 |                             if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
+   |                                                               ^^^^
+95 |                                 logger.warning(
+96 |                                     f"Location '{name}' has coordinates ({lat}, {lon}) "
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `180` with a constant variable
+  --> src/accessiweather/location.py:94:78
+   |
+92 |                         if lat is not None and lon is not None:
+93 |                             # Basic validation for all data sources
+94 |                             if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
+   |                                                                              ^^^
+95 |                                 logger.warning(
+96 |                                     f"Location '{name}' has coordinates ({lat}, {lon}) "
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `50` with a constant variable
+   --> src/accessiweather/location_manager.py:181:32
+    |
+179 |                 # Fallback to display name, but truncate if too long
+180 |                 name = display_name
+181 |                 if len(name) > 50:
+    |                                ^^
+182 |                     name = name[:47] + "..."
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `25` with a constant variable
+   --> src/accessiweather/location_manager.py:247:21
+    |
+246 |         # Discard extremely coarse matches (province/country) unless nothing else is available.
+247 |         if score <= 25 and addresstype in {"country", "province", "state", "region"}:
+    |                     ^^
+248 |             return 0.0
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `-90` with a constant variable
+   --> src/accessiweather/location_manager.py:254:17
+    |
+252 |     def validate_coordinates(self, latitude: float, longitude: float) -> bool:
+253 |         """Validate that coordinates are within valid ranges."""
+254 |         return (-90 <= latitude <= 90) and (-180 <= longitude <= 180)
+    |                 ^^^
+255 |
+256 |     def calculate_distance(self, loc1: Location, loc2: Location) -> float:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `90` with a constant variable
+   --> src/accessiweather/location_manager.py:254:36
+    |
+252 |     def validate_coordinates(self, latitude: float, longitude: float) -> bool:
+253 |         """Validate that coordinates are within valid ranges."""
+254 |         return (-90 <= latitude <= 90) and (-180 <= longitude <= 180)
+    |                                    ^^
+255 |
+256 |     def calculate_distance(self, loc1: Location, loc2: Location) -> float:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `-180` with a constant variable
+   --> src/accessiweather/location_manager.py:254:45
+    |
+252 |     def validate_coordinates(self, latitude: float, longitude: float) -> bool:
+253 |         """Validate that coordinates are within valid ranges."""
+254 |         return (-90 <= latitude <= 90) and (-180 <= longitude <= 180)
+    |                                             ^^^^
+255 |
+256 |     def calculate_distance(self, loc1: Location, loc2: Location) -> float:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `180` with a constant variable
+   --> src/accessiweather/location_manager.py:254:66
+    |
+252 |     def validate_coordinates(self, latitude: float, longitude: float) -> bool:
+253 |         """Validate that coordinates are within valid ranges."""
+254 |         return (-90 <= latitude <= 90) and (-180 <= longitude <= 180)
+    |                                                                  ^^^
+255 |
+256 |     def calculate_distance(self, loc1: Location, loc2: Location) -> float:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+   --> src/accessiweather/location_manager.py:343:30
+    |
+341 |             # Split on comma
+342 |             parts = [part.strip() for part in clean_string.split(",")]
+343 |             if len(parts) != 2:
+    |                              ^
+344 |                 return None
+    |
+
+PLR0911 Too many return statements (8 > 6)
+  --> src/accessiweather/notifications/sound_pack_installer.py:28:9
+   |
+26 |         self.soundpacks_dir.mkdir(exist_ok=True)
+27 |
+28 |     def install_from_zip(self, zip_path: Path, pack_name: str | None = None) -> tuple[bool, str]:
+   |         ^^^^^^^^^^^^^^^^
+29 |         """
+30 |         Install a sound pack from a ZIP file.
+   |
+
+PLR0911 Too many return statements (7 > 6)
+   --> src/accessiweather/notifications/sound_pack_installer.py:191:9
+    |
+189 |         return sorted(packs, key=lambda x: x["name"])
+190 |
+191 |     def _validate_extracted_pack(self, pack_dir: Path) -> tuple[bool, str]:
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^
+192 |         """
+193 |         Validate an extracted sound pack directory.
+    |
+
+PLR0911 Too many return statements (9 > 6)
+   --> src/accessiweather/notifications/sound_player.py:244:5
+    |
+244 | def validate_sound_pack(pack_path: Path) -> tuple[bool, str]:
+    |     ^^^^^^^^^^^^^^^^^^^
+245 |     """
+246 |     Validate a sound pack directory.
+    |
+
+PLR0912 Too many branches (14 > 12)
+   --> src/accessiweather/notifications/weather_notifier.py:425:9
+    |
+423 |             self._save_alert_state()
+424 |
+425 |     def _load_alert_state(self) -> None:
+    |         ^^^^^^^^^^^^^^^^^
+426 |         """Load alert state from persistent storage."""
+427 |         if not self.enable_persistence or not self.alerts_state_file:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `400` with a constant variable
+   --> src/accessiweather/openmeteo_client.py:108:44
+    |
+107 |                 # Check for HTTP errors
+108 |                 if response.status_code == 400:
+    |                                            ^^^
+109 |                     error_data = response.json() if response.content else {}
+110 |                     error_msg = error_data.get("reason", "Bad request")
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `429` with a constant variable
+   --> src/accessiweather/openmeteo_client.py:112:44
+    |
+110 |                     error_msg = error_data.get("reason", "Bad request")
+111 |                     raise OpenMeteoApiError(f"API error: {error_msg}")
+112 |                 if response.status_code == 429:
+    |                                            ^^^
+113 |                     raise OpenMeteoApiError("Rate limit exceeded")
+114 |                 if response.status_code >= 500:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `500` with a constant variable
+   --> src/accessiweather/openmeteo_client.py:114:44
+    |
+112 |                 if response.status_code == 429:
+113 |                     raise OpenMeteoApiError("Rate limit exceeded")
+114 |                 if response.status_code >= 500:
+    |                                            ^^^
+115 |                     raise OpenMeteoApiError(f"Server error: {response.status_code}")
+    |
+
+PLR0913 Too many arguments in function definition (6 > 5)
+   --> src/accessiweather/openmeteo_client.py:208:9
+    |
+206 |         return self._make_request("forecast", params)
+207 |
+208 |     def get_forecast(
+    |         ^^^^^^^^^^^^
+209 |         self,
+210 |         latitude: float,
+    |
+
+PLR0913 Too many arguments in function definition (6 > 5)
+   --> src/accessiweather/openmeteo_client.py:260:9
+    |
+258 |         return self._make_request("forecast", params)
+259 |
+260 |     def get_hourly_forecast(
+    |         ^^^^^^^^^^^^^^^^^^^
+261 |         self,
+262 |         latitude: float,
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `12.5` with a constant variable
+   --> src/accessiweather/openmeteo_mapper.py:441:27
+    |
+439 |             return "UNK"
+440 |
+441 |         if cloud_cover <= 12.5:
+    |                           ^^^^
+442 |             return "CLR"  # Clear
+443 |         if cloud_cover <= 25:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `25` with a constant variable
+   --> src/accessiweather/openmeteo_mapper.py:443:27
+    |
+441 |         if cloud_cover <= 12.5:
+442 |             return "CLR"  # Clear
+443 |         if cloud_cover <= 25:
+    |                           ^^
+444 |             return "FEW"  # Few
+445 |         if cloud_cover <= 50:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `50` with a constant variable
+   --> src/accessiweather/openmeteo_mapper.py:445:27
+    |
+443 |         if cloud_cover <= 25:
+444 |             return "FEW"  # Few
+445 |         if cloud_cover <= 50:
+    |                           ^^
+446 |             return "SCT"  # Scattered
+447 |         if cloud_cover <= 87.5:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `87.5` with a constant variable
+   --> src/accessiweather/openmeteo_mapper.py:447:27
+    |
+445 |         if cloud_cover <= 50:
+446 |             return "SCT"  # Scattered
+447 |         if cloud_cover <= 87.5:
+    |                           ^^^^
+448 |             return "BKN"  # Broken
+449 |         return "OVC"  # Overcast
+    |
+
+C901 `fetch_available_packs` is too complex (19 > 15)
+   --> src/accessiweather/services/community_soundpack_service.py:103:15
+    |
+102 |     @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=45.0)
+103 |     async def fetch_available_packs(self, force_refresh: bool = False) -> list[CommunityPack]:
+    |               ^^^^^^^^^^^^^^^^^^^^^
+104 |         """
+105 |         Fetch a list of available community packs.
+    |
+
+PLR0912 Too many branches (19 > 12)
+   --> src/accessiweather/services/community_soundpack_service.py:103:15
+    |
+102 |     @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=45.0)
+103 |     async def fetch_available_packs(self, force_refresh: bool = False) -> list[CommunityPack]:
+    |               ^^^^^^^^^^^^^^^^^^^^^
+104 |         """
+105 |         Fetch a list of available community packs.
+    |
+
+PLR0915 Too many statements (60 > 50)
+   --> src/accessiweather/services/community_soundpack_service.py:103:15
+    |
+102 |     @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=45.0)
+103 |     async def fetch_available_packs(self, force_refresh: bool = False) -> list[CommunityPack]:
+    |               ^^^^^^^^^^^^^^^^^^^^^
+104 |         """
+105 |         Fetch a list of available community packs.
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `200` with a constant variable
+   --> src/accessiweather/services/community_soundpack_service.py:128:36
+    |
+126 |             url = f"https://api.github.com/repos/{self.repo_owner}/{self.repo_name}/contents/index.json"
+127 |             resp = await self._http.get(url)
+128 |             if resp.status_code == 200:
+    |                                    ^^^
+129 |                 data = resp.json()
+130 |                 content_b64 = data.get("content")
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `200` with a constant variable
+   --> src/accessiweather/services/community_soundpack_service.py:165:40
+    |
+163 |                 rel_url = f"https://api.github.com/repos/{self.repo_owner}/{self.repo_name}/releases?per_page=50"
+164 |                 resp = await self._http.get(rel_url)
+165 |                 if resp.status_code == 200:
+    |                                        ^^^
+166 |                     releases = resp.json()
+167 |                     for release in releases:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `403` with a constant variable
+   --> src/accessiweather/services/community_soundpack_service.py:201:42
+    |
+199 |                                 )
+200 |                             )
+201 |                 elif resp.status_code == 403:
+    |                                          ^^^
+202 |                     # Likely rate limited
+203 |                     logger.warning("GitHub API rate limit reached while fetching releases.")
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `200` with a constant variable
+   --> src/accessiweather/services/community_soundpack_service.py:232:32
+    |
+230 |         contents_url = f"https://api.github.com/repos/{self.repo_owner}/{self.repo_name}/contents/packs?ref={ref}"
+231 |         resp = await self._http.get(contents_url)
+232 |         if resp.status_code != 200:
+    |                                ^^^
+233 |             logger.debug("Repository contents fallback unavailable (status %s)", resp.status_code)
+234 |             return []
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `200` with a constant variable
+   --> src/accessiweather/services/community_soundpack_service.py:251:45
+    |
+249 |             try:
+250 |                 pack_resp = await self._http.get(pack_json_url)
+251 |                 if pack_resp.status_code != 200:
+    |                                             ^^^
+252 |                     logger.debug("Skipping pack %s: pack.json not found", dir_name)
+253 |                     continue
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `200` with a constant variable
+   --> src/accessiweather/services/community_soundpack_service.py:289:36
+    |
+287 |         try:
+288 |             resp = await self._http.get(tree_url)
+289 |             if resp.status_code != 200:
+    |                                    ^^^
+290 |                 return None
+291 |             data = resp.json()
+    |
+
+PLR0912 Too many branches (13 > 12)
+   --> src/accessiweather/services/community_soundpack_service.py:356:15
+    |
+354 |         raise RuntimeError(f"Pack {pack.name} has no download source")
+355 |
+356 |     async def _download_from_url(
+    |               ^^^^^^^^^^^^^^^^^^
+357 |         self,
+358 |         pack: CommunityPack,
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `200` with a constant variable
+   --> src/accessiweather/services/community_soundpack_service.py:370:44
+    |
+368 |                 tmp_path: Path | None = None
+369 |                 async with self._http.stream("GET", pack.download_url) as resp:
+370 |                     if resp.status_code != 200:
+    |                                            ^^^
+371 |                         raise RuntimeError(f"Download failed with status {resp.status_code}")
+372 |                     total = int(resp.headers.get("Content-Length", "0") or 0)
+    |
+
+PLR0912 Too many branches (15 > 12)
+   --> src/accessiweather/services/community_soundpack_service.py:426:15
+    |
+424 |         retryable_exceptions=(RuntimeError,),
+425 |     )
+426 |     async def _download_repo_pack(
+    |               ^^^^^^^^^^^^^^^^^^^
+427 |         self,
+428 |         pack: CommunityPack,
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `200` with a constant variable
+   --> src/accessiweather/services/community_soundpack_service.py:455:44
+    |
+453 |                 )
+454 |                 async with self._http.stream("GET", raw_url) as resp:
+455 |                     if resp.status_code != 200:
+    |                                            ^^^
+456 |                         raise RuntimeError(
+457 |                             f"Failed to download {rel_path} (status {resp.status_code})"
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `200` with a constant variable
+   --> src/accessiweather/services/community_soundpack_service.py:503:32
+    |
+501 |         tree_url = f"https://api.github.com/repos/{self.repo_owner}/{self.repo_name}/git/trees/{tree_sha}?recursive=1"
+502 |         resp = await self._http.get(tree_url)
+503 |         if resp.status_code != 200:
+    |                                ^^^
+504 |             logger.error(
+505 |                 "Failed to fetch tree %s for pack %s (status %s)",
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `400` with a constant variable
+  --> src/accessiweather/services/github_backend_client.py:95:44
+   |
+93 |                     raise asyncio.CancelledError("Operation cancelled by user")
+94 |
+95 |                 if response.status_code >= 400:
+   |                                            ^^^
+96 |                     error_detail = "Unknown error"
+97 |                     try:
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `400` with a constant variable
+   --> src/accessiweather/services/github_backend_client.py:142:44
+    |
+140 |                 if cancel_event and cancel_event.is_set():
+141 |                     raise asyncio.CancelledError("Operation cancelled by user")
+142 |                 if response.status_code >= 400:
+    |                                            ^^^
+143 |                     error_detail = "Unknown error"
+144 |                     try:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `200` with a constant variable
+   --> src/accessiweather/services/github_backend_client.py:192:48
+    |
+190 |                 if cancel_event and cancel_event.is_set():
+191 |                     return False
+192 |                 return response.status_code == 200
+    |                                                ^^^
+193 |
+194 |         except asyncio.CancelledError:
+    |
+
+PLR0912 Too many branches (14 > 12)
+   --> src/accessiweather/services/national_discussion_scraper.py:137:9
+    |
+135 |             return {"success": False, "error": f"Request error: {e}", "error_type": "request"}
+136 |
+137 |     def _extract_discussion_text(self, html_content: str, source: str) -> dict[str, Any]:
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^
+138 |         """
+139 |         Extract discussion text from HTML content with robust parsing.
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `150` with a constant variable
+   --> src/accessiweather/services/national_discussion_scraper.py:265:75
+    |
+263 |                     full_text = parse_result["full_text"]
+264 |                     # Extract a summary (first 150 chars of the stripped full text)
+265 |                     summary = full_text[:150] + "..." if len(full_text) > 150 else full_text
+    |                                                                           ^^^
+266 |                     logger.info(f"Successfully fetched WPC discussion from {url}")
+267 |                     return {"summary": summary, "full": full_text}
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `150` with a constant variable
+   --> src/accessiweather/services/national_discussion_scraper.py:317:75
+    |
+315 |                     full_text = parse_result["full_text"]
+316 |                     # Extract a summary (first 150 chars of the stripped full text)
+317 |                     summary = full_text[:150] + "..." if len(full_text) > 150 else full_text
+    |                                                                           ^^^
+318 |                     logger.info(f"Successfully fetched SPC discussion from {url}")
+319 |                     return {"summary": summary, "full": full_text}
+    |
+
+PLR0913 Too many arguments in function definition (6 > 5)
+  --> src/accessiweather/services/pack_submission_service.py:31:9
+   |
+29 |     """
+30 |
+31 |     def __init__(
+   |         ^^^^^^^^
+32 |         self,
+33 |         repo_owner: str = COMMUNITY_REPO_OWNER,
+   |
+
+PLR0913 Too many arguments in function definition (6 > 5)
+   --> src/accessiweather/services/pack_submission_service.py:135:15
+    |
+133 |         )
+134 |
+135 |     async def submit_pack_anonymous(
+    |               ^^^^^^^^^^^^^^^^^^^^^
+136 |         self,
+137 |         pack_path: Path,
+    |
+
+PLR0913 Too many arguments in function definition (6 > 5)
+   --> src/accessiweather/services/pack_submission_service.py:197:15
+    |
+195 |             raise RuntimeError(f"Backend service error: {exc}") from exc
+196 |
+197 |     async def _submit_pack_via_backend(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^
+198 |         self,
+199 |         pack_path: Path,
+    |
+
+PLR0911 Too many return statements (7 > 6)
+   --> src/accessiweather/services/startup_utils.py:373:9
+    |
+371 |         return False
+372 |
+373 |     def _is_linux_startup_enabled(self) -> bool:
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+374 |         try:
+375 |             desktop_path = self._get_linux_desktop_entry_path()
+    |
+
+PLR0913 Too many arguments in function definition (7 > 5)
+  --> src/accessiweather/services/update_service/downloads.py:43:15
+   |
+41 |         self.app_name = app_name
+42 |
+43 |     async def download_update(
+   |               ^^^^^^^^^^^^^^^
+44 |         self,
+45 |         asset_or_info,
+   |
+
+PLR0913 Too many arguments in function definition (7 > 5)
+   --> src/accessiweather/services/update_service/downloads.py:118:15
+    |
+117 |     @async_retry_with_backoff(max_attempts=3, base_delay=2.0, timeout=300.0)
+118 |     async def _download_asset(
+    |               ^^^^^^^^^^^^^^^
+119 |         self,
+120 |         asset_url: str,
+    |
+
+PLR0911 Too many return statements (7 > 6)
+   --> src/accessiweather/services/update_service/downloads.py:118:15
+    |
+117 |     @async_retry_with_backoff(max_attempts=3, base_delay=2.0, timeout=300.0)
+118 |     async def _download_asset(
+    |               ^^^^^^^^^^^^^^^
+119 |         self,
+120 |         asset_url: str,
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+   --> src/accessiweather/services/update_service/downloads.py:219:34
+    |
+217 |             for line in lines:
+218 |                 parts = line.strip().split()
+219 |                 if len(parts) == 2 and parts[1] == artifact_name:
+    |                                  ^
+220 |                     expected = parts[0]
+221 |                     break
+    |
+
+PLR0913 Too many arguments in function definition (7 > 5)
+   --> src/accessiweather/services/update_service/github_update_service.py:194:15
+    |
+192 |         return self.release_manager._is_newer_version(candidate, current)
+193 |
+194 |     async def _download_asset(
+    |               ^^^^^^^^^^^^^^^
+195 |         self,
+196 |         asset_url: str,
+    |
+
+C901 `get_releases` is too complex (17 > 15)
+  --> src/accessiweather/services/update_service/releases.py:44:15
+   |
+43 |     @async_retry_with_backoff(max_attempts=3, base_delay=2.0, timeout=45.0)
+44 |     async def get_releases(self) -> list[dict[str, Any]]:
+   |               ^^^^^^^^^^^^
+45 |         """Return releases from cache or GitHub."""
+46 |         cache_valid = (
+   |
+
+PLR0912 Too many branches (17 > 12)
+  --> src/accessiweather/services/update_service/releases.py:44:15
+   |
+43 |     @async_retry_with_backoff(max_attempts=3, base_delay=2.0, timeout=45.0)
+44 |     async def get_releases(self) -> list[dict[str, Any]]:
+   |               ^^^^^^^^^^^^
+45 |         """Return releases from cache or GitHub."""
+46 |         cache_valid = (
+   |
+
+PLR0915 Too many statements (62 > 50)
+  --> src/accessiweather/services/update_service/releases.py:44:15
+   |
+43 |     @async_retry_with_backoff(max_attempts=3, base_delay=2.0, timeout=45.0)
+44 |     async def get_releases(self) -> list[dict[str, Any]]:
+   |               ^^^^^^^^^^^^
+45 |         """Return releases from cache or GitHub."""
+46 |         cache_valid = (
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `3` with a constant variable
+  --> src/accessiweather/services/update_service/releases.py:83:45
+   |
+82 |         try:
+83 |             while next_url and page_count < 3:
+   |                                             ^
+84 |                 response = await self.http_client.get(
+85 |                     next_url, headers=headers if page_count == 0 else {}
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `403` with a constant variable
+  --> src/accessiweather/services/update_service/releases.py:89:44
+   |
+87 |                 last_response = response
+88 |
+89 |                 if response.status_code == 403 and response.headers.get("X-RateLimit-Reset"):
+   |                                            ^^^
+90 |                     reset_time = response.headers["X-RateLimit-Reset"]
+91 |                     logger.warning(
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `304` with a constant variable
+  --> src/accessiweather/services/update_service/releases.py:97:44
+   |
+95 |                     return self._cache.get("releases", []) if self._cache else []
+96 |
+97 |                 if response.status_code == 304 and self._cache and page_count == 0:
+   |                                            ^^^
+98 |                     self._cache["last_check"] = time.time()
+99 |                     self._save_cache()
+   |
+
+PLR0913 Too many arguments in function definition (6 > 5)
+  --> src/accessiweather/services/weather_service/alerts_discussion.py:38:9
+   |
+36 |         self.api_client_manager = api_client_manager
+37 |
+38 |     def get_alerts(
+   |         ^^^^^^^^^^
+39 |         self,
+40 |         lat: float,
+   |
+
+PLR0911 Too many return statements (8 > 6)
+  --> src/accessiweather/services/weather_service/fallback_handler.py:45:9
+   |
+43 |         self.api_client_manager = api_client_manager
+44 |
+45 |     def try_fallback_api(
+   |         ^^^^^^^^^^^^^^^^
+46 |         self, lat: float, lon: float, method_name: str, *args, **kwargs
+47 |     ) -> dict[str, Any] | None:
+   |
+
+PLR0913 Too many arguments in function definition (6 > 5)
+   --> src/accessiweather/services/weather_service/weather_service.py:264:9
+    |
+262 |         return self.weather_data_retrieval.get_current_conditions(lat, lon, force_refresh)
+263 |
+264 |     def get_alerts(
+    |         ^^^^^^^^^^
+265 |         self,
+266 |         lat: float,
+    |
+
+PLR0911 Too many return statements (7 > 6)
+  --> src/accessiweather/single_instance.py:76:9
+   |
+74 |             return True
+75 |
+76 |     def _is_lock_file_stale(self) -> bool:
+   |         ^^^^^^^^^^^^^^^^^^^
+77 |         """
+78 |         Check if the lock file is stale (from a crashed instance).
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+  --> src/accessiweather/single_instance.py:95:29
+   |
+93 |             # Parse the lock file content
+94 |             lines = content.split("\n")
+95 |             if len(lines) < 2:
+   |                             ^
+96 |                 logger.warning("Invalid lock file format, considering it stale")
+97 |                 return True
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `200` with a constant variable
+   --> src/accessiweather/test_app.py:114:77
+    |
+113 |                 # Show first 200 characters
+114 |                 preview = current_text[:200] + "..." if len(current_text) > 200 else current_text
+    |                                                                             ^^^
+115 |                 self.results_display.value += f"Preview: {preview}\n"
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `500` with a constant variable
+  --> src/accessiweather/utils/retry_utils.py:86:35
+   |
+84 |         if status is not None:
+85 |             status_code = getattr(status, "status_code", 0)
+86 |             return status_code >= 500 or status_code in (408, 409, 425, 429)
+   |                                   ^^^
+87 |
+88 |     return bool(isinstance(exc, httpx.RequestError))
+   |
+
+PLR0913 Too many arguments in function definition (7 > 5)
+   --> src/accessiweather/utils/retry_utils.py:109:5
+    |
+109 | def async_retry_with_backoff(
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^
+110 |     *,
+111 |     max_attempts: int,
+    |
+
+PLR0912 Too many branches (14 > 12)
+   --> src/accessiweather/utils/taf_decoder.py:136:5
+    |
+136 | def _split_segments(tokens: list[str]) -> tuple[list[dict[str, Any]], str | None]:
+    |     ^^^^^^^^^^^^^^^
+137 |     segments: list[dict[str, Any]] = [{"type": "base", "tokens": []}]
+138 |     remarks: str | None = None
+    |
+
+PLR0915 Too many statements (64 > 50)
+   --> src/accessiweather/utils/taf_decoder.py:136:5
+    |
+136 | def _split_segments(tokens: list[str]) -> tuple[list[dict[str, Any]], str | None]:
+    |     ^^^^^^^^^^^^^^^
+137 |     segments: list[dict[str, Any]] = [{"type": "base", "tokens": []}]
+138 |     remarks: str | None = None
+    |
+
+PLR0911 Too many return statements (10 > 6)
+   --> src/accessiweather/utils/taf_decoder.py:221:5
+    |
+221 | def _segment_intro(segment: dict[str, Any]) -> str:
+    |     ^^^^^^^^^^^^^^
+222 |     seg_type = segment.get("type")
+223 |     if seg_type == "base":
+    |
+
+C901 `_describe_segment` is too complex (18 > 15)
+   --> src/accessiweather/utils/taf_decoder.py:255:5
+    |
+255 | def _describe_segment(segment: dict[str, Any]) -> str:
+    |     ^^^^^^^^^^^^^^^^^
+256 |     tokens = segment.get("tokens", [])
+257 |     if not tokens:
+    |
+
+PLR0912 Too many branches (18 > 12)
+   --> src/accessiweather/utils/taf_decoder.py:255:5
+    |
+255 | def _describe_segment(segment: dict[str, Any]) -> str:
+    |     ^^^^^^^^^^^^^^^^^
+256 |     tokens = segment.get("tokens", [])
+257 |     if not tokens:
+    |
+
+PLR0915 Too many statements (64 > 50)
+   --> src/accessiweather/utils/taf_decoder.py:255:5
+    |
+255 | def _describe_segment(segment: dict[str, Any]) -> str:
+    |     ^^^^^^^^^^^^^^^^^
+256 |     tokens = segment.get("tokens", [])
+257 |     if not tokens:
+    |
+
+C901 `_decode_visibility` is too complex (17 > 15)
+   --> src/accessiweather/utils/taf_decoder.py:367:5
+    |
+367 | def _decode_visibility(token: str) -> str | None:
+    |     ^^^^^^^^^^^^^^^^^^
+368 |     working = token.strip()
+369 |     if not working:
+    |
+
+PLR0912 Too many branches (18 > 12)
+   --> src/accessiweather/utils/taf_decoder.py:367:5
+    |
+367 | def _decode_visibility(token: str) -> str | None:
+    |     ^^^^^^^^^^^^^^^^^^
+368 |     working = token.strip()
+369 |     if not working:
+    |
+
+PLR0915 Too many statements (54 > 50)
+   --> src/accessiweather/utils/taf_decoder.py:367:5
+    |
+367 | def _decode_visibility(token: str) -> str | None:
+    |     ^^^^^^^^^^^^^^^^^^
+368 |     working = token.strip()
+369 |     if not working:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+   --> src/accessiweather/utils/taf_decoder.py:387:30
+    |
+385 |         elif " " in token:
+386 |             parts = token.replace("SM", "").split()
+387 |             if len(parts) == 2:
+    |                              ^
+388 |                 whole_number, fraction_part = parts
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `4` with a constant variable
+   --> src/accessiweather/utils/taf_decoder.py:428:24
+    |
+426 |         return f"{descriptor} {display_value} statute miles{decimal_text} ({token})"
+427 |
+428 |     if len(working) == 4 and working.isdigit():
+    |                        ^
+429 |         distance_m = int(working)
+430 |         if distance_m == 9999:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `9999` with a constant variable
+   --> src/accessiweather/utils/taf_decoder.py:430:26
+    |
+428 |     if len(working) == 4 and working.isdigit():
+429 |         distance_m = int(working)
+430 |         if distance_m == 9999:
+    |                          ^^^^
+431 |             return "Visibility 10 kilometres or more (9999 meters)"
+432 |         distance_km = distance_m / 1000
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `6` with a constant variable
+   --> src/accessiweather/utils/taf_decoder.py:551:22
+    |
+550 | def _format_from_time(token: str) -> str:
+551 |     if len(token) != 6 or not token.isdigit():
+    |                      ^
+552 |         return token
+553 |     day = int(token[:2])
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `10` with a constant variable
+   --> src/accessiweather/utils/taf_decoder.py:560:22
+    |
+559 | def _format_day(day: int) -> str:
+560 |     suffix = "th" if 10 <= day % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+    |                      ^^
+561 |     return f"{day}{suffix}"
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `20` with a constant variable
+   --> src/accessiweather/utils/taf_decoder.py:560:41
+    |
+559 | def _format_day(day: int) -> str:
+560 |     suffix = "th" if 10 <= day % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+    |                                         ^^
+561 |     return f"{day}{suffix}"
+    |
+
+PLR0912 Too many branches (16 > 12)
+   --> src/accessiweather/utils/thread_manager.py:155:9
+    |
+153 |             return list(self._stop_events.values())
+154 |
+155 |     def stop_all_threads(self, timeout=3.0):
+    |         ^^^^^^^^^^^^^^^^
+156 |         """
+157 |         Signal all registered threads to stop and attempt to join them.
+    |
+
+PLR0915 Too many statements (62 > 50)
+   --> src/accessiweather/utils/thread_manager.py:155:9
+    |
+153 |             return list(self._stop_events.values())
+154 |
+155 |     def stop_all_threads(self, timeout=3.0):
+    |         ^^^^^^^^^^^^^^^^
+156 |         """
+157 |         Signal all registered threads to stop and attempt to join them.
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `401` with a constant variable
+  --> src/accessiweather/visual_crossing_client.py:69:44
+   |
+67 |                 response = await client.get(url, params=params, headers=headers)
+68 |
+69 |                 if response.status_code == 401:
+   |                                            ^^^
+70 |                     raise VisualCrossingApiError("Invalid API key", response.status_code)
+71 |                 if response.status_code == 429:
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `429` with a constant variable
+  --> src/accessiweather/visual_crossing_client.py:71:44
+   |
+69 |                 if response.status_code == 401:
+70 |                     raise VisualCrossingApiError("Invalid API key", response.status_code)
+71 |                 if response.status_code == 429:
+   |                                            ^^^
+72 |                     raise VisualCrossingApiError("API rate limit exceeded", response.status_code)
+73 |                 if response.status_code != 200:
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `200` with a constant variable
+  --> src/accessiweather/visual_crossing_client.py:73:44
+   |
+71 |                 if response.status_code == 429:
+72 |                     raise VisualCrossingApiError("API rate limit exceeded", response.status_code)
+73 |                 if response.status_code != 200:
+   |                                            ^^^
+74 |                     raise VisualCrossingApiError(
+75 |                         f"API request failed: HTTP {response.status_code}", response.status_code
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `401` with a constant variable
+   --> src/accessiweather/visual_crossing_client.py:107:44
+    |
+105 |                 response = await client.get(url, params=params, headers=headers)
+106 |
+107 |                 if response.status_code == 401:
+    |                                            ^^^
+108 |                     raise VisualCrossingApiError("Invalid API key", response.status_code)
+109 |                 if response.status_code == 429:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `429` with a constant variable
+   --> src/accessiweather/visual_crossing_client.py:109:44
+    |
+107 |                 if response.status_code == 401:
+108 |                     raise VisualCrossingApiError("Invalid API key", response.status_code)
+109 |                 if response.status_code == 429:
+    |                                            ^^^
+110 |                     raise VisualCrossingApiError("API rate limit exceeded", response.status_code)
+111 |                 if response.status_code != 200:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `200` with a constant variable
+   --> src/accessiweather/visual_crossing_client.py:111:44
+    |
+109 |                 if response.status_code == 429:
+110 |                     raise VisualCrossingApiError("API rate limit exceeded", response.status_code)
+111 |                 if response.status_code != 200:
+    |                                            ^^^
+112 |                     raise VisualCrossingApiError(
+113 |                         f"API request failed: HTTP {response.status_code}", response.status_code
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `401` with a constant variable
+   --> src/accessiweather/visual_crossing_client.py:145:44
+    |
+143 |                 response = await client.get(url, params=params, headers=headers)
+144 |
+145 |                 if response.status_code == 401:
+    |                                            ^^^
+146 |                     raise VisualCrossingApiError("Invalid API key", response.status_code)
+147 |                 if response.status_code == 429:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `429` with a constant variable
+   --> src/accessiweather/visual_crossing_client.py:147:44
+    |
+145 |                 if response.status_code == 401:
+146 |                     raise VisualCrossingApiError("Invalid API key", response.status_code)
+147 |                 if response.status_code == 429:
+    |                                            ^^^
+148 |                     raise VisualCrossingApiError("API rate limit exceeded", response.status_code)
+149 |                 if response.status_code != 200:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `200` with a constant variable
+   --> src/accessiweather/visual_crossing_client.py:149:44
+    |
+147 |                 if response.status_code == 429:
+148 |                     raise VisualCrossingApiError("API rate limit exceeded", response.status_code)
+149 |                 if response.status_code != 200:
+    |                                            ^^^
+150 |                     raise VisualCrossingApiError(
+151 |                         f"API request failed: HTTP {response.status_code}", response.status_code
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `401` with a constant variable
+   --> src/accessiweather/visual_crossing_client.py:182:44
+    |
+180 |                 response = await client.get(url, params=params, headers=headers)
+181 |
+182 |                 if response.status_code == 401:
+    |                                            ^^^
+183 |                     raise VisualCrossingApiError("Invalid API key", response.status_code)
+184 |                 if response.status_code == 429:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `429` with a constant variable
+   --> src/accessiweather/visual_crossing_client.py:184:44
+    |
+182 |                 if response.status_code == 401:
+183 |                     raise VisualCrossingApiError("Invalid API key", response.status_code)
+184 |                 if response.status_code == 429:
+    |                                            ^^^
+185 |                     raise VisualCrossingApiError("API rate limit exceeded", response.status_code)
+186 |                 if response.status_code != 200:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `200` with a constant variable
+   --> src/accessiweather/visual_crossing_client.py:186:44
+    |
+184 |                 if response.status_code == 429:
+185 |                     raise VisualCrossingApiError("API rate limit exceeded", response.status_code)
+186 |                 if response.status_code != 200:
+    |                                            ^^^
+187 |                     raise VisualCrossingApiError(
+188 |                         f"API request failed: HTTP {response.status_code}", response.status_code
+    |
+
+C901 `_parse_current_conditions` is too complex (24 > 15)
+   --> src/accessiweather/visual_crossing_client.py:205:9
+    |
+203 |             return WeatherAlerts(alerts=[])
+204 |
+205 |     def _parse_current_conditions(self, data: dict) -> CurrentConditions:
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+206 |         """Parse Visual Crossing current conditions data."""
+207 |         current = data.get("currentConditions", {})
+    |
+
+PLR0912 Too many branches (23 > 12)
+   --> src/accessiweather/visual_crossing_client.py:205:9
+    |
+203 |             return WeatherAlerts(alerts=[])
+204 |
+205 |     def _parse_current_conditions(self, data: dict) -> CurrentConditions:
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+206 |         """Parse Visual Crossing current conditions data."""
+207 |         current = data.get("currentConditions", {})
+    |
+
+PLR0915 Too many statements (86 > 50)
+   --> src/accessiweather/visual_crossing_client.py:205:9
+    |
+203 |             return WeatherAlerts(alerts=[])
+204 |
+205 |     def _parse_current_conditions(self, data: dict) -> CurrentConditions:
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+206 |         """Parse Visual Crossing current conditions data."""
+207 |         current = data.get("currentConditions", {})
+    |
+
+PLR0913 Too many arguments in function definition (7 > 5)
+  --> src/accessiweather/weather_client_base.py:48:9
+   |
+46 |     """Simple async weather API client."""
+47 |
+48 |     def __init__(
+   |         ^^^^^^^^
+49 |         self,
+50 |         user_agent: str = "AccessiWeather/1.0",
+   |
+
+C901 `get_weather_data` is too complex (21 > 15)
+   --> src/accessiweather/weather_client_base.py:230:15
+    |
+228 |         await self.close()
+229 |
+230 |     async def get_weather_data(self, location: Location) -> WeatherData:
+    |               ^^^^^^^^^^^^^^^^
+231 |         """Get complete weather data for a location."""
+232 |         logger.info(f"Fetching weather data for {location.name}")
+    |
+
+PLR0912 Too many branches (25 > 12)
+   --> src/accessiweather/weather_client_base.py:230:15
+    |
+228 |         await self.close()
+229 |
+230 |     async def get_weather_data(self, location: Location) -> WeatherData:
+    |               ^^^^^^^^^^^^^^^^
+231 |         """Get complete weather data for a location."""
+232 |         logger.info(f"Fetching weather data for {location.name}")
+    |
+
+PLR0915 Too many statements (135 > 50)
+   --> src/accessiweather/weather_client_base.py:230:15
+    |
+228 |         await self.close()
+229 |
+230 |     async def get_weather_data(self, location: Location) -> WeatherData:
+    |               ^^^^^^^^^^^^^^^^
+231 |         """Get complete weather data for a location."""
+232 |         logger.info(f"Fetching weather data for {location.name}")
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `24.0` with a constant variable
+   --> src/accessiweather/weather_client_base.py:521:16
+    |
+520 |         # Continental US bounds (approximate)
+521 |         return 24.0 <= location.latitude <= 49.0 and -125.0 <= location.longitude <= -66.0
+    |                ^^^^
+522 |
+523 |     def _set_empty_weather_data(self, weather_data: WeatherData) -> None:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `49.0` with a constant variable
+   --> src/accessiweather/weather_client_base.py:521:45
+    |
+520 |         # Continental US bounds (approximate)
+521 |         return 24.0 <= location.latitude <= 49.0 and -125.0 <= location.longitude <= -66.0
+    |                                             ^^^^
+522 |
+523 |     def _set_empty_weather_data(self, weather_data: WeatherData) -> None:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `-125.0` with a constant variable
+   --> src/accessiweather/weather_client_base.py:521:54
+    |
+520 |         # Continental US bounds (approximate)
+521 |         return 24.0 <= location.latitude <= 49.0 and -125.0 <= location.longitude <= -66.0
+    |                                                      ^^^^^^
+522 |
+523 |     def _set_empty_weather_data(self, weather_data: WeatherData) -> None:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `-66.0` with a constant variable
+   --> src/accessiweather/weather_client_base.py:521:86
+    |
+520 |         # Continental US bounds (approximate)
+521 |         return 24.0 <= location.latitude <= 49.0 and -125.0 <= location.longitude <= -66.0
+    |                                                                                      ^^^^^
+522 |
+523 |     def _set_empty_weather_data(self, weather_data: WeatherData) -> None:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `300` with a constant variable
+   --> src/accessiweather/weather_client_base.py:782:21
+    |
+781 |     def _air_quality_severity(self, value: float) -> str:
+782 |         if value >= 300:
+    |                     ^^^
+783 |             return "Extreme"
+784 |         if value >= 200:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `200` with a constant variable
+   --> src/accessiweather/weather_client_base.py:784:21
+    |
+782 |         if value >= 300:
+783 |             return "Extreme"
+784 |         if value >= 200:
+    |                     ^^^
+785 |             return "Severe"
+786 |         if value >= 150:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `150` with a constant variable
+   --> src/accessiweather/weather_client_base.py:786:21
+    |
+784 |         if value >= 200:
+785 |             return "Severe"
+786 |         if value >= 150:
+    |                     ^^^
+787 |             return "Moderate"
+788 |         if value >= 100:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `100` with a constant variable
+   --> src/accessiweather/weather_client_base.py:788:21
+    |
+786 |         if value >= 150:
+787 |             return "Moderate"
+788 |         if value >= 100:
+    |                     ^^^
+789 |             return "Minor"
+790 |         return "Unknown"
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `4` with a constant variable
+  --> src/accessiweather/weather_client_enrichment.py:42:54
+   |
+40 |         index += 1
+41 |
+42 |     if index < len(tokens) and len(tokens[index]) == 4 and tokens[index].isalpha():
+   |                                                      ^
+43 |         index += 1
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `7` with a constant variable
+  --> src/accessiweather/weather_client_enrichment.py:45:86
+   |
+43 |         index += 1
+44 |
+45 |     if index < len(tokens) and tokens[index].endswith("Z") and len(tokens[index]) == 7:
+   |                                                                                      ^
+46 |         index += 1
+   |
+
+C901 `get_aviation_weather` is too complex (17 > 15)
+   --> src/accessiweather/weather_client_enrichment.py:154:11
+    |
+154 | async def get_aviation_weather(
+    |           ^^^^^^^^^^^^^^^^^^^^
+155 |     client: WeatherClient,
+156 |     station_id: str,
+    |
+
+PLR0913 Too many arguments in function definition (6 > 5)
+   --> src/accessiweather/weather_client_enrichment.py:154:11
+    |
+154 | async def get_aviation_weather(
+    |           ^^^^^^^^^^^^^^^^^^^^
+155 |     client: WeatherClient,
+156 |     station_id: str,
+    |
+
+PLR0912 Too many branches (19 > 12)
+   --> src/accessiweather/weather_client_enrichment.py:154:11
+    |
+154 | async def get_aviation_weather(
+    |           ^^^^^^^^^^^^^^^^^^^^
+155 |     client: WeatherClient,
+156 |     station_id: str,
+    |
+
+PLR0915 Too many statements (60 > 50)
+   --> src/accessiweather/weather_client_enrichment.py:154:11
+    |
+154 | async def get_aviation_weather(
+    |           ^^^^^^^^^^^^^^^^^^^^
+155 |     client: WeatherClient,
+156 |     station_id: str,
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+   --> src/accessiweather/weather_client_enrichment.py:225:49
+    |
+223 |         for part in aviation.airport_name.replace("-", " ").split():
+224 |             normalized = _normalize_token(part)
+225 |             if normalized and len(normalized) > 2:
+    |                                                 ^
+226 |                 tokens.add(normalized)
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `4` with a constant variable
+  --> src/accessiweather/weather_client_nws.py:67:27
+   |
+65 |         distance_value = float("inf")
+66 |
+67 |     if len(station_id) == 4 and station_id.startswith("K"):
+   |                           ^
+68 |         priority = 0
+69 |     elif len(station_id) == 4:
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `4` with a constant variable
+  --> src/accessiweather/weather_client_nws.py:69:29
+   |
+67 |     if len(station_id) == 4 and station_id.startswith("K"):
+68 |         priority = 0
+69 |     elif len(station_id) == 4:
+   |                             ^
+70 |         priority = 1
+71 |     else:
+   |
+
+PLR0911 Too many return statements (9 > 6)
+   --> src/accessiweather/weather_client_nws.py:163:5
+    |
+163 | def _format_wind_speed(value: Any) -> str | None:
+    |     ^^^^^^^^^^^^^^^^^^
+164 |     """Format NWS wind speed objects into a readable string."""
+165 |     if value is None:
+    |
+
+C901 `get_nws_current_conditions` is too complex (22 > 15)
+   --> src/accessiweather/weather_client_nws.py:324:11
+    |
+323 | @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
+324 | async def get_nws_current_conditions(
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+325 |     location: Location,
+326 |     nws_base_url: str,
+    |
+
+PLR0915 Too many statements (89 > 50)
+   --> src/accessiweather/weather_client_nws.py:324:11
+    |
+323 | @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
+324 | async def get_nws_current_conditions(
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+325 |     location: Location,
+326 |     nws_base_url: str,
+    |
+
+PLR0912 Too many branches (15 > 12)
+   --> src/accessiweather/weather_client_nws.py:336:19
+    |
+334 |         headers = {"User-Agent": user_agent}
+335 |
+336 |         async def _select_best_observation(
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^
+337 |             features: list[dict[str, Any]],
+338 |             http_client: httpx.AsyncClient,
+    |
+
+PLR0915 Too many statements (54 > 50)
+   --> src/accessiweather/weather_client_nws.py:336:19
+    |
+334 |         headers = {"User-Agent": user_agent}
+335 |
+336 |         async def _select_best_observation(
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^
+337 |             features: list[dict[str, Any]],
+338 |             http_client: httpx.AsyncClient,
+    |
+
+PLR0913 Too many arguments in function definition (6 > 5)
+   --> src/accessiweather/weather_client_nws.py:552:11
+    |
+551 | @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
+552 | async def get_nws_forecast_and_discussion(
+    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+553 |     location: Location,
+554 |     nws_base_url: str,
+    |
+
+PLR0911 Too many return statements (9 > 6)
+   --> src/accessiweather/weather_client_nws.py:606:11
+    |
+606 | async def get_nws_discussion(
+    |           ^^^^^^^^^^^^^^^^^^
+607 |     client: httpx.AsyncClient,
+608 |     headers: dict[str, str],
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `6` with a constant variable
+   --> src/accessiweather/weather_client_nws.py:620:25
+    |
+619 |         parts = forecast_url.split("/")
+620 |         if len(parts) < 6:
+    |                         ^
+621 |             logger.warning(f"Unexpected forecast URL format: {forecast_url}")
+622 |             return "Forecast discussion not available."
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `200` with a constant variable
+   --> src/accessiweather/weather_client_nws.py:630:36
+    |
+628 |         response = await _client_get(client, products_url, headers=headers)
+629 |
+630 |         if response.status_code != 200:
+    |                                    ^^^
+631 |             logger.warning(f"Failed to get AFD products: HTTP {response.status_code}")
+632 |             return "Forecast discussion not available."
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `200` with a constant variable
+   --> src/accessiweather/weather_client_nws.py:649:36
+    |
+647 |         response = await _client_get(client, product_url, headers=headers)
+648 |
+649 |         if response.status_code != 200:
+    |                                    ^^^
+650 |             logger.warning(f"Failed to get AFD product text: HTTP {response.status_code}")
+651 |             return "Forecast discussion not available."
+    |
+
+PLR0913 Too many arguments in function definition (6 > 5)
+   --> src/accessiweather/weather_client_nws.py:706:11
+    |
+705 | @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
+706 | async def get_nws_hourly_forecast(
+    |           ^^^^^^^^^^^^^^^^^^^^^^^
+707 |     location: Location,
+708 |     nws_base_url: str,
+    |
+
+C901 `get_nws_tafs` is too complex (18 > 15)
+   --> src/accessiweather/weather_client_nws.py:765:11
+    |
+764 | @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
+765 | async def get_nws_tafs(
+    |           ^^^^^^^^^^^^
+766 |     station_id: str,
+767 |     nws_base_url: str,
+    |
+
+PLR0912 Too many branches (17 > 12)
+   --> src/accessiweather/weather_client_nws.py:765:11
+    |
+764 | @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
+765 | async def get_nws_tafs(
+    |           ^^^^^^^^^^^^
+766 |     station_id: str,
+767 |     nws_base_url: str,
+    |
+
+PLR0915 Too many statements (52 > 50)
+   --> src/accessiweather/weather_client_nws.py:765:11
+    |
+764 | @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
+765 | async def get_nws_tafs(
+    |           ^^^^^^^^^^^^
+766 |     station_id: str,
+767 |     nws_base_url: str,
+    |
+
+PLR0913 Too many arguments in function definition (6 > 5)
+   --> src/accessiweather/weather_client_nws.py:936:11
+    |
+935 | @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
+936 | async def get_nws_marine_forecast(
+    |           ^^^^^^^^^^^^^^^^^^^^^^^
+937 |     zone_type: str,
+938 |     zone_id: str,
+    |
+
+PLR0911 Too many return statements (7 > 6)
+  --> src/accessiweather/weather_client_parsers.py:63:5
+   |
+63 | def convert_wind_speed_to_mph(value: float | None, unit_code: str | None) -> float | None:
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+64 |     """Normalize WMO wind speed units to miles per hour."""
+65 |     if value is None:
+   |
+
+PLR0911 Too many return statements (7 > 6)
+  --> src/accessiweather/weather_client_parsers.py:81:5
+   |
+81 | def convert_wind_speed_to_kph(value: float | None, unit_code: str | None) -> float | None:
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+82 |     """Normalize WMO wind speed units to kilometers per hour."""
+83 |     if value is None:
+   |
+
+PLR0911 Too many return statements (8 > 6)
+   --> src/accessiweather/weather_condition_analyzer.py:218:9
+    |
+216 |         }
+217 |
+218 |     def _analyze_temperature(self, weather_data: dict[str, Any]) -> dict[str, Any]:
+    |         ^^^^^^^^^^^^^^^^^^^^
+219 |         """
+220 |         Analyze temperature conditions.
+    |
+
+PLR0911 Too many return statements (7 > 6)
+   --> src/accessiweather/weather_condition_analyzer.py:250:9
+    |
+248 |         return {"temperature_extreme": None}
+249 |
+250 |     def _analyze_wind(self, weather_data: dict[str, Any]) -> dict[str, Any]:
+    |         ^^^^^^^^^^^^^
+251 |         """
+252 |         Analyze wind conditions.
+    |
+
+PLR0911 Too many return statements (7 > 6)
+   --> src/accessiweather/weather_condition_analyzer.py:341:9
+    |
+339 |         return score
+340 |
+341 |     def _determine_template(self, analysis: dict[str, Any]) -> str:
+    |         ^^^^^^^^^^^^^^^^^^^
+342 |         """
+343 |         Determine the recommended format template based on analysis.
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `7` with a constant variable
+   --> src/accessiweather/weather_history.py:109:31
+    |
+107 |         if self.days_ago == 1:
+108 |             time_ref = "yesterday"
+109 |         elif self.days_ago == 7:
+    |                               ^
+110 |             time_ref = "last week"
+111 |         else:
+    |
+
+Found 249 errors.
+[*] 4 fixable with the `--fix` option.

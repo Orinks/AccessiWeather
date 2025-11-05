@@ -20,6 +20,39 @@ All notable changes to AccessiWeather will be documented in this file.
   - Cache effectiveness (<10ms for cache hits vs 50ms+ fresh fetches)
   - Load testing (20 concurrent requests with intelligent deduplication)
 
+### Added
+- Intelligent alert notification system with rate limiting and cooldowns
+  - Global cooldown (default: 5 min) prevents notification spam across all alerts
+  - Per-alert cooldown (default: 60 min) prevents duplicate notifications
+  - Escalation override (default: 15 min) allows high-severity alerts to bypass cooldowns
+  - Hourly notification cap (default: 10) prevents excessive notifications
+- Severity-based alert filtering
+  - Configure which alert severities trigger notifications (Extreme, Severe, Moderate, Minor, Unknown)
+  - Minor severity alerts disabled by default to reduce noise
+- Alert notification history tracking
+  - Bounded history (max 500 notifications) prevents memory growth
+  - Tracks notification timestamps and severities for rate limiting decisions
+- Comprehensive test coverage for alert system (104 tests)
+  - Constants validation tests (19 tests)
+  - Alert state history tests (26 tests)
+  - Token bucket rate limiting tests (14 tests)
+  - Accessibility formatting tests (18 tests)
+  - UI accessibility audit tests (15 tests)
+  - Configuration migration tests (12 tests)
+
+### Changed
+- Alert notification settings now persist in configuration
+- AlertManager reconfigurable at runtime without restart
+- Improved screen reader accessibility for notification settings UI
+  - All controls have proper aria_label and aria_description attributes
+  - Logical keyboard navigation order
+  - Clear focus indicators and descriptive labels
+
+### Fixed
+- Eliminated magic numbers in alert notification code
+- Improved testability with dependency injection patterns
+- Enhanced configuration migration backward compatibility
+
 ## [0.9.1] - 2025-05-07
 
 ### Added

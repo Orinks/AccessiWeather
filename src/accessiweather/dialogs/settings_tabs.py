@@ -694,6 +694,11 @@ def create_notifications_tab(dialog):
         style=Pack(margin_bottom=12),
         id="alert_global_cooldown_input",
     )
+    dialog.alert_global_cooldown_input.aria_label = "Global notification cooldown"
+    dialog.alert_global_cooldown_input.aria_description = (
+        "Set the minimum number of minutes to wait between any alert notifications, "
+        "from 0 to 60 minutes. This prevents notification spam across all alerts."
+    )
     notifications_box.add(dialog.alert_global_cooldown_input)
 
     # Per-alert cooldown
@@ -716,6 +721,11 @@ def create_notifications_tab(dialog):
         style=Pack(margin_bottom=12),
         id="alert_per_alert_cooldown_input",
     )
+    dialog.alert_per_alert_cooldown_input.aria_label = "Per-alert notification cooldown"
+    dialog.alert_per_alert_cooldown_input.aria_description = (
+        "Set the minimum number of minutes to wait before notifying about the same alert again, "
+        "from 0 to 1440 minutes (24 hours). This prevents repeated notifications for unchanged alerts."
+    )
     notifications_box.add(dialog.alert_per_alert_cooldown_input)
 
     # Max notifications per hour
@@ -737,6 +747,11 @@ def create_notifications_tab(dialog):
         max=100,
         style=Pack(margin_bottom=15),
         id="alert_max_notifications_input",
+    )
+    dialog.alert_max_notifications_input.aria_label = "Maximum notifications per hour"
+    dialog.alert_max_notifications_input.aria_description = (
+        "Set the total number of alert notifications allowed per hour, from 1 to 100. "
+        "Uses token bucket rate limiting to prevent notification storms while allowing bursts."
     )
     notifications_box.add(dialog.alert_max_notifications_input)
 

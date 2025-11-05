@@ -11,6 +11,7 @@ from xml.etree import ElementTree as ET
 import httpx
 
 from ..models import Location, WeatherAlert, WeatherAlerts
+from ..utils.retry_utils import async_retry_with_backoff
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,7 @@ class MeteoAlarmClient:
             "https://www.meteoalarm.org/api/v1/product/feed",
         )
 
+    @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=15.0)
     async def fetch_alerts(self, location: Location) -> WeatherAlerts:
         """Fetch alerts for the provided location."""
         if location is None:

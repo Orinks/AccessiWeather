@@ -12,6 +12,7 @@ from typing import Any
 import httpx
 from packaging.version import Version
 
+from ...utils.retry_utils import async_retry_with_backoff
 from .settings import UpdateSettings
 
 logger = logging.getLogger(__name__)
@@ -39,6 +40,7 @@ class ReleaseManager:
         self.settings = settings
         self._cache: dict[str, Any] | None = None
 
+    @async_retry_with_backoff(max_attempts=3, base_delay=2.0, timeout=45.0)
     async def get_releases(self) -> list[dict[str, Any]]:
         """Return releases from cache or GitHub."""
         cache_valid = (
@@ -116,17 +118,17 @@ class ReleaseManager:
                             break
                 page_count += 1
         except httpx.TimeoutException:
-            logger.warning("GitHub API timeout; using cached releases if available")
-            return self._cache.get("releases", []) if self._cache else []
+            logger.warning("GitHub API timeout; retrying if possible")
+            raise
         except httpx.RequestError as exc:
             logger.error(f"Network error: {exc}")
-            return self._cache.get("releases", []) if self._cache else []
+            raise
         except httpx.HTTPStatusError as exc:
             logger.error(f"GitHub API error: {exc}")
-            return self._cache.get("releases", []) if self._cache else []
+            raise
         except Exception as exc:  # noqa: BLE001 - best-effort logging
             logger.error(f"Failed to fetch releases: {exc}")
-            return self._cache.get("releases", []) if self._cache else []
+            raise
 
         etag = last_response.headers.get("etag") if last_response else None
         self._cache = {
