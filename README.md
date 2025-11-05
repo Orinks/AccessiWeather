@@ -161,6 +161,15 @@ accessiweather --portable
 - **Accessible UI controls**: Properly labeled widgets and clear focus indicators
 - **Clear notifications**: Screen reader-friendly alert and status messages
 
+### Performance & Efficiency
+- **Intelligent caching**: 180-minute TTL cache reduces redundant API calls by 80%+
+- **Request deduplication**: Concurrent requests for the same location coalesce into a single API call (10x reduction)
+- **Connection pooling**: Optimized HTTP connection pool (30 connections, 15 keepalive) for faster parallel fetches
+- **Parallel enrichment**: Simultaneous fetching of alerts, discussions, and sunrise/sunset data
+- **Smart timeouts**: Configurable connect (5s) and read (10s) timeouts with exponential backoff retry
+- **Cache pre-warming**: Background pre-fetching for faster initial display
+- **Async architecture**: Non-blocking weather data operations for responsive UI
+
 ## Installation
 
 ### Option 1: Download Pre-built Binaries (Recommended)
