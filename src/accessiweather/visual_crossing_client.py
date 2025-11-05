@@ -20,6 +20,7 @@ from .models import (
     WeatherAlert,
     WeatherAlerts,
 )
+from .utils.retry_utils import async_retry_with_backoff
 from .utils.temperature_utils import TemperatureUnit, calculate_dewpoint
 from .weather_client_parsers import describe_moon_phase
 
@@ -48,6 +49,7 @@ class VisualCrossingClient:
         )
         self.timeout = 15.0
 
+    @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
     async def get_current_conditions(self, location: Location) -> CurrentConditions | None:
         """Get current weather conditions from Visual Crossing API."""
         try:
@@ -86,6 +88,7 @@ class VisualCrossingClient:
             logger.error(f"Failed to get Visual Crossing current conditions: {e}")
             raise VisualCrossingApiError(f"Unexpected error: {e}") from e
 
+    @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
     async def get_forecast(self, location: Location) -> Forecast | None:
         """Get weather forecast from Visual Crossing API."""
         try:
@@ -123,6 +126,7 @@ class VisualCrossingClient:
             logger.error(f"Failed to get Visual Crossing forecast: {e}")
             raise VisualCrossingApiError(f"Unexpected error: {e}") from e
 
+    @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
     async def get_hourly_forecast(self, location: Location) -> HourlyForecast | None:
         """Get hourly weather forecast from Visual Crossing API."""
         try:
@@ -160,6 +164,7 @@ class VisualCrossingClient:
             logger.error(f"Failed to get Visual Crossing hourly forecast: {e}")
             raise VisualCrossingApiError(f"Unexpected error: {e}") from e
 
+    @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
     async def get_alerts(self, location: Location) -> WeatherAlerts:
         """Get weather alerts from Visual Crossing API."""
         try:

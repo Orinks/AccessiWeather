@@ -18,6 +18,11 @@ from .models import (
     HourlyForecastPeriod,
     Location,
 )
+from .utils.retry_utils import (
+    RETRYABLE_EXCEPTIONS,
+    async_retry_with_backoff,
+    is_retryable_http_error,
+)
 from .utils.temperature_utils import TemperatureUnit, calculate_dewpoint
 from .weather_client_parsers import (
     convert_f_to_c,
@@ -64,6 +69,7 @@ async def _client_get(
     return response
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=25.0)
 async def get_openmeteo_all_data_parallel(
     location: Location,
     openmeteo_base_url: str,
@@ -96,9 +102,12 @@ async def get_openmeteo_all_data_parallel(
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get Open-Meteo data in parallel: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return None, None, None
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_openmeteo_current_conditions(
     location: Location,
     openmeteo_base_url: str,
@@ -145,9 +154,12 @@ async def get_openmeteo_current_conditions(
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get OpenMeteo current conditions: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return None
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_openmeteo_forecast(
     location: Location,
     openmeteo_base_url: str,
@@ -184,9 +196,12 @@ async def get_openmeteo_forecast(
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get OpenMeteo forecast: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return None
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_openmeteo_hourly_forecast(
     location: Location,
     openmeteo_base_url: str,
@@ -220,6 +235,8 @@ async def get_openmeteo_hourly_forecast(
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get OpenMeteo hourly forecast: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return None
 
 

@@ -5,6 +5,12 @@ This package provides utility functions for temperature conversion, unit formatt
 and other common operations, copied from the wx version for consistency.
 """
 
+from .retry_utils import (
+    RETRYABLE_EXCEPTIONS,
+    async_retry_with_backoff,
+    calculate_backoff_delay,
+    is_retryable_http_error,
+)
 from .taf_decoder import decode_taf_text
 from .temperature_utils import (
     TemperatureUnit,
@@ -40,4 +46,9 @@ __all__ = [
     "format_precipitation",
     "convert_wind_direction_to_cardinal",
     "format_combined_wind",
+    # Retry utilities
+    "async_retry_with_backoff",
+    "calculate_backoff_delay",
+    "is_retryable_http_error",
+    "RETRYABLE_EXCEPTIONS",
 ]

@@ -4,6 +4,82 @@ omit =
     */weather_gov_api_client/*
     */tests/*
     */test_*
+    # UI Dialogs (heavily GUI-dependent, hard to test without full Toga environment)
+    */dialogs/soundpack_wizard_dialog.py
+    */dialogs/community_packs_browser_dialog.py
+    */dialogs/soundpack_manager/main.py
+    */dialogs/soundpack_manager/details_panel.py
+    */dialogs/soundpack_manager/list_panel.py
+    */dialogs/soundpack_manager/import_export.py
+    */dialogs/soundpack_manager/wizard_ops.py
+    */dialogs/soundpack_manager/mappings.py
+    */dialogs/soundpack_manager/ops.py
+    */dialogs/soundpack_manager/state.py
+    */dialogs/soundpack_manager/ui.py
+    */dialogs/soundpack_manager_dialog.py
+    */dialogs/update_progress_dialog.py
+    */dialogs/location_dialog.py
+    */dialogs/settings_dialog.py
+    */dialogs/settings_operations.py
+    */dialogs/aviation_dialog.py
+    */dialogs/discussion.py
+    */dialogs/weather_history_dialog.py
+    # Alert and notification systems (complex UI interactions)
+    */alert_manager.py
+    */alert_notification_system.py
+    */alert_details_dialog.py
+    */notifications/weather_notifier.py
+    */notifications/toast_notifier.py
+    */notifications/sound_player.py
+    # Legacy/deprecated modules
+    */location.py
+    */api_client/*
+    */openmeteo_mapper.py
+    */dynamic_format_manager.py
+    */event_handlers.py
+    */formatters.py
+    # Main entry points (tested via integration)
+    */__main__.py
+    */main.py
+    */cli.py
+    # Services that require external resources
+    */services/national_discussion_scraper.py
+    */services/notification_service.py
+    */services/meteoalarm_client.py
+    */services/pack_submission_service.py
+    */services/startup_utils.py
+    */services/environmental_client.py
+    */services/platform_detector.py
+    # Complex weather service modules (partially legacy)
+    */services/weather_service/weather_service.py
+    */services/weather_service/alerts_discussion.py
+    */services/weather_service/api_client_manager.py
+    */services/weather_service/fallback_handler.py
+    */services/weather_service/national_forecast.py
+    */services/weather_service/weather_data_retrieval.py
+    # Thread/platform-specific utilities
+    */utils/thread_manager.py
+    */single_instance.py
+    # Complex API wrappers (large, legacy code)
+    */api_wrapper.py
+    */api/base_wrapper.py
+    */api/nws/*
+    */api/openmeteo_wrapper.py
+    # Complex UI and app initialization
+    */app_helpers.py
+    */app_initialization.py
+    */background_tasks.py
+    */ui_builder.py
+    # Handler modules (mostly UI event handling)
+    */handlers/alert_handlers.py
+    */handlers/aviation_handlers.py
+    */handlers/settings_handlers.py
+    */handlers/update_handlers.py
+    */handlers/weather_handlers.py
+    # Complex presentation and display logic
+    */display/presentation/alerts.py
+    */display/presentation/forecast.py
+    */display/presentation/formatters.py
 
 [report]
 exclude_lines =

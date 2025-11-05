@@ -12,6 +12,7 @@ from typing import Any
 import httpx
 
 from .. import __version__ as APP_VERSION
+from ..utils.retry_utils import async_retry_with_backoff
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,12 @@ class GitHubBackendClient:
         self.user_agent = user_agent or f"AccessiWeather/{APP_VERSION}"
         self.timeout = timeout
 
+    @async_retry_with_backoff(
+        max_attempts=2,
+        base_delay=2.0,
+        timeout=60.0,
+        retryable_exceptions=(RuntimeError,),
+    )
     async def upload_zip(
         self,
         zip_bytes: bytes,
@@ -108,6 +115,12 @@ class GitHubBackendClient:
         except Exception as e:
             raise RuntimeError(f"Unexpected error communicating with backend: {e}") from e
 
+    @async_retry_with_backoff(
+        max_attempts=2,
+        base_delay=1.0,
+        timeout=30.0,
+        retryable_exceptions=(RuntimeError,),
+    )
     async def upload_pack_json_only(
         self,
         pack_data: dict[str, Any],
@@ -146,6 +159,12 @@ class GitHubBackendClient:
         except Exception as e:
             raise RuntimeError(f"Unexpected error communicating with backend: {e}") from e
 
+    @async_retry_with_backoff(
+        max_attempts=2,
+        base_delay=0.5,
+        timeout=10.0,
+        retryable_exceptions=(RuntimeError,),
+    )
     async def health_check(self, *, cancel_event: asyncio.Event | None = None) -> bool:
         """
         Check if the backend service is available.
@@ -168,7 +187,15 @@ class GitHubBackendClient:
 
             async with httpx.AsyncClient(timeout=5.0) as client:
                 response = await client.get(url, headers=headers)
+                if cancel_event and cancel_event.is_set():
+                    return False
                 return response.status_code == 200
 
-        except Exception:
+        except asyncio.CancelledError:
             return False
+        except httpx.TimeoutException as exc:
+            raise RuntimeError("Backend health check timed out") from exc
+        except httpx.RequestError as exc:
+            raise RuntimeError(f"Backend health check request failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise RuntimeError(f"Unexpected backend health check error: {exc}") from exc

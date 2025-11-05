@@ -20,6 +20,11 @@ from .models import (
     WeatherAlert,
     WeatherAlerts,
 )
+from .utils.retry_utils import (
+    RETRYABLE_EXCEPTIONS,
+    async_retry_with_backoff,
+    is_retryable_http_error,
+)
 from .weather_client_parsers import (
     convert_pa_to_inches,
     convert_pa_to_mb,
@@ -254,6 +259,7 @@ async def _client_get(
     return response
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=30.0)
 async def get_nws_all_data_parallel(
     location: Location,
     nws_base_url: str,
@@ -309,9 +315,12 @@ async def get_nws_all_data_parallel(
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS data in parallel: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return None, None, None, None, None
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_nws_current_conditions(
     location: Location,
     nws_base_url: str,
@@ -453,6 +462,8 @@ async def get_nws_current_conditions(
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS current conditions: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return None
 
 
@@ -537,6 +548,7 @@ async def get_nws_station_metadata(
         return None
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_nws_forecast_and_discussion(
     location: Location,
     nws_base_url: str,
@@ -586,6 +598,8 @@ async def get_nws_forecast_and_discussion(
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS forecast and discussion: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return None, None
 
 
@@ -651,6 +665,7 @@ async def get_nws_discussion(
         return "Forecast discussion not available due to error."
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_nws_alerts(
     location: Location,
     nws_base_url: str,
@@ -682,9 +697,12 @@ async def get_nws_alerts(
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS alerts: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return WeatherAlerts(alerts=[])
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_nws_hourly_forecast(
     location: Location,
     nws_base_url: str,
@@ -738,9 +756,12 @@ async def get_nws_hourly_forecast(
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS hourly forecast: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return None
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_nws_tafs(
     station_id: str,
     nws_base_url: str,
@@ -798,6 +819,8 @@ async def get_nws_tafs(
         awc_response.raise_for_status()
     except Exception as exc:  # noqa: BLE001
         logger.error("Failed to fetch TAF from AviationWeather for %s: %s", station_id, exc)
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return None
 
     try:
@@ -825,6 +848,7 @@ async def get_nws_tafs(
     return None
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_nws_sigmets(
     nws_base_url: str,
     user_agent: str,
@@ -845,6 +869,8 @@ async def get_nws_sigmets(
         response.raise_for_status()
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to fetch SIGMET data: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return []
 
     data = response.json()
@@ -852,6 +878,7 @@ async def get_nws_sigmets(
     return [feature.get("properties", feature) for feature in features]
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_nws_cwas(
     cwsu_id: str,
     nws_base_url: str,
@@ -870,6 +897,8 @@ async def get_nws_cwas(
         response.raise_for_status()
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to fetch CWA data for {cwsu_id}: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return []
 
     data = response.json()
@@ -877,6 +906,7 @@ async def get_nws_cwas(
     return [feature.get("properties", feature) for feature in features]
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_nws_radar_profiler(
     station_id: str,
     nws_base_url: str,
@@ -895,11 +925,14 @@ async def get_nws_radar_profiler(
         response.raise_for_status()
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to fetch radar profiler {station_id}: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return None
 
     return response.json()
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_nws_marine_forecast(
     zone_type: str,
     zone_id: str,
@@ -919,6 +952,8 @@ async def get_nws_marine_forecast(
         response.raise_for_status()
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to fetch marine forecast for {zone_type}/{zone_id}: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return None
 
     return response.json()

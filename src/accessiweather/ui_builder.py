@@ -148,7 +148,7 @@ def create_location_section(app: AccessiWeatherApp) -> toga.Box:
     )
 
     # Add keyboard shortcut for Delete key to remove location on supported platforms
-    def on_location_key_down(widget, key, modifiers=None):
+    def on_location_key_down(widget, key, _modifiers=None):
         """Handle keyboard shortcuts for location selection."""
         if app_helpers.is_delete_key(key):
             asyncio.create_task(event_handlers.on_remove_location_pressed(app, widget))
