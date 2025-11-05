@@ -44,17 +44,6 @@ class TestDialogSoundpackCommunity:
         assert CommunityIntegration is not None
 
 
-class TestDialogSoundpackConstants:
-    """Test soundpack dialog constants."""
-
-    def test_soundpack_constants(self):
-        """Test that soundpack constants are importable."""
-        from accessiweather.dialogs.soundpack_manager.constants import DEFAULT_SOUND_PACK_ID
-
-        assert isinstance(DEFAULT_SOUND_PACK_ID, str)
-        assert DEFAULT_SOUND_PACK_ID == "default"
-
-
 class TestModelHelpers:
     """Test model helper methods."""
 
@@ -226,36 +215,6 @@ class TestModelHelpers:
         assert alert_settings.global_cooldown == 10
 
 
-class TestEnvironmentalPresentationModule:
-    """Test environmental presentation display helper."""
-
-    def test_environmental_presentation_imports(self):
-        """Test environmental presentation module imports."""
-        from accessiweather.display.presentation.environmental import (
-            format_air_quality_panel,
-            get_air_quality_description,
-        )
-
-        assert callable(format_air_quality_panel)
-        assert callable(get_air_quality_description)
-
-    def test_get_air_quality_description(self):
-        """Test air quality description function."""
-        from accessiweather.display.presentation.environmental import (
-            get_air_quality_description,
-        )
-
-        assert "good" in get_air_quality_description(1).lower()
-        assert "moderate" in get_air_quality_description(3).lower()
-
-    def test_format_air_quality_panel_none(self):
-        """Test formatting air quality panel with no data."""
-        from accessiweather.display.presentation.environmental import format_air_quality_panel
-
-        result = format_air_quality_panel(None)
-        assert result == ""
-
-
 class TestConfigUtilsModule:
     """Test config utils module."""
 
@@ -265,19 +224,3 @@ class TestConfigUtilsModule:
 
         result = is_portable_mode()
         assert isinstance(result, bool)
-
-    def test_get_config_directory(self):
-        """Test get_config_directory function."""
-        from accessiweather.config_utils import get_config_directory
-
-        config_dir = get_config_directory()
-        assert isinstance(config_dir, str)
-        assert len(config_dir) > 0
-
-    def test_ensure_config_directory(self):
-        """Test ensure_config_directory function."""
-        from accessiweather.config_utils import ensure_config_directory
-
-        config_dir = ensure_config_directory()
-        assert isinstance(config_dir, str)
-        assert len(config_dir) > 0

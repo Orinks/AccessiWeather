@@ -1,0 +1,41 @@
+=== COMPLEXITY ANALYSIS SUMMARY ===
+
+Top 10 Most Complex Functions:
+1. apply_settings_to_ui           (40) ████████████████████████████████████████
+2. build_current_conditions        (34) ██████████████████████████████████
+3. update_last_check_info          (31) ███████████████████████████████
+4. check_for_updates               (26) ██████████████████████████
+5. _parse_current_conditions       (24) ████████████████████████
+6. get_nws_current_conditions      (22) ██████████████████████
+7. update_weather_displays         (21) █████████████████████
+8. get_weather_data                (21) █████████████████████
+9. update_pack_details             (20) ████████████████████
+10. _load_locations                (20) ████████████████████
+
+Complexity Threshold: 15 (shown as |)
+
+Issue Distribution:
+- High Complexity (>15):    23 functions  ████████
+- Magic Values:            119 instances  ██████████████████████████████████████
+- Too Many Branches:        33 functions  ███████████
+- Too Many Statements:      29 functions  ██████████
+- Too Many Returns:         21 functions  ███████
+- Too Many Arguments:       20 functions  ███████
+
+Good Practices Found:
+✅ No unused imports
+✅ No unused variables
+✅ No TODO/FIXME markers
+✅ No problematic commented code
+✅ Clean import structure
+
+Priority Refactoring Targets:
+🔴 CRITICAL: apply_settings_to_ui (complexity 40)
+🔴 CRITICAL: build_current_conditions (complexity 34)
+🔴 CRITICAL: update_last_check_info (complexity 31)
+🟡 HIGH: 119 magic values need constants
+🟢 LOW: 4 collapsible if statements (auto-fixable)
+
+Total Issues: 340
+Auto-fixable: 4 (1.2%)
+Manual fixes needed: 336 (98.8%)
