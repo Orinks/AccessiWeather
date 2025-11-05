@@ -571,27 +571,12 @@ class WeatherClient:
                     )
                     self._set_empty_weather_data(weather_data)
 
-        # Smart enrichment in auto mode: combine best features from different sources (parallel)
-        if self.data_source == "auto":
-            logger.debug("Running smart enrichment for auto mode (parallel)")
-            # Run all enrichment tasks in parallel
-            await asyncio.gather(
-                self._enrich_with_sunrise_sunset(weather_data, location),
-                self._enrich_with_nws_discussion(weather_data, location),
-                self._enrich_with_visual_crossing_alerts(weather_data, location),
-                return_exceptions=True,  # Continue even if some enrichments fail
-            )
+        # Launch enrichment tasks immediately (don't await yet - run concurrently with core)
+        logger.debug("Launching enrichment tasks concurrently")
+        enrichment_tasks = self._launch_enrichment_tasks(weather_data, location)
 
-        # Run post-processing tasks in parallel
-        await asyncio.gather(
-            self._populate_environmental_metrics(weather_data, location),
-            self._merge_international_alerts(weather_data, location),
-            self._enrich_with_aviation_data(weather_data, location),
-            return_exceptions=True,  # Continue even if some tasks fail
-        )
-
-        self._apply_trend_insights(weather_data)
-        self._persist_weather_data(location, weather_data)
+        # Await enrichment completion
+        await self._await_enrichments(enrichment_tasks, weather_data)
 
         if not weather_data.has_any_data() and self.offline_cache:
             cached = self.offline_cache.load(location)
@@ -606,6 +591,76 @@ class WeatherClient:
     ) -> None:
         """Delegate Visual Crossing alert processing to the dedicated module."""
         await vc_alerts.process_visual_crossing_alerts(alerts, location)
+
+    def _launch_enrichment_tasks(
+        self, weather_data: WeatherData, location: Location
+    ) -> dict[str, asyncio.Task[Any]]:
+        """
+        Launch enrichment tasks that can run concurrently with core data fetches.
+
+        Returns a dictionary of task names to asyncio.Task objects that can be
+        awaited later or attached to the WeatherData object for progressive updates.
+
+        Args:
+        ----
+            weather_data: The WeatherData object to enrich
+            location: The location for enrichment
+
+        Returns:
+        -------
+            Dictionary mapping enrichment names to their tasks
+
+        """
+        tasks = {}
+
+        # Smart enrichments for auto mode
+        if self.data_source == "auto":
+            tasks["sunrise_sunset"] = asyncio.create_task(
+                self._enrich_with_sunrise_sunset(weather_data, location)
+            )
+            tasks["nws_discussion"] = asyncio.create_task(
+                self._enrich_with_nws_discussion(weather_data, location)
+            )
+            tasks["vc_alerts"] = asyncio.create_task(
+                self._enrich_with_visual_crossing_alerts(weather_data, location)
+            )
+
+        # Post-processing enrichments (always run)
+        tasks["environmental"] = asyncio.create_task(
+            self._populate_environmental_metrics(weather_data, location)
+        )
+        tasks["international_alerts"] = asyncio.create_task(
+            self._merge_international_alerts(weather_data, location)
+        )
+        tasks["aviation"] = asyncio.create_task(
+            self._enrich_with_aviation_data(weather_data, location)
+        )
+
+        return tasks
+
+    async def _await_enrichments(
+        self, tasks: dict[str, asyncio.Task[Any]], weather_data: WeatherData
+    ) -> None:
+        """
+        Await all enrichment tasks and apply final processing.
+
+        Args:
+        ----
+            tasks: Dictionary of enrichment tasks to await
+            weather_data: The WeatherData object to finalize
+
+        """
+        # Wait for all enrichments to complete (with error handling)
+        results = await asyncio.gather(*tasks.values(), return_exceptions=True)
+
+        # Log any enrichment failures
+        for task_name, result in zip(tasks.keys(), results, strict=False):
+            if isinstance(result, Exception):
+                logger.warning(f"Enrichment '{task_name}' failed: {result}")
+
+        # Apply post-enrichment processing
+        self._apply_trend_insights(weather_data)
+        self._persist_weather_data(weather_data.location, weather_data)
 
     def _determine_api_choice(self, location: Location) -> str:
         """Determine which API to use for the given location."""
