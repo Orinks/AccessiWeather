@@ -37,6 +37,7 @@ from .models import (
     WeatherData,
 )
 from .services import EnvironmentalDataClient, MeteoAlarmClient
+from .utils.retry import APITimeoutError, retry_with_backoff
 from .visual_crossing_client import VisualCrossingApiError, VisualCrossingClient
 
 logger = logging.getLogger(__name__)
@@ -111,13 +112,25 @@ class WeatherClient:
         # Reusable HTTP client for performance
         self._http_client: httpx.AsyncClient | None = None
 
+        # Track in-flight requests to deduplicate concurrent calls
+        self._in_flight_requests: dict[str, asyncio.Task[WeatherData]] = {}
+
+    def _location_key(self, location: Location) -> str:
+        """Generate a unique key for a location to track in-flight requests."""
+        return f"{location.name}:{location.latitude:.4f},{location.longitude:.4f}"
+
     def _get_http_client(self) -> httpx.AsyncClient:
-        """Get or create the reusable HTTP client."""
+        """Get or create the reusable HTTP client with optimized connection pooling."""
         if self._http_client is None or getattr(self._http_client, "is_closed", False):
+            # Optimized connection pool for concurrent requests:
+            # - max_connections=30: Allows multiple concurrent API calls
+            # - max_keepalive_connections=15: Reuses connections for performance
+            # - timeout with connect=3.0: Fast connection timeout
+            timeout_config = httpx.Timeout(connect=3.0, read=5.0, write=5.0, pool=5.0)
             client = httpx.AsyncClient(
-                timeout=self.timeout,
+                timeout=timeout_config,
                 follow_redirects=True,
-                limits=httpx.Limits(max_keepalive_connections=10, max_connections=20),
+                limits=httpx.Limits(max_keepalive_connections=15, max_connections=30),
             )
             if Mock is not None and isinstance(client, Mock):
                 enter = getattr(client, "__aenter__", None)
@@ -169,9 +182,21 @@ class WeatherClient:
         client_is_mock = Mock is not None and isinstance(client, Mock)
 
         if not self._methods_overridden(method_names) and not client_is_mock:
-            return await nws_client.get_nws_all_data_parallel(
-                location, self.nws_base_url, self.user_agent, self.timeout, client
-            )
+            # Use retry wrapper for the parallel fetch
+            try:
+                return await retry_with_backoff(
+                    nws_client.get_nws_all_data_parallel,
+                    location,
+                    self.nws_base_url,
+                    self.user_agent,
+                    self.timeout,
+                    client,
+                    max_retries=1,
+                    initial_delay=1.0,
+                )
+            except APITimeoutError as exc:
+                logger.error(f"NWS API timeout after retries: {exc}")
+                return None, None, None, None, None
 
         current, forecast_result, alerts, hourly_forecast = await asyncio.gather(
             self._get_nws_current_conditions(location),
@@ -203,9 +228,20 @@ class WeatherClient:
         client_is_mock = Mock is not None and isinstance(client, Mock)
 
         if not self._methods_overridden(method_names) and not client_is_mock:
-            return await openmeteo_client.get_openmeteo_all_data_parallel(
-                location, self.openmeteo_base_url, self.timeout, client
-            )
+            # Use retry wrapper for the parallel fetch
+            try:
+                return await retry_with_backoff(
+                    openmeteo_client.get_openmeteo_all_data_parallel,
+                    location,
+                    self.openmeteo_base_url,
+                    self.timeout,
+                    client,
+                    max_retries=1,
+                    initial_delay=1.0,
+                )
+            except APITimeoutError as exc:
+                logger.error(f"Open-Meteo API timeout after retries: {exc}")
+                return None, None, None
 
         return await asyncio.gather(
             self._get_openmeteo_current_conditions(location),
@@ -227,10 +263,106 @@ class WeatherClient:
         """Async context manager exit."""
         await self.close()
 
-    async def get_weather_data(self, location: Location) -> WeatherData:
-        """Get complete weather data for a location."""
+    async def pre_warm_cache(self, location: Location) -> bool:
+        """
+        Pre-warm the cache for a location by fetching and storing weather data.
+
+        This method is useful for reducing first-load latency by populating the cache
+        before the user requests data.
+
+        Args:
+        ----
+            location: The location to pre-warm cache for
+
+        Returns:
+        -------
+            True if cache was successfully warmed, False otherwise
+
+        """
+        logger.info(f"Pre-warming cache for {location.name}")
+        try:
+            # Fetch fresh data (bypassing cache)
+            weather_data = await self.get_weather_data(location, force_refresh=True)
+
+            if weather_data.has_any_data():
+                logger.info(f"✓ Cache pre-warmed successfully for {location.name}")
+                return True
+
+            logger.warning(f"Cache pre-warm failed: no data returned for {location.name}")
+            return False
+
+        except Exception as exc:
+            logger.error(f"Cache pre-warm failed for {location.name}: {exc}")
+            return False
+
+    async def get_weather_data(
+        self, location: Location, force_refresh: bool = False
+    ) -> WeatherData:
+        """
+        Get complete weather data for a location.
+
+        Args:
+            location: Location to fetch weather for
+            force_refresh: If True, bypass cache and force fresh API call
+
+        """
         logger.info(f"Fetching weather data for {location.name}")
 
+        # Handle force_refresh by temporarily clearing cache for this location
+        if force_refresh and self.offline_cache:
+            logger.debug(f"Force refresh requested, clearing cache for {location.name}")
+            self.offline_cache.invalidate(location)
+
+        # Check cache first before deduplication (unless force refresh)
+        if not force_refresh and self.offline_cache:
+            cached = self.offline_cache.load(location, allow_stale=False)
+            if cached and not cached.stale:
+                logger.debug(f"✓ Cache hit for {location.name} (fresh data, skipping API calls)")
+                return cached
+            if cached:
+                logger.debug(
+                    f"Cache hit for {location.name} but data is stale, will fetch fresh data"
+                )
+
+        # Use deduplication for concurrent requests
+        return await self._fetch_weather_data_with_dedup(location, force_refresh)
+
+    async def _fetch_weather_data_with_dedup(
+        self, location: Location, force_refresh: bool
+    ) -> WeatherData:
+        """
+        Fetch weather data with deduplication tracking.
+
+        This method prevents multiple concurrent requests for the same location.
+        """
+        location_key = self._location_key(location)
+
+        # Check if there's already an in-flight request for this location
+        if not force_refresh and location_key in self._in_flight_requests:
+            # Wait for the existing request to complete
+            logger.debug(f"Request for {location.name} already in flight, waiting for result")
+            return await self._in_flight_requests[location_key]
+
+        # Create a new task for this request
+        if not force_refresh:
+            task = asyncio.create_task(self._do_fetch_weather_data(location))
+            self._in_flight_requests[location_key] = task
+
+            try:
+                return await task
+            finally:
+                # Clean up completed request from tracking
+                self._in_flight_requests.pop(location_key, None)
+        else:
+            # Force refresh bypasses deduplication
+            return await self._do_fetch_weather_data(location)
+
+    async def _do_fetch_weather_data(self, location: Location) -> WeatherData:
+        """
+        Perform the actual weather data fetch.
+
+        This is the core fetch logic separated for deduplication purposes.
+        """
         # Determine which API to use based on data source and location
         logger.debug("Determining API choice")
         api_choice = self._determine_api_choice(location)
@@ -454,24 +586,10 @@ class WeatherClient:
                     self._set_empty_weather_data(weather_data)
 
         if weather_data.has_any_data():
-            if self.data_source == "auto":
-                logger.debug("Running smart enrichment for auto mode (parallel)")
-                await asyncio.gather(
-                    self._enrich_with_sunrise_sunset(weather_data, location),
-                    self._enrich_with_nws_discussion(weather_data, location),
-                    self._enrich_with_visual_crossing_alerts(weather_data, location),
-                    return_exceptions=True,
-                )
-
-            await asyncio.gather(
-                self._populate_environmental_metrics(weather_data, location),
-                self._merge_international_alerts(weather_data, location),
-                self._enrich_with_aviation_data(weather_data, location),
-                return_exceptions=True,
-            )
-
-            self._apply_trend_insights(weather_data)
-            self._persist_weather_data(location, weather_data)
+            # Launch enrichment tasks in parallel
+            enrichment_tasks = self._launch_enrichment_tasks(weather_data, location)
+            # Await enrichment completion
+            await self._await_enrichments(enrichment_tasks, weather_data)
 
         if not weather_data.has_any_data() and self.offline_cache:
             cached = self.offline_cache.load(location)
@@ -486,6 +604,76 @@ class WeatherClient:
     ) -> None:
         """Delegate Visual Crossing alert processing to the dedicated module."""
         await vc_alerts.process_visual_crossing_alerts(alerts, location)
+
+    def _launch_enrichment_tasks(
+        self, weather_data: WeatherData, location: Location
+    ) -> dict[str, asyncio.Task]:
+        """
+        Launch enrichment tasks that can run concurrently.
+
+        Returns a dictionary of task names to asyncio.Task objects that can be
+        awaited later for progressive updates.
+
+        Args:
+        ----
+            weather_data: The WeatherData object to enrich
+            location: The location for enrichment
+
+        Returns:
+        -------
+            Dictionary mapping enrichment names to their tasks
+
+        """
+        tasks = {}
+
+        # Smart enrichments for auto mode
+        if self.data_source == "auto":
+            tasks["sunrise_sunset"] = asyncio.create_task(
+                self._enrich_with_sunrise_sunset(weather_data, location)
+            )
+            tasks["nws_discussion"] = asyncio.create_task(
+                self._enrich_with_nws_discussion(weather_data, location)
+            )
+            tasks["vc_alerts"] = asyncio.create_task(
+                self._enrich_with_visual_crossing_alerts(weather_data, location)
+            )
+
+        # Post-processing enrichments (always run)
+        tasks["environmental"] = asyncio.create_task(
+            self._populate_environmental_metrics(weather_data, location)
+        )
+        tasks["international_alerts"] = asyncio.create_task(
+            self._merge_international_alerts(weather_data, location)
+        )
+        tasks["aviation"] = asyncio.create_task(
+            self._enrich_with_aviation_data(weather_data, location)
+        )
+
+        return tasks
+
+    async def _await_enrichments(
+        self, tasks: dict[str, asyncio.Task], weather_data: WeatherData
+    ) -> None:
+        """
+        Await all enrichment tasks and apply final processing.
+
+        Args:
+        ----
+            tasks: Dictionary of enrichment task names to Task objects
+            weather_data: The WeatherData object being enriched
+
+        """
+        # Await all tasks, capturing exceptions
+        results = await asyncio.gather(*tasks.values(), return_exceptions=True)
+
+        # Log any errors from enrichments (non-fatal)
+        for task_name, result in zip(tasks.keys(), results, strict=False):
+            if isinstance(result, Exception):
+                logger.debug(f"Enrichment '{task_name}' failed: {result}")
+
+        # Apply final processing
+        self._apply_trend_insights(weather_data)
+        self._persist_weather_data(weather_data.location, weather_data)
 
     def _determine_api_choice(self, location: Location) -> str:
         """Determine which API to use for the given location."""

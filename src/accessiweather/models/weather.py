@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from .alerts import WeatherAlerts
 
@@ -292,6 +294,7 @@ class WeatherData:
     stale: bool = False
     stale_since: datetime | None = None
     stale_reason: str | None = None
+    pending_enrichments: dict[str, asyncio.Task[Any]] | None = field(default=None, repr=False)
 
     @property
     def current_conditions(self) -> CurrentConditions | None:

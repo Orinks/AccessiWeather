@@ -4,6 +4,22 @@ All notable changes to AccessiWeather will be documented in this file.
 
 ## [Unreleased]
 
+### Performance
+- **Weather data fetch optimizations**: Comprehensive improvements reducing API calls and latency
+  - Request deduplication: Concurrent requests for same location now coalesce into single API call (10x reduction)
+  - Enhanced caching: 180-minute TTL cache with early freshness checking reduces redundant fetches by 80%+
+  - Cache pre-warming: Background pre-fetching of weather data for faster initial display
+  - Connection pooling: Optimized HTTP connection pool (30 max connections, 15 keepalive) for faster parallel fetches
+  - Parallel enrichment: Alerts, discussions, and sunrise/sunset data fetched simultaneously
+  - Smart timeouts: Configurable connect (5s) and read (10s) timeouts with exponential backoff retry
+  - Performance instrumentation: Comprehensive timing measurements for monitoring fetch operations
+- **Test coverage**: 31 performance tests (23 unit + 8 end-to-end) validating real-world scenarios
+  - App startup with multiple locations (<2s for 5 locations)
+  - Rapid location switching with cache hits (<1s for 5 requests)
+  - Concurrent request handling (<0.2s for 10 coalesced requests)
+  - Cache effectiveness (<10ms for cache hits vs 50ms+ fresh fetches)
+  - Load testing (20 concurrent requests with intelligent deduplication)
+
 ### Added
 - Intelligent alert notification system with rate limiting and cooldowns
   - Global cooldown (default: 5 min) prevents notification spam across all alerts

@@ -113,7 +113,7 @@ jobs:
         cat nightly-link-urls.md
 
     - name: Upload documentation
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: nightly-link-test-${{ github.event.inputs.test_branch }}
         path: nightly-link-urls.md
