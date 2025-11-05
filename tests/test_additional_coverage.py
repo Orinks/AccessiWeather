@@ -33,19 +33,15 @@ class TestUtilsInit:
 
 
 class TestDialogSoundpackCommunity:
-    """Test soundpack community dialog constants."""
+    """Test soundpack community dialog integration."""
 
-    def test_community_dialog_constants(self):
-        """Test that community dialog constants are importable."""
+    def test_community_integration_import(self):
+        """Test that CommunityIntegration class is importable."""
         from accessiweather.dialogs.soundpack_manager.community import (
-            COMMUNITY_REPO_URL,
-            COMMUNITY_SOUNDPACKS_PATH,
+            CommunityIntegration,
         )
 
-        assert isinstance(COMMUNITY_REPO_URL, str)
-        assert isinstance(COMMUNITY_SOUNDPACKS_PATH, str)
-        assert len(COMMUNITY_REPO_URL) > 0
-        assert len(COMMUNITY_SOUNDPACKS_PATH) > 0
+        assert CommunityIntegration is not None
 
 
 class TestDialogSoundpackConstants:
