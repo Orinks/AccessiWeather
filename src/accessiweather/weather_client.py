@@ -249,6 +249,13 @@ class WeatherClient:
         # Reusable HTTP client for performance
         self._http_client: httpx.AsyncClient | None = None
 
+        # Track in-flight requests to deduplicate concurrent calls
+        self._in_flight_requests: dict[str, asyncio.Task[WeatherData]] = {}
+
+    def _location_key(self, location: Location) -> str:
+        """Generate a unique key for a location to track in-flight requests."""
+        return f"{location.name}:{location.latitude:.4f},{location.longitude:.4f}"
+
     def _get_http_client(self) -> httpx.AsyncClient:
         """Get or create the reusable HTTP client with optimized timeout configuration."""
         if self._http_client is None or getattr(self._http_client, "is_closed", False):
@@ -456,8 +463,59 @@ class WeatherClient:
                             f"Cache hit for {location.name} but data is stale, will fetch fresh data"
                         )
 
-            # Determine which API to use based on data source and location
-            logger.debug("Determining API choice")
+            # Check for in-flight requests to deduplicate concurrent calls
+            if not force_refresh:
+                location_key = self._location_key(location)
+                if location_key in self._in_flight_requests:
+                    logger.info(
+                        f"⚡ Deduplicating request for {location.name} (joining in-flight request)"
+                    )
+                    try:
+                        # Wait for the existing request to complete
+                        return await self._in_flight_requests[location_key]
+                    except Exception:
+                        # If in-flight request failed, remove it and continue with new request
+                        self._in_flight_requests.pop(location_key, None)
+                        logger.debug(
+                            f"In-flight request for {location.name} failed, creating new request"
+                        )
+
+            # Create actual fetch as a task for deduplication tracking
+            return await self._fetch_weather_data_with_dedup(location, force_refresh)
+
+    async def _fetch_weather_data_with_dedup(
+        self, location: Location, force_refresh: bool
+    ) -> WeatherData:
+        """
+        Fetch weather data with deduplication tracking.
+
+        This method is wrapped by get_weather_data to enable request deduplication.
+        """
+        location_key = self._location_key(location)
+
+        # Create task for this request
+        if not force_refresh and location_key not in self._in_flight_requests:
+            # Create a task that will be tracked
+            task = asyncio.create_task(self._do_fetch_weather_data(location))
+            self._in_flight_requests[location_key] = task
+
+            try:
+                return await task
+            finally:
+                # Clean up completed request from tracking
+                self._in_flight_requests.pop(location_key, None)
+        else:
+            # Force refresh bypasses deduplication
+            return await self._do_fetch_weather_data(location)
+
+    async def _do_fetch_weather_data(self, location: Location) -> WeatherData:
+        """
+        Perform the actual weather data fetch.
+
+        This is the core fetch logic separated for deduplication purposes.
+        """
+        # Determine which API to use based on data source and location
+        logger.debug("Determining API choice")
         api_choice = self._determine_api_choice(location)
         api_name = {
             "nws": "NWS",
@@ -682,13 +740,17 @@ class WeatherClient:
             # Await enrichment completion
             await self._await_enrichments(enrichment_tasks, weather_data)
 
-            if not weather_data.has_any_data() and self.offline_cache:
-                cached = self.offline_cache.load(location)
-                if cached:
-                    logger.info(f"Using cached weather data for {location.name}")
-                    return cached
+        if not weather_data.has_any_data() and self.offline_cache:
+            cached = self.offline_cache.load(location)
+            if cached:
+                logger.info(f"Using cached weather data for {location.name}")
+                return cached
 
-            return weather_data
+        # Save to cache if enabled
+        if self.offline_cache:
+            self.offline_cache.store(location, weather_data)
+
+        return weather_data
 
     async def _process_visual_crossing_alerts(
         self, alerts: WeatherAlerts, location: Location
