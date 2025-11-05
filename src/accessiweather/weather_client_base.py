@@ -250,10 +250,13 @@ class WeatherClient:
                 if not self.visual_crossing_client:
                     raise VisualCrossingApiError("Visual Crossing API key not configured")
 
-                current = await self.visual_crossing_client.get_current_conditions(location)
-                forecast = await self.visual_crossing_client.get_forecast(location)
-                hourly_forecast = await self.visual_crossing_client.get_hourly_forecast(location)
-                alerts = await self.visual_crossing_client.get_alerts(location)
+                # Parallelize API calls for better performance
+                current, forecast, hourly_forecast, alerts = await asyncio.gather(
+                    self.visual_crossing_client.get_current_conditions(location),
+                    self.visual_crossing_client.get_forecast(location),
+                    self.visual_crossing_client.get_hourly_forecast(location),
+                    self.visual_crossing_client.get_alerts(location),
+                )
 
                 weather_data.current = current
                 weather_data.forecast = forecast
