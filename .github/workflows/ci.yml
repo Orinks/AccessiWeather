@@ -61,11 +61,6 @@ jobs:
       run: |
         python installer/make.py
 
-    - name: Ruff auto-fix
-      run: |
-        ruff format .
-        ruff check --fix .
-
     - name: Ruff format check
       run: ruff format --check .
 

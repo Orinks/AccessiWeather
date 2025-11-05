@@ -57,6 +57,13 @@ class TogaBackendVisitor(ast.NodeVisitor):
     """AST visitor to find toga imports and backend checks."""
 
     def __init__(self, file_path: Path) -> None:
+        """
+        Initialize the visitor with a file path.
+
+        Args:
+            file_path: Path to the file being analyzed.
+
+        """
         self.file_path = file_path
         self.toga_imports: list[TogaImport] = []
         self.backend_checks: list[BackendCheck] = []
@@ -94,25 +101,23 @@ class TogaBackendVisitor(ast.NodeVisitor):
         # Check for os.environ["TOGA_BACKEND"] = "toga_dummy"
         if isinstance(node.value, ast.Constant):
             for target in node.targets:
-                if isinstance(target, ast.Subscript):
-                    # Check if it's environ['TOGA_BACKEND']
-                    if (
-                        isinstance(target.value, ast.Attribute)
-                        and isinstance(target.value.value, ast.Name)
-                        and target.value.value.id == "os"
-                        and target.value.attr == "environ"
-                    ):
-                        if (
-                            isinstance(target.slice, ast.Constant)
-                            and target.slice.value == "TOGA_BACKEND"
-                        ):
-                            self.backend_checks.append(
-                                BackendCheck(
-                                    file_path=self.file_path,
-                                    line_number=node.lineno,
-                                    check_type="env_var",
-                                )
-                            )
+                # Check if it's environ['TOGA_BACKEND']
+                if (
+                    isinstance(target, ast.Subscript)
+                    and isinstance(target.value, ast.Attribute)
+                    and isinstance(target.value.value, ast.Name)
+                    and target.value.value.id == "os"
+                    and target.value.attr == "environ"
+                    and isinstance(target.slice, ast.Constant)
+                    and target.slice.value == "TOGA_BACKEND"
+                ):
+                    self.backend_checks.append(
+                        BackendCheck(
+                            file_path=self.file_path,
+                            line_number=node.lineno,
+                            check_type="env_var",
+                        )
+                    )
         self.generic_visit(node)
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
@@ -122,24 +127,21 @@ class TogaBackendVisitor(ast.NodeVisitor):
             if isinstance(decorator, ast.Name) and "fixture" in decorator.id.lower():
                 # Check function body for monkeypatch.setenv("TOGA_BACKEND", ...)
                 for stmt in ast.walk(node):
-                    if isinstance(stmt, ast.Call):
-                        if (
-                            isinstance(stmt.func, ast.Attribute)
-                            and stmt.func.attr == "setenv"
-                        ):
-                            # Check if first arg is "TOGA_BACKEND"
-                            if (
-                                stmt.args
-                                and isinstance(stmt.args[0], ast.Constant)
-                                and stmt.args[0].value == "TOGA_BACKEND"
-                            ):
-                                self.backend_checks.append(
-                                    BackendCheck(
-                                        file_path=self.file_path,
-                                        line_number=node.lineno,
-                                        check_type="fixture",
-                                    )
-                                )
+                    if (
+                        isinstance(stmt, ast.Call)
+                        and isinstance(stmt.func, ast.Attribute)
+                        and stmt.func.attr == "setenv"
+                        and stmt.args
+                        and isinstance(stmt.args[0], ast.Constant)
+                        and stmt.args[0].value == "TOGA_BACKEND"
+                    ):
+                        self.backend_checks.append(
+                            BackendCheck(
+                                file_path=self.file_path,
+                                line_number=node.lineno,
+                                check_type="fixture",
+                            )
+                        )
         self.generic_visit(node)
 
 
@@ -237,9 +239,7 @@ def generate_report(analyses: list[FileAnalysis]) -> str:
 
     if violations:
         report.append("\n## ❌ Violations (Files Without Backend Enforcement)\n")
-        report.append(
-            "\nThese files import toga but do not have backend enforcement:\n\n"
-        )
+        report.append("\nThese files import toga but do not have backend enforcement:\n\n")
 
         for analysis in violations:
             report.append(f"### `{analysis.file_path}`\n")
@@ -250,7 +250,7 @@ def generate_report(analyses: list[FileAnalysis]) -> str:
                 report.append(f"  - Line {imp.line_number}: `{imp.import_statement}`\n")
             report.append("\n**Fix:** Add this at the top of the file:\n")
             report.append("```python\n")
-            report.append('import os\n')
+            report.append("import os\n")
             report.append('os.environ["TOGA_BACKEND"] = "toga_dummy"\n')
             report.append("```\n\n")
     else:
@@ -261,9 +261,7 @@ def generate_report(analyses: list[FileAnalysis]) -> str:
 
     if compliant:
         report.append("\n## ✅ Compliant Files\n")
-        report.append(
-            "\nThese files properly enforce toga_dummy backend:\n\n"
-        )
+        report.append("\nThese files properly enforce toga_dummy backend:\n\n")
         for analysis in compliant:
             check_info = ""
             if analysis.backend_checks:
@@ -273,20 +271,14 @@ def generate_report(analyses: list[FileAnalysis]) -> str:
     report.append("\n---\n")
     report.append("\n## Summary\n")
     if violations:
-        report.append(
-            f"\n⚠️  **Action Required:** {len(violations)} file(s) need to be fixed.\n"
-        )
-        report.append(
-            "\nRun the following command to see this report:\n"
-        )
+        report.append(f"\n⚠️  **Action Required:** {len(violations)} file(s) need to be fixed.\n")
+        report.append("\nRun the following command to see this report:\n")
         report.append("```bash\n")
         report.append("python scripts/find_toga_backend_issues.py\n")
         report.append("```\n")
     else:
         report.append("\n✅ **All tests are properly configured!**\n")
-        report.append(
-            "\nAll test files that import toga are using the toga_dummy backend.\n"
-        )
+        report.append("\nAll test files that import toga are using the toga_dummy backend.\n")
 
     return "".join(report)
 
