@@ -20,7 +20,7 @@ env:
 
 jobs:
   test:
-    name: Lint and Test (Ubuntu)
+    name: Lint and Test (Windows)
     runs-on: ubuntu-latest
 
     steps:
