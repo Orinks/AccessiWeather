@@ -10,6 +10,7 @@ import toga
 from .. import app_helpers
 from ..dialogs.weather_history_dialog import WeatherHistoryDialog
 from ..models import WeatherData
+from ..performance.timer import timed_async
 
 if TYPE_CHECKING:  # pragma: no cover - circular import guard
     from ..app import AccessiWeatherApp
@@ -24,6 +25,7 @@ async def on_refresh_pressed(app: AccessiWeatherApp, widget: toga.Button) -> Non
     await refresh_weather_data(app)
 
 
+@timed_async("UI.refresh_weather_data")
 async def refresh_weather_data(app: AccessiWeatherApp) -> None:
     """Refresh weather data for the current location."""
     logger.debug("refresh_weather_data called")
@@ -71,6 +73,7 @@ async def refresh_weather_data(app: AccessiWeatherApp) -> None:
             app.refresh_button.enabled = True
 
 
+@timed_async("UI.update_displays")
 async def update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherData) -> Any:
     """Update UI widgets with new weather data."""
     try:
