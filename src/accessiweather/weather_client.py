@@ -262,10 +262,17 @@ class WeatherClient:
             # Use structured timeout: 3s for connection, 5s total
             # This prevents slow/unresponsive APIs from blocking the entire fetch
             timeout = httpx.Timeout(5.0, connect=3.0)
+
+            # Optimized connection pool for concurrent API requests
+            # max_connections=30: Total concurrent connections across all hosts
+            # max_keepalive_connections=15: Reusable connections for reduced latency
+            # Higher limits improve performance when fetching from multiple APIs simultaneously
+            limits = httpx.Limits(max_keepalive_connections=15, max_connections=30)
+
             client = httpx.AsyncClient(
                 timeout=timeout,
                 follow_redirects=True,
-                limits=httpx.Limits(max_keepalive_connections=10, max_connections=20),
+                limits=limits,
             )
             if Mock is not None and isinstance(client, Mock):
                 enter = getattr(client, "__aenter__", None)

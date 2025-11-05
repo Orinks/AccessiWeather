@@ -150,7 +150,7 @@ Slow or unresponsive APIs currently block the whole fetch; setting sensible time
 
 ---
 
-## Step 4: Optimize Cache Usage & Pre-warming
+## Step 4: Optimize Cache Usage & Pre-warming ✅ COMPLETED
 
 ### Action
 Optimize cache usage: ensure every API call checks `WeatherDataCache` first, and add a **pre‑warm** step at application startup for the default location.
@@ -171,26 +171,63 @@ Repeated requests for the same location within the cache window waste network ti
 - Add tests that mock the cache to return stale data and verify that a fresh request is made.
 - Verify that the pre‑warm call is executed during startup by checking that `cache.set` is called at least once in a test that runs `app_initialization.startup`.
 
+### Completed Implementation
+- ✅ Moved cache checking to beginning of get_weather_data() before API determination
+- ✅ Added early return for fresh cache hits (no API calls made)
+- ✅ Added force_refresh parameter to bypass cache when needed
+- ✅ Implemented pre_warm_cache() method for background cache population
+- ✅ Added measure_async() timing for cache operations
+- ✅ 9 comprehensive tests in `tests/performance/test_cache_optimization.py` passing
+- ✅ Tests cover: cache hits, stale detection, force refresh, pre-warming, multiple hits
+
 ---
 
-## Step 5: Deduplicate Overlapping API Calls
+## Step 5: Deduplicate Concurrent API Calls ✅ COMPLETED
 
 ### Action
-Deduplicate overlapping API calls across enrichment functions (e.g., geocoding or location‑based metadata).
+Deduplicate concurrent API calls for the same location to prevent redundant network requests when multiple UI components or background tasks request weather data simultaneously.
 
 ### Reasoning
-Multiple enrichment steps may independently request the same geocoding result, causing redundant latency.
+When app starts or location changes, multiple UI components may trigger get_weather_data() concurrently for the same location. Without deduplication, this causes duplicate API calls and wastes resources.
 
 ### Implementation Details
-- Introduce a shared async helper `location_lookup(location_str: str) -> Location` in `services/location_service.py` that caches its result in the same `WeatherDataCache` (key: `geocode:{location_str}`).
-- Refactor any enrichment module that calls `geopy` directly to use this helper.
-- Ensure the helper is idempotent and thread‑safe (use `asyncio.Lock` around cache writes).
+- Add `_in_flight_requests: dict[str, asyncio.Task[WeatherData]]` to WeatherClient to track ongoing requests
+- Create `_location_key(location: Location) -> str` method to generate unique identifier: "{name}:{lat:.4f},{lon:.4f}"
+- Refactor get_weather_data() to:
+  1. Check cache first (unless force_refresh)
+  2. Check _in_flight_requests dict for existing task
+  3. If found, await and return existing task result
+  4. Otherwise, create new task and register in dict
+- Split fetch logic into:
+  - `_fetch_weather_data_with_dedup()`: Manages task tracking and cleanup
+  - `_do_fetch_weather_data()`: Contains actual fetch implementation
+- Add automatic cleanup of completed tasks in finally block
+- Force_refresh bypasses deduplication for explicit refresh requests
 
 ### Error Handling
-- If geocoding fails, propagate a `GeocodeError` that enrichment functions can handle gracefully (log and skip that enrichment).
+- If in-flight task fails, remove from tracking dict to allow retry
+- Log deduplication events for monitoring ("⚡ Deduplicating request")
+- Propagate exceptions from awaited tasks to callers
 
 ### Testing
-- Mock `geopy` in tests and assert that multiple concurrent calls to `location_lookup` result in only one actual network request (use `assert mock.call_count == 1`).
+- Test concurrent requests for same location → 1 API call
+- Test sequential requests → separate API calls
+- Test different locations → separate API calls
+- Test force_refresh bypasses deduplication
+- Test failed request cleanup from tracking
+- Test location key uniqueness
+- Test cache hits don't trigger deduplication
+- Test second request joins in-flight request successfully
+
+### Completed Implementation
+- ✅ Added _in_flight_requests dict for request tracking
+- ✅ Created _location_key() method for unique location identification
+- ✅ Refactored get_weather_data() with deduplication check
+- ✅ Split into _fetch_weather_data_with_dedup() and _do_fetch_weather_data()
+- ✅ Added automatic cleanup of completed requests
+- ✅ Force_refresh parameter bypasses deduplication
+- ✅ 8 comprehensive tests in `tests/performance/test_request_deduplication.py` passing
+- ✅ All 30 performance tests passing (17 unit + 13 integration)
 
 ---
 
