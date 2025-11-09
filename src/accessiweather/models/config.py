@@ -35,6 +35,7 @@ class AppSettings:
     alert_global_cooldown_minutes: int = 5
     alert_per_alert_cooldown_minutes: int = 60
     alert_escalation_cooldown_minutes: int = 15
+    alert_freshness_window_minutes: int = 15
     alert_max_notifications_per_hour: int = 10
     alert_ignored_categories: list[str] = field(default_factory=list)
     international_alerts_enabled: bool = True
@@ -96,6 +97,7 @@ class AppSettings:
             "alert_global_cooldown_minutes": self.alert_global_cooldown_minutes,
             "alert_per_alert_cooldown_minutes": self.alert_per_alert_cooldown_minutes,
             "alert_escalation_cooldown_minutes": self.alert_escalation_cooldown_minutes,
+            "alert_freshness_window_minutes": self.alert_freshness_window_minutes,
             "alert_max_notifications_per_hour": self.alert_max_notifications_per_hour,
             "alert_ignored_categories": self.alert_ignored_categories,
             "international_alerts_enabled": self.international_alerts_enabled,
@@ -142,6 +144,7 @@ class AppSettings:
             alert_global_cooldown_minutes=data.get("alert_global_cooldown_minutes", 5),
             alert_per_alert_cooldown_minutes=data.get("alert_per_alert_cooldown_minutes", 60),
             alert_escalation_cooldown_minutes=data.get("alert_escalation_cooldown_minutes", 15),
+            alert_freshness_window_minutes=data.get("alert_freshness_window_minutes", 15),
             alert_max_notifications_per_hour=data.get("alert_max_notifications_per_hour", 10),
             alert_ignored_categories=data.get("alert_ignored_categories", []),
             international_alerts_enabled=cls._as_bool(
@@ -172,6 +175,7 @@ class AppSettings:
         settings.global_cooldown = self.alert_global_cooldown_minutes
         settings.per_alert_cooldown = self.alert_per_alert_cooldown_minutes
         settings.escalation_cooldown = self.alert_escalation_cooldown_minutes
+        settings.freshness_window_minutes = self.alert_freshness_window_minutes
         settings.max_notifications_per_hour = self.alert_max_notifications_per_hour
         settings.ignored_categories = set(self.alert_ignored_categories)
 

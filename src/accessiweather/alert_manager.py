@@ -16,6 +16,7 @@ from pathlib import Path
 from .constants import (
     ALERT_HISTORY_MAX_LENGTH,
     DEFAULT_ESCALATION_COOLDOWN_MINUTES,
+    DEFAULT_FRESHNESS_WINDOW_MINUTES,
     DEFAULT_GLOBAL_COOLDOWN_MINUTES,
     DEFAULT_MAX_NOTIFICATIONS_PER_HOUR,
     DEFAULT_MIN_SEVERITY_PRIORITY,
@@ -46,6 +47,7 @@ class AlertState:
         last_notified: datetime | None = None,
         notification_count: int = 0,
         severity_priority: int = 1,
+        alert_sent_time: datetime | None = None,
     ):
         """
         Initialize alert state.
@@ -58,12 +60,14 @@ class AlertState:
             last_notified: Timestamp of last notification sent
             notification_count: Number of times notifications were sent
             severity_priority: Numeric severity priority (1-5)
+            alert_sent_time: Timestamp when alert was issued by the provider (sent/effective)
 
         """
         self.alert_id = alert_id
         self.first_seen = first_seen
         self.last_notified = last_notified
         self.notification_count = notification_count
+        self.alert_sent_time = alert_sent_time
 
         # Bounded history: (content_hash, severity_priority, timestamp)
         self.hash_history: deque[tuple[str, int, float]] = deque(maxlen=ALERT_HISTORY_MAX_LENGTH)
@@ -151,6 +155,7 @@ class AlertState:
             "first_seen": self.first_seen.isoformat(),
             "last_notified": self.last_notified.isoformat() if self.last_notified else None,
             "notification_count": self.notification_count,
+            "alert_sent_time": self.alert_sent_time.isoformat() if self.alert_sent_time else None,
             # Store history as list of [hash, priority, timestamp]
             "hash_history": [[h, p, t] for h, p, t in self.hash_history],
         }
@@ -168,6 +173,9 @@ class AlertState:
             datetime.fromisoformat(data["last_notified"]) if data.get("last_notified") else None
         )
         notification_count = data.get("notification_count", 0)
+        alert_sent_time = (
+            datetime.fromisoformat(data["alert_sent_time"]) if data.get("alert_sent_time") else None
+        )
 
         # Handle migration from old format
         if "hash_history" in data:
@@ -179,6 +187,7 @@ class AlertState:
                 last_notified=last_notified,
                 notification_count=notification_count,
                 severity_priority=1,
+                alert_sent_time=alert_sent_time,
             )
             # Clear the initial entry and load history
             state.hash_history.clear()
@@ -195,6 +204,7 @@ class AlertState:
                 last_notified=last_notified,
                 notification_count=notification_count,
                 severity_priority=1,  # Unknown priority for migrated data
+                alert_sent_time=alert_sent_time,
             )
 
         return state
@@ -212,6 +222,7 @@ class AlertSettings:
         self.global_cooldown = DEFAULT_GLOBAL_COOLDOWN_MINUTES
         self.per_alert_cooldown = DEFAULT_PER_ALERT_COOLDOWN_MINUTES
         self.escalation_cooldown = DEFAULT_ESCALATION_COOLDOWN_MINUTES
+        self.freshness_window_minutes = DEFAULT_FRESHNESS_WINDOW_MINUTES
 
         # Category filters (event types to ignore)
         self.ignored_categories: set[str] = set()
@@ -400,6 +411,47 @@ class AlertManager:
         cooldown_period = timedelta(minutes=self.settings.global_cooldown)
         return datetime.now(UTC) - self.last_global_notification > cooldown_period
 
+    def _is_alert_fresh(self, alert_sent_time: datetime | None) -> bool:
+        """
+        Check if alert was issued within the freshness window.
+
+        Args:
+        ----
+            alert_sent_time: When the alert was issued by the provider (sent/effective timestamp)
+
+        Returns:
+        -------
+            True if alert is within freshness window, False otherwise
+
+        """
+        if not alert_sent_time:
+            return False
+
+        # Ensure timezone-aware comparison
+        # If naive datetime, assume it's already in UTC (as it should be from our parsers)
+        if alert_sent_time.tzinfo is None:
+            alert_sent_time = alert_sent_time.replace(tzinfo=UTC)
+
+        # Get current time in UTC
+        now = datetime.now(UTC)
+
+        # Calculate age
+        freshness_period = timedelta(minutes=self.settings.freshness_window_minutes)
+        try:
+            age = now - alert_sent_time
+        except TypeError:
+            # Handle any remaining timezone issues
+            logger.warning(f"Timezone mismatch in freshness check: {now} vs {alert_sent_time}")
+            return False
+
+        is_fresh = age <= freshness_period and age >= timedelta(0)
+        if is_fresh:
+            logger.info(
+                f"Alert is FRESH (age: {age.total_seconds() / 60:.1f} min, "
+                f"window: {self.settings.freshness_window_minutes} min)"
+            )
+        return is_fresh
+
     def _can_send_alert_notification(
         self, alert_state: AlertState, is_escalation: bool = False
     ) -> bool:
@@ -464,6 +516,9 @@ class AlertManager:
             content_hash = alert.get_content_hash()
             severity_priority = alert.get_severity_priority()
 
+            # Extract alert sent/effective timestamp for freshness check
+            alert_sent_time = alert.sent or alert.effective
+
             # Check if we should notify for this alert
             should_notify, reason = self._should_notify_alert(alert)
             if not should_notify:
@@ -480,6 +535,7 @@ class AlertManager:
                     content_hash=content_hash,
                     first_seen=current_time,
                     severity_priority=severity_priority,
+                    alert_sent_time=alert_sent_time,
                 )
                 self.alert_states[alert_id] = new_state
                 notifications_to_send.append((alert, "new_alert"))
@@ -492,6 +548,9 @@ class AlertManager:
                 if self._can_send_alert_notification(existing_state, is_escalation):
                     # Add new state to history
                     existing_state.add_hash(content_hash, severity_priority)
+                    # Update sent time if changed
+                    if alert_sent_time and alert_sent_time != existing_state.alert_sent_time:
+                        existing_state.alert_sent_time = alert_sent_time
                     notification_reason = "escalation" if is_escalation else "content_changed"
                     notifications_to_send.append((alert, notification_reason))
                     logger.info(f"Alert content changed: {alert_id} ({notification_reason})")
@@ -501,8 +560,16 @@ class AlertManager:
                     logger.debug(f"Alert changed but in cooldown: {alert_id}")
 
             else:
-                # Same alert, no changes - check if we should re-notify
-                if self._can_send_alert_notification(existing_state, False):
+                # Same alert, no changes - check freshness bypass
+                # Only apply freshness bypass if content is identical AND alert never notified
+                is_fresh = self._is_alert_fresh(alert_sent_time)
+
+                if is_fresh and existing_state.last_notified is None:
+                    # Fresh alert that was never notified - bypass per-alert cooldown
+                    notifications_to_send.append((alert, "fresh_alert"))
+                    logger.info(f"Fresh alert detected (never notified): {alert_id}")
+                elif self._can_send_alert_notification(existing_state, False):
+                    # Standard reminder after cooldown period
                     notifications_to_send.append((alert, "reminder"))
                     logger.debug(f"Alert reminder: {alert_id}")
 

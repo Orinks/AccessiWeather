@@ -22,6 +22,8 @@ class WeatherAlert:
     instruction: str | None = None
     onset: datetime | None = None
     expires: datetime | None = None
+    sent: datetime | None = None
+    effective: datetime | None = None
     areas: list[str] = field(default_factory=list)
     id: str | None = None
     source: str | None = None

@@ -728,6 +728,34 @@ def create_notifications_tab(dialog):
     )
     notifications_box.add(dialog.alert_per_alert_cooldown_input)
 
+    # Alert freshness window
+    notifications_box.add(
+        toga.Label(
+            "Alert freshness window (minutes):",
+            style=Pack(margin_bottom=5),
+        )
+    )
+    notifications_box.add(
+        toga.Label(
+            "Bypass per-alert cooldown for alerts issued within this window",
+            style=Pack(margin_bottom=5, font_size=9),
+        )
+    )
+    dialog.alert_freshness_window_input = toga.NumberInput(
+        value=getattr(dialog.current_settings, "alert_freshness_window_minutes", 15),
+        min=0,
+        max=120,
+        style=Pack(margin_bottom=12),
+        id="alert_freshness_window_input",
+    )
+    dialog.alert_freshness_window_input.aria_label = "Alert freshness window"
+    dialog.alert_freshness_window_input.aria_description = (
+        "Set the time window in minutes for treating alerts as fresh. Alerts issued within this "
+        "window will bypass per-alert cooldown if never notified before. Range: 0 to 120 minutes. "
+        "Recommended: 15-30 minutes for time-sensitive alerts."
+    )
+    notifications_box.add(dialog.alert_freshness_window_input)
+
     # Max notifications per hour
     notifications_box.add(
         toga.Label(

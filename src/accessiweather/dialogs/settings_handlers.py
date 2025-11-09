@@ -166,6 +166,11 @@ def _apply_alert_notification_settings(dialog, settings):
             settings, "alert_per_alert_cooldown_minutes", 60
         )
 
+    if getattr(dialog, "alert_freshness_window_input", None) is not None:
+        dialog.alert_freshness_window_input.value = getattr(
+            settings, "alert_freshness_window_minutes", 15
+        )
+
     if getattr(dialog, "alert_max_notifications_input", None) is not None:
         dialog.alert_max_notifications_input.value = getattr(
             settings, "alert_max_notifications_per_hour", 10
@@ -414,6 +419,10 @@ def _collect_alert_settings(dialog, current_settings):
         getattr(getattr(dialog, "alert_escalation_cooldown_input", None), "value", None),
         getattr(current_settings, "alert_escalation_cooldown_minutes", 15),
     )
+    freshness_window = _as_int(
+        getattr(getattr(dialog, "alert_freshness_window_input", None), "value", None),
+        getattr(current_settings, "alert_freshness_window_minutes", 15),
+    )
     max_per_hour = _as_int(
         getattr(getattr(dialog, "alert_max_notifications_input", None), "value", None),
         getattr(current_settings, "alert_max_notifications_per_hour", 10),
@@ -445,6 +454,7 @@ def _collect_alert_settings(dialog, current_settings):
         "alert_global_cooldown_minutes": global_cooldown,
         "alert_per_alert_cooldown_minutes": per_alert_cooldown,
         "alert_escalation_cooldown_minutes": escalation_cooldown,
+        "alert_freshness_window_minutes": freshness_window,
         "alert_max_notifications_per_hour": max_per_hour,
         "alert_ignored_categories": ignored_categories,
         "air_quality_notify_threshold": aq_threshold,
@@ -499,6 +509,7 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         alert_global_cooldown_minutes=alerts["alert_global_cooldown_minutes"],
         alert_per_alert_cooldown_minutes=alerts["alert_per_alert_cooldown_minutes"],
         alert_escalation_cooldown_minutes=alerts["alert_escalation_cooldown_minutes"],
+        alert_freshness_window_minutes=alerts["alert_freshness_window_minutes"],
         alert_max_notifications_per_hour=alerts["alert_max_notifications_per_hour"],
         alert_ignored_categories=alerts["alert_ignored_categories"],
         air_quality_notify_threshold=alerts["air_quality_notify_threshold"],
