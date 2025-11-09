@@ -52,6 +52,9 @@ class AppSettings:
     offline_cache_enabled: bool = True
     offline_cache_max_age_minutes: int = 180
     weather_history_enabled: bool = True
+    time_display_mode: str = "local"
+    time_format_12hour: bool = True
+    show_timezone_suffix: bool = False
 
     @staticmethod
     def _as_bool(value, default: bool) -> bool:
@@ -114,6 +117,9 @@ class AppSettings:
             "offline_cache_enabled": self.offline_cache_enabled,
             "offline_cache_max_age_minutes": self.offline_cache_max_age_minutes,
             "weather_history_enabled": self.weather_history_enabled,
+            "time_display_mode": self.time_display_mode,
+            "time_format_12hour": self.time_format_12hour,
+            "show_timezone_suffix": self.show_timezone_suffix,
         }
 
     @classmethod
@@ -163,6 +169,9 @@ class AppSettings:
             offline_cache_enabled=cls._as_bool(data.get("offline_cache_enabled"), True),
             offline_cache_max_age_minutes=data.get("offline_cache_max_age_minutes", 180),
             weather_history_enabled=cls._as_bool(data.get("weather_history_enabled"), True),
+            time_display_mode=data.get("time_display_mode", "local"),
+            time_format_12hour=cls._as_bool(data.get("time_format_12hour"), True),
+            show_timezone_suffix=cls._as_bool(data.get("show_timezone_suffix"), False),
         )
 
     def to_alert_settings(self):

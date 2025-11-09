@@ -50,6 +50,20 @@ def _apply_general_settings(dialog, settings):
         except Exception:  # pragma: no cover - defensive default
             dialog.air_quality_threshold_input.value = 3
 
+    # Time display settings
+    if getattr(dialog, "time_display_mode_selection", None):
+        display = dialog.time_display_value_to_display.get(
+            getattr(settings, "time_display_mode", "local"),
+            "Local time only",
+        )
+        dialog.time_display_mode_selection.value = display
+
+    if getattr(dialog, "time_format_12hour_switch", None):
+        dialog.time_format_12hour_switch.value = getattr(settings, "time_format_12hour", True)
+
+    if getattr(dialog, "show_timezone_suffix_switch", None):
+        dialog.show_timezone_suffix_switch.value = getattr(settings, "show_timezone_suffix", False)
+
 
 def _apply_data_source_settings(dialog, settings):
     """Apply data source and API settings to UI widgets."""
@@ -227,6 +241,23 @@ def _collect_display_settings(dialog, current_settings):
     except (ValueError, TypeError):
         update_interval = 10
 
+    # Time display settings
+    try:
+        selected_time_display = str(dialog.time_display_mode_selection.value)
+        time_display_mode = dialog.time_display_display_to_value.get(selected_time_display, "local")
+    except Exception as exc:  # pragma: no cover
+        logger.warning("%s: Failed to get time display mode selection: %s", LOG_PREFIX, exc)
+        time_display_mode = "local"
+
+    time_format_12hour = _switch_value(
+        "time_format_12hour_switch",
+        getattr(current_settings, "time_format_12hour", True),
+    )
+    show_timezone_suffix = _switch_value(
+        "show_timezone_suffix_switch",
+        getattr(current_settings, "show_timezone_suffix", False),
+    )
+
     show_dewpoint = _switch_value(
         "show_dewpoint_switch", getattr(current_settings, "show_dewpoint", True)
     )
@@ -256,6 +287,9 @@ def _collect_display_settings(dialog, current_settings):
         "show_visibility": show_visibility,
         "show_uv_index": show_uv_index,
         "show_pressure_trend": show_pressure_trend,
+        "time_display_mode": time_display_mode,
+        "time_format_12hour": time_format_12hour,
+        "show_timezone_suffix": show_timezone_suffix,
     }
 
 
@@ -529,4 +563,8 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         offline_cache_max_age_minutes=getattr(
             current_settings, "offline_cache_max_age_minutes", 180
         ),
+        # Time display settings
+        time_display_mode=display["time_display_mode"],
+        time_format_12hour=display["time_format_12hour"],
+        show_timezone_suffix=display["show_timezone_suffix"],
     )
