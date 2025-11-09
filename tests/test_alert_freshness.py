@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import tempfile
 from datetime import UTC, datetime, timedelta
+from unittest.mock import patch
 
 import pytest
 
@@ -46,10 +47,17 @@ class TestAlertFreshnessDetection:
             settings.freshness_window_minutes = 15
             manager = AlertManager(tmpdir, settings)
 
+            # Fix the current time to avoid timing issues
+            fixed_now = datetime.now(UTC)
             # Alert sent exactly 15 minutes ago
-            alert_sent_time = datetime.now(UTC) - timedelta(minutes=15)
+            alert_sent_time = fixed_now - timedelta(minutes=15)
 
-            assert manager._is_alert_fresh(alert_sent_time) is True
+            # Mock datetime.now to return our fixed time
+            with patch("accessiweather.alert_manager.datetime") as mock_datetime:
+                mock_datetime.now.return_value = fixed_now
+                mock_datetime.side_effect = lambda *args, **kw: datetime(*args, **kw)
+
+                assert manager._is_alert_fresh(alert_sent_time) is True
 
     def test_is_alert_fresh_no_timestamp(self):
         """Alert without timestamp should not be considered fresh."""
