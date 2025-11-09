@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import textwrap
-from datetime import datetime
+from datetime import UTC, datetime
 
 from ...models import CurrentConditions, ForecastPeriod, HourlyForecastPeriod
 from ...utils import (
@@ -177,7 +177,11 @@ def format_hour_time(start_time: datetime | None) -> str:
     """Render an hour label for hourly forecast output."""
     if not start_time:
         return "Unknown"
-    return start_time.strftime("%I:%M %p")
+    # Convert to local time if timezone-aware
+    local_time = start_time
+    if start_time.tzinfo is not None:
+        local_time = start_time.astimezone()
+    return local_time.strftime("%I:%M %p")
 
 
 def format_timestamp(value: datetime) -> str:
@@ -245,3 +249,104 @@ def format_hourly_wind(period: HourlyForecastPeriod) -> str | None:
     if not period.wind_direction or not period.wind_speed:
         return None
     return f"{period.wind_direction} at {period.wind_speed}"
+
+
+def format_hour_time_with_preferences(
+    start_time: datetime | None,
+    *,
+    time_display_mode: str = "local",
+    use_12hour: bool = True,
+    show_timezone: bool = False,
+) -> str:
+    """
+    Format time with user preferences for display mode, format, and timezone labels.
+
+    Args:
+    ----
+        start_time: Datetime to format
+        time_display_mode: One of "local", "utc", or "both"
+        use_12hour: If True, use 12-hour format; if False, use 24-hour format
+        show_timezone: If True, append timezone abbreviation
+
+    Returns:
+    -------
+        Formatted time string according to preferences
+
+    """
+    if not start_time:
+        return "Unknown"
+
+    time_format = "%I:%M %p" if use_12hour else "%H:%M"
+
+    if time_display_mode == "utc":
+        # Show UTC time
+        utc_time = start_time
+        if start_time.tzinfo is not None:
+            utc_time = start_time.astimezone(UTC)
+        time_str = utc_time.strftime(time_format)
+        if show_timezone:
+            time_str += " UTC"
+        return time_str
+
+    if time_display_mode == "both":
+        # Show both local and UTC: "03:00 PM EST (20:00 UTC)"
+        local_time = start_time
+        if start_time.tzinfo is not None:
+            local_time = start_time.astimezone()
+        local_str = local_time.strftime(time_format)
+
+        # Get timezone abbreviation for local time
+        if show_timezone:
+            tz_abbr = _get_timezone_abbreviation(local_time)
+            if tz_abbr:
+                local_str += f" {tz_abbr}"
+
+        # Add UTC time in parentheses
+
+        utc_time = start_time.astimezone(UTC) if start_time.tzinfo else start_time
+        utc_str = utc_time.strftime(time_format)
+        return f"{local_str} ({utc_str} UTC)"
+
+    # Default: local time only
+    local_time = start_time
+    if start_time.tzinfo is not None:
+        local_time = start_time.astimezone()
+    time_str = local_time.strftime(time_format)
+    if show_timezone:
+        tz_abbr = _get_timezone_abbreviation(local_time)
+        if tz_abbr:
+            time_str += f" {tz_abbr}"
+    return time_str
+
+
+def _get_timezone_abbreviation(dt: datetime) -> str:
+    """
+    Get timezone abbreviation for a datetime, handling cross-platform differences.
+
+    Returns consistent abbreviations like 'EST', 'PST', 'UTC' instead of platform-specific
+    names like 'Eastern Standard Time' on Windows.
+    """
+    if dt.tzinfo is None:
+        return ""
+
+    # Try to get tzname from the datetime
+    tzname = dt.strftime("%Z")
+    if not tzname:
+        return ""
+
+    # Handle common full timezone names and convert to abbreviations
+    # This ensures consistency across Windows and Unix systems
+    timezone_map = {
+        "Eastern Standard Time": "EST",
+        "Eastern Daylight Time": "EDT",
+        "Central Standard Time": "CST",
+        "Central Daylight Time": "CDT",
+        "Mountain Standard Time": "MST",
+        "Mountain Daylight Time": "MDT",
+        "Pacific Standard Time": "PST",
+        "Pacific Daylight Time": "PDT",
+        "Coordinated Universal Time": "UTC",
+    }
+
+    # Return mapped abbreviation or original if already abbreviated
+    return timezone_map.get(tzname, tzname)

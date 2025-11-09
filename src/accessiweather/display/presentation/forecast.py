@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from ...models import Forecast, HourlyForecast, Location
+from ...models import AppSettings, Forecast, HourlyForecast, Location
 from ...utils import TemperatureUnit
 from ..weather_presenter import (
     ForecastPeriodPresentation,
@@ -13,7 +13,7 @@ from ..weather_presenter import (
 )
 from .formatters import (
     format_forecast_temperature,
-    format_hour_time,
+    format_hour_time_with_preferences,
     format_hourly_wind,
     format_period_temperature,
     format_period_wind,
@@ -28,6 +28,7 @@ def build_forecast(
     hourly_forecast: HourlyForecast | None,
     location: Location,
     unit_pref: TemperatureUnit,
+    settings: AppSettings | None = None,
 ) -> ForecastPresentation:
     """Create a structured forecast including optional hourly highlights."""
     title = f"Forecast for {location.name}"
@@ -37,7 +38,7 @@ def build_forecast(
     fallback_lines = [f"Forecast for {location.name}:\n"]
 
     if hourly_forecast and hourly_forecast.has_data():
-        hourly = build_hourly_summary(hourly_forecast, unit_pref)
+        hourly = build_hourly_summary(hourly_forecast, unit_pref, settings=settings)
     else:
         hourly = []
 
@@ -88,18 +89,39 @@ def build_forecast(
 def build_hourly_summary(
     hourly_forecast: HourlyForecast,
     unit_pref: TemperatureUnit,
+    settings: AppSettings | None = None,
 ) -> list[HourlyPeriodPresentation]:
     """Generate the next six hours of simplified forecast data."""
     precision = get_temperature_precision(unit_pref)
     summary: list[HourlyPeriodPresentation] = []
+
+    # Extract time display preferences from settings
+    if settings:
+        time_display_mode = getattr(settings, "time_display_mode", "local")
+        time_format_12hour = getattr(settings, "time_format_12hour", True)
+        show_timezone_suffix = getattr(settings, "show_timezone_suffix", False)
+    else:
+        time_display_mode = "local"
+        time_format_12hour = True
+        show_timezone_suffix = False
+
     for period in hourly_forecast.get_next_hours(6):
         if not period.has_data():
             continue
         temperature = format_period_temperature(period, unit_pref, precision)
         wind = format_hourly_wind(period)
+
+        # Use enhanced time formatter with user preferences
+        time_str = format_hour_time_with_preferences(
+            period.start_time,
+            time_display_mode=time_display_mode,
+            use_12hour=time_format_12hour,
+            show_timezone=show_timezone_suffix,
+        )
+
         summary.append(
             HourlyPeriodPresentation(
-                time=format_hour_time(period.start_time),
+                time=time_str,
                 temperature=temperature,
                 conditions=period.short_forecast,
                 wind=wind,

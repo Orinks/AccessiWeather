@@ -298,7 +298,9 @@ class WeatherPresenter:
         location: Location,
         unit_pref: TemperatureUnit,
     ) -> ForecastPresentation:
-        return build_forecast(forecast, hourly_forecast, location, unit_pref)
+        return build_forecast(
+            forecast, hourly_forecast, location, unit_pref, settings=self.settings
+        )
 
     def _build_alerts(self, alerts: WeatherAlerts, location: Location) -> AlertsPresentation:
         return build_alerts(alerts, location)
