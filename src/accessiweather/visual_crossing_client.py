@@ -448,6 +448,8 @@ class VisualCrossingClient:
             # Parse time fields
             onset = self._parse_alert_time(alert_data.get("onset") or alert_data.get("start"))
             expires = self._parse_alert_time(alert_data.get("expires") or alert_data.get("end"))
+            sent = self._parse_alert_time(alert_data.get("sent"))
+            effective = self._parse_alert_time(alert_data.get("effective")) or onset
 
             # Extract affected areas
             areas = []
@@ -472,6 +474,9 @@ class VisualCrossingClient:
                 areas=areas,
                 onset=onset,
                 expires=expires,
+                sent=sent,
+                effective=effective,
+                source="VisualCrossing",
             )
 
             logger.debug(f"Created alert: {alert.event} - {alert.severity} - {alert.headline}")

@@ -129,6 +129,9 @@ DEFAULT_PER_ALERT_COOLDOWN_MINUTES = 60
 # Escalation cooldown: reduced cooldown when alert severity increases
 DEFAULT_ESCALATION_COOLDOWN_MINUTES = 15
 
+# Alert freshness window: time window for treating alerts as fresh/new
+DEFAULT_FRESHNESS_WINDOW_MINUTES = 15
+
 # Rate Limiting Configuration
 # Maximum number of alert notifications allowed per hour
 DEFAULT_MAX_NOTIFICATIONS_PER_HOUR = 10

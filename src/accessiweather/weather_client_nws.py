@@ -1069,6 +1069,8 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
 
         onset = None
         expires = None
+        sent = None
+        effective = None
 
         if props.get("onset"):
             try:
@@ -1082,6 +1084,18 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
             except ValueError:
                 logger.warning(f"Failed to parse expires time: {props['expires']}")
 
+        if props.get("sent"):
+            try:
+                sent = datetime.fromisoformat(props["sent"].replace("Z", "+00:00"))
+            except ValueError:
+                logger.warning(f"Failed to parse sent time: {props['sent']}")
+
+        if props.get("effective"):
+            try:
+                effective = datetime.fromisoformat(props["effective"].replace("Z", "+00:00"))
+            except ValueError:
+                logger.warning(f"Failed to parse effective time: {props['effective']}")
+
         alert = WeatherAlert(
             title=props.get("headline", "Weather Alert"),
             description=props.get("description", ""),
@@ -1093,8 +1107,11 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
             instruction=props.get("instruction"),
             onset=onset,
             expires=expires,
+            sent=sent,
+            effective=effective,
             areas=props.get("areaDesc", "").split("; ") if props.get("areaDesc") else [],
             id=alert_id,
+            source="NWS",
         )
         alerts.append(alert)
 
