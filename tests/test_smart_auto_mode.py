@@ -279,9 +279,9 @@ async def test_openmeteo_current_conditions_includes_sunrise_sunset():
 
     current = client._parse_openmeteo_current_conditions(sample_data)
 
-    # Verify sunrise/sunset is parsed
-    assert current.sunrise_time == datetime(2024, 6, 15, 6, 30)
-    assert current.sunset_time == datetime(2024, 6, 15, 20, 45)
+    # Verify sunrise/sunset is parsed (now timezone-aware after fix)
+    assert current.sunrise_time == datetime(2024, 6, 15, 6, 30, tzinfo=UTC)
+    assert current.sunset_time == datetime(2024, 6, 15, 20, 45, tzinfo=UTC)
 
 
 @pytest.mark.asyncio
