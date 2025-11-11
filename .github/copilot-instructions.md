@@ -91,161 +91,40 @@ briefcase package
 - **Fixtures**: Reusable test fixtures in `tests/toga_test_helpers.py`
   - `DummyConfigManager`: Mock config manager for testing
   - `WeatherDataFactory`: Creates mock weather data
-  - `mock_app`: Toga app instance with dummy backend
-- **Coverage**: Target 80%+ coverage (current: ~85%)
+  # AccessiWeather — AI coding agent quick guide
 
-## Configuration System
+  This file highlights the repository-specific patterns, workflows and commands an AI coding agent should follow to be immediately productive.
 
-### Config Structure
-- **Storage**: `~/.config/accessiweather/accessiweather.json` (or portable directory)
-- **Models**:
-  - `AppConfig`: Top-level config with `settings`, `locations`, `last_location`
-  - `AppSettings`: User preferences (units, display options, notifications, API keys)
-  - `Location`: Saved locations with name, lat/lon
-- **Validation**: `SettingsOperations._validate_and_fix_config()` ensures sane defaults
+  **Architecture & key locations**
+  - Entry: `src/accessiweather/app.py` (main `AccessiWeatherApp`)
+  - API wrappers: `api/` (see `api/base_wrapper.py` for shared HTTP client patterns)
+  - Config: `config/settings.py`, `config/locations.py` and `ConfigManager` (uses `toga.App.paths.config`)
+  - UI: `ui_builder.py`, `dialogs/` and `WeatherPresenter` for screen-reader formatting
+  - Background tasks: `background_tasks.py` and `WeatherDataCache` / `WeatherClient` for data flow
 
-### Settings Patterns
-- **Apply Settings**: Use `getattr(dialog, attr_name, None)` for defensive attribute access
-- **Collect Settings**: Use `getattr(dialog, attr_name, fallback_value)` with defaults
-- **Switches**: Toga Switch widgets with `.value` property (bool)
-- **Number Inputs**: Use `.value` property (float), set `.min_value`/`.max_value` constraints
+  **Must-follow code patterns (examples)**
+  - OptionContainer: use `option_container.content.append(title, widget)` (two args). Do NOT pass a tuple or use `.add()`.
+  - Accessibility: every control must set `aria_label` and `aria_description` (see `docs/ACCESSIBILITY.md`).
+  - Async/Toga rules: make long-running code `async`, `await` calls, and use `app.add_background_task()` or `asyncio.create_task()` for background work. Do not use `asyncio.run()` in Toga UI code.
 
-## Accessibility Requirements
+  **Testing & local dev commands**
+  - Run app (dev): `briefcase dev`
+  - Tests: `pytest -v -p pytest_asyncio` (use `TOGA_BACKEND=toga_dummy` for unit tests)
+  - Lint & format: `ruff check --fix . && ruff format .` (pre-commit auto-stages changes)
+  - Type check (optional): `pyright`
 
-### Screen Reader Support
-- **Labels**: Every input/button/switch needs `aria_label` (short label)
-- **Descriptions**: Every control needs `aria_description` (detailed explanation)
-- **Keyboard Navigation**: All dialogs must support Tab/Shift+Tab navigation
-- **Focus Management**: Set initial focus on most relevant widget (usually location dropdown)
-- **Announcements**: Use descriptive text for status updates
+  **When adding features**
+  - Settings UI: add widget attribute to `SettingsDialog`, update `dialogs/settings_tabs.py`, and wire `apply_settings_to_ui()` / `collect_settings_from_ui()` (see existing pattern in `dialogs/`).
+  - New API integration: add module under `api/`, implement async client (use `httpx.AsyncClient`), then integrate with `WeatherClient` and `WeatherDataCache`.
 
-### Example Pattern
-```python
-switch = toga.Switch(
-    text="Enable feature",
-    value=False
-)
-switch.aria_label = "Feature toggle"
-switch.aria_description = "Enable or disable the feature functionality"
+  **Important conventions & gotchas**
+  - Line length: 100 (see `pyproject.toml`/ruff config).
+  - Use modern type hints: `dict[str, Any]` and `from __future__ import annotations` where applicable.
+  - Config: always call `config_manager.load_config()` before reading settings; portable mode checks `portable.txt`.
+  - Alerts: Visual Crossing API requires an API key (gracefully degrade if missing). Rate-limit notifications.
+
+  **Files to inspect for examples**
+  - `src/accessiweather/app.py`, `api/base_wrapper.py`, `config/settings.py`, `dialogs/settings_handlers.py`, `background_tasks.py`, `tests/toga_test_helpers.py`
+
+  If anything here is unclear or you want more detail on a specific area (tests, packaging, accessibility patterns), tell me which section to expand.
 ```
-
-## Common Tasks
-
-### Adding Settings UI
-1. Add attribute to `SettingsDialog` class (e.g., `self.new_setting_switch`)
-2. Create UI in appropriate settings tab function in `dialogs/settings_tabs.py`
-3. Add to `apply_settings_to_ui()` in `dialogs/settings_handlers.py` (load from config)
-4. Add to `collect_settings_from_ui()` in `dialogs/settings_handlers.py` (save to config)
-5. Add to `AppSettings` model if new field needed
-6. Write tests in `tests/test_toga_ui_components.py`
-
-### Adding Weather API Integration
-1. Create wrapper module in `api/` directory (follow `base_wrapper.py` pattern)
-2. Add client class with `async` methods using `httpx.AsyncClient`
-3. Integrate into `WeatherClient` with fallback logic
-4. Add cache support with `WeatherDataCache`
-5. Update tests with mocked responses
-
-### Debugging Weather Issues
-1. Enable debug logging: Set `ACCESSIWEATHER_DEBUG=1` environment variable
-2. Check API responses: Look for 404/503 errors in logs
-3. Verify location: NWS requires US locations with valid lat/lon
-4. Test with curl: `curl -H "User-Agent: AccessiWeather/0.4" https://api.weather.gov/alerts/active?point=lat,lon`
-
-## Code Style
-
-### Ruff Configuration
-- Line length: 100 characters
-- Target: Python 3.12
-- Auto-fixes: Import sorting, unused variables, whitespace
-- Excludes: `weather_gov_api_client/` (auto-generated code)
-
-### Type Hints
-- Use modern syntax: `dict[str, Any]` not `Dict[str, Any]`
-- Import from `__future__`: `from __future__ import annotations` for forward refs
-- Optional imports: Use `TYPE_CHECKING` guard for type-only imports to avoid cycles
-
-### Async Patterns
-- Always `await` async functions
-- Use `asyncio.create_task()` for fire-and-forget operations
-- Add done callbacks: `task.add_done_callback(background_tasks.task_done_callback)`
-- Avoid `asyncio.run()` in Toga apps (use app's event loop)
-
-## Common Pitfalls
-
-1. **OptionContainer**: Don't use `.add()` method, it doesn't exist
-2. **Config Loading**: Always call `config_manager.load_config()` before accessing settings
-3. **NWS Alerts**: Minor severity alerts disabled by default (user configurable)
-4. **Toga Focus**: `.focus()` may fail silently on some platforms, always try-except
-5. **Pre-commit**: Will auto-format and fail if tests don't pass, fix tests before retrying
-6. **Alert Notifications**: Must respect rate limits (cooldowns, max per hour) to avoid spam
-7. **API Keys**: Visual Crossing requires API key in settings, gracefully degrade if missing
-
-## Resources
-
-- Toga Docs: https://toga.readthedocs.io/
-- BeeWare Tutorial: https://beeware.org/
-- NWS API: https://www.weather.gov/documentation/services-web-api
-- Open-Meteo: https://open-meteo.com/en/docs
-- Briefcase Docs: https://briefcase.readthedocs.io/
-## Misc
-## Toolbelt
-
-Fast, user‑friendly tools Codex prefers when available. Install with your package manager (examples shown for Homebrew):
-```bash
-pip/choco/scoop/sudo apt install fd ripgrep ast-grep jq fzf bat eza zoxide httpie git-delta
- fzf keybindings
-$( --prefix)/opt/fzf/install --key-bindings --completion --no-bash --no-fish
-Tool
-What it is
-Typical command(s)
-Why it’s an upgrade
-fd
-Fast, user‑friendly file finder
-fd src, fd -e ts foo
-Simpler than find, respects .gitignore, very fast
-ripgrep (rg)
-Recursive code searcher
-rg "TODO", rg -n --glob '!dist'
-Much faster than grep/ack/ag; great defaults
-ast-grep (sg)
-AST‑aware search & refactor
-sg -p 'if ($A) { $B }'
-Searches syntax, not text; precise refactors
-jq
-JSON processor
-jq '.items[].id' < resp.json
-Structured JSON queries, filters, transforms
-fzf
-Fuzzy finder (any list ➜ filtered)
-fzf, ``history
-fzf``
-bat
-cat with syntax, paging, git
-bat file.ts, bat -p README.md
-Syntax highlighting, line numbers, Git integration
-eza
-Modern ls
-eza -l --git, eza -T
-Better defaults, icons/trees/git info
-zoxide
-Smart cd (learns paths)
-z foo, zi my/project
-Jumps to dirs by frecency; fewer long paths
-httpie (http)
-Human‑friendly HTTP client
-http GET api/foo, http POST api bar=1
-Cleaner than curl for JSON; shows colors/headers
-git-delta
-Better git diff/pager
-git -c core.pager=delta diff
-Side‑by‑side, syntax‑colored diffs in terminal
-Preferred defaults inside Codex
-•
-Use rg for searching code and logs; fall back to grep only if needed.
-•
-Use fd for finding files; fall back to find only if needed.
-•
-Use jq to parse/pretty‑print JSON from APIs and logs.
-•
-Use httpie for ad‑hoc API exploration; use curl for fine‑grained CORS/DNS tests.
