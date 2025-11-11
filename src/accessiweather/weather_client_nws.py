@@ -1048,6 +1048,21 @@ def parse_nws_forecast(data: dict) -> Forecast:
         wind_direction_value = _extract_scalar(period_data.get("windDirection"))
         wind_direction = str(wind_direction_value) if wind_direction_value is not None else None
 
+        # Parse timestamps
+        start_time = None
+        end_time = None
+        if period_data.get("startTime"):
+            try:
+                start_time = datetime.fromisoformat(period_data["startTime"].replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                logger.warning(f"Failed to parse startTime: {period_data.get('startTime')}")
+
+        if period_data.get("endTime"):
+            try:
+                end_time = datetime.fromisoformat(period_data["endTime"].replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                logger.warning(f"Failed to parse endTime: {period_data.get('endTime')}")
+
         period = ForecastPeriod(
             name=period_data.get("name", ""),
             temperature=temperature,
@@ -1057,6 +1072,8 @@ def parse_nws_forecast(data: dict) -> Forecast:
             wind_speed=_format_wind_speed(period_data.get("windSpeed")),
             wind_direction=wind_direction,
             icon=period_data.get("icon"),
+            start_time=start_time,
+            end_time=end_time,
         )
         periods.append(period)
 
