@@ -56,25 +56,10 @@ jobs:
         run: |
           pytest tests/integration/ \
             -v \
-            --tb=short \
-            --junit-xml=integration-test-results.xml
+            --tb=short
         env:
           RUN_INTEGRATION_TESTS: "1"
         timeout-minutes: 15
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: integration-test-results-py${{ matrix.python-version }}
-          path: integration-test-results.xml
-          retention-days: 30
-
-      - name: Report test summary
-        if: always()
-        uses: test-summary/action@v2
-        with:
-          paths: integration-test-results.xml
 
       - name: Notify on failure (scheduled runs)
         if: failure() && github.event_name == 'schedule'
