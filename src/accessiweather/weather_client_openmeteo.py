@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -38,7 +38,13 @@ logger = logging.getLogger(__name__)
 
 
 def _parse_iso_datetime(value: str | None) -> datetime | None:
-    """Parse an ISO 8601 datetime string, including Zulu-formatted values."""
+    """
+    Parse an ISO 8601 datetime string, ensuring timezone awareness.
+
+    Open-Meteo returns ISO 8601 strings that may be timezone-aware or naive.
+    This function ensures all parsed datetimes have timezone information to
+    prevent display issues when mixing naive and timezone-aware datetimes.
+    """
     if not value:
         return None
 
@@ -48,7 +54,12 @@ def _parse_iso_datetime(value: str | None) -> datetime | None:
 
     for candidate in candidates:
         try:
-            return datetime.fromisoformat(candidate)
+            dt = datetime.fromisoformat(candidate)
+            # Ensure timezone-aware datetime
+            if dt.tzinfo is None:
+                # If naive, assume UTC (Open-Meteo provides UTC by default when timezone not specified)
+                dt = dt.replace(tzinfo=UTC)
+            return dt
         except ValueError:
             continue
 
