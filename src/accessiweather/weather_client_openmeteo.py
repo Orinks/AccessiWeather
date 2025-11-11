@@ -139,7 +139,7 @@ async def get_openmeteo_current_conditions(
             "temperature_unit": "fahrenheit",
             "wind_speed_unit": "mph",
             "precipitation_unit": "inch",
-            "timezone": "auto",
+            "timezone": "UTC",
             "forecast_days": 1,
         }
 
@@ -189,7 +189,7 @@ async def get_openmeteo_forecast(
             ),
             "temperature_unit": "fahrenheit",
             "wind_speed_unit": "mph",
-            "timezone": "auto",
+            "timezone": "UTC",
             "forecast_days": 7,
         }
 
@@ -228,7 +228,7 @@ async def get_openmeteo_hourly_forecast(
             "hourly": "temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,pressure_msl",
             "temperature_unit": "fahrenheit",
             "wind_speed_unit": "mph",
-            "timezone": "auto",
+            "timezone": "UTC",
             "forecast_days": 2,
         }
 
