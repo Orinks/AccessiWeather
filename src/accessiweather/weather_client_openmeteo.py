@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
 
 import httpx
@@ -37,13 +37,23 @@ from .weather_client_parsers import (
 logger = logging.getLogger(__name__)
 
 
-def _parse_iso_datetime(value: str | None) -> datetime | None:
+def _parse_iso_datetime(
+    value: str | None, utc_offset_seconds: int | None = None
+) -> datetime | None:
     """
     Parse an ISO 8601 datetime string, ensuring timezone awareness.
 
     Open-Meteo returns ISO 8601 strings that may be timezone-aware or naive.
-    This function ensures all parsed datetimes have timezone information to
-    prevent display issues when mixing naive and timezone-aware datetimes.
+    When using timezone="auto", Open-Meteo returns naive datetimes in the
+    location's local timezone, with utc_offset_seconds indicating the offset.
+
+    Args:
+        value: ISO 8601 datetime string
+        utc_offset_seconds: UTC offset in seconds (e.g., -28800 for PST/UTC-8)
+
+    Returns:
+        Timezone-aware datetime object, or None if parsing fails
+
     """
     if not value:
         return None
@@ -57,8 +67,13 @@ def _parse_iso_datetime(value: str | None) -> datetime | None:
             dt = datetime.fromisoformat(candidate)
             # Ensure timezone-aware datetime
             if dt.tzinfo is None:
-                # If naive, assume UTC (Open-Meteo provides UTC by default when timezone not specified)
-                dt = dt.replace(tzinfo=UTC)
+                # If naive and we have UTC offset, apply it
+                if utc_offset_seconds is not None:
+                    tz = timezone(timedelta(seconds=utc_offset_seconds))
+                    dt = dt.replace(tzinfo=tz)
+                else:
+                    # If naive with no offset info, assume UTC as fallback
+                    dt = dt.replace(tzinfo=UTC)
             return dt
         except ValueError:
             continue
@@ -139,7 +154,7 @@ async def get_openmeteo_current_conditions(
             "temperature_unit": "fahrenheit",
             "wind_speed_unit": "mph",
             "precipitation_unit": "inch",
-            "timezone": "UTC",
+            "timezone": "auto",
             "forecast_days": 1,
         }
 
@@ -189,7 +204,7 @@ async def get_openmeteo_forecast(
             ),
             "temperature_unit": "fahrenheit",
             "wind_speed_unit": "mph",
-            "timezone": "UTC",
+            "timezone": "auto",
             "forecast_days": 7,
         }
 
@@ -228,7 +243,7 @@ async def get_openmeteo_hourly_forecast(
             "hourly": "temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,pressure_msl",
             "temperature_unit": "fahrenheit",
             "wind_speed_unit": "mph",
-            "timezone": "UTC",
+            "timezone": "auto",
             "forecast_days": 2,
         }
 
@@ -256,6 +271,7 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
     current = data.get("current", {})
     units = data.get("current_units", {})
     daily = data.get("daily", {})
+    utc_offset_seconds = data.get("utc_offset_seconds")
 
     temp_f, temp_c = normalize_temperature(
         current.get("temperature_2m"), units.get("temperature_2m")
@@ -283,7 +299,7 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         current.get("apparent_temperature"), units.get("apparent_temperature")
     )
 
-    last_updated = _parse_iso_datetime(current.get("time"))
+    last_updated = _parse_iso_datetime(current.get("time"), utc_offset_seconds)
 
     # Parse sunrise and sunset times from daily data (today's values)
     sunrise_time = None
@@ -292,9 +308,9 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         sunrise_list = daily.get("sunrise", [])
         sunset_list = daily.get("sunset", [])
         if sunrise_list and len(sunrise_list) > 0:
-            sunrise_time = _parse_iso_datetime(sunrise_list[0])
+            sunrise_time = _parse_iso_datetime(sunrise_list[0], utc_offset_seconds)
         if sunset_list and len(sunset_list) > 0:
-            sunset_time = _parse_iso_datetime(sunset_list[0])
+            sunset_time = _parse_iso_datetime(sunset_list[0], utc_offset_seconds)
 
     uv_index = None
     if daily:
@@ -352,6 +368,7 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
     """Parse Open-Meteo hourly forecast payload into an HourlyForecast model."""
     periods: list[HourlyForecastPeriod] = []
     hourly = data.get("hourly", {})
+    utc_offset_seconds = data.get("utc_offset_seconds")
 
     times = hourly.get("time", [])
     temperatures = hourly.get("temperature_2m", [])
@@ -361,7 +378,7 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
     pressures = hourly.get("pressure_msl", [])
 
     for i, time_str in enumerate(times):
-        start_time = _parse_iso_datetime(time_str) or datetime.now()
+        start_time = _parse_iso_datetime(time_str, utc_offset_seconds) or datetime.now()
 
         temperature = temperatures[i] if i < len(temperatures) else None
         weather_code = weather_codes[i] if i < len(weather_codes) else None

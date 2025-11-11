@@ -174,17 +174,19 @@ class TestTimezoneIntegration:
             assert "AM" in result or "PM" in result
 
     def test_consistent_formatting_across_timezones(self):
-        """Test that formatting is consistent across different input timezones."""
+        """Test that formatting preserves location's timezone instead of converting."""
         # Same moment in time, different timezone representations
         utc_time = datetime(2025, 11, 9, 20, 0, tzinfo=UTC)
         eastern_time = datetime(2025, 11, 9, 15, 0, tzinfo=timezone(timedelta(hours=-5)))
 
-        # Both should convert to same local time
+        # Each should format in its own timezone (not convert to system timezone)
         result_utc = format_hour_time(utc_time)
         result_eastern = format_hour_time(eastern_time)
 
-        # Results should be the same (both represent the same moment)
-        assert result_utc == result_eastern
+        # Results should be different (showing location's time, not system time)
+        # UTC shows 8:00 PM, Eastern shows 3:00 PM
+        assert result_utc == "08:00 PM"
+        assert result_eastern == "03:00 PM"
 
 
 @pytest.mark.parametrize(
