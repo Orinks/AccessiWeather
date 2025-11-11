@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import sys
 from typing import TYPE_CHECKING
 
 import toga
@@ -24,6 +25,14 @@ if TYPE_CHECKING:  # pragma: no cover - import cycle guard
     from .display import WeatherPresenter
     from .location_manager import LocationManager
     from .weather_client import WeatherClient
+
+# Configure logging for when running with briefcase dev (bypasses main.py)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
+    force=True,
+)
 
 logger = logging.getLogger(__name__)
 

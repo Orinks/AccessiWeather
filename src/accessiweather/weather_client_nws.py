@@ -39,7 +39,13 @@ VALID_QC_CODES = {"V", "C", None}
 
 
 def _parse_iso_datetime(value: Any) -> datetime | None:
-    """Parse ISO formatted timestamps, handling trailing Z."""
+    """
+    Parse ISO formatted timestamps, ensuring timezone awareness.
+
+    NWS returns ISO 8601 strings that should be timezone-aware.
+    This function ensures all parsed datetimes have timezone information to
+    prevent display issues when mixing naive and timezone-aware datetimes.
+    """
     if not isinstance(value, str) or not value:
         return None
     text = value.strip()
@@ -48,7 +54,12 @@ def _parse_iso_datetime(value: Any) -> datetime | None:
     if text.endswith("Z"):
         text = text[:-1] + "+00:00"
     try:
-        return datetime.fromisoformat(text)
+        dt = datetime.fromisoformat(text)
+        # Ensure timezone-aware datetime
+        if dt.tzinfo is None:
+            # If naive, assume UTC (NWS typically provides UTC timestamps)
+            dt = dt.replace(tzinfo=UTC)
+        return dt
     except ValueError:
         return None
 

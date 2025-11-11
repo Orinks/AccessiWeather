@@ -68,6 +68,7 @@ class Cache:
 
         """
         if key not in self.data:
+            logger.debug(f"Cache miss for '{key}'")
             return None
 
         entry = self.data[key]
@@ -75,12 +76,12 @@ class Cache:
 
         # Check if the entry has expired
         if entry.expiration < current_time:
-            logger.debug(f"Cache entry for '{key}' has expired")
+            logger.info(f"Cache entry for '{key}' has expired")
             # Remove the expired entry
             del self.data[key]
             return None
 
-        logger.debug(f"Cache hit for '{key}'")
+        logger.info(f"Cache hit for '{key}' (expires in {int(entry.expiration - current_time)}s)")
         return entry.value
 
     def set(self, key: str, value: Any, ttl: float | None = None) -> None:
@@ -206,6 +207,22 @@ def _serialize_current(current: CurrentConditions | None) -> dict | None:
 def _deserialize_current(data: dict | None) -> CurrentConditions | None:
     if not isinstance(data, dict):
         return None
+
+    sunrise_raw = data.get("sunrise_time")
+    sunset_raw = data.get("sunset_time")
+    last_updated_raw = data.get("last_updated")
+
+    sunrise = _deserialize_datetime(sunrise_raw)
+    sunset = _deserialize_datetime(sunset_raw)
+    last_updated = _deserialize_datetime(last_updated_raw)
+
+    logger.info(
+        f"Deserializing current conditions from cache - "
+        f"sunrise: {sunrise_raw} -> {sunrise}, "
+        f"sunset: {sunset_raw} -> {sunset}, "
+        f"last_updated: {last_updated_raw} -> {last_updated}"
+    )
+
     return CurrentConditions(
         temperature_f=data.get("temperature_f"),
         temperature_c=data.get("temperature_c"),
@@ -223,9 +240,9 @@ def _deserialize_current(data: dict | None) -> CurrentConditions | None:
         visibility_miles=data.get("visibility_miles"),
         visibility_km=data.get("visibility_km"),
         uv_index=data.get("uv_index"),
-        sunrise_time=_deserialize_datetime(data.get("sunrise_time")),
-        sunset_time=_deserialize_datetime(data.get("sunset_time")),
-        last_updated=_deserialize_datetime(data.get("last_updated")),
+        sunrise_time=sunrise,
+        sunset_time=sunset,
+        last_updated=last_updated,
     )
 
 

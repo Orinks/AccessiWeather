@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterable
 
 from ...models import (
@@ -27,6 +28,8 @@ from .formatters import (
     get_temperature_precision,
     get_uv_description,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _build_basic_metrics(
@@ -81,12 +84,18 @@ def _build_astronomical_metrics(current: CurrentConditions) -> list[Metric]:
     """Build astronomical metrics (sunrise, sunset, moon phase, moonrise, moonset)."""
     metrics: list[Metric] = []
 
+    logger.info(
+        f"Building astronomical metrics - sunrise_time: {current.sunrise_time}, sunset_time: {current.sunset_time}"
+    )
+
     sunrise_str = format_sun_time(current.sunrise_time)
     if sunrise_str:
+        logger.info(f"Formatted sunrise: {sunrise_str}")
         metrics.append(Metric("Sunrise", sunrise_str))
 
     sunset_str = format_sun_time(current.sunset_time)
     if sunset_str:
+        logger.info(f"Formatted sunset: {sunset_str}")
         metrics.append(Metric("Sunset", sunset_str))
 
     if current.moon_phase:
@@ -217,7 +226,9 @@ def build_current_conditions(
     metrics.extend(_build_astronomical_metrics(current))
 
     if current.last_updated:
-        metrics.append(Metric("Last updated", format_timestamp(current.last_updated)))
+        formatted_time = format_timestamp(current.last_updated)
+        logger.info(f"Last updated raw: {current.last_updated}, formatted: {formatted_time}")
+        metrics.append(Metric("Last updated", formatted_time))
 
     metrics.extend(_build_environmental_metrics(environmental, air_quality))
     metrics.extend(_build_trend_metrics(trends, current, hourly_forecast, show_pressure_trend))
