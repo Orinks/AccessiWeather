@@ -1,0 +1,150 @@
+name: Integration Tests
+
+# Run integration tests on a schedule to catch API changes
+# and validate weather provider data quality without blocking PRs
+on:
+  # Run daily at 6 AM UTC (before most development hours)
+  schedule:
+    - cron: '0 6 * * *'
+
+  # Allow manual triggering for testing
+  workflow_dispatch:
+
+  # Run on pushes to main and dev branches
+  push:
+    branches:
+      - main
+      - dev
+
+  # Optionally run on PRs with the 'integration-tests' label
+  pull_request:
+    types: [labeled, opened, synchronize, reopened]
+
+jobs:
+  integration-tests:
+    name: Weather Provider Integration Tests
+    runs-on: ubuntu-latest
+
+    # Only run on schedule, manual dispatch, push to main/dev, or if PR has the label
+    if: |
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'push' ||
+      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'integration-tests'))
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.12']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Run integration tests
+        run: |
+          pytest tests/integration/ \
+            -v \
+            --tb=short \
+            --junit-xml=integration-test-results.xml
+        env:
+          RUN_INTEGRATION_TESTS: "1"
+        timeout-minutes: 15
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results-py${{ matrix.python-version }}
+          path: integration-test-results.xml
+          retention-days: 30
+
+      - name: Report test summary
+        if: always()
+        uses: test-summary/action@v2
+        with:
+          paths: integration-test-results.xml
+
+      - name: Notify on failure (scheduled runs)
+        if: failure() && github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue_title = `🚨 Integration Tests Failed - ${new Date().toISOString().split('T')[0]}`;
+            const issue_body = `
+            ## Integration Test Failure
+
+            The scheduled integration tests have failed. This may indicate:
+
+            - Changes to weather provider APIs (NWS or Open-Meteo)
+            - Network/connectivity issues
+            - Data quality problems
+            - Parsing bugs
+
+            **Workflow Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            **Next Steps:**
+            1. Review the test output in the workflow logs
+            2. Check if NWS or Open-Meteo APIs have changed
+            3. Verify network connectivity is working
+            4. Run tests locally: \`RUN_INTEGRATION_TESTS=1 pytest tests/integration/ -v\`
+
+            This issue will be closed automatically if the next scheduled run passes.
+            `;
+
+            // Check if there's already an open issue
+            const existingIssues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'integration-test-failure',
+            });
+
+            if (existingIssues.data.length === 0) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: issue_title,
+                body: issue_body,
+                labels: ['integration-test-failure', 'bug', 'automation'],
+              });
+            }
+
+      - name: Close failure issues on success (scheduled runs)
+        if: success() && github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'integration-test-failure',
+            });
+
+            for (const issue of issues.data) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: '✅ Integration tests are now passing. Closing this issue.',
+              });
+
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed',
+              });
+            }

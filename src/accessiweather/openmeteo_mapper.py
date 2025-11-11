@@ -6,7 +6,7 @@ into the internal data format expected by WeatherService and UI components.
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 # For Python 3.10 compatibility
@@ -19,6 +19,51 @@ from .openmeteo_client import OpenMeteoApiClient
 from .utils import TemperatureUnit, calculate_dewpoint
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_openmeteo_datetime(
+    datetime_str: str | None, utc_offset_seconds: int | None
+) -> str | None:
+    """
+    Parse a datetime string from Open-Meteo and convert to UTC ISO format.
+
+    When Open-Meteo uses timezone="auto", it returns naive datetime strings
+    in the local timezone. We need to convert these to UTC for consistent storage.
+
+    Args:
+    ----
+        datetime_str: ISO format datetime string from Open-Meteo (naive, in local time)
+        utc_offset_seconds: UTC offset in seconds from the Open-Meteo response
+
+    Returns:
+    -------
+        ISO format datetime string in UTC with timezone info, or None if parsing fails
+
+    """
+    if not datetime_str or utc_offset_seconds is None:
+        return datetime_str
+
+    try:
+        # Parse the naive datetime string
+        dt_naive = datetime.fromisoformat(datetime_str.replace("Z", ""))
+
+        # Create timezone object from offset
+        tz = timezone(timedelta(seconds=utc_offset_seconds))
+
+        # Attach the timezone to make it aware
+        dt_aware = dt_naive.replace(tzinfo=tz)
+
+        # Convert to UTC and return as ISO string
+        dt_utc = dt_aware.astimezone(UTC)
+
+        logger.info(
+            f"Converted Open-Meteo datetime: '{datetime_str}' "
+            f"(offset={utc_offset_seconds}s) -> UTC: '{dt_utc.isoformat()}'"
+        )
+        return dt_utc.isoformat()
+    except (ValueError, AttributeError) as e:
+        logger.warning(f"Failed to parse Open-Meteo datetime '{datetime_str}': {e}")
+        return datetime_str
 
 
 class OpenMeteoMapper:
@@ -47,9 +92,13 @@ class OpenMeteoMapper:
             uv_index_values = daily.get("uv_index_max") if daily else None
             uv_index_value = uv_index_values[0] if uv_index_values else None
 
+            # Extract timezone offset for proper datetime conversion
+            utc_offset_seconds = openmeteo_data.get("utc_offset_seconds")
+
             logger.debug(f"Open-Meteo current data keys: {list(current.keys())}")
             logger.debug(f"Open-Meteo current units: {current_units}")
             logger.debug(f"Open-Meteo daily data keys: {list(daily.keys()) if daily else 'None'}")
+            logger.debug(f"Open-Meteo UTC offset: {utc_offset_seconds} seconds")
 
             # Map the data to NWS-like structure
             temperature_unit = current_units.get("temperature_2m", "°C")
@@ -57,7 +106,8 @@ class OpenMeteoMapper:
             mapped_data = {
                 "properties": {
                     "@id": f"open-meteo-current-{datetime.now(UTC).isoformat()}",
-                    "timestamp": current.get("time", datetime.now(UTC).isoformat()),
+                    "timestamp": _parse_openmeteo_datetime(current.get("time"), utc_offset_seconds)
+                    or datetime.now(UTC).isoformat(),
                     "temperature": {
                         "value": current.get("temperature_2m"),
                         "unitCode": self._get_temperature_unit_code(
@@ -150,12 +200,13 @@ class OpenMeteoMapper:
                         }
                     ],
                     # Sunrise/sunset from daily data (today's values)
-                    "sunrise": (
-                        daily.get("sunrise", [None])[0] if daily and daily.get("sunrise") else None
-                    ),
-                    "sunset": (
-                        daily.get("sunset", [None])[0] if daily and daily.get("sunset") else None
-                    ),
+                    # Keep these in local time (don't convert to UTC) since they're displayed in local time
+                    "sunrise": daily.get("sunrise", [None])[0]
+                    if daily and daily.get("sunrise")
+                    else None,
+                    "sunset": daily.get("sunset", [None])[0]
+                    if daily and daily.get("sunset")
+                    else None,
                 }
             }
 
@@ -182,12 +233,14 @@ class OpenMeteoMapper:
         try:
             daily = openmeteo_data.get("daily", {})
             daily_units = openmeteo_data.get("daily_units", {})
+            utc_offset_seconds = openmeteo_data.get("utc_offset_seconds")
 
             logger.debug(
                 "Open-Meteo forecast raw daily keys=%s day_count=%s",
                 list(daily.keys()) if isinstance(daily, dict) else None,
                 len(daily.get("time", [])) if isinstance(daily, dict) else 0,
             )
+            logger.debug(f"Open-Meteo forecast UTC offset: {utc_offset_seconds} seconds")
 
             if not daily:
                 return {"properties": {"periods": []}}
@@ -200,8 +253,13 @@ class OpenMeteoMapper:
 
             for i, date_str in enumerate(dates):
                 try:
-                    # Parse the date
-                    date_obj = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+                    # Parse the date - convert from local time to UTC
+                    date_str_utc = _parse_openmeteo_datetime(date_str, utc_offset_seconds)
+                    if date_str_utc:
+                        date_obj = datetime.fromisoformat(date_str_utc)
+                    else:
+                        # Fallback to treating as UTC if parsing fails
+                        date_obj = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
 
                     # Create day and night periods (NWS style)
                     day_period = {
@@ -314,6 +372,7 @@ class OpenMeteoMapper:
         try:
             hourly = openmeteo_data.get("hourly", {})
             hourly_units = openmeteo_data.get("hourly_units", {})
+            utc_offset_seconds = openmeteo_data.get("utc_offset_seconds")
 
             if not hourly:
                 return {"properties": {"periods": []}}
@@ -328,8 +387,13 @@ class OpenMeteoMapper:
 
             for i, time_str in enumerate(times):
                 try:
-                    # Parse the time
-                    time_obj = datetime.fromisoformat(time_str.replace("Z", "+00:00"))
+                    # Parse the time - convert from local time to UTC
+                    time_str_utc = _parse_openmeteo_datetime(time_str, utc_offset_seconds)
+                    if time_str_utc:
+                        time_obj = datetime.fromisoformat(time_str_utc)
+                    else:
+                        # Fallback to treating as UTC if parsing fails
+                        time_obj = datetime.fromisoformat(time_str.replace("Z", "+00:00"))
                     end_time = time_obj.replace(minute=0, second=0, microsecond=0) + timedelta(
                         hours=1
                     )
