@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 import toga
 
+from .. import app_helpers
 from ..alert_details_dialog import AlertDetailsDialog
 
 if TYPE_CHECKING:  # pragma: no cover - circular import guard
@@ -24,9 +25,12 @@ async def on_alert_details_pressed(app: AccessiWeatherApp, widget: toga.Button) 
         await on_view_alert_details(app, widget)
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Failed to show alert details: %s", exc)
-        await app.main_window.error_dialog(
-            "Alert Details Error", f"Failed to show alert details: {exc}"
-        )
+        if app_helpers.should_show_dialog(app):
+            await app.main_window.error_dialog(
+                "Alert Details Error", f"Failed to show alert details: {exc}"
+            )
+        else:
+            logger.warning("Alert details error dialog suppressed - window hidden")
 
 
 def on_alert_selected(app: AccessiWeatherApp, widget: toga.Table) -> None:
@@ -44,9 +48,12 @@ async def on_view_alert_details(app: AccessiWeatherApp, widget: toga.Button) -> 
     """Handle the View Alert Details button press."""
     try:
         if not app.alerts_table or not app.alerts_table.selection or not app.current_alerts_data:
-            await app.main_window.info_dialog(
-                "No Selection", "Please select an alert from the table first."
-            )
+            if app_helpers.should_show_dialog(app):
+                await app.main_window.info_dialog(
+                    "No Selection", "Please select an alert from the table first."
+                )
+            else:
+                logger.info("Alert selection error dialog suppressed - window hidden")
             return
 
         selected_row = app.alerts_table.selection
@@ -67,7 +74,12 @@ async def on_view_alert_details(app: AccessiWeatherApp, widget: toga.Button) -> 
                     break
 
         if not alert_id:
-            await app.main_window.error_dialog("Error", "Selected alert is no longer available.")
+            if app_helpers.should_show_dialog(app):
+                await app.main_window.error_dialog(
+                    "Error", "Selected alert is no longer available."
+                )
+            else:
+                logger.warning("Alert not found error dialog suppressed - window hidden")
             return
 
         active_alerts = app.current_alerts_data.get_active_alerts()
@@ -76,7 +88,12 @@ async def on_view_alert_details(app: AccessiWeatherApp, widget: toga.Button) -> 
             None,
         )
         if not alert:
-            await app.main_window.error_dialog("Error", "Selected alert is no longer available.")
+            if app_helpers.should_show_dialog(app):
+                await app.main_window.error_dialog(
+                    "Error", "Selected alert is no longer available."
+                )
+            else:
+                logger.warning("Alert not found error dialog suppressed - window hidden")
             return
 
         title = f"Alert Details - {alert.event or 'Weather Alert'}"
@@ -85,4 +102,7 @@ async def on_view_alert_details(app: AccessiWeatherApp, widget: toga.Button) -> 
 
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Error showing alert details: %s", exc)
-        await app.main_window.error_dialog("Error", f"Failed to show alert details: {exc}")
+        if app_helpers.should_show_dialog(app):
+            await app.main_window.error_dialog("Error", f"Failed to show alert details: {exc}")
+        else:
+            logger.warning("Alert details error dialog suppressed - window hidden")

@@ -97,7 +97,8 @@ def update_location_selection(app: AccessiWeatherApp) -> None:
 
 def update_status(app: AccessiWeatherApp, message: str) -> None:
     """Update the status label and log the message."""
-    if app.status_label:
+    # Only update UI if the window is visible to avoid ghost notifications on Windows
+    if app.status_label and should_show_dialog(app):
         app.status_label.text = message
     logger.info("Status: %s", message)
 
@@ -127,13 +128,26 @@ def show_error_displays(app: AccessiWeatherApp, error_message: str) -> None:
         app.alert_details_button.enabled = False
 
 
-def show_error_dialog(app: AccessiWeatherApp, title: str, message: str) -> None:
-    """Show an error dialog, falling back to logging on failure."""
+def should_show_dialog(app: AccessiWeatherApp) -> bool:
+    """Check if dialogs should be shown (window is visible)."""
     try:
-        if hasattr(app, "main_window") and app.main_window:
+        if not hasattr(app, "main_window") or not app.main_window:
+            return False
+        # If window is hidden/minimized to tray, don't show intrusive dialogs
+        return getattr(app.main_window, "visible", True)
+    except Exception:
+        # If we can't determine visibility, assume visible to avoid breaking user-initiated actions
+        return True
+
+
+def show_error_dialog(app: AccessiWeatherApp, title: str, message: str) -> None:
+    """Show an error dialog, falling back to logging if window is hidden."""
+    try:
+        if should_show_dialog(app):
             app.main_window.error_dialog(title, message)
         else:
-            logger.error("%s: %s", title, message)
+            # Window is hidden/minimized - log instead of showing intrusive dialog
+            logger.warning("%s: %s (dialog suppressed - window hidden)", title, message)
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Failed to show error dialog: %s", exc)
         logger.error("Original error - %s: %s", title, message)

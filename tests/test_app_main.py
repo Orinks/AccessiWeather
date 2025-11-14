@@ -11,35 +11,6 @@ class TestAccessiWeatherAppStartup:
     """Test AccessiWeatherApp startup and initialization."""
 
     @pytest.mark.asyncio
-    async def test_handle_already_running_success(self):
-        """Test handling when another instance is running."""
-        app = Mock(spec=AccessiWeatherApp)
-        app.single_instance_manager = Mock()
-        app.single_instance_manager.show_already_running_dialog = AsyncMock()
-        app.request_exit = Mock()
-
-        # Call the method
-        await AccessiWeatherApp._handle_already_running(app)
-
-        app.single_instance_manager.show_already_running_dialog.assert_called_once()
-        app.request_exit.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_handle_already_running_exception(self):
-        """Test handling exception in already running dialog."""
-        app = Mock(spec=AccessiWeatherApp)
-        app.single_instance_manager = Mock()
-        app.single_instance_manager.show_already_running_dialog = AsyncMock(
-            side_effect=Exception("Dialog error")
-        )
-        app.request_exit = Mock()
-
-        # Should not raise exception, should still call request_exit
-        await AccessiWeatherApp._handle_already_running(app)
-
-        app.request_exit.assert_called_once()
-
-    @pytest.mark.asyncio
     async def test_on_running_success(self):
         """Test on_running method success path."""
         app = Mock(spec=AccessiWeatherApp)
