@@ -97,7 +97,8 @@ def update_location_selection(app: AccessiWeatherApp) -> None:
 
 def update_status(app: AccessiWeatherApp, message: str) -> None:
     """Update the status label and log the message."""
-    if app.status_label:
+    # Only update UI if the window is visible to avoid ghost notifications on Windows
+    if app.status_label and should_show_dialog(app):
         app.status_label.text = message
     logger.info("Status: %s", message)
 
