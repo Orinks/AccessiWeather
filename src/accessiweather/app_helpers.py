@@ -98,17 +98,30 @@ def update_location_selection(app: AccessiWeatherApp) -> None:
 
 def update_status(app: AccessiWeatherApp, message: str) -> None:
     """Update the status label and log the message."""
-    # Only update UI if the window is visible to avoid ghost notifications on Windows
-    if app.status_label and should_show_dialog(app):
-        try:
-            app.status_label.text = message
-        except Exception as exc:
-            logger.debug("Failed to update status label (window may be hidden): %s", exc)
     logger.info("Status: %s", message)
+
+    # IMPORTANT: Do NOT update UI when window is hidden to prevent phantom popups on Windows
+    # The WinForms backend can show the window if we modify widgets while hidden
+    if not app.status_label:
+        return
+
+    if not should_show_dialog(app):
+        logger.debug("Skipping status UI update - window is hidden")
+        return
+
+    try:
+        app.status_label.text = message
+    except Exception as exc:
+        logger.debug("Failed to update status label: %s", exc)
 
 
 def show_error_displays(app: AccessiWeatherApp, error_message: str) -> None:
     """Populate UI widgets with error text after a failure."""
+    # Do NOT update UI when window is hidden to prevent phantom popups on Windows
+    if not should_show_dialog(app):
+        logger.debug("Skipping error display UI update - window is hidden")
+        return
+
     error_text = f"Error loading weather data: {error_message}"
 
     if app.current_conditions_display:
