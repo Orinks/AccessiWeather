@@ -60,8 +60,6 @@ async def refresh_weather_data(app: AccessiWeatherApp) -> None:
 
         if presentation and presentation.status_messages:
             app_helpers.update_status(app, presentation.status_messages[-1])
-        else:
-            app_helpers.update_status(app, f"Weather updated for {current_location.name}")
 
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Failed to refresh weather data: %s", exc)
