@@ -313,17 +313,6 @@ class WeatherClient:
             logger.debug(f"Force refresh requested, clearing cache for {location.name}")
             self.offline_cache.invalidate(location)
 
-        # Check cache first before deduplication (unless force refresh)
-        if not force_refresh and self.offline_cache:
-            cached = self.offline_cache.load(location, allow_stale=False)
-            if cached and not cached.stale:
-                logger.debug(f"✓ Cache hit for {location.name} (fresh data, skipping API calls)")
-                return cached
-            if cached:
-                logger.debug(
-                    f"Cache hit for {location.name} but data is stale, will fetch fresh data"
-                )
-
         # Use deduplication for concurrent requests
         return await self._fetch_weather_data_with_dedup(location, force_refresh)
 
@@ -588,7 +577,7 @@ class WeatherClient:
         if weather_data.has_any_data():
             # Launch enrichment tasks in parallel
             enrichment_tasks = self._launch_enrichment_tasks(weather_data, location)
-            # Await enrichment completion
+            # Await enrichment completion (which includes persisting to cache)
             await self._await_enrichments(enrichment_tasks, weather_data)
 
         if not weather_data.has_any_data() and self.offline_cache:

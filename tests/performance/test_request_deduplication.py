@@ -272,13 +272,13 @@ async def test_concurrent_requests_with_cache_hit(
     sample_location: Location,
     sample_weather_data: WeatherData,
 ) -> None:
-    """Test that cache hits don't trigger deduplication logic."""
+    """Test that concurrent requests still fetch new data even with cached data."""
     # Mock cache to return fresh data
     if weather_client.offline_cache:
         weather_client.offline_cache.load = Mock(return_value=sample_weather_data)
         sample_weather_data.stale = False
 
-        fetch_mock = AsyncMock()
+        fetch_mock = AsyncMock(return_value=sample_weather_data)
 
         with patch.object(weather_client, "_do_fetch_weather_data", side_effect=fetch_mock):
             # Launch concurrent requests with cache enabled
@@ -289,11 +289,11 @@ async def test_concurrent_requests_with_cache_hit(
 
             results = await asyncio.gather(*tasks)
 
-            # All should return cached data
+            # All should return data
             assert len(results) == 3
 
-            # Fetch should never be called (cache hit)
-            fetch_mock.assert_not_called()
+            # Fetch should be called once (deduplication of concurrent requests)
+            assert fetch_mock.call_count == 1
 
 
 @pytest.mark.asyncio
