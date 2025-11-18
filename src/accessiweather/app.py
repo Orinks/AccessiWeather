@@ -41,9 +41,22 @@ logger = logging.getLogger(__name__)
 class AccessiWeatherApp(toga.App):
     """Simple AccessiWeather application using Toga."""
 
-    def __init__(self, *args, **kwargs):
-        """Initialize the AccessiWeather application."""
+    def __init__(self, *args, config_dir: str | None = None, portable_mode: bool = False, **kwargs):
+        """
+        Initialize the AccessiWeather application.
+
+        Args:
+            *args: Positional arguments passed to toga.App
+            config_dir: Optional custom configuration directory path
+            portable_mode: If True, use portable mode (config in app directory)
+            **kwargs: Keyword arguments passed to toga.App
+
+        """
         super().__init__(*args, **kwargs)
+
+        # Store config parameters for later use
+        self._config_dir = config_dir
+        self._portable_mode = portable_mode
 
         # Core components
         self.config_manager: ConfigManager | None = None
@@ -179,12 +192,21 @@ class AccessiWeatherApp(toga.App):
         return app_helpers.handle_exit(self)
 
 
-def main():
-    """Provide main entry point for the simplified AccessiWeather application."""
+def main(config_dir: str | None = None, portable_mode: bool = False):
+    """
+    Provide main entry point for the simplified AccessiWeather application.
+
+    Args:
+        config_dir: Optional custom configuration directory path
+        portable_mode: If True, use portable mode (config in app directory)
+
+    """
     return AccessiWeatherApp(
         "AccessiWeather",
         "net.orinks.accessiweather.simple",
         description="Simple, accessible weather application",
         home_page="https://github.com/Orinks/AccessiWeather",
         author="Orinks",
+        config_dir=config_dir,
+        portable_mode=portable_mode,
     )

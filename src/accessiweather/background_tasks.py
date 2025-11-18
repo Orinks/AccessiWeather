@@ -22,15 +22,13 @@ async def start_background_updates(app: AccessiWeatherApp) -> None:
             logger.warning("Config manager not available, skipping background updates")
             return
 
-        config = app.config_manager.get_config()
-        update_interval = config.settings.update_interval_minutes * 60
-
-        logger.info(
-            "Starting background updates every %s minutes",
-            config.settings.update_interval_minutes,
-        )
+        logger.info("Starting background updates")
 
         while True:
+            # Re-read config each loop to pick up user changes without restart
+            config = app.config_manager.get_config()
+            update_interval = max(1, int(config.settings.update_interval_minutes)) * 60
+
             logger.debug("Background update loop: sleeping for %s seconds", update_interval)
             await asyncio.sleep(update_interval)
 

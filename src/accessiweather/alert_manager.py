@@ -8,6 +8,7 @@ alert identification and user controls.
 
 import json
 import logging
+import os
 import time
 from collections import deque
 from datetime import UTC, datetime, timedelta
@@ -325,6 +326,14 @@ class AlertManager:
                 json.dump(data, f, indent=2)
 
             temp_file.replace(self.state_file)
+
+            # Set secure permissions on POSIX systems
+            try:
+                if os.name != "nt":
+                    os.chmod(self.state_file, 0o600)
+            except Exception:
+                logger.debug("Could not set strict permissions on alert state file", exc_info=True)
+
             logger.debug(f"Saved {len(self.alert_states)} alert states to storage")
 
         except Exception as e:
