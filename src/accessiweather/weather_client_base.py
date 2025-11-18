@@ -317,7 +317,11 @@ class WeatherClient:
         if not force_refresh and self.offline_cache:
             cached = self.offline_cache.load(location, allow_stale=False)
             if cached and not cached.stale:
-                logger.debug(f"✓ Cache hit for {location.name} (fresh data, skipping API calls)")
+                logger.debug(f"✓ Cache hit for {location.name} (fresh data, applying enrichments)")
+                # Apply enrichments to cached data to ensure it's up-to-date
+                if cached.has_any_data():
+                    enrichment_tasks = self._launch_enrichment_tasks(cached, location)
+                    await self._await_enrichments(enrichment_tasks, cached)
                 return cached
             if cached:
                 logger.debug(
@@ -588,7 +592,7 @@ class WeatherClient:
         if weather_data.has_any_data():
             # Launch enrichment tasks in parallel
             enrichment_tasks = self._launch_enrichment_tasks(weather_data, location)
-            # Await enrichment completion
+            # Await enrichment completion (which includes persisting to cache)
             await self._await_enrichments(enrichment_tasks, weather_data)
 
         if not weather_data.has_any_data() and self.offline_cache:

@@ -29,6 +29,10 @@ from .models import (
 
 logger = logging.getLogger(__name__)
 
+# Cache schema version - increment this when cache data structure changes
+# This is independent of app version and allows test builds to invalidate old cache
+CACHE_SCHEMA_VERSION = 2
+
 
 @dataclass
 class CacheEntry:
@@ -524,7 +528,7 @@ class WeatherDataCache:
     def store(self, location: Location, weather: WeatherData) -> None:
         try:
             payload = {
-                "version": 1,
+                "schema_version": CACHE_SCHEMA_VERSION,
                 "saved_at": _serialize_datetime(datetime.now(UTC)),
                 "location": {
                     "name": location.name,
@@ -550,6 +554,17 @@ class WeatherDataCache:
                 payload = json.load(fh)
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"Failed to read cached weather data: {exc}")
+            return None
+
+        # Validate cache schema version
+        cached_schema_version = payload.get("schema_version", 1)
+        if cached_schema_version != CACHE_SCHEMA_VERSION:
+            logger.debug(
+                f"Cache schema version mismatch for {location.name}: "
+                f"cached={cached_schema_version}, current={CACHE_SCHEMA_VERSION}. "
+                f"Invalidating cache."
+            )
+            path.unlink(missing_ok=True)
             return None
 
         saved_at = _deserialize_datetime(payload.get("saved_at")) or datetime.now(UTC)
