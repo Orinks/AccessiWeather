@@ -312,11 +312,8 @@ async def enrich_with_visual_crossing_alerts(
 async def enrich_with_sunrise_sunset(
     client: WeatherClient, weather_data: WeatherData, location: Location
 ) -> None:
-    """Enrich weather data with sunrise/sunset from Open-Meteo if not already present."""
+    """Enrich weather data with sunrise/sunset from Open-Meteo, always updating with fresh values."""
     if not weather_data.current:
-        return
-
-    if weather_data.current.sunrise_time and weather_data.current.sunset_time:
         return
 
     try:
@@ -326,17 +323,17 @@ async def enrich_with_sunrise_sunset(
         if not openmeteo_current:
             return
 
-        if not weather_data.current.sunrise_time and openmeteo_current.sunrise_time:
+        if openmeteo_current.sunrise_time:
             weather_data.current.sunrise_time = openmeteo_current.sunrise_time
             logger.info(
-                "Added sunrise time from Open-Meteo: %s",
+                "Updated sunrise time from Open-Meteo: %s",
                 openmeteo_current.sunrise_time,
             )
 
-        if not weather_data.current.sunset_time and openmeteo_current.sunset_time:
+        if openmeteo_current.sunset_time:
             weather_data.current.sunset_time = openmeteo_current.sunset_time
             logger.info(
-                "Added sunset time from Open-Meteo: %s",
+                "Updated sunset time from Open-Meteo: %s",
                 openmeteo_current.sunset_time,
             )
     except Exception as exc:  # noqa: BLE001
