@@ -38,14 +38,13 @@ def sample_weather_data(test_location):
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-@pytest.mark.skip(reason="Needs porting to refactored weather_client_base.py structure")
-async def test_cache_hit_skips_api_calls(
+async def test_cache_hit_still_fetches_api(
     temp_cache_dir: Path,
     test_location: Location,
     sample_weather_data: WeatherData,
     mocker,
 ):
-    """Test that fresh cache hits skip API calls entirely."""
+    """Test that cache is used as fallback but API is always called for fresh data."""
     cache = WeatherDataCache(cache_dir=temp_cache_dir, max_age_minutes=5)
 
     # Store fresh data in cache
@@ -54,20 +53,31 @@ async def test_cache_hit_skips_api_calls(
     # Create client with cache
     client = WeatherClient(offline_cache=cache)
 
-    # Mock API methods to verify they're not called
-    mock_nws = mocker.patch.object(client, "_fetch_nws_data")
-    mock_openmeteo = mocker.patch.object(client, "_fetch_openmeteo_data")
+    # Mock API methods to verify they ARE called
+    mock_nws = mocker.patch.object(
+        client,
+        "_fetch_nws_data",
+        return_value=(
+            sample_weather_data.current,
+            sample_weather_data.forecast,
+            None,
+            sample_weather_data.alerts,
+            sample_weather_data.hourly_forecast,
+        ),
+    )
+    # Mock enrichments to avoid API calls
+    mocker.patch.object(client, "_launch_enrichment_tasks", return_value={})
+    mocker.patch.object(client, "_await_enrichments")
 
-    # Get weather data - should hit cache
+    # Get weather data - cache exists but API should still be called
     result = await client.get_weather_data(test_location)
 
-    # Verify cache hit
+    # Verify we got data
     assert result.current is not None
     assert result.current.temperature_f == 72.0
 
-    # Verify API methods were NOT called
-    mock_nws.assert_not_called()
-    mock_openmeteo.assert_not_called()
+    # Verify API method WAS called even though cache exists
+    mock_nws.assert_called_once()
 
     await client.close()
 
@@ -279,7 +289,7 @@ async def test_multiple_cache_hits(
     sample_weather_data: WeatherData,
     mocker,
 ):
-    """Test that multiple requests use cached data."""
+    """Test that multiple requests always fetch fresh data with cache as fallback."""
     cache = WeatherDataCache(cache_dir=temp_cache_dir, max_age_minutes=60)
 
     # Store fresh data
@@ -287,20 +297,33 @@ async def test_multiple_cache_hits(
 
     client = WeatherClient(offline_cache=cache)
 
-    # Mock API to verify it's not called
-    mock_fetch = mocker.patch.object(client, "_fetch_nws_data")
+    # Mock API to return data
+    mock_fetch = mocker.patch.object(
+        client,
+        "_fetch_nws_data",
+        return_value=(
+            sample_weather_data.current,
+            sample_weather_data.forecast,
+            None,
+            sample_weather_data.alerts,
+            sample_weather_data.hourly_forecast,
+        ),
+    )
+    # Mock enrichments to avoid API calls
+    mocker.patch.object(client, "_launch_enrichment_tasks", return_value={})
+    mocker.patch.object(client, "_await_enrichments")
 
     # Make multiple requests
     result1 = await client.get_weather_data(test_location)
     result2 = await client.get_weather_data(test_location)
     result3 = await client.get_weather_data(test_location)
 
-    # All should return cached data
+    # All should have data
     assert result1.current is not None
     assert result2.current is not None
     assert result3.current is not None
 
-    # API should not be called at all
-    mock_fetch.assert_not_called()
+    # API should be called for each request (fresh fetch always happens)
+    assert mock_fetch.call_count == 3
 
     await client.close()
