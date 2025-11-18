@@ -136,17 +136,12 @@ async def enrich_with_nws_discussion(
     if not client._is_us_location(location):
         return
 
-    if weather_data.discussion and not weather_data.discussion.startswith(
-        "Forecast discussion not available"
-    ):
-        return
-
     try:
         logger.debug("Fetching forecast discussion from NWS for %s", location.name)
         _, discussion = await client._get_nws_forecast_and_discussion(location)
         if discussion:
             weather_data.discussion = discussion
-            logger.info("Added forecast discussion from NWS")
+            logger.info("Updated forecast discussion from NWS")
     except Exception as exc:  # noqa: BLE001
         logger.debug("Failed to fetch NWS discussion: %s", exc)
 
@@ -261,8 +256,6 @@ async def enrich_with_aviation_data(
 ) -> None:
     """Populate aviation data for US locations using NWS products."""
     if not client._is_us_location(location):
-        return
-    if weather_data.aviation and weather_data.aviation.has_taf():
         return
 
     try:
