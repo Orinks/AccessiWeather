@@ -51,7 +51,14 @@ class DummyButton:
 
 def _create_app():
     """Create a lightweight app stub with the fields used by update_weather_displays."""
+    from unittest.mock import Mock
+
     presenter = WeatherPresenter(AppSettings())
+
+    # Mock main_window to make the window appear "visible" for tests
+    mock_window = Mock()
+    mock_window.visible = True
+
     return SimpleNamespace(
         presenter=presenter,
         current_conditions_display=DummyText(),
@@ -65,6 +72,7 @@ def _create_app():
         current_alerts_data=None,
         _notifier=None,
         status_label=None,
+        main_window=mock_window,
     )
 
 
