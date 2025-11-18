@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 # Cache schema version - increment this when cache data structure changes
 # This is independent of app version and allows test builds to invalidate old cache
-CACHE_SCHEMA_VERSION = 2
+CACHE_SCHEMA_VERSION = 3
 
 
 @dataclass
