@@ -30,7 +30,11 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     """Initialize core application components for the given app instance."""
     logger.info("Initializing application components")
 
-    app.config_manager = ConfigManager(app)
+    app.config_manager = ConfigManager(
+        app,
+        config_dir=getattr(app, "_config_dir", None),
+        portable_mode=getattr(app, "_portable_mode", False),
+    )
     config = app.config_manager.load_config()
 
     try:
