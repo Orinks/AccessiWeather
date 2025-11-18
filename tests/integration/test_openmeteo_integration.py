@@ -40,6 +40,7 @@ def mapper():
 @pytest.mark.integration
 @pytest.mark.network
 @pytest.mark.skipif(not RUN_INTEGRATION, reason=skip_reason)
+@pytest.mark.flaky(reruns=2, reruns_delay=5)
 def test_openmeteo_current_conditions_sunrise_sunset(openmeteo_client, mapper):
     """Test Open-Meteo current conditions returns valid sunrise/sunset times."""
     # Fetch raw data from API

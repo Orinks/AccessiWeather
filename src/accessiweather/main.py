@@ -82,10 +82,6 @@ def main(
         enable_caching: Whether to enable API response caching
         portable_mode: Whether to run in portable mode (saves config to local directory)
 
-    Note:
-        The parameters configure logging context and introspection only; the GUI still reads
-        configuration from default locations until #316 updates the application wiring.
-
     Returns:
     -------
         The constructed Toga app instance.
@@ -97,10 +93,8 @@ def main(
         f"enable_caching={enable_caching}, portable_mode={portable_mode}"
     )
 
-    # AccessiWeatherApp still ignores the CLI-provided parameters until #316 updates its
-    # constructor; configuration continues to flow through ConfigManager defaults.
-
-    return toga_main()
+    # Pass config_dir and portable_mode to the app
+    return toga_main(config_dir=config_dir, portable_mode=portable_mode)
 
 
 # Add blank line before if __name__ == "__main__":

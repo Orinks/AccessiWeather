@@ -41,8 +41,8 @@ def parse_args(args: list[str] | None = None) -> argparse.Namespace:
         help="Run in portable mode (saves configuration to local directory instead of user directory)",
     )
     parser.epilog = (
-        "Note: Configuration, debug, caching, and portable flags are accepted but currently "
-        "no-ops in the GUI. Follow #316 for progress on wiring these parameters through."
+        "Note: The --config and --portable flags now control configuration directory location. "
+        "The --no-cache and --debug flags are accepted but not yet fully wired."
     )
 
     return parser.parse_args(args)

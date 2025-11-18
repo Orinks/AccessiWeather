@@ -124,6 +124,7 @@ async def test_nws_current_conditions_has_valid_timestamp(http_client):
     current = await get_nws_current_conditions(
         TEST_LOCATION,
         "https://api.weather.gov",
+        USER_AGENT,
         REQUEST_TIMEOUT,
         http_client,
     )
@@ -159,10 +160,11 @@ async def test_nws_current_conditions_has_valid_timestamp(http_client):
 @pytest.mark.skipif(not RUN_INTEGRATION, reason=skip_reason)
 @pytest.mark.asyncio
 async def test_nws_forecast_has_valid_periods_and_times(http_client):
-    """Test NWS forecast returns valid periods with timestamps."""
-    forecast, _ = await get_nws_forecast_and_discussion(
+    """Test NWS forecast returns periods with valid timestamps."""
+    forecast, discussion = await get_nws_forecast_and_discussion(
         TEST_LOCATION,
         "https://api.weather.gov",
+        USER_AGENT,
         REQUEST_TIMEOUT,
         http_client,
     )
@@ -200,10 +202,11 @@ async def test_nws_forecast_has_valid_periods_and_times(http_client):
 @pytest.mark.skipif(not RUN_INTEGRATION, reason=skip_reason)
 @pytest.mark.asyncio
 async def test_nws_hourly_forecast_has_timestamps(http_client):
-    """Test NWS hourly forecast returns valid hourly periods with timestamps."""
+    """Test NWS hourly forecast returns periods with valid timestamps."""
     hourly = await get_nws_hourly_forecast(
         TEST_LOCATION,
         "https://api.weather.gov",
+        USER_AGENT,
         REQUEST_TIMEOUT,
         http_client,
     )
@@ -245,9 +248,10 @@ async def test_nws_hourly_forecast_has_timestamps(http_client):
 @pytest.mark.asyncio
 async def test_nws_parallel_fetch_returns_data(http_client):
     """Test NWS parallel fetch returns current, forecast, hourly, alerts, and discussion."""
-    current, forecast, hourly, alerts, discussion = await get_nws_all_data_parallel(
+    current, forecast, discussion, alerts, hourly = await get_nws_all_data_parallel(
         TEST_LOCATION,
         "https://api.weather.gov",
+        USER_AGENT,
         REQUEST_TIMEOUT,
         http_client,
     )

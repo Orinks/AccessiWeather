@@ -59,7 +59,7 @@ def test_parse_openmeteo_current_conditions_converts_units():
     client = WeatherClient()
     sample = {
         "current": {
-            "time": "2025-09-27T00:30",
+            "time": "2025-09-27T00:30-04:00",
             "temperature_2m": 64.0,
             "relative_humidity_2m": 82.3,
             "apparent_temperature": 63.2,
@@ -77,8 +77,8 @@ def test_parse_openmeteo_current_conditions_converts_units():
             "pressure_msl": "hPa",
         },
         "daily": {
-            "sunrise": ["2025-09-27T06:45"],
-            "sunset": ["2025-09-27T18:15"],
+            "sunrise": ["2025-09-27T06:45-04:00"],
+            "sunset": ["2025-09-27T18:15-04:00"],
             "uv_index_max": [7.5],
         },
     }
@@ -96,10 +96,14 @@ def test_parse_openmeteo_current_conditions_converts_units():
     assert current.feels_like_f == pytest.approx(63.2, rel=1e-3)
     assert current.feels_like_c == pytest.approx(17.333, rel=1e-3)
     assert current.dewpoint_f is not None
-    # After timezone fix, these should be timezone-aware (UTC)
-    assert current.sunrise_time == datetime(2025, 9, 27, 6, 45, tzinfo=UTC)
-    assert current.sunset_time == datetime(2025, 9, 27, 18, 15, tzinfo=UTC)
-    assert current.last_updated == datetime(2025, 9, 27, 0, 30, tzinfo=UTC)
+    # After timezone fix, these should be timezone-aware in location's local timezone
+    # Using UTC-4 as example (Eastern Daylight Time)
+    from datetime import timedelta, timezone
+
+    edt = timezone(timedelta(hours=-4))
+    assert current.sunrise_time == datetime(2025, 9, 27, 6, 45, tzinfo=edt)
+    assert current.sunset_time == datetime(2025, 9, 27, 18, 15, tzinfo=edt)
+    assert current.last_updated == datetime(2025, 9, 27, 0, 30, tzinfo=edt)
     assert current.uv_index == pytest.approx(7.5, rel=1e-3)
 
 

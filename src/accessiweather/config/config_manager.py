@@ -29,11 +29,31 @@ logger = logging.getLogger("accessiweather.config")
 class ConfigManager:
     """Simple configuration manager using Toga paths."""
 
-    def __init__(self, app: toga.App):
-        """Initialize the configuration manager with a Toga app instance."""
+    def __init__(
+        self, app: toga.App, config_dir: str | Path | None = None, portable_mode: bool = False
+    ):
+        """
+        Initialize the configuration manager with a Toga app instance.
+
+        Args:
+            app: Toga application instance
+            config_dir: Custom configuration directory (overrides default)
+            portable_mode: If True, use app directory for config instead of user directory
+
+        """
         self.app = app
-        self.config_file = self.app.paths.config / "accessiweather.json"
-        self.config_dir = self.app.paths.config  # Add config_dir property
+
+        # Determine config directory based on parameters
+        if config_dir:
+            self.config_dir = Path(config_dir)
+        elif portable_mode:
+            # Portable mode: use directory alongside the executable/app
+            self.config_dir = Path.cwd() / "config"
+        else:
+            # Default: use Toga's standard config path
+            self.config_dir = self.app.paths.config
+
+        self.config_file = self.config_dir / "accessiweather.json"
         self._config: AppConfig | None = None
         self._startup_manager = StartupManager()
         self._locations = LocationOperations(self)

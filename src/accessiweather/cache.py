@@ -76,12 +76,12 @@ class Cache:
 
         # Check if the entry has expired
         if entry.expiration < current_time:
-            logger.info(f"Cache entry for '{key}' has expired")
+            logger.debug(f"Cache entry for '{key}' has expired")
             # Remove the expired entry
             del self.data[key]
             return None
 
-        logger.info(f"Cache hit for '{key}' (expires in {int(entry.expiration - current_time)}s)")
+        logger.debug(f"Cache hit for '{key}' (expires in {int(entry.expiration - current_time)}s)")
         return entry.value
 
     def set(self, key: str, value: Any, ttl: float | None = None) -> None:
@@ -216,7 +216,7 @@ def _deserialize_current(data: dict | None) -> CurrentConditions | None:
     sunset = _deserialize_datetime(sunset_raw)
     last_updated = _deserialize_datetime(last_updated_raw)
 
-    logger.info(
+    logger.debug(
         f"Deserializing current conditions from cache - "
         f"sunrise: {sunrise_raw} -> {sunrise}, "
         f"sunset: {sunset_raw} -> {sunset}, "

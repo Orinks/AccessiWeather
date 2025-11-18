@@ -157,4 +157,6 @@ class TestMainFunction:
                 description="Simple, accessible weather application",
                 home_page="https://github.com/Orinks/AccessiWeather",
                 author="Orinks",
+                config_dir=None,
+                portable_mode=False,
             )

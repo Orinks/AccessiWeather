@@ -1,7 +1,8 @@
 """Tests for version management - ensuring pyproject.toml is the single source of truth."""
 
-import tomllib
 from pathlib import Path
+
+import tomllib
 
 
 class TestVersionManagement:
