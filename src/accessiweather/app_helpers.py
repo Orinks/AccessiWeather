@@ -100,7 +100,10 @@ def update_status(app: AccessiWeatherApp, message: str) -> None:
     """Update the status label and log the message."""
     # Only update UI if the window is visible to avoid ghost notifications on Windows
     if app.status_label and should_show_dialog(app):
-        app.status_label.text = message
+        try:
+            app.status_label.text = message
+        except Exception as exc:
+            logger.debug("Failed to update status label (window may be hidden): %s", exc)
     logger.info("Status: %s", message)
 
 
