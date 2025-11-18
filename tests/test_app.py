@@ -332,15 +332,15 @@ class TestAccessiWeatherAppUICreation:
         """Test status label update."""
         app = mock_app_with_components
         app.status_label = Mock()
-        
+
         # Mock main_window as a property to avoid Toga validation
         mock_window = Mock()
         mock_window.visible = True
-        with patch.object(type(app), 'main_window', new_callable=PropertyMock) as mock_main_window:
+        with patch.object(type(app), "main_window", new_callable=PropertyMock) as mock_main_window:
             mock_main_window.return_value = mock_window
-            
+
             app_helpers.update_status(app, "Test status message")
-            
+
             assert app.status_label.text == "Test status message"
 
 
