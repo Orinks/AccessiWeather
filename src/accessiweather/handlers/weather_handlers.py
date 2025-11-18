@@ -37,12 +37,10 @@ async def refresh_weather_data(app: AccessiWeatherApp) -> None:
     current_location = app.config_manager.get_current_location()
     if not current_location:
         logger.debug("No current location found")
-        app_helpers.update_status(app, "No location selected")
         return
 
     logger.info("Starting weather data refresh for %s", current_location.name)
     app.is_updating = True
-    app_helpers.update_status(app, f"Updating weather for {current_location.name}...")
 
     try:
         if app.refresh_button:
@@ -55,16 +53,12 @@ async def refresh_weather_data(app: AccessiWeatherApp) -> None:
         app.current_weather_data = weather_data
 
         logger.debug("About to update weather displays")
-        presentation = await update_weather_displays(app, weather_data)
+        await update_weather_displays(app, weather_data)
         logger.debug("Weather displays updated")
-
-        if presentation and presentation.status_messages:
-            app_helpers.update_status(app, presentation.status_messages[-1])
 
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Failed to refresh weather data: %s", exc)
         app_helpers.show_error_displays(app, str(exc))
-        app_helpers.update_status(app, f"Failed to update weather: {exc}")
     finally:
         app.is_updating = False
         if app.refresh_button:
