@@ -58,8 +58,9 @@ except Exception:
 def _read_pyproject_version() -> str | None:
     """Read version from pyproject.toml (project.version is the single source of truth)."""
     try:
-        import tomllib
         from pathlib import Path
+
+        import tomllib
 
         root = Path(__file__).resolve().parents[2]
         py = root / "pyproject.toml"

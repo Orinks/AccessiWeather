@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import TYPE_CHECKING
 
@@ -170,6 +171,19 @@ def handle_exit(app: AccessiWeatherApp) -> bool:
                 app.update_task.cancel()
         except Exception as exc:  # pragma: no cover - defensive logging
             logger.debug("Background task cancel error (non-fatal): %s", exc)
+
+        # Close httpx client to prevent resource leaks
+        try:
+            weather_client = getattr(app, "weather_client", None)
+            if weather_client:
+                logger.debug("Closing weather client HTTP connections")
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    loop.create_task(weather_client.close())
+                else:
+                    asyncio.run(weather_client.close())
+        except Exception as exc:  # pragma: no cover - defensive logging
+            logger.debug("Weather client close error (non-fatal): %s", exc)
 
         play_exit_sound(app)
 
