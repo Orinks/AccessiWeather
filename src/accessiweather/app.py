@@ -27,12 +27,13 @@ if TYPE_CHECKING:  # pragma: no cover - import cycle guard
     from .weather_client import WeatherClient
 
 # Configure logging for when running with briefcase dev (bypasses main.py)
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)],
-    force=True,
-)
+# Only configure if no handlers are already set up (avoid double initialization)
+if not logging.getLogger().handlers:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=[logging.StreamHandler(sys.stdout)],
+    )
 
 logger = logging.getLogger(__name__)
 
