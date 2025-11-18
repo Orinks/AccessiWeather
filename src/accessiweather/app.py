@@ -98,12 +98,12 @@ class AccessiWeatherApp(toga.App):
             # Check for single instance before initializing anything else
             self.single_instance_manager = SingleInstanceManager(self)
             if not self.single_instance_manager.try_acquire_lock():
-                logger.info("Another instance is already running, showing dialog and exiting")
+                logger.info("Another instance is already running, exiting silently")
                 # Create a minimal main window to satisfy Toga's requirements
                 self.main_window = toga.MainWindow(title=self.formal_name)
                 self.main_window.content = toga.Box()
-                _task = asyncio.create_task(self._handle_already_running())
-                _task.add_done_callback(background_tasks.task_done_callback)
+                # Exit silently without showing intrusive dialog
+                self.request_exit()
                 return
 
             # Initialize core components
@@ -129,16 +129,6 @@ class AccessiWeatherApp(toga.App):
             app_helpers.show_error_dialog(
                 self, "Startup Error", f"Failed to start application: {e}"
             )
-
-    async def _handle_already_running(self):
-        """Handle the case when another instance is already running."""
-        try:
-            await self.single_instance_manager.show_already_running_dialog()
-        except Exception as e:
-            logger.error(f"Failed to show already running dialog: {e}")
-        finally:
-            # Use request_exit to allow proper cleanup through on_exit handler
-            self.request_exit()
 
     async def on_running(self):
         """Start background tasks when the app starts running."""

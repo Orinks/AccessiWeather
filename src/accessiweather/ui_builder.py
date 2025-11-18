@@ -97,7 +97,7 @@ def create_main_ui(app: AccessiWeatherApp) -> None:
     )
     main_box.add(title_label)
 
-    app.status_label = toga.Label("Ready", style=Pack(margin_bottom=10, font_style="italic"))
+    app.status_label = toga.Label("", style=Pack(margin_bottom=10, font_style="italic"))
     main_box.add(app.status_label)
 
     location_box = create_location_section(app)

@@ -37,15 +37,15 @@ async def refresh_weather_data(app: AccessiWeatherApp) -> None:
     current_location = app.config_manager.get_current_location()
     if not current_location:
         logger.debug("No current location found")
-        app_helpers.update_status(app, "No location selected")
         return
 
     logger.info("Starting weather data refresh for %s", current_location.name)
     app.is_updating = True
-    app_helpers.update_status(app, f"Updating weather for {current_location.name}...")
+    window_visible = app_helpers.should_show_dialog(app)
 
     try:
-        if app.refresh_button:
+        # Only update button state if window is visible
+        if app.refresh_button and window_visible:
             app.refresh_button.enabled = False
 
         logger.debug("About to call weather_client.get_weather_data")
@@ -55,27 +55,27 @@ async def refresh_weather_data(app: AccessiWeatherApp) -> None:
         app.current_weather_data = weather_data
 
         logger.debug("About to update weather displays")
-        presentation = await update_weather_displays(app, weather_data)
+        await update_weather_displays(app, weather_data)
         logger.debug("Weather displays updated")
-
-        if presentation and presentation.status_messages:
-            app_helpers.update_status(app, presentation.status_messages[-1])
-        else:
-            app_helpers.update_status(app, f"Weather updated for {current_location.name}")
 
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Failed to refresh weather data: %s", exc)
         app_helpers.show_error_displays(app, str(exc))
-        app_helpers.update_status(app, f"Failed to update weather: {exc}")
     finally:
         app.is_updating = False
-        if app.refresh_button:
+        # Only update button state if window is visible
+        if app.refresh_button and window_visible:
             app.refresh_button.enabled = True
 
 
 @timed_async("UI.update_displays")
 async def update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherData) -> Any:
     """Update UI widgets with new weather data."""
+    # CRITICAL: Do NOT update UI when window is hidden to prevent phantom popups on Windows
+    if not app_helpers.should_show_dialog(app):
+        logger.debug("Skipping weather display updates - window is hidden")
+        return None
+
     try:
         presentation = app.presenter.present(weather_data)
 
