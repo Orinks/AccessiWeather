@@ -332,6 +332,8 @@ class TestAccessiWeatherAppUICreation:
         """Test status label update."""
         app = mock_app_with_components
         app.status_label = Mock()
+        app.main_window = Mock()
+        app.main_window.visible = True
 
         app_helpers.update_status(app, "Test status message")
 
