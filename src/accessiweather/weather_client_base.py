@@ -351,18 +351,7 @@ class WeatherClient:
         Perform the actual weather data fetch.
 
         This is the core fetch logic separated for deduplication purposes.
-        Uses cache-first strategy: returns cached data if fresh, and schedules
-        background enrichment updates.
         """
-        # Try to load from cache first (cache-first design)
-        if self.offline_cache:
-            cached = self.offline_cache.load(location, allow_stale=False)
-            if cached:
-                logger.info(f"Cache hit for {location.name}, returning cached data")
-                # Schedule background enrichment updates without blocking
-                asyncio.create_task(self._update_enrichments_in_background(cached, location))
-                return cached
-
         # Determine which API to use based on data source and location
         logger.debug("Determining API choice")
         api_choice = self._determine_api_choice(location)
@@ -604,30 +593,6 @@ class WeatherClient:
     ) -> None:
         """Delegate Visual Crossing alert processing to the dedicated module."""
         await vc_alerts.process_visual_crossing_alerts(alerts, location)
-
-    async def _update_enrichments_in_background(
-        self, weather_data: WeatherData, location: Location
-    ) -> None:
-        """
-        Update enrichments asynchronously in the background without blocking.
-
-        This runs enrichment tasks concurrently and persists results to cache.
-        Used when returning cached data to keep it fresh.
-
-        Args:
-        ----
-            weather_data: The cached WeatherData object to enrich
-            location: The location for enrichment
-
-        """
-        try:
-            logger.debug(f"Starting background enrichment updates for {location.name}")
-            enrichment_tasks = self._launch_enrichment_tasks(weather_data, location)
-            # Don't block on enrichments, but await them to persist updated data
-            await self._await_enrichments(enrichment_tasks, weather_data)
-            logger.info(f"Background enrichment updates completed for {location.name}")
-        except Exception as exc:  # noqa: BLE001
-            logger.debug(f"Background enrichment failed for {location.name}: {exc}")
 
     def _launch_enrichment_tasks(
         self, weather_data: WeatherData, location: Location
