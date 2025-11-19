@@ -126,6 +126,8 @@ def create_main_ui(app: AccessiWeatherApp) -> None:
     app.main_window = toga.MainWindow(title=app.formal_name)
     app.main_window.content = main_box
     app.main_window.on_close = app._on_window_close
+    # Attach on_show handler to refresh weather when window becomes visible
+    app.main_window.on_show = lambda: asyncio.create_task(event_handlers.on_window_show(app))
     app.main_window.show()
 
     logger.info("Main UI created successfully")
