@@ -106,6 +106,7 @@ class TestAccessiWeatherAppStartup:
         app = Mock(spec=AccessiWeatherApp)
 
         with patch("accessiweather.app.app_initialization") as mock_init:
+            mock_init.initialize_components = Mock()
             AccessiWeatherApp._initialize_components(app)
             mock_init.initialize_components.assert_called_once_with(app)
 
@@ -114,6 +115,7 @@ class TestAccessiWeatherAppStartup:
         app = Mock(spec=AccessiWeatherApp)
 
         with patch("accessiweather.app.app_initialization") as mock_init:
+            mock_init.load_initial_data = Mock()
             AccessiWeatherApp._load_initial_data(app)
             mock_init.load_initial_data.assert_called_once_with(app)
 
