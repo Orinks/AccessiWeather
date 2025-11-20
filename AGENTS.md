@@ -58,3 +58,11 @@ python installer/make.py dev          # Helper wrapper around Briefcase
 **Error Handling**: Defensive `getattr(obj, attr, default)` for attributes; async operations with try-except; rate-limit alerts.
 
 **Docs**: See `.github/copilot-instructions.md` for detailed patterns and gotchas.
+
+## Branching & Merge Strategy
+
+To avoid massive merge conflicts and ensure repository health:
+
+1. **Frequent Merges**: Regularly merge `main` into `dev` (or your feature branch) to keep it up-to-date.
+2. **Feature Branches**: Use short-lived feature branches branched from `dev`. Merge back to `dev` frequently.
+3. **Release Flow**: Treat `dev` as the upstream for `main`. Never commit directly to `main`. Hotfixes on `main` must be immediately backported to `dev`.
