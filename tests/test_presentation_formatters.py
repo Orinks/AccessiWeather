@@ -25,7 +25,7 @@ class TestFormatHourTime:
         """Test formatting of timezone-naive datetime."""
         dt = datetime(2025, 11, 9, 15, 30)  # 3:30 PM
         result = format_hour_time(dt)
-        assert result == "03:30 PM"
+        assert result == "3:30 PM"
 
     def test_format_hour_time_with_utc_datetime(self):
         """Test formatting of UTC datetime converts to local time."""
@@ -185,8 +185,8 @@ class TestTimezoneIntegration:
 
         # Results should be different (showing location's time, not system time)
         # UTC shows 8:00 PM, Eastern shows 3:00 PM
-        assert result_utc == "08:00 PM"
-        assert result_eastern == "03:00 PM"
+        assert result_utc == "8:00 PM"
+        assert result_eastern == "3:00 PM"
 
 
 @pytest.mark.parametrize(

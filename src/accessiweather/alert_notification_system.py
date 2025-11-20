@@ -19,7 +19,8 @@ from .constants import (
     SEVERITY_PRIORITY_SEVERE,
     SEVERITY_PRIORITY_UNKNOWN,
 )
-from .models import WeatherAlert, WeatherAlerts
+from .display.presentation.formatters import format_display_datetime
+from .models import AppSettings, WeatherAlert, WeatherAlerts
 from .notifications.toast_notifier import SafeDesktopNotifier
 
 logger = logging.getLogger(__name__)
@@ -30,6 +31,7 @@ def format_accessible_message(
     reason: str,
     include_areas: bool = True,
     include_expiration: bool = True,
+    settings: AppSettings | None = None,
 ) -> tuple[str, str]:
     """
     Format alert information for screen reader accessibility.
@@ -44,6 +46,7 @@ def format_accessible_message(
         reason: The reason for notification (new_alert, escalation, content_changed, reminder)
         include_areas: Whether to include affected areas in message
         include_expiration: Whether to include expiration time in message
+        settings: Application settings for formatting preferences
 
     Returns:
     -------
@@ -95,7 +98,23 @@ def format_accessible_message(
 
     # Add expiration if requested and available
     if include_expiration and alert.expires:
-        expires_str = alert.expires.strftime("%I:%M %p on %b %d")
+        # Extract time preferences
+        if settings:
+            time_display_mode = getattr(settings, "time_display_mode", "local")
+            time_format_12hour = getattr(settings, "time_format_12hour", True)
+            show_timezone_suffix = getattr(settings, "show_timezone_suffix", False)
+        else:
+            time_display_mode = "local"
+            time_format_12hour = True
+            show_timezone_suffix = False
+
+        expires_str = format_display_datetime(
+            alert.expires,
+            time_display_mode=time_display_mode,
+            use_12hour=time_format_12hour,
+            show_timezone=show_timezone_suffix,
+            date_format="%b %d",
+        )
         message_parts.append(f"Expires: {expires_str}")
 
     # Join all parts with double newlines for screen reader pause
@@ -111,10 +130,12 @@ class AlertNotificationSystem:
         self,
         alert_manager: AlertManager,
         notifier: SafeDesktopNotifier | None = None,
+        settings: AppSettings | None = None,
     ):
         """Initialize the instance."""
         self.alert_manager = alert_manager
         self.notifier = notifier or SafeDesktopNotifier()
+        self.settings = settings
 
         logger.info("AlertNotificationSystem initialized")
 
@@ -177,6 +198,7 @@ class AlertNotificationSystem:
                 reason=reason,
                 include_areas=True,
                 include_expiration=True,
+                settings=self.settings,
             )
 
             # Compute sound candidates based on alert content

@@ -21,6 +21,7 @@ except ImportError:  # pragma: no cover - fallback for Python <3.8
     except ImportError:  # pragma: no cover - metadata unavailable
         importlib_metadata = None  # type: ignore[assignment]
 
+from ..display.presentation.formatters import format_display_datetime
 from ..notifications.sound_player import SOUNDPACKS_DIR
 from . import settings_handlers
 
@@ -857,8 +858,30 @@ def update_last_check_info(dialog):
         if last_check_ts:
             try:
                 ts_float = float(last_check_ts)
-                dt_value = datetime.fromtimestamp(ts_float)
-                formatted = dt_value.strftime("%b %d, %Y %H:%M").replace(" 0", " ")
+                # Make it aware (local) so formatting works correctly
+                dt_value = datetime.fromtimestamp(ts_float).astimezone()
+
+                # Extract settings
+                settings = None
+                if getattr(dialog, "config_manager", None):
+                    settings = dialog.config_manager.get_settings()
+
+                if settings:
+                    time_display_mode = getattr(settings, "time_display_mode", "local")
+                    time_format_12hour = getattr(settings, "time_format_12hour", True)
+                    show_timezone_suffix = getattr(settings, "show_timezone_suffix", False)
+                else:
+                    time_display_mode = "local"
+                    time_format_12hour = True
+                    show_timezone_suffix = False
+
+                formatted = format_display_datetime(
+                    dt_value,
+                    time_display_mode=time_display_mode,
+                    use_12hour=time_format_12hour,
+                    show_timezone=show_timezone_suffix,
+                    date_format="%b %d, %Y",
+                )
                 display_text = f"Last check: {formatted}"
                 if last_status:
                     display_text += f" ({last_status})"

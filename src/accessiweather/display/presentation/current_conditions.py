@@ -80,20 +80,32 @@ def _build_basic_metrics(
     return metrics
 
 
-def _build_astronomical_metrics(current: CurrentConditions) -> list[Metric]:
+def _build_astronomical_metrics(
+    current: CurrentConditions,
+    time_display_mode: str = "local",
+    use_12hour: bool = True,
+    show_timezone: bool = False,
+) -> list[Metric]:
     """Build astronomical metrics (sunrise, sunset, moon phase, moonrise, moonset)."""
     metrics: list[Metric] = []
+
+    # Common kwargs for format_sun_time
+    time_kwargs = {
+        "time_display_mode": time_display_mode,
+        "use_12hour": use_12hour,
+        "show_timezone": show_timezone,
+    }
 
     logger.info(
         f"Building astronomical metrics - sunrise_time: {current.sunrise_time}, sunset_time: {current.sunset_time}"
     )
 
-    sunrise_str = format_sun_time(current.sunrise_time)
+    sunrise_str = format_sun_time(current.sunrise_time, **time_kwargs)
     if sunrise_str:
         logger.info(f"Formatted sunrise: {sunrise_str}")
         metrics.append(Metric("Sunrise", sunrise_str))
 
-    sunset_str = format_sun_time(current.sunset_time)
+    sunset_str = format_sun_time(current.sunset_time, **time_kwargs)
     if sunset_str:
         logger.info(f"Formatted sunset: {sunset_str}")
         metrics.append(Metric("Sunset", sunset_str))
@@ -101,11 +113,11 @@ def _build_astronomical_metrics(current: CurrentConditions) -> list[Metric]:
     if current.moon_phase:
         metrics.append(Metric("Moon phase", current.moon_phase))
 
-    moonrise_str = format_sun_time(current.moonrise_time)
+    moonrise_str = format_sun_time(current.moonrise_time, **time_kwargs)
     if moonrise_str:
         metrics.append(Metric("Moonrise", moonrise_str))
 
-    moonset_str = format_sun_time(current.moonset_time)
+    moonset_str = format_sun_time(current.moonset_time, **time_kwargs)
     if moonset_str:
         metrics.append(Metric("Moonset", moonset_str))
 
@@ -216,6 +228,11 @@ def build_current_conditions(
     show_uv_index = getattr(settings, "show_uv_index", True) if settings else True
     show_pressure_trend = getattr(settings, "show_pressure_trend", True) if settings else True
 
+    # Time display preferences
+    time_display_mode = getattr(settings, "time_display_mode", "local") if settings else "local"
+    use_12hour = getattr(settings, "time_format_12hour", True) if settings else True
+    show_timezone = getattr(settings, "show_timezone_suffix", False) if settings else False
+
     # Build metrics by category
     metrics: list[Metric] = []
     metrics.extend(
@@ -223,10 +240,17 @@ def build_current_conditions(
             current, unit_pref, precision, show_dewpoint, show_visibility, show_uv_index
         )
     )
-    metrics.extend(_build_astronomical_metrics(current))
+    metrics.extend(
+        _build_astronomical_metrics(current, time_display_mode, use_12hour, show_timezone)
+    )
 
     if current.last_updated:
-        formatted_time = format_timestamp(current.last_updated)
+        formatted_time = format_timestamp(
+            current.last_updated,
+            time_display_mode=time_display_mode,
+            use_12hour=use_12hour,
+            show_timezone=show_timezone,
+        )
         logger.info(f"Last updated raw: {current.last_updated}, formatted: {formatted_time}")
         metrics.append(Metric("Last updated", formatted_time))
 
