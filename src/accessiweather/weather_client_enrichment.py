@@ -389,3 +389,34 @@ async def merge_international_alerts(
     for alert in alerts.alerts:
         combined.setdefault(alert.get_unique_id(), alert)
     weather_data.alerts = WeatherAlerts(alerts=list(combined.values()))
+
+
+async def enrich_with_visual_crossing_moon_data(
+    client: WeatherClient, weather_data: WeatherData, location: Location
+) -> None:
+    """Enrich weather data with moon phase info from Visual Crossing if configured."""
+    if not client.visual_crossing_client:
+        return
+
+    # Skip if we already have moon phase data
+    if weather_data.current and weather_data.current.moon_phase:
+        return
+
+    try:
+        logger.debug("Fetching moon data from Visual Crossing for %s", location.name)
+        vc_current = await client.visual_crossing_client.get_current_conditions(location)
+
+        if vc_current and weather_data.current:
+            # Update moon fields if present in VC response
+            if vc_current.moon_phase:
+                weather_data.current.moon_phase = vc_current.moon_phase
+                logger.info("Updated moon phase from Visual Crossing: %s", vc_current.moon_phase)
+
+            if vc_current.moonrise_time:
+                weather_data.current.moonrise_time = vc_current.moonrise_time
+
+            if vc_current.moonset_time:
+                weather_data.current.moonset_time = vc_current.moonset_time
+
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("Failed to fetch moon data from Visual Crossing: %s", exc)

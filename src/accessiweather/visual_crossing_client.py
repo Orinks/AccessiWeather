@@ -57,9 +57,10 @@ class VisualCrossingClient:
             url = f"{self.base_url}/{location.latitude},{location.longitude}"
             params = {
                 "key": self.api_key,
-                "include": "current",
+                "include": "current,days",
+                "numDays": 1,
                 "unitGroup": "us",  # Use US units (Fahrenheit, mph, inches)
-                "elements": "temp,feelslike,humidity,windspeed,winddir,pressure,conditions,datetime",
+                "elements": "temp,feelslike,humidity,windspeed,winddir,pressure,conditions,datetime,sunrise,sunset,moonrise,moonset,moonphase,sunriseEpoch,sunsetEpoch,moonriseEpoch,moonsetEpoch",
             }
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
