@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
+from contextlib import suppress
 from typing import TYPE_CHECKING, Any
 
 import toga
@@ -27,19 +29,36 @@ async def on_refresh_pressed(app: AccessiWeatherApp, widget: toga.Button) -> Non
 
 @timed_async("UI.refresh_weather_data")
 async def refresh_weather_data(app: AccessiWeatherApp) -> None:
-    """Refresh weather data for the current location."""
+    """Refresh weather data for the current location with cancellation support."""
     logger.debug("refresh_weather_data called")
 
-    if app.is_updating:
-        logger.info("Update already in progress, skipping")
-        return
+    # Cancel any pending refresh task
+    if app.current_refresh_task and not app.current_refresh_task.done():
+        logger.info("Cancelling previous refresh task due to new request")
+        app.current_refresh_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await app.current_refresh_task
 
+    # Start new refresh task
+    app.current_refresh_task = asyncio.create_task(_refresh_weather_data_impl(app))
+
+    # Wait for it to complete (or be cancelled by the next call)
+    try:
+        await app.current_refresh_task
+    except asyncio.CancelledError:
+        logger.debug("Current refresh task was cancelled")
+
+
+async def _refresh_weather_data_impl(app: AccessiWeatherApp) -> None:
+    """Refresh weather data implementation logic."""
     current_location = app.config_manager.get_current_location()
     if not current_location:
         logger.debug("No current location found")
         return
 
     logger.info("Starting weather data refresh for %s", current_location.name)
+
+    # We allow overlapping updates in terms of UI state, but this task owns the "active" update
     app.is_updating = True
     window_visible = app_helpers.should_show_dialog(app)
 
@@ -49,20 +68,39 @@ async def refresh_weather_data(app: AccessiWeatherApp) -> None:
             app.refresh_button.enabled = False
 
         # OPTIMIZATION: Try to load cached data first for immediate feedback
-        # This allows the UI to populate instantly while the fresh data is being fetched
         logger.debug("Checking for cached weather data")
         cached_data = app.weather_client.get_cached_weather(current_location)
+
+        # Check cancellation before updating UI
+        if asyncio.current_task().cancelled():
+            raise asyncio.CancelledError()
+
         if cached_data:
-            logger.info("Found cached data, updating display immediately")
-            app.current_weather_data = cached_data
-            await update_weather_displays(app, cached_data)
-            # Indicate that an update is still in progress
-            if app.status_label:
-                app_helpers.update_status(app, f"Updating weather for {current_location.name}...")
+            # Verify location consistency - the user might have switched again!
+            latest_location = app.config_manager.get_current_location()
+            if latest_location and latest_location.name == current_location.name:
+                logger.info("Found cached data, updating display immediately")
+                app.current_weather_data = cached_data
+                await update_weather_displays(app, cached_data)
+                # Indicate that an update is still in progress
+                if app.status_label:
+                    app_helpers.update_status(
+                        app, f"Updating weather for {current_location.name}..."
+                    )
+            else:
+                logger.debug("Skipping cached UI update - location changed mid-operation")
+                return
 
         logger.debug("About to call weather_client.get_weather_data")
+        # This is the slow part where cancellation usually happens
         weather_data = await app.weather_client.get_weather_data(current_location)
         logger.debug("weather_client.get_weather_data completed")
+
+        # Verify location consistency again
+        latest_location = app.config_manager.get_current_location()
+        if not latest_location or latest_location.name != current_location.name:
+            logger.debug("Skipping fresh UI update - location changed mid-operation")
+            return
 
         app.current_weather_data = weather_data
 
@@ -70,6 +108,9 @@ async def refresh_weather_data(app: AccessiWeatherApp) -> None:
         await update_weather_displays(app, weather_data)
         logger.debug("Weather displays updated")
 
+    except asyncio.CancelledError:
+        logger.debug(f"Refresh cancelled for {current_location.name}")
+        raise
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Failed to refresh weather data: %s", exc)
         app_helpers.show_error_displays(app, str(exc))

@@ -79,6 +79,7 @@ class AccessiWeatherApp(toga.App):
         # Background update task
         self.update_task: asyncio.Task | None = None
         self.is_updating: bool = False
+        self.current_refresh_task: asyncio.Task | None = None  # Track active foreground refresh
 
         # Weather data storage
         self.current_weather_data: WeatherData | None = None
