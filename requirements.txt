@@ -8,3 +8,4 @@ httpx>=0.20.0
 attrs>=22.2.0
 psutil
 packaging
+keyring

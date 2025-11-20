@@ -29,6 +29,7 @@ def mock_config_manager():
     config.settings.github_app_installation_id = "789012"
     manager.get_config.return_value = config
     manager.save_config.return_value = True
+    manager.update_settings.return_value = True
     mock_logger = Mock()
     manager._get_logger.return_value = mock_logger
     return manager
@@ -159,30 +160,31 @@ class TestGitHubConfigOperations:
         """Test setting GitHub App configuration."""
         result = github_config.set_github_app_config("999888", "NEW KEY", "777666")
         assert result is True
-        config = mock_config_manager.get_config.return_value
-        assert config.settings.github_app_id == "999888"
-        assert config.settings.github_app_private_key == "NEW KEY"
-        assert config.settings.github_app_installation_id == "777666"
-        mock_config_manager.save_config.assert_called_once()
+        mock_config_manager.update_settings.assert_called_once_with(
+            github_app_id="999888",
+            github_app_private_key="NEW KEY",
+            github_app_installation_id="777666",
+        )
 
     def test_set_github_app_config_strips_whitespace(self, github_config, mock_config_manager):
         """Test that set_github_app_config strips whitespace."""
         result = github_config.set_github_app_config("  123  ", "  KEY  ", "  456  ")
         assert result is True
-        config = mock_config_manager.get_config.return_value
-        assert config.settings.github_app_id == "123"
-        assert config.settings.github_app_private_key == "KEY"
-        assert config.settings.github_app_installation_id == "456"
+        mock_config_manager.update_settings.assert_called_once_with(
+            github_app_id="123",
+            github_app_private_key="KEY",
+            github_app_installation_id="456",
+        )
 
     def test_set_github_app_config_save_fails(self, github_config, mock_config_manager):
         """Test setting GitHub App config when save fails."""
-        mock_config_manager.save_config.return_value = False
+        mock_config_manager.update_settings.return_value = False
         result = github_config.set_github_app_config("123", "KEY", "456")
         assert result is False
 
     def test_set_github_app_config_exception(self, github_config, mock_config_manager):
         """Test setting GitHub App config when exception occurs."""
-        mock_config_manager.get_config.side_effect = Exception("Config error")
+        mock_config_manager.update_settings.side_effect = Exception("Config error")
         result = github_config.set_github_app_config("123", "KEY", "456")
         assert result is False
         github_config.logger.error.assert_called_once()
@@ -210,10 +212,11 @@ class TestGitHubConfigOperations:
         """Test clearing GitHub App configuration."""
         result = github_config.clear_github_app_config()
         assert result is True
-        config = mock_config_manager.get_config.return_value
-        assert config.settings.github_app_id == ""
-        assert config.settings.github_app_private_key == ""
-        assert config.settings.github_app_installation_id == ""
+        mock_config_manager.update_settings.assert_called_once_with(
+            github_app_id="",
+            github_app_private_key="",
+            github_app_installation_id="",
+        )
 
     def test_has_github_app_config_true(self, github_config):
         """Test has_github_app_config when backend URL is configured."""
