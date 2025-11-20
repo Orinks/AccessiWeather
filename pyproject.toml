@@ -19,7 +19,8 @@ dependencies = [
     "beautifulsoup4",
     "httpx>=0.20.0",
     "attrs>=22.2.0",
-    "psutil"
+    "psutil",
+    "keyring"
 ]
 readme = "README.md"
 classifiers = [
@@ -199,6 +200,7 @@ requires = [
     "beautifulsoup4",
     "attrs>=22.2.0",
     "psutil",
+    "keyring",
 ]
 test_requires = [
     "pytest>=7.0.0",

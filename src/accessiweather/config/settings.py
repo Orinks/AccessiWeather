@@ -13,6 +13,7 @@ from ..constants import (
     GITHUB_APP_PRIVATE_KEY_HEADER,
 )
 from ..models import AppConfig, AppSettings
+from .secure_storage import SecureStorage
 
 if TYPE_CHECKING:
     from .config_manager import ConfigManager
@@ -127,12 +128,24 @@ class SettingsOperations:
     def update_settings(self, **kwargs) -> bool:
         """Update settings values on the current configuration."""
         config = self._manager.get_config()
-        secret_keys = {"github_app_private_key", "visual_crossing_api_key"}
+        # These keys should be stored in SecureStorage
+        secure_keys = {
+            "visual_crossing_api_key",
+            "github_app_id",
+            "github_app_private_key",
+            "github_app_installation_id",
+        }
+        # These keys should be redacted in logs
+        redacted_keys = {"github_app_private_key", "visual_crossing_api_key"}
 
         for key, value in kwargs.items():
             if hasattr(config.settings, key):
                 setattr(config.settings, key, value)
-                log_value = "***redacted***" if key in secret_keys else value
+
+                if key in secure_keys and not SecureStorage.set_password(key, value):
+                    self.logger.error(f"Failed to save {key} to secure storage")
+
+                log_value = "***redacted***" if key in redacted_keys else value
                 self.logger.info(f"Updated setting {key} = {log_value}")
             else:
                 self.logger.warning(f"Unknown setting: {key}")

@@ -82,11 +82,11 @@ class GitHubConfigOperations:
     def set_github_app_config(self, app_id: str, private_key: str, installation_id: str) -> bool:
         """Set the GitHub App configuration in the settings."""
         try:
-            config = self._manager.get_config()
-            config.settings.github_app_id = app_id.strip()
-            config.settings.github_app_private_key = private_key.strip()
-            config.settings.github_app_installation_id = installation_id.strip()
-            return self._manager.save_config()
+            return self._manager.update_settings(
+                github_app_id=app_id.strip(),
+                github_app_private_key=private_key.strip(),
+                github_app_installation_id=installation_id.strip(),
+            )
         except Exception as exc:
             self.logger.error(f"Failed to set GitHub App configuration: {exc}")
             return False

@@ -26,6 +26,9 @@ class AppSettings:
     sound_enabled: bool = True
     sound_pack: str = "default"
     github_backend_url: str = ""
+    github_app_id: str = ""
+    github_app_private_key: str = ""
+    github_app_installation_id: str = ""
     alert_notifications_enabled: bool = True
     alert_notify_extreme: bool = True
     alert_notify_severe: bool = True
@@ -83,7 +86,7 @@ class AppSettings:
             "minimize_to_tray": self.minimize_to_tray,
             "startup_enabled": self.startup_enabled,
             "data_source": self.data_source,
-            "visual_crossing_api_key": self.visual_crossing_api_key,
+            # visual_crossing_api_key is stored in secure keyring, not JSON
             "auto_update_enabled": self.auto_update_enabled,
             "update_channel": self.update_channel,
             "update_check_interval_hours": self.update_check_interval_hours,
