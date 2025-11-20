@@ -295,6 +295,25 @@ class WeatherClient:
             logger.error(f"Cache pre-warm failed for {location.name}: {exc}")
             return False
 
+    def get_cached_weather(self, location: Location) -> WeatherData | None:
+        """
+        Retrieve cached weather data for a location without triggering a network fetch.
+
+        Args:
+        ----
+            location: The location to retrieve cached data for.
+
+        Returns:
+        -------
+            The cached WeatherData or None if not found.
+
+        """
+        if not self.offline_cache:
+            return None
+        # Load with allow_stale=True so we can show something immediately
+        # The calling code can check .stale property if it cares
+        return self.offline_cache.load(location, allow_stale=True)
+
     async def get_weather_data(
         self, location: Location, force_refresh: bool = False
     ) -> WeatherData:

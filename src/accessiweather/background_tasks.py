@@ -32,17 +32,49 @@ async def start_background_updates(app: AccessiWeatherApp) -> None:
             logger.debug("Background update loop: sleeping for %s seconds", update_interval)
             await asyncio.sleep(update_interval)
 
-            if (
-                not app.is_updating
-                and app.config_manager
-                and app.config_manager.get_current_location()
-            ):
-                logger.info("Performing background weather update")
+            if not app.is_updating and app.config_manager and app.config_manager.has_locations():
+                logger.info("Performing background weather update for all locations")
                 try:
-                    await asyncio.wait_for(event_handlers.refresh_weather_data(app), timeout=60.0)
+                    # Update all locations to keep cache fresh for instant switching
+                    # We use a shorter timeout per location but allow the total process to take longer
+                    all_locations = app.config_manager.get_all_locations()
+                    current_location = app.config_manager.get_current_location()
+
+                    # Prioritize current location
+                    if current_location:
+                        logger.info(
+                            f"Background update: Prioritizing current location {current_location.name}"
+                        )
+                        await asyncio.wait_for(
+                            event_handlers.refresh_weather_data(app), timeout=45.0
+                        )
+
+                    # Then update others in background
+                    other_locations = [
+                        loc
+                        for loc in all_locations
+                        if not current_location or loc.name != current_location.name
+                    ]
+
+                    if other_locations:
+                        logger.info(
+                            f"Background update: Refreshing {len(other_locations)} other locations"
+                        )
+                        for loc in other_locations:
+                            if app.weather_client:
+                                try:
+                                    # Pre-warm cache without updating UI
+                                    # Add a small delay to be nice to APIs
+                                    await asyncio.sleep(2.0)
+                                    await app.weather_client.pre_warm_cache(loc)
+                                except Exception as loc_exc:
+                                    logger.warning(
+                                        f"Failed background update for {loc.name}: {loc_exc}"
+                                    )
+
                     logger.info("Background weather update completed successfully")
                 except TimeoutError:
-                    logger.error("Background weather update timed out after 60 seconds")
+                    logger.error("Background weather update timed out")
                     app.is_updating = False
                     if app.refresh_button:
                         app.refresh_button.enabled = True
@@ -53,9 +85,9 @@ async def start_background_updates(app: AccessiWeatherApp) -> None:
                         app.refresh_button.enabled = True
             else:
                 logger.debug(
-                    "Skipping background update - is_updating: %s, has_location: %s",
+                    "Skipping background update - is_updating: %s, has_locations: %s",
                     app.is_updating,
-                    bool(app.config_manager and app.config_manager.get_current_location()),
+                    bool(app.config_manager and app.config_manager.has_locations()),
                 )
 
     except asyncio.CancelledError:
