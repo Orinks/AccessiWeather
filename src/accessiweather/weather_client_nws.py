@@ -20,6 +20,11 @@ from .models import (
     WeatherAlert,
     WeatherAlerts,
 )
+from .utils.retry_utils import (
+    RETRYABLE_EXCEPTIONS,
+    async_retry_with_backoff,
+    is_retryable_http_error,
+)
 from .weather_client_parsers import (
     convert_pa_to_inches,
     convert_pa_to_mb,
@@ -34,7 +39,13 @@ VALID_QC_CODES = {"V", "C", None}
 
 
 def _parse_iso_datetime(value: Any) -> datetime | None:
-    """Parse ISO formatted timestamps, handling trailing Z."""
+    """
+    Parse ISO formatted timestamps, ensuring timezone awareness.
+
+    NWS returns ISO 8601 strings that should be timezone-aware.
+    This function ensures all parsed datetimes have timezone information to
+    prevent display issues when mixing naive and timezone-aware datetimes.
+    """
     if not isinstance(value, str) or not value:
         return None
     text = value.strip()
@@ -43,7 +54,12 @@ def _parse_iso_datetime(value: Any) -> datetime | None:
     if text.endswith("Z"):
         text = text[:-1] + "+00:00"
     try:
-        return datetime.fromisoformat(text)
+        dt = datetime.fromisoformat(text)
+        # Ensure timezone-aware datetime
+        if dt.tzinfo is None:
+            # If naive, assume UTC (NWS typically provides UTC timestamps)
+            dt = dt.replace(tzinfo=UTC)
+        return dt
     except ValueError:
         return None
 
@@ -254,6 +270,7 @@ async def _client_get(
     return response
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=30.0)
 async def get_nws_all_data_parallel(
     location: Location,
     nws_base_url: str,
@@ -309,9 +326,12 @@ async def get_nws_all_data_parallel(
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS data in parallel: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return None, None, None, None, None
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_nws_current_conditions(
     location: Location,
     nws_base_url: str,
@@ -453,6 +473,8 @@ async def get_nws_current_conditions(
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS current conditions: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return None
 
 
@@ -537,6 +559,7 @@ async def get_nws_station_metadata(
         return None
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_nws_forecast_and_discussion(
     location: Location,
     nws_base_url: str,
@@ -586,6 +609,8 @@ async def get_nws_forecast_and_discussion(
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS forecast and discussion: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return None, None
 
 
@@ -651,6 +676,7 @@ async def get_nws_discussion(
         return "Forecast discussion not available due to error."
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_nws_alerts(
     location: Location,
     nws_base_url: str,
@@ -682,9 +708,12 @@ async def get_nws_alerts(
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS alerts: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return WeatherAlerts(alerts=[])
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_nws_hourly_forecast(
     location: Location,
     nws_base_url: str,
@@ -738,9 +767,12 @@ async def get_nws_hourly_forecast(
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS hourly forecast: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return None
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_nws_tafs(
     station_id: str,
     nws_base_url: str,
@@ -798,6 +830,8 @@ async def get_nws_tafs(
         awc_response.raise_for_status()
     except Exception as exc:  # noqa: BLE001
         logger.error("Failed to fetch TAF from AviationWeather for %s: %s", station_id, exc)
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return None
 
     try:
@@ -825,6 +859,7 @@ async def get_nws_tafs(
     return None
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_nws_sigmets(
     nws_base_url: str,
     user_agent: str,
@@ -845,6 +880,8 @@ async def get_nws_sigmets(
         response.raise_for_status()
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to fetch SIGMET data: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return []
 
     data = response.json()
@@ -852,6 +889,7 @@ async def get_nws_sigmets(
     return [feature.get("properties", feature) for feature in features]
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_nws_cwas(
     cwsu_id: str,
     nws_base_url: str,
@@ -870,6 +908,8 @@ async def get_nws_cwas(
         response.raise_for_status()
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to fetch CWA data for {cwsu_id}: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return []
 
     data = response.json()
@@ -877,6 +917,7 @@ async def get_nws_cwas(
     return [feature.get("properties", feature) for feature in features]
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_nws_radar_profiler(
     station_id: str,
     nws_base_url: str,
@@ -895,11 +936,14 @@ async def get_nws_radar_profiler(
         response.raise_for_status()
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to fetch radar profiler {station_id}: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return None
 
     return response.json()
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_nws_marine_forecast(
     zone_type: str,
     zone_id: str,
@@ -919,6 +963,8 @@ async def get_nws_marine_forecast(
         response.raise_for_status()
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to fetch marine forecast for {zone_type}/{zone_id}: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return None
 
     return response.json()
@@ -1002,6 +1048,21 @@ def parse_nws_forecast(data: dict) -> Forecast:
         wind_direction_value = _extract_scalar(period_data.get("windDirection"))
         wind_direction = str(wind_direction_value) if wind_direction_value is not None else None
 
+        # Parse timestamps
+        start_time = None
+        end_time = None
+        if period_data.get("startTime"):
+            try:
+                start_time = datetime.fromisoformat(period_data["startTime"].replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                logger.warning(f"Failed to parse startTime: {period_data.get('startTime')}")
+
+        if period_data.get("endTime"):
+            try:
+                end_time = datetime.fromisoformat(period_data["endTime"].replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                logger.warning(f"Failed to parse endTime: {period_data.get('endTime')}")
+
         period = ForecastPeriod(
             name=period_data.get("name", ""),
             temperature=temperature,
@@ -1011,6 +1072,8 @@ def parse_nws_forecast(data: dict) -> Forecast:
             wind_speed=_format_wind_speed(period_data.get("windSpeed")),
             wind_direction=wind_direction,
             icon=period_data.get("icon"),
+            start_time=start_time,
+            end_time=end_time,
         )
         periods.append(period)
 
@@ -1034,6 +1097,8 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
 
         onset = None
         expires = None
+        sent = None
+        effective = None
 
         if props.get("onset"):
             try:
@@ -1047,6 +1112,18 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
             except ValueError:
                 logger.warning(f"Failed to parse expires time: {props['expires']}")
 
+        if props.get("sent"):
+            try:
+                sent = datetime.fromisoformat(props["sent"].replace("Z", "+00:00"))
+            except ValueError:
+                logger.warning(f"Failed to parse sent time: {props['sent']}")
+
+        if props.get("effective"):
+            try:
+                effective = datetime.fromisoformat(props["effective"].replace("Z", "+00:00"))
+            except ValueError:
+                logger.warning(f"Failed to parse effective time: {props['effective']}")
+
         alert = WeatherAlert(
             title=props.get("headline", "Weather Alert"),
             description=props.get("description", ""),
@@ -1058,8 +1135,11 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
             instruction=props.get("instruction"),
             onset=onset,
             expires=expires,
+            sent=sent,
+            effective=effective,
             areas=props.get("areaDesc", "").split("; ") if props.get("areaDesc") else [],
             id=alert_id,
+            source="NWS",
         )
         alerts.append(alert)
 

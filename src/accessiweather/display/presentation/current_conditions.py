@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterable
 
 from ...models import (
@@ -28,28 +29,18 @@ from .formatters import (
     get_uv_description,
 )
 
+logger = logging.getLogger(__name__)
 
-def build_current_conditions(
+
+def _build_basic_metrics(
     current: CurrentConditions,
-    location: Location,
     unit_pref: TemperatureUnit,
-    *,
-    settings: AppSettings | None = None,
-    environmental: EnvironmentalConditions | None = None,
-    trends: Iterable[TrendInsight] | None = None,
-    hourly_forecast: HourlyForecast | None = None,
-    air_quality: AirQualityPresentation | None = None,
-) -> CurrentConditionsPresentation:
-    """Create a structured presentation for the current weather."""
-    title = f"Current conditions for {location.name}"
-    description = current.condition or "Unknown"
-    precision = get_temperature_precision(unit_pref)
-
-    show_dewpoint = getattr(settings, "show_dewpoint", True) if settings else True
-    show_visibility = getattr(settings, "show_visibility", True) if settings else True
-    show_uv_index = getattr(settings, "show_uv_index", True) if settings else True
-    show_pressure_trend = getattr(settings, "show_pressure_trend", True) if settings else True
-
+    precision: int,
+    show_dewpoint: bool,
+    show_visibility: bool,
+    show_uv_index: bool,
+) -> list[Metric]:
+    """Build basic weather metrics (temperature, feels like, humidity, wind, dewpoint, etc.)."""
     temperature_str = format_temperature_pair(
         current.temperature_f, current.temperature_c, unit_pref, precision
     )
@@ -86,67 +77,114 @@ def build_current_conditions(
         uv_desc = get_uv_description(current.uv_index)
         metrics.append(Metric("UV Index", f"{current.uv_index} ({uv_desc})"))
 
-    sunrise_str = format_sun_time(current.sunrise_time)
+    return metrics
+
+
+def _build_astronomical_metrics(
+    current: CurrentConditions,
+    time_display_mode: str = "local",
+    use_12hour: bool = True,
+    show_timezone: bool = False,
+) -> list[Metric]:
+    """Build astronomical metrics (sunrise, sunset, moon phase, moonrise, moonset)."""
+    metrics: list[Metric] = []
+
+    # Common kwargs for format_sun_time
+    time_kwargs = {
+        "time_display_mode": time_display_mode,
+        "use_12hour": use_12hour,
+        "show_timezone": show_timezone,
+    }
+
+    logger.info(
+        f"Building astronomical metrics - sunrise_time: {current.sunrise_time}, sunset_time: {current.sunset_time}"
+    )
+
+    sunrise_str = format_sun_time(current.sunrise_time, **time_kwargs)
     if sunrise_str:
+        logger.info(f"Formatted sunrise: {sunrise_str}")
         metrics.append(Metric("Sunrise", sunrise_str))
 
-    sunset_str = format_sun_time(current.sunset_time)
+    sunset_str = format_sun_time(current.sunset_time, **time_kwargs)
     if sunset_str:
+        logger.info(f"Formatted sunset: {sunset_str}")
         metrics.append(Metric("Sunset", sunset_str))
 
     if current.moon_phase:
         metrics.append(Metric("Moon phase", current.moon_phase))
 
-    moonrise_str = format_sun_time(current.moonrise_time)
+    moonrise_str = format_sun_time(current.moonrise_time, **time_kwargs)
     if moonrise_str:
         metrics.append(Metric("Moonrise", moonrise_str))
 
-    moonset_str = format_sun_time(current.moonset_time)
+    moonset_str = format_sun_time(current.moonset_time, **time_kwargs)
     if moonset_str:
         metrics.append(Metric("Moonset", moonset_str))
 
-    if current.last_updated:
-        metrics.append(Metric("Last updated", format_timestamp(current.last_updated)))
+    return metrics
 
-    if environmental:
-        aq_value_parts: list[str] = []
-        summary_value: str | None = None
-        if air_quality and air_quality.summary:
-            summary_value = air_quality.summary
-        elif environmental.air_quality_index is not None:
-            aq_label = f"{environmental.air_quality_index:.0f}"
-            if environmental.air_quality_category:
-                aq_label = f"{aq_label} ({environmental.air_quality_category})"
-            if environmental.air_quality_pollutant:
-                aq_label = f"{aq_label} – {environmental.air_quality_pollutant}"
-            summary_value = aq_label
-        if summary_value:
-            aq_value_parts.append(summary_value)
-        if air_quality and air_quality.guidance:
-            aq_value_parts.append(f"Advice: {air_quality.guidance}")
-        if aq_value_parts:
-            metrics.append(Metric("Air Quality", " | ".join(aq_value_parts)))
-        if environmental.pollen_index is not None or environmental.pollen_primary_allergen:
+
+def _build_environmental_metrics(
+    environmental: EnvironmentalConditions | None,
+    air_quality: AirQualityPresentation | None,
+) -> list[Metric]:
+    """Build environmental metrics (air quality, pollen)."""
+    metrics: list[Metric] = []
+
+    if not environmental:
+        return metrics
+
+    # Air Quality
+    aq_value_parts: list[str] = []
+    summary_value: str | None = None
+    if air_quality and air_quality.summary:
+        summary_value = air_quality.summary
+    elif environmental.air_quality_index is not None:
+        aq_label = f"{environmental.air_quality_index:.0f}"
+        if environmental.air_quality_category:
+            aq_label = f"{aq_label} ({environmental.air_quality_category})"
+        if environmental.air_quality_pollutant:
+            aq_label = f"{aq_label} – {environmental.air_quality_pollutant}"
+        summary_value = aq_label
+    if summary_value:
+        aq_value_parts.append(summary_value)
+    if air_quality and air_quality.guidance:
+        aq_value_parts.append(f"Advice: {air_quality.guidance}")
+    if aq_value_parts:
+        metrics.append(Metric("Air Quality", " | ".join(aq_value_parts)))
+
+    # Pollen
+    if environmental.pollen_index is not None or environmental.pollen_primary_allergen:
+        pollen_value = (
+            f"{environmental.pollen_index:.0f}" if environmental.pollen_index is not None else ""
+        )
+        if environmental.pollen_category:
             pollen_value = (
-                f"{environmental.pollen_index:.0f}"
-                if environmental.pollen_index is not None
-                else ""
+                f"{pollen_value} ({environmental.pollen_category})"
+                if pollen_value
+                else environmental.pollen_category
             )
-            if environmental.pollen_category:
-                pollen_value = (
-                    f"{pollen_value} ({environmental.pollen_category})"
-                    if pollen_value
-                    else environmental.pollen_category
-                )
-            if environmental.pollen_primary_allergen:
-                pollen_value = (
-                    f"{pollen_value} – {environmental.pollen_primary_allergen}"
-                    if pollen_value
-                    else environmental.pollen_primary_allergen
-                )
-            metrics.append(Metric("Pollen", pollen_value or "Data unavailable"))
+        if environmental.pollen_primary_allergen:
+            pollen_value = (
+                f"{pollen_value} – {environmental.pollen_primary_allergen}"
+                if pollen_value
+                else environmental.pollen_primary_allergen
+            )
+        metrics.append(Metric("Pollen", pollen_value or "Data unavailable"))
 
+    return metrics
+
+
+def _build_trend_metrics(
+    trends: Iterable[TrendInsight] | None,
+    current: CurrentConditions,
+    hourly_forecast: HourlyForecast | None,
+    show_pressure_trend: bool,
+) -> list[Metric]:
+    """Build trend metrics (temperature, pressure, etc. trends)."""
+    metrics: list[Metric] = []
     pressure_trend_present = False
+
     if trends:
         for trend in trends:
             summary = trend.summary or describe_trend(trend)
@@ -165,12 +203,69 @@ def build_current_conditions(
         if legacy_pressure_trend:
             metrics.append(Metric("Pressure trend", legacy_pressure_trend["value"]))
 
+    return metrics
+
+
+def build_current_conditions(
+    current: CurrentConditions,
+    location: Location,
+    unit_pref: TemperatureUnit,
+    *,
+    settings: AppSettings | None = None,
+    environmental: EnvironmentalConditions | None = None,
+    trends: Iterable[TrendInsight] | None = None,
+    hourly_forecast: HourlyForecast | None = None,
+    air_quality: AirQualityPresentation | None = None,
+) -> CurrentConditionsPresentation:
+    """Create a structured presentation for the current weather using helper functions."""
+    title = f"Current conditions for {location.name}"
+    description = current.condition or "Unknown"
+    precision = get_temperature_precision(unit_pref)
+
+    # Extract settings preferences
+    show_dewpoint = getattr(settings, "show_dewpoint", True) if settings else True
+    show_visibility = getattr(settings, "show_visibility", True) if settings else True
+    show_uv_index = getattr(settings, "show_uv_index", True) if settings else True
+    show_pressure_trend = getattr(settings, "show_pressure_trend", True) if settings else True
+
+    # Time display preferences
+    time_display_mode = getattr(settings, "time_display_mode", "local") if settings else "local"
+    use_12hour = getattr(settings, "time_format_12hour", True) if settings else True
+    show_timezone = getattr(settings, "show_timezone_suffix", False) if settings else False
+
+    # Build metrics by category
+    metrics: list[Metric] = []
+    metrics.extend(
+        _build_basic_metrics(
+            current, unit_pref, precision, show_dewpoint, show_visibility, show_uv_index
+        )
+    )
+    metrics.extend(
+        _build_astronomical_metrics(current, time_display_mode, use_12hour, show_timezone)
+    )
+
+    if current.last_updated:
+        formatted_time = format_timestamp(
+            current.last_updated,
+            time_display_mode=time_display_mode,
+            use_12hour=use_12hour,
+            show_timezone=show_timezone,
+        )
+        logger.info(f"Last updated raw: {current.last_updated}, formatted: {formatted_time}")
+        metrics.append(Metric("Last updated", formatted_time))
+
+    metrics.extend(_build_environmental_metrics(environmental, air_quality))
+    metrics.extend(_build_trend_metrics(trends, current, hourly_forecast, show_pressure_trend))
+
+    # Build fallback text
+    temperature_value = metrics[0].value if metrics else "N/A"
     fallback_lines = [f"Current Conditions: {description}"]
     fallback_lines.append(f"Temperature: {temperature_value}")
     for metric in metrics[1:]:  # already added temperature
         fallback_lines.append(f"{metric.label}: {metric.value}")
     fallback_text = "\n".join(fallback_lines)
 
+    # Build trend lines
     trend_lines = format_trend_lines(
         trends,
         current=current,

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import sys
 from typing import TYPE_CHECKING
 
 import toga
@@ -25,15 +26,37 @@ if TYPE_CHECKING:  # pragma: no cover - import cycle guard
     from .location_manager import LocationManager
     from .weather_client import WeatherClient
 
+# Configure logging for when running with briefcase dev (bypasses main.py)
+# Only configure if no handlers are already set up (avoid double initialization)
+if not logging.getLogger().handlers:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=[logging.StreamHandler(sys.stdout)],
+    )
+
 logger = logging.getLogger(__name__)
 
 
 class AccessiWeatherApp(toga.App):
     """Simple AccessiWeather application using Toga."""
 
-    def __init__(self, *args, **kwargs):
-        """Initialize the AccessiWeather application."""
+    def __init__(self, *args, config_dir: str | None = None, portable_mode: bool = False, **kwargs):
+        """
+        Initialize the AccessiWeather application.
+
+        Args:
+            *args: Positional arguments passed to toga.App
+            config_dir: Optional custom configuration directory path
+            portable_mode: If True, use portable mode (config in app directory)
+            **kwargs: Keyword arguments passed to toga.App
+
+        """
         super().__init__(*args, **kwargs)
+
+        # Store config parameters for later use
+        self._config_dir = config_dir
+        self._portable_mode = portable_mode
 
         # Core components
         self.config_manager: ConfigManager | None = None
@@ -56,6 +79,7 @@ class AccessiWeatherApp(toga.App):
         # Background update task
         self.update_task: asyncio.Task | None = None
         self.is_updating: bool = False
+        self.current_refresh_task: asyncio.Task | None = None  # Track active foreground refresh
 
         # Weather data storage
         self.current_weather_data: WeatherData | None = None
@@ -75,12 +99,12 @@ class AccessiWeatherApp(toga.App):
             # Check for single instance before initializing anything else
             self.single_instance_manager = SingleInstanceManager(self)
             if not self.single_instance_manager.try_acquire_lock():
-                logger.info("Another instance is already running, showing dialog and exiting")
+                logger.info("Another instance is already running, exiting silently")
                 # Create a minimal main window to satisfy Toga's requirements
                 self.main_window = toga.MainWindow(title=self.formal_name)
                 self.main_window.content = toga.Box()
-                _task = asyncio.create_task(self._handle_already_running())
-                _task.add_done_callback(background_tasks.task_done_callback)
+                # Exit silently without showing intrusive dialog
+                self.request_exit()
                 return
 
             # Initialize core components
@@ -106,16 +130,6 @@ class AccessiWeatherApp(toga.App):
             app_helpers.show_error_dialog(
                 self, "Startup Error", f"Failed to start application: {e}"
             )
-
-    async def _handle_already_running(self):
-        """Handle the case when another instance is already running."""
-        try:
-            await self.single_instance_manager.show_already_running_dialog()
-        except Exception as e:
-            logger.error(f"Failed to show already running dialog: {e}")
-        finally:
-            # Use request_exit to allow proper cleanup through on_exit handler
-            self.request_exit()
 
     async def on_running(self):
         """Start background tasks when the app starts running."""
@@ -169,12 +183,21 @@ class AccessiWeatherApp(toga.App):
         return app_helpers.handle_exit(self)
 
 
-def main():
-    """Provide main entry point for the simplified AccessiWeather application."""
+def main(config_dir: str | None = None, portable_mode: bool = False):
+    """
+    Provide main entry point for the simplified AccessiWeather application.
+
+    Args:
+        config_dir: Optional custom configuration directory path
+        portable_mode: If True, use portable mode (config in app directory)
+
+    """
     return AccessiWeatherApp(
         "AccessiWeather",
         "net.orinks.accessiweather.simple",
         description="Simple, accessible weather application",
         home_page="https://github.com/Orinks/AccessiWeather",
         author="Orinks",
+        config_dir=config_dir,
+        portable_mode=portable_mode,
     )

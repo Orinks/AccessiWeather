@@ -187,7 +187,8 @@ class TestSoundpackSelectionKeyboardShortcuts:
         assert result is False
         mock_delete_pack.assert_not_called()
 
-    def test_soundpack_delete_blocks_default_pack(self):
+    @pytest.mark.asyncio
+    async def test_soundpack_delete_blocks_default_pack(self):
         """Test that delete_pack doesn't delete the default pack."""
         from accessiweather.dialogs.soundpack_manager.ops import delete_pack
 
@@ -198,12 +199,13 @@ class TestSoundpackSelectionKeyboardShortcuts:
         mock_dlg.app.main_window = Mock()
 
         # Call delete_pack - should return early without showing dialog
-        delete_pack(mock_dlg, Mock())
+        await delete_pack(mock_dlg, Mock())
 
         # Verify no dialog was shown
         mock_dlg.app.main_window.question_dialog.assert_not_called()
 
-    def test_soundpack_delete_blocks_none_selection(self):
+    @pytest.mark.asyncio
+    async def test_soundpack_delete_blocks_none_selection(self):
         """Test that delete_pack handles None selection gracefully."""
         from accessiweather.dialogs.soundpack_manager.ops import delete_pack
 
@@ -213,7 +215,7 @@ class TestSoundpackSelectionKeyboardShortcuts:
         mock_dlg.app = Mock()
 
         # Call delete_pack - should return early without crashing
-        delete_pack(mock_dlg, Mock())
+        await delete_pack(mock_dlg, Mock())
 
         # Should not have accessed any dialogs
         assert not mock_dlg.app.main_window.called

@@ -167,6 +167,86 @@ def create_display_tab(dialog):
     dialog.show_detailed_forecast_switch.aria_description = "Show extended details in weather forecasts including wind, precipitation, and other metrics."
     display_box.add(dialog.show_detailed_forecast_switch)
 
+    # Time & Date Display Settings
+    display_box.add(
+        toga.Label(
+            "Time & Date Display:",
+            style=Pack(margin_top=10, margin_bottom=8, font_weight="bold"),
+        )
+    )
+    display_box.add(
+        toga.Label(
+            "Configure how times are displayed in forecasts:",
+            style=Pack(margin_bottom=10, font_size=9),
+        )
+    )
+
+    # Time display mode selection
+    display_box.add(toga.Label("Time zone display:", style=Pack(margin_bottom=5)))
+
+    time_display_options = [
+        "Local time only",
+        "UTC time only",
+        "Both (Local and UTC)",
+    ]
+    dialog.time_display_display_to_value = {
+        "Local time only": "local",
+        "UTC time only": "utc",
+        "Both (Local and UTC)": "both",
+    }
+    dialog.time_display_value_to_display = {
+        value: key for key, value in dialog.time_display_display_to_value.items()
+    }
+
+    dialog.time_display_mode_selection = toga.Selection(
+        items=time_display_options,
+        style=Pack(margin_bottom=12),
+        id="time_display_mode_selection",
+    )
+    dialog.time_display_mode_selection.aria_label = "Time zone display selection"
+    dialog.time_display_mode_selection.aria_description = (
+        "Choose whether to display times in your local timezone, UTC, or both."
+    )
+
+    try:
+        current_time_mode = getattr(dialog.current_settings, "time_display_mode", "local")
+        display_value = dialog.time_display_value_to_display.get(
+            current_time_mode,
+            "Local time only",
+        )
+        dialog.time_display_mode_selection.value = display_value
+    except Exception as exc:  # pragma: no cover - defensive logging
+        logger.warning("Failed to set time display mode selection: %s", exc)
+        dialog.time_display_mode_selection.value = "Local time only"
+
+    display_box.add(dialog.time_display_mode_selection)
+
+    # Time format switch (12-hour vs 24-hour)
+    dialog.time_format_12hour_switch = toga.Switch(
+        "Use 12-hour time format (e.g., 3:00 PM)",
+        value=getattr(dialog.current_settings, "time_format_12hour", True),
+        style=Pack(margin_bottom=10),
+        id="time_format_12hour_switch",
+    )
+    dialog.time_format_12hour_switch.aria_label = "Toggle 12-hour time format"
+    dialog.time_format_12hour_switch.aria_description = (
+        "Enable to use 12-hour time format with AM/PM. Disable to use 24-hour format."
+    )
+    display_box.add(dialog.time_format_12hour_switch)
+
+    # Show timezone suffix switch
+    dialog.show_timezone_suffix_switch = toga.Switch(
+        "Show timezone abbreviations (e.g., EST, UTC)",
+        value=getattr(dialog.current_settings, "show_timezone_suffix", False),
+        style=Pack(margin_bottom=15),
+        id="show_timezone_suffix_switch",
+    )
+    dialog.show_timezone_suffix_switch.aria_label = "Toggle timezone abbreviations"
+    dialog.show_timezone_suffix_switch.aria_description = (
+        "Enable to append timezone abbreviations like EST or UTC to displayed times."
+    )
+    display_box.add(dialog.show_timezone_suffix_switch)
+
     dialog.option_container.content.append("Display", display_box)
 
 
@@ -694,6 +774,11 @@ def create_notifications_tab(dialog):
         style=Pack(margin_bottom=12),
         id="alert_global_cooldown_input",
     )
+    dialog.alert_global_cooldown_input.aria_label = "Global notification cooldown"
+    dialog.alert_global_cooldown_input.aria_description = (
+        "Set the minimum number of minutes to wait between any alert notifications, "
+        "from 0 to 60 minutes. This prevents notification spam across all alerts."
+    )
     notifications_box.add(dialog.alert_global_cooldown_input)
 
     # Per-alert cooldown
@@ -716,7 +801,40 @@ def create_notifications_tab(dialog):
         style=Pack(margin_bottom=12),
         id="alert_per_alert_cooldown_input",
     )
+    dialog.alert_per_alert_cooldown_input.aria_label = "Per-alert notification cooldown"
+    dialog.alert_per_alert_cooldown_input.aria_description = (
+        "Set the minimum number of minutes to wait before notifying about the same alert again, "
+        "from 0 to 1440 minutes (24 hours). This prevents repeated notifications for unchanged alerts."
+    )
     notifications_box.add(dialog.alert_per_alert_cooldown_input)
+
+    # Alert freshness window
+    notifications_box.add(
+        toga.Label(
+            "Alert freshness window (minutes):",
+            style=Pack(margin_bottom=5),
+        )
+    )
+    notifications_box.add(
+        toga.Label(
+            "Bypass per-alert cooldown for alerts issued within this window",
+            style=Pack(margin_bottom=5, font_size=9),
+        )
+    )
+    dialog.alert_freshness_window_input = toga.NumberInput(
+        value=getattr(dialog.current_settings, "alert_freshness_window_minutes", 15),
+        min=0,
+        max=120,
+        style=Pack(margin_bottom=12),
+        id="alert_freshness_window_input",
+    )
+    dialog.alert_freshness_window_input.aria_label = "Alert freshness window"
+    dialog.alert_freshness_window_input.aria_description = (
+        "Set the time window in minutes for treating alerts as fresh. Alerts issued within this "
+        "window will bypass per-alert cooldown if never notified before. Range: 0 to 120 minutes. "
+        "Recommended: 15-30 minutes for time-sensitive alerts."
+    )
+    notifications_box.add(dialog.alert_freshness_window_input)
 
     # Max notifications per hour
     notifications_box.add(
@@ -737,6 +855,11 @@ def create_notifications_tab(dialog):
         max=100,
         style=Pack(margin_bottom=15),
         id="alert_max_notifications_input",
+    )
+    dialog.alert_max_notifications_input.aria_label = "Maximum notifications per hour"
+    dialog.alert_max_notifications_input.aria_description = (
+        "Set the total number of alert notifications allowed per hour, from 1 to 100. "
+        "Uses token bucket rate limiting to prevent notification storms while allowing bursts."
     )
     notifications_box.add(dialog.alert_max_notifications_input)
 

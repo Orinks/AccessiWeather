@@ -164,7 +164,9 @@ class WeatherPresenter:
         unit_pref = self._get_temperature_unit_preference()
 
         air_quality_panel = (
-            build_air_quality_panel(weather_data.location, weather_data.environmental)
+            build_air_quality_panel(
+                weather_data.location, weather_data.environmental, settings=self.settings
+            )
             if weather_data.environmental
             else None
         )
@@ -233,7 +235,9 @@ class WeatherPresenter:
             return None
         unit_pref = self._get_temperature_unit_preference()
         air_quality_panel = (
-            build_air_quality_panel(location, environmental) if environmental else None
+            build_air_quality_panel(location, environmental, settings=self.settings)
+            if environmental
+            else None
         )
         return self._build_current_conditions(
             current,
@@ -298,10 +302,12 @@ class WeatherPresenter:
         location: Location,
         unit_pref: TemperatureUnit,
     ) -> ForecastPresentation:
-        return build_forecast(forecast, hourly_forecast, location, unit_pref)
+        return build_forecast(
+            forecast, hourly_forecast, location, unit_pref, settings=self.settings
+        )
 
     def _build_alerts(self, alerts: WeatherAlerts, location: Location) -> AlertsPresentation:
-        return build_alerts(alerts, location)
+        return build_alerts(alerts, location, settings=self.settings)
 
     def _build_aviation(
         self, aviation: AviationData | None, location: Location
@@ -540,8 +546,16 @@ class WeatherPresenter:
         return TemperatureUnit.BOTH
 
     def _format_timestamp(self, value: datetime) -> str:
-        ref = value.astimezone() if value.tzinfo else value
-        return ref.strftime("%b %d %I:%M %p")
+        mode = getattr(self.settings, "time_display_mode", "local")
+        use_12hour = getattr(self.settings, "time_format_12hour", True)
+        show_timezone = getattr(self.settings, "show_timezone_suffix", False)
+
+        return format_display_datetime(
+            value,
+            time_display_mode=mode,
+            use_12hour=use_12hour,
+            show_timezone=show_timezone,
+        )
 
 
 from .presentation.alerts import build_alerts  # noqa: E402
@@ -550,4 +564,7 @@ from .presentation.current_conditions import (  # noqa: E402
     format_trend_lines,
 )
 from .presentation.forecast import build_forecast  # noqa: E402
-from .presentation.formatters import format_temperature_pair  # noqa: E402
+from .presentation.formatters import (  # noqa: E402
+    format_display_datetime,
+    format_temperature_pair,
+)

@@ -30,7 +30,11 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     """Initialize core application components for the given app instance."""
     logger.info("Initializing application components")
 
-    app.config_manager = ConfigManager(app)
+    app.config_manager = ConfigManager(
+        app,
+        config_dir=getattr(app, "_config_dir", None),
+        portable_mode=getattr(app, "_portable_mode", False),
+    )
     config = app.config_manager.load_config()
 
     try:
@@ -91,7 +95,9 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     config_dir = str(app.paths.config)
     alert_settings = config.settings.to_alert_settings()
     app.alert_manager = AlertManager(config_dir, alert_settings)
-    app.alert_notification_system = AlertNotificationSystem(app.alert_manager, app._notifier)
+    app.alert_notification_system = AlertNotificationSystem(
+        app.alert_manager, app._notifier, config.settings
+    )
 
     # Initialize weather history service
     if config.settings.weather_history_enabled:
@@ -131,7 +137,52 @@ def load_initial_data(app: AccessiWeatherApp) -> None:
             logger.info("No locations configured; waiting for user to add one")
             app_helpers.update_status(app, "Add a location to get started.")
         elif config.current_location:
+            # Start initial data fetch for current location
             task = asyncio.create_task(event_handlers.refresh_weather_data(app))
             task.add_done_callback(background_tasks.task_done_callback)
+
+            # Kick off a background pre-warm for all other locations
+            # This ensures that switching locations later will be fast
+            if len(config.locations) > 1:
+                asyncio.create_task(_pre_warm_other_locations(app))
+
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Failed to load initial data: %s", exc)
+
+
+async def _pre_warm_other_locations(app: AccessiWeatherApp) -> None:
+    """Background task to pre-warm cache for non-active locations on startup."""
+    try:
+        # Wait a bit to let the app settle and primary location load first
+        await asyncio.sleep(5.0)
+
+        if not app.config_manager or not app.weather_client:
+            return
+
+        current_location = app.config_manager.get_current_location()
+        all_locations = app.config_manager.get_all_locations()
+
+        other_locations = [
+            loc
+            for loc in all_locations
+            if not current_location or loc.name != current_location.name
+        ]
+
+        if not other_locations:
+            return
+
+        logger.info(f"Startup: Pre-warming cache for {len(other_locations)} other locations")
+
+        for loc in other_locations:
+            try:
+                # Be gentle with APIs
+                await asyncio.sleep(2.0)
+                if app.weather_client:
+                    await app.weather_client.pre_warm_cache(loc)
+            except Exception as e:
+                logger.debug(f"Startup pre-warm failed for {loc.name}: {e}")
+
+        logger.info("Startup: Cache pre-warming completed")
+
+    except Exception as exc:
+        logger.error(f"Error in startup cache pre-warming: {exc}")

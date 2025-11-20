@@ -37,15 +37,30 @@ def test_setup_logging_directory_creation():
         Path(MOCK_LOG_DIR).mkdir.assert_called_once_with(exist_ok=True)
 
 
+def _logger_side_effect(root_logger: MagicMock, perf_logger: MagicMock):
+    """Return a logging.getLogger side effect for root and performance loggers."""
+
+    def _get_logger(name=None):
+        if name == "performance":
+            return perf_logger
+        return root_logger
+
+    return _get_logger
+
+
 def test_setup_logging_root_logger_config():
     """Test that the root logger is configured correctly."""
-    mock_logger = MagicMock()
+    mock_root_logger = MagicMock()
+    mock_perf_logger = MagicMock()
     mock_handler = MagicMock()
-    mock_logger.handlers = [mock_handler]
+    mock_root_logger.handlers = [mock_handler]
     mock_console = MagicMock(level=logging.NOTSET)  # Mock handler with level
     mock_file = MagicMock(level=logging.NOTSET)  # Mock handler with level
 
-    with patch("logging.getLogger", return_value=mock_logger):
+    with patch(
+        "logging.getLogger",
+        side_effect=_logger_side_effect(mock_root_logger, mock_perf_logger),
+    ):
         with patch("pathlib.Path.home", return_value=MOCK_HOME):
             with patch("pathlib.Path.__truediv__") as mock_truediv:
                 with patch("pathlib.Path.mkdir"):  # Mock mkdir directly
@@ -56,8 +71,9 @@ def test_setup_logging_root_logger_config():
 
                                 setup_logging(log_level=logging.INFO)
 
-                                mock_logger.setLevel.assert_called_once_with(logging.INFO)
-                                mock_logger.removeHandler.assert_called_once_with(mock_handler)
+                                mock_root_logger.setLevel.assert_called_once_with(logging.INFO)
+                                mock_root_logger.removeHandler.assert_called_once_with(mock_handler)
+                                mock_perf_logger.setLevel.assert_called_once_with(logging.WARNING)
 
 
 def test_setup_logging_formatters():
@@ -89,12 +105,16 @@ def test_setup_logging_formatters():
 
 def test_setup_logging_console_handler():
     """Test that console handler is configured correctly."""
-    mock_logger = MagicMock()
+    mock_root_logger = MagicMock()
+    mock_perf_logger = MagicMock()
     mock_formatter = MagicMock()
     mock_console = MagicMock(level=logging.NOTSET)  # Mock handler with level
     mock_file = MagicMock(level=logging.NOTSET)  # Mock handler with level
 
-    with patch("logging.getLogger", return_value=mock_logger):
+    with patch(
+        "logging.getLogger",
+        side_effect=_logger_side_effect(mock_root_logger, mock_perf_logger),
+    ):
         with patch("logging.Formatter", return_value=mock_formatter):
             with patch("logging.StreamHandler", return_value=mock_console) as mock_stream:
                 with patch("pathlib.Path.home", return_value=MOCK_HOME):
@@ -113,18 +133,25 @@ def test_setup_logging_console_handler():
                                     mock_console.setFormatter.assert_called_once_with(
                                         mock_formatter
                                     )
-                                    mock_logger.addHandler.assert_any_call(mock_console)
+                                    mock_root_logger.addHandler.assert_any_call(mock_console)
+                                    mock_perf_logger.setLevel.assert_called_once_with(
+                                        logging.WARNING
+                                    )
 
 
 def test_setup_logging_file_handler():
     """Test that file handler is configured correctly."""
-    mock_logger = MagicMock()
+    mock_root_logger = MagicMock()
+    mock_perf_logger = MagicMock()
     mock_formatter = MagicMock()
     mock_console = MagicMock(level=logging.NOTSET)  # Mock handler with level
     mock_file = MagicMock(level=logging.NOTSET)  # Mock handler with level
     mock_stream = MagicMock()  # Mock for the file handler's stream
 
-    with patch("logging.getLogger", return_value=mock_logger):
+    with patch(
+        "logging.getLogger",
+        side_effect=_logger_side_effect(mock_root_logger, mock_perf_logger),
+    ):
         with patch("logging.Formatter", return_value=mock_formatter):
             with patch("logging.StreamHandler", return_value=mock_console):
                 with patch(
@@ -149,17 +176,24 @@ def test_setup_logging_file_handler():
                                         logging.DEBUG
                                     )  # Always DEBUG for file
                                     mock_file.setFormatter.assert_called_once_with(mock_formatter)
-                                    mock_logger.addHandler.assert_any_call(mock_file)
+                                    mock_root_logger.addHandler.assert_any_call(mock_file)
+                                    mock_perf_logger.setLevel.assert_called_once_with(
+                                        logging.WARNING
+                                    )
 
 
 def test_setup_logging_debug_level():
     """Test that DEBUG level is handled correctly."""
-    mock_logger = MagicMock()
+    mock_root_logger = MagicMock()
+    mock_perf_logger = MagicMock()
     mock_console = MagicMock(level=logging.NOTSET)  # Mock handler with level
     mock_file = MagicMock(level=logging.NOTSET)  # Mock handler with level
     mock_stream = MagicMock()  # Mock for the file handler's stream
 
-    with patch("logging.getLogger", return_value=mock_logger):
+    with patch(
+        "logging.getLogger",
+        side_effect=_logger_side_effect(mock_root_logger, mock_perf_logger),
+    ):
         with patch("logging.StreamHandler", return_value=mock_console):
             with patch("logging.handlers.RotatingFileHandler", return_value=mock_file):
                 with patch("pathlib.Path.home", return_value=MOCK_HOME):
@@ -172,9 +206,10 @@ def test_setup_logging_debug_level():
 
                                 setup_logging(log_level=logging.DEBUG)
 
-                                mock_logger.setLevel.assert_called_once_with(logging.DEBUG)
+                                mock_root_logger.setLevel.assert_called_once_with(logging.DEBUG)
                                 mock_console.setLevel.assert_called_once_with(logging.DEBUG)
                                 mock_file.setLevel.assert_called_once_with(logging.DEBUG)
+                                mock_perf_logger.setLevel.assert_called_once_with(logging.INFO)
 
 
 def test_setup_logging_return_value():

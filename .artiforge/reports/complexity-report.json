@@ -1,0 +1,393 @@
+[
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 19,
+      "row": 35
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/alert_details_dialog.py",
+    "fix": null,
+    "location": {
+      "column": 15,
+      "row": 35
+    },
+    "message": "`show` is too complex (17 > 15)",
+    "noqa_row": 35,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 19,
+      "row": 31
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/api/nws/alerts_discussions.py",
+    "fix": null,
+    "location": {
+      "column": 9,
+      "row": 31
+    },
+    "message": "`get_alerts` is too complex (18 > 15)",
+    "noqa_row": 31,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 22,
+      "row": 100
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/api_client/core_client.py",
+    "fix": null,
+    "location": {
+      "column": 9,
+      "row": 100
+    },
+    "message": "`_make_request` is too complex (18 > 15)",
+    "noqa_row": 100,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 33,
+      "row": 34
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/config/settings.py",
+    "fix": null,
+    "location": {
+      "column": 9,
+      "row": 34
+    },
+    "message": "`_validate_and_fix_config` is too complex (18 > 15)",
+    "noqa_row": 34,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 21,
+      "row": 318
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/dialogs/settings_dialog.py",
+    "fix": null,
+    "location": {
+      "column": 15,
+      "row": 318
+    },
+    "message": "`_on_ok` is too complex (19 > 15)",
+    "noqa_row": 318,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 25,
+      "row": 14
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/dialogs/settings_handlers.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 14
+    },
+    "message": "`apply_settings_to_ui` is too complex (40 > 15)",
+    "noqa_row": 14,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 29,
+      "row": 188
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/dialogs/settings_handlers.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 188
+    },
+    "message": "`collect_settings_from_ui` is too complex (18 > 15)",
+    "noqa_row": 188,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 43,
+      "row": 280
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/dialogs/settings_operations.py",
+    "fix": null,
+    "location": {
+      "column": 11,
+      "row": 280
+    },
+    "message": "`validate_visual_crossing_api_key` is too complex (18 > 15)",
+    "noqa_row": 280,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 28,
+      "row": 413
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/dialogs/settings_operations.py",
+    "fix": null,
+    "location": {
+      "column": 11,
+      "row": 413
+    },
+    "message": "`check_for_updates` is too complex (26 > 15)",
+    "noqa_row": 413,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 27,
+      "row": 724
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/dialogs/settings_operations.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 724
+    },
+    "message": "`update_last_check_info` is too complex (31 > 15)",
+    "noqa_row": 724,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 24,
+      "row": 54
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/dialogs/soundpack_manager/state.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 54
+    },
+    "message": "`update_pack_details` is too complex (20 > 15)",
+    "noqa_row": 54,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 29,
+      "row": 32
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/display/presentation/current_conditions.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 32
+    },
+    "message": "`build_current_conditions` is too complex (34 > 15)",
+    "noqa_row": 32,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 34,
+      "row": 74
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/handlers/weather_handlers.py",
+    "fix": null,
+    "location": {
+      "column": 11,
+      "row": 74
+    },
+    "message": "`update_weather_displays` is too complex (21 > 15)",
+    "noqa_row": 74,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 24,
+      "row": 69
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/location.py",
+    "fix": null,
+    "location": {
+      "column": 9,
+      "row": 69
+    },
+    "message": "`_load_locations` is too complex (20 > 15)",
+    "noqa_row": 69,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 36,
+      "row": 103
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/services/community_soundpack_service.py",
+    "fix": null,
+    "location": {
+      "column": 15,
+      "row": 103
+    },
+    "message": "`fetch_available_packs` is too complex (19 > 15)",
+    "noqa_row": 103,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 27,
+      "row": 44
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/services/update_service/releases.py",
+    "fix": null,
+    "location": {
+      "column": 15,
+      "row": 44
+    },
+    "message": "`get_releases` is too complex (17 > 15)",
+    "noqa_row": 44,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 22,
+      "row": 255
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/utils/taf_decoder.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 255
+    },
+    "message": "`_describe_segment` is too complex (18 > 15)",
+    "noqa_row": 255,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 23,
+      "row": 367
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/utils/taf_decoder.py",
+    "fix": null,
+    "location": {
+      "column": 5,
+      "row": 367
+    },
+    "message": "`_decode_visibility` is too complex (17 > 15)",
+    "noqa_row": 367,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 34,
+      "row": 205
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/visual_crossing_client.py",
+    "fix": null,
+    "location": {
+      "column": 9,
+      "row": 205
+    },
+    "message": "`_parse_current_conditions` is too complex (24 > 15)",
+    "noqa_row": 205,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 31,
+      "row": 230
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/weather_client_base.py",
+    "fix": null,
+    "location": {
+      "column": 15,
+      "row": 230
+    },
+    "message": "`get_weather_data` is too complex (21 > 15)",
+    "noqa_row": 230,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 31,
+      "row": 154
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/weather_client_enrichment.py",
+    "fix": null,
+    "location": {
+      "column": 11,
+      "row": 154
+    },
+    "message": "`get_aviation_weather` is too complex (17 > 15)",
+    "noqa_row": 154,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 37,
+      "row": 324
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/weather_client_nws.py",
+    "fix": null,
+    "location": {
+      "column": 11,
+      "row": 324
+    },
+    "message": "`get_nws_current_conditions` is too complex (22 > 15)",
+    "noqa_row": 324,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  },
+  {
+    "cell": null,
+    "code": "C901",
+    "end_location": {
+      "column": 23,
+      "row": 765
+    },
+    "filename": "/home/josh/accessiweather/src/accessiweather/weather_client_nws.py",
+    "fix": null,
+    "location": {
+      "column": 11,
+      "row": 765
+    },
+    "message": "`get_nws_tafs` is too complex (18 > 15)",
+    "noqa_row": 765,
+    "url": "https://docs.astral.sh/ruff/rules/complex-structure"
+  }
+]

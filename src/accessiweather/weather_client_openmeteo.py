@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 import logging
-from datetime import datetime
+from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
 
 import httpx
@@ -17,6 +17,11 @@ from .models import (
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
+)
+from .utils.retry_utils import (
+    RETRYABLE_EXCEPTIONS,
+    async_retry_with_backoff,
+    is_retryable_http_error,
 )
 from .utils.temperature_utils import TemperatureUnit, calculate_dewpoint
 from .weather_client_parsers import (
@@ -32,8 +37,24 @@ from .weather_client_parsers import (
 logger = logging.getLogger(__name__)
 
 
-def _parse_iso_datetime(value: str | None) -> datetime | None:
-    """Parse an ISO 8601 datetime string, including Zulu-formatted values."""
+def _parse_iso_datetime(
+    value: str | None, utc_offset_seconds: int | None = None
+) -> datetime | None:
+    """
+    Parse an ISO 8601 datetime string, ensuring timezone awareness.
+
+    Open-Meteo returns ISO 8601 strings that may be timezone-aware or naive.
+    When using timezone="auto", Open-Meteo returns naive datetimes in the
+    location's local timezone, with utc_offset_seconds indicating the offset.
+
+    Args:
+        value: ISO 8601 datetime string
+        utc_offset_seconds: UTC offset in seconds (e.g., -28800 for PST/UTC-8)
+
+    Returns:
+        Timezone-aware datetime object, or None if parsing fails
+
+    """
     if not value:
         return None
 
@@ -43,7 +64,17 @@ def _parse_iso_datetime(value: str | None) -> datetime | None:
 
     for candidate in candidates:
         try:
-            return datetime.fromisoformat(candidate)
+            dt = datetime.fromisoformat(candidate)
+            # Ensure timezone-aware datetime
+            if dt.tzinfo is None:
+                # If naive and we have UTC offset, apply it
+                if utc_offset_seconds is not None:
+                    tz = timezone(timedelta(seconds=utc_offset_seconds))
+                    dt = dt.replace(tzinfo=tz)
+                else:
+                    # If naive with no offset info, assume UTC as fallback
+                    dt = dt.replace(tzinfo=UTC)
+            return dt
         except ValueError:
             continue
 
@@ -64,6 +95,7 @@ async def _client_get(
     return response
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=25.0)
 async def get_openmeteo_all_data_parallel(
     location: Location,
     openmeteo_base_url: str,
@@ -96,9 +128,12 @@ async def get_openmeteo_all_data_parallel(
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get Open-Meteo data in parallel: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return None, None, None
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_openmeteo_current_conditions(
     location: Location,
     openmeteo_base_url: str,
@@ -145,9 +180,12 @@ async def get_openmeteo_current_conditions(
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get OpenMeteo current conditions: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return None
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_openmeteo_forecast(
     location: Location,
     openmeteo_base_url: str,
@@ -184,9 +222,12 @@ async def get_openmeteo_forecast(
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get OpenMeteo forecast: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return None
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_openmeteo_hourly_forecast(
     location: Location,
     openmeteo_base_url: str,
@@ -220,6 +261,8 @@ async def get_openmeteo_hourly_forecast(
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get OpenMeteo hourly forecast: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
         return None
 
 
@@ -228,6 +271,7 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
     current = data.get("current", {})
     units = data.get("current_units", {})
     daily = data.get("daily", {})
+    utc_offset_seconds = data.get("utc_offset_seconds")
 
     temp_f, temp_c = normalize_temperature(
         current.get("temperature_2m"), units.get("temperature_2m")
@@ -255,7 +299,7 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         current.get("apparent_temperature"), units.get("apparent_temperature")
     )
 
-    last_updated = _parse_iso_datetime(current.get("time"))
+    last_updated = _parse_iso_datetime(current.get("time"), utc_offset_seconds)
 
     # Parse sunrise and sunset times from daily data (today's values)
     sunrise_time = None
@@ -264,9 +308,9 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         sunrise_list = daily.get("sunrise", [])
         sunset_list = daily.get("sunset", [])
         if sunrise_list and len(sunrise_list) > 0:
-            sunrise_time = _parse_iso_datetime(sunrise_list[0])
+            sunrise_time = _parse_iso_datetime(sunrise_list[0], utc_offset_seconds)
         if sunset_list and len(sunset_list) > 0:
-            sunset_time = _parse_iso_datetime(sunset_list[0])
+            sunset_time = _parse_iso_datetime(sunset_list[0], utc_offset_seconds)
 
     uv_index = None
     if daily:
@@ -324,6 +368,7 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
     """Parse Open-Meteo hourly forecast payload into an HourlyForecast model."""
     periods: list[HourlyForecastPeriod] = []
     hourly = data.get("hourly", {})
+    utc_offset_seconds = data.get("utc_offset_seconds")
 
     times = hourly.get("time", [])
     temperatures = hourly.get("temperature_2m", [])
@@ -333,7 +378,7 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
     pressures = hourly.get("pressure_msl", [])
 
     for i, time_str in enumerate(times):
-        start_time = _parse_iso_datetime(time_str) or datetime.now()
+        start_time = _parse_iso_datetime(time_str, utc_offset_seconds) or datetime.now()
 
         temperature = temperatures[i] if i < len(temperatures) else None
         weather_code = weather_codes[i] if i < len(weather_codes) else None

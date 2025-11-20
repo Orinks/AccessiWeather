@@ -115,6 +115,15 @@ async def download_update(app: AccessiWeatherApp, update_info: Any) -> None:
         app_helpers.update_status(app, "Update download failed")
 
 
+async def on_window_show(app: AccessiWeatherApp) -> None:
+    """Handle window becoming visible and refresh weather data."""
+    try:
+        logger.info("Main window became visible, refreshing weather data")
+        await refresh_weather_data(app)
+    except Exception as exc:  # pragma: no cover - defensive logging
+        logger.error("Failed to refresh weather on window show: %s", exc)
+
+
 async def on_show_hide_window(app: AccessiWeatherApp, widget: toga.Command) -> None:
     """Toggle main window visibility from system tray."""
     try:
@@ -128,6 +137,8 @@ async def on_show_hide_window(app: AccessiWeatherApp, widget: toga.Command) -> N
             if app.status_icon and hasattr(app.show_hide_command, "text"):
                 app.show_hide_command.text = "Hide AccessiWeather"
             logger.info("Main window restored from system tray")
+            # Trigger refresh when window is shown from tray
+            await on_window_show(app)
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Failed to toggle window visibility: %s", exc)
 

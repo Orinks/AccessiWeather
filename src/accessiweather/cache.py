@@ -29,6 +29,10 @@ from .models import (
 
 logger = logging.getLogger(__name__)
 
+# Cache schema version - increment this when cache data structure changes
+# This is independent of app version and allows test builds to invalidate old cache
+CACHE_SCHEMA_VERSION = 3
+
 
 @dataclass
 class CacheEntry:
@@ -68,6 +72,7 @@ class Cache:
 
         """
         if key not in self.data:
+            logger.debug(f"Cache miss for '{key}'")
             return None
 
         entry = self.data[key]
@@ -80,7 +85,7 @@ class Cache:
             del self.data[key]
             return None
 
-        logger.debug(f"Cache hit for '{key}'")
+        logger.debug(f"Cache hit for '{key}' (expires in {int(entry.expiration - current_time)}s)")
         return entry.value
 
     def set(self, key: str, value: Any, ttl: float | None = None) -> None:
@@ -206,6 +211,22 @@ def _serialize_current(current: CurrentConditions | None) -> dict | None:
 def _deserialize_current(data: dict | None) -> CurrentConditions | None:
     if not isinstance(data, dict):
         return None
+
+    sunrise_raw = data.get("sunrise_time")
+    sunset_raw = data.get("sunset_time")
+    last_updated_raw = data.get("last_updated")
+
+    sunrise = _deserialize_datetime(sunrise_raw)
+    sunset = _deserialize_datetime(sunset_raw)
+    last_updated = _deserialize_datetime(last_updated_raw)
+
+    logger.debug(
+        f"Deserializing current conditions from cache - "
+        f"sunrise: {sunrise_raw} -> {sunrise}, "
+        f"sunset: {sunset_raw} -> {sunset}, "
+        f"last_updated: {last_updated_raw} -> {last_updated}"
+    )
+
     return CurrentConditions(
         temperature_f=data.get("temperature_f"),
         temperature_c=data.get("temperature_c"),
@@ -223,9 +244,9 @@ def _deserialize_current(data: dict | None) -> CurrentConditions | None:
         visibility_miles=data.get("visibility_miles"),
         visibility_km=data.get("visibility_km"),
         uv_index=data.get("uv_index"),
-        sunrise_time=_deserialize_datetime(data.get("sunrise_time")),
-        sunset_time=_deserialize_datetime(data.get("sunset_time")),
-        last_updated=_deserialize_datetime(data.get("last_updated")),
+        sunrise_time=sunrise,
+        sunset_time=sunset,
+        last_updated=last_updated,
     )
 
 
@@ -507,7 +528,7 @@ class WeatherDataCache:
     def store(self, location: Location, weather: WeatherData) -> None:
         try:
             payload = {
-                "version": 1,
+                "schema_version": CACHE_SCHEMA_VERSION,
                 "saved_at": _serialize_datetime(datetime.now(UTC)),
                 "location": {
                     "name": location.name,
@@ -533,6 +554,17 @@ class WeatherDataCache:
                 payload = json.load(fh)
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"Failed to read cached weather data: {exc}")
+            return None
+
+        # Validate cache schema version
+        cached_schema_version = payload.get("schema_version", 1)
+        if cached_schema_version != CACHE_SCHEMA_VERSION:
+            logger.debug(
+                f"Cache schema version mismatch for {location.name}: "
+                f"cached={cached_schema_version}, current={CACHE_SCHEMA_VERSION}. "
+                f"Invalidating cache."
+            )
+            path.unlink(missing_ok=True)
             return None
 
         saved_at = _deserialize_datetime(payload.get("saved_at")) or datetime.now(UTC)
@@ -572,6 +604,20 @@ class WeatherDataCache:
                     path.unlink(missing_ok=True)
             except Exception:  # noqa: BLE001
                 path.unlink(missing_ok=True)
+
+    def invalidate(self, location: Location) -> None:
+        """
+        Invalidate cache entry for a specific location.
+
+        Args:
+        ----
+            location: The location to invalidate cache for
+
+        """
+        path = self._path_for_location(location)
+        if path.exists():
+            path.unlink(missing_ok=True)
+            logger.debug(f"Invalidated cache for location '{location.name}'")
 
     def _path_for_location(self, location: Location) -> Path:
         filename = f"{_safe_location_key(location)}.json"

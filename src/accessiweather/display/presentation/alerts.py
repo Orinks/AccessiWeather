@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from ...models import Location, WeatherAlert, WeatherAlerts
+from ...models import AppSettings, Location, WeatherAlert, WeatherAlerts
 from ..weather_presenter import AlertPresentation, AlertsPresentation
-from .formatters import truncate, wrap_text
+from .formatters import format_display_datetime, truncate, wrap_text
 
 
-def build_alerts(alerts: WeatherAlerts, location: Location) -> AlertsPresentation:
+def build_alerts(
+    alerts: WeatherAlerts, location: Location, settings: AppSettings | None = None
+) -> AlertsPresentation:
     """Create an alerts presentation for a given location."""
     title = f"Weather alerts for {location.name}"
     if not alerts.has_alerts():
@@ -21,7 +23,7 @@ def build_alerts(alerts: WeatherAlerts, location: Location) -> AlertsPresentatio
     fallback_lines = [title + ":"]
 
     for idx, alert in enumerate(active, start=1):
-        presentation = build_single_alert(alert, idx)
+        presentation = build_single_alert(alert, idx, settings)
         presentations.append(presentation)
         fallback_lines.append(presentation.fallback_text)
 
@@ -29,12 +31,33 @@ def build_alerts(alerts: WeatherAlerts, location: Location) -> AlertsPresentatio
     return AlertsPresentation(title=title, alerts=presentations, fallback_text=fallback_text)
 
 
-def build_single_alert(alert: WeatherAlert, index: int) -> AlertPresentation:
+def build_single_alert(
+    alert: WeatherAlert, index: int, settings: AppSettings | None = None
+) -> AlertPresentation:
     """Create a single alert presentation with truncated text for readability."""
     severity = alert.severity if alert.severity != "Unknown" else None
     urgency = alert.urgency if alert.urgency != "Unknown" else None
     areas = alert.areas[:3] if alert.areas else []
-    expires = alert.expires.strftime("%m/%d %I:%M %p") if alert.expires else None
+
+    # Extract time preferences
+    if settings:
+        time_display_mode = getattr(settings, "time_display_mode", "local")
+        time_format_12hour = getattr(settings, "time_format_12hour", True)
+        show_timezone_suffix = getattr(settings, "show_timezone_suffix", False)
+    else:
+        time_display_mode = "local"
+        time_format_12hour = True
+        show_timezone_suffix = False
+
+    expires = None
+    if alert.expires:
+        expires = format_display_datetime(
+            alert.expires,
+            time_display_mode=time_display_mode,
+            use_12hour=time_format_12hour,
+            show_timezone=show_timezone_suffix,
+            date_format="%m/%d",
+        )
 
     description = truncate(alert.description, 200) if alert.description else None
     instruction = truncate(alert.instruction, 150) if alert.instruction else None

@@ -97,7 +97,7 @@ def create_main_ui(app: AccessiWeatherApp) -> None:
     )
     main_box.add(title_label)
 
-    app.status_label = toga.Label("Ready", style=Pack(margin_bottom=10, font_style="italic"))
+    app.status_label = toga.Label("", style=Pack(margin_bottom=10, font_style="italic"))
     main_box.add(app.status_label)
 
     location_box = create_location_section(app)
@@ -126,6 +126,8 @@ def create_main_ui(app: AccessiWeatherApp) -> None:
     app.main_window = toga.MainWindow(title=app.formal_name)
     app.main_window.content = main_box
     app.main_window.on_close = app._on_window_close
+    # Attach on_show handler to refresh weather when window becomes visible
+    app.main_window.on_show = lambda: asyncio.create_task(event_handlers.on_window_show(app))
     app.main_window.show()
 
     logger.info("Main UI created successfully")
@@ -148,7 +150,7 @@ def create_location_section(app: AccessiWeatherApp) -> toga.Box:
     )
 
     # Add keyboard shortcut for Delete key to remove location on supported platforms
-    def on_location_key_down(widget, key, modifiers=None):
+    def on_location_key_down(widget, key, _modifiers=None):
         """Handle keyboard shortcuts for location selection."""
         if app_helpers.is_delete_key(key):
             asyncio.create_task(event_handlers.on_remove_location_pressed(app, widget))
@@ -196,6 +198,11 @@ def create_weather_display_section(app: AccessiWeatherApp) -> toga.Box:
         readonly=True, style=Pack(height=120, margin_bottom=10)
     )
     app.current_conditions_display.value = "No current conditions data available."
+    try:
+        app.current_conditions_display.aria_label = "Current conditions"
+        app.current_conditions_display.aria_description = "Read-only display of current weather conditions including temperature, humidity, wind speed, and pressure"
+    except AttributeError:
+        pass
     weather_box.add(app.current_conditions_display)
 
     forecast_label = toga.Label("Forecast:", style=Pack(font_weight="bold", margin_bottom=5))
@@ -205,6 +212,13 @@ def create_weather_display_section(app: AccessiWeatherApp) -> toga.Box:
         readonly=True, style=Pack(height=200, margin_bottom=10)
     )
     app.forecast_display.value = "No forecast data available."
+    try:
+        app.forecast_display.aria_label = "Forecast"
+        app.forecast_display.aria_description = (
+            "Read-only display of extended weather forecast with detailed predictions"
+        )
+    except AttributeError:
+        pass
     weather_box.add(app.forecast_display)
 
     app.discussion_button = toga.Button(
@@ -214,6 +228,13 @@ def create_weather_display_section(app: AccessiWeatherApp) -> toga.Box:
         ),
         style=Pack(margin_bottom=10),
     )
+    try:
+        app.discussion_button.aria_label = "View forecast discussion"
+        app.discussion_button.aria_description = (
+            "Press Enter to open detailed forecast discussion from meteorologists"
+        )
+    except AttributeError:
+        pass
     weather_box.add(app.discussion_button)
 
     alerts_label = toga.Label("Weather Alerts:", style=Pack(font_weight="bold", margin_bottom=5))
@@ -225,6 +246,11 @@ def create_weather_display_section(app: AccessiWeatherApp) -> toga.Box:
         style=Pack(height=150, margin_bottom=10),
         on_select=lambda widget: event_handlers.on_alert_selected(app, widget),
     )
+    try:
+        app.alerts_table.aria_label = "Weather alerts"
+        app.alerts_table.aria_description = "Table of active weather alerts. Select an alert and press View Alert Details button or press Enter to view full details"
+    except AttributeError:
+        pass
     weather_box.add(app.alerts_table)
 
     app.alert_details_button = toga.Button(
@@ -235,6 +261,13 @@ def create_weather_display_section(app: AccessiWeatherApp) -> toga.Box:
         style=Pack(margin_bottom=10),
         enabled=False,
     )
+    try:
+        app.alert_details_button.aria_label = "View alert details"
+        app.alert_details_button.aria_description = (
+            "Press Enter to view detailed information about the selected weather alert"
+        )
+    except AttributeError:
+        pass
     weather_box.add(app.alert_details_button)
 
     return weather_box
@@ -251,6 +284,11 @@ def create_control_buttons_section(app: AccessiWeatherApp) -> toga.Box:
         ),
         style=Pack(margin_right=5),
     )
+    try:
+        app.add_button.aria_label = "Add location"
+        app.add_button.aria_description = "Press Enter to add a new weather location"
+    except AttributeError:
+        pass
     buttons_box.add(app.add_button)
 
     app.remove_button = toga.Button(
@@ -260,6 +298,11 @@ def create_control_buttons_section(app: AccessiWeatherApp) -> toga.Box:
         ),
         style=Pack(margin_right=5),
     )
+    try:
+        app.remove_button.aria_label = "Remove location"
+        app.remove_button.aria_description = "Press Enter to remove the currently selected location"
+    except AttributeError:
+        pass
     buttons_box.add(app.remove_button)
 
     app.refresh_button = toga.Button(
@@ -267,6 +310,13 @@ def create_control_buttons_section(app: AccessiWeatherApp) -> toga.Box:
         on_press=lambda widget: asyncio.create_task(event_handlers.on_refresh_pressed(app, widget)),
         style=Pack(margin_right=5),
     )
+    try:
+        app.refresh_button.aria_label = "Refresh weather"
+        app.refresh_button.aria_description = (
+            "Press Enter to refresh weather data for the current location"
+        )
+    except AttributeError:
+        pass
     buttons_box.add(app.refresh_button)
 
     app.settings_button = toga.Button(
@@ -276,6 +326,11 @@ def create_control_buttons_section(app: AccessiWeatherApp) -> toga.Box:
         ),
         style=Pack(),
     )
+    try:
+        app.settings_button.aria_label = "Settings"
+        app.settings_button.aria_description = "Press Enter to open application settings dialog"
+    except AttributeError:
+        pass
     buttons_box.add(app.settings_button)
 
     return buttons_box

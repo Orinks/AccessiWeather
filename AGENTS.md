@@ -47,7 +47,7 @@ python installer/make.py dev          # Helper wrapper around Briefcase
 
 **Imports**: Ruff auto-sorts; group stdlib, third-party, local with blank lines; use `TYPE_CHECKING` guard for type-only imports.
 
-**Toga Patterns**: 
+**Toga Patterns**:
 - OptionContainer: Use `.content.append(title, widget)` (two arguments, NOT tuple)
 - ALL UI elements MUST have `aria_label` + `aria_description` (accessibility)
 - Modal dialogs: Create with `toga.Window`, show with `.show()`, close with `.close()`

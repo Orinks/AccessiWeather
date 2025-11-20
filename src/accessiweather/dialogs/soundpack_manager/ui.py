@@ -91,7 +91,7 @@ def create_pack_list_panel(dlg) -> toga.Box:
     )
 
     # Add keyboard shortcut for Delete key to remove sound pack where supported
-    def on_pack_list_key_down(widget, key, modifiers=None):
+    def on_pack_list_key_down(widget, key, _modifiers=None):
         """Handle keyboard shortcuts for pack list."""
         if app_helpers.is_delete_key(key):
             # Import the delete function and call it

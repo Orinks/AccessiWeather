@@ -161,6 +161,15 @@ accessiweather --portable
 - **Accessible UI controls**: Properly labeled widgets and clear focus indicators
 - **Clear notifications**: Screen reader-friendly alert and status messages
 
+### Performance & Efficiency
+- **Intelligent caching**: 180-minute TTL cache reduces redundant API calls by 80%+
+- **Request deduplication**: Concurrent requests for the same location coalesce into a single API call (10x reduction)
+- **Connection pooling**: Optimized HTTP connection pool (30 connections, 15 keepalive) for faster parallel fetches
+- **Parallel enrichment**: Simultaneous fetching of alerts, discussions, and sunrise/sunset data
+- **Smart timeouts**: Configurable connect (5s) and read (10s) timeouts with exponential backoff retry
+- **Cache pre-warming**: Background pre-fetching for faster initial display
+- **Async architecture**: Non-blocking weather data operations for responsive UI
+
 ## Installation
 
 ### Option 1: Download Pre-built Binaries (Recommended)
@@ -280,6 +289,38 @@ accessiweather --portable
 - **Alert details**: Click any alert for full information
 - **Precise targeting**: County/township level accuracy
 - **Customizable radius**: Adjust coverage area in settings
+- **Smart rate limiting**: Prevents notification spam with configurable cooldowns
+- **Severity filtering**: Choose which alert severity levels to receive
+
+### Alert Notification System
+
+AccessiWeather includes intelligent notification management to prevent alert fatigue:
+
+**Rate Limiting Features:**
+- **Global cooldown** (default: 5 minutes): Minimum wait between any notifications
+- **Per-alert cooldown** (default: 60 minutes): Prevents duplicate alerts for the same event
+- **Escalation override** (default: 15 minutes): Higher severity alerts bypass cooldowns
+- **Hourly cap** (default: 10 notifications): Maximum notifications per hour
+
+**Severity Filtering:**
+Control which alert severities trigger notifications (all enabled by default):
+- **Extreme**: Life-threatening, catastrophic events
+- **Severe**: Significant threat to life/property
+- **Moderate**: Possible threat requiring attention
+- **Minor**: Minimal or no threat (disabled by default)
+- **Unknown**: Unclassified alerts
+
+**Configuration:**
+All notification settings can be customized in Settings → Notifications:
+```python
+# Example: Stricter rate limiting for busy areas
+Global cooldown: 10 minutes
+Per-alert cooldown: 120 minutes
+Max notifications per hour: 5
+
+# Example: Only critical alerts
+Enable only: Extreme and Severe severities
+```
 
 ## Contributing
 

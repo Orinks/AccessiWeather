@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
+from ..constants import SEVERITY_PRIORITY_MAP
+
 
 @dataclass
 class WeatherAlert:
@@ -20,6 +22,8 @@ class WeatherAlert:
     instruction: str | None = None
     onset: datetime | None = None
     expires: datetime | None = None
+    sent: datetime | None = None
+    effective: datetime | None = None
     areas: list[str] = field(default_factory=list)
     id: str | None = None
     source: str | None = None
@@ -73,8 +77,7 @@ class WeatherAlert:
 
     def get_severity_priority(self) -> int:
         """Get numeric priority for severity level (higher = more severe)."""
-        severity_map = {"extreme": 5, "severe": 4, "moderate": 3, "minor": 2, "unknown": 1}
-        return severity_map.get(self.severity.lower(), 1)
+        return SEVERITY_PRIORITY_MAP.get(self.severity.lower(), SEVERITY_PRIORITY_MAP["unknown"])
 
 
 @dataclass

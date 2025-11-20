@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import TYPE_CHECKING
 
@@ -97,13 +98,30 @@ def update_location_selection(app: AccessiWeatherApp) -> None:
 
 def update_status(app: AccessiWeatherApp, message: str) -> None:
     """Update the status label and log the message."""
-    if app.status_label:
-        app.status_label.text = message
     logger.info("Status: %s", message)
+
+    # IMPORTANT: Do NOT update UI when window is hidden to prevent phantom popups on Windows
+    # The WinForms backend can show the window if we modify widgets while hidden
+    if not app.status_label:
+        return
+
+    if not should_show_dialog(app):
+        logger.debug("Skipping status UI update - window is hidden")
+        return
+
+    try:
+        app.status_label.text = message
+    except Exception as exc:
+        logger.debug("Failed to update status label: %s", exc)
 
 
 def show_error_displays(app: AccessiWeatherApp, error_message: str) -> None:
     """Populate UI widgets with error text after a failure."""
+    # Do NOT update UI when window is hidden to prevent phantom popups on Windows
+    if not should_show_dialog(app):
+        logger.debug("Skipping error display UI update - window is hidden")
+        return
+
     error_text = f"Error loading weather data: {error_message}"
 
     if app.current_conditions_display:
@@ -127,13 +145,26 @@ def show_error_displays(app: AccessiWeatherApp, error_message: str) -> None:
         app.alert_details_button.enabled = False
 
 
-def show_error_dialog(app: AccessiWeatherApp, title: str, message: str) -> None:
-    """Show an error dialog, falling back to logging on failure."""
+def should_show_dialog(app: AccessiWeatherApp) -> bool:
+    """Check if dialogs should be shown (window is visible)."""
     try:
-        if hasattr(app, "main_window") and app.main_window:
+        if not hasattr(app, "main_window") or not app.main_window:
+            return False
+        # If window is hidden/minimized to tray, don't show intrusive dialogs
+        return getattr(app.main_window, "visible", True)
+    except Exception:
+        # If we can't determine visibility, assume visible to avoid breaking user-initiated actions
+        return True
+
+
+def show_error_dialog(app: AccessiWeatherApp, title: str, message: str) -> None:
+    """Show an error dialog, falling back to logging if window is hidden."""
+    try:
+        if should_show_dialog(app):
             app.main_window.error_dialog(title, message)
         else:
-            logger.error("%s: %s", title, message)
+            # Window is hidden/minimized - log instead of showing intrusive dialog
+            logger.warning("%s: %s (dialog suppressed - window hidden)", title, message)
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Failed to show error dialog: %s", exc)
         logger.error("Original error - %s: %s", title, message)
@@ -170,6 +201,19 @@ def handle_exit(app: AccessiWeatherApp) -> bool:
                 app.update_task.cancel()
         except Exception as exc:  # pragma: no cover - defensive logging
             logger.debug("Background task cancel error (non-fatal): %s", exc)
+
+        # Close httpx client to prevent resource leaks
+        try:
+            weather_client = getattr(app, "weather_client", None)
+            if weather_client:
+                logger.debug("Closing weather client HTTP connections")
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    loop.create_task(weather_client.close())
+                else:
+                    asyncio.run(weather_client.close())
+        except Exception as exc:  # pragma: no cover - defensive logging
+            logger.debug("Weather client close error (non-fatal): %s", exc)
 
         play_exit_sound(app)
 

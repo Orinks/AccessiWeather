@@ -21,7 +21,7 @@ env:
 jobs:
   test:
     name: Lint and Test (Windows)
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
@@ -32,10 +32,19 @@ jobs:
       with:
         python-version: "3.12"
 
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libcairo2-dev \
+          libgirepository-2.0-dev \
+          pkg-config \
+          python3-dev
+
     - name: Cache pip dependencies
       uses: actions/cache@v4
       with:
-        path: ~\AppData\Local\pip\Cache
+        path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt', 'pyproject.toml') }}
         restore-keys: |
           ${{ runner.os }}-pip-
@@ -51,11 +60,6 @@ jobs:
         ACCESSIWEATHER_TEST_MODE: "1"
       run: |
         python installer/make.py
-
-    - name: Ruff auto-fix
-      run: |
-        ruff format .
-        ruff check --fix .
 
     - name: Ruff format check
       run: ruff format --check .

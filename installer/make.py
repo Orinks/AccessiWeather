@@ -184,8 +184,9 @@ def run_headless() -> int:
             if _briefcase_with(vpy, "build", "windows", "--no-update") != 0:
                 return 1
 
-        # Clean up soundpacks in build tree prior to packaging
+        # Clean up soundpacks and weather cache in build tree prior to packaging
         _cleanup_soundpacks(argparse.Namespace(platform="windows"))
+        _cleanup_weather_cache(argparse.Namespace(platform="windows"))
 
         print("Packaging Windows MSI ...")
         if _briefcase_with(vpy, "package", "windows", "--adhoc-sign", "-p", "msi") != 0:
@@ -234,6 +235,32 @@ def _cleanup_soundpacks(args: argparse.Namespace) -> None:
         print("  No non-default soundpacks found to clean")
 
 
+def _cleanup_weather_cache(args: argparse.Namespace) -> None:
+    """Remove weather cache from build directory to avoid shipping stale data."""
+    build_base = ROOT / "build" / "accessiweather" / args.platform / "app"
+
+    # Find all possible weather cache locations in the build
+    cache_patterns = [
+        build_base / "src" / "app_packages" / "accessiweather" / "cache",
+        build_base / "src" / "app" / "accessiweather" / "cache",
+        build_base / "cache",
+    ]
+
+    print("Cleaning up weather cache...")
+    removed_any = False
+
+    for cache_path in cache_patterns:
+        if cache_path.exists() and cache_path.is_dir():
+            print(f"  Removing cache directory: {cache_path}")
+            shutil.rmtree(cache_path, ignore_errors=True)
+            removed_any = True
+
+    if removed_any:
+        print("  Weather cache cleaned up successfully")
+    else:
+        print("  No weather cache found to clean")
+
+
 def cmd_status(args: argparse.Namespace) -> int:
     print("AccessiWeather make-like utility (Briefcase)")
     print(f"Root: {ROOT}")
@@ -259,8 +286,9 @@ def cmd_build(args: argparse.Namespace) -> int:
     _briefcase("update", args.platform)  # Don't fail if update fails
     result = _briefcase("build", args.platform, "--no-update")
 
-    # Clean up soundpacks after build (regardless of build success/failure)
+    # Clean up soundpacks and weather cache after build (regardless of build success/failure)
     _cleanup_soundpacks(args)
+    _cleanup_weather_cache(args)
 
     return result
 
@@ -270,8 +298,9 @@ def cmd_package(args: argparse.Namespace) -> int:
         print("Error: Briefcase is not installed. Install with: pip install briefcase")
         return 1
 
-    # Ensure soundpacks are cleaned up before packaging
+    # Ensure soundpacks and weather cache are cleaned up before packaging
     _cleanup_soundpacks(args)
+    _cleanup_weather_cache(args)
 
     return _briefcase("package", args.platform, "--adhoc-sign")
 
@@ -309,8 +338,9 @@ def cmd_zip(args: argparse.Namespace) -> int:
         print(f"Error: build output not found at {app_build_dir}. Run build first.")
         return 1
 
-    # Ensure soundpacks are cleaned up before creating ZIP
+    # Ensure soundpacks and weather cache are cleaned up before creating ZIP
     _cleanup_soundpacks(args)
+    _cleanup_weather_cache(args)
 
     dist_dir = ROOT / "dist"
     dist_dir.mkdir(parents=True, exist_ok=True)

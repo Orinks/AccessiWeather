@@ -28,6 +28,7 @@ from .update_handlers import (
     on_tray_exit,
     on_tray_refresh,
     on_tray_settings,
+    on_window_show,
     test_alert_notification,
 )
 from .weather_handlers import (
@@ -61,6 +62,7 @@ __all__ = [
     "on_check_updates_pressed",
     "download_update",
     "on_show_hide_window",
+    "on_window_show",
     "on_tray_refresh",
     "on_tray_settings",
     "on_tray_exit",

@@ -786,12 +786,12 @@ async def test_get_releases_rate_limit_fallback(sample_releases, svc):
 async def test_get_releases_timeout_fallback(sample_releases, svc):
     """Test timeout fallback returns cached releases."""
     # Preload cache with sample releases
-    svc._cache = {"releases": sample_releases}
+    svc.release_manager._cache = {"releases": sample_releases}
 
     # Set up client that raises TimeoutException
     import httpx
 
-    svc.http_client = RaisingClient(httpx.TimeoutException("timeout"))
+    svc.release_manager.http_client = RaisingClient(httpx.TimeoutException("timeout"))
 
     # Call _get_releases() and assert it returns cached releases
     releases = await svc._get_releases()
@@ -800,23 +800,23 @@ async def test_get_releases_timeout_fallback(sample_releases, svc):
 
 @pytest.mark.asyncio
 async def test_get_releases_request_error_fallback(sample_releases, svc):
-    """Test RequestError fallback returns cached releases if available, else empty list."""
+    """Test RequestError fallback returns cached releases if available, else raises."""
     # Test with cache available
-    svc._cache = {"releases": sample_releases}
+    svc.release_manager._cache = {"releases": sample_releases}
 
     # Set up client that raises RequestError
     import httpx
 
-    svc.http_client = RaisingClient(httpx.RequestError("boom"))
+    svc.release_manager.http_client = RaisingClient(httpx.RequestError("boom"))
 
     # Call _get_releases() and assert it returns cached releases
     releases = await svc._get_releases()
     assert releases == sample_releases
 
-    # Test without cache - should return empty list
-    svc._cache = None
-    releases = await svc._get_releases()
-    assert releases == []
+    # Test without cache - should raise after retries exhausted
+    svc.release_manager._cache = None
+    with pytest.raises(httpx.RequestError):
+        await svc._get_releases()
 
 
 # -----------------------------

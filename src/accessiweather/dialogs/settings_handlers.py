@@ -11,166 +11,197 @@ logger = logging.getLogger(__name__)
 LOG_PREFIX = "SettingsHandlers"
 
 
+def _apply_general_settings(dialog, settings):
+    """Apply general/display settings to UI widgets."""
+    if getattr(dialog, "temperature_unit_selection", None):
+        dialog.temperature_unit_selection.value = dialog.temperature_value_to_display.get(
+            getattr(settings, "temperature_unit", "both"),
+            "Both (Fahrenheit and Celsius)",
+        )
+
+    if getattr(dialog, "update_interval_input", None):
+        dialog.update_interval_input.value = getattr(settings, "update_interval_minutes", 10)
+
+    if getattr(dialog, "show_dewpoint_switch", None):
+        dialog.show_dewpoint_switch.value = getattr(settings, "show_dewpoint", True)
+
+    if getattr(dialog, "show_visibility_switch", None):
+        dialog.show_visibility_switch.value = getattr(settings, "show_visibility", True)
+
+    if getattr(dialog, "show_uv_index_switch", None):
+        dialog.show_uv_index_switch.value = getattr(settings, "show_uv_index", True)
+
+    if getattr(dialog, "show_pressure_trend_switch", None):
+        dialog.show_pressure_trend_switch.value = getattr(settings, "show_pressure_trend", True)
+
+    if getattr(dialog, "show_detailed_forecast_switch", None):
+        dialog.show_detailed_forecast_switch.value = getattr(
+            settings, "show_detailed_forecast", True
+        )
+
+    if getattr(dialog, "enable_alerts_switch", None):
+        dialog.enable_alerts_switch.value = getattr(settings, "enable_alerts", True)
+
+    if getattr(dialog, "air_quality_threshold_input", None):
+        try:
+            dialog.air_quality_threshold_input.value = int(
+                getattr(settings, "air_quality_notify_threshold", 3)
+            )
+        except Exception:  # pragma: no cover - defensive default
+            dialog.air_quality_threshold_input.value = 3
+
+    # Time display settings
+    if getattr(dialog, "time_display_mode_selection", None):
+        display = dialog.time_display_value_to_display.get(
+            getattr(settings, "time_display_mode", "local"),
+            "Local time only",
+        )
+        dialog.time_display_mode_selection.value = display
+
+    if getattr(dialog, "time_format_12hour_switch", None):
+        dialog.time_format_12hour_switch.value = getattr(settings, "time_format_12hour", True)
+
+    if getattr(dialog, "show_timezone_suffix_switch", None):
+        dialog.show_timezone_suffix_switch.value = getattr(settings, "show_timezone_suffix", False)
+
+
+def _apply_data_source_settings(dialog, settings):
+    """Apply data source and API settings to UI widgets."""
+    if getattr(dialog, "data_source_selection", None):
+        display = dialog.data_source_value_to_display.get(getattr(settings, "data_source", "auto"))
+        if display:
+            dialog.data_source_selection.value = display
+
+    if getattr(dialog, "visual_crossing_api_key_input", None) is not None:
+        dialog.visual_crossing_api_key_input.value = getattr(
+            settings, "visual_crossing_api_key", ""
+        )
+
+    with contextlib.suppress(Exception):
+        dialog._update_visual_crossing_visibility()
+
+
+def _apply_sound_settings(dialog, settings):
+    """Apply sound pack settings to UI widgets."""
+    if getattr(dialog, "sound_enabled_switch", None) is not None:
+        dialog.sound_enabled_switch.value = getattr(settings, "sound_enabled", True)
+
+    if getattr(dialog, "sound_pack_selection", None) is not None:
+        target_pack = getattr(settings, "sound_pack", "default")
+        display_name = None
+        for name, pack_id in getattr(dialog, "sound_pack_map", {}).items():
+            if pack_id == target_pack:
+                display_name = name
+                break
+
+        if not display_name and getattr(dialog, "sound_pack_options", []):
+            display_name = dialog.sound_pack_options[0]
+
+        if display_name:
+            dialog.sound_pack_selection.value = display_name
+
+        dialog.sound_pack_selection.enabled = bool(dialog.sound_enabled_switch.value)
+
+
+def _apply_update_settings(dialog, settings):
+    """Apply update-related settings to UI widgets."""
+    if getattr(dialog, "auto_update_switch", None) is not None:
+        dialog.auto_update_switch.value = getattr(settings, "auto_update_enabled", True)
+
+    if getattr(dialog, "update_channel_selection", None) is not None:
+        channel = getattr(settings, "update_channel", "stable")
+        if channel == "dev":
+            dialog.update_channel_selection.value = "Development (Latest features, may be unstable)"
+        elif channel == "beta":
+            dialog.update_channel_selection.value = "Beta (Pre-release testing)"
+        else:
+            dialog.update_channel_selection.value = "Stable (Production releases only)"
+
+        with contextlib.suppress(Exception):
+            dialog._update_channel_description()
+
+    if getattr(dialog, "update_check_interval_input", None) is not None:
+        dialog.update_check_interval_input.value = getattr(
+            settings, "update_check_interval_hours", 24
+        )
+
+
+def _apply_system_settings(dialog, settings):
+    """Apply system/startup settings to UI widgets."""
+    if getattr(dialog, "minimize_to_tray_switch", None) is not None:
+        dialog.minimize_to_tray_switch.value = getattr(settings, "minimize_to_tray", False)
+
+    if getattr(dialog, "startup_enabled_switch", None) is not None:
+        try:
+            actual_startup = dialog.config_manager.is_startup_enabled()
+            dialog.startup_enabled_switch.value = actual_startup
+        except Exception as exc:  # pragma: no cover - platform failures
+            logger.warning("%s: Failed to sync startup state: %s", LOG_PREFIX, exc)
+            dialog.startup_enabled_switch.value = getattr(settings, "startup_enabled", False)
+
+    if getattr(dialog, "debug_mode_switch", None) is not None:
+        dialog.debug_mode_switch.value = getattr(settings, "debug_mode", False)
+
+    if getattr(dialog, "weather_history_enabled_switch", None) is not None:
+        dialog.weather_history_enabled_switch.value = getattr(
+            settings, "weather_history_enabled", True
+        )
+
+
+def _apply_alert_notification_settings(dialog, settings):
+    """Apply alert notification settings to UI widgets."""
+    if getattr(dialog, "alert_notifications_enabled_switch", None) is not None:
+        dialog.alert_notifications_enabled_switch.value = getattr(
+            settings, "alert_notifications_enabled", True
+        )
+
+    if getattr(dialog, "alert_notify_extreme_switch", None) is not None:
+        dialog.alert_notify_extreme_switch.value = getattr(settings, "alert_notify_extreme", True)
+
+    if getattr(dialog, "alert_notify_severe_switch", None) is not None:
+        dialog.alert_notify_severe_switch.value = getattr(settings, "alert_notify_severe", True)
+
+    if getattr(dialog, "alert_notify_moderate_switch", None) is not None:
+        dialog.alert_notify_moderate_switch.value = getattr(settings, "alert_notify_moderate", True)
+
+    if getattr(dialog, "alert_notify_minor_switch", None) is not None:
+        dialog.alert_notify_minor_switch.value = getattr(settings, "alert_notify_minor", False)
+
+    if getattr(dialog, "alert_notify_unknown_switch", None) is not None:
+        dialog.alert_notify_unknown_switch.value = getattr(settings, "alert_notify_unknown", False)
+
+    if getattr(dialog, "alert_global_cooldown_input", None) is not None:
+        dialog.alert_global_cooldown_input.value = getattr(
+            settings, "alert_global_cooldown_minutes", 5
+        )
+
+    if getattr(dialog, "alert_per_alert_cooldown_input", None) is not None:
+        dialog.alert_per_alert_cooldown_input.value = getattr(
+            settings, "alert_per_alert_cooldown_minutes", 60
+        )
+
+    if getattr(dialog, "alert_freshness_window_input", None) is not None:
+        dialog.alert_freshness_window_input.value = getattr(
+            settings, "alert_freshness_window_minutes", 15
+        )
+
+    if getattr(dialog, "alert_max_notifications_input", None) is not None:
+        dialog.alert_max_notifications_input.value = getattr(
+            settings, "alert_max_notifications_per_hour", 10
+        )
+
+
 def apply_settings_to_ui(dialog):
-    """Populate dialog widgets from the dialog's working settings copy."""
+    """Apply settings model to UI widgets in the dialog using helper functions."""
     try:
         settings = dialog.current_settings
 
-        if getattr(dialog, "temperature_unit_selection", None):
-            dialog.temperature_unit_selection.value = dialog.temperature_value_to_display.get(
-                getattr(settings, "temperature_unit", "both"),
-                "Both (Fahrenheit and Celsius)",
-            )
-
-        if getattr(dialog, "update_interval_input", None):
-            dialog.update_interval_input.value = getattr(settings, "update_interval_minutes", 10)
-
-        if getattr(dialog, "show_dewpoint_switch", None):
-            dialog.show_dewpoint_switch.value = getattr(settings, "show_dewpoint", True)
-
-        if getattr(dialog, "show_visibility_switch", None):
-            dialog.show_visibility_switch.value = getattr(settings, "show_visibility", True)
-
-        if getattr(dialog, "show_uv_index_switch", None):
-            dialog.show_uv_index_switch.value = getattr(settings, "show_uv_index", True)
-
-        if getattr(dialog, "show_pressure_trend_switch", None):
-            dialog.show_pressure_trend_switch.value = getattr(settings, "show_pressure_trend", True)
-
-        if getattr(dialog, "show_detailed_forecast_switch", None):
-            dialog.show_detailed_forecast_switch.value = getattr(
-                settings, "show_detailed_forecast", True
-            )
-
-        if getattr(dialog, "enable_alerts_switch", None):
-            dialog.enable_alerts_switch.value = getattr(settings, "enable_alerts", True)
-
-        if getattr(dialog, "air_quality_threshold_input", None):
-            try:
-                dialog.air_quality_threshold_input.value = int(
-                    getattr(settings, "air_quality_notify_threshold", 3)
-                )
-            except Exception:  # pragma: no cover - defensive default
-                dialog.air_quality_threshold_input.value = 3
-
-        if getattr(dialog, "data_source_selection", None):
-            display = dialog.data_source_value_to_display.get(
-                getattr(settings, "data_source", "auto")
-            )
-            if display:
-                dialog.data_source_selection.value = display
-
-        if getattr(dialog, "visual_crossing_api_key_input", None) is not None:
-            dialog.visual_crossing_api_key_input.value = getattr(
-                settings, "visual_crossing_api_key", ""
-            )
-
-        with contextlib.suppress(Exception):
-            dialog._update_visual_crossing_visibility()
-
-        if getattr(dialog, "sound_enabled_switch", None) is not None:
-            dialog.sound_enabled_switch.value = getattr(settings, "sound_enabled", True)
-
-        if getattr(dialog, "sound_pack_selection", None) is not None:
-            target_pack = getattr(settings, "sound_pack", "default")
-            display_name = None
-            for name, pack_id in getattr(dialog, "sound_pack_map", {}).items():
-                if pack_id == target_pack:
-                    display_name = name
-                    break
-
-            if not display_name and getattr(dialog, "sound_pack_options", []):
-                display_name = dialog.sound_pack_options[0]
-
-            if display_name:
-                dialog.sound_pack_selection.value = display_name
-
-            dialog.sound_pack_selection.enabled = bool(  # keep enabled state in sync
-                dialog.sound_enabled_switch.value
-            )
-
-        if getattr(dialog, "auto_update_switch", None) is not None:
-            dialog.auto_update_switch.value = getattr(settings, "auto_update_enabled", True)
-
-        if getattr(dialog, "update_channel_selection", None) is not None:
-            channel = getattr(settings, "update_channel", "stable")
-            if channel == "dev":
-                dialog.update_channel_selection.value = (
-                    "Development (Latest features, may be unstable)"
-                )
-            elif channel == "beta":
-                dialog.update_channel_selection.value = "Beta (Pre-release testing)"
-            else:
-                dialog.update_channel_selection.value = "Stable (Production releases only)"
-
-            with contextlib.suppress(Exception):
-                dialog._update_channel_description()
-
-        if getattr(dialog, "update_check_interval_input", None) is not None:
-            dialog.update_check_interval_input.value = getattr(
-                settings, "update_check_interval_hours", 24
-            )
-
-        if getattr(dialog, "minimize_to_tray_switch", None) is not None:
-            dialog.minimize_to_tray_switch.value = getattr(settings, "minimize_to_tray", False)
-
-        if getattr(dialog, "startup_enabled_switch", None) is not None:
-            try:
-                actual_startup = dialog.config_manager.is_startup_enabled()
-                dialog.startup_enabled_switch.value = actual_startup
-            except Exception as exc:  # pragma: no cover - platform failures
-                logger.warning("%s: Failed to sync startup state: %s", LOG_PREFIX, exc)
-                dialog.startup_enabled_switch.value = getattr(settings, "startup_enabled", False)
-
-        if getattr(dialog, "debug_mode_switch", None) is not None:
-            dialog.debug_mode_switch.value = getattr(settings, "debug_mode", False)
-
-        if getattr(dialog, "weather_history_enabled_switch", None) is not None:
-            dialog.weather_history_enabled_switch.value = getattr(
-                settings, "weather_history_enabled", True
-            )
-
-        # Notification settings
-        if getattr(dialog, "alert_notifications_enabled_switch", None) is not None:
-            dialog.alert_notifications_enabled_switch.value = getattr(
-                settings, "alert_notifications_enabled", True
-            )
-
-        if getattr(dialog, "alert_notify_extreme_switch", None) is not None:
-            dialog.alert_notify_extreme_switch.value = getattr(
-                settings, "alert_notify_extreme", True
-            )
-
-        if getattr(dialog, "alert_notify_severe_switch", None) is not None:
-            dialog.alert_notify_severe_switch.value = getattr(settings, "alert_notify_severe", True)
-
-        if getattr(dialog, "alert_notify_moderate_switch", None) is not None:
-            dialog.alert_notify_moderate_switch.value = getattr(
-                settings, "alert_notify_moderate", True
-            )
-
-        if getattr(dialog, "alert_notify_minor_switch", None) is not None:
-            dialog.alert_notify_minor_switch.value = getattr(settings, "alert_notify_minor", False)
-
-        if getattr(dialog, "alert_notify_unknown_switch", None) is not None:
-            dialog.alert_notify_unknown_switch.value = getattr(
-                settings, "alert_notify_unknown", False
-            )
-
-        if getattr(dialog, "alert_global_cooldown_input", None) is not None:
-            dialog.alert_global_cooldown_input.value = getattr(
-                settings, "alert_global_cooldown_minutes", 5
-            )
-
-        if getattr(dialog, "alert_per_alert_cooldown_input", None) is not None:
-            dialog.alert_per_alert_cooldown_input.value = getattr(
-                settings, "alert_per_alert_cooldown_minutes", 60
-            )
-
-        if getattr(dialog, "alert_max_notifications_input", None) is not None:
-            dialog.alert_max_notifications_input.value = getattr(
-                settings, "alert_max_notifications_per_hour", 10
-            )
+        _apply_general_settings(dialog, settings)
+        _apply_data_source_settings(dialog, settings)
+        _apply_sound_settings(dialog, settings)
+        _apply_update_settings(dialog, settings)
+        _apply_system_settings(dialog, settings)
+        _apply_alert_notification_settings(dialog, settings)
 
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.warning("%s: Failed to apply settings to UI: %s", LOG_PREFIX, exc)
@@ -185,9 +216,8 @@ def map_channel_display_to_value(display: str) -> str:
     return "stable"
 
 
-def collect_settings_from_ui(dialog) -> AppSettings:
-    """Read current widget values and return an AppSettings instance."""
-    current_settings = getattr(dialog, "current_settings", AppSettings())
+def _collect_display_settings(dialog, current_settings):
+    """Collect general display settings from UI widgets."""
 
     def _switch_value(attr: str, default: bool) -> bool:
         widget = getattr(dialog, attr, None)
@@ -197,13 +227,6 @@ def collect_settings_from_ui(dialog) -> AppSettings:
             return bool(widget.value)
         except Exception:  # pragma: no cover - defensive fallback
             return default
-
-    try:
-        selected_display = str(dialog.data_source_selection.value)
-        data_source = dialog.data_source_display_to_value.get(selected_display, "auto")
-    except Exception as exc:  # pragma: no cover - defensive fallback
-        logger.warning("%s: Failed to get data source selection: %s", LOG_PREFIX, exc)
-        data_source = "auto"
 
     try:
         selected_display = str(dialog.temperature_unit_selection.value)
@@ -218,6 +241,79 @@ def collect_settings_from_ui(dialog) -> AppSettings:
     except (ValueError, TypeError):
         update_interval = 10
 
+    # Time display settings
+    try:
+        selected_time_display = str(dialog.time_display_mode_selection.value)
+        time_display_mode = dialog.time_display_display_to_value.get(selected_time_display, "local")
+    except Exception as exc:  # pragma: no cover
+        logger.warning("%s: Failed to get time display mode selection: %s", LOG_PREFIX, exc)
+        time_display_mode = "local"
+
+    time_format_12hour = _switch_value(
+        "time_format_12hour_switch",
+        getattr(current_settings, "time_format_12hour", True),
+    )
+    show_timezone_suffix = _switch_value(
+        "show_timezone_suffix_switch",
+        getattr(current_settings, "show_timezone_suffix", False),
+    )
+
+    show_dewpoint = _switch_value(
+        "show_dewpoint_switch", getattr(current_settings, "show_dewpoint", True)
+    )
+    show_visibility = _switch_value(
+        "show_visibility_switch", getattr(current_settings, "show_visibility", True)
+    )
+    show_uv_index = _switch_value(
+        "show_uv_index_switch", getattr(current_settings, "show_uv_index", True)
+    )
+    show_pressure_trend = _switch_value(
+        "show_pressure_trend_switch", getattr(current_settings, "show_pressure_trend", True)
+    )
+    show_detailed_forecast = _switch_value(
+        "show_detailed_forecast_switch",
+        getattr(current_settings, "show_detailed_forecast", True),
+    )
+    enable_alerts = _switch_value(
+        "enable_alerts_switch", getattr(current_settings, "enable_alerts", True)
+    )
+
+    return {
+        "temperature_unit": temperature_unit,
+        "update_interval_minutes": update_interval,
+        "show_detailed_forecast": show_detailed_forecast,
+        "enable_alerts": enable_alerts,
+        "show_dewpoint": show_dewpoint,
+        "show_visibility": show_visibility,
+        "show_uv_index": show_uv_index,
+        "show_pressure_trend": show_pressure_trend,
+        "time_display_mode": time_display_mode,
+        "time_format_12hour": time_format_12hour,
+        "show_timezone_suffix": show_timezone_suffix,
+    }
+
+
+def _collect_data_source_settings(dialog):
+    """Collect data source and API settings from UI widgets."""
+    try:
+        selected_display = str(dialog.data_source_selection.value)
+        data_source = dialog.data_source_display_to_value.get(selected_display, "auto")
+    except Exception as exc:  # pragma: no cover - defensive fallback
+        logger.warning("%s: Failed to get data source selection: %s", LOG_PREFIX, exc)
+        data_source = "auto"
+
+    visual_crossing_api_key = ""
+    if getattr(dialog, "visual_crossing_api_key_input", None):
+        visual_crossing_api_key = str(dialog.visual_crossing_api_key_input.value or "").strip()
+
+    return {
+        "data_source": data_source,
+        "visual_crossing_api_key": visual_crossing_api_key,
+    }
+
+
+def _collect_update_settings(dialog):
+    """Collect update-related settings from UI widgets."""
     auto_update_enabled = getattr(dialog.auto_update_switch, "value", True)
 
     if getattr(dialog, "update_channel_selection", None) and hasattr(
@@ -239,6 +335,15 @@ def collect_settings_from_ui(dialog) -> AppSettings:
     else:
         update_check_interval_hours = 24
 
+    return {
+        "auto_update_enabled": auto_update_enabled,
+        "update_channel": update_channel,
+        "update_check_interval_hours": update_check_interval_hours,
+    }
+
+
+def _collect_sound_settings(dialog):
+    """Collect sound-related settings from UI widgets."""
     sound_enabled = getattr(dialog.sound_enabled_switch, "value", True)
 
     pack_display = None
@@ -248,11 +353,50 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         pack_display = dialog.sound_pack_selection.value
     sound_pack = getattr(dialog, "sound_pack_map", {}).get(pack_display, "default")
 
-    visual_crossing_api_key = ""
-    if getattr(dialog, "visual_crossing_api_key_input", None):
-        visual_crossing_api_key = str(dialog.visual_crossing_api_key_input.value or "").strip()
+    return {
+        "sound_enabled": sound_enabled,
+        "sound_pack": sound_pack,
+    }
+
+
+def _collect_system_settings(dialog, current_settings):
+    """Collect system-related settings from UI widgets."""
+
+    def _switch_value(attr: str, default: bool) -> bool:
+        widget = getattr(dialog, attr, None)
+        if widget is None or not hasattr(widget, "value"):
+            return default
+        try:
+            return bool(widget.value)
+        except Exception:  # pragma: no cover - defensive fallback
+            return default
 
     startup_enabled = getattr(dialog.startup_enabled_switch, "value", False)
+    minimize_to_tray = _switch_value(
+        "minimize_to_tray_switch", getattr(current_settings, "minimize_to_tray", False)
+    )
+    debug_mode = _switch_value("debug_mode_switch", getattr(current_settings, "debug_mode", False))
+    weather_history_enabled = _switch_value(
+        "weather_history_enabled_switch",
+        getattr(current_settings, "weather_history_enabled", True),
+    )
+
+    return {
+        "startup_enabled": startup_enabled,
+        "minimize_to_tray": minimize_to_tray,
+        "debug_mode": debug_mode,
+        "weather_history_enabled": weather_history_enabled,
+    }
+
+
+def _collect_alert_settings(dialog, current_settings):
+    """Collect alert notification settings from UI widgets."""
+
+    def _as_int(value, default):
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return default
 
     alerts_enabled = bool(
         getattr(
@@ -297,12 +441,6 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         )
     )
 
-    def _as_int(value, default):
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            return default
-
     global_cooldown = _as_int(
         getattr(getattr(dialog, "alert_global_cooldown_input", None), "value", None),
         getattr(current_settings, "alert_global_cooldown_minutes", 5),
@@ -314,6 +452,10 @@ def collect_settings_from_ui(dialog) -> AppSettings:
     escalation_cooldown = _as_int(
         getattr(getattr(dialog, "alert_escalation_cooldown_input", None), "value", None),
         getattr(current_settings, "alert_escalation_cooldown_minutes", 15),
+    )
+    freshness_window = _as_int(
+        getattr(getattr(dialog, "alert_freshness_window_input", None), "value", None),
+        getattr(current_settings, "alert_freshness_window_minutes", 15),
     )
     max_per_hour = _as_int(
         getattr(getattr(dialog, "alert_max_notifications_input", None), "value", None),
@@ -336,55 +478,77 @@ def collect_settings_from_ui(dialog) -> AppSettings:
             aq_threshold = getattr(current_settings, "air_quality_notify_threshold", 3)
     aq_threshold = max(0, min(500, aq_threshold))
 
-    show_dewpoint = _switch_value(
-        "show_dewpoint_switch", getattr(current_settings, "show_dewpoint", True)
-    )
-    show_visibility = _switch_value(
-        "show_visibility_switch", getattr(current_settings, "show_visibility", True)
-    )
-    show_uv_index = _switch_value(
-        "show_uv_index_switch", getattr(current_settings, "show_uv_index", True)
-    )
-    show_pressure_trend = _switch_value(
-        "show_pressure_trend_switch", getattr(current_settings, "show_pressure_trend", True)
-    )
+    return {
+        "alert_notifications_enabled": alerts_enabled,
+        "alert_notify_extreme": notify_extreme,
+        "alert_notify_severe": notify_severe,
+        "alert_notify_moderate": notify_moderate,
+        "alert_notify_minor": notify_minor,
+        "alert_notify_unknown": notify_unknown,
+        "alert_global_cooldown_minutes": global_cooldown,
+        "alert_per_alert_cooldown_minutes": per_alert_cooldown,
+        "alert_escalation_cooldown_minutes": escalation_cooldown,
+        "alert_freshness_window_minutes": freshness_window,
+        "alert_max_notifications_per_hour": max_per_hour,
+        "alert_ignored_categories": ignored_categories,
+        "air_quality_notify_threshold": aq_threshold,
+    }
 
+
+def collect_settings_from_ui(dialog) -> AppSettings:
+    """Read current widget values and return an AppSettings instance using helper functions."""
+    current_settings = getattr(dialog, "current_settings", AppSettings())
+
+    # Collect settings from each category
+    display = _collect_display_settings(dialog, current_settings)
+    data_source = _collect_data_source_settings(dialog)
+    updates = _collect_update_settings(dialog)
+    sound = _collect_sound_settings(dialog)
+    system = _collect_system_settings(dialog, current_settings)
+    alerts = _collect_alert_settings(dialog, current_settings)
+
+    # Build and return AppSettings with collected values
     return AppSettings(
-        temperature_unit=temperature_unit,
-        update_interval_minutes=update_interval,
-        show_detailed_forecast=_switch_value(
-            "show_detailed_forecast_switch",
-            getattr(current_settings, "show_detailed_forecast", True),
-        ),
-        enable_alerts=_switch_value(
-            "enable_alerts_switch", getattr(current_settings, "enable_alerts", True)
-        ),
-        minimize_to_tray=_switch_value(
-            "minimize_to_tray_switch", getattr(current_settings, "minimize_to_tray", False)
-        ),
-        startup_enabled=startup_enabled,
-        data_source=data_source,
-        visual_crossing_api_key=visual_crossing_api_key,
-        auto_update_enabled=auto_update_enabled,
-        update_channel=update_channel,
-        update_check_interval_hours=update_check_interval_hours,
-        debug_mode=_switch_value(
-            "debug_mode_switch", getattr(current_settings, "debug_mode", False)
-        ),
-        sound_enabled=sound_enabled,
-        sound_pack=sound_pack,
+        # Display settings
+        temperature_unit=display["temperature_unit"],
+        update_interval_minutes=display["update_interval_minutes"],
+        show_detailed_forecast=display["show_detailed_forecast"],
+        enable_alerts=display["enable_alerts"],
+        show_dewpoint=display["show_dewpoint"],
+        show_visibility=display["show_visibility"],
+        show_uv_index=display["show_uv_index"],
+        show_pressure_trend=display["show_pressure_trend"],
+        # Data source settings
+        data_source=data_source["data_source"],
+        visual_crossing_api_key=data_source["visual_crossing_api_key"],
+        # Update settings
+        auto_update_enabled=updates["auto_update_enabled"],
+        update_channel=updates["update_channel"],
+        update_check_interval_hours=updates["update_check_interval_hours"],
+        # Sound settings
+        sound_enabled=sound["sound_enabled"],
+        sound_pack=sound["sound_pack"],
+        # System settings
+        startup_enabled=system["startup_enabled"],
+        minimize_to_tray=system["minimize_to_tray"],
+        debug_mode=system["debug_mode"],
+        weather_history_enabled=system["weather_history_enabled"],
+        # Alert settings
+        alert_notifications_enabled=alerts["alert_notifications_enabled"],
+        alert_notify_extreme=alerts["alert_notify_extreme"],
+        alert_notify_severe=alerts["alert_notify_severe"],
+        alert_notify_moderate=alerts["alert_notify_moderate"],
+        alert_notify_minor=alerts["alert_notify_minor"],
+        alert_notify_unknown=alerts["alert_notify_unknown"],
+        alert_global_cooldown_minutes=alerts["alert_global_cooldown_minutes"],
+        alert_per_alert_cooldown_minutes=alerts["alert_per_alert_cooldown_minutes"],
+        alert_escalation_cooldown_minutes=alerts["alert_escalation_cooldown_minutes"],
+        alert_freshness_window_minutes=alerts["alert_freshness_window_minutes"],
+        alert_max_notifications_per_hour=alerts["alert_max_notifications_per_hour"],
+        alert_ignored_categories=alerts["alert_ignored_categories"],
+        air_quality_notify_threshold=alerts["air_quality_notify_threshold"],
+        # Settings without UI widgets (preserve from current_settings)
         github_backend_url="",
-        alert_notifications_enabled=alerts_enabled,
-        alert_notify_extreme=notify_extreme,
-        alert_notify_severe=notify_severe,
-        alert_notify_moderate=notify_moderate,
-        alert_notify_minor=notify_minor,
-        alert_notify_unknown=notify_unknown,
-        alert_global_cooldown_minutes=global_cooldown,
-        alert_per_alert_cooldown_minutes=per_alert_cooldown,
-        alert_escalation_cooldown_minutes=escalation_cooldown,
-        alert_max_notifications_per_hour=max_per_hour,
-        alert_ignored_categories=ignored_categories,
         international_alerts_enabled=getattr(
             current_settings, "international_alerts_enabled", True
         ),
@@ -393,19 +557,14 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         ),
         trend_insights_enabled=getattr(current_settings, "trend_insights_enabled", True),
         trend_hours=getattr(current_settings, "trend_hours", 24),
-        show_dewpoint=show_dewpoint,
-        show_pressure_trend=show_pressure_trend,
-        show_visibility=show_visibility,
-        show_uv_index=show_uv_index,
         air_quality_enabled=getattr(current_settings, "air_quality_enabled", True),
         pollen_enabled=getattr(current_settings, "pollen_enabled", True),
-        air_quality_notify_threshold=aq_threshold,
         offline_cache_enabled=getattr(current_settings, "offline_cache_enabled", True),
         offline_cache_max_age_minutes=getattr(
             current_settings, "offline_cache_max_age_minutes", 180
         ),
-        weather_history_enabled=_switch_value(
-            "weather_history_enabled_switch",
-            getattr(current_settings, "weather_history_enabled", True),
-        ),
+        # Time display settings
+        time_display_mode=display["time_display_mode"],
+        time_format_12hour=display["time_format_12hour"],
+        show_timezone_suffix=display["show_timezone_suffix"],
     )

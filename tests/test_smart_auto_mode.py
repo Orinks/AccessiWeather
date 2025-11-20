@@ -150,8 +150,8 @@ async def test_auto_mode_enriches_with_visual_crossing_alerts():
 
 
 @pytest.mark.asyncio
-async def test_auto_mode_does_not_overwrite_existing_sunrise_sunset():
-    """Test that enrichment doesn't overwrite existing sunrise/sunset data."""
+async def test_auto_mode_enriches_with_fresh_sunrise_sunset():
+    """Test that enrichment updates sunrise/sunset from Open-Meteo in auto mode."""
     # Setup
     location = Location(name="New York", latitude=40.7128, longitude=-74.0060)
     client = WeatherClient(data_source="auto")
@@ -167,6 +167,14 @@ async def test_auto_mode_does_not_overwrite_existing_sunrise_sunset():
         sunset_time=existing_sunset,
     )
 
+    # Fresh sunrise/sunset from Open-Meteo
+    fresh_sunrise = datetime(2024, 6, 15, 5, 45, tzinfo=UTC)
+    fresh_sunset = datetime(2024, 6, 15, 21, 15, tzinfo=UTC)
+    openmeteo_current = CurrentConditions(
+        sunrise_time=fresh_sunrise,
+        sunset_time=fresh_sunset,
+    )
+
     with (
         patch.object(client, "_get_nws_current_conditions", return_value=nws_current),
         patch.object(
@@ -176,16 +184,13 @@ async def test_auto_mode_does_not_overwrite_existing_sunrise_sunset():
         ),
         patch.object(client, "_get_nws_hourly_forecast", return_value=HourlyForecast(periods=[])),
         patch.object(client, "_get_nws_alerts", return_value=WeatherAlerts(alerts=[])),
-        patch.object(client, "_get_openmeteo_current_conditions") as mock_openmeteo,
+        patch.object(client, "_get_openmeteo_current_conditions", return_value=openmeteo_current),
     ):
         weather_data = await client.get_weather_data(location)
 
-        # Verify sunrise/sunset was NOT overwritten
-        assert weather_data.current.sunrise_time == existing_sunrise
-        assert weather_data.current.sunset_time == existing_sunset
-
-        # Verify Open-Meteo was NOT called since we already have the data
-        mock_openmeteo.assert_not_called()
+        # Verify sunrise/sunset was updated with fresh data from Open-Meteo
+        assert weather_data.current.sunrise_time == fresh_sunrise
+        assert weather_data.current.sunset_time == fresh_sunset
 
 
 @pytest.mark.asyncio
@@ -279,9 +284,9 @@ async def test_openmeteo_current_conditions_includes_sunrise_sunset():
 
     current = client._parse_openmeteo_current_conditions(sample_data)
 
-    # Verify sunrise/sunset is parsed
-    assert current.sunrise_time == datetime(2024, 6, 15, 6, 30)
-    assert current.sunset_time == datetime(2024, 6, 15, 20, 45)
+    # Verify sunrise/sunset is parsed (now timezone-aware after fix)
+    assert current.sunrise_time == datetime(2024, 6, 15, 6, 30, tzinfo=UTC)
+    assert current.sunset_time == datetime(2024, 6, 15, 20, 45, tzinfo=UTC)
 
 
 @pytest.mark.asyncio

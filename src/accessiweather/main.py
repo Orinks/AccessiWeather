@@ -6,6 +6,11 @@ handling configuration, logging setup, and launching the Toga-based GUI.
 
 The main() function serves as the primary entry point, called by the CLI interface
 and configured in setup.py/pyproject.toml entry points.
+
+Note:
+    CLI parameters for configuration, debug mode, caching, and portability are accepted
+    but currently not propagated into the GUI layer. Follow #316 for implementation updates.
+
 """
 
 import logging
@@ -88,12 +93,8 @@ def main(
         f"enable_caching={enable_caching}, portable_mode={portable_mode}"
     )
 
-    # TODO: Pass configuration parameters to the application
-    # Currently, the AccessiWeatherApp doesn't accept these parameters in its constructor
-    # Configuration is handled through ConfigManager which uses app.paths
-    # Future enhancement: Modify AccessiWeatherApp to accept these parameters
-
-    return toga_main()
+    # Pass config_dir and portable_mode to the app
+    return toga_main(config_dir=config_dir, portable_mode=portable_mode)
 
 
 # Add blank line before if __name__ == "__main__":

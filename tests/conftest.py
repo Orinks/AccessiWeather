@@ -8,6 +8,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+# Ensure pytest-mock plugin loads before tests so the `mocker` fixture is available
+pytest_plugins = ("pytest_mock",)
+
 # Set toga to use the dummy backend for headless testing
 os.environ["TOGA_BACKEND"] = "toga_dummy"
 

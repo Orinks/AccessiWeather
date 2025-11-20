@@ -3,6 +3,7 @@ Location dialog for AccessiWeather Simple.
 
 This module provides dialogs for adding and managing locations in the Toga application.
 """
+# Advanced coordinates dialog work is tracked in #315.
 
 import asyncio
 import logging
@@ -333,12 +334,12 @@ class AddLocationDialog:
 
     async def _on_advanced_pressed(self, widget):
         """Handle advanced coordinates button press."""
-        # TODO: Implement advanced coordinates dialog
         await self.app.main_window.info_dialog(
             "Advanced Coordinates",
-            "Advanced coordinate entry dialog will be implemented in a future version.\n\n"
-            "For now, you can enter coordinates directly in the format:\n"
-            "latitude, longitude (e.g., 40.7128, -74.0060)",
+            "Advanced coordinate entry will land in a future version.\n\n"
+            "Accepted coordinate formats today include decimal degrees with or without degree "
+            "symbols and N/S/E/W suffixes (e.g., 40.7128, -74.0060 or 40.7128°N, 74.0060°W).\n"
+            "Track the dialog implementation in #315.",
         )
 
     async def _on_save_pressed(self, widget):
