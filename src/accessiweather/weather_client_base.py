@@ -645,6 +645,9 @@ class WeatherClient:
             tasks["vc_alerts"] = asyncio.create_task(
                 self._enrich_with_visual_crossing_alerts(weather_data, location)
             )
+            tasks["vc_moon_data"] = asyncio.create_task(
+                self._enrich_with_visual_crossing_moon_data(weather_data, location)
+            )
 
         # Post-processing enrichments (always run)
         tasks["environmental"] = asyncio.create_task(
@@ -909,6 +912,11 @@ class WeatherClient:
         self, weather_data: WeatherData, location: Location
     ) -> None:
         await enrichment.enrich_with_visual_crossing_alerts(self, weather_data, location)
+
+    async def _enrich_with_visual_crossing_moon_data(
+        self, weather_data: WeatherData, location: Location
+    ) -> None:
+        await enrichment.enrich_with_visual_crossing_moon_data(self, weather_data, location)
 
     async def _enrich_with_sunrise_sunset(
         self, weather_data: WeatherData, location: Location

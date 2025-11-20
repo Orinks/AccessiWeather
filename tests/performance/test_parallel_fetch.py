@@ -54,6 +54,7 @@ async def test_enrichments_run_concurrently(mock_location):
     mock_sunrise = AsyncMock()
     mock_discussion = AsyncMock()
     mock_vc_alerts = AsyncMock()
+    mock_vc_moon = AsyncMock()
     mock_environmental = AsyncMock()
     mock_intl_alerts = AsyncMock()
     mock_aviation = AsyncMock()
@@ -64,6 +65,7 @@ async def test_enrichments_run_concurrently(mock_location):
         patch.object(client, "_enrich_with_sunrise_sunset", mock_sunrise),
         patch.object(client, "_enrich_with_nws_discussion", mock_discussion),
         patch.object(client, "_enrich_with_visual_crossing_alerts", mock_vc_alerts),
+        patch.object(client, "_enrich_with_visual_crossing_moon_data", mock_vc_moon),
         patch.object(client, "_populate_environmental_metrics", mock_environmental),
         patch.object(client, "_merge_international_alerts", mock_intl_alerts),
         patch.object(client, "_enrich_with_aviation_data", mock_aviation),
@@ -74,7 +76,7 @@ async def test_enrichments_run_concurrently(mock_location):
         tasks = client._launch_enrichment_tasks(weather_data, mock_location)
 
         # Verify tasks were created
-        assert len(tasks) == 6  # 3 auto-mode + 3 post-processing
+        assert len(tasks) == 7  # 4 auto-mode + 3 post-processing
 
         # Await all enrichments
         await client._await_enrichments(tasks, weather_data)
@@ -83,6 +85,7 @@ async def test_enrichments_run_concurrently(mock_location):
     mock_sunrise.assert_called_once()
     mock_discussion.assert_called_once()
     mock_vc_alerts.assert_called_once()
+    mock_vc_moon.assert_called_once()
     mock_environmental.assert_called_once()
     mock_intl_alerts.assert_called_once()
     mock_aviation.assert_called_once()
