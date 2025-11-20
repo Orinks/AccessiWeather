@@ -164,7 +164,9 @@ class WeatherPresenter:
         unit_pref = self._get_temperature_unit_preference()
 
         air_quality_panel = (
-            build_air_quality_panel(weather_data.location, weather_data.environmental)
+            build_air_quality_panel(
+                weather_data.location, weather_data.environmental, settings=self.settings
+            )
             if weather_data.environmental
             else None
         )
@@ -233,7 +235,9 @@ class WeatherPresenter:
             return None
         unit_pref = self._get_temperature_unit_preference()
         air_quality_panel = (
-            build_air_quality_panel(location, environmental) if environmental else None
+            build_air_quality_panel(location, environmental, settings=self.settings)
+            if environmental
+            else None
         )
         return self._build_current_conditions(
             current,
