@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from ...models import EnvironmentalConditions, Location
-from .formatters import format_timestamp
+from ...models import AppSettings, EnvironmentalConditions, Location
+from .formatters import format_display_datetime, format_timestamp
 
 _AIR_QUALITY_GUIDANCE: dict[str, str] = {
     "Good": "Air quality is satisfactory; enjoy normal outdoor activities.",
@@ -54,6 +54,7 @@ class AirQualityPresentation:
 def build_air_quality_panel(
     location: Location,
     environmental: EnvironmentalConditions,
+    settings: AppSettings | None = None,
 ) -> AirQualityPresentation | None:
     """Create an accessible presentation of air quality metrics."""
     index = environmental.air_quality_index
@@ -65,7 +66,7 @@ def build_air_quality_panel(
 
     summary_line = _build_summary_line(index, category)
     pollutant_line = _build_pollutant_line(pollutant)
-    updated_line = _build_updated_line(environmental.updated_at)
+    updated_line = _build_updated_line(environmental.updated_at, settings)
     guidance = _AIR_QUALITY_GUIDANCE.get(category or "", _DEFAULT_GUIDANCE)
     sources = sorted({source for source in environmental.sources if source})
 
@@ -130,7 +131,26 @@ def _build_pollutant_line(pollutant: str | None) -> str | None:
     return f"Dominant pollutant: {pretty}"
 
 
-def _build_updated_line(updated_at: datetime | None) -> str | None:
+def _build_updated_line(
+    updated_at: datetime | None, settings: AppSettings | None = None
+) -> str | None:
     if not updated_at:
         return None
-    return f"Updated {format_timestamp(updated_at)}"
+
+    # Extract time preferences
+    if settings:
+        time_display_mode = getattr(settings, "time_display_mode", "local")
+        time_format_12hour = getattr(settings, "time_format_12hour", True)
+        show_timezone_suffix = getattr(settings, "show_timezone_suffix", False)
+    else:
+        time_display_mode = "local"
+        time_format_12hour = True
+        show_timezone_suffix = False
+
+    timestamp = format_display_datetime(
+        updated_at,
+        time_display_mode=time_display_mode,
+        use_12hour=time_format_12hour,
+        show_timezone=show_timezone_suffix,
+    )
+    return f"Updated {timestamp}"

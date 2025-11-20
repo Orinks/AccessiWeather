@@ -361,7 +361,9 @@ class TestAccessibilityEdgeCases:
         _, message = format_accessible_message(alert, "new_alert")
 
         # Should use 12-hour format with AM/PM
-        assert "02:30 PM" in message or "14:30" in message  # Allow for timezone conversion
+        assert (
+            "02:30 PM" in message or "2:30 PM" in message or "14:30" in message
+        )  # Allow for timezone conversion
         # Should include abbreviated month
         assert "Dec" in message
 

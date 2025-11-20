@@ -12,8 +12,8 @@ from ..weather_presenter import (
     HourlyPeriodPresentation,
 )
 from .formatters import (
+    format_display_time,
     format_forecast_temperature,
-    format_hour_time_with_preferences,
     format_hourly_wind,
     format_period_temperature,
     format_period_wind,
@@ -42,6 +42,16 @@ def build_forecast(
     else:
         hourly = []
 
+    # Extract time display preferences from settings
+    if settings:
+        time_display_mode = getattr(settings, "time_display_mode", "local")
+        time_format_12hour = getattr(settings, "time_format_12hour", True)
+        show_timezone_suffix = getattr(settings, "show_timezone_suffix", False)
+    else:
+        time_display_mode = "local"
+        time_format_12hour = True
+        show_timezone_suffix = False
+
     for period in forecast.periods[:14]:
         temp_pair = format_forecast_temperature(period, unit_pref, precision)
         wind_value = format_period_wind(period)
@@ -68,7 +78,16 @@ def build_forecast(
         if details:
             fallback_lines.append(f"  Details: {wrap_text(details, 80)}")
 
-    generated_at = format_timestamp(forecast.generated_at) if forecast.generated_at else None
+    generated_at = (
+        format_timestamp(
+            forecast.generated_at,
+            time_display_mode=time_display_mode,
+            use_12hour=time_format_12hour,
+            show_timezone=show_timezone_suffix,
+        )
+        if forecast.generated_at
+        else None
+    )
     if generated_at:
         fallback_lines.append(f"\nForecast generated: {generated_at}")
 
@@ -112,7 +131,7 @@ def build_hourly_summary(
         wind = format_hourly_wind(period)
 
         # Use enhanced time formatter with user preferences
-        time_str = format_hour_time_with_preferences(
+        time_str = format_display_time(
             period.start_time,
             time_display_mode=time_display_mode,
             use_12hour=time_format_12hour,

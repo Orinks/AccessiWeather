@@ -95,7 +95,9 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     config_dir = str(app.paths.config)
     alert_settings = config.settings.to_alert_settings()
     app.alert_manager = AlertManager(config_dir, alert_settings)
-    app.alert_notification_system = AlertNotificationSystem(app.alert_manager, app._notifier)
+    app.alert_notification_system = AlertNotificationSystem(
+        app.alert_manager, app._notifier, config.settings
+    )
 
     # Initialize weather history service
     if config.settings.weather_history_enabled:
