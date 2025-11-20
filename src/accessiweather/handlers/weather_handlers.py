@@ -48,6 +48,18 @@ async def refresh_weather_data(app: AccessiWeatherApp) -> None:
         if app.refresh_button and window_visible:
             app.refresh_button.enabled = False
 
+        # OPTIMIZATION: Try to load cached data first for immediate feedback
+        # This allows the UI to populate instantly while the fresh data is being fetched
+        logger.debug("Checking for cached weather data")
+        cached_data = app.weather_client.get_cached_weather(current_location)
+        if cached_data:
+            logger.info("Found cached data, updating display immediately")
+            app.current_weather_data = cached_data
+            await update_weather_displays(app, cached_data)
+            # Indicate that an update is still in progress
+            if app.status_label:
+                app_helpers.update_status(app, f"Updating weather for {current_location.name}...")
+
         logger.debug("About to call weather_client.get_weather_data")
         weather_data = await app.weather_client.get_weather_data(current_location)
         logger.debug("weather_client.get_weather_data completed")
