@@ -7,6 +7,7 @@ import inspect
 import logging
 from datetime import UTC, datetime, timedelta
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import httpx
 
@@ -399,7 +400,7 @@ async def get_nws_current_conditions(
 
                 try:
                     _scrub_measurements(obs_props)
-                    current = parse_nws_current_conditions(obs_data)
+                    current = parse_nws_current_conditions(obs_data, location=location)
                 except Exception as exc:  # noqa: BLE001
                     logger.debug("Failed to parse observation for %s: %s", station_id, exc)
                     continue
@@ -429,6 +430,10 @@ async def get_nws_current_conditions(
             response.raise_for_status()
             grid_data = response.json()
 
+            # Extract timezone from grid data and update location
+            if "properties" in grid_data and "timeZone" in grid_data["properties"]:
+                location.timezone = grid_data["properties"]["timeZone"]
+
             stations_url = grid_data["properties"]["observationStations"]
             response = await _client_get(client, stations_url, headers=headers)
             response.raise_for_status()
@@ -451,6 +456,10 @@ async def get_nws_current_conditions(
             response = await new_client.get(grid_url, headers=headers)
             response.raise_for_status()
             grid_data = response.json()
+
+            # Extract timezone from grid data and update location
+            if "properties" in grid_data and "timeZone" in grid_data["properties"]:
+                location.timezone = grid_data["properties"]["timeZone"]
 
             stations_url = grid_data["properties"]["observationStations"]
             response = await new_client.get(stations_url, headers=headers)
@@ -970,8 +979,20 @@ async def get_nws_marine_forecast(
     return response.json()
 
 
-def parse_nws_current_conditions(data: dict) -> CurrentConditions:
-    """Parse NWS current conditions payload into a CurrentConditions model."""
+def parse_nws_current_conditions(
+    data: dict,
+    location: Location | None = None,
+) -> CurrentConditions:
+    """
+    Parse NWS current conditions payload into a CurrentConditions model.
+
+    Args:
+    ----
+        data: NWS API response payload
+        location: Location object with timezone info. If provided, timestamps
+                  will be converted to the location's local timezone.
+
+    """
     props = data.get("properties", {})
 
     temp_c = props.get("temperature", {}).get("value")
@@ -1012,6 +1033,16 @@ def parse_nws_current_conditions(data: dict) -> CurrentConditions:
     if isinstance(timestamp, str) and timestamp:
         try:
             last_updated = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+            # Convert UTC timestamp to location's timezone if available
+            if last_updated and location and location.timezone:
+                try:
+                    location_tz = ZoneInfo(location.timezone)
+                    last_updated = last_updated.astimezone(location_tz)
+                except Exception as e:  # noqa: BLE001
+                    logger.debug(
+                        f"Failed to convert timestamp to location timezone "
+                        f"'{location.timezone}': {e}"
+                    )
         except ValueError:
             logger.debug(f"Failed to parse observation timestamp: {timestamp}")
 

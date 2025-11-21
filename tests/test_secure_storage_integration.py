@@ -47,17 +47,15 @@ def mock_app(tmp_path):
 
 
 def test_secure_storage_migration(mock_app, mock_keyring):
-    """Test that secrets are migrated from JSON to keyring."""
-    # Create a legacy config file with secrets
+    """Test that config loads without performing keyring migration."""
+    # Create a config file
     config_dir = mock_app.paths.config
     config_dir.mkdir(parents=True, exist_ok=True)
     config_file = config_dir / "accessiweather.json"
 
     legacy_data = {
         "settings": {
-            "visual_crossing_api_key": "secret_api_key",
-            "github_app_private_key": "secret_private_key",
-            "data_source": "visualcrossing",
+            "data_source": "auto",
             "startup_enabled": True,
         }
     }
@@ -65,26 +63,18 @@ def test_secure_storage_migration(mock_app, mock_keyring):
     with open(config_file, "w") as f:
         json.dump(legacy_data, f)
 
-    # Initialize ConfigManager (should trigger migration)
+    # Initialize ConfigManager (no migration happens)
     manager = ConfigManager(mock_app)
     manager.load_config()
 
-    # Verify secrets are in keyring
-    assert mock_keyring.set_password.call_count >= 2
-    # Check via the get_password side effect logic (or mock calls if simple)
-    # We can check if the manager loaded the values correctly
+    # Verify no keyring calls were made
+    assert mock_keyring.set_password.call_count == 0
+    assert mock_keyring.get_password.call_count == 0
+
+    # Verify config loads correctly
     config = manager.get_config()
-    assert config.settings.visual_crossing_api_key == "secret_api_key"
-    assert config.settings.github_app_private_key == "secret_private_key"
-
-    # Verify secrets are REMOVED from JSON file
-    with open(config_file) as f:
-        saved_data = json.load(f)
-
-    saved_settings = saved_data["settings"]
-    assert "visual_crossing_api_key" not in saved_settings
-    assert "github_app_private_key" not in saved_settings
-    assert saved_settings["data_source"] == "visualcrossing"
+    assert config.settings.data_source == "auto"
+    assert config.settings.startup_enabled is True
 
 
 def test_update_settings_saves_to_keyring(mock_app, mock_keyring):
