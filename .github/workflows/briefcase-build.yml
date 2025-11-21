@@ -125,10 +125,14 @@ jobs:
         VERSION="${{ steps.version.outputs.version }}"
 
         # Update project version using sed (more reliable in CI)
-        sed -i "s/version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml
-
-        # Update briefcase version
-        sed -i "/\[tool\.briefcase\]/,/\[/ s/version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml
+        # Mac sed requires a backup extension (even if empty string)
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s/version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml
+            sed -i '' "/\[tool\.briefcase\]/,/\[/ s/version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml
+        else
+            sed -i "s/version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml
+            sed -i "/\[tool\.briefcase\]/,/\[/ s/version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml
+        fi
 
         echo "Updated version to: $VERSION"
 
