@@ -86,6 +86,32 @@ Keep `CHANGELOG.md` updated with user-facing changes during development:
 
 When releasing, promote the "Unreleased" section to a new version entry with today's date.
 
+## Writing Human-Authentic Changelogs & Release Notes
+
+Avoid AI-generated writing patterns. Users should hear a person, not a chatbot:
+
+**Avoid These AI Tells:**
+- Over-predictable structure (topic sentence → summary sentence pattern)
+- Passive voice ("API calls will be reduced" → use active: "You'll see 80% fewer API calls")
+- Hedging language ("may improve," "tend to," on-the-one-hand-on-the-other-hand phrasing)
+- Jargon without context; overly formal tone
+- Perfect grammar everywhere; flawless transitions (ironically a red flag)
+- Generic language ("enhanced," "optimized," "streamlined," "integrated")
+
+**Write Like a Human:**
+- Use contractions ("You're" not "You are")
+- Vary sentence length and structure
+- Be direct and specific: "Stop storing API keys in plain text" not "API credential storage mechanisms have been fortified"
+- Take a clear stance; don't hedge
+- Address the user directly ("You can now," "Your data is moved to")
+- Include the why: "80%+ fewer API calls, noticeably faster on slower connections"
+- Write as if explaining to a friend; cut unnecessary words
+- Use active voice and short sentences when listing improvements
+
+**Example Rewrite:**
+- ❌ "Performance improvements have been implemented via cache-first design with background enrichment updates, resulting in reduced API calls"
+- ✅ "Performance boost: We restructured how the app handles data. Now it serves cached results instantly while refreshing in the background—80%+ fewer API calls, noticeably faster on slower connections."
+
 ## Branching & Merge Strategy
 
 To avoid massive merge conflicts and ensure repository health:
