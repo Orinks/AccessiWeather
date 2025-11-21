@@ -4,44 +4,21 @@ name: Release with Briefcase
 # Triggered by: pushes to main (excluding docs), or manual dispatch
 
 on:
-  push:
-    branches: [ main, feature/toga-migration ]  # Releases from main and toga-migration branches
-    paths-ignore:
-      - 'docs/**'
-      - '*.md'
-      - '.gitignore'
+  workflow_run:
+    workflows: ["Build and Package with Briefcase"]
+    types:
+      - completed
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Release version (e.g., 1.0.0 - without v prefix)'
-        required: true
-        type: string
-      prerelease:
-        description: 'Mark as pre-release'
-        required: false
-        type: boolean
-        default: false
 
 permissions:
-  contents: write      # Required to create releases and upload assets
-  actions: read        # Required to read workflow artifacts
-
-# Prevent concurrent releases
-concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: false
-
-env:
-  FORCE_COLOR: "0"
-
-defaults:
-  run:
-    shell: bash
+  contents: write
+  actions: read
 
 jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     permissions:
       contents: write
     steps:
