@@ -7,6 +7,7 @@ implementing methods to fetch current conditions, forecast, and hourly data.
 
 import logging
 from datetime import UTC, datetime
+from zoneinfo import ZoneInfo
 
 import httpx
 
@@ -77,7 +78,7 @@ class VisualCrossingClient:
                     )
 
                 data = response.json()
-                return self._parse_current_conditions(data)
+                return self._parse_current_conditions(data, location=location)
 
         except httpx.TimeoutException:
             logger.error("Visual Crossing API request timed out")
@@ -153,7 +154,7 @@ class VisualCrossingClient:
                     )
 
                 data = response.json()
-                return self._parse_hourly_forecast(data)
+                return self._parse_hourly_forecast(data, location=location)
 
         except httpx.TimeoutException:
             logger.error("Visual Crossing API request timed out")
@@ -203,8 +204,21 @@ class VisualCrossingClient:
             # Return empty alerts on error rather than raising
             return WeatherAlerts(alerts=[])
 
-    def _parse_current_conditions(self, data: dict) -> CurrentConditions:
-        """Parse Visual Crossing current conditions data."""
+    def _parse_current_conditions(
+        self,
+        data: dict,
+        location: Location | None = None,
+    ) -> CurrentConditions:
+        """
+        Parse Visual Crossing current conditions data.
+
+        Args:
+        ----
+            data: Visual Crossing API response payload
+            location: Location object with timezone info. If provided, timestamps
+                      will be converted to the location's local timezone.
+
+        """
         current = data.get("currentConditions", {})
 
         temp_f = current.get("temp")
@@ -239,11 +253,31 @@ class VisualCrossingClient:
         if timestamp is not None:
             try:
                 last_updated = datetime.fromtimestamp(timestamp, tz=UTC)
+                # Convert UTC timestamp to location's timezone if available
+                if last_updated and location and location.timezone:
+                    try:
+                        location_tz = ZoneInfo(location.timezone)
+                        last_updated = last_updated.astimezone(location_tz)
+                    except Exception as e:  # noqa: BLE001
+                        logger.debug(
+                            f"Failed to convert timestamp to location timezone "
+                            f"'{location.timezone}': {e}"
+                        )
             except (OSError, ValueError):
                 logger.debug(f"Failed to parse Visual Crossing epoch: {timestamp}")
         elif current.get("datetime"):
             try:
                 last_updated = datetime.fromisoformat(current["datetime"])
+                # Convert to location's timezone if available
+                if last_updated and location and location.timezone:
+                    try:
+                        location_tz = ZoneInfo(location.timezone)
+                        last_updated = last_updated.astimezone(location_tz)
+                    except Exception as e:  # noqa: BLE001
+                        logger.debug(
+                            f"Failed to convert datetime to location timezone "
+                            f"'{location.timezone}': {e}"
+                        )
             except ValueError:
                 logger.debug(f"Failed to parse Visual Crossing datetime: {current['datetime']}")
 
@@ -260,11 +294,31 @@ class VisualCrossingClient:
             if sunrise_epoch is not None:
                 try:
                     sunrise_time = datetime.fromtimestamp(sunrise_epoch, tz=UTC)
+                    # Convert UTC timestamp to location's timezone if available
+                    if sunrise_time and location and location.timezone:
+                        try:
+                            location_tz = ZoneInfo(location.timezone)
+                            sunrise_time = sunrise_time.astimezone(location_tz)
+                        except Exception as e:  # noqa: BLE001
+                            logger.debug(
+                                f"Failed to convert sunrise_time to location timezone "
+                                f"'{location.timezone}': {e}"
+                            )
                 except (OSError, ValueError):
                     logger.debug(f"Failed to parse sunrise epoch: {sunrise_epoch}")
             if sunrise_time is None and day_data.get("sunrise"):
                 try:
                     sunrise_time = datetime.fromisoformat(day_data["sunrise"])
+                    # Convert to location's timezone if available
+                    if sunrise_time and location and location.timezone:
+                        try:
+                            location_tz = ZoneInfo(location.timezone)
+                            sunrise_time = sunrise_time.astimezone(location_tz)
+                        except Exception as e:  # noqa: BLE001
+                            logger.debug(
+                                f"Failed to convert sunrise_time to location timezone "
+                                f"'{location.timezone}': {e}"
+                            )
                 except ValueError:
                     logger.debug(f"Failed to parse sunrise time: {day_data['sunrise']}")
 
@@ -272,11 +326,31 @@ class VisualCrossingClient:
             if sunset_epoch is not None:
                 try:
                     sunset_time = datetime.fromtimestamp(sunset_epoch, tz=UTC)
+                    # Convert UTC timestamp to location's timezone if available
+                    if sunset_time and location and location.timezone:
+                        try:
+                            location_tz = ZoneInfo(location.timezone)
+                            sunset_time = sunset_time.astimezone(location_tz)
+                        except Exception as e:  # noqa: BLE001
+                            logger.debug(
+                                f"Failed to convert sunset_time to location timezone "
+                                f"'{location.timezone}': {e}"
+                            )
                 except (OSError, ValueError):
                     logger.debug(f"Failed to parse sunset epoch: {sunset_epoch}")
             if sunset_time is None and day_data.get("sunset"):
                 try:
                     sunset_time = datetime.fromisoformat(day_data["sunset"])
+                    # Convert to location's timezone if available
+                    if sunset_time and location and location.timezone:
+                        try:
+                            location_tz = ZoneInfo(location.timezone)
+                            sunset_time = sunset_time.astimezone(location_tz)
+                        except Exception as e:  # noqa: BLE001
+                            logger.debug(
+                                f"Failed to convert sunset_time to location timezone "
+                                f"'{location.timezone}': {e}"
+                            )
                 except ValueError:
                     logger.debug(f"Failed to parse sunset time: {day_data['sunset']}")
 
@@ -284,11 +358,31 @@ class VisualCrossingClient:
             if moonrise_epoch is not None:
                 try:
                     moonrise_time = datetime.fromtimestamp(moonrise_epoch, tz=UTC)
+                    # Convert UTC timestamp to location's timezone if available
+                    if moonrise_time and location and location.timezone:
+                        try:
+                            location_tz = ZoneInfo(location.timezone)
+                            moonrise_time = moonrise_time.astimezone(location_tz)
+                        except Exception as e:  # noqa: BLE001
+                            logger.debug(
+                                f"Failed to convert moonrise_time to location timezone "
+                                f"'{location.timezone}': {e}"
+                            )
                 except (OSError, ValueError):
                     logger.debug(f"Failed to parse moonrise epoch: {moonrise_epoch}")
             if moonrise_time is None and day_data.get("moonrise"):
                 try:
                     moonrise_time = datetime.fromisoformat(day_data["moonrise"])
+                    # Convert to location's timezone if available
+                    if moonrise_time and location and location.timezone:
+                        try:
+                            location_tz = ZoneInfo(location.timezone)
+                            moonrise_time = moonrise_time.astimezone(location_tz)
+                        except Exception as e:  # noqa: BLE001
+                            logger.debug(
+                                f"Failed to convert moonrise_time to location timezone "
+                                f"'{location.timezone}': {e}"
+                            )
                 except ValueError:
                     logger.debug(f"Failed to parse moonrise time: {day_data['moonrise']}")
 
@@ -296,11 +390,31 @@ class VisualCrossingClient:
             if moonset_epoch is not None:
                 try:
                     moonset_time = datetime.fromtimestamp(moonset_epoch, tz=UTC)
+                    # Convert UTC timestamp to location's timezone if available
+                    if moonset_time and location and location.timezone:
+                        try:
+                            location_tz = ZoneInfo(location.timezone)
+                            moonset_time = moonset_time.astimezone(location_tz)
+                        except Exception as e:  # noqa: BLE001
+                            logger.debug(
+                                f"Failed to convert moonset_time to location timezone "
+                                f"'{location.timezone}': {e}"
+                            )
                 except (OSError, ValueError):
                     logger.debug(f"Failed to parse moonset epoch: {moonset_epoch}")
             if moonset_time is None and day_data.get("moonset"):
                 try:
                     moonset_time = datetime.fromisoformat(day_data["moonset"])
+                    # Convert to location's timezone if available
+                    if moonset_time and location and location.timezone:
+                        try:
+                            location_tz = ZoneInfo(location.timezone)
+                            moonset_time = moonset_time.astimezone(location_tz)
+                        except Exception as e:  # noqa: BLE001
+                            logger.debug(
+                                f"Failed to convert moonset_time to location timezone "
+                                f"'{location.timezone}': {e}"
+                            )
                 except ValueError:
                     logger.debug(f"Failed to parse moonset time: {day_data['moonset']}")
 
@@ -365,8 +479,21 @@ class VisualCrossingClient:
 
         return Forecast(periods=periods, generated_at=datetime.now())
 
-    def _parse_hourly_forecast(self, data: dict) -> HourlyForecast:
-        """Parse Visual Crossing hourly forecast data."""
+    def _parse_hourly_forecast(
+        self,
+        data: dict,
+        location: Location | None = None,
+    ) -> HourlyForecast:
+        """
+        Parse Visual Crossing hourly forecast data.
+
+        Args:
+        ----
+            data: Visual Crossing API response payload
+            location: Location object with timezone info. If provided, timestamps
+                      will be converted to the location's local timezone.
+
+        """
         periods = []
         days = data.get("days", [])
 
@@ -383,6 +510,16 @@ class VisualCrossingClient:
                         date_str = day_data.get("datetime", "")
                         full_datetime_str = f"{date_str}T{datetime_str}"
                         start_time = datetime.fromisoformat(full_datetime_str)
+                        # Convert to location's timezone if available
+                        if start_time and location and location.timezone:
+                            try:
+                                location_tz = ZoneInfo(location.timezone)
+                                start_time = start_time.astimezone(location_tz)
+                            except Exception as e:  # noqa: BLE001
+                                logger.debug(
+                                    f"Failed to convert start_time to location timezone "
+                                    f"'{location.timezone}': {e}"
+                                )
                     except (ValueError, TypeError):
                         logger.warning(
                             f"Failed to parse Visual Crossing datetime: {full_datetime_str}"
