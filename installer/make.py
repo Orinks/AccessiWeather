@@ -195,6 +195,21 @@ def run_headless() -> int:
         _cleanup_soundpacks(argparse.Namespace(platform="windows"))
         _cleanup_weather_cache(argparse.Namespace(platform="windows"))
 
+        # Add .exe.config for Mark of the Web workaround (ZIP packages only)
+        build_base = ROOT / "build" / "accessiweather" / "windows" / "app"
+        app_build_dir = build_base / "src"
+        if app_build_dir.exists():
+            exe_config_path = app_build_dir / "AccessiWeather.exe.config"
+            config_content = """<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <runtime>
+    <loadFromRemoteSources enabled="true" />
+  </runtime>
+</configuration>
+"""
+            print("Adding .exe.config for Mark of the Web workaround...")
+            exe_config_path.write_text(config_content, encoding="utf-8")
+
         print("Packaging Windows MSI ...")
         if _briefcase_with(vpy, "package", "windows", "--adhoc-sign", "-p", "msi") != 0:
             return 1
