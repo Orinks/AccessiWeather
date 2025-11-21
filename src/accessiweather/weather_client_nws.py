@@ -430,6 +430,10 @@ async def get_nws_current_conditions(
             response.raise_for_status()
             grid_data = response.json()
 
+            # Extract timezone from grid data and update location
+            if "properties" in grid_data and "timeZone" in grid_data["properties"]:
+                location.timezone = grid_data["properties"]["timeZone"]
+
             stations_url = grid_data["properties"]["observationStations"]
             response = await _client_get(client, stations_url, headers=headers)
             response.raise_for_status()
@@ -452,6 +456,10 @@ async def get_nws_current_conditions(
             response = await new_client.get(grid_url, headers=headers)
             response.raise_for_status()
             grid_data = response.json()
+
+            # Extract timezone from grid data and update location
+            if "properties" in grid_data and "timeZone" in grid_data["properties"]:
+                location.timezone = grid_data["properties"]["timeZone"]
 
             stations_url = grid_data["properties"]["observationStations"]
             response = await new_client.get(stations_url, headers=headers)
@@ -584,6 +592,10 @@ async def get_nws_forecast_and_discussion(
                 response.raise_for_status()
                 grid_data = response.json()
 
+            # Extract timezone from grid data and update location
+            if "properties" in grid_data and "timeZone" in grid_data["properties"]:
+                location.timezone = grid_data["properties"]["timeZone"]
+
             forecast_url = grid_data["properties"]["forecast"]
             response = await _client_get(client, forecast_url, headers=feature_headers)
             response.raise_for_status()
@@ -598,6 +610,10 @@ async def get_nws_forecast_and_discussion(
             response = await new_client.get(grid_url, headers=headers)
             response.raise_for_status()
             grid_data = response.json()
+
+            # Extract timezone from grid data and update location
+            if "properties" in grid_data and "timeZone" in grid_data["properties"]:
+                location.timezone = grid_data["properties"]["timeZone"]
 
             forecast_url = grid_data["properties"]["forecast"]
             response = await new_client.get(forecast_url, headers=feature_headers)
@@ -738,6 +754,10 @@ async def get_nws_hourly_forecast(
                 response.raise_for_status()
                 grid_data = response.json()
 
+            # Extract timezone from grid data and update location
+            if "properties" in grid_data and "timeZone" in grid_data["properties"]:
+                location.timezone = grid_data["properties"]["timeZone"]
+
             hourly_forecast_url = grid_data.get("properties", {}).get("forecastHourly")
             if not hourly_forecast_url:
                 logger.warning("No hourly forecast URL found in grid data")
@@ -754,6 +774,10 @@ async def get_nws_hourly_forecast(
             response = await new_client.get(grid_url, headers=headers)
             response.raise_for_status()
             grid_data = response.json()
+
+            # Extract timezone from grid data and update location
+            if "properties" in grid_data and "timeZone" in grid_data["properties"]:
+                location.timezone = grid_data["properties"]["timeZone"]
 
             hourly_forecast_url = grid_data.get("properties", {}).get("forecastHourly")
             if not hourly_forecast_url:
