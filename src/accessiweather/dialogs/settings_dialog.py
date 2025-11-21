@@ -31,17 +31,19 @@ class _SafeEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
 
 def _ensure_asyncio_loop():
     """Ensure an asyncio event loop exists for the current thread."""
-    policy = asyncio.get_event_loop_policy()
-    if os.environ.get("TOGA_BACKEND") == "toga_dummy" and not isinstance(
-        policy, _SafeEventLoopPolicy
-    ):
-        asyncio.set_event_loop_policy(_SafeEventLoopPolicy())
+    with contextlib.suppress(RuntimeError):
+        # Suppress warnings about unclosed event loops and deprecated APIs
         policy = asyncio.get_event_loop_policy()
-    try:
-        policy.get_event_loop()
-    except RuntimeError:
-        loop = policy.new_event_loop()
-        policy.set_event_loop(loop)
+        if os.environ.get("TOGA_BACKEND") == "toga_dummy" and not isinstance(
+            policy, _SafeEventLoopPolicy
+        ):
+            asyncio.set_event_loop_policy(_SafeEventLoopPolicy())
+            policy = asyncio.get_event_loop_policy()
+        try:
+            policy.get_event_loop()
+        except RuntimeError:
+            loop = policy.new_event_loop()
+            policy.set_event_loop(loop)
 
 
 _ensure_asyncio_loop()
