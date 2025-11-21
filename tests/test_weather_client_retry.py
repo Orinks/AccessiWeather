@@ -118,7 +118,7 @@ async def test_visual_crossing_retries_on_request_error(monkeypatch: pytest.Monk
     monkeypatch.setattr("httpx.AsyncClient", lambda *args, **kwargs: DummyClient())
     monkeypatch.setattr(
         "accessiweather.visual_crossing_client.VisualCrossingClient._parse_current_conditions",
-        lambda self, data: "ok",
+        lambda self, data, location=None: "ok",
     )
     monkeypatch.setattr(
         "accessiweather.utils.retry_utils.asyncio.sleep",
