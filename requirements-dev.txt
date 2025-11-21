@@ -13,6 +13,6 @@ types-requests>=2.31.0
 pre-commit>=3.0.0
 ruff>=0.9.0
 pyright>=1.1.330
-briefcase>=0.3.26
+briefcase
 
 Pillow
