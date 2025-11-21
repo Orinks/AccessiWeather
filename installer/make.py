@@ -175,7 +175,7 @@ def run_headless() -> int:
         # Prepare windows app build
         print("Running Briefcase update/build for Windows ...")
         _briefcase_with(vpy, "update", "windows")  # best-effort
-        build_code = _briefcase_with(vpy, "build", "windows", "--no-update")
+        build_code = _briefcase_with(vpy, "build", "windows", "-r")
         if build_code != 0:
             print("Build failed; attempting to re-create app template and rebuild ...")
 
@@ -188,7 +188,7 @@ def run_headless() -> int:
             # Some template versions require a re-create with current Briefcase
             if _briefcase_with(vpy, "create", "windows", "app") != 0:
                 return 1
-            if _briefcase_with(vpy, "build", "windows", "--no-update") != 0:
+            if _briefcase_with(vpy, "build", "windows", "-r") != 0:
                 return 1
 
         # Clean up soundpacks and weather cache in build tree prior to packaging
@@ -299,7 +299,7 @@ def cmd_build(args: argparse.Namespace) -> int:
         return 1
     # Use update+build for more robust builds, but ignore update failures
     _briefcase("update", args.platform)  # Don't fail if update fails
-    result = _briefcase("build", args.platform, "--no-update")
+    result = _briefcase("build", args.platform, "-r")
 
     # Clean up soundpacks and weather cache after build (regardless of build success/failure)
     _cleanup_soundpacks(args)
