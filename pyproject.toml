@@ -262,7 +262,7 @@ flatpak_sdk = "org.freedesktop.Sdk"
 
 [tool.briefcase.app.accessiweather.windows]
 requires = [
-    # Add your Windows-specific app requirements here
+    "pythonnet = '<3.0'",  # Pin to 2.x to avoid bundling issues with clr_loader/ClrLoader.dll
 ]
 
 # Mobile deployments
