@@ -87,36 +87,3 @@ jobs:
         else
           echo "❌ Some checks failed"
         fi
-
-  smoke-macos:
-    name: macOS Smoke (headless make.py)
-    runs-on: macos-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
-
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: "3.12"
-
-    - name: Cache pip dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/Library/Caches/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt', 'pyproject.toml') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements-dev.txt
-        pip install -e .
-
-    - name: Headless make.py smoke check (macOS)
-      env:
-        ACCESSIWEATHER_TEST_MODE: "1"
-      run: |
-        python installer/make.py

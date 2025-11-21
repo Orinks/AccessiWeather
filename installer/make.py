@@ -199,29 +199,9 @@ def run_headless() -> int:
         print("Headless packaging complete. Artifacts are in ./dist")
         return 0
 
-    if host == "darwin":
-        # Prepare macOS app build
-        print("Running Briefcase update/build for macOS (headless smoke)...")
-        _briefcase_with(vpy, "update", "macOS")  # best-effort
-        build_code = _briefcase_with(vpy, "build", "macOS", "--no-update")
-        if build_code != 0:
-            print("Build failed; attempting to re-create app template and rebuild ...")
-            if _briefcase_with(vpy, "create", "macOS", "app") != 0:
-                return 1
-            if _briefcase_with(vpy, "build", "macOS", "--no-update") != 0:
-                return 1
-
-        # Clean up soundpacks and weather cache
-        _cleanup_soundpacks(argparse.Namespace(platform="macOS"))
-        _cleanup_weather_cache(argparse.Namespace(platform="macOS"))
-
-        # Note: We do NOT package DMG in headless mode (too heavy for CI smoke check)
-        print("Headless build complete. Artifacts are in build/accessiweather/macOS/app")
-        return 0
-
     print(
-        f"Non-Windows/macOS host detected ({host}); full packaging is skipped.\n"
-        "Run this script on a Windows or macOS host to build installers."
+        "Non-Windows host detected; MSI/ZIP Windows packages are skipped.\n"
+        "Run this script on a Windows host (e.g., GitHub Actions windows-latest) to build installers."
     )
     return 0
 
@@ -322,13 +302,7 @@ def cmd_package(args: argparse.Namespace) -> int:
     _cleanup_soundpacks(args)
     _cleanup_weather_cache(args)
 
-    extra_args = ["--adhoc-sign"]
-    if args.platform == "windows":
-        extra_args.extend(["-p", "msi"])
-    elif args.platform == "macOS":
-        extra_args.extend(["-p", "dmg"])
-
-    return _briefcase("package", args.platform, *extra_args)
+    return _briefcase("package", args.platform, "--adhoc-sign")
 
 
 def cmd_dev(args: argparse.Namespace) -> int:
@@ -353,42 +327,8 @@ def cmd_test(args: argparse.Namespace) -> int:
 def cmd_zip(args: argparse.Namespace) -> int:
     """Create a portable ZIP from the Briefcase build output (temporary)."""
     version = _read_version()
-    dist_dir = ROOT / "dist"
-    dist_dir.mkdir(parents=True, exist_ok=True)
-
-    # Handle macOS specifically (prefer zipping the .app bundle)
-    if args.platform == "macOS":
-        # Look for built .app in dist/ first (output of package command usually puts it in build/ ... wait,
-        # briefcase package dmg puts dmg in dist, but the .app is in build/)
-        # Actually, usually we want to zip the .app from the build directory if we are making a portable zip.
-        # Briefcase build output is in build/accessiweather/macOS/app/AccessiWeather.app
-
-        build_base = ROOT / "build" / "accessiweather" / "macOS" / "app"
-        app_name = "AccessiWeather.app"
-        app_path = build_base / app_name
-
-        if app_path.exists():
-            print(f"Found macOS app bundle: {app_path}")
-            _cleanup_soundpacks(args)
-            _cleanup_weather_cache(args)
-
-            zip_path = dist_dir / f"AccessiWeather_macOS_v{version}.zip"
-            print(f"Creating ZIP: {zip_path}")
-            if zip_path.exists():
-                zip_path.unlink()
-
-            # Zip the .app bundle (must be zipped as a folder to preserve structure)
-            # shutil.make_archive base_dir should be the parent of the .app
-            shutil.make_archive(str(zip_path.with_suffix("")), "zip", build_base, app_name)
-            print("ZIP created.")
-            return 0
-
-        print(f"Warning: macOS app bundle not found at {app_path}")
-        # Fall through to generic behavior? Or fail?
-        # Let's try generic behavior but it might not be what we want for macOS.
-
-    if args.platform != "windows" and args.platform != "macOS":
-        print("Note: ZIP recipe is primarily intended for Windows and macOS.")
+    if args.platform != "windows":
+        print("Note: ZIP recipe is primarily intended for Windows.")
 
     # Find the built app directory more robustly
     build_base = ROOT / "build" / "accessiweather" / args.platform / "app"
