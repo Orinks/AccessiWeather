@@ -83,33 +83,15 @@ class ConfigManager:
                 logger.info(f"Loading config from {self.config_file}")
                 with open(self.config_file, encoding="utf-8") as f:
                     data = json.load(f)
+                    self._config = AppConfig.from_dict(data)
 
-                    # Secure storage migration and loading
-                    settings_data = data.get("settings", {})
-                    migrated = False
-
-                    # Map of AppSettings attribute -> Keyring key
+                    # Load secure keys from keyring
                     secure_keys = {
                         "visual_crossing_api_key": "visual_crossing_api_key",
                         "github_app_id": "github_app_id",
                         "github_app_private_key": "github_app_private_key",
                         "github_app_installation_id": "github_app_installation_id",
                     }
-
-                    # 1. Migrate any keys found in JSON to SecureStorage
-                    for attr_name, key_name in secure_keys.items():
-                        if attr_name in settings_data and settings_data[attr_name]:
-                            logger.info(f"Migrating {attr_name} to secure storage")
-                            if SecureStorage.set_password(key_name, settings_data[attr_name]):
-                                # Only remove if successfully secured
-                                del settings_data[attr_name]
-                                migrated = True
-                            else:
-                                logger.error(f"Failed to migrate {attr_name} to secure storage")
-
-                    self._config = AppConfig.from_dict(data)
-
-                    # 2. Load keys from SecureStorage into the config object
                     for attr_name, key_name in secure_keys.items():
                         val = SecureStorage.get_password(key_name)
                         if val:
@@ -117,10 +99,6 @@ class ConfigManager:
 
                     # Validate and fix configuration
                     self._settings._validate_and_fix_config()
-
-                    if migrated:
-                        logger.info("Saving config to remove migrated secrets")
-                        self.save_config()
 
                     logger.info("Configuration loaded successfully")
             else:
