@@ -6,9 +6,12 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from playsound import playsound
+    from playsound3 import playsound
 except ImportError:
-    playsound = None
+    try:
+        from playsound import playsound
+    except ImportError:
+        playsound = None
 
 # Windows-specific sound playing
 winsound = None
@@ -102,6 +105,42 @@ def play_sample_sound(pack_dir: str) -> None:
     play_notification_sound(DEFAULT_EVENT, pack_dir)
 
 
+def play_startup_sound(pack_dir: str = DEFAULT_PACK) -> None:
+    """Play the application startup sound."""
+    try:
+        play_notification_sound("startup", pack_dir)
+        logger.debug(f"Played startup sound from pack: {pack_dir}")
+    except Exception as e:
+        logger.debug(f"Failed to play startup sound: {e}")
+
+
+def play_exit_sound(pack_dir: str = DEFAULT_PACK) -> None:
+    """Play the application exit sound."""
+    try:
+        play_notification_sound("exit", pack_dir)
+        logger.debug(f"Played exit sound from pack: {pack_dir}")
+    except Exception as e:
+        logger.debug(f"Failed to play exit sound: {e}")
+
+
+def play_error_sound(pack_dir: str = DEFAULT_PACK) -> None:
+    """Play an error sound."""
+    try:
+        play_notification_sound("error", pack_dir)
+        logger.debug(f"Played error sound from pack: {pack_dir}")
+    except Exception as e:
+        logger.debug(f"Failed to play error sound: {e}")
+
+
+def play_success_sound(pack_dir: str = DEFAULT_PACK) -> None:
+    """Play a success sound."""
+    try:
+        play_notification_sound("success", pack_dir)
+        logger.debug(f"Played success sound from pack: {pack_dir}")
+    except Exception as e:
+        logger.debug(f"Failed to play success sound: {e}")
+
+
 def get_available_sound_packs() -> dict[str, dict]:
     """Get all available sound packs with their metadata."""
     sound_packs: dict[str, dict] = {}
@@ -150,7 +189,8 @@ def get_sound_pack_sounds(pack_dir: str) -> dict[str, str]:
 
 
 def get_sound_file_for_candidates(candidates: list[str], pack_dir: str) -> Path | None:
-    """Resolve a sound file trying multiple candidate event keys, with fallbacks.
+    """
+    Resolve a sound file trying multiple candidate event keys, with fallbacks.
 
     Tries the given pack first across all candidates, then falls back to the
     default pack. If still nothing is found, falls back to the default 'alert'
@@ -205,9 +245,11 @@ def play_notification_sound_candidates(candidates: list[str], pack_dir: str) -> 
 
 
 def validate_sound_pack(pack_path: Path) -> tuple[bool, str]:
-    """Validate a sound pack directory.
+    """
+    Validate a sound pack directory.
 
-    Returns:
+    Returns
+    -------
         tuple: (is_valid, error_message)
 
     """

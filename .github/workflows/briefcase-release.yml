@@ -1,5 +1,8 @@
 name: Release with Briefcase
 
+# This workflow creates official releases from the main branch
+# Triggered by: pushes to main (excluding docs), or manual dispatch
+
 on:
   push:
     branches: [ main, feature/toga-migration ]  # Releases from main and toga-migration branches
@@ -23,26 +26,124 @@ permissions:
   contents: write      # Required to create releases and upload assets
   actions: read        # Required to read workflow artifacts
 
+# Prevent concurrent releases
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
-  FORCE_COLOR: "1"
+  FORCE_COLOR: "0"
 
 defaults:
   run:
     shell: bash
 
 jobs:
-  release:
-    name: Build and Release with Briefcase
-    runs-on: windows-latest
+  release-macos:
+    name: Build macOS artifacts for Release
+    runs-on: macos-latest
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         fetch-depth: 0
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
+      with:
+        python-version: "3.12"
+
+    - name: Get version
+      id: version
+      run: |
+        if [ -n "${{ github.event.inputs.version }}" ]; then
+          VERSION="${{ github.event.inputs.version }}"
+        else
+          python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])" > version.txt
+          VERSION=$(cat version.txt)
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Version: $VERSION"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        pip install -e .
+        pip install briefcase
+
+    - name: Update version in pyproject.toml (macOS)
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        python - << 'PY'
+        import tomllib
+        from pathlib import Path
+        import re
+
+        VERSION = "${{ steps.version.outputs.version }}"
+        py = Path("pyproject.toml")
+        text = py.read_text("utf-8")
+
+        # Replace project.version
+        text = re.sub(r'version = "[^"]*"', f'version = "{VERSION}"', text, count=1)
+
+        # Replace tool.briefcase.version
+        # We use a lambda to avoid issues with backreferences like \1 being interpreted as octal or group numbers
+        text = re.sub(
+            r'(\[tool\.briefcase\][\s\S]*?version = ")[^"]*(")',
+            lambda m: f"{m.group(1)}{VERSION}{m.group(2)}",
+            text,
+            count=1,
+        )
+        py.write_text(text, encoding="utf-8")
+        PY
+
+    - name: Build Briefcase app (macOS)
+      run: |
+        echo "Building Briefcase app for macOS via installer/make.py..."
+        python installer/make.py build --platform macOS
+      env:
+        DISPLAY: ""
+        ACCESSIWEATHER_TEST_MODE: "1"
+
+    - name: Package Briefcase app (macOS DMG)
+      run: |
+        echo "Packaging Briefcase app as DMG via installer/make.py..."
+        python installer/make.py package --platform macOS
+      env:
+        DISPLAY: ""
+        ACCESSIWEATHER_TEST_MODE: "1"
+
+    - name: Create macOS portable ZIP (optional)
+      run: |
+        echo "Creating macOS portable ZIP..."
+        python installer/make.py zip --platform macOS || true
+      env:
+        DISPLAY: ""
+        ACCESSIWEATHER_TEST_MODE: "1"
+
+    - name: Upload macOS artifacts for release
+      uses: actions/upload-artifact@v5
+      with:
+        name: macos-release-dist-${{ steps.version.outputs.version }}
+        path: |
+          dist/*.dmg
+          dist/*macOS*.zip
+        retention-days: 7
+
+  release:
+    name: Build and Release with Briefcase
+    runs-on: windows-latest
+    needs: release-macos
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v6
       with:
         python-version: "3.12"
 
@@ -86,7 +187,7 @@ jobs:
       if: steps.check_release.outputs.exists == 'false'
       run: |
         python -m pip install --upgrade pip setuptools wheel
-        pip install -e .[dev]
+        pip install -e .
         pip install briefcase
 
     - name: Update version in pyproject.toml
@@ -105,43 +206,44 @@ jobs:
     - name: Build Briefcase application
       if: steps.check_release.outputs.exists == 'false'
       run: |
-        echo "Building Briefcase app for Windows..."
-        briefcase build windows app --no-input --log
+        echo "Building Briefcase app for Windows via installer/make.py..."
+        python installer/make.py build --platform windows
       env:
         DISPLAY: ""
         ACCESSIWEATHER_TEST_MODE: "1"
+        PYTHONUTF8: "1"
+        PYTHONIOENCODING: "utf-8"
 
     - name: Package Briefcase application (MSI)
       if: steps.check_release.outputs.exists == 'false'
       run: |
-        echo "Packaging Briefcase app as MSI installer..."
-        briefcase package windows app --no-input --log --adhoc-sign
+        echo "Packaging Briefcase app as MSI installer via installer/make.py..."
+        python installer/make.py package --platform windows
       env:
         DISPLAY: ""
         ACCESSIWEATHER_TEST_MODE: "1"
+        PYTHONUTF8: "1"
+        PYTHONIOENCODING: "utf-8"
 
     - name: Create portable ZIP version
       if: steps.check_release.outputs.exists == 'false'
       run: |
         VERSION="${{ steps.version.outputs.version }}"
+        echo "Creating portable ZIP with make.py..."
+        python installer/make.py zip --platform windows
+        echo "Created portable ZIP: dist/AccessiWeather_Portable_v$VERSION.zip"
+      env:
+        DISPLAY: ""
+        ACCESSIWEATHER_TEST_MODE: "1"
+        PYTHONUTF8: "1"
+        PYTHONIOENCODING: "utf-8"
 
-        # Find the built app directory
-        APP_DIR=$(find build -name "AccessiWeather" -type d | head -1)
-
-        if [ -z "$APP_DIR" ]; then
-          echo "Error: Could not find built app directory"
-          find build -type d -name "*" | head -10
-          exit 1
-        fi
-
-        echo "Found app directory: $APP_DIR"
-
-        # Create portable ZIP
-        cd "$APP_DIR"
-        powershell -Command "Compress-Archive -Path * -DestinationPath '../../AccessiWeather_Portable_v$VERSION.zip'"
-        cd ../..
-
-        echo "Created portable ZIP: AccessiWeather_Portable_v$VERSION.zip"
+    - name: Download macOS artifacts
+      if: steps.check_release.outputs.exists == 'false'
+      uses: actions/download-artifact@v6
+      with:
+        name: macos-release-dist-${{ steps.version.outputs.version }}
+        path: macos-dist/
 
     - name: Prepare release assets
       if: steps.check_release.outputs.exists == 'false'
@@ -162,7 +264,7 @@ jobs:
         fi
 
         # Copy portable ZIP
-        PORTABLE_SOURCE="AccessiWeather_Portable_v$VERSION.zip"
+        PORTABLE_SOURCE="dist/AccessiWeather_Portable_v$VERSION.zip"
         if [ -f "$PORTABLE_SOURCE" ]; then
           cp "$PORTABLE_SOURCE" "release-assets/"
           echo "✓ Copied portable ZIP"
@@ -171,17 +273,28 @@ jobs:
           exit 1
         fi
 
+        # Copy macOS artifacts
+        MACOS_DIR="macos-dist"
+        if [ -d "$MACOS_DIR" ]; then
+          echo "Copying macOS artifacts..."
+          find "$MACOS_DIR" -maxdepth 1 -type f \( -name "*.dmg" -o -name "*.zip" \) -print0 | while IFS= read -r -d '' f; do
+            cp "$f" "release-assets/"
+            echo "✓ Copied macOS artifact: $(basename "$f")"
+          done
+        else
+          echo "No macOS artifacts directory found (macOS build may have failed or been skipped)"
+        fi
+
         # Generate checksums
         CHECKSUM_FILE="release-assets/checksums.txt"
         echo "AccessiWeather v$VERSION - Release Checksums" > "$CHECKSUM_FILE"
         echo "" >> "$CHECKSUM_FILE"
 
-        # Get all .exe, .msi and .zip files in release-assets directory
-        for file in release-assets/*.{exe,msi,zip}; do
+        # Get all .exe, .msi, .zip, .dmg files in release-assets directory
+        for file in release-assets/*.{exe,msi,zip,dmg}; do
           if [ -f "$file" ]; then
             HASH=$(powershell -Command "(Get-FileHash '$file' -Algorithm SHA256).Hash")
-            SIZE=$(powershell -Command "(Get-Item '$file').Length")
-            SIZE_MB=$(echo "scale=2; $SIZE / 1024 / 1024" | bc -l)
+            SIZE_MB=$(powershell -Command "('{0:N2}' -f ((Get-Item '$file').Length / 1MB))")
             echo "$HASH  $(basename "$file") ($SIZE_MB MB)" >> "$CHECKSUM_FILE"
           fi
         done
@@ -205,7 +318,9 @@ jobs:
         ## Downloads
 
         - **Windows MSI Installer**: \`AccessiWeather-$VERSION.msi\`
-        - **Portable Version**: \`AccessiWeather_Portable_v$VERSION.zip\`
+        - **Windows Portable**: \`AccessiWeather_Portable_v$VERSION.zip\`
+        - **macOS DMG Installer**: \`AccessiWeather-$VERSION.dmg\` (or similar)
+        - **macOS App ZIP**: \`AccessiWeather_macOS_v$VERSION.zip\`
 
         ## Installation
 
@@ -214,10 +329,15 @@ jobs:
         2. Run the installer and follow the setup wizard
         3. Launch AccessiWeather from the Start Menu
 
-        ### Portable Version
-        1. Download \`AccessiWeather_Portable_v$VERSION.zip\`
+        ### Windows Portable Version
+        1. Download the portable ZIP
         2. Extract to your desired location
         3. Run \`AccessiWeather.exe\` from the extracted folder
+
+        ### macOS
+        1. Download the DMG installer
+        2. Open the DMG and drag AccessiWeather to your Applications folder
+        3. Launch AccessiWeather from Applications
 
         ## Checksums
 
@@ -228,6 +348,7 @@ jobs:
         ## System Requirements
 
         - Windows 10 or later
+        - macOS 12 or later
         - Internet connection for weather data
 
         ---
@@ -251,7 +372,7 @@ jobs:
 
     - name: Upload Briefcase logs on failure
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: briefcase-release-logs
         path: logs/*

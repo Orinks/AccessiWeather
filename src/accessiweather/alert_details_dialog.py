@@ -1,4 +1,5 @@
-"""Alert details dialog for the simple Toga AccessiWeather app.
+"""
+Alert details dialog for the simple Toga AccessiWeather app.
 
 This module provides a comprehensive alert details dialog that matches the functionality
 and layout of the existing wx alert details dialog, but implemented using Toga widgets.
@@ -16,9 +17,11 @@ class AlertDetailsDialog:
     """Toga-based alert details dialog with tabbed interface."""
 
     def __init__(self, app, title, alert_data):
-        """Initialize the alert details dialog.
+        """
+        Initialize the alert details dialog.
 
         Args:
+        ----
             app: The Toga application instance
             title: Dialog title
             alert_data: Dictionary containing alert data or WeatherAlert object

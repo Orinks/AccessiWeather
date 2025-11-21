@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import logging
 
@@ -7,6 +8,7 @@ import toga
 from toga.style import Pack
 from travertino.constants import COLUMN, ROW
 
+from ... import app_helpers
 from .constants import FRIENDLY_ALERT_CATEGORIES, AlertCategoryItem
 
 logger = logging.getLogger(__name__)
@@ -45,6 +47,24 @@ def create_dialog_ui(dlg) -> None:
     main_box.add(button_box)
 
     dlg.dialog.content = main_box
+    with contextlib.suppress(Exception):
+        dlg.dialog.on_close = dlg._on_close
+    try:
+        if dlg.dialog not in getattr(dlg.app, "windows", []):
+            dlg.app.windows.add(dlg.dialog)
+    except Exception:
+        with contextlib.suppress(Exception):
+            dlg.app.windows.add(dlg.dialog)
+
+    delete_pack_cmd = toga.Command(
+        dlg._on_delete_pack,
+        text="Delete Sound Pack",
+        tooltip="Delete the selected sound pack",
+        shortcut=toga.Key.MOD_1 + toga.Key.D.value,
+    )
+    commands = getattr(dlg.dialog, "commands", None)
+    if commands is not None:
+        commands.add(delete_pack_cmd)
 
     # Populate the pack list with loaded sound packs
     dlg._refresh_pack_list()
@@ -69,6 +89,55 @@ def create_pack_list_panel(dlg) -> toga.Box:
     dlg.pack_list = toga.DetailedList(
         on_select=dlg._on_pack_selected, style=Pack(flex=1, margin_bottom=10)
     )
+
+    # Add keyboard shortcut for Delete key to remove sound pack where supported
+    def on_pack_list_key_down(widget, key, _modifiers=None):
+        """Handle keyboard shortcuts for pack list."""
+        if app_helpers.is_delete_key(key):
+            # Import the delete function and call it
+            from . import ops as ops_mod
+
+            result = ops_mod.delete_pack(dlg, widget)
+
+            if (
+                asyncio.isfuture(result)
+                or asyncio.iscoroutine(result)
+                or hasattr(result, "__await__")
+            ):
+                try:
+                    loop = asyncio.get_running_loop()
+                except RuntimeError:
+                    logger.debug(
+                        "No running event loop for delete shortcut; executing handler synchronously"
+                    )
+                    try:
+                        asyncio.run(result)
+                    except Exception as exc:  # pragma: no cover - defensive logging
+                        logger.error("Failed to execute delete pack handler: %s", exc)
+                        return False
+                else:
+                    loop.create_task(result)
+            return True
+        return False
+
+    try:
+        dlg.pack_list.on_key_down = on_pack_list_key_down
+        logger.info("Keyboard shortcuts enabled for sound pack list")
+    except AttributeError:
+        # on_key_down might not be available on all platforms
+        logger.warning("Keyboard shortcuts not available for sound pack list on this platform")
+
+    # Add accessibility description for keyboard shortcut
+    try:
+        dlg.pack_list.aria_label = "Sound pack selection"
+        dlg.pack_list.aria_description = (
+            "Select a sound pack. Press Ctrl or Command+D to delete the selected sound pack (except default), "
+            "or use the Delete key where supported."
+        )
+    except AttributeError:
+        # aria properties might not be available on all platforms
+        pass
+
     panel.add(dlg.pack_list)
 
     dlg.import_button = toga.Button(
@@ -178,13 +247,8 @@ def create_button_panel(dlg) -> toga.Box:
 
     button_box.add(toga.Box(style=Pack(flex=1)))
 
-    dlg.create_button = toga.Button(
-        "Create New", on_press=dlg._on_create_pack, style=Pack(margin_right=10)
-    )
-    button_box.add(dlg.create_button)
-
     dlg.create_wizard_button = toga.Button(
-        "Create with Wizard", on_press=dlg._on_create_pack_wizard, style=Pack(margin_right=10)
+        "Create Sound Pack", on_press=dlg._on_create_pack_wizard, style=Pack(margin_right=10)
     )
     button_box.add(dlg.create_wizard_button)
 

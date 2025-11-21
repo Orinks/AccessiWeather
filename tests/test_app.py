@@ -1,4 +1,5 @@
-"""Tests for the simplified AccessiWeather Toga application.
+"""
+Tests for the simplified AccessiWeather Toga application.
 
 This module provides comprehensive tests for the AccessiWeatherApp in the simplified
 implementation, focusing on app initialization, UI components, event handlers,
@@ -7,13 +8,15 @@ actual GUI rendering.
 """
 
 import asyncio
-from unittest.mock import Mock, PropertyMock, patch
+import contextlib
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
 
 # Import simplified app components
+from accessiweather import app_helpers, background_tasks, ui_builder
 from accessiweather.app import AccessiWeatherApp
-from accessiweather.models import AppConfig, AppSettings, Location
+from accessiweather.models import Location
 
 
 class TestAccessiWeatherAppInitialization:
@@ -61,13 +64,14 @@ class TestAccessiWeatherAppInitialization:
         assert app.config_manager is None
         assert app.weather_client is None
         assert app.location_manager is None
-        assert app.formatter is None
+        assert app.presenter is None
 
         # Check UI components are None initially
         assert app.location_selection is None
         assert app.current_conditions_display is None
         assert app.forecast_display is None
-        assert app.alerts_display is None
+        assert getattr(app, "air_quality_display", None) is None
+        assert app.alerts_table is None
         assert app.refresh_button is None
         assert app.status_label is None
 
@@ -81,16 +85,16 @@ class TestAccessiWeatherAppInitialization:
 
         with (
             patch.object(app, "_initialize_components") as mock_init_components,
-            patch.object(app, "_create_main_ui") as mock_create_ui,
-            patch.object(app, "_create_menu_system") as mock_create_menu,
+            patch.object(ui_builder, "create_main_ui") as mock_create_ui,
+            patch.object(ui_builder, "create_menu_system") as mock_create_menu,
             patch.object(app, "_load_initial_data") as mock_load_data,
         ):
             app.startup()
 
             # Verify startup sequence
             mock_init_components.assert_called_once()
-            mock_create_ui.assert_called_once()
-            mock_create_menu.assert_called_once()
+            mock_create_ui.assert_called_once_with(app)
+            mock_create_menu.assert_called_once_with(app)
             mock_load_data.assert_called_once()
 
     def test_startup_component_initialization_failure(self, mock_toga_app):
@@ -99,7 +103,7 @@ class TestAccessiWeatherAppInitialization:
 
         with (
             patch.object(app, "_initialize_components") as mock_init_components,
-            patch.object(app, "_show_error_dialog") as mock_show_error,
+            patch("accessiweather.app_helpers.show_error_dialog") as mock_show_error,
             patch("toga.MainWindow"),
             patch.object(type(app), "main_window", new_callable=PropertyMock),
         ):
@@ -108,7 +112,9 @@ class TestAccessiWeatherAppInitialization:
             app.startup()
 
             mock_show_error.assert_called_once_with(
-                "Startup Error", "Failed to start application: Component init failed"
+                app,
+                "Startup Error",
+                "Failed to start application: Component init failed",
             )
 
     def test_startup_ui_creation_failure(self, mock_toga_app):
@@ -117,8 +123,8 @@ class TestAccessiWeatherAppInitialization:
 
         with (
             patch.object(app, "_initialize_components"),
-            patch.object(app, "_create_main_ui") as mock_create_ui,
-            patch.object(app, "_show_error_dialog") as mock_show_error,
+            patch("accessiweather.ui_builder.create_main_ui") as mock_create_ui,
+            patch("accessiweather.app_helpers.show_error_dialog") as mock_show_error,
             patch("toga.MainWindow"),
             patch.object(type(app), "main_window", new_callable=PropertyMock),
         ):
@@ -127,70 +133,85 @@ class TestAccessiWeatherAppInitialization:
             app.startup()
 
             mock_show_error.assert_called_once_with(
-                "Startup Error", "Failed to start application: UI creation failed"
+                app,
+                "Startup Error",
+                "Failed to start application: UI creation failed",
             )
 
     def test_initialize_components_success(self, mock_toga_app):
-        """Test successful component initialization."""
+        """_initialize_components delegates to the initialization helper."""
         app = mock_toga_app
 
-        with (
-            patch("accessiweather.app.ConfigManager") as mock_config_manager_class,
-            patch("accessiweather.app.WeatherClient") as mock_weather_client_class,
-            patch("accessiweather.app.LocationManager") as mock_location_manager_class,
-            patch("accessiweather.app.WxStyleWeatherFormatter") as mock_formatter_class,
-            patch("accessiweather.app.AlertManager"),
-            patch("accessiweather.app.AlertNotificationSystem"),
-            patch.object(app, "_initialize_system_tray"),
-        ):
-            # Mock the instances
-            mock_config_manager = Mock()
-            mock_config = AppConfig(settings=AppSettings(), locations=[])
-            mock_config_manager.load_config.return_value = mock_config
-            mock_config_manager.get_config.return_value = mock_config
-            mock_config_manager_class.return_value = mock_config_manager
-
-            mock_weather_client = Mock()
-            mock_weather_client_class.return_value = mock_weather_client
-
-            mock_location_manager = Mock()
-            mock_location_manager_class.return_value = mock_location_manager
-
-            mock_formatter = Mock()
-            mock_formatter_class.return_value = mock_formatter
-
+        with patch("accessiweather.app_initialization.initialize_components") as mock_init:
             app._initialize_components()
 
-            # Verify components were created
-            assert app.config_manager == mock_config_manager
-            assert app.weather_client == mock_weather_client
-            assert app.location_manager == mock_location_manager
-            assert app.formatter == mock_formatter
+            mock_init.assert_called_once_with(app)
 
     @pytest.mark.asyncio
     async def test_on_running_success(self, mock_toga_app):
         """Test successful on_running method."""
         app = mock_toga_app
 
-        with patch.object(app, "_start_background_updates") as mock_start_updates:
-            mock_start_updates.return_value = None  # Async method
-
+        with patch.object(
+            background_tasks, "start_background_updates", new_callable=AsyncMock
+        ) as mock_start_updates:
             await app.on_running()
 
-            mock_start_updates.assert_called_once()
+            mock_start_updates.assert_called_once_with(app)
+
+            if app.update_task:
+                app.update_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await app.update_task
 
     @pytest.mark.asyncio
     async def test_on_running_failure(self, mock_toga_app):
         """Test on_running method with background task failure."""
         app = mock_toga_app
 
-        with patch.object(app, "_start_background_updates") as mock_start_updates:
+        with patch.object(
+            background_tasks, "start_background_updates", new_callable=AsyncMock
+        ) as mock_start_updates:
             mock_start_updates.side_effect = Exception("Background task failed")
 
-            # Should not raise exception, just log error
             await app.on_running()
 
-            mock_start_updates.assert_called_once()
+            mock_start_updates.assert_called_once_with(app)
+
+            if app.update_task:
+                app.update_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await app.update_task
+
+    @pytest.mark.asyncio
+    async def test_on_exit_cancels_background_task(self, mock_toga_app):
+        """on_exit should cancel a running background update task."""
+        app = mock_toga_app
+
+        cancelled = False
+
+        async def long_running():
+            nonlocal cancelled
+            try:
+                await asyncio.sleep(60)
+            except asyncio.CancelledError:
+                cancelled = True
+                raise
+
+        # Inject a long-running task
+        app.update_task = asyncio.create_task(long_running())
+        assert not app.update_task.done()
+
+        # Trigger exit cleanup
+        result = app.on_exit()
+        assert result is True
+
+        # Let the event loop process the cancellation
+        with pytest.raises(asyncio.CancelledError):
+            await app.update_task
+
+        # Verify the task was cancelled
+        assert cancelled or app.update_task.cancelled()
 
 
 class TestAccessiWeatherAppUICreation:
@@ -241,12 +262,12 @@ class TestAccessiWeatherAppUICreation:
         app = mock_app_with_components
 
         with (
-            patch("toga.Box") as mock_box,
-            patch("toga.Label"),
-            patch("toga.MainWindow") as mock_main_window,
-            patch.object(app, "_create_location_section") as mock_create_location,
-            patch.object(app, "_create_weather_display_section") as mock_create_weather,
-            patch.object(app, "_create_control_buttons_section") as mock_create_buttons,
+            patch.object(ui_builder.toga, "Box") as mock_box,
+            patch.object(ui_builder.toga, "Label"),
+            patch.object(ui_builder.toga, "MainWindow") as mock_main_window,
+            patch.object(ui_builder, "create_location_section") as mock_create_location,
+            patch.object(ui_builder, "create_weather_display_section") as mock_create_weather,
+            patch.object(ui_builder, "create_control_buttons_section") as mock_create_buttons,
             patch.object(
                 type(app), "main_window", new_callable=PropertyMock
             ) as mock_main_window_prop,
@@ -268,12 +289,12 @@ class TestAccessiWeatherAppUICreation:
             # Make the mocked main_window property return our mock window
             mock_main_window_prop.return_value = mock_window
 
-            app._create_main_ui()
+            ui_builder.create_main_ui(app)
 
             # Verify UI structure creation
-            mock_create_location.assert_called_once()
-            mock_create_weather.assert_called_once()
-            mock_create_buttons.assert_called_once()
+            mock_create_location.assert_called_once_with(app)
+            mock_create_weather.assert_called_once_with(app)
+            mock_create_buttons.assert_called_once_with(app)
 
             # Verify main window setup
             mock_main_window.assert_called_once_with(title=app.formal_name)
@@ -284,7 +305,7 @@ class TestAccessiWeatherAppUICreation:
         """Test getting location choices when locations exist."""
         app = mock_app_with_components
 
-        choices = app._get_location_choices()
+        choices = app_helpers.get_location_choices(app)
 
         assert choices == ["Philadelphia, PA", "New York, NY"]
         app.config_manager.get_location_names.assert_called_once()
@@ -294,7 +315,7 @@ class TestAccessiWeatherAppUICreation:
         app = mock_app_with_components
         app.config_manager.get_location_names.return_value = []
 
-        choices = app._get_location_choices()
+        choices = app_helpers.get_location_choices(app)
 
         assert choices == ["No locations available"]
 
@@ -303,7 +324,7 @@ class TestAccessiWeatherAppUICreation:
         app = mock_app_with_components
         app.config_manager.get_location_names.side_effect = Exception("Config error")
 
-        choices = app._get_location_choices()
+        choices = app_helpers.get_location_choices(app)
 
         assert choices == ["Error loading locations"]
 
@@ -312,9 +333,15 @@ class TestAccessiWeatherAppUICreation:
         app = mock_app_with_components
         app.status_label = Mock()
 
-        app._update_status("Test status message")
+        # Mock main_window as a property to avoid Toga validation
+        mock_window = Mock()
+        mock_window.visible = True
+        with patch.object(type(app), "main_window", new_callable=PropertyMock) as mock_main_window:
+            mock_main_window.return_value = mock_window
 
-        assert app.status_label.text == "Test status message"
+            app_helpers.update_status(app, "Test status message")
+
+            assert app.status_label.text == "Test status message"
 
 
 # Smoke test functions that can be run with briefcase dev --test
@@ -341,14 +368,14 @@ def test_accessiweather_app_basic_functionality():
         assert app.config_manager is None
         assert app.weather_client is None
         assert app.location_manager is None
-        assert app.formatter is None
+        assert app.presenter is None
         assert app.is_updating is False
 
         # Test utility methods
         app.config_manager = Mock()
         app.config_manager.get_location_names.return_value = ["Test City"]
 
-        choices = app._get_location_choices()
+        choices = app_helpers.get_location_choices(app)
         assert choices == ["Test City"]
 
 

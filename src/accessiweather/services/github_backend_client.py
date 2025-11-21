@@ -1,4 +1,5 @@
-"""GitHub App backend service client for AccessiWeather.
+"""
+GitHub App backend service client for AccessiWeather.
 
 This module provides a client for communicating with the AccessiWeather GitHub App
 backend service, which handles GitHub App authentication and soundpack submissions.
@@ -10,13 +11,15 @@ from typing import Any
 
 import httpx
 
-from ..version import __version__ as APP_VERSION
+from .. import __version__ as APP_VERSION
+from ..utils.retry_utils import async_retry_with_backoff
 
 logger = logging.getLogger(__name__)
 
 
 class GitHubBackendClient:
-    """Client for the AccessiWeather GitHub App backend service.
+    """
+    Client for the AccessiWeather GitHub App backend service.
 
     This client communicates with a backend service that handles GitHub App
     authentication and soundpack submission, eliminating the need to manage
@@ -30,9 +33,11 @@ class GitHubBackendClient:
         user_agent: str | None = None,
         timeout: float = 30.0,
     ) -> None:
-        """Initialize the GitHub backend client.
+        """
+        Initialize the GitHub backend client.
 
         Args:
+        ----
             backend_url: Base URL of the GitHub App backend service
             user_agent: Optional user-agent string
             timeout: Request timeout in seconds
@@ -42,6 +47,12 @@ class GitHubBackendClient:
         self.user_agent = user_agent or f"AccessiWeather/{APP_VERSION}"
         self.timeout = timeout
 
+    @async_retry_with_backoff(
+        max_attempts=2,
+        base_delay=2.0,
+        timeout=60.0,
+        retryable_exceptions=(RuntimeError,),
+    )
     async def upload_zip(
         self,
         zip_bytes: bytes,
@@ -49,14 +60,17 @@ class GitHubBackendClient:
         *,
         cancel_event: asyncio.Event | None = None,
     ) -> dict[str, Any]:
-        """Upload a ZIP soundpack to the backend which will create a PR.
+        """
+        Upload a ZIP soundpack to the backend which will create a PR.
 
         Args:
+        ----
             zip_bytes: Bytes of the ZIP file containing pack.json and audio files
             filename: Name to send for the multipart file
             cancel_event: Optional cancellation event
 
         Returns:
+        -------
             Dictionary containing PR information from the backend
 
         """
@@ -101,6 +115,12 @@ class GitHubBackendClient:
         except Exception as e:
             raise RuntimeError(f"Unexpected error communicating with backend: {e}") from e
 
+    @async_retry_with_backoff(
+        max_attempts=2,
+        base_delay=1.0,
+        timeout=30.0,
+        retryable_exceptions=(RuntimeError,),
+    )
     async def upload_pack_json_only(
         self,
         pack_data: dict[str, Any],
@@ -139,13 +159,22 @@ class GitHubBackendClient:
         except Exception as e:
             raise RuntimeError(f"Unexpected error communicating with backend: {e}") from e
 
+    @async_retry_with_backoff(
+        max_attempts=2,
+        base_delay=0.5,
+        timeout=10.0,
+        retryable_exceptions=(RuntimeError,),
+    )
     async def health_check(self, *, cancel_event: asyncio.Event | None = None) -> bool:
-        """Check if the backend service is available.
+        """
+        Check if the backend service is available.
 
         Args:
+        ----
             cancel_event: Optional cancellation event
 
         Returns:
+        -------
             True if backend is healthy, False otherwise
 
         """
@@ -158,7 +187,15 @@ class GitHubBackendClient:
 
             async with httpx.AsyncClient(timeout=5.0) as client:
                 response = await client.get(url, headers=headers)
+                if cancel_event and cancel_event.is_set():
+                    return False
                 return response.status_code == 200
 
-        except Exception:
+        except asyncio.CancelledError:
             return False
+        except httpx.TimeoutException as exc:
+            raise RuntimeError("Backend health check timed out") from exc
+        except httpx.RequestError as exc:
+            raise RuntimeError(f"Backend health check request failed: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise RuntimeError(f"Unexpected backend health check error: {exc}") from exc

@@ -38,6 +38,7 @@ coverage.xml
 # Environments
 .env
 .venv
+.venv-wsl/
 env/
 venv/
 ENV/
@@ -205,6 +206,23 @@ release_notes.md
 nature_sounds_pack.zip
 test_soundpack.zip
 
+# Runtime sound pack assets generated locally (Codex Cloud cannot attach binaries)
+src/accessiweather/soundpacks/*
+!src/accessiweather/soundpacks/.gitkeep
+!src/accessiweather/soundpacks/default/
+!src/accessiweather/soundpacks/default/**
+!src/accessiweather/soundpacks/classic/
+!src/accessiweather/soundpacks/classic/**
+!src/accessiweather/soundpacks/minimal/
+!src/accessiweather/soundpacks/minimal/**
+!src/accessiweather/soundpacks/nature/
+!src/accessiweather/soundpacks/nature/**
+!src/accessiweather/soundpacks/scifi/
+!src/accessiweather/soundpacks/scifi/**
+!src/accessiweather/soundpacks/custom_1/
+src/accessiweather/soundpacks/custom_1/*
+!src/accessiweather/soundpacks/custom_1/pack.json
+
 # Temporary backup directories
 temp_backup/
 backup_*/
@@ -236,7 +254,6 @@ test_sounds/
 TESTING_*.md
 *_SOLUTION.md
 BETA_RELEASE.md
-AGENTS.md
 CLAUDE.md
 knowledge.md
 RELEASE_README.md

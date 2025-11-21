@@ -1,4 +1,5 @@
-"""Simple AccessiWeather package.
+"""
+Simple AccessiWeather package.
 
 This package provides a simplified, async-first implementation of AccessiWeather
 using BeeWare/Toga best practices, replacing the complex service layer architecture
@@ -7,18 +8,20 @@ with straightforward, direct API calls and simple data models.
 
 from .app import AccessiWeatherApp, main
 from .config import ConfigManager
-from .display import WxStyleWeatherFormatter
+from .display import WeatherPresenter
 from .formatters import WeatherFormatter
 from .location_manager import LocationManager
 from .models import (
     AppConfig,
     AppSettings,
     CurrentConditions,
+    EnvironmentalConditions,
     Forecast,
     ForecastPeriod,
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
+    TrendInsight,
     WeatherAlert,
     WeatherAlerts,
     WeatherData,
@@ -31,6 +34,47 @@ from .utils import (
     format_wind_speed,
 )
 from .weather_client import WeatherClient
+from .weather_history import (
+    HistoricalWeatherData,
+    WeatherComparison,
+    WeatherHistoryService,
+)
+
+# Package version is sourced from installed metadata, with fallback to pyproject.toml
+try:
+    from importlib.metadata import (
+        PackageNotFoundError,
+        version as _pkg_version,
+    )
+
+    try:
+        _v = _pkg_version("accessiweather")
+    except PackageNotFoundError:
+        _v = None
+except Exception:
+    _v = None
+
+
+def _read_pyproject_version() -> str | None:
+    """Read version from pyproject.toml (project.version is the single source of truth)."""
+    try:
+        from pathlib import Path
+
+        import tomllib
+
+        root = Path(__file__).resolve().parents[2]
+        py = root / "pyproject.toml"
+        if not py.exists():
+            return None
+        with py.open("rb") as f:
+            data = tomllib.load(f)
+        return data.get("project", {}).get("version")
+    except Exception:
+        return None
+
+
+__version__ = _v or _read_pyproject_version() or "0.0.0"
+
 
 __all__ = [
     # Main app
@@ -41,7 +85,7 @@ __all__ = [
     "WeatherClient",
     "LocationManager",
     "WeatherFormatter",
-    "WxStyleWeatherFormatter",
+    "WeatherPresenter",
     # Data models
     "Location",
     "CurrentConditions",
@@ -49,11 +93,17 @@ __all__ = [
     "Forecast",
     "HourlyForecastPeriod",
     "HourlyForecast",
+    "EnvironmentalConditions",
+    "TrendInsight",
     "WeatherAlert",
     "WeatherAlerts",
     "WeatherData",
     "AppSettings",
     "AppConfig",
+    # Weather History
+    "HistoricalWeatherData",
+    "WeatherHistoryService",
+    "WeatherComparison",
     # Utilities
     "TemperatureUnit",
     "format_temperature",

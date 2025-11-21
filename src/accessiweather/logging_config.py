@@ -1,18 +1,22 @@
-"""Logging configuration for AccessiWeather application.
+"""
+Logging configuration for AccessiWeather application.
 
 This module sets up logging for the application with both console and file output.
 """
 
 import logging
 import logging.handlers
+import os
 import sys
 from pathlib import Path
 
 
 def setup_logging(log_level=logging.INFO):
-    """Set up logging for the application.
+    """
+    Set up logging for the application.
 
     Args:
+    ----
         log_level: Logging level (default: INFO)
 
     """
@@ -52,6 +56,15 @@ def setup_logging(log_level=logging.INFO):
     file_handler.setLevel(min(log_level, logging.DEBUG))  # Always include DEBUG in file
     file_handler.setFormatter(file_format)
     root_logger.addHandler(file_handler)
+
+    # Configure performance logger
+    perf_logger = logging.getLogger("performance")
+    perf_mode = os.environ.get("ACCESSIWEATHER_PERFORMANCE", "").lower() in ("1", "true", "yes")
+    if perf_mode or log_level <= logging.DEBUG:
+        perf_logger.setLevel(logging.INFO)
+        logging.info("Performance monitoring enabled")
+    else:
+        perf_logger.setLevel(logging.WARNING)
 
     # Log startup information
     logging.info(f"Logging initialized at level {logging.getLevelName(log_level)}")

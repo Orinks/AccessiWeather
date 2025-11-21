@@ -15,9 +15,11 @@ repos:
     hooks:
     -   id: ruff
         args: [--fix]
-        exclude: ^src/accessiweather/weather_gov_api_client/
+        files: ^(src/|tests/)
+        exclude: ^src/accessiweather/(weather_gov_api_client|weatherapi_client)/
     -   id: ruff-format
-        exclude: ^src/accessiweather/weather_gov_api_client/
+        files: ^(src/|tests/)
+        exclude: ^src/accessiweather/(weather_gov_api_client|weatherapi_client)/
 
 -   repo: https://github.com/RobertCraigie/pyright-python
     rev: v1.1.403
@@ -29,9 +31,15 @@ repos:
 
 -   repo: local
     hooks:
+    -   id: pytest-last-failed
+        name: pytest-last-failed
+        entry: python -m pytest --lf --ff -m "unit" --maxfail=1 -q --no-cov
+        language: system
+        pass_filenames: false
+        always_run: true
     -   id: pytest-check
         name: pytest-check
-        entry: python -m pytest tests/ -m "unit" --maxfail=5 -x
+        entry: python -m pytest tests/ -m "unit" --maxfail=5 -x --no-cov
         language: system
         pass_filenames: false
         always_run: true

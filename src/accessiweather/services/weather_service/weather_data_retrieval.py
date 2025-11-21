@@ -1,4 +1,5 @@
-"""Weather data retrieval for WeatherService.
+"""
+Weather data retrieval for WeatherService.
 
 This module handles the main weather data retrieval methods including
 forecast, hourly forecast, current conditions, and observation stations.
@@ -23,9 +24,11 @@ class WeatherDataRetrieval:
         api_client_manager,  # Type hint would create circular import
         fallback_handler,  # Type hint would create circular import
     ):
-        """Initialize the weather data retrieval handler.
+        """
+        Initialize the weather data retrieval handler.
 
         Args:
+        ----
             nws_client: The NWS API client
             api_client_manager: The API client manager instance
             fallback_handler: The fallback handler instance
@@ -36,18 +39,22 @@ class WeatherDataRetrieval:
         self.fallback_handler = fallback_handler
 
     def get_forecast(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
-        """Get forecast data for a location.
+        """
+        Get forecast data for a location.
 
         Args:
+        ----
             lat: Latitude of the location.
             lon: Longitude of the location.
             force_refresh: Whether to force a refresh of the data from the API
                 instead of using cache.
 
         Returns:
+        -------
             Dictionary containing forecast data.
 
         Raises:
+        ------
             ApiClientError: If there was an error retrieving the forecast.
 
         """
@@ -106,18 +113,22 @@ class WeatherDataRetrieval:
     def get_hourly_forecast(
         self, lat: float, lon: float, force_refresh: bool = False
     ) -> dict[str, Any]:
-        """Get hourly forecast data for a location.
+        """
+        Get hourly forecast data for a location.
 
         Args:
+        ----
             lat: Latitude of the location.
             lon: Longitude of the location.
             force_refresh: Whether to force a refresh of the data from the API
                 instead of using cache.
 
         Returns:
+        -------
             Dictionary containing hourly forecast data.
 
         Raises:
+        ------
             ApiClientError: If there was an error retrieving the hourly forecast.
 
         """
@@ -178,18 +189,22 @@ class WeatherDataRetrieval:
             raise ApiClientError(f"Unable to retrieve hourly forecast data: {str(e)}") from e
 
     def get_stations(self, lat: float, lon: float, force_refresh: bool = False) -> dict[str, Any]:
-        """Get observation stations for a location.
+        """
+        Get observation stations for a location.
 
         Args:
+        ----
             lat: Latitude of the location.
             lon: Longitude of the location.
             force_refresh: Whether to force a refresh of the data from the API
                 instead of using cache.
 
         Returns:
+        -------
             Dictionary containing observation stations data.
 
         Raises:
+        ------
             ApiClientError: If there was an error retrieving the stations.
 
         """
@@ -204,18 +219,22 @@ class WeatherDataRetrieval:
     def get_current_conditions(
         self, lat: float, lon: float, force_refresh: bool = False
     ) -> dict[str, Any]:
-        """Get current weather conditions for a location.
+        """
+        Get current weather conditions for a location.
 
         Args:
+        ----
             lat: Latitude of the location.
             lon: Longitude of the location.
             force_refresh: Whether to force a refresh of the data from the API
                 instead of using cache.
 
         Returns:
+        -------
             Dictionary containing current weather conditions.
 
         Raises:
+        ------
             ApiClientError: If there was an error retrieving the current conditions.
 
         """

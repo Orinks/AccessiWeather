@@ -20,6 +20,14 @@ class AlertCategoryItem:
 # Friendly alert categories for mapping (display name, technical key)
 # Updated to match canonical keys from alert_sound_mapper
 FRIENDLY_ALERT_CATEGORIES: list[tuple[str, str]] = [
+    # Core application sounds
+    ("General Alert", "alert"),
+    ("General Notification", "notify"),
+    ("Error Sound", "error"),
+    ("Success Sound", "success"),
+    ("App Startup", "startup"),
+    ("App Exit", "exit"),
+    # Weather alert types
     ("Tornado Warnings", "tornado_warning"),
     ("Flood Warnings", "flood_warning"),
     ("Heat Advisories", "heat_advisory"),

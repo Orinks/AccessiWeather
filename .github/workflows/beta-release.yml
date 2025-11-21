@@ -1,5 +1,8 @@
 name: Beta Release
 
+# This workflow creates pre-release builds for beta testing
+# Triggered by: tags matching beta/alpha/rc/dev patterns, or manual dispatch
+
 on:
   push:
     tags:
@@ -23,6 +26,11 @@ permissions:
   contents: write
   actions: read
 
+# Prevent concurrent beta releases
+concurrency:
+  group: beta-release-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   FORCE_COLOR: "1"
 
@@ -33,12 +41,12 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         fetch-depth: 0
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: "3.12"
 
@@ -81,8 +89,6 @@ jobs:
         # Update pyproject.toml
         sed -i "s/version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml
 
-        # Update version.py
-        sed -i "s/__version__ = \"[^\"]*\"/__version__ = \"$VERSION\"/" src/accessiweather/version.py
 
         echo "Updated version to: $VERSION"
 
@@ -280,7 +286,7 @@ jobs:
 
     - name: Upload Briefcase logs on failure
       if: failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: briefcase-beta-logs
         path: logs/*

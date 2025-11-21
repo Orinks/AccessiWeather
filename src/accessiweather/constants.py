@@ -1,4 +1,5 @@
-"""Constants and configuration values for AccessiWeather.
+"""
+Constants and configuration values for AccessiWeather.
 
 This module centralizes all settings keys, default values, and configuration
 constants used throughout the application.
@@ -96,3 +97,73 @@ GITHUB_APP_PKCS8_PRIVATE_KEY_FOOTER = "-----END PRIVATE KEY-----"
 # GitHub repository constants for community soundpack repository
 COMMUNITY_REPO_OWNER = "orinks"
 COMMUNITY_REPO_NAME = "accessiweather-soundpacks"
+
+
+# =============================================================================
+# Alert System Constants
+# =============================================================================
+
+# Severity Priority System (1-5 scale, higher = more severe)
+SEVERITY_PRIORITY_UNKNOWN = 1
+SEVERITY_PRIORITY_MINOR = 2
+SEVERITY_PRIORITY_MODERATE = 3
+SEVERITY_PRIORITY_SEVERE = 4
+SEVERITY_PRIORITY_EXTREME = 5
+
+# Mapping from severity string to numeric priority
+SEVERITY_PRIORITY_MAP: dict[str, int] = {
+    "unknown": SEVERITY_PRIORITY_UNKNOWN,
+    "minor": SEVERITY_PRIORITY_MINOR,
+    "moderate": SEVERITY_PRIORITY_MODERATE,
+    "severe": SEVERITY_PRIORITY_SEVERE,
+    "extreme": SEVERITY_PRIORITY_EXTREME,
+}
+
+# Alert Notification Cooldown Periods (in minutes)
+# Global cooldown: minimum time between any notifications
+DEFAULT_GLOBAL_COOLDOWN_MINUTES = 5
+
+# Per-alert cooldown: minimum time before re-notifying about same alert
+DEFAULT_PER_ALERT_COOLDOWN_MINUTES = 60
+
+# Escalation cooldown: reduced cooldown when alert severity increases
+DEFAULT_ESCALATION_COOLDOWN_MINUTES = 15
+
+# Alert freshness window: time window for treating alerts as fresh/new
+DEFAULT_FRESHNESS_WINDOW_MINUTES = 15
+
+# Rate Limiting Configuration
+# Maximum number of alert notifications allowed per hour
+DEFAULT_MAX_NOTIFICATIONS_PER_HOUR = 10
+
+# Time conversion constant for rate limit calculations
+SECONDS_PER_HOUR = 3600
+
+# Notification Formatting Limits
+# Maximum length of alert description in notification message (truncated with "...")
+MAX_NOTIFICATION_DESCRIPTION_LENGTH = 100
+
+# Maximum number of affected areas to display (additional areas shown as count)
+MAX_DISPLAYED_AREAS = 2
+
+# Default timeout for desktop notifications (in seconds)
+NOTIFICATION_TIMEOUT_SECONDS = 15
+
+# Alert State Management
+# Number of days to retain alert state history before cleanup
+ALERT_STATE_RETENTION_DAYS = 7
+
+# Maximum number of historical content hashes to track per alert
+# (for change detection and escalation tracking)
+ALERT_HISTORY_MAX_LENGTH = 5
+
+# Default Alert Settings
+# Default minimum severity level to trigger notifications
+# (2 = minor and above, 3 = moderate and above, etc.)
+DEFAULT_MIN_SEVERITY_PRIORITY = SEVERITY_PRIORITY_MINOR
+
+# Default enabled state for alert notifications
+DEFAULT_NOTIFICATIONS_ENABLED = True
+
+# Default enabled state for notification sounds
+DEFAULT_SOUND_ENABLED = True

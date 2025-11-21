@@ -1,4 +1,5 @@
-"""National Discussion Scraper for AccessiWeather.
+"""
+National Discussion Scraper for AccessiWeather.
 
 This module provides functionality to scrape and parse national weather discussions
 from NOAA websites, including the Weather Prediction Center (WPC) and Storm Prediction
@@ -23,7 +24,8 @@ _last_request_time: dict[str, float] = {}
 
 
 class NationalDiscussionScraper:
-    """Service for scraping text-based discussions from WPC/SPC websites with rate limiting.
+    """
+    Service for scraping text-based discussions from WPC/SPC websites with rate limiting.
 
     This class provides methods to fetch and parse weather discussions from the
     Weather Prediction Center (WPC) and Storm Prediction Center (SPC) websites.
@@ -46,9 +48,11 @@ class NationalDiscussionScraper:
         retry_backoff: float = 1.5,
         timeout: int = 10,
     ):
-        """Initialize the scraper with rate limiting and retry settings.
+        """
+        Initialize the scraper with rate limiting and retry settings.
 
         Args:
+        ----
             request_delay: Delay between requests in seconds
             max_retries: Maximum number of retry attempts for failed requests
             retry_backoff: Multiplier for increasing delay between retries
@@ -63,9 +67,11 @@ class NationalDiscussionScraper:
         self.headers = HEADERS  # Use the same headers as the legacy functions
 
     def _rate_limit(self, domain: str) -> None:
-        """Enforce rate limiting between requests to the same domain.
+        """
+        Enforce rate limiting between requests to the same domain.
 
         Args:
+        ----
             domain: The domain being requested
 
         """
@@ -84,14 +90,17 @@ class NationalDiscussionScraper:
         _last_request_time[domain] = time.time()
 
     def _make_request(self, url: str, domain: str, retry_count: int = 0) -> dict[str, Any]:
-        """Make an HTTP request with retry logic and error handling.
+        """
+        Make an HTTP request with retry logic and error handling.
 
         Args:
+        ----
             url: URL to request
             domain: Domain for rate limiting
             retry_count: Current retry attempt number
 
         Returns:
+        -------
             Dictionary with response text or error information
 
         """
@@ -126,13 +135,16 @@ class NationalDiscussionScraper:
             return {"success": False, "error": f"Request error: {e}", "error_type": "request"}
 
     def _extract_discussion_text(self, html_content: str, source: str) -> dict[str, Any]:
-        """Extract discussion text from HTML content with robust parsing.
+        """
+        Extract discussion text from HTML content with robust parsing.
 
         Args:
+        ----
             html_content: HTML content to parse
             source: Source identifier ('wpc' or 'spc')
 
         Returns:
+        -------
             Dictionary with extracted text or error information
 
         """
@@ -211,9 +223,11 @@ class NationalDiscussionScraper:
             }
 
     def fetch_wpc_discussion(self) -> dict[str, str]:
-        """Fetch the Weather Prediction Center (WPC) discussion with retry logic.
+        """
+        Fetch the Weather Prediction Center (WPC) discussion with retry logic.
 
-        Returns:
+        Returns
+        -------
             Dictionary containing summary and full text of the discussion
 
         """
@@ -261,9 +275,11 @@ class NationalDiscussionScraper:
         return {"summary": "No discussion found. (WPC)", "full": ""}
 
     def fetch_spc_discussion(self) -> dict[str, str]:
-        """Fetch the Storm Prediction Center (SPC) discussion with retry logic.
+        """
+        Fetch the Storm Prediction Center (SPC) discussion with retry logic.
 
-        Returns:
+        Returns
+        -------
             Dictionary containing summary and full text of the discussion
 
         """
@@ -311,9 +327,11 @@ class NationalDiscussionScraper:
         return {"summary": "No discussion found. (SPC)", "full": ""}
 
     def fetch_all_discussions(self) -> dict[str, dict[str, str]]:
-        """Fetch all national discussions with parallel processing.
+        """
+        Fetch all national discussions with parallel processing.
 
-        Returns:
+        Returns
+        -------
             Dictionary containing all discussions with structure:
             {
                 "wpc": {
@@ -357,9 +375,11 @@ _scraper = NationalDiscussionScraper(
 
 
 def _rate_limit(domain: str) -> None:
-    """Legacy rate limiting function that uses the global _last_request_time dict.
+    """
+    Legacy rate limiting function that uses the global _last_request_time dict.
 
     Args:
+    ----
         domain: The domain being requested
 
     """
@@ -367,12 +387,14 @@ def _rate_limit(domain: str) -> None:
 
 
 def fetch_wpc_short_range():
-    """Fetch the latest WPC Short Range Discussion (PMDSPD) from the WPC site.
+    """
+    Fetch the latest WPC Short Range Discussion (PMDSPD) from the WPC site.
 
     This function uses the improved NationalDiscussionScraper class internally
     for better reliability and error handling.
 
-    Returns:
+    Returns
+    -------
         text (str): The discussion text, or a friendly error message.
 
     """
@@ -391,12 +413,14 @@ def fetch_wpc_short_range():
 
 
 def fetch_spc_day1():
-    """Fetch the latest SPC Day 1 Outlook Discussion from the SPC site.
+    """
+    Fetch the latest SPC Day 1 Outlook Discussion from the SPC site.
 
     This function uses the improved NationalDiscussionScraper class internally
     for better reliability and error handling.
 
-    Returns:
+    Returns
+    -------
         text (str): The discussion text, or a friendly error message.
 
     """
@@ -415,12 +439,14 @@ def fetch_spc_day1():
 
 
 def get_national_discussion_summaries():
-    """Fetch and summarize the latest WPC and SPC national discussions.
+    """
+    Fetch and summarize the latest WPC and SPC national discussions.
 
     This function uses the improved NationalDiscussionScraper class internally
     for better reliability and error handling.
 
-    Returns:
+    Returns
+    -------
         dict: Contains both summaries and full text for national discussions:
             {
                 "wpc": {

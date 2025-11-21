@@ -10,6 +10,7 @@ import toga
 from toga.style.pack import Pack
 
 from ...notifications.sound_pack_installer import SoundPackInstaller
+from ...services.community_soundpack_service import CommunitySoundPackService
 from ..community_packs_browser_dialog import CommunityPacksBrowserDialog
 from . import (
     mappings as map_mod,
@@ -24,7 +25,8 @@ logger = logging.getLogger(__name__)
 
 
 class SoundPackManagerDialog:
-    """Orchestrates the modular Sound Pack Manager dialog.
+    """
+    Orchestrates the modular Sound Pack Manager dialog.
 
     This class wires UI components (built in ui.py) with state, mapping, and
     filesystem operations implemented in sibling modules. It replaces the
@@ -32,7 +34,8 @@ class SoundPackManagerDialog:
     """
 
     def __init__(self, app: toga.App, current_pack: str = "default") -> None:
-        """Construct the dialog orchestrator.
+        """
+        Construct the dialog orchestrator.
 
         Parameters
         ----------
@@ -51,8 +54,8 @@ class SoundPackManagerDialog:
         self.soundpacks_dir.mkdir(exist_ok=True)
 
         # External services
-        self.community_service = None
         self.installer = SoundPackInstaller(self.soundpacks_dir)
+        self.community_service = self._create_community_service()
 
         # UI component placeholders used by the subpanels
         self.dialog: toga.Window | None = None
@@ -78,7 +81,6 @@ class SoundPackManagerDialog:
         self.share_button = None
         self.duplicate_button = None
         self.edit_button = None
-        self.create_button = None
         self.create_wizard_button = None
         self.browse_community_button = None
 
@@ -106,6 +108,13 @@ class SoundPackManagerDialog:
     def _save_pack_meta(self, pack_info: dict, meta: dict) -> None:
         ops_mod.save_pack_meta(pack_info, meta)
 
+    def _create_community_service(self) -> CommunitySoundPackService | None:
+        try:
+            return CommunitySoundPackService()
+        except Exception as exc:
+            logger.warning("Community packs disabled - failed to initialize service: %s", exc)
+            return None
+
     # UI creation
     def _create_dialog(self) -> None:
         """Create dialog using the modular UI composer."""
@@ -131,34 +140,47 @@ class SoundPackManagerDialog:
         if getattr(self, "delete_button", None):
             self.delete_button.enabled = bool(pack_id and pack_id != "default")
         if getattr(self, "share_button", None):
-            self.share_button.enabled = bool(pack_id)
+            self.share_button.enabled = bool(pack_id and pack_id != "default")
 
     def _on_sound_selected(self, widget) -> None:
         # Enable preview button only if the actual sound file exists
+        button = getattr(self, "preview_button", None)
         if widget.value is None:
-            if getattr(self, "preview_button", None):
-                self.preview_button.enabled = False
+            if button is not None:
+                button.enabled = False
             return
         if self.selected_pack and self.selected_pack in self.sound_packs:
             pack_info = self.sound_packs[self.selected_pack]
             try:
                 sound_path = pack_info["path"] / widget.value.sound_file
-                self.preview_button.enabled = sound_path.exists() and sound_path.stat().st_size > 0
+                if button is not None:
+                    button.enabled = sound_path.exists() and sound_path.stat().st_size > 0
             except Exception:
-                self.preview_button.enabled = False
-        else:
-            if getattr(self, "preview_button", None):
-                self.preview_button.enabled = False
+                if button is not None:
+                    button.enabled = False
+        elif button is not None:
+            button.enabled = False
 
     def _on_preview_sound(self, widget) -> None:
         map_mod.preview_selected_sound(self, widget)
 
     def _on_import_pack(self, widget) -> None:
         try:
+
+            def _handle_import_result(dialog_widget, path=None):
+                if not path:
+                    return
+                try:
+                    loop = asyncio.get_running_loop()
+                except RuntimeError:
+                    logger.error("Import result received without active event loop")
+                    return
+                loop.create_task(ops_mod.import_pack_file(self, dialog_widget, path))
+
             self.app.main_window.open_file_dialog(
                 title="Select Sound Pack ZIP File",
                 file_types=["zip"],
-                on_result=lambda w, path=None: ops_mod.import_pack_file(self, w, path),
+                on_result=_handle_import_result,
             )
         except Exception as e:
             logger.error(f"Failed to open import dialog: {e}")
@@ -190,10 +212,13 @@ class SoundPackManagerDialog:
         map_mod.preview_mapping(self, widget)
 
     def _on_delete_pack(self, widget) -> None:
-        ops_mod.delete_pack(self, widget)
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            logger.error("Delete pack requested without active event loop")
+            return
 
-    def _on_create_pack(self, widget) -> None:
-        ops_mod.create_pack(self)
+        loop.create_task(ops_mod.delete_pack(self, widget))
 
     def _on_duplicate_pack(self, widget) -> None:
         ops_mod.duplicate_pack(self)
@@ -306,6 +331,21 @@ class SoundPackManagerDialog:
 
     # Community integration
     def _on_browse_community_packs(self, widget) -> None:
+        if getattr(self, "community_service", None) is None:
+            try:
+                self.community_service = CommunitySoundPackService()
+                if getattr(self, "browse_community_button", None):
+                    self.browse_community_button.enabled = True
+            except Exception as exc:
+                logger.error("Unable to start community service: %s", exc)
+                asyncio.create_task(
+                    self.app.main_window.error_dialog(
+                        "Community Sound Packs",
+                        "Community packs are temporarily unavailable. Please try again later.",
+                    )
+                )
+                return
+
         dlg = CommunityPacksBrowserDialog(
             app=self.app,
             service=getattr(self, "community_service", None),
@@ -336,7 +376,36 @@ class SoundPackManagerDialog:
                     "Please select a sound pack to share.",
                 )
                 return
-            pack_info = self.sound_packs[self.selected_pack]
+            pack_id = self.selected_pack
+            pack_info = self.sound_packs[pack_id]
+            pack_display_name = pack_info.get("name", pack_id)
+
+            if pack_id == "default":
+                await self.app.main_window.info_dialog(
+                    "Share Pack",
+                    "The default sound pack comes preinstalled and cannot be shared with the community.",
+                )
+                return
+
+            try:
+                confirmed = await self.app.main_window.question_dialog(
+                    "Confirm Share",
+                    (
+                        f"Are you sure you want to share '{pack_display_name}' with the community?\n\n"
+                        "This will submit a pull request for review."
+                    ),
+                )
+            except Exception as dialog_error:
+                logger.error("Failed to show share confirmation dialog: %s", dialog_error)
+                await self.app.main_window.info_dialog(
+                    "Share Pack",
+                    "Unable to confirm sharing right now. Submission cancelled.",
+                )
+                return
+
+            if not confirmed:
+                return
+
             pack_path = pack_info["path"]
 
             # Validate pack quickly before packaging
@@ -384,15 +453,54 @@ class SoundPackManagerDialog:
                 with contextlib.suppress(Exception):
                     progress.window.close()
 
-            # Success
-            self.app.main_window.info_dialog(
-                "Sound Pack Shared",
-                f"Your sound pack has been submitted for review. PR: {pr_url}",
-            )
+            # Success - show info dialog and offer to open PR
+            asyncio.create_task(self._show_pack_shared_success(pr_url))
         except Exception as e:
             logger.error(f"Unexpected error sharing pack: {e}")
             with contextlib.suppress(Exception):
                 self.app.main_window.error_dialog("Share Pack", f"Unexpected error: {e}")
+
+    async def _show_pack_shared_success(self, pr_url: str) -> None:
+        """Show success message and offer to open PR in browser."""
+        try:
+            # Show success info dialog first
+            await self.app.main_window.info_dialog(
+                "Sound Pack Shared Successfully",
+                f"🎉 Your sound pack has been submitted for review!\n\nPull Request: {pr_url}",
+            )
+
+            # Ask if they want to open the PR in browser
+            should_open = await self.app.main_window.confirm_dialog(
+                "Open PR in Browser?",
+                "Would you like to open the pull request in your browser to track its progress?",
+            )
+
+            if should_open:
+                self._open_pr_in_browser(pr_url)
+
+        except Exception as e:
+            logger.error(f"Failed to show success dialog: {e}")
+            # Fallback to simple dialog
+            await self.app.main_window.info_dialog(
+                "Sound Pack Shared",
+                f"Your sound pack has been submitted for review. PR: {pr_url}",
+            )
+
+    def _open_pr_in_browser(self, pr_url: str) -> None:
+        """Open the PR URL in the default browser."""
+        try:
+            import webbrowser
+
+            webbrowser.open(pr_url)
+            logger.info(f"Opened PR in browser: {pr_url}")
+        except Exception as e:
+            logger.error(f"Failed to open PR in browser: {e}")
+            asyncio.create_task(
+                self.app.main_window.error_dialog(
+                    "Browser Error",
+                    f"Failed to open PR in browser: {e}\n\nYou can manually visit: {pr_url}",
+                )
+            )
 
     def _on_close(self, widget) -> None:
         try:
@@ -415,8 +523,10 @@ class SoundPackManagerDialog:
         if self.pack_list and hasattr(self.pack_list, "data") and len(self.pack_list.data) > 0:
             try:
                 first_pack = self.pack_list.data[0]
-                self.pack_list.selection = first_pack
-                self._on_pack_selected(self.pack_list)
+                from types import SimpleNamespace
+
+                dummy_widget = SimpleNamespace(selection=first_pack)
+                self._on_pack_selected(dummy_widget)
                 await asyncio.sleep(0.1)
             except Exception as e:
                 logger.warning(f"Could not select first pack: {e}")

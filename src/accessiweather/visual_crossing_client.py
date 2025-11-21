@@ -1,11 +1,12 @@
-"""Visual Crossing Weather API client for AccessiWeather.
+"""
+Visual Crossing Weather API client for AccessiWeather.
 
 This module provides a client for the Visual Crossing Weather API,
 implementing methods to fetch current conditions, forecast, and hourly data.
 """
 
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 
 import httpx
 
@@ -19,6 +20,9 @@ from .models import (
     WeatherAlert,
     WeatherAlerts,
 )
+from .utils.retry_utils import async_retry_with_backoff
+from .utils.temperature_utils import TemperatureUnit, calculate_dewpoint
+from .weather_client_parsers import describe_moon_phase
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +49,7 @@ class VisualCrossingClient:
         )
         self.timeout = 15.0
 
+    @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
     async def get_current_conditions(self, location: Location) -> CurrentConditions | None:
         """Get current weather conditions from Visual Crossing API."""
         try:
@@ -52,9 +57,10 @@ class VisualCrossingClient:
             url = f"{self.base_url}/{location.latitude},{location.longitude}"
             params = {
                 "key": self.api_key,
-                "include": "current",
+                "include": "current,days",
+                "numDays": 1,
                 "unitGroup": "us",  # Use US units (Fahrenheit, mph, inches)
-                "elements": "temp,feelslike,humidity,windspeed,winddir,pressure,conditions,datetime",
+                "elements": "temp,feelslike,humidity,windspeed,winddir,pressure,conditions,datetime,sunrise,sunset,moonrise,moonset,moonphase,sunriseEpoch,sunsetEpoch,moonriseEpoch,moonsetEpoch",
             }
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
@@ -83,6 +89,7 @@ class VisualCrossingClient:
             logger.error(f"Failed to get Visual Crossing current conditions: {e}")
             raise VisualCrossingApiError(f"Unexpected error: {e}") from e
 
+    @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
     async def get_forecast(self, location: Location) -> Forecast | None:
         """Get weather forecast from Visual Crossing API."""
         try:
@@ -120,6 +127,7 @@ class VisualCrossingClient:
             logger.error(f"Failed to get Visual Crossing forecast: {e}")
             raise VisualCrossingApiError(f"Unexpected error: {e}") from e
 
+    @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
     async def get_hourly_forecast(self, location: Location) -> HourlyForecast | None:
         """Get hourly weather forecast from Visual Crossing API."""
         try:
@@ -157,6 +165,7 @@ class VisualCrossingClient:
             logger.error(f"Failed to get Visual Crossing hourly forecast: {e}")
             raise VisualCrossingApiError(f"Unexpected error: {e}") from e
 
+    @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
     async def get_alerts(self, location: Location) -> WeatherAlerts:
         """Get weather alerts from Visual Crossing API."""
         try:
@@ -199,18 +208,126 @@ class VisualCrossingClient:
         current = data.get("currentConditions", {})
 
         temp_f = current.get("temp")
+        temp_c = self._convert_f_to_c(temp_f)
+
+        humidity = current.get("humidity")
+        humidity = round(humidity) if humidity is not None else None
+
+        dewpoint_f = current.get("dew")
+        dewpoint_c = self._convert_f_to_c(dewpoint_f) if dewpoint_f is not None else None
+        if dewpoint_f is None and temp_f is not None and humidity is not None:
+            dewpoint_f = calculate_dewpoint(temp_f, humidity, unit=TemperatureUnit.FAHRENHEIT)
+            if dewpoint_f is not None:
+                dewpoint_c = self._convert_f_to_c(dewpoint_f)
+
+        wind_speed_mph = current.get("windspeed")
+        wind_speed_kph = wind_speed_mph * 1.60934 if wind_speed_mph is not None else None
+
+        wind_direction = current.get("winddir")
+
+        pressure_in = current.get("pressure")
+        pressure_mb = pressure_in * 33.8639 if pressure_in is not None else None
+
+        visibility_miles = current.get("visibility")
+        visibility_km = visibility_miles * 1.60934 if visibility_miles is not None else None
+
+        feels_like_f = current.get("feelslike")
+        feels_like_c = self._convert_f_to_c(feels_like_f)
+
+        timestamp = current.get("datetimeEpoch")
+        last_updated = None
+        if timestamp is not None:
+            try:
+                last_updated = datetime.fromtimestamp(timestamp, tz=UTC)
+            except (OSError, ValueError):
+                logger.debug(f"Failed to parse Visual Crossing epoch: {timestamp}")
+        elif current.get("datetime"):
+            try:
+                last_updated = datetime.fromisoformat(current["datetime"])
+            except ValueError:
+                logger.debug(f"Failed to parse Visual Crossing datetime: {current['datetime']}")
+
+        sunrise_time = None
+        sunset_time = None
+        moonrise_time = None
+        moonset_time = None
+        moon_phase = None
+        days = data.get("days", [])
+        if days:
+            day_data = days[0]
+
+            sunrise_epoch = day_data.get("sunriseEpoch")
+            if sunrise_epoch is not None:
+                try:
+                    sunrise_time = datetime.fromtimestamp(sunrise_epoch, tz=UTC)
+                except (OSError, ValueError):
+                    logger.debug(f"Failed to parse sunrise epoch: {sunrise_epoch}")
+            if sunrise_time is None and day_data.get("sunrise"):
+                try:
+                    sunrise_time = datetime.fromisoformat(day_data["sunrise"])
+                except ValueError:
+                    logger.debug(f"Failed to parse sunrise time: {day_data['sunrise']}")
+
+            sunset_epoch = day_data.get("sunsetEpoch")
+            if sunset_epoch is not None:
+                try:
+                    sunset_time = datetime.fromtimestamp(sunset_epoch, tz=UTC)
+                except (OSError, ValueError):
+                    logger.debug(f"Failed to parse sunset epoch: {sunset_epoch}")
+            if sunset_time is None and day_data.get("sunset"):
+                try:
+                    sunset_time = datetime.fromisoformat(day_data["sunset"])
+                except ValueError:
+                    logger.debug(f"Failed to parse sunset time: {day_data['sunset']}")
+
+            moonrise_epoch = day_data.get("moonriseEpoch")
+            if moonrise_epoch is not None:
+                try:
+                    moonrise_time = datetime.fromtimestamp(moonrise_epoch, tz=UTC)
+                except (OSError, ValueError):
+                    logger.debug(f"Failed to parse moonrise epoch: {moonrise_epoch}")
+            if moonrise_time is None and day_data.get("moonrise"):
+                try:
+                    moonrise_time = datetime.fromisoformat(day_data["moonrise"])
+                except ValueError:
+                    logger.debug(f"Failed to parse moonrise time: {day_data['moonrise']}")
+
+            moonset_epoch = day_data.get("moonsetEpoch")
+            if moonset_epoch is not None:
+                try:
+                    moonset_time = datetime.fromtimestamp(moonset_epoch, tz=UTC)
+                except (OSError, ValueError):
+                    logger.debug(f"Failed to parse moonset epoch: {moonset_epoch}")
+            if moonset_time is None and day_data.get("moonset"):
+                try:
+                    moonset_time = datetime.fromisoformat(day_data["moonset"])
+                except ValueError:
+                    logger.debug(f"Failed to parse moonset time: {day_data['moonset']}")
+
+            moon_phase = describe_moon_phase(day_data.get("moonphase"))
 
         return CurrentConditions(
             temperature_f=temp_f,
-            temperature_c=self._convert_f_to_c(temp_f),
+            temperature_c=temp_c,
             condition=current.get("conditions"),
-            humidity=current.get("humidity"),
-            wind_speed_mph=current.get("windspeed"),
-            wind_direction=self._degrees_to_cardinal(current.get("winddir")),
-            pressure_mb=current.get("pressure"),
-            feels_like_f=current.get("feelslike"),
-            feels_like_c=self._convert_f_to_c(current.get("feelslike")),
-            last_updated=datetime.now(),
+            humidity=humidity,
+            dewpoint_f=dewpoint_f,
+            dewpoint_c=dewpoint_c,
+            wind_speed_mph=wind_speed_mph,
+            wind_speed_kph=wind_speed_kph,
+            wind_direction=wind_direction,
+            pressure_in=pressure_in,
+            pressure_mb=pressure_mb,
+            feels_like_f=feels_like_f,
+            feels_like_c=feels_like_c,
+            visibility_miles=visibility_miles,
+            visibility_km=visibility_km,
+            sunrise_time=sunrise_time,
+            sunset_time=sunset_time,
+            moon_phase=moon_phase,
+            moonrise_time=moonrise_time,
+            moonset_time=moonset_time,
+            last_updated=last_updated or datetime.now(),
         )
 
     def _parse_forecast(self, data: dict) -> Forecast:
@@ -332,6 +449,8 @@ class VisualCrossingClient:
             # Parse time fields
             onset = self._parse_alert_time(alert_data.get("onset") or alert_data.get("start"))
             expires = self._parse_alert_time(alert_data.get("expires") or alert_data.get("end"))
+            sent = self._parse_alert_time(alert_data.get("sent"))
+            effective = self._parse_alert_time(alert_data.get("effective")) or onset
 
             # Extract affected areas
             areas = []
@@ -356,6 +475,9 @@ class VisualCrossingClient:
                 areas=areas,
                 onset=onset,
                 expires=expires,
+                sent=sent,
+                effective=effective,
+                source="VisualCrossing",
             )
 
             logger.debug(f"Created alert: {alert.event} - {alert.severity} - {alert.headline}")

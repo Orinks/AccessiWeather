@@ -1,13 +1,130 @@
 # AccessiWeather (v0.9.4-dev)
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+[![Built with BeeWare/Toga](https://img.shields.io/badge/Built%20with-BeeWare%20%2F%20Toga-ff6f00)](https://beeware.org/)
+[![Packaging: Briefcase](https://img.shields.io/badge/Packaging-Briefcase-6f42c1)](https://briefcase.readthedocs.io/)
+![Platforms](https://img.shields.io/badge/Platforms-Windows%20%7C%20macOS%20%7C%20Linux-informational)
+![Accessibility](https://img.shields.io/badge/Accessibility-Screen%20Reader%20Friendly-success)
+[![Download](https://img.shields.io/badge/Download-GitHub%20Pages-2ea44f)](https://orinks.github.io/AccessiWeather/)
+[![Latest Release](https://img.shields.io/github/v/release/Orinks/AccessiWeather?sort=semver)](https://github.com/Orinks/AccessiWeather/releases)
+
+
+
 A desktop weather application with robust accessibility features and international weather support. Built using the BeeWare/Toga framework with a focus on screen reader compatibility and keyboard navigation.
+
+## Quickstart (Developers)
+
+- Prereqs: Python 3.10+ (3.12 recommended), Git
+- Create a virtual environment and install dev deps:
+
+```bash
+python -m venv .venv
+# Windows (bash)
+source .venv/Scripts/activate
+# macOS/Linux
+# source .venv/bin/activate
+pip install -e ".[dev]"
+```
+
+- Run the app with Briefcase during development:
+
+```bash
+briefcase dev
+```
+
+- Run tests and linters:
+
+```bash
+pytest -q
+ruff check --fix . && ruff format
+```
+
+## Packaging & Distribution (Briefcase)
+
+This project uses BeeWare Briefcase for packaging. Common commands:
+
+```bash
+# Create platform-specific project skeletons
+briefcase create
+
+# Build app artifacts
+briefcase build
+
+# Generate distributables (MSI/DMG/PKG/ZIP where supported)
+briefcase package
+```
+
+Updates are delivered via GitHub Releases and integrated with the app’s Settings → Updates tab.
+
+### Using installer/make.py
+
+A convenience wrapper around Briefcase is provided at installer/make.py:
+
+```bash
+# Show environment and detected versions
+python installer/make.py status
+
+# First-time platform scaffold (windows|macOS|linux)
+python installer/make.py create --platform windows
+
+# Build and then package an installer (MSI/DMG/PKG depending on platform)
+python installer/make.py build --platform windows
+python installer/make.py package --platform windows
+
+# Run the app in development mode (same as `briefcase dev`)
+python installer/make.py dev
+
+# Run tests in a Briefcase dev app (falls back to pytest if needed)
+python installer/make.py test
+
+# Create a portable ZIP from the build output (Windows-focused helper)
+python installer/make.py zip --platform windows
+
+# Clean Briefcase artifacts
+python installer/make.py clean --platform windows
+```
+
+
+## Configuration & Portable Mode
+
+- Default config/data lives in a user app data directory (platform-dependent)
+- Portable mode stores configuration alongside the app; you can force it with:
+
+```bash
+accessiweather --portable
+```
+
+## Project Structure (high level)
+
+- src/accessiweather: main application package (Toga app, dialogs, services, clients)
+- tests: unit/integration tests (Toga dummy used where needed)
+- pyproject.toml: project metadata, Briefcase and Ruff configuration
+- pytest.ini: test configuration
+
+## Accessibility
+
+- Screen reader friendly text and focus management
+- Keyboard-first navigation across all dialogs and main views
+- Temperature display format: 84°F (29°C)
+
+## Notes
+
+- This README section reflects the current Toga + Briefcase workflow.
+- The legacy “Building Binaries” section below describes a historical PyInstaller/Inno Setup process; use Briefcase for packaging going forward.
+
 
 ## Features
 
 ### Weather Data Sources
-- **Multiple weather providers**: Choose between National Weather Service (NWS), Open-Meteo, or automatic selection
+- **Multiple weather providers**: Choose between National Weather Service (NWS), Open-Meteo, Visual Crossing, or automatic selection
 - **International support**: Open-Meteo integration provides free weather data for locations worldwide
-- **Automatic provider selection**: Uses NWS for US locations (with alerts) and Open-Meteo for international locations
+- **Smart automatic mode**: Intelligently combines the best features from multiple sources:
+  - Uses NWS for US locations with forecast discussions
+  - Uses Open-Meteo for international locations
+  - Enriches all data with sunrise/sunset times from Open-Meteo (global)
+  - Adds NWS forecast discussions for US locations when available
+  - Includes Visual Crossing alerts globally when API key is configured
 - **Real-time weather data**: Current conditions, forecasts, and alerts from trusted sources
 
 ### Location Management
@@ -23,6 +140,7 @@ A desktop weather application with robust accessibility features and internation
 - **Hourly forecasts**: Short-term detailed predictions
 - **Weather alerts**: Active watches, warnings, and advisories (NWS locations only)
 - **Weather discussions**: In-depth analysis from Weather Prediction Center and Storm Prediction Center
+- **Weather history comparisons**: Compare current weather with historical data via Open-Meteo archive API
 - **Configurable updates**: Customizable refresh intervals (1-1440 minutes)
 
 ### System Integration
@@ -42,6 +160,15 @@ A desktop weather application with robust accessibility features and internation
 - **Complete keyboard navigation**: All features accessible without a mouse
 - **Accessible UI controls**: Properly labeled widgets and clear focus indicators
 - **Clear notifications**: Screen reader-friendly alert and status messages
+
+### Performance & Efficiency
+- **Intelligent caching**: 180-minute TTL cache reduces redundant API calls by 80%+
+- **Request deduplication**: Concurrent requests for the same location coalesce into a single API call (10x reduction)
+- **Connection pooling**: Optimized HTTP connection pool (30 connections, 15 keepalive) for faster parallel fetches
+- **Parallel enrichment**: Simultaneous fetching of alerts, discussions, and sunrise/sunset data
+- **Smart timeouts**: Configurable connect (5s) and read (10s) timeouts with exponential backoff retry
+- **Cache pre-warming**: Background pre-fetching for faster initial display
+- **Async architecture**: Non-blocking weather data operations for responsive UI
 
 ## Installation
 
@@ -76,73 +203,33 @@ accessiweather --portable
 2. **Configure weather data source** (optional):
    - Go to Settings → General tab
    - Choose your preferred weather data source:
-     - **National Weather Service**: US locations only (includes alerts)
-     - **Open-Meteo**: International locations (no alerts)
-     - **Automatic**: Best of both (recommended)
+     - **National Weather Service**: US locations only (includes alerts and discussions)
+     - **Open-Meteo**: International locations (includes sunrise/sunset)
+     - **Visual Crossing**: Global coverage with API key (alerts, forecasts)
+     - **Automatic**: Smart multi-source mode (recommended)
 
 3. **NOAA API setup** (required for NWS data):
    - The application will prompt for your contact information
    - This is required by NOAA's terms of service for API access
    - Your information is stored locally and only sent to NOAA
 
-4. **Customize settings** (optional):
+4. **Visual Crossing API key** (optional for enhanced global alerts):
+   - Sign up at https://www.visualcrossing.com for a free API key
+   - Enter your API key in Settings → General tab
+   - Enables global weather alerts when using automatic mode
+
+5. **Customize settings** (optional):
    - Update interval (1-1440 minutes)
    - Temperature units (Fahrenheit, Celsius, or both)
    - Alert radius and precision
    - System tray behavior
    - Taskbar icon customization
 
-## Building Binaries
-
-AccessiWeather includes a PowerShell script to build Windows binaries and installers.
-
-### Prerequisites
-
-- Python 3.7+ (Python 3.11 recommended)
-- PowerShell 5.0+
-- [Inno Setup 6](https://jrsoftware.org/isdl.php) (for creating installers)
-
-### Building Steps
-
-1. Ensure Inno Setup is installed and in your PATH
-   ```powershell
-   # You can install Inno Setup using winget
-   winget install JRSoftware.InnoSetup
-   ```
-
-2. Run the build script from the project root directory
-   ```powershell
-   # Navigate to the project directory
-   cd path\to\AccessiWeather
-
-   # Run the build script
-   .\installer\build_installer.ps1
-   ```
-
-3. The script will:
-   - Check for processes that might interfere with the build
-   - Install PyInstaller if needed
-   - Build the executable using PyInstaller
-   - Create a portable ZIP archive
-   - Build an installer with Inno Setup
-
-4. After completion, you'll find the following in the `dist` directory:
-   - `AccessiWeather_Setup_v{version}.exe` - Windows installer
-   - `AccessiWeather_Portable_v{version}.zip` - Portable ZIP archive
-   - `AccessiWeather` folder - Standalone executable and dependencies
-
-   The version number is automatically extracted from `setup.py`.
-
-### Troubleshooting
-
-- If the script can't find Inno Setup, ensure it's installed and the `iscc` command is in your PATH
-- If you encounter file locking issues, the script will help identify and close interfering processes
-- For detailed logs, check the console output during the build process
 
 ## Requirements
 
 - **Python 3.7+** (Python 3.11+ recommended for best performance)
-- **Toga 0.5.1+** (BeeWare GUI framework, automatically installed with pip)
+- **Toga** (BeeWare GUI framework, automatically installed with pip)
 - **Internet connection** for weather data access
 - **Windows 10+** (primary platform), Linux and macOS support available
 
@@ -150,20 +237,29 @@ AccessiWeather includes a PowerShell script to build Windows binaries and instal
 
 ### National Weather Service (NWS)
 - **Coverage**: United States only
-- **Features**: Weather alerts, watches, warnings, detailed forecasts
+- **Features**: Weather alerts, watches, warnings, detailed forecasts, forecast discussions
 - **API**: Free, no registration required
 - **Contact info**: Required by NOAA terms of service
 
 ### Open-Meteo
 - **Coverage**: Worldwide
-- **Features**: Current conditions, forecasts (no alerts)
+- **Features**: Current conditions, forecasts, sunrise/sunset times
 - **API**: Free, no registration required
-- **Limitations**: No severe weather alerts available
+- **Limitations**: No severe weather alerts or forecast discussions
+
+### Visual Crossing
+- **Coverage**: Worldwide
+- **Features**: Weather alerts, current conditions, forecasts
+- **API**: Free tier available, requires API key
+- **Best for**: Global weather alerts
 
 ### Automatic Mode (Recommended)
-- **US locations**: Uses NWS (includes alerts)
-- **International locations**: Uses Open-Meteo
-- **Best of both**: Maximum coverage with alerts where available
+- **Smart multi-source**: Combines the best features from each provider
+- **Primary data**: NWS for US locations, Open-Meteo for international
+- **Enrichment**: Adds sunrise/sunset from Open-Meteo globally
+- **Discussions**: Includes NWS forecast discussions for US locations
+- **Alerts**: Uses Visual Crossing for global alerts when API key is configured
+- **Best of all**: Maximum features with intelligent source selection
 
 ## Known Issues
 
@@ -193,6 +289,38 @@ AccessiWeather includes a PowerShell script to build Windows binaries and instal
 - **Alert details**: Click any alert for full information
 - **Precise targeting**: County/township level accuracy
 - **Customizable radius**: Adjust coverage area in settings
+- **Smart rate limiting**: Prevents notification spam with configurable cooldowns
+- **Severity filtering**: Choose which alert severity levels to receive
+
+### Alert Notification System
+
+AccessiWeather includes intelligent notification management to prevent alert fatigue:
+
+**Rate Limiting Features:**
+- **Global cooldown** (default: 5 minutes): Minimum wait between any notifications
+- **Per-alert cooldown** (default: 60 minutes): Prevents duplicate alerts for the same event
+- **Escalation override** (default: 15 minutes): Higher severity alerts bypass cooldowns
+- **Hourly cap** (default: 10 notifications): Maximum notifications per hour
+
+**Severity Filtering:**
+Control which alert severities trigger notifications (all enabled by default):
+- **Extreme**: Life-threatening, catastrophic events
+- **Severe**: Significant threat to life/property
+- **Moderate**: Possible threat requiring attention
+- **Minor**: Minimal or no threat (disabled by default)
+- **Unknown**: Unclassified alerts
+
+**Configuration:**
+All notification settings can be customized in Settings → Notifications:
+```python
+# Example: Stricter rate limiting for busy areas
+Global cooldown: 10 minutes
+Per-alert cooldown: 120 minutes
+Max notifications per hour: 5
+
+# Example: Only critical alerts
+Enable only: Extreme and Severe severities
+```
 
 ## Contributing
 

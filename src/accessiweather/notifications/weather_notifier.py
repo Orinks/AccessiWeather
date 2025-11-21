@@ -1,4 +1,5 @@
-"""Weather notification module for AccessiWeather.
+"""
+Weather notification module for AccessiWeather.
 
 This module provides functionality to process and display weather alerts
 with deduplication, persistence, and change detection.
@@ -32,9 +33,11 @@ class WeatherNotifier:
     PRIORITY = {"Extreme": 3, "Severe": 2, "Moderate": 1, "Minor": 0, "Unknown": -1}
 
     def __init__(self, config_dir: str | None = None, enable_persistence: bool = True):
-        """Initialize the weather notifier.
+        """
+        Initialize the weather notifier.
 
         Args:
+        ----
             config_dir: Directory for storing alert state (optional)
             enable_persistence: Whether to enable persistent storage of alert state (default: True)
 
@@ -54,9 +57,11 @@ class WeatherNotifier:
             self.alerts_state_file = None
 
     def notify_alerts(self, alert_count, new_count=0, updated_count=0):
-        """Notify the user about new alerts.
+        """
+        Notify the user about new alerts.
 
         Args:
+        ----
             alert_count: Number of active alerts
             new_count: Number of new alerts (default: 0)
             updated_count: Number of updated alerts (default: 0)
@@ -97,9 +102,11 @@ class WeatherNotifier:
             logger.info(f"Displayed summary notification: {message}")
 
     def show_notification(self, alert: dict[str, Any], is_update: bool = False) -> None:
-        """Show a desktop notification for an alert.
+        """
+        Show a desktop notification for an alert.
 
         Args:
+        ----
             alert: Dictionary containing alert information
             is_update: Whether this is an update to an existing alert (default: False)
 
@@ -131,9 +138,11 @@ class WeatherNotifier:
             logger.error(f"Failed to show notification: {str(e)}")
 
     def get_sorted_alerts(self) -> list[dict[str, Any]]:
-        """Get all active alerts sorted by priority.
+        """
+        Get all active alerts sorted by priority.
 
-        Returns:
+        Returns
+        -------
             List of alerts sorted by priority (highest first)
 
         """
@@ -147,12 +156,15 @@ class WeatherNotifier:
         )
 
     def process_alerts(self, alerts_data: dict[str, Any]) -> tuple[list[dict[str, Any]], int, int]:
-        """Process alerts data from NOAA API with change detection and deduplication.
+        """
+        Process alerts data from NOAA API with change detection and deduplication.
 
         Args:
+        ----
             alerts_data: Dictionary containing alerts data from NOAA API
 
         Returns:
+        -------
             Tuple containing:
             - List of processed alerts
             - Number of new alerts
@@ -259,13 +271,16 @@ class WeatherNotifier:
         return processed_alerts, new_alerts_count, updated_alerts_count
 
     def _is_alert_updated(self, old_alert: dict[str, Any], new_alert: dict[str, Any]) -> bool:
-        """Check if an alert has been updated by comparing key fields.
+        """
+        Check if an alert has been updated by comparing key fields.
 
         Args:
+        ----
             old_alert: The existing alert in our active alerts dictionary
             new_alert: The newly received alert with the same ID
 
         Returns:
+        -------
             True if the alert has been meaningfully updated, False otherwise
 
         """
@@ -280,12 +295,15 @@ class WeatherNotifier:
         return False
 
     def _generate_deduplication_key(self, alert: dict[str, Any]) -> str:
-        """Generate a deduplication key for an alert to identify duplicate alerts from different offices.
+        """
+        Generate a deduplication key for an alert to identify duplicate alerts from different offices.
 
         Args:
+        ----
             alert: Alert dictionary
 
         Returns:
+        -------
             String key that uniquely identifies the weather event (not the specific alert)
 
         """
@@ -312,12 +330,15 @@ class WeatherNotifier:
         return dedup_key
 
     def _choose_representative_alert(self, alerts: list[dict[str, Any]]) -> dict[str, Any]:
-        """Choose the best representative alert from a group of duplicate alerts.
+        """
+        Choose the best representative alert from a group of duplicate alerts.
 
         Args:
+        ----
             alerts: List of alerts that represent the same weather event
 
         Returns:
+        -------
             The alert that should be used as the representative for the group
 
         """

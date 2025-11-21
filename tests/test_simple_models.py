@@ -1,4 +1,5 @@
-"""Tests for data models in the simplified AccessiWeather application.
+"""
+Tests for data models in the simplified AccessiWeather application.
 
 This module provides comprehensive tests for the data models in the simplified
 AccessiWeather implementation, adapted from existing test logic while updating
@@ -360,6 +361,20 @@ class TestWeatherDataModel:
 
         assert weather_data.last_updated == last_updated
 
+    def test_weather_data_current_conditions_alias(self):
+        """WeatherData.current_conditions should mirror the current attribute."""
+        location = Location("Alias City", 41.0, -74.0)
+        current = CurrentConditions(temperature_f=70.0, condition="Clear")
+        weather_data = WeatherData(location=location, current=current)
+
+        assert weather_data.current_conditions is current
+
+        updated = CurrentConditions(temperature_f=68.0, condition="Cloudy")
+        weather_data.current_conditions = updated
+
+        assert weather_data.current is updated
+        assert weather_data.current_conditions is updated
+
 
 class TestApiErrorModel:
     """Test the ApiError data model - adapted from existing test logic."""
@@ -400,8 +415,12 @@ class TestAppSettingsModel:
         assert settings.update_interval_minutes == 10
         assert settings.show_detailed_forecast is True
         assert settings.enable_alerts is True
-        assert settings.minimize_to_tray is True
+        assert settings.minimize_to_tray is False
         assert settings.data_source == "auto"
+        assert settings.show_dewpoint is True
+        assert settings.show_pressure_trend is True
+        assert settings.show_visibility is True
+        assert settings.show_uv_index is True
 
     def test_app_settings_custom_values(self):
         """Test AppSettings with custom values."""
@@ -412,6 +431,10 @@ class TestAppSettingsModel:
             enable_alerts=False,
             minimize_to_tray=False,
             data_source="nws",
+            show_dewpoint=False,
+            show_pressure_trend=False,
+            show_visibility=False,
+            show_uv_index=False,
         )
 
         assert settings.temperature_unit == "f"
@@ -420,6 +443,10 @@ class TestAppSettingsModel:
         assert settings.enable_alerts is False
         assert settings.minimize_to_tray is False
         assert settings.data_source == "nws"
+        assert settings.show_dewpoint is False
+        assert settings.show_pressure_trend is False
+        assert settings.show_visibility is False
+        assert settings.show_uv_index is False
 
     def test_app_settings_serialization(self):
         """Test AppSettings to_dict serialization."""
@@ -433,6 +460,10 @@ class TestAppSettingsModel:
         assert settings_dict["update_interval_minutes"] == 20
         assert settings_dict["show_detailed_forecast"] is True  # Default value
         assert settings_dict["data_source"] == "openmeteo"
+        assert settings_dict["show_dewpoint"] is True
+        assert settings_dict["show_pressure_trend"] is True
+        assert settings_dict["show_visibility"] is True
+        assert settings_dict["show_uv_index"] is True
 
     def test_app_settings_deserialization(self):
         """Test AppSettings from_dict deserialization."""
@@ -443,6 +474,10 @@ class TestAppSettingsModel:
             "enable_alerts": True,
             "minimize_to_tray": False,
             "data_source": "nws",
+            "show_dewpoint": False,
+            "show_pressure_trend": False,
+            "show_visibility": False,
+            "show_uv_index": False,
         }
 
         settings = AppSettings.from_dict(settings_dict)
@@ -453,6 +488,10 @@ class TestAppSettingsModel:
         assert settings.enable_alerts is True
         assert settings.minimize_to_tray is False
         assert settings.data_source == "nws"
+        assert settings.show_dewpoint is False
+        assert settings.show_pressure_trend is False
+        assert settings.show_visibility is False
+        assert settings.show_uv_index is False
 
     def test_app_settings_partial_deserialization(self):
         """Test AppSettings deserialization with missing fields (should use defaults)."""
@@ -466,11 +505,19 @@ class TestAppSettingsModel:
         assert settings.show_detailed_forecast is True
         assert settings.enable_alerts is True
         assert settings.data_source == "auto"
+        assert settings.show_dewpoint is True
+        assert settings.show_pressure_trend is True
+        assert settings.show_visibility is True
+        assert settings.show_uv_index is True
 
     def test_app_settings_roundtrip_serialization(self):
         """Test roundtrip serialization (to_dict -> from_dict)."""
         original_settings = AppSettings(
-            temperature_unit="both", update_interval_minutes=12, show_detailed_forecast=False
+            temperature_unit="both",
+            update_interval_minutes=12,
+            show_detailed_forecast=False,
+            show_dewpoint=False,
+            show_pressure_trend=False,
         )
 
         # Serialize and deserialize
@@ -484,6 +531,74 @@ class TestAppSettingsModel:
         )
         assert restored_settings.show_detailed_forecast == original_settings.show_detailed_forecast
         assert restored_settings.enable_alerts == original_settings.enable_alerts
+        assert restored_settings.show_dewpoint == original_settings.show_dewpoint
+        assert restored_settings.show_pressure_trend == original_settings.show_pressure_trend
+
+    def test_app_settings_roundtrip_preserves_startup_enabled_true(self):
+        """Ensure startup_enabled stays True after serialization and deserialization."""
+        original_settings = AppSettings(startup_enabled=True)
+
+        restored_settings = AppSettings.from_dict(original_settings.to_dict())
+
+        assert restored_settings.startup_enabled is True
+
+    def test_app_settings_missing_startup_enabled_defaults_to_false(self):
+        """Ensure missing startup_enabled falls back to the default False value."""
+        settings = AppSettings.from_dict({"temperature_unit": "f"})
+
+        assert settings.startup_enabled is False
+
+    def test_app_settings_from_dict_normalizes_boolean_inputs(self):
+        """AppSettings.from_dict should coerce diverse truthy/falsey values."""
+        settings = AppSettings.from_dict(
+            {
+                "show_detailed_forecast": "false",
+                "enable_alerts": "true",
+                "minimize_to_tray": 1,
+                "startup_enabled": "True",
+                "auto_update_enabled": 0,
+                "debug_mode": "no",
+                "sound_enabled": "YES",
+                "alert_notifications_enabled": "off",
+                "alert_notify_extreme": "false",
+                "alert_notify_severe": "TRUE",
+                "alert_notify_moderate": "0",
+                "alert_notify_minor": "1",
+                "alert_notify_unknown": "On",
+                "international_alerts_enabled": "OFF",
+                "trend_insights_enabled": 1,
+                "air_quality_enabled": 0,
+                "pollen_enabled": "true",
+                "offline_cache_enabled": "False",
+                "show_dewpoint": "0",
+                "show_pressure_trend": "false",
+                "show_visibility": "yes",
+                "show_uv_index": "On",
+            }
+        )
+
+        assert settings.show_detailed_forecast is False
+        assert settings.enable_alerts is True
+        assert settings.minimize_to_tray is True
+        assert settings.startup_enabled is True
+        assert settings.auto_update_enabled is False
+        assert settings.debug_mode is False
+        assert settings.sound_enabled is True
+        assert settings.alert_notifications_enabled is False
+        assert settings.alert_notify_extreme is False
+        assert settings.alert_notify_severe is True
+        assert settings.alert_notify_moderate is False
+        assert settings.alert_notify_minor is True
+        assert settings.alert_notify_unknown is True
+        assert settings.international_alerts_enabled is False
+        assert settings.trend_insights_enabled is True
+        assert settings.air_quality_enabled is False
+        assert settings.pollen_enabled is True
+        assert settings.offline_cache_enabled is False
+        assert settings.show_dewpoint is False
+        assert settings.show_pressure_trend is False
+        assert settings.show_visibility is True
+        assert settings.show_uv_index is True
 
 
 class TestAppConfigModel:
@@ -873,32 +988,91 @@ class TestHourlyForecast:
         forecast_with_data = HourlyForecast(periods=periods)
         assert forecast_with_data.has_data() is True
 
-    def test_hourly_forecast_get_next_hours(self):
-        """Test getting next N hours from hourly forecast."""
-        base_time = datetime.now()
+    def test_hourly_forecast_get_next_hours_filters_past(self):
+        """get_next_hours should skip past periods and return upcoming hours."""
+        now = datetime.now(UTC).replace(minute=0, second=0, microsecond=0)
         periods = []
-        for i in range(12):  # 12 hours of data
+
+        # Create 4 periods in the past, 1 current, and 6 future
+        for offset in range(-4, 6):
             periods.append(
                 HourlyForecastPeriod(
-                    start_time=base_time + timedelta(hours=i),
-                    temperature=75.0 - i,
-                    short_forecast=f"Hour {i}",
+                    start_time=now + timedelta(hours=offset),
+                    temperature=70 + offset,
+                    short_forecast=f"Hour {offset}",
                 )
             )
 
         forecast = HourlyForecast(periods=periods)
 
-        # Get next 6 hours (default)
-        next_6 = forecast.get_next_hours()
-        assert len(next_6) == 6
-        assert next_6[0].short_forecast == "Hour 0"
-        assert next_6[5].short_forecast == "Hour 5"
+        next_hours = forecast.get_next_hours()
+        assert len(next_hours) == 6
+        # First result should be the current hour (offset 0)
+        assert next_hours[0].short_forecast == "Hour 0"
+        # Last result should be offset 5
+        assert next_hours[-1].short_forecast == "Hour 5"
 
-        # Get next 3 hours
-        next_3 = forecast.get_next_hours(3)
-        assert len(next_3) == 3
-        assert next_3[2].short_forecast == "Hour 2"
+    def test_hourly_forecast_get_next_hours_handles_naive_times(self):
+        """Naive datetimes should be treated as UTC when filtering."""
+        now = datetime.now().replace(minute=0, second=0, microsecond=0)
+        periods = []
+        for offset in range(-2, 4):
+            periods.append(
+                HourlyForecastPeriod(
+                    start_time=now + timedelta(hours=offset),
+                    short_forecast=f"Naive {offset}",
+                )
+            )
 
-        # Request more hours than available
-        next_20 = forecast.get_next_hours(20)
-        assert len(next_20) == 12  # Should return all available
+        forecast = HourlyForecast(periods=periods)
+        next_hours = forecast.get_next_hours(3)
+        assert [p.short_forecast for p in next_hours] == [
+            "Naive 0",
+            "Naive 1",
+            "Naive 2",
+        ]
+
+
+class TestModelsPackageStructure:
+    """Verify the models package exports and layout remain compatible."""
+
+    def test_models_can_be_imported_from_package_modules(self):
+        """Ensure models import paths remain available after refactor."""
+        from accessiweather.models import Location as ReExportedLocation
+        from accessiweather.models.alerts import WeatherAlert, WeatherAlerts
+        from accessiweather.models.config import AppConfig, AppSettings
+        from accessiweather.models.errors import ApiError
+        from accessiweather.models.weather import CurrentConditions, Location, WeatherData
+
+        assert Location is ReExportedLocation
+        assert CurrentConditions is not None
+        assert WeatherAlert is not None
+        assert WeatherAlerts is not None
+        assert AppSettings is not None
+        assert AppConfig is not None
+        assert ApiError is not None
+        assert WeatherData is not None
+
+    def test_backward_compatibility_imports(self):
+        """Ensure legacy import paths still resolve after refactor."""
+        from accessiweather.models import (
+            ApiError,
+            AppConfig,
+            AppSettings,
+            CurrentConditions,
+            Location,
+            WeatherAlert,
+            WeatherAlerts,
+            WeatherData,
+        )
+
+        location = Location("Test City", 1.0, 2.0)
+
+        assert isinstance(location, Location)
+        assert ApiError is not None
+        assert AppConfig is not None
+        assert AppSettings is not None
+        assert CurrentConditions is not None
+        assert WeatherAlert is not None
+        assert WeatherAlerts is not None
+        assert WeatherData is not None

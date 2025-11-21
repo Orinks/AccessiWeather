@@ -1,4 +1,5 @@
-"""Simple location management for AccessiWeather.
+"""
+Simple location management for AccessiWeather.
 
 This module provides simple location management functionality,
 replacing the complex location service with direct operations.
@@ -9,6 +10,11 @@ import logging
 import httpx
 
 from .models import Location
+from .utils.retry_utils import (
+    RETRYABLE_EXCEPTIONS,
+    async_retry_with_backoff,
+    is_retryable_http_error,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +27,7 @@ class LocationManager:
         self.timeout = 10.0
         self.geocoding_base_url = "https://nominatim.openstreetmap.org"
 
+    @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=15.0)
     async def search_locations(self, query: str, limit: int = 5) -> list[Location]:
         """Search for locations using geocoding service."""
         logger.info(f"Searching for locations: {query}")
@@ -44,19 +51,51 @@ class LocationManager:
                 response.raise_for_status()
                 data = response.json()
 
-                locations = []
+                candidates: list[tuple[float, Location]] = []
+                fallbacks: list[tuple[float, Location]] = []
                 for item in data:
+                    score = self._score_geocoding_result(item)
                     location = self._parse_geocoding_result(item)
                     if location:
-                        locations.append(location)
+                        if score > 0:
+                            candidates.append((score, location))
+                        else:
+                            fallbacks.append((score, location))
 
+                if not candidates and not fallbacks:
+                    logger.info(f"No suitable locations found for query: {query}")
+                    return []
+
+                # Sort by score (highest first) and deduplicate by name to keep results tidy.
+                primary_pool = candidates if candidates else fallbacks
+                primary_pool.sort(key=lambda entry: entry[0], reverse=True)
+                unique_locations: dict[str, Location] = {}
+
+                def add_from_pool(pool: list[tuple[float, Location]]) -> None:
+                    for _, location in pool:
+                        key = location.name.lower()
+                        if key not in unique_locations:
+                            unique_locations[key] = location
+                        if len(unique_locations) >= limit:
+                            break
+
+                add_from_pool(primary_pool)
+
+                if candidates and fallbacks and len(unique_locations) < limit:
+                    fallbacks.sort(key=lambda entry: entry[0], reverse=True)
+                    add_from_pool(fallbacks)
+
+                locations = list(unique_locations.values())
                 logger.info(f"Found {len(locations)} locations for query: {query}")
                 return locations
 
         except Exception as e:
             logger.error(f"Failed to search locations: {e}")
+            if isinstance(e, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(e):
+                raise
             return []
 
+    @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=15.0)
     async def reverse_geocode(self, latitude: float, longitude: float) -> Location | None:
         """Get location name from coordinates."""
         logger.info(f"Reverse geocoding: {latitude}, {longitude}")
@@ -88,6 +127,8 @@ class LocationManager:
 
         except Exception as e:
             logger.error(f"Failed to reverse geocode: {e}")
+            if isinstance(e, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(e):
+                raise
             return None
 
     def _parse_geocoding_result(self, data: dict) -> Location | None:
@@ -104,11 +145,17 @@ class LocationManager:
             # Try to build a nice name from address components
             name_parts = []
 
-            # Add city/town/village
+            # Add city/town/village/county - prioritize more specific locations
+            location_found = False
             for key in ["city", "town", "village", "hamlet"]:
                 if key in address:
                     name_parts.append(address[key])
+                    location_found = True
                     break
+
+            # If no city/town found, check for county
+            if not location_found and "county" in address:
+                name_parts.append(address["county"])
 
             # Add state/province
             for key in ["state", "province", "region"]:
@@ -121,6 +168,10 @@ class LocationManager:
             if country and country != "United States":
                 name_parts.append(country)
 
+            country_code = address.get("country_code")
+            if country_code:
+                country_code = country_code.upper()
+
             # Use constructed name or fall back to display name
             if name_parts:
                 name = ", ".join(name_parts)
@@ -130,11 +181,73 @@ class LocationManager:
                 if len(name) > 50:
                     name = name[:47] + "..."
 
-            return Location(name=name, latitude=lat, longitude=lon)
+            return Location(name=name, latitude=lat, longitude=lon, country_code=country_code)
 
         except Exception as e:
             logger.error(f"Failed to parse geocoding result: {e}")
             return None
+
+    def _score_geocoding_result(self, data: dict) -> float:
+        """
+        Compute a relevance score for a geocoding result.
+
+        We prefer populated places (city/town/village) and de-prioritize large
+        administrative boundaries (province/country) that tend to have coarse centroids.
+        """
+        addresstype = (data.get("addresstype") or "").lower()
+        result_class = (data.get("class") or "").lower()
+        extratags = data.get("extratags") or {}
+
+        priority_map = {
+            "city": 120,
+            "town": 110,
+            "village": 100,
+            "hamlet": 90,
+            "municipality": 85,
+            "suburb": 80,
+            "borough": 75,
+            "county": 60,
+            "state_district": 40,
+            "state": 35,
+            "province": 25,
+            "region": 20,
+            "country": 10,
+        }
+
+        score = priority_map.get(addresstype, 0)
+
+        # Favor explicit place classifications over administrative boundaries.
+        if result_class == "place":
+            score += 15
+        elif result_class == "boundary":
+            score -= 10
+
+        # Extratags often carry a more precise "place" hint; use it if present.
+        place_hint = (extratags.get("place") or "").lower()
+        if place_hint in {"city", "town", "village", "hamlet", "municipality"}:
+            score += 20
+        elif place_hint in {"province", "state", "region"}:
+            score -= 15
+
+        # Higher place_rank indicates finer-grained features.
+        try:
+            place_rank = float(data.get("place_rank", 0))
+        except (TypeError, ValueError):
+            place_rank = 0.0
+        score += place_rank * 0.5
+
+        # Importance ranges roughly 0-1; boost slightly to break ties.
+        try:
+            importance = float(data.get("importance", 0.0))
+        except (TypeError, ValueError):
+            importance = 0.0
+        score += importance * 5
+
+        # Discard extremely coarse matches (province/country) unless nothing else is available.
+        if score <= 25 and addresstype in {"country", "province", "state", "region"}:
+            return 0.0
+
+        return score
 
     def validate_coordinates(self, latitude: float, longitude: float) -> bool:
         """Validate that coordinates are within valid ranges."""
@@ -268,6 +381,7 @@ class LocationManager:
             Location("Denver, CO", 39.7392, -104.9903),
         ]
 
+    @async_retry_with_backoff(max_attempts=2, base_delay=0.5, timeout=12.0)
     async def get_current_location_from_ip(self) -> Location | None:
         """Get approximate location from IP address (for initial setup)."""
         try:
@@ -292,7 +406,10 @@ class LocationManager:
                     name = ", ".join(name_parts) if name_parts else "Current Location"
 
                     location = Location(
-                        name=name, latitude=data.get("lat", 0.0), longitude=data.get("lon", 0.0)
+                        name=name,
+                        latitude=data.get("lat", 0.0),
+                        longitude=data.get("lon", 0.0),
+                        country_code=(data.get("countryCode") or "").upper() or None,
                     )
 
                     logger.info(f"Detected location from IP: {location.name}")
@@ -300,5 +417,7 @@ class LocationManager:
 
         except Exception as e:
             logger.error(f"Failed to get location from IP: {e}")
+            if isinstance(e, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(e):
+                raise
 
         return None

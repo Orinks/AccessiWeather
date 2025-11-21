@@ -1,9 +1,17 @@
 {
-    "name": "Default",
-    "author": "AccessiWeather Team",
-    "description": "The default sound pack for AccessiWeather. Replace the .wav files to customize.",
-    "sounds": {
-        "alert": "alert.wav",
-        "notify": "notify.wav"
-    }
+  "name": "Default",
+  "author": "AccessiWeather Team",
+  "description": "The default sound pack for AccessiWeather. Replace the .wav files to customize.",
+  "version": "1.0.0",
+  "sounds": {
+    "alert": "alert.wav",
+    "notify": "notify.wav",
+    "error": "error.wav",
+    "success": "success.wav",
+    "startup": "startup.wav",
+    "exit": "exit.wav",
+    "tornado_warning": "tornado_warning.wav",
+    "warning": "warning.wav",
+    "watch": "watch.wav"
+  }
 }

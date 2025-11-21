@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "accessiweather"
-version = "0.9.4-dev"
+version = "0.4.0"
 description = "AccessiWeather: An accessible weather application that includes NOAA and Open-Meteo support with focus on screen reader compatibility"
 authors = [
     { name = "Orinks" }
 ]
 license = {text = "MIT"}
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 dependencies = [
     "toga",
     "desktop-notifier",
@@ -20,7 +20,7 @@ dependencies = [
     "httpx>=0.20.0",
     "attrs>=22.2.0",
     "psutil",
-    "tufup"
+    "keyring"
 ]
 readme = "README.md"
 classifiers = [
@@ -37,11 +37,11 @@ dev = [
     "pytest-asyncio",
     "ruff>=0.9.0",
     "mypy>=1.0.0",
-    "types-requests",
-    "PyInstaller"
+    "pyright",
+    "types-requests"
 ]
 audio = [
-    "playsound"
+    "playsound3"
 ]
 
 [project.scripts]
@@ -49,7 +49,7 @@ accessiweather = "accessiweather.cli:main"
 
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py310"
 
 # Cache configuration
 cache-dir = ".ruff_cache"
@@ -57,28 +57,57 @@ respect-gitignore = true
 
 # Exclude auto-generated and build directories
 exclude = [
+    # VCS & IDE
     ".git",
+    ".github",
+    ".idea",
+    ".vscode",
+
+    # Python caches & coverage
     "__pycache__",
+    "**/__pycache__/",
+    ".pytest_cache",
+    "**/.pytest_cache/",
+    ".mypy_cache",
+    "**/.mypy_cache/",
+    ".ruff_cache",
+    "**/.ruff_cache/",
+    ".coverage",
+    "coverage.xml",
+    "htmlcov",
+
+    # Virtual environments (any name/prefix)
+    ".venv",
+    ".venv-wsl",
+    ".venv*",
+    "venv",
+    "venv*",
+    "env",
+    "env*",
+    "**/.venv*/",
+    "**/venv*/",
+    "**/env*/",
+
+    # Build & dist artifacts
     "build",
     "dist",
-    "src/accessiweather/weather_gov_api_client",
-    "src/accessiweather/weatherapi_client",
-    ".venv",
-    "venv",
-    "env",
-    ".eggs",
     "*.egg-info",
-    ".tox",
-    ".coverage",
-    "htmlcov",
-    ".pytest_cache",
-    ".mypy_cache",
-    ".ruff_cache",
-    "temp_backup",
+    ".eggs",
+    "*.dist-info",
+    "src/accessiweather.dist-info",
     "installer/build",
     "installer/dist",
+
+    # Project-specific generated content
+    "src/accessiweather/weather_gov_api_client",
+    "src/accessiweather/weatherapi_client",
     "docs",
-    ".github"
+    "temp_backup",
+    "accessiweather.log",
+    "*.log",
+
+    # Third-party (if present)
+    "node_modules"
 ]
 
 [tool.ruff.lint]
@@ -90,12 +119,15 @@ ignore = [
     "E501",   # line too long (handled by formatter)
     "F541",   # f-string is missing placeholders
     "C901",   # too complex (we'll handle this gradually)
+    "D203",   # No blank line before class docstring; prefer D211 instead
+    "D212",   # Use D213 convention for multi-line docstrings
     "D100",   # Missing docstring in public module
     "D101",   # Missing docstring in public class
     "D102",   # Missing docstring in public method
     "D103",   # Missing docstring in public function
     "D104",   # Missing docstring in public package
     "D105",   # Missing docstring in magic method
+    "UP038",  # Do not use union types in isinstance checks at runtime
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -130,9 +162,8 @@ max-complexity = 15
 # content below this line added by briefcase convert
 # This project was generated with 0.3.23 using template: https://github.com/beeware/briefcase-template @ v0.3.23
 [tool.briefcase]
-project_name = "Accessiweather"
+project_name = "AccessiWeather"
 bundle = "net.orinks.accessiweather"
-version = "0.0.1"
 url = "http://accessiweather.orinks.net"
 license.file = "LICENSE"
 author = "Orinks"
@@ -151,7 +182,6 @@ test_sources = [
     "tests",
 ]
 
-# Include TUF root metadata and other resources
 resources = [
     "src/accessiweather/resources",
 ]
@@ -160,8 +190,8 @@ resources = [
 entry_point = "accessiweather:main"
 
 requires = [
-    "toga>=0.5.1",
-    "playsound",
+    "toga",
+    "playsound3",
     "httpx>=0.20.0",
     "python-dateutil",
     "desktop-notifier",
@@ -169,7 +199,7 @@ requires = [
     "beautifulsoup4",
     "attrs>=22.2.0",
     "psutil",
-    "tufup",
+    "keyring",
 ]
 test_requires = [
     "pytest>=7.0.0",

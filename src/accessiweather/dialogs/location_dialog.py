@@ -1,7 +1,9 @@
-"""Location dialog for AccessiWeather Simple.
+"""
+Location dialog for AccessiWeather Simple.
 
 This module provides dialogs for adding and managing locations in the Toga application.
 """
+# Advanced coordinates dialog work is tracked in #315.
 
 import asyncio
 import logging
@@ -19,9 +21,11 @@ class AddLocationDialog:
     """Dialog for adding a new location with search functionality."""
 
     def __init__(self, app, config_manager):
-        """Initialize the add location dialog.
+        """
+        Initialize the add location dialog.
 
         Args:
+        ----
             app: The main application instance
             config_manager: Configuration manager instance
 
@@ -120,13 +124,13 @@ class AddLocationDialog:
 
         self.name_input = toga.TextInput(
             placeholder="Enter a descriptive name for this location",
-            style=Pack(width=400, padding_bottom=5),
+            style=Pack(width=400, margin_bottom=5),
         )
         section.add(self.name_input)
 
         help_text = toga.Label(
             "This name will appear in your location list",
-            style=Pack(font_style="italic", font_size=10, padding_bottom=10),
+            style=Pack(font_style="italic", font_size=10, margin_bottom=10),
         )
         section.add(help_text)
 
@@ -134,17 +138,17 @@ class AddLocationDialog:
 
     def _create_search_section(self) -> toga.Box:
         """Create the location search section."""
-        section = toga.Box(style=Pack(direction=COLUMN, padding_bottom=10))
+        section = toga.Box(style=Pack(direction=COLUMN, margin_bottom=10))
 
         search_label = toga.Label(
-            "Search for Location:", style=Pack(font_weight="bold", padding_bottom=5)
+            "Search for Location:", style=Pack(font_weight="bold", margin_bottom=5)
         )
         section.add(search_label)
 
-        search_box = toga.Box(style=Pack(direction=ROW, padding_bottom=5))
+        search_box = toga.Box(style=Pack(direction=ROW, margin_bottom=5))
 
         self.search_input = toga.TextInput(
-            placeholder="Enter address, city, or ZIP code", style=Pack(flex=1, padding_right=10)
+            placeholder="Enter address, city, or ZIP code", style=Pack(flex=1, margin_right=10)
         )
         search_box.add(self.search_input)
 
@@ -158,7 +162,7 @@ class AddLocationDialog:
 
         search_help = toga.Label(
             "Search for an address to automatically fill coordinates",
-            style=Pack(font_style="italic", font_size=10, padding_bottom=10),
+            style=Pack(font_style="italic", font_size=10, margin_bottom=10),
         )
         section.add(search_help)
 
@@ -166,17 +170,17 @@ class AddLocationDialog:
 
     def _create_results_section(self) -> toga.Box:
         """Create the search results section."""
-        section = toga.Box(style=Pack(direction=COLUMN, padding_bottom=10))
+        section = toga.Box(style=Pack(direction=COLUMN, margin_bottom=10))
 
         results_label = toga.Label(
-            "Search Results:", style=Pack(font_weight="bold", padding_bottom=5)
+            "Search Results:", style=Pack(font_weight="bold", margin_bottom=5)
         )
         section.add(results_label)
 
         self.results_table = toga.Table(
             headings=["Location", "Coordinates"],
             data=[],
-            style=Pack(height=150, padding_bottom=10),
+            style=Pack(height=150, margin_bottom=10),
             on_select=self._on_result_selected,
         )
         section.add(self.results_table)
@@ -185,18 +189,18 @@ class AddLocationDialog:
 
     def _create_coordinates_section(self) -> toga.Box:
         """Create the manual coordinates section."""
-        section = toga.Box(style=Pack(direction=COLUMN, padding_bottom=10))
+        section = toga.Box(style=Pack(direction=COLUMN, margin_bottom=10))
 
         coords_label = toga.Label(
-            "Manual Coordinates:", style=Pack(font_weight="bold", padding_bottom=5)
+            "Manual Coordinates:", style=Pack(font_weight="bold", margin_bottom=5)
         )
         section.add(coords_label)
 
-        coords_box = toga.Box(style=Pack(direction=ROW, padding_bottom=5))
+        coords_box = toga.Box(style=Pack(direction=ROW, margin_bottom=5))
 
         self.coordinates_input = toga.TextInput(
             placeholder="e.g., 40.7128, -74.0060 or 40.7128°N, 74.0060°W",
-            style=Pack(flex=1, padding_right=10),
+            style=Pack(flex=1, margin_right=10),
         )
 
         coords_box.add(self.coordinates_input)
@@ -210,7 +214,7 @@ class AddLocationDialog:
 
         coords_help = toga.Label(
             "Enter latitude and longitude manually if search doesn't work",
-            style=Pack(font_style="italic", font_size=10, padding_bottom=10),
+            style=Pack(font_style="italic", font_size=10, margin_bottom=10),
         )
         section.add(coords_help)
 
@@ -218,10 +222,10 @@ class AddLocationDialog:
 
     def _create_status_section(self) -> toga.Box:
         """Create the status display section."""
-        section = toga.Box(style=Pack(direction=COLUMN, padding_bottom=15))
+        section = toga.Box(style=Pack(direction=COLUMN, margin_bottom=15))
 
         self.status_label = toga.Label(
-            "Ready to add location", style=Pack(font_style="italic", padding_bottom=5)
+            "Ready to add location", style=Pack(font_style="italic", margin_bottom=5)
         )
         section.add(self.status_label)
 
@@ -229,14 +233,14 @@ class AddLocationDialog:
 
     def _create_buttons_section(self) -> toga.Box:
         """Create the dialog buttons section."""
-        section = toga.Box(style=Pack(direction=ROW, padding_top=10))
+        section = toga.Box(style=Pack(direction=ROW, margin_top=10))
 
         # Spacer to push buttons to the right
         spacer = toga.Box(style=Pack(flex=1))
         section.add(spacer)
 
         self.cancel_button = toga.Button(
-            "Cancel", on_press=self._on_cancel_pressed, style=Pack(padding_right=10)
+            "Cancel", on_press=self._on_cancel_pressed, style=Pack(margin_right=10)
         )
 
         section.add(self.cancel_button)
@@ -330,12 +334,12 @@ class AddLocationDialog:
 
     async def _on_advanced_pressed(self, widget):
         """Handle advanced coordinates button press."""
-        # TODO: Implement advanced coordinates dialog
         await self.app.main_window.info_dialog(
             "Advanced Coordinates",
-            "Advanced coordinate entry dialog will be implemented in a future version.\n\n"
-            "For now, you can enter coordinates directly in the format:\n"
-            "latitude, longitude (e.g., 40.7128, -74.0060)",
+            "Advanced coordinate entry will land in a future version.\n\n"
+            "Accepted coordinate formats today include decimal degrees with or without degree "
+            "symbols and N/S/E/W suffixes (e.g., 40.7128, -74.0060 or 40.7128°N, 74.0060°W).\n"
+            "Track the dialog implementation in #315.",
         )
 
     async def _on_save_pressed(self, widget):
@@ -376,8 +380,23 @@ class AddLocationDialog:
             return
 
         try:
+            country_code = None
+            if self.selected_location and getattr(self.selected_location, "country_code", None):
+                country_code = self.selected_location.country_code
+            elif not self.selected_location:
+                try:
+                    reverse_location = await self.location_manager.reverse_geocode(
+                        latitude, longitude
+                    )
+                    if reverse_location and reverse_location.country_code:
+                        country_code = reverse_location.country_code
+                except Exception as geo_exc:  # pragma: no cover - best effort enrichment
+                    logger.debug("Reverse geocoding for country code failed: %s", geo_exc)
+
             # Add location
-            success = self.config_manager.add_location(name, latitude, longitude)
+            success = self.config_manager.add_location(
+                name, latitude, longitude, country_code=country_code
+            )
 
             if success:
                 self._update_status("Location saved successfully!")

@@ -1,11 +1,13 @@
-"""Display modules for AccessiWeather Simple.
+"""
+Display modules for AccessiWeather Simple.
 
-This package provides display components and formatters that match the wx version's
-output exactly while being organized into clean, modular components.
+WeatherPresenter remains the public entry point. Additional presentation helpers now
+live in internal submodules that organize current conditions, forecasts, and alerts
+logic while preserving this import surface.
 """
 
-from .wx_style_formatter import WxStyleWeatherFormatter
+from .weather_presenter import WeatherPresenter
 
 __all__ = [
-    "WxStyleWeatherFormatter",
+    "WeatherPresenter",
 ]

@@ -1,4 +1,5 @@
-"""Single instance manager for AccessiWeather Toga application.
+"""
+Single instance manager for AccessiWeather Toga application.
 
 This module provides functionality to ensure only one instance of the application
 can run at a time using a lock file approach, since Toga/BeeWare does not provide
@@ -7,6 +8,7 @@ built-in single-instance management.
 
 import logging
 import os
+import subprocess
 import time
 from pathlib import Path
 
@@ -19,9 +21,11 @@ class SingleInstanceManager:
     """Manages single instance functionality using a lock file approach."""
 
     def __init__(self, app: toga.App, lock_filename: str = "accessiweather.lock"):
-        """Initialize the single instance manager.
+        """
+        Initialize the single instance manager.
 
         Args:
+        ----
             app: The Toga application instance
             lock_filename: Name of the lock file to create
 
@@ -32,9 +36,11 @@ class SingleInstanceManager:
         self._lock_acquired = False
 
     def try_acquire_lock(self) -> bool:
-        """Try to acquire the single instance lock.
+        """
+        Try to acquire the single instance lock.
 
-        Returns:
+        Returns
+        -------
             bool: True if lock was acquired successfully, False if another instance is running
 
         """
@@ -68,9 +74,11 @@ class SingleInstanceManager:
             return True
 
     def _is_lock_file_stale(self) -> bool:
-        """Check if the lock file is stale (from a crashed instance).
+        """
+        Check if the lock file is stale (from a crashed instance).
 
-        Returns:
+        Returns
+        -------
             bool: True if the lock file is stale and should be removed
 
         """
@@ -114,20 +122,21 @@ class SingleInstanceManager:
             return False
 
     def _is_process_running(self, pid: int) -> bool:
-        """Check if a process with the given PID is running.
+        """
+        Check if a process with the given PID is running.
 
         Args:
+        ----
             pid: Process ID to check
 
         Returns:
+        -------
             bool: True if the process is running, False otherwise
 
         """
         try:
             # Cross-platform way to check if process is running
             if os.name == "nt":  # Windows
-                import subprocess
-
                 result = subprocess.run(
                     ["tasklist", "/FI", f"PID eq {pid}"], capture_output=True, text=True, timeout=5
                 )
@@ -136,7 +145,9 @@ class SingleInstanceManager:
             # Send signal 0 to check if process exists
             os.kill(pid, 0)
             return True
-        except (OSError, subprocess.TimeoutExpired, subprocess.SubprocessError):
+        except Exception:
+            # Catch all exceptions to avoid blocking the app
+            # This includes OSError, subprocess errors, and any other unexpected issues
             return False
 
     def _create_lock_file(self) -> None:
@@ -195,6 +206,6 @@ class SingleInstanceManager:
         """Context manager entry."""
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, _exc_type, _exc_val, _exc_tb):
         """Context manager exit - ensure lock is released."""
         self.release_lock()

@@ -31,11 +31,14 @@ def load_sound_packs(dlg) -> None:
 
 def refresh_pack_list(dlg) -> None:
     """Refresh the DetailedList with current dlg.sound_packs items."""
-    dlg.pack_list.data.clear()
+    if not getattr(dlg, "pack_list", None):
+        return
+
+    items: list[dict] = []
     for pack_id, pack_info in dlg.sound_packs.items():
         pack_name = pack_info.get("name", pack_id)
         author = pack_info.get("author", "Unknown")
-        dlg.pack_list.data.append(
+        items.append(
             {
                 "pack_id": pack_id,
                 "pack_info": pack_info,
@@ -44,6 +47,8 @@ def refresh_pack_list(dlg) -> None:
                 "icon": None,
             }
         )
+
+    dlg.pack_list.data = items
 
 
 def update_pack_details(dlg) -> None:

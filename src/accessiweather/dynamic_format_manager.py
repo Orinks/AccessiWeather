@@ -1,4 +1,5 @@
-"""Dynamic format string management system for taskbar icon customization.
+"""
+Dynamic format string management system for taskbar icon customization.
 
 This module provides functionality to dynamically switch between format string
 templates based on weather conditions, alerts, and forecast data.
@@ -28,9 +29,11 @@ class DynamicFormatManager:
     }
 
     def __init__(self, custom_templates: dict[str, str] | None = None):
-        """Initialize the dynamic format manager.
+        """
+        Initialize the dynamic format manager.
 
         Args:
+        ----
             custom_templates: Optional dictionary of custom format templates
 
         """
@@ -54,15 +57,18 @@ class DynamicFormatManager:
         forecast_data: dict[str, Any] | None = None,
         user_format: str | None = None,
     ) -> str:
-        """Get the appropriate format string based on current conditions.
+        """
+        Get the appropriate format string based on current conditions.
 
         Args:
+        ----
             weather_data: Current weather data dictionary
             alerts_data: Optional list of active weather alerts
             forecast_data: Optional forecast data for anticipatory updates
             user_format: Optional user-defined format string to use as base
 
         Returns:
+        -------
             Format string to use for the taskbar icon tooltip
 
         """
@@ -89,12 +95,15 @@ class DynamicFormatManager:
             return user_format or self.templates["default"]
 
     def _should_update_format(self, analysis: dict[str, Any]) -> bool:
-        """Determine if the format string should be updated.
+        """
+        Determine if the format string should be updated.
 
         Args:
+        ----
             analysis: Current weather analysis
 
         Returns:
+        -------
             True if format should be updated, False otherwise
 
         """
@@ -136,9 +145,11 @@ class DynamicFormatManager:
         user_format: str | None = None,
         forecast_data: dict[str, Any] | None = None,
     ):
-        """Update the current format string based on analysis.
+        """
+        Update the current format string based on analysis.
 
         Args:
+        ----
             analysis: Weather condition analysis
             user_format: Optional user-defined base format
             forecast_data: Optional forecast data for anticipatory updates
@@ -168,13 +179,16 @@ class DynamicFormatManager:
     def _should_use_forecast_template(
         self, analysis: dict[str, Any], forecast_data: dict[str, Any]
     ) -> bool:
-        """Determine if forecast template should be used.
+        """
+        Determine if forecast template should be used.
 
         Args:
+        ----
             analysis: Current weather analysis
             forecast_data: Forecast data
 
         Returns:
+        -------
             True if forecast template should be used
 
         """
@@ -204,13 +218,16 @@ class DynamicFormatManager:
             return False
 
     def _customize_alert_format(self, format_string: str, analysis: dict[str, Any]) -> str:
-        """Customize alert format string based on alert details.
+        """
+        Customize alert format string based on alert details.
 
         Args:
+        ----
             format_string: Base alert format string
             analysis: Weather analysis with alert information
 
         Returns:
+        -------
             Customized format string
 
         """
@@ -236,9 +253,11 @@ class DynamicFormatManager:
             return format_string
 
     def add_custom_template(self, name: str, format_string: str):
-        """Add a custom format template.
+        """
+        Add a custom format template.
 
         Args:
+        ----
             name: Template name
             format_string: Format string template
 
@@ -247,12 +266,15 @@ class DynamicFormatManager:
         logger.debug(f"Added custom template '{name}': {format_string}")
 
     def remove_custom_template(self, name: str) -> bool:
-        """Remove a custom format template.
+        """
+        Remove a custom format template.
 
         Args:
+        ----
             name: Template name to remove
 
         Returns:
+        -------
             True if template was removed, False if not found
 
         """
@@ -268,9 +290,11 @@ class DynamicFormatManager:
         return False
 
     def get_available_templates(self) -> dict[str, str]:
-        """Get all available format templates.
+        """
+        Get all available format templates.
 
-        Returns:
+        Returns
+        -------
             Dictionary of template names and format strings
 
         """
@@ -285,9 +309,11 @@ class DynamicFormatManager:
         logger.debug("Reset to default format template")
 
     def get_current_state(self) -> dict[str, Any]:
-        """Get current state information.
+        """
+        Get current state information.
 
-        Returns:
+        Returns
+        -------
             Dictionary with current state information
 
         """
@@ -300,12 +326,15 @@ class DynamicFormatManager:
         }
 
     def force_template(self, template_name: str) -> bool:
-        """Force a specific template to be used.
+        """
+        Force a specific template to be used.
 
         Args:
+        ----
             template_name: Name of template to force
 
         Returns:
+        -------
             True if template was set, False if template not found
 
         """

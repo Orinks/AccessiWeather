@@ -1,11 +1,12 @@
-"""Community Sound Pack service for browsing and downloading packs from GitHub.
+"""
+Community Sound Pack service for browsing and downloading packs from GitHub.
 
 This module provides an async service that queries a GitHub repository for
 available community sound packs and downloads them as ZIP files for
 installation using SoundPackInstaller.
 
 Design notes:
-- Mirrors httpx async client usage and logging patterns from TUFUpdateService
+- Mirrors httpx async client usage and logging patterns from GitHubUpdateService
 - Provides simple in-memory caching for the list of packs
 - Supports authentication via GitHub App for higher rate limits when available
 - Gracefully handles rate limits and transient errors with lightweight retries
@@ -18,14 +19,19 @@ import base64
 import contextlib
 import json
 import logging
+import shutil
 import tempfile
+import zipfile
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import httpx
 
 from accessiweather.constants import COMMUNITY_REPO_NAME, COMMUNITY_REPO_OWNER
+
+from ..utils.retry_utils import async_retry_with_backoff, is_retryable_http_error
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +52,9 @@ class CommunityPack:
     download_count: int | None = None
     created_date: str | None = None  # ISO 8601 string
     preview_image_url: str | None = None
+    repo_path: str | None = None
+    tree_sha: str | None = None
+    ref: str | None = "main"
 
     def __str__(self) -> str:
         return f"{self.name} {self.version} by {self.author}"
@@ -62,9 +71,11 @@ class CommunitySoundPackService:
         cache_duration_seconds: int = 300,
         user_agent: str = "AccessiWeather-CommunityPacks/1.0",
     ) -> None:
-        """Initialize the community packs service.
+        """
+        Initialize the community packs service.
 
         Args:
+        ----
             repo_owner: GitHub org/user that hosts community packs
             repo_name: Repository name for packs
             timeout: HTTP timeout in seconds
@@ -88,8 +99,10 @@ class CommunitySoundPackService:
         with contextlib.suppress(Exception):
             await self._http.aclose()
 
+    @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=45.0)
     async def fetch_available_packs(self, force_refresh: bool = False) -> list[CommunityPack]:
-        """Fetch a list of available community packs.
+        """
+        Fetch a list of available community packs.
 
         Strategy:
         1) Try curated index.json in the repo root via GitHub API contents
@@ -139,8 +152,10 @@ class CommunitySoundPackService:
                     except Exception as e:  # fall back to releases
                         logger.warning(f"Failed to parse curated index.json: {e}")
                 # If content not present, fall through to releases
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.info(f"Curated index.json not available or failed: {e}")
+            if isinstance(e, httpx.RequestError) or is_retryable_http_error(e):
+                raise
 
         # Fallback to releases if packs still empty
         if not packs:
@@ -188,13 +203,103 @@ class CommunitySoundPackService:
                     logger.warning("GitHub API rate limit reached while fetching releases.")
                 else:
                     logger.warning(f"Unexpected GitHub API status: {resp.status_code}")
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.error(f"Failed to fetch releases: {e}")
+                if isinstance(e, httpx.RequestError) or is_retryable_http_error(e):
+                    raise
+
+        # Final fallback: scan repository directories for packs (no releases yet)
+        if not packs:
+            try:
+                repo_packs = await self._fetch_repo_directory_packs()
+                packs.extend(repo_packs)
+            except Exception as e:  # noqa: BLE001
+                logger.error(f"Failed to discover packs from repository contents: {e}")
+                if isinstance(e, httpx.RequestError) or is_retryable_http_error(e):
+                    raise
 
         # Cache results
         self._cached_packs = packs
         self._cached_at = now
         return packs
+
+    @async_retry_with_backoff(max_attempts=2, base_delay=1.0, timeout=30.0)
+    async def _fetch_repo_directory_packs(self) -> list[CommunityPack]:
+        """Discover packs from /packs when no curated index or releases exist."""
+        ref = "main"
+        contents_url = f"https://api.github.com/repos/{self.repo_owner}/{self.repo_name}/contents/packs?ref={ref}"
+        resp = await self._http.get(contents_url)
+        if resp.status_code != 200:
+            logger.debug("Repository contents fallback unavailable (status %s)", resp.status_code)
+            return []
+
+        entries: list[dict[str, Any]] = resp.json()  # type: ignore[assignment]
+        packs: list[CommunityPack] = []
+        for entry in entries:
+            if entry.get("type") != "dir":
+                continue
+            dir_name = entry.get("name") or "unknown"
+            repo_path = entry.get("path") or f"packs/{dir_name}"
+            tree_sha = entry.get("sha")
+
+            pack_json_url = (
+                f"https://raw.githubusercontent.com/"
+                f"{self.repo_owner}/{self.repo_name}/{ref}/{repo_path}/pack.json"
+            )
+            try:
+                pack_resp = await self._http.get(pack_json_url)
+                if pack_resp.status_code != 200:
+                    logger.debug("Skipping pack %s: pack.json not found", dir_name)
+                    continue
+                pack_meta = pack_resp.json()
+            except Exception as exc:
+                logger.debug("Skipping pack %s: failed to parse pack.json (%s)", dir_name, exc)
+                continue
+
+            total_size = await self._calculate_tree_size(tree_sha)
+            packs.append(
+                CommunityPack(
+                    name=pack_meta.get("name") or dir_name,
+                    author=pack_meta.get("author", "Unknown"),
+                    description=pack_meta.get("description", ""),
+                    version=str(pack_meta.get("version", "1.0")),
+                    download_url="",  # zip generated on demand
+                    file_size=total_size,
+                    repository_url=(
+                        f"https://github.com/{self.repo_owner}/{self.repo_name}/tree/{ref}/{repo_path}"
+                    ),
+                    release_tag=ref,
+                    download_count=None,
+                    created_date=None,
+                    preview_image_url=pack_meta.get("preview_image_url"),
+                    repo_path=repo_path,
+                    tree_sha=tree_sha,
+                    ref=ref,
+                )
+            )
+        return packs
+
+    @async_retry_with_backoff(max_attempts=2, base_delay=1.0, timeout=15.0)
+    async def _calculate_tree_size(self, tree_sha: str | None) -> int | None:
+        if not tree_sha:
+            return None
+        tree_url = f"https://api.github.com/repos/{self.repo_owner}/{self.repo_name}/git/trees/{tree_sha}?recursive=1"
+        try:
+            resp = await self._http.get(tree_url)
+            if resp.status_code != 200:
+                return None
+            data = resp.json()
+            tree_entries = data.get("tree", [])
+            total = 0
+            for item in tree_entries:
+                if item.get("type") == "blob":
+                    total += int(item.get("size") or 0)
+            return total
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("Failed to calculate tree size for %s: %s", tree_sha, exc)
+            if isinstance(exc, httpx.RequestError) or is_retryable_http_error(exc):
+                raise
+            return None
 
     async def download_pack(
         self,
@@ -203,9 +308,11 @@ class CommunitySoundPackService:
         progress_callback: Callable[[float, int, int], asyncio.Future | bool | None] | None = None,
         max_retries: int = 2,
     ) -> Path:
-        """Download a community pack ZIP to the destination directory.
+        """
+        Download a community pack ZIP to the destination directory.
 
         Args:
+        ----
             pack: CommunityPack to download
             dest_dir: Directory to store the downloaded ZIP
             progress_callback: Optional callback(progress, downloaded_bytes, total_bytes) -> bool | None.
@@ -213,6 +320,7 @@ class CommunitySoundPackService:
             max_retries: Number of simple retries for transient errors
 
         Returns:
+        -------
             Path to the downloaded ZIP file.
 
         """
@@ -228,6 +336,30 @@ class CommunitySoundPackService:
                 i += 1
             final_path = dest_dir / f"{base_name}_{i}.zip"
 
+        if pack.download_url:
+            return await self._download_from_url(
+                pack,
+                final_path,
+                progress_callback=progress_callback,
+                max_retries=max_retries,
+            )
+
+        if pack.repo_path:
+            return await self._download_repo_pack(
+                pack,
+                final_path,
+                progress_callback=progress_callback,
+            )
+
+        raise RuntimeError(f"Pack {pack.name} has no download source")
+
+    async def _download_from_url(
+        self,
+        pack: CommunityPack,
+        final_path: Path,
+        progress_callback: Callable[[float, int, int], asyncio.Future | bool | None] | None,
+        max_retries: int,
+    ) -> Path:
         attempt = 0
         last_exc: Exception | None = None
         while attempt <= max_retries:
@@ -240,8 +372,9 @@ class CommunitySoundPackService:
                     total = int(resp.headers.get("Content-Length", "0") or 0)
                     downloaded = 0
 
+                    parent_dir = str(final_path.parent)
                     with tempfile.NamedTemporaryFile(
-                        delete=False, suffix=".zip", dir=str(dest_dir)
+                        delete=False, suffix=".zip", dir=parent_dir
                     ) as tmp:
                         tmp_path = Path(tmp.name)
                         async for chunk in resp.aiter_bytes(chunk_size=65536):
@@ -283,3 +416,97 @@ class CommunitySoundPackService:
 
         # Exhausted retries
         raise RuntimeError(f"Failed to download {pack.name}: {last_exc}")
+
+    @async_retry_with_backoff(
+        max_attempts=2,
+        base_delay=1.0,
+        timeout=120.0,
+        retryable_exceptions=(RuntimeError,),
+    )
+    async def _download_repo_pack(
+        self,
+        pack: CommunityPack,
+        final_path: Path,
+        progress_callback: Callable[[float, int, int], asyncio.Future | bool | None] | None,
+    ) -> Path:
+        ref = pack.ref or "main"
+        tree_entries = await self._fetch_tree_entries(pack)
+        if not tree_entries:
+            raise RuntimeError(f"No files found for {pack.name}")
+
+        total_bytes = sum(
+            int(item.get("size") or 0) for item in tree_entries if item.get("type") == "blob"
+        )
+        downloaded = 0
+
+        staging_dir = Path(tempfile.mkdtemp(prefix="aw_pack_", dir=str(final_path.parent)))
+        try:
+            for item in tree_entries:
+                if item.get("type") != "blob":
+                    continue
+                rel_path = item.get("path") or ""
+                target_path = staging_dir / rel_path
+                target_path.parent.mkdir(parents=True, exist_ok=True)
+                raw_url = (
+                    f"https://raw.githubusercontent.com/{self.repo_owner}/{self.repo_name}/"
+                    f"{ref}/{pack.repo_path}/{rel_path}"
+                )
+                async with self._http.stream("GET", raw_url) as resp:
+                    if resp.status_code != 200:
+                        raise RuntimeError(
+                            f"Failed to download {rel_path} (status {resp.status_code})"
+                        )
+                    with target_path.open("wb") as f:
+                        async for chunk in resp.aiter_bytes(chunk_size=65536):
+                            if not chunk:
+                                continue
+                            f.write(chunk)
+                            downloaded += len(chunk)
+                            if progress_callback is not None:
+                                pct = (downloaded / total_bytes * 100.0) if total_bytes else 0.0
+                                try:
+                                    res = progress_callback(pct, downloaded, total_bytes)
+                                    if asyncio.iscoroutine(res):
+                                        res = await res  # type: ignore[assignment]
+                                    if res is False:
+                                        raise asyncio.CancelledError(
+                                            "Download cancelled by callback"
+                                        )
+                                except Exception as cb_err:
+                                    logger.debug("Progress callback error ignored: %s", cb_err)
+            # Bundle into zip
+            with zipfile.ZipFile(final_path, "w", compression=zipfile.ZIP_DEFLATED) as zipf:
+                for file_path in staging_dir.rglob("*"):
+                    if file_path.is_file():
+                        zipf.write(file_path, arcname=file_path.relative_to(staging_dir))
+            return final_path
+        except Exception:
+            with contextlib.suppress(Exception):
+                if final_path.exists():
+                    final_path.unlink()
+            raise
+        finally:
+            shutil.rmtree(staging_dir, ignore_errors=True)
+
+    @async_retry_with_backoff(
+        max_attempts=2,
+        base_delay=1.0,
+        timeout=15.0,
+        retryable_exceptions=(RuntimeError,),
+    )
+    async def _fetch_tree_entries(self, pack: CommunityPack) -> list[dict[str, Any]]:
+        tree_sha = pack.tree_sha
+        if not tree_sha:
+            return []
+        tree_url = f"https://api.github.com/repos/{self.repo_owner}/{self.repo_name}/git/trees/{tree_sha}?recursive=1"
+        resp = await self._http.get(tree_url)
+        if resp.status_code != 200:
+            logger.error(
+                "Failed to fetch tree %s for pack %s (status %s)",
+                tree_sha,
+                pack.name,
+                resp.status_code,
+            )
+            raise RuntimeError(f"Tree fetch failed with status {resp.status_code}")
+        data = resp.json()
+        return data.get("tree", []) or []

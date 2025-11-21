@@ -14,9 +14,11 @@ class SoundPackInstaller:
     """Handles installation and management of sound packs."""
 
     def __init__(self, soundpacks_dir: Path):
-        """Initialize the sound pack installer.
+        """
+        Initialize the sound pack installer.
 
         Args:
+        ----
             soundpacks_dir: Directory where sound packs are stored
 
         """
@@ -24,13 +26,16 @@ class SoundPackInstaller:
         self.soundpacks_dir.mkdir(exist_ok=True)
 
     def install_from_zip(self, zip_path: Path, pack_name: str | None = None) -> tuple[bool, str]:
-        """Install a sound pack from a ZIP file.
+        """
+        Install a sound pack from a ZIP file.
 
         Args:
+        ----
             zip_path: Path to the ZIP file containing the sound pack
             pack_name: Optional name for the pack (defaults to ZIP filename)
 
         Returns:
+        -------
             Tuple of (success, message)
 
         """
@@ -85,12 +90,15 @@ class SoundPackInstaller:
                 return False, f"Installation failed: {e}"
 
     def uninstall_pack(self, pack_name: str) -> tuple[bool, str]:
-        """Uninstall a sound pack.
+        """
+        Uninstall a sound pack.
 
         Args:
+        ----
             pack_name: Name of the pack to uninstall
 
         Returns:
+        -------
             Tuple of (success, message)
 
         """
@@ -109,13 +117,16 @@ class SoundPackInstaller:
             return False, f"Uninstallation failed: {e}"
 
     def export_pack(self, pack_name: str, output_path: Path) -> tuple[bool, str]:
-        """Export a sound pack to a ZIP file.
+        """
+        Export a sound pack to a ZIP file.
 
         Args:
+        ----
             pack_name: Name of the pack to export
             output_path: Path where the ZIP file should be created
 
         Returns:
+        -------
             Tuple of (success, message)
 
         """
@@ -137,9 +148,11 @@ class SoundPackInstaller:
             return False, f"Export failed: {e}"
 
     def list_installed_packs(self) -> list[dict[str, str]]:
-        """List all installed sound packs.
+        """
+        List all installed sound packs.
 
-        Returns:
+        Returns
+        -------
             List of pack information dictionaries
 
         """
@@ -176,12 +189,15 @@ class SoundPackInstaller:
         return sorted(packs, key=lambda x: x["name"])
 
     def _validate_extracted_pack(self, pack_dir: Path) -> tuple[bool, str]:
-        """Validate an extracted sound pack directory.
+        """
+        Validate an extracted sound pack directory.
 
         Args:
+        ----
             pack_dir: Path to the extracted pack directory
 
         Returns:
+        -------
             Tuple of (is_valid, error_message)
 
         """
@@ -220,13 +236,16 @@ class SoundPackInstaller:
             return False, f"Error validating sound pack: {e}"
 
     def create_pack_template(self, pack_name: str, pack_info: dict[str, str]) -> tuple[bool, str]:
-        """Create a new sound pack template.
+        """
+        Create a new sound pack template.
 
         Args:
+        ----
             pack_name: Directory name for the pack
             pack_info: Pack metadata (name, author, description, etc.)
 
         Returns:
+        -------
             Tuple of (success, message)
 
         """
@@ -248,6 +267,8 @@ class SoundPackInstaller:
                     "notify": "notify.wav",
                     "error": "error.wav",
                     "success": "success.wav",
+                    "startup": "startup.wav",
+                    "exit": "exit.wav",
                 },
             }
 

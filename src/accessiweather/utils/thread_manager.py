@@ -1,4 +1,5 @@
-"""Thread manager for AccessiWeather.
+"""
+Thread manager for AccessiWeather.
 
 This module provides a centralized thread manager that tracks and manages
 all background threads in the application.
@@ -13,13 +14,15 @@ logger = logging.getLogger(__name__)
 
 
 class ThreadManager:
-    """Thread manager singleton for AccessiWeather.
+    """
+    Thread manager singleton for AccessiWeather.
 
     This class provides methods for tracking and managing threads in the
     application, making it easier to ensure all threads are properly
     cleaned up when the application exits.
 
-    Attributes:
+    Attributes
+    ----------
         _instance: Class variable to store the singleton instance
         _instance_lock: Class lock to ensure thread-safe singleton creation
 
@@ -30,9 +33,11 @@ class ThreadManager:
 
     @classmethod
     def instance(cls) -> "ThreadManager":
-        """Get the singleton instance of ThreadManager.
+        """
+        Get the singleton instance of ThreadManager.
 
-        Returns:
+        Returns
+        -------
             The singleton ThreadManager instance
 
         """
@@ -42,9 +47,11 @@ class ThreadManager:
             return cls._instance
 
     def __init__(self):
-        """Initialize the thread manager.
+        """
+        Initialize the thread manager.
 
         Note:
+        ----
             This should not be called directly. Use ThreadManager.instance() instead.
 
         """
@@ -54,14 +61,17 @@ class ThreadManager:
         logger.debug("ThreadManager initialized")
 
     def register_thread(self, thread, stop_event=None, name=None):
-        """Register a thread with the manager.
+        """
+        Register a thread with the manager.
 
         Args:
+        ----
             thread: The thread to register
             stop_event: An event that can be set to stop the thread (optional)
             name: A name for the thread (optional)
 
         Returns:
+        -------
             The registered thread
 
         """
@@ -90,9 +100,11 @@ class ThreadManager:
         return thread
 
     def unregister_thread(self, thread_id):
-        """Unregister a thread using its ID.
+        """
+        Unregister a thread using its ID.
 
         Args:
+        ----
             thread_id: The identifier of the thread to unregister.
 
         """
@@ -117,9 +129,11 @@ class ThreadManager:
                 )
 
     def get_threads(self):
-        """Get all registered threads.
+        """
+        Get all registered threads.
 
-        Returns:
+        Returns
+        -------
             List of registered threads
 
         """
@@ -127,9 +141,11 @@ class ThreadManager:
             return [thread["thread"] for thread in self._threads.values()]
 
     def get_stop_events(self):
-        """Get all registered stop events.
+        """
+        Get all registered stop events.
 
-        Returns:
+        Returns
+        -------
             List of registered stop events
 
         """
@@ -137,13 +153,16 @@ class ThreadManager:
             return list(self._stop_events.values())
 
     def stop_all_threads(self, timeout=3.0):
-        """Signal all registered threads to stop and attempt to join them.
+        """
+        Signal all registered threads to stop and attempt to join them.
 
         Args:
+        ----
             timeout (float): Maximum time in seconds to wait for all threads to join.
                 Default is 3.0 seconds for a balance of responsiveness and thoroughness.
 
         Returns:
+        -------
             list: Names of threads that did not stop cleanly within the timeout.
 
         """
@@ -257,12 +276,15 @@ class ThreadManager:
         return remaining_threads
 
     def is_thread_running(self, thread_id):
-        """Check if a thread is running.
+        """
+        Check if a thread is running.
 
         Args:
+        ----
             thread_id: The ID of the thread to check
 
         Returns:
+        -------
             True if the thread is running, False otherwise
 
         """
@@ -273,9 +295,11 @@ class ThreadManager:
             return False
 
     def get_active_threads(self):
-        """Get a list of all active threads.
+        """
+        Get a list of all active threads.
 
-        Returns:
+        Returns
+        -------
             A list of thread objects that are currently active
 
         """
@@ -288,9 +312,11 @@ class ThreadManager:
         return active_threads
 
     def get_active_thread_info(self):
-        """Get detailed information about all active threads.
+        """
+        Get detailed information about all active threads.
 
-        Returns:
+        Returns
+        -------
             A list of dictionaries containing thread information
 
         """
@@ -330,9 +356,11 @@ class ThreadManager:
 
 
 def get_thread_manager():
-    """Get the global thread manager instance.
+    """
+    Get the global thread manager instance.
 
-    Returns:
+    Returns
+    -------
         The global thread manager instance
 
     """
@@ -340,14 +368,17 @@ def get_thread_manager():
 
 
 def register_thread(thread, stop_event=None, name=None):
-    """Register a thread with the global thread manager.
+    """
+    Register a thread with the global thread manager.
 
     Args:
+    ----
         thread: The thread to register
         stop_event: An event that can be set to stop the thread (optional)
         name: A name for the thread (optional)
 
     Returns:
+    -------
         The registered thread
 
     """
@@ -355,9 +386,11 @@ def register_thread(thread, stop_event=None, name=None):
 
 
 def unregister_thread(thread_id):
-    """Unregister a thread from the global thread manager.
+    """
+    Unregister a thread from the global thread manager.
 
     Args:
+    ----
         thread_id: The identifier of the thread to unregister.
 
     """
@@ -365,12 +398,15 @@ def unregister_thread(thread_id):
 
 
 def stop_all_threads(timeout=3.0):
-    """Stop all registered threads.
+    """
+    Stop all registered threads.
 
     Args:
+    ----
         timeout: Timeout for joining threads in seconds (default: 3.0)
 
     Returns:
+    -------
         List of threads that could not be joined
 
     """

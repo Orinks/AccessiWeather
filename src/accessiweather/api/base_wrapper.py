@@ -1,4 +1,5 @@
-"""Base API wrapper for AccessiWeather.
+"""
+Base API wrapper for AccessiWeather.
 
 This module provides the BaseApiWrapper abstract class that contains shared
 functionality for all weather API providers, including caching, rate limiting,
@@ -22,7 +23,8 @@ logger = logging.getLogger(__name__)
 
 
 class BaseApiWrapper(ABC):
-    """Abstract base class for weather API wrappers.
+    """
+    Abstract base class for weather API wrappers.
 
     Provides common functionality including:
     - Rate limiting
@@ -43,9 +45,11 @@ class BaseApiWrapper(ABC):
         retry_backoff: float = 2.0,
         retry_initial_wait: float = 5.0,
     ):
-        """Initialize the base API wrapper.
+        """
+        Initialize the base API wrapper.
 
         Args:
+        ----
             user_agent: User agent string for API requests
             contact_info: Optional contact information for API identification
             enable_caching: Whether to enable caching of API responses

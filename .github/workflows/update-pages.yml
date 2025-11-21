@@ -8,39 +8,21 @@ name: Update GitHub Pages
 # IMPORTANT: This workflow runs AFTER the build workflow completes, not on direct pushes.
 # This prevents duplicate runs and ensures build artifacts are available when updating pages.
 
-# TEMPORARILY DISABLED FOR TESTING
-# on:
-#   # Trigger when build workflow completes successfully on main or dev branches
-#   workflow_run:
-#     workflows: ["Build and Package"]
-#     types:
-#       - completed
-#     branches: [main, dev]
-#   # Trigger when releases are published/edited
-#   release:
-#     types:
-#       - published
-#       - edited
-#   # Manual trigger
-#   workflow_dispatch:
-#     inputs:
-#       force_update:
-#         description: 'Force update pages'
-#         required: false
-#         type: boolean
-#         default: false
-#       target_branch:
-#         description: 'Target branch for build info (main/dev/both)'
-#         required: false
-#         type: choice
-#         options:
-#           - both
-#           - main
-#           - dev
-#         default: both
-
-# Temporary manual-only trigger for testing
 on:
+  push:
+    branches: [main]
+  # Trigger when build workflow completes successfully on main or dev branches
+  workflow_run:
+    workflows: ["Build and Package with Briefcase"]
+    types:
+      - completed
+    branches: [main, dev]
+  # Trigger when releases are published/edited
+  release:
+    types:
+      - published
+      - edited
+  # Manual trigger
   workflow_dispatch:
     inputs:
       force_update:
@@ -73,7 +55,7 @@ jobs:
   update-build-info:
     name: Update Build Information
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'release' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'release' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
 
     steps:
     - name: Determine target branch
@@ -91,6 +73,9 @@ jobs:
           # For manual triggers, use the current branch
           TARGET_BRANCH="${{ github.ref_name }}"
           echo "Using current branch from manual trigger: $TARGET_BRANCH"
+        elif [ "${{ github.event_name }}" = "push" ]; then
+          TARGET_BRANCH="${{ github.ref_name }}"
+          echo "Using push branch: $TARGET_BRANCH"
         else
           # Fallback to current branch
           TARGET_BRANCH="${{ github.ref_name }}"
@@ -101,14 +86,14 @@ jobs:
         echo "Final target branch: $TARGET_BRANCH"
 
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         ref: ${{ steps.target-branch.outputs.target_branch }}
         token: ${{ github.token }}
         fetch-depth: 0
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: "3.12"
 
@@ -187,13 +172,66 @@ jobs:
           fi
         }
 
+        # Function to get latest pre-release info for the dev branch
+        get_pre_release_info() {
+          echo "Fetching latest pre-release info for dev branch..." >&2
+
+          local releases=$(curl -s -H "Authorization: token ${{ github.token }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases?per_page=10")
+
+          local release_base64=$(echo "$releases" | jq -r 'map(select(.prerelease == true and (.draft | not))) | first? | @base64')
+
+          if [ -z "$release_base64" ] || [ "$release_base64" = "null" ]; then
+            echo "⚠ No published pre-releases found for dev branch" >&2
+            return 1
+          fi
+
+          local release_json=$(echo "$release_base64" | base64 --decode)
+          local tag_name=$(echo "$release_json" | jq -r '.tag_name // empty')
+          local published_at=$(echo "$release_json" | jq -r '.published_at // empty')
+          local target_commitish=$(echo "$release_json" | jq -r '.target_commitish // empty')
+          local release_url=$(echo "$release_json" | jq -r '.html_url // empty')
+
+          local version=$(echo "$tag_name" | sed 's/^v//')
+          [ -z "$version" ] && version="pre-release"
+
+          local formatted_date=$(date -d "$published_at" "+%Y-%m-%d %H:%M UTC" 2>/dev/null || echo "$published_at")
+
+          local installer_url=$(echo "$release_json" | jq -r '
+            [
+              .assets[]?
+              | select((.name // "" | ascii_downcase) | contains("installer"))
+              | .browser_download_url
+            ][0] // empty
+          ')
+
+          local portable_url=$(echo "$release_json" | jq -r '
+            [
+              .assets[]?
+              | select((.name // "" | ascii_downcase) | contains("portable"))
+              | .browser_download_url
+            ][0] // empty
+          ')
+
+          echo "dev_version=${version}"
+          echo "dev_date=${formatted_date}"
+          echo "dev_commit=${target_commitish}"
+          echo "dev_release_url=${release_url}"
+          echo "dev_installer_url=${installer_url}"
+          echo "dev_portable_url=${portable_url}"
+          echo "dev_tag=${tag_name}"
+
+          echo "✓ Found pre-release: tag=$tag_name, version=$version" >&2
+          return 0
+        }
+
         # Function to get latest successful run info for dev branch
         get_build_info() {
           local branch=$1
           echo "Fetching build info for branch: $branch" >&2
 
           local run_info=$(curl -s -H "Authorization: token ${{ github.token }}" \
-            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/build.yml/runs?branch=${branch}&status=success&per_page=1")
+            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/briefcase-build.yml/runs?branch=${branch}&status=success&per_page=1")
 
           local run_id=$(echo "$run_info" | jq -r '.workflow_runs[0].id // empty')
           local run_date=$(echo "$run_info" | jq -r '.workflow_runs[0].created_at // empty')
@@ -235,6 +273,11 @@ jobs:
           if [ "$branch" = "main" ]; then
             # For main branch, get release info from GitHub releases
             get_release_info >> $GITHUB_OUTPUT
+          elif [ "$branch" = "dev" ]; then
+            if ! get_pre_release_info >> $GITHUB_OUTPUT; then
+              echo "Falling back to latest successful workflow run for dev" >&2
+              get_build_info "$branch" >> $GITHUB_OUTPUT
+            fi
           else
             # For other branches (dev, workflow-testing), get build info from workflow runs
             get_build_info "$branch" >> $GITHUB_OUTPUT
@@ -317,18 +360,21 @@ jobs:
         DEV_VERSION="${{ steps.build-info.outputs.dev_version }}"
         DEV_DATE="${{ steps.build-info.outputs.dev_date }}"
         DEV_COMMIT="${{ steps.build-info.outputs.dev_commit }}"
+        DEV_RELEASE_URL="${{ steps.build-info.outputs.dev_release_url }}"
+        DEV_INSTALLER_URL="${{ steps.build-info.outputs.dev_installer_url }}"
+        DEV_PORTABLE_URL="${{ steps.build-info.outputs.dev_portable_url }}"
 
         # If dev branch info is not available, fall back to target branch or generic values
         if [ -z "$DEV_VERSION" ] || [ "$DEV_VERSION" = "No builds available" ]; then
           case "$TARGET_BRANCH" in
             "main")
               DEV_VERSION="Development (latest)"
-              DEV_DATE="Check nightly.link"
+              DEV_DATE="Check pre-release page"
               DEV_COMMIT=""
               ;;
             *)
               DEV_VERSION="Development ($TARGET_BRANCH)"
-              DEV_DATE="Check nightly.link"
+              DEV_DATE="Check pre-release page"
               DEV_COMMIT=""
               ;;
           esac
@@ -339,28 +385,38 @@ jobs:
         [ -z "$MAIN_DATE" ] && MAIN_DATE="Check GitHub"
         [ -z "$MAIN_COMMIT" ] && MAIN_COMMIT=""
         [ -z "$DEV_VERSION" ] && DEV_VERSION="Development ($TARGET_BRANCH)"
-        [ -z "$DEV_DATE" ] && DEV_DATE="Check nightly.link"
+        [ -z "$DEV_DATE" ] && DEV_DATE="Check pre-release page"
         [ -z "$DEV_COMMIT" ] && DEV_COMMIT=""
+        [ -z "$DEV_RELEASE_URL" ] && DEV_RELEASE_URL="https://github.com/Orinks/AccessiWeather/releases"
+        [ -z "$DEV_INSTALLER_URL" ] && DEV_INSTALLER_URL="$DEV_RELEASE_URL"
+        [ -z "$DEV_PORTABLE_URL" ] && DEV_PORTABLE_URL="$DEV_RELEASE_URL"
 
         # Escape special characters for sed (but preserve HTML in release notes)
-        MAIN_VERSION=$(echo "$MAIN_VERSION" | sed 's/[[\.*^$()+?{|]/\\&/g')
-        MAIN_DATE=$(echo "$MAIN_DATE" | sed 's/[[\.*^$()+?{|]/\\&/g')
-        MAIN_COMMIT=$(echo "$MAIN_COMMIT" | sed 's/[[\.*^$()+?{|]/\\&/g')
-        DEV_VERSION=$(echo "$DEV_VERSION" | sed 's/[[\.*^$()+?{|]/\\&/g')
-        DEV_DATE=$(echo "$DEV_DATE" | sed 's/[[\.*^$()+?{|]/\\&/g')
-        DEV_COMMIT=$(echo "$DEV_COMMIT" | sed 's/[[\.*^$()+?{|]/\\&/g')
-        LAST_UPDATED_ESCAPED=$(echo "$LAST_UPDATED" | sed 's/[[\.*^$()+?{|]/\\&/g')
-
-
+        escape_for_sed() {
+          printf '%s' "$1" | sed 's/[&@\\]/\\&/g'
+        }
+        MAIN_VERSION=$(escape_for_sed "$MAIN_VERSION")
+        MAIN_DATE=$(escape_for_sed "$MAIN_DATE")
+        MAIN_COMMIT=$(escape_for_sed "$MAIN_COMMIT")
+        DEV_VERSION=$(escape_for_sed "$DEV_VERSION")
+        DEV_DATE=$(escape_for_sed "$DEV_DATE")
+        DEV_COMMIT=$(escape_for_sed "$DEV_COMMIT")
+        DEV_RELEASE_URL_ESC=$(escape_for_sed "$DEV_RELEASE_URL")
+        DEV_INSTALLER_URL_ESC=$(escape_for_sed "$DEV_INSTALLER_URL")
+        DEV_PORTABLE_URL_ESC=$(escape_for_sed "$DEV_PORTABLE_URL")
+        LAST_UPDATED_ESCAPED=$(escape_for_sed "$LAST_UPDATED")
 
         # Substitute template variables with actual values
-        sed -i "s/{{MAIN_VERSION}}/$MAIN_VERSION/g" index.html
-        sed -i "s/{{MAIN_DATE}}/$MAIN_DATE/g" index.html
-        sed -i "s/{{MAIN_COMMIT}}/$MAIN_COMMIT/g" index.html
-        sed -i "s/{{DEV_VERSION}}/$DEV_VERSION/g" index.html
-        sed -i "s/{{DEV_DATE}}/$DEV_DATE/g" index.html
-        sed -i "s/{{DEV_COMMIT}}/$DEV_COMMIT/g" index.html
-        sed -i "s/{{LAST_UPDATED}}/$LAST_UPDATED_ESCAPED/g" index.html
+        sed -i "s@{{MAIN_VERSION}}@$MAIN_VERSION@g" index.html
+        sed -i "s@{{MAIN_DATE}}@$MAIN_DATE@g" index.html
+        sed -i "s@{{MAIN_COMMIT}}@$MAIN_COMMIT@g" index.html
+        sed -i "s@{{DEV_VERSION}}@$DEV_VERSION@g" index.html
+        sed -i "s@{{DEV_DATE}}@$DEV_DATE@g" index.html
+        sed -i "s@{{DEV_COMMIT}}@$DEV_COMMIT@g" index.html
+        sed -i "s@{{DEV_RELEASE_URL}}@$DEV_RELEASE_URL_ESC@g" index.html
+        sed -i "s@{{DEV_INSTALLER_URL}}@$DEV_INSTALLER_URL_ESC@g" index.html
+        sed -i "s@{{DEV_PORTABLE_URL}}@$DEV_PORTABLE_URL_ESC@g" index.html
+        sed -i "s@{{LAST_UPDATED}}@$LAST_UPDATED_ESCAPED@g" index.html
 
         # Substitute release notes and commits using a more robust method
         # Create temporary files to handle multiline content safely
@@ -418,7 +474,7 @@ jobs:
           echo "✓ Release notes section found"
         fi
 
-    - name: Create nightly.link URLs documentation
+    - name: Create download links documentation
       run: |
         # Get build info with fallbacks
         TARGET_BRANCH="${{ steps.target-branch.outputs.target_branch }}"
@@ -426,11 +482,17 @@ jobs:
         MAIN_DATE="${{ steps.build-info.outputs.main_date }}"
         DEV_VERSION="${{ steps.build-info.outputs.dev_version }}"
         DEV_DATE="${{ steps.build-info.outputs.dev_date }}"
+        DEV_RELEASE_URL="${{ steps.build-info.outputs.dev_release_url }}"
+        DEV_INSTALLER_URL="${{ steps.build-info.outputs.dev_installer_url }}"
+        DEV_PORTABLE_URL="${{ steps.build-info.outputs.dev_portable_url }}"
 
         [ -z "$MAIN_VERSION" ] && MAIN_VERSION="latest"
         [ -z "$MAIN_DATE" ] && MAIN_DATE="Check GitHub"
-        [ -z "$DEV_VERSION" ] && DEV_VERSION="latest"
-        [ -z "$DEV_DATE" ] && DEV_DATE="Check nightly.link"
+        [ -z "$DEV_VERSION" ] && DEV_VERSION="pre-release"
+        [ -z "$DEV_DATE" ] && DEV_DATE="Check pre-release page"
+        [ -z "$DEV_RELEASE_URL" ] && DEV_RELEASE_URL="https://github.com/Orinks/AccessiWeather/releases"
+        [ -z "$DEV_INSTALLER_URL" ] && DEV_INSTALLER_URL="$DEV_RELEASE_URL"
+        [ -z "$DEV_PORTABLE_URL" ] && DEV_PORTABLE_URL="$DEV_RELEASE_URL"
 
         # Always use dev branch for development URLs since we always fetch dev info
         DEV_BRANCH_NAME="dev"
@@ -441,14 +503,15 @@ jobs:
         ## Stable Release (Main Branch)
 
         ### Direct Downloads:
-        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-installer-${MAIN_VERSION}.zip
-        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main/windows-portable-${MAIN_VERSION}.zip
+        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/briefcase-build/main/windows-installer-${MAIN_VERSION}.zip
+        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/briefcase-build/main/windows-portable-${MAIN_VERSION}.zip
 
         ## Development Release (${DEV_BRANCH_NAME^} Branch)
 
-        ### Direct Downloads:
-        - **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/${DEV_BRANCH_NAME}/windows-installer-${DEV_VERSION}.zip
-        - **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/${DEV_BRANCH_NAME}/windows-portable-${DEV_VERSION}.zip
+        ### Latest Pre-release:
+        - **Release Page**: ${DEV_RELEASE_URL}
+        - **Installer**: ${DEV_INSTALLER_URL}
+        - **Portable**: ${DEV_PORTABLE_URL}
 
         ## How to Use
 
@@ -463,8 +526,8 @@ jobs:
 
         - **Main Version**: ${MAIN_VERSION}
         - **Main Build Date**: ${MAIN_DATE}
-        - **${DEV_BRANCH_NAME^} Version**: ${DEV_VERSION}
-        - **${DEV_BRANCH_NAME^} Build Date**: ${DEV_DATE}
+        - **${DEV_BRANCH_NAME^} Pre-release**: ${DEV_VERSION}
+        - **${DEV_BRANCH_NAME^} Release Date**: ${DEV_DATE}
         - **Last Updated**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
 
         EOF
@@ -515,7 +578,7 @@ jobs:
         echo "📋 File validation complete"
 
     - name: Upload Pages artifact
-      uses: actions/upload-pages-artifact@v3
+      uses: actions/upload-pages-artifact@v4
       with:
         path: ./
 

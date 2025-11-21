@@ -37,10 +37,15 @@ def test_get_current_weather_success(openmeteo_client):
                     "wind_direction_10m",
                     "wind_gusts_10m",
                 ],
+                "daily": [
+                    "sunrise",
+                    "sunset",
+                ],
                 "temperature_unit": "fahrenheit",
                 "wind_speed_unit": "mph",
                 "precipitation_unit": "inch",
                 "timezone": "auto",
+                "forecast_days": 1,
             },
         )
 

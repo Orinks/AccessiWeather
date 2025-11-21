@@ -1,4 +1,5 @@
-"""Open-Meteo API client for AccessiWeather.
+"""
+Open-Meteo API client for AccessiWeather.
 
 This module provides a client for the Open-Meteo weather API, which offers
 free weather data without requiring an API key.
@@ -14,6 +15,8 @@ import time
 from typing import Any
 
 import httpx
+
+from .weather_client_parsers import weather_code_to_description
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +34,8 @@ class OpenMeteoNetworkError(OpenMeteoError):
 
 
 class OpenMeteoApiClient:
-    """Client for the Open-Meteo weather API.
+    """
+    Client for the Open-Meteo weather API.
 
     Open-Meteo provides free weather data without requiring an API key.
     It supports current conditions, hourly forecasts, and daily forecasts.
@@ -46,9 +50,11 @@ class OpenMeteoApiClient:
         max_retries: int = 3,
         retry_delay: float = 1.0,
     ):
-        """Initialize the Open-Meteo API client.
+        """
+        Initialize the Open-Meteo API client.
 
         Args:
+        ----
             user_agent: User agent string for API requests
             timeout: Request timeout in seconds
             max_retries: Maximum number of retries for failed requests
@@ -73,16 +79,20 @@ class OpenMeteoApiClient:
             self.client.close()
 
     def _make_request(self, endpoint: str, params: dict[str, Any]) -> dict[str, Any]:
-        """Make a request to the Open-Meteo API.
+        """
+        Make a request to the Open-Meteo API.
 
         Args:
+        ----
             endpoint: API endpoint (e.g., "forecast")
             params: Query parameters
 
         Returns:
+        -------
             JSON response as a dictionary
 
         Raises:
+        ------
             OpenMeteoApiError: If the API returns an error
             OpenMeteoNetworkError: If there's a network error
 
@@ -149,9 +159,11 @@ class OpenMeteoApiClient:
         wind_speed_unit: str = "mph",
         precipitation_unit: str = "inch",
     ) -> dict[str, Any]:
-        """Get current weather conditions for a location.
+        """
+        Get current weather conditions for a location.
 
         Args:
+        ----
             latitude: Latitude of the location
             longitude: Longitude of the location
             temperature_unit: Temperature unit ("celsius" or "fahrenheit")
@@ -159,6 +171,7 @@ class OpenMeteoApiClient:
             precipitation_unit: Precipitation unit ("mm" or "inch")
 
         Returns:
+        -------
             Dictionary containing current weather data
 
         """
@@ -179,10 +192,15 @@ class OpenMeteoApiClient:
                 "wind_direction_10m",
                 "wind_gusts_10m",
             ],
+            "daily": [
+                "sunrise",
+                "sunset",
+            ],
             "temperature_unit": temperature_unit,
             "wind_speed_unit": wind_speed_unit,
             "precipitation_unit": precipitation_unit,
             "timezone": "auto",
+            "forecast_days": 1,
         }
 
         return self._make_request("forecast", params)
@@ -196,9 +214,11 @@ class OpenMeteoApiClient:
         wind_speed_unit: str = "mph",
         precipitation_unit: str = "inch",
     ) -> dict[str, Any]:
-        """Get daily forecast for a location.
+        """
+        Get daily forecast for a location.
 
         Args:
+        ----
             latitude: Latitude of the location
             longitude: Longitude of the location
             days: Number of forecast days (1-16)
@@ -207,6 +227,7 @@ class OpenMeteoApiClient:
             precipitation_unit: Precipitation unit ("mm" or "inch")
 
         Returns:
+        -------
             Dictionary containing daily forecast data
 
         """
@@ -245,9 +266,11 @@ class OpenMeteoApiClient:
         wind_speed_unit: str = "mph",
         precipitation_unit: str = "inch",
     ) -> dict[str, Any]:
-        """Get hourly forecast for a location.
+        """
+        Get hourly forecast for a location.
 
         Args:
+        ----
             latitude: Latitude of the location
             longitude: Longitude of the location
             hours: Number of forecast hours (max 384 = 16 days)
@@ -256,6 +279,7 @@ class OpenMeteoApiClient:
             precipitation_unit: Precipitation unit ("mm" or "inch")
 
         Returns:
+        -------
             Dictionary containing hourly forecast data
 
         """
@@ -287,48 +311,28 @@ class OpenMeteoApiClient:
         return self._make_request("forecast", params)
 
     @staticmethod
-    def get_weather_description(weather_code: int) -> str:
-        """Get weather description from Open-Meteo weather code.
+    def get_weather_description(weather_code: int | str) -> str:
+        """
+        Get weather description from Open-Meteo weather code.
 
         Args:
+        ----
             weather_code: Open-Meteo weather code
 
         Returns:
+        -------
             Human-readable weather description
 
         """
-        weather_codes = {
-            0: "Clear sky",
-            1: "Mainly clear",
-            2: "Partly cloudy",
-            3: "Overcast",
-            45: "Fog",
-            48: "Depositing rime fog",
-            51: "Light drizzle",
-            53: "Moderate drizzle",
-            55: "Dense drizzle",
-            56: "Light freezing drizzle",
-            57: "Dense freezing drizzle",
-            61: "Slight rain",
-            63: "Moderate rain",
-            65: "Heavy rain",
-            66: "Light freezing rain",
-            67: "Heavy freezing rain",
-            71: "Slight snow fall",
-            73: "Moderate snow fall",
-            75: "Heavy snow fall",
-            77: "Snow grains",
-            80: "Slight rain showers",
-            81: "Moderate rain showers",
-            82: "Violent rain showers",
-            85: "Slight snow showers",
-            86: "Heavy snow showers",
-            95: "Thunderstorm",
-            96: "Thunderstorm with slight hail",
-            99: "Thunderstorm with heavy hail",
-        }
+        description = weather_code_to_description(weather_code)
+        if description is None:
+            return "Unknown weather code: None"
 
-        return weather_codes.get(weather_code, f"Unknown weather code: {weather_code}")
+        if description.startswith("Weather code "):
+            suffix = description.split("Weather code ", 1)[1]
+            return f"Unknown weather code: {suffix}"
+
+        return description
 
     def close(self):
         """Close the HTTP client."""
