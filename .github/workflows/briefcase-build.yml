@@ -26,7 +26,7 @@ permissions:
 env:
   # Build configuration
   PYTHON_VERSION: "3.12"
-  FORCE_COLOR: "1"
+  FORCE_COLOR: "0"
 
 # Cancel active builds for a PR before starting another run
 concurrency:
