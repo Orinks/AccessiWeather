@@ -30,23 +30,8 @@ class _SafeEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
 
 
 def _ensure_asyncio_loop():
-<<<<<<< HEAD
-    """Ensure an asyncio event loop exists for the current thread."""
-    with contextlib.suppress(RuntimeError):
-        # Suppress warnings about unclosed event loops and deprecated APIs
-        policy = asyncio.get_event_loop_policy()
-        if os.environ.get("TOGA_BACKEND") == "toga_dummy" and not isinstance(
-            policy, _SafeEventLoopPolicy
-        ):
-            asyncio.set_event_loop_policy(_SafeEventLoopPolicy())
-            policy = asyncio.get_event_loop_policy()
-        try:
-            policy.get_event_loop()
-        except RuntimeError:
-            loop = policy.new_event_loop()
-            policy.set_event_loop(loop)
-=======
-    """Ensure asyncio event loop policy is set for the current thread.
+    """
+    Ensure asyncio event loop policy is set for the current thread.
 
     Only configures the policy for testing; does not create event loops.
     Toga manages the event loop during normal app execution.
@@ -58,7 +43,6 @@ def _ensure_asyncio_loop():
                 asyncio.set_event_loop_policy(_SafeEventLoopPolicy())
         except Exception:
             pass  # Ignore errors - Toga will handle event loop setup
->>>>>>> 96a00b0e630bd275f0c687d5ddbd8f6b25857045
 
 
 _ensure_asyncio_loop()
