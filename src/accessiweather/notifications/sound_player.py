@@ -6,9 +6,12 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from playsound import playsound
+    from playsound3 import playsound
 except ImportError:
-    playsound = None
+    try:
+        from playsound import playsound
+    except ImportError:
+        playsound = None
 
 # Windows-specific sound playing
 winsound = None
