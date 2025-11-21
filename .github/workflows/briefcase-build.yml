@@ -26,7 +26,8 @@ permissions:
 env:
   # Build configuration
   PYTHON_VERSION: "3.12"
-  FORCE_COLOR: "1"
+  FORCE_COLOR: "0"
+  PYTHONUTF8: "1"
 
 # Cancel active builds for a PR before starting another run
 concurrency:
@@ -39,8 +40,19 @@ defaults:
 
 jobs:
   build:
-    name: Build Windows Application with Briefcase
-    runs-on: windows-latest
+    name: Build ${{ matrix.platform }} Application
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+            installer_pattern: "*.msi"
+          - os: macos-latest
+            platform: macOS
+            installer_pattern: "*.dmg"
+
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
 
     outputs:
@@ -60,7 +72,7 @@ jobs:
     - name: Cache pip dependencies
       uses: actions/cache@v4
       with:
-        path: ~\AppData\Local\pip\Cache
+        path: ~/.cache/pip
         key: ${{ runner.os }}-build-pip-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml') }}
         restore-keys: |
           ${{ runner.os }}-build-pip-
@@ -85,6 +97,7 @@ jobs:
 
     - name: Extract version
       id: version
+      shell: bash
       run: |
         if [ -n "${{ github.event.inputs.version_override }}" ]; then
           VERSION="${{ github.event.inputs.version_override }}"
@@ -98,21 +111,26 @@ jobs:
         echo "Building version: $VERSION"
 
     - name: Update version in pyproject.toml
+      shell: bash
       run: |
         VERSION="${{ steps.version.outputs.version }}"
 
         # Update project version using sed (more reliable in CI)
-        sed -i "s/version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml
-
-        # Update briefcase version
-        sed -i "/\[tool\.briefcase\]/,/\[/ s/version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml
+        # Mac sed requires a backup extension (even if empty string)
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s/version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml
+            sed -i '' "/\[tool\.briefcase\]/,/\[/ s/version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml
+        else
+            sed -i "s/version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml
+            sed -i "/\[tool\.briefcase\]/,/\[/ s/version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml
+        fi
 
         echo "Updated version to: $VERSION"
 
     - name: Create Briefcase app scaffold
       run: |
         echo "Creating Briefcase app scaffold..."
-        python installer/make.py create --platform windows
+        python installer/make.py create --platform ${{ matrix.platform }}
       env:
         DISPLAY: ""
         ACCESSIWEATHER_TEST_MODE: "1"
@@ -120,12 +138,13 @@ jobs:
     - name: Build Briefcase app
       run: |
         echo "Building Briefcase app..."
-        python installer/make.py build --platform windows
+        python installer/make.py build --platform ${{ matrix.platform }}
       env:
         DISPLAY: ""
         ACCESSIWEATHER_TEST_MODE: "1"
 
-    - name: Create portable ZIP version (even if build fails)
+    - name: Create portable ZIP version (Windows only)
+      if: matrix.platform == 'windows'
       run: |
         echo "Creating portable ZIP version..."
         python installer/make.py zip --platform windows || true
@@ -133,50 +152,66 @@ jobs:
         DISPLAY: ""
         ACCESSIWEATHER_TEST_MODE: "1"
 
-    - name: Package Briefcase app (MSI Installer)
+    - name: Package Briefcase app
       run: |
-        echo "Packaging Briefcase app as MSI installer..."
-        python installer/make.py package --platform windows
+        echo "Packaging Briefcase app..."
+        python installer/make.py package --platform ${{ matrix.platform }}
       env:
         DISPLAY: ""
         ACCESSIWEATHER_TEST_MODE: "1"
 
 
     - name: Verify build outputs and generate checksums
+      shell: bash
       run: |
         VERSION="${{ steps.version.outputs.version }}"
         echo "Verifying build outputs for version: $VERSION"
 
-        # Check for MSI installer
-        MSI_PATH=$(find dist -name "*.msi" | head -1)
-        ZIP_PATH="dist/AccessiWeather_Portable_v$VERSION.zip"
+        # Check for installer
+        INSTALLER_PATH=$(find dist -name "${{ matrix.installer_pattern }}" | head -1)
+
+        if [ "${{ matrix.platform }}" == "windows" ]; then
+            ZIP_PATH="dist/AccessiWeather_Portable_v$VERSION.zip"
+        fi
 
         BUILD_SUCCESS=true
 
-        # Verify MSI installer
-        if [ -n "$MSI_PATH" ] && [ -f "$MSI_PATH" ]; then
-          MSI_SIZE=$(powershell -Command "(Get-Item '$MSI_PATH').Length")
-          MSI_SIZE_MB=$(powershell -Command "('{0:N2}' -f ((Get-Item '$MSI_PATH').Length / 1MB))")
-          MSI_HASH=$(powershell -Command "(Get-FileHash '$MSI_PATH' -Algorithm SHA256).Hash")
-          echo "✓ MSI Installer: $MSI_PATH ($MSI_SIZE_MB MB)"
-          echo "  SHA256: ${MSI_HASH:0:16}..."
+        # Verify Installer
+        if [ -n "$INSTALLER_PATH" ] && [ -f "$INSTALLER_PATH" ]; then
+          # Use generic stat for size if powershell not available (macOS/Linux)
+          if command -v powershell >/dev/null; then
+              FILE_SIZE_MB=$(powershell -Command "('{0:N2}' -f ((Get-Item '$INSTALLER_PATH').Length / 1MB))")
+              # SHA256 calculation
+              FILE_HASH=$(powershell -Command "(Get-FileHash '$INSTALLER_PATH' -Algorithm SHA256).Hash")
+          else
+              FILE_SIZE_MB=$(du -m "$INSTALLER_PATH" | cut -f1)
+              if command -v sha256sum >/dev/null; then
+                  FILE_HASH=$(sha256sum "$INSTALLER_PATH" | cut -d' ' -f1)
+              else
+                  FILE_HASH=$(shasum -a 256 "$INSTALLER_PATH" | cut -d' ' -f1)
+              fi
+          fi
+
+          echo "✓ Installer: $INSTALLER_PATH ($FILE_SIZE_MB MB)"
+          echo "  SHA256: ${FILE_HASH:0:16}..."
         else
-          echo "✗ Missing MSI installer"
+          echo "✗ Missing Installer: ${{ matrix.installer_pattern }}"
           echo "Contents of dist directory:"
           find dist -type f | head -10
           BUILD_SUCCESS=false
         fi
 
-        # Verify portable ZIP
-        if [ -f "$ZIP_PATH" ]; then
-          ZIP_SIZE=$(powershell -Command "(Get-Item '$ZIP_PATH').Length")
-          ZIP_SIZE_MB=$(powershell -Command "('{0:N2}' -f ((Get-Item '$ZIP_PATH').Length / 1MB))")
-          ZIP_HASH=$(powershell -Command "(Get-FileHash '$ZIP_PATH' -Algorithm SHA256).Hash")
-          echo "✓ Portable ZIP: $ZIP_PATH ($ZIP_SIZE_MB MB)"
-          echo "  SHA256: ${ZIP_HASH:0:16}..."
-        else
-          echo "✗ Missing portable ZIP: $ZIP_PATH"
-          BUILD_SUCCESS=false
+        # Verify portable ZIP (Windows only)
+        if [ "${{ matrix.platform }}" == "windows" ]; then
+            if [ -f "$ZIP_PATH" ]; then
+              FILE_SIZE_MB=$(powershell -Command "('{0:N2}' -f ((Get-Item '$ZIP_PATH').Length / 1MB))")
+              ZIP_HASH=$(powershell -Command "(Get-FileHash '$ZIP_PATH' -Algorithm SHA256).Hash")
+              echo "✓ Portable ZIP: $ZIP_PATH ($FILE_SIZE_MB MB)"
+              echo "  SHA256: ${ZIP_HASH:0:16}..."
+            else
+              echo "✗ Missing portable ZIP: $ZIP_PATH"
+              BUILD_SUCCESS=false
+            fi
         fi
 
         if [ "$BUILD_SUCCESS" != "true" ]; then
@@ -185,15 +220,18 @@ jobs:
         fi
 
         # Generate checksums file
-        echo "AccessiWeather v$VERSION - Build Checksums" > dist/checksums.txt
+        echo "AccessiWeather v$VERSION - ${{ matrix.platform }} Build Checksums" > dist/checksums.txt
         echo "" >> dist/checksums.txt
-        if [ -n "$MSI_PATH" ]; then
-          echo "$MSI_HASH  $(basename "$MSI_PATH")" >> dist/checksums.txt
+        if [ -n "$INSTALLER_PATH" ]; then
+          echo "$FILE_HASH  $(basename "$INSTALLER_PATH")" >> dist/checksums.txt
         fi
-        echo "$ZIP_HASH  AccessiWeather_Portable_v$VERSION.zip" >> dist/checksums.txt
+        if [ "${{ matrix.platform }}" == "windows" ] && [ -n "$ZIP_HASH" ]; then
+          echo "$ZIP_HASH  AccessiWeather_Portable_v$VERSION.zip" >> dist/checksums.txt
+        fi
         echo "✓ Checksums saved to dist/checksums.txt"
 
-    - name: Upload portable build artifact
+    - name: Upload portable build artifact (Windows only)
+      if: matrix.platform == 'windows'
       uses: actions/upload-artifact@v5
       with:
         name: windows-portable-${{ steps.version.outputs.version }}
@@ -202,19 +240,20 @@ jobs:
           dist/checksums.txt
         retention-days: 30
 
-    - name: Upload MSI installer artifact
+    - name: Upload Installer artifact
       uses: actions/upload-artifact@v5
       with:
-        name: windows-installer-${{ steps.version.outputs.version }}
+        name: ${{ matrix.platform }}-installer-${{ steps.version.outputs.version }}
         path: |
-          dist/*.msi
+          dist/${{ matrix.installer_pattern }}
+          dist/checksums.txt
         retention-days: 90
 
     - name: Upload Briefcase logs on failure
       if: failure()
       uses: actions/upload-artifact@v5
       with:
-        name: briefcase-build-logs
+        name: briefcase-build-logs-${{ matrix.platform }}
         path: logs/*
 
   validate:

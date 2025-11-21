@@ -178,6 +178,13 @@ def run_headless() -> int:
         build_code = _briefcase_with(vpy, "build", "windows", "--no-update")
         if build_code != 0:
             print("Build failed; attempting to re-create app template and rebuild ...")
+
+            # Robustness: ensure fresh create
+            build_dir = ROOT / "build" / "accessiweather" / "windows"
+            if build_dir.exists():
+                print(f"Removing existing build directory: {build_dir}")
+                shutil.rmtree(build_dir, ignore_errors=True)
+
             # Some template versions require a re-create with current Briefcase
             if _briefcase_with(vpy, "create", "windows", "app") != 0:
                 return 1
@@ -275,6 +282,14 @@ def cmd_create(args: argparse.Namespace) -> int:
     if not _briefcase_exists():
         print("Error: Briefcase is not installed. Install with: pip install briefcase")
         return 1
+
+    # Robustness for CI: remove existing platform build to ensure fresh creation
+    # This avoids interactive prompts if the app already exists and ensures a clean state.
+    build_dir = ROOT / "build" / "accessiweather" / args.platform
+    if build_dir.exists():
+        print(f"Removing existing build directory to ensure fresh create: {build_dir}")
+        shutil.rmtree(build_dir, ignore_errors=True)
+
     return _briefcase("create", args.platform)
 
 

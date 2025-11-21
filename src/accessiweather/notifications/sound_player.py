@@ -8,10 +8,7 @@ from typing import Any
 try:
     from playsound3 import playsound
 except ImportError:
-    try:
-        from playsound import playsound
-    except ImportError:
-        playsound = None
+    playsound = None
 
 # Windows-specific sound playing
 winsound = None

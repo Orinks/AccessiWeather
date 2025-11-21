@@ -41,7 +41,7 @@ dev = [
     "types-requests"
 ]
 audio = [
-    "playsound"
+    "playsound3"
 ]
 
 [project.scripts]
@@ -191,7 +191,7 @@ entry_point = "accessiweather:main"
 
 requires = [
     "toga",
-    "playsound",
+    "playsound3",
     "httpx>=0.20.0",
     "python-dateutil",
     "desktop-notifier",
