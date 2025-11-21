@@ -31,6 +31,8 @@ jobs:
           path: dist
           pattern: "*-installer-*"
           merge-multiple: true
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download Windows Portable
         uses: actions/download-artifact@v4
@@ -38,6 +40,8 @@ jobs:
           path: dist
           pattern: "windows-portable-*"
           merge-multiple: true
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Prepare release assets
         run: |
