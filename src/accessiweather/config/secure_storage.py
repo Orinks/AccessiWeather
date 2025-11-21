@@ -5,7 +5,10 @@ from __future__ import annotations
 import logging
 from typing import Final
 
-import keyring
+try:
+    import keyring
+except ImportError:
+    keyring = None
 
 logger = logging.getLogger("accessiweather.config.secure")
 
@@ -28,6 +31,10 @@ class SecureStorage:
             True if successful, False otherwise
 
         """
+        if keyring is None:
+            logger.warning(f"Keyring not available, cannot store credential for {username}")
+            return False
+
         try:
             if not password:
                 # storing empty password often fails or is ambiguous, so we delete instead
@@ -52,6 +59,10 @@ class SecureStorage:
             The password string if found, None otherwise
 
         """
+        if keyring is None:
+            logger.warning(f"Keyring not available, cannot retrieve credential for {username}")
+            return None
+
         try:
             return keyring.get_password(SERVICE_NAME, username)
         except Exception as e:
@@ -70,6 +81,9 @@ class SecureStorage:
             True if successful (or didn't exist), False on error
 
         """
+        if keyring is None:
+            return True  # Treat as success since we can't delete what we can't access
+
         try:
             # Check if it exists first to avoid errors in some backends
             if keyring.get_password(SERVICE_NAME, username) is not None:
