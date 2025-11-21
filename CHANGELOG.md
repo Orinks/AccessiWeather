@@ -5,16 +5,16 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
-- 
+-
 
 ### Changed
-- 
+-
 
 ### Fixed
-- 
+-
 
 ### Removed
-- 
+-
 
 ---
 
@@ -46,7 +46,8 @@ All notable changes to this project will be documented in this file.
 - NWS temperature unit normalization inconsistencies
 - Improved weather data coverage and aviation handling to reduce missing data gaps
 - Sound pack manager async race conditions during import/delete
-- Removed non-existent types-httpx dependency
+- Critical Windows crash: fixed asyncio event loop initialization errors in settings dialog
+- Critical Windows crash: fixed event loop errors during app exit cleanup
 
 ### Known Issues
 - **Moon Phase Data (UI Not Displaying)**: Visual Crossing moon phase API calls are working correctly, but the UI is not yet displaying the retrieved moon phase information. The data is being fetched and cached successfully; this is a presentation-layer issue that will be resolved in a future patch.
