@@ -48,6 +48,8 @@ All notable changes to this project will be documented in this file.
 - Sound pack manager async race conditions during import/delete
 - NWS 'Last updated' timestamps now convert to location's timezone based on user display preferences
 - Keyring now gracefully handles missing system integration without crashing
+- Critical Windows crash: fixed asyncio event loop initialization errors in settings dialog
+- Critical Windows crash: fixed event loop errors during app exit cleanup
 
 ### Known Issues
 - **Moon Phase Data (UI Not Displaying)**: Visual Crossing moon phase API calls are working correctly, but the UI is not yet displaying the retrieved moon phase information. The data is being fetched and cached successfully; this is a presentation-layer issue that will be resolved in a future patch.
