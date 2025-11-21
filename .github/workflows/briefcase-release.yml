@@ -54,9 +54,27 @@ jobs:
       - name: Prepare release assets
         run: |
           mkdir -p release-assets
-          cp dist/*.msi release-assets/ 2>/dev/null || true
-          cp dist/*.dmg release-assets/ 2>/dev/null || true
-          cp dist/*.zip release-assets/ 2>/dev/null || true
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Rename files to match release naming convention
+          # Windows MSI installer
+          if [ -f "dist/AccessiWeather.msi" ]; then
+            cp "dist/AccessiWeather.msi" "release-assets/AccessiWeather-${VERSION}-windows-installer.msi"
+          fi
+
+          # macOS DMG installer
+          if [ -f "dist/AccessiWeather.dmg" ]; then
+            cp "dist/AccessiWeather.dmg" "release-assets/AccessiWeather-${VERSION}-mac.dmg"
+          fi
+
+          # Windows portable ZIP
+          if [ -f "dist/AccessiWeather_Portable_v${VERSION}.zip" ]; then
+            cp "dist/AccessiWeather_Portable_v${VERSION}.zip" "release-assets/AccessiWeather_Portable_v${VERSION}-windows.zip"
+          fi
+
+          # Generic portable ZIP (if needed)
+          # Uncomment the line below if you want a generic portable ZIP for cross-platform
+          # cp "dist/AccessiWeather_Portable_v${VERSION}.zip" "release-assets/AccessiWeather_Portable_v${VERSION}.zip" 2>/dev/null || true
 
           # Generate checksums
           cd release-assets
