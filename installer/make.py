@@ -186,7 +186,7 @@ def run_headless() -> int:
                 shutil.rmtree(build_dir, ignore_errors=True)
 
             # Some template versions require a re-create with current Briefcase
-            if _briefcase_with(vpy, "create", "windows", "app") != 0:
+            if _briefcase_with(vpy, "create", "windows", "app", "--no-input") != 0:
                 return 1
             if _briefcase_with(vpy, "build", "windows", "-r") != 0:
                 return 1
@@ -290,7 +290,7 @@ def cmd_create(args: argparse.Namespace) -> int:
         print(f"Removing existing build directory to ensure fresh create: {build_dir}")
         shutil.rmtree(build_dir, ignore_errors=True)
 
-    return _briefcase("create", args.platform)
+    return _briefcase("create", args.platform, "--no-input")
 
 
 def cmd_build(args: argparse.Namespace) -> int:
