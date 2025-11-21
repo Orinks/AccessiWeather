@@ -4,257 +4,62 @@ name: Release with Briefcase
 # Triggered by: pushes to main (excluding docs), or manual dispatch
 
 on:
-  push:
-    branches: [ main, feature/toga-migration ]  # Releases from main and toga-migration branches
-    paths-ignore:
-      - 'docs/**'
-      - '*.md'
-      - '.gitignore'
+  workflow_run:
+    workflows: ["Build and Package with Briefcase"]
+    types:
+      - completed
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Release version (e.g., 1.0.0 - without v prefix)'
-        required: true
-        type: string
-      prerelease:
-        description: 'Mark as pre-release'
-        required: false
-        type: boolean
-        default: false
 
 permissions:
-  contents: write      # Required to create releases and upload assets
-  actions: read        # Required to read workflow artifacts
-
-# Prevent concurrent releases
-concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: false
-
-env:
-  FORCE_COLOR: "0"
-
-defaults:
-  run:
-    shell: bash
+  contents: write
+  actions: read
 
 jobs:
   release:
-    name: Build and Release with Briefcase
-    runs-on: windows-latest
-
+    name: Release
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      contents: write
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: "3.12"
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: "*-installer-*"
+          merge-multiple: true
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Get version
-      id: version
-      run: |
-        if [ -n "${{ github.event.inputs.version }}" ]; then
-          VERSION="${{ github.event.inputs.version }}"
-        else
-          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
-        fi
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
-        echo "Version: $VERSION"
+      - name: Download Windows Portable
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: "windows-portable-*"
+          merge-multiple: true
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Check if release exists
-      id: check_release
-      run: |
-        VERSION="${{ steps.version.outputs.version }}"
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+          cp dist/*.msi release-assets/ 2>/dev/null || true
+          cp dist/*.dmg release-assets/ 2>/dev/null || true
+          cp dist/*.zip release-assets/ 2>/dev/null || true
 
-        # Reset error action preference to continue on errors
-        set +e
+          # Generate checksums
+          cd release-assets
+          echo "Checksums:" > checksums.txt
+          sha256sum * >> checksums.txt
+          cd ..
 
-        # Check if release exists
-        gh release view "v$VERSION" >/dev/null 2>&1
-        EXIT_CODE=$?
-
-        if [ $EXIT_CODE -eq 0 ]; then
-          echo "Release v$VERSION already exists, skipping..."
-          echo "exists=true" >> $GITHUB_OUTPUT
-        else
-          echo "Release v$VERSION does not exist, proceeding..."
-          echo "exists=false" >> $GITHUB_OUTPUT
-        fi
-
-        # Ensure we exit with success
-        exit 0
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Install dependencies
-      if: steps.check_release.outputs.exists == 'false'
-      run: |
-        python -m pip install --upgrade pip setuptools wheel
-        pip install -e .[dev]
-        pip install briefcase
-
-    - name: Update version in pyproject.toml
-      if: steps.check_release.outputs.exists == 'false'
-      run: |
-        VERSION="${{ steps.version.outputs.version }}"
-
-        # Update project version using sed
-        sed -i "s/version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml
-
-        # Update briefcase version
-        sed -i "/\[tool\.briefcase\]/,/\[/ s/version = \"[^\"]*\"/version = \"$VERSION\"/" pyproject.toml
-
-        echo "Updated version to: $VERSION"
-
-    - name: Build Briefcase application
-      if: steps.check_release.outputs.exists == 'false'
-      run: |
-        echo "Building Briefcase app for Windows via installer/make.py..."
-        python installer/make.py build --platform windows
-      env:
-        DISPLAY: ""
-        ACCESSIWEATHER_TEST_MODE: "1"
-
-    - name: Package Briefcase application (MSI)
-      if: steps.check_release.outputs.exists == 'false'
-      run: |
-        echo "Packaging Briefcase app as MSI installer via installer/make.py..."
-        python installer/make.py package --platform windows
-      env:
-        DISPLAY: ""
-        ACCESSIWEATHER_TEST_MODE: "1"
-
-    - name: Create portable ZIP version
-      if: steps.check_release.outputs.exists == 'false'
-      run: |
-        VERSION="${{ steps.version.outputs.version }}"
-        echo "Creating portable ZIP with make.py..."
-        python installer/make.py zip --platform windows
-        echo "Created portable ZIP: dist/AccessiWeather_Portable_v$VERSION.zip"
-      env:
-        DISPLAY: ""
-        ACCESSIWEATHER_TEST_MODE: "1"
-
-    - name: Prepare release assets
-      if: steps.check_release.outputs.exists == 'false'
-      run: |
-        VERSION="${{ steps.version.outputs.version }}"
-
-        # Create release directory
-        mkdir -p release-assets
-
-        # Copy MSI installer
-        MSI_SOURCE=$(find dist -name "*.msi" | head -1)
-        if [ -n "$MSI_SOURCE" ] && [ -f "$MSI_SOURCE" ]; then
-          cp "$MSI_SOURCE" "release-assets/"
-          echo "✓ Copied MSI installer"
-        else
-          echo "✗ MSI installer not found"
-          exit 1
-        fi
-
-        # Copy portable ZIP
-        PORTABLE_SOURCE="dist/AccessiWeather_Portable_v$VERSION.zip"
-        if [ -f "$PORTABLE_SOURCE" ]; then
-          cp "$PORTABLE_SOURCE" "release-assets/"
-          echo "✓ Copied portable ZIP"
-        else
-          echo "✗ Portable ZIP not found at: $PORTABLE_SOURCE"
-          exit 1
-        fi
-
-        # Generate checksums
-        CHECKSUM_FILE="release-assets/checksums.txt"
-        echo "AccessiWeather v$VERSION - Release Checksums" > "$CHECKSUM_FILE"
-        echo "" >> "$CHECKSUM_FILE"
-
-        # Get all .exe, .msi and .zip files in release-assets directory
-        for file in release-assets/*.{exe,msi,zip}; do
-          if [ -f "$file" ]; then
-            HASH=$(powershell -Command "(Get-FileHash '$file' -Algorithm SHA256).Hash")
-            SIZE_MB=$(powershell -Command "('{0:N2}' -f ((Get-Item '$file').Length / 1MB))")
-            echo "$HASH  $(basename "$file") ($SIZE_MB MB)" >> "$CHECKSUM_FILE"
-          fi
-        done
-
-        echo "✓ Generated checksums"
-        cat "$CHECKSUM_FILE"
-
-    - name: Create release notes
-      if: steps.check_release.outputs.exists == 'false'
-      run: |
-        VERSION="${{ steps.version.outputs.version }}"
-
-        # Create release notes content
-        cat > release-notes.md << EOF
-        # AccessiWeather v$VERSION
-
-        ## What's New
-
-        This release includes improvements and bug fixes for AccessiWeather, now built with the modern Toga/BeeWare framework for better cross-platform support and accessibility.
-
-        ## Downloads
-
-        - **Windows MSI Installer**: \`AccessiWeather-$VERSION.msi\`
-        - **Portable Version**: \`AccessiWeather_Portable_v$VERSION.zip\`
-
-        ## Installation
-
-        ### Windows MSI Installer
-        1. Download the MSI installer
-        2. Run the installer and follow the setup wizard
-        3. Launch AccessiWeather from the Start Menu
-
-        ### Portable Version
-        1. Download \`AccessiWeather_Portable_v$VERSION.zip\`
-        2. Extract to your desired location
-        3. Run \`AccessiWeather.exe\` from the extracted folder
-
-        ## Checksums
-
-        \`\`\`
-        $(cat release-assets/checksums.txt)
-        \`\`\`
-
-        ## System Requirements
-
-        - Windows 10 or later
-        - Internet connection for weather data
-
-        ---
-
-        For support and documentation, visit the [AccessiWeather repository](https://github.com/Orinks/AccessiWeather).
-        EOF
-
-        echo "✓ Generated release notes"
-
-    - name: Create GitHub Release
-      if: steps.check_release.outputs.exists == 'false'
-      uses: ncipollo/release-action@v1
-      with:
-        tag: v${{ steps.version.outputs.version }}
-        name: AccessiWeather v${{ steps.version.outputs.version }}
-        bodyFile: release-notes.md
-        artifacts: "release-assets/*"
-        draft: true
-        prerelease: ${{ github.event.inputs.prerelease || false }}
-        token: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Upload Briefcase logs on failure
-      if: failure()
-      uses: actions/upload-artifact@v5
-      with:
-        name: briefcase-release-logs
-        path: logs/*
-
-    - name: Release summary
-      if: steps.check_release.outputs.exists == 'false'
-      run: |
-        VERSION="${{ steps.version.outputs.version }}"
-        echo "✅ Successfully created draft release v$VERSION"
-        echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/v$VERSION"
-        echo "📝 Edit the release notes and publish when ready!"
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "release-assets/*"
+          draft: true
+          allowUpdates: true
+          token: ${{ secrets.GITHUB_TOKEN }}
