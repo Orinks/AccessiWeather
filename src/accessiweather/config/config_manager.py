@@ -21,7 +21,6 @@ from accessiweather.services import StartupManager
 from .github_config import GitHubConfigOperations
 from .import_export import ImportExportOperations
 from .locations import LocationOperations
-from .secure_storage import SecureStorage
 from .settings import SettingsOperations
 
 logger = logging.getLogger("accessiweather.config")
@@ -84,18 +83,6 @@ class ConfigManager:
                 with open(self.config_file, encoding="utf-8") as f:
                     data = json.load(f)
                     self._config = AppConfig.from_dict(data)
-
-                    # Load secure keys from keyring
-                    secure_keys = {
-                        "visual_crossing_api_key": "visual_crossing_api_key",
-                        "github_app_id": "github_app_id",
-                        "github_app_private_key": "github_app_private_key",
-                        "github_app_installation_id": "github_app_installation_id",
-                    }
-                    for attr_name, key_name in secure_keys.items():
-                        val = SecureStorage.get_password(key_name)
-                        if val:
-                            setattr(self._config.settings, attr_name, val)
 
                     # Validate and fix configuration
                     self._settings._validate_and_fix_config()
