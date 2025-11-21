@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import TYPE_CHECKING
 
@@ -98,30 +97,14 @@ def update_location_selection(app: AccessiWeatherApp) -> None:
 
 def update_status(app: AccessiWeatherApp, message: str) -> None:
     """Update the status label and log the message."""
-    logger.info("Status: %s", message)
-
-    # IMPORTANT: Do NOT update UI when window is hidden to prevent phantom popups on Windows
-    # The WinForms backend can show the window if we modify widgets while hidden
-    if not app.status_label:
-        return
-
-    if not should_show_dialog(app):
-        logger.debug("Skipping status UI update - window is hidden")
-        return
-
-    try:
+    # Only update UI if the window is visible to avoid ghost notifications on Windows
+    if app.status_label and should_show_dialog(app):
         app.status_label.text = message
-    except Exception as exc:
-        logger.debug("Failed to update status label: %s", exc)
+    logger.info("Status: %s", message)
 
 
 def show_error_displays(app: AccessiWeatherApp, error_message: str) -> None:
     """Populate UI widgets with error text after a failure."""
-    # Do NOT update UI when window is hidden to prevent phantom popups on Windows
-    if not should_show_dialog(app):
-        logger.debug("Skipping error display UI update - window is hidden")
-        return
-
     error_text = f"Error loading weather data: {error_message}"
 
     if app.current_conditions_display:
@@ -201,19 +184,6 @@ def handle_exit(app: AccessiWeatherApp) -> bool:
                 app.update_task.cancel()
         except Exception as exc:  # pragma: no cover - defensive logging
             logger.debug("Background task cancel error (non-fatal): %s", exc)
-
-        # Close httpx client to prevent resource leaks
-        try:
-            weather_client = getattr(app, "weather_client", None)
-            if weather_client:
-                logger.debug("Closing weather client HTTP connections")
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    loop.create_task(weather_client.close())
-                else:
-                    asyncio.run(weather_client.close())
-        except Exception as exc:  # pragma: no cover - defensive logging
-            logger.debug("Weather client close error (non-fatal): %s", exc)
 
         play_exit_sound(app)
 

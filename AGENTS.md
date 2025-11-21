@@ -111,7 +111,6 @@ Avoid AI-generated writing patterns. Users should hear a person, not a chatbot:
 **Example Rewrite:**
 - ❌ "Performance improvements have been implemented via cache-first design with background enrichment updates, resulting in reduced API calls"
 - ✅ "Performance boost: We restructured how the app handles data. Now it serves cached results instantly while refreshing in the background—80%+ fewer API calls, noticeably faster on slower connections."
-
 ## Branching & Merge Strategy
 
 To avoid massive merge conflicts and ensure repository health:
