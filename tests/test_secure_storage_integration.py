@@ -53,15 +53,10 @@ def test_secure_storage_migration(mock_app, mock_keyring):
     config_dir.mkdir(parents=True, exist_ok=True)
     config_file = config_dir / "accessiweather.json"
 
-    # Use a valid PKCS#1 format private key for testing
-    valid_private_key = (
-        "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA1234567890\n-----END RSA PRIVATE KEY-----"
-    )
-
     legacy_data = {
         "settings": {
             "visual_crossing_api_key": "secret_api_key",
-            "github_app_private_key": valid_private_key,
+            "github_app_id": "123456",
             "data_source": "visualcrossing",
             "startup_enabled": True,
         }
@@ -80,7 +75,7 @@ def test_secure_storage_migration(mock_app, mock_keyring):
     # Verify keys are loaded from JSON as-is (no migration)
     config = manager.get_config()
     assert config.settings.visual_crossing_api_key == "secret_api_key"
-    assert config.settings.github_app_private_key == valid_private_key
+    assert config.settings.github_app_id == "123456"
 
     # Verify JSON file is not modified (no removal of secrets)
     with open(config_file) as f:
@@ -89,7 +84,7 @@ def test_secure_storage_migration(mock_app, mock_keyring):
     saved_settings = saved_data["settings"]
     # Keys remain in JSON since we don't migrate
     assert saved_settings["visual_crossing_api_key"] == "secret_api_key"
-    assert saved_settings["github_app_private_key"] == valid_private_key
+    assert saved_settings["github_app_id"] == "123456"
     assert saved_settings["data_source"] == "visualcrossing"
 
 
