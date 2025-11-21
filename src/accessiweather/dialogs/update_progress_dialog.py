@@ -27,7 +27,8 @@ class _SafeEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
 
 
 def _ensure_asyncio_loop():
-    """Ensure asyncio event loop policy is set for the current thread.
+    """
+    Ensure asyncio event loop policy is set for the current thread.
 
     Only configures the policy for testing; does not create event loops.
     Toga manages the event loop during normal app execution.

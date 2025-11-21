@@ -7,6 +7,7 @@ import inspect
 import logging
 from datetime import UTC, datetime, timedelta
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import httpx
 
@@ -970,8 +971,20 @@ async def get_nws_marine_forecast(
     return response.json()
 
 
-def parse_nws_current_conditions(data: dict) -> CurrentConditions:
-    """Parse NWS current conditions payload into a CurrentConditions model."""
+def parse_nws_current_conditions(
+    data: dict,
+    location: Location | None = None,
+) -> CurrentConditions:
+    """
+    Parse NWS current conditions payload into a CurrentConditions model.
+
+    Args:
+    ----
+        data: NWS API response payload
+        location: Location object with timezone info. If provided, timestamps
+                  will be converted to the location's local timezone.
+
+    """
     props = data.get("properties", {})
 
     temp_c = props.get("temperature", {}).get("value")
@@ -1012,6 +1025,16 @@ def parse_nws_current_conditions(data: dict) -> CurrentConditions:
     if isinstance(timestamp, str) and timestamp:
         try:
             last_updated = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+            # Convert UTC timestamp to location's timezone if available
+            if last_updated and location and location.timezone:
+                try:
+                    location_tz = ZoneInfo(location.timezone)
+                    last_updated = last_updated.astimezone(location_tz)
+                except Exception as e:  # noqa: BLE001
+                    logger.debug(
+                        f"Failed to convert timestamp to location timezone "
+                        f"'{location.timezone}': {e}"
+                    )
         except ValueError:
             logger.debug(f"Failed to parse observation timestamp: {timestamp}")
 
