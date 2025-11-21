@@ -357,6 +357,20 @@ def cmd_zip(args: argparse.Namespace) -> int:
     _cleanup_soundpacks(args)
     _cleanup_weather_cache(args)
 
+    # Add .exe.config to allow loading remote sources (Mark of the Web workaround)
+    if args.platform == "windows":
+        exe_name = "AccessiWeather"
+        exe_config_path = app_build_dir / f"{exe_name}.exe.config"
+        config_content = """<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <runtime>
+    <loadFromRemoteSources enabled="true" />
+  </runtime>
+</configuration>
+"""
+        print("Adding .exe.config for Mark of the Web workaround...")
+        exe_config_path.write_text(config_content, encoding="utf-8")
+
     dist_dir = ROOT / "dist"
     dist_dir.mkdir(parents=True, exist_ok=True)
     zip_path = dist_dir / f"AccessiWeather_Portable_v{version}.zip"
