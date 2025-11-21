@@ -45,7 +45,7 @@ class AddLocationDialog:
         self.search_input = None
         self.search_button = None
         self.results_table = None
-        self.coordinates_input = None
+        self.coordinates_input = ""  # Track coordinates internally
         self.status_label = None
         self.save_button = None
         self.cancel_button = None
@@ -97,10 +97,6 @@ class AddLocationDialog:
         # Results section
         results_section = self._create_results_section()
         main_box.add(results_section)
-
-        # Manual coordinates section
-        coords_section = self._create_coordinates_section()
-        main_box.add(coords_section)
 
         # Status section
         status_section = self._create_status_section()
@@ -184,39 +180,6 @@ class AddLocationDialog:
             on_select=self._on_result_selected,
         )
         section.add(self.results_table)
-
-        return section
-
-    def _create_coordinates_section(self) -> toga.Box:
-        """Create the manual coordinates section."""
-        section = toga.Box(style=Pack(direction=COLUMN, margin_bottom=10))
-
-        coords_label = toga.Label(
-            "Manual Coordinates:", style=Pack(font_weight="bold", margin_bottom=5)
-        )
-        section.add(coords_label)
-
-        coords_box = toga.Box(style=Pack(direction=ROW, margin_bottom=5))
-
-        self.coordinates_input = toga.TextInput(
-            placeholder="e.g., 40.7128, -74.0060 or 40.7128°N, 74.0060°W",
-            style=Pack(flex=1, margin_right=10),
-        )
-
-        coords_box.add(self.coordinates_input)
-
-        self.advanced_button = toga.Button(
-            "Advanced", on_press=self._on_advanced_pressed, style=Pack(width=80)
-        )
-        coords_box.add(self.advanced_button)
-
-        section.add(coords_box)
-
-        coords_help = toga.Label(
-            "Enter latitude and longitude manually if search doesn't work",
-            style=Pack(font_style="italic", font_size=10, margin_bottom=10),
-        )
-        section.add(coords_help)
 
         return section
 
@@ -316,15 +279,13 @@ class AddLocationDialog:
             if 0 <= row_index < len(self.search_results):
                 self.selected_location = self.search_results[row_index]
 
-                # Update coordinates input
-                coords_str = (
+                # Update name to match the selected location
+                self.name_input.value = self.selected_location.name
+
+                # Update coordinates internally
+                self.coordinates_input = (
                     f"{self.selected_location.latitude}, {self.selected_location.longitude}"
                 )
-                self.coordinates_input.value = coords_str
-
-                # Update name if empty
-                if not self.name_input.value.strip():
-                    self.name_input.value = self.selected_location.name
 
                 self._update_status(f"Selected: {self.selected_location.name}")
 
@@ -334,13 +295,69 @@ class AddLocationDialog:
 
     async def _on_advanced_pressed(self, widget):
         """Handle advanced coordinates button press."""
-        await self.app.main_window.info_dialog(
-            "Advanced Coordinates",
-            "Advanced coordinate entry will land in a future version.\n\n"
-            "Accepted coordinate formats today include decimal degrees with or without degree "
-            "symbols and N/S/E/W suffixes (e.g., 40.7128, -74.0060 or 40.7128°N, 74.0060°W).\n"
-            "Track the dialog implementation in #315.",
+        await self._show_coordinates_dialog()
+
+    async def _show_coordinates_dialog(self):
+        """Show a dialog for manual coordinate entry."""
+        # Create dialog content
+        dialog_box = toga.Box(style=Pack(direction=COLUMN, padding=15))
+
+        # Instructions
+        instructions = toga.Label(
+            "Enter coordinates manually.\n"
+            "Accepted formats: decimal degrees with or without "
+            "degree symbols and N/S/E/W suffixes\n"
+            "Examples: 40.7128, -74.0060 or 40.7128°N, 74.0060°W",
+            style=Pack(margin_bottom=15, font_size=10),
         )
+        dialog_box.add(instructions)
+
+        # Coordinates input
+        coords_input = toga.TextInput(
+            placeholder="e.g., 40.7128, -74.0060",
+            value=self.coordinates_input if self.coordinates_input else "",
+            style=Pack(width=300, margin_bottom=15),
+        )
+        dialog_box.add(coords_input)
+
+        # Buttons
+        button_box = toga.Box(style=Pack(direction=ROW, margin_top=15))
+        spacer = toga.Box(style=Pack(flex=1))
+        button_box.add(spacer)
+
+        cancel_btn = toga.Button("Cancel", style=Pack(margin_right=10))
+        save_btn = toga.Button("Save Coordinates")
+
+        button_box.add(cancel_btn)
+        button_box.add(save_btn)
+        dialog_box.add(button_box)
+
+        # Create and show dialog window
+        coords_dialog = toga.Window(title="Enter Coordinates", content=dialog_box, size=(400, 200))
+
+        # Handle button actions
+        def on_save(widget):
+            coords_text = coords_input.value.strip()
+            if coords_text:
+                coords = self.location_manager.parse_coordinates(coords_text)
+                if coords:
+                    latitude, longitude = coords
+                    self.coordinates_input = f"{latitude}, {longitude}"
+                    self.selected_location = None  # Clear auto-selected location
+                    self._update_status("Coordinates updated")
+                    coords_dialog.close()
+                else:
+                    self._update_status("Invalid coordinate format")
+            else:
+                coords_dialog.close()
+
+        def on_cancel(widget):
+            coords_dialog.close()
+
+        save_btn.on_press = on_save
+        cancel_btn.on_press = on_cancel
+
+        coords_dialog.show()
 
     async def _on_save_pressed(self, widget):
         """Handle save button press."""
@@ -356,7 +373,9 @@ class AddLocationDialog:
             coords = (self.selected_location.latitude, self.selected_location.longitude)
         else:
             # Try to parse manual coordinates
-            coords_text = self.coordinates_input.value.strip()
+            coords_text = (
+                self.coordinates_input.strip() if isinstance(self.coordinates_input, str) else ""
+            )
             if coords_text:
                 coords = self.location_manager.parse_coordinates(coords_text)
 
