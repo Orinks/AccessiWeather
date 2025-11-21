@@ -74,6 +74,18 @@ python installer/make.py dev          # Helper wrapper around Briefcase
 - **Windows Encoding**: `FORCE_COLOR="0"` must be set in CI to prevent `rich` library encoding crashes (`UnicodeEncodeError`).
 - **Version Extraction**: CI extracts version directly from `pyproject.toml` using `tomllib`.
 
+## Changelog Maintenance
+
+Keep `CHANGELOG.md` updated with user-facing changes during development:
+
+- **When to Add**: Any user-visible feature, fix, or change (UI, behavior, performance, appearance)
+- **Where to Add**: Add to the "Unreleased" section under the appropriate subsection (Added, Changed, Fixed)
+- **What to Skip**: Internal refactoring, CI/CD improvements, test-only changes, documentation-only updates, and developer-facing changes
+- **Format**: Use plain language focused on what the user experiences, not implementation details
+- **Example**: Instead of "Refactored cache layer to use stale-while-revalidate", write "Improved app responsiveness on slow connections with smarter caching"
+
+When releasing, promote the "Unreleased" section to a new version entry with today's date.
+
 ## Branching & Merge Strategy
 
 To avoid massive merge conflicts and ensure repository health:
