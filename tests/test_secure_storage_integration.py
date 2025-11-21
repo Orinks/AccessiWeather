@@ -55,7 +55,7 @@ def test_secure_storage_migration(mock_app, mock_keyring):
 
     legacy_data = {
         "settings": {
-            "data_source": "visualcrossing",
+            "data_source": "auto",
             "startup_enabled": True,
         }
     }
@@ -73,7 +73,7 @@ def test_secure_storage_migration(mock_app, mock_keyring):
 
     # Verify config loads correctly
     config = manager.get_config()
-    assert config.settings.data_source == "visualcrossing"
+    assert config.settings.data_source == "auto"
     assert config.settings.startup_enabled is True
 
 
