@@ -59,6 +59,21 @@ python installer/make.py dev          # Helper wrapper around Briefcase
 
 **Docs**: See `.github/copilot-instructions.md` for detailed patterns and gotchas.
 
+## CI/CD & Platform Specifics
+
+**Workflows**:
+- `briefcase-build.yml`: Matrix-based build for Windows (MSI) and macOS (DMG). Uses `installer/make.py`.
+- `ci.yml`: Runs linting (Ruff) and unit tests (Pytest) on Ubuntu/Windows/macOS.
+
+**Audio Support**:
+- **Windows**: Uses `winsound` (stdlib) primarily.
+- **macOS/Linux**: Uses `playsound3` (external dep) as `winsound` is unavailable.
+- **Fallback**: `playsound3` is used as a fallback on Windows if `winsound` fails.
+
+**Build Quirks**:
+- **Windows Encoding**: `FORCE_COLOR="0"` must be set in CI to prevent `rich` library encoding crashes (`UnicodeEncodeError`).
+- **Version Extraction**: CI extracts version directly from `pyproject.toml` using `tomllib`.
+
 ## Branching & Merge Strategy
 
 To avoid massive merge conflicts and ensure repository health:
