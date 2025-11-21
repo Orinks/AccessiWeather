@@ -28,8 +28,8 @@ jobs:
       - name: Get version
         id: version
         run: |
-          # Extract version from pyproject.toml
-          VERSION=$(grep -m 1 'version = ' pyproject.toml | cut -d '"' -f 2)
+          # Extract version from pyproject.toml using Python for reliability
+          VERSION=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Version: $VERSION"
 
@@ -56,30 +56,43 @@ jobs:
           mkdir -p release-assets
           VERSION="${{ steps.version.outputs.version }}"
 
+          echo "Preparing assets for version: $VERSION"
+          echo "Files in dist directory:"
+          ls -la dist/ || true
+
           # Rename files to match release naming convention
           # Windows MSI installer
-          if [ -f "dist/AccessiWeather.msi" ]; then
-            cp "dist/AccessiWeather.msi" "release-assets/AccessiWeather-${VERSION}-windows-installer.msi"
+          MSI=$(find dist -name "*.msi" -type f | head -1)
+          if [ -n "$MSI" ]; then
+            cp "$MSI" "release-assets/AccessiWeather-${VERSION}.msi"
+            echo "✓ Copied MSI: $MSI"
+          else
+            echo "⚠ No MSI found"
           fi
 
           # macOS DMG installer
-          if [ -f "dist/AccessiWeather.dmg" ]; then
-            cp "dist/AccessiWeather.dmg" "release-assets/AccessiWeather-${VERSION}-mac.dmg"
+          DMG=$(find dist -name "*.dmg" -type f | head -1)
+          if [ -n "$DMG" ]; then
+            cp "$DMG" "release-assets/AccessiWeather-${VERSION}.dmg"
+            echo "✓ Copied DMG: $DMG"
+          else
+            echo "⚠ No DMG found"
           fi
 
           # Windows portable ZIP
-          if [ -f "dist/AccessiWeather_Portable_v${VERSION}.zip" ]; then
-            cp "dist/AccessiWeather_Portable_v${VERSION}.zip" "release-assets/AccessiWeather_Portable_v${VERSION}-windows.zip"
+          ZIP=$(find dist -name "AccessiWeather_Portable_v*.zip" -o -name "*Portable*.zip" | head -1)
+          if [ -n "$ZIP" ]; then
+            cp "$ZIP" "release-assets/AccessiWeather_Portable_v${VERSION}.zip"
+            echo "✓ Copied ZIP: $ZIP"
+          else
+            echo "⚠ No portable ZIP found"
           fi
-
-          # Generic portable ZIP (if needed)
-          # Uncomment the line below if you want a generic portable ZIP for cross-platform
-          # cp "dist/AccessiWeather_Portable_v${VERSION}.zip" "release-assets/AccessiWeather_Portable_v${VERSION}.zip" 2>/dev/null || true
 
           # Generate checksums
           cd release-assets
-          echo "Checksums:" > checksums.txt
+          echo "Checksums for AccessiWeather v${VERSION}" > checksums.txt
           sha256sum * >> checksums.txt
+          cat checksums.txt
           cd ..
 
       - name: Create Release
