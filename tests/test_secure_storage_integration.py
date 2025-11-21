@@ -47,7 +47,7 @@ def mock_app(tmp_path):
 
 
 def test_secure_storage_migration(mock_app, mock_keyring):
-    """Test that secrets are migrated from JSON to keyring."""
+    """Test that legacy secrets in JSON are not migrated (users must re-add them)."""
     # Create a legacy config file with secrets
     config_dir = mock_app.paths.config
     config_dir.mkdir(parents=True, exist_ok=True)
@@ -65,25 +65,26 @@ def test_secure_storage_migration(mock_app, mock_keyring):
     with open(config_file, "w") as f:
         json.dump(legacy_data, f)
 
-    # Initialize ConfigManager (should trigger migration)
+    # Initialize ConfigManager (no migration happens)
     manager = ConfigManager(mock_app)
     manager.load_config()
 
-    # Verify secrets are in keyring
-    assert mock_keyring.set_password.call_count >= 2
-    # Check via the get_password side effect logic (or mock calls if simple)
-    # We can check if the manager loaded the values correctly
+    # Verify secrets are NOT migrated to keyring
+    assert mock_keyring.set_password.call_count == 0
+
+    # Verify keys are loaded from JSON as-is (no migration)
     config = manager.get_config()
     assert config.settings.visual_crossing_api_key == "secret_api_key"
     assert config.settings.github_app_private_key == "secret_private_key"
 
-    # Verify secrets are REMOVED from JSON file
+    # Verify JSON file is not modified (no removal of secrets)
     with open(config_file) as f:
         saved_data = json.load(f)
 
     saved_settings = saved_data["settings"]
-    assert "visual_crossing_api_key" not in saved_settings
-    assert "github_app_private_key" not in saved_settings
+    # Keys remain in JSON since we don't migrate
+    assert saved_settings["visual_crossing_api_key"] == "secret_api_key"
+    assert saved_settings["github_app_private_key"] == "secret_private_key"
     assert saved_settings["data_source"] == "visualcrossing"
 
 
