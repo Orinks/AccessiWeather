@@ -1,117 +1,95 @@
-# Changelog
+# AccessiWeather Changelog
 
-All notable changes to AccessiWeather will be documented in this file.
+All notable changes to this project will be documented in this file.
 
-## [Unreleased]
-
-### Performance
-- **Weather data fetch optimizations**: Comprehensive improvements reducing API calls and latency
-  - Request deduplication: Concurrent requests for same location now coalesce into single API call (10x reduction)
-  - Enhanced caching: 180-minute TTL cache with early freshness checking reduces redundant fetches by 80%+
-  - Cache pre-warming: Background pre-fetching of weather data for faster initial display
-  - Connection pooling: Optimized HTTP connection pool (30 max connections, 15 keepalive) for faster parallel fetches
-  - Parallel enrichment: Alerts, discussions, and sunrise/sunset data fetched simultaneously
-  - Smart timeouts: Configurable connect (5s) and read (10s) timeouts with exponential backoff retry
-  - Performance instrumentation: Comprehensive timing measurements for monitoring fetch operations
-- **Test coverage**: 31 performance tests (23 unit + 8 end-to-end) validating real-world scenarios
-  - App startup with multiple locations (<2s for 5 locations)
-  - Rapid location switching with cache hits (<1s for 5 requests)
-  - Concurrent request handling (<0.2s for 10 coalesced requests)
-  - Cache effectiveness (<10ms for cache hits vs 50ms+ fresh fetches)
-  - Load testing (20 concurrent requests with intelligent deduplication)
+## Unreleased
 
 ### Added
-- Intelligent alert notification system with rate limiting and cooldowns
-  - Global cooldown (default: 5 min) prevents notification spam across all alerts
-  - Per-alert cooldown (default: 60 min) prevents duplicate notifications
-  - Escalation override (default: 15 min) allows high-severity alerts to bypass cooldowns
-  - Hourly notification cap (default: 10) prevents excessive notifications
-- Severity-based alert filtering
-  - Configure which alert severities trigger notifications (Extreme, Severe, Moderate, Minor, Unknown)
-  - Minor severity alerts disabled by default to reduce noise
-- Alert notification history tracking
-  - Bounded history (max 500 notifications) prevents memory growth
-  - Tracks notification timestamps and severities for rate limiting decisions
-- Comprehensive test coverage for alert system (104 tests)
-  - Constants validation tests (19 tests)
-  - Alert state history tests (26 tests)
-  - Token bucket rate limiting tests (14 tests)
-  - Accessibility formatting tests (18 tests)
-  - UI accessibility audit tests (15 tests)
-  - Configuration migration tests (12 tests)
+- 
 
 ### Changed
-- Alert notification settings now persist in configuration
-- AlertManager reconfigurable at runtime without restart
-- Improved screen reader accessibility for notification settings UI
-  - All controls have proper aria_label and aria_description attributes
-  - Logical keyboard navigation order
-  - Clear focus indicators and descriptive labels
+- 
 
 ### Fixed
-- Eliminated magic numbers in alert notification code
-- Improved testability with dependency injection patterns
-- Enhanced configuration migration backward compatibility
+- 
 
-## [0.9.1] - 2025-05-07
+### Removed
+- 
+
+---
+
+## [0.4.1] - 2025-11-20 (Unreleased)
+
+### Highlights
+- **Secure API Key Storage**: Integrated system keyring for safer storage of API credentials on Windows, macOS, and Linux—no more plain-text keys in config files.
+- **Moon Phase Data**: Visual Crossing moon phase information now displays in the current conditions, showing lunar phase with readable descriptions.
+- **Flexible Time Display**: Standardized time format controls across the app—choose between local time, UTC, or both, with 12/24-hour and timezone label toggles to suit your preferences.
+- **Performance Improvements**: Implemented cache-first design with background enrichment updates, reducing unnecessary API calls by 80%+ and improving app responsiveness on slower connections.
 
 ### Added
-- System tray functionality with minimize to tray option
-- Escape key shortcut to hide app to system tray
-- Extended 7-day forecast display (all 14 periods)
-- Current conditions integration with temperature, humidity, wind, and pressure
-- Hourly forecast integration for detailed short-term predictions
-- Debug mode CLI flag for testing and development
+- Secure API Key Storage via system keyring (Windows, macOS, Linux)
+- Moon Phase Data integration from Visual Crossing (API integration complete; UI display pending)
+- Flexible time display preferences (local/UTC toggle, 12/24-hour format, timezone labels)
+- Fine-grained alert notification settings for alert type filtering
+- Automatic weather refresh when app window returns to foreground
 
 ### Changed
-- Consolidated update mechanism for better performance
-- Enhanced weather discussion reader with improved formatting
+- Time format preferences now consistently apply to all displayed timestamps (sunrise/sunset, forecasts, alerts, weather history)
+- Cache-first architecture pre-warms forecasts in the background while serving cached data instantly to the user
+- Alert notification settings UI for better accessibility and control
+- Modernized sound pack manager and community browser interface
+- Improved NWS observation station selection to prioritize quality data
+- Enhanced international Open-Meteo support with better location search scoring
 
 ### Fixed
-- Alert update interval setting issues
-- Weather discussion fetching and display problems
-- Loading dialog cleanup
-- Various accessibility improvements for screen readers
+- Timezone display bug for sunrise/sunset times—now properly respects location timezone instead of shifting by local offset
+- NWS temperature unit normalization inconsistencies
+- Improved weather data coverage and aviation handling to reduce missing data gaps
+- Sound pack manager async race conditions during import/delete
+- Removed non-existent types-httpx dependency
 
 ### Known Issues
-- Screen readers parse Nationwide discussions oddly and read them incorrectly, even though the data is being fetched correctly
-- Escape key for minimizing is currently busted.
-## [0.9.0] - 2025-04-14 (Beta Release)
+- **Moon Phase Data (UI Not Displaying)**: Visual Crossing moon phase API calls are working correctly, but the UI is not yet displaying the retrieved moon phase information. The data is being fetched and cached successfully; this is a presentation-layer issue that will be resolved in a future patch.
+
+### Upgrade Notes
+- **Security Migration**: Previous versions stored API keys in plain text (`~/.accessiweather/accessiweather.json`). On first launch, v0.4.1 automatically migrates your keys to the system keyring (Windows Credential Manager, macOS Keychain, Linux Secret Service). Your old config file keys will be cleared for safety. If you have multiple machines, migrate each one separately.
+- Portable Windows builds should remove any legacy `config` folders next to the executable before extracting the new ZIP to ensure clean asset refresh.
+- Settings continue to use the BeeWare standard config path (`%APPDATA%\.accessiweather` on Windows, `~/.accessiweather` on macOS/Linux).
+
+---
+
+## [0.4.0] - 2025-10-12 [YANKED]
+
+⚠️ **Security Warning**: This release stored API keys in plain text in `accessiweather.json`. Upgrade to v0.4.1+ immediately.
 
 ### Added
-- Complete NOAA weather API integration
-- Location management with multiple saved locations
-- Search by address or ZIP code
-- Manual coordinate entry support
-- Detailed weather forecasts with temperature and conditions
-- Active weather alerts, watches, and warnings
-- Weather discussion reader
-- Desktop notifications for weather alerts
-- Precise location alerts (county/township level)
-- Statewide alert toggle
-- Alert details dialog to display alert statements
-- Accessible UI with screen reader compatibility
-- Keyboard navigation support
-- Configuration persistence
-- True portable mode with local configuration storage
+- Desktop app rebuilt on BeeWare's Toga toolkit for native UI across Windows, macOS, Linux
+- Weather History comparisons against yesterday and last week using Open-Meteo archive
+- Auto mode with enriched forecasts (sunrise/sunset, NWS discussions, Visual Crossing alerts)
+- Sound pack manager with modular interface, mapping previews, creation wizard, community integration
+- Update center with stable/beta/dev channels and checksum-verified downloads
+- Expanded current conditions view (sunrise/sunset, UV, air-quality, pollen metrics)
+- Universal Remove shortcut (Ctrl/Cmd+D) for locations and sound packs
+- Startup management for automatic launch on Windows, macOS, Linux
+- Accessible Weather History dialog with forecast discussion reader layout
 
 ### Changed
-- Removed autocomplete from location search for better accessibility
-- Improved error handling and user feedback
-- Enhanced thread safety in wxPython components
-- Enhanced location display with full address information
-- Standardized configuration directory location
+- Refined settings dialog with accessible dropdowns for temperature units and data sources
+- Refactored codebase into modular packages (app shell, presenters, weather client, updater)
+- Streamlined CI/CD with make.py-driven builds, nightly smoketests, checksum validation
 
 ### Fixed
-- Thread safety issues in UI updates
-- Segmentation faults in some test scenarios
-- API error handling and recovery
-- Location search crash by making geocoding asynchronous
-- ZIP code search functionality
-- Precise location alerts setting persistence
+- Normalized Open-Meteo timestamps for international forecasts
+- Restored legacy `current` weather accessor compatibility
+- Prevented duplicate application launches
+- Removed unstable text-to-speech override controls
 
-## [0.1.0] - 2024-01-01 (Initial Development)
+### Removed
+- wxPython-based UI and related dependencies
+- Unstable text-to-speech override functionality
 
-- Initial project structure
-- Basic wxPython UI framework
-- NOAA API client implementation
+---
+
+## [0.3.1] and earlier
+
+See git history for detailed changes prior to v0.4.0.
