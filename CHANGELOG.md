@@ -46,16 +46,16 @@ All notable changes to this project will be documented in this file.
 - NWS temperature unit normalization inconsistencies
 - Improved weather data coverage and aviation handling to reduce missing data gaps
 - Sound pack manager async race conditions during import/delete
-- Critical Windows crash: fixed asyncio event loop initialization errors in settings dialog
-- Critical Windows crash: fixed event loop errors during app exit cleanup
+- NWS 'Last updated' timestamps now convert to location's timezone based on user display preferences
+- Keyring now gracefully handles missing system integration without crashing
 
 ### Known Issues
 - **Moon Phase Data (UI Not Displaying)**: Visual Crossing moon phase API calls are working correctly, but the UI is not yet displaying the retrieved moon phase information. The data is being fetched and cached successfully; this is a presentation-layer issue that will be resolved in a future patch.
 
 ### Upgrade Notes
-- **Security Migration**: Previous versions stored API keys in plain text (`~/.accessiweather/accessiweather.json`). On first launch, v0.4.1 automatically migrates your keys to the system keyring (Windows Credential Manager, macOS Keychain, Linux Secret Service). Your old config file keys will be cleared for safety. If you have multiple machines, migrate each one separately.
+- **API Keys**: Add your API keys through Settings > Data Sources. Keys are now stored securely in your system's keyring (Windows Credential Manager, macOS Keychain, Linux Secret Service) instead of plain text.
 - Portable Windows builds should remove any legacy `config` folders next to the executable before extracting the new ZIP to ensure clean asset refresh.
-- Settings continue to use the BeeWare standard config path (`%APPDATA%\.accessiweather` on Windows, `~/.accessiweather` on macOS/Linux).
+- Need a fresh start? Use Settings > Advanced > Reset Application to clear your config and start fresh. Your config is stored in `%APPDATA%\.accessiweather` on Windows and `~/.accessiweather` on macOS/Linux.
 
 ---
 
