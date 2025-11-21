@@ -52,9 +52,6 @@ jobs:
           - os: macos-latest
             platform: macOS
             installer_pattern: "*.dmg"
-          - os: ubuntu-latest
-            platform: linux
-            installer_pattern: "*.AppImage"
 
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
 
@@ -71,12 +68,6 @@ jobs:
       uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Install System Dependencies (Linux)
-      if: matrix.platform == 'linux'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y python3-dev libgirepository1.0-dev libcairo2-dev pkg-config libsystemd-dev
 
     - name: Cache pip dependencies
       uses: actions/cache@v4
