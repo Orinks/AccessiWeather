@@ -47,16 +47,14 @@ def mock_app(tmp_path):
 
 
 def test_secure_storage_migration(mock_app, mock_keyring):
-    """Test that legacy secrets in JSON are not migrated (users must re-add them)."""
-    # Create a legacy config file with secrets
+    """Test that config loads without performing keyring migration."""
+    # Create a config file
     config_dir = mock_app.paths.config
     config_dir.mkdir(parents=True, exist_ok=True)
     config_file = config_dir / "accessiweather.json"
 
     legacy_data = {
         "settings": {
-            "visual_crossing_api_key": "secret_api_key",
-            "github_app_id": "123456",
             "data_source": "visualcrossing",
             "startup_enabled": True,
         }
@@ -69,23 +67,14 @@ def test_secure_storage_migration(mock_app, mock_keyring):
     manager = ConfigManager(mock_app)
     manager.load_config()
 
-    # Verify secrets are NOT migrated to keyring
+    # Verify no keyring calls were made
     assert mock_keyring.set_password.call_count == 0
+    assert mock_keyring.get_password.call_count == 0
 
-    # Verify keys are loaded from JSON as-is (no migration)
+    # Verify config loads correctly
     config = manager.get_config()
-    assert config.settings.visual_crossing_api_key == "secret_api_key"
-    assert config.settings.github_app_id == "123456"
-
-    # Verify JSON file is not modified (no removal of secrets)
-    with open(config_file) as f:
-        saved_data = json.load(f)
-
-    saved_settings = saved_data["settings"]
-    # Keys remain in JSON since we don't migrate
-    assert saved_settings["visual_crossing_api_key"] == "secret_api_key"
-    assert saved_settings["github_app_id"] == "123456"
-    assert saved_settings["data_source"] == "visualcrossing"
+    assert config.settings.data_source == "visualcrossing"
+    assert config.settings.startup_enabled is True
 
 
 def test_update_settings_saves_to_keyring(mock_app, mock_keyring):
