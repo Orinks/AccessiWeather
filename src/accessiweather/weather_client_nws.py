@@ -400,7 +400,7 @@ async def get_nws_current_conditions(
 
                 try:
                     _scrub_measurements(obs_props)
-                    current = parse_nws_current_conditions(obs_data)
+                    current = parse_nws_current_conditions(obs_data, location=location)
                 except Exception as exc:  # noqa: BLE001
                     logger.debug("Failed to parse observation for %s: %s", station_id, exc)
                     continue
@@ -430,6 +430,10 @@ async def get_nws_current_conditions(
             response.raise_for_status()
             grid_data = response.json()
 
+            # Extract timezone from grid data and update location
+            if "properties" in grid_data and "timeZone" in grid_data["properties"]:
+                location.timezone = grid_data["properties"]["timeZone"]
+
             stations_url = grid_data["properties"]["observationStations"]
             response = await _client_get(client, stations_url, headers=headers)
             response.raise_for_status()
@@ -452,6 +456,10 @@ async def get_nws_current_conditions(
             response = await new_client.get(grid_url, headers=headers)
             response.raise_for_status()
             grid_data = response.json()
+
+            # Extract timezone from grid data and update location
+            if "properties" in grid_data and "timeZone" in grid_data["properties"]:
+                location.timezone = grid_data["properties"]["timeZone"]
 
             stations_url = grid_data["properties"]["observationStations"]
             response = await new_client.get(stations_url, headers=headers)
