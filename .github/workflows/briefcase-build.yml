@@ -27,6 +27,7 @@ env:
   # Build configuration
   PYTHON_VERSION: "3.12"
   FORCE_COLOR: "0"
+  PYTHONUTF8: "1"
 
 # Cancel active builds for a PR before starting another run
 concurrency:
