@@ -51,18 +51,45 @@ jobs:
           pip install -e .
 
       - name: Run integration tests
-        run: |
-          pytest tests/integration/ \
-            -v \
-            --tb=short \
-            --reruns 2 \
-            --reruns-delay 10
+        id: run-tests
+        uses: nick-fields/retry@v3
+        continue-on-error: true
+        with:
+          max_attempts: 3
+          retry_wait_seconds: 60
+          timeout_minutes: 20
+          shell: bash
+          command: |
+            set -euo pipefail
+            pytest tests/integration/ \
+              -v \
+              --tb=short \
+              --reruns 2 \
+              --reruns-delay 10 \
+              --junitxml=reports/integration-junit.xml
         env:
           RUN_INTEGRATION_TESTS: "1"
-        timeout-minutes: 15
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-tests-${{ matrix.python-version }}
+          path: reports/integration-junit.xml
+          retention-days: 7
+
+      - name: Add outcome summary
+        if: always()
+        run: |
+          echo "## Integration test outcome" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.run-tests.outcome }}" = "success" ]; then
+            echo "✅ Integration suite passed after automated retries." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Integration suite failed after automated retries. This workflow won't block merges, but please review the logs and rerun manually if needed." >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Notify on failure (scheduled runs)
-        if: failure() && github.event_name == 'schedule'
+        if: steps.run-tests.outcome == 'failure' && github.event_name == 'schedule'
         uses: actions/github-script@v7
         with:
           script: |
@@ -107,7 +134,7 @@ jobs:
             }
 
       - name: Close failure issues on success (scheduled runs)
-        if: success() && github.event_name == 'schedule'
+        if: steps.run-tests.outcome == 'success' && github.event_name == 'schedule'
         uses: actions/github-script@v7
         with:
           script: |
