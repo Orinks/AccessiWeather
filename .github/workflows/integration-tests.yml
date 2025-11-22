@@ -7,13 +7,18 @@ on:
   schedule:
     - cron: '0 6 * * *'
 
+  # Allow manual triggering for testing
+  workflow_dispatch:
+
 jobs:
   integration-tests:
     name: Weather Provider Integration Tests
     runs-on: ubuntu-latest
 
-    # Only run on the scheduled trigger
-    if: github.event_name == 'schedule'
+    # Only run on schedule or manual dispatch
+    if: |
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch'
 
     strategy:
       fail-fast: false
@@ -35,7 +40,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             libcairo2-dev \
-            libgirepository1.0-dev \
+            libgirepository-2.0-dev \
             pkg-config \
             python3-dev
 
@@ -46,45 +51,16 @@ jobs:
           pip install -e .
 
       - name: Run integration tests
-        id: run-tests
-        uses: nick-fields/retry@v3
-        continue-on-error: true
-        with:
-          max_attempts: 3
-          retry_wait_seconds: 60
-          timeout_minutes: 20
-          shell: bash
-          command: |
-            set -euo pipefail
-            pytest tests/integration/ \
-              -v \
-              --tb=short \
-              --reruns 2 \
-              --reruns-delay 10 \
-              --junitxml=reports/integration-junit.xml
+        run: |
+          pytest tests/integration/ \
+            -v \
+            --tb=short
         env:
           RUN_INTEGRATION_TESTS: "1"
-
-      - name: Upload test report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: integration-tests-${{ matrix.python-version }}
-          path: reports/integration-junit.xml
-          retention-days: 7
-
-      - name: Add outcome summary
-        if: always()
-        run: |
-          echo "## Integration test outcome" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.run-tests.outcome }}" = "success" ]; then
-            echo "✅ Integration suite passed after automated retries." >> $GITHUB_STEP_SUMMARY
-          else
-            echo "⚠️ Integration suite failed after automated retries. This workflow won't block merges, but please review the logs and rerun manually if needed." >> $GITHUB_STEP_SUMMARY
-          fi
+        timeout-minutes: 15
 
       - name: Notify on failure (scheduled runs)
-        if: steps.run-tests.outcome == 'failure' && github.event_name == 'schedule'
+        if: failure() && github.event_name == 'schedule'
         uses: actions/github-script@v7
         with:
           script: |
@@ -129,7 +105,7 @@ jobs:
             }
 
       - name: Close failure issues on success (scheduled runs)
-        if: steps.run-tests.outcome == 'success' && github.event_name == 'schedule'
+        if: success() && github.event_name == 'schedule'
         uses: actions/github-script@v7
         with:
           script: |

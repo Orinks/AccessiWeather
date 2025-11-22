@@ -37,8 +37,9 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y \
+          gcc \
           libcairo2-dev \
-          libgirepository1.0-dev \
+          libgirepository-2.0-dev \
           pkg-config \
           python3-dev
 
@@ -67,7 +68,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.11", "3.12"]
 
     steps:
     - name: Checkout code
@@ -83,8 +84,9 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y \
+          gcc \
           libcairo2-dev \
-          libgirepository1.0-dev \
+          libgirepository-2.0-dev \
           pkg-config \
           python3-dev
 
@@ -100,7 +102,8 @@ jobs:
         PYTEST_DISABLE_PLUGIN_AUTOLOAD: 1
         ACCESSIWEATHER_TEST_MODE: "1"
       run: |
-        pytest -v -p pytest_asyncio --tb=short --maxfail=1 --junitxml=reports/junit.xml -m "not integration"
+        mkdir -p reports
+        pytest tests/ -v -p pytest_asyncio --tb=short --maxfail=1 --junitxml=reports/junit.xml --ignore=tests/integration
 
     - name: Upload test report
       if: always()
