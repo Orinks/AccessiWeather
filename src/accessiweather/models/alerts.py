@@ -3,9 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from ..constants import SEVERITY_PRIORITY_MAP
+
+# Python 3.11+ has datetime.UTC; 3.10 needs timezone.utc
+try:
+    from datetime import UTC
+except ImportError:
+    UTC = timezone.utc
 
 
 @dataclass
