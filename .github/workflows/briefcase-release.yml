@@ -18,7 +18,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     permissions:
       contents: write
     steps:
@@ -33,7 +33,22 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Version: $VERSION"
 
+      - name: Ensure tag exists for stable release
+        id: tag-check
+        run: |
+          git fetch --tags
+          VERSION="${{ steps.version.outputs.version }}"
+
+          if git rev-parse -q "v$VERSION" >/dev/null; then
+            echo "publish=true" >> $GITHUB_OUTPUT
+            echo "Found tag v$VERSION"
+          else
+            echo "publish=false" >> $GITHUB_OUTPUT
+            echo "Tag v$VERSION not found; skipping release upload. Trigger manually or create the tag."
+          fi
+
       - name: Download All Artifacts
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.tag-check.outputs.publish == 'true' }}
         uses: actions/download-artifact@v4
         with:
           path: dist
@@ -43,6 +58,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download Windows Portable
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.tag-check.outputs.publish == 'true' }}
         uses: actions/download-artifact@v4
         with:
           path: dist
@@ -52,6 +68,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Prepare release assets
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.tag-check.outputs.publish == 'true' }}
         run: |
           mkdir -p release-assets
           VERSION="${{ steps.version.outputs.version }}"
@@ -96,6 +113,7 @@ jobs:
           cd ..
 
       - name: Create Release
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.tag-check.outputs.publish == 'true' }}
         uses: ncipollo/release-action@v1
         with:
           tag: v${{ steps.version.outputs.version }}
