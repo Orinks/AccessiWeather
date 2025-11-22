@@ -38,9 +38,11 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y \
           libcairo2-dev \
-          libgirepository1.0-dev \
           pkg-config \
-          python3-dev
+          python3-dev \
+          libgirepository-dev \
+          || sudo apt-get install -y libgirepository1.0-dev \
+          || sudo apt-get install -y libgirepository-2.0-dev
 
     - name: Install dependencies
       run: |
@@ -84,9 +86,11 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y \
           libcairo2-dev \
-          libgirepository1.0-dev \
           pkg-config \
-          python3-dev
+          python3-dev \
+          libgirepository-dev \
+          || sudo apt-get install -y libgirepository1.0-dev \
+          || sudo apt-get install -y libgirepository-2.0-dev
 
     - name: Install dependencies
       run: |
@@ -100,6 +104,7 @@ jobs:
         PYTEST_DISABLE_PLUGIN_AUTOLOAD: 1
         ACCESSIWEATHER_TEST_MODE: "1"
       run: |
+        mkdir -p reports
         pytest -v -p pytest_asyncio --tb=short --maxfail=1 --junitxml=reports/junit.xml -m "not integration"
 
     - name: Upload test report
