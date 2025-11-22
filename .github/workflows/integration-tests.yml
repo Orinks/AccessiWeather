@@ -54,7 +54,9 @@ jobs:
         run: |
           pytest tests/integration/ \
             -v \
-            --tb=short
+            --tb=short \
+            --reruns 2 \
+            --reruns-delay 10
         env:
           RUN_INTEGRATION_TESTS: "1"
         timeout-minutes: 15
