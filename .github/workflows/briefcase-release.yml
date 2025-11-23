@@ -52,10 +52,10 @@ jobs:
         run: |
           RUN_ID="${{ github.event.workflow_run.id }}"
           if [ -z "$RUN_ID" ] || [ "$RUN_ID" = "null" ]; then
-            # For workflow_dispatch, get the latest successful build run
-            echo "Manual trigger detected, fetching latest successful build run..."
+            # For workflow_dispatch, get the latest successful build run from main branch
+            echo "Manual trigger detected, fetching latest successful build run from main..."
             RUN_ID=$(curl -s -H "Authorization: token ${{ github.token }}" \
-              "https://api.github.com/repos/${{ github.repository }}/actions/workflows/briefcase-build.yml/runs?branch=${{ github.ref_name }}&status=success&per_page=1" \
+              "https://api.github.com/repos/${{ github.repository }}/actions/workflows/briefcase-build.yml/runs?branch=main&status=success&per_page=1" \
               | jq -r '.workflow_runs[0].id // empty')
             echo "Latest build run ID: $RUN_ID"
           fi
