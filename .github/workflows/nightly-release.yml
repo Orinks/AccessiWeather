@@ -146,7 +146,9 @@ jobs:
           # Delete existing release/tag if re-running for the same day
           gh release delete "$TAG" -y --cleanup-tag || true
 
-          gh release create "$TAG" dist/* \
+          # Only upload files from dist/ (exclude subdirectories)
+          cd dist
+          gh release create "$TAG" *.msi *.dmg *.zip checksums.txt \
             --title "$TITLE" \
             --generate-notes \
             --prerelease
