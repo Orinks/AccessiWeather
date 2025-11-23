@@ -942,6 +942,9 @@ async def test_e2e_dev_channel_nightly_update(windows_platform, svc):
     # 1. Initialize and set channel to dev
     svc.settings.channel = "dev"
 
+    # Mock download content
+    file_content = b"Nightly binary content"
+
     # 2. Mock releases: Stable v1.0.0 vs Newer Nightly
     releases = [
         {
@@ -965,15 +968,12 @@ async def test_e2e_dev_channel_nightly_update(windows_platform, svc):
                 {
                     "name": "AccessiWeather-nightly-20251122-win.exe",
                     "browser_download_url": "https://example.com/nightly.exe",
-                    "size": 2048,
+                    "size": len(file_content),
                 }
             ],
             "body": "Nightly build",
         },
     ]
-
-    # Mock download content
-    file_content = b"Nightly binary content"
 
     # Configure client:
     # - get_responses for check_for_updates (returns releases)
