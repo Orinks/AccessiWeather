@@ -107,12 +107,18 @@ jobs:
           TIMESTAMP=$(date -u +%Y%m%d)
           cd dist
 
+          # Flatten directory structure - extract files from subdirectories
+          find . -type f \( -name "*.msi" -o -name "*.dmg" -o -name "*.zip" \) -exec mv {} . \;
+
+          # Remove empty directories
+          find . -type d -empty -delete
+
           # Remove existing checksums if they exist
           rm -f checksums.txt
 
           # Rename artifacts
           for file in *; do
-            # Skip if it's not a file we care about (though dist should only contain our downloads)
+            # Skip if it's not a file
             [ -f "$file" ] || continue
 
             if [[ "$file" == *.msi ]]; then
@@ -124,8 +130,8 @@ jobs:
             fi
           done
 
-          # Generate new checksums
-          sha256sum * > checksums.txt
+          # Generate new checksums (only for files, not directories)
+          sha256sum *.msi *.dmg *.zip 2>/dev/null > checksums.txt || true
 
           echo "Prepared assets:"
           ls -la
