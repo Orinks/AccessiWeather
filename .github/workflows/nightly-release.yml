@@ -78,23 +78,25 @@ jobs:
     if: needs.prepare.outputs.changed == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          run-id: ${{ needs.prepare.outputs.run_id }}
-          pattern: "*-installer-*"
-          path: dist
-          merge-multiple: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download artifacts via gh cli
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p dist
+          RUN_ID=${{ needs.prepare.outputs.run_id }}
+          echo "Downloading artifacts from run $RUN_ID"
+          gh run download $RUN_ID --dir dist
 
-      - name: Download portable artifacts
-        uses: actions/download-artifact@v4
-        with:
-          run-id: ${{ needs.prepare.outputs.run_id }}
-          pattern: "windows-portable-*"
-          path: dist
-          merge-multiple: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # gh run download creates subdirectories for each artifact. Flatten them.
+          # We only care about installers and portables
+          find dist -type f -name "*installer*" -exec mv {} dist/ \;
+          find dist -type f -name "*portable*" -exec mv {} dist/ \;
+
+          # Clean up empty directories (and any artifacts we didn't move)
+          find dist -type d -empty -delete
+
+          # List contents for verification
+          ls -R dist
 
       - name: Prepare assets
         run: |
