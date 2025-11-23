@@ -307,6 +307,15 @@ class ReleaseManager:
                 name = asset.get("name", "").lower()
                 if "portable" in name and name.endswith(".zip"):
                     return asset
+            # If no portable zip found, try ANY zip
+            for asset in assets:
+                name = asset.get("name", "").lower()
+                is_zip = name.endswith(".zip")
+                not_portable = "portable" not in name
+                not_source = "source" not in name
+
+                if is_zip and not_portable and not_source:
+                    return asset
 
         for extension in priority_extensions:
             for asset in filtered_assets:
