@@ -39,9 +39,37 @@ defaults:
     shell: bash
 
 jobs:
+  check-release:
+    name: Check if release already exists
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Check if release exists
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          TAG="v${VERSION}"
+
+          echo "Checking for existing release: ${TAG}"
+
+          if gh release view "${TAG}" &>/dev/null; then
+            echo "Release ${TAG} already exists. Skipping build."
+            echo "should_build=false" >> $GITHUB_OUTPUT
+          else
+            echo "Release ${TAG} does not exist. Proceeding with build."
+            echo "should_build=true" >> $GITHUB_OUTPUT
+          fi
+
   build:
     name: Build ${{ matrix.platform }} Application
     runs-on: ${{ matrix.os }}
+    needs: check-release
     strategy:
       fail-fast: false
       matrix:
@@ -53,7 +81,7 @@ jobs:
             platform: macOS
             installer_pattern: "*.dmg"
 
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+    if: ${{ (github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')) && needs.check-release.outputs.should_build == 'true' }}
 
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -259,7 +287,8 @@ jobs:
   validate:
     name: Validate Build
     runs-on: windows-latest
-    needs: build
+    needs: [check-release, build]
+    if: ${{ needs.check-release.outputs.should_build == 'true' }}
 
     steps:
     - name: Download installer artifacts
