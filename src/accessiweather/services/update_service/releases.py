@@ -233,7 +233,11 @@ class ReleaseManager:
                 return cand_date > curr_date
             return False
 
-        if cand_is_nightly and not curr_is_nightly:
+        if (
+            cand_is_nightly
+            and not curr_is_nightly
+            and ReleaseManager._parse_nightly_suffix(candidate) is not None
+        ):
             return True
 
         if not cand_is_nightly and curr_is_nightly:
@@ -242,11 +246,16 @@ class ReleaseManager:
         try:
             return Version(candidate) > Version(current)
         except InvalidVersion:
-            logger.warning(f"Invalid version comparison: {candidate} vs {current}")
+            logger.debug("Invalid version comparison: %s vs %s", candidate, current)
+            return False
+        except Exception as exc:
+            logger.debug("Error comparing versions %s vs %s: %s", candidate, current, exc)
             return False
 
     @staticmethod
-    def find_platform_asset(release: dict[str, Any]) -> dict[str, Any] | None:
+    def find_platform_asset(
+        release: dict[str, Any], portable: bool = False
+    ) -> dict[str, Any] | None:
         """Choose the best asset for the current platform."""
         assets = release.get("assets", [])
         system = platform.system().lower()
@@ -285,6 +294,12 @@ class ReleaseManager:
             if any(pattern in name for pattern in deny_patterns):
                 continue
             filtered_assets.append(asset)
+
+        if portable and "windows" in system:
+            for asset in filtered_assets:
+                name = asset.get("name", "").lower()
+                if "portable" in name and name.endswith(".zip"):
+                    return asset
 
         for extension in priority_extensions:
             for asset in filtered_assets:

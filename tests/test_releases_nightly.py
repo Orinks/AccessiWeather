@@ -86,3 +86,16 @@ class TestReleaseManagerNightly:
         assert ReleaseManager._is_newer_version("invalid_ver", "v1.0.0") is False
         assert ReleaseManager._is_newer_version("v1.0.0", "invalid_ver") is False
         assert ReleaseManager._is_newer_version("foo", "bar") is False
+
+    def test_is_newer_invalid_tags_soft_fail(self):
+        """Test that invalid tags or parsing failures result in False (soft fail)."""
+        # 1. Invalid tag vs valid version
+        assert ReleaseManager._is_newer_version("invalid-tag", "1.0.0") is False
+
+        # 2. Valid version vs invalid tag
+        assert ReleaseManager._is_newer_version("1.0.0", "invalid-tag") is False
+
+        # 3. Broken nightly tag (suffix parsing fails)
+        # This relies on _parse_nightly_suffix returning None for "nightly-broken"
+        # and _is_newer_version handling that gracefully.
+        assert ReleaseManager._is_newer_version("nightly-broken", "1.0.0") is False
