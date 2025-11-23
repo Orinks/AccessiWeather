@@ -565,8 +565,6 @@ class SettingsDialog:
             description = (
                 "🔒 Stable releases only. Production-ready versions. Recommended for most users."
             )
-        elif "Beta" in channel_value:
-            description = "🧪 Pre-release versions for testing. Includes new features before stable release. May contain bugs."
         elif "Development" in channel_value:
             description = "🛠️ Latest development builds. Cutting-edge features but may be unstable. For developers and early testers."
         else:

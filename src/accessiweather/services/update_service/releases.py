@@ -233,7 +233,11 @@ class ReleaseManager:
                 return cand_date > curr_date
             return False
 
-        if cand_is_nightly and not curr_is_nightly:
+        if (
+            cand_is_nightly
+            and not curr_is_nightly
+            and ReleaseManager._parse_nightly_suffix(candidate) is not None
+        ):
             return True
 
         if not cand_is_nightly and curr_is_nightly:
@@ -242,7 +246,10 @@ class ReleaseManager:
         try:
             return Version(candidate) > Version(current)
         except InvalidVersion:
-            logger.warning(f"Invalid version comparison: {candidate} vs {current}")
+            logger.debug("Invalid version comparison: %s vs %s", candidate, current)
+            return False
+        except Exception as exc:
+            logger.debug("Error comparing versions %s vs %s: %s", candidate, current, exc)
             return False
 
     @staticmethod
