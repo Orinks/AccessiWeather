@@ -219,6 +219,13 @@ class QueueHttpClient:
         return None
 
 
+class RejectFollowRedirectsClient(QueueHttpClient):
+    def stream(self, method: str, url: str, **kwargs):
+        if "follow_redirects" in kwargs:
+            raise TypeError("got an unexpected keyword argument 'follow_redirects'")
+        return super().stream(method, url, **kwargs)
+
+
 # -----------------------------
 # Fixtures
 # -----------------------------
@@ -467,6 +474,26 @@ async def test_download_update_follows_redirects(windows_platform, svc):
 
     assert dest
     assert client._stream_calls[0].get("follow_redirects") is True
+
+
+@pytest.mark.asyncio
+async def test_download_update_handles_client_without_follow_redirects(windows_platform, svc):
+    content = b"legacy client content"
+    client = RejectFollowRedirectsClient(
+        stream_resp=MockStreamResponse(
+            headers={"content-length": str(len(content))}, chunks=[content]
+        )
+    )
+    svc.http_client = client
+
+    info = UpdateInfo(
+        version="1.0.1", download_url="https://example.com/file.exe", artifact_name="file.exe"
+    )
+
+    dest = await svc.download_update(info)
+
+    assert dest
+    assert client._stream_calls[0].get("follow_redirects") is None
 
 
 @pytest.mark.asyncio

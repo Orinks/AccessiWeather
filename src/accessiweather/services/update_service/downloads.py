@@ -140,9 +140,9 @@ class DownloadManager:
         try:
             with open(dest_path, "wb") as file_obj:
                 try:
-                    async with self.http_client.stream(
-                        "GET", asset_url, follow_redirects=True
-                    ) as response:
+                    stream_ctx = self._open_stream(asset_url)
+
+                    async with stream_ctx as response:
                         response.raise_for_status()
                         total = int(response.headers.get("content-length", 0))
                         downloaded = 0
@@ -186,6 +186,18 @@ class DownloadManager:
             with contextlib.suppress(Exception):
                 dest_path.unlink(missing_ok=True)
             raise
+
+    def _open_stream(self, asset_url: str):
+        """Open a streaming response, tolerating clients without follow_redirects."""
+
+        try:
+            return self.http_client.stream("GET", asset_url, follow_redirects=True)
+        except TypeError as exc:
+            if "follow_redirects" not in str(exc):
+                raise
+
+            logger.warning("HTTP client does not support follow_redirects; retrying without it")
+            return self.http_client.stream("GET", asset_url)
 
     @staticmethod
     def _verify_sha256(dest_path: Path, expected_sha256: str) -> bool:
