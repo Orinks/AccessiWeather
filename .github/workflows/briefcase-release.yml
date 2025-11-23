@@ -126,6 +126,85 @@ jobs:
           cat checksums.txt
           cd ..
 
+      - name: Extract release notes from CHANGELOG
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.tag-check.outputs.publish == 'true' }}
+        id: changelog
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Extract release notes from CHANGELOG.md for the given version
+          python3 << 'PYTHON_EOF'
+          import re
+
+          version = "$VERSION"
+          changelog_file = "CHANGELOG.md"
+
+          try:
+              with open(changelog_file, 'r') as f:
+                  content = f.read()
+
+              # Find the section for this version (e.g., ## [0.4.1] - 2025-11-20)
+              # The pattern matches version headers with optional dates
+              pattern = rf'## \[{re.escape(version)}\].*?\n(.*?)(?=## \[|$)'
+              match = re.search(pattern, content, re.DOTALL)
+
+              if match:
+                  release_notes = match.group(1).strip()
+                  # Remove any trailing dashes/separators
+                  release_notes = re.sub(r'\n---\s*$', '', release_notes)
+                  print(release_notes)
+              else:
+                  # If version not found, look for Unreleased section
+                  unreleased_pattern = r'## Unreleased\n(.*?)(?=## \[|$)'
+                  match = re.search(unreleased_pattern, content, re.DOTALL)
+                  if match:
+                      release_notes = match.group(1).strip()
+                      release_notes = re.sub(r'\n---\s*$', '', release_notes)
+                      print(release_notes)
+                  else:
+                      print("No release notes found in CHANGELOG.md")
+          except FileNotFoundError:
+              print("CHANGELOG.md not found")
+          PYTHON_EOF
+
+      - name: Save release notes
+        if: ${{ github.event_name == 'workflow_dispatch' || steps.tag-check.outputs.publish == 'true' }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Extract release notes and save to file
+          python3 << 'PYTHON_EOF' > release-notes.md
+          import re
+
+          version = "$VERSION"
+          changelog_file = "CHANGELOG.md"
+
+          try:
+              with open(changelog_file, 'r') as f:
+                  content = f.read()
+
+              # Find the section for this version
+              pattern = rf'## \[{re.escape(version)}\].*?\n(.*?)(?=## \[|$)'
+              match = re.search(pattern, content, re.DOTALL)
+
+              if match:
+                  release_notes = match.group(1).strip()
+                  release_notes = re.sub(r'\n---\s*$', '', release_notes)
+              else:
+                  # If version not found, look for Unreleased section
+                  unreleased_pattern = r'## Unreleased\n(.*?)(?=## \[|$)'
+                  match = re.search(unreleased_pattern, content, re.DOTALL)
+                  if match:
+                      release_notes = match.group(1).strip()
+                      release_notes = re.sub(r'\n---\s*$', '', release_notes)
+                  else:
+                      release_notes = "See CHANGELOG.md for details."
+
+              print(release_notes)
+          except FileNotFoundError:
+              print("See CHANGELOG.md for details.")
+          PYTHON_EOF
+
       - name: Create Release
         if: ${{ github.event_name == 'workflow_dispatch' || steps.tag-check.outputs.publish == 'true' }}
         env:
@@ -150,11 +229,11 @@ jobs:
             fi
           fi
 
-          # Create release with artifacts (as draft for manual review)
+          # Create release with artifacts from CHANGELOG.md notes (published, not draft)
           gh release create "${TAG}" \
             --title "AccessiWeather v${VERSION}" \
-            --draft \
+            --notes-file release-notes.md \
             --target "$(git rev-parse HEAD)" \
             release-assets/*
 
-          echo "✓ Release ${TAG} created as draft. Edit release notes and publish manually."
+          echo "✓ Release ${TAG} created and published with notes from CHANGELOG.md"
