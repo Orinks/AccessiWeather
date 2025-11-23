@@ -109,7 +109,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-build-pip-${{ hashFiles('requirements.txt', 'requirements-dev.txt', 'pyproject.toml') }}
+        key: ${{ runner.os }}-build-pip-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements-dev.txt') }}-${{ hashFiles('pyproject.toml') }}
         restore-keys: |
           ${{ runner.os }}-build-pip-
 
