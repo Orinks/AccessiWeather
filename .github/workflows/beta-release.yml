@@ -92,10 +92,18 @@ jobs:
 
         echo "Updated version to: $VERSION"
 
+    - name: Create Briefcase app scaffold
+      run: |
+        echo "Creating Briefcase app scaffold..."
+        python installer/make.py create --platform windows
+      env:
+        DISPLAY: ""
+        ACCESSIWEATHER_TEST_MODE: "1"
+
     - name: Build Briefcase application
       run: |
         echo "Building Briefcase app for Windows..."
-        briefcase build windows app --no-input --log
+        python installer/make.py build --platform windows
       env:
         DISPLAY: ""
         ACCESSIWEATHER_TEST_MODE: "1"
@@ -103,33 +111,20 @@ jobs:
     - name: Package Briefcase application
       run: |
         echo "Packaging Briefcase app as MSI installer..."
-        briefcase package windows app --no-input --log --adhoc-sign
+        python installer/make.py package --platform windows
       env:
         DISPLAY: ""
         ACCESSIWEATHER_TEST_MODE: "1"
 
-    - name: Create portable ZIP version
-      shell: bash
+    - name: Create portable ZIP version (Windows)
       run: |
-        VERSION="${{ steps.version.outputs.version }}"
+        echo "Creating portable ZIP version..."
+        python installer/make.py zip --platform windows || true
+      env:
+        DISPLAY: ""
+        ACCESSIWEATHER_TEST_MODE: "1"
 
-        # Find the built app directory
-        APP_DIR=$(find build -name "AccessiWeather" -type d | head -1)
 
-        if [ -z "$APP_DIR" ]; then
-          echo "Error: Could not find built app directory"
-          find build -type d -name "*" | head -10
-          exit 1
-        fi
-
-        echo "Found app directory: $APP_DIR"
-
-        # Create portable ZIP
-        cd "$APP_DIR"
-        powershell -Command "Compress-Archive -Path * -DestinationPath '../../AccessiWeather_Beta_v$VERSION.zip'"
-        cd ../..
-
-        echo "Created portable ZIP: AccessiWeather_Beta_v$VERSION.zip"
 
     - name: Prepare release assets
       shell: bash

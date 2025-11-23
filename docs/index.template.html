@@ -278,34 +278,34 @@
         </header>
 
         <!-- Stable Release Section -->
-        <section class="download-section stable">
-            <h2 class="section-title">
-                Stable Release
-                <span class="badge stable">Recommended</span>
-            </h2>
+         <section class="download-section stable" id="main-section" data-has-release="{{MAIN_HAS_RELEASE}}">
+             <h2 class="section-title">
+                 Stable Release
+                 <span class="badge stable">Recommended</span>
+             </h2>
 
-            <div class="version-info">
-                <h3>Version <span id="main-version">{{MAIN_VERSION}}</span></h3>
-                <p><strong>Released:</strong> <span id="main-date">{{MAIN_DATE}}</span></p>
-                <p><strong>Commit:</strong> <span id="main-commit">{{MAIN_COMMIT}}</span></p>
-            </div>
+             <div class="version-info">
+                 <h3>Version <span id="main-version">{{MAIN_VERSION}}</span></h3>
+                 <p><strong>Released:</strong> <span id="main-date">{{MAIN_DATE}}</span></p>
+                 <p><strong>Commit:</strong> <span id="main-commit">{{MAIN_COMMIT}}</span></p>
+             </div>
 
-            <div class="download-buttons">
-                <a href="#" id="main-installer" class="download-btn">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                            d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-                    </svg>
-                    Download Installer
-                </a>
-                <a href="#" id="main-portable" class="download-btn secondary">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                            d="M12,17.5L10.25,16H13.75L12,17.5M10,4.5C10,3.67 10.67,3 11.5,3H12.5C13.33,3 14,3.67 14,4.5V5.5H10V4.5M4,7V6H20V7H19V19A2,2 0 0,1 17,21H7A2,2 0 0,1 5,19V7H4Z" />
-                    </svg>
-                    Download Portable
-                </a>
-            </div>
+             <div class="download-buttons" id="main-downloads">
+                 <a href="{{MAIN_INSTALLER_URL}}" id="main-installer" class="download-btn">
+                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                         <path
+                             d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+                     </svg>
+                     Download Installer
+                 </a>
+                 <a href="{{MAIN_PORTABLE_URL}}" id="main-portable" class="download-btn secondary">
+                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                         <path
+                             d="M12,17.5L10.25,16H13.75L12,17.5M10,4.5C10,3.67 10.67,3 11.5,3H12.5C13.33,3 14,3.67 14,4.5V5.5H10V4.5M4,7V6H20V7H19V19A2,2 0 0,1 17,21H7A2,2 0 0,1 5,19V7H4Z" />
+                     </svg>
+                     Download Portable
+                 </a>
+             </div>
 
             <!-- Release Notes Section -->
             <div class="release-notes">
@@ -317,7 +317,7 @@
         </section>
 
         <!-- Development Build Section -->
-        <section class="download-section dev">
+        <section class="download-section dev" id="dev-section" data-has-release="{{DEV_HAS_RELEASE}}">
             <h2 class="section-title">
                 Development Build
                 <span class="badge dev">Latest Features</span>
@@ -329,7 +329,7 @@
                 <p><strong>Commit:</strong> <span id="dev-commit">{{DEV_COMMIT}}</span></p>
             </div>
 
-            <div class="download-buttons">
+            <div class="download-buttons" id="dev-downloads">
                 <a href="#" id="dev-installer" class="download-btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                         <path
@@ -435,25 +435,22 @@
 
     <script>
         // Build info configuration - values will be substituted by GitHub Actions
-        const buildInfo = {
-            main: {
-                version: '{{MAIN_VERSION}}',
-                date: '{{MAIN_DATE}}',
-                commit: '{{MAIN_COMMIT}}',
-                // Will be dynamically updated with actual asset URLs from GitHub API
-                installerUrl: 'https://github.com/Orinks/AccessiWeather/releases/latest',
-                portableUrl: 'https://github.com/Orinks/AccessiWeather/releases/latest'
-            },
-            dev: {
-                version: '{{DEV_VERSION}}',
-                date: '{{DEV_DATE}}',
-                commit: '{{DEV_COMMIT}}',
-                releaseUrl: '{{DEV_RELEASE_URL}}',
-                installerUrl: '{{DEV_INSTALLER_URL}}',
-                portableUrl: '{{DEV_PORTABLE_URL}}'
-            },
-            lastUpdated: '{{LAST_UPDATED}}'
-        };
+         const buildInfo = {
+             main: {
+                 version: '{{MAIN_VERSION}}',
+                 date: '{{MAIN_DATE}}',
+                 commit: '{{MAIN_COMMIT}}'
+             },
+             dev: {
+                 version: '{{DEV_VERSION}}',
+                 date: '{{DEV_DATE}}',
+                 commit: '{{DEV_COMMIT}}',
+                 releaseUrl: '{{DEV_RELEASE_URL}}',
+                 installerUrl: '{{DEV_INSTALLER_URL}}',
+                 portableUrl: '{{DEV_PORTABLE_URL}}'
+             },
+             lastUpdated: '{{LAST_UPDATED}}'
+         };
 
         // Update download links and version info
         function updateDownloadInfo() {
@@ -475,8 +472,6 @@
             });
 
             // Main branch
-            document.getElementById('main-installer').href = buildInfo.main.installerUrl;
-            document.getElementById('main-portable').href = buildInfo.main.portableUrl;
             document.getElementById('main-version').textContent = buildInfo.main.version;
             if (mainDateEl) {
                 mainDateEl.textContent = buildInfo.main.date;
@@ -533,8 +528,34 @@
          }
 
          // Update the page with template-substituted values
-         updateDownloadInfo();
-    </script>
+          updateDownloadInfo();
+
+          // Hide download buttons if no release exists
+          function hideDownloadsIfNoRelease() {
+              const mainSection = document.getElementById('main-section');
+              const devSection = document.getElementById('dev-section');
+              const mainDownloads = document.getElementById('main-downloads');
+              const devDownloads = document.getElementById('dev-downloads');
+
+              if (mainSection && mainSection.dataset.hasRelease === 'false' && mainDownloads) {
+                  mainDownloads.style.display = 'none';
+                  const p = document.createElement('p');
+                  p.style.color = '#4a5568';
+                  p.textContent = 'No release available. Check GitHub for latest updates.';
+                  mainSection.querySelector('.version-info').parentElement.insertBefore(p, mainDownloads);
+              }
+
+              if (devSection && devSection.dataset.hasRelease === 'false' && devDownloads) {
+                  devDownloads.style.display = 'none';
+                  const p = document.createElement('p');
+                  p.style.color = '#4a5568';
+                  p.textContent = 'No pre-release available. Latest development builds are available from the main branch.';
+                  devSection.querySelector('.version-info').parentElement.insertBefore(p, devDownloads);
+              }
+          }
+
+          hideDownloadsIfNoRelease();
+         </script>
 </body>
 
 </html>

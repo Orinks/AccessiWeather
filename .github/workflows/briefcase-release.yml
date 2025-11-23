@@ -136,17 +136,25 @@ jobs:
 
           echo "Creating release for tag ${TAG}..."
 
-          # Check if release already exists
+          # Check if release already exists and is published
           if gh release view "${TAG}" &>/dev/null; then
-            echo "Release ${TAG} already exists, updating it..."
-            gh release delete "${TAG}" --yes || true
+            # Get the draft status of the release
+            IS_DRAFT=$(gh release view "${TAG}" --json isDraft -q '.isDraft')
+
+            if [ "$IS_DRAFT" = "false" ]; then
+              echo "Release ${TAG} already exists and is published. Skipping update to preserve release notes."
+              exit 0
+            else
+              echo "Release ${TAG} exists as draft, updating it..."
+              gh release delete "${TAG}" --yes || true
+            fi
           fi
 
-          # Create release with artifacts
+          # Create release with artifacts (as draft for manual review)
           gh release create "${TAG}" \
             --title "AccessiWeather v${VERSION}" \
             --draft \
             --target "$(git rev-parse HEAD)" \
             release-assets/*
 
-          echo "✓ Release ${TAG} created successfully"
+          echo "✓ Release ${TAG} created as draft. Edit release notes and publish manually."

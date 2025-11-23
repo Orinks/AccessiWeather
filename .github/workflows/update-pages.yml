@@ -160,10 +160,29 @@ jobs:
              # Format the date nicely
              local formatted_date=$(date -d "$published_at" "+%Y-%m-%d %H:%M UTC" 2>/dev/null || echo "$published_at")
 
+             # Extract asset URLs - prioritize .msi for installer, .zip for portable
+             local installer_url=$(echo "$release_info" | jq -r '
+               [
+                 .assets[]?
+                 | select((.name // "" | ascii_downcase) | contains(".msi"))
+                 | .browser_download_url
+               ][0] // empty
+             ')
+
+             local portable_url=$(echo "$release_info" | jq -r '
+               [
+                 .assets[]?
+                 | select((.name // "" | ascii_downcase) | contains("portable"))
+                 | .browser_download_url
+               ][0] // empty
+             ')
+
              echo "main_version=${version}"
              echo "main_date=${formatted_date}"
              echo "main_run_id="
              echo "main_commit=${target_commitish}"
+             echo "main_installer_url=${installer_url}"
+             echo "main_portable_url=${portable_url}"
 
              echo "✓ Found release: version=$version, date=$formatted_date" >&2
            else
@@ -171,6 +190,8 @@ jobs:
              echo "main_date=N/A"
              echo "main_run_id="
              echo "main_commit="
+             echo "main_installer_url="
+             echo "main_portable_url="
              echo "⚠ No releases found" >&2
            fi
          }
@@ -260,6 +281,9 @@ jobs:
             echo "${branch}_date=${formatted_date}"
             echo "${branch}_run_id=${run_id}"
             echo "${branch}_commit=${commit_sha}"
+            echo "${branch}_release_url="
+            echo "${branch}_installer_url="
+            echo "${branch}_portable_url="
 
             echo "✓ Found build for $branch: version=$version, date=$formatted_date" >&2
           else
@@ -267,57 +291,50 @@ jobs:
             echo "${branch}_date=N/A"
             echo "${branch}_run_id="
             echo "${branch}_commit="
+            echo "${branch}_release_url="
+            echo "${branch}_installer_url="
+            echo "${branch}_portable_url="
             echo "⚠ No successful builds found for $branch" >&2
           fi
         }
 
         # Get info for specified branches
-        for branch in $FETCH_BRANCHES; do
-          if [ "$branch" = "main" ]; then
-            # For main branch, get release info from GitHub releases
-            get_release_info >> $GITHUB_OUTPUT
-          elif [ "$branch" = "dev" ]; then
-            if ! get_pre_release_info >> $GITHUB_OUTPUT; then
-              echo "Falling back to latest successful workflow run for dev" >&2
-              get_build_info "$branch" >> $GITHUB_OUTPUT
-            fi
-          else
-            # For other branches (dev, workflow-testing), get build info from workflow runs
-            get_build_info "$branch" >> $GITHUB_OUTPUT
-          fi
-        done
+         for branch in $FETCH_BRANCHES; do
+           if [ "$branch" = "main" ]; then
+             # For main branch, get release info from GitHub releases
+             get_release_info >> $GITHUB_OUTPUT
+             echo "main_has_release=true" >> $GITHUB_OUTPUT
+           elif [ "$branch" = "dev" ]; then
+             if get_pre_release_info >> $GITHUB_OUTPUT 2>/dev/null; then
+               echo "dev_has_release=true" >> $GITHUB_OUTPUT
+             else
+               echo "No published pre-releases found for dev, using latest successful build" >&2
+               get_build_info "$branch" >> $GITHUB_OUTPUT
+               echo "dev_has_release=false" >> $GITHUB_OUTPUT
+             fi
+           else
+             # For other branches (dev, workflow-testing), get build info from workflow runs
+             get_build_info "$branch" >> $GITHUB_OUTPUT
+           fi
+         done
 
     - name: Fetch release notes and recent commits
       run: |
         echo "📝 Fetching release notes and recent commits..."
 
+        # Install markdown converter
+        python -m pip install -q markdown
+
         # Fetch latest release notes
         echo "Fetching latest release notes..."
         RELEASE_NOTES=""
         if curl -s "https://api.github.com/repos/Orinks/AccessiWeather/releases/latest" | jq -e '.body' > /dev/null 2>&1; then
-          RELEASE_NOTES=$(curl -s "https://api.github.com/repos/Orinks/AccessiWeather/releases/latest" | jq -r '.body // "No release notes available."')
-
-          # Convert markdown to basic HTML for better display
-          # Replace markdown headers with HTML headers
-          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | sed 's/^### \(.*\)/<h5>\1<\/h5>/g')
-          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | sed 's/^## \(.*\)/<h4>\1<\/h4>/g')
-          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | sed 's/^# \(.*\)/<h3>\1<\/h3>/g')
-
-          # Replace markdown lists with HTML lists
-          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | sed 's/^- \(.*\)/<li>\1<\/li>/g')
-          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | sed 's/^\* \(.*\)/<li>\1<\/li>/g')
-
-          # Wrap consecutive list items in ul tags
-          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | sed ':a;N;$!ba;s/<li>\([^<]*\)<\/li>\n<li>/<ul><li>\1<\/li>\n<li>/g')
-          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | sed 's/<\/li>\n\([^<]*\)$/<\/li><\/ul>\n\1/g')
-          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | sed 's/<\/li>$/<\/li><\/ul>/g')
-
-          # Replace newlines with <br> for proper HTML display
-          RELEASE_NOTES=$(echo "$RELEASE_NOTES" | sed ':a;N;$!ba;s/\n\([^<]\)/<br>\1/g')
-
-          echo "✓ Fetched release notes (${#RELEASE_NOTES} characters)"
+          RAW_NOTES=$(curl -s "https://api.github.com/repos/Orinks/AccessiWeather/releases/latest" | jq -r '.body // "No release notes available."')
+          # Convert markdown to HTML using Python markdown library
+          RELEASE_NOTES=$(python3 -c 'import markdown; import sys; html = markdown.markdown(sys.stdin.read(), extensions=["nl2br", "tables"]); print(html)' <<< "$RAW_NOTES")
+          echo "✓ Fetched and converted release notes (${#RELEASE_NOTES} characters)"
         else
-          RELEASE_NOTES="<p>No release notes available. <a href=\"https://github.com/Orinks/AccessiWeather/releases/latest\" target=\"_blank\">View on GitHub</a></p>"
+          RELEASE_NOTES="<p>No release notes available. <a href=\"https://github.com/Orinks/AccessiWeather/releases/latest\">View on GitHub</a></p>"
           echo "⚠ No release found, using fallback message"
         fi
 
@@ -357,6 +374,9 @@ jobs:
         MAIN_VERSION="${{ steps.build-info.outputs.main_version }}"
         MAIN_DATE="${{ steps.build-info.outputs.main_date }}"
         MAIN_COMMIT="${{ steps.build-info.outputs.main_commit }}"
+        MAIN_INSTALLER_URL="${{ steps.build-info.outputs.main_installer_url }}"
+        MAIN_PORTABLE_URL="${{ steps.build-info.outputs.main_portable_url }}"
+        MAIN_HAS_RELEASE="${{ steps.build-info.outputs.main_has_release }}"
 
         # Always use dev branch information for development section when available
         # This ensures we show different versions: stable release vs latest dev build
@@ -366,6 +386,7 @@ jobs:
         DEV_RELEASE_URL="${{ steps.build-info.outputs.dev_release_url }}"
         DEV_INSTALLER_URL="${{ steps.build-info.outputs.dev_installer_url }}"
         DEV_PORTABLE_URL="${{ steps.build-info.outputs.dev_portable_url }}"
+        DEV_HAS_RELEASE="${{ steps.build-info.outputs.dev_has_release }}"
 
         # If dev branch info is not available, fall back to target branch or generic values
         if [ -z "$DEV_VERSION" ] || [ "$DEV_VERSION" = "No builds available" ]; then
@@ -409,16 +430,24 @@ jobs:
         DEV_PORTABLE_URL_ESC=$(escape_for_sed "$DEV_PORTABLE_URL")
         LAST_UPDATED_ESCAPED=$(escape_for_sed "$LAST_UPDATED")
 
+        # Escape URLs for sed
+        MAIN_INSTALLER_URL_ESC=$(escape_for_sed "$MAIN_INSTALLER_URL")
+        MAIN_PORTABLE_URL_ESC=$(escape_for_sed "$MAIN_PORTABLE_URL")
+
         # Substitute template variables with actual values
         sed -i "s@{{MAIN_VERSION}}@$MAIN_VERSION@g" index.html
         sed -i "s@{{MAIN_DATE}}@$MAIN_DATE@g" index.html
         sed -i "s@{{MAIN_COMMIT}}@$MAIN_COMMIT@g" index.html
+        sed -i "s@{{MAIN_INSTALLER_URL}}@$MAIN_INSTALLER_URL_ESC@g" index.html
+        sed -i "s@{{MAIN_PORTABLE_URL}}@$MAIN_PORTABLE_URL_ESC@g" index.html
+        sed -i "s@{{MAIN_HAS_RELEASE}}@$MAIN_HAS_RELEASE@g" index.html
         sed -i "s@{{DEV_VERSION}}@$DEV_VERSION@g" index.html
         sed -i "s@{{DEV_DATE}}@$DEV_DATE@g" index.html
         sed -i "s@{{DEV_COMMIT}}@$DEV_COMMIT@g" index.html
         sed -i "s@{{DEV_RELEASE_URL}}@$DEV_RELEASE_URL_ESC@g" index.html
         sed -i "s@{{DEV_INSTALLER_URL}}@$DEV_INSTALLER_URL_ESC@g" index.html
         sed -i "s@{{DEV_PORTABLE_URL}}@$DEV_PORTABLE_URL_ESC@g" index.html
+        sed -i "s@{{DEV_HAS_RELEASE}}@$DEV_HAS_RELEASE@g" index.html
         sed -i "s@{{LAST_UPDATED}}@$LAST_UPDATED_ESCAPED@g" index.html
 
         # Substitute release notes and commits using a more robust method
