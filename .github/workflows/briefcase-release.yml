@@ -52,10 +52,11 @@ jobs:
         run: |
           RUN_ID="${{ github.event.workflow_run.id }}"
           if [ -z "$RUN_ID" ] || [ "$RUN_ID" = "null" ]; then
-            # For workflow_dispatch, get the latest successful build run from main branch
-            echo "Manual trigger detected, fetching latest successful build run from main..."
+            # For workflow_dispatch, get the latest successful build run from current branch
+            BRANCH="${{ github.ref_name }}"
+            echo "Manual trigger detected on branch '$BRANCH', fetching latest successful build run..."
             RUN_ID=$(curl -s -H "Authorization: token ${{ github.token }}" \
-              "https://api.github.com/repos/${{ github.repository }}/actions/workflows/briefcase-build.yml/runs?branch=main&status=success&per_page=1" \
+              "https://api.github.com/repos/${{ github.repository }}/actions/workflows/briefcase-build.yml/runs?branch=$BRANCH&status=success&per_page=1" \
               | jq -r '.workflow_runs[0].id // empty')
             echo "Latest build run ID: $RUN_ID"
           fi
@@ -133,8 +134,9 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
 
           # Extract release notes from CHANGELOG.md for the given version
-          python3 << 'PYTHON_EOF'
+          python3 << PYTHON_EOF
           import re
+          import sys
 
           version = "$VERSION"
           changelog_file = "CHANGELOG.md"
@@ -155,11 +157,14 @@ jobs:
                   print(release_notes)
               else:
                   # If version not found, look for Unreleased section
+                  print(f"ERROR: Could not find version [{version}] in CHANGELOG.md", file=__import__('sys').stderr)
+                  print(f"DEBUG: Looking for pattern: ## \\[{version}\\]", file=__import__('sys').stderr)
                   unreleased_pattern = r'## Unreleased\n(.*?)(?=## \[|$)'
                   match = re.search(unreleased_pattern, content, re.DOTALL)
                   if match:
                       release_notes = match.group(1).strip()
                       release_notes = re.sub(r'\n---\s*$', '', release_notes)
+                      print(f"WARNING: Using Unreleased section as fallback", file=__import__('sys').stderr)
                       print(release_notes)
                   else:
                       print("No release notes found in CHANGELOG.md")
@@ -173,8 +178,9 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
 
           # Extract release notes and save to file
-          python3 << 'PYTHON_EOF' > release-notes.md
+          python3 << PYTHON_EOF > release-notes.md
           import re
+          import sys
 
           version = "$VERSION"
           changelog_file = "CHANGELOG.md"
@@ -190,8 +196,10 @@ jobs:
               if match:
                   release_notes = match.group(1).strip()
                   release_notes = re.sub(r'\n---\s*$', '', release_notes)
+                  print(f"✓ Extracted release notes for v{version}", file=sys.stderr)
               else:
                   # If version not found, look for Unreleased section
+                  print(f"⚠ Could not find v{version}, checking Unreleased section", file=sys.stderr)
                   unreleased_pattern = r'## Unreleased\n(.*?)(?=## \[|$)'
                   match = re.search(unreleased_pattern, content, re.DOTALL)
                   if match:

@@ -58,9 +58,17 @@ jobs:
 
           echo "Checking for existing release: ${TAG}"
 
+          # Only skip build if release exists AND has artifacts
           if gh release view "${TAG}" &>/dev/null; then
-            echo "Release ${TAG} already exists. Skipping build."
-            echo "should_build=false" >> $GITHUB_OUTPUT
+            # Check if release has binaries/assets (not just checksums)
+            ASSET_COUNT=$(gh api repos/${{ github.repository }}/releases/tags/${TAG} --jq '.assets | map(select(.name != "checksums.txt")) | length')
+            if [ "$ASSET_COUNT" -gt 0 ]; then
+              echo "Release ${TAG} already exists with assets. Skipping build."
+              echo "should_build=false" >> $GITHUB_OUTPUT
+            else
+              echo "Release ${TAG} exists but missing assets. Proceeding with rebuild."
+              echo "should_build=true" >> $GITHUB_OUTPUT
+            fi
           else
             echo "Release ${TAG} does not exist. Proceeding with build."
             echo "should_build=true" >> $GITHUB_OUTPUT
@@ -101,7 +109,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-build-pip-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml') }}
+        key: ${{ runner.os }}-build-pip-${{ hashFiles('requirements.txt', 'requirements-dev.txt', 'pyproject.toml') }}
         restore-keys: |
           ${{ runner.os }}-build-pip-
 
