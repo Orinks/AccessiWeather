@@ -511,155 +511,29 @@
             console.log('Page updated successfully');
         }
 
-        // Fetch latest release info from GitHub API for stable releases
-        async function fetchLatestRelease() {
-            try {
-                console.log('Fetching latest release...');
-                const response = await fetch('https://api.github.com/repos/Orinks/AccessiWeather/releases/latest');
-                console.log('Release response status:', response.status);
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const release = await response.json();
-                console.log('Release data:', release);
-
-                // Update main branch info with latest release
-                buildInfo.main.version = release.tag_name || release.name;
-                buildInfo.main.date = new Date(release.published_at).toLocaleDateString();
-
-                console.log('Updated main build info:', {
-                    version: buildInfo.main.version,
-                    date: buildInfo.main.date
-                });
-
-                // Look for assets and update URLs if found
-                if (release.assets && release.assets.length > 0) {
-                    // Find installer asset (contains "Setup" or "Installer")
-                    const installerAsset = release.assets.find(asset =>
-                        asset.name.toLowerCase().includes('setup') ||
-                        asset.name.toLowerCase().includes('installer')
-                    );
-
-                    // Find portable asset (contains "Portable")
-                    const portableAsset = release.assets.find(asset =>
-                        asset.name.toLowerCase().includes('portable')
-                    );
-
-                    if (installerAsset) {
-                        // Use GitHub's latest release download URL pattern
-                        buildInfo.main.installerUrl = `https://github.com/Orinks/AccessiWeather/releases/latest/download/${installerAsset.name}`;
-                    }
-                    if (portableAsset) {
-                        buildInfo.main.portableUrl = `https://github.com/Orinks/AccessiWeather/releases/latest/download/${portableAsset.name}`;
-                    }
-
-                    console.log('Latest release assets found:', {
-                        installer: installerAsset?.name,
-                        portable: portableAsset?.name,
-                        installerUrl: buildInfo.main.installerUrl,
-                        portableUrl: buildInfo.main.portableUrl
-                    });
-                } else {
-                    console.log('No assets found in latest release, using release page');
-                }
-
-            } catch (error) {
-                console.log('Could not fetch latest release info:', error);
-                buildInfo.main.version = 'Latest Release';
-                buildInfo.main.date = 'Check GitHub for details';
-            }
-        }
-
-        // Fetch dev build info from latest GitHub pre-release
-        async function fetchDevBuildInfo() {
-            try {
-                console.log('Fetching dev pre-release info...');
-                const response = await fetch('https://api.github.com/repos/Orinks/AccessiWeather/releases?per_page=5');
-                console.log('Dev pre-release response status:', response.status);
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const releases = await response.json();
-                console.log('Release data for dev branch:', releases?.length);
-
-                const preRelease = releases.find(rel => rel && rel.prerelease && !rel.draft);
-
-                if (preRelease) {
-                    buildInfo.dev.version = preRelease.tag_name || preRelease.name || buildInfo.dev.version;
-                    buildInfo.dev.date = preRelease.published_at
-                        ? new Date(preRelease.published_at).toLocaleDateString()
-                        : buildInfo.dev.date;
-                    buildInfo.dev.releaseUrl = preRelease.html_url || buildInfo.dev.releaseUrl;
-
-                    if (Array.isArray(preRelease.assets) && preRelease.assets.length > 0) {
-                        const lower = name => (name || '').toLowerCase();
-                        const installerAsset = preRelease.assets.find(asset =>
-                            lower(asset.name).includes('installer') || lower(asset.name).includes('setup')
-                        );
-                        const portableAsset = preRelease.assets.find(asset =>
-                            lower(asset.name).includes('portable')
-                        );
-
-                        if (installerAsset) {
-                            buildInfo.dev.installerUrl = installerAsset.browser_download_url;
-                        }
-                        if (portableAsset) {
-                            buildInfo.dev.portableUrl = portableAsset.browser_download_url;
-                        }
-                    }
-
-                    console.log('Latest dev pre-release info:', {
-                        version: buildInfo.dev.version,
-                        date: buildInfo.dev.date,
-                        installerUrl: buildInfo.dev.installerUrl,
-                        portableUrl: buildInfo.dev.portableUrl
-                    });
-                } else {
-                    console.log('No published pre-releases found for dev branch');
-                    buildInfo.dev.date = 'No pre-release available';
-                }
-
-            } catch (error) {
-                console.log('Could not fetch dev pre-release info:', error);
-                buildInfo.dev.date = 'Check pre-release page';
-            }
-        }
 
         // Initialize the page immediately with template-substituted values
-        console.log('Starting page initialization...');
-        console.log('Build info from template substitution:', buildInfo);
+         console.log('Starting page initialization...');
+         console.log('Build info from template substitution:', buildInfo);
 
-        // Check if template substitution worked (values don't contain {{}} anymore)
-        const hasTemplateValues = buildInfo.main.version.includes('{{') || buildInfo.dev.version.includes('{{');
+         // Check if template substitution worked (values don't contain {{}} anymore)
+         const hasTemplateValues = buildInfo.main.version.includes('{{') || buildInfo.dev.version.includes('{{');
 
-        if (hasTemplateValues) {
-            console.log('Template values not substituted, using fallback defaults');
-            // Fallback to default values if template substitution didn't work
-            buildInfo.main.version = 'Loading...';
-            buildInfo.main.date = 'Loading...';
-            buildInfo.dev.version = '0.9.3';
-            buildInfo.dev.date = 'Loading...';
-            buildInfo.lastUpdated = new Date().toISOString();
-        }
+         if (hasTemplateValues) {
+             console.log('⚠ Template values not substituted, using fallback defaults');
+             // Fallback to default values if template substitution didn't work
+             buildInfo.main.version = 'Loading...';
+             buildInfo.main.date = 'Loading...';
+             buildInfo.dev.version = '0.9.3';
+             buildInfo.dev.date = 'Loading...';
+             buildInfo.lastUpdated = new Date().toISOString();
+         } else {
+             console.log('✓ Template values successfully substituted from GitHub Actions workflow');
+         }
 
-        updateDownloadInfo();
-
-        // Fetch additional info from GitHub API to enhance/verify the data
-        Promise.all([
-            fetchLatestRelease(),
-            fetchDevBuildInfo()
-        ]).then(() => {
-            console.log('All API calls completed, updating page with latest info');
-            updateDownloadInfo();
-        }).catch(error => {
-            console.error('Error fetching additional build info:', error);
-            // Page will still work with template-substituted values
-            updateDownloadInfo();
-        });
+         // Update the page with template-substituted values
+         updateDownloadInfo();
     </script>
 </body>
 
