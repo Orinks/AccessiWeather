@@ -283,14 +283,21 @@ class ReleaseManager:
             ".json",
             ".xml",
             ".plist",
+            ".whl",  # Ignore Python wheels
+            ".tar.gz",  # Ignore source distributions unless explicitly allowed for Linux
         ]
         deny_patterns = ["checksum", "signature", "hash", "verify", "sum"]
 
         filtered_assets: list[dict[str, Any]] = []
         for asset in assets:
             name = asset.get("name", "").lower()
+            # Skip if explicitly denied
             if any(ext in name for ext in deny_extensions):
-                continue
+                # Allow .tar.gz for Linux if it's in priority_extensions
+                if ".tar.gz" in name and ".tar.gz" in priority_extensions:
+                    pass
+                else:
+                    continue
             if any(pattern in name for pattern in deny_patterns):
                 continue
             filtered_assets.append(asset)
