@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 concurrency:
   group: nightly-release
@@ -20,99 +21,120 @@ env:
   FORCE_COLOR: "1"
 
 jobs:
-  nightly:
-    name: Nightly prerelease build
+  prepare:
+    name: Check for changes & find artifacts
     runs-on: ubuntu-latest
-
+    outputs:
+      changed: ${{ steps.changes.outputs.changed }}
+      run_id: ${{ steps.find_run.outputs.run_id }}
     steps:
-    - name: Checkout dev
-      uses: actions/checkout@v5
-      with:
-        ref: dev
-        fetch-depth: 0
+      - name: Checkout dev
+        uses: actions/checkout@v5
+        with:
+          ref: dev
+          fetch-depth: 0
 
-    - name: Check for changes in src/ since last nightly
-      id: changes
-      run: |
-        git fetch --tags
-        LAST_NIGHTLY_TAG=$(git tag --list "nightly-*" --sort=-committerdate | head -n 1)
-        echo "Last nightly tag: $LAST_NIGHTLY_TAG"
+      - name: Check for changes in src/ since last nightly
+        id: changes
+        run: |
+          git fetch --tags
+          LAST_NIGHTLY_TAG=$(git tag --list "nightly-*" --sort=-committerdate | head -n 1)
+          echo "Last nightly tag: $LAST_NIGHTLY_TAG"
 
-        if [ -z "$LAST_NIGHTLY_TAG" ]; then
-          echo "No previous nightly tag found."
-          echo "changed=true" >> "$GITHUB_OUTPUT"
-        else
-          if git diff --quiet "$LAST_NIGHTLY_TAG"..HEAD -- src; then
-             echo "No changes in src/."
-             echo "changed=false" >> "$GITHUB_OUTPUT"
+          if [ -z "$LAST_NIGHTLY_TAG" ]; then
+            echo "No previous nightly tag found."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           else
-             echo "Changes detected in src/."
-             echo "changed=true" >> "$GITHUB_OUTPUT"
+            if git diff --quiet "$LAST_NIGHTLY_TAG"..HEAD -- src; then
+               echo "No changes in src/."
+               echo "changed=false" >> "$GITHUB_OUTPUT"
+            else
+               echo "Changes detected in src/."
+               echo "changed=true" >> "$GITHUB_OUTPUT"
+            fi
           fi
-        fi
 
-    - name: Set up Python
-      if: steps.changes.outputs.changed == 'true'
-      uses: actions/setup-python@v6
-      with:
-        python-version: "3.12"
-        cache: pip
+      - name: Find latest successful build on dev
+        if: steps.changes.outputs.changed == 'true'
+        id: find_run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Find the latest successful run of 'briefcase-build.yml' on branch 'dev'
+          RUN_ID=$(gh api "repos/${{ github.repository }}/actions/workflows/briefcase-build.yml/runs?branch=dev&status=success&per_page=1" \
+            --jq '.workflow_runs[0].id')
 
-    - name: Install system dependencies
-      if: steps.changes.outputs.changed == 'true'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          libcairo2-dev \
-          pkg-config \
-          python3-dev \
-          libgirepository-dev \
-          || sudo apt-get install -y libgirepository1.0-dev \
-          || sudo apt-get install -y libgirepository-2.0-dev
+          if [ -z "$RUN_ID" ] || [ "$RUN_ID" == "null" ]; then
+            echo "No successful build found on dev."
+            exit 1
+          fi
 
-    - name: Install dependencies
-      if: steps.changes.outputs.changed == 'true'
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements-dev.txt
-        pip install -e .
-        pip install build
+          echo "Found run ID: $RUN_ID"
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
 
-    - name: Lint & test
-      if: steps.changes.outputs.changed == 'true'
-      env:
-        PYTHONPATH: src
-        PYTEST_DISABLE_PLUGIN_AUTOLOAD: 1
-        ACCESSIWEATHER_TEST_MODE: "1"
-      run: |
-        ruff format --check .
-        ruff check .
-        pytest -v -p pytest_asyncio --tb=short --maxfail=1
+  nightly-release:
+    name: Publish Nightly Release
+    needs: prepare
+    if: needs.prepare.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ needs.prepare.outputs.run_id }}
+          pattern: "*-installer-*"
+          path: dist
+          merge-multiple: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build distribution
-      if: steps.changes.outputs.changed == 'true'
-      run: |
-        python -m build
-        ls -la dist
+      - name: Download portable artifacts
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ needs.prepare.outputs.run_id }}
+          pattern: "windows-portable-*"
+          path: dist
+          merge-multiple: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Upload artifacts
-      if: steps.changes.outputs.changed == 'true'
-      uses: actions/upload-artifact@v4
-      with:
-        name: nightly-dist
-        path: dist/**
-        retention-days: 7
+      - name: Prepare assets
+        run: |
+          TIMESTAMP=$(date -u +%Y%m%d)
+          cd dist
 
-    - name: Create prerelease with generated notes
-      if: steps.changes.outputs.changed == 'true'
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        TAG="nightly-$(date -u +%Y%m%d)"
-        TITLE="Nightly $(date -u +%Y-%m-%d)"
+          # Remove existing checksums if they exist
+          rm -f checksums.txt
 
-        gh release delete "$TAG" -y || true
-        gh release create "$TAG" dist/** \
-          --title "$TITLE" \
-          --generate-notes \
-          --prerelease
+          # Rename artifacts
+          for file in *; do
+            # Skip if it's not a file we care about (though dist should only contain our downloads)
+            [ -f "$file" ] || continue
+
+            if [[ "$file" == *.msi ]]; then
+              mv "$file" "AccessiWeather-nightly-${TIMESTAMP}-windows-setup.msi"
+            elif [[ "$file" == *.dmg ]]; then
+              mv "$file" "AccessiWeather-nightly-${TIMESTAMP}-macOS.dmg"
+            elif [[ "$file" == *.zip ]]; then
+              mv "$file" "AccessiWeather-nightly-${TIMESTAMP}-windows-portable.zip"
+            fi
+          done
+
+          # Generate new checksums
+          sha256sum * > checksums.txt
+
+          echo "Prepared assets:"
+          ls -la
+
+      - name: Create Prerelease
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="nightly-$(date -u +%Y%m%d)"
+          TITLE="Nightly $(date -u +%Y-%m-%d)"
+
+          # Delete existing release/tag if re-running for the same day
+          gh release delete "$TAG" -y --cleanup-tag || true
+
+          gh release create "$TAG" dist/* \
+            --title "$TITLE" \
+            --generate-notes \
+            --prerelease
