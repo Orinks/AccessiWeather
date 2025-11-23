@@ -79,6 +79,7 @@ class GitHubUpdateService:
         self.http_client = httpx.AsyncClient(
             headers={"User-Agent": f"{self.app_name}/{pkg_version}"},
             timeout=30.0,
+            follow_redirects=True,
         )
 
         self.settings_manager = SettingsManager(self.settings_path)

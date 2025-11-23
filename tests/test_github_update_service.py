@@ -196,14 +196,14 @@ class QueueHttpClient:
         self._get_calls = []
         self._stream_resp = stream_resp or MockStreamResponse()
 
-    async def get(self, url: str, headers: dict | None = None):
+    async def get(self, url: str, headers: dict | None = None, **kwargs):
         self._get_calls.append({"url": url, "headers": dict(headers or {})})
         if self._get_responses:
             return self._get_responses.pop(0)
         # default empty list
         return MockResponse(status_code=200, json_data=[])
 
-    def stream(self, method: str, url: str):
+    def stream(self, method: str, url: str, **kwargs):
         assert method == "GET"
         # return an async context manager
         return self._stream_resp
