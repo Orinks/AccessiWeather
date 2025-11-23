@@ -130,6 +130,7 @@ class GitHubUpdateService:
         method: str | None = None,
         current_version: str | None = None,
     ) -> UpdateInfo | None:
+        """Check for updates against the configured channel (stable, beta, nightly)."""
         if current_version is None:
             try:
                 from ... import __version__ as pkg_version

@@ -16,7 +16,12 @@ DEFAULT_REPO = "accessiweather"
 
 @dataclass
 class UpdateSettings:
-    """Persisted update configuration."""
+    """
+    Persisted update configuration.
+
+    The channel field supports "stable" and "dev".
+    Channels "beta" and "nightly" are automatically migrated to "dev".
+    """
 
     channel: str = "stable"
     owner: str = DEFAULT_OWNER
@@ -57,6 +62,16 @@ class SettingsManager:
                 for old_key, value in data.items():
                     if old_key in field_mapping:
                         filtered_data[field_mapping[old_key]] = value
+
+                # Channel migration: beta/nightly -> dev
+                channel = filtered_data.get("channel")
+                if channel in ("beta", "nightly"):
+                    logger.info(f"Migrating channel '{channel}' to 'dev'")
+                    filtered_data["channel"] = "dev"
+                elif channel not in ("stable", "dev"):
+                    if channel:  # Only warn if a channel was actually set
+                        logger.warning(f"Unknown channel '{channel}', defaulting to 'stable'")
+                    filtered_data["channel"] = "stable"
 
                 return UpdateSettings(**filtered_data)
             except Exception as exc:  # noqa: BLE001 - log and recover gracefully
