@@ -70,6 +70,10 @@ _packaging_stub = types.ModuleType("packaging")
 _version_mod = types.ModuleType("version")
 
 
+class _InvalidVersion(Exception):
+    pass
+
+
 class _Version:
     def __init__(self, s: str):
         s = s.lstrip("vV")
@@ -107,6 +111,7 @@ class _Version:
         return self._cmp_key() == other._cmp_key()
 
 
+_version_mod.InvalidVersion = _InvalidVersion
 _version_mod.Version = _Version
 _packaging_stub.version = _version_mod
 sys.modules.setdefault("packaging", _packaging_stub)
@@ -195,6 +200,7 @@ class QueueHttpClient:
         self._get_responses = list(get_responses or [])
         self._get_calls = []
         self._stream_resp = stream_resp or MockStreamResponse()
+        self._stream_calls: list[dict[str, Any]] = []
 
     async def get(self, url: str, headers: dict | None = None):
         self._get_calls.append({"url": url, "headers": dict(headers or {})})
@@ -203,8 +209,9 @@ class QueueHttpClient:
         # default empty list
         return MockResponse(status_code=200, json_data=[])
 
-    def stream(self, method: str, url: str):
+    def stream(self, method: str, url: str, **kwargs):
         assert method == "GET"
+        self._stream_calls.append({"url": url, **kwargs})
         # return an async context manager
         return self._stream_resp
 
@@ -440,6 +447,26 @@ async def test_download_update_success_with_progress_and_cancel(windows_platform
     assert path.stat().st_size == sum(len(c) for c in chunks)
     # Ensure progress was called incrementally
     assert progress[-1][0] == sum(len(c) for c in chunks)
+
+
+@pytest.mark.asyncio
+async def test_download_update_follows_redirects(windows_platform, svc):
+    content = b"redirected content"
+    client = QueueHttpClient(
+        stream_resp=MockStreamResponse(
+            headers={"content-length": str(len(content))}, chunks=[content]
+        )
+    )
+    svc.http_client = client
+
+    info = UpdateInfo(
+        version="1.0.0", download_url="https://example.com/file.exe", artifact_name="file.exe"
+    )
+
+    dest = await svc.download_update(info)
+
+    assert dest
+    assert client._stream_calls[0].get("follow_redirects") is True
 
 
 @pytest.mark.asyncio

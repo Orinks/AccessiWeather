@@ -1,56 +1,50 @@
-"""
-Simple AccessiWeather package.
+"""Simple AccessiWeather package."""
 
-This package provides a simplified, async-first implementation of AccessiWeather
-using BeeWare/Toga best practices, replacing the complex service layer architecture
-with straightforward, direct API calls and simple data models.
-"""
+from __future__ import annotations
 
-from .app import AccessiWeatherApp, main
-from .config import ConfigManager
-from .display import WeatherPresenter
-from .formatters import WeatherFormatter
-from .location_manager import LocationManager
-from .models import (
-    AppConfig,
-    AppSettings,
-    CurrentConditions,
-    EnvironmentalConditions,
-    Forecast,
-    ForecastPeriod,
-    HourlyForecast,
-    HourlyForecastPeriod,
-    Location,
-    TrendInsight,
-    WeatherAlert,
-    WeatherAlerts,
-    WeatherData,
-)
-from .utils import (
-    TemperatureUnit,
-    convert_wind_direction_to_cardinal,
-    format_pressure,
-    format_temperature,
-    format_wind_speed,
-)
-from .weather_client import WeatherClient
-from .weather_history import (
-    HistoricalWeatherData,
-    WeatherComparison,
-    WeatherHistoryService,
-)
+import importlib
+from importlib import metadata
 
-# Package version is sourced from installed metadata, with fallback to pyproject.toml
+_EXPORT_MAP = {
+    # Main app
+    "AccessiWeatherApp": "accessiweather.app",
+    "main": "accessiweather.app",
+    # Core components
+    "ConfigManager": "accessiweather.config",
+    "WeatherClient": "accessiweather.weather_client",
+    "LocationManager": "accessiweather.location_manager",
+    "WeatherFormatter": "accessiweather.formatters",
+    "WeatherPresenter": "accessiweather.display",
+    # Data models
+    "Location": "accessiweather.models",
+    "CurrentConditions": "accessiweather.models",
+    "ForecastPeriod": "accessiweather.models",
+    "Forecast": "accessiweather.models",
+    "HourlyForecastPeriod": "accessiweather.models",
+    "HourlyForecast": "accessiweather.models",
+    "EnvironmentalConditions": "accessiweather.models",
+    "TrendInsight": "accessiweather.models",
+    "WeatherAlert": "accessiweather.models",
+    "WeatherAlerts": "accessiweather.models",
+    "WeatherData": "accessiweather.models",
+    "AppSettings": "accessiweather.models",
+    "AppConfig": "accessiweather.models",
+    # Weather History
+    "HistoricalWeatherData": "accessiweather.weather_history",
+    "WeatherHistoryService": "accessiweather.weather_history",
+    "WeatherComparison": "accessiweather.weather_history",
+    # Utilities
+    "TemperatureUnit": "accessiweather.utils",
+    "format_temperature": "accessiweather.utils",
+    "format_wind_speed": "accessiweather.utils",
+    "format_pressure": "accessiweather.utils",
+    "convert_wind_direction_to_cardinal": "accessiweather.utils",
+}
+
 try:
-    from importlib.metadata import (
-        PackageNotFoundError,
-        version as _pkg_version,
-    )
-
-    try:
-        _v = _pkg_version("accessiweather")
-    except PackageNotFoundError:
-        _v = None
+    _v = metadata.version("accessiweather")
+except metadata.PackageNotFoundError:
+    _v = None
 except Exception:
     _v = None
 
@@ -74,6 +68,18 @@ def _read_pyproject_version() -> str | None:
 
 
 __version__ = _v or _read_pyproject_version() or "0.0.0"
+
+
+def __getattr__(name: str):
+    module_path = _EXPORT_MAP.get(name)
+    if module_path is None:
+        raise AttributeError(f"module 'accessiweather' has no attribute '{name}'")
+    module = importlib.import_module(module_path)
+    return getattr(module, name)
+
+
+def __dir__():  # pragma: no cover - trivial listing helper
+    return sorted(set(__all__))
 
 
 __all__ = [

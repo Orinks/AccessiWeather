@@ -140,7 +140,9 @@ class DownloadManager:
         try:
             with open(dest_path, "wb") as file_obj:
                 try:
-                    async with self.http_client.stream("GET", asset_url) as response:
+                    async with self.http_client.stream(
+                        "GET", asset_url, follow_redirects=True
+                    ) as response:
                         response.raise_for_status()
                         total = int(response.headers.get("content-length", 0))
                         downloaded = 0
