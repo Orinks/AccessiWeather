@@ -128,11 +128,25 @@ jobs:
 
       - name: Create Release
         if: ${{ github.event_name == 'workflow_dispatch' || steps.tag-check.outputs.publish == 'true' }}
-        uses: ncipollo/release-action@v1
-        with:
-          tag: v${{ steps.version.outputs.version }}
-          name: AccessiWeather v${{ steps.version.outputs.version }}
-          artifacts: "release-assets/*"
-          draft: true
-          allowUpdates: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="v${VERSION}"
+
+          echo "Creating release for tag ${TAG}..."
+
+          # Check if release already exists
+          if gh release view "${TAG}" &>/dev/null; then
+            echo "Release ${TAG} already exists, updating it..."
+            gh release delete "${TAG}" --yes || true
+          fi
+
+          # Create release with artifacts
+          gh release create "${TAG}" \
+            --title "AccessiWeather v${VERSION}" \
+            --draft \
+            --target "$(git rev-parse HEAD)" \
+            release-assets/*
+
+          echo "✓ Release ${TAG} created successfully"
