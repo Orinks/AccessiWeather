@@ -133,7 +133,6 @@ jobs:
           tag: v${{ steps.version.outputs.version }}
           name: AccessiWeather v${{ steps.version.outputs.version }}
           artifacts: "release-assets/*"
-          draft: false
-          prerelease: false
+          draft: true
           allowUpdates: true
           token: ${{ secrets.GITHUB_TOKEN }}
