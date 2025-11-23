@@ -49,11 +49,11 @@ jobs:
         pip install -r requirements-dev.txt
         pip install -e .
 
-    - name: Headless make.py smoke check
-      env:
-        ACCESSIWEATHER_TEST_MODE: "1"
+    - name: Build and package (headless)
       run: |
+        echo "Building Briefcase app..."
         python installer/make.py
+
 
     - name: Ruff format check
       run: ruff format --check .
