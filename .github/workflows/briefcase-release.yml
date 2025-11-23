@@ -215,18 +215,10 @@ jobs:
 
           echo "Creating release for tag ${TAG}..."
 
-          # Check if release already exists and is published
+          # Delete existing release if it exists (draft or published)
           if gh release view "${TAG}" &>/dev/null; then
-            # Get the draft status of the release
-            IS_DRAFT=$(gh release view "${TAG}" --json isDraft -q '.isDraft')
-
-            if [ "$IS_DRAFT" = "false" ]; then
-              echo "Release ${TAG} already exists and is published. Skipping update to preserve release notes."
-              exit 0
-            else
-              echo "Release ${TAG} exists as draft, updating it..."
-              gh release delete "${TAG}" --yes || true
-            fi
+            echo "Deleting existing release ${TAG}..."
+            gh release delete "${TAG}" --yes || true
           fi
 
           # Create release with artifacts from CHANGELOG.md notes (published, not draft)
