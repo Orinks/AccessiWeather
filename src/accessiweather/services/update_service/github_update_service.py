@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import platform
+import subprocess
+import sys
+import textwrap
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -21,6 +25,14 @@ from .settings import (
     SettingsManager,
     UpdateSettings,
 )
+
+try:
+    from ...config_utils import is_portable_mode
+except ImportError:
+
+    def is_portable_mode() -> bool:
+        return False
+
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +157,8 @@ class GitHubUpdateService:
             logger.info("No newer release found for channel %s", self.settings.channel)
             return None
 
-        asset = self._find_platform_asset(latest)
+        is_portable = self._is_portable_environment()
+        asset = self._find_platform_asset(latest, portable=is_portable)
         if not asset:
             logger.warning("No suitable asset found for platform")
             return None
@@ -186,11 +199,21 @@ class GitHubUpdateService:
     ) -> dict[str, Any] | None:
         return self.release_manager.find_latest_release(releases, current_version)
 
-    def _find_platform_asset(self, release: dict[str, Any]) -> dict[str, Any] | None:
-        return self.release_manager.find_platform_asset(release)
+    def _find_platform_asset(
+        self, release: dict[str, Any], portable: bool = False
+    ) -> dict[str, Any] | None:
+        return self.release_manager.find_platform_asset(release, portable=portable)
 
     def _is_newer_version(self, candidate: str, current: str) -> bool:
         return self.release_manager._is_newer_version(candidate, current)
+
+    def _is_portable_environment(self) -> bool:
+        """Check if running in a portable environment."""
+        try:
+            return is_portable_mode()
+        except Exception as e:
+            logger.debug(f"Error checking portable mode: {e}")
+            return False
 
     async def _download_asset(
         self,
@@ -254,6 +277,82 @@ class GitHubUpdateService:
 
     async def cleanup(self) -> None:
         await self.http_client.aclose()
+
+    def schedule_portable_update_and_restart(self, zip_path: str | Path) -> None:
+        """
+        Schedule a portable update by creating a batch script to swap files and restart.
+
+        This method:
+        1. Verifies platform is Windows.
+        2. Creates a temporary batch script that:
+           - Waits for this process to exit
+           - Unzips the new version
+           - Overwrites the current installation
+           - Cleans up
+           - Restarts the application
+        3. Launches the script and exits immediately
+        """
+        if platform.system() != "Windows":
+            logger.error("Portable update is only supported on Windows")
+            return
+
+        zip_path = Path(zip_path).resolve()
+        exe_path = Path(sys.executable).resolve()
+        target_dir = exe_path.parent
+
+        # Temporary extraction directory inside the target directory
+        extract_dir = target_dir / "update_tmp"
+        batch_path = target_dir / "accessiweather_portable_update.bat"
+
+        # Create the batch script content
+        # Note: We use powershell for extraction as it's available on all modern Windows
+        batch_content = textwrap.dedent(f"""
+            @echo off
+            set "PID={os.getpid()}"
+            set "ZIP_PATH={zip_path}"
+            set "TARGET_DIR={target_dir}"
+            set "EXE_PATH={exe_path}"
+            set "EXTRACT_DIR={extract_dir}"
+
+            :WAIT_LOOP
+            tasklist /FI "PID eq %PID%" 2>NUL | find /I /N "%PID%" >NUL
+            if "%ERRORLEVEL%"=="0" (
+                timeout /t 1 /nobreak >NUL
+                goto WAIT_LOOP
+            )
+
+            echo Extracting update...
+            if exist "%EXTRACT_DIR%" rd /s /q "%EXTRACT_DIR%"
+            powershell -Command "Expand-Archive -Path '%ZIP_PATH%' -DestinationPath '%EXTRACT_DIR%' -Force"
+
+            echo Installing update...
+            xcopy "%EXTRACT_DIR%\\*" "%TARGET_DIR%\\" /E /H /Y /Q
+
+            echo Cleaning up...
+            rd /s /q "%EXTRACT_DIR%"
+            del "%ZIP_PATH%"
+
+            echo Restarting application...
+            start "" "%EXE_PATH%"
+
+            (goto) 2>nul & del "%~f0"
+        """)
+
+        with open(batch_path, "w") as f:
+            f.write(batch_content)
+
+        # Launch the batch script detached
+        # CREATE_NEW_CONSOLE = 0x00000010
+        creation_flags = 0x00000010
+        subprocess.Popen(
+            [str(batch_path)],
+            shell=True,
+            cwd=str(target_dir),
+            creationflags=creation_flags,
+        )
+
+        # Force exit to allow the update script to proceed
+        os._exit(0)
 
     def __del__(self) -> None:
         try:
