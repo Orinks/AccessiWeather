@@ -79,6 +79,9 @@ jobs:
     if: needs.prepare.outputs.changed == 'true'
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Download artifacts via gh cli
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
