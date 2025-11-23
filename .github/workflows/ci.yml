@@ -19,8 +19,8 @@ env:
   FORCE_COLOR: "1"
 
 jobs:
-  test:
-    name: Lint and Test (Windows)
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
 
     steps:
@@ -31,23 +31,17 @@ jobs:
       uses: actions/setup-python@v6
       with:
         python-version: "3.12"
+        cache: pip
 
     - name: Install system dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y \
+          gcc \
           libcairo2-dev \
           libgirepository-2.0-dev \
           pkg-config \
           python3-dev
-
-    - name: Cache pip dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt', 'pyproject.toml') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
 
     - name: Install dependencies
       run: |
@@ -67,13 +61,57 @@ jobs:
     - name: Ruff lint
       run: ruff check .
 
+  tests:
+    name: Tests (Ubuntu, Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    needs: lint
+    strategy:
+      fail-fast: true
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v5
+
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: pip
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          gcc \
+          libcairo2-dev \
+          libgirepository-2.0-dev \
+          pkg-config \
+          python3-dev
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-dev.txt
+        pip install -e .
+
     - name: Run tests
       env:
         PYTHONPATH: src
         PYTEST_DISABLE_PLUGIN_AUTOLOAD: 1
         ACCESSIWEATHER_TEST_MODE: "1"
       run: |
-        pytest -v -p pytest_asyncio --tb=short --maxfail=1
+        mkdir -p reports
+        pytest tests/ -v -p pytest_asyncio --tb=short --maxfail=1 --junitxml=reports/junit.xml --ignore=tests/integration
+
+    - name: Upload test report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: junit-${{ matrix.python-version }}
+        path: reports/junit.xml
+        retention-days: 7
 
     - name: CI Summary
       if: always()
@@ -82,6 +120,7 @@ jobs:
         echo "Branch: ${{ github.ref_name }}"
         echo "Commit: ${{ github.sha }}"
         echo "Event: ${{ github.event_name }}"
+        echo "Python: ${{ matrix.python-version }}"
         if [ "${{ job.status }}" = "success" ]; then
           echo "✅ All checks passed!"
         else
