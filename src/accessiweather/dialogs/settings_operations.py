@@ -445,7 +445,7 @@ async def check_for_updates(dialog):
 
         # Update AppSettings with the new channel selection
         if dialog.config_manager:
-            dialog.config_manager.settings.update_settings(update_channel=channel)
+            dialog.config_manager.update_settings(update_channel=channel)
 
         # Sync the channel to the update service
         from ..services import sync_update_channel_to_service
