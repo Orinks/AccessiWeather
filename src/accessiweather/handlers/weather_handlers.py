@@ -180,7 +180,7 @@ async def update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherD
                     if weather_data.environmental and weather_data.environmental.hourly_air_quality:
                         hourly_forecast = format_hourly_air_quality(
                             weather_data.environmental.hourly_air_quality,
-                            settings=app.config_manager.settings,
+                            settings=app.config_manager.get_config().settings,
                         )
                         if hourly_forecast:
                             current_text += "\n\nHourly forecast:\n" + hourly_forecast
