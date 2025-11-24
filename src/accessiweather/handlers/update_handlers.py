@@ -101,12 +101,7 @@ async def download_update(app: AccessiWeatherApp, update_info: Any) -> None:
 
         if downloaded_file:
             downloaded_path = str(downloaded_file)
-            await app.main_window.info_dialog(
-                "Update Downloaded",
-                f"Update {update_info.version} has been downloaded successfully.\n\n"
-                f"Location: {downloaded_path}\n\n"
-                "Please close the application and run the installer to complete the update.",
-            )
+            await _handle_update_completion(app, update_info.version, downloaded_path)
             app_helpers.update_status(app, f"Update {update_info.version} downloaded")
         else:
             await app.main_window.error_dialog(
@@ -118,6 +113,98 @@ async def download_update(app: AccessiWeatherApp, update_info: Any) -> None:
         logger.error("Update download failed: %s", exc)
         await app.main_window.error_dialog("Download Failed", f"Failed to download update: {exc}")
         app_helpers.update_status(app, "Update download failed")
+
+
+async def _handle_update_completion(app: AccessiWeatherApp, version: str, file_path: str) -> None:
+    """Handle post-download update actions based on platform and installation type."""
+    import platform
+    from pathlib import Path
+
+    system = platform.system()
+
+    if system == "Windows":
+        try:
+            from ..config_utils import is_portable_mode
+
+            is_portable = is_portable_mode()
+        except Exception:
+            is_portable = False
+
+        file_ext = Path(file_path).suffix.lower()
+
+        if is_portable and file_ext == ".zip":
+            # Running from portable ZIP, offer to extract or run MSI
+            message = (
+                f"Update {version} has been downloaded.\n\n"
+                f"Location: {file_path}\n\n"
+                "You're running from a portable ZIP. Would you like to extract the update "
+                "to your current folder?"
+            )
+            should_extract = await app.main_window.question_dialog("Update Downloaded", message)
+            if should_extract:
+                await _extract_portable_update(app, file_path)
+        elif file_ext == ".msi":
+            # MSI installer available, offer to run it
+            message = (
+                f"Update {version} has been downloaded.\n\n"
+                f"Location: {file_path}\n\n"
+                "Would you like to run the installer now?"
+            )
+            should_install = await app.main_window.question_dialog("Update Downloaded", message)
+            if should_install:
+                await _run_msi_installer(app, file_path)
+        else:
+            # Fallback for other file types
+            await app.main_window.info_dialog(
+                "Update Downloaded",
+                f"Update {version} has been downloaded successfully.\n\nLocation: {file_path}",
+            )
+    else:
+        # Non-Windows platforms
+        await app.main_window.info_dialog(
+            "Update Downloaded",
+            f"Update {version} has been downloaded successfully.\n\nLocation: {file_path}",
+        )
+
+
+async def _extract_portable_update(app: AccessiWeatherApp, zip_path: str) -> None:
+    """Extract portable update from ZIP and restart the application."""
+    try:
+        if app.update_service:
+            app.update_service.schedule_portable_update_and_restart(zip_path)
+        else:
+            await app.main_window.error_dialog(
+                "Update Error", "Update service not available. Please extract manually."
+            )
+    except Exception as exc:
+        logger.error("Failed to extract portable update: %s", exc)
+        await app.main_window.error_dialog(
+            "Extraction Failed",
+            f"Failed to extract the update: {exc}\n\nPlease extract manually from {zip_path}",
+        )
+
+
+async def _run_msi_installer(app: AccessiWeatherApp, msi_path: str) -> None:
+    """Run the MSI installer and exit the application."""
+    import subprocess
+
+    try:
+        # Disable status updates since we're about to exit
+        subprocess.Popen(["msiexec", "/i", msi_path])
+        # Give the installer a moment to start before we exit
+        await app.main_window.info_dialog(
+            "Installer Starting",
+            "The installer is starting. The application will now close to complete the update.",
+        )
+        # Exit the application to allow the installer to update files
+        app.request_exit()
+    except Exception as exc:
+        logger.error("Failed to run MSI installer: %s", exc)
+        await app.main_window.error_dialog(
+            "Installer Failed",
+            f"Failed to start the installer: {exc}\n\n"
+            f'You can manually run: msiexec /i "{msi_path}"',
+        )
 
 
 async def on_window_show(app: AccessiWeatherApp) -> None:
