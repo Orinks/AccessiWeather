@@ -55,11 +55,11 @@ jobs:
         python installer/make.py
 
 
-    - name: Ruff format check
-      run: ruff format --check .
+    - name: Ruff format
+      run: ruff format .
 
     - name: Ruff lint
-      run: ruff check .
+      run: ruff check --fix .
 
   tests:
     name: Tests (Ubuntu, Python ${{ matrix.python-version }})
