@@ -332,7 +332,15 @@ def cmd_package(args: argparse.Namespace) -> int:
     _cleanup_soundpacks(args)
     _cleanup_weather_cache(args)
 
-    return _briefcase("package", args.platform, "--adhoc-sign")
+    extra_args = []
+    if args.platform == "windows":
+        extra_args = ["-p", "msi"]
+    elif args.platform == "macOS":
+        extra_args = ["-p", "dmg"]
+    elif args.platform == "linux":
+        extra_args = ["-p", "appimage"]
+
+    return _briefcase("package", args.platform, "--adhoc-sign", *extra_args)
 
 
 def cmd_dev(args: argparse.Namespace) -> int:

@@ -6,10 +6,10 @@ and other application services.
 """
 
 from .environmental_client import EnvironmentalDataClient
-from .github_update_service import GitHubUpdateService
 from .meteoalarm_client import MeteoAlarmClient
 from .platform_detector import PlatformDetector
 from .startup_utils import StartupManager
+from .update_service import GitHubUpdateService, sync_update_channel_to_service
 
 __all__ = [
     "PlatformDetector",
@@ -17,4 +17,5 @@ __all__ = [
     "EnvironmentalDataClient",
     "MeteoAlarmClient",
     "StartupManager",
+    "sync_update_channel_to_service",
 ]

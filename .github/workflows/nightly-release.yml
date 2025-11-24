@@ -28,10 +28,9 @@ jobs:
       changed: ${{ steps.changes.outputs.changed }}
       run_id: ${{ steps.find_run.outputs.run_id }}
     steps:
-      - name: Checkout dev
+      - name: Checkout code
         uses: actions/checkout@v5
         with:
-          ref: dev
           fetch-depth: 0
 
       - name: Check for changes in src/ since last nightly
@@ -54,18 +53,20 @@ jobs:
             fi
           fi
 
-      - name: Find latest successful build on dev
+      - name: Find latest successful build
         if: steps.changes.outputs.changed == 'true'
         id: find_run
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH_NAME: ${{ github.ref_name }}
         run: |
-          # Find the latest successful run of 'briefcase-build.yml' on branch 'dev'
-          RUN_ID=$(gh api "repos/${{ github.repository }}/actions/workflows/briefcase-build.yml/runs?branch=dev&status=success&per_page=1" \
+          echo "Looking for successful builds on branch: $BRANCH_NAME"
+          # Find the latest successful run of 'briefcase-build.yml' on the current branch
+          RUN_ID=$(gh api "repos/${{ github.repository }}/actions/workflows/briefcase-build.yml/runs?branch=$BRANCH_NAME&status=success&per_page=1" \
             --jq '.workflow_runs[0].id')
 
           if [ -z "$RUN_ID" ] || [ "$RUN_ID" == "null" ]; then
-            echo "No successful build found on dev."
+            echo "No successful build found on $BRANCH_NAME."
             exit 1
           fi
 
@@ -78,6 +79,9 @@ jobs:
     if: needs.prepare.outputs.changed == 'true'
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Download artifacts via gh cli
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -103,12 +107,18 @@ jobs:
           TIMESTAMP=$(date -u +%Y%m%d)
           cd dist
 
+          # Flatten directory structure - extract files from subdirectories
+          find . -type f \( -name "*.msi" -o -name "*.dmg" -o -name "*.zip" \) -exec mv {} . \;
+
+          # Remove empty directories
+          find . -type d -empty -delete
+
           # Remove existing checksums if they exist
           rm -f checksums.txt
 
           # Rename artifacts
           for file in *; do
-            # Skip if it's not a file we care about (though dist should only contain our downloads)
+            # Skip if it's not a file
             [ -f "$file" ] || continue
 
             if [[ "$file" == *.msi ]]; then
@@ -120,8 +130,8 @@ jobs:
             fi
           done
 
-          # Generate new checksums
-          sha256sum * > checksums.txt
+          # Generate new checksums (only for files, not directories)
+          sha256sum *.msi *.dmg *.zip 2>/dev/null > checksums.txt || true
 
           echo "Prepared assets:"
           ls -la
@@ -136,7 +146,9 @@ jobs:
           # Delete existing release/tag if re-running for the same day
           gh release delete "$TAG" -y --cleanup-tag || true
 
-          gh release create "$TAG" dist/* \
+          # Only upload files from dist/ (exclude subdirectories)
+          cd dist
+          gh release create "$TAG" *.msi *.dmg *.zip checksums.txt \
             --title "$TITLE" \
             --generate-notes \
             --prerelease
