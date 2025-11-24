@@ -43,8 +43,12 @@ def is_portable_mode() -> bool:
 
     # Check for briefcase portable app marker file (e.g., AccessiWeather.exe exists but no Program Files)
     if getattr(sys, "frozen", False):
+        # Use ntpath for Windows path operations to ensure cross-platform test compatibility
+        import ntpath
+
         # Get the directory where the executable is located
-        app_dir = os.path.dirname(sys.executable)
+        # Use ntpath.dirname to handle Windows paths correctly even on non-Windows systems
+        app_dir = ntpath.dirname(sys.executable)
 
         logger.debug(f"Checking portable mode for executable directory: {app_dir}")
 
@@ -53,9 +57,6 @@ def is_portable_mode() -> bool:
         program_files_x86 = os.environ.get("PROGRAMFILES(X86)", "")
 
         # Normalize paths for comparison (handle case sensitivity and path separators)
-        # Use ntpath for Windows path normalization to ensure cross-platform test compatibility
-        import ntpath
-
         app_dir_normalized = ntpath.normpath(app_dir).lower().replace("\\", "/")
 
         # Check if app_dir is under Program Files
