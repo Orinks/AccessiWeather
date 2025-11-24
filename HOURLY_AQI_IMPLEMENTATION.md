@@ -79,10 +79,35 @@ Best time: AQI 35 (Good) at 6:00 AM
 
 **Total: 16 new tests, all passing**
 
+## UI Integration
+
+The hourly forecast is now displayed in the current conditions section, appearing after the current air quality information when available.
+
+**Display Format:**
+```
+Air quality update:
+• AQI 50 (Good)
+• Advice: Air quality is satisfactory; enjoy normal outdoor activities.
+
+Hourly forecast:
+Current: AQI 50 (Good)
+Trend: Worsening (AQI 50 → 125)
+Peak: AQI 125 (Unhealthy for Sensitive Groups) at 2:00 PM
+```
+
+## Tests Summary
+
+- **API Client Tests**: 5 tests (fetch, pollutants, error handling, hours parameter, category mapping)
+- **Integration Tests**: 4 tests (fetch integration, disable option, pollutant details, timestamp ordering)
+- **Presentation Tests**: 7 tests (basic formatting, trends, peak/best times, empty data, settings)
+- **UI Integration Tests**: 3 tests (display in UI, omit when unavailable, trend/peak display)
+
+**Total: 19 tests, all passing**
+
 ## Next Steps (Not Implemented Yet)
 
-1. UI integration - display hourly forecast in the app
-2. Settings toggle for hourly forecast
-3. Alerts when AQI will exceed threshold in next N hours
-4. Graph/chart visualization of hourly trends
-5. Individual pollutant breakdown display
+1. Settings toggle for hourly forecast length (24/48/120 hours)
+2. Alerts when AQI will exceed threshold in next N hours
+3. Graph/chart visualization of hourly trends
+4. Individual pollutant breakdown display in UI
+5. Export hourly forecast data
