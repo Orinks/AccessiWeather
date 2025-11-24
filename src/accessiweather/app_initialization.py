@@ -38,12 +38,14 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     config = app.config_manager.load_config()
 
     try:
-        from .services import GitHubUpdateService
+        from .services import GitHubUpdateService, sync_update_channel_to_service
 
         app.update_service = GitHubUpdateService(
             app_name="AccessiWeather",
             config_dir=app.config_manager.config_dir if app.config_manager else None,
         )
+        # Sync the update channel from AppSettings to UpdateSettings
+        sync_update_channel_to_service(app.config_manager, app.update_service)
         logger.info("Update service initialized")
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.warning("Failed to initialize update service: %s", exc)

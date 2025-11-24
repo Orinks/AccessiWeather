@@ -48,6 +48,11 @@ async def on_check_updates_pressed(app: AccessiWeatherApp, widget: toga.Command)
         return
 
     try:
+        from ..services import sync_update_channel_to_service
+
+        # Sync the update channel before checking for updates
+        sync_update_channel_to_service(app.config_manager, app.update_service)
+
         app_helpers.update_status(app, "Checking for updates...")
 
         update_info = await app.update_service.check_for_updates()

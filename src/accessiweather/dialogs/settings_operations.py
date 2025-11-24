@@ -443,10 +443,14 @@ async def check_for_updates(dialog):
         channel_value = str(dialog.update_channel_selection.value)
         channel = settings_handlers.map_channel_display_to_value(channel_value)
 
-        if hasattr(update_service, "settings") and hasattr(update_service.settings, "channel"):
-            update_service.settings.channel = channel
-            if hasattr(update_service, "save_settings"):
-                update_service.save_settings()
+        # Update AppSettings with the new channel selection
+        if dialog.config_manager:
+            dialog.config_manager.settings.update_settings(update_channel=channel)
+
+        # Sync the channel to the update service
+        from ..services import sync_update_channel_to_service
+
+        sync_update_channel_to_service(dialog.config_manager, update_service)
 
         update_info = None
 
