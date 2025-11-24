@@ -11,6 +11,7 @@ import toga
 
 from .. import app_helpers
 from ..dialogs.weather_history_dialog import WeatherHistoryDialog
+from ..display.presentation.environmental import format_hourly_air_quality
 from ..models import WeatherData
 from ..performance.timer import timed_async
 
@@ -174,6 +175,15 @@ async def update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherD
                         aq_lines.append("• Sources: " + ", ".join(presentation.air_quality.sources))
                     if aq_lines:
                         current_text += "\n\nAir quality update:\n" + "\n".join(aq_lines)
+
+                    # Add hourly forecast if available
+                    if weather_data.environmental and weather_data.environmental.hourly_air_quality:
+                        hourly_forecast = format_hourly_air_quality(
+                            weather_data.environmental.hourly_air_quality,
+                            settings=app.config_manager.get_config().settings,
+                        )
+                        if hourly_forecast:
+                            current_text += "\n\nHourly forecast:\n" + hourly_forecast
                 app.current_conditions_display.value = current_text
             else:
                 # Avoid inventing "no data" messages when the API simply omitted a section.

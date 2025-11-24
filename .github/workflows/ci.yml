@@ -103,7 +103,7 @@ jobs:
         ACCESSIWEATHER_TEST_MODE: "1"
       run: |
         mkdir -p reports
-        pytest tests/ -v -p pytest_asyncio --tb=short --maxfail=1 --junitxml=reports/junit.xml --ignore=tests/integration
+        pytest tests/ -v -p pytest_asyncio --tb=short -m "not integration" --junitxml=reports/junit.xml
 
     - name: Upload test report
       if: always()
