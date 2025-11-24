@@ -518,8 +518,9 @@ async def check_for_updates(dialog):
                 if len(notes) > 500:
                     message += "..."
 
-            is_portable = False
-            if hasattr(update_service, "_is_portable_environment"):
+            # Use the app's portable mode flag if available, otherwise try the service method
+            is_portable = getattr(dialog.app, "_portable_mode", False)
+            if not is_portable and hasattr(update_service, "_is_portable_environment"):
                 is_portable = update_service._is_portable_environment()
 
             prompt_message = message + "\n\nWould you like to download "

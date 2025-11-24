@@ -123,12 +123,15 @@ async def _handle_update_completion(app: AccessiWeatherApp, version: str, file_p
     system = platform.system()
 
     if system == "Windows":
-        try:
-            from ..config_utils import is_portable_mode
+        # Use the app's portable mode flag if available, otherwise try to detect
+        is_portable = getattr(app, "_portable_mode", False)
+        if not is_portable:
+            try:
+                from ..config_utils import is_portable_mode
 
-            is_portable = is_portable_mode()
-        except Exception:
-            is_portable = False
+                is_portable = is_portable_mode()
+            except Exception:
+                is_portable = False
 
         file_ext = Path(file_path).suffix.lower()
 
@@ -189,8 +192,8 @@ async def _run_msi_installer(app: AccessiWeatherApp, msi_path: str) -> None:
     import subprocess
 
     try:
-        # Disable status updates since we're about to exit
-        subprocess.Popen(["msiexec", "/i", msi_path])
+        # Use /norestart to prevent automatic restart, and /qn for quiet mode
+        subprocess.Popen(["msiexec", "/i", msi_path, "/norestart"])
         # Give the installer a moment to start before we exit
         await app.main_window.info_dialog(
             "Installer Starting",
