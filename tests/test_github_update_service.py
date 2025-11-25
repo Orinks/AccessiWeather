@@ -196,14 +196,14 @@ class QueueHttpClient:
         self._get_calls = []
         self._stream_resp = stream_resp or MockStreamResponse()
 
-    async def get(self, url: str, headers: dict | None = None):
+    async def get(self, url: str, headers: dict | None = None, **kwargs):
         self._get_calls.append({"url": url, "headers": dict(headers or {})})
         if self._get_responses:
             return self._get_responses.pop(0)
         # default empty list
         return MockResponse(status_code=200, json_data=[])
 
-    def stream(self, method: str, url: str):
+    def stream(self, method: str, url: str, **kwargs):
         assert method == "GET"
         # return an async context manager
         return self._stream_resp
@@ -399,23 +399,15 @@ async def test_get_releases_pagination_aggregates(windows_platform, svc):
 
 def test_channel_filtering(sample_releases, svc_sync):
     stable = svc_sync._filter_releases_by_channel(sample_releases, "stable")
-    beta = svc_sync._filter_releases_by_channel(sample_releases, "beta")
     dev = svc_sync._filter_releases_by_channel(sample_releases, "dev")
 
     # Stable channel: only non-prerelease versions
     assert all(not r.get("prerelease", False) for r in stable)
 
-    # Beta channel: stable releases + beta/rc prereleases (hierarchical)
-    # Should include all stable releases
-    stable_in_beta = [r for r in beta if not r.get("prerelease", False)]
-    assert len(stable_in_beta) == len(stable)  # All stable releases included
-
-    # Should include beta/rc prereleases but not other prereleases
-    prerelease_in_beta = [r for r in beta if r.get("prerelease", False)]
-    assert all(
-        "beta" in r.get("tag_name", "").lower() or "rc" in r.get("tag_name", "").lower()
-        for r in prerelease_in_beta
-    )
+    # Invalid channel (e.g., "beta") should fallback to "stable" behavior
+    beta_fallback = svc_sync._filter_releases_by_channel(sample_releases, "beta")
+    assert len(beta_fallback) == len(stable)
+    assert all(not r.get("prerelease", False) for r in beta_fallback)
 
     # Dev channel: includes all releases
     assert len(dev) == len(sample_releases)
@@ -490,7 +482,7 @@ async def test_get_github_diagnostics(windows_platform, svc):
 def test_save_and_load_settings(tmp_path, windows_platform):
     svc = GitHubUpdateService(app_name="AccessiWeatherTest", config_dir=str(tmp_path))
 
-    # Update settings and save
+    # Update settings and save - "beta" should auto-migrate to "dev"
     svc.settings.channel = "beta"
     svc.settings.owner = "foo"
     svc.settings.repo = "bar"
@@ -498,9 +490,15 @@ def test_save_and_load_settings(tmp_path, windows_platform):
 
     # New service should load saved settings
     svc2 = GitHubUpdateService(app_name="AccessiWeatherTest", config_dir=str(tmp_path))
-    assert svc2.settings.channel == "beta"
+    assert svc2.settings.channel == "dev"
     assert svc2.settings.owner == "foo"
     assert svc2.settings.repo == "bar"
+
+    # Verify "nightly" also maps to "dev"
+    svc.settings.channel = "nightly"
+    svc.save_settings()
+    svc3 = GitHubUpdateService(app_name="AccessiWeatherTest", config_dir=str(tmp_path))
+    assert svc3.settings.channel == "dev"
 
 
 # -----------------------------
@@ -663,7 +661,7 @@ async def test_cache_invalidation_on_channel_change(windows_platform, sample_rel
         "last_check": time.time() - 1800,
         "releases": sample_releases,
         "etag": 'W/"test-etag"',
-        "channel": "beta",  # Different from default "stable"
+        "channel": "dev",  # Different from default "stable"
         "owner": svc.owner,
         "repo": svc.repo,
     }
@@ -931,3 +929,80 @@ async def test_download_with_checksums_txt_mismatch(windows_platform, svc, tmp_p
     updates_dir = Path(svc.config_dir) / "updates"
     files = list(updates_dir.glob("*.exe"))
     assert not files  # File should be removed due to checksum mismatch
+
+
+@pytest.mark.asyncio
+async def test_e2e_dev_channel_nightly_update(windows_platform, svc):
+    """
+    E2E test for dev channel picking up a nightly release over a stable one.
+
+    Ensures that the dev channel correctly identifies and downloads the
+    newer nightly release.
+    """
+    # 1. Initialize and set channel to dev
+    svc.settings.channel = "dev"
+
+    # Mock download content
+    file_content = b"Nightly binary content"
+
+    # 2. Mock releases: Stable v1.0.0 vs Newer Nightly
+    releases = [
+        {
+            "tag_name": "v1.0.0",
+            "published_at": "2025-01-01T00:00:00Z",
+            "prerelease": False,
+            "assets": [
+                {
+                    "name": "AccessiWeather-1.0.0-win.msi",
+                    "browser_download_url": "https://example.com/v1.0.0.msi",
+                    "size": 1024,
+                }
+            ],
+            "body": "Stable release",
+        },
+        {
+            "tag_name": "nightly-20251122",
+            "published_at": "2025-11-22T00:00:00Z",
+            "prerelease": True,
+            "assets": [
+                {
+                    "name": "AccessiWeather-nightly-20251122-win.exe",
+                    "browser_download_url": "https://example.com/nightly.exe",
+                    "size": len(file_content),
+                }
+            ],
+            "body": "Nightly build",
+        },
+    ]
+
+    # Configure client:
+    # - get_responses for check_for_updates (returns releases)
+    # - stream_resp for download_update (returns file content)
+    client = QueueHttpClient(
+        get_responses=[MockResponse(json_data=releases)],
+        stream_resp=MockStreamResponse(
+            headers={"content-length": str(len(file_content))}, chunks=[file_content]
+        ),
+    )
+    svc.http_client = client
+
+    # 4. Call svc.check_for_updates(current_version="1.0.0")
+    # Since we are on 'dev' channel, we should see the nightly as it is newer and 'dev' allows prereleases
+    info = await svc.check_for_updates(current_version="1.0.0")
+
+    # 5. Assert update found and is the nightly
+    assert isinstance(info, UpdateInfo)
+    assert "nightly" in info.version
+    assert info.version == "nightly-20251122"
+    assert info.is_prerelease is True
+    assert info.download_url == "https://example.com/nightly.exe"
+
+    # 6 & 7. Download update
+    dest = await svc.download_update(info)
+
+    # 8. Assert file downloaded correctly
+    assert isinstance(dest, str)
+    path = Path(dest)
+    assert path.exists()
+    assert path.read_bytes() == file_content
+    assert path.name == "AccessiWeather-nightly-20251122-win.exe"

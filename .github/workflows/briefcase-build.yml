@@ -12,6 +12,11 @@ on:
         required: false
         type: boolean
         default: false
+      force_rebuild:
+        description: 'Force rebuild even if release exists'
+        required: false
+        type: boolean
+        default: false
   workflow_run:
     workflows: ["CI"]
     types:
@@ -58,8 +63,12 @@ jobs:
 
           echo "Checking for existing release: ${TAG}"
 
-          # Only skip build if release exists AND has artifacts
-          if gh release view "${TAG}" &>/dev/null; then
+          # Force rebuild if requested via input
+          if [ "${{ github.event.inputs.force_rebuild }}" == "true" ]; then
+            echo "Force rebuild requested. Proceeding with build."
+            echo "should_build=true" >> $GITHUB_OUTPUT
+          # Only skip build if release exists AND has artifacts AND not a manual trigger
+          elif gh release view "${TAG}" &>/dev/null; then
             # Check if release has binaries/assets (not just checksums)
             ASSET_COUNT=$(gh api repos/${{ github.repository }}/releases/tags/${TAG} --jq '.assets | map(select(.name != "checksums.txt")) | length')
             if [ "$ASSET_COUNT" -gt 0 ]; then
@@ -96,12 +105,12 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Fetch full history for build metadata
 
     - name: Set up Python
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 

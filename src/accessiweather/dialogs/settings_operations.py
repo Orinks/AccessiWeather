@@ -443,10 +443,14 @@ async def check_for_updates(dialog):
         channel_value = str(dialog.update_channel_selection.value)
         channel = settings_handlers.map_channel_display_to_value(channel_value)
 
-        if hasattr(update_service, "settings") and hasattr(update_service.settings, "channel"):
-            update_service.settings.channel = channel
-            if hasattr(update_service, "save_settings"):
-                update_service.save_settings()
+        # Update AppSettings with the new channel selection
+        if dialog.config_manager:
+            dialog.config_manager.update_settings(update_channel=channel)
+
+        # Sync the channel to the update service
+        from ..services import sync_update_channel_to_service
+
+        sync_update_channel_to_service(dialog.config_manager, update_service)
 
         update_info = None
 
@@ -514,15 +518,29 @@ async def check_for_updates(dialog):
                 if len(notes) > 500:
                     message += "..."
 
+            # Use the app's portable mode flag if available, otherwise try the service method
+            is_portable = getattr(dialog.app, "_portable_mode", False)
+            if not is_portable and hasattr(update_service, "_is_portable_environment"):
+                is_portable = update_service._is_portable_environment()
+
+            prompt_message = message + "\n\nWould you like to download "
+            if is_portable:
+                prompt_message += "and install this update? (Restart required)"
+            else:
+                prompt_message += "this update?"
+
             should_download = await _call_dialog_method(
                 dialog,
                 "question_dialog",
                 "Update Available",
-                message + "\n\nWould you like to download and install this update?",
+                prompt_message,
             )
 
             if should_download:
-                await download_update(dialog, update_service, update_info)
+                if is_portable:
+                    await download_and_apply_portable_update(dialog, update_service, update_info)
+                else:
+                    await download_update(dialog, update_service, update_info)
             else:
                 final_status = "Update available (not downloaded)"
                 if dialog.update_status_label:
@@ -646,6 +664,84 @@ async def download_update(dialog, update_service, update_info):
         if dialog.update_status_label:
             dialog.update_status_label.text = final_status
         dialog._ensure_dialog_focus()
+
+
+async def download_and_apply_portable_update(dialog, update_service, update_info):
+    """Download and apply a portable update, showing progress."""
+    try:
+        from .update_progress_dialog import UpdateProgressDialog
+
+        progress_dialog = UpdateProgressDialog(dialog.app, "Downloading Portable Update")
+        progress_dialog.show_and_prepare()
+
+        cancel_event = asyncio.Event()
+
+        # Hook up cancel button
+        # We need to preserve the original behavior of _on_cancel which sets is_cancelled
+        original_on_cancel = progress_dialog._on_cancel
+
+        def on_cancel_wrapper(widget):
+            original_on_cancel(widget)
+            cancel_event.set()
+
+        if progress_dialog.cancel_button:
+            progress_dialog.cancel_button.on_press = on_cancel_wrapper
+
+        def progress_callback(downloaded, total):
+            if cancel_event.is_set():
+                return
+
+            progress = (downloaded / total) * 100 if total > 0 else 0
+
+            # Schedule the async update
+            asyncio.create_task(progress_dialog.update_progress(progress, downloaded, total))
+
+        download_path = await update_service.download_update(
+            update_info, progress_callback=progress_callback, cancel_event=cancel_event
+        )
+
+        if progress_dialog.is_cancelled or cancel_event.is_set():
+            await progress_dialog.complete_error("Update cancelled by user")
+            return
+
+        if not download_path:
+            await progress_dialog.complete_error("Failed to download update")
+            return
+
+        await progress_dialog.complete_success("Download complete")
+
+        # Ask to restart
+        restart_choice = await _call_dialog_method(
+            dialog,
+            "question_dialog",
+            "Restart Required",
+            "The portable update has been downloaded. AccessiWeather needs to restart to apply the update.\n\n"
+            "Restart now?",
+        )
+
+        if restart_choice:
+            await progress_dialog.set_status("Restarting...", "Preparing to apply update...")
+            # Give a moment for UI to update
+            await asyncio.sleep(0.5)
+            update_service.schedule_portable_update_and_restart(download_path)
+        else:
+            await progress_dialog.set_status(
+                "Update Ready", "Restart AccessiWeather manually to apply the update."
+            )
+            await asyncio.sleep(2)
+            progress_dialog.close()
+
+    except Exception as exc:
+        logger.exception("%s: Failed to perform portable update", LOG_PREFIX)
+        if "progress_dialog" in locals() and progress_dialog:
+            await progress_dialog.complete_error(f"Failed to perform update: {exc}")
+        else:
+            await _call_dialog_method(
+                dialog,
+                "error_dialog",
+                "Update Failed",
+                f"Failed to perform update: {exc}",
+            )
 
 
 async def download_and_install_update(dialog, update_service, update_info):

@@ -73,6 +73,8 @@ class DownloadManager:
                 except Exception:  # noqa: BLE001 - fall back to default name
                     name = f"{self.app_name}-update"
 
+            file_size = getattr(info, "file_size", None)
+
             dest_dir = self.config_dir / "updates"
             dest_dir.mkdir(parents=True, exist_ok=True)
             file_path = dest_dir / name
@@ -86,6 +88,7 @@ class DownloadManager:
                     expected_sha256=expected_sha256,
                     checksums_url=checksums_url,
                     artifact_name=name,
+                    expected_size=file_size,
                 )
             except asyncio.CancelledError:
                 raise
@@ -124,6 +127,7 @@ class DownloadManager:
         expected_sha256: str | None = None,
         checksums_url: str | None = None,
         artifact_name: str | None = None,
+        expected_size: int | None = None,
     ) -> str | bool:
         if not asset_url or not dest_path:
             logger.error("asset_url and dest_path are required for legacy download call")
@@ -140,7 +144,9 @@ class DownloadManager:
         try:
             with open(dest_path, "wb") as file_obj:
                 try:
-                    async with self.http_client.stream("GET", asset_url) as response:
+                    async with self.http_client.stream(
+                        "GET", asset_url, follow_redirects=True
+                    ) as response:
                         response.raise_for_status()
                         total = int(response.headers.get("content-length", 0))
                         downloaded = 0
@@ -164,6 +170,23 @@ class DownloadManager:
                     except Exception:  # noqa: BLE001 - best effort cleanup
                         pass
                     raise
+
+            # Verify file size
+            if dest_path.stat().st_size == 0:
+                logger.error("Downloaded file is empty")
+                dest_path.unlink(missing_ok=True)
+                return False
+
+            if expected_size is not None:
+                actual_size = dest_path.stat().st_size
+                if actual_size != expected_size:
+                    logger.error(
+                        "Downloaded file size mismatch: expected %s, got %s",
+                        expected_size,
+                        actual_size,
+                    )
+                    dest_path.unlink(missing_ok=True)
+                    return False
 
             if expected_sha256 and not self._verify_sha256(dest_path, expected_sha256):
                 return False
@@ -210,7 +233,7 @@ class DownloadManager:
         artifact_name: str,
     ) -> bool:
         try:
-            response = await self.http_client.get(checksums_url)
+            response = await self.http_client.get(checksums_url, follow_redirects=True)
             response.raise_for_status()
             lines = response.text.splitlines()
             expected: str | None = None

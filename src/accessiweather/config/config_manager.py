@@ -48,7 +48,11 @@ class ConfigManager:
             self.config_dir = Path(config_dir)
         elif portable_mode:
             # Portable mode: use directory alongside the executable/app
-            self.config_dir = Path.cwd() / "config"
+            # For briefcase apps, use the directory of the executable
+            import sys
+
+            app_dir = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path.cwd()
+            self.config_dir = app_dir / "config"
         else:
             # Default: use Toga's standard config path
             self.config_dir = self.app.paths.config

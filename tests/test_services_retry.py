@@ -102,7 +102,7 @@ async def test_download_manager_retries(monkeypatch: pytest.MonkeyPatch, tmp_pat
             return False
 
     class DummyHttpClient:
-        def stream(self, method, url):
+        def stream(self, method, url, **kwargs):
             return DummyStreamCtx()
 
     manager = DownloadManager(

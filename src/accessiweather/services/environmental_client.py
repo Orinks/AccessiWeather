@@ -9,7 +9,7 @@ from typing import Any
 
 import httpx
 
-from ..models import EnvironmentalConditions, Location
+from ..models import EnvironmentalConditions, HourlyAirQuality, Location
 from ..utils.retry_utils import async_retry_with_backoff
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,8 @@ class EnvironmentalDataClient:
     POLLEN_ENDPOINT = "https://pollen-api.open-meteo.com/v1/pollen"
 
     def __init__(self, user_agent: str = "AccessiWeather/2.0", timeout: float = 10.0):
-        """Initialize the client.
+        """
+        Initialize the client.
 
         Args:
             user_agent: HTTP User-Agent header value.
@@ -33,14 +34,116 @@ class EnvironmentalDataClient:
         self.timeout = timeout
 
     @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=15.0)
+    async def fetch_hourly_air_quality(
+        self,
+        location: Location,
+        hours: int = 48,
+    ) -> list[dict[str, Any]] | None:
+        """
+        Fetch hourly air quality forecast.
+
+        Args:
+            location: Location to fetch air quality for.
+            hours: Number of hours to forecast (max 120).
+
+        Returns:
+            List of hourly air quality data dictionaries, or None on error.
+            Each dict contains: timestamp, aqi, category, and pollutant levels.
+
+        """
+        try:
+            headers = {"User-Agent": self.user_agent}
+            params = {
+                "latitude": location.latitude,
+                "longitude": location.longitude,
+                "hourly": "us_aqi,pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide",
+                "timezone": "auto",
+                "forecast_hours": min(hours, 120),
+            }
+
+            async with httpx.AsyncClient(timeout=self.timeout, headers=headers) as client:
+                response = await client.get(self.AIR_QUALITY_ENDPOINT, params=params)
+                response.raise_for_status()
+
+            payload = response.json()
+            hourly = payload.get("hourly") if isinstance(payload, dict) else None
+            if not isinstance(hourly, dict):
+                return None
+
+            times = hourly.get("time")
+            aqi_values = hourly.get("us_aqi")
+
+            if not self._is_sequence(times) or not self._is_sequence(aqi_values):
+                return None
+
+            # Build hourly forecast list
+            result = []
+            for i, (time_str, aqi) in enumerate(zip(times, aqi_values, strict=False)):
+                if i >= hours:
+                    break
+
+                timestamp = self._parse_iso(time_str)
+                aqi_float = self._coerce_float(aqi)
+
+                if timestamp is None or aqi_float is None:
+                    continue
+
+                entry = {
+                    "timestamp": timestamp,
+                    "aqi": int(round(aqi_float)),
+                    "category": self._air_quality_category(aqi_float),
+                }
+
+                # Add pollutant data if available
+                if self._is_sequence(hourly.get("pm2_5")):
+                    pm25 = self._coerce_float(hourly["pm2_5"][i])
+                    if pm25 is not None:
+                        entry["pm2_5"] = round(pm25, 1)
+
+                if self._is_sequence(hourly.get("pm10")):
+                    pm10 = self._coerce_float(hourly["pm10"][i])
+                    if pm10 is not None:
+                        entry["pm10"] = round(pm10, 1)
+
+                if self._is_sequence(hourly.get("ozone")):
+                    ozone = self._coerce_float(hourly["ozone"][i])
+                    if ozone is not None:
+                        entry["ozone"] = round(ozone, 1)
+
+                if self._is_sequence(hourly.get("nitrogen_dioxide")):
+                    no2 = self._coerce_float(hourly["nitrogen_dioxide"][i])
+                    if no2 is not None:
+                        entry["nitrogen_dioxide"] = round(no2, 1)
+
+                if self._is_sequence(hourly.get("sulphur_dioxide")):
+                    so2 = self._coerce_float(hourly["sulphur_dioxide"][i])
+                    if so2 is not None:
+                        entry["sulphur_dioxide"] = round(so2, 1)
+
+                if self._is_sequence(hourly.get("carbon_monoxide")):
+                    co = self._coerce_float(hourly["carbon_monoxide"][i])
+                    if co is not None:
+                        entry["carbon_monoxide"] = round(co, 1)
+
+                result.append(entry)
+
+            return result if result else None
+
+        except Exception as exc:  # noqa: BLE001
+            logger.debug(f"Hourly air quality request failed: {exc}")
+            return None
+
+    @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=15.0)
     async def fetch(
         self,
         location: Location,
         *,
         include_air_quality: bool = True,
         include_pollen: bool = True,
+        include_hourly_air_quality: bool = True,
+        hourly_hours: int = 48,
     ) -> EnvironmentalConditions | None:
-        if not include_air_quality and not include_pollen:
+        if not include_air_quality and not include_pollen and not include_hourly_air_quality:
             return None
 
         headers = {"User-Agent": self.user_agent}
@@ -57,6 +160,25 @@ class EnvironmentalDataClient:
                 await self._populate_air_quality(client, params, environmental)
             if include_pollen:
                 await self._populate_pollen(client, params, environmental)
+
+        # Fetch hourly air quality separately if requested
+        if include_hourly_air_quality:
+            hourly_data = await self.fetch_hourly_air_quality(location, hours=hourly_hours)
+            if hourly_data:
+                environmental.hourly_air_quality = [
+                    HourlyAirQuality(
+                        timestamp=entry["timestamp"],
+                        aqi=entry["aqi"],
+                        category=entry["category"],
+                        pm2_5=entry.get("pm2_5"),
+                        pm10=entry.get("pm10"),
+                        ozone=entry.get("ozone"),
+                        nitrogen_dioxide=entry.get("nitrogen_dioxide"),
+                        sulphur_dioxide=entry.get("sulphur_dioxide"),
+                        carbon_monoxide=entry.get("carbon_monoxide"),
+                    )
+                    for entry in hourly_data
+                ]
 
         if environmental.has_data():
             return environmental

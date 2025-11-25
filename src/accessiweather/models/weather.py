@@ -229,12 +229,28 @@ class TrendInsight:
 
 
 @dataclass
+class HourlyAirQuality:
+    """Single hour of air quality forecast data."""
+
+    timestamp: datetime
+    aqi: int
+    category: str
+    pm2_5: float | None = None
+    pm10: float | None = None
+    ozone: float | None = None
+    nitrogen_dioxide: float | None = None
+    sulphur_dioxide: float | None = None
+    carbon_monoxide: float | None = None
+
+
+@dataclass
 class EnvironmentalConditions:
     """Air quality and pollen conditions."""
 
     air_quality_index: float | None = None
     air_quality_category: str | None = None
     air_quality_pollutant: str | None = None
+    hourly_air_quality: list[HourlyAirQuality] = field(default_factory=list)
     pollen_index: float | None = None
     pollen_category: str | None = None
     pollen_tree_index: float | None = None
@@ -252,6 +268,7 @@ class EnvironmentalConditions:
                 self.pollen_tree_index is not None,
                 self.pollen_grass_index is not None,
                 self.pollen_weed_index is not None,
+                len(self.hourly_air_quality) > 0,
             ]
         )
 

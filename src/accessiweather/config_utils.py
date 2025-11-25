@@ -41,57 +41,55 @@ def is_portable_mode() -> bool:
         logger.debug("Not in portable mode: running from source code")
         return False
 
-    # Get the directory of the executable
-    # Use ntpath for Windows paths when PROGRAMFILES is set (handles cross-platform testing)
-    program_files = os.environ.get("PROGRAMFILES", "")
-    if program_files and "\\" in sys.executable:
-        # Windows path detected, use ntpath for proper handling
+    # Check for briefcase portable app marker file (e.g., AccessiWeather.exe exists but no Program Files)
+    if getattr(sys, "frozen", False):
+        # Use ntpath for Windows path operations to ensure cross-platform test compatibility
         import ntpath
 
-        if getattr(sys, "frozen", False):
-            app_dir = ntpath.dirname(sys.executable)
-        else:
-            app_dir = ntpath.dirname(ntpath.abspath(__file__))
-    else:
-        # Use standard os.path for the current platform
-        if getattr(sys, "frozen", False):
-            app_dir = os.path.dirname(sys.executable)
-        else:
-            app_dir = os.path.dirname(os.path.abspath(__file__))
+        # Get the directory where the executable is located
+        # Use ntpath.dirname to handle Windows paths correctly even on non-Windows systems
+        app_dir = ntpath.dirname(sys.executable)
 
-    logger.debug(f"Checking portable mode for app directory: {app_dir}")
+        logger.debug(f"Checking portable mode for executable directory: {app_dir}")
 
-    # Check if we're running from Program Files (standard installation)
-    program_files_x86 = os.environ.get("PROGRAMFILES(X86)", "")
+        # Check if we're running from Program Files (standard installation)
+        program_files = os.environ.get("PROGRAMFILES", "")
+        program_files_x86 = os.environ.get("PROGRAMFILES(X86)", "")
 
-    # Normalize paths for comparison (handle case sensitivity and path separators)
-    # Replace backslashes with forward slashes for consistent comparison
-    app_dir_normalized = os.path.normpath(app_dir).lower().replace("\\", "/")
+        # Normalize paths for comparison (handle case sensitivity and path separators)
+        app_dir_normalized = ntpath.normpath(app_dir).lower().replace("\\", "/")
 
-    # Check if app_dir starts with any Program Files path
-    program_files_paths = []
-    if program_files:
-        program_files_paths.append(os.path.normpath(program_files).lower().replace("\\", "/"))
-    if program_files_x86:
-        program_files_paths.append(os.path.normpath(program_files_x86).lower().replace("\\", "/"))
+        # Check if app_dir is under Program Files
+        program_files_paths = []
+        if program_files:
+            program_files_paths.append(ntpath.normpath(program_files).lower().replace("\\", "/"))
+        if program_files_x86:
+            program_files_paths.append(
+                ntpath.normpath(program_files_x86).lower().replace("\\", "/")
+            )
 
-    for pf_path in program_files_paths:
-        if app_dir_normalized.startswith(pf_path + "/") or app_dir_normalized == pf_path:
-            logger.debug(f"Not in portable mode: app directory is under Program Files ({pf_path})")
+        for pf_path in program_files_paths:
+            if app_dir_normalized.startswith(pf_path + "/") or app_dir_normalized == pf_path:
+                logger.debug(
+                    f"Not in portable mode: app directory is under Program Files ({pf_path})"
+                )
+                return False
+
+        # Check if the directory is writable (portable installations should be)
+        try:
+            test_file = os.path.join(app_dir, ".write_test")
+            with open(test_file, "w") as f:
+                f.write("test")
+            os.remove(test_file)
+            logger.debug(f"Portable mode detected: directory {app_dir} is writable")
+            return True
+        except (OSError, PermissionError) as e:
+            # If we can't write to the directory, assume it's not portable
+            logger.debug(f"Not in portable mode: directory {app_dir} is not writable ({e})")
             return False
 
-    # Check if the directory is writable (portable installations should be)
-    try:
-        test_file = os.path.join(app_dir, ".write_test")
-        with open(test_file, "w") as f:
-            f.write("test")
-        os.remove(test_file)
-        logger.debug(f"Portable mode detected: directory {app_dir} is writable")
-        return True
-    except (OSError, PermissionError) as e:
-        # If we can't write to the directory, assume it's not portable
-        logger.debug(f"Not in portable mode: directory {app_dir} is not writable ({e})")
-        return False
+    logger.debug("Not in portable mode: default fallback")
+    return False
 
 
 def get_config_dir(custom_dir: str | None = None) -> str:

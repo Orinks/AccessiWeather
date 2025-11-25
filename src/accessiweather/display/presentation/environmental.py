@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from ...models import AppSettings, EnvironmentalConditions, Location
-from .formatters import format_display_datetime, format_timestamp
+from ...models import AppSettings, EnvironmentalConditions, HourlyAirQuality, Location
+from .formatters import format_display_datetime
 
 _AIR_QUALITY_GUIDANCE: dict[str, str] = {
     "Good": "Air quality is satisfactory; enjoy normal outdoor activities.",
@@ -154,3 +154,72 @@ def _build_updated_line(
         show_timezone=show_timezone_suffix,
     )
     return f"Updated {timestamp}"
+
+
+def format_hourly_air_quality(
+    hourly_data: list[HourlyAirQuality],
+    settings: AppSettings | None = None,
+    max_hours: int = 24,
+) -> str | None:
+    """
+    Format hourly air quality forecast into readable text.
+
+    Args:
+        hourly_data: List of hourly air quality forecasts.
+        settings: App settings for time formatting.
+        max_hours: Maximum number of hours to include.
+
+    Returns:
+        Formatted string describing the hourly forecast, or None if no data.
+
+    """
+    if not hourly_data:
+        return None
+
+    # Extract time preferences
+    time_format_12hour = getattr(settings, "time_format_12hour", True) if settings else True
+
+    # Limit to max_hours
+    data = hourly_data[:max_hours]
+
+    # Find current, peak, and best times
+    current = data[0]
+    peak = max(data, key=lambda h: h.aqi)
+    best = min(data, key=lambda h: h.aqi)
+
+    lines = []
+
+    # Current AQI
+    lines.append(f"Current: AQI {current.aqi} ({current.category})")
+
+    # Trend analysis (compare first 3 hours if available)
+    if len(data) >= 3:
+        trend_start = data[0].aqi
+        trend_end = data[2].aqi
+        diff = trend_end - trend_start
+
+        if diff > 20:
+            lines.append(f"Trend: Worsening (AQI {trend_start} → {trend_end})")
+        elif diff < -20:
+            lines.append(f"Trend: Improving (AQI {trend_start} → {trend_end})")
+        else:
+            lines.append("Trend: Stable")
+
+    # Peak time
+    if peak.aqi != current.aqi:
+        peak_time = _format_time(peak.timestamp, time_format_12hour)
+        lines.append(f"Peak: AQI {peak.aqi} ({peak.category}) at {peak_time}")
+
+    # Best time for outdoor activities
+    if best.aqi < 100 and best.aqi != current.aqi:
+        best_time = _format_time(best.timestamp, time_format_12hour)
+        lines.append(f"Best time: AQI {best.aqi} at {best_time}")
+
+    return "\n".join(lines)
+
+
+def _format_time(dt: datetime, use_12hour: bool = True) -> str:
+    """Format a datetime as a simple time string."""
+    if use_12hour:
+        return dt.strftime("%I:%M %p").lstrip("0")
+    return dt.strftime("%H:%M")

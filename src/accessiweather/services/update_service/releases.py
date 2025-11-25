@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import httpx
-from packaging.version import Version
+from packaging.version import InvalidVersion, Version
 
 from ...utils.retry_utils import async_retry_with_backoff
 from .settings import UpdateSettings
@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 GITHUB_API_URL = "https://api.github.com/repos/{owner}/{repo}/releases"
 CACHE_EXPIRY_SECONDS = 3600  # 1 hour
+VALID_CHANNELS = {"stable", "dev"}
 
 
 class ReleaseManager:
@@ -152,23 +153,46 @@ class ReleaseManager:
             logger.warning(f"Failed to save cache: {exc}")
 
     @staticmethod
+    def _is_nightly_tag(tag: str) -> bool:
+        """Check if a tag looks like a nightly release (nightly-YYYYMMDD)."""
+        return tag.lower().startswith("nightly-")
+
+    @staticmethod
+    def _parse_nightly_suffix(tag: str) -> int | None:
+        """Extract YYYYMMDD integer from nightly-YYYYMMDD, or None."""
+        if not ReleaseManager._is_nightly_tag(tag):
+            return None
+        try:
+            # tag format: nightly-20240315
+            suffix = tag.lower().replace("nightly-", "")
+            return int(suffix)
+        except ValueError:
+            return None
+
+    @staticmethod
     def filter_releases_by_channel(
         releases: list[dict[str, Any]], channel: str
     ) -> list[dict[str, Any]]:
         """Filter releases according to channel hierarchy."""
         channel = channel.lower()
+        if channel not in VALID_CHANNELS:
+            logger.warning(f"Invalid channel '{channel}', falling back to stable.")
+            channel = "stable"
+
         filtered: list[dict[str, Any]] = []
 
         for release in releases:
             tag = release.get("tag_name", "").lower()
             prerelease = release.get("prerelease", False)
+            is_nightly = ReleaseManager._is_nightly_tag(tag)
 
-            if channel == "stable" and not prerelease:
-                filtered.append(release)
-            elif channel == "beta":
-                if not prerelease or (prerelease and ("beta" in tag or "rc" in tag)):
+            if channel == "stable":
+                # Stable: non-prerelease, non-nightly
+                if not prerelease and not is_nightly:
                     filtered.append(release)
+
             elif channel == "dev":
+                # Dev: all releases
                 filtered.append(release)
 
         return filtered
@@ -187,10 +211,51 @@ class ReleaseManager:
 
     @staticmethod
     def _is_newer_version(candidate: str, current: str) -> bool:
-        return Version(candidate.lstrip("v")) > Version(current.lstrip("v"))
+        """
+        Compare versions, handling nightly builds (nightly-YYYYMMDD) specially.
+
+        Rules:
+        1. If both are nightly, compare by date.
+        2. If candidate is nightly and current is not, return True.
+        3. If candidate is not nightly and current is, return False.
+        4. Otherwise, use Version comparison (handle InvalidVersion gracefully).
+        """
+        candidate = candidate.lstrip("v")
+        current = current.lstrip("v")
+
+        cand_is_nightly = ReleaseManager._is_nightly_tag(candidate)
+        curr_is_nightly = ReleaseManager._is_nightly_tag(current)
+
+        if cand_is_nightly and curr_is_nightly:
+            cand_date = ReleaseManager._parse_nightly_suffix(candidate)
+            curr_date = ReleaseManager._parse_nightly_suffix(current)
+            if cand_date is not None and curr_date is not None:
+                return cand_date > curr_date
+            return False
+
+        if (
+            cand_is_nightly
+            and not curr_is_nightly
+            and ReleaseManager._parse_nightly_suffix(candidate) is not None
+        ):
+            return True
+
+        if not cand_is_nightly and curr_is_nightly:
+            return False
+
+        try:
+            return Version(candidate) > Version(current)
+        except InvalidVersion:
+            logger.debug("Invalid version comparison: %s vs %s", candidate, current)
+            return False
+        except Exception as exc:
+            logger.debug("Error comparing versions %s vs %s: %s", candidate, current, exc)
+            return False
 
     @staticmethod
-    def find_platform_asset(release: dict[str, Any]) -> dict[str, Any] | None:
+    def find_platform_asset(
+        release: dict[str, Any], portable: bool = False
+    ) -> dict[str, Any] | None:
         """Choose the best asset for the current platform."""
         assets = release.get("assets", [])
         system = platform.system().lower()
@@ -218,17 +283,39 @@ class ReleaseManager:
             ".json",
             ".xml",
             ".plist",
+            ".whl",  # Ignore Python wheels
+            ".tar.gz",  # Ignore source distributions unless explicitly allowed for Linux
         ]
         deny_patterns = ["checksum", "signature", "hash", "verify", "sum"]
 
         filtered_assets: list[dict[str, Any]] = []
         for asset in assets:
             name = asset.get("name", "").lower()
+            # Skip if explicitly denied
             if any(ext in name for ext in deny_extensions):
-                continue
+                # Allow .tar.gz for Linux if it's in priority_extensions
+                if ".tar.gz" in name and ".tar.gz" in priority_extensions:
+                    pass
+                else:
+                    continue
             if any(pattern in name for pattern in deny_patterns):
                 continue
             filtered_assets.append(asset)
+
+        if portable and "windows" in system:
+            for asset in filtered_assets:
+                name = asset.get("name", "").lower()
+                if "portable" in name and name.endswith(".zip"):
+                    return asset
+            # If no portable zip found, try ANY zip
+            for asset in assets:
+                name = asset.get("name", "").lower()
+                is_zip = name.endswith(".zip")
+                not_portable = "portable" not in name
+                not_source = "source" not in name
+
+                if is_zip and not_portable and not_source:
+                    return asset
 
         for extension in priority_extensions:
             for asset in filtered_assets:

@@ -139,15 +139,26 @@ jobs:
 
         echo "Fetching build info for branches: $FETCH_BRANCHES"
 
-        # Function to get latest release info for main branch (including drafts)
+        # Function to get latest stable release info for main branch (matching pyproject.toml version)
          get_release_info() {
-           echo "Fetching latest release info (including drafts)..." >&2
+           echo "Fetching latest stable release info (matching pyproject.toml version)..." >&2
 
-           # Get all releases and find the most recent (including drafts)
+           # Get the version from pyproject.toml
+           local expected_version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])" 2>/dev/null || echo "")
+
+           if [ -z "$expected_version" ]; then
+             echo "⚠ Could not read version from pyproject.toml" >&2
+             expected_version=""
+           else
+             echo "Expected stable version from pyproject.toml: $expected_version" >&2
+           fi
+
+           # Get all releases (excluding pre-releases and drafts)
            local releases=$(curl -s -H "Authorization: token ${{ github.token }}" \
-             "https://api.github.com/repos/${{ github.repository }}/releases?per_page=10")
+             "https://api.github.com/repos/${{ github.repository }}/releases?per_page=20")
 
-           local release_info=$(echo "$releases" | jq 'map(select(.draft | not) // .) | first? // empty')
+           # Filter to only stable releases (not pre-releases, not drafts)
+           local release_info=$(echo "$releases" | jq 'map(select(.prerelease == false and .draft == false)) | first? // empty')
 
            local tag_name=$(echo "$release_info" | jq -r '.tag_name // empty')
            local published_at=$(echo "$release_info" | jq -r '.published_at // empty')
@@ -184,7 +195,12 @@ jobs:
              echo "main_installer_url=${installer_url}"
              echo "main_portable_url=${portable_url}"
 
-             echo "✓ Found release: version=$version, date=$formatted_date" >&2
+             echo "✓ Found stable release: version=$version, date=$formatted_date" >&2
+
+             # Warn if version doesn't match pyproject.toml
+             if [ -n "$expected_version" ] && [ "$version" != "$expected_version" ]; then
+               echo "⚠ Warning: Latest stable release ($version) doesn't match pyproject.toml ($expected_version)" >&2
+             fi
            else
              echo "main_version=No releases available"
              echo "main_date=N/A"
@@ -192,7 +208,7 @@ jobs:
              echo "main_commit="
              echo "main_installer_url="
              echo "main_portable_url="
-             echo "⚠ No releases found" >&2
+             echo "⚠ No stable releases found" >&2
            fi
          }
 

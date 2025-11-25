@@ -417,7 +417,6 @@ def create_updates_tab(dialog):
 
     update_channel_options = [
         "Stable (Production releases only)",
-        "Beta (Pre-release testing)",
         "Development (Latest features, may be unstable)",
     ]
     dialog.update_channel_selection = toga.Selection(
@@ -432,10 +431,8 @@ def create_updates_tab(dialog):
     )
 
     current_channel = getattr(dialog.current_settings, "update_channel", "stable")
-    if current_channel == "dev":
+    if current_channel == "dev" or current_channel == "beta":
         dialog.update_channel_selection.value = "Development (Latest features, may be unstable)"
-    elif current_channel == "beta":
-        dialog.update_channel_selection.value = "Beta (Pre-release testing)"
     else:
         dialog.update_channel_selection.value = "Stable (Production releases only)"
 
