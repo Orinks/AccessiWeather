@@ -31,6 +31,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
         with:
+          ref: dev  # Nightly releases are built from dev branch
           fetch-depth: 0
 
       - name: Check for changes in src/ since last nightly
@@ -58,11 +59,10 @@ jobs:
         id: find_run
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH_NAME: ${{ github.ref_name }}
         run: |
-          echo "Looking for successful builds on branch: $BRANCH_NAME"
-          # Find the latest successful run of 'briefcase-build.yml' on the current branch
-          RUN_ID=$(gh api "repos/${{ github.repository }}/actions/workflows/briefcase-build.yml/runs?branch=$BRANCH_NAME&status=success&per_page=1" \
+          echo "Looking for successful builds on branch: dev"
+          # Find the latest successful run of 'briefcase-build.yml' on dev branch
+          RUN_ID=$(gh api "repos/${{ github.repository }}/actions/workflows/briefcase-build.yml/runs?branch=dev&status=success&per_page=1" \
             --jq '.workflow_runs[0].id')
 
           if [ -z "$RUN_ID" ] || [ "$RUN_ID" == "null" ]; then
