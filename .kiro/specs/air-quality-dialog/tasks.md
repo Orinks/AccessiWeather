@@ -1,20 +1,33 @@
 # Implementation Plan
 
-- [ ] 1. Create Air Quality Dialog UI component
+- [x] 1. Create Air Quality Dialog UI component
+
+
+
+
+
   - [ ] 1.1 Create `src/accessiweather/dialogs/air_quality_dialog.py` with AirQualityDialog class
     - Implement `__init__` accepting app, location_name, environmental data, and settings
     - Create dialog window with title "Air Quality - {location_name}"
+
+
     - Add aria_label and aria_description to all interactive elements
     - _Requirements: 1.2, 1.3, 5.1, 5.2_
   - [ ] 1.2 Implement summary section in dialog
     - Display current AQI value and category
+
+
     - Display dominant pollutant if available
     - Display health guidance based on category
     - Display last updated timestamp
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
-  - [ ] 1.3 Implement hourly forecast section in dialog
+
+  - [-] 1.3 Implement hourly forecast section in dialog
+
     - Display trend (improving/worsening/stable)
+
     - Display peak AQI time and value
+
     - Display best time for outdoor activities (if AQI < 100)
     - Limit display to 24 hours maximum
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
