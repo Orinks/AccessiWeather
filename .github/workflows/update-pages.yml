@@ -158,7 +158,8 @@ jobs:
              "https://api.github.com/repos/${{ github.repository }}/releases?per_page=20")
 
            # Filter to only stable releases (not pre-releases, not drafts)
-           local release_info=$(echo "$releases" | jq 'map(select(.prerelease == false and .draft == false)) | first? // empty')
+           # Note: GitHub API returns both 'prerelease' and 'draft' fields
+           local release_info=$(echo "$releases" | jq '[.[] | select(.prerelease == false and .draft == false)] | first // empty')
 
            local tag_name=$(echo "$release_info" | jq -r '.tag_name // empty')
            local published_at=$(echo "$release_info" | jq -r '.published_at // empty')
