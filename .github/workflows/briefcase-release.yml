@@ -8,6 +8,7 @@ on:
     workflows: ["Build and Package with Briefcase"]
     types:
       - completed
+    branches: [main]  # Only trigger releases for main branch builds
   workflow_dispatch:
 
 permissions:
