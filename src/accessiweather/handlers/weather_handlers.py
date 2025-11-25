@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 import toga
 
 from .. import app_helpers
+from ..dialogs.air_quality_dialog import AirQualityDialog
 from ..dialogs.weather_history_dialog import WeatherHistoryDialog
 from ..display.presentation.environmental import format_hourly_air_quality
 from ..models import WeatherData
@@ -346,3 +347,45 @@ async def on_view_weather_history(app: AccessiWeatherApp, widget: toga.Widget) -
             )
         )
         app_helpers.update_status(app, "Failed to fetch weather history")
+
+
+async def on_view_air_quality(app: AccessiWeatherApp, widget: toga.Widget) -> None:
+    """Show air quality dialog."""
+    logger.info("View air quality pressed")
+
+    current_location = app.config_manager.get_current_location()
+    if not current_location:
+        await app.main_window.dialog(
+            toga.InfoDialog("Air Quality", "No location selected. Please select a location first.")
+        )
+        return
+
+    if not app.current_weather_data or not app.current_weather_data.environmental:
+        await app.main_window.dialog(
+            toga.InfoDialog(
+                "Air Quality",
+                "No air quality data available. Please refresh weather data first.",
+            )
+        )
+        return
+
+    environmental = app.current_weather_data.environmental
+    if not environmental.has_data():
+        await app.main_window.dialog(
+            toga.InfoDialog(
+                "Air Quality",
+                "Air quality data is not available for this location.",
+            )
+        )
+        return
+
+    try:
+        settings = app.config_manager.get_config().settings
+        dialog = AirQualityDialog(app, current_location.name, environmental, settings)
+        await dialog.show_and_focus()
+        app_helpers.update_status(app, "Air quality dialog opened")
+    except Exception as exc:
+        logger.error("Failed to open air quality dialog: %s", exc)
+        await app.main_window.dialog(
+            toga.InfoDialog("Air Quality Error", f"Could not open air quality dialog: {exc}")
+        )

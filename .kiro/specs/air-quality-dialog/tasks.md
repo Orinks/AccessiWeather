@@ -81,9 +81,14 @@
 - [ ] 3. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
+
+
+
+
 - [ ] 4. Enhance hourly forecast formatting
   - [ ] 4.1 Update `format_hourly_air_quality()` to support dialog display
     - Ensure output limited to 24 hours
+
     - Include time, AQI, and category for each hour
     - _Requirements: 3.1, 3.2_
   - [ ]* 4.2 Write property test for hourly forecast limited to 24 hours

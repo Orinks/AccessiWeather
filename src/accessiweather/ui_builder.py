@@ -390,6 +390,13 @@ def create_menu_system(app: AccessiWeatherApp) -> None:
         group=toga.Group.VIEW,
     )
 
+    air_quality_cmd = toga.Command(
+        lambda widget: asyncio.create_task(event_handlers.on_view_air_quality(app, widget)),
+        text="Air Quality…",
+        tooltip="View detailed air quality information",
+        group=toga.Group.VIEW,
+    )
+
     app.commands.add(
         settings_cmd,
         exit_cmd,
@@ -398,6 +405,7 @@ def create_menu_system(app: AccessiWeatherApp) -> None:
         refresh_cmd,
         history_cmd,
         aviation_cmd,
+        air_quality_cmd,
     )
 
     if toga.Command.ABOUT in app.commands:
