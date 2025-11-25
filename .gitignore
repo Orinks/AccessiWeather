@@ -78,6 +78,8 @@ dmypy.json
 .specs/
 .cursor/
 .windsurfrules
+.kiro/steering/
+.briefcase/
 project_state.json
 fix_imports.py
 *.code-workspace
