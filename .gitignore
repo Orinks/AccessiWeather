@@ -34,6 +34,7 @@ coverage.xml
 *.cover
 .pytest_cache/
 .tox/
+.hypothesis/
 
 # Environments
 .env
@@ -127,6 +128,10 @@ api_keys.txt
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+nul
+
+# Accidental pip install artifacts
+=*
 
 # Notebook checkpoints
 .ipynb_checkpoints

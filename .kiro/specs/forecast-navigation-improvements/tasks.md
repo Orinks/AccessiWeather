@@ -32,6 +32,8 @@
 
 - [ ] 1.3 Write unit tests for forecast rendering edge cases
   - Test with empty forecast data
+
+
   - Test with single day forecast
   - Test with maximum days (14)
   - Test fallback behavior when accessibility attributes unavailable
@@ -40,18 +42,21 @@
 - [ ] 2. Enhance system tray functionality for Windows 11
   - Update `initialize_system_tray()` in `ui_builder.py` to return success status
   - Add Windows 11 specific compatibility checks
+
   - Ensure system tray icon is visible (not hidden in overflow)
   - Add meaningful tooltip text to system tray icon
   - Improve window show/hide toggle logic in system tray commands
   - Add fallback handling when system tray unavailable
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-- [ ] 2.1 Write property test for system tray state consistency
+- [x] 2.1 Write property test for system tray state consistency
+
   - **Property 4: System tray minimize behavior**
   - **Validates: Requirements 2.1, 2.2, 4.1**
   - Generate random application states (window visible/hidden, tray enabled/disabled)
   - Trigger minimize actions
   - Verify window and tray icon states are consistent
+
   - Run 100+ iterations
 
 - [ ] 2.2 Write unit tests for system tray initialization
@@ -61,7 +66,8 @@
   - Test context menu creation
   - _Requirements: 2.1, 2.2, 2.4_
 
-- [ ] 3. Improve window management and Escape key handling
+- [x] 3. Improve window management and Escape key handling
+
   - Enhance `handle_window_close()` in `app_helpers.py` for better minimize-to-tray logic
   - Add window visibility state tracking to `AccessiWeatherApp`
   - Implement `handle_escape_key()` function with modal dialog detection
@@ -70,17 +76,21 @@
   - Add fallback to taskbar minimize when system tray unavailable
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
+
 - [ ] 3.1 Write property test for Escape key context awareness
   - **Property 6: Escape key context awareness**
   - **Validates: Requirements 4.2**
   - Generate random UI states (with/without modal dialogs)
   - Trigger Escape key
   - Verify correct behavior (dialog close vs window minimize)
+
   - Run 100+ iterations
 
 - [ ] 3.2 Write property test for fallback minimize behavior
   - **Property 8: Fallback minimize behavior**
   - **Validates: Requirements 4.4, 4.5**
+
+
   - Generate states where system tray is unavailable or disabled
   - Trigger minimize actions
   - Verify window minimizes to taskbar instead of hiding
@@ -88,19 +98,26 @@
 
 - [ ] 3.3 Write unit tests for window management
   - Test minimize-to-tray when enabled
+
   - Test minimize-to-taskbar when tray disabled
   - Test window restore from tray
   - Test Escape key with open dialog
   - Test Escape key without dialog
+
+
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
 - [ ] 4. Add desktop shortcut creation for Windows installer
+
+
   - Update `pyproject.toml` Briefcase configuration for Windows
   - Add desktop shortcut creation option to MSI installer
+
   - Ensure shortcut uses correct application icon
   - Set proper working directory and launch parameters
   - Add shortcut removal during uninstallation
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
+
 
 - [ ] 4.1 Write unit tests for desktop shortcut configuration
   - Test shortcut file properties (Windows only, may need mocking)

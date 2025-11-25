@@ -266,6 +266,9 @@ requires = [
     "pythonnet",  # Pin to 2.x to avoid bundling issues with clr_loader/ClrLoader.dll
 ]
 
+# MSI installer options - desktop shortcut is created by default
+# The installer will create a desktop shortcut using the app icon
+
 # Mobile deployments
 [tool.briefcase.app.accessiweather.iOS]
 requires = [

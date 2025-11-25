@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -220,15 +221,28 @@ async def on_window_show(app: AccessiWeatherApp) -> None:
 
 
 async def on_show_hide_window(app: AccessiWeatherApp, widget: toga.Command) -> None:
-    """Toggle main window visibility from system tray."""
+    """
+    Toggle main window visibility from system tray.
+
+    Handles show/hide with proper state tracking for Windows 11 compatibility.
+    Updates the tray menu text to reflect current state.
+    """
     try:
-        if app.main_window.visible:
+        # Use tracked state if available, fall back to window.visible
+        is_visible = getattr(app, "window_visible", app.main_window.visible)
+
+        if is_visible:
             app.main_window.hide()
+            app.window_visible = False
             if app.status_icon and hasattr(app.show_hide_command, "text"):
                 app.show_hide_command.text = "Show AccessiWeather"
             logger.info("Main window hidden to system tray")
         else:
             app.main_window.show()
+            app.window_visible = True
+            # Bring window to front on Windows 11
+            with contextlib.suppress(AttributeError, NotImplementedError):
+                app.main_window.focus()
             if app.status_icon and hasattr(app.show_hide_command, "text"):
                 app.show_hide_command.text = "Hide AccessiWeather"
             logger.info("Main window restored from system tray")

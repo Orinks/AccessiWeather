@@ -164,25 +164,55 @@ def render_forecast_with_headings(
     return heading_labels
 
 
-def initialize_system_tray(app: AccessiWeatherApp) -> None:
-    """Initialize system tray functionality."""
+def initialize_system_tray(app: AccessiWeatherApp) -> bool:
+    """
+    Initialize system tray with Windows 11 compatibility.
+
+    Creates a system tray icon with context menu for background operation.
+    On Windows 11, ensures the icon is properly registered and visible.
+
+    Args:
+        app: The AccessiWeather application instance
+
+    Returns:
+        True if system tray initialized successfully, False otherwise
+
+    """
     try:
         logger.info("Initializing system tray")
 
+        # Check if system tray is available on this platform
+        if not hasattr(app, "status_icons"):
+            logger.warning("System tray not available on this platform")
+            app.status_icon = None
+            app.system_tray_available = False
+            return False
+
+        # Create the status icon with meaningful tooltip for Windows 11
+        # Windows 11 shows tooltip text when hovering over tray icons
         app.status_icon = toga.MenuStatusIcon(
             id="accessiweather_main",
             icon=app.icon,
-            text="AccessiWeather",
+            text="AccessiWeather - Weather at a glance",
         )
 
         create_system_tray_commands(app)
 
         app.status_icons.add(app.status_icon)
 
+        # Track that system tray is available
+        app.system_tray_available = True
+
+        # Track window visibility state for consistent behavior
+        app.window_visible = True
+
         logger.info("System tray initialized successfully")
+        return True
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Failed to initialize system tray: %s", exc)
         app.status_icon = None
+        app.system_tray_available = False
+        return False
 
 
 def create_system_tray_commands(app: AccessiWeatherApp) -> None:
@@ -273,6 +303,21 @@ def create_main_ui(app: AccessiWeatherApp) -> None:
     app.main_window.on_close = app._on_window_close
     # Attach on_show handler to refresh weather when window becomes visible
     app.main_window.on_show = lambda: asyncio.create_task(event_handlers.on_window_show(app))
+
+    # Add global Escape key handler for minimize-to-tray
+    def on_main_window_key_down(widget, key, _modifiers=None):
+        """Handle global keyboard shortcuts for main window."""
+        if app_helpers.is_escape_key(key):
+            return app_helpers.handle_escape_key(app)
+        return False
+
+    try:
+        app.main_window.on_key_down = on_main_window_key_down
+        logger.info("Escape key handler enabled for main window")
+    except AttributeError:
+        # on_key_down might not be available on all platforms
+        logger.warning("Escape key handler not available on this platform")
+
     app.main_window.show()
 
     logger.info("Main UI created successfully")
@@ -331,7 +376,9 @@ def create_location_section(app: AccessiWeatherApp) -> toga.Box:
 
 
 def create_weather_display_section(app: AccessiWeatherApp) -> toga.Box:
-    """Create the weather display section."""
+    """Create the weather display section using WebView for faster rendering."""
+    from .ui.webview_weather import create_conditions_webview, create_forecast_webview
+
     weather_box = toga.Box(style=Pack(direction=COLUMN, flex=1))
 
     conditions_label = toga.Label(
@@ -339,32 +386,24 @@ def create_weather_display_section(app: AccessiWeatherApp) -> toga.Box:
     )
     weather_box.add(conditions_label)
 
-    app.current_conditions_display = toga.MultilineTextInput(
-        readonly=True, style=Pack(height=120, margin_bottom=10)
-    )
-    app.current_conditions_display.value = "No current conditions data available."
-    try:
-        app.current_conditions_display.aria_label = "Current conditions"
-        app.current_conditions_display.aria_description = "Read-only display of current weather conditions including temperature, humidity, wind speed, and pressure"
-    except AttributeError:
-        pass
-    weather_box.add(app.current_conditions_display)
+    # Use WebView for current conditions - much faster than MultilineTextInput
+    app.current_conditions_webview = create_conditions_webview(height=120)
+    weather_box.add(app.current_conditions_webview)
+
+    # Keep legacy reference for backward compatibility checks
+    app.current_conditions_display = None
 
     forecast_label = toga.Label("Forecast:", style=Pack(font_weight="bold", margin_bottom=5))
     weather_box.add(forecast_label)
 
-    app.forecast_display = toga.MultilineTextInput(
-        readonly=True, style=Pack(height=200, margin_bottom=10)
-    )
-    app.forecast_display.value = "No forecast data available."
-    try:
-        app.forecast_display.aria_label = "Forecast"
-        app.forecast_display.aria_description = (
-            "Read-only display of extended weather forecast with detailed predictions"
-        )
-    except AttributeError:
-        pass
-    weather_box.add(app.forecast_display)
+    # Use WebView for forecast - much faster than creating many Label widgets
+    app.forecast_webview = create_forecast_webview(height=200)
+    weather_box.add(app.forecast_webview)
+
+    # Keep legacy references for backward compatibility
+    app.forecast_container = None
+    app.forecast_scroll = None
+    app.forecast_display = None
 
     app.discussion_button = toga.Button(
         "View Forecast Discussion",

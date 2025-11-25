@@ -29,6 +29,78 @@ def is_delete_key(key: object) -> bool:
     return normalized in {"delete", "del"}
 
 
+def is_escape_key(key: object) -> bool:
+    """Return True if the provided key represents the Escape key."""
+    key_value = getattr(key, "value", key)
+    if not isinstance(key_value, str):
+        key_value = str(key_value)
+
+    normalized = key_value.strip().lower()
+    if normalized.startswith("<") and normalized.endswith(">"):
+        normalized = normalized[1:-1]
+
+    for prefix in ("key.", "vk_"):
+        if normalized.startswith(prefix):
+            normalized = normalized[len(prefix) :]
+
+    return normalized in {"escape", "esc"}
+
+
+def handle_escape_key(app: AccessiWeatherApp) -> bool:
+    """
+    Handle Escape key press with context awareness.
+
+    Behavior:
+    - If a modal dialog is open: close the dialog (don't minimize)
+    - If minimize_to_tray is enabled and system tray available: hide to tray
+    - If minimize_to_tray is enabled but tray unavailable: minimize to taskbar
+    - Otherwise: do nothing (let the event propagate)
+
+    Args:
+        app: The AccessiWeather application instance
+
+    Returns:
+        True if the event was handled, False to propagate
+
+    """
+    try:
+        # Check if any modal dialogs are open
+        # Modal dialogs in Toga are tracked via app.windows
+        for window in app.windows:
+            if window != app.main_window and getattr(window, "visible", False):
+                # A dialog is open - don't minimize, let the dialog handle Escape
+                logger.debug("Escape pressed with dialog open - not minimizing")
+                return False
+
+        # No dialogs open - handle minimize behavior
+        cfg = app.config_manager.get_config() if app.config_manager else None
+        minimize_to_tray = bool(getattr(cfg.settings, "minimize_to_tray", False)) if cfg else False
+        system_tray_available = getattr(app, "system_tray_available", False)
+
+        if minimize_to_tray:
+            if system_tray_available and getattr(app, "status_icon", None):
+                # Hide to system tray
+                logger.info("Escape pressed - minimizing to system tray")
+                app.main_window.hide()
+                app.window_visible = False
+                if hasattr(app, "show_hide_command") and hasattr(app.show_hide_command, "text"):
+                    app.show_hide_command.text = "Show AccessiWeather"
+                return True
+            # Fallback: minimize to taskbar
+            logger.info("Escape pressed - minimizing to taskbar (tray unavailable)")
+            try:
+                app.main_window.state = "minimized"
+            except (AttributeError, NotImplementedError):
+                logger.warning("Window minimize not supported on this platform")
+            return True
+
+        # minimize_to_tray not enabled - don't handle
+        return False
+    except Exception as exc:  # pragma: no cover - defensive logging
+        logger.error("Error handling Escape key: %s", exc)
+        return False
+
+
 async def play_startup_sound(app: AccessiWeatherApp) -> None:
     """Play the application startup sound if enabled."""
     try:
@@ -105,12 +177,23 @@ def update_status(app: AccessiWeatherApp, message: str) -> None:
 
 def show_error_displays(app: AccessiWeatherApp, error_message: str) -> None:
     """Populate UI widgets with error text after a failure."""
+    import toga
+    from toga.style import Pack
+
     error_text = f"Error loading weather data: {error_message}"
 
     if app.current_conditions_display:
         app.current_conditions_display.value = error_text
 
-    if app.forecast_display:
+    # Handle new forecast container or legacy forecast_display
+    forecast_container = getattr(app, "forecast_container", None)
+    if forecast_container is not None:
+        # Clear and show error in structured container
+        while forecast_container.children:
+            forecast_container.remove(forecast_container.children[0])
+        error_label = toga.Label(error_text, style=Pack(margin_bottom=5))
+        forecast_container.add(error_label)
+    elif app.forecast_display:
         app.forecast_display.value = error_text
 
     if app.alerts_table:
@@ -154,16 +237,43 @@ def show_error_dialog(app: AccessiWeatherApp, title: str, message: str) -> None:
 
 
 def handle_window_close(app: AccessiWeatherApp, widget) -> bool:
-    """Implement minimize-to-tray semantics for the main window."""
+    """
+    Implement minimize-to-tray semantics for the main window.
+
+    Handles window close with the following logic:
+    - If minimize_to_tray is enabled AND system tray is available: hide to tray
+    - If minimize_to_tray is enabled but system tray unavailable: minimize to taskbar
+    - Otherwise: exit the application
+
+    Args:
+        app: The AccessiWeather application instance
+        widget: The widget that triggered the close event
+
+    Returns:
+        True to allow the window to close (exit app), False to prevent closing
+
+    """
     try:
         cfg = app.config_manager.get_config() if app.config_manager else None
         minimize_to_tray = bool(getattr(cfg.settings, "minimize_to_tray", False)) if cfg else False
+        system_tray_available = getattr(app, "system_tray_available", False)
 
-        if minimize_to_tray and getattr(app, "status_icon", None):
-            logger.info("Window close requested - minimizing to system tray")
-            app.main_window.hide()
-            if hasattr(app, "show_hide_command") and hasattr(app.show_hide_command, "text"):
-                app.show_hide_command.text = "Show AccessiWeather"
+        if minimize_to_tray:
+            if system_tray_available and getattr(app, "status_icon", None):
+                # Hide to system tray
+                logger.info("Window close requested - minimizing to system tray")
+                app.main_window.hide()
+                app.window_visible = False
+                if hasattr(app, "show_hide_command") and hasattr(app.show_hide_command, "text"):
+                    app.show_hide_command.text = "Show AccessiWeather"
+                return False
+            # Fallback: minimize to taskbar when system tray unavailable
+            logger.info("Window close requested - minimizing to taskbar (tray unavailable)")
+            try:
+                app.main_window.state = "minimized"
+            except (AttributeError, NotImplementedError):
+                # Some platforms may not support window state
+                logger.warning("Window minimize not supported on this platform")
             return False
 
         logger.info("Close requested - exiting application")
