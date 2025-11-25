@@ -154,8 +154,9 @@ jobs:
           fi
 
           # Get all releases (excluding pre-releases and drafts)
+          # Note: per_page=100 is needed due to GitHub API pagination quirks
           local releases=$(curl -s -H "Authorization: token ${{ github.token }}" \
-            "https://api.github.com/repos/${{ github.repository }}/releases?per_page=20")
+            "https://api.github.com/repos/${{ github.repository }}/releases?per_page=100")
 
           # Debug: show how many releases we got
           local total_releases=$(echo "$releases" | jq 'length')
