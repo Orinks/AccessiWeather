@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: write
-  actions: read
+  actions: write
 
 concurrency:
   group: nightly-release
@@ -18,20 +18,22 @@ defaults:
     shell: bash
 
 env:
-  FORCE_COLOR: "1"
+  FORCE_COLOR: "0"
+  PYTHONUTF8: "1"
+  PYTHON_VERSION: "3.12"
 
 jobs:
   prepare:
-    name: Check for changes & find artifacts
+    name: Check for changes
     runs-on: ubuntu-latest
     outputs:
       changed: ${{ steps.changes.outputs.changed }}
-      run_id: ${{ steps.find_run.outputs.run_id }}
+      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
         with:
-          ref: dev  # Nightly releases are built from dev branch
+          ref: dev
           fetch-depth: 0
 
       - name: Check for changes in src/ since last nightly
@@ -54,53 +56,108 @@ jobs:
             fi
           fi
 
-      - name: Find latest successful build
-        if: steps.changes.outputs.changed == 'true'
-        id: find_run
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get version
+        id: version
         run: |
-          echo "Looking for successful builds on branch: dev"
-          # Find the latest successful run of 'briefcase-build.yml' on dev branch
-          RUN_ID=$(gh api "repos/${{ github.repository }}/actions/workflows/briefcase-build.yml/runs?branch=dev&status=success&per_page=1" \
-            --jq '.workflow_runs[0].id')
+          VERSION=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
 
-          if [ -z "$RUN_ID" ] || [ "$RUN_ID" == "null" ]; then
-            echo "No successful build found on $BRANCH_NAME."
-            exit 1
-          fi
+  build:
+    name: Build ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    needs: prepare
+    if: needs.prepare.outputs.changed == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+            installer_pattern: "*.msi"
+          - os: macos-latest
+            platform: macOS
+            installer_pattern: "*.dmg"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
 
-          echo "Found run ID: $RUN_ID"
-          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -e .[dev]
+          pip install briefcase
+
+      - name: Create Briefcase app scaffold
+        run: python installer/make.py create --platform ${{ matrix.platform }}
+        env:
+          DISPLAY: ""
+          ACCESSIWEATHER_TEST_MODE: "1"
+
+      - name: Build Briefcase app
+        run: python installer/make.py build --platform ${{ matrix.platform }}
+        env:
+          DISPLAY: ""
+          ACCESSIWEATHER_TEST_MODE: "1"
+
+      - name: Create portable ZIP (Windows only)
+        if: matrix.platform == 'windows'
+        run: python installer/make.py zip --platform windows || true
+        env:
+          DISPLAY: ""
+          ACCESSIWEATHER_TEST_MODE: "1"
+
+      - name: Package Briefcase app
+        run: python installer/make.py package --platform ${{ matrix.platform }}
+        env:
+          DISPLAY: ""
+          ACCESSIWEATHER_TEST_MODE: "1"
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-${{ matrix.platform }}-installer
+          path: dist/${{ matrix.installer_pattern }}
+          retention-days: 7
+
+      - name: Upload portable artifact (Windows only)
+        if: matrix.platform == 'windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-windows-portable
+          path: dist/AccessiWeather_Portable_v${{ needs.prepare.outputs.version }}.zip
+          retention-days: 7
 
   nightly-release:
     name: Publish Nightly Release
-    needs: prepare
+    needs: [prepare, build]
     if: needs.prepare.outputs.changed == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: dev
 
-      - name: Download artifacts via gh cli
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: nightly-*
+          merge-multiple: true
+
+      - name: List downloaded artifacts
         run: |
-          mkdir -p dist
-          RUN_ID=${{ needs.prepare.outputs.run_id }}
-          echo "Downloading artifacts from run $RUN_ID"
-          gh run download $RUN_ID --dir dist
-
-          # gh run download creates subdirectories for each artifact. Flatten them.
-          # We only care about installers and portables
-          find dist -type f -name "*installer*" -exec mv {} dist/ \;
-          find dist -type f -name "*portable*" -exec mv {} dist/ \;
-
-          # Clean up empty directories (and any artifacts we didn't move)
-          find dist -type d -empty -delete
-
-          # List contents for verification
-          ls -R dist
+          echo "Downloaded artifacts:"
+          ls -laR dist/
 
       - name: Prepare assets
         run: |
