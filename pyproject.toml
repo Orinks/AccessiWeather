@@ -35,6 +35,7 @@ dev = [
     "pytest-mock",
     "pytest-cov",
     "pytest-asyncio",
+    "hypothesis>=6.0.0",
     "ruff>=0.9.0",
     "mypy>=1.0.0",
     "pyright",

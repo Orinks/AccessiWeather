@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 from typing import TYPE_CHECKING
 
@@ -14,9 +15,153 @@ from . import app_helpers, event_handlers
 
 if TYPE_CHECKING:  # pragma: no cover - circular import guard
     from .app import AccessiWeatherApp
+    from .display.weather_presenter import ForecastPresentation
 
 
 logger = logging.getLogger(__name__)
+
+
+def render_forecast_with_headings(
+    presentation: ForecastPresentation | None,
+    container: toga.Box,
+) -> list[toga.Label]:
+    """
+    Render forecast with semantic heading structure for screen reader navigation.
+
+    Creates a structured display where each forecast day is marked with a heading
+    element, allowing screen reader users to navigate between days using heading
+    shortcuts (H key in NVDA/JAWS).
+
+    Args:
+        presentation: Structured forecast data from WeatherPresenter
+        container: Parent Box widget to add forecast elements to
+
+    Returns:
+        List of heading Label widgets created for each forecast day
+
+    """
+    # Clear existing children from container
+    while container.children:
+        container.remove(container.children[0])
+
+    heading_labels: list[toga.Label] = []
+
+    if presentation is None or not presentation.periods:
+        # No forecast data - show fallback message
+        no_data_label = toga.Label(
+            "No forecast data available.",
+            style=Pack(margin_bottom=5),
+        )
+        with contextlib.suppress(AttributeError):
+            no_data_label.aria_label = "No forecast data available"
+        container.add(no_data_label)
+        return heading_labels
+
+    # Add hourly summary if available
+    if presentation.hourly_periods:
+        hourly_heading = toga.Label(
+            "Next 6 Hours:",
+            style=Pack(font_weight="bold", margin_bottom=3, margin_top=5),
+        )
+        try:
+            hourly_heading.aria_role = "heading"
+            hourly_heading.aria_level = 2
+            hourly_heading.aria_label = "Next 6 Hours forecast"
+        except AttributeError:
+            pass
+        container.add(hourly_heading)
+        heading_labels.append(hourly_heading)
+
+        for hourly in presentation.hourly_periods:
+            parts = [hourly.time]
+            if hourly.temperature:
+                parts.append(hourly.temperature)
+            if hourly.conditions:
+                parts.append(hourly.conditions)
+            if hourly.wind:
+                parts.append(f"Wind {hourly.wind}")
+            hourly_text = " - ".join(parts)
+
+            hourly_label = toga.Label(
+                f"  {hourly_text}",
+                style=Pack(margin_bottom=2),
+            )
+            with contextlib.suppress(AttributeError):
+                hourly_label.aria_label = hourly_text
+            container.add(hourly_label)
+
+    # Add each forecast period with heading structure
+    for period in presentation.periods:
+        # Create heading label for the day name
+        day_heading = toga.Label(
+            period.name,
+            style=Pack(font_weight="bold", margin_top=8, margin_bottom=3),
+        )
+        try:
+            day_heading.aria_role = "heading"
+            day_heading.aria_level = 2
+            day_heading.aria_label = f"{period.name} forecast"
+        except AttributeError:
+            pass
+        container.add(day_heading)
+        heading_labels.append(day_heading)
+
+        # Temperature line
+        if period.temperature:
+            temp_label = toga.Label(
+                f"  Temperature: {period.temperature}",
+                style=Pack(margin_bottom=2),
+            )
+            with contextlib.suppress(AttributeError):
+                temp_label.aria_label = f"Temperature {period.temperature}"
+            container.add(temp_label)
+
+        # Conditions line
+        if period.conditions:
+            conditions_label = toga.Label(
+                f"  Conditions: {period.conditions}",
+                style=Pack(margin_bottom=2),
+            )
+            with contextlib.suppress(AttributeError):
+                conditions_label.aria_label = f"Conditions {period.conditions}"
+            container.add(conditions_label)
+
+        # Wind line
+        if period.wind:
+            wind_label = toga.Label(
+                f"  Wind: {period.wind}",
+                style=Pack(margin_bottom=2),
+            )
+            with contextlib.suppress(AttributeError):
+                wind_label.aria_label = f"Wind {period.wind}"
+            container.add(wind_label)
+
+        # Details line (if different from conditions)
+        if period.details:
+            details_label = toga.Label(
+                f"  {period.details}",
+                style=Pack(margin_bottom=2),
+            )
+            with contextlib.suppress(AttributeError):
+                details_label.aria_label = period.details
+            container.add(details_label)
+
+    # Add generated timestamp if available
+    if presentation.generated_at:
+        generated_label = toga.Label(
+            f"\nForecast generated: {presentation.generated_at}",
+            style=Pack(margin_top=5, font_style="italic"),
+        )
+        with contextlib.suppress(AttributeError):
+            generated_label.aria_label = f"Forecast generated at {presentation.generated_at}"
+        container.add(generated_label)
+
+    logger.debug(
+        "Rendered forecast with %d heading elements for %d periods",
+        len(heading_labels),
+        len(presentation.periods),
+    )
+    return heading_labels
 
 
 def initialize_system_tray(app: AccessiWeatherApp) -> None:
