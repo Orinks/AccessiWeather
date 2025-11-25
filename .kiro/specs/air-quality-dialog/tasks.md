@@ -34,8 +34,13 @@
   - [ ] 1.4 Implement pollutant details section in dialog
     - Display individual pollutant measurements with human-readable names
     - Indicate dominant pollutant
+
+
+
+
     - _Requirements: 4.1, 4.2, 4.3_
-  - [ ] 1.5 Implement dialog close functionality
+  - [x] 1.5 Implement dialog close functionality
+
     - Add Close button that dismisses dialog
     - Return focus to main window on close
     - _Requirements: 6.1, 6.2_
