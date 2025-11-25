@@ -162,12 +162,18 @@ jobs:
           local total_releases=$(echo "$releases" | jq 'length')
           echo "Total releases fetched: $total_releases" >&2
 
-          # Filter to only stable releases (not pre-releases, not drafts)
-          # Use 'first' with error suppression and check for null explicitly
-          local release_info=$(echo "$releases" | jq -c '[.[] | select(.prerelease == false and .draft == false)] | if length > 0 then .[0] else null end')
+          # Filter to only stable releases (not pre-releases, not drafts) that have binary assets
+          # This ensures we don't link to releases that only have checksums or source code
+          local release_info=$(echo "$releases" | jq -c '
+            [.[] | select(
+              .prerelease == false and
+              .draft == false and
+              (.assets | map(select(.name | test("\\.(msi|dmg|zip)$"; "i"))) | length > 0)
+            )] | if length > 0 then .[0] else null end
+          ')
 
           # Debug: show filtered result
-          echo "Filtered release info: $(echo "$release_info" | jq -c '{tag: .tag_name, prerelease: .prerelease, draft: .draft}' 2>/dev/null || echo 'null')" >&2
+          echo "Filtered release info: $(echo "$release_info" | jq -c '{tag: .tag_name, prerelease: .prerelease, draft: .draft, asset_count: (.assets | length)}' 2>/dev/null || echo 'null')" >&2
 
           # Check if we got a valid release (not null, not empty)
           if [ -z "$release_info" ] || [ "$release_info" = "null" ]; then
@@ -219,6 +225,8 @@ jobs:
             echo "main_portable_url=${portable_url}"
 
             echo "✓ Found stable release: version=$version, date=$formatted_date" >&2
+            echo "  Installer URL: ${installer_url:-'(none)'}" >&2
+            echo "  Portable URL: ${portable_url:-'(none)'}" >&2
 
             # Warn if version doesn't match pyproject.toml
             if [ -n "$expected_version" ] && [ "$version" != "$expected_version" ]; then
