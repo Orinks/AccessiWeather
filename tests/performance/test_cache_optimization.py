@@ -87,7 +87,7 @@ async def test_cache_hit_still_fetches_api(
     await client.close()
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_stale_cache_triggers_refresh(
     temp_cache_dir: Path,
@@ -132,7 +132,7 @@ async def test_stale_cache_triggers_refresh(
     await client.close()
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_force_refresh_bypasses_cache(
     temp_cache_dir: Path,
