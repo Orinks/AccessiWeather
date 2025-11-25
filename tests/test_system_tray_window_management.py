@@ -175,11 +175,12 @@ class TestEscapeKeyContextAwarenessProperty:
 
     @given(state=app_state_strategy)
     @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
-    def test_escape_key_without_dialog_minimizes_when_enabled(self, state: dict) -> None:
+    def test_escape_key_without_dialog_always_minimizes(self, state: dict) -> None:
         """
         **Feature: forecast-navigation-improvements, Property 6: Escape key context awareness.**.
 
-        For any application state without dialogs, Escape should minimize if enabled.
+        For any application state without dialogs, Escape should always minimize
+        (regardless of minimize_to_tray setting - that only affects window close behavior).
         """
         # Force no dialogs
         state_no_dialog = {**state, "has_dialogs": False}
@@ -187,14 +188,10 @@ class TestEscapeKeyContextAwarenessProperty:
 
         result = app_helpers.handle_escape_key(app)
 
-        if state["minimize_to_tray"]:
-            # Should be handled
-            assert result is True, "Escape should be handled when minimize_to_tray enabled"
-            if state["system_tray_available"]:
-                app.main_window.hide.assert_called_once()
-        else:
-            # Should not be handled
-            assert result is False, "Escape should not be handled when minimize_to_tray disabled"
+        # Escape should always be handled (minimize) when no dialog is open
+        assert result is True, "Escape should always minimize when no dialog is open"
+        if state["system_tray_available"]:
+            app.main_window.hide.assert_called_once()
 
 
 @pytest.mark.unit

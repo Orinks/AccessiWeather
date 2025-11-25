@@ -48,13 +48,12 @@ def is_escape_key(key: object) -> bool:
 
 def handle_escape_key(app: AccessiWeatherApp) -> bool:
     """
-    Handle Escape key press with context awareness.
+    Handle Escape key press - always minimizes to background.
 
     Behavior:
-    - If a modal dialog is open: close the dialog (don't minimize)
-    - If minimize_to_tray is enabled and system tray available: hide to tray
-    - If minimize_to_tray is enabled but tray unavailable: minimize to taskbar
-    - Otherwise: do nothing (let the event propagate)
+    - If a modal dialog is open: don't minimize, let the dialog handle Escape
+    - If system tray is available: hide to system tray
+    - Otherwise: minimize to taskbar
 
     Args:
         app: The AccessiWeather application instance
@@ -63,6 +62,8 @@ def handle_escape_key(app: AccessiWeatherApp) -> bool:
         True if the event was handled, False to propagate
 
     """
+    import toga.constants
+
     try:
         # Check if any modal dialogs are open
         # Modal dialogs in Toga are tracked via app.windows
@@ -72,30 +73,25 @@ def handle_escape_key(app: AccessiWeatherApp) -> bool:
                 logger.debug("Escape pressed with dialog open - not minimizing")
                 return False
 
-        # No dialogs open - handle minimize behavior
-        cfg = app.config_manager.get_config() if app.config_manager else None
-        minimize_to_tray = bool(getattr(cfg.settings, "minimize_to_tray", False)) if cfg else False
+        # No dialogs open - minimize to background
         system_tray_available = getattr(app, "system_tray_available", False)
 
-        if minimize_to_tray:
-            if system_tray_available and getattr(app, "status_icon", None):
-                # Hide to system tray
-                logger.info("Escape pressed - minimizing to system tray")
-                app.main_window.hide()
-                app.window_visible = False
-                if hasattr(app, "show_hide_command") and hasattr(app.show_hide_command, "text"):
-                    app.show_hide_command.text = "Show AccessiWeather"
-                return True
-            # Fallback: minimize to taskbar
-            logger.info("Escape pressed - minimizing to taskbar (tray unavailable)")
-            try:
-                app.main_window.state = "minimized"
-            except (AttributeError, NotImplementedError):
-                logger.warning("Window minimize not supported on this platform")
+        if system_tray_available and getattr(app, "status_icon", None):
+            # Hide to system tray
+            logger.info("Escape pressed - minimizing to system tray")
+            app.main_window.hide()
+            app.window_visible = False
+            if hasattr(app, "show_hide_command") and hasattr(app.show_hide_command, "text"):
+                app.show_hide_command.text = "Show AccessiWeather"
             return True
 
-        # minimize_to_tray not enabled - don't handle
-        return False
+        # Fallback: minimize to taskbar using WindowState enum
+        logger.info("Escape pressed - minimizing to taskbar")
+        try:
+            app.main_window.state = toga.constants.WindowState.MINIMIZED
+        except (AttributeError, NotImplementedError, ValueError):
+            logger.warning("Window minimize not supported on this platform")
+        return True
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Error handling Escape key: %s", exc)
         return False
@@ -253,6 +249,8 @@ def handle_window_close(app: AccessiWeatherApp, widget) -> bool:
         True to allow the window to close (exit app), False to prevent closing
 
     """
+    import toga.constants
+
     try:
         cfg = app.config_manager.get_config() if app.config_manager else None
         minimize_to_tray = bool(getattr(cfg.settings, "minimize_to_tray", False)) if cfg else False
@@ -270,8 +268,8 @@ def handle_window_close(app: AccessiWeatherApp, widget) -> bool:
             # Fallback: minimize to taskbar when system tray unavailable
             logger.info("Window close requested - minimizing to taskbar (tray unavailable)")
             try:
-                app.main_window.state = "minimized"
-            except (AttributeError, NotImplementedError):
+                app.main_window.state = toga.constants.WindowState.MINIMIZED
+            except (AttributeError, NotImplementedError, ValueError):
                 # Some platforms may not support window state
                 logger.warning("Window minimize not supported on this platform")
             return False
