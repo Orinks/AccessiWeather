@@ -84,6 +84,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Prepare release assets
+        id: prepare-assets
         if: ${{ github.event_name == 'workflow_dispatch' || steps.tag-check.outputs.publish == 'true' }}
         run: |
           mkdir -p release-assets
@@ -91,40 +92,55 @@ jobs:
 
           echo "Preparing assets for version: $VERSION"
           echo "Files in dist directory:"
-          ls -la dist/ || true
+          ls -laR dist/ || echo "dist directory is empty or doesn't exist"
+
+          ASSETS_FOUND=0
 
           # Rename files to match release naming convention
           # Windows MSI installer
-          MSI=$(find dist -name "*.msi" -type f | head -1)
+          MSI=$(find dist -name "*.msi" -type f 2>/dev/null | head -1)
           if [ -n "$MSI" ]; then
             cp "$MSI" "release-assets/AccessiWeather-${VERSION}.msi"
             echo "✓ Copied MSI: $MSI"
+            ASSETS_FOUND=$((ASSETS_FOUND + 1))
           else
             echo "⚠ No MSI found"
           fi
 
           # macOS DMG installer
-          DMG=$(find dist -name "*.dmg" -type f | head -1)
+          DMG=$(find dist -name "*.dmg" -type f 2>/dev/null | head -1)
           if [ -n "$DMG" ]; then
             cp "$DMG" "release-assets/AccessiWeather-${VERSION}.dmg"
             echo "✓ Copied DMG: $DMG"
+            ASSETS_FOUND=$((ASSETS_FOUND + 1))
           else
             echo "⚠ No DMG found"
           fi
 
           # Windows portable ZIP
-          ZIP=$(find dist -name "AccessiWeather_Portable_v*.zip" -o -name "*Portable*.zip" | head -1)
+          ZIP=$(find dist -name "AccessiWeather_Portable_v*.zip" -o -name "*Portable*.zip" 2>/dev/null | head -1)
           if [ -n "$ZIP" ]; then
             cp "$ZIP" "release-assets/AccessiWeather_Portable_v${VERSION}.zip"
             echo "✓ Copied ZIP: $ZIP"
+            ASSETS_FOUND=$((ASSETS_FOUND + 1))
           else
             echo "⚠ No portable ZIP found"
           fi
 
+          # Fail if no build artifacts were found
+          if [ "$ASSETS_FOUND" -eq 0 ]; then
+            echo "❌ ERROR: No build artifacts found! Cannot create release without binaries."
+            echo "has_assets=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          echo "has_assets=true" >> $GITHUB_OUTPUT
+          echo "✓ Found $ASSETS_FOUND build artifact(s)"
+
           # Generate checksums
           cd release-assets
           echo "Checksums for AccessiWeather v${VERSION}" > checksums.txt
-          sha256sum * >> checksums.txt
+          sha256sum *.msi *.dmg *.zip 2>/dev/null >> checksums.txt || true
           cat checksums.txt
           cd ..
 
@@ -215,7 +231,7 @@ jobs:
           PYTHON_EOF
 
       - name: Create Release
-        if: ${{ github.event_name == 'workflow_dispatch' || steps.tag-check.outputs.publish == 'true' }}
+        if: ${{ (github.event_name == 'workflow_dispatch' || steps.tag-check.outputs.publish == 'true') && steps.prepare-assets.outputs.has_assets == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -223,6 +239,15 @@ jobs:
           TAG="v${VERSION}"
 
           echo "Creating release for tag ${TAG}..."
+
+          # Verify we have actual binaries, not just checksums
+          BINARY_COUNT=$(find release-assets -type f \( -name "*.msi" -o -name "*.dmg" -o -name "*.zip" \) | wc -l)
+          if [ "$BINARY_COUNT" -eq 0 ]; then
+            echo "❌ ERROR: No binary assets found in release-assets/. Aborting release."
+            exit 1
+          fi
+
+          echo "Found $BINARY_COUNT binary asset(s) to upload"
 
           # Delete existing release if it exists (draft or published)
           if gh release view "${TAG}" &>/dev/null; then
