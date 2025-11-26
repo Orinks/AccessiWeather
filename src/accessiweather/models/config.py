@@ -59,8 +59,8 @@ class AppSettings:
     time_format_12hour: bool = True
     show_timezone_suffix: bool = False
     # HTML rendering options - when True, use WebView with HTML; when False, use MultilineTextInput
-    html_render_current_conditions: bool = True
-    html_render_forecast: bool = True
+    html_render_current_conditions: bool = False
+    html_render_forecast: bool = False
 
     @staticmethod
     def _as_bool(value, default: bool) -> bool:
@@ -181,9 +181,9 @@ class AppSettings:
             time_format_12hour=cls._as_bool(data.get("time_format_12hour"), True),
             show_timezone_suffix=cls._as_bool(data.get("show_timezone_suffix"), False),
             html_render_current_conditions=cls._as_bool(
-                data.get("html_render_current_conditions"), True
+                data.get("html_render_current_conditions"), False
             ),
-            html_render_forecast=cls._as_bool(data.get("html_render_forecast"), True),
+            html_render_forecast=cls._as_bool(data.get("html_render_forecast"), False),
         )
 
     def to_alert_settings(self):

@@ -133,25 +133,25 @@ class TestSettingsDefaults:
     """Tests for default values. Validates: Requirements 5.1, 5.2."""
 
     @pytest.mark.unit
-    def test_default_enabled(self):
-        """New AppSettings should have HTML rendering enabled by default for accessibility."""
+    def test_default_disabled(self):
+        """New AppSettings should have HTML rendering disabled by default for existing users."""
         s = AppSettings()
-        assert s.html_render_current_conditions is True
-        assert s.html_render_forecast is True
+        assert s.html_render_current_conditions is False
+        assert s.html_render_forecast is False
 
     @pytest.mark.unit
     def test_empty_dict_defaults(self):
-        """Loading from empty dict should default HTML rendering to enabled."""
+        """Loading from empty dict should default HTML rendering to disabled."""
         s = AppSettings.from_dict({})
-        assert s.html_render_current_conditions is True
-        assert s.html_render_forecast is True
+        assert s.html_render_current_conditions is False
+        assert s.html_render_forecast is False
 
     @pytest.mark.unit
     def test_backward_compat(self):
-        """Old config without HTML fields defaults to enabled."""
+        """Old config without HTML fields defaults to disabled."""
         s = AppSettings.from_dict({"temperature_unit": "fahrenheit"})
-        assert s.html_render_current_conditions is True
-        assert s.html_render_forecast is True
+        assert s.html_render_current_conditions is False
+        assert s.html_render_forecast is False
 
     @pytest.mark.unit
     def test_to_dict_includes_fields(self):
@@ -282,11 +282,11 @@ class TestWidgetSettings:
     """Property 1: Widget type matches settings. Validates: Requirements 1.3, 1.4."""
 
     @pytest.mark.unit
-    def test_default_uses_html(self):
-        """Default settings should use HTML widgets for better accessibility."""
+    def test_default_uses_plain_text(self):
+        """Default settings should use plain text widgets for existing users."""
         s = AppSettings()
-        assert s.html_render_current_conditions is True
-        assert s.html_render_forecast is True
+        assert s.html_render_current_conditions is False
+        assert s.html_render_forecast is False
 
     @pytest.mark.unit
     @given(html_current=st.booleans(), html_forecast=st.booleans())
