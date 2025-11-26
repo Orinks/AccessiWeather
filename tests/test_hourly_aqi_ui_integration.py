@@ -23,9 +23,13 @@ async def test_hourly_aqi_displayed_in_current_conditions():
     """Test that hourly AQI forecast is displayed in current conditions."""
     # Create mock app
     app = MagicMock()
+    # Explicitly set WebView to None to use legacy MultilineTextInput path
+    app.current_conditions_webview = None
+    app.forecast_webview = None
     app.current_conditions_display = MagicMock()
     app.current_conditions_display.value = ""
     app.forecast_display = MagicMock()
+    app.forecast_container = None
     app.alerts_table = MagicMock()
     app.alert_details_button = MagicMock()
     app.alert_details_button.enabled = False
@@ -86,9 +90,13 @@ async def test_hourly_aqi_displayed_in_current_conditions():
 async def test_hourly_aqi_not_displayed_when_unavailable():
     """Test that hourly forecast section is omitted when no data."""
     app = MagicMock()
+    # Explicitly set WebView to None to use legacy MultilineTextInput path
+    app.current_conditions_webview = None
+    app.forecast_webview = None
     app.current_conditions_display = MagicMock()
     app.current_conditions_display.value = ""
     app.forecast_display = MagicMock()
+    app.forecast_container = None
     app.alerts_table = MagicMock()
     app.alert_details_button = MagicMock()
     app.alert_details_button.enabled = False
@@ -135,9 +143,13 @@ async def test_hourly_aqi_not_displayed_when_unavailable():
 async def test_hourly_aqi_shows_trend_and_peak():
     """Test that hourly forecast shows trend analysis and peak times."""
     app = MagicMock()
+    # Explicitly set WebView to None to use legacy MultilineTextInput path
+    app.current_conditions_webview = None
+    app.forecast_webview = None
     app.current_conditions_display = MagicMock()
     app.current_conditions_display.value = ""
     app.forecast_display = MagicMock()
+    app.forecast_container = None
     app.alerts_table = MagicMock()
     app.alert_details_button = MagicMock()
     app.alert_details_button.enabled = False

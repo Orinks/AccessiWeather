@@ -247,6 +247,55 @@ def create_display_tab(dialog):
     )
     display_box.add(dialog.show_timezone_suffix_switch)
 
+    # HTML Rendering Settings
+    display_box.add(
+        toga.Label(
+            "Weather Display Rendering:",
+            style=Pack(margin_top=10, margin_bottom=8, font_weight="bold"),
+        )
+    )
+    display_box.add(
+        toga.Label(
+            "HTML rendering provides better screen reader navigation with headings.",
+            style=Pack(margin_bottom=10, font_size=9),
+        )
+    )
+
+    dialog.html_render_current_conditions_switch = toga.Switch(
+        "Use HTML for current conditions (requires app restart)",
+        value=getattr(dialog.current_settings, "html_render_current_conditions", True),
+        style=Pack(margin_bottom=8),
+        id="html_render_current_conditions_switch",
+    )
+    dialog.html_render_current_conditions_switch.aria_label = (
+        "Toggle HTML rendering for current conditions"
+    )
+    dialog.html_render_current_conditions_switch.aria_description = (
+        "Enable HTML rendering for better accessibility. "
+        "Disable to use plain text display. Requires app restart."
+    )
+    display_box.add(dialog.html_render_current_conditions_switch)
+
+    dialog.html_render_forecast_switch = toga.Switch(
+        "Use HTML for forecast (requires app restart)",
+        value=getattr(dialog.current_settings, "html_render_forecast", True),
+        style=Pack(margin_bottom=8),
+        id="html_render_forecast_switch",
+    )
+    dialog.html_render_forecast_switch.aria_label = "Toggle HTML rendering for forecast"
+    dialog.html_render_forecast_switch.aria_description = (
+        "Enable HTML rendering with semantic headings for screen reader navigation. "
+        "Disable to use plain text display. Requires app restart."
+    )
+    display_box.add(dialog.html_render_forecast_switch)
+
+    display_box.add(
+        toga.Label(
+            "Note: Changes to rendering settings require an app restart.",
+            style=Pack(margin_top=5, margin_bottom=10, font_size=9, font_style="italic"),
+        )
+    )
+
     dialog.option_container.content.append("Display", display_box)
 
 
