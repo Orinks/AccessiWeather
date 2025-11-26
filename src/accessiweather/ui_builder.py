@@ -376,34 +376,82 @@ def create_location_section(app: AccessiWeatherApp) -> toga.Box:
 
 
 def create_weather_display_section(app: AccessiWeatherApp) -> toga.Box:
-    """Create the weather display section using WebView for faster rendering."""
-    from .ui.webview_weather import create_conditions_webview, create_forecast_webview
+    """
+    Create the weather display section.
 
+    Uses WebView (HTML) or MultilineTextInput based on user settings.
+    HTML rendering provides better accessibility with semantic headings.
+    """
     weather_box = toga.Box(style=Pack(direction=COLUMN, flex=1))
+
+    # Get user preferences for rendering mode
+    use_html_conditions = True
+    use_html_forecast = True
+    if hasattr(app, "config_manager") and app.config_manager:
+        try:
+            config = app.config_manager.get_config()
+            use_html_conditions = getattr(config.settings, "html_render_current_conditions", True)
+            use_html_forecast = getattr(config.settings, "html_render_forecast", True)
+        except Exception:
+            pass  # Use defaults if config unavailable
 
     conditions_label = toga.Label(
         "Current Conditions:", style=Pack(font_weight="bold", margin_top=10, margin_bottom=5)
     )
     weather_box.add(conditions_label)
 
-    # Use WebView for current conditions - much faster than MultilineTextInput
-    app.current_conditions_webview = create_conditions_webview(height=120)
-    weather_box.add(app.current_conditions_webview)
+    # Create current conditions display based on user preference
+    if use_html_conditions:
+        from .ui.webview_weather import create_conditions_webview
 
-    # Keep legacy reference for backward compatibility checks
-    app.current_conditions_display = None
+        app.current_conditions_webview = create_conditions_webview(height=120)
+        weather_box.add(app.current_conditions_webview)
+        app.current_conditions_display = None
+    else:
+        # Use traditional MultilineTextInput for users who prefer it
+        app.current_conditions_display = toga.MultilineTextInput(
+            readonly=True,
+            style=Pack(height=120, margin_bottom=5),
+        )
+        try:
+            app.current_conditions_display.aria_label = "Current weather conditions"
+            app.current_conditions_display.aria_description = (
+                "Read-only text area showing current weather conditions"
+            )
+        except AttributeError:
+            pass
+        weather_box.add(app.current_conditions_display)
+        app.current_conditions_webview = None
 
     forecast_label = toga.Label("Forecast:", style=Pack(font_weight="bold", margin_bottom=5))
     weather_box.add(forecast_label)
 
-    # Use WebView for forecast - much faster than creating many Label widgets
-    app.forecast_webview = create_forecast_webview(height=200)
-    weather_box.add(app.forecast_webview)
+    # Create forecast display based on user preference
+    if use_html_forecast:
+        from .ui.webview_weather import create_forecast_webview
 
-    # Keep legacy references for backward compatibility
-    app.forecast_container = None
-    app.forecast_scroll = None
-    app.forecast_display = None
+        app.forecast_webview = create_forecast_webview(height=200)
+        weather_box.add(app.forecast_webview)
+        app.forecast_container = None
+        app.forecast_scroll = None
+        app.forecast_display = None
+    else:
+        # Use traditional MultilineTextInput for users who prefer it
+        app.forecast_display = toga.MultilineTextInput(
+            readonly=True,
+            style=Pack(height=200, margin_bottom=5),
+        )
+        try:
+            app.forecast_display.aria_label = "Weather forecast"
+            app.forecast_display.aria_description = (
+                "Read-only text area showing extended weather forecast"
+            )
+        except AttributeError:
+            pass
+        weather_box.add(app.forecast_display)
+        app.forecast_webview = None
+        app.forecast_container = None
+        app.forecast_scroll = None
 
     app.discussion_button = toga.Button(
         "View Forecast Discussion",
