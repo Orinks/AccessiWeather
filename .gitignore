@@ -88,7 +88,9 @@ fix_imports.py
 
 # Logs
 *.log
+*.log.*
 logs/
+accessiweather.log*
 
 # Local configuration (secrets, API keys, etc.)
 # IMPORTANT: Ensure config.sample.json or similar is checked in
