@@ -588,4 +588,7 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         time_display_mode=display["time_display_mode"],
         time_format_12hour=display["time_format_12hour"],
         show_timezone_suffix=display["show_timezone_suffix"],
+        # HTML rendering settings
+        html_render_current_conditions=display["html_render_current_conditions"],
+        html_render_forecast=display["html_render_forecast"],
     )

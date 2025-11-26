@@ -262,7 +262,7 @@ def create_display_tab(dialog):
     )
 
     dialog.html_render_current_conditions_switch = toga.Switch(
-        "Use HTML for current conditions",
+        "Use HTML for current conditions (requires app restart)",
         value=getattr(dialog.current_settings, "html_render_current_conditions", True),
         style=Pack(margin_bottom=8),
         id="html_render_current_conditions_switch",
@@ -277,7 +277,7 @@ def create_display_tab(dialog):
     display_box.add(dialog.html_render_current_conditions_switch)
 
     dialog.html_render_forecast_switch = toga.Switch(
-        "Use HTML for forecast",
+        "Use HTML for forecast (requires app restart)",
         value=getattr(dialog.current_settings, "html_render_forecast", True),
         style=Pack(margin_bottom=8),
         id="html_render_forecast_switch",
