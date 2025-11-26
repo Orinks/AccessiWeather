@@ -133,51 +133,7 @@ async def update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherD
     try:
         presentation = app.presenter.present(weather_data)
 
-        # Update current conditions - prefer WebView, fall back to legacy
-        conditions_webview = getattr(app, "current_conditions_webview", None)
-        if conditions_webview is not None:
-            from ..ui.webview_weather import update_conditions_webview
-
-            # Enrich presentation with additional data for WebView
-            if presentation.current_conditions:
-                # Add history comparison to trends if available
-                if (
-                    app.weather_history_service
-                    and weather_data.location
-                    and weather_data.current_conditions
-                ):
-                    try:
-                        comparison = app.weather_history_service.compare_with_yesterday(
-                            weather_data.location, weather_data.current_conditions
-                        )
-                        if comparison:
-                            history_text = comparison.get_accessible_summary()
-                            presentation.current_conditions.trends.append(
-                                f"History: {history_text}"
-                            )
-                            logger.debug("Added weather history comparison to display")
-                    except Exception as hist_exc:
-                        logger.debug(f"Could not fetch weather history: {hist_exc}")
-
-                # Add status messages to trends
-                if presentation.status_messages:
-                    for msg in presentation.status_messages:
-                        presentation.current_conditions.trends.append(f"Status: {msg}")
-
-                # Add air quality info to trends
-                if presentation.air_quality:
-                    if presentation.air_quality.summary:
-                        presentation.current_conditions.trends.append(
-                            f"Air Quality: {presentation.air_quality.summary}"
-                        )
-                    if presentation.air_quality.guidance:
-                        presentation.current_conditions.trends.append(
-                            f"AQ Advice: {presentation.air_quality.guidance}"
-                        )
-
-            update_conditions_webview(conditions_webview, presentation.current_conditions)
-        elif app.current_conditions_display:
-            # Legacy MultilineTextInput fallback
+        if app.current_conditions_display:
             if presentation.current_conditions:
                 current_text = presentation.current_conditions.fallback_text
                 trend_lines = presentation.current_conditions.trends
@@ -193,6 +149,7 @@ async def update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherD
                     and weather_data.current_conditions
                 ):
                     try:
+                        # Try to get yesterday's comparison
                         comparison = app.weather_history_service.compare_with_yesterday(
                             weather_data.location, weather_data.current_conditions
                         )
@@ -229,20 +186,10 @@ async def update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherD
                             current_text += "\n\nHourly forecast:\n" + hourly_forecast
                 app.current_conditions_display.value = current_text
             else:
+                # Avoid inventing "no data" messages when the API simply omitted a section.
                 app.current_conditions_display.value = ""
 
-        # Update forecast - prefer WebView, fall back to legacy
-        forecast_webview = getattr(app, "forecast_webview", None)
-        if forecast_webview is not None:
-            from ..ui.webview_weather import update_forecast_webview
-
-            update_forecast_webview(forecast_webview, presentation.forecast)
-        elif getattr(app, "forecast_container", None) is not None:
-            from ..ui_builder import render_forecast_with_headings
-
-            render_forecast_with_headings(presentation.forecast, app.forecast_container)
-        elif app.forecast_display:
-            # Fallback for backward compatibility
+        if app.forecast_display:
             if presentation.forecast:
                 app.forecast_display.value = presentation.forecast.fallback_text
             else:
