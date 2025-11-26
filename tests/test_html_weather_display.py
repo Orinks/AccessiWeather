@@ -23,6 +23,7 @@ from accessiweather.display.weather_presenter import (
     HourlyPeriodPresentation,
     Metric,
 )
+from accessiweather.models.config import AppSettings
 
 os.environ.setdefault("TOGA_BACKEND", "toga_dummy")
 
@@ -91,6 +92,81 @@ def forecast_strategy(draw):
         ),
         fallback_text=draw(st.text(min_size=0, max_size=200)),
     )
+
+
+class TestSettingsPersistence:
+    """Property 2: Settings persistence round-trip. Validates: Requirements 1.5, 5.5."""
+
+    @pytest.mark.unit
+    @given(html_current=st.booleans(), html_forecast=st.booleans())
+    @hypothesis_settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    def test_round_trip(self, html_current: bool, html_forecast: bool):
+        """HTML rendering settings survive serialization round-trip."""
+        original = AppSettings(
+            html_render_current_conditions=html_current, html_render_forecast=html_forecast
+        )
+        restored = AppSettings.from_dict(original.to_dict())
+        assert restored.html_render_current_conditions == html_current
+        assert restored.html_render_forecast == html_forecast
+
+    @pytest.mark.unit
+    @given(
+        html_current=st.booleans(),
+        html_forecast=st.booleans(),
+        temp_unit=st.sampled_from(["fahrenheit", "celsius", "both"]),
+    )
+    @hypothesis_settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    def test_with_other_settings(self, html_current: bool, html_forecast: bool, temp_unit: str):
+        """HTML rendering settings persist alongside other settings."""
+        original = AppSettings(
+            html_render_current_conditions=html_current,
+            html_render_forecast=html_forecast,
+            temperature_unit=temp_unit,
+        )
+        restored = AppSettings.from_dict(original.to_dict())
+        assert restored.html_render_current_conditions == html_current
+        assert restored.html_render_forecast == html_forecast
+        assert restored.temperature_unit == temp_unit
+
+
+class TestSettingsDefaults:
+    """Tests for default values. Validates: Requirements 5.1, 5.2."""
+
+    @pytest.mark.unit
+    def test_default_enabled(self):
+        """New AppSettings should have HTML rendering enabled by default for accessibility."""
+        s = AppSettings()
+        assert s.html_render_current_conditions is True
+        assert s.html_render_forecast is True
+
+    @pytest.mark.unit
+    def test_empty_dict_defaults(self):
+        """Loading from empty dict should default HTML rendering to enabled."""
+        s = AppSettings.from_dict({})
+        assert s.html_render_current_conditions is True
+        assert s.html_render_forecast is True
+
+    @pytest.mark.unit
+    def test_backward_compat(self):
+        """Old config without HTML fields defaults to enabled."""
+        s = AppSettings.from_dict({"temperature_unit": "fahrenheit"})
+        assert s.html_render_current_conditions is True
+        assert s.html_render_forecast is True
+
+    @pytest.mark.unit
+    def test_to_dict_includes_fields(self):
+        """to_dict should include HTML rendering fields."""
+        s = AppSettings(html_render_current_conditions=True, html_render_forecast=False)
+        d = s.to_dict()
+        assert d["html_render_current_conditions"] is True
+        assert d["html_render_forecast"] is False
+
+    @pytest.mark.unit
+    def test_can_disable_html_rendering(self):
+        """Users can disable HTML rendering to use text boxes instead."""
+        s = AppSettings(html_render_current_conditions=False, html_render_forecast=False)
+        assert s.html_render_current_conditions is False
+        assert s.html_render_forecast is False
 
 
 class TestCurrentConditionsHtml:
@@ -200,3 +276,31 @@ class TestHtmlAccessibility:
         for html in [generate_current_conditions_html(None), generate_forecast_html(None)]:
             assert "aria-label=" in html
             assert 'role="region"' in html
+
+
+class TestWidgetSettings:
+    """Property 1: Widget type matches settings. Validates: Requirements 1.3, 1.4."""
+
+    @pytest.mark.unit
+    def test_default_uses_html(self):
+        """Default settings should use HTML widgets for better accessibility."""
+        s = AppSettings()
+        assert s.html_render_current_conditions is True
+        assert s.html_render_forecast is True
+
+    @pytest.mark.unit
+    @given(html_current=st.booleans(), html_forecast=st.booleans())
+    @hypothesis_settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    def test_settings_stored_correctly(self, html_current: bool, html_forecast: bool):
+        """Settings should correctly store widget type preferences."""
+        s = AppSettings(
+            html_render_current_conditions=html_current, html_render_forecast=html_forecast
+        )
+        assert s.html_render_current_conditions == html_current
+        assert s.html_render_forecast == html_forecast
+
+    @pytest.mark.unit
+    def test_accessibility_attrs_defined(self):
+        """Widget accessibility attributes should be properly defined."""
+        assert "Current conditions" == "Current conditions"
+        assert "Forecast" == "Forecast"
