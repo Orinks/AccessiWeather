@@ -64,6 +64,15 @@ def _apply_general_settings(dialog, settings):
     if getattr(dialog, "show_timezone_suffix_switch", None):
         dialog.show_timezone_suffix_switch.value = getattr(settings, "show_timezone_suffix", False)
 
+    # HTML rendering settings
+    if getattr(dialog, "html_render_current_conditions_switch", None):
+        dialog.html_render_current_conditions_switch.value = getattr(
+            settings, "html_render_current_conditions", True
+        )
+
+    if getattr(dialog, "html_render_forecast_switch", None):
+        dialog.html_render_forecast_switch.value = getattr(settings, "html_render_forecast", True)
+
 
 def _apply_data_source_settings(dialog, settings):
     """Apply data source and API settings to UI widgets."""
@@ -278,6 +287,16 @@ def _collect_display_settings(dialog, current_settings):
         "enable_alerts_switch", getattr(current_settings, "enable_alerts", True)
     )
 
+    # HTML rendering settings
+    html_render_current_conditions = _switch_value(
+        "html_render_current_conditions_switch",
+        getattr(current_settings, "html_render_current_conditions", True),
+    )
+    html_render_forecast = _switch_value(
+        "html_render_forecast_switch",
+        getattr(current_settings, "html_render_forecast", True),
+    )
+
     return {
         "temperature_unit": temperature_unit,
         "update_interval_minutes": update_interval,
@@ -290,6 +309,8 @@ def _collect_display_settings(dialog, current_settings):
         "time_display_mode": time_display_mode,
         "time_format_12hour": time_format_12hour,
         "show_timezone_suffix": show_timezone_suffix,
+        "html_render_current_conditions": html_render_current_conditions,
+        "html_render_forecast": html_render_forecast,
     }
 
 
