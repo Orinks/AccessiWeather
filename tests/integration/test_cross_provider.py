@@ -118,6 +118,7 @@ async def test_temperature_cross_provider_comparison(nws_http_client, openmeteo_
     nws_current = await get_nws_current_conditions(
         TEST_LOCATION,
         NWS_BASE_URL,
+        NWS_USER_AGENT,
         REQUEST_TIMEOUT,
         nws_http_client,
     )
@@ -169,6 +170,7 @@ async def test_humidity_cross_provider_comparison(nws_http_client, openmeteo_htt
     nws_current = await get_nws_current_conditions(
         TEST_LOCATION,
         NWS_BASE_URL,
+        NWS_USER_AGENT,
         REQUEST_TIMEOUT,
         nws_http_client,
     )
@@ -219,6 +221,7 @@ async def test_data_freshness_cross_provider(nws_http_client, openmeteo_http_cli
     nws_current = await get_nws_current_conditions(
         TEST_LOCATION,
         NWS_BASE_URL,
+        NWS_USER_AGENT,
         REQUEST_TIMEOUT,
         nws_http_client,
     )
@@ -258,6 +261,7 @@ async def test_wind_speed_cross_provider_comparison(nws_http_client, openmeteo_h
     nws_current = await get_nws_current_conditions(
         TEST_LOCATION,
         NWS_BASE_URL,
+        NWS_USER_AGENT,
         REQUEST_TIMEOUT,
         nws_http_client,
     )
