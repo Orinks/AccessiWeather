@@ -19,6 +19,12 @@ briefcase create                      # Create platform-specific skeleton
 briefcase build                       # Build app bundle
 briefcase package                     # Generate installers (MSI/DMG/AppImage)
 python installer/make.py dev          # Helper wrapper around Briefcase
+
+# Git (Windows)
+# Use --no-pager BEFORE the subcommand to prevent hanging on Windows
+git --no-pager log --oneline -5       # View recent commits
+git --no-pager diff                   # View changes without pager
+git --no-pager show HEAD              # Show last commit
 ```
 
 ## Architecture & Codebase Structure

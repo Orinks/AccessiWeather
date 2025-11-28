@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -219,16 +220,59 @@ async def on_window_show(app: AccessiWeatherApp) -> None:
         logger.error("Failed to refresh weather on window show: %s", exc)
 
 
-async def on_show_hide_window(app: AccessiWeatherApp, widget: toga.Command) -> None:
-    """Toggle main window visibility from system tray."""
+async def on_minimize_to_background(app: AccessiWeatherApp, widget: toga.Command) -> None:
+    """
+    Minimize the app to background/system tray on demand.
+
+    This works regardless of the minimize_to_tray setting - it's an explicit
+    user action to send the app to the background.
+    """
     try:
-        if app.main_window.visible:
+        system_tray_available = getattr(app, "system_tray_available", False)
+
+        if system_tray_available and getattr(app, "status_icon", None):
+            # Hide to system tray
+            logger.info("Minimizing to system tray (user requested)")
             app.main_window.hide()
+            app.window_visible = False
+            if hasattr(app, "show_hide_command") and hasattr(app.show_hide_command, "text"):
+                app.show_hide_command.text = "Show AccessiWeather"
+        else:
+            # Fallback: minimize to taskbar
+            logger.info("Minimizing to taskbar (user requested, tray unavailable)")
+            import toga.constants
+
+            try:
+                app.main_window.state = toga.constants.WindowState.MINIMIZED
+            except (AttributeError, NotImplementedError, ValueError):
+                logger.warning("Window minimize not supported on this platform")
+    except Exception as exc:  # pragma: no cover - defensive logging
+        logger.error("Failed to minimize to background: %s", exc)
+
+
+async def on_show_hide_window(app: AccessiWeatherApp, widget: toga.Command) -> None:
+    """
+    Toggle main window visibility from system tray.
+
+    Handles show/hide with proper state tracking for Windows 11 compatibility.
+    Updates the tray menu text to reflect current state.
+    """
+    try:
+        # Use tracked state if available, fall back to window.visible
+        is_visible = getattr(app, "window_visible", app.main_window.visible)
+
+        if is_visible:
+            app.main_window.hide()
+            app.window_visible = False
             if app.status_icon and hasattr(app.show_hide_command, "text"):
                 app.show_hide_command.text = "Show AccessiWeather"
             logger.info("Main window hidden to system tray")
         else:
             app.main_window.show()
+            app.window_visible = True
+            # Bring window to front on Windows 11
+            with contextlib.suppress(AttributeError, NotImplementedError):
+                app.main_window.focus()
             if app.status_icon and hasattr(app.show_hide_command, "text"):
                 app.show_hide_command.text = "Hide AccessiWeather"
             logger.info("Main window restored from system tray")
