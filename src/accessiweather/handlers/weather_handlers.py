@@ -12,7 +12,6 @@ import toga
 from .. import app_helpers
 from ..dialogs.air_quality_dialog import AirQualityDialog
 from ..dialogs.weather_history_dialog import WeatherHistoryDialog
-from ..display.presentation.environmental import format_air_quality_brief
 from ..models import WeatherData
 from ..performance.timer import timed_async
 
@@ -134,7 +133,14 @@ async def update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherD
     try:
         presentation = app.presenter.present(weather_data)
 
-        if app.current_conditions_display:
+        # Update current conditions - check for WebView first, then text display
+        current_conditions_webview = getattr(app, "current_conditions_webview", None)
+        if current_conditions_webview is not None:
+            # Use HTML WebView for better accessibility
+            from ..ui.webview_weather import update_conditions_webview
+
+            update_conditions_webview(current_conditions_webview, presentation.current_conditions)
+        elif app.current_conditions_display:
             if presentation.current_conditions:
                 current_text = presentation.current_conditions.fallback_text
                 trend_lines = presentation.current_conditions.trends
@@ -164,19 +170,19 @@ async def update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherD
                 if presentation.status_messages:
                     status_lines = "\n".join(f"• {line}" for line in presentation.status_messages)
                     current_text += f"\n\nStatus:\n{status_lines}"
-                if weather_data.environmental:
-                    brief_summary = format_air_quality_brief(
-                        weather_data.environmental,
-                        settings=app.config_manager.get_config().settings,
-                    )
-                    if brief_summary:
-                        current_text += f"\n\nAir Quality: {brief_summary}"
                 app.current_conditions_display.value = current_text
             else:
                 # Avoid inventing "no data" messages when the API simply omitted a section.
                 app.current_conditions_display.value = ""
 
-        if app.forecast_display:
+        # Update forecast - check for WebView first, then text display
+        forecast_webview = getattr(app, "forecast_webview", None)
+        if forecast_webview is not None:
+            # Use HTML WebView for better accessibility with semantic headings
+            from ..ui.webview_weather import update_forecast_webview
+
+            update_forecast_webview(forecast_webview, presentation.forecast)
+        elif app.forecast_display:
             if presentation.forecast:
                 app.forecast_display.value = presentation.forecast.fallback_text
             else:

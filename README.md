@@ -263,8 +263,6 @@ accessiweather --portable
 
 ## Known Issues
 
-- **Screen reader parsing**: Nationwide discussions may be read incorrectly by some screen readers despite correct data formatting
-- **Escape key**: Minimize to tray shortcut may not work consistently in all scenarios
 - **Linux support**: Experimental - some features may not work as expected
 - **API limitations**: Open-Meteo does not provide severe weather alerts
 - **Geocoding**: May occasionally find locations outside supported coverage areas

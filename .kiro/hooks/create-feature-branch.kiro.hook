@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Create Feature Branch",
+  "description": "Creates a new git branch for a feature when starting a new spec",
+  "version": "1",
+  "when": {
+    "type": "fileCreated",
+    "patterns": [
+      ".kiro/specs"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Before implementing any spec tasks, check if you're on a dedicated feature branch:\n1. Run `git branch --show-current` to check current branch\n2. If on `main` or `dev`, create a feature branch: `git checkout -b feature/{spec-name}`\n3. The branch name should match the spec folder name (e.g., feature/air-quality-dialog)\n4. Confirm the branch was created before proceeding with implementation"
+  }
+}

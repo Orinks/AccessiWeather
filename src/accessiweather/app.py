@@ -116,6 +116,9 @@ class AccessiWeatherApp(toga.App):
             # Create menu system
             ui_builder.create_menu_system(self)
 
+            # Initialize system tray for minimize-to-tray functionality
+            ui_builder.initialize_system_tray(self)
+
             # Load initial data
             self._load_initial_data()
 

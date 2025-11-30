@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 from typing import TYPE_CHECKING
 
@@ -14,30 +15,204 @@ from . import app_helpers, event_handlers
 
 if TYPE_CHECKING:  # pragma: no cover - circular import guard
     from .app import AccessiWeatherApp
+    from .display.weather_presenter import ForecastPresentation
 
 
 logger = logging.getLogger(__name__)
 
 
-def initialize_system_tray(app: AccessiWeatherApp) -> None:
-    """Initialize system tray functionality."""
+def render_forecast_with_headings(
+    presentation: ForecastPresentation | None,
+    container: toga.Box,
+) -> list[toga.Label]:
+    """
+    Render forecast with semantic heading structure for screen reader navigation.
+
+    Creates a structured display where each forecast day is marked with a heading
+    element, allowing screen reader users to navigate between days using heading
+    shortcuts (H key in NVDA/JAWS).
+
+    Args:
+        presentation: Structured forecast data from WeatherPresenter
+        container: Parent Box widget to add forecast elements to
+
+    Returns:
+        List of heading Label widgets created for each forecast day
+
+    """
+    # Clear existing children from container
+    while container.children:
+        container.remove(container.children[0])
+
+    heading_labels: list[toga.Label] = []
+
+    if presentation is None or not presentation.periods:
+        # No forecast data - show fallback message
+        no_data_label = toga.Label(
+            "No forecast data available.",
+            style=Pack(margin_bottom=5),
+        )
+        with contextlib.suppress(AttributeError):
+            no_data_label.aria_label = "No forecast data available"
+        container.add(no_data_label)
+        return heading_labels
+
+    # Add hourly summary if available
+    if presentation.hourly_periods:
+        hourly_heading = toga.Label(
+            "Next 6 Hours:",
+            style=Pack(font_weight="bold", margin_bottom=3, margin_top=5),
+        )
+        try:
+            hourly_heading.aria_role = "heading"
+            hourly_heading.aria_level = 2
+            hourly_heading.aria_label = "Next 6 Hours forecast"
+        except AttributeError:
+            pass
+        container.add(hourly_heading)
+        heading_labels.append(hourly_heading)
+
+        for hourly in presentation.hourly_periods:
+            parts = [hourly.time]
+            if hourly.temperature:
+                parts.append(hourly.temperature)
+            if hourly.conditions:
+                parts.append(hourly.conditions)
+            if hourly.wind:
+                parts.append(f"Wind {hourly.wind}")
+            hourly_text = " - ".join(parts)
+
+            hourly_label = toga.Label(
+                f"  {hourly_text}",
+                style=Pack(margin_bottom=2),
+            )
+            with contextlib.suppress(AttributeError):
+                hourly_label.aria_label = hourly_text
+            container.add(hourly_label)
+
+    # Add each forecast period with heading structure
+    for period in presentation.periods:
+        # Create heading label for the day name
+        day_heading = toga.Label(
+            period.name,
+            style=Pack(font_weight="bold", margin_top=8, margin_bottom=3),
+        )
+        try:
+            day_heading.aria_role = "heading"
+            day_heading.aria_level = 2
+            day_heading.aria_label = f"{period.name} forecast"
+        except AttributeError:
+            pass
+        container.add(day_heading)
+        heading_labels.append(day_heading)
+
+        # Temperature line
+        if period.temperature:
+            temp_label = toga.Label(
+                f"  Temperature: {period.temperature}",
+                style=Pack(margin_bottom=2),
+            )
+            with contextlib.suppress(AttributeError):
+                temp_label.aria_label = f"Temperature {period.temperature}"
+            container.add(temp_label)
+
+        # Conditions line
+        if period.conditions:
+            conditions_label = toga.Label(
+                f"  Conditions: {period.conditions}",
+                style=Pack(margin_bottom=2),
+            )
+            with contextlib.suppress(AttributeError):
+                conditions_label.aria_label = f"Conditions {period.conditions}"
+            container.add(conditions_label)
+
+        # Wind line
+        if period.wind:
+            wind_label = toga.Label(
+                f"  Wind: {period.wind}",
+                style=Pack(margin_bottom=2),
+            )
+            with contextlib.suppress(AttributeError):
+                wind_label.aria_label = f"Wind {period.wind}"
+            container.add(wind_label)
+
+        # Details line (if different from conditions)
+        if period.details:
+            details_label = toga.Label(
+                f"  {period.details}",
+                style=Pack(margin_bottom=2),
+            )
+            with contextlib.suppress(AttributeError):
+                details_label.aria_label = period.details
+            container.add(details_label)
+
+    # Add generated timestamp if available
+    if presentation.generated_at:
+        generated_label = toga.Label(
+            f"\nForecast generated: {presentation.generated_at}",
+            style=Pack(margin_top=5, font_style="italic"),
+        )
+        with contextlib.suppress(AttributeError):
+            generated_label.aria_label = f"Forecast generated at {presentation.generated_at}"
+        container.add(generated_label)
+
+    logger.debug(
+        "Rendered forecast with %d heading elements for %d periods",
+        len(heading_labels),
+        len(presentation.periods),
+    )
+    return heading_labels
+
+
+def initialize_system_tray(app: AccessiWeatherApp) -> bool:
+    """
+    Initialize system tray with Windows 11 compatibility.
+
+    Creates a system tray icon with context menu for background operation.
+    On Windows 11, ensures the icon is properly registered and visible.
+
+    Args:
+        app: The AccessiWeather application instance
+
+    Returns:
+        True if system tray initialized successfully, False otherwise
+
+    """
     try:
         logger.info("Initializing system tray")
 
+        # Check if system tray is available on this platform
+        if not hasattr(app, "status_icons"):
+            logger.warning("System tray not available on this platform")
+            app.status_icon = None
+            app.system_tray_available = False
+            return False
+
+        # Create the status icon with meaningful tooltip for Windows 11
+        # Windows 11 shows tooltip text when hovering over tray icons
         app.status_icon = toga.MenuStatusIcon(
             id="accessiweather_main",
             icon=app.icon,
-            text="AccessiWeather",
+            text="AccessiWeather - Weather at a glance",
         )
 
         create_system_tray_commands(app)
 
         app.status_icons.add(app.status_icon)
 
+        # Track that system tray is available
+        app.system_tray_available = True
+
+        # Track window visibility state for consistent behavior
+        app.window_visible = True
+
         logger.info("System tray initialized successfully")
+        return True
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Failed to initialize system tray: %s", exc)
         app.status_icon = None
+        app.system_tray_available = False
+        return False
 
 
 def create_system_tray_commands(app: AccessiWeatherApp) -> None:
@@ -128,6 +303,21 @@ def create_main_ui(app: AccessiWeatherApp) -> None:
     app.main_window.on_close = app._on_window_close
     # Attach on_show handler to refresh weather when window becomes visible
     app.main_window.on_show = lambda: asyncio.create_task(event_handlers.on_window_show(app))
+
+    # Add global Escape key handler for minimize-to-tray
+    def on_main_window_key_down(widget, key, _modifiers=None):
+        """Handle global keyboard shortcuts for main window."""
+        if app_helpers.is_escape_key(key):
+            return app_helpers.handle_escape_key(app)
+        return False
+
+    try:
+        app.main_window.on_key_down = on_main_window_key_down
+        logger.info("Escape key handler enabled for main window")
+    except AttributeError:
+        # on_key_down might not be available on all platforms
+        logger.warning("Escape key handler not available on this platform")
+
     app.main_window.show()
 
     logger.info("Main UI created successfully")
@@ -186,40 +376,82 @@ def create_location_section(app: AccessiWeatherApp) -> toga.Box:
 
 
 def create_weather_display_section(app: AccessiWeatherApp) -> toga.Box:
-    """Create the weather display section."""
+    """
+    Create the weather display section.
+
+    Uses WebView (HTML) or MultilineTextInput based on user settings.
+    HTML rendering provides better accessibility with semantic headings.
+    """
     weather_box = toga.Box(style=Pack(direction=COLUMN, flex=1))
+
+    # Get user preferences for rendering mode
+    use_html_conditions = True
+    use_html_forecast = True
+    if hasattr(app, "config_manager") and app.config_manager:
+        try:
+            config = app.config_manager.get_config()
+            use_html_conditions = getattr(config.settings, "html_render_current_conditions", True)
+            use_html_forecast = getattr(config.settings, "html_render_forecast", True)
+        except Exception:
+            pass  # Use defaults if config unavailable
 
     conditions_label = toga.Label(
         "Current Conditions:", style=Pack(font_weight="bold", margin_top=10, margin_bottom=5)
     )
     weather_box.add(conditions_label)
 
-    app.current_conditions_display = toga.MultilineTextInput(
-        readonly=True, style=Pack(height=120, margin_bottom=10)
-    )
-    app.current_conditions_display.value = "No current conditions data available."
-    try:
-        app.current_conditions_display.aria_label = "Current conditions"
-        app.current_conditions_display.aria_description = "Read-only display of current weather conditions including temperature, humidity, wind speed, and pressure"
-    except AttributeError:
-        pass
-    weather_box.add(app.current_conditions_display)
+    # Create current conditions display based on user preference
+    if use_html_conditions:
+        from .ui.webview_weather import create_conditions_webview
+
+        app.current_conditions_webview = create_conditions_webview(height=120)
+        weather_box.add(app.current_conditions_webview)
+        app.current_conditions_display = None
+    else:
+        # Use traditional MultilineTextInput for users who prefer it
+        app.current_conditions_display = toga.MultilineTextInput(
+            readonly=True,
+            style=Pack(height=120, margin_bottom=5),
+        )
+        try:
+            app.current_conditions_display.aria_label = "Current weather conditions"
+            app.current_conditions_display.aria_description = (
+                "Read-only text area showing current weather conditions"
+            )
+        except AttributeError:
+            pass
+        weather_box.add(app.current_conditions_display)
+        app.current_conditions_webview = None
 
     forecast_label = toga.Label("Forecast:", style=Pack(font_weight="bold", margin_bottom=5))
     weather_box.add(forecast_label)
 
-    app.forecast_display = toga.MultilineTextInput(
-        readonly=True, style=Pack(height=200, margin_bottom=10)
-    )
-    app.forecast_display.value = "No forecast data available."
-    try:
-        app.forecast_display.aria_label = "Forecast"
-        app.forecast_display.aria_description = (
-            "Read-only display of extended weather forecast with detailed predictions"
+    # Create forecast display based on user preference
+    if use_html_forecast:
+        from .ui.webview_weather import create_forecast_webview
+
+        app.forecast_webview = create_forecast_webview(height=200)
+        weather_box.add(app.forecast_webview)
+        app.forecast_container = None
+        app.forecast_scroll = None
+        app.forecast_display = None
+    else:
+        # Use traditional MultilineTextInput for users who prefer it
+        app.forecast_display = toga.MultilineTextInput(
+            readonly=True,
+            style=Pack(height=200, margin_bottom=5),
         )
-    except AttributeError:
-        pass
-    weather_box.add(app.forecast_display)
+        try:
+            app.forecast_display.aria_label = "Weather forecast"
+            app.forecast_display.aria_description = (
+                "Read-only text area showing extended weather forecast"
+            )
+        except AttributeError:
+            pass
+        weather_box.add(app.forecast_display)
+        app.forecast_webview = None
+        app.forecast_container = None
+        app.forecast_scroll = None
 
     app.discussion_button = toga.Button(
         "View Forecast Discussion",

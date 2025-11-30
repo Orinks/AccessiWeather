@@ -23,12 +23,23 @@ from accessiweather.models import (
 )
 
 
-def _create_mock_app():
-    """Create a mock app with config_manager."""
+def _create_mock_app(*, include_air_quality: bool = True, air_quality_trend: str | None = None):
+    """
+    Create a mock app with config_manager.
+
+    Args:
+        include_air_quality: Whether to include air quality in fallback text.
+        air_quality_trend: Optional trend string (e.g., "Worsening") to include.
+
+    """
     app = MagicMock()
+    # Explicitly set WebView to None to use legacy MultilineTextInput path
+    app.current_conditions_webview = None
+    app.forecast_webview = None
     app.current_conditions_display = MagicMock()
     app.current_conditions_display.value = ""
     app.forecast_display = MagicMock()
+    app.forecast_container = None
     app.alerts_table = MagicMock()
     app.alert_details_button = MagicMock()
     app.alert_details_button.enabled = False
@@ -41,11 +52,19 @@ def _create_mock_app():
     mock_config_manager.get_config.return_value = mock_config
     app.config_manager = mock_config_manager
 
+    # Build fallback text based on parameters
+    fallback_text = "Temperature: 70°F"
+    if include_air_quality:
+        aq_line = "Air Quality: AQI: 50 (Good)"
+        if air_quality_trend:
+            aq_line += f" - {air_quality_trend}"
+        fallback_text += f"\n{aq_line}"
+
     # Mock the presenter
     app.presenter = MagicMock()
     mock_presentation = MagicMock()
     mock_presentation.current_conditions = MagicMock()
-    mock_presentation.current_conditions.fallback_text = "Temperature: 70°F"
+    mock_presentation.current_conditions.fallback_text = fallback_text
     mock_presentation.forecast = None
     mock_presentation.aviation = None
     mock_presentation.air_quality = MagicMock()
@@ -100,7 +119,7 @@ async def test_brief_aqi_displayed_in_current_conditions():
 @pytest.mark.unit
 async def test_aqi_not_displayed_when_unavailable():
     """Test that air quality section is omitted when no data."""
-    app = _create_mock_app()
+    app = _create_mock_app(include_air_quality=False)
 
     location = Location(name="Test City", latitude=40.0, longitude=-74.0)
 
@@ -126,7 +145,7 @@ async def test_aqi_not_displayed_when_unavailable():
 @pytest.mark.unit
 async def test_brief_aqi_shows_trend():
     """Test that brief AQI shows trend indicator from hourly data."""
-    app = _create_mock_app()
+    app = _create_mock_app(air_quality_trend="Worsening")
 
     location = Location(name="Test City", latitude=40.0, longitude=-74.0)
     now = datetime.now(UTC)

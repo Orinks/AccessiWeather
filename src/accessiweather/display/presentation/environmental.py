@@ -205,6 +205,15 @@ def format_hourly_air_quality(
         best_time = _format_time(best.timestamp, time_format_12hour)
         lines.append(f"Best time: AQI {best.aqi} at {best_time}")
 
+    # Add individual hourly entries (show up to 12 hours)
+    hourly_entries = data[:12]
+    if hourly_entries:
+        lines.append("")
+        lines.append("Hourly Forecast:")
+        for entry in hourly_entries:
+            entry_time = _format_time(entry.timestamp, time_format_12hour)
+            lines.append(f"  {entry_time}: AQI {entry.aqi} ({entry.category})")
+
     return "\n".join(lines)
 
 

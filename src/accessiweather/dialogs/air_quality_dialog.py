@@ -243,10 +243,10 @@ class AirQualityDialog:
 
         # Section header
         header = toga.Label(
-            "Pollutant Details",
+            "Current Pollutant Levels",
             style=Pack(font_weight="bold", font_size=14, padding_bottom=8),
         )
-        header.aria_label = "Pollutant details section"
+        header.aria_label = "Current pollutant levels section"
         box.add(header)
 
         hourly_data = self.environmental.hourly_air_quality

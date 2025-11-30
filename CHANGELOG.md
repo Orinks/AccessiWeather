@@ -5,13 +5,14 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
--
+- Heading navigation for forecast days - screen readers can now jump between days using heading shortcuts (H key)
+- HTML-based weather display with semantic headings for better accessibility
 
 ### Changed
--
+- Forecast display now uses WebView with semantic HTML for faster rendering and better screen reader support
 
 ### Fixed
--
+- Screen reader users can now navigate forecast days using heading shortcuts instead of reading through all content sequentially
 
 ### Removed
 -

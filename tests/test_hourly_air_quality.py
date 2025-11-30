@@ -50,7 +50,7 @@ async def test_hourly_air_quality_includes_pollutants():
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 async def test_hourly_air_quality_handles_api_error():
     """Test that API errors are handled gracefully."""
     client = EnvironmentalDataClient()
@@ -64,7 +64,7 @@ async def test_hourly_air_quality_handles_api_error():
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 async def test_hourly_air_quality_respects_hours_parameter():
     """Test that the hours parameter limits the forecast length."""
     client = EnvironmentalDataClient()

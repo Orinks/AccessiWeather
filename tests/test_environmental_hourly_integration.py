@@ -91,7 +91,7 @@ async def test_hourly_air_quality_includes_pollutant_details():
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
+@pytest.mark.integration
 async def test_hourly_air_quality_timestamps_are_ordered():
     """Test that hourly timestamps are in chronological order."""
     client = EnvironmentalDataClient()

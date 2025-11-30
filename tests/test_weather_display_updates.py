@@ -108,7 +108,7 @@ async def test_update_weather_displays_embeds_air_quality_details():
 
     current_text = app.current_conditions_display.value
     assert "Air Quality:" in current_text
-    assert "AQI: 135" in current_text
+    assert "AQI 135" in current_text
     assert "Unhealthy for Sensitive Groups" in current_text
 
 
