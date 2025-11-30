@@ -105,7 +105,6 @@ def build_air_quality_panel(
     )
 
 
-
 def _build_summary_line(index: float | None, category: str | None) -> str | None:
     if index is None and not category:
         return None
@@ -154,7 +153,6 @@ def _build_updated_line(
         show_timezone=show_timezone_suffix,
     )
     return f"Updated {timestamp}"
-
 
 
 def format_hourly_air_quality(
@@ -217,7 +215,6 @@ def _format_time(dt: datetime, use_12hour: bool = True) -> str:
     return dt.strftime("%H:%M")
 
 
-
 def format_air_quality_summary(
     environmental: EnvironmentalConditions,
     settings: AppSettings | None = None,
@@ -260,9 +257,7 @@ def format_air_quality_summary(
     lines.append(f"Health guidance: {guidance}")
 
     if environmental.updated_at:
-        time_format_12hour = (
-            getattr(settings, "time_format_12hour", True) if settings else True
-        )
+        time_format_12hour = getattr(settings, "time_format_12hour", True) if settings else True
         if time_format_12hour:
             timestamp = environmental.updated_at.strftime("%I:%M %p").lstrip("0")
         else:
@@ -271,7 +266,6 @@ def format_air_quality_summary(
         lines.append(f"Last updated: {timestamp} on {date_str}")
 
     return "\n".join(lines) if lines else "Air quality data not available."
-
 
 
 def format_pollutant_details(
@@ -328,3 +322,52 @@ def _get_pollutant_display_name(pollutant_code: str) -> str:
     if code == "OZONE":
         return "Ozone"
     return code.replace("_", " ").title() if "_" in code else code
+
+
+def format_air_quality_brief(
+    environmental: EnvironmentalConditions,
+    settings: AppSettings | None = None,
+) -> str:
+    """
+    Format a brief air quality summary for Current Conditions section.
+
+    This is a pure function that returns a concise one-line summary with
+    AQI value, category, and trend only. No detailed hourly breakdown.
+
+    Args:
+        environmental: Environmental conditions data containing AQI info.
+        settings: App settings (unused, kept for API consistency).
+
+    Returns:
+        Brief summary like "AQI: 45 (Good) - Stable" or empty string if no data.
+
+    """
+    parts: list[str] = []
+
+    aqi = environmental.air_quality_index
+    category = environmental.air_quality_category
+
+    if aqi is not None:
+        aqi_text = f"AQI: {int(round(aqi))}"
+        if category:
+            aqi_text += f" ({category})"
+        parts.append(aqi_text)
+    elif category:
+        parts.append(category)
+
+    hourly_data = environmental.hourly_air_quality
+    if hourly_data and len(hourly_data) >= 3:
+        trend_start = hourly_data[0].aqi
+        trend_end = hourly_data[2].aqi
+        diff = trend_end - trend_start
+
+        if diff > 20:
+            parts.append("Worsening")
+        elif diff < -20:
+            parts.append("Improving")
+        else:
+            parts.append("Stable")
+    elif parts:
+        parts.append("Stable")
+
+    return " - ".join(parts) if parts else ""

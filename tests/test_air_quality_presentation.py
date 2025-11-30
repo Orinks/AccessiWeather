@@ -14,6 +14,7 @@ from hypothesis import given, settings
 
 from accessiweather.display.presentation.environmental import (
     _POLLUTANT_LABELS,
+    format_air_quality_brief,
     format_air_quality_summary,
     format_hourly_air_quality,
     format_pollutant_details,
@@ -486,3 +487,229 @@ def test_best_time_has_aqi_below_threshold(hourly_data: list[HourlyAirQuality]) 
             )
         else:
             assert f"Current: AQI {best_entry.aqi}" in result
+
+
+@st.composite
+def environmental_with_aqi_category_and_hourly(
+    draw: st.DrawFn, trend: str = "stable"
+) -> EnvironmentalConditions:
+    """Strategy for EnvironmentalConditions with AQI, category, and hourly data for trend."""
+    base_time = datetime.now(UTC)
+
+    if trend == "worsening":
+        first_aqi = draw(st.integers(min_value=0, max_value=200))
+        third_aqi = first_aqi + draw(st.integers(min_value=21, max_value=100))
+        third_aqi = min(third_aqi, 500)
+    elif trend == "improving":
+        first_aqi = draw(st.integers(min_value=50, max_value=500))
+        third_aqi = first_aqi - draw(st.integers(min_value=21, max_value=min(first_aqi, 100)))
+        third_aqi = max(third_aqi, 0)
+    else:
+        first_aqi = draw(st.integers(min_value=0, max_value=500))
+        diff = draw(st.integers(min_value=-20, max_value=20))
+        third_aqi = max(0, min(500, first_aqi + diff))
+
+    second_aqi = draw(st.integers(min_value=0, max_value=500))
+
+    hourly = [
+        HourlyAirQuality(
+            timestamp=base_time,
+            aqi=first_aqi,
+            category=draw(st.sampled_from(AQI_CATEGORIES)),
+        ),
+        HourlyAirQuality(
+            timestamp=base_time + timedelta(hours=1),
+            aqi=second_aqi,
+            category=draw(st.sampled_from(AQI_CATEGORIES)),
+        ),
+        HourlyAirQuality(
+            timestamp=base_time + timedelta(hours=2),
+            aqi=third_aqi,
+            category=draw(st.sampled_from(AQI_CATEGORIES)),
+        ),
+    ]
+
+    return EnvironmentalConditions(
+        air_quality_index=draw(st.floats(min_value=0, max_value=500, allow_nan=False)),
+        air_quality_category=draw(st.sampled_from(AQI_CATEGORIES)),
+        air_quality_pollutant=draw(st.sampled_from(POLLUTANT_CODES + [None])),
+        hourly_air_quality=hourly,
+        updated_at=draw(st.none() | st.just(datetime.now(UTC))),
+    )
+
+
+@pytest.mark.unit
+@given(env=environmental_with_aqi_category_and_hourly(trend="stable"))
+@settings(max_examples=100)
+def test_brief_summary_contains_aqi_category_trend(env: EnvironmentalConditions) -> None:
+    """
+    Property 7.4a: Brief summary contains AQI, category, and trend.
+
+    **Feature: air-quality-dialog, Property 7.4a: Brief summary format**
+
+    For any EnvironmentalConditions with AQI and category, the brief summary
+    SHALL contain the AQI value, category, and trend indicator.
+    """
+    result = format_air_quality_brief(env)
+
+    aqi_rounded = int(round(env.air_quality_index))  # type: ignore[arg-type]
+    assert f"AQI: {aqi_rounded}" in result, f"AQI value not found in brief summary: {result}"
+    assert env.air_quality_category is not None
+    assert env.air_quality_category in result, (
+        f"Category '{env.air_quality_category}' not found in brief summary: {result}"
+    )
+    assert any(trend in result for trend in ["Stable", "Improving", "Worsening"]), (
+        f"Trend indicator not found in brief summary: {result}"
+    )
+
+
+@st.composite
+def environmental_with_hourly_data(draw: st.DrawFn) -> EnvironmentalConditions:
+    """Strategy for EnvironmentalConditions with hourly data."""
+    base_time = datetime.now(UTC)
+    size = draw(st.integers(min_value=3, max_value=24))
+    hourly = []
+    for i in range(size):
+        hourly.append(
+            HourlyAirQuality(
+                timestamp=base_time + timedelta(hours=i),
+                aqi=draw(st.integers(min_value=0, max_value=500)),
+                category=draw(st.sampled_from(AQI_CATEGORIES)),
+            )
+        )
+
+    return EnvironmentalConditions(
+        air_quality_index=draw(st.floats(min_value=0, max_value=500, allow_nan=False)),
+        air_quality_category=draw(st.sampled_from(AQI_CATEGORIES)),
+        hourly_air_quality=hourly,
+    )
+
+
+@pytest.mark.unit
+@given(env=environmental_with_hourly_data())
+@settings(max_examples=100)
+def test_brief_summary_does_not_contain_hourly_details(env: EnvironmentalConditions) -> None:
+    """
+    Property 7.4b: Brief summary does not contain detailed hourly data.
+
+    **Feature: air-quality-dialog, Property 7.4b: Brief summary excludes hourly details**
+
+    The brief summary format SHALL NOT contain detailed hourly data such as
+    "Current:", "Peak:", "Best time:", or specific hour timestamps.
+    """
+    result = format_air_quality_brief(env)
+
+    assert "Current:" not in result, f"Brief summary should not contain 'Current:': {result}"
+    assert "Peak:" not in result, f"Brief summary should not contain 'Peak:': {result}"
+    assert "Best time:" not in result, f"Brief summary should not contain 'Best time:': {result}"
+    assert "\n" not in result, f"Brief summary should be single-line: {result}"
+
+
+@pytest.mark.unit
+@given(env=environmental_with_hourly_data())
+@settings(max_examples=100)
+def test_no_duplicate_air_quality_sections(env: EnvironmentalConditions) -> None:
+    """
+    Property 10: No duplicate air quality sections.
+
+    **Feature: air-quality-dialog, Property 10: No duplicate sections**
+
+    For any weather data displayed in Current Conditions, the air quality
+    information SHALL appear in exactly one section (not both brief and
+    detailed hourly with overlapping content).
+    """
+    brief_result = format_air_quality_brief(env)
+    hourly_result = format_hourly_air_quality(env.hourly_air_quality)
+
+    assert brief_result != hourly_result, "Brief and hourly formats should be distinct"
+
+    if hourly_result:
+        assert "Current:" not in brief_result, (
+            "Brief format should not duplicate hourly's 'Current:' line"
+        )
+        assert "Peak:" not in brief_result, (
+            "Brief format should not duplicate hourly's 'Peak:' line"
+        )
+
+    assert "\n" not in brief_result, "Brief format should be single-line"
+    if hourly_result:
+        assert "\n" in hourly_result, "Hourly format should be multi-line"
+
+
+@pytest.mark.unit
+def test_brief_format_example_output() -> None:
+    """
+    Unit test: Brief format produces expected concise output.
+
+    Example: "AQI: 45 (Good) - Stable"
+    """
+    env = EnvironmentalConditions(
+        air_quality_index=45.0,
+        air_quality_category="Good",
+    )
+
+    result = format_air_quality_brief(env)
+
+    assert result == "AQI: 45 (Good) - Stable"
+
+
+@pytest.mark.unit
+def test_brief_format_with_improving_trend() -> None:
+    """Unit test: Brief format shows improving trend when AQI decreases by >20."""
+    hourly = [
+        HourlyAirQuality(
+            timestamp=datetime.now(UTC),
+            aqi=100,
+            category="Moderate",
+        ),
+        HourlyAirQuality(
+            timestamp=datetime.now(UTC) + timedelta(hours=1),
+            aqi=85,
+            category="Moderate",
+        ),
+        HourlyAirQuality(
+            timestamp=datetime.now(UTC) + timedelta(hours=2),
+            aqi=70,
+            category="Moderate",
+        ),
+    ]
+    env = EnvironmentalConditions(
+        air_quality_index=80.0,
+        air_quality_category="Moderate",
+        hourly_air_quality=hourly,
+    )
+
+    result = format_air_quality_brief(env)
+
+    assert "Improving" in result
+
+
+@pytest.mark.unit
+def test_brief_format_with_worsening_trend() -> None:
+    """Unit test: Brief format shows worsening trend when AQI increases by >20."""
+    hourly = [
+        HourlyAirQuality(
+            timestamp=datetime.now(UTC),
+            aqi=50,
+            category="Good",
+        ),
+        HourlyAirQuality(
+            timestamp=datetime.now(UTC) + timedelta(hours=1),
+            aqi=65,
+            category="Moderate",
+        ),
+        HourlyAirQuality(
+            timestamp=datetime.now(UTC) + timedelta(hours=2),
+            aqi=80,
+            category="Moderate",
+        ),
+    ]
+    env = EnvironmentalConditions(
+        air_quality_index=100.0,
+        air_quality_category="Moderate",
+        hourly_air_quality=hourly,
+    )
+
+    result = format_air_quality_brief(env)
+
+    assert "Worsening" in result

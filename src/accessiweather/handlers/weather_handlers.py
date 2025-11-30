@@ -12,7 +12,7 @@ import toga
 from .. import app_helpers
 from ..dialogs.air_quality_dialog import AirQualityDialog
 from ..dialogs.weather_history_dialog import WeatherHistoryDialog
-from ..display.presentation.environmental import format_hourly_air_quality
+from ..display.presentation.environmental import format_air_quality_brief
 from ..models import WeatherData
 from ..performance.timer import timed_async
 
@@ -164,27 +164,13 @@ async def update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherD
                 if presentation.status_messages:
                     status_lines = "\n".join(f"• {line}" for line in presentation.status_messages)
                     current_text += f"\n\nStatus:\n{status_lines}"
-                if presentation.air_quality:
-                    aq_lines: list[str] = []
-                    if presentation.air_quality.summary:
-                        aq_lines.append(f"• {presentation.air_quality.summary}")
-                    if presentation.air_quality.guidance:
-                        aq_lines.append(f"• Advice: {presentation.air_quality.guidance}")
-                    if presentation.air_quality.updated_at:
-                        aq_lines.append(f"• {presentation.air_quality.updated_at}")
-                    if presentation.air_quality.sources:
-                        aq_lines.append("• Sources: " + ", ".join(presentation.air_quality.sources))
-                    if aq_lines:
-                        current_text += "\n\nAir quality update:\n" + "\n".join(aq_lines)
-
-                    # Add hourly forecast if available
-                    if weather_data.environmental and weather_data.environmental.hourly_air_quality:
-                        hourly_forecast = format_hourly_air_quality(
-                            weather_data.environmental.hourly_air_quality,
-                            settings=app.config_manager.get_config().settings,
-                        )
-                        if hourly_forecast:
-                            current_text += "\n\nHourly forecast:\n" + hourly_forecast
+                if weather_data.environmental:
+                    brief_summary = format_air_quality_brief(
+                        weather_data.environmental,
+                        settings=app.config_manager.get_config().settings,
+                    )
+                    if brief_summary:
+                        current_text += f"\n\nAir Quality: {brief_summary}"
                 app.current_conditions_display.value = current_text
             else:
                 # Avoid inventing "no data" messages when the API simply omitted a section.
