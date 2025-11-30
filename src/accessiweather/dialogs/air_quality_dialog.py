@@ -324,11 +324,21 @@ def _get_pollutant_name(pollutant_code: str) -> str:
     return code.replace("_", " ").title() if "_" in code else code
 
 
+_POLLUTANT_DESCRIPTIONS: dict[str, str] = {
+    "PM2_5": "Fine particles from smoke, exhaust, and dust that penetrate deep into lungs",
+    "PM10": "Coarse particles from dust, pollen, and mold",
+    "O3": "Ground-level ozone formed by sunlight reacting with vehicle/industrial emissions",
+    "NO2": "Gas from vehicle exhaust and power plants that irritates airways",
+    "SO2": "Gas from burning fossil fuels that affects breathing",
+    "CO": "Odorless gas from incomplete combustion that reduces oxygen in blood",
+}
+
+
 def _format_pollutant_details(
     hourly: HourlyAirQuality,
     dominant_pollutant: str | None = None,
 ) -> list[str]:
-    """Format pollutant measurements into readable lines."""
+    """Format pollutant measurements into readable lines with descriptions."""
     lines = []
     dominant_code = dominant_pollutant.strip().upper() if dominant_pollutant else None
 
@@ -345,9 +355,11 @@ def _format_pollutant_details(
         if value is not None:
             name = _POLLUTANT_LABELS.get(code, code)
             line = f"{name}: {value:.1f} {unit}"
-            # Mark dominant pollutant
             if dominant_code and code == dominant_code:
                 line += " (dominant)"
+            description = _POLLUTANT_DESCRIPTIONS.get(code)
+            if description:
+                line += f"\n  {description}"
             lines.append(line)
 
     return lines
