@@ -11,10 +11,12 @@ os.environ["TOGA_BACKEND"] = "toga_dummy"
 import toga
 
 from accessiweather.dialogs.air_quality_dialog import (
+    _POLLUTANT_DESCRIPTIONS,
     AirQualityDialog,
     _format_pollutant_details,
     _get_pollutant_name,
 )
+from accessiweather.display.presentation.environmental import _POLLUTANT_LABELS
 from accessiweather.models import AppSettings, EnvironmentalConditions, HourlyAirQuality
 
 
@@ -524,3 +526,25 @@ class TestHelperFunctions:
         lines = _format_pollutant_details(hourly, None)
 
         assert lines == []
+
+    def test_all_pollutants_have_descriptions(self):
+        """Ensure every defined pollutant has a human-readable description."""
+        for code in _POLLUTANT_LABELS:
+            assert code in _POLLUTANT_DESCRIPTIONS, f"Missing description for pollutant: {code}"
+            assert len(_POLLUTANT_DESCRIPTIONS[code]) > 10, f"Description too short for: {code}"
+
+    def test_pollutant_descriptions_included_in_output(self):
+        """Test that descriptions appear in formatted output."""
+        hourly = HourlyAirQuality(
+            timestamp=datetime.now(timezone.utc),
+            aqi=50,
+            category="Good",
+            pm2_5=15.0,
+            ozone=20.0,
+        )
+
+        lines = _format_pollutant_details(hourly)
+        joined = "\n".join(lines)
+
+        assert "Fine particles" in joined
+        assert "Ground-level ozone" in joined
