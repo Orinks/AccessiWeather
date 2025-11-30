@@ -53,14 +53,22 @@ def _create_app():
     """Create a lightweight app stub with the fields used by update_weather_displays."""
     from unittest.mock import Mock
 
-    presenter = WeatherPresenter(AppSettings())
+    settings = AppSettings()
+    presenter = WeatherPresenter(settings)
 
     # Mock main_window to make the window appear "visible" for tests
     mock_window = Mock()
     mock_window.visible = True
 
+    # Mock config_manager to provide settings
+    mock_config_manager = Mock()
+    mock_config = Mock()
+    mock_config.settings = settings
+    mock_config_manager.get_config.return_value = mock_config
+
     return SimpleNamespace(
         presenter=presenter,
+        config_manager=mock_config_manager,
         current_conditions_display=DummyText(),
         forecast_display=DummyText(),
         aviation_display=DummyText(),
@@ -101,7 +109,7 @@ async def test_update_weather_displays_embeds_air_quality_details():
     current_text = app.current_conditions_display.value
     assert "Air Quality:" in current_text
     assert "AQI 135" in current_text
-    assert "Advice:" in current_text
+    assert "Unhealthy for Sensitive Groups" in current_text
 
 
 @pytest.mark.asyncio

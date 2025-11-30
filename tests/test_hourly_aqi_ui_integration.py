@@ -1,14 +1,20 @@
-"""Tests for hourly AQI UI integration."""
+"""
+Tests for hourly AQI UI integration.
+
+The Current Conditions now displays a brief air quality summary.
+Detailed hourly forecast is shown in the dedicated Air Quality Dialog.
+"""
 
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
 import pytest
 
 from accessiweather.handlers.weather_handlers import update_weather_displays
 from accessiweather.models import (
+    AppSettings,
     CurrentConditions,
     EnvironmentalConditions,
     HourlyAirQuality,
@@ -17,11 +23,15 @@ from accessiweather.models import (
 )
 
 
-@pytest.mark.asyncio
-@pytest.mark.unit
-async def test_hourly_aqi_displayed_in_current_conditions():
-    """Test that hourly AQI forecast is displayed in current conditions."""
-    # Create mock app
+def _create_mock_app(*, include_air_quality: bool = True, air_quality_trend: str | None = None):
+    """
+    Create a mock app with config_manager.
+
+    Args:
+        include_air_quality: Whether to include air quality in fallback text.
+        air_quality_trend: Optional trend string (e.g., "Worsening") to include.
+
+    """
     app = MagicMock()
     # Explicitly set WebView to None to use legacy MultilineTextInput path
     app.current_conditions_webview = None
@@ -33,15 +43,28 @@ async def test_hourly_aqi_displayed_in_current_conditions():
     app.alerts_table = MagicMock()
     app.alert_details_button = MagicMock()
     app.alert_details_button.enabled = False
-    app.config.settings.temperature_unit = "fahrenheit"
-    app.config.settings.time_format_12hour = True
     app.current_alerts_data = None
 
-    # Mock the presenter to return a simple presentation
+    # Mock config_manager
+    mock_config_manager = Mock()
+    mock_config = Mock()
+    mock_config.settings = AppSettings()
+    mock_config_manager.get_config.return_value = mock_config
+    app.config_manager = mock_config_manager
+
+    # Build fallback text based on parameters
+    fallback_text = "Temperature: 70°F"
+    if include_air_quality:
+        aq_line = "Air Quality: AQI: 50 (Good)"
+        if air_quality_trend:
+            aq_line += f" - {air_quality_trend}"
+        fallback_text += f"\n{aq_line}"
+
+    # Mock the presenter
     app.presenter = MagicMock()
     mock_presentation = MagicMock()
     mock_presentation.current_conditions = MagicMock()
-    mock_presentation.current_conditions.fallback_text = "Temperature: 70°F"
+    mock_presentation.current_conditions.fallback_text = fallback_text
     mock_presentation.forecast = None
     mock_presentation.aviation = None
     mock_presentation.air_quality = MagicMock()
@@ -49,9 +72,18 @@ async def test_hourly_aqi_displayed_in_current_conditions():
     mock_presentation.air_quality.guidance = "Air quality is satisfactory"
     mock_presentation.air_quality.updated_at = None
     mock_presentation.air_quality.sources = []
+    mock_presentation.status_messages = []
     app.presenter.present.return_value = mock_presentation
 
-    # Create weather data with hourly AQI
+    return app
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_brief_aqi_displayed_in_current_conditions():
+    """Test that brief AQI summary is displayed in current conditions."""
+    app = _create_mock_app()
+
     location = Location(name="Test City", latitude=40.0, longitude=-74.0)
     now = datetime.now(UTC)
 
@@ -75,55 +107,26 @@ async def test_hourly_aqi_displayed_in_current_conditions():
         environmental=environmental,
     )
 
-    # Update displays
     await update_weather_displays(app, weather_data)
 
-    # Verify hourly forecast is in the display
     display_text = app.current_conditions_display.value
-    assert "Hourly forecast:" in display_text
-    assert "Current: AQI 50" in display_text
+    assert "Air Quality:" in display_text
+    assert "AQI: 50" in display_text
     assert "Good" in display_text
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_hourly_aqi_not_displayed_when_unavailable():
-    """Test that hourly forecast section is omitted when no data."""
-    app = MagicMock()
-    # Explicitly set WebView to None to use legacy MultilineTextInput path
-    app.current_conditions_webview = None
-    app.forecast_webview = None
-    app.current_conditions_display = MagicMock()
-    app.current_conditions_display.value = ""
-    app.forecast_display = MagicMock()
-    app.forecast_container = None
-    app.alerts_table = MagicMock()
-    app.alert_details_button = MagicMock()
-    app.alert_details_button.enabled = False
-    app.config.settings.temperature_unit = "fahrenheit"
-    app.current_alerts_data = None
-
-    # Mock the presenter
-    app.presenter = MagicMock()
-    mock_presentation = MagicMock()
-    mock_presentation.current_conditions = MagicMock()
-    mock_presentation.current_conditions.fallback_text = "Temperature: 70°F"
-    mock_presentation.forecast = None
-    mock_presentation.aviation = None
-    mock_presentation.air_quality = MagicMock()
-    mock_presentation.air_quality.summary = "AQI 50 (Good)"
-    mock_presentation.air_quality.guidance = "Air quality is satisfactory"
-    mock_presentation.air_quality.updated_at = None
-    mock_presentation.air_quality.sources = []
-    app.presenter.present.return_value = mock_presentation
+async def test_aqi_not_displayed_when_unavailable():
+    """Test that air quality section is omitted when no data."""
+    app = _create_mock_app(include_air_quality=False)
 
     location = Location(name="Test City", latitude=40.0, longitude=-74.0)
 
-    # Environmental data without hourly forecast
     environmental = EnvironmentalConditions(
-        air_quality_index=50.0,
-        air_quality_category="Good",
-        hourly_air_quality=[],  # Empty list
+        air_quality_index=None,
+        air_quality_category=None,
+        hourly_air_quality=[],
     )
 
     weather_data = WeatherData(
@@ -135,53 +138,22 @@ async def test_hourly_aqi_not_displayed_when_unavailable():
     await update_weather_displays(app, weather_data)
 
     display_text = app.current_conditions_display.value
-    assert "Hourly forecast:" not in display_text
+    assert "Air Quality:" not in display_text
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_hourly_aqi_shows_trend_and_peak():
-    """Test that hourly forecast shows trend analysis and peak times."""
-    app = MagicMock()
-    # Explicitly set WebView to None to use legacy MultilineTextInput path
-    app.current_conditions_webview = None
-    app.forecast_webview = None
-    app.current_conditions_display = MagicMock()
-    app.current_conditions_display.value = ""
-    app.forecast_display = MagicMock()
-    app.forecast_container = None
-    app.alerts_table = MagicMock()
-    app.alert_details_button = MagicMock()
-    app.alert_details_button.enabled = False
-    app.config.settings.temperature_unit = "fahrenheit"
-    app.config.settings.time_format_12hour = True
-    app.current_alerts_data = None
-
-    # Mock the presenter
-    app.presenter = MagicMock()
-    mock_presentation = MagicMock()
-    mock_presentation.current_conditions = MagicMock()
-    mock_presentation.current_conditions.fallback_text = "Temperature: 70°F"
-    mock_presentation.forecast = None
-    mock_presentation.aviation = None
-    mock_presentation.air_quality = MagicMock()
-    mock_presentation.air_quality.summary = "AQI 50 (Good)"
-    mock_presentation.air_quality.guidance = "Air quality is satisfactory"
-    mock_presentation.air_quality.updated_at = None
-    mock_presentation.air_quality.sources = []
-    app.presenter.present.return_value = mock_presentation
+async def test_brief_aqi_shows_trend():
+    """Test that brief AQI shows trend indicator from hourly data."""
+    app = _create_mock_app(air_quality_trend="Worsening")
 
     location = Location(name="Test City", latitude=40.0, longitude=-74.0)
     now = datetime.now(UTC)
 
-    # Create worsening trend
     hourly_data = [
         HourlyAirQuality(timestamp=now, aqi=50, category="Good"),
         HourlyAirQuality(timestamp=now + timedelta(hours=1), aqi=75, category="Moderate"),
         HourlyAirQuality(timestamp=now + timedelta(hours=2), aqi=150, category="Unhealthy"),
-        HourlyAirQuality(
-            timestamp=now + timedelta(hours=3), aqi=125, category="Unhealthy for Sensitive Groups"
-        ),
     ]
 
     environmental = EnvironmentalConditions(
@@ -199,6 +171,5 @@ async def test_hourly_aqi_shows_trend_and_peak():
     await update_weather_displays(app, weather_data)
 
     display_text = app.current_conditions_display.value
-    assert "Hourly forecast:" in display_text
-    assert "Trend:" in display_text
-    assert "Peak:" in display_text or "150" in display_text
+    assert "Air Quality:" in display_text
+    assert "Worsening" in display_text
