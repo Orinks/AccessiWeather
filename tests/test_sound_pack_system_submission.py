@@ -152,12 +152,23 @@ async def test_submit_pack_with_config_manager(tmp_pack_dir, mock_config_manager
         config_manager=mock_config_manager,
     )
 
-    # This should now work with the backend service, but will fail due to invalid test data
-    with pytest.raises(RuntimeError) as exc_info:
-        await svc.submit_pack(pack_dir, meta)
+    # Mock the backend client to raise a connection error (no network call)
+    mock_backend_client = AsyncMock()
+    mock_backend_client.upload_zip = AsyncMock(
+        side_effect=RuntimeError("Failed to connect to backend service: test error")
+    )
 
-    # Should get a backend service error, not a config manager error
-    assert "Failed to connect to backend service" in str(exc_info.value)
+    with patch(
+        "accessiweather.services.pack_submission_service.GitHubBackendClient"
+    ) as mock_backend_class:
+        mock_backend_class.return_value = mock_backend_client
+
+        # This should now work with the backend service, but will fail due to mocked error
+        with pytest.raises(RuntimeError) as exc_info:
+            await svc.submit_pack(pack_dir, meta)
+
+        # Should get a backend service error, not a config manager error
+        assert "Failed to connect to backend service" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
@@ -167,12 +178,23 @@ async def test_submit_pack_anonymous_no_config_manager(tmp_pack_dir):
 
     svc = PackSubmissionService(repo_owner="owner", repo_name="repo", dest_subdir="packs")
 
-    # This should now work with the backend service, but will fail due to invalid test data
-    with pytest.raises(RuntimeError) as exc_info:
-        await svc.submit_pack_anonymous(pack_dir, meta, "John Doe", "john@example.com")
+    # Mock the backend client to raise a backend service error (no network call)
+    mock_backend_client = AsyncMock()
+    mock_backend_client.upload_zip = AsyncMock(
+        side_effect=RuntimeError("Backend service error: test error")
+    )
 
-    # Should get a backend service error, not a config manager error
-    assert "Backend service error" in str(exc_info.value)
+    with patch(
+        "accessiweather.services.pack_submission_service.GitHubBackendClient"
+    ) as mock_backend_class:
+        mock_backend_class.return_value = mock_backend_client
+
+        # This should now work with the backend service, but will fail due to mocked error
+        with pytest.raises(RuntimeError) as exc_info:
+            await svc.submit_pack_anonymous(pack_dir, meta, "John Doe", "john@example.com")
+
+        # Should get a backend service error, not a config manager error
+        assert "Backend service error" in str(exc_info.value)
 
 
 @pytest.mark.asyncio
@@ -255,10 +277,21 @@ async def test_submit_pack_anonymous_invalid_config(tmp_pack_dir, mock_config_ma
         config_manager=mock_config_manager,
     )
 
-    with pytest.raises(RuntimeError) as exc_info:
-        await svc.submit_pack_anonymous(pack_dir, meta, "John Doe", "john@example.com")
+    # Mock the backend client to raise a connection error (no network call)
+    mock_backend_client = AsyncMock()
+    mock_backend_client.upload_zip = AsyncMock(
+        side_effect=RuntimeError("Failed to connect to backend service: invalid URL")
+    )
 
-    assert "Failed to connect to backend service" in str(exc_info.value)
+    with patch(
+        "accessiweather.services.pack_submission_service.GitHubBackendClient"
+    ) as mock_backend_class:
+        mock_backend_class.return_value = mock_backend_client
+
+        with pytest.raises(RuntimeError) as exc_info:
+            await svc.submit_pack_anonymous(pack_dir, meta, "John Doe", "john@example.com")
+
+        assert "Failed to connect to backend service" in str(exc_info.value)
 
 
 @pytest.mark.asyncio

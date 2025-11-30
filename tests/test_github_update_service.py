@@ -781,7 +781,7 @@ async def test_get_releases_rate_limit_fallback(sample_releases, svc):
 
 
 @pytest.mark.asyncio
-async def test_get_releases_timeout_fallback(sample_releases, svc):
+async def test_get_releases_timeout_fallback(sample_releases, svc, monkeypatch):
     """Test timeout fallback returns cached releases."""
     # Preload cache with sample releases
     svc.release_manager._cache = {"releases": sample_releases}
@@ -791,14 +791,27 @@ async def test_get_releases_timeout_fallback(sample_releases, svc):
 
     svc.release_manager.http_client = RaisingClient(httpx.TimeoutException("timeout"))
 
+    # Patch the retry decorator's sleep to be instant (avoid 2s+ delays)
+    async def instant_sleep(_):
+        pass
+
+    monkeypatch.setattr("accessiweather.utils.retry_utils.asyncio.sleep", instant_sleep)
+
     # Call _get_releases() and assert it returns cached releases
     releases = await svc._get_releases()
     assert releases == sample_releases
 
 
 @pytest.mark.asyncio
-async def test_get_releases_request_error_fallback(sample_releases, svc):
+async def test_get_releases_request_error_fallback(sample_releases, svc, monkeypatch):
     """Test RequestError fallback returns cached releases if available, else raises."""
+
+    # Patch the retry decorator's sleep to be instant (avoid 2s+ delays)
+    async def instant_sleep(_):
+        pass
+
+    monkeypatch.setattr("accessiweather.utils.retry_utils.asyncio.sleep", instant_sleep)
+
     # Test with cache available
     svc.release_manager._cache = {"releases": sample_releases}
 

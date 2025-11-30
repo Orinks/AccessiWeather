@@ -89,7 +89,7 @@ class TestBaseApiWrapper:
 
     def test_rate_limiting_enforcement(self):
         """Test that rate limiting enforces minimum request interval."""
-        wrapper = ConcreteApiWrapper(min_request_interval=0.2)
+        wrapper = ConcreteApiWrapper(min_request_interval=0.02)
 
         # Make first request
         start_time = time.time()
@@ -100,11 +100,11 @@ class TestBaseApiWrapper:
         elapsed = time.time() - start_time
 
         # Should have waited at least min_request_interval
-        assert elapsed >= 0.2
+        assert elapsed >= 0.02
 
     def test_rate_limit_thread_safety(self):
         """Test that rate limiting is thread-safe."""
-        wrapper = ConcreteApiWrapper(min_request_interval=0.1)
+        wrapper = ConcreteApiWrapper(min_request_interval=0.02)
 
         import threading
 
@@ -125,7 +125,7 @@ class TestBaseApiWrapper:
             thread.join()
 
         # At least some threads should have waited
-        assert any(r >= 0.1 for r in results)
+        assert any(r >= 0.02 for r in results)
 
     def test_fetch_url_success(self):
         """Test successful URL fetch."""
@@ -186,7 +186,7 @@ class TestBaseApiWrapper:
 
     def test_fetch_url_rate_limit_retry(self):
         """Test retry logic for 429 rate limit errors."""
-        wrapper = ConcreteApiWrapper(max_retries=2, retry_initial_wait=0.05, retry_backoff=1.5)
+        wrapper = ConcreteApiWrapper(max_retries=2, retry_initial_wait=0.01, retry_backoff=1.5)
 
         # First two calls return 429, third succeeds
         mock_response_429 = Mock(spec=httpx.Response)
@@ -207,7 +207,10 @@ class TestBaseApiWrapper:
                 return mock_response_429
             return mock_response_200
 
-        with patch("httpx.Client") as mock_client:
+        with (
+            patch("httpx.Client") as mock_client,
+            patch("accessiweather.api.base_wrapper.time.sleep"),
+        ):
             mock_client.return_value.__enter__.return_value.get.side_effect = get_side_effect
 
             result = wrapper._fetch_url("https://api.test.com/weather")
@@ -216,7 +219,7 @@ class TestBaseApiWrapper:
 
     def test_fetch_url_rate_limit_max_retries_exceeded(self):
         """Test that max retries raises error."""
-        wrapper = ConcreteApiWrapper(max_retries=2, retry_initial_wait=0.05)
+        wrapper = ConcreteApiWrapper(max_retries=2, retry_initial_wait=0.01)
 
         mock_response = Mock(spec=httpx.Response)
         mock_response.status_code = 429
@@ -224,7 +227,10 @@ class TestBaseApiWrapper:
             "Rate limited", request=Mock(), response=mock_response
         )
 
-        with patch("httpx.Client") as mock_client:
+        with (
+            patch("httpx.Client") as mock_client,
+            patch("accessiweather.api.base_wrapper.time.sleep"),
+        ):
             mock_client.return_value.__enter__.return_value.get.return_value = mock_response
 
             with pytest.raises(NoaaApiError) as exc_info:
