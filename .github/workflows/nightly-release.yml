@@ -40,20 +40,52 @@ jobs:
         id: changes
         run: |
           git fetch --tags
-          LAST_NIGHTLY_TAG=$(git tag --list "nightly-*" --sort=-committerdate | head -n 1)
+
+          # Get HEAD commit SHA
+          HEAD_SHA=$(git rev-parse HEAD)
+          echo "HEAD commit: $HEAD_SHA"
+
+          # Check if HEAD already has a nightly tag (already released)
+          HEAD_TAGS=$(git tag --points-at HEAD | grep "^nightly-" || true)
+          if [ -n "$HEAD_TAGS" ]; then
+            echo "HEAD already has nightly tag(s): $HEAD_TAGS"
+            echo "Skipping build - this commit was already released."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Find the latest nightly tag
+          LAST_NIGHTLY_TAG=$(git tag --list "nightly-*" --sort=-version:refname | head -n 1)
           echo "Last nightly tag: $LAST_NIGHTLY_TAG"
 
           if [ -z "$LAST_NIGHTLY_TAG" ]; then
-            echo "No previous nightly tag found."
+            echo "No previous nightly tag found - first nightly build."
             echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Get the commit SHA of the last nightly tag
+          LAST_NIGHTLY_SHA=$(git rev-parse "$LAST_NIGHTLY_TAG^{commit}")
+          echo "Last nightly commit: $LAST_NIGHTLY_SHA"
+
+          # Check if there are ANY commits since last nightly (not just src/ changes)
+          COMMIT_COUNT=$(git rev-list --count "$LAST_NIGHTLY_TAG"..HEAD)
+          echo "Commits since last nightly: $COMMIT_COUNT"
+
+          if [ "$COMMIT_COUNT" -eq 0 ]; then
+            echo "No new commits since last nightly."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Check for meaningful changes in src/ directory
+          if git diff --quiet "$LAST_NIGHTLY_TAG"..HEAD -- src/; then
+            echo "No changes in src/ since last nightly."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
           else
-            if git diff --quiet "$LAST_NIGHTLY_TAG"..HEAD -- src; then
-               echo "No changes in src/."
-               echo "changed=false" >> "$GITHUB_OUTPUT"
-            else
-               echo "Changes detected in src/."
-               echo "changed=true" >> "$GITHUB_OUTPUT"
-            fi
+            echo "Changes detected in src/ since last nightly."
+            git --no-pager diff --stat "$LAST_NIGHTLY_TAG"..HEAD -- src/ | tail -20
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Get version
