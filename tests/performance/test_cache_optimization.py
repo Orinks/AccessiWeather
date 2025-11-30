@@ -120,6 +120,9 @@ async def test_stale_cache_triggers_refresh(
     mock_fetch = mocker.patch.object(
         client, "_fetch_nws_data", return_value=(fresh_data.current, None, None, None, None)
     )
+    # Mock enrichments to avoid real API calls
+    mocker.patch.object(client, "_launch_enrichment_tasks", return_value={})
+    mocker.patch.object(client, "_await_enrichments")
 
     # Get weather data - should bypass stale cache and fetch fresh
     await client.get_weather_data(test_location)
@@ -153,6 +156,10 @@ async def test_force_refresh_bypasses_cache(
     mock_fetch = mocker.patch.object(
         client, "_fetch_nws_data", return_value=(None, None, None, None, None)
     )
+    # Mock Open-Meteo and enrichment to avoid real API calls
+    mocker.patch.object(client, "_fetch_openmeteo_data", return_value=(None, None, None))
+    mocker.patch.object(client, "_launch_enrichment_tasks", return_value={})
+    mocker.patch.object(client, "_await_enrichments")
 
     # Get weather data with force_refresh=True
     await client.get_weather_data(test_location, force_refresh=True)
@@ -177,6 +184,7 @@ async def test_pre_warm_cache_success(temp_cache_dir: Path, test_location: Locat
     mocker.patch.object(
         client, "_fetch_nws_data", return_value=(fresh_data, None, None, None, None)
     )
+    mocker.patch.object(client, "_fetch_openmeteo_data", return_value=(None, None, None))
 
     # Pre-warm cache
     success = await client.pre_warm_cache(test_location)
@@ -251,6 +259,10 @@ async def test_cache_miss_fetches_data(temp_cache_dir: Path, test_location: Loca
     mock_fetch = mocker.patch.object(
         client, "_fetch_nws_data", return_value=(None, None, None, None, None)
     )
+    # Mock Open-Meteo and enrichment to avoid real API calls
+    mocker.patch.object(client, "_fetch_openmeteo_data", return_value=(None, None, None))
+    mocker.patch.object(client, "_launch_enrichment_tasks", return_value={})
+    mocker.patch.object(client, "_await_enrichments")
 
     # Get weather data (cache is empty)
     await client.get_weather_data(test_location)

@@ -99,11 +99,10 @@ jobs:
     - name: Run tests
       env:
         PYTHONPATH: src
-        PYTEST_DISABLE_PLUGIN_AUTOLOAD: 1
         ACCESSIWEATHER_TEST_MODE: "1"
       run: |
         mkdir -p reports
-        pytest tests/ -v -p pytest_asyncio --tb=short -m "not integration" --junitxml=reports/junit.xml
+        pytest tests/ -n auto -v --tb=short -m "not integration" --junitxml=reports/junit.xml
 
     - name: Upload test report
       if: always()
