@@ -13,6 +13,7 @@ build/
 *.egg-info/
 *.egg
 wheelhouse/
+.briefcase/
 
 # PyInstaller
 # Usually these files are written by a python script from a template
@@ -34,6 +35,7 @@ coverage.xml
 *.cover
 .pytest_cache/
 .tox/
+.hypothesis/
 
 # Environments
 .env
@@ -78,8 +80,6 @@ dmypy.json
 .specs/
 .cursor/
 .windsurfrules
-.kiro/steering/
-.briefcase/
 project_state.json
 fix_imports.py
 *.code-workspace
@@ -89,7 +89,9 @@ fix_imports.py
 
 # Logs
 *.log
+*.log.*
 logs/
+accessiweather.log*
 
 # Local configuration (secrets, API keys, etc.)
 # IMPORTANT: Ensure config.sample.json or similar is checked in
@@ -129,6 +131,10 @@ api_keys.txt
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+nul
+
+# Accidental pip install artifacts
+=*
 
 # Notebook checkpoints
 .ipynb_checkpoints
