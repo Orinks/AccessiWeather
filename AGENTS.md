@@ -5,7 +5,8 @@
 ```bash
 # Development
 briefcase dev                          # Run app with hot reload
-pytest -v                             # Run all tests
+pytest -v                             # Run all tests (serial)
+pytest -n auto                        # Run all tests (parallel, ~4x faster)
 pytest tests/test_file.py::test_func  # Run single test
 pytest -k "test_name" -v              # Run tests matching pattern
 pytest --lf --ff -m "unit"            # Run last-failed/first-failed unit tests
