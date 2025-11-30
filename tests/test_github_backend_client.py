@@ -111,7 +111,10 @@ async def test_upload_pack_json_only_error_handling():
     }
     mock_response.text = "Validation error"
 
-    with patch("httpx.AsyncClient") as mock_httpx:
+    with (
+        patch("httpx.AsyncClient") as mock_httpx,
+        patch("accessiweather.utils.retry_utils.asyncio.sleep", new_callable=AsyncMock),
+    ):
         mock_client = AsyncMock()
         mock_httpx.return_value.__aenter__.return_value = mock_client
         mock_client.post.return_value = mock_response

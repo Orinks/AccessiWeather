@@ -1,12 +1,20 @@
 """Integration tests for HTTP timeout and retry behavior."""
 
 import asyncio
+from unittest.mock import AsyncMock, patch
 
 import httpx
 import pytest
 
 from accessiweather.models import Location
 from accessiweather.weather_client import WeatherClient
+
+
+@pytest.fixture
+def fast_retry_sleep():
+    """Speed up retry delays in tests by mocking asyncio.sleep in retry module."""
+    with patch("accessiweather.utils.retry.asyncio.sleep", new_callable=AsyncMock):
+        yield
 
 
 @pytest.fixture
@@ -37,7 +45,9 @@ async def test_timeout_configuration(test_location: Location):
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_nws_fetch_with_timeout_simulation(test_location: Location, monkeypatch):
+async def test_nws_fetch_with_timeout_simulation(
+    test_location: Location, monkeypatch, fast_retry_sleep
+):
     """Test NWS data fetch handles timeout with retry."""
     from unittest.mock import AsyncMock
 
@@ -71,7 +81,7 @@ async def test_nws_fetch_with_timeout_simulation(test_location: Location, monkey
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_nws_fetch_timeout_exhausted(test_location: Location, monkeypatch):
+async def test_nws_fetch_timeout_exhausted(test_location: Location, monkeypatch, fast_retry_sleep):
     """Test NWS data fetch returns None tuple when all retries exhausted."""
     from unittest.mock import AsyncMock
 
@@ -97,7 +107,9 @@ async def test_nws_fetch_timeout_exhausted(test_location: Location, monkeypatch)
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_openmeteo_fetch_with_timeout_simulation(test_location: Location, monkeypatch):
+async def test_openmeteo_fetch_with_timeout_simulation(
+    test_location: Location, monkeypatch, fast_retry_sleep
+):
     """Test Open-Meteo data fetch handles timeout with retry."""
     from unittest.mock import AsyncMock
 
@@ -128,7 +140,9 @@ async def test_openmeteo_fetch_with_timeout_simulation(test_location: Location, 
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_openmeteo_fetch_timeout_exhausted(test_location: Location, monkeypatch):
+async def test_openmeteo_fetch_timeout_exhausted(
+    test_location: Location, monkeypatch, fast_retry_sleep
+):
     """Test Open-Meteo fetch returns None tuple when retries exhausted."""
     from unittest.mock import AsyncMock
 
@@ -151,6 +165,7 @@ async def test_openmeteo_fetch_timeout_exhausted(test_location: Location, monkey
 
 
 @pytest.mark.integration
+@pytest.mark.slow
 @pytest.mark.asyncio
 async def test_retry_delay_timing(test_location: Location, monkeypatch):
     """Test that retry delay follows exponential backoff."""
