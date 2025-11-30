@@ -137,7 +137,6 @@ def _build_updated_line(
     if not updated_at:
         return None
 
-    # Extract time preferences
     if settings:
         time_display_mode = getattr(settings, "time_display_mode", "local")
         time_format_12hour = getattr(settings, "time_format_12hour", True)
@@ -176,23 +175,16 @@ def format_hourly_air_quality(
     if not hourly_data:
         return None
 
-    # Extract time preferences
     time_format_12hour = getattr(settings, "time_format_12hour", True) if settings else True
-
-    # Limit to max_hours
     data = hourly_data[:max_hours]
 
-    # Find current, peak, and best times
     current = data[0]
     peak = max(data, key=lambda h: h.aqi)
     best = min(data, key=lambda h: h.aqi)
 
     lines = []
-
-    # Current AQI
     lines.append(f"Current: AQI {current.aqi} ({current.category})")
 
-    # Trend analysis (compare first 3 hours if available)
     if len(data) >= 3:
         trend_start = data[0].aqi
         trend_end = data[2].aqi
@@ -205,15 +197,22 @@ def format_hourly_air_quality(
         else:
             lines.append("Trend: Stable")
 
-    # Peak time
     if peak.aqi != current.aqi:
         peak_time = _format_time(peak.timestamp, time_format_12hour)
         lines.append(f"Peak: AQI {peak.aqi} ({peak.category}) at {peak_time}")
 
-    # Best time for outdoor activities
     if best.aqi < 100 and best.aqi != current.aqi:
         best_time = _format_time(best.timestamp, time_format_12hour)
         lines.append(f"Best time: AQI {best.aqi} at {best_time}")
+
+    # Add individual hourly entries (show up to 12 hours)
+    hourly_entries = data[:12]
+    if hourly_entries:
+        lines.append("")
+        lines.append("Hourly Forecast:")
+        for entry in hourly_entries:
+            entry_time = _format_time(entry.timestamp, time_format_12hour)
+            lines.append(f"  {entry_time}: AQI {entry.aqi} ({entry.category})")
 
     return "\n".join(lines)
 
@@ -223,3 +222,161 @@ def _format_time(dt: datetime, use_12hour: bool = True) -> str:
     if use_12hour:
         return dt.strftime("%I:%M %p").lstrip("0")
     return dt.strftime("%H:%M")
+
+
+def format_air_quality_summary(
+    environmental: EnvironmentalConditions,
+    settings: AppSettings | None = None,
+) -> str:
+    """
+    Format current air quality as a summary string for the dialog.
+
+    This is a pure function that accepts data and settings and returns formatted text.
+
+    Args:
+        environmental: Environmental conditions data containing AQI info.
+        settings: App settings for time formatting preferences.
+
+    Returns:
+        Formatted summary string with AQI, category, pollutant, guidance, and timestamp.
+
+    """
+    lines: list[str] = []
+
+    aqi = environmental.air_quality_index
+    category = environmental.air_quality_category
+
+    if aqi is not None or category:
+        aqi_text = ""
+        if aqi is not None:
+            aqi_text = f"AQI: {int(round(aqi))}"
+        if category:
+            if aqi_text:
+                aqi_text += f" ({category})"
+            else:
+                aqi_text = category
+        lines.append(aqi_text)
+
+    pollutant = environmental.air_quality_pollutant
+    if pollutant:
+        pollutant_name = _get_pollutant_display_name(pollutant)
+        lines.append(f"Dominant pollutant: {pollutant_name}")
+
+    guidance = _AIR_QUALITY_GUIDANCE.get(category or "", _DEFAULT_GUIDANCE)
+    lines.append(f"Health guidance: {guidance}")
+
+    if environmental.updated_at:
+        time_format_12hour = getattr(settings, "time_format_12hour", True) if settings else True
+        if time_format_12hour:
+            timestamp = environmental.updated_at.strftime("%I:%M %p").lstrip("0")
+        else:
+            timestamp = environmental.updated_at.strftime("%H:%M")
+        date_str = environmental.updated_at.strftime("%B %d, %Y")
+        lines.append(f"Last updated: {timestamp} on {date_str}")
+
+    return "\n".join(lines) if lines else "Air quality data not available."
+
+
+def format_pollutant_details(
+    hourly_data: list[HourlyAirQuality],
+    dominant_pollutant: str | None = None,
+) -> str:
+    """
+    Format pollutant measurements into readable text.
+
+    This is a pure function that accepts data and returns formatted text.
+
+    Args:
+        hourly_data: List of hourly air quality data (uses first entry for current values).
+        dominant_pollutant: Code of the dominant pollutant to highlight.
+
+    Returns:
+        Formatted pollutant breakdown with human-readable names and dominant indicator.
+
+    """
+    if not hourly_data:
+        return "No pollutant data available."
+
+    current = hourly_data[0]
+    dominant_code = dominant_pollutant.strip().upper() if dominant_pollutant else None
+
+    pollutants = [
+        ("PM2_5", current.pm2_5, "µg/m³"),
+        ("PM10", current.pm10, "µg/m³"),
+        ("O3", current.ozone, "µg/m³"),
+        ("NO2", current.nitrogen_dioxide, "µg/m³"),
+        ("SO2", current.sulphur_dioxide, "µg/m³"),
+        ("CO", current.carbon_monoxide, "µg/m³"),
+    ]
+
+    lines: list[str] = []
+    for code, value, unit in pollutants:
+        if value is not None:
+            name = _POLLUTANT_LABELS.get(code, code)
+            line = f"{name}: {value:.1f} {unit}"
+            if dominant_code and code == dominant_code:
+                line += " (dominant)"
+            lines.append(line)
+
+    return "\n".join(lines) if lines else "No pollutant measurements available."
+
+
+def _get_pollutant_display_name(pollutant_code: str) -> str:
+    """Convert pollutant code to human-readable display name."""
+    code = pollutant_code.strip().upper()
+    if code in _POLLUTANT_LABELS:
+        return _POLLUTANT_LABELS[code]
+    if code == "PM2.5":
+        return "PM2.5"
+    if code == "OZONE":
+        return "Ozone"
+    return code.replace("_", " ").title() if "_" in code else code
+
+
+def format_air_quality_brief(
+    environmental: EnvironmentalConditions,
+    settings: AppSettings | None = None,
+) -> str:
+    """
+    Format a brief air quality summary for Current Conditions section.
+
+    This is a pure function that returns a concise one-line summary with
+    AQI value, category, and trend only. No detailed hourly breakdown.
+
+    Args:
+        environmental: Environmental conditions data containing AQI info.
+        settings: App settings (unused, kept for API consistency).
+
+    Returns:
+        Brief summary like "AQI: 45 (Good) - Stable" or empty string if no data.
+
+    """
+    parts: list[str] = []
+
+    aqi = environmental.air_quality_index
+    category = environmental.air_quality_category
+
+    if aqi is not None:
+        aqi_text = f"AQI: {int(round(aqi))}"
+        if category:
+            aqi_text += f" ({category})"
+        parts.append(aqi_text)
+    elif category:
+        parts.append(category)
+
+    hourly_data = environmental.hourly_air_quality
+    if hourly_data and len(hourly_data) >= 3:
+        trend_start = hourly_data[0].aqi
+        trend_end = hourly_data[2].aqi
+        diff = trend_end - trend_start
+
+        if diff > 20:
+            parts.append("Worsening")
+        elif diff < -20:
+            parts.append("Improving")
+        else:
+            parts.append("Stable")
+    elif parts:
+        parts.append("Stable")
+
+    return " - ".join(parts) if parts else ""

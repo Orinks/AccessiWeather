@@ -26,6 +26,7 @@ from .handlers import (
     on_tray_exit,
     on_tray_refresh,
     on_tray_settings,
+    on_view_air_quality,
     on_view_alert_details,
     on_view_aviation_pressed,
     on_view_weather_history,
@@ -48,6 +49,7 @@ __all__ = [
     "convert_alerts_to_table_data",
     "notify_new_alerts",
     "on_view_weather_history",
+    "on_view_air_quality",
     "on_settings_pressed",
     "show_settings_dialog",
     "on_discussion_pressed",
@@ -65,5 +67,4 @@ __all__ = [
     "on_tray_exit",
     "test_alert_notification",
     "on_test_notification_pressed",
-    "on_view_aviation_pressed",
 ]
