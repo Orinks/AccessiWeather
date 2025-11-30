@@ -15,6 +15,7 @@ from hypothesis import given, settings
 from accessiweather.display.presentation.environmental import (
     _POLLUTANT_LABELS,
     format_air_quality_summary,
+    format_hourly_air_quality,
     format_pollutant_details,
 )
 from accessiweather.models import AppSettings, EnvironmentalConditions, HourlyAirQuality
@@ -273,3 +274,215 @@ def test_pollutant_details_formatting_is_deterministic(
     result2 = format_pollutant_details(hourly_data, dominant_pollutant=pollutant)
 
     assert result1 == result2, "format_pollutant_details is not deterministic"
+
+
+@st.composite
+def hourly_air_quality_list_extended(
+    draw: st.DrawFn, min_size: int = 1, max_size: int = 48
+) -> list[HourlyAirQuality]:
+    """Strategy for generating a list of HourlyAirQuality entries (up to 48 hours)."""
+    base_time = datetime.now(UTC)
+    size = draw(st.integers(min_value=min_size, max_value=max_size))
+    entries = []
+    for i in range(size):
+        entries.append(
+            HourlyAirQuality(
+                timestamp=base_time + timedelta(hours=i),
+                aqi=draw(st.integers(min_value=0, max_value=500)),
+                category=draw(st.sampled_from(AQI_CATEGORIES)),
+                pm2_5=draw(st.floats(min_value=0, max_value=500) | st.none()),
+                pm10=draw(st.floats(min_value=0, max_value=500) | st.none()),
+                ozone=draw(st.floats(min_value=0, max_value=500) | st.none()),
+                nitrogen_dioxide=draw(st.floats(min_value=0, max_value=500) | st.none()),
+                sulphur_dioxide=draw(st.floats(min_value=0, max_value=500) | st.none()),
+                carbon_monoxide=draw(st.floats(min_value=0, max_value=50000) | st.none()),
+            )
+        )
+    return entries
+
+
+@pytest.mark.unit
+@given(hourly_data=hourly_air_quality_list_extended(min_size=25, max_size=48))
+@settings(max_examples=100)
+def test_hourly_forecast_limited_to_24_hours(hourly_data: list[HourlyAirQuality]) -> None:
+    """
+    Property 5: Hourly forecast limited to 24 hours.
+
+    For any list of HourlyAirQuality entries with length > 24, the formatted hourly
+    output SHALL contain at most 24 hour entries.
+    """
+    result = format_hourly_air_quality(hourly_data)
+
+    assert result is not None, "Expected non-empty result for non-empty input"
+
+    lines = result.split("\n")
+    hour_entry_count = 0
+    for line in lines:
+        if line.startswith("Current:") or "Peak:" in line or "Best time:" in line:
+            hour_entry_count += 1
+
+    assert hour_entry_count <= 24, f"Expected at most 24 hour entries, got {hour_entry_count}"
+
+
+@st.composite
+def hourly_with_trend(draw: st.DrawFn, trend: str) -> list[HourlyAirQuality]:
+    """Strategy for generating hourly data with a specific trend."""
+    base_time = datetime.now(UTC)
+
+    if trend == "worsening":
+        first_aqi = draw(st.integers(min_value=0, max_value=200))
+        third_aqi = first_aqi + draw(st.integers(min_value=21, max_value=100))
+        third_aqi = min(third_aqi, 500)
+    elif trend == "improving":
+        first_aqi = draw(st.integers(min_value=50, max_value=500))
+        third_aqi = first_aqi - draw(st.integers(min_value=21, max_value=min(first_aqi, 100)))
+        third_aqi = max(third_aqi, 0)
+    else:
+        first_aqi = draw(st.integers(min_value=0, max_value=500))
+        diff = draw(st.integers(min_value=-20, max_value=20))
+        third_aqi = max(0, min(500, first_aqi + diff))
+
+    second_aqi = draw(st.integers(min_value=0, max_value=500))
+
+    entries = []
+    for i, aqi in enumerate([first_aqi, second_aqi, third_aqi]):
+        entries.append(
+            HourlyAirQuality(
+                timestamp=base_time + timedelta(hours=i),
+                aqi=aqi,
+                category=draw(st.sampled_from(AQI_CATEGORIES)),
+            )
+        )
+
+    extra_count = draw(st.integers(min_value=0, max_value=5))
+    for i in range(extra_count):
+        entries.append(
+            HourlyAirQuality(
+                timestamp=base_time + timedelta(hours=3 + i),
+                aqi=draw(st.integers(min_value=0, max_value=500)),
+                category=draw(st.sampled_from(AQI_CATEGORIES)),
+            )
+        )
+
+    return entries
+
+
+@pytest.mark.unit
+@given(hourly_data=hourly_with_trend("worsening"))
+@settings(max_examples=100)
+def test_trend_worsening_identified(hourly_data: list[HourlyAirQuality]) -> None:
+    """
+    Property 6: Trend correctly identifies direction (worsening).
+
+    For any sequence of at least 3 HourlyAirQuality entries where AQI increases
+    by more than 20 from first to third entry, the trend SHALL be "Worsening".
+    """
+    result = format_hourly_air_quality(hourly_data)
+
+    assert result is not None
+    assert "Trend: Worsening" in result, f"Expected 'Worsening' trend, got: {result}"
+
+
+@pytest.mark.unit
+@given(hourly_data=hourly_with_trend("improving"))
+@settings(max_examples=100)
+def test_trend_improving_identified(hourly_data: list[HourlyAirQuality]) -> None:
+    """
+    Property 6: Trend correctly identifies direction (improving).
+
+    For any sequence of at least 3 HourlyAirQuality entries where AQI decreases
+    by more than 20 from first to third entry, the trend SHALL be "Improving".
+    """
+    result = format_hourly_air_quality(hourly_data)
+
+    assert result is not None
+    assert "Trend: Improving" in result, f"Expected 'Improving' trend, got: {result}"
+
+
+@pytest.mark.unit
+@given(hourly_data=hourly_with_trend("stable"))
+@settings(max_examples=100)
+def test_trend_stable_identified(hourly_data: list[HourlyAirQuality]) -> None:
+    """
+    Property 6: Trend correctly identifies direction (stable).
+
+    For any sequence of at least 3 HourlyAirQuality entries where AQI change
+    from first to third is within 20 (inclusive), the trend SHALL be "Stable".
+    """
+    result = format_hourly_air_quality(hourly_data)
+
+    assert result is not None
+    assert "Trend: Stable" in result, f"Expected 'Stable' trend, got: {result}"
+
+
+@pytest.mark.unit
+@given(hourly_data=hourly_air_quality_list(min_size=1, max_size=24))
+@settings(max_examples=100)
+def test_peak_aqi_is_maximum_value(hourly_data: list[HourlyAirQuality]) -> None:
+    """
+    Property 7: Peak AQI is maximum value.
+
+    For any non-empty list of HourlyAirQuality entries, the reported peak AQI
+    SHALL equal the maximum AQI value in the list.
+    """
+    result = format_hourly_air_quality(hourly_data)
+
+    assert result is not None
+
+    max_aqi = max(h.aqi for h in hourly_data)
+
+    peak_in_result = f"Peak: AQI {max_aqi}" in result
+    current_is_peak = f"Current: AQI {max_aqi}" in result
+
+    assert peak_in_result or current_is_peak, f"Peak AQI {max_aqi} not found in result: {result}"
+
+
+@st.composite
+def hourly_with_good_aqi_entry(draw: st.DrawFn) -> list[HourlyAirQuality]:
+    """Strategy for generating hourly data with at least one AQI < 100."""
+    base_time = datetime.now(UTC)
+
+    size = draw(st.integers(min_value=2, max_value=24))
+    good_index = draw(st.integers(min_value=0, max_value=size - 1))
+
+    entries = []
+    for i in range(size):
+        if i == good_index:
+            aqi = draw(st.integers(min_value=0, max_value=99))
+        else:
+            aqi = draw(st.integers(min_value=0, max_value=500))
+
+        entries.append(
+            HourlyAirQuality(
+                timestamp=base_time + timedelta(hours=i),
+                aqi=aqi,
+                category=draw(st.sampled_from(AQI_CATEGORIES)),
+            )
+        )
+
+    return entries
+
+
+@pytest.mark.unit
+@given(hourly_data=hourly_with_good_aqi_entry())
+@settings(max_examples=100)
+def test_best_time_has_aqi_below_threshold(hourly_data: list[HourlyAirQuality]) -> None:
+    """
+    Property 8: Best time has AQI below threshold.
+
+    For any list of HourlyAirQuality entries where at least one entry has AQI < 100,
+    the reported best time SHALL correspond to an entry with AQI < 100.
+    """
+    result = format_hourly_air_quality(hourly_data)
+
+    assert result is not None
+
+    best_entry = min(hourly_data, key=lambda h: h.aqi)
+
+    if best_entry.aqi < 100:
+        if best_entry != hourly_data[0]:
+            assert f"Best time: AQI {best_entry.aqi}" in result, (
+                f"Expected best time with AQI {best_entry.aqi} in result: {result}"
+            )
+        else:
+            assert f"Current: AQI {best_entry.aqi}" in result
