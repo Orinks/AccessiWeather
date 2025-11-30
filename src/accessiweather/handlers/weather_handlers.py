@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING, Any
 import toga
 
 from .. import app_helpers
+from ..dialogs.air_quality_dialog import AirQualityDialog
 from ..dialogs.weather_history_dialog import WeatherHistoryDialog
-from ..display.presentation.environmental import format_hourly_air_quality
 from ..models import WeatherData
 from ..performance.timer import timed_async
 
@@ -170,27 +170,6 @@ async def update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherD
                 if presentation.status_messages:
                     status_lines = "\n".join(f"• {line}" for line in presentation.status_messages)
                     current_text += f"\n\nStatus:\n{status_lines}"
-                if presentation.air_quality:
-                    aq_lines: list[str] = []
-                    if presentation.air_quality.summary:
-                        aq_lines.append(f"• {presentation.air_quality.summary}")
-                    if presentation.air_quality.guidance:
-                        aq_lines.append(f"• Advice: {presentation.air_quality.guidance}")
-                    if presentation.air_quality.updated_at:
-                        aq_lines.append(f"• {presentation.air_quality.updated_at}")
-                    if presentation.air_quality.sources:
-                        aq_lines.append("• Sources: " + ", ".join(presentation.air_quality.sources))
-                    if aq_lines:
-                        current_text += "\n\nAir quality update:\n" + "\n".join(aq_lines)
-
-                    # Add hourly forecast if available
-                    if weather_data.environmental and weather_data.environmental.hourly_air_quality:
-                        hourly_forecast = format_hourly_air_quality(
-                            weather_data.environmental.hourly_air_quality,
-                            settings=app.config_manager.get_config().settings,
-                        )
-                        if hourly_forecast:
-                            current_text += "\n\nHourly forecast:\n" + hourly_forecast
                 app.current_conditions_display.value = current_text
             else:
                 # Avoid inventing "no data" messages when the API simply omitted a section.
@@ -360,3 +339,45 @@ async def on_view_weather_history(app: AccessiWeatherApp, widget: toga.Widget) -
             )
         )
         app_helpers.update_status(app, "Failed to fetch weather history")
+
+
+async def on_view_air_quality(app: AccessiWeatherApp, widget: toga.Widget) -> None:
+    """Show air quality dialog."""
+    logger.info("View air quality pressed")
+
+    current_location = app.config_manager.get_current_location()
+    if not current_location:
+        await app.main_window.dialog(
+            toga.InfoDialog("Air Quality", "No location selected. Please select a location first.")
+        )
+        return
+
+    if not app.current_weather_data or not app.current_weather_data.environmental:
+        await app.main_window.dialog(
+            toga.InfoDialog(
+                "Air Quality",
+                "No air quality data available. Please refresh weather data first.",
+            )
+        )
+        return
+
+    environmental = app.current_weather_data.environmental
+    if not environmental.has_data():
+        await app.main_window.dialog(
+            toga.InfoDialog(
+                "Air Quality",
+                "Air quality data is not available for this location.",
+            )
+        )
+        return
+
+    try:
+        settings = app.config_manager.get_config().settings
+        dialog = AirQualityDialog(app, current_location.name, environmental, settings)
+        await dialog.show_and_focus()
+        app_helpers.update_status(app, "Air quality dialog opened")
+    except Exception as exc:
+        logger.error("Failed to open air quality dialog: %s", exc)
+        await app.main_window.dialog(
+            toga.InfoDialog("Air Quality Error", f"Could not open air quality dialog: {exc}")
+        )

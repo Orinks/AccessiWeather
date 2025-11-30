@@ -240,4 +240,5 @@ jobs:
           gh release create "$TAG" *.msi *.dmg *.zip checksums.txt \
             --title "$TITLE" \
             --generate-notes \
-            --prerelease
+            --prerelease \
+            --target dev
