@@ -409,25 +409,36 @@ jobs:
         # Fetch latest release notes
         echo "Fetching latest release notes..."
         RELEASE_NOTES=""
+        IS_PRERELEASE="false"
         if curl -s "https://api.github.com/repos/Orinks/AccessiWeather/releases/latest" | jq -e '.body' > /dev/null 2>&1; then
-          RAW_NOTES=$(curl -s "https://api.github.com/repos/Orinks/AccessiWeather/releases/latest" | jq -r '.body // "No release notes available."')
+          LATEST_RELEASE=$(curl -s "https://api.github.com/repos/Orinks/AccessiWeather/releases/latest")
+          RAW_NOTES=$(echo "$LATEST_RELEASE" | jq -r '.body // "No release notes available."')
+          IS_PRERELEASE=$(echo "$LATEST_RELEASE" | jq -r '.prerelease')
           # Convert markdown to HTML using Python markdown library
           RELEASE_NOTES=$(python3 -c 'import markdown; import sys; html = markdown.markdown(sys.stdin.read(), extensions=["nl2br", "tables"]); print(html)' <<< "$RAW_NOTES")
           echo "✓ Fetched and converted release notes (${#RELEASE_NOTES} characters)"
+          echo "Is prerelease: $IS_PRERELEASE"
         else
           RELEASE_NOTES="<p>No release notes available. <a href=\"https://github.com/Orinks/AccessiWeather/releases/latest\">View on GitHub</a></p>"
           echo "⚠ No release found, using fallback message"
         fi
 
-        # Fetch recent commits from dev branch
+        # Fetch recent commits from dev branch - but only for stable releases
+        # For prerelease/nightly builds, release notes already include full changelog via --generate-notes
         echo "Fetching recent commits from dev branch..."
         DEV_COMMITS=""
-        if curl -s "https://api.github.com/repos/Orinks/AccessiWeather/commits?sha=dev&per_page=3" | jq -e '.[0]' > /dev/null 2>&1; then
-          DEV_COMMITS=$(curl -s "https://api.github.com/repos/Orinks/AccessiWeather/commits?sha=dev&per_page=3" | jq -r '.[] | "<li>" + .commit.message + "</li>"' | tr '\n' ' ')
-          echo "✓ Fetched recent commits (${#DEV_COMMITS} characters)"
+        if [ "$IS_PRERELEASE" = "false" ]; then
+          echo "Latest release is stable, fetching separate recent commits..."
+          if curl -s "https://api.github.com/repos/Orinks/AccessiWeather/commits?sha=dev&per_page=3" | jq -e '.[0]' > /dev/null 2>&1; then
+            DEV_COMMITS=$(curl -s "https://api.github.com/repos/Orinks/AccessiWeather/commits?sha=dev&per_page=3" | jq -r '.[] | "<li>" + .commit.message + "</li>"' | tr '\n' ' ')
+            echo "✓ Fetched recent commits (${#DEV_COMMITS} characters)"
+          else
+            DEV_COMMITS="<li>Unable to fetch recent commits. <a href=\"https://github.com/Orinks/AccessiWeather/commits/dev\" target=\"_blank\">View on GitHub</a></li>"
+            echo "⚠ Failed to fetch commits, using fallback message"
+          fi
         else
-          DEV_COMMITS="<li>Unable to fetch recent commits. <a href=\"https://github.com/Orinks/AccessiWeather/commits/dev\" target=\"_blank\">View on GitHub</a></li>"
-          echo "⚠ Failed to fetch commits, using fallback message"
+          echo "Latest release is prerelease/nightly, skipping separate commits (already in release notes)"
+          DEV_COMMITS=""
         fi
 
         # Save to environment for next step
@@ -539,29 +550,41 @@ jobs:
         sed -i "s@{{DEV_HAS_RELEASE}}@$DEV_HAS_RELEASE@g" index.html
         sed -i "s@{{LAST_UPDATED}}@$LAST_UPDATED_ESCAPED@g" index.html
 
-        # Substitute release notes and commits using a more robust method
-        # Create temporary files to handle multiline content safely
+        # Create temporary files with release notes and commits
         echo "$RELEASE_NOTES" > /tmp/release_notes.txt
         echo "$DEV_COMMITS" > /tmp/dev_commits.txt
 
-        # Use awk to replace the placeholders with file content
-        awk '
-        /{{MAIN_RELEASE_NOTES}}/ {
-            while ((getline line < "/tmp/release_notes.txt") > 0) {
-                print line
-            }
-            close("/tmp/release_notes.txt")
-            next
-        }
-        /{{DEV_RECENT_COMMITS}}/ {
-            while ((getline line < "/tmp/dev_commits.txt") > 0) {
-                print line
-            }
-            close("/tmp/dev_commits.txt")
-            next
-        }
-        { print }
-        ' index.html > index_tmp.html && mv index_tmp.html index.html
+        # Substitute release notes and commits using Python for cleaner logic
+        python3 << 'PYTHON_EOF'
+        import re
+
+        # Read the files
+        with open("index.html", "r") as f:
+            html_content = f.read()
+
+        with open("/tmp/release_notes.txt", "r") as f:
+            release_notes = f.read()
+
+        with open("/tmp/dev_commits.txt", "r") as f:
+            dev_commits = f.read()
+
+        # Replace release notes
+        html_content = html_content.replace("{{MAIN_RELEASE_NOTES}}", release_notes)
+
+        # Handle Recent Changes section: remove it entirely if dev_commits is empty
+        if not dev_commits.strip():
+            # Remove the entire Recent Commits Section block
+            pattern = r'<!-- Recent Commits Section -->.*?</div>\s*</div>\s*</section>'
+            html_content = re.sub(pattern, '', html_content, flags=re.DOTALL)
+        else:
+            # Otherwise, just replace the placeholder
+            html_content = html_content.replace("{{DEV_RECENT_COMMITS}}", dev_commits)
+
+        # Write back
+        with open("index.html", "w") as f:
+            f.write(html_content)
+        PYTHON_EOF
+
 
         echo "✓ Generated index.html from template with build info:"
         echo "  Stable Release (main): ${{ steps.build-info.outputs.main_version }} (${{ steps.build-info.outputs.main_date }})"
