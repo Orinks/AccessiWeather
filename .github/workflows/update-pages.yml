@@ -177,6 +177,7 @@ jobs:
             echo "main_commit="
             echo "main_installer_url="
             echo "main_portable_url="
+            echo "main_macos_installer_url="
             echo "⚠ No stable releases found (release_info was null or empty)" >&2
             return
           fi
@@ -211,12 +212,22 @@ jobs:
               ][0] // ""
             ')
 
+            # Extract macOS asset URLs - look for .dmg files
+            local macos_installer_url=$(echo "$release_info" | jq -r '
+              [
+                .assets[]?
+                | select((.name // "" | ascii_downcase) | endswith(".dmg"))
+                | .browser_download_url
+              ][0] // ""
+            ')
+
             echo "main_version=${version}"
             echo "main_date=${formatted_date}"
             echo "main_run_id="
             echo "main_commit=${target_commitish}"
             echo "main_installer_url=${installer_url}"
             echo "main_portable_url=${portable_url}"
+            echo "main_macos_installer_url=${macos_installer_url}"
 
             echo "✓ Found stable release: version=$version, date=$formatted_date" >&2
 
@@ -231,6 +242,7 @@ jobs:
             echo "main_commit="
             echo "main_installer_url="
             echo "main_portable_url="
+            echo "main_macos_installer_url="
             echo "⚠ No stable releases found (tag_name was empty)" >&2
           fi
         }
@@ -255,6 +267,16 @@ jobs:
           local target_commitish=$(echo "$release_json" | jq -r '.target_commitish // empty')
           local release_url=$(echo "$release_json" | jq -r '.html_url // empty')
 
+          # Get actual commit SHA from tag reference (target_commitish often just returns branch name)
+          if [ -n "$tag_name" ]; then
+            local tag_ref=$(curl -s -H "Authorization: token ${{ github.token }}" \
+              "https://api.github.com/repos/${{ github.repository }}/git/refs/tags/${tag_name}")
+            local tag_sha=$(echo "$tag_ref" | jq -r '.object.sha // empty')
+            if [ -n "$tag_sha" ] && [ "$tag_sha" != "null" ]; then
+              target_commitish="$tag_sha"
+            fi
+          fi
+
           local version=$(echo "$tag_name" | sed 's/^v//')
           [ -z "$version" ] && version="pre-release"
 
@@ -276,12 +298,22 @@ jobs:
             ][0] // empty
           ')
 
+          # Extract macOS asset URLs - look for .dmg files
+          local macos_installer_url=$(echo "$release_json" | jq -r '
+            [
+              .assets[]?
+              | select((.name // "" | ascii_downcase) | endswith(".dmg"))
+              | .browser_download_url
+            ][0] // empty
+          ')
+
           echo "dev_version=${version}"
           echo "dev_date=${formatted_date}"
           echo "dev_commit=${target_commitish}"
           echo "dev_release_url=${release_url}"
           echo "dev_installer_url=${installer_url}"
           echo "dev_portable_url=${portable_url}"
+          echo "dev_macos_installer_url=${macos_installer_url}"
           echo "dev_tag=${tag_name}"
 
           echo "✓ Found pre-release: tag=$tag_name, version=$version" >&2
@@ -323,6 +355,7 @@ jobs:
             echo "${branch}_release_url="
             echo "${branch}_installer_url="
             echo "${branch}_portable_url="
+            echo "${branch}_macos_installer_url="
 
             echo "✓ Found build for $branch: version=$version, date=$formatted_date" >&2
           else
@@ -333,6 +366,7 @@ jobs:
             echo "${branch}_release_url="
             echo "${branch}_installer_url="
             echo "${branch}_portable_url="
+            echo "${branch}_macos_installer_url="
             echo "⚠ No successful builds found for $branch" >&2
           fi
         }
@@ -415,6 +449,7 @@ jobs:
         MAIN_COMMIT="${{ steps.build-info.outputs.main_commit }}"
         MAIN_INSTALLER_URL="${{ steps.build-info.outputs.main_installer_url }}"
         MAIN_PORTABLE_URL="${{ steps.build-info.outputs.main_portable_url }}"
+        MAIN_MACOS_INSTALLER_URL="${{ steps.build-info.outputs.main_macos_installer_url }}"
         MAIN_HAS_RELEASE="${{ steps.build-info.outputs.main_has_release }}"
 
         # Always use dev branch information for development section when available
@@ -425,6 +460,7 @@ jobs:
         DEV_RELEASE_URL="${{ steps.build-info.outputs.dev_release_url }}"
         DEV_INSTALLER_URL="${{ steps.build-info.outputs.dev_installer_url }}"
         DEV_PORTABLE_URL="${{ steps.build-info.outputs.dev_portable_url }}"
+        DEV_MACOS_INSTALLER_URL="${{ steps.build-info.outputs.dev_macos_installer_url }}"
         DEV_HAS_RELEASE="${{ steps.build-info.outputs.dev_has_release }}"
 
         # If dev branch info is not available, fall back to target branch or generic values
@@ -453,6 +489,8 @@ jobs:
         [ -z "$DEV_RELEASE_URL" ] && DEV_RELEASE_URL="https://github.com/Orinks/AccessiWeather/releases"
         [ -z "$DEV_INSTALLER_URL" ] && DEV_INSTALLER_URL="$DEV_RELEASE_URL"
         [ -z "$DEV_PORTABLE_URL" ] && DEV_PORTABLE_URL="$DEV_RELEASE_URL"
+        [ -z "$MAIN_MACOS_INSTALLER_URL" ] && MAIN_MACOS_INSTALLER_URL="https://github.com/Orinks/AccessiWeather/releases"
+        [ -z "$DEV_MACOS_INSTALLER_URL" ] && DEV_MACOS_INSTALLER_URL="$DEV_RELEASE_URL"
 
         # Escape special characters for sed (but preserve HTML in release notes)
         escape_for_sed() {
@@ -467,11 +505,13 @@ jobs:
         DEV_RELEASE_URL_ESC=$(escape_for_sed "$DEV_RELEASE_URL")
         DEV_INSTALLER_URL_ESC=$(escape_for_sed "$DEV_INSTALLER_URL")
         DEV_PORTABLE_URL_ESC=$(escape_for_sed "$DEV_PORTABLE_URL")
+        DEV_MACOS_INSTALLER_URL_ESC=$(escape_for_sed "$DEV_MACOS_INSTALLER_URL")
         LAST_UPDATED_ESCAPED=$(escape_for_sed "$LAST_UPDATED")
 
         # Escape URLs for sed
         MAIN_INSTALLER_URL_ESC=$(escape_for_sed "$MAIN_INSTALLER_URL")
         MAIN_PORTABLE_URL_ESC=$(escape_for_sed "$MAIN_PORTABLE_URL")
+        MAIN_MACOS_INSTALLER_URL_ESC=$(escape_for_sed "$MAIN_MACOS_INSTALLER_URL")
 
         # Substitute template variables with actual values
         sed -i "s@{{MAIN_VERSION}}@$MAIN_VERSION@g" index.html
@@ -479,6 +519,7 @@ jobs:
         sed -i "s@{{MAIN_COMMIT}}@$MAIN_COMMIT@g" index.html
         sed -i "s@{{MAIN_INSTALLER_URL}}@$MAIN_INSTALLER_URL_ESC@g" index.html
         sed -i "s@{{MAIN_PORTABLE_URL}}@$MAIN_PORTABLE_URL_ESC@g" index.html
+        sed -i "s@{{MAIN_MACOS_INSTALLER_URL}}@$MAIN_MACOS_INSTALLER_URL_ESC@g" index.html
         sed -i "s@{{MAIN_HAS_RELEASE}}@$MAIN_HAS_RELEASE@g" index.html
         sed -i "s@{{DEV_VERSION}}@$DEV_VERSION@g" index.html
         sed -i "s@{{DEV_DATE}}@$DEV_DATE@g" index.html
@@ -486,6 +527,7 @@ jobs:
         sed -i "s@{{DEV_RELEASE_URL}}@$DEV_RELEASE_URL_ESC@g" index.html
         sed -i "s@{{DEV_INSTALLER_URL}}@$DEV_INSTALLER_URL_ESC@g" index.html
         sed -i "s@{{DEV_PORTABLE_URL}}@$DEV_PORTABLE_URL_ESC@g" index.html
+        sed -i "s@{{DEV_MACOS_INSTALLER_URL}}@$DEV_MACOS_INSTALLER_URL_ESC@g" index.html
         sed -i "s@{{DEV_HAS_RELEASE}}@$DEV_HAS_RELEASE@g" index.html
         sed -i "s@{{LAST_UPDATED}}@$LAST_UPDATED_ESCAPED@g" index.html
 
