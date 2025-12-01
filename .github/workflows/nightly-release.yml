@@ -180,7 +180,7 @@ jobs:
           ref: dev
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           path: dist
           pattern: nightly-*
