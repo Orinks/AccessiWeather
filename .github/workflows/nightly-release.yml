@@ -251,6 +251,9 @@ jobs:
     permissions:
       actions: write
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Trigger update-pages workflow
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
