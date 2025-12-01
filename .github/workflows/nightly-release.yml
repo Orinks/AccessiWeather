@@ -154,7 +154,7 @@ jobs:
           ACCESSIWEATHER_TEST_MODE: "1"
 
       - name: Upload installer artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: nightly-${{ matrix.platform }}-installer
           path: dist/${{ matrix.installer_pattern }}
@@ -162,7 +162,7 @@ jobs:
 
       - name: Upload portable artifact (Windows only)
         if: matrix.platform == 'windows'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: nightly-windows-portable
           path: dist/AccessiWeather_Portable_v${{ needs.prepare.outputs.version }}.zip
