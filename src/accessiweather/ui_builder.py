@@ -239,12 +239,10 @@ def create_system_tray_commands(app: AccessiWeatherApp) -> None:
             tooltip="Open application settings",
         )
 
-        app.tray_separator_group = toga.Group("Actions", parent=app.status_icon)
-
         app.tray_exit_command = toga.Command(
             lambda widget: asyncio.create_task(event_handlers.on_tray_exit(app, widget)),
             text="Exit AccessiWeather",
-            group=app.tray_separator_group,
+            group=app.status_icon,
             tooltip="Exit the application",
         )
 
