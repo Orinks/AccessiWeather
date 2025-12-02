@@ -714,13 +714,45 @@ class WeatherClient:
         return "nws" if self._is_us_location(location) else "openmeteo"
 
     def _is_us_location(self, location: Location) -> bool:
-        """Check if location is within the United States (rough approximation)."""
+        """
+        Check if location is within the United States.
+
+        Uses country_code when available for accurate detection. Falls back to
+        coordinate bounds for legacy locations, but logs a warning since this
+        can misclassify Canadian border cities like Toronto.
+        """
         country_code = getattr(location, "country_code", None)
         if country_code:
             return country_code.upper() == "US"
 
+        lat = location.latitude
+        lon = location.longitude
+
+        # Without country_code, use coordinate bounds as fallback
+        # Note: This can misclassify Canadian cities near the US border
+        # (e.g., Toronto, Montreal, Ottawa) as US locations.
+
         # Continental US bounds (approximate)
-        return 24.0 <= location.latitude <= 49.0 and -125.0 <= location.longitude <= -66.0
+        in_continental_bounds = 24.0 <= lat <= 49.0 and -125.0 <= lon <= -66.0
+
+        # Alaska bounds (51-71°N, 130-172°W)
+        in_alaska_bounds = 51.0 <= lat <= 71.5 and -172.0 <= lon <= -130.0
+
+        # Hawaii bounds (18-23°N, 154-161°W)
+        in_hawaii_bounds = 18.0 <= lat <= 23.0 and -161.0 <= lon <= -154.0
+
+        is_us = in_continental_bounds or in_alaska_bounds or in_hawaii_bounds
+
+        if is_us and not country_code:
+            # Log warning for locations without country_code in ambiguous regions
+            # This helps identify locations that may need country_code to be set
+            logger.debug(
+                f"Location '{location.name}' ({lat:.2f}, {lon:.2f}) detected as US by "
+                f"coordinates but has no country_code. If this is incorrect (e.g., Canadian "
+                f"city), re-add the location to set country_code via geocoding."
+            )
+
+        return is_us
 
     def _set_empty_weather_data(self, weather_data: WeatherData) -> None:
         """Set empty weather data when all APIs fail."""
