@@ -419,8 +419,17 @@ jobs:
       run: |
         echo "📝 Fetching release notes and nightly changes..."
 
-        # Install markdown converter
-        python -m pip install -q markdown
+        # Function to render markdown using GitHub's API (handles @mentions, #issues, etc.)
+        render_github_markdown() {
+          local markdown_text="$1"
+          local rendered=$(curl -s -X POST \
+            -H "Authorization: token ${{ github.token }}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "Content-Type: application/json" \
+            "https://api.github.com/repos/${{ github.repository }}/markdown" \
+            -d "$(jq -n --arg text "$markdown_text" --arg mode "gfm" --arg context "${{ github.repository }}" '{text: $text, mode: $mode, context: $context}')")
+          echo "$rendered"
+        }
 
         # Fetch ALL releases in a single API call to avoid rate limiting/caching issues
         echo "Fetching all releases..."
@@ -446,8 +455,8 @@ jobs:
         if [ "$STABLE_LENGTH" -gt 10 ]; then
           STABLE_TAG=$(echo "$STABLE_RELEASE" | jq -r '.tag_name // "unknown"')
           RAW_NOTES=$(echo "$STABLE_RELEASE" | jq -r '.body // "No release notes available."')
-          # Convert markdown to HTML using Python markdown library
-          RELEASE_NOTES=$(python3 -c 'import markdown; import sys; html = markdown.markdown(sys.stdin.read(), extensions=["nl2br", "tables"]); print(html)' <<< "$RAW_NOTES")
+          # Use GitHub's markdown API to render with proper @mentions, #issues, etc.
+          RELEASE_NOTES=$(render_github_markdown "$RAW_NOTES")
           echo "✓ Fetched stable release notes for $STABLE_TAG (${#RELEASE_NOTES} characters)"
         else
           RELEASE_NOTES="<p>No stable release notes available. <a href=\"https://github.com/Orinks/AccessiWeather/releases\">View all releases on GitHub</a></p>"
@@ -465,8 +474,8 @@ jobs:
         if [ "$NIGHTLY_LENGTH" -gt 10 ]; then
           NIGHTLY_TAG=$(echo "$NIGHTLY_RELEASE" | jq -r '.tag_name // "unknown"')
           RAW_NIGHTLY_NOTES=$(echo "$NIGHTLY_RELEASE" | jq -r '.body // "No release notes available."')
-          # Convert markdown to HTML using Python markdown library
-          DEV_CHANGES=$(python3 -c 'import markdown; import sys; html = markdown.markdown(sys.stdin.read(), extensions=["nl2br", "tables"]); print(html)' <<< "$RAW_NIGHTLY_NOTES")
+          # Use GitHub's markdown API to render with proper @mentions, #issues, etc.
+          DEV_CHANGES=$(render_github_markdown "$RAW_NIGHTLY_NOTES")
           echo "✓ Fetched nightly release notes for $NIGHTLY_TAG (${#DEV_CHANGES} characters)"
         else
           DEV_CHANGES="<p>No nightly release notes available. <a href=\"https://github.com/Orinks/AccessiWeather/releases\">View all releases on GitHub</a></p>"
