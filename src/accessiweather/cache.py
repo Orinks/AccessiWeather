@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 # Cache schema version - increment this when cache data structure changes
 # This is independent of app version and allows test builds to invalidate old cache
-CACHE_SCHEMA_VERSION = 3
+CACHE_SCHEMA_VERSION = 4
 
 
 @dataclass
@@ -163,23 +163,73 @@ class Cache:
             logger.debug(f"Cleaned up {len(expired_keys)} expired cache entries")
 
 
-def _serialize_datetime(value: datetime | None) -> str | None:
+def _serialize_datetime(value: datetime | None) -> dict[str, str] | str | None:
+    """
+    Serialize a datetime, preserving the original timezone.
+
+    Returns a dict with 'iso' (UTC) and 'original_tz' (timezone name) keys.
+    For backward compatibility, old code may still return just a string.
+    """
     if value is None:
         return None
-    dt = value.astimezone(UTC) if value.tzinfo else value.replace(tzinfo=UTC)
-    return dt.isoformat()
+    dt_utc = value.astimezone(UTC) if value.tzinfo else value.replace(tzinfo=UTC)
+
+    original_tz: str | None = None
+    if value.tzinfo is not None:
+        tz_name = getattr(value.tzinfo, "key", None)
+        if tz_name is None:
+            tz_name = getattr(value.tzinfo, "zone", None)
+        if tz_name is None:
+            tz_name = str(value.tzinfo)
+        if tz_name and tz_name != "UTC":
+            original_tz = tz_name
+
+    result: dict[str, str] = {"iso": dt_utc.isoformat()}
+    if original_tz:
+        result["original_tz"] = original_tz
+    return result
 
 
 def _deserialize_datetime(value: Any) -> datetime | None:
-    if not isinstance(value, str) or not value:
+    """
+    Deserialize a datetime, restoring the original timezone if stored.
+
+    Handles both new format (dict with 'iso' and 'original_tz') and
+    legacy format (plain ISO string) for backward compatibility.
+    """
+    if value is None:
         return None
-    text = value.strip()
-    if not text:
-        return None
-    try:
-        return datetime.fromisoformat(text)
-    except ValueError:
-        return None
+
+    if isinstance(value, dict):
+        iso_str = value.get("iso")
+        if not isinstance(iso_str, str) or not iso_str.strip():
+            return None
+        try:
+            dt = datetime.fromisoformat(iso_str.strip())
+        except ValueError:
+            return None
+
+        original_tz = value.get("original_tz")
+        if original_tz and isinstance(original_tz, str):
+            try:
+                from zoneinfo import ZoneInfo
+
+                tz = ZoneInfo(original_tz)
+                return dt.astimezone(tz)
+            except (KeyError, ValueError):
+                pass
+        return dt
+
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        try:
+            return datetime.fromisoformat(text)
+        except ValueError:
+            return None
+
+    return None
 
 
 def _serialize_current(current: CurrentConditions | None) -> dict | None:
