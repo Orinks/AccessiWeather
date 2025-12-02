@@ -9,7 +9,7 @@ import logging
 import re
 import time
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 # Cache schema version - increment this when cache data structure changes
 # This is independent of app version and allows test builds to invalidate old cache
-CACHE_SCHEMA_VERSION = 4
+CACHE_SCHEMA_VERSION = 5
 
 
 @dataclass
@@ -163,30 +163,37 @@ class Cache:
             logger.debug(f"Cleaned up {len(expired_keys)} expired cache entries")
 
 
-def _serialize_datetime(value: datetime | None) -> dict[str, str] | str | None:
+def _serialize_datetime(value: datetime | None) -> dict[str, Any] | str | None:
     """
     Serialize a datetime, preserving the original timezone.
 
-    Returns a dict with 'iso' (UTC) and 'original_tz' (timezone name) keys.
-    For backward compatibility, old code may still return just a string.
+    Returns a dict with 'iso' (UTC) and timezone info keys.
+    For named timezones (ZoneInfo), stores 'original_tz'.
+    For fixed offset timezones, stores 'utc_offset_seconds'.
     """
     if value is None:
         return None
     dt_utc = value.astimezone(UTC) if value.tzinfo else value.replace(tzinfo=UTC)
 
-    original_tz: str | None = None
-    if value.tzinfo is not None:
+    result: dict[str, Any] = {"iso": dt_utc.isoformat()}
+
+    if value.tzinfo is not None and value.tzinfo != UTC:
+        # Try to get named timezone (ZoneInfo or pytz)
         tz_name = getattr(value.tzinfo, "key", None)
         if tz_name is None:
             tz_name = getattr(value.tzinfo, "zone", None)
-        if tz_name is None:
-            tz_name = str(value.tzinfo)
-        if tz_name and tz_name != "UTC":
-            original_tz = tz_name
 
-    result: dict[str, str] = {"iso": dt_utc.isoformat()}
-    if original_tz:
-        result["original_tz"] = original_tz
+        if tz_name and tz_name != "UTC":
+            result["original_tz"] = tz_name
+        else:
+            # Fixed offset timezone (datetime.timezone) - store the offset
+            try:
+                offset = value.utcoffset()
+                if offset is not None:
+                    result["utc_offset_seconds"] = int(offset.total_seconds())
+            except Exception:  # noqa: BLE001
+                pass
+
     return result
 
 
@@ -194,8 +201,10 @@ def _deserialize_datetime(value: Any) -> datetime | None:
     """
     Deserialize a datetime, restoring the original timezone if stored.
 
-    Handles both new format (dict with 'iso' and 'original_tz') and
-    legacy format (plain ISO string) for backward compatibility.
+    Handles:
+    - New format with 'original_tz' (named timezone via ZoneInfo)
+    - New format with 'utc_offset_seconds' (fixed offset timezone)
+    - Legacy format (plain ISO string)
     """
     if value is None:
         return None
@@ -209,6 +218,7 @@ def _deserialize_datetime(value: Any) -> datetime | None:
         except ValueError:
             return None
 
+        # Try named timezone first
         original_tz = value.get("original_tz")
         if original_tz and isinstance(original_tz, str):
             try:
@@ -216,8 +226,18 @@ def _deserialize_datetime(value: Any) -> datetime | None:
 
                 tz = ZoneInfo(original_tz)
                 return dt.astimezone(tz)
-            except (KeyError, ValueError):
+            except (KeyError, ValueError, ImportError):
                 pass
+
+        # Try fixed offset timezone
+        utc_offset = value.get("utc_offset_seconds")
+        if utc_offset is not None:
+            try:
+                tz = timezone(timedelta(seconds=int(utc_offset)))
+                return dt.astimezone(tz)
+            except (ValueError, TypeError):
+                pass
+
         return dt
 
     if isinstance(value, str):
