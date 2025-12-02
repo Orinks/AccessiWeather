@@ -394,7 +394,7 @@ class TestBuildSteps:
             None,
         )
         assert python_step is not None
-        assert "actions/setup-python@v5" in python_step["uses"]
+        assert "actions/setup-python@v6" in python_step["uses"]
 
     def test_briefcase_create_step_exists(self, build_workflow):
         """Verify Briefcase create step exists."""

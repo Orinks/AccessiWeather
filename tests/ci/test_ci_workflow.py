@@ -232,7 +232,7 @@ class TestArtifactUpload:
                 upload_step = step
                 break
         assert upload_step is not None
-        assert upload_step["uses"] == "actions/upload-artifact@v4"
+        assert upload_step["uses"] == "actions/upload-artifact@v5"
 
     def test_upload_artifact_runs_always(self, tests_job):
         """Verify artifact upload runs even on failure."""
@@ -290,15 +290,15 @@ class TestJobConfiguration:
 class TestCheckoutStep:
     """Tests for checkout step configuration."""
 
-    def test_lint_uses_checkout_v5(self, lint_job):
-        """Verify lint job uses checkout action v5."""
+    def test_lint_uses_checkout_v6(self, lint_job):
+        """Verify lint job uses checkout action v6."""
         checkout_step = lint_job["steps"][0]
-        assert checkout_step["uses"] == "actions/checkout@v5"
+        assert checkout_step["uses"] == "actions/checkout@v6"
 
-    def test_tests_uses_checkout_v5(self, tests_job):
-        """Verify tests job uses checkout action v5."""
+    def test_tests_uses_checkout_v6(self, tests_job):
+        """Verify tests job uses checkout action v6."""
         checkout_step = tests_job["steps"][0]
-        assert checkout_step["uses"] == "actions/checkout@v5"
+        assert checkout_step["uses"] == "actions/checkout@v6"
 
 
 class TestSetupPythonStep:
