@@ -1051,20 +1051,30 @@ def parse_nws_current_conditions(
                         tz_name = tf.timezone_at(lat=location.latitude, lng=location.longitude)
                         if tz_name:
                             location_tz = ZoneInfo(tz_name)
-                            logger.debug(
+                            logger.info(
                                 f"Inferred timezone '{tz_name}' for {location.name} "
                                 f"from coordinates ({location.latitude}, {location.longitude})"
                             )
+                        else:
+                            logger.warning(
+                                f"timezonefinder returned None for {location.name} "
+                                f"at ({location.latitude}, {location.longitude})"
+                            )
                     except ImportError:
-                        logger.debug("timezonefinder not available, keeping times in UTC")
+                        logger.warning("timezonefinder not available, keeping times in UTC")
                     except Exception as e:  # noqa: BLE001
-                        logger.debug(f"Failed to infer timezone from coordinates: {e}")
+                        logger.error(f"Failed to infer timezone from coordinates: {e}")
 
                 # Apply timezone conversion if we have a timezone
                 if location_tz:
                     last_updated = last_updated.astimezone(location_tz)
+                    logger.info(
+                        f"Converted last_updated from UTC to {location_tz} for {location.name}: {last_updated}"
+                    )
                 else:
-                    logger.debug(f"No timezone available for {location.name}, keeping time in UTC")
+                    logger.warning(
+                        f"No timezone available for {location.name}, keeping time in UTC"
+                    )
         except ValueError:
             logger.debug(f"Failed to parse observation timestamp: {timestamp}")
 
