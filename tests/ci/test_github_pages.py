@@ -197,21 +197,25 @@ class TestTemplateVariables:
 
 
 class TestReleaseNotesSection:
-    """Tests for release notes and commit history sections."""
+    """Tests for release notes sections (stable and nightly)."""
 
     def test_main_release_notes_section_exists(self, template_content):
-        """Verify main release notes section exists."""
+        """Verify main/stable release notes section exists."""
         assert "Release Notes" in template_content
         assert "{{MAIN_RELEASE_NOTES}}" in template_content
 
-    def test_dev_recent_commits_section_exists(self, template_content):
-        """Verify dev recent commits section exists."""
+    def test_dev_recent_changes_section_exists(self, template_content):
+        """Verify dev/nightly recent changes section exists."""
         assert "Recent Changes" in template_content
         assert "{{DEV_RECENT_COMMITS}}" in template_content
 
-    def test_commit_list_styling_exists(self, template_content):
-        """Verify commit list has proper CSS styling."""
-        assert "commit-list" in template_content
+    def test_nightly_release_notes_section_comment(self, template_content):
+        """Verify nightly release notes section has proper HTML comment."""
+        assert "<!-- Nightly Release Notes Section -->" in template_content
+
+    def test_release_notes_content_styling_exists(self, template_content):
+        """Verify release notes content has proper CSS styling."""
+        assert "release-notes-content" in template_content
 
 
 class TestHasReleaseFlags:

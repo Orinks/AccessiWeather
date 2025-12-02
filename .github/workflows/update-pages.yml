@@ -415,46 +415,50 @@ jobs:
            fi
          done
 
-    - name: Fetch release notes and recent commits
+    - name: Fetch release notes and nightly changes
       run: |
-        echo "📝 Fetching release notes and recent commits..."
+        echo "📝 Fetching release notes and nightly changes..."
 
         # Install markdown converter
         python -m pip install -q markdown
 
-        # Fetch latest release notes
-        echo "Fetching latest release notes..."
+        # Fetch latest STABLE release notes (for the stable release section)
+        echo "Fetching latest stable release notes..."
         RELEASE_NOTES=""
-        IS_PRERELEASE="false"
-        if curl -s "https://api.github.com/repos/Orinks/AccessiWeather/releases/latest" | jq -e '.body' > /dev/null 2>&1; then
-          LATEST_RELEASE=$(curl -s "https://api.github.com/repos/Orinks/AccessiWeather/releases/latest")
-          RAW_NOTES=$(echo "$LATEST_RELEASE" | jq -r '.body // "No release notes available."')
-          IS_PRERELEASE=$(echo "$LATEST_RELEASE" | jq -r '.prerelease')
+
+        # Get all releases and find the latest non-prerelease
+        STABLE_RELEASE=$(curl -s -H "Authorization: token ${{ github.token }}" \
+          "https://api.github.com/repos/${{ github.repository }}/releases?per_page=20" | \
+          jq -r '[.[] | select(.prerelease == false and .draft == false)] | first // empty')
+
+        if [ -n "$STABLE_RELEASE" ] && [ "$STABLE_RELEASE" != "null" ]; then
+          RAW_NOTES=$(echo "$STABLE_RELEASE" | jq -r '.body // "No release notes available."')
           # Convert markdown to HTML using Python markdown library
           RELEASE_NOTES=$(python3 -c 'import markdown; import sys; html = markdown.markdown(sys.stdin.read(), extensions=["nl2br", "tables"]); print(html)' <<< "$RAW_NOTES")
-          echo "✓ Fetched and converted release notes (${#RELEASE_NOTES} characters)"
-          echo "Is prerelease: $IS_PRERELEASE"
+          STABLE_TAG=$(echo "$STABLE_RELEASE" | jq -r '.tag_name // "unknown"')
+          echo "✓ Fetched stable release notes for $STABLE_TAG (${#RELEASE_NOTES} characters)"
         else
-          RELEASE_NOTES="<p>No release notes available. <a href=\"https://github.com/Orinks/AccessiWeather/releases/latest\">View on GitHub</a></p>"
-          echo "⚠ No release found, using fallback message"
+          RELEASE_NOTES="<p>No stable release notes available. <a href=\"https://github.com/Orinks/AccessiWeather/releases\">View all releases on GitHub</a></p>"
+          echo "⚠ No stable release found, using fallback message"
         fi
 
-        # Fetch recent commits from dev branch - but only for stable releases
-        # For prerelease/nightly builds, release notes already include full changelog via --generate-notes
-        echo "Fetching recent commits from dev branch..."
-        DEV_COMMITS=""
-        if [ "$IS_PRERELEASE" = "false" ]; then
-          echo "Latest release is stable, fetching separate recent commits..."
-          if curl -s "https://api.github.com/repos/Orinks/AccessiWeather/commits?sha=dev&per_page=3" | jq -e '.[0]' > /dev/null 2>&1; then
-            DEV_COMMITS=$(curl -s "https://api.github.com/repos/Orinks/AccessiWeather/commits?sha=dev&per_page=3" | jq -r '.[] | "<li>" + .commit.message + "</li>"' | tr '\n' ' ')
-            echo "✓ Fetched recent commits (${#DEV_COMMITS} characters)"
-          else
-            DEV_COMMITS="<li>Unable to fetch recent commits. <a href=\"https://github.com/Orinks/AccessiWeather/commits/dev\" target=\"_blank\">View on GitHub</a></li>"
-            echo "⚠ Failed to fetch commits, using fallback message"
-          fi
+        # Fetch latest NIGHTLY/pre-release notes (for the dev/nightly section)
+        echo "Fetching latest nightly release notes..."
+        DEV_CHANGES=""
+
+        NIGHTLY_RELEASE=$(curl -s -H "Authorization: token ${{ github.token }}" \
+          "https://api.github.com/repos/${{ github.repository }}/releases?per_page=10" | \
+          jq -r '[.[] | select(.prerelease == true and .draft == false)] | first // empty')
+
+        if [ -n "$NIGHTLY_RELEASE" ] && [ "$NIGHTLY_RELEASE" != "null" ]; then
+          NIGHTLY_TAG=$(echo "$NIGHTLY_RELEASE" | jq -r '.tag_name // "unknown"')
+          RAW_NIGHTLY_NOTES=$(echo "$NIGHTLY_RELEASE" | jq -r '.body // "No release notes available."')
+          # Convert markdown to HTML using Python markdown library
+          DEV_CHANGES=$(python3 -c 'import markdown; import sys; html = markdown.markdown(sys.stdin.read(), extensions=["nl2br", "tables"]); print(html)' <<< "$RAW_NIGHTLY_NOTES")
+          echo "✓ Fetched nightly release notes for $NIGHTLY_TAG (${#DEV_CHANGES} characters)"
         else
-          echo "Latest release is prerelease/nightly, skipping separate commits (already in release notes)"
-          DEV_COMMITS=""
+          DEV_CHANGES="<p>No nightly release notes available. <a href=\"https://github.com/Orinks/AccessiWeather/releases\">View all releases on GitHub</a></p>"
+          echo "⚠ No nightly release found, using fallback message"
         fi
 
         # Save to environment for next step
@@ -462,12 +466,12 @@ jobs:
           echo "RELEASE_NOTES<<EOF"
           echo "$RELEASE_NOTES"
           echo "EOF"
-          echo "DEV_COMMITS<<EOF"
-          echo "$DEV_COMMITS"
+          echo "DEV_CHANGES<<EOF"
+          echo "$DEV_CHANGES"
           echo "EOF"
         } >> $GITHUB_ENV
 
-        echo "✓ Release notes and commits data prepared"
+        echo "✓ Release notes and nightly changes data prepared"
 
     - name: Generate HTML from template
       run: |
@@ -566,11 +570,11 @@ jobs:
         sed -i "s@{{DEV_HAS_RELEASE}}@$DEV_HAS_RELEASE@g" index.html
         sed -i "s@{{LAST_UPDATED}}@$LAST_UPDATED_ESCAPED@g" index.html
 
-        # Create temporary files with release notes and commits
+        # Create temporary files with release notes and nightly changes
         echo "$RELEASE_NOTES" > /tmp/release_notes.txt
-        echo "$DEV_COMMITS" > /tmp/dev_commits.txt
+        echo "$DEV_CHANGES" > /tmp/dev_changes.txt
 
-        # Substitute release notes and commits using Python for cleaner logic
+        # Substitute release notes and nightly changes using Python for cleaner logic
         python3 << 'PYTHON_EOF'
         import re
 
@@ -581,20 +585,15 @@ jobs:
         with open("/tmp/release_notes.txt", "r") as f:
             release_notes = f.read()
 
-        with open("/tmp/dev_commits.txt", "r") as f:
-            dev_commits = f.read()
+        with open("/tmp/dev_changes.txt", "r") as f:
+            dev_changes = f.read()
 
-        # Replace release notes
+        # Replace stable release notes
         html_content = html_content.replace("{{MAIN_RELEASE_NOTES}}", release_notes)
 
-        # Handle Recent Changes section: remove it entirely if dev_commits is empty
-        if not dev_commits.strip():
-            # Remove the entire Recent Commits Section block
-            pattern = r'<!-- Recent Commits Section -->.*?</div>\s*</div>\s*</section>'
-            html_content = re.sub(pattern, '', html_content, flags=re.DOTALL)
-        else:
-            # Otherwise, just replace the placeholder
-            html_content = html_content.replace("{{DEV_RECENT_COMMITS}}", dev_commits)
+        # Replace nightly/dev release notes (always show if available)
+        # The DEV_RECENT_COMMITS placeholder now receives nightly release notes
+        html_content = html_content.replace("{{DEV_RECENT_COMMITS}}", dev_changes)
 
         # Write back
         with open("index.html", "w") as f:
@@ -606,7 +605,7 @@ jobs:
         echo "  Stable Release (main): ${{ steps.build-info.outputs.main_version }} (${{ steps.build-info.outputs.main_date }})"
         echo "  Development Build (dev): $DEV_VERSION ($DEV_DATE)"
         echo "  Release notes: ${#RELEASE_NOTES} characters"
-        echo "  Recent commits: ${#DEV_COMMITS} characters"
+        echo "  Nightly changes: ${#DEV_CHANGES} characters"
         echo "  Last updated: $LAST_UPDATED"
         echo "  Triggered by: ${{ github.event_name }}"
         echo "  Source branch: $TARGET_BRANCH"
