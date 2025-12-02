@@ -56,7 +56,6 @@ class CurrentConditions:
     moon_phase: str | None = None
     moonrise_time: datetime | None = None
     moonset_time: datetime | None = None
-    last_updated: datetime | None = None
 
     def has_data(self) -> bool:
         """Check if we have any meaningful weather data."""
@@ -304,7 +303,6 @@ class WeatherData:
     hourly_forecast: HourlyForecast | None = None
     discussion: str | None = None
     alerts: WeatherAlerts | None = None
-    last_updated: datetime | None = None
     environmental: EnvironmentalConditions | None = None
     aviation: AviationData | None = None
     trend_insights: list[TrendInsight] = field(default_factory=list)

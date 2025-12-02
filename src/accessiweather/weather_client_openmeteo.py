@@ -41,18 +41,21 @@ def _parse_iso_datetime(
     value: str | None, utc_offset_seconds: int | None = None
 ) -> datetime | None:
     """
-    Parse an ISO 8601 datetime string, ensuring timezone awareness.
+    Parse an ISO 8601 datetime string, converting to location's local timezone.
 
     Open-Meteo returns ISO 8601 strings that may be timezone-aware or naive.
-    When using timezone="auto", Open-Meteo returns naive datetimes in the
+    When using timezone="auto", Open-Meteo typically returns naive datetimes in the
     location's local timezone, with utc_offset_seconds indicating the offset.
+
+    If the timestamp is UTC-aware (ends with Z or +00:00), we convert it to the
+    location's timezone using utc_offset_seconds.
 
     Args:
         value: ISO 8601 datetime string
         utc_offset_seconds: UTC offset in seconds (e.g., -28800 for PST/UTC-8)
 
     Returns:
-        Timezone-aware datetime object, or None if parsing fails
+        Timezone-aware datetime object in the location's timezone, or None if parsing fails
 
     """
     if not value:
@@ -65,15 +68,21 @@ def _parse_iso_datetime(
     for candidate in candidates:
         try:
             dt = datetime.fromisoformat(candidate)
-            # Ensure timezone-aware datetime
+
+            # Build the target timezone from offset
+            local_tz = None
+            if utc_offset_seconds is not None:
+                local_tz = timezone(timedelta(seconds=utc_offset_seconds))
+
             if dt.tzinfo is None:
-                # If naive and we have UTC offset, apply it
-                if utc_offset_seconds is not None:
-                    tz = timezone(timedelta(seconds=utc_offset_seconds))
-                    dt = dt.replace(tzinfo=tz)
-                else:
-                    # If naive with no offset info, assume UTC as fallback
-                    dt = dt.replace(tzinfo=UTC)
+                # Naive datetime - assume it's already in local time, just label it
+                dt = dt.replace(tzinfo=local_tz) if local_tz else dt.replace(tzinfo=UTC)
+            elif local_tz and (
+                dt.tzinfo == UTC or (dt.utcoffset() and dt.utcoffset().total_seconds() == 0)
+            ):
+                # UTC-aware datetime - convert to local timezone
+                dt = dt.astimezone(local_tz)
+
             return dt
         except ValueError:
             continue
@@ -299,8 +308,6 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         current.get("apparent_temperature"), units.get("apparent_temperature")
     )
 
-    last_updated = _parse_iso_datetime(current.get("time"), utc_offset_seconds)
-
     # Parse sunrise and sunset times from daily data (today's values)
     sunrise_time = None
     sunset_time = None
@@ -337,7 +344,6 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         feels_like_c=feels_like_c,
         sunrise_time=sunrise_time,
         sunset_time=sunset_time,
-        last_updated=last_updated or datetime.now(),
         uv_index=uv_index,
     )
 

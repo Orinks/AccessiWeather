@@ -7,7 +7,6 @@ import inspect
 import logging
 from datetime import UTC, datetime, timedelta
 from typing import Any
-from zoneinfo import ZoneInfo
 
 import httpx
 
@@ -1028,24 +1027,6 @@ def parse_nws_current_conditions(
     pressure_pa = props.get("barometricPressure", {}).get("value")
     pressure_in = convert_pa_to_inches(pressure_pa)
 
-    timestamp = props.get("timestamp")
-    last_updated = None
-    if isinstance(timestamp, str) and timestamp:
-        try:
-            last_updated = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-            # Convert UTC timestamp to location's timezone if available
-            if last_updated and location and location.timezone:
-                try:
-                    location_tz = ZoneInfo(location.timezone)
-                    last_updated = last_updated.astimezone(location_tz)
-                except Exception as e:  # noqa: BLE001
-                    logger.debug(
-                        f"Failed to convert timestamp to location timezone "
-                        f"'{location.timezone}': {e}"
-                    )
-        except ValueError:
-            logger.debug(f"Failed to parse observation timestamp: {timestamp}")
-
     return CurrentConditions(
         temperature_f=temp_f,
         temperature_c=temp_c,
@@ -1063,7 +1044,6 @@ def parse_nws_current_conditions(
         visibility_miles=visibility_miles,
         visibility_km=visibility_km,
         uv_index=uv_index,
-        last_updated=last_updated or datetime.now(),
     )
 
 

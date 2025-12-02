@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import tempfile
-from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, Mock, patch
@@ -57,7 +56,6 @@ def sample_weather_data(sample_location: Location) -> WeatherData:
     """Create sample weather data for testing."""
     return WeatherData(
         location=sample_location,
-        last_updated=datetime.now(),
         current=CurrentConditions(
             temperature=72.0,
             condition="Partly Cloudy",
@@ -222,7 +220,7 @@ async def test_failed_request_cleanup(
         if call_count == 1:
             raise RuntimeError("API failure")
         # Second call succeeds
-        return WeatherData(location=sample_location, last_updated=datetime.now())
+        return WeatherData(location=sample_location)
 
     with patch.object(weather_client, "_do_fetch_weather_data", side_effect=mock_fetch_fail):
         # First request should fail

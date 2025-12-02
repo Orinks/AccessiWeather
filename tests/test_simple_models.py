@@ -108,14 +108,12 @@ class TestCurrentConditionsModel:
             pressure_in=29.92,
             visibility_miles=10.0,
             uv_index=6.0,
-            last_updated=datetime.now(),
         )
 
         assert conditions.feels_like_f == 78.0
         assert conditions.pressure_in == 29.92
         assert conditions.visibility_miles == 10.0
         assert conditions.uv_index == 6.0
-        assert conditions.last_updated is not None
 
     def test_current_conditions_numeric_wind_direction(self):
         """Test current conditions with numeric wind direction."""
@@ -351,15 +349,6 @@ class TestWeatherDataModel:
         # Test with no data
         weather_data_empty = WeatherData(location=location)
         assert weather_data_empty.has_any_data() is False
-
-    def test_weather_data_with_timestamp(self):
-        """Test weather data with last updated timestamp."""
-        location = Location("Test City", 40.0, -75.0)
-        last_updated = datetime.now()
-
-        weather_data = WeatherData(location=location, last_updated=last_updated)
-
-        assert weather_data.last_updated == last_updated
 
     def test_weather_data_current_conditions_alias(self):
         """WeatherData.current_conditions should mirror the current attribute."""
@@ -750,7 +739,6 @@ class TestModelIntegration:
             humidity=65,
             wind_speed_mph=10.0,
             wind_direction="NW",
-            last_updated=datetime.now(),
         )
 
         # Create forecast
@@ -775,7 +763,6 @@ class TestModelIntegration:
             current=current,
             forecast=forecast,
             alerts=alerts,
-            last_updated=datetime.now(),
         )
 
         # Verify all data is present and accessible
@@ -819,9 +806,7 @@ class TestModelIntegration:
         hourly_forecast = HourlyForecast(periods=hourly_periods)
 
         # Create weather data with hourly forecast
-        weather_data = WeatherData(
-            location=location, hourly_forecast=hourly_forecast, last_updated=datetime.now()
-        )
+        weather_data = WeatherData(location=location, hourly_forecast=hourly_forecast)
 
         assert weather_data.hourly_forecast is not None
         assert weather_data.hourly_forecast.has_data() is True
@@ -856,7 +841,6 @@ class TestModelIntegration:
             forecast=forecast,
             hourly_forecast=hourly_forecast,
             alerts=alerts,
-            last_updated=datetime.now(),
         )
 
         # Verify all components
