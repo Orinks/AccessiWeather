@@ -422,13 +422,10 @@ jobs:
         # Install markdown converter
         python -m pip install -q markdown
 
-        # Fetch latest STABLE release notes (for the stable release section)
-        echo "Fetching latest stable release notes..."
-        RELEASE_NOTES=""
-
-        # Get all releases and find the latest non-prerelease
+        # Fetch ALL releases in a single API call to avoid rate limiting/caching issues
+        echo "Fetching all releases..."
         ALL_RELEASES=$(curl -s -H "Authorization: token ${{ github.token }}" \
-          "https://api.github.com/repos/${{ github.repository }}/releases?per_page=20")
+          "https://api.github.com/repos/${{ github.repository }}/releases?per_page=50")
 
         # Debug: Check if we got releases
         RELEASE_COUNT=$(echo "$ALL_RELEASES" | jq 'length' 2>/dev/null || echo "0")
@@ -438,17 +435,15 @@ jobs:
         echo "All releases:"
         echo "$ALL_RELEASES" | jq -r '.[] | "  - \(.tag_name): prerelease=\(.prerelease)"'
 
-        # Filter to stable releases
-        STABLE_RELEASES=$(echo "$ALL_RELEASES" | jq -c '[.[] | select(.prerelease == false and .draft == false)]')
-        STABLE_COUNT=$(echo "$STABLE_RELEASES" | jq 'length' 2>/dev/null || echo "0")
-        echo "Stable releases found: $STABLE_COUNT"
+        # Extract STABLE release notes (for the stable release section)
+        echo "Extracting stable release notes..."
+        RELEASE_NOTES=""
 
-        STABLE_RELEASE=$(echo "$STABLE_RELEASES" | jq -c 'first // empty')
+        STABLE_RELEASE=$(echo "$ALL_RELEASES" | jq -c '[.[] | select(.prerelease == false and .draft == false)] | first // empty')
+        STABLE_LENGTH=${#STABLE_RELEASE}
+        echo "Stable release JSON length: $STABLE_LENGTH characters"
 
-        # Debug output
-        echo "Stable release length: ${#STABLE_RELEASE} characters"
-
-        if [ -n "$STABLE_RELEASE" ] && [ "$STABLE_RELEASE" != "null" ] && [ "$STABLE_RELEASE" != "" ]; then
+        if [ "$STABLE_LENGTH" -gt 10 ]; then
           STABLE_TAG=$(echo "$STABLE_RELEASE" | jq -r '.tag_name // "unknown"')
           RAW_NOTES=$(echo "$STABLE_RELEASE" | jq -r '.body // "No release notes available."')
           # Convert markdown to HTML using Python markdown library
@@ -456,18 +451,18 @@ jobs:
           echo "✓ Fetched stable release notes for $STABLE_TAG (${#RELEASE_NOTES} characters)"
         else
           RELEASE_NOTES="<p>No stable release notes available. <a href=\"https://github.com/Orinks/AccessiWeather/releases\">View all releases on GitHub</a></p>"
-          echo "⚠ No stable release found (STABLE_RELEASE was empty or null)"
+          echo "⚠ No stable release found (STABLE_RELEASE was empty or too short)"
         fi
 
-        # Fetch latest NIGHTLY/pre-release notes (for the dev/nightly section)
-        echo "Fetching latest nightly release notes..."
+        # Extract NIGHTLY/pre-release notes (for the dev/nightly section)
+        echo "Extracting nightly release notes..."
         DEV_CHANGES=""
 
-        NIGHTLY_RELEASE=$(curl -s -H "Authorization: token ${{ github.token }}" \
-          "https://api.github.com/repos/${{ github.repository }}/releases?per_page=10" | \
-          jq -r '[.[] | select(.prerelease == true and .draft == false)] | first // empty')
+        NIGHTLY_RELEASE=$(echo "$ALL_RELEASES" | jq -c '[.[] | select(.prerelease == true and .draft == false)] | first // empty')
+        NIGHTLY_LENGTH=${#NIGHTLY_RELEASE}
+        echo "Nightly release JSON length: $NIGHTLY_LENGTH characters"
 
-        if [ -n "$NIGHTLY_RELEASE" ] && [ "$NIGHTLY_RELEASE" != "null" ]; then
+        if [ "$NIGHTLY_LENGTH" -gt 10 ]; then
           NIGHTLY_TAG=$(echo "$NIGHTLY_RELEASE" | jq -r '.tag_name // "unknown"')
           RAW_NIGHTLY_NOTES=$(echo "$NIGHTLY_RELEASE" | jq -r '.body // "No release notes available."')
           # Convert markdown to HTML using Python markdown library
