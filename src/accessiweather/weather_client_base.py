@@ -874,6 +874,8 @@ class WeatherClient:
         if primary is None:
             return fallback
 
+        # Note: last_updated is intentionally excluded - we want to keep the
+        # primary source's timestamp, not replace it with fallback data
         for field in [
             "temperature",
             "temperature_f",
@@ -899,7 +901,6 @@ class WeatherClient:
             "moon_phase",
             "moonrise_time",
             "moonset_time",
-            "last_updated",
         ]:
             value = getattr(primary, field, None)
             if value not in (None, ""):
