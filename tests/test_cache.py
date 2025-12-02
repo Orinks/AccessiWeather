@@ -385,7 +385,7 @@ class TestWeatherDataCache:
         # Verify content
         with cache_files[0].open() as f:
             data = json.load(f)
-            assert data["schema_version"] == 4
+            assert data["schema_version"] == 5
             assert "saved_at" in data
             assert data["location"]["name"] == "Test City"
 

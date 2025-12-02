@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 import time
-from datetime import UTC, datetime, timedelta
+from datetime import datetime
 
 import pytest
 
@@ -85,44 +85,6 @@ def test_openmeteo_current_conditions_sunrise_sunset(openmeteo_client, mapper):
 
     # Sunset should be in reasonable evening hours (4 PM - 8 PM typically)
     assert 16 <= sunset.hour <= 20, f"Sunset hour {sunset.hour} seems unreasonable"
-
-    time.sleep(DELAY_BETWEEN_REQUESTS)
-
-
-@pytest.mark.integration
-@pytest.mark.network
-@pytest.mark.skipif(not RUN_INTEGRATION, reason=skip_reason)
-def test_openmeteo_current_conditions_last_updated(openmeteo_client, mapper):
-    """Test Open-Meteo current conditions has valid last_updated timestamp."""
-    # Fetch raw data
-    raw_data = openmeteo_client.get_current_weather(
-        latitude=TEST_LOCATION.latitude,
-        longitude=TEST_LOCATION.longitude,
-        temperature_unit="fahrenheit",
-    )
-
-    # Map to internal format
-    mapped_data = mapper.map_current_conditions(raw_data)
-    timestamp_str = mapped_data["properties"]["timestamp"]
-
-    assert timestamp_str is not None, "Timestamp should be present"
-
-    # Parse the timestamp (should be in UTC)
-    last_updated = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
-    assert isinstance(last_updated, datetime), "Last updated should be a datetime"
-    assert last_updated.tzinfo is not None, "Timestamp should be timezone-aware (UTC)"
-
-    # Last updated should be recent (within 7 days) and not in the future
-    now_utc = datetime.now(UTC)
-    age = now_utc - last_updated
-
-    assert age.total_seconds() >= 0, "Last updated should not be in the future"
-    assert age.total_seconds() < timedelta(days=7).total_seconds(), (
-        f"Last updated {last_updated} is too old (age: {age})"
-    )
-
-    # Year sanity check (not epoch)
-    assert last_updated.year > 2000, "Last updated year is invalid"
 
     time.sleep(DELAY_BETWEEN_REQUESTS)
 

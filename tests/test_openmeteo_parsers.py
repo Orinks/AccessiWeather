@@ -34,7 +34,6 @@ def test_parse_openmeteo_current_conditions_handles_z_times():
 
     current = parse_openmeteo_current_conditions(payload)
 
-    assert current.last_updated is not None
     assert current.sunrise_time is not None
     assert current.sunset_time is not None
 

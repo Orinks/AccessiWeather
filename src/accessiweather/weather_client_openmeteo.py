@@ -308,13 +308,6 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         current.get("apparent_temperature"), units.get("apparent_temperature")
     )
 
-    raw_time = current.get("time")
-    last_updated = _parse_iso_datetime(raw_time, utc_offset_seconds)
-    logger.info(
-        f"Open-Meteo current.time parsing: raw='{raw_time}', "
-        f"offset={utc_offset_seconds}, result={last_updated}"
-    )
-
     # Parse sunrise and sunset times from daily data (today's values)
     sunrise_time = None
     sunset_time = None
@@ -351,7 +344,6 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         feels_like_c=feels_like_c,
         sunrise_time=sunrise_time,
         sunset_time=sunset_time,
-        last_updated=last_updated or datetime.now(),
         uv_index=uv_index,
     )
 

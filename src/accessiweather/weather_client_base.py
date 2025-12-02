@@ -382,7 +382,7 @@ class WeatherClient:
         logger.info(f"Using {api_name} API for {location.name} (data_source: {self.data_source})")
 
         logger.debug("Creating WeatherData object")
-        weather_data = WeatherData(location=location, last_updated=datetime.now())
+        weather_data = WeatherData(location=location)
 
         if api_choice == "visualcrossing":
             # Use Visual Crossing API
@@ -874,8 +874,6 @@ class WeatherClient:
         if primary is None:
             return fallback
 
-        # Note: last_updated is intentionally excluded - we want to keep the
-        # primary source's timestamp, not replace it with fallback data
         for field in [
             "temperature",
             "temperature_f",

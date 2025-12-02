@@ -7,7 +7,6 @@ import inspect
 import logging
 from datetime import UTC, datetime, timedelta
 from typing import Any
-from zoneinfo import ZoneInfo
 
 import httpx
 
@@ -1028,56 +1027,6 @@ def parse_nws_current_conditions(
     pressure_pa = props.get("barometricPressure", {}).get("value")
     pressure_in = convert_pa_to_inches(pressure_pa)
 
-    timestamp = props.get("timestamp")
-    last_updated = None
-    if isinstance(timestamp, str) and timestamp:
-        try:
-            last_updated = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-            # Convert UTC timestamp to location's timezone if available
-            if last_updated and location:
-                location_tz = None
-                if location.timezone:
-                    try:
-                        location_tz = ZoneInfo(location.timezone)
-                    except Exception as e:  # noqa: BLE001
-                        logger.debug(f"Failed to load timezone '{location.timezone}': {e}")
-
-                # If no timezone set, try to infer from coordinates using timezonefinder
-                if not location_tz:
-                    try:
-                        from timezonefinder import TimezoneFinder
-
-                        tf = TimezoneFinder()
-                        tz_name = tf.timezone_at(lat=location.latitude, lng=location.longitude)
-                        if tz_name:
-                            location_tz = ZoneInfo(tz_name)
-                            logger.info(
-                                f"Inferred timezone '{tz_name}' for {location.name} "
-                                f"from coordinates ({location.latitude}, {location.longitude})"
-                            )
-                        else:
-                            logger.warning(
-                                f"timezonefinder returned None for {location.name} "
-                                f"at ({location.latitude}, {location.longitude})"
-                            )
-                    except ImportError:
-                        logger.warning("timezonefinder not available, keeping times in UTC")
-                    except Exception as e:  # noqa: BLE001
-                        logger.error(f"Failed to infer timezone from coordinates: {e}")
-
-                # Apply timezone conversion if we have a timezone
-                if location_tz:
-                    last_updated = last_updated.astimezone(location_tz)
-                    logger.info(
-                        f"Converted last_updated from UTC to {location_tz} for {location.name}: {last_updated}"
-                    )
-                else:
-                    logger.warning(
-                        f"No timezone available for {location.name}, keeping time in UTC"
-                    )
-        except ValueError:
-            logger.debug(f"Failed to parse observation timestamp: {timestamp}")
-
     return CurrentConditions(
         temperature_f=temp_f,
         temperature_c=temp_c,
@@ -1095,7 +1044,6 @@ def parse_nws_current_conditions(
         visibility_miles=visibility_miles,
         visibility_km=visibility_km,
         uv_index=uv_index,
-        last_updated=last_updated or datetime.now(),
     )
 
 

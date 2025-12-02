@@ -274,7 +274,6 @@ def _serialize_current(current: CurrentConditions | None) -> dict | None:
         "uv_index": current.uv_index,
         "sunrise_time": _serialize_datetime(current.sunrise_time),
         "sunset_time": _serialize_datetime(current.sunset_time),
-        "last_updated": _serialize_datetime(current.last_updated),
     }
 
 
@@ -284,17 +283,14 @@ def _deserialize_current(data: dict | None) -> CurrentConditions | None:
 
     sunrise_raw = data.get("sunrise_time")
     sunset_raw = data.get("sunset_time")
-    last_updated_raw = data.get("last_updated")
 
     sunrise = _deserialize_datetime(sunrise_raw)
     sunset = _deserialize_datetime(sunset_raw)
-    last_updated = _deserialize_datetime(last_updated_raw)
 
     logger.debug(
         f"Deserializing current conditions from cache - "
         f"sunrise: {sunrise_raw} -> {sunrise}, "
-        f"sunset: {sunset_raw} -> {sunset}, "
-        f"last_updated: {last_updated_raw} -> {last_updated}"
+        f"sunset: {sunset_raw} -> {sunset}"
     )
 
     return CurrentConditions(
@@ -316,7 +312,6 @@ def _deserialize_current(data: dict | None) -> CurrentConditions | None:
         uv_index=data.get("uv_index"),
         sunrise_time=sunrise,
         sunset_time=sunset,
-        last_updated=last_updated,
     )
 
 
@@ -546,7 +541,6 @@ def _serialize_weather_data(weather: WeatherData) -> dict:
         "hourly_forecast": _serialize_hourly(weather.hourly_forecast),
         "discussion": weather.discussion,
         "alerts": _serialize_alerts(weather.alerts),
-        "last_updated": _serialize_datetime(weather.last_updated),
         "environmental": _serialize_environmental(weather.environmental),
         "trend_insights": _serialize_trends(weather.trend_insights),
         "stale": weather.stale,
@@ -563,7 +557,6 @@ def _deserialize_weather_data(data: dict, location: Location) -> WeatherData:
         hourly_forecast=_deserialize_hourly(data.get("hourly_forecast")),
         discussion=data.get("discussion"),
         alerts=_deserialize_alerts(data.get("alerts")),
-        last_updated=_deserialize_datetime(data.get("last_updated")),
         environmental=_deserialize_environmental(data.get("environmental")),
         trend_insights=_deserialize_trends(data.get("trend_insights")),
     )
