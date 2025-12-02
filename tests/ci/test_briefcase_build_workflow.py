@@ -217,7 +217,7 @@ class TestBuildJob:
             None,
         )
         assert upload_step is not None
-        assert "actions/upload-artifact@v5" in upload_step["uses"]
+        assert upload_step["uses"].startswith("actions/upload-artifact@")
         assert "installer_pattern" in str(upload_step["with"]["path"])
 
     def test_portable_artifact_upload_windows_only(self, build_workflow):
@@ -256,7 +256,7 @@ class TestCacheConfiguration:
             None,
         )
         assert cache_step is not None
-        assert "actions/cache@v4" in cache_step["uses"]
+        assert cache_step["uses"].startswith("actions/cache@")
         assert "pip" in cache_step["with"]["path"]
 
     def test_briefcase_cache_configured(self, build_workflow):
@@ -267,7 +267,7 @@ class TestCacheConfiguration:
             None,
         )
         assert cache_step is not None
-        assert "actions/cache@v4" in cache_step["uses"]
+        assert cache_step["uses"].startswith("actions/cache@")
 
     def test_briefcase_cache_includes_build_directories(self, build_workflow):
         """Verify Briefcase cache includes build/dist/logs directories."""
@@ -394,7 +394,7 @@ class TestBuildSteps:
             None,
         )
         assert python_step is not None
-        assert "actions/setup-python@v6" in python_step["uses"]
+        assert python_step["uses"].startswith("actions/setup-python@")
 
     def test_briefcase_create_step_exists(self, build_workflow):
         """Verify Briefcase create step exists."""

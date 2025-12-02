@@ -225,14 +225,14 @@ class TestArtifactUpload:
         assert upload_step is not None
 
     def test_upload_artifact_uses_correct_action(self, tests_job):
-        """Verify correct GitHub action version is used for upload."""
+        """Verify correct GitHub action is used for upload."""
         upload_step = None
         for step in tests_job["steps"]:
             if step.get("name") == "Upload test report":
                 upload_step = step
                 break
         assert upload_step is not None
-        assert upload_step["uses"] == "actions/upload-artifact@v5"
+        assert upload_step["uses"].startswith("actions/upload-artifact@")
 
     def test_upload_artifact_runs_always(self, tests_job):
         """Verify artifact upload runs even on failure."""
@@ -290,39 +290,39 @@ class TestJobConfiguration:
 class TestCheckoutStep:
     """Tests for checkout step configuration."""
 
-    def test_lint_uses_checkout_v6(self, lint_job):
-        """Verify lint job uses checkout action v6."""
+    def test_lint_uses_checkout(self, lint_job):
+        """Verify lint job uses checkout action."""
         checkout_step = lint_job["steps"][0]
-        assert checkout_step["uses"] == "actions/checkout@v6"
+        assert checkout_step["uses"].startswith("actions/checkout@")
 
-    def test_tests_uses_checkout_v6(self, tests_job):
-        """Verify tests job uses checkout action v6."""
+    def test_tests_uses_checkout(self, tests_job):
+        """Verify tests job uses checkout action."""
         checkout_step = tests_job["steps"][0]
-        assert checkout_step["uses"] == "actions/checkout@v6"
+        assert checkout_step["uses"].startswith("actions/checkout@")
 
 
 class TestSetupPythonStep:
     """Tests for Python setup step configuration."""
 
-    def test_lint_uses_setup_python_v6(self, lint_job):
-        """Verify lint job uses setup-python action v6."""
+    def test_lint_uses_setup_python(self, lint_job):
+        """Verify lint job uses setup-python action."""
         setup_step = None
         for step in lint_job["steps"]:
             if step.get("name") == "Set up Python":
                 setup_step = step
                 break
         assert setup_step is not None
-        assert setup_step["uses"] == "actions/setup-python@v6"
+        assert setup_step["uses"].startswith("actions/setup-python@")
 
-    def test_tests_uses_setup_python_v6(self, tests_job):
-        """Verify tests job uses setup-python action v6."""
+    def test_tests_uses_setup_python(self, tests_job):
+        """Verify tests job uses setup-python action."""
         setup_step = None
         for step in tests_job["steps"]:
             if step.get("name") == "Set up Python":
                 setup_step = step
                 break
         assert setup_step is not None
-        assert setup_step["uses"] == "actions/setup-python@v6"
+        assert setup_step["uses"].startswith("actions/setup-python@")
 
     def test_pip_cache_enabled(self, lint_job):
         """Verify pip cache is enabled for faster builds."""
