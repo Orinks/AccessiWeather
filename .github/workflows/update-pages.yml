@@ -158,9 +158,25 @@ jobs:
           local releases=$(curl -s -H "Authorization: token ${{ github.token }}" \
             "https://api.github.com/repos/${{ github.repository }}/releases?per_page=100")
 
-          # Debug: show how many releases we got
-          local total_releases=$(echo "$releases" | jq 'length')
+          # Debug: show how many releases we got and check for API errors
+          if echo "$releases" | jq -e '.message' > /dev/null 2>&1; then
+            echo "⚠ GitHub API error: $(echo "$releases" | jq -r '.message')" >&2
+            echo "main_version=API Error"
+            echo "main_date=N/A"
+            echo "main_run_id="
+            echo "main_commit="
+            echo "main_installer_url="
+            echo "main_portable_url="
+            echo "main_macos_installer_url="
+            return
+          fi
+
+          local total_releases=$(echo "$releases" | jq 'length' 2>/dev/null || echo "0")
           echo "Total releases fetched: $total_releases" >&2
+
+          # Debug: Show all releases with their prerelease status
+          echo "All releases:" >&2
+          echo "$releases" | jq -r '.[] | "  - \(.tag_name): prerelease=\(.prerelease), draft=\(.draft), assets=\(.assets | length)"' >&2
 
           # Filter to only stable releases (not pre-releases, not drafts) that have binary assets
           # This ensures we don't link to releases that only have checksums or source code
@@ -177,13 +193,13 @@ jobs:
 
           # Check if we got a valid release (not null, not empty)
           if [ -z "$release_info" ] || [ "$release_info" = "null" ]; then
-            echo "main_version=No releases available"
-            echo "main_date=N/A"
+            echo "main_version=No stable release"
+            echo "main_date=See GitHub Releases"
             echo "main_run_id="
             echo "main_commit="
-            echo "main_installer_url="
-            echo "main_portable_url="
-            echo "main_macos_installer_url="
+            echo "main_installer_url=https://github.com/${{ github.repository }}/releases"
+            echo "main_portable_url=https://github.com/${{ github.repository }}/releases"
+            echo "main_macos_installer_url=https://github.com/${{ github.repository }}/releases"
             echo "⚠ No stable releases found (release_info was null or empty)" >&2
             return
           fi
