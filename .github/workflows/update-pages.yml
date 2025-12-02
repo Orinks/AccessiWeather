@@ -434,7 +434,16 @@ jobs:
         RELEASE_COUNT=$(echo "$ALL_RELEASES" | jq 'length' 2>/dev/null || echo "0")
         echo "Total releases fetched: $RELEASE_COUNT"
 
-        STABLE_RELEASE=$(echo "$ALL_RELEASES" | jq -c '[.[] | select(.prerelease == false and .draft == false)] | first // empty')
+        # Debug: Show all releases with prerelease status
+        echo "All releases:"
+        echo "$ALL_RELEASES" | jq -r '.[] | "  - \(.tag_name): prerelease=\(.prerelease)"'
+
+        # Filter to stable releases
+        STABLE_RELEASES=$(echo "$ALL_RELEASES" | jq -c '[.[] | select(.prerelease == false and .draft == false)]')
+        STABLE_COUNT=$(echo "$STABLE_RELEASES" | jq 'length' 2>/dev/null || echo "0")
+        echo "Stable releases found: $STABLE_COUNT"
+
+        STABLE_RELEASE=$(echo "$STABLE_RELEASES" | jq -c 'first // empty')
 
         # Debug output
         echo "Stable release length: ${#STABLE_RELEASE} characters"
