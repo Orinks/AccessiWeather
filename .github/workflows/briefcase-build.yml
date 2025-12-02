@@ -110,7 +110,7 @@ jobs:
         fetch-depth: 0  # Fetch full history for build metadata
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
