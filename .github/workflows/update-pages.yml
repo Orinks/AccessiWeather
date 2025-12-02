@@ -427,19 +427,27 @@ jobs:
         RELEASE_NOTES=""
 
         # Get all releases and find the latest non-prerelease
-        STABLE_RELEASE=$(curl -s -H "Authorization: token ${{ github.token }}" \
-          "https://api.github.com/repos/${{ github.repository }}/releases?per_page=20" | \
-          jq -r '[.[] | select(.prerelease == false and .draft == false)] | first // empty')
+        ALL_RELEASES=$(curl -s -H "Authorization: token ${{ github.token }}" \
+          "https://api.github.com/repos/${{ github.repository }}/releases?per_page=20")
 
-        if [ -n "$STABLE_RELEASE" ] && [ "$STABLE_RELEASE" != "null" ]; then
+        # Debug: Check if we got releases
+        RELEASE_COUNT=$(echo "$ALL_RELEASES" | jq 'length' 2>/dev/null || echo "0")
+        echo "Total releases fetched: $RELEASE_COUNT"
+
+        STABLE_RELEASE=$(echo "$ALL_RELEASES" | jq -c '[.[] | select(.prerelease == false and .draft == false)] | first // empty')
+
+        # Debug output
+        echo "Stable release length: ${#STABLE_RELEASE} characters"
+
+        if [ -n "$STABLE_RELEASE" ] && [ "$STABLE_RELEASE" != "null" ] && [ "$STABLE_RELEASE" != "" ]; then
+          STABLE_TAG=$(echo "$STABLE_RELEASE" | jq -r '.tag_name // "unknown"')
           RAW_NOTES=$(echo "$STABLE_RELEASE" | jq -r '.body // "No release notes available."')
           # Convert markdown to HTML using Python markdown library
           RELEASE_NOTES=$(python3 -c 'import markdown; import sys; html = markdown.markdown(sys.stdin.read(), extensions=["nl2br", "tables"]); print(html)' <<< "$RAW_NOTES")
-          STABLE_TAG=$(echo "$STABLE_RELEASE" | jq -r '.tag_name // "unknown"')
           echo "✓ Fetched stable release notes for $STABLE_TAG (${#RELEASE_NOTES} characters)"
         else
           RELEASE_NOTES="<p>No stable release notes available. <a href=\"https://github.com/Orinks/AccessiWeather/releases\">View all releases on GitHub</a></p>"
-          echo "⚠ No stable release found, using fallback message"
+          echo "⚠ No stable release found (STABLE_RELEASE was empty or null)"
         fi
 
         # Fetch latest NIGHTLY/pre-release notes (for the dev/nightly section)
