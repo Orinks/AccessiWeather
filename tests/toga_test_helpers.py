@@ -55,7 +55,6 @@ class WeatherDataFactory:
             pressure_in=30.15,
             visibility_miles=10.0,
             uv_index=5,
-            last_updated=datetime.now(),
         )
 
     @staticmethod
@@ -136,7 +135,6 @@ class WeatherDataFactory:
             weather_data.alerts = WeatherDataFactory.create_weather_alerts()
 
         weather_data.discussion = "Mock forecast discussion for testing."
-        weather_data.last_updated = datetime.now()
 
         return weather_data
 

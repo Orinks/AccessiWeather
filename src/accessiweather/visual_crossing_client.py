@@ -234,19 +234,6 @@ class VisualCrossingClient:
         feels_like_f = current.get("feelslike")
         feels_like_c = self._convert_f_to_c(feels_like_f)
 
-        timestamp = current.get("datetimeEpoch")
-        last_updated = None
-        if timestamp is not None:
-            try:
-                last_updated = datetime.fromtimestamp(timestamp, tz=UTC)
-            except (OSError, ValueError):
-                logger.debug(f"Failed to parse Visual Crossing epoch: {timestamp}")
-        elif current.get("datetime"):
-            try:
-                last_updated = datetime.fromisoformat(current["datetime"])
-            except ValueError:
-                logger.debug(f"Failed to parse Visual Crossing datetime: {current['datetime']}")
-
         sunrise_time = None
         sunset_time = None
         moonrise_time = None
@@ -327,7 +314,6 @@ class VisualCrossingClient:
             moon_phase=moon_phase,
             moonrise_time=moonrise_time,
             moonset_time=moonset_time,
-            last_updated=last_updated or datetime.now(),
         )
 
     def _parse_forecast(self, data: dict) -> Forecast:

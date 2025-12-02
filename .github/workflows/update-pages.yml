@@ -86,7 +86,7 @@ jobs:
         echo "Final target branch: $TARGET_BRANCH"
 
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v5
       with:
         ref: ${{ steps.target-branch.outputs.target_branch }}
         token: ${{ github.token }}
@@ -158,48 +158,26 @@ jobs:
           local releases=$(curl -s -H "Authorization: token ${{ github.token }}" \
             "https://api.github.com/repos/${{ github.repository }}/releases?per_page=100")
 
-          # Debug: show how many releases we got and check for API errors
-          if echo "$releases" | jq -e '.message' > /dev/null 2>&1; then
-            echo "⚠ GitHub API error: $(echo "$releases" | jq -r '.message')" >&2
-            echo "main_version=API Error"
+          # Debug: show how many releases we got
+          local total_releases=$(echo "$releases" | jq 'length')
+          echo "Total releases fetched: $total_releases" >&2
+
+          # Filter to only stable releases (not pre-releases, not drafts)
+          # Use 'first' with error suppression and check for null explicitly
+          local release_info=$(echo "$releases" | jq -c '[.[] | select(.prerelease == false and .draft == false)] | if length > 0 then .[0] else null end')
+
+          # Debug: show filtered result
+          echo "Filtered release info: $(echo "$release_info" | jq -c '{tag: .tag_name, prerelease: .prerelease, draft: .draft}' 2>/dev/null || echo 'null')" >&2
+
+          # Check if we got a valid release (not null, not empty)
+          if [ -z "$release_info" ] || [ "$release_info" = "null" ]; then
+            echo "main_version=No releases available"
             echo "main_date=N/A"
             echo "main_run_id="
             echo "main_commit="
             echo "main_installer_url="
             echo "main_portable_url="
             echo "main_macos_installer_url="
-            return
-          fi
-
-          local total_releases=$(echo "$releases" | jq 'length' 2>/dev/null || echo "0")
-          echo "Total releases fetched: $total_releases" >&2
-
-          # Debug: Show all releases with their prerelease status
-          echo "All releases:" >&2
-          echo "$releases" | jq -r '.[] | "  - \(.tag_name): prerelease=\(.prerelease), draft=\(.draft), assets=\(.assets | length)"' >&2
-
-          # Filter to only stable releases (not pre-releases, not drafts) that have binary assets
-          # This ensures we don't link to releases that only have checksums or source code
-          local release_info=$(echo "$releases" | jq -c '
-            [.[] | select(
-              .prerelease == false and
-              .draft == false and
-              (.assets | map(select(.name | test("\\.(msi|dmg|zip)$"; "i"))) | length > 0)
-            )] | if length > 0 then .[0] else null end
-          ')
-
-          # Debug: show filtered result
-          echo "Filtered release info: $(echo "$release_info" | jq -c '{tag: .tag_name, prerelease: .prerelease, draft: .draft, asset_count: (.assets | length)}' 2>/dev/null || echo 'null')" >&2
-
-          # Check if we got a valid release (not null, not empty)
-          if [ -z "$release_info" ] || [ "$release_info" = "null" ]; then
-            echo "main_version=No stable release"
-            echo "main_date=See GitHub Releases"
-            echo "main_run_id="
-            echo "main_commit="
-            echo "main_installer_url=https://github.com/${{ github.repository }}/releases"
-            echo "main_portable_url=https://github.com/${{ github.repository }}/releases"
-            echo "main_macos_installer_url=https://github.com/${{ github.repository }}/releases"
             echo "⚠ No stable releases found (release_info was null or empty)" >&2
             return
           fi
@@ -252,8 +230,6 @@ jobs:
             echo "main_macos_installer_url=${macos_installer_url}"
 
             echo "✓ Found stable release: version=$version, date=$formatted_date" >&2
-            echo "  Installer URL: ${installer_url:-'(none)'}" >&2
-            echo "  Portable URL: ${portable_url:-'(none)'}" >&2
 
             # Warn if version doesn't match pyproject.toml
             if [ -n "$expected_version" ] && [ "$version" != "$expected_version" ]; then
@@ -415,71 +391,46 @@ jobs:
            fi
          done
 
-    - name: Fetch release notes and nightly changes
+    - name: Fetch release notes and recent commits
       run: |
-        echo "📝 Fetching release notes and nightly changes..."
+        echo "📝 Fetching release notes and recent commits..."
 
-        # Function to render markdown using GitHub's API (handles @mentions, #issues, etc.)
-        render_github_markdown() {
-          local markdown_text="$1"
-          local rendered=$(curl -s -X POST \
-            -H "Authorization: token ${{ github.token }}" \
-            -H "Accept: application/vnd.github+json" \
-            -H "Content-Type: application/json" \
-            "https://api.github.com/markdown" \
-            -d "$(jq -n --arg text "$markdown_text" --arg mode "gfm" --arg context "${{ github.repository }}" '{text: $text, mode: $mode, context: $context}')")
-          echo "$rendered"
-        }
+        # Install markdown converter
+        python -m pip install -q markdown
 
-        # Fetch ALL releases in a single API call to avoid rate limiting/caching issues
-        echo "Fetching all releases..."
-        ALL_RELEASES=$(curl -s -H "Authorization: token ${{ github.token }}" \
-          "https://api.github.com/repos/${{ github.repository }}/releases?per_page=50")
-
-        # Debug: Check if we got releases
-        RELEASE_COUNT=$(echo "$ALL_RELEASES" | jq 'length' 2>/dev/null || echo "0")
-        echo "Total releases fetched: $RELEASE_COUNT"
-
-        # Debug: Show all releases with prerelease status
-        echo "All releases:"
-        echo "$ALL_RELEASES" | jq -r '.[] | "  - \(.tag_name): prerelease=\(.prerelease)"'
-
-        # Extract STABLE release notes (for the stable release section)
-        echo "Extracting stable release notes..."
+        # Fetch latest release notes
+        echo "Fetching latest release notes..."
         RELEASE_NOTES=""
-
-        STABLE_RELEASE=$(echo "$ALL_RELEASES" | jq -c '[.[] | select(.prerelease == false and .draft == false)] | first // empty')
-        STABLE_LENGTH=${#STABLE_RELEASE}
-        echo "Stable release JSON length: $STABLE_LENGTH characters"
-
-        if [ "$STABLE_LENGTH" -gt 10 ]; then
-          STABLE_TAG=$(echo "$STABLE_RELEASE" | jq -r '.tag_name // "unknown"')
-          RAW_NOTES=$(echo "$STABLE_RELEASE" | jq -r '.body // "No release notes available."')
-          # Use GitHub's markdown API to render with proper @mentions, #issues, etc.
-          RELEASE_NOTES=$(render_github_markdown "$RAW_NOTES")
-          echo "✓ Fetched stable release notes for $STABLE_TAG (${#RELEASE_NOTES} characters)"
+        IS_PRERELEASE="false"
+        if curl -s "https://api.github.com/repos/Orinks/AccessiWeather/releases/latest" | jq -e '.body' > /dev/null 2>&1; then
+          LATEST_RELEASE=$(curl -s "https://api.github.com/repos/Orinks/AccessiWeather/releases/latest")
+          RAW_NOTES=$(echo "$LATEST_RELEASE" | jq -r '.body // "No release notes available."')
+          IS_PRERELEASE=$(echo "$LATEST_RELEASE" | jq -r '.prerelease')
+          # Convert markdown to HTML using Python markdown library
+          RELEASE_NOTES=$(python3 -c 'import markdown; import sys; html = markdown.markdown(sys.stdin.read(), extensions=["nl2br", "tables"]); print(html)' <<< "$RAW_NOTES")
+          echo "✓ Fetched and converted release notes (${#RELEASE_NOTES} characters)"
+          echo "Is prerelease: $IS_PRERELEASE"
         else
-          RELEASE_NOTES="<p>No stable release notes available. <a href=\"https://github.com/Orinks/AccessiWeather/releases\">View all releases on GitHub</a></p>"
-          echo "⚠ No stable release found (STABLE_RELEASE was empty or too short)"
+          RELEASE_NOTES="<p>No release notes available. <a href=\"https://github.com/Orinks/AccessiWeather/releases/latest\">View on GitHub</a></p>"
+          echo "⚠ No release found, using fallback message"
         fi
 
-        # Extract NIGHTLY/pre-release notes (for the dev/nightly section)
-        echo "Extracting nightly release notes..."
-        DEV_CHANGES=""
-
-        NIGHTLY_RELEASE=$(echo "$ALL_RELEASES" | jq -c '[.[] | select(.prerelease == true and .draft == false)] | first // empty')
-        NIGHTLY_LENGTH=${#NIGHTLY_RELEASE}
-        echo "Nightly release JSON length: $NIGHTLY_LENGTH characters"
-
-        if [ "$NIGHTLY_LENGTH" -gt 10 ]; then
-          NIGHTLY_TAG=$(echo "$NIGHTLY_RELEASE" | jq -r '.tag_name // "unknown"')
-          RAW_NIGHTLY_NOTES=$(echo "$NIGHTLY_RELEASE" | jq -r '.body // "No release notes available."')
-          # Use GitHub's markdown API to render with proper @mentions, #issues, etc.
-          DEV_CHANGES=$(render_github_markdown "$RAW_NIGHTLY_NOTES")
-          echo "✓ Fetched nightly release notes for $NIGHTLY_TAG (${#DEV_CHANGES} characters)"
+        # Fetch recent commits from dev branch - but only for stable releases
+        # For prerelease/nightly builds, release notes already include full changelog via --generate-notes
+        echo "Fetching recent commits from dev branch..."
+        DEV_COMMITS=""
+        if [ "$IS_PRERELEASE" = "false" ]; then
+          echo "Latest release is stable, fetching separate recent commits..."
+          if curl -s "https://api.github.com/repos/Orinks/AccessiWeather/commits?sha=dev&per_page=3" | jq -e '.[0]' > /dev/null 2>&1; then
+            DEV_COMMITS=$(curl -s "https://api.github.com/repos/Orinks/AccessiWeather/commits?sha=dev&per_page=3" | jq -r '.[] | "<li>" + .commit.message + "</li>"' | tr '\n' ' ')
+            echo "✓ Fetched recent commits (${#DEV_COMMITS} characters)"
+          else
+            DEV_COMMITS="<li>Unable to fetch recent commits. <a href=\"https://github.com/Orinks/AccessiWeather/commits/dev\" target=\"_blank\">View on GitHub</a></li>"
+            echo "⚠ Failed to fetch commits, using fallback message"
+          fi
         else
-          DEV_CHANGES="<p>No nightly release notes available. <a href=\"https://github.com/Orinks/AccessiWeather/releases\">View all releases on GitHub</a></p>"
-          echo "⚠ No nightly release found, using fallback message"
+          echo "Latest release is prerelease/nightly, skipping separate commits (already in release notes)"
+          DEV_COMMITS=""
         fi
 
         # Save to environment for next step
@@ -487,12 +438,12 @@ jobs:
           echo "RELEASE_NOTES<<EOF"
           echo "$RELEASE_NOTES"
           echo "EOF"
-          echo "DEV_CHANGES<<EOF"
-          echo "$DEV_CHANGES"
+          echo "DEV_COMMITS<<EOF"
+          echo "$DEV_COMMITS"
           echo "EOF"
         } >> $GITHUB_ENV
 
-        echo "✓ Release notes and nightly changes data prepared"
+        echo "✓ Release notes and commits data prepared"
 
     - name: Generate HTML from template
       run: |
@@ -591,11 +542,11 @@ jobs:
         sed -i "s@{{DEV_HAS_RELEASE}}@$DEV_HAS_RELEASE@g" index.html
         sed -i "s@{{LAST_UPDATED}}@$LAST_UPDATED_ESCAPED@g" index.html
 
-        # Create temporary files with release notes and nightly changes
+        # Create temporary files with release notes and commits
         echo "$RELEASE_NOTES" > /tmp/release_notes.txt
-        echo "$DEV_CHANGES" > /tmp/dev_changes.txt
+        echo "$DEV_COMMITS" > /tmp/dev_commits.txt
 
-        # Substitute release notes and nightly changes using Python for cleaner logic
+        # Substitute release notes and commits using Python for cleaner logic
         python3 << 'PYTHON_EOF'
         import re
 
@@ -606,15 +557,20 @@ jobs:
         with open("/tmp/release_notes.txt", "r") as f:
             release_notes = f.read()
 
-        with open("/tmp/dev_changes.txt", "r") as f:
-            dev_changes = f.read()
+        with open("/tmp/dev_commits.txt", "r") as f:
+            dev_commits = f.read()
 
-        # Replace stable release notes
+        # Replace release notes
         html_content = html_content.replace("{{MAIN_RELEASE_NOTES}}", release_notes)
 
-        # Replace nightly/dev release notes (always show if available)
-        # The DEV_RECENT_COMMITS placeholder now receives nightly release notes
-        html_content = html_content.replace("{{DEV_RECENT_COMMITS}}", dev_changes)
+        # Handle Recent Changes section: remove it entirely if dev_commits is empty
+        if not dev_commits.strip():
+            # Remove the entire Recent Commits Section block
+            pattern = r'<!-- Recent Commits Section -->.*?</div>\s*</div>\s*</section>'
+            html_content = re.sub(pattern, '', html_content, flags=re.DOTALL)
+        else:
+            # Otherwise, just replace the placeholder
+            html_content = html_content.replace("{{DEV_RECENT_COMMITS}}", dev_commits)
 
         # Write back
         with open("index.html", "w") as f:
@@ -626,7 +582,7 @@ jobs:
         echo "  Stable Release (main): ${{ steps.build-info.outputs.main_version }} (${{ steps.build-info.outputs.main_date }})"
         echo "  Development Build (dev): $DEV_VERSION ($DEV_DATE)"
         echo "  Release notes: ${#RELEASE_NOTES} characters"
-        echo "  Nightly changes: ${#DEV_CHANGES} characters"
+        echo "  Recent commits: ${#DEV_COMMITS} characters"
         echo "  Last updated: $LAST_UPDATED"
         echo "  Triggered by: ${{ github.event_name }}"
         echo "  Source branch: $TARGET_BRANCH"

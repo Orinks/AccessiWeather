@@ -1,6 +1,6 @@
 """Tests for WeatherClient parsing helpers."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -50,8 +50,6 @@ def test_parse_nws_current_conditions_converts_units():
     assert current.pressure_mb == pytest.approx(1000.0, rel=1e-3)
     assert current.visibility_miles == pytest.approx(6.213, rel=1e-3)
     assert current.visibility_km == pytest.approx(10.0, rel=1e-3)
-    assert current.last_updated.tzinfo is not None
-    assert current.last_updated == datetime(2025, 9, 27, 4, 10, tzinfo=UTC)
 
 
 @pytest.mark.unit
@@ -103,7 +101,6 @@ def test_parse_openmeteo_current_conditions_converts_units():
     edt = timezone(timedelta(hours=-4))
     assert current.sunrise_time == datetime(2025, 9, 27, 6, 45, tzinfo=edt)
     assert current.sunset_time == datetime(2025, 9, 27, 18, 15, tzinfo=edt)
-    assert current.last_updated == datetime(2025, 9, 27, 0, 30, tzinfo=edt)
     assert current.uv_index == pytest.approx(7.5, rel=1e-3)
 
 
@@ -571,4 +568,3 @@ def test_parse_visual_crossing_current_conditions():
     assert current.visibility_km == pytest.approx(15.288, rel=1e-3)
     assert current.feels_like_f == 73.0
     assert current.feels_like_c == pytest.approx(22.777, rel=1e-3)
-    assert current.last_updated == datetime.fromtimestamp(1727414400, tz=UTC)

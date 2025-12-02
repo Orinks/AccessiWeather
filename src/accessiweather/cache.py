@@ -9,7 +9,7 @@ import logging
 import re
 import time
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 # Cache schema version - increment this when cache data structure changes
 # This is independent of app version and allows test builds to invalidate old cache
-CACHE_SCHEMA_VERSION = 3
+CACHE_SCHEMA_VERSION = 5
 
 
 @dataclass
@@ -163,23 +163,93 @@ class Cache:
             logger.debug(f"Cleaned up {len(expired_keys)} expired cache entries")
 
 
-def _serialize_datetime(value: datetime | None) -> str | None:
+def _serialize_datetime(value: datetime | None) -> dict[str, Any] | str | None:
+    """
+    Serialize a datetime, preserving the original timezone.
+
+    Returns a dict with 'iso' (UTC) and timezone info keys.
+    For named timezones (ZoneInfo), stores 'original_tz'.
+    For fixed offset timezones, stores 'utc_offset_seconds'.
+    """
     if value is None:
         return None
-    dt = value.astimezone(UTC) if value.tzinfo else value.replace(tzinfo=UTC)
-    return dt.isoformat()
+    dt_utc = value.astimezone(UTC) if value.tzinfo else value.replace(tzinfo=UTC)
+
+    result: dict[str, Any] = {"iso": dt_utc.isoformat()}
+
+    if value.tzinfo is not None and value.tzinfo != UTC:
+        # Try to get named timezone (ZoneInfo or pytz)
+        tz_name = getattr(value.tzinfo, "key", None)
+        if tz_name is None:
+            tz_name = getattr(value.tzinfo, "zone", None)
+
+        if tz_name and tz_name != "UTC":
+            result["original_tz"] = tz_name
+        else:
+            # Fixed offset timezone (datetime.timezone) - store the offset
+            try:
+                offset = value.utcoffset()
+                if offset is not None:
+                    result["utc_offset_seconds"] = int(offset.total_seconds())
+            except Exception:  # noqa: BLE001
+                pass
+
+    return result
 
 
 def _deserialize_datetime(value: Any) -> datetime | None:
-    if not isinstance(value, str) or not value:
+    """
+    Deserialize a datetime, restoring the original timezone if stored.
+
+    Handles:
+    - New format with 'original_tz' (named timezone via ZoneInfo)
+    - New format with 'utc_offset_seconds' (fixed offset timezone)
+    - Legacy format (plain ISO string)
+    """
+    if value is None:
         return None
-    text = value.strip()
-    if not text:
-        return None
-    try:
-        return datetime.fromisoformat(text)
-    except ValueError:
-        return None
+
+    if isinstance(value, dict):
+        iso_str = value.get("iso")
+        if not isinstance(iso_str, str) or not iso_str.strip():
+            return None
+        try:
+            dt = datetime.fromisoformat(iso_str.strip())
+        except ValueError:
+            return None
+
+        # Try named timezone first
+        original_tz = value.get("original_tz")
+        if original_tz and isinstance(original_tz, str):
+            try:
+                from zoneinfo import ZoneInfo
+
+                tz = ZoneInfo(original_tz)
+                return dt.astimezone(tz)
+            except (KeyError, ValueError, ImportError):
+                pass
+
+        # Try fixed offset timezone
+        utc_offset = value.get("utc_offset_seconds")
+        if utc_offset is not None:
+            try:
+                tz = timezone(timedelta(seconds=int(utc_offset)))
+                return dt.astimezone(tz)
+            except (ValueError, TypeError):
+                pass
+
+        return dt
+
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        try:
+            return datetime.fromisoformat(text)
+        except ValueError:
+            return None
+
+    return None
 
 
 def _serialize_current(current: CurrentConditions | None) -> dict | None:
@@ -204,7 +274,6 @@ def _serialize_current(current: CurrentConditions | None) -> dict | None:
         "uv_index": current.uv_index,
         "sunrise_time": _serialize_datetime(current.sunrise_time),
         "sunset_time": _serialize_datetime(current.sunset_time),
-        "last_updated": _serialize_datetime(current.last_updated),
     }
 
 
@@ -214,17 +283,14 @@ def _deserialize_current(data: dict | None) -> CurrentConditions | None:
 
     sunrise_raw = data.get("sunrise_time")
     sunset_raw = data.get("sunset_time")
-    last_updated_raw = data.get("last_updated")
 
     sunrise = _deserialize_datetime(sunrise_raw)
     sunset = _deserialize_datetime(sunset_raw)
-    last_updated = _deserialize_datetime(last_updated_raw)
 
     logger.debug(
         f"Deserializing current conditions from cache - "
         f"sunrise: {sunrise_raw} -> {sunrise}, "
-        f"sunset: {sunset_raw} -> {sunset}, "
-        f"last_updated: {last_updated_raw} -> {last_updated}"
+        f"sunset: {sunset_raw} -> {sunset}"
     )
 
     return CurrentConditions(
@@ -246,7 +312,6 @@ def _deserialize_current(data: dict | None) -> CurrentConditions | None:
         uv_index=data.get("uv_index"),
         sunrise_time=sunrise,
         sunset_time=sunset,
-        last_updated=last_updated,
     )
 
 
@@ -476,7 +541,6 @@ def _serialize_weather_data(weather: WeatherData) -> dict:
         "hourly_forecast": _serialize_hourly(weather.hourly_forecast),
         "discussion": weather.discussion,
         "alerts": _serialize_alerts(weather.alerts),
-        "last_updated": _serialize_datetime(weather.last_updated),
         "environmental": _serialize_environmental(weather.environmental),
         "trend_insights": _serialize_trends(weather.trend_insights),
         "stale": weather.stale,
@@ -493,7 +557,6 @@ def _deserialize_weather_data(data: dict, location: Location) -> WeatherData:
         hourly_forecast=_deserialize_hourly(data.get("hourly_forecast")),
         discussion=data.get("discussion"),
         alerts=_deserialize_alerts(data.get("alerts")),
-        last_updated=_deserialize_datetime(data.get("last_updated")),
         environmental=_deserialize_environmental(data.get("environmental")),
         trend_insights=_deserialize_trends(data.get("trend_insights")),
     )

@@ -20,7 +20,8 @@ dependencies = [
     "httpx>=0.20.0",
     "attrs>=22.2.0",
     "psutil",
-    "keyring"
+    "keyring",
+    "timezonefinder"
 ]
 readme = "README.md"
 classifiers = [

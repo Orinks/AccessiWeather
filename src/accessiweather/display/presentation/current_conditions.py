@@ -22,7 +22,6 @@ from .formatters import (
     format_pressure_value,
     format_sun_time,
     format_temperature_pair,
-    format_timestamp,
     format_visibility_value,
     format_wind,
     get_temperature_precision,
@@ -243,16 +242,6 @@ def build_current_conditions(
     metrics.extend(
         _build_astronomical_metrics(current, time_display_mode, use_12hour, show_timezone)
     )
-
-    if current.last_updated:
-        formatted_time = format_timestamp(
-            current.last_updated,
-            time_display_mode=time_display_mode,
-            use_12hour=use_12hour,
-            show_timezone=show_timezone,
-        )
-        logger.info(f"Last updated raw: {current.last_updated}, formatted: {formatted_time}")
-        metrics.append(Metric("Last updated", formatted_time))
 
     metrics.extend(_build_environmental_metrics(environmental, air_quality))
     metrics.extend(_build_trend_metrics(trends, current, hourly_forecast, show_pressure_trend))

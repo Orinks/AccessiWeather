@@ -1,7 +1,6 @@
 """Tests for cache optimization and pre-warming."""
 
 import tempfile
-from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -33,7 +32,7 @@ def sample_weather_data(test_location):
         condition="Partly Cloudy",
         humidity=65,
     )
-    return WeatherData(location=test_location, current=current, last_updated=datetime.now(UTC))
+    return WeatherData(location=test_location, current=current)
 
 
 @pytest.mark.unit
@@ -114,7 +113,6 @@ async def test_stale_cache_triggers_refresh(
             condition="Sunny",
             humidity=50,
         ),
-        last_updated=datetime.now(UTC),
     )
 
     mock_fetch = mocker.patch.object(

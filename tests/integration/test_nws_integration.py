@@ -133,26 +133,6 @@ async def test_nws_current_conditions_has_valid_timestamp(http_client):
     if current is None:
         pytest.skip("NWS did not return current conditions for test location")
 
-    assert current.last_updated is not None, "Current conditions should have last_updated"
-    assert isinstance(current.last_updated, datetime), "last_updated should be a datetime"
-
-    # Check timezone awareness (NWS attempts to add UTC if missing)
-    if current.last_updated.tzinfo is not None:
-        # If timezone-aware, verify it's reasonable
-        now_utc = datetime.now(UTC)
-        age = now_utc - current.last_updated.replace(tzinfo=UTC)
-
-        # Should be recent (NWS observation stations vary; allow up to 24 hours)
-        # Some stations update infrequently, so we're lenient here
-        max_age = timedelta(hours=24)
-        assert age.total_seconds() >= 0, "Observation should not be in the future"
-        assert age < max_age, f"Observation is too old: {age} (max {max_age})"
-
-    # Year sanity check (not epoch 1970)
-    assert current.last_updated.year > 2000, (
-        f"last_updated year {current.last_updated.year} is invalid (possibly epoch)"
-    )
-
     await asyncio.sleep(DELAY_BETWEEN_REQUESTS)
 
 
@@ -261,11 +241,6 @@ async def test_nws_parallel_fetch_returns_data(http_client):
     assert forecast is not None, "NWS should return forecast data"
     assert len(forecast.periods) > 0, "Forecast should have periods"
 
-    # Current conditions may be None (depends on station availability)
-    if current is not None:
-        assert current.last_updated is not None, "Current should have last_updated"
-        assert current.last_updated.year > 2000, "Current last_updated year should be valid"
-
     # Hourly forecast should typically be available
     if hourly is not None:
         assert len(hourly.periods) > 0, "Hourly forecast should have periods"
@@ -357,12 +332,6 @@ async def test_nws_parser_handles_observation_data():
     }
 
     current = parse_nws_current_conditions(sample_observation)
-
-    # Verify timestamp was parsed
-    assert current.last_updated is not None
-    assert isinstance(current.last_updated, datetime)
-    assert current.last_updated.tzinfo is not None, "NWS timestamp should be timezone-aware"
-    assert current.last_updated.year == 2025
 
     # Verify other fields were parsed
     assert current.temperature_c is not None

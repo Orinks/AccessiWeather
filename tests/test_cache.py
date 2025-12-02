@@ -157,13 +157,15 @@ class TestSerializationHelpers:
     """Test datetime and model serialization helpers."""
 
     def test_serialize_datetime_with_timezone(self):
-        """Should serialize datetime with timezone to ISO format."""
+        """Should serialize datetime with timezone to dict format."""
         dt = datetime(2025, 1, 1, 12, 0, 0, tzinfo=UTC)
         result = _serialize_datetime(dt)
 
         assert result is not None
-        assert "2025-01-01" in result
-        assert "12:00:00" in result
+        assert isinstance(result, dict)
+        assert "iso" in result
+        assert "2025-01-01" in result["iso"]
+        assert "12:00:00" in result["iso"]
 
     def test_serialize_datetime_without_timezone(self):
         """Should add UTC timezone when missing."""
@@ -171,7 +173,9 @@ class TestSerializationHelpers:
         result = _serialize_datetime(dt)
 
         assert result is not None
-        assert "2025-01-01" in result
+        assert isinstance(result, dict)
+        assert "iso" in result
+        assert "2025-01-01" in result["iso"]
 
     def test_serialize_datetime_none(self):
         """Should return None for None input."""
@@ -381,7 +385,7 @@ class TestWeatherDataCache:
         # Verify content
         with cache_files[0].open() as f:
             data = json.load(f)
-            assert data["schema_version"] == 3
+            assert data["schema_version"] == 5
             assert "saved_at" in data
             assert data["location"]["name"] == "Test City"
 
