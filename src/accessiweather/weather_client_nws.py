@@ -1034,15 +1034,37 @@ def parse_nws_current_conditions(
         try:
             last_updated = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
             # Convert UTC timestamp to location's timezone if available
-            if last_updated and location and location.timezone:
-                try:
-                    location_tz = ZoneInfo(location.timezone)
+            if last_updated and location:
+                location_tz = None
+                if location.timezone:
+                    try:
+                        location_tz = ZoneInfo(location.timezone)
+                    except Exception as e:  # noqa: BLE001
+                        logger.debug(f"Failed to load timezone '{location.timezone}': {e}")
+
+                # If no timezone set, try to infer from coordinates using timezonefinder
+                if not location_tz:
+                    try:
+                        from timezonefinder import TimezoneFinder
+
+                        tf = TimezoneFinder()
+                        tz_name = tf.timezone_at(lat=location.latitude, lng=location.longitude)
+                        if tz_name:
+                            location_tz = ZoneInfo(tz_name)
+                            logger.debug(
+                                f"Inferred timezone '{tz_name}' for {location.name} "
+                                f"from coordinates ({location.latitude}, {location.longitude})"
+                            )
+                    except ImportError:
+                        logger.debug("timezonefinder not available, keeping times in UTC")
+                    except Exception as e:  # noqa: BLE001
+                        logger.debug(f"Failed to infer timezone from coordinates: {e}")
+
+                # Apply timezone conversion if we have a timezone
+                if location_tz:
                     last_updated = last_updated.astimezone(location_tz)
-                except Exception as e:  # noqa: BLE001
-                    logger.debug(
-                        f"Failed to convert timestamp to location timezone "
-                        f"'{location.timezone}': {e}"
-                    )
+                else:
+                    logger.debug(f"No timezone available for {location.name}, keeping time in UTC")
         except ValueError:
             logger.debug(f"Failed to parse observation timestamp: {timestamp}")
 
