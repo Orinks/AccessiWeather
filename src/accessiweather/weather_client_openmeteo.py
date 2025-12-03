@@ -209,7 +209,8 @@ async def get_openmeteo_forecast(
             "longitude": location.longitude,
             "daily": (
                 "temperature_2m_max,temperature_2m_min,weather_code,"
-                "wind_speed_10m_max,wind_direction_10m_dominant"
+                "wind_speed_10m_max,wind_direction_10m_dominant,"
+                "precipitation_probability_max,snowfall_sum,uv_index_max"
             ),
             "temperature_unit": "fahrenheit",
             "wind_speed_unit": "mph",
@@ -249,7 +250,10 @@ async def get_openmeteo_hourly_forecast(
         params = {
             "latitude": location.latitude,
             "longitude": location.longitude,
-            "hourly": "temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,pressure_msl",
+            "hourly": (
+                "temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,pressure_msl,"
+                "precipitation_probability,snowfall,uv_index"
+            ),
             "temperature_unit": "fahrenheit",
             "wind_speed_unit": "mph",
             "timezone": "auto",
@@ -356,14 +360,23 @@ def parse_openmeteo_forecast(data: dict) -> Forecast:
     dates = daily.get("time", [])
     max_temps = daily.get("temperature_2m_max", [])
     weather_codes = daily.get("weather_code", [])
+    precip_probs = daily.get("precipitation_probability_max", [])
+    snowfall_sums = daily.get("snowfall_sum", [])
+    uv_indices = daily.get("uv_index_max", [])
 
     for i, date in enumerate(dates):
         if i < len(max_temps) and i < len(weather_codes):
+            precip_prob = precip_probs[i] if i < len(precip_probs) else None
+            snowfall = snowfall_sums[i] if i < len(snowfall_sums) else None
+            uv_index = uv_indices[i] if i < len(uv_indices) else None
             period = ForecastPeriod(
                 name=format_date_name(date, i),
                 temperature=max_temps[i],
                 temperature_unit="F",
                 short_forecast=weather_code_to_description(weather_codes[i]),
+                precipitation_probability=precip_prob,
+                snowfall=snowfall,
+                uv_index=uv_index,
             )
             periods.append(period)
 
@@ -382,6 +395,9 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
     wind_speeds = hourly.get("wind_speed_10m", [])
     wind_directions = hourly.get("wind_direction_10m", [])
     pressures = hourly.get("pressure_msl", [])
+    precip_probs = hourly.get("precipitation_probability", [])
+    snowfalls = hourly.get("snowfall", [])
+    uv_indices = hourly.get("uv_index", [])
 
     for i, time_str in enumerate(times):
         start_time = _parse_iso_datetime(time_str, utc_offset_seconds) or datetime.now()
@@ -392,6 +408,9 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
         wind_direction = wind_directions[i] if i < len(wind_directions) else None
         pressure_mb = pressures[i] if i < len(pressures) else None
         pressure_in = pressure_mb * 0.0295299830714 if pressure_mb is not None else None
+        precip_prob = precip_probs[i] if i < len(precip_probs) else None
+        snowfall = snowfalls[i] if i < len(snowfalls) else None
+        uv_index = uv_indices[i] if i < len(uv_indices) else None
 
         period = HourlyForecastPeriod(
             start_time=start_time or datetime.now(),
@@ -402,6 +421,9 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
             wind_direction=degrees_to_cardinal(wind_direction),
             pressure_mb=pressure_mb,
             pressure_in=pressure_in,
+            precipitation_probability=precip_prob,
+            snowfall=snowfall,
+            uv_index=uv_index,
         )
         periods.append(period)
 

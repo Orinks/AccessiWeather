@@ -103,6 +103,9 @@ class ForecastPeriod:
     icon: str | None = None
     start_time: datetime | None = None
     end_time: datetime | None = None
+    precipitation_probability: float | None = None
+    snowfall: float | None = None
+    uv_index: float | None = None
 
 
 @dataclass
@@ -131,6 +134,9 @@ class HourlyForecastPeriod:
     end_time: datetime | None = None
     pressure_mb: float | None = None
     pressure_in: float | None = None
+    precipitation_probability: float | None = None
+    snowfall: float | None = None
+    uv_index: float | None = None
 
     def has_data(self) -> bool:
         """Check if we have any meaningful hourly forecast data."""

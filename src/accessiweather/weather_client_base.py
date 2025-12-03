@@ -36,7 +36,7 @@ from .models import (
     WeatherAlerts,
     WeatherData,
 )
-from .services import EnvironmentalDataClient, MeteoAlarmClient
+from .services import EnvironmentalDataClient
 from .utils.retry import APITimeoutError, retry_with_backoff
 from .visual_crossing_client import VisualCrossingApiError, VisualCrossingClient
 
@@ -53,7 +53,6 @@ class WeatherClient:
         visual_crossing_api_key: str = "",
         settings: AppSettings | None = None,
         *,
-        meteoalarm_client: MeteoAlarmClient | None = None,
         environmental_client: EnvironmentalDataClient | None = None,
         offline_cache: WeatherDataCache | None = None,
     ):
@@ -67,12 +66,6 @@ class WeatherClient:
         self.settings = settings or AppSettings()
         self._test_mode = bool(os.environ.get("PYTEST_CURRENT_TEST"))
         self.alerts_enabled = bool(self.settings.enable_alerts)
-        self.international_alerts_enabled = bool(self.settings.international_alerts_enabled)
-        if self._test_mode and meteoalarm_client is None:
-            self.international_alerts_enabled = False
-        self.international_alerts_provider = (
-            (self.settings.international_alerts_provider or "meteosalarm").strip().lower()
-        )
         self.trend_insights_enabled = bool(self.settings.trend_insights_enabled)
         self.trend_hours = max(1, int(self.settings.trend_hours or 24))
         self.show_pressure_trend = bool(getattr(self.settings, "show_pressure_trend", True))
@@ -95,14 +88,6 @@ class WeatherClient:
             self.visual_crossing_client = VisualCrossingClient(visual_crossing_api_key, user_agent)
 
         # Secondary data providers
-        self.meteoalarm_client = meteoalarm_client
-        if (
-            self.international_alerts_enabled
-            and self.meteoalarm_client is None
-            and self.international_alerts_provider == "meteosalarm"
-        ):
-            self.meteoalarm_client = MeteoAlarmClient(user_agent=user_agent, timeout=self.timeout)
-
         self.environmental_client = environmental_client
         if (self.air_quality_enabled or self.pollen_enabled) and self.environmental_client is None:
             self.environmental_client = EnvironmentalDataClient(
@@ -653,9 +638,6 @@ class WeatherClient:
         tasks["environmental"] = asyncio.create_task(
             self._populate_environmental_metrics(weather_data, location)
         )
-        tasks["international_alerts"] = asyncio.create_task(
-            self._merge_international_alerts(weather_data, location)
-        )
         tasks["aviation"] = asyncio.create_task(
             self._enrich_with_aviation_data(weather_data, location)
         )
@@ -958,11 +940,6 @@ class WeatherClient:
         self, weather_data: WeatherData, location: Location
     ) -> None:
         await enrichment.populate_environmental_metrics(self, weather_data, location)
-
-    async def _merge_international_alerts(
-        self, weather_data: WeatherData, location: Location
-    ) -> None:
-        await enrichment.merge_international_alerts(self, weather_data, location)
 
     def _apply_trend_insights(self, weather_data: WeatherData) -> None:
         trends.apply_trend_insights(

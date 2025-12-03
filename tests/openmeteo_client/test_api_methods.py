@@ -36,10 +36,12 @@ def test_get_current_weather_success(openmeteo_client):
                     "wind_speed_10m",
                     "wind_direction_10m",
                     "wind_gusts_10m",
+                    "uv_index",
                 ],
                 "daily": [
                     "sunrise",
                     "sunset",
+                    "uv_index_max",
                 ],
                 "temperature_unit": "fahrenheit",
                 "wind_speed_unit": "mph",
