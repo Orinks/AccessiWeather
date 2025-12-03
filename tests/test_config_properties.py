@@ -25,7 +25,6 @@ temperature_units = sampled_from(["both", "fahrenheit", "celsius"])
 data_sources = sampled_from(["auto", "nws", "open-meteo", "visual_crossing"])
 update_channels = sampled_from(["stable", "beta", "dev"])
 time_display_modes = sampled_from(["local", "utc"])
-alert_providers = sampled_from(["meteosalarm", "meteoalarm", "none"])
 
 
 @composite
@@ -76,8 +75,6 @@ def valid_app_settings(draw) -> AppSettings:
         alert_freshness_window_minutes=draw(integers(min_value=1, max_value=60)),
         alert_max_notifications_per_hour=draw(integers(min_value=1, max_value=100)),
         alert_ignored_categories=draw(lists(text(min_size=1, max_size=20), max_size=5)),
-        international_alerts_enabled=draw(booleans()),
-        international_alerts_provider=draw(alert_providers),
         trend_insights_enabled=draw(booleans()),
         trend_hours=draw(integers(min_value=1, max_value=168)),
         show_dewpoint=draw(booleans()),
@@ -162,8 +159,6 @@ class TestAppSettingsRoundtrip:
             == settings_obj.alert_max_notifications_per_hour
         )
         assert restored.alert_ignored_categories == settings_obj.alert_ignored_categories
-        assert restored.international_alerts_enabled == settings_obj.international_alerts_enabled
-        assert restored.international_alerts_provider == settings_obj.international_alerts_provider
         assert restored.trend_insights_enabled == settings_obj.trend_insights_enabled
         assert restored.trend_hours == settings_obj.trend_hours
         assert restored.show_dewpoint == settings_obj.show_dewpoint

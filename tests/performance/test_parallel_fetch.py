@@ -56,7 +56,6 @@ async def test_enrichments_run_concurrently(mock_location):
     mock_vc_alerts = AsyncMock()
     mock_vc_moon = AsyncMock()
     mock_environmental = AsyncMock()
-    mock_intl_alerts = AsyncMock()
     mock_aviation = AsyncMock()
     mock_trends = MagicMock()  # Sync method
     mock_persist = MagicMock()  # Sync method
@@ -67,7 +66,6 @@ async def test_enrichments_run_concurrently(mock_location):
         patch.object(client, "_enrich_with_visual_crossing_alerts", mock_vc_alerts),
         patch.object(client, "_enrich_with_visual_crossing_moon_data", mock_vc_moon),
         patch.object(client, "_populate_environmental_metrics", mock_environmental),
-        patch.object(client, "_merge_international_alerts", mock_intl_alerts),
         patch.object(client, "_enrich_with_aviation_data", mock_aviation),
         patch.object(client, "_apply_trend_insights", mock_trends),
         patch.object(client, "_persist_weather_data", mock_persist),
@@ -76,7 +74,7 @@ async def test_enrichments_run_concurrently(mock_location):
         tasks = client._launch_enrichment_tasks(weather_data, mock_location)
 
         # Verify tasks were created
-        assert len(tasks) == 7  # 4 auto-mode + 3 post-processing
+        assert len(tasks) == 6  # auto-mode enrichments + post-processing
 
         # Await all enrichments
         await client._await_enrichments(tasks, weather_data)
@@ -87,7 +85,6 @@ async def test_enrichments_run_concurrently(mock_location):
     mock_vc_alerts.assert_called_once()
     mock_vc_moon.assert_called_once()
     mock_environmental.assert_called_once()
-    mock_intl_alerts.assert_called_once()
     mock_aviation.assert_called_once()
     mock_trends.assert_called_once()
     mock_persist.assert_called_once()
@@ -105,7 +102,6 @@ async def test_enrichment_errors_dont_crash_await(mock_location):
         patch.object(client, "_enrich_with_nws_discussion", return_value=None),
         patch.object(client, "_enrich_with_visual_crossing_alerts", return_value=None),
         patch.object(client, "_populate_environmental_metrics", return_value=None),
-        patch.object(client, "_merge_international_alerts", return_value=None),
         patch.object(client, "_enrich_with_aviation_data", return_value=None),
         patch.object(client, "_apply_trend_insights", return_value=None),
         patch.object(client, "_persist_weather_data", return_value=None),
