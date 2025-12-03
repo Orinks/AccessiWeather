@@ -570,12 +570,6 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         air_quality_notify_threshold=alerts["air_quality_notify_threshold"],
         # Settings without UI widgets (preserve from current_settings)
         github_backend_url="",
-        international_alerts_enabled=getattr(
-            current_settings, "international_alerts_enabled", True
-        ),
-        international_alerts_provider=getattr(
-            current_settings, "international_alerts_provider", "meteosalarm"
-        ),
         trend_insights_enabled=getattr(current_settings, "trend_insights_enabled", True),
         trend_hours=getattr(current_settings, "trend_hours", 24),
         air_quality_enabled=getattr(current_settings, "air_quality_enabled", True),

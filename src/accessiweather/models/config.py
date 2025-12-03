@@ -41,8 +41,6 @@ class AppSettings:
     alert_freshness_window_minutes: int = 15
     alert_max_notifications_per_hour: int = 10
     alert_ignored_categories: list[str] = field(default_factory=list)
-    international_alerts_enabled: bool = True
-    international_alerts_provider: str = "meteosalarm"
     trend_insights_enabled: bool = True
     trend_hours: int = 24
     show_dewpoint: bool = True
@@ -109,8 +107,6 @@ class AppSettings:
             "alert_freshness_window_minutes": self.alert_freshness_window_minutes,
             "alert_max_notifications_per_hour": self.alert_max_notifications_per_hour,
             "alert_ignored_categories": self.alert_ignored_categories,
-            "international_alerts_enabled": self.international_alerts_enabled,
-            "international_alerts_provider": self.international_alerts_provider,
             "trend_insights_enabled": self.trend_insights_enabled,
             "trend_hours": self.trend_hours,
             "show_dewpoint": self.show_dewpoint,
@@ -161,10 +157,6 @@ class AppSettings:
             alert_freshness_window_minutes=data.get("alert_freshness_window_minutes", 15),
             alert_max_notifications_per_hour=data.get("alert_max_notifications_per_hour", 10),
             alert_ignored_categories=data.get("alert_ignored_categories", []),
-            international_alerts_enabled=cls._as_bool(
-                data.get("international_alerts_enabled"), True
-            ),
-            international_alerts_provider=data.get("international_alerts_provider", "meteosalarm"),
             trend_insights_enabled=cls._as_bool(data.get("trend_insights_enabled"), True),
             trend_hours=data.get("trend_hours", 24),
             show_dewpoint=cls._as_bool(data.get("show_dewpoint"), True),
