@@ -238,7 +238,7 @@ class SoundPackManagerDialog:
             meta = {}
         # Create a simple modal window with inputs
         edit_win = toga.Window(title="Edit Sound Pack Metadata", size=(480, 300), resizable=False)
-        box = toga.Box(style=Pack(direction="column", padding=10))
+        box = toga.Box(style=Pack(direction="column", margin=10))
         name_input = toga.TextInput(
             value=meta.get("name", self.selected_pack), style=Pack(margin_bottom=8)
         )

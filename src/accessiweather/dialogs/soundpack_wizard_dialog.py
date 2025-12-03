@@ -74,7 +74,7 @@ class SoundPackWizardDialog:
             title="Create Sound Pack (Wizard)", size=(600, 500), resizable=False
         )
 
-        self.root_box = toga.Box(style=Pack(direction=COLUMN, padding=10))
+        self.root_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
         self.header_label = toga.Label(
             "Step 1 of 4: Pack Details", style=Pack(margin_bottom=10, font_weight="bold")
         )
@@ -277,7 +277,7 @@ class SoundPackWizardDialog:
         help_lbl = toga.Label("Choose the alert categories you want sounds for.")
         outer.add(help_lbl)
         scroll = toga.ScrollContainer(style=Pack(flex=1, margin_top=8))
-        inner = toga.Box(style=Pack(direction=COLUMN, padding=(4, 8)))
+        inner = toga.Box(style=Pack(direction=COLUMN, margin=(4, 8)))
 
         self.category_checks: list[tuple[str, toga.Switch]] = []
         first_switch = None
@@ -331,7 +331,7 @@ class SoundPackWizardDialog:
         )
         outer.add(help_lbl)
         scroll = toga.ScrollContainer(style=Pack(flex=1, margin_top=8))
-        inner = toga.Box(style=Pack(direction=COLUMN, padding=(4, 8)))
+        inner = toga.Box(style=Pack(direction=COLUMN, margin=(4, 8)))
 
         self.mapping_rows = []
         selected = self.state.selected_alert_keys or []
@@ -443,7 +443,7 @@ class SoundPackWizardDialog:
         outer.add(toga.Label(f"Sounds selected: {len(self.state.sound_mappings or {})}"))
 
         table_scroll = toga.ScrollContainer(style=Pack(flex=1, margin_top=8))
-        inner = toga.Box(style=Pack(direction=COLUMN, padding=(4, 8)))
+        inner = toga.Box(style=Pack(direction=COLUMN, margin=(4, 8)))
         for key in self.state.selected_alert_keys or []:
             from pathlib import Path as _Path
 

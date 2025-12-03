@@ -32,21 +32,21 @@ class TestWeatherApp(toga.App):
         self.main_window = toga.MainWindow(title="Weather Test")
 
         # Create UI
-        main_box = toga.Box(style=Pack(direction=COLUMN, padding=10))
+        main_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
 
         # Status label
-        self.status_label = toga.Label("Ready to test weather fetching...", style=Pack(padding=10))
+        self.status_label = toga.Label("Ready to test weather fetching...", style=Pack(margin=10))
         main_box.add(self.status_label)
 
         # Test button
         test_button = toga.Button(
-            "Test Weather Fetch", on_press=self.test_weather_fetch, style=Pack(padding=10)
+            "Test Weather Fetch", on_press=self.test_weather_fetch, style=Pack(margin=10)
         )
         main_box.add(test_button)
 
         # Results display
         self.results_display = toga.MultilineTextInput(
-            readonly=True, style=Pack(height=400, padding=10)
+            readonly=True, style=Pack(height=400, margin=10)
         )
         main_box.add(self.results_display)
 
