@@ -19,6 +19,7 @@ from .formatters import (
     format_period_wind,
     format_timestamp,
     get_temperature_precision,
+    get_uv_description,
     wrap_text,
 )
 
@@ -60,6 +61,24 @@ def build_forecast(
             if period.detailed_forecast and period.detailed_forecast != period.short_forecast
             else None
         )
+
+        # Format extended fields
+        precip_prob = (
+            f"{int(period.precipitation_probability)}%"
+            if period.precipitation_probability is not None
+            else None
+        )
+        snowfall_val = (
+            f"{period.snowfall:.1f} in"
+            if period.snowfall is not None and period.snowfall > 0
+            else None
+        )
+        uv_val = (
+            f"{period.uv_index:.0f} ({get_uv_description(period.uv_index)})"
+            if period.uv_index is not None
+            else None
+        )
+
         periods.append(
             ForecastPeriodPresentation(
                 name=period.name or "Unknown",
@@ -67,6 +86,9 @@ def build_forecast(
                 conditions=period.short_forecast,
                 wind=wind_value,
                 details=details,
+                precipitation_probability=precip_prob,
+                snowfall=snowfall_val,
+                uv_index=uv_val,
             )
         )
 
@@ -75,6 +97,12 @@ def build_forecast(
             fallback_lines.append(f"  Conditions: {period.short_forecast}")
         if wind_value:
             fallback_lines.append(f"  Wind: {wind_value}")
+        if precip_prob:
+            fallback_lines.append(f"  Precipitation: {precip_prob}")
+        if snowfall_val:
+            fallback_lines.append(f"  Snowfall: {snowfall_val}")
+        if uv_val:
+            fallback_lines.append(f"  UV Index: {uv_val}")
         if details:
             fallback_lines.append(f"  Details: {wrap_text(details, 80)}")
 
@@ -138,12 +166,32 @@ def build_hourly_summary(
             show_timezone=show_timezone_suffix,
         )
 
+        # Format extended fields
+        precip_prob = (
+            f"{int(period.precipitation_probability)}%"
+            if period.precipitation_probability is not None
+            else None
+        )
+        snowfall_val = (
+            f"{period.snowfall:.1f} in"
+            if period.snowfall is not None and period.snowfall > 0
+            else None
+        )
+        uv_val = (
+            f"{period.uv_index:.0f} ({get_uv_description(period.uv_index)})"
+            if period.uv_index is not None
+            else None
+        )
+
         summary.append(
             HourlyPeriodPresentation(
                 time=time_str,
                 temperature=temperature,
                 conditions=period.short_forecast,
                 wind=wind,
+                precipitation_probability=precip_prob,
+                snowfall=snowfall_val,
+                uv_index=uv_val,
             )
         )
     return summary
@@ -160,5 +208,11 @@ def render_hourly_fallback(hourly: Iterable[HourlyPeriodPresentation]) -> str:
             parts.append(period.conditions)
         if period.wind:
             parts.append(f"Wind {period.wind}")
+        if period.precipitation_probability:
+            parts.append(f"Precip {period.precipitation_probability}")
+        if period.snowfall:
+            parts.append(f"Snow {period.snowfall}")
+        if period.uv_index:
+            parts.append(f"UV {period.uv_index}")
         lines.append("  " + " - ".join(parts))
     return "\n".join(lines)
