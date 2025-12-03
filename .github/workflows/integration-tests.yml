@@ -27,10 +27,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
@@ -61,7 +61,7 @@ jobs:
 
       - name: Notify on failure (scheduled runs)
         if: failure() && github.event_name == 'schedule'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const issue_title = `🚨 Integration Tests Failed - ${new Date().toISOString().split('T')[0]}`;
@@ -106,7 +106,7 @@ jobs:
 
       - name: Close failure issues on success (scheduled runs)
         if: success() && github.event_name == 'schedule'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const issues = await github.rest.issues.listForRepo({

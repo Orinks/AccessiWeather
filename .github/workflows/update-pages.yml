@@ -285,7 +285,7 @@ jobs:
           local installer_url=$(echo "$release_json" | jq -r '
             [
               .assets[]?
-              | select((.name // "" | ascii_downcase) | contains("installer"))
+              | select((.name // "" | ascii_downcase) | (endswith(".msi") or contains("setup") or contains("installer")))
               | .browser_download_url
             ][0] // empty
           ')
@@ -391,46 +391,62 @@ jobs:
            fi
          done
 
-    - name: Fetch release notes and recent commits
+    - name: Fetch release notes
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
-        echo "📝 Fetching release notes and recent commits..."
+        echo "📝 Fetching release notes..."
 
-        # Install markdown converter
-        python -m pip install -q markdown
+        # Function to render markdown using GitHub's API (renders @mentions, #issues, etc.)
+        render_markdown() {
+          local markdown_text="$1"
+          curl -s -X POST \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/markdown" \
+            -d "$(jq -n --arg text "$markdown_text" --arg mode "gfm" --arg context "${{ github.repository }}" '{text: $text, mode: $mode, context: $context}')"
+        }
 
-        # Fetch latest release notes
-        echo "Fetching latest release notes..."
+        # Fetch latest stable release notes using /releases/latest endpoint
+        echo "Fetching latest stable release notes..."
         RELEASE_NOTES=""
-        IS_PRERELEASE="false"
-        if curl -s "https://api.github.com/repos/Orinks/AccessiWeather/releases/latest" | jq -e '.body' > /dev/null 2>&1; then
-          LATEST_RELEASE=$(curl -s "https://api.github.com/repos/Orinks/AccessiWeather/releases/latest")
-          RAW_NOTES=$(echo "$LATEST_RELEASE" | jq -r '.body // "No release notes available."')
-          IS_PRERELEASE=$(echo "$LATEST_RELEASE" | jq -r '.prerelease')
-          # Convert markdown to HTML using Python markdown library
-          RELEASE_NOTES=$(python3 -c 'import markdown; import sys; html = markdown.markdown(sys.stdin.read(), extensions=["nl2br", "tables"]); print(html)' <<< "$RAW_NOTES")
-          echo "✓ Fetched and converted release notes (${#RELEASE_NOTES} characters)"
-          echo "Is prerelease: $IS_PRERELEASE"
-        else
-          RELEASE_NOTES="<p>No release notes available. <a href=\"https://github.com/Orinks/AccessiWeather/releases/latest\">View on GitHub</a></p>"
-          echo "⚠ No release found, using fallback message"
-        fi
+        STABLE_RELEASE=$(curl -s -H "Authorization: token $GH_TOKEN" \
+          "https://api.github.com/repos/${{ github.repository }}/releases/latest" 2>/dev/null)
 
-        # Fetch recent commits from dev branch - but only for stable releases
-        # For prerelease/nightly builds, release notes already include full changelog via --generate-notes
-        echo "Fetching recent commits from dev branch..."
-        DEV_COMMITS=""
-        if [ "$IS_PRERELEASE" = "false" ]; then
-          echo "Latest release is stable, fetching separate recent commits..."
-          if curl -s "https://api.github.com/repos/Orinks/AccessiWeather/commits?sha=dev&per_page=3" | jq -e '.[0]' > /dev/null 2>&1; then
-            DEV_COMMITS=$(curl -s "https://api.github.com/repos/Orinks/AccessiWeather/commits?sha=dev&per_page=3" | jq -r '.[] | "<li>" + .commit.message + "</li>"' | tr '\n' ' ')
-            echo "✓ Fetched recent commits (${#DEV_COMMITS} characters)"
+        if echo "$STABLE_RELEASE" | jq -e '.tag_name' > /dev/null 2>&1; then
+          STABLE_TAG=$(echo "$STABLE_RELEASE" | jq -r '.tag_name')
+          RAW_NOTES=$(echo "$STABLE_RELEASE" | jq -r '.body // ""')
+          if [ -n "$RAW_NOTES" ] && [ "$RAW_NOTES" != "null" ]; then
+            RELEASE_NOTES=$(render_markdown "$RAW_NOTES")
+            echo "✓ Fetched and rendered stable release notes for $STABLE_TAG (${#RELEASE_NOTES} characters)"
           else
-            DEV_COMMITS="<li>Unable to fetch recent commits. <a href=\"https://github.com/Orinks/AccessiWeather/commits/dev\" target=\"_blank\">View on GitHub</a></li>"
-            echo "⚠ Failed to fetch commits, using fallback message"
+            RELEASE_NOTES="<p>No release notes available for $STABLE_TAG.</p>"
           fi
         else
-          echo "Latest release is prerelease/nightly, skipping separate commits (already in release notes)"
-          DEV_COMMITS=""
+          RELEASE_NOTES="<p>No stable release available. <a href=\"https://github.com/${{ github.repository }}/releases\">View releases on GitHub</a></p>"
+          echo "⚠ No stable release found"
+        fi
+
+        # Fetch latest pre-release notes for dev section
+        echo "Fetching latest pre-release notes..."
+        DEV_RELEASE_NOTES=""
+        PRERELEASE=$(curl -s -H "Authorization: token $GH_TOKEN" \
+          "https://api.github.com/repos/${{ github.repository }}/releases?per_page=10" | \
+          jq -c '[.[] | select(.prerelease == true and .draft == false)][0] // null')
+
+        if [ "$PRERELEASE" != "null" ] && [ -n "$PRERELEASE" ]; then
+          PRERELEASE_TAG=$(echo "$PRERELEASE" | jq -r '.tag_name')
+          RAW_DEV_NOTES=$(echo "$PRERELEASE" | jq -r '.body // ""')
+          if [ -n "$RAW_DEV_NOTES" ] && [ "$RAW_DEV_NOTES" != "null" ]; then
+            DEV_RELEASE_NOTES=$(render_markdown "$RAW_DEV_NOTES")
+            echo "✓ Fetched and rendered pre-release notes for $PRERELEASE_TAG (${#DEV_RELEASE_NOTES} characters)"
+          else
+            DEV_RELEASE_NOTES="<p>No release notes available for $PRERELEASE_TAG.</p>"
+          fi
+        else
+          DEV_RELEASE_NOTES="<p>No pre-release available. <a href=\"https://github.com/${{ github.repository }}/releases\">View releases on GitHub</a></p>"
+          echo "⚠ No pre-release found"
         fi
 
         # Save to environment for next step
@@ -438,12 +454,12 @@ jobs:
           echo "RELEASE_NOTES<<EOF"
           echo "$RELEASE_NOTES"
           echo "EOF"
-          echo "DEV_COMMITS<<EOF"
-          echo "$DEV_COMMITS"
+          echo "DEV_RELEASE_NOTES<<EOF"
+          echo "$DEV_RELEASE_NOTES"
           echo "EOF"
         } >> $GITHUB_ENV
 
-        echo "✓ Release notes and commits data prepared"
+        echo "✓ Release notes data prepared"
 
     - name: Generate HTML from template
       run: |
@@ -542,14 +558,12 @@ jobs:
         sed -i "s@{{DEV_HAS_RELEASE}}@$DEV_HAS_RELEASE@g" index.html
         sed -i "s@{{LAST_UPDATED}}@$LAST_UPDATED_ESCAPED@g" index.html
 
-        # Create temporary files with release notes and commits
+        # Create temporary files with release notes
         echo "$RELEASE_NOTES" > /tmp/release_notes.txt
-        echo "$DEV_COMMITS" > /tmp/dev_commits.txt
+        echo "$DEV_RELEASE_NOTES" > /tmp/dev_release_notes.txt
 
-        # Substitute release notes and commits using Python for cleaner logic
+        # Substitute release notes using Python for cleaner logic
         python3 << 'PYTHON_EOF'
-        import re
-
         # Read the files
         with open("index.html", "r") as f:
             html_content = f.read()
@@ -557,20 +571,14 @@ jobs:
         with open("/tmp/release_notes.txt", "r") as f:
             release_notes = f.read()
 
-        with open("/tmp/dev_commits.txt", "r") as f:
-            dev_commits = f.read()
+        with open("/tmp/dev_release_notes.txt", "r") as f:
+            dev_release_notes = f.read()
 
-        # Replace release notes
+        # Replace stable release notes
         html_content = html_content.replace("{{MAIN_RELEASE_NOTES}}", release_notes)
 
-        # Handle Recent Changes section: remove it entirely if dev_commits is empty
-        if not dev_commits.strip():
-            # Remove the entire Recent Commits Section block
-            pattern = r'<!-- Recent Commits Section -->.*?</div>\s*</div>\s*</section>'
-            html_content = re.sub(pattern, '', html_content, flags=re.DOTALL)
-        else:
-            # Otherwise, just replace the placeholder
-            html_content = html_content.replace("{{DEV_RECENT_COMMITS}}", dev_commits)
+        # Replace dev/pre-release notes
+        html_content = html_content.replace("{{DEV_RELEASE_NOTES}}", dev_release_notes)
 
         # Write back
         with open("index.html", "w") as f:
@@ -581,8 +589,8 @@ jobs:
         echo "✓ Generated index.html from template with build info:"
         echo "  Stable Release (main): ${{ steps.build-info.outputs.main_version }} (${{ steps.build-info.outputs.main_date }})"
         echo "  Development Build (dev): $DEV_VERSION ($DEV_DATE)"
-        echo "  Release notes: ${#RELEASE_NOTES} characters"
-        echo "  Recent commits: ${#DEV_COMMITS} characters"
+        echo "  Stable release notes: ${#RELEASE_NOTES} characters"
+        echo "  Dev release notes: ${#DEV_RELEASE_NOTES} characters"
         echo "  Last updated: $LAST_UPDATED"
         echo "  Triggered by: ${{ github.event_name }}"
         echo "  Source branch: $TARGET_BRANCH"

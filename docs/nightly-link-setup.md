@@ -21,12 +21,12 @@
 ### 4. **Download URLs Available**
 
 #### Dev Branch (Currently Working)
-- **Preview**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev?preview
-- **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-installer-0.9.3.zip
-- **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/build/dev/windows-build-0.9.3.zip
+- **Preview**: https://nightly.link/Orinks/AccessiWeather/workflows/briefcase-build/dev?preview
+- **Installer**: https://nightly.link/Orinks/AccessiWeather/workflows/briefcase-build/dev/windows-installer-0.9.3.zip
+- **Portable**: https://nightly.link/Orinks/AccessiWeather/workflows/briefcase-build/dev/windows-portable-0.9.3.zip
 
 #### Main Branch (No builds yet)
-- **Preview**: https://nightly.link/Orinks/AccessiWeather/workflows/build/main?preview
+- **Preview**: https://nightly.link/Orinks/AccessiWeather/workflows/briefcase-build/main?preview
 - **Will work once builds run on main branch**
 
 ## 🚀 Next Steps
