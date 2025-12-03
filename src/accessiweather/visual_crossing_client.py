@@ -98,7 +98,7 @@ class VisualCrossingClient:
                 "key": self.api_key,
                 "include": "days",
                 "unitGroup": "us",
-                "elements": "datetime,tempmax,tempmin,temp,conditions,description,windspeed,winddir,icon",
+                "elements": "datetime,tempmax,tempmin,temp,conditions,description,windspeed,winddir,icon,precipprob,snow,uvindex",
             }
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
@@ -136,7 +136,7 @@ class VisualCrossingClient:
                 "key": self.api_key,
                 "include": "hours",
                 "unitGroup": "us",
-                "elements": "datetime,temp,conditions,windspeed,winddir,icon",
+                "elements": "datetime,temp,conditions,windspeed,winddir,icon,precipprob,snow,uvindex",
             }
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
@@ -337,7 +337,7 @@ class VisualCrossingClient:
 
             period = ForecastPeriod(
                 name=name,
-                temperature=day_data.get("tempmax"),  # Use max temp for daily forecast
+                temperature=day_data.get("tempmax"),
                 temperature_unit="F",
                 short_forecast=day_data.get("conditions"),
                 detailed_forecast=day_data.get("description"),
@@ -346,6 +346,9 @@ class VisualCrossingClient:
                 else None,
                 wind_direction=self._degrees_to_cardinal(day_data.get("winddir")),
                 icon=day_data.get("icon"),
+                precipitation_probability=day_data.get("precipprob"),
+                snowfall=day_data.get("snow"),
+                uv_index=day_data.get("uvindex"),
             )
             periods.append(period)
 
@@ -385,6 +388,9 @@ class VisualCrossingClient:
                     else None,
                     wind_direction=self._degrees_to_cardinal(hour_data.get("winddir")),
                     icon=hour_data.get("icon"),
+                    precipitation_probability=hour_data.get("precipprob"),
+                    snowfall=hour_data.get("snow"),
+                    uv_index=hour_data.get("uvindex"),
                 )
                 periods.append(period)
 

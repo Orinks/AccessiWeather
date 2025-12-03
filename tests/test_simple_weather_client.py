@@ -12,8 +12,6 @@ from accessiweather.models import (
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
-    WeatherAlert,
-    WeatherAlerts,
     WeatherData,
 )
 from accessiweather.openmeteo_client import OpenMeteoApiClient
@@ -343,35 +341,6 @@ def test_weather_client_skips_pressure_trend_when_disabled():
     metrics = {trend.metric for trend in weather_data.trend_insights}
     assert "pressure" not in metrics
     assert "temperature" in metrics
-
-
-@pytest.mark.asyncio
-async def test_weather_client_merges_meteoalarm_alerts():
-    class DummyMeteoAlarm:
-        async def fetch_alerts(self, location):
-            return WeatherAlerts(
-                alerts=[
-                    WeatherAlert(
-                        title="Storm Warning",
-                        description="Severe storm expected",
-                        severity="Severe",
-                        urgency="Immediate",
-                        certainty="Likely",
-                        source="MeteoAlarm",
-                    )
-                ]
-            )
-
-    settings = AppSettings(international_alerts_enabled=True)
-    client = WeatherClient(settings=settings, meteoalarm_client=DummyMeteoAlarm())
-    location = Location(name="Paris", latitude=48.8566, longitude=2.3522)
-    weather_data = WeatherData(location=location, alerts=WeatherAlerts(alerts=[]))
-
-    await client._merge_international_alerts(weather_data, location)
-
-    assert weather_data.alerts is not None
-    assert weather_data.alerts.alerts
-    assert weather_data.alerts.alerts[0].source == "MeteoAlarm"
 
 
 @pytest.mark.asyncio

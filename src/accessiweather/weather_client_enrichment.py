@@ -364,33 +364,6 @@ async def populate_environmental_metrics(
         client._maybe_generate_air_quality_alert(weather_data, environmental)
 
 
-async def merge_international_alerts(
-    client: WeatherClient, weather_data: WeatherData, location: Location
-) -> None:
-    """Merge MeteoAlarm alerts into existing alert set for international locations."""
-    if not client.international_alerts_enabled:
-        return
-    if client._is_us_location(location):
-        return
-    if not client.meteoalarm_client:
-        return
-
-    try:
-        alerts = await client.meteoalarm_client.fetch_alerts(location)
-    except Exception as exc:  # noqa: BLE001
-        logger.debug("MeteoAlarm fetch failed: %s", exc)
-        return
-
-    if not alerts or not alerts.has_alerts():
-        return
-
-    existing = weather_data.alerts.alerts if weather_data.alerts else []
-    combined: dict[str, WeatherAlert] = {alert.get_unique_id(): alert for alert in existing}
-    for alert in alerts.alerts:
-        combined.setdefault(alert.get_unique_id(), alert)
-    weather_data.alerts = WeatherAlerts(alerts=list(combined.values()))
-
-
 async def enrich_with_visual_crossing_moon_data(
     client: WeatherClient, weather_data: WeatherData, location: Location
 ) -> None:
