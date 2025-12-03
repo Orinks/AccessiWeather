@@ -68,14 +68,14 @@ class AirQualityDialog:
         self.window.on_close = self._on_close
 
         main_box = toga.Box(
-            style=Pack(direction=COLUMN, padding=15),
+            style=Pack(direction=COLUMN, margin=15),
         )
 
         # Check if we have data
         if not self.environmental.has_data():
             no_data_label = toga.Label(
                 "Air quality data is not available for this location.",
-                style=Pack(font_size=14, padding=20),
+                style=Pack(font_size=14, margin=20),
             )
             no_data_label.aria_label = "Air quality data unavailable"
             no_data_label.aria_description = (
@@ -97,7 +97,7 @@ class AirQualityDialog:
 
         # Close button
         button_box = toga.Box(
-            style=Pack(direction=ROW, padding_top=15, alignment="center"),
+            style=Pack(direction=ROW, margin_top=15, align_items="center"),
         )
         self._close_button = toga.Button(
             "Close",
@@ -116,13 +116,13 @@ class AirQualityDialog:
     def _build_summary_section(self) -> toga.Box:
         """Build the current AQI summary section."""
         box = toga.Box(
-            style=Pack(direction=COLUMN, padding_bottom=15),
+            style=Pack(direction=COLUMN, margin_bottom=15),
         )
 
         # Section header
         header = toga.Label(
             "Current Air Quality",
-            style=Pack(font_weight="bold", font_size=14, padding_bottom=8),
+            style=Pack(font_weight="bold", font_size=14, margin_bottom=8),
         )
         header.aria_label = "Current air quality section"
         box.add(header)
@@ -143,7 +143,7 @@ class AirQualityDialog:
 
             aqi_label = toga.Label(
                 aqi_text,
-                style=Pack(font_size=13, padding_bottom=4),
+                style=Pack(font_size=13, margin_bottom=4),
             )
             aqi_label.aria_label = f"Air quality index: {aqi_text}"
             aqi_label.aria_description = "Current air quality index value and category"
@@ -155,7 +155,7 @@ class AirQualityDialog:
             pollutant_name = _get_pollutant_name(pollutant)
             pollutant_label = toga.Label(
                 f"Dominant pollutant: {pollutant_name}",
-                style=Pack(font_size=12, padding_bottom=4),
+                style=Pack(font_size=12, margin_bottom=4),
             )
             pollutant_label.aria_label = f"Dominant pollutant is {pollutant_name}"
             pollutant_label.aria_description = (
@@ -167,7 +167,7 @@ class AirQualityDialog:
         guidance = _AIR_QUALITY_GUIDANCE.get(category or "", _DEFAULT_GUIDANCE)
         guidance_label = toga.Label(
             f"Health guidance: {guidance}",
-            style=Pack(font_size=11, font_style="italic", padding_bottom=4),
+            style=Pack(font_size=11, font_style="italic", margin_bottom=4),
         )
         guidance_label.aria_label = f"Health guidance: {guidance}"
         guidance_label.aria_description = "Health recommendations based on current air quality"
@@ -197,13 +197,13 @@ class AirQualityDialog:
     def _build_hourly_section(self) -> toga.Box:
         """Build the hourly forecast section."""
         box = toga.Box(
-            style=Pack(direction=COLUMN, padding_bottom=15),
+            style=Pack(direction=COLUMN, margin_bottom=15),
         )
 
         # Section header
         header = toga.Label(
             "Hourly Forecast",
-            style=Pack(font_weight="bold", font_size=14, padding_bottom=8),
+            style=Pack(font_weight="bold", font_size=14, margin_bottom=8),
         )
         header.aria_label = "Hourly air quality forecast section"
         box.add(header)
@@ -238,13 +238,13 @@ class AirQualityDialog:
     def _build_pollutant_section(self) -> toga.Box:
         """Build the pollutant details section."""
         box = toga.Box(
-            style=Pack(direction=COLUMN, padding_bottom=10),
+            style=Pack(direction=COLUMN, margin_bottom=10),
         )
 
         # Section header
         header = toga.Label(
             "Current Pollutant Levels",
-            style=Pack(font_weight="bold", font_size=14, padding_bottom=8),
+            style=Pack(font_weight="bold", font_size=14, margin_bottom=8),
         )
         header.aria_label = "Current pollutant levels section"
         box.add(header)

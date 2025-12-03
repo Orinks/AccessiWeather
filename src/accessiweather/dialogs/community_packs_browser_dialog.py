@@ -118,11 +118,11 @@ class CommunityPacksBrowserDialog:
             resizable=True,
         )
 
-        root = toga.Box(style=Pack(direction=COLUMN, padding=12, flex=1))
+        root = toga.Box(style=Pack(direction=COLUMN, margin=12, flex=1))
 
         # Header with search + refresh
         header = toga.Box(style=Pack(direction=ROW, margin_bottom=8))
-        hint_label = toga.Label("Filter packs:", style=Pack(margin_right=6, alignment="center"))
+        hint_label = toga.Label("Filter packs:", style=Pack(margin_right=6, align_items="center"))
         header.add(hint_label)
         self.search_input = toga.TextInput(
             placeholder="Search by name or author",
@@ -182,7 +182,7 @@ class CommunityPacksBrowserDialog:
         content.add(list_panel)
 
         # Details panel
-        details_panel = toga.Box(style=Pack(direction=COLUMN, flex=1.4, padding=10))
+        details_panel = toga.Box(style=Pack(direction=COLUMN, flex=1.4, margin=10))
         details_panel.add(
             toga.Label("Pack Details", style=Pack(font_weight="bold", margin_bottom=6))
         )
@@ -193,7 +193,7 @@ class CommunityPacksBrowserDialog:
         self.details_repo_label = toga.Label("", style=Pack(margin_bottom=6))
         self.details_description_label = toga.Label(
             "",
-            style=Pack(flex=1, padding_top=6),
+            style=Pack(flex=1, margin_top=6),
         )
         details_panel.add(self.details_name_label)
         details_panel.add(self.details_author_label)

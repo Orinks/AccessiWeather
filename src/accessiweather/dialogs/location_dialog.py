@@ -300,7 +300,7 @@ class AddLocationDialog:
     async def _show_coordinates_dialog(self):
         """Show a dialog for manual coordinate entry."""
         # Create dialog content
-        dialog_box = toga.Box(style=Pack(direction=COLUMN, padding=15))
+        dialog_box = toga.Box(style=Pack(direction=COLUMN, margin=15))
 
         # Instructions
         instructions = toga.Label(

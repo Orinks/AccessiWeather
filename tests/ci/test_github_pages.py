@@ -44,7 +44,7 @@ def template_variables():
         "DEV_PORTABLE_URL",
         "DEV_MACOS_INSTALLER_URL",
         "DEV_HAS_RELEASE",
-        "DEV_RECENT_COMMITS",
+        "DEV_RELEASE_NOTES",
         "DEV_RELEASE_URL",
         "LAST_UPDATED",
     ]
@@ -204,14 +204,14 @@ class TestReleaseNotesSection:
         assert "Release Notes" in template_content
         assert "{{MAIN_RELEASE_NOTES}}" in template_content
 
-    def test_dev_recent_changes_section_exists(self, template_content):
-        """Verify dev/nightly recent changes section exists."""
-        assert "Recent Changes" in template_content
-        assert "{{DEV_RECENT_COMMITS}}" in template_content
+    def test_dev_release_notes_section_exists(self, template_content):
+        """Verify dev/pre-release notes section exists."""
+        assert "Release Notes" in template_content
+        assert "{{DEV_RELEASE_NOTES}}" in template_content
 
-    def test_nightly_release_notes_section_comment(self, template_content):
-        """Verify nightly release notes section has proper HTML comment."""
-        assert "<!-- Nightly Release Notes Section -->" in template_content
+    def test_prerelease_notes_section_comment(self, template_content):
+        """Verify pre-release notes section has proper HTML comment."""
+        assert "<!-- Pre-release Notes Section -->" in template_content
 
     def test_release_notes_content_styling_exists(self, template_content):
         """Verify release notes content has proper CSS styling."""

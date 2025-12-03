@@ -52,7 +52,7 @@ class AviationDialog:
         self.window = toga.Window(title="Aviation Weather", size=(900, 620))
         self.window.on_close = self._on_close
 
-        main_box = toga.Box(style=Pack(direction=COLUMN, padding=15))
+        main_box = toga.Box(style=Pack(direction=COLUMN, margin=15))
 
         header = toga.Label(
             "Fetch decoded aviation weather by entering a four-letter ICAO airport code.",
@@ -60,7 +60,7 @@ class AviationDialog:
         )
         main_box.add(header)
 
-        input_row = toga.Box(style=Pack(direction=ROW, alignment="center", margin_bottom=10))
+        input_row = toga.Box(style=Pack(direction=ROW, align_items="center", margin_bottom=10))
         self.station_input = toga.TextInput(
             placeholder="e.g., KJFK",
             style=Pack(width=120, margin_right=10),

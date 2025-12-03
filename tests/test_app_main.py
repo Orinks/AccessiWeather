@@ -7,6 +7,13 @@ import pytest
 from accessiweather.app import AccessiWeatherApp, main
 
 
+def _make_coro_mock():
+    """Create a mock that returns a completed coroutine to avoid unawaited warnings."""
+    mock = Mock()
+    mock.return_value = None
+    return mock
+
+
 class TestAccessiWeatherAppStartup:
     """Test AccessiWeatherApp startup and initialization."""
 
@@ -25,7 +32,9 @@ class TestAccessiWeatherAppStartup:
             patch("asyncio.create_task") as mock_create_task,
         ):
             mock_helpers.play_startup_sound = AsyncMock()
-            mock_bg_tasks.start_background_updates = AsyncMock()
+            # Use a regular Mock for start_background_updates since it's passed to
+            # create_task (which is mocked) - AsyncMock would create unawaited coroutines
+            mock_bg_tasks.start_background_updates = _make_coro_mock()
             mock_task = Mock()
             mock_task.add_done_callback = Mock()
             mock_create_task.return_value = mock_task
@@ -52,7 +61,7 @@ class TestAccessiWeatherAppStartup:
             patch("asyncio.create_task") as mock_create_task,
         ):
             mock_helpers.play_startup_sound = AsyncMock()
-            mock_bg_tasks.start_background_updates = AsyncMock()
+            mock_bg_tasks.start_background_updates = _make_coro_mock()
             mock_task = Mock()
             mock_task.add_done_callback = Mock()
             mock_create_task.return_value = mock_task
@@ -79,7 +88,7 @@ class TestAccessiWeatherAppStartup:
             patch("asyncio.create_task") as mock_create_task,
         ):
             mock_helpers.play_startup_sound = AsyncMock()
-            mock_bg_tasks.start_background_updates = AsyncMock()
+            mock_bg_tasks.start_background_updates = _make_coro_mock()
             mock_task = Mock()
             mock_task.add_done_callback = Mock()
             mock_create_task.return_value = mock_task
