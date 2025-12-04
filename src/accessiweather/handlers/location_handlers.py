@@ -9,6 +9,7 @@ import toga
 
 from .. import app_helpers
 from ..dialogs import AddLocationDialog
+from ..ui_builder import update_tray_icon_tooltip
 from .weather_handlers import refresh_weather_data
 
 if TYPE_CHECKING:  # pragma: no cover - circular import guard
@@ -27,6 +28,7 @@ async def on_location_changed(app: AccessiWeatherApp, widget: toga.Selection) ->
 
     try:
         app.config_manager.set_current_location(widget.value)
+        update_tray_icon_tooltip(app, None)
         await refresh_weather_data(app)
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Failed to handle location change: %s", exc)

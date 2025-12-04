@@ -16,6 +16,7 @@ from . import app_helpers, event_handlers
 if TYPE_CHECKING:  # pragma: no cover - circular import guard
     from .app import AccessiWeatherApp
     from .display.weather_presenter import ForecastPresentation
+    from .models import WeatherData
 
 
 logger = logging.getLogger(__name__)
@@ -188,23 +189,32 @@ def initialize_system_tray(app: AccessiWeatherApp) -> bool:
             app.system_tray_available = False
             return False
 
-        # Create the status icon with meaningful tooltip for Windows 11
-        # Windows 11 shows tooltip text when hovering over tray icons
+        initial_text = "AccessiWeather"
+        try:
+            settings = app.config_manager.get_settings()
+            if settings.taskbar_icon_text_enabled and hasattr(app, "current_weather_data"):
+                weather_data = getattr(app, "current_weather_data", None)
+                if weather_data:
+                    pass
+        except Exception:
+            pass
+
         app.status_icon = toga.MenuStatusIcon(
             id="accessiweather_main",
             icon=app.icon,
-            text="AccessiWeather - Weather at a glance",
+            text=initial_text,
         )
 
         create_system_tray_commands(app)
 
         app.status_icons.add(app.status_icon)
 
-        # Track that system tray is available
         app.system_tray_available = True
 
-        # Track window visibility state for consistent behavior
         app.window_visible = True
+
+        if hasattr(app, "current_weather_data") and app.current_weather_data:
+            update_tray_icon_tooltip(app, app.current_weather_data)
 
         logger.info("System tray initialized successfully")
         return True
@@ -248,6 +258,95 @@ def create_system_tray_commands(app: AccessiWeatherApp) -> None:
         logger.info("System tray commands created")
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Failed to create system tray commands: %s", exc)
+
+
+def _set_status_icon_text(status_icon: toga.MenuStatusIcon, text: str) -> bool:
+    """
+    Set the text/tooltip on a status icon, working around Toga's lack of a text setter.
+
+    Toga's StatusIcon.text property is read-only after creation. This function
+    directly accesses the native control to update the tooltip text.
+
+    Supported platforms:
+    - Windows: Sets NotifyIcon.Text
+    - macOS: Sets NSStatusItem.button.toolTip
+
+    Args:
+        status_icon: The Toga MenuStatusIcon instance
+        text: The text to set as the tooltip
+
+    Returns:
+        True if successfully set, False otherwise
+
+    """
+    try:
+        impl = getattr(status_icon, "_impl", None)
+        if impl is None:
+            return False
+        native = getattr(impl, "native", None)
+        if native is None:
+            return False
+        type_name = type(native).__name__
+
+        if "Mock" in type_name:
+            return False
+
+        if "NotifyIcon" in type_name:
+            native.Text = text
+        elif hasattr(native, "button") and hasattr(native.button, "toolTip"):
+            native.button.toolTip = text
+        else:
+            return False
+
+        if hasattr(status_icon, "_text"):
+            status_icon._text = text
+        return True
+    except Exception as exc:
+        logger.debug("Failed to set native status icon text: %s", exc)
+    return False
+
+
+def update_tray_icon_tooltip(
+    app: AccessiWeatherApp, weather_data: WeatherData | None = None
+) -> None:
+    """
+    Update the system tray icon tooltip with weather information.
+
+    Args:
+        app: The AccessiWeather application instance
+        weather_data: Optional weather data to format into tooltip. If None, uses default text.
+
+    """
+    if not getattr(app, "status_icon", None):
+        return
+
+    if not getattr(app, "system_tray_available", False):
+        return
+
+    try:
+        settings = app.config_manager.get_settings()
+
+        from .taskbar_icon_updater import TaskbarIconUpdater
+
+        updater = TaskbarIconUpdater(
+            text_enabled=settings.taskbar_icon_text_enabled,
+            dynamic_enabled=settings.taskbar_icon_dynamic_enabled,
+            format_string=settings.taskbar_icon_text_format,
+            temperature_unit=settings.temperature_unit,
+        )
+
+        location = app.config_manager.get_current_location()
+        location_name = location.name if location else None
+
+        tooltip_text = updater.format_tooltip(weather_data, location_name)
+
+        if not _set_status_icon_text(app.status_icon, tooltip_text):
+            app.status_icon.text = tooltip_text
+
+    except Exception as exc:
+        logger.debug("Failed to update tray icon tooltip: %s", exc)
+        with contextlib.suppress(Exception):
+            _set_status_icon_text(app.status_icon, "AccessiWeather")
 
 
 def create_main_ui(app: AccessiWeatherApp) -> None:

@@ -59,6 +59,10 @@ class AppSettings:
     # HTML rendering options - when True, use WebView with HTML; when False, use MultilineTextInput
     html_render_current_conditions: bool = False
     html_render_forecast: bool = False
+    # Taskbar icon text options
+    taskbar_icon_text_enabled: bool = False
+    taskbar_icon_dynamic_enabled: bool = True
+    taskbar_icon_text_format: str = "{temp} {condition}"
 
     @staticmethod
     def _as_bool(value, default: bool) -> bool:
@@ -124,6 +128,9 @@ class AppSettings:
             "show_timezone_suffix": self.show_timezone_suffix,
             "html_render_current_conditions": self.html_render_current_conditions,
             "html_render_forecast": self.html_render_forecast,
+            "taskbar_icon_text_enabled": self.taskbar_icon_text_enabled,
+            "taskbar_icon_dynamic_enabled": self.taskbar_icon_dynamic_enabled,
+            "taskbar_icon_text_format": self.taskbar_icon_text_format,
         }
 
     @classmethod
@@ -176,6 +183,11 @@ class AppSettings:
                 data.get("html_render_current_conditions"), False
             ),
             html_render_forecast=cls._as_bool(data.get("html_render_forecast"), False),
+            taskbar_icon_text_enabled=cls._as_bool(data.get("taskbar_icon_text_enabled"), False),
+            taskbar_icon_dynamic_enabled=cls._as_bool(
+                data.get("taskbar_icon_dynamic_enabled"), True
+            ),
+            taskbar_icon_text_format=data.get("taskbar_icon_text_format", "{temp} {condition}"),
         )
 
     def to_alert_settings(self):

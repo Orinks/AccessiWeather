@@ -13,6 +13,15 @@ from travertino.constants import COLUMN, ROW
 logger = logging.getLogger(__name__)
 
 
+def _on_taskbar_icon_enabled_changed(dialog, widget):
+    """Handle taskbar icon text enabled switch change."""
+    enabled = getattr(widget, "value", False)
+    if getattr(dialog, "taskbar_icon_dynamic_enabled_switch", None) is not None:
+        dialog.taskbar_icon_dynamic_enabled_switch.enabled = enabled
+    if getattr(dialog, "taskbar_icon_text_format_input", None) is not None:
+        dialog.taskbar_icon_text_format_input.enabled = enabled
+
+
 def create_general_tab(dialog):
     """Build the General tab for the provided settings dialog."""
     general_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
@@ -293,6 +302,85 @@ def create_display_tab(dialog):
         toga.Label(
             "Note: Changes to rendering settings require an app restart.",
             style=Pack(margin_top=5, margin_bottom=10, font_size=9, font_style="italic"),
+        )
+    )
+
+    # Taskbar Icon Text Settings
+    display_box.add(
+        toga.Label(
+            "Taskbar Icon Text:",
+            style=Pack(margin_top=10, margin_bottom=8, font_weight="bold"),
+        )
+    )
+    display_box.add(
+        toga.Label(
+            "Customize the text shown in the system tray icon tooltip.",
+            style=Pack(margin_bottom=10, font_size=9),
+        )
+    )
+
+    dialog.taskbar_icon_text_enabled_switch = toga.Switch(
+        "Enable taskbar icon text",
+        value=getattr(dialog.current_settings, "taskbar_icon_text_enabled", False),
+        style=Pack(margin_bottom=8),
+        id="taskbar_icon_text_enabled_switch",
+        on_change=lambda w: _on_taskbar_icon_enabled_changed(dialog, w),
+    )
+    dialog.taskbar_icon_text_enabled_switch.aria_label = "Toggle taskbar icon text"
+    dialog.taskbar_icon_text_enabled_switch.aria_description = (
+        "Enable to show weather information in the system tray icon tooltip."
+    )
+    display_box.add(dialog.taskbar_icon_text_enabled_switch)
+
+    dialog.taskbar_icon_dynamic_enabled_switch = toga.Switch(
+        "Enable dynamic format switching",
+        value=getattr(dialog.current_settings, "taskbar_icon_dynamic_enabled", True),
+        style=Pack(margin_bottom=8),
+        id="taskbar_icon_dynamic_enabled_switch",
+    )
+    dialog.taskbar_icon_dynamic_enabled_switch.aria_label = "Toggle dynamic format switching"
+    dialog.taskbar_icon_dynamic_enabled_switch.aria_description = (
+        "Enable to automatically adjust the format based on available weather data."
+    )
+    dialog.taskbar_icon_dynamic_enabled_switch.enabled = getattr(
+        dialog.current_settings, "taskbar_icon_text_enabled", False
+    )
+    display_box.add(dialog.taskbar_icon_dynamic_enabled_switch)
+
+    display_box.add(toga.Label("Custom format string:", style=Pack(margin_bottom=5)))
+    dialog.taskbar_icon_text_format_input = toga.TextInput(
+        value=getattr(dialog.current_settings, "taskbar_icon_text_format", "{temp} {condition}"),
+        placeholder="{temp} {condition}",
+        style=Pack(margin_bottom=5, width=300),
+        id="taskbar_icon_text_format_input",
+    )
+    dialog.taskbar_icon_text_format_input.aria_label = "Taskbar icon format string"
+    dialog.taskbar_icon_text_format_input.aria_description = (
+        "Enter a custom format string for the taskbar icon tooltip. "
+        "Use placeholders like {temp}, {condition}, {humidity}, etc."
+    )
+    dialog.taskbar_icon_text_format_input.enabled = getattr(
+        dialog.current_settings, "taskbar_icon_text_enabled", False
+    )
+    display_box.add(dialog.taskbar_icon_text_format_input)
+
+    dialog.taskbar_format_validation_label = toga.Label(
+        "",
+        style=Pack(margin_bottom=5, font_size=9),
+    )
+    display_box.add(dialog.taskbar_format_validation_label)
+
+    display_box.add(
+        toga.Label(
+            "Available variables: {temp}, {condition}, {humidity}, {wind}, {wind_speed}, "
+            "{wind_dir}, {feels_like}, {pressure}, {uv}, {visibility}, {precip}, {precip_chance}",
+            style=Pack(margin_bottom=5, font_size=9, font_style="italic"),
+        )
+    )
+    display_box.add(
+        toga.Label(
+            "Example: '{temp} {condition}' shows '72F Partly Cloudy'",
+            style=Pack(margin_bottom=10, font_size=9, font_style="italic"),
         )
     )
 
