@@ -189,7 +189,7 @@ def initialize_system_tray(app: AccessiWeatherApp) -> bool:
             app.system_tray_available = False
             return False
 
-        initial_text = "AccessiWeather - Weather at a glance"
+        initial_text = "AccessiWeather"
         try:
             settings = app.config_manager.get_settings()
             if settings.taskbar_icon_text_enabled and hasattr(app, "current_weather_data"):
@@ -260,6 +260,52 @@ def create_system_tray_commands(app: AccessiWeatherApp) -> None:
         logger.error("Failed to create system tray commands: %s", exc)
 
 
+def _set_status_icon_text(status_icon: toga.MenuStatusIcon, text: str) -> bool:
+    """
+    Set the text/tooltip on a status icon, working around Toga's lack of a text setter.
+
+    Toga's StatusIcon.text property is read-only after creation. This function
+    directly accesses the native control to update the tooltip text.
+
+    Supported platforms:
+    - Windows: Sets NotifyIcon.Text
+    - macOS: Sets NSStatusItem.button.toolTip
+
+    Args:
+        status_icon: The Toga MenuStatusIcon instance
+        text: The text to set as the tooltip
+
+    Returns:
+        True if successfully set, False otherwise
+
+    """
+    try:
+        impl = getattr(status_icon, "_impl", None)
+        if impl is None:
+            return False
+        native = getattr(impl, "native", None)
+        if native is None:
+            return False
+        type_name = type(native).__name__
+
+        if "Mock" in type_name:
+            return False
+
+        if "NotifyIcon" in type_name:
+            native.Text = text
+        elif hasattr(native, "button") and hasattr(native.button, "toolTip"):
+            native.button.toolTip = text
+        else:
+            return False
+
+        if hasattr(status_icon, "_text"):
+            status_icon._text = text
+        return True
+    except Exception as exc:
+        logger.debug("Failed to set native status icon text: %s", exc)
+    return False
+
+
 def update_tray_icon_tooltip(
     app: AccessiWeatherApp, weather_data: WeatherData | None = None
 ) -> None:
@@ -293,12 +339,14 @@ def update_tray_icon_tooltip(
         location_name = location.name if location else None
 
         tooltip_text = updater.format_tooltip(weather_data, location_name)
-        app.status_icon.text = tooltip_text
+
+        if not _set_status_icon_text(app.status_icon, tooltip_text):
+            app.status_icon.text = tooltip_text
 
     except Exception as exc:
         logger.debug("Failed to update tray icon tooltip: %s", exc)
         with contextlib.suppress(Exception):
-            app.status_icon.text = "AccessiWeather - Weather at a glance"
+            _set_status_icon_text(app.status_icon, "AccessiWeather")
 
 
 def create_main_ui(app: AccessiWeatherApp) -> None:

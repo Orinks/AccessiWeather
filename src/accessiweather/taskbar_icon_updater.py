@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_TOOLTIP_TEXT = "AccessiWeather - Weather at a glance"
+DEFAULT_TOOLTIP_TEXT = "AccessiWeather"
 TOOLTIP_MAX_LENGTH = 127
 PLACEHOLDER_NA = "N/A"
 
@@ -172,9 +172,9 @@ class TaskbarIconUpdater:
         if temp_f is None and temp_c is None:
             return PLACEHOLDER_NA
 
-        if self.temperature_unit == "fahrenheit":
+        if self.temperature_unit in ("fahrenheit", "f"):
             return self._format_temp_value(temp_f, "F")
-        if self.temperature_unit == "celsius":
+        if self.temperature_unit in ("celsius", "c"):
             if temp_c is not None:
                 return self._format_temp_value(temp_c, "C")
             return PLACEHOLDER_NA
@@ -194,9 +194,9 @@ class TaskbarIconUpdater:
         if feels_f is None and feels_c is None:
             return PLACEHOLDER_NA
 
-        if self.temperature_unit == "fahrenheit":
+        if self.temperature_unit in ("fahrenheit", "f"):
             return self._format_temp_value(feels_f, "F")
-        if self.temperature_unit == "celsius":
+        if self.temperature_unit in ("celsius", "c"):
             if feels_c is not None:
                 return self._format_temp_value(feels_c, "C")
             return PLACEHOLDER_NA
