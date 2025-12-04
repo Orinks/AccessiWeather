@@ -279,48 +279,21 @@ def update_tray_icon_tooltip(
 
     try:
         settings = app.config_manager.get_settings()
-        if not settings.taskbar_icon_text_enabled:
-            app.status_icon.text = "AccessiWeather - Weather at a glance"
-            return
 
-        if not settings.taskbar_icon_dynamic_enabled or weather_data is None:
-            app.status_icon.text = "AccessiWeather - Weather at a glance"
-            return
+        from .taskbar_icon_updater import TaskbarIconUpdater
 
-        current = weather_data.current_conditions
-        if not current or not current.has_data():
-            app.status_icon.text = "AccessiWeather - Weather at a glance"
-            return
+        updater = TaskbarIconUpdater(
+            text_enabled=settings.taskbar_icon_text_enabled,
+            dynamic_enabled=settings.taskbar_icon_dynamic_enabled,
+            format_string=settings.taskbar_icon_text_format,
+            temperature_unit=settings.temperature_unit,
+        )
 
-        temp_str = ""
-        if current.temperature_f is not None:
-            temp_unit = settings.temperature_unit
-            if temp_unit == "fahrenheit":
-                temp_str = f"{current.temperature_f:.0f}F"
-            elif temp_unit == "celsius" and current.temperature_c is not None:
-                temp_str = f"{current.temperature_c:.0f}C"
-            elif temp_unit == "both" and current.temperature_c is not None:
-                temp_str = f"{current.temperature_f:.0f}F/{current.temperature_c:.0f}C"
-            else:
-                temp_str = f"{current.temperature_f:.0f}F"
-        elif current.temperature_c is not None:
-            temp_str = f"{current.temperature_c:.0f}C"
+        location = app.config_manager.get_current_location()
+        location_name = location.name if location else None
 
-        condition_str = current.condition or ""
-
-        format_str = settings.taskbar_icon_text_format
-        tooltip_text = format_str.format(
-            temp=temp_str,
-            condition=condition_str,
-        ).strip()
-
-        if tooltip_text:
-            location = app.config_manager.get_current_location()
-            if location:
-                tooltip_text = f"{location.name}: {tooltip_text}"
-            app.status_icon.text = tooltip_text
-        else:
-            app.status_icon.text = "AccessiWeather - Weather at a glance"
+        tooltip_text = updater.format_tooltip(weather_data, location_name)
+        app.status_icon.text = tooltip_text
 
     except Exception as exc:
         logger.debug("Failed to update tray icon tooltip: %s", exc)
