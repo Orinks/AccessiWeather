@@ -84,7 +84,7 @@ class OpenMeteoApiClient:
 
         Args:
         ----
-            endpoint: API endpoint (e.g., "forecast")
+            endpoint: API endpoint (e.g., "forecast", "archive")
             params: Query parameters
 
         Returns:
@@ -97,7 +97,11 @@ class OpenMeteoApiClient:
             OpenMeteoNetworkError: If there's a network error
 
         """
-        url = f"{self.BASE_URL}/{endpoint}"
+        # Use archive API base URL for archive endpoint
+        if endpoint == "archive":
+            url = f"https://archive-api.open-meteo.com/v1/{endpoint}"
+        else:
+            url = f"{self.BASE_URL}/{endpoint}"
 
         for attempt in range(self.max_retries + 1):
             try:
