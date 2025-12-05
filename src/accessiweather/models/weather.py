@@ -307,6 +307,7 @@ class WeatherData:
     current: CurrentConditions | None = None
     forecast: Forecast | None = None
     hourly_forecast: HourlyForecast | None = None
+    daily_history: list[ForecastPeriod] = field(default_factory=list)
     discussion: str | None = None
     alerts: WeatherAlerts | None = None
     environmental: EnvironmentalConditions | None = None
