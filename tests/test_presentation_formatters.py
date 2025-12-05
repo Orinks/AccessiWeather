@@ -213,3 +213,175 @@ def test_format_patterns(time_mode, use_12hour, show_tz, expected_pattern):
     if time_mode == "both":
         assert "(" in result
         assert "UTC)" in result
+
+
+class TestFormatTemperatureWithFeelsLike:
+    """Test the format_temperature_with_feels_like function."""
+
+    def test_no_feels_like_data(self):
+        """Test when feels-like data is not available."""
+        from accessiweather.display.presentation.formatters import (
+            format_temperature_with_feels_like,
+        )
+        from accessiweather.models import CurrentConditions
+        from accessiweather.utils import TemperatureUnit
+
+        current = CurrentConditions(
+            temperature_f=75.0,
+            temperature_c=23.9,
+            condition="Sunny",
+            humidity=50,
+        )
+        result, reason = format_temperature_with_feels_like(current, TemperatureUnit.FAHRENHEIT, 0)
+        assert result == "75°F"
+        assert reason is None
+
+    def test_feels_like_below_threshold(self):
+        """Test when feels-like difference is below threshold."""
+        from accessiweather.display.presentation.formatters import (
+            format_temperature_with_feels_like,
+        )
+        from accessiweather.models import CurrentConditions
+        from accessiweather.utils import TemperatureUnit
+
+        current = CurrentConditions(
+            temperature_f=75.0,
+            temperature_c=23.9,
+            feels_like_f=76.0,  # Only 1°F difference
+            feels_like_c=24.4,
+            condition="Sunny",
+            humidity=50,
+        )
+        result, reason = format_temperature_with_feels_like(current, TemperatureUnit.FAHRENHEIT, 0)
+        assert result == "75°F"
+        assert reason is None
+
+    def test_feels_warmer_due_to_humidity(self):
+        """Test when it feels warmer due to high humidity."""
+        from accessiweather.display.presentation.formatters import (
+            format_temperature_with_feels_like,
+        )
+        from accessiweather.models import CurrentConditions
+        from accessiweather.utils import TemperatureUnit
+
+        current = CurrentConditions(
+            temperature_f=85.0,
+            temperature_c=29.4,
+            feels_like_f=95.0,  # 10°F warmer
+            feels_like_c=35.0,
+            condition="Sunny",
+            humidity=80,  # High humidity
+        )
+        result, reason = format_temperature_with_feels_like(current, TemperatureUnit.FAHRENHEIT, 0)
+        assert "85°F" in result
+        assert "feels like 95°F" in result
+        assert reason == "due to high humidity"
+
+    def test_feels_colder_due_to_wind(self):
+        """Test when it feels colder due to wind."""
+        from accessiweather.display.presentation.formatters import (
+            format_temperature_with_feels_like,
+        )
+        from accessiweather.models import CurrentConditions
+        from accessiweather.utils import TemperatureUnit
+
+        current = CurrentConditions(
+            temperature_f=40.0,
+            temperature_c=4.4,
+            feels_like_f=30.0,  # 10°F colder
+            feels_like_c=-1.1,
+            condition="Cloudy",
+            humidity=50,
+            wind_speed_mph=20.0,  # Strong wind
+        )
+        result, reason = format_temperature_with_feels_like(current, TemperatureUnit.FAHRENHEIT, 0)
+        assert "40°F" in result
+        assert "feels like 30°F" in result
+        assert reason == "due to strong wind"
+
+    def test_celsius_unit_preference(self):
+        """Test with Celsius unit preference."""
+        from accessiweather.display.presentation.formatters import (
+            format_temperature_with_feels_like,
+        )
+        from accessiweather.models import CurrentConditions
+        from accessiweather.utils import TemperatureUnit
+
+        current = CurrentConditions(
+            temperature_f=85.0,
+            temperature_c=29.4,
+            feels_like_f=95.0,
+            feels_like_c=35.0,
+            condition="Sunny",
+            humidity=80,
+        )
+        result, reason = format_temperature_with_feels_like(current, TemperatureUnit.CELSIUS, 0)
+        assert "29°C" in result
+        assert "feels like 35°C" in result
+
+    def test_custom_threshold(self):
+        """Test with custom difference threshold."""
+        from accessiweather.display.presentation.formatters import (
+            format_temperature_with_feels_like,
+        )
+        from accessiweather.models import CurrentConditions
+        from accessiweather.utils import TemperatureUnit
+
+        current = CurrentConditions(
+            temperature_f=75.0,
+            temperature_c=23.9,
+            feels_like_f=80.0,  # 5°F difference
+            feels_like_c=26.7,
+            condition="Sunny",
+            humidity=70,
+        )
+        # With default threshold (3°F), should show feels-like
+        result1, _ = format_temperature_with_feels_like(current, TemperatureUnit.FAHRENHEIT, 0)
+        assert "feels like" in result1
+
+        # With higher threshold (10°F), should not show feels-like
+        result2, _ = format_temperature_with_feels_like(
+            current, TemperatureUnit.FAHRENHEIT, 0, difference_threshold=10.0
+        )
+        assert "feels like" not in result2
+
+    def test_moderate_humidity_reason(self):
+        """Test moderate humidity gives simpler reason."""
+        from accessiweather.display.presentation.formatters import (
+            format_temperature_with_feels_like,
+        )
+        from accessiweather.models import CurrentConditions
+        from accessiweather.utils import TemperatureUnit
+
+        current = CurrentConditions(
+            temperature_f=85.0,
+            temperature_c=29.4,
+            feels_like_f=92.0,
+            feels_like_c=33.3,
+            condition="Sunny",
+            humidity=55,  # Moderate humidity (40-70%)
+        )
+        result, reason = format_temperature_with_feels_like(current, TemperatureUnit.FAHRENHEIT, 0)
+        assert "feels like" in result
+        assert reason == "due to humidity"
+
+    def test_moderate_wind_reason(self):
+        """Test moderate wind gives simpler reason."""
+        from accessiweather.display.presentation.formatters import (
+            format_temperature_with_feels_like,
+        )
+        from accessiweather.models import CurrentConditions
+        from accessiweather.utils import TemperatureUnit
+
+        current = CurrentConditions(
+            temperature_f=40.0,
+            temperature_c=4.4,
+            feels_like_f=35.0,
+            feels_like_c=1.7,
+            condition="Cloudy",
+            humidity=50,
+            wind_speed_mph=8.0,  # Moderate wind (3-15 mph)
+        )
+        result, reason = format_temperature_with_feels_like(current, TemperatureUnit.FAHRENHEIT, 0)
+        assert "feels like" in result
+        assert reason == "due to wind"

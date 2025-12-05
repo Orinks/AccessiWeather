@@ -21,7 +21,7 @@ from .formatters import (
     format_dewpoint,
     format_pressure_value,
     format_sun_time,
-    format_temperature_pair,
+    format_temperature_with_feels_like,
     format_visibility_value,
     format_wind,
     get_temperature_precision,
@@ -40,18 +40,15 @@ def _build_basic_metrics(
     show_uv_index: bool,
 ) -> list[Metric]:
     """Build basic weather metrics (temperature, feels like, humidity, wind, dewpoint, etc.)."""
-    temperature_str = format_temperature_pair(
-        current.temperature_f, current.temperature_c, unit_pref, precision
+    # Format temperature with inline feels-like when there's a significant difference
+    temperature_value, feels_like_reason = format_temperature_with_feels_like(
+        current, unit_pref, precision
     )
-    temperature_value = temperature_str if temperature_str is not None else "N/A"
     metrics: list[Metric] = [Metric("Temperature", temperature_value)]
 
-    if current.feels_like_f is not None or current.feels_like_c is not None:
-        feels_like = format_temperature_pair(
-            current.feels_like_f, current.feels_like_c, unit_pref, precision
-        )
-        if feels_like:
-            metrics.append(Metric("Feels like", feels_like))
+    # Add reason as a separate metric if available (for accessibility)
+    if feels_like_reason:
+        metrics.append(Metric("Feels different", feels_like_reason.capitalize()))
 
     if current.humidity is not None:
         metrics.append(Metric("Humidity", f"{current.humidity:.0f}%"))
