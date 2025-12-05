@@ -73,6 +73,28 @@ def _apply_general_settings(dialog, settings):
     if getattr(dialog, "html_render_forecast_switch", None):
         dialog.html_render_forecast_switch.value = getattr(settings, "html_render_forecast", True)
 
+    # Taskbar icon text settings
+    if getattr(dialog, "taskbar_icon_text_enabled_switch", None):
+        dialog.taskbar_icon_text_enabled_switch.value = getattr(
+            settings, "taskbar_icon_text_enabled", False
+        )
+
+    if getattr(dialog, "taskbar_icon_dynamic_enabled_switch", None):
+        dialog.taskbar_icon_dynamic_enabled_switch.value = getattr(
+            settings, "taskbar_icon_dynamic_enabled", True
+        )
+        dialog.taskbar_icon_dynamic_enabled_switch.enabled = getattr(
+            settings, "taskbar_icon_text_enabled", False
+        )
+
+    if getattr(dialog, "taskbar_icon_text_format_input", None):
+        dialog.taskbar_icon_text_format_input.value = getattr(
+            settings, "taskbar_icon_text_format", "{temp} {condition}"
+        )
+        dialog.taskbar_icon_text_format_input.enabled = getattr(
+            settings, "taskbar_icon_text_enabled", False
+        )
+
 
 def _apply_data_source_settings(dialog, settings):
     """Apply data source and API settings to UI widgets."""
@@ -297,6 +319,28 @@ def _collect_display_settings(dialog, current_settings):
         getattr(current_settings, "html_render_forecast", True),
     )
 
+    # Taskbar icon text settings
+    taskbar_icon_text_enabled = _switch_value(
+        "taskbar_icon_text_enabled_switch",
+        getattr(current_settings, "taskbar_icon_text_enabled", False),
+    )
+    taskbar_icon_dynamic_enabled = _switch_value(
+        "taskbar_icon_dynamic_enabled_switch",
+        getattr(current_settings, "taskbar_icon_dynamic_enabled", True),
+    )
+    taskbar_icon_text_format = getattr(
+        current_settings, "taskbar_icon_text_format", "{temp} {condition}"
+    )
+    if getattr(dialog, "taskbar_icon_text_format_input", None) is not None:
+        try:
+            taskbar_icon_text_format = str(
+                dialog.taskbar_icon_text_format_input.value or ""
+            ).strip()
+            if not taskbar_icon_text_format:
+                taskbar_icon_text_format = "{temp} {condition}"
+        except Exception:
+            pass
+
     return {
         "temperature_unit": temperature_unit,
         "update_interval_minutes": update_interval,
@@ -311,6 +355,9 @@ def _collect_display_settings(dialog, current_settings):
         "show_timezone_suffix": show_timezone_suffix,
         "html_render_current_conditions": html_render_current_conditions,
         "html_render_forecast": html_render_forecast,
+        "taskbar_icon_text_enabled": taskbar_icon_text_enabled,
+        "taskbar_icon_dynamic_enabled": taskbar_icon_dynamic_enabled,
+        "taskbar_icon_text_format": taskbar_icon_text_format,
     }
 
 
@@ -585,4 +632,8 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         # HTML rendering settings
         html_render_current_conditions=display["html_render_current_conditions"],
         html_render_forecast=display["html_render_forecast"],
+        # Taskbar icon text settings
+        taskbar_icon_text_enabled=display["taskbar_icon_text_enabled"],
+        taskbar_icon_dynamic_enabled=display["taskbar_icon_dynamic_enabled"],
+        taskbar_icon_text_format=display["taskbar_icon_text_format"],
     )

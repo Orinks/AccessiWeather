@@ -353,3 +353,154 @@ def test_presenter_builds_aviation_section_from_taf():
     assert aviation.taf_summary is not None
     assert "Terminal Aerodrome Forecast" in aviation.fallback_text
     assert "KJFK" in aviation.fallback_text
+
+
+@pytest.mark.unit
+def test_presenter_includes_forecast_extended_fields():
+    """Presenter should include precipitation probability, snowfall, and UV index in forecasts."""
+    from accessiweather.models import Forecast, ForecastPeriod
+
+    settings = AppSettings(temperature_unit="fahrenheit")
+    presenter = WeatherPresenter(settings)
+    location = Location(name="Extended Fields City", latitude=40.0, longitude=-75.0)
+
+    forecast = Forecast(
+        periods=[
+            ForecastPeriod(
+                name="Today",
+                temperature=75.0,
+                temperature_unit="F",
+                short_forecast="Partly Cloudy",
+                precipitation_probability=45.0,
+                snowfall=0.0,
+                uv_index=8.5,  # >= 8 is "Very High"
+            ),
+            ForecastPeriod(
+                name="Tonight",
+                temperature=55.0,
+                temperature_unit="F",
+                short_forecast="Snow Likely",
+                precipitation_probability=80.0,
+                snowfall=2.5,
+                uv_index=0.0,
+            ),
+        ]
+    )
+
+    presentation = presenter.present_forecast(forecast, location)
+
+    assert presentation is not None
+    assert len(presentation.periods) == 2
+
+    # Check first period (Today)
+    today = presentation.periods[0]
+    assert today.precipitation_probability == "45%"
+    assert today.snowfall is None  # 0.0 snowfall should not be shown
+    assert today.uv_index == "8 (Very High)"
+
+    # Check second period (Tonight with snow)
+    tonight = presentation.periods[1]
+    assert tonight.precipitation_probability == "80%"
+    assert tonight.snowfall == "2.5 in"
+    assert tonight.uv_index == "0 (Low)"
+
+    # Check fallback text includes the new fields
+    assert "Precipitation: 45%" in presentation.fallback_text
+    assert "Precipitation: 80%" in presentation.fallback_text
+    assert "Snowfall: 2.5 in" in presentation.fallback_text
+    assert "UV Index:" in presentation.fallback_text
+
+
+@pytest.mark.unit
+def test_presenter_includes_hourly_extended_fields():
+    """Presenter should include extended fields in hourly forecast periods."""
+    from datetime import timedelta
+
+    settings = AppSettings(temperature_unit="fahrenheit")
+    presenter = WeatherPresenter(settings)
+    location = Location(name="Hourly City", latitude=40.0, longitude=-75.0)
+
+    now = datetime.now(UTC)
+    hourly = HourlyForecast(
+        periods=[
+            HourlyForecastPeriod(
+                start_time=now + timedelta(hours=1),
+                temperature=72.0,
+                short_forecast="Sunny",
+                precipitation_probability=10.0,
+                snowfall=0.0,
+                uv_index=9.0,
+            ),
+            HourlyForecastPeriod(
+                start_time=now + timedelta(hours=2),
+                temperature=70.0,
+                short_forecast="Light Snow",
+                precipitation_probability=65.0,
+                snowfall=0.3,
+                uv_index=2.0,
+            ),
+        ]
+    )
+
+    from accessiweather.models import Forecast, ForecastPeriod
+
+    forecast = Forecast(periods=[ForecastPeriod(name="Today", temperature=72.0)])
+
+    presentation = presenter.present_forecast(forecast, location, hourly_forecast=hourly)
+
+    assert presentation is not None
+    assert len(presentation.hourly_periods) == 2
+
+    # Check first hourly period
+    hour1 = presentation.hourly_periods[0]
+    assert hour1.precipitation_probability == "10%"
+    assert hour1.snowfall is None  # 0.0 snowfall should not be shown
+    assert hour1.uv_index == "9 (Very High)"
+
+    # Check second hourly period with snow
+    hour2 = presentation.hourly_periods[1]
+    assert hour2.precipitation_probability == "65%"
+    assert hour2.snowfall == "0.3 in"
+    assert hour2.uv_index == "2 (Low)"
+
+    # Check fallback text includes hourly extended fields
+    assert "Precip 10%" in presentation.fallback_text
+    assert "Snow 0.3 in" in presentation.fallback_text
+    assert "UV 9 (Very High)" in presentation.fallback_text
+
+
+@pytest.mark.unit
+def test_presenter_handles_missing_extended_fields():
+    """Presenter should gracefully handle missing extended fields."""
+    from accessiweather.models import Forecast, ForecastPeriod
+
+    settings = AppSettings(temperature_unit="fahrenheit")
+    presenter = WeatherPresenter(settings)
+    location = Location(name="Sparse Data City", latitude=40.0, longitude=-75.0)
+
+    forecast = Forecast(
+        periods=[
+            ForecastPeriod(
+                name="Today",
+                temperature=75.0,
+                temperature_unit="F",
+                short_forecast="Partly Cloudy",
+                # No extended fields set
+            ),
+        ]
+    )
+
+    presentation = presenter.present_forecast(forecast, location)
+
+    assert presentation is not None
+    assert len(presentation.periods) == 1
+
+    today = presentation.periods[0]
+    assert today.precipitation_probability is None
+    assert today.snowfall is None
+    assert today.uv_index is None
+
+    # Fallback text should not contain placeholders for missing fields
+    assert "Precipitation:" not in presentation.fallback_text
+    assert "Snowfall:" not in presentation.fallback_text
+    assert "UV Index:" not in presentation.fallback_text

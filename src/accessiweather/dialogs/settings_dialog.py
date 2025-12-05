@@ -117,6 +117,12 @@ class SettingsDialog:
         self.alert_per_alert_cooldown_input = None
         self.alert_max_notifications_input = None
 
+        # Taskbar icon text controls (Display tab)
+        self.taskbar_icon_text_enabled_switch = None
+        self.taskbar_icon_dynamic_enabled_switch = None
+        self.taskbar_icon_text_format_input = None
+        self.taskbar_format_validation_label = None
+
     def __await__(self):
         """Make the dialog awaitable for modal behavior."""
         if self.future is None:
@@ -437,6 +443,8 @@ class SettingsDialog:
 
             if success:
                 logger.info("%s: Settings saved successfully", LOG_PREFIX)
+                # Trigger immediate taskbar icon update if settings changed
+                self._trigger_taskbar_icon_update(new_settings)
                 # Set result and close dialog
                 if self.future and not self.future.done():
                     self.future.set_result(True)
@@ -612,3 +620,29 @@ class SettingsDialog:
 
     async def _on_check_updates(self, widget):
         await settings_operations.check_for_updates(self)
+
+    def _trigger_taskbar_icon_update(self, new_settings):
+        """
+        Trigger immediate taskbar icon text update if settings changed.
+
+        This method is called after settings are saved to apply taskbar icon
+        changes without requiring an app restart.
+        """
+        try:
+            if not hasattr(self.app, "status_icon") or self.app.status_icon is None:
+                return
+
+            if not getattr(self.app, "system_tray_available", False):
+                return
+
+            from ..ui_builder import update_tray_icon_tooltip
+
+            weather_data = None
+            if hasattr(self.app, "current_weather_data"):
+                weather_data = self.app.current_weather_data
+
+            update_tray_icon_tooltip(self.app, weather_data)
+            logger.debug("%s: Taskbar icon text updated after settings change", LOG_PREFIX)
+
+        except Exception as exc:
+            logger.debug("%s: Failed to update taskbar icon: %s", LOG_PREFIX, exc)

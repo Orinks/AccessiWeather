@@ -14,6 +14,7 @@ from ..dialogs.air_quality_dialog import AirQualityDialog
 from ..dialogs.weather_history_dialog import WeatherHistoryDialog
 from ..models import WeatherData
 from ..performance.timer import timed_async
+from ..ui_builder import update_tray_icon_tooltip
 
 if TYPE_CHECKING:  # pragma: no cover - circular import guard
     from ..app import AccessiWeatherApp
@@ -108,6 +109,8 @@ async def _refresh_weather_data_impl(app: AccessiWeatherApp) -> None:
         logger.debug("About to update weather displays")
         await update_weather_displays(app, weather_data)
         logger.debug("Weather displays updated")
+
+        update_tray_icon_tooltip(app, weather_data)
 
     except asyncio.CancelledError:
         logger.debug(f"Refresh cancelled for {current_location.name}")

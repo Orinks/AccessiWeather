@@ -52,11 +52,11 @@ def generate_nightly_link_url(
 
     Raises:
         ValueError: If artifact_type is not recognized.
+
     """
     if artifact_type not in ARTIFACT_PATTERNS:
         raise ValueError(
-            f"Unknown artifact type: {artifact_type}. "
-            f"Valid types: {list(ARTIFACT_PATTERNS.keys())}"
+            f"Unknown artifact type: {artifact_type}. Valid types: {list(ARTIFACT_PATTERNS.keys())}"
         )
 
     pattern = ARTIFACT_PATTERNS[artifact_type]
@@ -64,10 +64,9 @@ def generate_nightly_link_url(
     if version:
         artifact_name = pattern.format(version=version)
         return f"{NIGHTLY_LINK_BASE}/{REPO_OWNER}/{REPO_NAME}/workflows/{WORKFLOW_NAME}/{branch}/{artifact_name}.zip"
-    else:
-        # Generic URL without version - nightly.link will resolve to latest
-        base_name = pattern.split("-{version}")[0]
-        return f"{NIGHTLY_LINK_BASE}/{REPO_OWNER}/{REPO_NAME}/workflows/{WORKFLOW_NAME}/{branch}/{base_name}"
+    # Generic URL without version - nightly.link will resolve to latest
+    base_name = pattern.split("-{version}")[0]
+    return f"{NIGHTLY_LINK_BASE}/{REPO_OWNER}/{REPO_NAME}/workflows/{WORKFLOW_NAME}/{branch}/{base_name}"
 
 
 def extract_asset_url(
@@ -83,6 +82,7 @@ def extract_asset_url(
 
     Returns:
         The browser_download_url for the matching asset, or None if not found.
+
     """
     if not release_assets:
         return None
@@ -92,13 +92,18 @@ def extract_asset_url(
     for asset in release_assets:
         name = asset.get("name", "").lower()
 
-        if asset_type_lower == "msi" and name.endswith(".msi"):
-            return asset.get("browser_download_url")
-        elif asset_type_lower == "dmg" and name.endswith(".dmg"):
-            return asset.get("browser_download_url")
-        elif asset_type_lower == "portable" and "portable" in name and name.endswith(".zip"):
-            return asset.get("browser_download_url")
-        elif asset_type_lower == "zip" and name.endswith(".zip") and "portable" not in name:
+        if (
+            asset_type_lower == "msi"
+            and name.endswith(".msi")
+            or asset_type_lower == "dmg"
+            and name.endswith(".dmg")
+            or asset_type_lower == "portable"
+            and "portable" in name
+            and name.endswith(".zip")
+            or asset_type_lower == "zip"
+            and name.endswith(".zip")
+            and "portable" not in name
+        ):
             return asset.get("browser_download_url")
 
     return None
@@ -114,6 +119,7 @@ def truncate_commit_sha(sha: str | None, length: int = 7) -> str:
 
     Returns:
         The truncated SHA, or empty string if sha is None/empty.
+
     """
     if not sha:
         return ""
@@ -135,6 +141,7 @@ def substitute_template(
 
     Returns:
         The template with all variables substituted.
+
     """
     if fallbacks is None:
         fallbacks = {}
@@ -163,6 +170,7 @@ def verify_no_placeholders(content: str) -> tuple[bool, list[str]]:
     Returns:
         A tuple of (is_valid, list_of_remaining_placeholders).
         is_valid is True if no placeholders remain.
+
     """
     pattern = r"\{\{([A-Z_]+)\}\}"
     matches = re.findall(pattern, content)

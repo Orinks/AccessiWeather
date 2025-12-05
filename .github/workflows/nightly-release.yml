@@ -261,4 +261,4 @@ jobs:
           gh workflow run update-pages.yml \
             --repo ${{ github.repository }} \
             -f force_update=true \
-            -f target_branch=dev
+            -f target_branch=both

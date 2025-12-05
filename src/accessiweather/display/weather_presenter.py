@@ -44,6 +44,9 @@ class HourlyPeriodPresentation:
     temperature: str | None
     conditions: str | None
     wind: str | None
+    precipitation_probability: str | None = None
+    snowfall: str | None = None
+    uv_index: str | None = None
 
 
 @dataclass(slots=True)
@@ -55,6 +58,9 @@ class ForecastPeriodPresentation:
     conditions: str | None
     wind: str | None
     details: str | None
+    precipitation_probability: str | None = None
+    snowfall: str | None = None
+    uv_index: str | None = None
 
 
 @dataclass(slots=True)

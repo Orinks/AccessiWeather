@@ -510,13 +510,15 @@ jobs:
         [ -z "$MAIN_VERSION" ] && MAIN_VERSION="Latest Release"
         [ -z "$MAIN_DATE" ] && MAIN_DATE="Check GitHub"
         [ -z "$MAIN_COMMIT" ] && MAIN_COMMIT=""
+        [ -z "$MAIN_INSTALLER_URL" ] && MAIN_INSTALLER_URL="https://github.com/Orinks/AccessiWeather/releases"
+        [ -z "$MAIN_PORTABLE_URL" ] && MAIN_PORTABLE_URL="https://github.com/Orinks/AccessiWeather/releases"
+        [ -z "$MAIN_MACOS_INSTALLER_URL" ] && MAIN_MACOS_INSTALLER_URL="https://github.com/Orinks/AccessiWeather/releases"
         [ -z "$DEV_VERSION" ] && DEV_VERSION="Development ($TARGET_BRANCH)"
         [ -z "$DEV_DATE" ] && DEV_DATE="Check pre-release page"
         [ -z "$DEV_COMMIT" ] && DEV_COMMIT=""
         [ -z "$DEV_RELEASE_URL" ] && DEV_RELEASE_URL="https://github.com/Orinks/AccessiWeather/releases"
         [ -z "$DEV_INSTALLER_URL" ] && DEV_INSTALLER_URL="$DEV_RELEASE_URL"
         [ -z "$DEV_PORTABLE_URL" ] && DEV_PORTABLE_URL="$DEV_RELEASE_URL"
-        [ -z "$MAIN_MACOS_INSTALLER_URL" ] && MAIN_MACOS_INSTALLER_URL="https://github.com/Orinks/AccessiWeather/releases"
         [ -z "$DEV_MACOS_INSTALLER_URL" ] && DEV_MACOS_INSTALLER_URL="$DEV_RELEASE_URL"
 
         # Escape special characters for sed (but preserve HTML in release notes)
