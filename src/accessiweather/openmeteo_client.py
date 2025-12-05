@@ -42,6 +42,7 @@ class OpenMeteoApiClient:
     """
 
     BASE_URL = "https://api.open-meteo.com/v1"
+    ARCHIVE_BASE_URL = "https://archive-api.open-meteo.com/v1"
 
     def __init__(
         self,
@@ -78,14 +79,17 @@ class OpenMeteoApiClient:
         if hasattr(self, "client"):
             self.client.close()
 
-    def _make_request(self, endpoint: str, params: dict[str, Any]) -> dict[str, Any]:
+    def _make_request(
+        self, endpoint: str, params: dict[str, Any], use_archive: bool = False
+    ) -> dict[str, Any]:
         """
         Make a request to the Open-Meteo API.
 
         Args:
         ----
-            endpoint: API endpoint (e.g., "forecast")
+            endpoint: API endpoint (e.g., "forecast", "archive")
             params: Query parameters
+            use_archive: If True, use the archive API base URL for historical data
 
         Returns:
         -------
@@ -97,7 +101,8 @@ class OpenMeteoApiClient:
             OpenMeteoNetworkError: If there's a network error
 
         """
-        url = f"{self.BASE_URL}/{endpoint}"
+        base_url = self.ARCHIVE_BASE_URL if use_archive else self.BASE_URL
+        url = f"{base_url}/{endpoint}"
 
         for attempt in range(self.max_retries + 1):
             try:

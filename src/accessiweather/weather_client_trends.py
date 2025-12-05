@@ -35,6 +35,10 @@ def apply_trend_insights(
         if pressure_insight:
             insights.append(pressure_insight)
 
+    daily_insight = compute_daily_trend(weather_data)
+    if daily_insight:
+        insights.append(daily_insight)
+
     weather_data.trend_insights = insights
 
 
@@ -172,3 +176,58 @@ def normalize_datetime(value: datetime | None) -> datetime | None:
     if value.tzinfo is None:
         return value
     return value.astimezone().replace(tzinfo=None)
+
+
+def compute_daily_trend(weather_data: WeatherData) -> TrendInsight | None:
+    """
+    Compute trend comparing today's forecast to yesterday's history.
+
+    Compares today's High (Max Temp) vs Yesterday's High.
+    """
+    if not weather_data.forecast or not weather_data.forecast.periods:
+        return None
+    if not weather_data.daily_history:
+        return None
+
+    # Assuming first period is "Today" and history has "Yesterday"
+    today = weather_data.forecast.periods[0]
+    yesterday = weather_data.daily_history[0]
+
+    if today.temperature is None or yesterday.temperature is None:
+        return None
+
+    # Determine unit from today's data (default F)
+    unit = today.temperature_unit or "F"
+
+    change = today.temperature - yesterday.temperature
+
+    # Thresholds for "Warmer" vs "Cooler"
+    # 2 degrees F is a reasonable threshold for "Noticeably" different
+    threshold = 2.0 if unit == "F" else 1.0
+
+    direction = "steady"
+    if change >= threshold:
+        direction = "warmer"
+    elif change <= -threshold:
+        direction = "cooler"
+    else:
+        direction = "similar"
+
+    if direction == "steady" or direction == "similar":
+        summary = "Temperatures similar to yesterday"
+    else:
+        # e.g. "5°F warmer than yesterday"
+        summary = f"{abs(change):.0f}°{unit} {direction} than yesterday"
+
+    # Sparkline isn't very meaningful for a single point comparison, using simple arrow
+    sparkline = "↑" if change > 0 else "↓" if change < 0 else "→"
+
+    return TrendInsight(
+        metric="daily_trend",
+        direction=direction,
+        change=round(change, 1),
+        unit=unit,
+        timeframe_hours=24,
+        summary=summary,
+        sparkline=sparkline,
+    )
