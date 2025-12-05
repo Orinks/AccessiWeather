@@ -184,8 +184,8 @@ class WeatherHistoryService:
                 "timezone": "auto",
             }
 
-            # Call archive endpoint (different from forecast)
-            response = self.openmeteo_client._make_request("archive", params)
+            # Call archive endpoint (uses different base URL than forecast)
+            response = self.openmeteo_client._make_request("archive", params, use_archive=True)
 
             if not response or "daily" not in response:
                 logger.warning(f"No historical data available for {target_date}")

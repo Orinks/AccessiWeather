@@ -402,6 +402,112 @@ def get_temperature_precision(unit_pref: TemperatureUnit) -> int:
     return 0 if unit_pref == TemperatureUnit.BOTH else 1
 
 
+def format_temperature_with_feels_like(
+    current: CurrentConditions,
+    unit_pref: TemperatureUnit,
+    precision: int,
+    *,
+    difference_threshold: float = 3.0,
+) -> tuple[str, str | None]:
+    """
+    Format temperature with inline feels-like comparison when significantly different.
+
+    Returns a tuple of (temperature_string, feels_like_reason).
+    The feels_like_reason explains why it feels different (humidity, wind, etc.)
+    and is None if the difference is below threshold.
+
+    Args:
+    ----
+        current: Current weather conditions
+        unit_pref: Temperature unit preference
+        precision: Decimal precision for display
+        difference_threshold: Minimum difference in °F to show feels-like (default 3°F)
+
+    Returns:
+    -------
+        Tuple of (formatted_temp, reason_or_none)
+        Example: ("75°F (feels like 82°F)", "due to high humidity")
+
+    """
+    # Format base temperature
+    temp_str = format_temperature_pair(
+        current.temperature_f, current.temperature_c, unit_pref, precision
+    )
+    if temp_str is None:
+        return "N/A", None
+
+    # Check if we have feels-like data
+    feels_f = current.feels_like_f
+    feels_c = current.feels_like_c
+    if feels_f is None and feels_c is None:
+        return temp_str, None
+
+    # Calculate difference (use Fahrenheit for threshold comparison)
+    actual_f = current.temperature_f
+    if actual_f is None and current.temperature_c is not None:
+        actual_f = (current.temperature_c * 9 / 5) + 32
+    if feels_f is None and feels_c is not None:
+        feels_f = (feels_c * 9 / 5) + 32
+
+    if actual_f is None or feels_f is None:
+        return temp_str, None
+
+    diff = feels_f - actual_f
+
+    # Only show feels-like if difference exceeds threshold
+    if abs(diff) < difference_threshold:
+        return temp_str, None
+
+    # Format feels-like temperature
+    feels_str = format_temperature_pair(feels_f, feels_c, unit_pref, precision)
+    if feels_str is None:
+        return temp_str, None
+
+    # Build the combined string
+    combined = f"{temp_str} (feels like {feels_str})"
+
+    # Determine the reason for the difference
+    reason = _get_feels_like_reason(current, diff)
+
+    return combined, reason
+
+
+def _get_feels_like_reason(current: CurrentConditions, diff_f: float) -> str | None:
+    """
+    Determine why the apparent temperature differs from actual.
+
+    Args:
+    ----
+        current: Current weather conditions
+        diff_f: Difference in Fahrenheit (positive = feels warmer)
+
+    Returns:
+    -------
+        Human-readable reason or None
+
+    """
+    humidity = current.humidity
+    wind_mph = current.wind_speed_mph
+    temp_f = current.temperature_f
+
+    if diff_f > 0:
+        # Feels warmer - likely heat index (humidity effect)
+        if humidity is not None and humidity >= 40:
+            if humidity >= 70:
+                return "due to high humidity"
+            return "due to humidity"
+        return None
+    # Feels colder - likely wind chill
+    if wind_mph is not None and wind_mph >= 3:
+        if wind_mph >= 15:
+            return "due to strong wind"
+        return "due to wind"
+    # Could also be low humidity in cold weather
+    if temp_f is not None and temp_f < 50 and humidity is not None and humidity < 30:
+        return "due to dry air"
+    return None
+
+
 def format_hourly_wind(period: HourlyForecastPeriod) -> str | None:
     """Return wind description for hourly periods when both pieces are present."""
     if not period.wind_direction or not period.wind_speed:
