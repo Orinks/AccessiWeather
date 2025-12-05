@@ -203,6 +203,48 @@ class VisualCrossingClient:
             # Return empty alerts on error rather than raising
             return WeatherAlerts(alerts=[])
 
+    @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
+    async def get_history(
+        self, location: Location, start_date: datetime, end_date: datetime
+    ) -> Forecast | None:
+        """Get historical weather data from Visual Crossing API."""
+        try:
+            start_str = start_date.strftime("%Y-%m-%d")
+            end_str = end_date.strftime("%Y-%m-%d")
+            url = f"{self.base_url}/{location.latitude},{location.longitude}/{start_str}/{end_str}"
+            params = {
+                "key": self.api_key,
+                "include": "days",
+                "unitGroup": "us",
+                "elements": "datetime,tempmax,tempmin,temp,conditions,description,windspeed,winddir,icon,precipprob,snow,uvindex",
+            }
+
+            async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
+                headers = {"User-Agent": self.user_agent}
+                response = await client.get(url, params=params, headers=headers)
+
+                if response.status_code == 401:
+                    raise VisualCrossingApiError("Invalid API key", response.status_code)
+                if response.status_code == 429:
+                    raise VisualCrossingApiError("API rate limit exceeded", response.status_code)
+                if response.status_code != 200:
+                    raise VisualCrossingApiError(
+                        f"API request failed: HTTP {response.status_code}", response.status_code
+                    )
+
+                data = response.json()
+                return self._parse_forecast(data)
+
+        except httpx.TimeoutException:
+            logger.error("Visual Crossing API request timed out")
+            raise VisualCrossingApiError("Request timed out") from None
+        except httpx.RequestError as e:
+            logger.error(f"Visual Crossing API request failed: {e}")
+            raise VisualCrossingApiError(f"Request failed: {e}") from e
+        except Exception as e:
+            logger.error(f"Failed to get Visual Crossing history: {e}")
+            raise VisualCrossingApiError(f"Unexpected error: {e}") from e
+
     def _parse_current_conditions(self, data: dict) -> CurrentConditions:
         """Parse Visual Crossing current conditions data."""
         current = data.get("currentConditions", {})

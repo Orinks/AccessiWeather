@@ -73,6 +73,17 @@ def build_air_quality_panel(
     lines = [f"Air quality for {location.name}"]
     details: list[str] = []
 
+    # Pollen data
+    pollen_line = _build_pollen_line(environmental)
+    if pollen_line:
+        lines.append(f"• {pollen_line}")
+        details.append(pollen_line)
+
+        # Add detailed pollen breakdown if available
+        pollen_details = format_pollen_details(environmental)
+        if pollen_details:
+            details.append(pollen_details)
+
     if summary_line:
         lines.append(f"• {summary_line}")
         details.append(summary_line)
@@ -93,6 +104,10 @@ def build_air_quality_panel(
     summary_value = summary_line or "Air quality data not available."
     if pollutant_line:
         summary_value = f"{summary_value} – {pollutant_line}"
+    if pollen_line and not summary_line:
+        summary_value = pollen_line
+    elif pollen_line:
+        summary_value = f"{summary_value}. {pollen_line}"
 
     return AirQualityPresentation(
         title=f"Air quality for {location.name}",
@@ -129,6 +144,23 @@ def _build_pollutant_line(pollutant: str | None) -> str | None:
     if pretty is None:
         pretty = label.replace("_", " ").title() if "_" in label else label
     return f"Dominant pollutant: {pretty}"
+
+
+def _build_pollen_line(environmental: EnvironmentalConditions) -> str | None:
+    """Build a summary line for pollen conditions."""
+    if environmental.pollen_index is None and not environmental.pollen_category:
+        return None
+
+    parts: list[str] = []
+    if environmental.pollen_category:
+        parts.append(f"Pollen: {environmental.pollen_category}")
+    elif environmental.pollen_index is not None:
+        parts.append(f"Pollen Index: {int(round(environmental.pollen_index))}")
+
+    if environmental.pollen_primary_allergen:
+        parts.append(f"({environmental.pollen_primary_allergen})")
+
+    return " ".join(parts) if parts else None
 
 
 def _build_updated_line(
@@ -319,6 +351,31 @@ def format_pollutant_details(
             lines.append(line)
 
     return "\n".join(lines) if lines else "No pollutant measurements available."
+
+
+def format_pollen_details(environmental: EnvironmentalConditions) -> str | None:
+    """
+    Format pollen measurements into readable text.
+
+    Args:
+        environmental: Environmental conditions data.
+
+    Returns:
+        Formatted pollen breakdown or None if no data.
+
+    """
+    items = []
+    if environmental.pollen_tree_index is not None:
+        items.append(f"Tree: {int(round(environmental.pollen_tree_index))}")
+    if environmental.pollen_grass_index is not None:
+        items.append(f"Grass: {int(round(environmental.pollen_grass_index))}")
+    if environmental.pollen_weed_index is not None:
+        items.append(f"Weed: {int(round(environmental.pollen_weed_index))}")
+
+    if not items:
+        return None
+
+    return "Pollen Levels: " + ", ".join(items)
 
 
 def _get_pollutant_display_name(pollutant_code: str) -> str:
