@@ -1,0 +1,181 @@
+# Implementation Plan
+
+- [ ] 1. Create core data fusion infrastructure
+  - [ ] 1.1 Create SourceData dataclass in models/weather.py
+    - Add SourceData class to hold data from a single source with success/error tracking
+    - Include source name, fetch_time, success flag, and error message
+    - _Requirements: 1.3, 8.1_
+  - [ ] 1.2 Create SourceAttribution and DataConflict dataclasses
+    - Add field_sources dict for tracking which source provided each field
+    - Add conflicts list for recording merge conflicts
+    - Add contributing_sources and failed_sources sets
+    - _Requirements: 6.2_
+  - [ ] 1.3 Extend WeatherData model with source attribution fields
+    - Add source_attribution: SourceAttribution | None field
+    - Add incomplete_sections: set[str] field
+    - _Requirements: 6.2, 8.2_
+  - [ ]* 1.4 Write property test for SourceAttribution tracking
+    - **Property 15: Source Attribution Tracking**
+    - **Validates: Requirements 6.2**
+
+- [ ] 2. Implement SourcePriorityConfig
+  - [ ] 2.1 Create SourcePriorityConfig dataclass in config/source_priority.py
+    - Define us_default and international_default priority lists
+    - Add field_priorities dict for per-field overrides
+    - Add temperature_conflict_threshold setting
+    - Implement get_priority() method
+    - _Requirements: 7.1, 7.3_
+  - [ ] 2.2 Implement JSON serialization for SourcePriorityConfig
+    - Add to_json() method
+    - Add from_json() class method
+    - _Requirements: 7.4_
+  - [ ]* 2.3 Write property test for configuration round-trip
+    - **Property 16: Configuration Round-Trip**
+    - **Validates: Requirements 7.4**
+  - [ ]* 2.4 Write property test for default priority application
+    - **Property 17: Default Priority Application**
+    - **Validates: Requirements 7.3**
+
+- [ ] 3. Implement DataFusionEngine
+  - [ ] 3.1 Create DataFusionEngine class in weather_client_fusion.py
+    - Initialize with SourcePriorityConfig
+    - Track attribution during merge operations
+    - _Requirements: 2.1_
+  - [ ] 3.2 Implement merge_current_conditions method
+    - Iterate fields in priority order
+    - Fill missing fields from lower-priority sources
+    - Track source attribution for each field
+    - Handle temperature conflict threshold
+    - _Requirements: 2.1, 2.2, 2.3, 2.4_
+  - [ ]* 3.3 Write property test for priority-based field merging
+    - **Property 4: Priority-Based Field Merging**
+    - **Validates: Requirements 2.1, 2.3, 3.3, 7.2**
+  - [ ]* 3.4 Write property test for temperature conflict resolution
+    - **Property 5: Temperature Conflict Resolution**
+    - **Validates: Requirements 2.2**
+  - [ ]* 3.5 Write property test for no data loss during merge
+    - **Property 6: No Data Loss During Merge**
+    - **Validates: Requirements 2.4**
+  - [ ] 3.6 Implement merge_forecasts method
+    - Combine forecast periods from all sources
+    - Prefer higher temporal resolution for overlapping periods
+    - Preserve precipitation_probability, uv_index, snowfall
+    - _Requirements: 3.1, 3.2, 3.3, 3.4_
+  - [ ]* 3.7 Write property test for forecast timeline unification
+    - **Property 7: Forecast Timeline Unification**
+    - **Validates: Requirements 3.1**
+  - [ ]* 3.8 Write property test for forecast field preservation
+    - **Property 8: Forecast Field Preservation**
+    - **Validates: Requirements 3.4**
+  - [ ] 3.9 Implement merge_hourly_forecasts method
+    - Merge hourly periods into unified timeline
+    - Apply same priority logic as daily forecasts
+    - _Requirements: 3.1, 3.3_
+
+- [ ] 4. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 5. Implement AlertAggregator
+  - [ ] 5.1 Create AlertAggregator class in weather_client_alerts.py
+    - Initialize with deduplication time window setting
+    - _Requirements: 4.1_
+  - [ ] 5.2 Implement aggregate_alerts method
+    - Collect alerts from NWS and Visual Crossing only
+    - Call deduplication logic
+    - _Requirements: 4.1_
+  - [ ]* 5.3 Write property test for alert source collection
+    - **Property 9: Alert Source Collection**
+    - **Validates: Requirements 4.1**
+  - [ ] 5.4 Implement _is_duplicate method
+    - Compare event type, area overlap, and time window
+    - _Requirements: 4.2_
+  - [ ] 5.5 Implement _merge_duplicate_alerts method
+    - Keep most detailed description and instructions
+    - Preserve source attribution
+    - _Requirements: 4.3, 4.4_
+  - [ ]* 5.6 Write property test for alert deduplication correctness
+    - **Property 10: Alert Deduplication Correctness**
+    - **Validates: Requirements 4.2**
+  - [ ]* 5.7 Write property test for alert detail preservation
+    - **Property 11: Alert Detail Preservation**
+    - **Validates: Requirements 4.3**
+  - [ ]* 5.8 Write property test for alert source attribution
+    - **Property 12: Alert Source Attribution**
+    - **Validates: Requirements 4.4**
+
+- [ ] 6. Implement ParallelFetchCoordinator
+  - [ ] 6.1 Create ParallelFetchCoordinator class in weather_client_parallel.py
+    - Initialize with client references and timeout setting
+    - _Requirements: 1.1, 5.1_
+  - [ ] 6.2 Implement fetch_all method
+    - Use asyncio.gather with return_exceptions=True
+    - Wrap each source fetch with timeout
+    - Return list of SourceData objects
+    - _Requirements: 1.1, 1.2, 5.1_
+  - [ ] 6.3 Implement _fetch_with_timeout helper
+    - Use asyncio.wait_for for per-request timeout
+    - Return None on timeout, log warning
+    - _Requirements: 1.2, 5.2_
+  - [ ]* 6.4 Write property test for parallel fetch execution
+    - **Property 1: Parallel Fetch Executes All Sources Concurrently**
+    - **Validates: Requirements 1.1, 5.1**
+  - [ ]* 6.5 Write property test for source failure isolation
+    - **Property 2: Source Failure Isolation**
+    - **Validates: Requirements 1.3, 8.1**
+  - [ ]* 6.6 Write property test for request timeout enforcement
+    - **Property 13: Request Timeout Enforcement**
+    - **Validates: Requirements 1.2, 5.2**
+
+- [ ] 7. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 8. Integrate smart auto source into WeatherClient
+  - [ ] 8.1 Update WeatherClient._do_fetch_weather_data for auto mode
+    - When data_source="auto", use ParallelFetchCoordinator
+    - Pass results to DataFusionEngine for merging
+    - Use AlertAggregator for alert combination
+    - _Requirements: 1.1, 2.1, 4.1_
+  - [ ] 8.2 Implement stale-while-revalidate pattern
+    - Return cached data immediately if available
+    - Trigger background refresh task
+    - _Requirements: 5.3, 5.4_
+  - [ ]* 8.3 Write property test for stale-while-revalidate behavior
+    - **Property 14: Stale-While-Revalidate Behavior**
+    - **Validates: Requirements 5.3**
+  - [ ] 8.4 Implement stale cache fallback
+    - When all sources fail, return cached data with stale=True
+    - Set stale_reason to indicate failure
+    - _Requirements: 1.4_
+  - [ ]* 8.5 Write property test for stale cache fallback
+    - **Property 3: Stale Cache Fallback**
+    - **Validates: Requirements 1.4**
+  - [ ] 8.6 Implement partial data completeness tracking
+    - Track which sections failed to populate
+    - Set incomplete_sections on WeatherData
+    - _Requirements: 8.1, 8.2_
+  - [ ]* 8.7 Write property test for partial data completeness tracking
+    - **Property 18: Partial Data Completeness Tracking**
+    - **Validates: Requirements 8.2**
+
+- [ ] 9. Update UI for source attribution display
+  - [ ] 9.1 Add source attribution display to weather panels
+    - Show source name for each major section
+    - Use accessible aria-labels for screen readers
+    - _Requirements: 6.1, 6.4_
+  - [ ] 9.2 Add incomplete data indicators to UI
+    - Show visual indicator when sections are unavailable
+    - Provide accessible description of missing data
+    - _Requirements: 8.3_
+
+- [ ] 10. Add configuration UI for source priorities
+  - [ ] 10.1 Add source priority settings to settings dialog
+    - Allow reordering of source priorities
+    - Show per-field priority overrides (advanced)
+    - _Requirements: 7.1_
+  - [ ] 10.2 Persist source priority configuration
+    - Save to config file alongside other settings
+    - Load on app startup
+    - _Requirements: 7.1, 7.4_
+
+- [ ] 11. Final Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
