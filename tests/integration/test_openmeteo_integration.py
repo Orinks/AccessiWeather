@@ -9,7 +9,7 @@ from datetime import datetime
 import pytest
 
 from accessiweather.models import Location
-from accessiweather.openmeteo_client import OpenMeteoApiClient
+from accessiweather.openmeteo_client import OpenMeteoApiClient, OpenMeteoNetworkError
 from accessiweather.openmeteo_mapper import OpenMeteoMapper
 
 # Skip integration tests unless explicitly requested
@@ -44,11 +44,14 @@ def mapper():
 def test_openmeteo_current_conditions_sunrise_sunset(openmeteo_client, mapper):
     """Test Open-Meteo current conditions returns valid sunrise/sunset times."""
     # Fetch raw data from API
-    raw_data = openmeteo_client.get_current_weather(
-        latitude=TEST_LOCATION.latitude,
-        longitude=TEST_LOCATION.longitude,
-        temperature_unit="fahrenheit",
-    )
+    try:
+        raw_data = openmeteo_client.get_current_weather(
+            latitude=TEST_LOCATION.latitude,
+            longitude=TEST_LOCATION.longitude,
+            temperature_unit="fahrenheit",
+        )
+    except OpenMeteoNetworkError as e:
+        pytest.skip(f"Open-Meteo API timed out: {e}")
 
     assert raw_data is not None, "Open-Meteo should return data"
     assert "daily" in raw_data, "Response should include daily data with sunrise/sunset"
@@ -95,12 +98,15 @@ def test_openmeteo_current_conditions_sunrise_sunset(openmeteo_client, mapper):
 def test_openmeteo_forecast_contains_sunrise_sunset(openmeteo_client):
     """Test Open-Meteo forecast includes sunrise/sunset data in raw response."""
     # Fetch raw forecast data
-    data = openmeteo_client.get_forecast(
-        latitude=TEST_LOCATION.latitude,
-        longitude=TEST_LOCATION.longitude,
-        temperature_unit="fahrenheit",
-        days=7,
-    )
+    try:
+        data = openmeteo_client.get_forecast(
+            latitude=TEST_LOCATION.latitude,
+            longitude=TEST_LOCATION.longitude,
+            temperature_unit="fahrenheit",
+            days=7,
+        )
+    except OpenMeteoNetworkError as e:
+        pytest.skip(f"Open-Meteo API timed out: {e}")
 
     # Check raw response structure
     assert "daily" in data, "Response should contain daily data"
@@ -151,12 +157,15 @@ def test_openmeteo_forecast_contains_sunrise_sunset(openmeteo_client):
 def test_openmeteo_hourly_forecast_timezone_converted(openmeteo_client, mapper):
     """Test Open-Meteo hourly forecast timestamps are converted to UTC."""
     # Fetch raw hourly data
-    raw_data = openmeteo_client.get_hourly_forecast(
-        latitude=TEST_LOCATION.latitude,
-        longitude=TEST_LOCATION.longitude,
-        temperature_unit="fahrenheit",
-        hours=48,
-    )
+    try:
+        raw_data = openmeteo_client.get_hourly_forecast(
+            latitude=TEST_LOCATION.latitude,
+            longitude=TEST_LOCATION.longitude,
+            temperature_unit="fahrenheit",
+            hours=48,
+        )
+    except OpenMeteoNetworkError as e:
+        pytest.skip(f"Open-Meteo API timed out: {e}")
 
     # Map to internal format
     mapped_data = mapper.map_hourly_forecast(raw_data)
@@ -187,31 +196,34 @@ def test_openmeteo_hourly_forecast_timezone_converted(openmeteo_client, mapper):
 @pytest.mark.skipif(not RUN_INTEGRATION, reason=skip_reason)
 def test_openmeteo_client_fetches_all_data_types(openmeteo_client, mapper):
     """Test Open-Meteo client can fetch current, forecast, and hourly data."""
-    # Fetch current weather
-    current_raw = openmeteo_client.get_current_weather(
-        latitude=TEST_LOCATION.latitude,
-        longitude=TEST_LOCATION.longitude,
-        temperature_unit="fahrenheit",
-    )
-    current_mapped = mapper.map_current_conditions(current_raw)
+    try:
+        # Fetch current weather
+        current_raw = openmeteo_client.get_current_weather(
+            latitude=TEST_LOCATION.latitude,
+            longitude=TEST_LOCATION.longitude,
+            temperature_unit="fahrenheit",
+        )
+        current_mapped = mapper.map_current_conditions(current_raw)
 
-    # Fetch daily forecast
-    forecast_raw = openmeteo_client.get_forecast(
-        latitude=TEST_LOCATION.latitude,
-        longitude=TEST_LOCATION.longitude,
-        temperature_unit="fahrenheit",
-        days=7,
-    )
-    forecast_mapped = mapper.map_forecast(forecast_raw)
+        # Fetch daily forecast
+        forecast_raw = openmeteo_client.get_forecast(
+            latitude=TEST_LOCATION.latitude,
+            longitude=TEST_LOCATION.longitude,
+            temperature_unit="fahrenheit",
+            days=7,
+        )
+        forecast_mapped = mapper.map_forecast(forecast_raw)
 
-    # Fetch hourly forecast
-    hourly_raw = openmeteo_client.get_hourly_forecast(
-        latitude=TEST_LOCATION.latitude,
-        longitude=TEST_LOCATION.longitude,
-        temperature_unit="fahrenheit",
-        hours=48,
-    )
-    hourly_mapped = mapper.map_hourly_forecast(hourly_raw)
+        # Fetch hourly forecast
+        hourly_raw = openmeteo_client.get_hourly_forecast(
+            latitude=TEST_LOCATION.latitude,
+            longitude=TEST_LOCATION.longitude,
+            temperature_unit="fahrenheit",
+            hours=48,
+        )
+        hourly_mapped = mapper.map_hourly_forecast(hourly_raw)
+    except OpenMeteoNetworkError as e:
+        pytest.skip(f"Open-Meteo API timed out: {e}")
 
     # All three should return successfully
     assert current_mapped is not None, "Current conditions should be present"
@@ -236,11 +248,14 @@ def test_openmeteo_client_fetches_all_data_types(openmeteo_client, mapper):
 @pytest.mark.skipif(not RUN_INTEGRATION, reason=skip_reason)
 def test_openmeteo_raw_response_timezone_field(openmeteo_client):
     """Test Open-Meteo API response includes timezone information."""
-    data = openmeteo_client.get_current_weather(
-        latitude=TEST_LOCATION.latitude,
-        longitude=TEST_LOCATION.longitude,
-        temperature_unit="fahrenheit",
-    )
+    try:
+        data = openmeteo_client.get_current_weather(
+            latitude=TEST_LOCATION.latitude,
+            longitude=TEST_LOCATION.longitude,
+            temperature_unit="fahrenheit",
+        )
+    except OpenMeteoNetworkError as e:
+        pytest.skip(f"Open-Meteo API timed out: {e}")
 
     # Check timezone field is present
     assert "timezone" in data, "Response should include timezone"
