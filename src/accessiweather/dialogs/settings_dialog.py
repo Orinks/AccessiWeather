@@ -526,53 +526,50 @@ class SettingsDialog:
 
     def _on_data_source_changed(self, widget):
         """Handle data source selection change to update UI visibility."""
-        self._update_data_source_ui_visibility()
+        self._update_visual_crossing_config_visibility()
+        self._update_priority_settings_visibility()
 
-    def _update_data_source_ui_visibility(self):
-        """
-        Update visibility of data source-dependent UI elements.
-
-        Shows/hides:
-        - Visual Crossing API config (only when Visual Crossing is selected)
-        - Source priority settings (only when Automatic is selected)
-        """
+    def _get_selected_data_source(self) -> str:
+        """Get the currently selected data source internal value."""
         if not self.data_source_selection:
-            return
-
+            return "auto"
         selected_display = str(self.data_source_selection.value)
-        # Map display back to internal value using mapping; default to 'auto'
-        selected_internal = self.data_source_display_to_value.get(selected_display, "auto")
-        show_visual_crossing = selected_internal == "visualcrossing"
-        show_priority_settings = selected_internal == "auto"
+        return self.data_source_display_to_value.get(selected_display, "auto")
 
-        # Use a stable, known parent to manage add/remove so it can be re-added reliably
+    def _update_visual_crossing_config_visibility(self):
+        """Show Visual Crossing API config only when Visual Crossing is selected."""
         container = getattr(self, "data_sources_tab", None)
-        if not container:
+        if not container or not self.visual_crossing_config_box:
             return
 
-        # Handle Visual Crossing config visibility
-        if self.visual_crossing_config_box:
-            if show_visual_crossing:
-                if self.visual_crossing_config_box not in container.children:
-                    # Insert right after the data source selection control
-                    try:
-                        idx = container.children.index(self.data_source_selection)
-                        container.insert(idx + 1, self.visual_crossing_config_box)
-                    except ValueError:
-                        container.add(self.visual_crossing_config_box)
-            else:
-                if self.visual_crossing_config_box in container.children:
-                    container.remove(self.visual_crossing_config_box)
+        show = self._get_selected_data_source() == "visualcrossing"
 
-        # Handle priority settings visibility (only show for Auto mode)
+        if show:
+            if self.visual_crossing_config_box not in container.children:
+                try:
+                    idx = container.children.index(self.data_source_selection)
+                    container.insert(idx + 1, self.visual_crossing_config_box)
+                except ValueError:
+                    container.add(self.visual_crossing_config_box)
+        else:
+            if self.visual_crossing_config_box in container.children:
+                container.remove(self.visual_crossing_config_box)
+
+    def _update_priority_settings_visibility(self):
+        """Show source priority settings only when Automatic mode is selected."""
+        container = getattr(self, "data_sources_tab", None)
         source_priority_box = getattr(self, "source_priority_config_box", None)
-        if source_priority_box:
-            if show_priority_settings:
-                if source_priority_box not in container.children:
-                    container.add(source_priority_box)
-            else:
-                if source_priority_box in container.children:
-                    container.remove(source_priority_box)
+        if not container or not source_priority_box:
+            return
+
+        show = self._get_selected_data_source() == "auto"
+
+        if show:
+            if source_priority_box not in container.children:
+                container.add(source_priority_box)
+        else:
+            if source_priority_box in container.children:
+                container.remove(source_priority_box)
 
     def _on_update_channel_changed(self, widget):
         """Handle update channel selection change."""

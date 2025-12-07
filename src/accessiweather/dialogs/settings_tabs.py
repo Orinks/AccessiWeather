@@ -596,8 +596,9 @@ def create_data_sources_tab(dialog):
     # Add the priority config box to the main container
     data_sources_box.add(dialog.source_priority_config_box)
 
-    # Update visibility of Visual Crossing config and priority settings based on data source
-    dialog._update_data_source_ui_visibility()
+    # Update visibility based on selected data source
+    dialog._update_visual_crossing_config_visibility()
+    dialog._update_priority_settings_visibility()
 
     dialog.option_container.content.append("Data Sources", data_sources_box)
 

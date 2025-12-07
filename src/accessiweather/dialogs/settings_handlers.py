@@ -136,7 +136,8 @@ def _apply_data_source_settings(dialog, settings):
             logger.warning("%s: Failed to apply intl priority selection: %s", LOG_PREFIX, exc)
 
     with contextlib.suppress(Exception):
-        dialog._update_data_source_ui_visibility()
+        dialog._update_visual_crossing_config_visibility()
+        dialog._update_priority_settings_visibility()
 
 
 def _apply_sound_settings(dialog, settings):
