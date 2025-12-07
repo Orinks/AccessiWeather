@@ -392,11 +392,18 @@ class TestWeatherDataFetching:
         assert current.condition == "Warm"
 
     @pytest.mark.asyncio
-    async def test_nws_current_missing_primary_fields_uses_openmeteo(self):
-        """Missing NWS temperature/condition should be filled with Open-Meteo data."""
+    async def test_nws_explicit_source_does_not_augment_with_openmeteo(self):
+        """
+        When NWS is explicitly selected, missing fields are NOT filled from Open-Meteo.
+
+        This test verifies that explicit source selection respects user preference.
+        When a user explicitly selects NWS as their data source, only NWS data is used
+        even if some fields are missing. No fallback or augmentation from other sources.
+        """
         client = WeatherClient(data_source="nws")
         location = Location("Data Gap", 40.0, -75.0)
 
+        # NWS returns current conditions with only wind_speed_mph (missing temperature)
         nws_current = CurrentConditions(wind_speed_mph=7.0)
         forecast = Forecast(periods=[])
         alerts = WeatherAlerts(alerts=[])
@@ -425,12 +432,14 @@ class TestWeatherDataFetching:
         weather_data = await client.get_weather_data(location)
         await client.close()
 
+        # With explicit NWS selection, we should get NWS data only - no Open-Meteo augmentation
         assert weather_data.current is not None
-        assert weather_data.current.temperature_f == pytest.approx(42.0)
-        assert weather_data.current.condition == "Clear sky"
         assert weather_data.current.wind_speed_mph == pytest.approx(7.0)
-        assert weather_data.current.has_data()
-        client._get_openmeteo_current_conditions.assert_awaited_once()
+        # Temperature should be None since NWS didn't provide it and we don't augment
+        assert weather_data.current.temperature_f is None
+        assert weather_data.current.condition is None
+        # Open-Meteo should NOT have been called for augmentation
+        client._get_openmeteo_current_conditions.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_weather_client_error_handling(self):
