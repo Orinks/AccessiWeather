@@ -396,13 +396,13 @@ def create_data_sources_tab(dialog):
     data_sources_box.add(toga.Label("Weather Data Source:", style=Pack(margin_bottom=5)))
 
     data_source_options = [
-        "Automatic (NWS for US, Open-Meteo for non-US)",
+        "Automatic (merges all available sources)",
         "National Weather Service (NWS)",
         "Open-Meteo (International)",
         "Visual Crossing (Global, requires API key)",
     ]
     dialog.data_source_display_to_value = {
-        "Automatic (NWS for US, Open-Meteo for non-US)": "auto",
+        "Automatic (merges all available sources)": "auto",
         "National Weather Service (NWS)": "nws",
         "Open-Meteo (International)": "openmeteo",
         "Visual Crossing (Global, requires API key)": "visualcrossing",
@@ -479,16 +479,16 @@ def create_data_sources_tab(dialog):
 
     data_sources_box.add(dialog.visual_crossing_config_box)
 
-    dialog._update_visual_crossing_visibility()
+    # Source Priority Configuration (for Auto mode) - wrapped in a container for visibility control
+    dialog.source_priority_config_box = toga.Box(style=Pack(direction=COLUMN))
 
-    # Source Priority Configuration (for Auto mode)
-    data_sources_box.add(
+    dialog.source_priority_config_box.add(
         toga.Label(
             "Source Priority (Auto Mode):",
             style=Pack(margin_top=20, margin_bottom=5, font_weight="bold"),
         )
     )
-    data_sources_box.add(
+    dialog.source_priority_config_box.add(
         toga.Label(
             "When using Auto mode, data is merged from multiple sources in priority order.",
             style=Pack(margin_bottom=10, font_size=9),
@@ -496,7 +496,9 @@ def create_data_sources_tab(dialog):
     )
 
     # US locations priority
-    data_sources_box.add(toga.Label("US Locations Priority:", style=Pack(margin_bottom=5)))
+    dialog.source_priority_config_box.add(
+        toga.Label("US Locations Priority:", style=Pack(margin_bottom=5))
+    )
 
     us_priority_options = [
         "NWS → Open-Meteo → Visual Crossing (Default)",
@@ -536,10 +538,10 @@ def create_data_sources_tab(dialog):
         logger.warning("Failed to set US priority selection: %s", exc)
         dialog.us_priority_selection.value = us_priority_options[0]
 
-    data_sources_box.add(dialog.us_priority_selection)
+    dialog.source_priority_config_box.add(dialog.us_priority_selection)
 
     # International locations priority
-    data_sources_box.add(
+    dialog.source_priority_config_box.add(
         toga.Label("International Locations Priority:", style=Pack(margin_bottom=5))
     )
 
@@ -581,15 +583,21 @@ def create_data_sources_tab(dialog):
         logger.warning("Failed to set international priority selection: %s", exc)
         dialog.intl_priority_selection.value = intl_priority_options[0]
 
-    data_sources_box.add(dialog.intl_priority_selection)
+    dialog.source_priority_config_box.add(dialog.intl_priority_selection)
 
-    data_sources_box.add(
+    dialog.source_priority_config_box.add(
         toga.Label(
             "Note: Higher priority sources provide the primary data. Lower priority sources "
             "fill in missing fields and provide additional details.",
             style=Pack(margin_top=5, margin_bottom=10, font_size=9, font_style="italic"),
         )
     )
+
+    # Add the priority config box to the main container
+    data_sources_box.add(dialog.source_priority_config_box)
+
+    # Update visibility of Visual Crossing config and priority settings based on data source
+    dialog._update_visual_crossing_visibility()
 
     dialog.option_container.content.append("Data Sources", data_sources_box)
 

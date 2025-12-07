@@ -529,21 +529,23 @@ class SettingsDialog:
         self._update_visual_crossing_visibility()
 
     def _update_visual_crossing_visibility(self):
-        """Update visibility of Visual Crossing configuration based on data source selection."""
-        if not self.data_source_selection or not self.visual_crossing_config_box:
+        """Update visibility of Visual Crossing config and priority settings based on data source."""
+        if not self.data_source_selection:
             return
 
         selected_display = str(self.data_source_selection.value)
         # Map display back to internal value using mapping; default to 'auto'
         selected_internal = self.data_source_display_to_value.get(selected_display, "auto")
         show_visual_crossing = selected_internal == "visualcrossing"
+        show_priority_settings = selected_internal == "auto"
 
         # Use a stable, known parent to manage add/remove so it can be re-added reliably
         container = getattr(self, "data_sources_tab", None)
         if not container:
             return
 
-        if container:
+        # Handle Visual Crossing config visibility
+        if self.visual_crossing_config_box:
             if show_visual_crossing:
                 if self.visual_crossing_config_box not in container.children:
                     # Insert right after the data source selection control
@@ -555,6 +557,16 @@ class SettingsDialog:
             else:
                 if self.visual_crossing_config_box in container.children:
                     container.remove(self.visual_crossing_config_box)
+
+        # Handle priority settings visibility (only show for Auto mode)
+        source_priority_box = getattr(self, "source_priority_config_box", None)
+        if source_priority_box:
+            if show_priority_settings:
+                if source_priority_box not in container.children:
+                    container.add(source_priority_box)
+            else:
+                if source_priority_box in container.children:
+                    container.remove(source_priority_box)
 
     def _on_update_channel_changed(self, widget):
         """Handle update channel selection change."""
