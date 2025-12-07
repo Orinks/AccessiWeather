@@ -49,20 +49,15 @@ class SettingsOperations:
             settings.data_source = "auto"
             config_changed = True
 
-        if settings.data_source == "visualcrossing":
-            if not settings.visual_crossing_api_key:
-                self.logger.warning(
-                    "Visual Crossing selected but no API key provided, switching to 'auto'"
-                )
-                settings.data_source = "auto"
-                config_changed = True
-        else:
-            if settings.visual_crossing_api_key:
-                self.logger.info(
-                    f"Clearing Visual Crossing API key for data_source '{settings.data_source}'"
-                )
-                settings.visual_crossing_api_key = ""
-                config_changed = True
+        if settings.data_source == "visualcrossing" and not settings.visual_crossing_api_key:
+            self.logger.warning(
+                "Visual Crossing selected but no API key provided, switching to 'auto'"
+            )
+            settings.data_source = "auto"
+            config_changed = True
+        # Note: We no longer clear the API key when data_source is not "visualcrossing"
+        # because "auto" mode uses Visual Crossing as one of its sources when an API key
+        # is configured. The API key should persist across data source changes.
 
         app_id = getattr(settings, "github_app_id", "")
         if app_id:

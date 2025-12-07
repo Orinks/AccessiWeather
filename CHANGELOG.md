@@ -19,7 +19,14 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [0.4.1] - 2025-11-20 (Unreleased)
+## [0.4.2] - 2025-12-07
+
+### Fixed
+- API keys now persist in secure storage regardless of selected data source, fixing auto mode's ability to use Visual Crossing when configured
+
+---
+
+## [0.4.1] - 2025-11-20
 
 ### Highlights
 - **Secure API Key Storage**: Integrated system keyring for safer storage of API credentials on Windows, macOS, and Linux—no more plain-text keys in config files.
