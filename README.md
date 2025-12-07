@@ -1,183 +1,148 @@
-# AccessiWeather (Development)
+# AccessiWeather
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 [![Built with BeeWare/Toga](https://img.shields.io/badge/Built%20with-BeeWare%20%2F%20Toga-ff6f00)](https://beeware.org/)
-[![Packaging: Briefcase](https://img.shields.io/badge/Packaging-Briefcase-6f42c1)](https://briefcase.readthedocs.io/)
 ![Platforms](https://img.shields.io/badge/Platforms-Windows%20%7C%20macOS%20%7C%20Linux-informational)
 
-This is the development branch of AccessiWeather. For stable releases, see the [main branch](https://github.com/Orinks/AccessiWeather/tree/main) or download from [accessiweather.orinks.net](https://accessiweather.orinks.net).
+AccessiWeather is a cross-platform, accessible weather application built with Python and BeeWare/Toga. Get detailed weather forecasts, alerts, and conditions with full screen reader support and keyboard navigation.
 
-## Nightly Builds
+## Features
 
-Automated nightly builds are available for testing the latest development changes:
+- **Multi-Source Weather Data**: Combines National Weather Service (NWS), Open-Meteo, and Visual Crossing for comprehensive coverage
+- **Weather Alerts**: Real-time notifications for severe weather with customizable alert sounds
+- **Accessibility First**: Full screen reader support, keyboard shortcuts, and ARIA labels throughout
+- **Air Quality & Environmental Data**: Track AQI, pollen, UV index, and more
+- **Weather History**: View historical weather trends and patterns
+- **Aviation Weather**: TAF/METAR decoding for pilots
+- **Sound Packs**: Customize alert sounds with community-created packs
+- **Offline Support**: Smart caching keeps data available when you're offline
+- **Multiple Locations**: Save and switch between your favorite locations
 
-- **Windows (MSI/ZIP)** and **macOS (DMG)** builds run nightly when there are new commits
+## Installation
+
+### Download Installers
+
+Visit [accessiweather.orinks.net](https://accessiweather.orinks.net) to download:
+
+- **Windows**: MSI installer or portable ZIP
+- **macOS**: DMG installer
+- **Linux**: AppImage (coming soon)
+
+### Nightly Builds
+
+Want to test the latest features? Nightly builds are available from the [dev branch](https://github.com/Orinks/AccessiWeather/tree/dev):
+
 - Download from [GitHub Actions](https://github.com/Orinks/AccessiWeather/actions/workflows/briefcase-build.yml) (select a successful run → Artifacts)
 - See [docs/nightly-link-setup.md](docs/nightly-link-setup.md) for direct download links
 
-⚠️ Nightly builds may contain bugs or incomplete features. Use stable releases for production.
+⚠️ Nightly builds may contain bugs or incomplete features.
 
-## Development Setup
+## Getting Started
 
-### Prerequisites
-- Python 3.10+ (3.12 recommended)
-- Git
+1. **Launch AccessiWeather** after installation
+2. **Add a location**: Click "Add Location" or press `Ctrl+L` (Windows/Linux) / `Cmd+L` (macOS)
+3. **View weather**: Select your location and choose from Current Conditions, Forecast, Alerts, and more
+4. **Customize settings**: Access Settings via the menu or `Ctrl+,` / `Cmd+,`
 
-### Quick Start
+### Keyboard Shortcuts
 
-```bash
-# Clone and enter the repo
-git clone https://github.com/Orinks/AccessiWeather.git
-cd AccessiWeather
-git checkout dev
+- `Ctrl/Cmd + L` - Add/manage locations
+- `Ctrl/Cmd + R` - Refresh weather data
+- `Ctrl/Cmd + ,` - Open settings
+- `Ctrl/Cmd + Q` - Quit application
+- `F1` - Help/documentation
 
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate      # Linux/macOS
-# source .venv/Scripts/activate  # Windows (Git Bash)
-# .venv\Scripts\activate         # Windows (CMD/PowerShell)
+See the [User Manual](docs/user_manual.md) for complete documentation.
 
-# Install dev dependencies
-pip install -e ".[dev]"
-```
+## Configuration
 
-### Running the App
+AccessiWeather stores your settings and locations in:
 
-```bash
-# Run with Briefcase (recommended for development)
-briefcase dev
+- **Windows**: `%APPDATA%\accessiweather\accessiweather.json`
+- **macOS**: `~/Library/Application Support/accessiweather/accessiweather.json`
+- **Linux**: `~/.config/accessiweather/accessiweather.json`
 
-# Or run directly (limited functionality)
-python -m accessiweather
-```
+You can export and import your configuration from the Settings dialog.
 
-### Running Tests
+## API Keys (Optional)
 
-```bash
-# Run all tests (parallel, faster)
-pytest -n auto
+AccessiWeather works out of the box with free data sources (NWS and Open-Meteo). For enhanced features, you can add:
 
-# Run all tests (serial)
-pytest -v
-
-# Run specific test file or function
-pytest tests/test_file.py::test_func -v
-
-# Run tests matching a pattern
-pytest -k "test_name" -v
-
-# Run only unit tests (skips integration tests that hit real APIs)
-pytest -m "unit"
-```
-
-### Linting & Type Checking
-
-```bash
-# Lint and format (line length: 100)
-ruff check --fix .
-ruff format .
-
-# Type checking
-pyright
-```
-
-## Building & Packaging
-
-### Using Briefcase Directly
-
-```bash
-# Create platform-specific project skeleton
-briefcase create
-
-# Build app artifacts
-briefcase build
-
-# Generate installers (MSI/DMG/PKG)
-briefcase package
-```
-
-### Using installer/make.py (Recommended)
-
-A convenience wrapper around Briefcase with additional helpers:
-
-```bash
-# Show environment info and detected versions
-python installer/make.py status
-
-# Create platform scaffold (first time only)
-python installer/make.py create --platform windows  # or macOS, linux
-
-# Build the app
-python installer/make.py build --platform windows
-
-# Package installer (MSI/DMG/PKG)
-python installer/make.py package --platform windows
-
-# Run in dev mode
-python installer/make.py dev
-
-# Run tests via Briefcase
-python installer/make.py test
-
-# Create portable ZIP (Windows)
-python installer/make.py zip --platform windows
-
-# Clean build artifacts
-python installer/make.py clean --platform windows
-```
-
-## Project Structure
-
-```
-src/accessiweather/     # Main application package
-├── app.py              # Main Toga app entry point
-├── api/                # Weather API clients (NWS, Open-Meteo, Visual Crossing)
-├── config/             # ConfigManager, AppSettings, LocationOperations
-├── dialogs/            # UI dialogs
-├── ui_builder.py       # Toga UI construction
-├── weather_client.py   # Multi-source weather orchestration
-├── alert_manager.py    # Weather alert handling
-├── cache.py            # API response caching
-└── background_tasks.py # Async periodic updates
-
-tests/                  # Unit and integration tests
-installer/              # Build scripts and make.py wrapper
-docs/                   # Documentation
-```
-
-## Code Style
-
-- **Formatter**: Ruff (100 char line length, double quotes)
-- **Type hints**: Modern syntax (`dict[str, Any]` not `Dict`)
-- **Async**: Use `await` for async functions, `asyncio.create_task()` for fire-and-forget
-- **Toga UI**: All elements must have `aria_label` and `aria_description` for accessibility
-- **Tests**: Mark with `@pytest.mark.unit` or `@pytest.mark.integration`
-
-See [AGENTS.md](AGENTS.md) for detailed conventions and gotchas.
-
-## CI/CD
-
-- **ci.yml**: Runs linting (Ruff) and unit tests on Ubuntu/Windows/macOS
-- **briefcase-build.yml**: Matrix builds for Windows (MSI) and macOS (DMG)
-
-## Contributing
-
-1. Fork the repo and create a feature branch from `dev`
-2. Make your changes with tests
-3. Run `ruff check --fix . && ruff format .` and `pytest`
-4. Submit a PR to `dev`
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
+- **Visual Crossing API**: Historical weather data and extended forecasts
+  - Get a free key at [visualcrossing.com](https://www.visualcrossing.com/weather-api)
+  - Add in Settings → Weather Sources
 
 ## Documentation
 
-- [User Manual](docs/user_manual.md)
-- [Accessibility Guide](docs/ACCESSIBILITY.md)
-- [CI/CD Architecture](docs/cicd_architecture.md)
-- [Build & Artifacts](docs/build_and_artifacts.md)
-- [Git Workflow](docs/git-workflow.md)
+- [User Manual](docs/user_manual.md) - Complete guide to using AccessiWeather
+- [Accessibility Guide](docs/ACCESSIBILITY.md) - Screen reader tips and keyboard navigation
+- [Sound Pack System](docs/SOUND_PACK_SYSTEM.md) - Create and install custom alert sounds
+- [Update System](docs/UPDATE_SYSTEM.md) - How automatic updates work
+
+## Support & Community
+
+- **Issues**: Report bugs or request features on [GitHub Issues](https://github.com/Orinks/AccessiWeather/issues)
+- **Discussions**: Join the conversation on [GitHub Discussions](https://github.com/Orinks/AccessiWeather/discussions)
+- **Website**: [accessiweather.orinks.net](https://accessiweather.orinks.net)
+
+## Contributing
+
+We welcome contributions! Whether you're fixing bugs, adding features, or improving documentation:
+
+1. Fork the repo and create a feature branch from `dev`
+2. Make your changes with tests
+3. Run linting: `ruff check --fix . && ruff format .`
+4. Run tests: `pytest -n auto`
+5. Submit a PR to `dev`
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+## Development
+
+### Quick Setup
+
+```bash
+# Clone and setup
+git clone https://github.com/Orinks/AccessiWeather.git
+cd AccessiWeather
+python -m venv .venv
+source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+pip install -e ".[dev]"
+
+# Run the app
+briefcase dev
+
+# Run tests
+pytest -n auto
+```
+
+### Key Commands
+
+```bash
+# Development
+briefcase dev              # Run with hot reload
+pytest -n auto             # Run tests (parallel)
+ruff check --fix .         # Lint and fix
+ruff format .              # Format code
+pyright                    # Type checking
+
+# Building
+briefcase create           # Create platform skeleton
+briefcase build            # Build app
+briefcase package          # Generate installer
+```
+
+See [AGENTS.md](AGENTS.md) for detailed development conventions, architecture overview, and CI/CD information.
 
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
+
+## Acknowledgments
+
+Built with [BeeWare/Toga](https://beeware.org/) for cross-platform Python GUI development. Weather data provided by:
+
+- [National Weather Service](https://www.weather.gov/) (US)
+- [Open-Meteo](https://open-meteo.com/) (Global)
+- [Visual Crossing](https://www.visualcrossing.com/) (Optional, for historical data)
