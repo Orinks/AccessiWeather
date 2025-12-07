@@ -51,20 +51,20 @@
     - Test fallback to actual temperature
     - **Validates: Requirements 6.1, 6.2, 6.3**
 
-- [-] 4. Checkpoint - Ensure all tests pass
+- [x] 4. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. Enhance current conditions presentation
-  - [ ] 5.1 Add seasonal fields to CurrentConditionsPresentation
+- [x] 5. Enhance current conditions presentation
+  - [x] 5.1 Add seasonal fields to CurrentConditionsPresentation
     - Add snow_depth, frost_risk fields to presentation dataclass
     - Include in fallback_text when available
     - _Requirements: 2.1, 4.1_
-  - [ ] 5.2 Integrate select_feels_like_temperature() into presentation
+  - [x] 5.2 Integrate select_feels_like_temperature() into presentation
     - Use new function for feels-like display
     - Show reason (wind chill/heat index) when applicable
     - _Requirements: 6.1, 6.2, 6.3_
 
-- [ ] 6. Final Checkpoint - Ensure all tests pass
+- [-] 6. Final Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ---

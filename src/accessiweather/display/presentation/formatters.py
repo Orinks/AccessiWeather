@@ -524,6 +524,9 @@ def format_temperature_with_feels_like(
     """
     Format temperature with inline feels-like comparison when significantly different.
 
+    Uses select_feels_like_temperature() to intelligently choose between wind chill,
+    heat index, or existing feels-like based on current conditions.
+
     Returns a tuple of (temperature_string, feels_like_reason).
     The feels_like_reason explains why it feels different (humidity, wind, etc.)
     and is None if the difference is below threshold.
@@ -548,9 +551,9 @@ def format_temperature_with_feels_like(
     if temp_str is None:
         return "N/A", None
 
-    # Check if we have feels-like data
-    feels_f = current.feels_like_f
-    feels_c = current.feels_like_c
+    # Use intelligent feels-like selection based on conditions
+    feels_f, feels_c, selection_reason = select_feels_like_temperature(current)
+
     if feels_f is None and feels_c is None:
         return temp_str, None
 
@@ -578,8 +581,11 @@ def format_temperature_with_feels_like(
     # Build the combined string
     combined = f"{temp_str} (feels like {feels_str})"
 
-    # Determine the reason for the difference
-    reason = _get_feels_like_reason(current, diff)
+    # Use the selection reason if available, otherwise determine from conditions
+    if selection_reason:
+        reason = f"due to {selection_reason}"
+    else:
+        reason = _get_feels_like_reason(current, diff)
 
     return combined, reason
 
