@@ -47,6 +47,7 @@ class AppSettings:
     show_pressure_trend: bool = True
     show_visibility: bool = True
     show_uv_index: bool = True
+    show_seasonal_data: bool = True
     air_quality_enabled: bool = True
     pollen_enabled: bool = True
     air_quality_notify_threshold: int = 3
@@ -124,6 +125,7 @@ class AppSettings:
             "show_pressure_trend": self.show_pressure_trend,
             "show_visibility": self.show_visibility,
             "show_uv_index": self.show_uv_index,
+            "show_seasonal_data": self.show_seasonal_data,
             "air_quality_enabled": self.air_quality_enabled,
             "pollen_enabled": self.pollen_enabled,
             "air_quality_notify_threshold": self.air_quality_notify_threshold,
@@ -179,6 +181,7 @@ class AppSettings:
             show_pressure_trend=cls._as_bool(data.get("show_pressure_trend"), True),
             show_visibility=cls._as_bool(data.get("show_visibility"), True),
             show_uv_index=cls._as_bool(data.get("show_uv_index"), True),
+            show_seasonal_data=cls._as_bool(data.get("show_seasonal_data"), True),
             air_quality_enabled=cls._as_bool(data.get("air_quality_enabled"), True),
             pollen_enabled=cls._as_bool(data.get("pollen_enabled"), True),
             air_quality_notify_threshold=data.get("air_quality_notify_threshold", 3),

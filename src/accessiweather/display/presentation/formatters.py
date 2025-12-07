@@ -123,6 +123,118 @@ def format_visibility_value(
     )
 
 
+def format_snow_depth(
+    snow_depth_in: float | None,
+    snow_depth_cm: float | None,
+    unit_pref: TemperatureUnit,
+) -> str | None:
+    """
+    Format snow depth for display.
+
+    Args:
+        snow_depth_in: Snow depth in inches
+        snow_depth_cm: Snow depth in centimeters
+        unit_pref: Unit preference (imperial/metric/both)
+
+    Returns:
+        Formatted string like "6 in" or "15 cm" or None if no data
+
+    """
+    if snow_depth_in is None and snow_depth_cm is None:
+        return None
+
+    # Convert if needed
+    if snow_depth_in is None and snow_depth_cm is not None:
+        snow_depth_in = snow_depth_cm / 2.54
+    if snow_depth_cm is None and snow_depth_in is not None:
+        snow_depth_cm = snow_depth_in * 2.54
+
+    if unit_pref == TemperatureUnit.CELSIUS:
+        return f"{snow_depth_cm:.1f} cm"
+    if unit_pref == TemperatureUnit.BOTH:
+        return f"{snow_depth_in:.1f} in ({snow_depth_cm:.1f} cm)"
+    # Default: imperial
+    return f"{snow_depth_in:.1f} in"
+
+
+def format_frost_risk(frost_risk: str | None) -> str | None:
+    """
+    Format frost risk level for display.
+
+    Args:
+        frost_risk: Risk level ("None", "Low", "Moderate", "High")
+
+    Returns:
+        Formatted string or None if no data
+
+    """
+    if frost_risk is None or frost_risk.lower() == "none":
+        return None
+    return frost_risk
+
+
+def select_feels_like_temperature(
+    current: CurrentConditions,
+) -> tuple[float | None, float | None, str | None]:
+    """
+    Select the appropriate feels-like temperature based on conditions.
+
+    Logic:
+    - If temp < 50°F and wind > 3 mph: use wind_chill
+    - If temp > 80°F and humidity > 40%: use heat_index
+    - Otherwise: use existing feels_like or actual temp
+
+    Args:
+        current: Current weather conditions
+
+    Returns:
+        Tuple of (feels_like_f, feels_like_c, reason)
+        reason is "wind chill", "heat index", or None
+
+    """
+    temp_f = current.temperature_f
+    if temp_f is None and current.temperature_c is not None:
+        temp_f = (current.temperature_c * 9 / 5) + 32
+
+    wind_mph = current.wind_speed_mph
+    if wind_mph is None and current.wind_speed_kph is not None:
+        wind_mph = current.wind_speed_kph * 0.621371
+
+    humidity = current.humidity
+
+    # Check for wind chill conditions: cold and windy
+    if (
+        temp_f is not None
+        and temp_f < 50
+        and wind_mph is not None
+        and wind_mph > 3
+        and current.wind_chill_f is not None
+    ):
+        wind_chill_c = current.wind_chill_c
+        if wind_chill_c is None and current.wind_chill_f is not None:
+            wind_chill_c = (current.wind_chill_f - 32) * 5 / 9
+        return current.wind_chill_f, wind_chill_c, "wind chill"
+
+    # Check for heat index conditions: hot and humid
+    if (
+        temp_f is not None
+        and temp_f > 80
+        and humidity is not None
+        and humidity > 40
+        and current.heat_index_f is not None
+    ):
+        heat_index_c = current.heat_index_c
+        if heat_index_c is None and current.heat_index_f is not None:
+            heat_index_c = (current.heat_index_f - 32) * 5 / 9
+        return current.heat_index_f, heat_index_c, "heat index"
+
+    # Fall back to existing feels_like or actual temperature
+    if current.feels_like_f is not None or current.feels_like_c is not None:
+        return current.feels_like_f, current.feels_like_c, None
+
+    return current.temperature_f, current.temperature_c, None
+
+
 def format_forecast_temperature(
     period: ForecastPeriod,
     unit_pref: TemperatureUnit,

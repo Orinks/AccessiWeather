@@ -14,44 +14,44 @@
   - Verified Open-Meteo client requests seasonal parameters
   - _Requirements: Architecture setup_
 
-- [ ] 2. Add seasonal formatter functions
-  - [ ] 2.1 Add format_snow_depth() function to formatters.py
+- [x] 2. Add seasonal formatter functions
+  - [x] 2.1 Add format_snow_depth() function to formatters.py
     - Format snow depth in inches or centimeters based on unit preference
     - Return None when no data available
     - _Requirements: 2.1_
-  - [ ] 2.2 Add format_frost_risk() function to formatters.py
+  - [x] 2.2 Add format_frost_risk() function to formatters.py
     - Format frost risk level (None, Low, Moderate, High)
     - Return None when no data available
     - _Requirements: 4.1_
-  - [ ] 2.3 Add select_feels_like_temperature() function to formatters.py
+  - [x] 2.3 Add select_feels_like_temperature() function to formatters.py
     - Use wind_chill when temp < 50°F and wind > 3 mph
     - Use heat_index when temp > 80°F and humidity > 40%
     - Fall back to actual temperature otherwise
     - _Requirements: 6.1, 6.2, 6.3_
 
-- [ ] 3. Write property tests for seasonal logic
-  - [ ] 3.1 Write property test for season detection
+- [x] 3. Write property tests for seasonal logic
+  - [x] 3.1 Write property test for season detection
     - **Property 1: Season Detection Consistency**
     - Test get_season() returns correct season for any date/latitude
     - Test Southern Hemisphere flip (December = summer)
     - **Validates: Requirements 1.1, 1.2**
-  - [ ] 3.2 Write property test for seasonal data display
+  - [x] 3.2 Write property test for seasonal data display
     - **Property 2: Seasonal Data Display Completeness**
     - Test that populated seasonal fields appear in formatted output
     - **Validates: Requirements 2.1, 2.2, 2.3, 3.1, 4.1**
-  - [ ] 3.3 Write property test for graceful degradation
+  - [x] 3.3 Write property test for graceful degradation
     - **Property 3: Graceful Degradation**
     - Test that None seasonal fields don't cause errors
     - Test that basic weather still displays
     - **Validates: Requirements 5.1, 5.2**
-  - [ ] 3.4 Write property test for feels-like selection
+  - [x] 3.4 Write property test for feels-like selection
     - **Property 4: Feels-Like Temperature Selection**
     - Test wind chill selection when cold and windy
     - Test heat index selection when hot and humid
     - Test fallback to actual temperature
     - **Validates: Requirements 6.1, 6.2, 6.3**
 
-- [ ] 4. Checkpoint - Ensure all tests pass
+- [-] 4. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 5. Enhance current conditions presentation
