@@ -41,12 +41,14 @@ async def on_add_location_pressed(app: AccessiWeatherApp, widget: toga.Button) -
 
     try:
         add_dialog = AddLocationDialog(app, app.config_manager)
-        location_added = await add_dialog.show_and_wait()
+        added_location_name = await add_dialog.show_and_wait()
 
-        if location_added:
+        if added_location_name:
+            # Set the newly added location as current so it's selected in the dropdown
+            app.config_manager.set_current_location(added_location_name)
             app_helpers.update_location_selection(app)
             await refresh_weather_data(app)
-            logger.info("Location added successfully")
+            logger.info("Location added successfully: %s", added_location_name)
         else:
             logger.info("Add location cancelled")
     except Exception as exc:  # pragma: no cover - defensive logging

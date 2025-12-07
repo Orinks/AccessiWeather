@@ -419,8 +419,8 @@ class AddLocationDialog:
 
             if success:
                 self._update_status("Location saved successfully!")
-                # Close dialog with success result
-                self._close_dialog(True)
+                # Close dialog with the name of the added location
+                self._close_dialog(name)
             else:
                 self._update_status("Failed to save location")
 
@@ -430,7 +430,7 @@ class AddLocationDialog:
 
     async def _on_cancel_pressed(self, widget):
         """Handle cancel button press."""
-        self._close_dialog(False)
+        self._close_dialog(None)
 
     def _update_status(self, message: str):
         """Update the status label."""
@@ -438,8 +438,14 @@ class AddLocationDialog:
             self.status_label.text = message
             logger.info(f"Location dialog status: {message}")
 
-    def _close_dialog(self, result: bool):
-        """Close the dialog and set the result."""
+    def _close_dialog(self, result: str | None):
+        """
+        Close the dialog and set the result.
+
+        Args:
+            result: The name of the added location, or None if cancelled.
+
+        """
         if self._result_future and not self._result_future.done():
             self._result_future.set_result(result)
 

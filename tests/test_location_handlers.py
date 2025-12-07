@@ -128,13 +128,16 @@ class TestOnAddLocationPressed:
             patch("accessiweather.handlers.location_handlers.app_helpers") as mock_helpers,
         ):
             mock_dialog = Mock()
-            mock_dialog.show_and_wait = AsyncMock(return_value=True)
+            # Dialog now returns the location name on success, None on cancel
+            mock_dialog.show_and_wait = AsyncMock(return_value="New Location")
             mock_dialog_class.return_value = mock_dialog
 
             await on_add_location_pressed(mock_app, mock_button)
 
             mock_dialog_class.assert_called_once_with(mock_app, mock_app.config_manager)
             mock_dialog.show_and_wait.assert_called_once()
+            # Should set the new location as current
+            mock_app.config_manager.set_current_location.assert_called_once_with("New Location")
             mock_helpers.update_location_selection.assert_called_once_with(mock_app)
             mock_refresh.assert_called_once_with(mock_app)
 
@@ -151,11 +154,13 @@ class TestOnAddLocationPressed:
             patch("accessiweather.handlers.location_handlers.app_helpers") as mock_helpers,
         ):
             mock_dialog = Mock()
-            mock_dialog.show_and_wait = AsyncMock(return_value=False)
+            # Dialog returns None when cancelled
+            mock_dialog.show_and_wait = AsyncMock(return_value=None)
             mock_dialog_class.return_value = mock_dialog
 
             await on_add_location_pressed(mock_app, mock_button)
 
+            mock_app.config_manager.set_current_location.assert_not_called()
             mock_helpers.update_location_selection.assert_not_called()
             mock_refresh.assert_not_called()
 
@@ -191,13 +196,14 @@ class TestOnAddLocationPressed:
             patch("accessiweather.handlers.location_handlers.app_helpers"),
         ):
             mock_dialog = Mock()
-            mock_dialog.show_and_wait = AsyncMock(return_value=True)
+            # Dialog returns the location name on success
+            mock_dialog.show_and_wait = AsyncMock(return_value="Test Location")
             mock_dialog_class.return_value = mock_dialog
 
             await on_add_location_pressed(mock_app, mock_button)
 
             assert "Add location menu pressed" in caplog.text
-            assert "Location added successfully" in caplog.text
+            assert "Location added successfully: Test Location" in caplog.text
 
 
 class TestOnRemoveLocationPressed:
