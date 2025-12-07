@@ -1027,6 +1027,23 @@ def parse_nws_current_conditions(
     pressure_pa = props.get("barometricPressure", {}).get("value")
     pressure_in = convert_pa_to_inches(pressure_pa)
 
+    # Seasonal fields - wind chill and heat index
+    wind_chill_c = props.get("windChill", {}).get("value")
+    wind_chill_f = (wind_chill_c * 9 / 5) + 32 if wind_chill_c is not None else None
+
+    heat_index_c = props.get("heatIndex", {}).get("value")
+    heat_index_f = (heat_index_c * 9 / 5) + 32 if heat_index_c is not None else None
+
+    # Determine feels_like based on wind chill or heat index
+    feels_like_f = None
+    feels_like_c = None
+    if wind_chill_f is not None and (temp_f is None or wind_chill_f < temp_f):
+        feels_like_f = wind_chill_f
+        feels_like_c = wind_chill_c
+    elif heat_index_f is not None and (temp_f is None or heat_index_f > temp_f):
+        feels_like_f = heat_index_f
+        feels_like_c = heat_index_c
+
     return CurrentConditions(
         temperature_f=temp_f,
         temperature_c=temp_c,
@@ -1039,11 +1056,16 @@ def parse_nws_current_conditions(
         wind_direction=wind_direction,
         pressure_in=pressure_in,
         pressure_mb=convert_pa_to_mb(pressure_pa),
-        feels_like_f=None,
-        feels_like_c=None,
+        feels_like_f=feels_like_f,
+        feels_like_c=feels_like_c,
         visibility_miles=visibility_miles,
         visibility_km=visibility_km,
         uv_index=uv_index,
+        # Seasonal fields
+        wind_chill_f=wind_chill_f,
+        wind_chill_c=wind_chill_c,
+        heat_index_f=heat_index_f,
+        heat_index_c=heat_index_c,
     )
 
 

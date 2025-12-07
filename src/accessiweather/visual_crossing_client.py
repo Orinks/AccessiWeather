@@ -60,7 +60,7 @@ class VisualCrossingClient:
                 "include": "current,days",
                 "numDays": 1,
                 "unitGroup": "us",  # Use US units (Fahrenheit, mph, inches)
-                "elements": "temp,feelslike,humidity,windspeed,winddir,pressure,conditions,datetime,sunrise,sunset,moonrise,moonset,moonphase,sunriseEpoch,sunsetEpoch,moonriseEpoch,moonsetEpoch",
+                "elements": "temp,feelslike,humidity,windspeed,winddir,pressure,conditions,datetime,sunrise,sunset,moonrise,moonset,moonphase,sunriseEpoch,sunsetEpoch,moonriseEpoch,moonsetEpoch,snowdepth,preciptype,windchill,heatindex,severerisk,visibility",
             }
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
@@ -98,7 +98,7 @@ class VisualCrossingClient:
                 "key": self.api_key,
                 "include": "days",
                 "unitGroup": "us",
-                "elements": "datetime,tempmax,tempmin,temp,conditions,description,windspeed,winddir,icon,precipprob,snow,uvindex",
+                "elements": "datetime,tempmax,tempmin,temp,conditions,description,windspeed,winddir,icon,precipprob,snow,uvindex,snowdepth,preciptype,windchill,heatindex,severerisk,visibility,feelslikemax,feelslikemin",
             }
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
@@ -136,7 +136,7 @@ class VisualCrossingClient:
                 "key": self.api_key,
                 "include": "hours",
                 "unitGroup": "us",
-                "elements": "datetime,temp,conditions,windspeed,winddir,icon,precipprob,snow,uvindex",
+                "elements": "datetime,temp,conditions,windspeed,winddir,icon,precipprob,snow,uvindex,snowdepth,preciptype,windchill,heatindex,visibility,feelslike",
             }
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
@@ -293,6 +293,21 @@ class VisualCrossingClient:
 
             moon_phase = describe_moon_phase(day_data.get("moonphase"))
 
+        # Seasonal fields
+        snow_depth_in = current.get("snowdepth")
+        snow_depth_cm = snow_depth_in * 2.54 if snow_depth_in is not None else None
+
+        wind_chill_f = current.get("windchill")
+        wind_chill_c = self._convert_f_to_c(wind_chill_f)
+
+        heat_index_f = current.get("heatindex")
+        heat_index_c = self._convert_f_to_c(heat_index_f)
+
+        precip_type = current.get("preciptype")
+        precipitation_type = precip_type if isinstance(precip_type, list) else None
+
+        severe_weather_risk = current.get("severerisk")
+
         return CurrentConditions(
             temperature_f=temp_f,
             temperature_c=temp_c,
@@ -314,6 +329,15 @@ class VisualCrossingClient:
             moon_phase=moon_phase,
             moonrise_time=moonrise_time,
             moonset_time=moonset_time,
+            # Seasonal fields
+            snow_depth_in=snow_depth_in,
+            snow_depth_cm=snow_depth_cm,
+            wind_chill_f=wind_chill_f,
+            wind_chill_c=wind_chill_c,
+            heat_index_f=heat_index_f,
+            heat_index_c=heat_index_c,
+            precipitation_type=precipitation_type,
+            severe_weather_risk=severe_weather_risk,
         )
 
     def _parse_forecast(self, data: dict) -> Forecast:
@@ -335,6 +359,10 @@ class VisualCrossingClient:
                 except (ValueError, TypeError):
                     name = f"Day {i + 1}"
 
+            # Seasonal fields
+            precip_type = day_data.get("preciptype")
+            precipitation_type = precip_type if isinstance(precip_type, list) else None
+
             period = ForecastPeriod(
                 name=name,
                 temperature=day_data.get("tempmax"),
@@ -349,6 +377,12 @@ class VisualCrossingClient:
                 precipitation_probability=day_data.get("precipprob"),
                 snowfall=day_data.get("snow"),
                 uv_index=day_data.get("uvindex"),
+                # Seasonal fields
+                snow_depth=day_data.get("snowdepth"),
+                severe_weather_risk=day_data.get("severerisk"),
+                precipitation_type=precipitation_type,
+                feels_like_high=day_data.get("feelslikemax"),
+                feels_like_low=day_data.get("feelslikemin"),
             )
             periods.append(period)
 
@@ -378,6 +412,10 @@ class VisualCrossingClient:
                         )
                         start_time = datetime.now()
 
+                # Seasonal fields
+                precip_type = hour_data.get("preciptype")
+                precipitation_type = precip_type if isinstance(precip_type, list) else None
+
                 period = HourlyForecastPeriod(
                     start_time=start_time or datetime.now(),
                     temperature=hour_data.get("temp"),
@@ -391,6 +429,13 @@ class VisualCrossingClient:
                     precipitation_probability=hour_data.get("precipprob"),
                     snowfall=hour_data.get("snow"),
                     uv_index=hour_data.get("uvindex"),
+                    # Seasonal fields
+                    snow_depth=hour_data.get("snowdepth"),
+                    wind_chill_f=hour_data.get("windchill"),
+                    heat_index_f=hour_data.get("heatindex"),
+                    feels_like=hour_data.get("feelslike"),
+                    visibility_miles=hour_data.get("visibility"),
+                    precipitation_type=precipitation_type,
                 )
                 periods.append(period)
 

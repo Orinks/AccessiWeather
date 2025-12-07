@@ -37,6 +37,10 @@ def test_get_current_weather_success(openmeteo_client):
                     "wind_direction_10m",
                     "wind_gusts_10m",
                     "uv_index",
+                    # Seasonal fields
+                    "snowfall",
+                    "snow_depth",
+                    "visibility",
                 ],
                 "daily": [
                     "sunrise",
