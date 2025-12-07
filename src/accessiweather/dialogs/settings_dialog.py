@@ -525,11 +525,17 @@ class SettingsDialog:
             )
 
     def _on_data_source_changed(self, widget):
-        """Handle data source selection change to show/hide Visual Crossing config."""
-        self._update_visual_crossing_visibility()
+        """Handle data source selection change to update UI visibility."""
+        self._update_data_source_ui_visibility()
 
-    def _update_visual_crossing_visibility(self):
-        """Update visibility of Visual Crossing config and priority settings based on data source."""
+    def _update_data_source_ui_visibility(self):
+        """
+        Update visibility of data source-dependent UI elements.
+
+        Shows/hides:
+        - Visual Crossing API config (only when Visual Crossing is selected)
+        - Source priority settings (only when Automatic is selected)
+        """
         if not self.data_source_selection:
             return
 
