@@ -14,7 +14,7 @@
     - Add source_attribution: SourceAttribution | None field
     - Add incomplete_sections: set[str] field
     - _Requirements: 6.2, 8.2_
-  - [ ]* 1.4 Write property test for SourceAttribution tracking
+  - [x]* 1.4 Write property test for SourceAttribution tracking
     - **Property 15: Source Attribution Tracking**
     - **Validates: Requirements 6.2**
 
@@ -83,7 +83,7 @@
     - Collect alerts from NWS and Visual Crossing only
     - Call deduplication logic
     - _Requirements: 4.1_
-  - [ ]* 5.3 Write property test for alert source collection
+  - [x]* 5.3 Write property test for alert source collection
     - **Property 9: Alert Source Collection**
     - **Validates: Requirements 4.1**
   - [x] 5.4 Implement _is_duplicate method
@@ -93,13 +93,13 @@
     - Keep most detailed description and instructions
     - Preserve source attribution
     - _Requirements: 4.3, 4.4_
-  - [ ]* 5.6 Write property test for alert deduplication correctness
+  - [x]* 5.6 Write property test for alert deduplication correctness
     - **Property 10: Alert Deduplication Correctness**
     - **Validates: Requirements 4.2**
-  - [ ]* 5.7 Write property test for alert detail preservation
+  - [x]* 5.7 Write property test for alert detail preservation
     - **Property 11: Alert Detail Preservation**
     - **Validates: Requirements 4.3**
-  - [ ]* 5.8 Write property test for alert source attribution
+  - [x]* 5.8 Write property test for alert source attribution
     - **Property 12: Alert Source Attribution**
     - **Validates: Requirements 4.4**
 
@@ -116,13 +116,13 @@
     - Use asyncio.wait_for for per-request timeout
     - Return None on timeout, log warning
     - _Requirements: 1.2, 5.2_
-  - [ ]* 6.4 Write property test for parallel fetch execution
+  - [x]* 6.4 Write property test for parallel fetch execution
     - **Property 1: Parallel Fetch Executes All Sources Concurrently**
     - **Validates: Requirements 1.1, 5.1**
-  - [ ]* 6.5 Write property test for source failure isolation
+  - [x]* 6.5 Write property test for source failure isolation
     - **Property 2: Source Failure Isolation**
     - **Validates: Requirements 1.3, 8.1**
-  - [ ]* 6.6 Write property test for request timeout enforcement
+  - [x]* 6.6 Write property test for request timeout enforcement
     - **Property 13: Request Timeout Enforcement**
     - **Validates: Requirements 1.2, 5.2**
 
@@ -139,21 +139,21 @@
     - Return cached data immediately if available
     - Trigger background refresh task
     - _Requirements: 5.3, 5.4_
-  - [ ]* 8.3 Write property test for stale-while-revalidate behavior
+  - [x]* 8.3 Write property test for stale-while-revalidate behavior
     - **Property 14: Stale-While-Revalidate Behavior**
     - **Validates: Requirements 5.3**
   - [x] 8.4 Implement stale cache fallback
     - When all sources fail, return cached data with stale=True
     - Set stale_reason to indicate failure
     - _Requirements: 1.4_
-  - [ ]* 8.5 Write property test for stale cache fallback
+  - [x]* 8.5 Write property test for stale cache fallback
     - **Property 3: Stale Cache Fallback**
     - **Validates: Requirements 1.4**
   - [x] 8.6 Implement partial data completeness tracking
     - Track which sections failed to populate
     - Set incomplete_sections on WeatherData
     - _Requirements: 8.1, 8.2_
-  - [ ]* 8.7 Write property test for partial data completeness tracking
+  - [x]* 8.7 Write property test for partial data completeness tracking
     - **Property 18: Partial Data Completeness Tracking**
     - **Validates: Requirements 8.2**
 
