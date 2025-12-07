@@ -397,15 +397,15 @@ def create_data_sources_tab(dialog):
 
     data_source_options = [
         "Automatic (merges all available sources)",
-        "National Weather Service (NWS)",
-        "Open-Meteo (International)",
-        "Visual Crossing (Global, requires API key)",
+        "National Weather Service (US only, with alerts)",
+        "Open-Meteo (International, no alerts)",
+        "Visual Crossing (International with alerts, requires API key)",
     ]
     dialog.data_source_display_to_value = {
         "Automatic (merges all available sources)": "auto",
-        "National Weather Service (NWS)": "nws",
-        "Open-Meteo (International)": "openmeteo",
-        "Visual Crossing (Global, requires API key)": "visualcrossing",
+        "National Weather Service (US only, with alerts)": "nws",
+        "Open-Meteo (International, no alerts)": "openmeteo",
+        "Visual Crossing (International with alerts, requires API key)": "visualcrossing",
     }
     dialog.data_source_value_to_display = {
         value: key for key, value in dialog.data_source_display_to_value.items()
