@@ -1,16 +1,16 @@
 # Implementation Plan
 
-- [ ] 1. Create core data fusion infrastructure
-  - [ ] 1.1 Create SourceData dataclass in models/weather.py
+- [x] 1. Create core data fusion infrastructure
+  - [x] 1.1 Create SourceData dataclass in models/weather.py
     - Add SourceData class to hold data from a single source with success/error tracking
     - Include source name, fetch_time, success flag, and error message
     - _Requirements: 1.3, 8.1_
-  - [ ] 1.2 Create SourceAttribution and DataConflict dataclasses
+  - [x] 1.2 Create SourceAttribution and DataConflict dataclasses
     - Add field_sources dict for tracking which source provided each field
     - Add conflicts list for recording merge conflicts
     - Add contributing_sources and failed_sources sets
     - _Requirements: 6.2_
-  - [ ] 1.3 Extend WeatherData model with source attribution fields
+  - [x] 1.3 Extend WeatherData model with source attribution fields
     - Add source_attribution: SourceAttribution | None field
     - Add incomplete_sections: set[str] field
     - _Requirements: 6.2, 8.2_
@@ -18,14 +18,14 @@
     - **Property 15: Source Attribution Tracking**
     - **Validates: Requirements 6.2**
 
-- [ ] 2. Implement SourcePriorityConfig
-  - [ ] 2.1 Create SourcePriorityConfig dataclass in config/source_priority.py
+- [x] 2. Implement SourcePriorityConfig
+  - [x] 2.1 Create SourcePriorityConfig dataclass in config/source_priority.py
     - Define us_default and international_default priority lists
     - Add field_priorities dict for per-field overrides
     - Add temperature_conflict_threshold setting
     - Implement get_priority() method
     - _Requirements: 7.1, 7.3_
-  - [ ] 2.2 Implement JSON serialization for SourcePriorityConfig
+  - [x] 2.2 Implement JSON serialization for SourcePriorityConfig
     - Add to_json() method
     - Add from_json() class method
     - _Requirements: 7.4_
@@ -36,12 +36,12 @@
     - **Property 17: Default Priority Application**
     - **Validates: Requirements 7.3**
 
-- [ ] 3. Implement DataFusionEngine
-  - [ ] 3.1 Create DataFusionEngine class in weather_client_fusion.py
+- [x] 3. Implement DataFusionEngine
+  - [x] 3.1 Create DataFusionEngine class in weather_client_fusion.py
     - Initialize with SourcePriorityConfig
     - Track attribution during merge operations
     - _Requirements: 2.1_
-  - [ ] 3.2 Implement merge_current_conditions method
+  - [x] 3.2 Implement merge_current_conditions method
     - Iterate fields in priority order
     - Fill missing fields from lower-priority sources
     - Track source attribution for each field
@@ -56,7 +56,7 @@
   - [ ]* 3.5 Write property test for no data loss during merge
     - **Property 6: No Data Loss During Merge**
     - **Validates: Requirements 2.4**
-  - [ ] 3.6 Implement merge_forecasts method
+  - [x] 3.6 Implement merge_forecasts method
     - Combine forecast periods from all sources
     - Prefer higher temporal resolution for overlapping periods
     - Preserve precipitation_probability, uv_index, snowfall
@@ -67,12 +67,12 @@
   - [ ]* 3.8 Write property test for forecast field preservation
     - **Property 8: Forecast Field Preservation**
     - **Validates: Requirements 3.4**
-  - [ ] 3.9 Implement merge_hourly_forecasts method
+  - [x] 3.9 Implement merge_hourly_forecasts method
     - Merge hourly periods into unified timeline
     - Apply same priority logic as daily forecasts
     - _Requirements: 3.1, 3.3_
 
-- [ ] 4. Checkpoint - Ensure all tests pass
+- [x] 4. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 5. Implement AlertAggregator

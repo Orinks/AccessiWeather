@@ -9,6 +9,50 @@ from typing import Any
 
 from .alerts import WeatherAlerts
 
+# Note: CurrentConditions, Forecast, HourlyForecast are defined later in this file
+# and used in SourceData via forward references (string annotations)
+
+
+@dataclass
+class DataConflict:
+    """Records a conflict between sources during data fusion."""
+
+    field_name: str
+    values: dict[str, Any]  # source -> value
+    selected_source: str
+    selected_value: Any
+
+
+@dataclass
+class SourceAttribution:
+    """Tracks source attribution for merged data."""
+
+    # Field name -> source name
+    field_sources: dict[str, str] = field(default_factory=dict)
+
+    # Conflicts detected during merge
+    conflicts: list[DataConflict] = field(default_factory=list)
+
+    # Sources that contributed to this data
+    contributing_sources: set[str] = field(default_factory=set)
+
+    # Sources that failed
+    failed_sources: set[str] = field(default_factory=set)
+
+
+@dataclass
+class SourceData:
+    """Container for data from a single source."""
+
+    source: str  # "nws", "openmeteo", "visualcrossing"
+    current: CurrentConditions | None = None
+    forecast: Forecast | None = None
+    hourly_forecast: HourlyForecast | None = None
+    alerts: WeatherAlerts | None = None
+    fetch_time: datetime = field(default_factory=lambda: datetime.now(UTC))
+    success: bool = True
+    error: str | None = None
+
 
 @dataclass
 class Location:
@@ -316,6 +360,10 @@ class WeatherData:
     stale_since: datetime | None = None
     stale_reason: str | None = None
     pending_enrichments: dict[str, asyncio.Task[Any]] | None = field(default=None, repr=False)
+
+    # Smart auto source fields
+    source_attribution: SourceAttribution | None = None
+    incomplete_sections: set[str] = field(default_factory=set)
 
     @property
     def current_conditions(self) -> CurrentConditions | None:

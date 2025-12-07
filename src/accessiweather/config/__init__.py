@@ -6,5 +6,6 @@ that implement specific groups of configuration operations.
 """
 
 from .config_manager import ConfigManager, logger
+from .source_priority import SourcePriorityConfig
 
-__all__ = ["ConfigManager", "logger"]
+__all__ = ["ConfigManager", "logger", "SourcePriorityConfig"]
