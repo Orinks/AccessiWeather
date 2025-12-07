@@ -47,7 +47,7 @@ def mock_app(tmp_path):
 
 
 def test_secure_storage_migration(mock_app, mock_keyring):
-    """Test that config loads without performing keyring migration."""
+    """Test that config loads and retrieves secure keys from keyring."""
     # Create a config file
     config_dir = mock_app.paths.config
     config_dir.mkdir(parents=True, exist_ok=True)
@@ -63,13 +63,15 @@ def test_secure_storage_migration(mock_app, mock_keyring):
     with open(config_file, "w") as f:
         json.dump(legacy_data, f)
 
-    # Initialize ConfigManager (no migration happens)
+    # Initialize ConfigManager
     manager = ConfigManager(mock_app)
     manager.load_config()
 
-    # Verify no keyring calls were made
+    # Verify keyring get_password was called to load secure keys
+    # (visual_crossing_api_key, github_app_id, github_app_private_key, github_app_installation_id)
+    assert mock_keyring.get_password.call_count == 4
+    # No set_password calls during load
     assert mock_keyring.set_password.call_count == 0
-    assert mock_keyring.get_password.call_count == 0
 
     # Verify config loads correctly
     config = manager.get_config()

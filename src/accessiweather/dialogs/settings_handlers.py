@@ -398,9 +398,17 @@ def _collect_data_source_settings(dialog, current_settings):
         logger.warning("%s: Failed to get data source selection: %s", LOG_PREFIX, exc)
         data_source = "auto"
 
-    visual_crossing_api_key = ""
+    # Start with existing API key to preserve it across data source changes
+    visual_crossing_api_key = getattr(current_settings, "visual_crossing_api_key", "") or ""
+
+    # Read from input field if it exists and has a value
+    # The input field is only visible when Visual Crossing is selected, but we should
+    # still read from it if the user entered a key before switching sources
     if getattr(dialog, "visual_crossing_api_key_input", None):
-        visual_crossing_api_key = str(dialog.visual_crossing_api_key_input.value or "").strip()
+        input_value = str(dialog.visual_crossing_api_key_input.value or "").strip()
+        # Only update if the user entered something (don't clear existing key with empty input)
+        if input_value:
+            visual_crossing_api_key = input_value
 
     # Source priority settings
     source_priority_us = getattr(

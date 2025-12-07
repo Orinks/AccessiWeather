@@ -21,6 +21,7 @@ from accessiweather.services import StartupManager
 from .github_config import GitHubConfigOperations
 from .import_export import ImportExportOperations
 from .locations import LocationOperations
+from .secure_storage import SecureStorage
 from .settings import SettingsOperations
 
 logger = logging.getLogger("accessiweather.config")
@@ -88,6 +89,9 @@ class ConfigManager:
                     data = json.load(f)
                     self._config = AppConfig.from_dict(data)
 
+                    # Load secure keys from SecureStorage (not stored in JSON for security)
+                    self._load_secure_keys()
+
                     # Validate and fix configuration
                     self._settings._validate_and_fix_config()
 
@@ -103,6 +107,35 @@ class ConfigManager:
             self._config = AppConfig.default()
 
         return self._config
+
+    def _load_secure_keys(self) -> None:
+        """
+        Load secure keys from SecureStorage into the config.
+
+        These keys are stored in the system keyring for security and are not
+        saved to the JSON config file.
+        """
+        if self._config is None:
+            return
+
+        settings = self._config.settings
+
+        # List of secure keys to load from SecureStorage
+        secure_keys = [
+            "visual_crossing_api_key",
+            "github_app_id",
+            "github_app_private_key",
+            "github_app_installation_id",
+        ]
+
+        for key in secure_keys:
+            try:
+                value = SecureStorage.get_password(key)
+                if value:
+                    setattr(settings, key, value)
+                    logger.debug(f"Loaded {key} from secure storage")
+            except Exception as exc:
+                logger.debug(f"Failed to load {key} from secure storage: {exc}")
 
     def save_config(self) -> bool:
         """Save configuration to file."""
