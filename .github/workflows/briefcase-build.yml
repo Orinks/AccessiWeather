@@ -17,6 +17,9 @@ on:
         required: false
         type: boolean
         default: false
+  push:
+    tags:
+      - 'v*.*.*'  # Trigger on version tags (e.g., v0.4.2)
   workflow_run:
     workflows: ["CI"]
     types:
