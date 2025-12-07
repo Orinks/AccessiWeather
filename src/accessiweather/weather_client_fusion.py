@@ -260,8 +260,15 @@ class DataFusionEngine:
                 merged_periods.append(period)
                 field_sources[f"period_{period.name}"] = src
 
-        # Sort by start time if available
-        merged_periods.sort(key=lambda p: p.start_time if p.start_time else p.name)
+        # Sort by start time if available, with fallback for periods without times
+        # Use a tuple key: (has_time, time_or_name) to ensure consistent ordering
+        # Periods with times come first (sorted by time), then periods without times (sorted by name)
+        def sort_key(p: ForecastPeriod) -> tuple[int, datetime | str]:
+            if p.start_time is not None:
+                return (0, p.start_time)  # Periods with times first
+            return (1, p.name)  # Periods without times second
+
+        merged_periods.sort(key=sort_key)
 
         # Use the most recent generated_at time
         generated_at = None

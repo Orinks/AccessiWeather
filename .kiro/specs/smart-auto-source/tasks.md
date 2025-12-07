@@ -29,10 +29,10 @@
     - Add to_json() method
     - Add from_json() class method
     - _Requirements: 7.4_
-  - [ ]* 2.3 Write property test for configuration round-trip
+  - [x]* 2.3 Write property test for configuration round-trip
     - **Property 16: Configuration Round-Trip**
     - **Validates: Requirements 7.4**
-  - [ ]* 2.4 Write property test for default priority application
+  - [x]* 2.4 Write property test for default priority application
     - **Property 17: Default Priority Application**
     - **Validates: Requirements 7.3**
 
@@ -47,13 +47,13 @@
     - Track source attribution for each field
     - Handle temperature conflict threshold
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
-  - [ ]* 3.3 Write property test for priority-based field merging
+  - [x]* 3.3 Write property test for priority-based field merging
     - **Property 4: Priority-Based Field Merging**
     - **Validates: Requirements 2.1, 2.3, 3.3, 7.2**
-  - [ ]* 3.4 Write property test for temperature conflict resolution
+  - [x]* 3.4 Write property test for temperature conflict resolution
     - **Property 5: Temperature Conflict Resolution**
     - **Validates: Requirements 2.2**
-  - [ ]* 3.5 Write property test for no data loss during merge
+  - [x]* 3.5 Write property test for no data loss during merge
     - **Property 6: No Data Loss During Merge**
     - **Validates: Requirements 2.4**
   - [x] 3.6 Implement merge_forecasts method
@@ -61,10 +61,10 @@
     - Prefer higher temporal resolution for overlapping periods
     - Preserve precipitation_probability, uv_index, snowfall
     - _Requirements: 3.1, 3.2, 3.3, 3.4_
-  - [ ]* 3.7 Write property test for forecast timeline unification
+  - [x]* 3.7 Write property test for forecast timeline unification
     - **Property 7: Forecast Timeline Unification**
     - **Validates: Requirements 3.1**
-  - [ ]* 3.8 Write property test for forecast field preservation
+  - [x]* 3.8 Write property test for forecast field preservation
     - **Property 8: Forecast Field Preservation**
     - **Validates: Requirements 3.4**
   - [x] 3.9 Implement merge_hourly_forecasts method
