@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import fields
+from datetime import datetime
 from typing import Any
 
 from accessiweather.config.source_priority import SourcePriorityConfig
@@ -151,7 +152,8 @@ class DataFusionEngine:
             for source in sources:
                 if source.current:
                     val = self._get_field_value(source.current, temp_field)
-                    if val is not None:
+                    # Only include numeric values (skip mocks and other non-numeric types)
+                    if val is not None and isinstance(val, (int, float)):
                         values[source.source] = val
 
             if len(values) < 2:
@@ -264,12 +266,13 @@ class DataFusionEngine:
         # Use the most recent generated_at time
         generated_at = None
         for source in valid_sources:
-            if (
-                source.forecast
-                and source.forecast.generated_at
-                and (generated_at is None or source.forecast.generated_at > generated_at)
-            ):
-                generated_at = source.forecast.generated_at
+            if source.forecast and source.forecast.generated_at:
+                src_generated_at = source.forecast.generated_at
+                # Only compare if it's a datetime (skip mocks)
+                if isinstance(src_generated_at, datetime) and (
+                    generated_at is None or src_generated_at > generated_at
+                ):
+                    generated_at = src_generated_at
 
         return Forecast(periods=merged_periods, generated_at=generated_at), field_sources
 
@@ -333,12 +336,13 @@ class DataFusionEngine:
         # Use the most recent generated_at time
         generated_at = None
         for source in valid_sources:
-            if (
-                source.hourly_forecast
-                and source.hourly_forecast.generated_at
-                and (generated_at is None or source.hourly_forecast.generated_at > generated_at)
-            ):
-                generated_at = source.hourly_forecast.generated_at
+            if source.hourly_forecast and source.hourly_forecast.generated_at:
+                src_generated_at = source.hourly_forecast.generated_at
+                # Only compare if it's a datetime (skip mocks)
+                if isinstance(src_generated_at, datetime) and (
+                    generated_at is None or src_generated_at > generated_at
+                ):
+                    generated_at = src_generated_at
 
         return (
             HourlyForecast(periods=merged_periods, generated_at=generated_at),

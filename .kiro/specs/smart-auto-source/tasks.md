@@ -129,27 +129,27 @@
 - [x] 7. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 8. Integrate smart auto source into WeatherClient
-  - [ ] 8.1 Update WeatherClient._do_fetch_weather_data for auto mode
+- [x] 8. Integrate smart auto source into WeatherClient
+  - [x] 8.1 Update WeatherClient._do_fetch_weather_data for auto mode
     - When data_source="auto", use ParallelFetchCoordinator
     - Pass results to DataFusionEngine for merging
     - Use AlertAggregator for alert combination
     - _Requirements: 1.1, 2.1, 4.1_
-  - [ ] 8.2 Implement stale-while-revalidate pattern
+  - [x] 8.2 Implement stale-while-revalidate pattern
     - Return cached data immediately if available
     - Trigger background refresh task
     - _Requirements: 5.3, 5.4_
   - [ ]* 8.3 Write property test for stale-while-revalidate behavior
     - **Property 14: Stale-While-Revalidate Behavior**
     - **Validates: Requirements 5.3**
-  - [ ] 8.4 Implement stale cache fallback
+  - [x] 8.4 Implement stale cache fallback
     - When all sources fail, return cached data with stale=True
     - Set stale_reason to indicate failure
     - _Requirements: 1.4_
   - [ ]* 8.5 Write property test for stale cache fallback
     - **Property 3: Stale Cache Fallback**
     - **Validates: Requirements 1.4**
-  - [ ] 8.6 Implement partial data completeness tracking
+  - [x] 8.6 Implement partial data completeness tracking
     - Track which sections failed to populate
     - Set incomplete_sections on WeatherData
     - _Requirements: 8.1, 8.2_
