@@ -108,6 +108,7 @@ async def test_auto_mode_enriches_with_visual_crossing_alerts():
     client.pollen_enabled = False
     client.air_quality_notify_threshold = 0
     client.environmental_client = None
+    client.trend_insights_enabled = False
 
     # Mock NWS data
     nws_current = CurrentConditions(temperature_f=72.0, temperature_c=22.2, condition="Clear")
@@ -125,21 +126,24 @@ async def test_auto_mode_enriches_with_visual_crossing_alerts():
     )
     vc_alerts = WeatherAlerts(alerts=[vc_alert])
 
-    # Mock Visual Crossing client
+    # Mock Visual Crossing client methods
     mock_vc_client = AsyncMock()
+    mock_vc_client.get_current_conditions = AsyncMock(return_value=None)
+    mock_vc_client.get_forecast = AsyncMock(return_value=None)
+    mock_vc_client.get_hourly_forecast = AsyncMock(return_value=None)
     mock_vc_client.get_alerts = AsyncMock(return_value=vc_alerts)
     client.visual_crossing_client = mock_vc_client
 
+    # Mock the fetch methods used by smart auto source
+    async def mock_fetch_nws(location):
+        return (nws_current, Forecast(periods=[]), None, nws_alerts, HourlyForecast(periods=[]))
+
+    async def mock_fetch_openmeteo(location):
+        return (CurrentConditions(), Forecast(periods=[]), HourlyForecast(periods=[]))
+
     with (
-        patch.object(client, "_get_nws_current_conditions", return_value=nws_current),
-        patch.object(
-            client,
-            "_get_nws_forecast_and_discussion",
-            return_value=(Forecast(periods=[]), "Test discussion"),
-        ),
-        patch.object(client, "_get_nws_hourly_forecast", return_value=HourlyForecast(periods=[])),
-        patch.object(client, "_get_nws_alerts", return_value=nws_alerts),
-        patch.object(client, "_get_openmeteo_current_conditions", return_value=CurrentConditions()),
+        patch.object(client, "_fetch_nws_data", side_effect=mock_fetch_nws),
+        patch.object(client, "_fetch_openmeteo_data", side_effect=mock_fetch_openmeteo),
         patch.object(client, "_process_visual_crossing_alerts", new_callable=AsyncMock),
     ):
         weather_data = await client.get_weather_data(location)
@@ -298,6 +302,7 @@ async def test_visual_crossing_alerts_merged_with_existing():
     client.pollen_enabled = False
     client.air_quality_notify_threshold = 0
     client.environmental_client = None
+    client.trend_insights_enabled = False
 
     # Mock NWS alert
     nws_alert = WeatherAlert(
@@ -323,25 +328,26 @@ async def test_visual_crossing_alerts_merged_with_existing():
     )
     vc_alerts = WeatherAlerts(alerts=[vc_alert])
 
-    # Mock Visual Crossing client
+    # Mock Visual Crossing client methods
     mock_vc_client = AsyncMock()
+    mock_vc_client.get_current_conditions = AsyncMock(return_value=None)
+    mock_vc_client.get_forecast = AsyncMock(return_value=None)
+    mock_vc_client.get_hourly_forecast = AsyncMock(return_value=None)
     mock_vc_client.get_alerts = AsyncMock(return_value=vc_alerts)
     client.visual_crossing_client = mock_vc_client
 
+    # Mock the fetch methods used by smart auto source
+    nws_current = CurrentConditions(temperature_f=72.0, condition="Clear")
+
+    async def mock_fetch_nws(location):
+        return (nws_current, Forecast(periods=[]), None, nws_alerts, HourlyForecast(periods=[]))
+
+    async def mock_fetch_openmeteo(location):
+        return (CurrentConditions(), Forecast(periods=[]), HourlyForecast(periods=[]))
+
     with (
-        patch.object(
-            client,
-            "_get_nws_current_conditions",
-            return_value=CurrentConditions(temperature_f=72.0),
-        ),
-        patch.object(
-            client,
-            "_get_nws_forecast_and_discussion",
-            return_value=(Forecast(periods=[]), "Test discussion"),
-        ),
-        patch.object(client, "_get_nws_hourly_forecast", return_value=HourlyForecast(periods=[])),
-        patch.object(client, "_get_nws_alerts", return_value=nws_alerts),
-        patch.object(client, "_get_openmeteo_current_conditions", return_value=CurrentConditions()),
+        patch.object(client, "_fetch_nws_data", side_effect=mock_fetch_nws),
+        patch.object(client, "_fetch_openmeteo_data", side_effect=mock_fetch_openmeteo),
         patch.object(client, "_process_visual_crossing_alerts", new_callable=AsyncMock),
     ):
         weather_data = await client.get_weather_data(location)

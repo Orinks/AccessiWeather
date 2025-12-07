@@ -5,9 +5,115 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+from enum import Enum
 from typing import Any
 
 from .alerts import WeatherAlerts
+
+# Note: CurrentConditions, Forecast, HourlyForecast are defined later in this file
+# and used in SourceData via forward references (string annotations)
+
+
+class Season(Enum):
+    """Enumeration of seasons."""
+
+    WINTER = "winter"
+    SPRING = "spring"
+    SUMMER = "summer"
+    FALL = "fall"
+
+
+def get_hemisphere(latitude: float) -> str:
+    """
+    Determine hemisphere based on latitude.
+
+    Args:
+        latitude: Location latitude (-90 to 90)
+
+    Returns:
+        "northern" for positive latitudes, "southern" for negative
+
+    """
+    return "northern" if latitude >= 0 else "southern"
+
+
+def get_season(date: datetime, latitude: float) -> Season:
+    """
+    Determine the season based on date and hemisphere.
+
+    Args:
+        date: The current date
+        latitude: Location latitude (determines hemisphere)
+
+    Returns:
+        The current season
+
+    """
+    hemisphere = get_hemisphere(latitude)
+    month = date.month
+
+    # Determine base season from month (Northern Hemisphere)
+    if month in (12, 1, 2):
+        base_season = Season.WINTER
+    elif month in (3, 4, 5):
+        base_season = Season.SPRING
+    elif month in (6, 7, 8):
+        base_season = Season.SUMMER
+    else:  # 9, 10, 11
+        base_season = Season.FALL
+
+    # Flip season for Southern Hemisphere
+    if hemisphere == "southern":
+        season_flip = {
+            Season.WINTER: Season.SUMMER,
+            Season.SPRING: Season.FALL,
+            Season.SUMMER: Season.WINTER,
+            Season.FALL: Season.SPRING,
+        }
+        return season_flip[base_season]
+
+    return base_season
+
+
+@dataclass
+class DataConflict:
+    """Records a conflict between sources during data fusion."""
+
+    field_name: str
+    values: dict[str, Any]  # source -> value
+    selected_source: str
+    selected_value: Any
+
+
+@dataclass
+class SourceAttribution:
+    """Tracks source attribution for merged data."""
+
+    # Field name -> source name
+    field_sources: dict[str, str] = field(default_factory=dict)
+
+    # Conflicts detected during merge
+    conflicts: list[DataConflict] = field(default_factory=list)
+
+    # Sources that contributed to this data
+    contributing_sources: set[str] = field(default_factory=set)
+
+    # Sources that failed
+    failed_sources: set[str] = field(default_factory=set)
+
+
+@dataclass
+class SourceData:
+    """Container for data from a single source."""
+
+    source: str  # "nws", "openmeteo", "visualcrossing"
+    current: CurrentConditions | None = None
+    forecast: Forecast | None = None
+    hourly_forecast: HourlyForecast | None = None
+    alerts: WeatherAlerts | None = None
+    fetch_time: datetime = field(default_factory=lambda: datetime.now(UTC))
+    success: bool = True
+    error: str | None = None
 
 
 @dataclass
@@ -56,6 +162,26 @@ class CurrentConditions:
     moon_phase: str | None = None
     moonrise_time: datetime | None = None
     moonset_time: datetime | None = None
+
+    # Seasonal fields - Winter
+    snow_depth_in: float | None = None  # Snow depth on ground (inches)
+    snow_depth_cm: float | None = None  # Snow depth on ground (cm)
+    snowfall_rate_in: float | None = None  # Current snowfall rate (in/hr)
+    wind_chill_f: float | None = None  # Wind chill (Fahrenheit)
+    wind_chill_c: float | None = None  # Wind chill (Celsius)
+    freezing_level_ft: float | None = None  # Freezing level (feet)
+    freezing_level_m: float | None = None  # Freezing level (meters)
+
+    # Seasonal fields - Summer
+    heat_index_f: float | None = None  # Heat index (Fahrenheit)
+    heat_index_c: float | None = None  # Heat index (Celsius)
+
+    # Seasonal fields - Spring/Fall
+    frost_risk: str | None = None  # "None", "Low", "Moderate", "High"
+
+    # Seasonal fields - Year-round
+    precipitation_type: list[str] | None = None  # ["rain", "snow", "ice", etc.]
+    severe_weather_risk: int | None = None  # 0-100 scale
 
     def has_data(self) -> bool:
         """Check if we have any meaningful weather data."""
@@ -107,6 +233,29 @@ class ForecastPeriod:
     snowfall: float | None = None
     uv_index: float | None = None
 
+    # Seasonal fields - Winter
+    snow_depth: float | None = None  # Expected snow accumulation (inches)
+    wind_chill_min_f: float | None = None  # Minimum wind chill for the period
+    wind_chill_max_f: float | None = None  # Maximum wind chill for the period
+    freezing_level_ft: float | None = None  # Freezing level (feet)
+    ice_risk: str | None = None  # "None", "Low", "Moderate", "High"
+
+    # Seasonal fields - Summer
+    heat_index_max_f: float | None = None  # Maximum heat index for the period
+    heat_index_min_f: float | None = None  # Minimum heat index for the period
+    uv_index_max: float | None = None  # Maximum UV index for the period
+    air_quality_forecast: int | None = None  # Forecasted AQI
+
+    # Seasonal fields - Spring/Fall
+    frost_risk: str | None = None  # "None", "Low", "Moderate", "High"
+    pollen_forecast: str | None = None  # "Low", "Moderate", "High", "Very High"
+
+    # Seasonal fields - Year-round
+    precipitation_type: list[str] | None = None  # ["rain", "snow", "ice"]
+    severe_weather_risk: int | None = None  # 0-100 scale
+    feels_like_high: float | None = None  # High "feels like" (heat index or temp)
+    feels_like_low: float | None = None  # Low "feels like" (wind chill or temp)
+
 
 @dataclass
 class Forecast:
@@ -137,6 +286,24 @@ class HourlyForecastPeriod:
     precipitation_probability: float | None = None
     snowfall: float | None = None
     uv_index: float | None = None
+
+    # Seasonal fields - Winter
+    snow_depth: float | None = None  # Snow depth at this hour (inches)
+    freezing_level_ft: float | None = None  # Freezing level (feet)
+    wind_chill_f: float | None = None  # Wind chill at this hour
+
+    # Seasonal fields - Summer
+    heat_index_f: float | None = None  # Heat index at this hour
+    air_quality_index: int | None = None  # AQI at this hour
+
+    # Seasonal fields - Spring/Fall
+    frost_risk: bool | None = None  # Frost expected this hour
+    pollen_level: str | None = None  # Pollen level this hour
+
+    # Seasonal fields - Year-round
+    precipitation_type: list[str] | None = None  # ["rain", "snow", "ice"]
+    feels_like: float | None = None  # Feels like (wind chill or heat index)
+    visibility_miles: float | None = None  # Visibility forecast
 
     def has_data(self) -> bool:
         """Check if we have any meaningful hourly forecast data."""
@@ -317,6 +484,10 @@ class WeatherData:
     stale_since: datetime | None = None
     stale_reason: str | None = None
     pending_enrichments: dict[str, asyncio.Task[Any]] | None = field(default=None, repr=False)
+
+    # Smart auto source fields
+    source_attribution: SourceAttribution | None = None
+    incomplete_sections: set[str] = field(default_factory=set)
 
     @property
     def current_conditions(self) -> CurrentConditions | None:

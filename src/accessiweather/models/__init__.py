@@ -16,6 +16,7 @@ from .errors import ApiError
 from .weather import (
     AviationData,
     CurrentConditions,
+    DataConflict,
     EnvironmentalConditions,
     Forecast,
     ForecastPeriod,
@@ -23,6 +24,8 @@ from .weather import (
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
+    SourceAttribution,
+    SourceData,
     TrendInsight,
     WeatherData,
 )
@@ -44,4 +47,7 @@ __all__ = [
     "ApiError",
     "AppSettings",
     "AppConfig",
+    "SourceData",
+    "SourceAttribution",
+    "DataConflict",
 ]

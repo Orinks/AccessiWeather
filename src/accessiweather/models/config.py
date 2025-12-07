@@ -47,6 +47,7 @@ class AppSettings:
     show_pressure_trend: bool = True
     show_visibility: bool = True
     show_uv_index: bool = True
+    show_seasonal_data: bool = True
     air_quality_enabled: bool = True
     pollen_enabled: bool = True
     air_quality_notify_threshold: int = 3
@@ -63,6 +64,13 @@ class AppSettings:
     taskbar_icon_text_enabled: bool = False
     taskbar_icon_dynamic_enabled: bool = True
     taskbar_icon_text_format: str = "{temp} {condition}"
+    # Source priority settings for smart auto mode
+    source_priority_us: list[str] = field(
+        default_factory=lambda: ["nws", "openmeteo", "visualcrossing"]
+    )
+    source_priority_international: list[str] = field(
+        default_factory=lambda: ["openmeteo", "visualcrossing"]
+    )
 
     @staticmethod
     def _as_bool(value, default: bool) -> bool:
@@ -117,6 +125,7 @@ class AppSettings:
             "show_pressure_trend": self.show_pressure_trend,
             "show_visibility": self.show_visibility,
             "show_uv_index": self.show_uv_index,
+            "show_seasonal_data": self.show_seasonal_data,
             "air_quality_enabled": self.air_quality_enabled,
             "pollen_enabled": self.pollen_enabled,
             "air_quality_notify_threshold": self.air_quality_notify_threshold,
@@ -131,6 +140,8 @@ class AppSettings:
             "taskbar_icon_text_enabled": self.taskbar_icon_text_enabled,
             "taskbar_icon_dynamic_enabled": self.taskbar_icon_dynamic_enabled,
             "taskbar_icon_text_format": self.taskbar_icon_text_format,
+            "source_priority_us": self.source_priority_us,
+            "source_priority_international": self.source_priority_international,
         }
 
     @classmethod
@@ -170,6 +181,7 @@ class AppSettings:
             show_pressure_trend=cls._as_bool(data.get("show_pressure_trend"), True),
             show_visibility=cls._as_bool(data.get("show_visibility"), True),
             show_uv_index=cls._as_bool(data.get("show_uv_index"), True),
+            show_seasonal_data=cls._as_bool(data.get("show_seasonal_data"), True),
             air_quality_enabled=cls._as_bool(data.get("air_quality_enabled"), True),
             pollen_enabled=cls._as_bool(data.get("pollen_enabled"), True),
             air_quality_notify_threshold=data.get("air_quality_notify_threshold", 3),
@@ -188,6 +200,12 @@ class AppSettings:
                 data.get("taskbar_icon_dynamic_enabled"), True
             ),
             taskbar_icon_text_format=data.get("taskbar_icon_text_format", "{temp} {condition}"),
+            source_priority_us=data.get(
+                "source_priority_us", ["nws", "openmeteo", "visualcrossing"]
+            ),
+            source_priority_international=data.get(
+                "source_priority_international", ["openmeteo", "visualcrossing"]
+            ),
         )
 
     def to_alert_settings(self):

@@ -22,6 +22,7 @@ from . import (
     weather_client_visualcrossing as vc_alerts,
 )
 from .cache import WeatherDataCache
+from .config.source_priority import SourcePriorityConfig
 from .models import (
     AppSettings,
     AviationData,
@@ -31,6 +32,8 @@ from .models import (
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
+    SourceAttribution,
+    SourceData,
     TrendInsight,
     WeatherAlert,
     WeatherAlerts,
@@ -39,6 +42,9 @@ from .models import (
 from .services import EnvironmentalDataClient
 from .utils.retry import APITimeoutError, retry_with_backoff
 from .visual_crossing_client import VisualCrossingApiError, VisualCrossingClient
+from .weather_client_alerts import AlertAggregator
+from .weather_client_fusion import DataFusionEngine
+from .weather_client_parallel import ParallelFetchCoordinator
 
 logger = logging.getLogger(__name__)
 
@@ -356,6 +362,10 @@ class WeatherClient:
 
         This is the core fetch logic separated for deduplication purposes.
         """
+        # Check if we should use smart auto source (parallel multi-source fetch)
+        if self.data_source == "auto":
+            return await self._fetch_smart_auto_source(location)
+
         # Determine which API to use based on data source and location
         logger.debug("Determining API choice")
         api_choice = self._determine_api_choice(location)
@@ -399,63 +409,11 @@ class WeatherClient:
                 logger.info(f"Successfully fetched Visual Crossing data for {location.name}")
 
             except VisualCrossingApiError as e:
-                logger.warning(f"Visual Crossing API failed for {location.name}: {e}")
-
-                # Try fallback based on location
-                if self._is_us_location(location):
-                    logger.info(f"Trying NWS fallback for US location: {location.name}")
-                    try:
-                        (
-                            current,
-                            forecast,
-                            discussion,
-                            alerts,
-                            hourly_forecast,
-                        ) = await self._fetch_nws_data(location)
-
-                        current = await self._augment_current_with_openmeteo(current, location)
-                        weather_data.current = current
-                        weather_data.forecast = forecast
-                        weather_data.hourly_forecast = hourly_forecast
-                        weather_data.discussion = discussion
-                        weather_data.alerts = alerts
-
-                        logger.info(f"Successfully fetched NWS fallback data for {location.name}")
-                    except Exception as e2:
-                        logger.error(
-                            f"Both Visual Crossing and NWS failed for {location.name}: "
-                            f"VC={e}, NWS={e2}"
-                        )
-                        self._set_empty_weather_data(weather_data)
-                else:
-                    logger.info(
-                        f"Trying Open-Meteo fallback for international location: {location.name}"
-                    )
-                    try:
-                        current, forecast, hourly_forecast = await self._fetch_openmeteo_data(
-                            location
-                        )
-
-                        weather_data.current = current
-                        weather_data.forecast = forecast
-                        weather_data.hourly_forecast = hourly_forecast
-                        weather_data.discussion = (
-                            "Forecast discussion not available from Open-Meteo."
-                        )
-                        weather_data.alerts = WeatherAlerts(alerts=[])
-
-                        logger.info(
-                            f"Successfully fetched Open-Meteo fallback data for {location.name}"
-                        )
-                    except Exception as e2:
-                        logger.error(
-                            f"Both Visual Crossing and Open-Meteo failed for "
-                            f"{location.name}: VC={e}, OM={e2}"
-                        )
-                        self._set_empty_weather_data(weather_data)
+                logger.error(f"Visual Crossing API failed for {location.name}: {e}")
+                self._set_empty_weather_data(weather_data)
 
         elif api_choice == "openmeteo":
-            # Use Open-Meteo API with parallel fetching
+            # Use Open-Meteo API only (user explicitly selected this source)
             try:
                 current, forecast, hourly_forecast = await self._fetch_openmeteo_data(location)
 
@@ -468,41 +426,10 @@ class WeatherClient:
                 logger.info(f"Successfully fetched Open-Meteo data for {location.name}")
 
             except Exception as e:
-                logger.warning(f"Open-Meteo API failed for {location.name}: {e}")
-
-                # Try NWS as fallback if location is in US
-                if self._is_us_location(location):
-                    logger.info(f"Trying NWS fallback for US location: {location.name}")
-                    try:
-                        (
-                            current,
-                            forecast,
-                            discussion,
-                            alerts,
-                            hourly_forecast,
-                        ) = await self._fetch_nws_data(location)
-
-                        current = await self._augment_current_with_openmeteo(current, location)
-                        weather_data.current = current
-                        weather_data.forecast = forecast
-                        weather_data.hourly_forecast = hourly_forecast
-                        weather_data.discussion = discussion
-                        weather_data.alerts = alerts
-
-                        logger.info(f"Successfully fetched NWS fallback data for {location.name}")
-                    except Exception as e2:
-                        logger.error(
-                            f"Both Open-Meteo and NWS failed for {location.name}: "
-                            f"OpenMeteo={e}, NWS={e2}"
-                        )
-                        self._set_empty_weather_data(weather_data)
-                else:
-                    logger.error(
-                        f"Open-Meteo failed for international location {location.name}: {e}"
-                    )
-                    self._set_empty_weather_data(weather_data)
+                logger.error(f"Open-Meteo API failed for {location.name}: {e}")
+                self._set_empty_weather_data(weather_data)
         else:
-            # Use NWS API with parallel fetching
+            # Use NWS API only (user explicitly selected this source)
             try:
                 (
                     current,
@@ -512,71 +439,20 @@ class WeatherClient:
                     hourly_forecast,
                 ) = await self._fetch_nws_data(location)
 
-                current = await self._augment_current_with_openmeteo(current, location)
                 weather_data.current = current
                 weather_data.forecast = forecast
                 weather_data.hourly_forecast = hourly_forecast
                 weather_data.discussion = discussion
                 weather_data.alerts = alerts
 
-                # Check if we actually got valid data
                 if (current is None or not current.has_data()) and forecast is None:
-                    # If essential data is missing, try Open-Meteo fallback
-                    logger.info(
-                        f"NWS returned empty data for {location.name}, trying Open-Meteo fallback"
-                    )
-                    try:
-                        current, forecast, hourly_forecast = await self._fetch_openmeteo_data(
-                            location
-                        )
-
-                        weather_data.current = current
-                        weather_data.forecast = forecast
-                        weather_data.hourly_forecast = hourly_forecast
-                        weather_data.discussion = (
-                            "Forecast discussion not available from Open-Meteo."
-                        )
-                        weather_data.alerts = WeatherAlerts(alerts=[])
-
-                        # Check if Open-Meteo returned valid data
-                        if current is None and forecast is None:
-                            logger.error(f"Open-Meteo also returned empty data for {location.name}")
-                            self._set_empty_weather_data(weather_data)
-                        else:
-                            logger.info(
-                                f"Successfully fetched Open-Meteo fallback data for {location.name}"
-                            )
-                    except Exception as e2:
-                        logger.error(f"Both NWS and Open-Meteo failed for {location.name}: {e2}")
-                        self._set_empty_weather_data(weather_data)
+                    logger.warning(f"NWS returned empty data for {location.name}")
                 else:
                     logger.info(f"Successfully fetched NWS data for {location.name}")
 
             except Exception as e:
-                logger.warning(f"NWS API failed for {location.name}: {e}")
-
-                # Try Open-Meteo as fallback
-                logger.info(f"Trying Open-Meteo fallback for {location.name}")
-                try:
-                    current, forecast, hourly_forecast = await self._fetch_openmeteo_data(location)
-
-                    weather_data.current = current
-                    weather_data.forecast = forecast
-                    weather_data.hourly_forecast = hourly_forecast
-                    weather_data.discussion = "Forecast discussion not available from Open-Meteo."
-                    weather_data.alerts = WeatherAlerts(
-                        alerts=[]
-                    )  # Open-Meteo doesn't provide alerts
-
-                    logger.info(
-                        f"Successfully fetched Open-Meteo fallback data for {location.name}"
-                    )
-                except Exception as e2:
-                    logger.error(
-                        f"Both NWS and Open-Meteo failed for {location.name}: "
-                        f"NWS={e}, OpenMeteo={e2}"
-                    )
-                    self._set_empty_weather_data(weather_data)
+                logger.error(f"NWS API failed for {location.name}: {e}")
+                self._set_empty_weather_data(weather_data)
 
         if weather_data.has_any_data():
             # Launch enrichment tasks in parallel
@@ -591,6 +467,199 @@ class WeatherClient:
                 return cached
 
         return weather_data
+
+    async def _fetch_smart_auto_source(self, location: Location) -> WeatherData:
+        """
+        Fetch weather data from all sources in parallel and merge results.
+
+        This implements the smart auto source feature that:
+        1. Fetches from all available sources concurrently
+        2. Merges data using configurable priorities
+        3. Deduplicates alerts from multiple sources
+        4. Tracks source attribution for transparency
+
+        Args:
+            location: The location to fetch weather for
+
+        Returns:
+            Merged WeatherData from all successful sources
+
+        """
+        logger.info(f"Using smart auto source for {location.name}")
+
+        # Initialize components
+        config = SourcePriorityConfig()
+        coordinator = ParallelFetchCoordinator(timeout=5.0)
+        fusion_engine = DataFusionEngine(config)
+        alert_aggregator = AlertAggregator()
+
+        # Prepare fetch coroutines for available sources
+        is_us = self._is_us_location(location)
+
+        # Always fetch from Open-Meteo (works globally)
+        async def fetch_openmeteo():
+            current, forecast, hourly = await self._fetch_openmeteo_data(location)
+            return (current, forecast, hourly, None)  # Open-Meteo has no alerts
+
+        # Fetch from NWS for US locations
+        async def fetch_nws():
+            current, forecast, discussion, alerts, hourly = await self._fetch_nws_data(location)
+            return (current, forecast, hourly, alerts)
+
+        # Fetch from Visual Crossing if configured
+        async def fetch_vc():
+            if not self.visual_crossing_client:
+                return (None, None, None, None)
+            current = await self.visual_crossing_client.get_current_conditions(location)
+            forecast = await self.visual_crossing_client.get_forecast(location)
+            hourly = await self.visual_crossing_client.get_hourly_forecast(location)
+            alerts = await self.visual_crossing_client.get_alerts(location)
+            return (current, forecast, hourly, alerts)
+
+        # Fetch from all sources in parallel
+        source_results = await coordinator.fetch_all(
+            location=location,
+            fetch_nws=fetch_nws() if is_us else None,
+            fetch_openmeteo=fetch_openmeteo(),
+            fetch_visualcrossing=fetch_vc() if self.visual_crossing_client else None,
+        )
+
+        # Check if all sources failed
+        successful_sources = [s for s in source_results if s.success]
+        if not successful_sources:
+            logger.warning(f"All sources failed for {location.name}, checking cache")
+            return self._handle_all_sources_failed(location, source_results)
+
+        # Merge current conditions
+        merged_current, current_attribution = fusion_engine.merge_current_conditions(
+            source_results, location
+        )
+
+        # Merge forecasts
+        merged_forecast, forecast_attribution = fusion_engine.merge_forecasts(
+            source_results, location
+        )
+
+        # Merge hourly forecasts
+        merged_hourly, hourly_attribution = fusion_engine.merge_hourly_forecasts(
+            source_results, location
+        )
+
+        # Check if we got any actual data
+        has_any_data = (
+            (merged_current is not None and merged_current.has_data())
+            or (merged_forecast is not None and merged_forecast.has_data())
+            or (merged_hourly is not None and merged_hourly.has_data())
+        )
+
+        if not has_any_data:
+            # All sources returned empty data, treat as failure
+            logger.warning(f"All sources returned empty data for {location.name}")
+            return self._handle_all_sources_failed(location, source_results)
+
+        # Aggregate alerts from NWS and Visual Crossing
+        nws_alerts = None
+        vc_alerts_data = None
+        for source in source_results:
+            if source.source == "nws" and source.alerts:
+                nws_alerts = source.alerts
+            elif source.source == "visualcrossing" and source.alerts:
+                vc_alerts_data = source.alerts
+
+        merged_alerts = alert_aggregator.aggregate_alerts(nws_alerts, vc_alerts_data)
+
+        # Build source attribution
+        attribution = SourceAttribution(
+            field_sources=current_attribution.field_sources,
+            conflicts=current_attribution.conflicts,
+            contributing_sources=current_attribution.contributing_sources,
+            failed_sources=current_attribution.failed_sources,
+        )
+
+        # Track incomplete sections
+        incomplete_sections: set[str] = set()
+        if merged_current is None:
+            incomplete_sections.add("current")
+        if merged_forecast is None:
+            incomplete_sections.add("forecast")
+        if merged_hourly is None:
+            incomplete_sections.add("hourly_forecast")
+
+        # Set appropriate discussion message based on location
+        if is_us:
+            discussion = "Forecast discussion available from NWS for US locations."
+        else:
+            discussion = "Forecast discussion not available from Open-Meteo."
+
+        # Create the merged WeatherData
+        weather_data = WeatherData(
+            location=location,
+            current=merged_current,
+            forecast=merged_forecast,
+            hourly_forecast=merged_hourly,
+            discussion=discussion,
+            alerts=merged_alerts,
+            source_attribution=attribution,
+            incomplete_sections=incomplete_sections,
+        )
+
+        # Run enrichment tasks
+        if weather_data.has_any_data():
+            enrichment_tasks = self._launch_enrichment_tasks(weather_data, location)
+            await self._await_enrichments(enrichment_tasks, weather_data)
+
+        # Cache the result
+        if weather_data.has_any_data() and self.offline_cache:
+            self._persist_weather_data(location, weather_data)
+
+        logger.info(
+            f"Smart auto source completed for {location.name}: "
+            f"{len(successful_sources)} sources succeeded"
+        )
+        return weather_data
+
+    def _handle_all_sources_failed(
+        self, location: Location, source_results: list[SourceData]
+    ) -> WeatherData:
+        """
+        Handle the case when all sources fail.
+
+        Returns cached data if available, marked as stale.
+
+        Args:
+            location: The location that failed
+            source_results: List of failed source results
+
+        Returns:
+            Cached WeatherData marked as stale, or empty WeatherData
+
+        """
+        # Try to return cached data
+        if self.offline_cache:
+            cached = self.offline_cache.load(location, allow_stale=True)
+            if cached:
+                cached.stale = True
+                cached.stale_reason = "All weather sources failed"
+                logger.info(f"Returning stale cached data for {location.name}")
+                return cached
+
+        # No cache available, return empty data with attribution
+        attribution = SourceAttribution()
+        for source in source_results:
+            attribution.failed_sources.add(source.source)
+
+        # Return empty but non-None objects for backward compatibility
+        return WeatherData(
+            location=location,
+            current=CurrentConditions(),
+            forecast=Forecast(periods=[]),
+            hourly_forecast=HourlyForecast(periods=[]),
+            alerts=WeatherAlerts(alerts=[]),
+            source_attribution=attribution,
+            incomplete_sections={"current", "forecast", "hourly_forecast", "alerts"},
+            stale=True,
+            stale_reason="All weather sources failed and no cached data available",
+        )
 
     async def _process_visual_crossing_alerts(
         self, alerts: WeatherAlerts, location: Location

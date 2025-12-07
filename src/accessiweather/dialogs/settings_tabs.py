@@ -396,16 +396,16 @@ def create_data_sources_tab(dialog):
     data_sources_box.add(toga.Label("Weather Data Source:", style=Pack(margin_bottom=5)))
 
     data_source_options = [
-        "Automatic (NWS for US, Open-Meteo for non-US)",
-        "National Weather Service (NWS)",
-        "Open-Meteo (International)",
-        "Visual Crossing (Global, requires API key)",
+        "Automatic (merges all available sources)",
+        "National Weather Service (US only, with alerts)",
+        "Open-Meteo (International, no alerts)",
+        "Visual Crossing (International with alerts, requires API key)",
     ]
     dialog.data_source_display_to_value = {
-        "Automatic (NWS for US, Open-Meteo for non-US)": "auto",
-        "National Weather Service (NWS)": "nws",
-        "Open-Meteo (International)": "openmeteo",
-        "Visual Crossing (Global, requires API key)": "visualcrossing",
+        "Automatic (merges all available sources)": "auto",
+        "National Weather Service (US only, with alerts)": "nws",
+        "Open-Meteo (International, no alerts)": "openmeteo",
+        "Visual Crossing (International with alerts, requires API key)": "visualcrossing",
     }
     dialog.data_source_value_to_display = {
         value: key for key, value in dialog.data_source_display_to_value.items()
@@ -479,7 +479,126 @@ def create_data_sources_tab(dialog):
 
     data_sources_box.add(dialog.visual_crossing_config_box)
 
-    dialog._update_visual_crossing_visibility()
+    # Source Priority Configuration (for Auto mode) - wrapped in a container for visibility control
+    dialog.source_priority_config_box = toga.Box(style=Pack(direction=COLUMN))
+
+    dialog.source_priority_config_box.add(
+        toga.Label(
+            "Source Priority (Auto Mode):",
+            style=Pack(margin_top=20, margin_bottom=5, font_weight="bold"),
+        )
+    )
+    dialog.source_priority_config_box.add(
+        toga.Label(
+            "When using Auto mode, data is merged from multiple sources in priority order.",
+            style=Pack(margin_bottom=10, font_size=9),
+        )
+    )
+
+    # US locations priority
+    dialog.source_priority_config_box.add(
+        toga.Label("US Locations Priority:", style=Pack(margin_bottom=5))
+    )
+
+    us_priority_options = [
+        "NWS → Open-Meteo → Visual Crossing (Default)",
+        "NWS → Visual Crossing → Open-Meteo",
+        "Open-Meteo → NWS → Visual Crossing",
+    ]
+    dialog.us_priority_display_to_value = {
+        "NWS → Open-Meteo → Visual Crossing (Default)": ["nws", "openmeteo", "visualcrossing"],
+        "NWS → Visual Crossing → Open-Meteo": ["nws", "visualcrossing", "openmeteo"],
+        "Open-Meteo → NWS → Visual Crossing": ["openmeteo", "nws", "visualcrossing"],
+    }
+    dialog.us_priority_value_to_display = {
+        tuple(v): k for k, v in dialog.us_priority_display_to_value.items()
+    }
+
+    dialog.us_priority_selection = toga.Selection(
+        items=us_priority_options,
+        style=Pack(margin_bottom=10),
+        id="us_priority_selection",
+    )
+    dialog.us_priority_selection.aria_label = "US locations source priority"
+    dialog.us_priority_selection.aria_description = (
+        "Select the order in which weather sources are prioritized for US locations. "
+        "Higher priority sources are used first when merging data."
+    )
+
+    # Set current value
+    try:
+        current_us_priority = getattr(
+            dialog.current_settings, "source_priority_us", ["nws", "openmeteo", "visualcrossing"]
+        )
+        display_value = dialog.us_priority_value_to_display.get(
+            tuple(current_us_priority), us_priority_options[0]
+        )
+        dialog.us_priority_selection.value = display_value
+    except Exception as exc:
+        logger.warning("Failed to set US priority selection: %s", exc)
+        dialog.us_priority_selection.value = us_priority_options[0]
+
+    dialog.source_priority_config_box.add(dialog.us_priority_selection)
+
+    # International locations priority
+    dialog.source_priority_config_box.add(
+        toga.Label("International Locations Priority:", style=Pack(margin_bottom=5))
+    )
+
+    intl_priority_options = [
+        "Open-Meteo → Visual Crossing (Default)",
+        "Visual Crossing → Open-Meteo",
+    ]
+    dialog.intl_priority_display_to_value = {
+        "Open-Meteo → Visual Crossing (Default)": ["openmeteo", "visualcrossing"],
+        "Visual Crossing → Open-Meteo": ["visualcrossing", "openmeteo"],
+    }
+    dialog.intl_priority_value_to_display = {
+        tuple(v): k for k, v in dialog.intl_priority_display_to_value.items()
+    }
+
+    dialog.intl_priority_selection = toga.Selection(
+        items=intl_priority_options,
+        style=Pack(margin_bottom=10),
+        id="intl_priority_selection",
+    )
+    dialog.intl_priority_selection.aria_label = "International locations source priority"
+    dialog.intl_priority_selection.aria_description = (
+        "Select the order in which weather sources are prioritized for international locations. "
+        "NWS is not available outside the US."
+    )
+
+    # Set current value
+    try:
+        current_intl_priority = getattr(
+            dialog.current_settings,
+            "source_priority_international",
+            ["openmeteo", "visualcrossing"],
+        )
+        display_value = dialog.intl_priority_value_to_display.get(
+            tuple(current_intl_priority), intl_priority_options[0]
+        )
+        dialog.intl_priority_selection.value = display_value
+    except Exception as exc:
+        logger.warning("Failed to set international priority selection: %s", exc)
+        dialog.intl_priority_selection.value = intl_priority_options[0]
+
+    dialog.source_priority_config_box.add(dialog.intl_priority_selection)
+
+    dialog.source_priority_config_box.add(
+        toga.Label(
+            "Note: Higher priority sources provide the primary data. Lower priority sources "
+            "fill in missing fields and provide additional details.",
+            style=Pack(margin_top=5, margin_bottom=10, font_size=9, font_style="italic"),
+        )
+    )
+
+    # Add the priority config box to the main container
+    data_sources_box.add(dialog.source_priority_config_box)
+
+    # Update visibility based on selected data source
+    dialog._update_visual_crossing_config_visibility()
+    dialog._update_priority_settings_visibility()
 
     dialog.option_container.content.append("Data Sources", data_sources_box)
 

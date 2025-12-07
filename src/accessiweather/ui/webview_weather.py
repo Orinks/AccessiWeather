@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from ..display.weather_presenter import (
         CurrentConditionsPresentation,
         ForecastPresentation,
+        SourceAttributionPresentation,
     )
 
 logger = logging.getLogger(__name__)
@@ -95,6 +96,35 @@ WEATHER_CSS = """
         color: #666;
         font-style: italic;
     }
+    .source-attribution {
+        margin-top: 12px;
+        padding: 8px;
+        background: #f0f7ff;
+        border-radius: 4px;
+        font-size: 12px;
+        color: #444;
+    }
+    .source-attribution .sources {
+        margin-bottom: 4px;
+    }
+    .source-attribution .failed {
+        color: #b35900;
+    }
+    .source-attribution .incomplete {
+        color: #cc0000;
+        font-weight: 500;
+    }
+    .incomplete-indicator {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 4px;
+        padding: 8px;
+        margin: 8px 0;
+        color: #856404;
+    }
+    .incomplete-indicator::before {
+        content: "⚠ ";
+    }
     /* High contrast mode support */
     @media (prefers-contrast: high) {
         body { background: #000; color: #fff; }
@@ -102,6 +132,10 @@ WEATHER_CSS = """
         .trend { color: #ccc; }
         .period { border-bottom-color: #666; }
         .hourly-section { background: #222; }
+        .source-attribution { background: #003366; color: #fff; }
+        .source-attribution .failed { color: #ffcc00; }
+        .source-attribution .incomplete { color: #ff6666; }
+        .incomplete-indicator { background: #664400; border-color: #ffcc00; color: #ffcc00; }
     }
 </style>
 """
@@ -122,6 +156,7 @@ def _escape_html(text: str | None) -> str:
 
 def render_current_conditions_html(
     presentation: CurrentConditionsPresentation | None,
+    source_attribution: SourceAttributionPresentation | None = None,
 ) -> str:
     """Render current conditions as accessible HTML."""
     if presentation is None:
@@ -165,8 +200,47 @@ def render_current_conditions_html(
             html_parts.append(f'<div class="trend">• {_escape_html(trend)}</div>')
         html_parts.append("</section>")
 
+    # Source attribution
+    if source_attribution:
+        html_parts.append(_render_source_attribution_html(source_attribution))
+
     html_parts.append("</body></html>")
     return "\n".join(html_parts)
+
+
+def _render_source_attribution_html(attribution: SourceAttributionPresentation) -> str:
+    """Render source attribution section as HTML."""
+    parts = [
+        f'<div class="source-attribution" aria-label="{_escape_html(attribution.aria_label)}">'
+    ]
+
+    if attribution.contributing_sources:
+        sources = ", ".join(_escape_html(s) for s in attribution.contributing_sources)
+        parts.append(f'<div class="sources">Data from: {sources}</div>')
+
+    if attribution.failed_sources:
+        failed = ", ".join(_escape_html(s) for s in attribution.failed_sources)
+        parts.append(f'<div class="failed">Unavailable: {failed}</div>')
+
+    if attribution.incomplete_sections:
+        incomplete = ", ".join(_escape_html(s) for s in attribution.incomplete_sections)
+        parts.append(f'<div class="incomplete">Missing sections: {incomplete}</div>')
+
+    parts.append("</div>")
+    return "\n".join(parts)
+
+
+def render_incomplete_indicator_html(incomplete_sections: list[str]) -> str:
+    """Render an incomplete data indicator as HTML."""
+    if not incomplete_sections:
+        return ""
+
+    sections = ", ".join(_escape_html(s) for s in incomplete_sections)
+    return (
+        f'<div class="incomplete-indicator" role="alert" '
+        f'aria-label="Some weather data is unavailable">'
+        f"Some data unavailable: {sections}</div>"
+    )
 
 
 def render_forecast_html(presentation: ForecastPresentation | None) -> str:
@@ -272,10 +346,11 @@ def create_forecast_webview(height: int = 200) -> toga.WebView:
 def update_conditions_webview(
     webview: toga.WebView,
     presentation: CurrentConditionsPresentation | None,
+    source_attribution: SourceAttributionPresentation | None = None,
 ) -> None:
     """Update the conditions WebView with new data."""
     try:
-        html = render_current_conditions_html(presentation)
+        html = render_current_conditions_html(presentation, source_attribution)
         webview.set_content("about:blank", html)
         logger.debug("Updated conditions WebView")
     except Exception as exc:

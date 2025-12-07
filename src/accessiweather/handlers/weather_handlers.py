@@ -142,7 +142,11 @@ async def update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherD
             # Use HTML WebView for better accessibility
             from ..ui.webview_weather import update_conditions_webview
 
-            update_conditions_webview(current_conditions_webview, presentation.current_conditions)
+            update_conditions_webview(
+                current_conditions_webview,
+                presentation.current_conditions,
+                presentation.source_attribution,
+            )
         elif app.current_conditions_display:
             if presentation.current_conditions:
                 current_text = presentation.current_conditions.fallback_text
@@ -173,6 +177,16 @@ async def update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherD
                 if presentation.status_messages:
                     status_lines = "\n".join(f"• {line}" for line in presentation.status_messages)
                     current_text += f"\n\nStatus:\n{status_lines}"
+
+                # Add source attribution for transparency
+                if presentation.source_attribution:
+                    attr = presentation.source_attribution
+                    if attr.summary_text:
+                        current_text += f"\n\n{attr.summary_text}"
+                    if attr.incomplete_sections:
+                        incomplete = ", ".join(attr.incomplete_sections)
+                        current_text += f"\nMissing sections: {incomplete}"
+
                 app.current_conditions_display.value = current_text
             else:
                 # Avoid inventing "no data" messages when the API simply omitted a section.

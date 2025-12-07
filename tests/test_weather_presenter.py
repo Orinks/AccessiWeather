@@ -504,3 +504,122 @@ def test_presenter_handles_missing_extended_fields():
     assert "Precipitation:" not in presentation.fallback_text
     assert "Snowfall:" not in presentation.fallback_text
     assert "UV Index:" not in presentation.fallback_text
+
+
+@pytest.mark.unit
+def test_presenter_includes_seasonal_metrics():
+    """Presenter should include seasonal weather metrics when available."""
+    settings = AppSettings(temperature_unit="fahrenheit")
+    presenter = WeatherPresenter(settings)
+    location = Location(name="Winter City", latitude=40.0, longitude=-75.0)
+
+    # Winter conditions with seasonal data
+    conditions = CurrentConditions(
+        temperature_f=25.0,
+        temperature_c=-3.9,
+        condition="Light Snow",
+        humidity=85,
+        wind_speed_mph=15.0,
+        wind_direction=315,
+        # Seasonal fields
+        snow_depth_in=6.5,
+        snow_depth_cm=16.5,
+        wind_chill_f=12.0,
+        wind_chill_c=-11.1,
+        freezing_level_ft=2500.0,
+        freezing_level_m=762.0,
+        precipitation_type=["snow"],
+        severe_weather_risk=25,
+    )
+
+    presentation = presenter.present_current(conditions, location)
+
+    assert presentation is not None
+    labels = {metric.label for metric in presentation.metrics}
+
+    # Check seasonal metrics are present
+    assert "Snow depth" in labels
+    assert "Wind chill" in labels
+    assert "Freezing level" in labels
+    assert "Precipitation type" in labels
+    assert "Severe weather risk" in labels
+
+    # Check values
+    snow_metric = next((m for m in presentation.metrics if m.label == "Snow depth"), None)
+    assert snow_metric is not None
+    assert "6.5" in snow_metric.value
+
+    wind_chill_metric = next((m for m in presentation.metrics if m.label == "Wind chill"), None)
+    assert wind_chill_metric is not None
+    assert "12" in wind_chill_metric.value
+
+    precip_metric = next((m for m in presentation.metrics if m.label == "Precipitation type"), None)
+    assert precip_metric is not None
+    assert "Snow" in precip_metric.value
+
+    risk_metric = next((m for m in presentation.metrics if m.label == "Severe weather risk"), None)
+    assert risk_metric is not None
+    assert "25%" in risk_metric.value
+    assert "Low" in risk_metric.value
+
+
+@pytest.mark.unit
+def test_presenter_includes_summer_seasonal_metrics():
+    """Presenter should include heat index when significantly different from temperature."""
+    settings = AppSettings(temperature_unit="fahrenheit")
+    presenter = WeatherPresenter(settings)
+    location = Location(name="Summer City", latitude=30.0, longitude=-90.0)
+
+    # Summer conditions with heat index
+    conditions = CurrentConditions(
+        temperature_f=95.0,
+        temperature_c=35.0,
+        condition="Hot and Humid",
+        humidity=75,
+        wind_speed_mph=5.0,
+        wind_direction=180,
+        # Seasonal fields
+        heat_index_f=110.0,
+        heat_index_c=43.3,
+        frost_risk="None",  # Should not show when "None"
+    )
+
+    presentation = presenter.present_current(conditions, location)
+
+    assert presentation is not None
+    labels = {metric.label for metric in presentation.metrics}
+
+    # Heat index should be shown (15°F difference)
+    assert "Heat index" in labels
+    heat_metric = next((m for m in presentation.metrics if m.label == "Heat index"), None)
+    assert heat_metric is not None
+    assert "110" in heat_metric.value
+
+    # Frost risk "None" should not be shown
+    assert "Frost risk" not in labels
+
+
+@pytest.mark.unit
+def test_presenter_respects_seasonal_data_setting():
+    """Presenter should hide seasonal metrics when show_seasonal_data is False."""
+    settings = AppSettings(temperature_unit="fahrenheit", show_seasonal_data=False)
+    presenter = WeatherPresenter(settings)
+    location = Location(name="No Seasonal City", latitude=40.0, longitude=-75.0)
+
+    conditions = CurrentConditions(
+        temperature_f=25.0,
+        condition="Snow",
+        snow_depth_in=6.5,
+        wind_chill_f=12.0,
+        precipitation_type=["snow"],
+    )
+
+    presentation = presenter.present_current(conditions, location)
+
+    assert presentation is not None
+    labels = {metric.label for metric in presentation.metrics}
+
+    # Seasonal metrics should not be present
+    assert "Snow depth" not in labels
+    assert "Wind chill" not in labels
+    assert "Precipitation type" not in labels
