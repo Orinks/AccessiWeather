@@ -75,21 +75,21 @@
 - [x] 4. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. Implement AlertAggregator
-  - [ ] 5.1 Create AlertAggregator class in weather_client_alerts.py
+- [x] 5. Implement AlertAggregator
+  - [x] 5.1 Create AlertAggregator class in weather_client_alerts.py
     - Initialize with deduplication time window setting
     - _Requirements: 4.1_
-  - [ ] 5.2 Implement aggregate_alerts method
+  - [x] 5.2 Implement aggregate_alerts method
     - Collect alerts from NWS and Visual Crossing only
     - Call deduplication logic
     - _Requirements: 4.1_
   - [ ]* 5.3 Write property test for alert source collection
     - **Property 9: Alert Source Collection**
     - **Validates: Requirements 4.1**
-  - [ ] 5.4 Implement _is_duplicate method
+  - [x] 5.4 Implement _is_duplicate method
     - Compare event type, area overlap, and time window
     - _Requirements: 4.2_
-  - [ ] 5.5 Implement _merge_duplicate_alerts method
+  - [x] 5.5 Implement _merge_duplicate_alerts method
     - Keep most detailed description and instructions
     - Preserve source attribution
     - _Requirements: 4.3, 4.4_
@@ -103,16 +103,16 @@
     - **Property 12: Alert Source Attribution**
     - **Validates: Requirements 4.4**
 
-- [ ] 6. Implement ParallelFetchCoordinator
-  - [ ] 6.1 Create ParallelFetchCoordinator class in weather_client_parallel.py
+- [x] 6. Implement ParallelFetchCoordinator
+  - [x] 6.1 Create ParallelFetchCoordinator class in weather_client_parallel.py
     - Initialize with client references and timeout setting
     - _Requirements: 1.1, 5.1_
-  - [ ] 6.2 Implement fetch_all method
+  - [x] 6.2 Implement fetch_all method
     - Use asyncio.gather with return_exceptions=True
     - Wrap each source fetch with timeout
     - Return list of SourceData objects
     - _Requirements: 1.1, 1.2, 5.1_
-  - [ ] 6.3 Implement _fetch_with_timeout helper
+  - [x] 6.3 Implement _fetch_with_timeout helper
     - Use asyncio.wait_for for per-request timeout
     - Return None on timeout, log warning
     - _Requirements: 1.2, 5.2_
@@ -126,7 +126,7 @@
     - **Property 13: Request Timeout Enforcement**
     - **Validates: Requirements 1.2, 5.2**
 
-- [ ] 7. Checkpoint - Ensure all tests pass
+- [x] 7. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 8. Integrate smart auto source into WeatherClient
