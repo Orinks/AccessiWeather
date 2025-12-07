@@ -138,14 +138,15 @@ class TestSourceSelectionFixes:
         # Verify correction
         assert config.settings.data_source == "auto"
 
-    def test_config_validation_clears_unused_api_key(self, config_manager, temp_config_dir):
-        """Test that Visual Crossing API key is cleared when not using Visual Crossing."""
+    def test_config_preserves_api_key_for_auto_mode(self, config_manager, temp_config_dir):
+        """Test that Visual Crossing API key is preserved for use in auto mode."""
         # Create config with NWS but Visual Crossing API key
+        # The key should be preserved because auto mode uses it
         config_file = temp_config_dir / "accessiweather.json"
-        invalid_config = {
+        valid_config = {
             "settings": {
                 "data_source": "nws",
-                "visual_crossing_api_key": "unused_key",
+                "visual_crossing_api_key": "preserved_key",
                 "temperature_unit": "both",
                 "update_interval_minutes": 10,
                 "show_detailed_forecast": True,
@@ -174,14 +175,14 @@ class TestSourceSelectionFixes:
         }
 
         with open(config_file, "w", encoding="utf-8") as f:
-            json.dump(invalid_config, f)
+            json.dump(valid_config, f)
 
-        # Load config - should auto-correct
+        # Load config - API key should be preserved
         config = config_manager.load_config()
 
-        # Verify correction
+        # Verify API key is preserved (for use when switching to auto mode)
         assert config.settings.data_source == "nws"
-        assert config.settings.visual_crossing_api_key == ""
+        assert config.settings.visual_crossing_api_key == "preserved_key"
 
     def test_weather_client_invalid_data_source(self, us_location):
         """Test weather client handles invalid data source."""
