@@ -138,6 +138,7 @@ ignore = [
 "src/accessiweather/weatherapi_client/client.py" = ["F401", "F541", "F811", "E741"]
 "src/accessiweather/weatherapi_mapper.py" = ["F401"]
 "tests/test_logging_config.py" = ["SIM117"]
+"tests/test_smart_auto_properties.py" = ["D205", "D400", "D415"]  # Property test docstrings follow spec format
 
 [tool.ruff.lint.isort]
 # Black-compatible settings
