@@ -129,6 +129,17 @@ class AlertsPresentation:
 
 
 @dataclass(slots=True)
+class SourceAttributionPresentation:
+    """Presentation of data source attribution for transparency."""
+
+    contributing_sources: list[str] = field(default_factory=list)
+    failed_sources: list[str] = field(default_factory=list)
+    incomplete_sections: list[str] = field(default_factory=list)
+    summary_text: str = ""
+    aria_label: str = ""
+
+
+@dataclass(slots=True)
 class WeatherPresentation:
     """Top-level presentation for all weather content."""
 
@@ -141,6 +152,7 @@ class WeatherPresentation:
     aviation: AviationPresentation | None = None
     trend_summary: list[str] = field(default_factory=list)
     status_messages: list[str] = field(default_factory=list)
+    source_attribution: SourceAttributionPresentation | None = None
 
     @property
     def current(self) -> CurrentConditionsPresentation | None:  # pragma: no cover - compat
@@ -215,6 +227,7 @@ class WeatherPresenter:
             include_pressure=getattr(self.settings, "show_pressure_trend", True),
         )
         status_messages = self._build_status_messages(weather_data)
+        source_attribution = self._build_source_attribution(weather_data)
 
         return WeatherPresentation(
             location_name=weather_data.location.name,
@@ -226,6 +239,7 @@ class WeatherPresenter:
             aviation=aviation,
             trend_summary=trend_summary,
             status_messages=status_messages,
+            source_attribution=source_attribution,
         )
 
     def present_current(
@@ -542,6 +556,55 @@ class WeatherPresenter:
             else:
                 messages.append(f"Showing cached weather data ({reason}).")
         return messages
+
+    def _build_source_attribution(
+        self, weather_data: WeatherData
+    ) -> SourceAttributionPresentation | None:
+        """Build source attribution presentation for transparency."""
+        attribution = weather_data.source_attribution
+        if not attribution:
+            return None
+
+        # Format source names for display
+        source_names = {
+            "nws": "National Weather Service",
+            "openmeteo": "Open-Meteo",
+            "visualcrossing": "Visual Crossing",
+        }
+
+        contributing = [
+            source_names.get(s, s.title()) for s in sorted(attribution.contributing_sources)
+        ]
+        failed = [source_names.get(s, s.title()) for s in sorted(attribution.failed_sources)]
+        incomplete = list(weather_data.incomplete_sections)
+
+        # Build summary text
+        if contributing:
+            summary = f"Data from: {', '.join(contributing)}"
+            if failed:
+                summary += f". Unavailable: {', '.join(failed)}"
+        elif failed:
+            summary = f"Sources unavailable: {', '.join(failed)}"
+        else:
+            summary = ""
+
+        # Build accessible aria label
+        aria_parts = []
+        if contributing:
+            aria_parts.append(f"Weather data provided by {', '.join(contributing)}")
+        if failed:
+            aria_parts.append(f"Data unavailable from {', '.join(failed)}")
+        if incomplete:
+            aria_parts.append(f"Missing sections: {', '.join(incomplete)}")
+        aria_label = ". ".join(aria_parts) if aria_parts else "Weather data source information"
+
+        return SourceAttributionPresentation(
+            contributing_sources=contributing,
+            failed_sources=failed,
+            incomplete_sections=incomplete,
+            summary_text=summary,
+            aria_label=aria_label,
+        )
 
     def _get_temperature_unit_preference(self) -> TemperatureUnit:
         unit_pref = (self.settings.temperature_unit or "both").lower()

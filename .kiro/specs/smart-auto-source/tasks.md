@@ -157,25 +157,25 @@
     - **Property 18: Partial Data Completeness Tracking**
     - **Validates: Requirements 8.2**
 
-- [ ] 9. Update UI for source attribution display
-  - [ ] 9.1 Add source attribution display to weather panels
+- [x] 9. Update UI for source attribution display
+  - [x] 9.1 Add source attribution display to weather panels
     - Show source name for each major section
     - Use accessible aria-labels for screen readers
     - _Requirements: 6.1, 6.4_
-  - [ ] 9.2 Add incomplete data indicators to UI
+  - [x] 9.2 Add incomplete data indicators to UI
     - Show visual indicator when sections are unavailable
     - Provide accessible description of missing data
     - _Requirements: 8.3_
 
-- [ ] 10. Add configuration UI for source priorities
-  - [ ] 10.1 Add source priority settings to settings dialog
+- [x] 10. Add configuration UI for source priorities
+  - [x] 10.1 Add source priority settings to settings dialog
     - Allow reordering of source priorities
     - Show per-field priority overrides (advanced)
     - _Requirements: 7.1_
-  - [ ] 10.2 Persist source priority configuration
+  - [x] 10.2 Persist source priority configuration
     - Save to config file alongside other settings
     - Load on app startup
     - _Requirements: 7.1, 7.4_
 
-- [ ] 11. Final Checkpoint - Ensure all tests pass
+- [x] 11. Final Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.

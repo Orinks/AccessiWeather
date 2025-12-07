@@ -63,6 +63,13 @@ class AppSettings:
     taskbar_icon_text_enabled: bool = False
     taskbar_icon_dynamic_enabled: bool = True
     taskbar_icon_text_format: str = "{temp} {condition}"
+    # Source priority settings for smart auto mode
+    source_priority_us: list[str] = field(
+        default_factory=lambda: ["nws", "openmeteo", "visualcrossing"]
+    )
+    source_priority_international: list[str] = field(
+        default_factory=lambda: ["openmeteo", "visualcrossing"]
+    )
 
     @staticmethod
     def _as_bool(value, default: bool) -> bool:
@@ -131,6 +138,8 @@ class AppSettings:
             "taskbar_icon_text_enabled": self.taskbar_icon_text_enabled,
             "taskbar_icon_dynamic_enabled": self.taskbar_icon_dynamic_enabled,
             "taskbar_icon_text_format": self.taskbar_icon_text_format,
+            "source_priority_us": self.source_priority_us,
+            "source_priority_international": self.source_priority_international,
         }
 
     @classmethod
@@ -188,6 +197,12 @@ class AppSettings:
                 data.get("taskbar_icon_dynamic_enabled"), True
             ),
             taskbar_icon_text_format=data.get("taskbar_icon_text_format", "{temp} {condition}"),
+            source_priority_us=data.get(
+                "source_priority_us", ["nws", "openmeteo", "visualcrossing"]
+            ),
+            source_priority_international=data.get(
+                "source_priority_international", ["openmeteo", "visualcrossing"]
+            ),
         )
 
     def to_alert_settings(self):

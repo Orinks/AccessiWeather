@@ -108,6 +108,33 @@ def _apply_data_source_settings(dialog, settings):
             settings, "visual_crossing_api_key", ""
         )
 
+    # Apply source priority settings
+    if getattr(dialog, "us_priority_selection", None) is not None:
+        try:
+            current_us_priority = getattr(
+                settings, "source_priority_us", ["nws", "openmeteo", "visualcrossing"]
+            )
+            display_value = dialog.us_priority_value_to_display.get(
+                tuple(current_us_priority),
+                "NWS → Open-Meteo → Visual Crossing (Default)",
+            )
+            dialog.us_priority_selection.value = display_value
+        except Exception as exc:
+            logger.warning("%s: Failed to apply US priority selection: %s", LOG_PREFIX, exc)
+
+    if getattr(dialog, "intl_priority_selection", None) is not None:
+        try:
+            current_intl_priority = getattr(
+                settings, "source_priority_international", ["openmeteo", "visualcrossing"]
+            )
+            display_value = dialog.intl_priority_value_to_display.get(
+                tuple(current_intl_priority),
+                "Open-Meteo → Visual Crossing (Default)",
+            )
+            dialog.intl_priority_selection.value = display_value
+        except Exception as exc:
+            logger.warning("%s: Failed to apply intl priority selection: %s", LOG_PREFIX, exc)
+
     with contextlib.suppress(Exception):
         dialog._update_visual_crossing_visibility()
 
@@ -361,7 +388,7 @@ def _collect_display_settings(dialog, current_settings):
     }
 
 
-def _collect_data_source_settings(dialog):
+def _collect_data_source_settings(dialog, current_settings):
     """Collect data source and API settings from UI widgets."""
     try:
         selected_display = str(dialog.data_source_selection.value)
@@ -374,9 +401,37 @@ def _collect_data_source_settings(dialog):
     if getattr(dialog, "visual_crossing_api_key_input", None):
         visual_crossing_api_key = str(dialog.visual_crossing_api_key_input.value or "").strip()
 
+    # Source priority settings
+    source_priority_us = getattr(
+        current_settings, "source_priority_us", ["nws", "openmeteo", "visualcrossing"]
+    )
+    source_priority_international = getattr(
+        current_settings, "source_priority_international", ["openmeteo", "visualcrossing"]
+    )
+
+    if getattr(dialog, "us_priority_selection", None) is not None:
+        try:
+            selected_us = str(dialog.us_priority_selection.value)
+            source_priority_us = dialog.us_priority_display_to_value.get(
+                selected_us, ["nws", "openmeteo", "visualcrossing"]
+            )
+        except Exception as exc:
+            logger.warning("%s: Failed to get US priority selection: %s", LOG_PREFIX, exc)
+
+    if getattr(dialog, "intl_priority_selection", None) is not None:
+        try:
+            selected_intl = str(dialog.intl_priority_selection.value)
+            source_priority_international = dialog.intl_priority_display_to_value.get(
+                selected_intl, ["openmeteo", "visualcrossing"]
+            )
+        except Exception as exc:
+            logger.warning("%s: Failed to get intl priority selection: %s", LOG_PREFIX, exc)
+
     return {
         "data_source": data_source,
         "visual_crossing_api_key": visual_crossing_api_key,
+        "source_priority_us": source_priority_us,
+        "source_priority_international": source_priority_international,
     }
 
 
@@ -569,7 +624,7 @@ def collect_settings_from_ui(dialog) -> AppSettings:
 
     # Collect settings from each category
     display = _collect_display_settings(dialog, current_settings)
-    data_source = _collect_data_source_settings(dialog)
+    data_source = _collect_data_source_settings(dialog, current_settings)
     updates = _collect_update_settings(dialog)
     sound = _collect_sound_settings(dialog)
     system = _collect_system_settings(dialog, current_settings)
@@ -589,6 +644,8 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         # Data source settings
         data_source=data_source["data_source"],
         visual_crossing_api_key=data_source["visual_crossing_api_key"],
+        source_priority_us=data_source["source_priority_us"],
+        source_priority_international=data_source["source_priority_international"],
         # Update settings
         auto_update_enabled=updates["auto_update_enabled"],
         update_channel=updates["update_channel"],
