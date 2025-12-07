@@ -53,12 +53,12 @@ class EnvironmentalDataClient:
         """
         try:
             headers = {"User-Agent": self.user_agent}
+            import math
             params = {
                 "latitude": location.latitude,
                 "longitude": location.longitude,
                 "hourly": "us_aqi,pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide",
                 "timezone": "auto",
-                "forecast_hours": min(hours, 120),
             }
 
             async with httpx.AsyncClient(timeout=self.timeout, headers=headers) as client:
@@ -130,7 +130,7 @@ class EnvironmentalDataClient:
             return result if result else None
 
         except Exception as exc:  # noqa: BLE001
-            logger.debug(f"Hourly air quality request failed: {exc}")
+            logger.warning(f"Hourly air quality request failed: {exc}")
             return None
 
     @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=15.0)
@@ -349,7 +349,12 @@ class EnvironmentalDataClient:
         if text.endswith("Z"):
             text = text[:-1] + "+00:00"
         try:
-            return datetime.fromisoformat(text)
+            dt = datetime.fromisoformat(text)
+            # If the datetime is naive (no timezone), assume UTC
+            if dt.tzinfo is None:
+                from datetime import timezone
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt
         except ValueError:
             return None
 

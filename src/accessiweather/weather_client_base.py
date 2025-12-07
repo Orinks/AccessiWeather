@@ -703,6 +703,11 @@ class WeatherClient:
                 self._enrich_with_visual_crossing_moon_data(weather_data, location)
             )
 
+        if self.trend_insights_enabled and not weather_data.daily_history:
+            tasks["vc_history"] = asyncio.create_task(
+                self._enrich_with_visual_crossing_history(weather_data, location)
+            )
+
         # Post-processing enrichments (always run)
         tasks["environmental"] = asyncio.create_task(
             self._populate_environmental_metrics(weather_data, location)
@@ -1009,6 +1014,33 @@ class WeatherClient:
         self, weather_data: WeatherData, location: Location
     ) -> None:
         await enrichment.populate_environmental_metrics(self, weather_data, location)
+
+    async def _enrich_with_visual_crossing_history(
+        self, weather_data: WeatherData, location: Location
+    ) -> None:
+        """Enrich weather data with historical weather from Visual Crossing for trends."""
+        if not self.visual_crossing_client:
+            return
+
+        try:
+            # We want yesterday's data to compare
+            from datetime import timedelta
+
+            end_date = datetime.now() - timedelta(days=1)
+            start_date = end_date  # Just one day
+
+            logger.debug("Fetching historical data from Visual Crossing for %s", location.name)
+            history = await self.visual_crossing_client.get_history(location, start_date, end_date)
+
+            if history and history.periods:
+                weather_data.daily_history = history.periods
+                logger.info(
+                    "Updated weather history from Visual Crossing (fetched %d periods)",
+                    len(history.periods),
+                )
+
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("Failed to fetch history from Visual Crossing: %s", exc)
 
     def _apply_trend_insights(self, weather_data: WeatherData) -> None:
         trends.apply_trend_insights(

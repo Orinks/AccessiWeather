@@ -25,7 +25,8 @@ NWS_USER_AGENT = "AccessiWeather/IntegrationTest (github.com/Orinks/AccessiWeath
 OPENMETEO_BASE_URL = "https://api.open-meteo.com/v1"
 NWS_BASE_URL = "https://api.weather.gov"
 REQUEST_TIMEOUT = 30.0
-DELAY_BETWEEN_REQUESTS = 1.0
+# Longer delay between requests to avoid NWS rate limiting in CI
+DELAY_BETWEEN_REQUESTS = 2.0
 
 
 @pytest.fixture
@@ -115,22 +116,28 @@ async def test_temperature_cross_provider_comparison(nws_http_client, openmeteo_
     is expected due to different observation times and stations.
     """
     # Get current conditions from both providers
-    nws_current = await get_nws_current_conditions(
-        TEST_LOCATION,
-        NWS_BASE_URL,
-        NWS_USER_AGENT,
-        REQUEST_TIMEOUT,
-        nws_http_client,
-    )
+    try:
+        nws_current = await get_nws_current_conditions(
+            TEST_LOCATION,
+            NWS_BASE_URL,
+            NWS_USER_AGENT,
+            REQUEST_TIMEOUT,
+            nws_http_client,
+        )
+    except (TimeoutError, httpx.TimeoutException) as e:
+        pytest.skip(f"NWS API timed out (likely rate-limited): {e}")
 
     await asyncio.sleep(DELAY_BETWEEN_REQUESTS)
 
-    openmeteo_current = await get_openmeteo_current_conditions(
-        TEST_LOCATION,
-        OPENMETEO_BASE_URL,
-        REQUEST_TIMEOUT,
-        openmeteo_http_client,
-    )
+    try:
+        openmeteo_current = await get_openmeteo_current_conditions(
+            TEST_LOCATION,
+            OPENMETEO_BASE_URL,
+            REQUEST_TIMEOUT,
+            openmeteo_http_client,
+        )
+    except (TimeoutError, httpx.TimeoutException) as e:
+        pytest.skip(f"Open-Meteo API timed out: {e}")
 
     # NWS current conditions may be None (station issues)
     if nws_current is None:
@@ -167,22 +174,28 @@ async def test_humidity_cross_provider_comparison(nws_http_client, openmeteo_htt
 
     Should be reasonably close (within 20 percentage points).
     """
-    nws_current = await get_nws_current_conditions(
-        TEST_LOCATION,
-        NWS_BASE_URL,
-        NWS_USER_AGENT,
-        REQUEST_TIMEOUT,
-        nws_http_client,
-    )
+    try:
+        nws_current = await get_nws_current_conditions(
+            TEST_LOCATION,
+            NWS_BASE_URL,
+            NWS_USER_AGENT,
+            REQUEST_TIMEOUT,
+            nws_http_client,
+        )
+    except (TimeoutError, httpx.TimeoutException) as e:
+        pytest.skip(f"NWS API timed out (likely rate-limited): {e}")
 
     await asyncio.sleep(DELAY_BETWEEN_REQUESTS)
 
-    openmeteo_current = await get_openmeteo_current_conditions(
-        TEST_LOCATION,
-        OPENMETEO_BASE_URL,
-        REQUEST_TIMEOUT,
-        openmeteo_http_client,
-    )
+    try:
+        openmeteo_current = await get_openmeteo_current_conditions(
+            TEST_LOCATION,
+            OPENMETEO_BASE_URL,
+            REQUEST_TIMEOUT,
+            openmeteo_http_client,
+        )
+    except (TimeoutError, httpx.TimeoutException) as e:
+        pytest.skip(f"Open-Meteo API timed out: {e}")
 
     if nws_current is None:
         pytest.skip("NWS did not return current conditions")
@@ -218,22 +231,28 @@ async def test_data_freshness_cross_provider(nws_http_client, openmeteo_http_cli
     This ensures the issue from the screenshot (wrong sunrise/sunset times)
     doesn't stem from stale or cached data.
     """
-    await get_nws_current_conditions(
-        TEST_LOCATION,
-        NWS_BASE_URL,
-        NWS_USER_AGENT,
-        REQUEST_TIMEOUT,
-        nws_http_client,
-    )
+    try:
+        await get_nws_current_conditions(
+            TEST_LOCATION,
+            NWS_BASE_URL,
+            NWS_USER_AGENT,
+            REQUEST_TIMEOUT,
+            nws_http_client,
+        )
+    except (TimeoutError, httpx.TimeoutException) as e:
+        pytest.skip(f"NWS API timed out (likely rate-limited): {e}")
 
     await asyncio.sleep(DELAY_BETWEEN_REQUESTS)
 
-    openmeteo_current = await get_openmeteo_current_conditions(
-        TEST_LOCATION,
-        OPENMETEO_BASE_URL,
-        REQUEST_TIMEOUT,
-        openmeteo_http_client,
-    )
+    try:
+        openmeteo_current = await get_openmeteo_current_conditions(
+            TEST_LOCATION,
+            OPENMETEO_BASE_URL,
+            REQUEST_TIMEOUT,
+            openmeteo_http_client,
+        )
+    except (TimeoutError, httpx.TimeoutException) as e:
+        pytest.skip(f"Open-Meteo API timed out: {e}")
 
     assert openmeteo_current is not None
 
@@ -244,22 +263,28 @@ async def test_data_freshness_cross_provider(nws_http_client, openmeteo_http_cli
 @pytest.mark.asyncio
 async def test_wind_speed_cross_provider_comparison(nws_http_client, openmeteo_http_client):
     """Compare wind speed readings between providers."""
-    nws_current = await get_nws_current_conditions(
-        TEST_LOCATION,
-        NWS_BASE_URL,
-        NWS_USER_AGENT,
-        REQUEST_TIMEOUT,
-        nws_http_client,
-    )
+    try:
+        nws_current = await get_nws_current_conditions(
+            TEST_LOCATION,
+            NWS_BASE_URL,
+            NWS_USER_AGENT,
+            REQUEST_TIMEOUT,
+            nws_http_client,
+        )
+    except (TimeoutError, httpx.TimeoutException) as e:
+        pytest.skip(f"NWS API timed out (likely rate-limited): {e}")
 
     await asyncio.sleep(DELAY_BETWEEN_REQUESTS)
 
-    openmeteo_current = await get_openmeteo_current_conditions(
-        TEST_LOCATION,
-        OPENMETEO_BASE_URL,
-        REQUEST_TIMEOUT,
-        openmeteo_http_client,
-    )
+    try:
+        openmeteo_current = await get_openmeteo_current_conditions(
+            TEST_LOCATION,
+            OPENMETEO_BASE_URL,
+            REQUEST_TIMEOUT,
+            openmeteo_http_client,
+        )
+    except (TimeoutError, httpx.TimeoutException) as e:
+        pytest.skip(f"Open-Meteo API timed out: {e}")
 
     if nws_current is None:
         pytest.skip("NWS did not return current conditions")
