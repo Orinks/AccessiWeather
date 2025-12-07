@@ -157,7 +157,8 @@ async def get_openmeteo_current_conditions(
             "longitude": location.longitude,
             "current": (
                 "temperature_2m,relative_humidity_2m,apparent_temperature,"
-                "weather_code,wind_speed_10m,wind_direction_10m,pressure_msl"
+                "weather_code,wind_speed_10m,wind_direction_10m,pressure_msl,"
+                "snowfall,snow_depth,visibility"
             ),
             "daily": "sunrise,sunset,uv_index_max",
             "temperature_unit": "fahrenheit",
@@ -252,7 +253,8 @@ async def get_openmeteo_hourly_forecast(
             "longitude": location.longitude,
             "hourly": (
                 "temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,pressure_msl,"
-                "precipitation_probability,snowfall,uv_index"
+                "precipitation_probability,snowfall,uv_index,snow_depth,freezing_level_height,"
+                "visibility,apparent_temperature"
             ),
             "temperature_unit": "fahrenheit",
             "wind_speed_unit": "mph",
@@ -332,6 +334,31 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
             except (TypeError, ValueError):
                 uv_index = None
 
+    # Seasonal fields
+    snowfall_rate = current.get("snowfall")  # mm/hour
+    snowfall_rate_in = snowfall_rate / 25.4 if snowfall_rate is not None else None
+
+    snow_depth_m = current.get("snow_depth")  # meters
+    snow_depth_in = snow_depth_m * 39.3701 if snow_depth_m is not None else None
+    snow_depth_cm = snow_depth_m * 100 if snow_depth_m is not None else None
+
+    visibility_m = current.get("visibility")  # meters
+    visibility_miles = visibility_m / 1609.344 if visibility_m is not None else None
+    visibility_km = visibility_m / 1000 if visibility_m is not None else None
+
+    # Determine wind chill vs heat index from apparent temperature
+    wind_chill_f = None
+    wind_chill_c = None
+    heat_index_f = None
+    heat_index_c = None
+    if feels_like_f is not None and temp_f is not None:
+        if feels_like_f < temp_f:
+            wind_chill_f = feels_like_f
+            wind_chill_c = feels_like_c
+        elif feels_like_f > temp_f:
+            heat_index_f = feels_like_f
+            heat_index_c = feels_like_c
+
     return CurrentConditions(
         temperature_f=temp_f,
         temperature_c=temp_c,
@@ -346,9 +373,19 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         pressure_mb=pressure_mb,
         feels_like_f=feels_like_f,
         feels_like_c=feels_like_c,
+        visibility_miles=visibility_miles,
+        visibility_km=visibility_km,
         sunrise_time=sunrise_time,
         sunset_time=sunset_time,
         uv_index=uv_index,
+        # Seasonal fields
+        snowfall_rate_in=snowfall_rate_in,
+        snow_depth_in=snow_depth_in,
+        snow_depth_cm=snow_depth_cm,
+        wind_chill_f=wind_chill_f,
+        wind_chill_c=wind_chill_c,
+        heat_index_f=heat_index_f,
+        heat_index_c=heat_index_c,
     )
 
 
@@ -398,6 +435,11 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
     precip_probs = hourly.get("precipitation_probability", [])
     snowfalls = hourly.get("snowfall", [])
     uv_indices = hourly.get("uv_index", [])
+    # Seasonal fields
+    snow_depths = hourly.get("snow_depth", [])
+    freezing_levels = hourly.get("freezing_level_height", [])
+    visibilities = hourly.get("visibility", [])
+    apparent_temps = hourly.get("apparent_temperature", [])
 
     for i, time_str in enumerate(times):
         start_time = _parse_iso_datetime(time_str, utc_offset_seconds) or datetime.now()
@@ -412,6 +454,27 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
         snowfall = snowfalls[i] if i < len(snowfalls) else None
         uv_index = uv_indices[i] if i < len(uv_indices) else None
 
+        # Seasonal fields
+        snow_depth_m = snow_depths[i] if i < len(snow_depths) else None
+        snow_depth_in = snow_depth_m * 39.3701 if snow_depth_m is not None else None
+
+        freezing_level_m = freezing_levels[i] if i < len(freezing_levels) else None
+        freezing_level_ft = freezing_level_m * 3.28084 if freezing_level_m is not None else None
+
+        visibility_m = visibilities[i] if i < len(visibilities) else None
+        visibility_miles = visibility_m / 1609.344 if visibility_m is not None else None
+
+        apparent_temp = apparent_temps[i] if i < len(apparent_temps) else None
+
+        # Determine wind chill vs heat index from apparent temperature
+        wind_chill_f = None
+        heat_index_f = None
+        if apparent_temp is not None and temperature is not None:
+            if apparent_temp < temperature:
+                wind_chill_f = apparent_temp
+            elif apparent_temp > temperature:
+                heat_index_f = apparent_temp
+
         period = HourlyForecastPeriod(
             start_time=start_time or datetime.now(),
             temperature=temperature,
@@ -424,6 +487,13 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
             precipitation_probability=precip_prob,
             snowfall=snowfall,
             uv_index=uv_index,
+            # Seasonal fields
+            snow_depth=snow_depth_in,
+            freezing_level_ft=freezing_level_ft,
+            visibility_miles=visibility_miles,
+            feels_like=apparent_temp,
+            wind_chill_f=wind_chill_f,
+            heat_index_f=heat_index_f,
         )
         periods.append(period)
 

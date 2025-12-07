@@ -197,6 +197,10 @@ class OpenMeteoApiClient:
                 "wind_direction_10m",
                 "wind_gusts_10m",
                 "uv_index",
+                # Seasonal fields
+                "snowfall",
+                "snow_depth",
+                "visibility",
             ],
             "daily": [
                 "sunrise",
@@ -311,6 +315,10 @@ class OpenMeteoApiClient:
                 "is_day",
                 "snowfall",
                 "uv_index",
+                # Seasonal fields
+                "snow_depth",
+                "freezing_level_height",
+                "visibility",
             ],
             "temperature_unit": temperature_unit,
             "wind_speed_unit": wind_speed_unit,
