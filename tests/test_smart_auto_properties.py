@@ -928,7 +928,6 @@ class TestSourceAttributionTracking:
         assert "nws" in attribution.contributing_sources
 
 
-
 # =============================================================================
 # Alert Strategies
 # =============================================================================
@@ -966,7 +965,11 @@ def weather_alerts(
 
     title = f"{event} for Test Area"
     description = draw(
-        st.text(min_size=10, max_size=200, alphabet=st.characters(whitelist_categories=("L", "N", "P", "Z")))
+        st.text(
+            min_size=10,
+            max_size=200,
+            alphabet=st.characters(whitelist_categories=("L", "N", "P", "Z")),
+        )
     )
     if not description.strip():
         description = f"A {event} has been issued for the area."
@@ -981,7 +984,9 @@ def weather_alerts(
         instruction=draw(st.one_of(st.none(), st.text(min_size=5, max_size=100))),
         onset=onset,
         expires=onset + timedelta(hours=draw(st.integers(min_value=1, max_value=24))),
-        areas=draw(st.lists(st.sampled_from(["County A", "County B", "City X"]), min_size=1, max_size=3)),
+        areas=draw(
+            st.lists(st.sampled_from(["County A", "County B", "City X"]), min_size=1, max_size=3)
+        ),
         id=f"alert-{draw(st.integers(min_value=1000, max_value=9999))}",
         source=source or draw(st.sampled_from(["nws", "visualcrossing"])),
     )
@@ -1250,15 +1255,15 @@ class TestAlertSourceAttribution:
         assert "visualcrossing" in result.alerts[0].source
 
 
-
 # =============================================================================
 # ParallelFetchCoordinator Tests
 # =============================================================================
 
 import asyncio
-import pytest
-from accessiweather.weather_client_parallel import ParallelFetchCoordinator
 
+import pytest
+
+from accessiweather.weather_client_parallel import ParallelFetchCoordinator
 
 # =============================================================================
 # Property 1: Parallel Fetch Executes All Sources Concurrently
