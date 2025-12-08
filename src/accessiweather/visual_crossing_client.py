@@ -432,8 +432,20 @@ class VisualCrossingClient:
 
     def _parse_hourly_forecast(self, data: dict) -> HourlyForecast:
         """Parse Visual Crossing hourly forecast data."""
+        from zoneinfo import ZoneInfo
+
         periods = []
         days = data.get("days", [])
+
+        # Get timezone info from the response
+        # Visual Crossing returns timezone name (e.g., "America/New_York")
+        location_tz = None
+        timezone_str = data.get("timezone")
+        if timezone_str:
+            try:
+                location_tz = ZoneInfo(timezone_str)
+            except Exception:
+                logger.warning(f"Failed to load timezone: {timezone_str}")
 
         # Extract hourly data from all days
         for day_data in days:
@@ -445,9 +457,13 @@ class VisualCrossingClient:
                 if datetime_str:
                     try:
                         # Visual Crossing format: "HH:MM:SS"
+                        # Times are in the location's local timezone
                         date_str = day_data.get("datetime", "")
                         full_datetime_str = f"{date_str}T{datetime_str}"
                         start_time = datetime.fromisoformat(full_datetime_str)
+                        # Add timezone info if available
+                        if location_tz and start_time:
+                            start_time = start_time.replace(tzinfo=location_tz)
                     except (ValueError, TypeError):
                         logger.warning(
                             f"Failed to parse Visual Crossing datetime: {full_datetime_str}"

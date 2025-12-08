@@ -876,9 +876,11 @@ class WeatherClient:
         """Delegate to the NWS client module."""
         return nws_client.parse_nws_alerts(data)
 
-    def _parse_nws_hourly_forecast(self, data: dict) -> HourlyForecast:
+    def _parse_nws_hourly_forecast(
+        self, data: dict, location: Location | None = None
+    ) -> HourlyForecast:
         """Delegate to the NWS client module."""
-        return nws_client.parse_nws_hourly_forecast(data)
+        return nws_client.parse_nws_hourly_forecast(data, location)
 
     def _parse_openmeteo_current_conditions(self, data: dict) -> CurrentConditions:
         """Delegate to the Open-Meteo client module."""

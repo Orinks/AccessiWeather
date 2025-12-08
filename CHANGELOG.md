@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Screen reader users can now navigate forecast days using heading shortcuts instead of reading through all content sequentially
+- Hourly forecast times now display correctly in your location's timezone for all data sources (NWS and Visual Crossing were showing UTC times, causing incorrect displays like "0:00 AM" for midnight UTC)
 
 ### Removed
 -
