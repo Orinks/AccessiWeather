@@ -7,9 +7,53 @@ from contextlib import suppress
 from unittest.mock import MagicMock, patch
 
 import pytest
+from hypothesis import (
+    Verbosity,
+    settings as hypothesis_settings,
+)
 
 # Ensure pytest-mock plugin loads before tests so the `mocker` fixture is available
 pytest_plugins = ("pytest_mock",)
+
+# =============================================================================
+# Hypothesis Performance Profiles
+# =============================================================================
+# Register profiles for different test scenarios:
+# - "ci": Fast profile for CI pipelines (fewer examples, shorter deadlines)
+# - "dev": Development profile (moderate examples for quick feedback)
+# - "thorough": Full testing profile (many examples for release validation)
+#
+# Usage:
+#   pytest --hypothesis-profile=ci    # Fast CI runs
+#   pytest --hypothesis-profile=dev   # Development
+#   pytest                            # Uses default (dev)
+# =============================================================================
+
+hypothesis_settings.register_profile(
+    "ci",
+    max_examples=25,
+    deadline=None,  # Disable deadline to avoid flaky failures in CI
+    suppress_health_check=[],
+    verbosity=Verbosity.quiet,
+)
+
+hypothesis_settings.register_profile(
+    "dev",
+    max_examples=50,
+    deadline=None,
+    verbosity=Verbosity.normal,
+)
+
+hypothesis_settings.register_profile(
+    "thorough",
+    max_examples=200,
+    deadline=None,
+    verbosity=Verbosity.verbose,
+)
+
+# Load profile from environment or default to "dev"
+_profile = os.environ.get("HYPOTHESIS_PROFILE", "dev")
+hypothesis_settings.load_profile(_profile)
 
 # Set toga to use the dummy backend for headless testing
 os.environ["TOGA_BACKEND"] = "toga_dummy"

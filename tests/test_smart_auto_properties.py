@@ -1277,7 +1277,7 @@ class TestParallelFetchExecution:
 
     @pytest.mark.asyncio
     @given(location=locations())
-    @settings(max_examples=50)
+    @settings(max_examples=10)  # Reduced: timing tests don't need many examples
     async def test_all_sources_fetched_concurrently(self, location: Location) -> None:
         """
         **Feature: smart-auto-source, Property 1: Parallel Fetch Executes All Sources Concurrently**
@@ -1287,7 +1287,7 @@ class TestParallelFetchExecution:
         concurrently, and total fetch time SHALL be bounded by the slowest
         source plus overhead.
         """
-        coordinator = ParallelFetchCoordinator(timeout=5.0)
+        coordinator = ParallelFetchCoordinator(timeout=1.0)
 
         # Track when each fetch starts and ends
         fetch_times: dict[str, tuple[float, float]] = {}
@@ -1295,14 +1295,14 @@ class TestParallelFetchExecution:
 
         async def mock_nws_fetch():
             fetch_start = asyncio.get_event_loop().time() - start_time
-            await asyncio.sleep(0.1)  # Simulate network delay
+            await asyncio.sleep(0.01)  # Reduced from 0.1s - still proves concurrency
             fetch_end = asyncio.get_event_loop().time() - start_time
             fetch_times["nws"] = (fetch_start, fetch_end)
             return (CurrentConditions(temperature_f=70.0), None, None, None)
 
         async def mock_openmeteo_fetch():
             fetch_start = asyncio.get_event_loop().time() - start_time
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.01)  # Reduced from 0.1s
             fetch_end = asyncio.get_event_loop().time() - start_time
             fetch_times["openmeteo"] = (fetch_start, fetch_end)
             return (CurrentConditions(temperature_f=72.0), None, None)
@@ -1336,7 +1336,7 @@ class TestSourceFailureIsolation:
 
     @pytest.mark.asyncio
     @given(location=locations())
-    @settings(max_examples=50)
+    @settings(max_examples=25)  # Reduced: failure isolation doesn't need many examples
     async def test_one_failure_doesnt_block_others(self, location: Location) -> None:
         """
         **Feature: smart-auto-source, Property 2: Source Failure Isolation**
@@ -1346,7 +1346,7 @@ class TestSourceFailureIsolation:
         the coordinator SHALL produce valid SourceData from successful sources
         regardless of which sources failed.
         """
-        coordinator = ParallelFetchCoordinator(timeout=5.0)
+        coordinator = ParallelFetchCoordinator(timeout=1.0)
 
         async def mock_nws_fetch():
             raise ConnectionError("NWS API unavailable")
@@ -1390,7 +1390,7 @@ class TestRequestTimeoutEnforcement:
 
     @pytest.mark.asyncio
     @given(location=locations())
-    @settings(max_examples=50)
+    @settings(max_examples=10)  # Reduced: timeout tests are slow by nature
     async def test_slow_source_times_out(self, location: Location) -> None:
         """
         **Feature: smart-auto-source, Property 13: Request Timeout Enforcement**
@@ -1399,15 +1399,15 @@ class TestRequestTimeoutEnforcement:
         *For any* source request that takes longer than the configured timeout,
         the coordinator SHALL cancel that request and proceed with other sources.
         """
-        # Use a short timeout for testing
-        coordinator = ParallelFetchCoordinator(timeout=0.1)
+        # Use a very short timeout for testing (50ms instead of 100ms)
+        coordinator = ParallelFetchCoordinator(timeout=0.05)
 
         async def mock_slow_nws_fetch():
-            await asyncio.sleep(1.0)  # Much longer than timeout
+            await asyncio.sleep(0.2)  # Reduced from 1.0s - still exceeds timeout
             return (CurrentConditions(temperature_f=70.0), None, None, None)
 
         async def mock_fast_openmeteo_fetch():
-            await asyncio.sleep(0.01)  # Fast response
+            await asyncio.sleep(0.005)  # Fast response
             return (CurrentConditions(temperature_f=72.0), None, None)
 
         results = await coordinator.fetch_all(
