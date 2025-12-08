@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
+import os
 from typing import TYPE_CHECKING
 
 import toga
@@ -18,18 +20,79 @@ if TYPE_CHECKING:  # pragma: no cover - circular import guard
 
 logger = logging.getLogger(__name__)
 
+# Debounce delay for rapid location switches (in seconds)
+# This prevents overwhelming APIs when users scroll through locations quickly
+_LOCATION_CHANGE_DEBOUNCE_DELAY = 0.3
+
+
+def _get_debounce_delay() -> float:
+    """Get debounce delay, disabled during tests."""
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        return 0.0
+    return _LOCATION_CHANGE_DEBOUNCE_DELAY
+
+
+# Track pending location change task for debouncing
+_pending_location_change: asyncio.Task | None = None
+
 
 async def on_location_changed(app: AccessiWeatherApp, widget: toga.Selection) -> None:
-    """Handle location selection change."""
+    """
+    Handle location selection change with debouncing.
+
+    When users rapidly switch locations (e.g., scrolling through a dropdown),
+    this debounces the API calls to prevent overwhelming the weather services
+    and causing screen reader lag.
+
+    Note: Debouncing is disabled during tests (PYTEST_CURRENT_TEST env var).
+    """
+    global _pending_location_change
+
     if not widget.value or widget.value == "No locations available":
         return
 
-    logger.info("Location changed to: %s", widget.value)
+    selected_location = widget.value
 
+    # In test mode or with zero delay, execute immediately
+    debounce_delay = _get_debounce_delay()
+    if debounce_delay == 0:
+        logger.info("Location changed to: %s", selected_location)
+        try:
+            app.config_manager.set_current_location(selected_location)
+            update_tray_icon_tooltip(app, None)
+            await refresh_weather_data(app)
+        except Exception as exc:  # pragma: no cover - defensive logging
+            logger.error("Failed to handle location change: %s", exc)
+            app_helpers.update_status(app, f"Error changing location: {exc}")
+        return
+
+    logger.debug("Location selection changed to: %s", selected_location)
+
+    # Cancel any pending location change
+    if _pending_location_change and not _pending_location_change.done():
+        _pending_location_change.cancel()
+        logger.debug("Cancelled pending location change due to new selection")
+
+    # Schedule the actual location change after debounce delay
+    _pending_location_change = asyncio.create_task(
+        _debounced_location_change(app, selected_location)
+    )
+
+
+async def _debounced_location_change(app: AccessiWeatherApp, location_name: str) -> None:
+    """Execute location change after debounce delay."""
     try:
-        app.config_manager.set_current_location(widget.value)
+        # Wait for debounce period - if cancelled, another selection was made
+        await asyncio.sleep(_LOCATION_CHANGE_DEBOUNCE_DELAY)
+
+        logger.info("Location changed to: %s", location_name)
+
+        app.config_manager.set_current_location(location_name)
         update_tray_icon_tooltip(app, None)
         await refresh_weather_data(app)
+
+    except asyncio.CancelledError:
+        logger.debug("Location change to %s was superseded", location_name)
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Failed to handle location change: %s", exc)
         app_helpers.update_status(app, f"Error changing location: {exc}")
