@@ -754,7 +754,7 @@ async def get_nws_hourly_forecast(
             response.raise_for_status()
             hourly_data = response.json()
 
-            return parse_nws_hourly_forecast(hourly_data)
+            return parse_nws_hourly_forecast(hourly_data, location)
         grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
 
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
@@ -771,7 +771,7 @@ async def get_nws_hourly_forecast(
             response.raise_for_status()
             hourly_data = response.json()
 
-            return parse_nws_hourly_forecast(hourly_data)
+            return parse_nws_hourly_forecast(hourly_data, location)
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS hourly forecast: {exc}")
@@ -1185,9 +1185,19 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
     return WeatherAlerts(alerts=alerts)
 
 
-def parse_nws_hourly_forecast(data: dict) -> HourlyForecast:
+def parse_nws_hourly_forecast(data: dict, location: Location | None = None) -> HourlyForecast:
     """Parse NWS hourly forecast payload into an HourlyForecast model."""
+    from zoneinfo import ZoneInfo
+
     periods = []
+
+    # Get location timezone if available
+    location_tz = None
+    if location and location.timezone:
+        try:
+            location_tz = ZoneInfo(location.timezone)
+        except Exception:
+            logger.warning(f"Failed to load timezone: {location.timezone}")
 
     for period_data in data.get("properties", {}).get("periods", []):
         start_time_str = period_data.get("startTime")
@@ -1195,6 +1205,9 @@ def parse_nws_hourly_forecast(data: dict) -> HourlyForecast:
         if start_time_str:
             try:
                 start_time = datetime.fromisoformat(start_time_str.replace("Z", "+00:00"))
+                # Convert to location's timezone if available
+                if location_tz and start_time:
+                    start_time = start_time.astimezone(location_tz)
             except ValueError:
                 logger.warning(f"Failed to parse start time: {start_time_str}")
 
@@ -1203,6 +1216,9 @@ def parse_nws_hourly_forecast(data: dict) -> HourlyForecast:
         if end_time_str:
             try:
                 end_time = datetime.fromisoformat(end_time_str.replace("Z", "+00:00"))
+                # Convert to location's timezone if available
+                if location_tz and end_time:
+                    end_time = end_time.astimezone(location_tz)
             except ValueError:
                 logger.warning(f"Failed to parse end time: {end_time_str}")
 

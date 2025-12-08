@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import copy
-from datetime import UTC, datetime
+from datetime import datetime
 
 import pytest
 
@@ -12,6 +12,7 @@ from accessiweather.visual_crossing_client import VisualCrossingClient
 AKRON_SAMPLE = {
     "address": "Akron, OH",
     "timezone": "America/New_York",
+    "tzoffset": -4.0,
     "latitude": 41.0814,
     "longitude": -81.519,
     "currentConditions": {
@@ -38,13 +39,13 @@ AKRON_SAMPLE = {
             "windspeed": 10.0,
             "winddir": 215.0,
             "icon": "partly-cloudy-day",
-            "sunrise": "2024-09-18T06:45:00-04:00",
+            "sunrise": "06:45:00",
             "sunriseEpoch": 1726656300,
-            "sunset": "2024-09-18T18:15:00-04:00",
+            "sunset": "19:15:00",
             "sunsetEpoch": 1726697700,
-            "moonrise": "2024-09-18T11:20:00-04:00",
+            "moonrise": "11:20:00",
             "moonriseEpoch": 1726672800,
-            "moonset": "2024-09-18T22:05:00-04:00",
+            "moonset": "22:05:00",
             "moonsetEpoch": 1726711500,
             "moonphase": 0.48,
             "hours": [
@@ -158,10 +159,14 @@ def test_visual_crossing_current_conditions_fahrenheit_fields(
     assert current.dewpoint_f == pytest.approx(58.0)
     assert current.dewpoint_c == pytest.approx(14.4, abs=0.1)
     assert current.visibility_miles == pytest.approx(9.9)
-    assert current.sunrise_time == datetime.fromtimestamp(1726656300, tz=UTC)
-    assert current.sunset_time == datetime.fromtimestamp(1726697700, tz=UTC)
-    assert current.moonrise_time == datetime.fromtimestamp(1726672800, tz=UTC)
-    assert current.moonset_time == datetime.fromtimestamp(1726711500, tz=UTC)
+    # Times are parsed from string format in local timezone (tzoffset=-4 for EDT)
+    from datetime import timedelta, timezone
+
+    edt = timezone(timedelta(hours=-4))
+    assert current.sunrise_time == datetime(2024, 9, 18, 6, 45, 0, tzinfo=edt)
+    assert current.sunset_time == datetime(2024, 9, 18, 19, 15, 0, tzinfo=edt)
+    assert current.moonrise_time == datetime(2024, 9, 18, 11, 20, 0, tzinfo=edt)
+    assert current.moonset_time == datetime(2024, 9, 18, 22, 5, 0, tzinfo=edt)
     assert current.moon_phase == "Full Moon"
 
 
