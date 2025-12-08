@@ -149,27 +149,51 @@ class SettingsDialog:
                 closable=False,  # Prevent closing via X button to enforce modal behavior
             )
 
-            # Ensure startup configuration reflects actual system state before loading
-            with contextlib.suppress(Exception):
-                self.config_manager.sync_startup_setting()
-
-            # Load current settings
+            # Load current settings (fast - just reads from memory/config object)
             self.current_settings = self.config_manager.get_settings()
             logger.debug("%s: Loaded settings: %s", LOG_PREFIX, self.current_settings)
 
-            # Create dialog content
+            # Create dialog content (UI construction)
             self._create_dialog_content()
 
-            # Show the dialog
+            # Show the dialog immediately for responsive UX
             self.window.show()
 
             # Set initial focus to the first interactive control for accessibility
             self._set_initial_focus()
 
+            # Defer slow operations to run after dialog is visible
+            asyncio.create_task(self._deferred_init())
+
         except Exception as exc:
             logger.exception("%s: Failed to show settings dialog", LOG_PREFIX)
             if self.future and not self.future.done():
                 self.future.set_exception(exc)
+
+    async def _deferred_init(self) -> None:
+        """Run slow initialization tasks after dialog is visible."""
+        try:
+            loop = asyncio.get_running_loop()
+
+            # Sync startup setting in background (can involve file system checks)
+            with contextlib.suppress(Exception):
+                await loop.run_in_executor(None, self.config_manager.sync_startup_setting)
+
+                # Update the startup switch if the actual state differs from loaded settings
+                actual_startup = self.config_manager.get_settings().startup_enabled
+                if (
+                    hasattr(self, "startup_enabled_switch")
+                    and self.startup_enabled_switch is not None
+                    and self.startup_enabled_switch.value != actual_startup
+                ):
+                    self.startup_enabled_switch.value = actual_startup
+
+            # Initialize update info (reads cache file from disk)
+            with contextlib.suppress(Exception):
+                settings_operations.initialize_update_info(self)
+
+        except Exception as exc:
+            logger.debug("%s: Deferred init error (non-fatal): %s", LOG_PREFIX, exc)
 
     def _ensure_toga_app_context(self):
         """Ensure a Toga application context exists for window creation."""
@@ -233,11 +257,7 @@ class SettingsDialog:
         # Set window content
         self.window.content = main_box
 
-        # Initialize update service and platform info
-        try:
-            settings_operations.initialize_update_info(self)
-        except Exception as exc:
-            logger.warning("%s: Failed to initialize update info: %s", LOG_PREFIX, exc)
+        # Note: initialize_update_info is called in _deferred_init() for faster dialog open
 
     def _set_initial_focus(self):
         """Set initial focus to the first interactive control for accessibility."""
