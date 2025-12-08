@@ -214,13 +214,13 @@ def _build_seasonal_metrics(
     if current.snow_depth_in is not None and current.snow_depth_in > 0:
         if unit_pref == TemperatureUnit.CELSIUS:
             snow_depth_cm = current.snow_depth_cm or current.snow_depth_in * 2.54
-            metrics.append(Metric("Snow depth", f"{snow_depth_cm:.1f} cm"))
+            metrics.append(Metric("Snow on ground", f"{snow_depth_cm:.1f} cm"))
         elif unit_pref == TemperatureUnit.FAHRENHEIT:
-            metrics.append(Metric("Snow depth", f"{current.snow_depth_in:.1f} in"))
+            metrics.append(Metric("Snow on ground", f"{current.snow_depth_in:.1f} in"))
         else:
             snow_depth_cm = current.snow_depth_cm or current.snow_depth_in * 2.54
             metrics.append(
-                Metric("Snow depth", f"{current.snow_depth_in:.1f} in ({snow_depth_cm:.1f} cm)")
+                Metric("Snow on ground", f"{current.snow_depth_in:.1f} in ({snow_depth_cm:.1f} cm)")
             )
 
     if current.wind_chill_f is not None:
@@ -266,8 +266,16 @@ def _build_seasonal_metrics(
     if current.frost_risk is not None and current.frost_risk.lower() != "none":
         metrics.append(Metric("Frost risk", current.frost_risk))
 
-    # Year-round metrics
+    # Year-round metrics - only show precipitation type when there's active precipitation
+    # Check for active precipitation indicators: precipitation amount, or condition suggests precip
+    has_active_precip = False
     if current.precipitation_type and len(current.precipitation_type) > 0:
+        # Check if condition indicates active precipitation
+        condition_lower = (current.condition or "").lower()
+        precip_keywords = ["rain", "snow", "drizzle", "shower", "storm", "sleet", "hail", "precip"]
+        has_active_precip = any(keyword in condition_lower for keyword in precip_keywords)
+
+    if has_active_precip and current.precipitation_type:
         precip_types = ", ".join(current.precipitation_type)
         metrics.append(Metric("Precipitation type", precip_types.title()))
 
