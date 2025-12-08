@@ -135,12 +135,8 @@ class SingleInstanceManager:
 
         """
         try:
-            # Cross-platform way to check if process is running
-            if os.name == "nt":  # Windows
-                result = subprocess.run(
-                    ["tasklist", "/FI", f"PID eq {pid}"], capture_output=True, text=True, timeout=5
-                )
-                return str(pid) in result.stdout
+            if os.name == "nt":  # Windows - use ctypes for fast, silent check
+                return self._is_windows_process_running(pid)
             # Unix-like systems (macOS, Linux)
             # Send signal 0 to check if process exists
             os.kill(pid, 0)
@@ -149,6 +145,47 @@ class SingleInstanceManager:
             # Catch all exceptions to avoid blocking the app
             # This includes OSError, subprocess errors, and any other unexpected issues
             return False
+
+    def _is_windows_process_running(self, pid: int) -> bool:
+        """
+        Check if a Windows process is running using the Windows API.
+
+        This is much faster than spawning tasklist.exe and doesn't create
+        a visible terminal window.
+        """
+        try:
+            import ctypes
+
+            kernel32 = ctypes.windll.kernel32
+
+            # OpenProcess with PROCESS_QUERY_LIMITED_INFORMATION (0x1000)
+            # This is the minimum access right needed to query process info
+            PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+            handle = kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, pid)
+
+            if handle:
+                # Process exists, close the handle
+                kernel32.CloseHandle(handle)
+                return True
+
+            # Check if access was denied (process exists but we can't open it)
+            ERROR_ACCESS_DENIED = 5
+            return ctypes.get_last_error() == ERROR_ACCESS_DENIED
+
+        except Exception as e:
+            logger.debug(f"Windows process check failed, falling back to tasklist: {e}")
+            # Fallback to tasklist if ctypes fails (shouldn't happen on Windows)
+            try:
+                result = subprocess.run(
+                    ["tasklist", "/FI", f"PID eq {pid}"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                    creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+                )
+                return str(pid) in result.stdout
+            except Exception:
+                return False
 
     def _create_lock_file(self) -> None:
         """Create the lock file with current process information."""

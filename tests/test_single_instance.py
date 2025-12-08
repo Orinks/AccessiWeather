@@ -264,16 +264,22 @@ class TestProcessRunningCheck:
 
     @patch("os.name", "nt")
     def test_is_process_running_windows(self, mock_app):
-        """Should use tasklist on Windows."""
+        """Should use ctypes on Windows, falling back to tasklist if unavailable."""
         manager = SingleInstanceManager(mock_app)
 
-        with patch("subprocess.run") as mock_run:
+        # On non-Windows systems, ctypes.windll doesn't exist, so it falls back to subprocess
+        # We need to mock subprocess.CREATE_NO_WINDOW since it doesn't exist on Linux
+        with (
+            patch("subprocess.run") as mock_run,
+            patch("subprocess.CREATE_NO_WINDOW", 0x08000000, create=True),
+        ):
             mock_result = Mock()
             mock_result.stdout = f"PID: {os.getpid()}"
             mock_run.return_value = mock_result
 
             result = manager._is_process_running(os.getpid())
 
+            # On Linux (where tests run), ctypes.windll fails and falls back to subprocess
             assert result is True
             mock_run.assert_called_once()
 
@@ -292,7 +298,10 @@ class TestProcessRunningCheck:
         """Should handle subprocess timeout on Windows."""
         manager = SingleInstanceManager(mock_app)
 
-        with patch("subprocess.run", side_effect=Exception("Timeout")):
+        with (
+            patch("subprocess.run", side_effect=Exception("Timeout")),
+            patch("subprocess.CREATE_NO_WINDOW", 0x08000000, create=True),
+        ):
             result = manager._is_process_running(12345)
 
             assert result is False
