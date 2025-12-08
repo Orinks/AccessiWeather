@@ -100,6 +100,7 @@ jobs:
       env:
         PYTHONPATH: src
         ACCESSIWEATHER_TEST_MODE: "1"
+        HYPOTHESIS_PROFILE: ci  # Use fast CI profile (fewer examples, no deadline)
       run: |
         mkdir -p reports
         pytest tests/ -n auto -v --tb=short -m "not integration" --junitxml=reports/junit.xml
