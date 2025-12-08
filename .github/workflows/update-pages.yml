@@ -162,12 +162,19 @@ jobs:
           local total_releases=$(echo "$releases" | jq 'length')
           echo "Total releases fetched: $total_releases" >&2
 
-          # Filter to only stable releases (not pre-releases, not drafts)
-          # Use 'first' with error suppression and check for null explicitly
-          local release_info=$(echo "$releases" | jq -c '[.[] | select(.prerelease == false and .draft == false)] | if length > 0 then .[0] else null end')
+          # Filter to only stable releases (not pre-releases, not drafts), then sort by published date
+          local stable_releases=$(echo "$releases" | jq -c '[.[] | select(.prerelease == false and .draft == false)] | sort_by(.published_at) | reverse')
+
+          local stable_count=$(echo "$stable_releases" | jq 'length')
+          echo "Stable releases found: $stable_count" >&2
+
+          # Get the first (most recent) stable release
+          local release_info=$(echo "$stable_releases" | jq -c '.[0] // null')
 
           # Debug: show filtered result
-          echo "Filtered release info: $(echo "$release_info" | jq -c '{tag: .tag_name, prerelease: .prerelease, draft: .draft}' 2>/dev/null || echo 'null')" >&2
+          if [ "$release_info" != "null" ]; then
+            echo "Filtered release info: $(echo "$release_info" | jq -c '{tag: .tag_name, prerelease: .prerelease, draft: .draft, published: .published_at}' 2>/dev/null || echo 'null')" >&2
+          fi
 
           # Check if we got a valid release (not null, not empty)
           if [ -z "$release_info" ] || [ "$release_info" = "null" ]; then
@@ -178,7 +185,7 @@ jobs:
             echo "main_installer_url="
             echo "main_portable_url="
             echo "main_macos_installer_url="
-            echo "⚠ No stable releases found (release_info was null or empty)" >&2
+            echo "⚠ No stable releases found" >&2
             return
           fi
 
@@ -252,16 +259,15 @@ jobs:
           echo "Fetching latest pre-release info for dev branch..." >&2
 
           local releases=$(curl -s -H "Authorization: token ${{ github.token }}" \
-            "https://api.github.com/repos/${{ github.repository }}/releases?per_page=10")
+            "https://api.github.com/repos/${{ github.repository }}/releases?per_page=100")
 
-          local release_base64=$(echo "$releases" | jq -r 'map(select(.prerelease == true and (.draft | not))) | first? | @base64')
+          # Filter to pre-releases only, sort by published date, get most recent
+          local release_json=$(echo "$releases" | jq -c '[.[] | select(.prerelease == true and .draft == false)] | sort_by(.published_at) | reverse | .[0] // null')
 
-          if [ -z "$release_base64" ] || [ "$release_base64" = "null" ]; then
+          if [ -z "$release_json" ] || [ "$release_json" = "null" ]; then
             echo "⚠ No published pre-releases found for dev branch" >&2
             return 1
           fi
-
-          local release_json=$(echo "$release_base64" | base64 --decode)
           local tag_name=$(echo "$release_json" | jq -r '.tag_name // empty')
           local published_at=$(echo "$release_json" | jq -r '.published_at // empty')
           local target_commitish=$(echo "$release_json" | jq -r '.target_commitish // empty')
@@ -408,13 +414,19 @@ jobs:
             -d "$(jq -n --arg text "$markdown_text" --arg mode "gfm" --arg context "${{ github.repository }}" '{text: $text, mode: $mode, context: $context}')"
         }
 
-        # Fetch latest stable release notes using /releases/latest endpoint
+        # Fetch latest stable release notes (same logic as get_release_info)
         echo "Fetching latest stable release notes..."
         RELEASE_NOTES=""
-        STABLE_RELEASE=$(curl -s -H "Authorization: token $GH_TOKEN" \
-          "https://api.github.com/repos/${{ github.repository }}/releases/latest" 2>/dev/null)
 
-        if echo "$STABLE_RELEASE" | jq -e '.tag_name' > /dev/null 2>&1; then
+        # Get all releases and filter to stable releases only, sorted by published date
+        ALL_RELEASES=$(curl -s -H "Authorization: token $GH_TOKEN" \
+          "https://api.github.com/repos/${{ github.repository }}/releases?per_page=100")
+
+        # Filter and sort exactly like get_release_info does
+        STABLE_RELEASES=$(echo "$ALL_RELEASES" | jq -c '[.[] | select(.prerelease == false and .draft == false)] | sort_by(.published_at) | reverse')
+        STABLE_RELEASE=$(echo "$STABLE_RELEASES" | jq -c '.[0] // null')
+
+        if [ "$STABLE_RELEASE" != "null" ] && [ -n "$STABLE_RELEASE" ]; then
           STABLE_TAG=$(echo "$STABLE_RELEASE" | jq -r '.tag_name')
           RAW_NOTES=$(echo "$STABLE_RELEASE" | jq -r '.body // ""')
           if [ -n "$RAW_NOTES" ] && [ "$RAW_NOTES" != "null" ]; then
@@ -428,12 +440,14 @@ jobs:
           echo "⚠ No stable release found"
         fi
 
-        # Fetch latest pre-release notes for dev section
+        # Fetch latest pre-release notes for dev section (same logic as get_pre_release_info)
         echo "Fetching latest pre-release notes..."
         DEV_RELEASE_NOTES=""
-        PRERELEASE=$(curl -s -H "Authorization: token $GH_TOKEN" \
-          "https://api.github.com/repos/${{ github.repository }}/releases?per_page=10" | \
-          jq -c '[.[] | select(.prerelease == true and .draft == false)][0] // null')
+        PRERELEASE_RELEASES=$(curl -s -H "Authorization: token $GH_TOKEN" \
+          "https://api.github.com/repos/${{ github.repository }}/releases?per_page=100")
+
+        # Filter and sort exactly like get_pre_release_info does
+        PRERELEASE=$(echo "$PRERELEASE_RELEASES" | jq -c '[.[] | select(.prerelease == true and .draft == false)] | sort_by(.published_at) | reverse | .[0] // null')
 
         if [ "$PRERELEASE" != "null" ] && [ -n "$PRERELEASE" ]; then
           PRERELEASE_TAG=$(echo "$PRERELEASE" | jq -r '.tag_name')
