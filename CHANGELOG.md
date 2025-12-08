@@ -13,6 +13,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Screen reader users can now navigate forecast days using heading shortcuts instead of reading through all content sequentially
+- "Snow depth" renamed to "Snow on ground" to clarify it shows accumulated snow, not active snowfall
+- "Precipitation type" now only appears when there's active precipitation, avoiding confusion during clear conditions
 
 ### Removed
 -
