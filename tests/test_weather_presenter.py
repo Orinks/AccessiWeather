@@ -514,10 +514,11 @@ def test_presenter_includes_seasonal_metrics():
     location = Location(name="Winter City", latitude=40.0, longitude=-75.0)
 
     # Winter conditions with seasonal data
+    # Note: condition must indicate active precipitation for precipitation_type to show
     conditions = CurrentConditions(
         temperature_f=25.0,
         temperature_c=-3.9,
-        condition="Light Snow",
+        condition="Light Snow",  # Active precipitation condition
         humidity=85,
         wind_speed_mph=15.0,
         wind_direction=315,
@@ -538,14 +539,14 @@ def test_presenter_includes_seasonal_metrics():
     labels = {metric.label for metric in presentation.metrics}
 
     # Check seasonal metrics are present
-    assert "Snow depth" in labels
+    assert "Snow on ground" in labels
     assert "Wind chill" in labels
     assert "Freezing level" in labels
     assert "Precipitation type" in labels
     assert "Severe weather risk" in labels
 
     # Check values
-    snow_metric = next((m for m in presentation.metrics if m.label == "Snow depth"), None)
+    snow_metric = next((m for m in presentation.metrics if m.label == "Snow on ground"), None)
     assert snow_metric is not None
     assert "6.5" in snow_metric.value
 
@@ -620,6 +621,6 @@ def test_presenter_respects_seasonal_data_setting():
     labels = {metric.label for metric in presentation.metrics}
 
     # Seasonal metrics should not be present
-    assert "Snow depth" not in labels
+    assert "Snow on ground" not in labels
     assert "Wind chill" not in labels
     assert "Precipitation type" not in labels
