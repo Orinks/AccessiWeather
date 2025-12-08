@@ -21,7 +21,8 @@ dependencies = [
     "attrs>=22.2.0",
     "psutil",
     "keyring",
-    "timezonefinder"
+    "timezonefinder",
+    "tzdata",
 ]
 readme = "README.md"
 classifiers = [
