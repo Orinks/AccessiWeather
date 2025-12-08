@@ -185,6 +185,53 @@ class AccessiWeatherApp(toga.App):
         """Delegate shutdown cleanup to helper logic."""
         return app_helpers.handle_exit(self)
 
+    def refresh_runtime_settings(self) -> None:
+        """
+        Refresh runtime components with current settings.
+
+        Call this after settings are saved to ensure all app components
+        use the updated configuration without requiring an app restart.
+        """
+        try:
+            settings = self.config_manager.get_settings()
+            logger.info("Refreshing runtime settings")
+
+            # Update WeatherClient settings
+            if self.weather_client:
+                self.weather_client.settings = settings
+                self.weather_client.data_source = settings.data_source
+                self.weather_client.alerts_enabled = bool(settings.enable_alerts)
+                self.weather_client.trend_insights_enabled = bool(settings.trend_insights_enabled)
+                self.weather_client.trend_hours = max(1, int(settings.trend_hours or 24))
+                self.weather_client.air_quality_enabled = bool(settings.air_quality_enabled)
+                self.weather_client.pollen_enabled = bool(settings.pollen_enabled)
+                logger.debug("Updated WeatherClient settings")
+
+            # Update WeatherPresenter settings
+            if self.presenter:
+                self.presenter.settings = settings
+                logger.debug("Updated WeatherPresenter settings")
+
+            # Update notifier settings
+            if self._notifier:
+                self._notifier.sound_enabled = bool(getattr(settings, "sound_enabled", True))
+                self._notifier.soundpack = getattr(settings, "sound_pack", "default")
+                logger.debug("Updated notifier settings")
+
+            # Update alert notification system settings
+            if self.alert_notification_system:
+                self.alert_notification_system.settings = settings
+                logger.debug("Updated AlertNotificationSystem settings")
+
+            # Update system tray tooltip with current weather data
+            if hasattr(self, "status_icon") and self.status_icon:
+                ui_builder.update_tray_icon_tooltip(self, self.current_weather_data)
+
+            logger.info("Runtime settings refreshed successfully")
+
+        except Exception as exc:
+            logger.error(f"Failed to refresh runtime settings: {exc}")
+
 
 def main(config_dir: str | None = None, portable_mode: bool = False):
     """

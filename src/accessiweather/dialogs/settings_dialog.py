@@ -443,8 +443,12 @@ class SettingsDialog:
 
             if success:
                 logger.info("%s: Settings saved successfully", LOG_PREFIX)
-                # Trigger immediate taskbar icon update if settings changed
-                self._trigger_taskbar_icon_update(new_settings)
+                # Refresh all runtime components with new settings
+                if hasattr(self.app, "refresh_runtime_settings"):
+                    self.app.refresh_runtime_settings()
+                else:
+                    # Fallback: just update taskbar icon
+                    self._trigger_taskbar_icon_update(new_settings)
                 # Set result and close dialog
                 if self.future and not self.future.done():
                     self.future.set_result(True)
