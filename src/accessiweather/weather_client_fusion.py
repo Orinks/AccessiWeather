@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import fields
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from accessiweather.config.source_priority import SourcePriorityConfig
@@ -321,12 +321,19 @@ class DataFusionEngine:
         valid_sources.sort(key=source_priority)
 
         # Collect all periods with their source, keyed by start time
+        # Normalize to UTC for consistent comparison across sources
         periods_by_time: dict[str, tuple[HourlyForecastPeriod, str]] = {}
 
         for source in valid_sources:
             if source.hourly_forecast and source.hourly_forecast.periods:
                 for period in source.hourly_forecast.periods:
-                    time_key = period.start_time.isoformat()
+                    # Convert to UTC for consistent key generation across timezones
+                    start_time_utc = (
+                        period.start_time.astimezone(UTC)
+                        if period.start_time.tzinfo
+                        else period.start_time
+                    )
+                    time_key = start_time_utc.isoformat()
                     # Only add if not already present (first = highest priority)
                     if time_key not in periods_by_time:
                         periods_by_time[time_key] = (period, source.source)
