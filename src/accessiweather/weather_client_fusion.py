@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import fields
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 from accessiweather.config.source_priority import SourcePriorityConfig
@@ -14,7 +14,6 @@ from accessiweather.models.weather import (
     Forecast,
     ForecastPeriod,
     HourlyForecast,
-    HourlyForecastPeriod,
     Location,
     SourceAttribution,
     SourceData,
@@ -289,14 +288,20 @@ class DataFusionEngine:
         location: Location,
     ) -> tuple[HourlyForecast | None, dict[str, str]]:
         """
-        Merge hourly forecast data from multiple sources.
+        Select hourly forecast from a single source based on location.
+
+        Unlike other data types, hourly forecasts are NOT merged from multiple sources
+        because different sources use different timezone representations that cause
+        display issues when combined. Instead, we select the best single source:
+        - US locations: Prefer NWS (most accurate for US)
+        - International: Use Open-Meteo
 
         Args:
             sources: List of source data containers
-            location: The location for priority determination
+            location: The location for source selection
 
         Returns:
-            Tuple of merged HourlyForecast and field-level source attribution
+            Tuple of HourlyForecast from single source and source attribution
 
         """
         is_us = self._is_us_location(location)
@@ -308,57 +313,34 @@ class DataFusionEngine:
         if not valid_sources:
             return None, field_sources
 
-        # Get priority order
-        priority = self.config.get_priority("hourly_forecast", is_us)
+        # Select single source based on location (no merging for hourly data)
+        # US: prefer NWS > Open-Meteo > Visual Crossing
+        # International: prefer Open-Meteo > Visual Crossing
+        if is_us:
+            preferred_order = ["nws", "openmeteo", "visualcrossing"]
+        else:
+            preferred_order = ["openmeteo", "visualcrossing"]
 
-        # Sort sources by priority
-        def source_priority(s: SourceData) -> int:
-            try:
-                return priority.index(s.source)
-            except ValueError:
-                return len(priority)
+        # Find the first available source in preferred order
+        selected_source = None
+        for source_name in preferred_order:
+            for source in valid_sources:
+                if source.source == source_name:
+                    selected_source = source
+                    break
+            if selected_source:
+                break
 
-        valid_sources.sort(key=source_priority)
+        # Fallback to first available if none matched preferred order
+        if not selected_source:
+            selected_source = valid_sources[0]
 
-        # Collect all periods with their source, keyed by start time
-        # Normalize to UTC for consistent comparison across sources
-        periods_by_time: dict[str, tuple[HourlyForecastPeriod, str]] = {}
+        # Use the selected source's hourly forecast directly (no merging)
+        hourly_forecast = selected_source.hourly_forecast
+        source_name = selected_source.source
 
-        for source in valid_sources:
-            if source.hourly_forecast and source.hourly_forecast.periods:
-                for period in source.hourly_forecast.periods:
-                    # Convert to UTC for consistent key generation across timezones
-                    start_time_utc = (
-                        period.start_time.astimezone(UTC)
-                        if period.start_time.tzinfo
-                        else period.start_time
-                    )
-                    time_key = start_time_utc.isoformat()
-                    # Only add if not already present (first = highest priority)
-                    if time_key not in periods_by_time:
-                        periods_by_time[time_key] = (period, source.source)
+        # Track attribution
+        field_sources["hourly_source"] = source_name
+        logger.debug(f"Using {source_name} for hourly forecast (location: {location.name})")
 
-        if not periods_by_time:
-            return None, field_sources
-
-        # Extract periods and sort by time
-        merged_periods: list[HourlyForecastPeriod] = []
-        for time_key, (period, src) in sorted(periods_by_time.items()):
-            merged_periods.append(period)
-            field_sources[f"hour_{time_key}"] = src
-
-        # Use the most recent generated_at time
-        generated_at = None
-        for source in valid_sources:
-            if source.hourly_forecast and source.hourly_forecast.generated_at:
-                src_generated_at = source.hourly_forecast.generated_at
-                # Only compare if it's a datetime (skip mocks)
-                if isinstance(src_generated_at, datetime) and (
-                    generated_at is None or src_generated_at > generated_at
-                ):
-                    generated_at = src_generated_at
-
-        return (
-            HourlyForecast(periods=merged_periods, generated_at=generated_at),
-            field_sources,
-        )
+        return hourly_forecast, field_sources
