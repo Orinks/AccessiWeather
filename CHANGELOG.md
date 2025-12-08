@@ -15,7 +15,7 @@ All notable changes to this project will be documented in this file.
 - Screen reader users can now navigate forecast days using heading shortcuts instead of reading through all content sequentially
 - Hourly forecast times now display correctly in your location's timezone for all data sources (NWS and Visual Crossing were showing UTC times, causing incorrect displays like "0:00 AM" for midnight UTC)
 - Forecast periods no longer appear twice - the app now picks the best single source (NWS for US, Open-Meteo internationally) instead of merging forecasts from multiple sources with different naming conventions
-- Snow depth now shows the correct value - was displaying 3x too high because the code assumed Open-Meteo returned meters when it actually returns feet for US unit requests
+- Snow depth and snowfall values now display correctly - Open-Meteo was returning data in metric units (cm/meters) but the code treated them as imperial (inches/feet), causing values to be 2-3x too high
 
 ### Removed
 -

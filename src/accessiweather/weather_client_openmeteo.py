@@ -215,6 +215,7 @@ async def get_openmeteo_forecast(
             ),
             "temperature_unit": "fahrenheit",
             "wind_speed_unit": "mph",
+            "precipitation_unit": "inch",
             "timezone": "auto",
             "forecast_days": 7,
         }
@@ -258,6 +259,7 @@ async def get_openmeteo_hourly_forecast(
             ),
             "temperature_unit": "fahrenheit",
             "wind_speed_unit": "mph",
+            "precipitation_unit": "inch",
             "timezone": "auto",
             "forecast_days": 2,
         }
@@ -473,8 +475,9 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
         uv_index = uv_indices[i] if i < len(uv_indices) else None
 
         # Seasonal fields
-        snow_depth_m = snow_depths[i] if i < len(snow_depths) else None
-        snow_depth_in = snow_depth_m * 39.3701 if snow_depth_m is not None else None
+        # With precipitation_unit=inch, snow_depth is returned in feet
+        snow_depth_ft = snow_depths[i] if i < len(snow_depths) else None
+        snow_depth_in = snow_depth_ft * 12 if snow_depth_ft is not None else None
 
         freezing_level_m = freezing_levels[i] if i < len(freezing_levels) else None
         freezing_level_ft = freezing_level_m * 3.28084 if freezing_level_m is not None else None
