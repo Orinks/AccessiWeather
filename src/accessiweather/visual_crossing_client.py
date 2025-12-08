@@ -247,7 +247,18 @@ class VisualCrossingClient:
 
     def _parse_current_conditions(self, data: dict) -> CurrentConditions:
         """Parse Visual Crossing current conditions data."""
+        from zoneinfo import ZoneInfo
+
         current = data.get("currentConditions", {})
+
+        # Get location timezone for converting UTC times to local
+        location_tz = None
+        timezone_str = data.get("timezone")
+        if timezone_str:
+            try:
+                location_tz = ZoneInfo(timezone_str)
+            except Exception:
+                logger.warning(f"Failed to load timezone: {timezone_str}")
 
         temp_f = current.get("temp")
         temp_c = self._convert_f_to_c(temp_f)
@@ -289,6 +300,8 @@ class VisualCrossingClient:
             if sunrise_epoch is not None:
                 try:
                     sunrise_time = datetime.fromtimestamp(sunrise_epoch, tz=UTC)
+                    if location_tz:
+                        sunrise_time = sunrise_time.astimezone(location_tz)
                 except (OSError, ValueError):
                     logger.debug(f"Failed to parse sunrise epoch: {sunrise_epoch}")
             if sunrise_time is None and day_data.get("sunrise"):
@@ -301,6 +314,8 @@ class VisualCrossingClient:
             if sunset_epoch is not None:
                 try:
                     sunset_time = datetime.fromtimestamp(sunset_epoch, tz=UTC)
+                    if location_tz:
+                        sunset_time = sunset_time.astimezone(location_tz)
                 except (OSError, ValueError):
                     logger.debug(f"Failed to parse sunset epoch: {sunset_epoch}")
             if sunset_time is None and day_data.get("sunset"):
@@ -313,6 +328,8 @@ class VisualCrossingClient:
             if moonrise_epoch is not None:
                 try:
                     moonrise_time = datetime.fromtimestamp(moonrise_epoch, tz=UTC)
+                    if location_tz:
+                        moonrise_time = moonrise_time.astimezone(location_tz)
                 except (OSError, ValueError):
                     logger.debug(f"Failed to parse moonrise epoch: {moonrise_epoch}")
             if moonrise_time is None and day_data.get("moonrise"):
@@ -325,6 +342,8 @@ class VisualCrossingClient:
             if moonset_epoch is not None:
                 try:
                     moonset_time = datetime.fromtimestamp(moonset_epoch, tz=UTC)
+                    if location_tz:
+                        moonset_time = moonset_time.astimezone(location_tz)
                 except (OSError, ValueError):
                     logger.debug(f"Failed to parse moonset epoch: {moonset_epoch}")
             if moonset_time is None and day_data.get("moonset"):
