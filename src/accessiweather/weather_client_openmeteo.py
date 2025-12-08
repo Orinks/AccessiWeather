@@ -335,12 +335,30 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
                 uv_index = None
 
     # Seasonal fields
-    snowfall_rate = current.get("snowfall")  # mm/hour
-    snowfall_rate_in = snowfall_rate / 25.4 if snowfall_rate is not None else None
+    snowfall_rate = current.get("snowfall")  # inches (due to precipitation_unit=inch)
+    snowfall_rate_in = snowfall_rate  # Already in inches
 
-    snow_depth_m = current.get("snow_depth")  # meters
-    snow_depth_in = snow_depth_m * 39.3701 if snow_depth_m is not None else None
-    snow_depth_cm = snow_depth_m * 100 if snow_depth_m is not None else None
+    # Snow depth unit depends on the API request units
+    # When using temperature_unit=fahrenheit, snow_depth is returned in feet
+    snow_depth_unit = units.get("snow_depth", "").lower()
+    snow_depth_value = current.get("snow_depth")
+
+    if snow_depth_value is not None:
+        if "ft" in snow_depth_unit or "feet" in snow_depth_unit:
+            # Convert feet to inches and cm
+            snow_depth_in = snow_depth_value * 12
+            snow_depth_cm = snow_depth_value * 30.48
+        elif "m" in snow_depth_unit and "mm" not in snow_depth_unit:
+            # Meters - convert to inches and cm
+            snow_depth_in = snow_depth_value * 39.3701
+            snow_depth_cm = snow_depth_value * 100
+        else:
+            # Unknown unit, assume meters as fallback
+            snow_depth_in = snow_depth_value * 39.3701
+            snow_depth_cm = snow_depth_value * 100
+    else:
+        snow_depth_in = None
+        snow_depth_cm = None
 
     visibility_m = current.get("visibility")  # meters
     visibility_miles = visibility_m / 1609.344 if visibility_m is not None else None
