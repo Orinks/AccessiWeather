@@ -159,12 +159,20 @@ class AIExplainer:
     def _get_client(self):
         """Get or create OpenAI client configured for OpenRouter."""
         if self._client is None:
+            # OpenRouter requires an API key for ALL requests, including free models
+            # The :free suffix only means no charges, not no authentication
+            if not self.api_key:
+                raise AIExplainerError(
+                    "OpenRouter API key required. Get a free key at openrouter.ai/keys - "
+                    "free models won't charge your account."
+                )
+
             try:
                 from openai import OpenAI
 
                 self._client = OpenAI(
                     base_url=OPENROUTER_BASE_URL,
-                    api_key=self.api_key or "dummy-key-for-free-models",
+                    api_key=self.api_key,
                 )
             except ImportError as e:
                 logger.error("OpenAI package not installed")
