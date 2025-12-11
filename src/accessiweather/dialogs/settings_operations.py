@@ -449,9 +449,10 @@ async def validate_openrouter_api_key(dialog):
             dialog.validate_openrouter_api_key_button.text = "Validating..."
             dialog.validate_openrouter_api_key_button.enabled = False
 
-        # Use OpenRouter's models endpoint to validate the API key
-        # This is a lightweight call that just lists available models
-        url = "https://openrouter.ai/api/v1/models"
+        # Use OpenRouter's /api/v1/key endpoint to validate the API key
+        # This endpoint requires authentication and returns key info for valid keys
+        # Returns 401 for invalid keys
+        url = "https://openrouter.ai/api/v1/key"
         headers = {
             "Authorization": f"Bearer {api_key}",
             "HTTP-Referer": "https://accessiweather.orinks.net",
@@ -489,13 +490,31 @@ async def validate_openrouter_api_key(dialog):
                         dialog.validate_openrouter_api_key_button.text = "Validating..."
 
         if response.status_code == 200:
-            await _call_dialog_method(
-                dialog,
-                "info_dialog",
-                "API Key Valid",
-                "✅ Your OpenRouter API key is valid and working!\n\n"
-                "You can now use AI-powered weather explanations.",
-            )
+            # Parse response to get key info
+            try:
+                key_data = response.json().get("data", {})
+                key_label = key_data.get("label", "Unknown")
+                is_free_tier = key_data.get("is_free_tier", False)
+                tier_info = "Free tier" if is_free_tier else "Paid tier"
+
+                await _call_dialog_method(
+                    dialog,
+                    "info_dialog",
+                    "API Key Valid",
+                    f"✅ Your OpenRouter API key is valid and working!\n\n"
+                    f"Key: {key_label}\n"
+                    f"Tier: {tier_info}\n\n"
+                    "You can now use AI-powered weather explanations.",
+                )
+            except Exception:
+                # Fallback if parsing fails
+                await _call_dialog_method(
+                    dialog,
+                    "info_dialog",
+                    "API Key Valid",
+                    "✅ Your OpenRouter API key is valid and working!\n\n"
+                    "You can now use AI-powered weather explanations.",
+                )
         elif response.status_code == 401:
             await dialog._show_dialog_error(
                 "Invalid API Key",
