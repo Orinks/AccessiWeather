@@ -422,23 +422,35 @@ class AIExplainer:
 
         except Exception as e:
             error_message = str(e).lower()
+            original_error = str(e)
 
             # Map specific errors to custom exceptions
             if "invalid api key" in error_message or "authentication" in error_message:
-                raise InvalidAPIKeyError("API key is invalid. Please check your settings.") from e
+                raise InvalidAPIKeyError(
+                    f"API key is invalid. Please check your settings.\n\nDetails: {original_error}"
+                ) from e
+
+            if "401" in error_message or "unauthorized" in error_message:
+                raise InvalidAPIKeyError(
+                    f"API key authentication failed.\n\nDetails: {original_error}"
+                ) from e
 
             if "insufficient" in error_message or "no credits" in error_message:
                 raise InsufficientCreditsError(
-                    "Your OpenRouter account has no funds. "
-                    "Add credits or switch to free models in settings."
+                    f"Your OpenRouter account has no funds. "
+                    f"Add credits or switch to free models in settings.\n\nDetails: {original_error}"
                 ) from e
 
             if "rate limit" in error_message or "too many requests" in error_message:
-                raise RateLimitError("Rate limit exceeded. Try again in a few minutes.") from e
+                raise RateLimitError(
+                    f"Rate limit exceeded. Try again in a few minutes.\n\nDetails: {original_error}"
+                ) from e
 
-            # Generic error
+            # Generic error - include the actual error message
             logger.error(f"OpenRouter API error: {e}", exc_info=True)
-            raise AIExplainerError("Unable to generate explanation. Try again later.") from e
+            raise AIExplainerError(
+                f"Unable to generate explanation.\n\nAPI Error: {original_error}"
+            ) from e
 
     def _estimate_cost(self, model: str, token_count: int) -> float:
         """

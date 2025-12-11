@@ -133,6 +133,8 @@ async def on_explain_weather_pressed(app: AccessiWeatherApp, widget) -> None:
 
     except Exception as e:
         loading_dialog.close()
-        error_dialog = ErrorDialog(app, "Unable to generate explanation. Please try again later.")
+        # Include actual error details for debugging
+        error_message = f"Unable to generate explanation.\n\nError: {e}"
+        error_dialog = ErrorDialog(app, error_message)
         error_dialog.show()
         logger.error(f"Unexpected error generating AI explanation: {e}", exc_info=True)
