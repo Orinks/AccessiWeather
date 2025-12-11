@@ -274,34 +274,58 @@ class AIExplainer:
             Formatted response text
 
         """
+        logger.info(f"[FORMAT] Input - preserve_markdown={preserve_markdown}, len={len(response_text)}")
+        logger.debug(f"[FORMAT] Raw input: {response_text[:300]}...")
+        
         if preserve_markdown:
+            logger.info("[FORMAT] Preserving markdown, returning as-is")
             return response_text
 
         # Strip markdown formatting for plain text output
         text = response_text
+        logger.debug(f"[FORMAT] Step 0 (initial): len={len(text)}, text={text[:100]}...")
 
         # Remove bold/italic markers
         text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)  # **bold**
+        logger.debug(f"[FORMAT] Step 1 (after **bold**): len={len(text)}, text={text[:100]}...")
+        
         text = re.sub(r"\*(.+?)\*", r"\1", text)  # *italic*
+        logger.debug(f"[FORMAT] Step 2 (after *italic*): len={len(text)}, text={text[:100]}...")
+        
         text = re.sub(r"__(.+?)__", r"\1", text)  # __bold__
+        logger.debug(f"[FORMAT] Step 3 (after __bold__): len={len(text)}, text={text[:100]}...")
+        
         text = re.sub(r"_(.+?)_", r"\1", text)  # _italic_
+        logger.debug(f"[FORMAT] Step 4 (after _italic_): len={len(text)}, text={text[:100]}...")
 
         # Remove headers
         text = re.sub(r"^#{1,6}\s+", "", text, flags=re.MULTILINE)
+        logger.debug(f"[FORMAT] Step 5 (after headers): len={len(text)}, text={text[:100]}...")
 
         # Remove code blocks
         text = re.sub(r"```[\s\S]*?```", "", text)
+        logger.debug(f"[FORMAT] Step 6 (after code blocks): len={len(text)}, text={text[:100]}...")
+        
         text = re.sub(r"`(.+?)`", r"\1", text)
+        logger.debug(f"[FORMAT] Step 7 (after inline code): len={len(text)}, text={text[:100]}...")
 
         # Remove links but keep text
         text = re.sub(r"\[(.+?)\]\(.+?\)", r"\1", text)
+        logger.debug(f"[FORMAT] Step 8 (after links): len={len(text)}, text={text[:100]}...")
 
         # Remove bullet points
         text = re.sub(r"^\s*[-*+]\s+", "", text, flags=re.MULTILINE)
+        logger.debug(f"[FORMAT] Step 9 (after bullets): len={len(text)}, text={text[:100]}...")
 
         # Clean up extra whitespace
         text = re.sub(r"\n{3,}", "\n\n", text)
-        return text.strip()
+        logger.debug(f"[FORMAT] Step 10 (after whitespace cleanup): len={len(text)}, text={text[:100]}...")
+        
+        final_text = text.strip()
+        logger.info(f"[FORMAT] Final result: len={len(final_text)}")
+        logger.debug(f"[FORMAT] Final text: {final_text[:300]}...")
+        
+        return final_text
 
     def _generate_cache_key(self, weather_data: dict[str, Any], location_name: str) -> str:
         """Generate a cache key for the explanation."""
@@ -409,13 +433,27 @@ class AIExplainer:
         # Process response
         raw_content = response["content"]
         logger.info(
-            f"Raw content from API (len={len(raw_content) if raw_content else 0}): {raw_content[:200] if raw_content else 'NONE'}..."
+            f"[EXPLAIN] Raw content from API (len={len(raw_content) if raw_content else 0})"
+        )
+        logger.debug(
+            f"[EXPLAIN] Raw content (full): {raw_content}"
+        )
+        logger.info(
+            f"[EXPLAIN] About to format with preserve_markdown={preserve_markdown}"
         )
 
         text = self._format_response(raw_content, preserve_markdown)
         logger.info(
-            f"Formatted text (len={len(text) if text else 0}): {text[:200] if text else 'EMPTY'}..."
+            f"[EXPLAIN] Formatted text returned (len={len(text) if text else 0})"
         )
+        logger.debug(
+            f"[EXPLAIN] Formatted text (full): {text}"
+        )
+        
+        if not text or len(text) == 0:
+            logger.error(f"[EXPLAIN] ❌ EMPTY TEXT BUG DETECTED! Raw had {len(raw_content)} chars but formatted has 0")
+            logger.error(f"[EXPLAIN] Raw content was: {raw_content}")
+            logger.error(f"[EXPLAIN] preserve_markdown was: {preserve_markdown}")
 
         token_count = response["total_tokens"]
         model_used = response["model"]
@@ -594,12 +632,20 @@ class AIExplainer:
             )
 
             # Extract content - handle potential None values
+            logger.debug(f"[API] Response object type: {type(response)}")
+            logger.debug(f"[API] Response choices: {len(response.choices)} choices")
+            logger.debug(f"[API] First choice: {response.choices[0]}")
+            
             content = response.choices[0].message.content
             if content is None:
-                logger.warning("OpenRouter returned None content in response")
+                logger.warning("[API] OpenRouter returned None content in response")
+                logger.debug(f"[API] Full response: {response}")
                 content = ""
+            else:
+                logger.info(f"[API] Content received: len={len(content)}")
+                logger.debug(f"[API] Content preview (first 500 chars): {content[:500]}")
 
-            logger.info(f"OpenRouter response: model={response.model}, content_len={len(content)}")
+            logger.info(f"[API] OpenRouter response: model={response.model}, content_len={len(content)}")
 
             return {
                 "content": content,

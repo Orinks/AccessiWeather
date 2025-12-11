@@ -1,0 +1,11 @@
+installation:
+  version: 6.0.0-alpha.16
+  installDate: '2025-12-11T18:42:35.215Z'
+  lastUpdated: '2025-12-11T18:42:35.215Z'
+modules:
+  - core
+  - bmm
+customModules: []
+ides:
+  - github-copilot
+  - antigravity
