@@ -627,6 +627,44 @@ def _collect_alert_settings(dialog, current_settings):
     }
 
 
+def _collect_ai_settings(dialog, current_settings: AppSettings) -> dict:
+    """Collect AI explanation settings from dialog widgets."""
+    # Enable AI explanations
+    enable_ai = getattr(current_settings, "enable_ai_explanations", False)
+    if hasattr(dialog, "enable_ai_switch"):
+        enable_ai = getattr(dialog.enable_ai_switch, "value", enable_ai)
+
+    # OpenRouter API key
+    api_key = getattr(current_settings, "openrouter_api_key", "")
+    if hasattr(dialog, "openrouter_api_key_input"):
+        api_key = getattr(dialog.openrouter_api_key_input, "value", api_key) or ""
+
+    # Model preference
+    model_pref = getattr(current_settings, "ai_model_preference", "auto:free")
+    if hasattr(dialog, "ai_model_selection"):
+        display_value = getattr(dialog.ai_model_selection, "value", None)
+        if display_value and hasattr(dialog, "ai_model_display_to_value"):
+            model_pref = dialog.ai_model_display_to_value.get(display_value, model_pref)
+
+    # Explanation style
+    style = getattr(current_settings, "ai_explanation_style", "standard")
+    if hasattr(dialog, "ai_style_selection"):
+        display_value = getattr(dialog.ai_style_selection, "value", None)
+        if display_value and hasattr(dialog, "ai_style_display_to_value"):
+            style = dialog.ai_style_display_to_value.get(display_value, style)
+
+    # Cache TTL (not exposed in UI, use default)
+    cache_ttl = getattr(current_settings, "ai_cache_ttl", 300)
+
+    return {
+        "enable_ai_explanations": enable_ai,
+        "openrouter_api_key": api_key,
+        "ai_model_preference": model_pref,
+        "ai_explanation_style": style,
+        "ai_cache_ttl": cache_ttl,
+    }
+
+
 def collect_settings_from_ui(dialog) -> AppSettings:
     """Read current widget values and return an AppSettings instance using helper functions."""
     current_settings = getattr(dialog, "current_settings", AppSettings())
@@ -638,6 +676,7 @@ def collect_settings_from_ui(dialog) -> AppSettings:
     sound = _collect_sound_settings(dialog)
     system = _collect_system_settings(dialog, current_settings)
     alerts = _collect_alert_settings(dialog, current_settings)
+    ai = _collect_ai_settings(dialog, current_settings)
 
     # Build and return AppSettings with collected values
     return AppSettings(
@@ -702,4 +741,10 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         taskbar_icon_text_enabled=display["taskbar_icon_text_enabled"],
         taskbar_icon_dynamic_enabled=display["taskbar_icon_dynamic_enabled"],
         taskbar_icon_text_format=display["taskbar_icon_text_format"],
+        # AI explanation settings
+        enable_ai_explanations=ai["enable_ai_explanations"],
+        openrouter_api_key=ai["openrouter_api_key"],
+        ai_model_preference=ai["ai_model_preference"],
+        ai_explanation_style=ai["ai_explanation_style"],
+        ai_cache_ttl=ai["ai_cache_ttl"],
     )

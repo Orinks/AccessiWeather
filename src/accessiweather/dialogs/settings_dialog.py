@@ -198,6 +198,7 @@ class SettingsDialog:
         settings_tabs.create_notifications_tab(self)
         settings_tabs.create_audio_tab(self)
         settings_tabs.create_updates_tab(self)
+        settings_tabs.create_ai_tab(self)
         settings_tabs.create_advanced_tab(self)
 
         main_box.add(self.option_container)

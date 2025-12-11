@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. Set up project dependencies and configuration models
+- [x] 1. Set up project dependencies and configuration models
   - Add `openai>=1.0.0` dependency to `pyproject.toml`
   - Extend `AppSettings` dataclass with AI configuration fields
   - Add default values for AI settings
@@ -10,7 +10,7 @@
   - **Property 4: Settings persistence round-trip**
   - **Validates: Requirements 3.5**
 
-- [ ] 2. Implement core AIExplainer module
+- [x] 2. Implement core AIExplainer module
   - Create `src/accessiweather/ai_explainer.py` with `AIExplainer` class
   - Implement `__init__` with API key, model, and cache parameters
   - Create custom exception classes (AIExplainerError, InsufficientCreditsError, RateLimitError, InvalidAPIKeyError)
@@ -21,7 +21,7 @@
   - **Property 2: Model selection matches configuration**
   - **Validates: Requirements 2.1, 2.2, 2.5**
 
-- [ ] 3. Implement prompt construction logic
+- [x] 3. Implement prompt construction logic
   - Create `WeatherContext` dataclass for structured weather data
   - Implement `_build_prompt()` method to convert weather data to natural language
   - Include all required fields (temperature, conditions, humidity, wind, visibility)
@@ -37,7 +37,7 @@
   - **Property 6: Alerts included when present**
   - **Validates: Requirements 4.2**
 
-- [ ] 4. Implement OpenRouter API integration
+- [x] 4. Implement OpenRouter API integration
   - Initialize OpenAI client with OpenRouter base URL
   - Implement `_call_openrouter()` method with proper headers
   - Add 30-second timeout handling
@@ -45,7 +45,7 @@
   - Extract model used, token counts, and content
   - _Requirements: 1.2, 2.1, 2.2, 2.5_
 
-- [ ] 5. Implement response formatting and markdown handling
+- [x] 5. Implement response formatting and markdown handling
   - Create `_format_response()` method
   - Implement markdown stripping logic for plain text mode
   - Implement markdown preservation for HTML mode
@@ -56,7 +56,7 @@
   - **Property 7: Markdown formatting follows HTML setting**
   - **Validates: Requirements 4.4, 4.5**
 
-- [ ] 6. Implement caching layer integration
+- [x] 6. Implement caching layer integration
   - Integrate with existing `cache.py` infrastructure
   - Generate cache keys from weather data and location
   - Implement 5-minute TTL for explanations
@@ -68,7 +68,7 @@
   - **Property 3: Cache prevents duplicate API calls**
   - **Validates: Requirements 2.4**
 
-- [ ] 7. Implement comprehensive error handling
+- [x] 7. Implement comprehensive error handling
   - Add try-except blocks for all error categories
   - Map API errors to custom exceptions
   - Create user-friendly error messages without technical details
@@ -85,7 +85,7 @@
   - **Property 10: Errors logged without user exposure**
   - **Validates: Requirements 5.6**
 
-- [ ] 8. Implement data source selection logic
+- [x] 8. Implement data source selection logic
   - Create method to compare timestamps across weather data sources
   - Select most recent data source for explanation
   - Handle missing timestamp gracefully
@@ -95,7 +95,7 @@
   - **Property 8: Most recent data source selected**
   - **Validates: Requirements 4.6**
 
-- [ ] 9. Implement cost estimation and usage tracking
+- [x] 9. Implement cost estimation and usage tracking
   - Create method to estimate token counts before API call
   - Calculate estimated cost based on model pricing
   - Implement session usage tracking (accumulate token counts)
@@ -111,7 +111,7 @@
   - **Property 14: Free model cost display**
   - **Validates: Requirements 7.5**
 
-- [ ] 10. Add "Explain Weather" button to weather display
+- [x] 10. Add "Explain Weather" button to weather display
   - Modify `ui_builder.py` to add button to current weather view
   - Implement conditional rendering based on `enable_ai_explanations` setting
   - Add `on_press` handler to trigger explanation generation
@@ -126,7 +126,7 @@
   - **Property 15: Accessibility attributes present**
   - **Validates: Requirements 8.3**
 
-- [ ] 11. Create explanation dialog component
+- [x] 11. Create explanation dialog component
   - Create `src/accessiweather/dialogs/explanation_dialog.py`
   - Build dialog with explanation text, location, and timestamp
   - Implement focus management (set focus to explanation text)
@@ -147,7 +147,7 @@
   - **Property 18: Error announcements accessible**
   - **Validates: Requirements 8.5**
 
-- [ ] 12. Implement explanation generation flow
+- [x] 12. Implement explanation generation flow
   - Wire button press to AIExplainer.explain_weather()
   - Show loading indicator while generating
   - Handle async operation with asyncio.to_thread()
@@ -155,7 +155,7 @@
   - Show error dialog on failure
   - _Requirements: 1.2, 1.3_
 
-- [ ] 13. Add AI settings section to settings dialog
+- [x] 13. Add AI settings section to settings dialog
   - Modify `src/accessiweather/dialogs/settings_dialog.py`
   - Add "Enable AI Explanations" toggle switch
   - Add password field for OpenRouter API key (mask input)
@@ -166,20 +166,20 @@
   - Display usage information
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 7.2_
 
-- [ ] 14. Implement settings validation and persistence
+- [x] 14. Implement settings validation and persistence
   - Validate API key format (starts with "sk-or-")
   - Implement `validate_api_key()` method with test API call
   - Save settings to config file on change
   - Implement reactive UI updates when toggle changes
   - _Requirements: 3.2, 3.4, 3.5_
 
-- [ ] 15. Add API key security measures
+- [x] 15. Add API key security measures
   - Mask API key in UI (show only last 4 characters)
   - Never log full API key values
   - Validate format before storage
   - _Requirements: 3.5_
 
-- [ ] 16. Checkpoint - Ensure all tests pass
+- [x] 16. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ]* 17. Write integration tests for real API calls

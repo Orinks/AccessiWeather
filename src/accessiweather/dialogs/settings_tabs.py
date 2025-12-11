@@ -1118,3 +1118,174 @@ def create_notifications_tab(dialog):
 
     # Add the tab to the option container
     dialog.option_container.content.append("Notifications", notifications_box)
+
+
+def create_ai_tab(dialog):
+    """Build the AI Explanations tab for AI-powered weather explanations."""
+    ai_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
+    dialog.ai_tab = ai_box
+
+    # Enable AI Explanations toggle
+    ai_box.add(
+        toga.Label(
+            "AI Weather Explanations",
+            style=Pack(margin_bottom=8, font_weight="bold"),
+        )
+    )
+    ai_box.add(
+        toga.Label(
+            "Get natural language explanations of weather conditions using AI.",
+            style=Pack(margin_bottom=10, font_size=9),
+        )
+    )
+
+    dialog.enable_ai_switch = toga.Switch(
+        "Enable AI Explanations",
+        value=getattr(dialog.current_settings, "enable_ai_explanations", False),
+        style=Pack(margin_bottom=15),
+        id="enable_ai_switch",
+    )
+    dialog.enable_ai_switch.aria_label = "Enable AI explanations"
+    dialog.enable_ai_switch.aria_description = (
+        "Turn on AI-powered weather explanations. When enabled, an 'Explain Weather' "
+        "button will appear in the weather display."
+    )
+    ai_box.add(dialog.enable_ai_switch)
+
+    # OpenRouter API Key
+    ai_box.add(
+        toga.Label(
+            "OpenRouter API Key (optional):",
+            style=Pack(margin_bottom=5),
+        )
+    )
+    ai_box.add(
+        toga.Label(
+            "Leave empty to use free models. Get a key at openrouter.ai",
+            style=Pack(margin_bottom=5, font_size=9),
+        )
+    )
+
+    dialog.openrouter_api_key_input = toga.PasswordInput(
+        value=getattr(dialog.current_settings, "openrouter_api_key", ""),
+        style=Pack(margin_bottom=15, width=300),
+        id="openrouter_api_key_input",
+    )
+    dialog.openrouter_api_key_input.aria_label = "OpenRouter API key"
+    dialog.openrouter_api_key_input.aria_description = (
+        "Enter your OpenRouter API key for paid models. Leave empty to use free models."
+    )
+    ai_box.add(dialog.openrouter_api_key_input)
+
+    # Model Preference
+    ai_box.add(
+        toga.Label(
+            "Model Preference:",
+            style=Pack(margin_bottom=5),
+        )
+    )
+
+    model_options = [
+        "Auto (Free)",
+        "Auto (Paid - requires API key)",
+    ]
+    dialog.ai_model_display_to_value = {
+        "Auto (Free)": "auto:free",
+        "Auto (Paid - requires API key)": "auto",
+    }
+    dialog.ai_model_value_to_display = {
+        value: key for key, value in dialog.ai_model_display_to_value.items()
+    }
+
+    dialog.ai_model_selection = toga.Selection(
+        items=model_options,
+        style=Pack(margin_bottom=15),
+        id="ai_model_selection",
+    )
+    dialog.ai_model_selection.aria_label = "AI model preference"
+    dialog.ai_model_selection.aria_description = (
+        "Choose between free models (no API key needed) or paid models (requires API key)."
+    )
+
+    try:
+        current_model = getattr(dialog.current_settings, "ai_model_preference", "auto:free")
+        display_value = dialog.ai_model_value_to_display.get(current_model, "Auto (Free)")
+        dialog.ai_model_selection.value = display_value
+    except Exception as exc:
+        logger.warning("Failed to set AI model selection: %s", exc)
+        dialog.ai_model_selection.value = "Auto (Free)"
+
+    ai_box.add(dialog.ai_model_selection)
+
+    # Explanation Style
+    ai_box.add(
+        toga.Label(
+            "Explanation Style:",
+            style=Pack(margin_bottom=5),
+        )
+    )
+
+    style_options = [
+        "Brief (1-2 sentences)",
+        "Standard (3-4 sentences)",
+        "Detailed (full paragraph)",
+    ]
+    dialog.ai_style_display_to_value = {
+        "Brief (1-2 sentences)": "brief",
+        "Standard (3-4 sentences)": "standard",
+        "Detailed (full paragraph)": "detailed",
+    }
+    dialog.ai_style_value_to_display = {
+        value: key for key, value in dialog.ai_style_display_to_value.items()
+    }
+
+    dialog.ai_style_selection = toga.Selection(
+        items=style_options,
+        style=Pack(margin_bottom=15),
+        id="ai_style_selection",
+    )
+    dialog.ai_style_selection.aria_label = "Explanation style"
+    dialog.ai_style_selection.aria_description = (
+        "Choose how detailed the AI explanations should be."
+    )
+
+    try:
+        current_style = getattr(dialog.current_settings, "ai_explanation_style", "standard")
+        display_value = dialog.ai_style_value_to_display.get(
+            current_style, "Standard (3-4 sentences)"
+        )
+        dialog.ai_style_selection.value = display_value
+    except Exception as exc:
+        logger.warning("Failed to set AI style selection: %s", exc)
+        dialog.ai_style_selection.value = "Standard (3-4 sentences)"
+
+    ai_box.add(dialog.ai_style_selection)
+
+    # Pricing info
+    ai_box.add(
+        toga.Label(
+            "Cost Information:",
+            style=Pack(margin_bottom=5, margin_top=10, font_weight="bold"),
+        )
+    )
+    ai_box.add(
+        toga.Label(
+            "Free models: No cost, may have rate limits",
+            style=Pack(margin_bottom=3, font_size=9),
+        )
+    )
+    ai_box.add(
+        toga.Label(
+            "Paid models: ~$0.001 per explanation (varies by model)",
+            style=Pack(margin_bottom=3, font_size=9),
+        )
+    )
+    ai_box.add(
+        toga.Label(
+            "Visit openrouter.ai/docs for pricing details",
+            style=Pack(margin_bottom=10, font_size=9),
+        )
+    )
+
+    # Add the tab to the option container
+    dialog.option_container.content.append("AI", ai_box)

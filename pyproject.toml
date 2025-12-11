@@ -21,7 +21,8 @@ dependencies = [
     "attrs>=22.2.0",
     "psutil",
     "keyring",
-    "timezonefinder"
+    "timezonefinder",
+    "openai>=1.0.0",
 ]
 readme = "README.md"
 classifiers = [
@@ -204,6 +205,7 @@ requires = [
     "attrs>=22.2.0",
     "psutil",
     "keyring",
+    "openai>=1.0.0",
 ]
 test_requires = [
     "pytest>=7.0.0",

@@ -17,6 +17,7 @@ from .handlers import (
     on_alert_selected,
     on_check_updates_pressed,
     on_discussion_pressed,
+    on_explain_weather_pressed,
     on_location_changed,
     on_refresh_pressed,
     on_remove_location_pressed,
@@ -67,4 +68,5 @@ __all__ = [
     "on_tray_exit",
     "test_alert_notification",
     "on_test_notification_pressed",
+    "on_explain_weather_pressed",
 ]

@@ -41,6 +41,7 @@ from .weather_handlers import (
     refresh_weather_data,
     update_weather_displays,
 )
+from .ai_handlers import on_explain_weather_pressed
 
 __all__ = [
     "on_location_changed",
@@ -72,4 +73,5 @@ __all__ = [
     "on_tray_exit",
     "test_alert_notification",
     "on_test_notification_pressed",
+    "on_explain_weather_pressed",
 ]
