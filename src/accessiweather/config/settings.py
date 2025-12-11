@@ -126,12 +126,13 @@ class SettingsOperations:
         # These keys should be stored in SecureStorage
         secure_keys = {
             "visual_crossing_api_key",
+            "openrouter_api_key",
             "github_app_id",
             "github_app_private_key",
             "github_app_installation_id",
         }
         # These keys should be redacted in logs
-        redacted_keys = {"github_app_private_key", "visual_crossing_api_key"}
+        redacted_keys = {"github_app_private_key", "visual_crossing_api_key", "openrouter_api_key"}
 
         for key, value in kwargs.items():
             if hasattr(config.settings, key):
