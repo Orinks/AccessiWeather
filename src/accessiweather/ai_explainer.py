@@ -427,6 +427,107 @@ class AIExplainer:
 
         return result
 
+    async def explain_afd(
+        self,
+        afd_text: str,
+        location_name: str,
+        style: ExplanationStyle = ExplanationStyle.DETAILED,
+    ) -> ExplanationResult:
+        """
+        Generate plain language explanation of an Area Forecast Discussion.
+
+        Args:
+            afd_text: The raw AFD text from NWS
+            location_name: Human-readable location name
+            style: Explanation style (brief, standard, detailed)
+
+        Returns:
+            ExplanationResult with text, model used, and metadata
+
+        """
+        import asyncio
+
+        # Build AFD-specific prompts
+        system_prompt = (
+            "You are a helpful weather assistant that explains National Weather Service "
+            "Area Forecast Discussions (AFDs) in plain, accessible language. AFDs contain "
+            "technical meteorological terminology that most people don't understand. "
+            "Your job is to translate this into clear, everyday language that anyone can "
+            "understand. Focus on:\n"
+            "- What weather to expect and when\n"
+            "- Any significant weather events or changes\n"
+            "- How confident forecasters are in their predictions\n"
+            "- What this means for daily activities\n\n"
+            "Avoid using technical jargon. If you must use a technical term, explain it."
+        )
+
+        style_instructions = {
+            ExplanationStyle.BRIEF: "Provide a 2-3 sentence summary of the key points.",
+            ExplanationStyle.STANDARD: "Provide a clear 1-2 paragraph summary.",
+            ExplanationStyle.DETAILED: (
+                "Provide a comprehensive summary covering all major points "
+                "from the discussion, organized by topic."
+            ),
+        }
+
+        user_prompt = (
+            f"Please explain this Area Forecast Discussion for {location_name} "
+            f"in plain language:\n\n{afd_text}\n\n"
+            f"{style_instructions.get(style, style_instructions[ExplanationStyle.DETAILED])}"
+        )
+
+        # Build list of models to try
+        primary_model = self.get_effective_model()
+        models_to_try = [primary_model]
+        if ":free" in primary_model:
+            models_to_try.extend(FALLBACK_FREE_MODELS)
+
+        # Try each model until we get a non-empty response
+        response = None
+        last_error = None
+        for model in models_to_try:
+            try:
+                model_override = model if model != primary_model else None
+                response = await asyncio.to_thread(
+                    self._call_openrouter, system_prompt, user_prompt, model_override
+                )
+
+                if response["content"] and response["content"].strip():
+                    logger.info(f"Got valid AFD response from model: {model}")
+                    break
+
+                logger.warning(f"Model {model} returned empty response for AFD, trying fallback...")
+                response = None
+
+            except Exception as e:
+                last_error = e
+                logger.warning(f"Model {model} failed for AFD: {e}, trying fallback...")
+                continue
+
+        if response is None:
+            if last_error:
+                logger.error(f"All models failed for AFD. Last error: {last_error}", exc_info=True)
+                raise last_error
+            raise AIExplainerError(
+                "All AI models returned empty responses. Please try again later."
+            )
+
+        # Process response
+        text = response["content"]
+        token_count = response["total_tokens"]
+        model_used = response["model"]
+        estimated_cost = self._estimate_cost(model_used, token_count)
+        self._session_token_count += token_count
+
+        return ExplanationResult(
+            text=text,
+            model_used=model_used,
+            token_count=token_count,
+            estimated_cost=estimated_cost,
+            cached=False,
+            timestamp=datetime.now(),
+        )
+
     def _call_openrouter(
         self, system_prompt: str, user_prompt: str, model_override: str | None = None
     ) -> dict[str, Any]:
