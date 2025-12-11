@@ -1,4 +1,5 @@
-"""Tests for AI weather explanation feature.
+"""
+Tests for AI weather explanation feature.
 
 This module contains unit tests and property-based tests for the AI explainer
 functionality, including configuration, prompt construction, and API integration.
@@ -7,7 +8,11 @@ functionality, including configuration, prompt construction, and API integration
 from __future__ import annotations
 
 import pytest
-from hypothesis import given, settings, strategies as st
+from hypothesis import (
+    given,
+    settings,
+    strategies as st,
+)
 
 from accessiweather.models import AppSettings
 
@@ -69,7 +74,8 @@ class TestAISettingsConfiguration:
 
 
 class TestAISettingsRoundTrip:
-    """Property-based tests for AI settings persistence.
+    """
+    Property-based tests for AI settings persistence.
 
     **Feature: ai-weather-explanations, Property 4: Settings persistence round-trip**
     **Validates: Requirements 3.5**
@@ -83,7 +89,8 @@ class TestAISettingsRoundTrip:
     )
     @settings(max_examples=100)
     def test_settings_round_trip(self, enable_ai, model_pref, style, cache_ttl):
-        """For any valid AI configuration, saving and loading produces equivalent values.
+        """
+        For any valid AI configuration, saving and loading produces equivalent values.
 
         **Feature: ai-weather-explanations, Property 4: Settings persistence round-trip**
         **Validates: Requirements 3.5**
@@ -171,7 +178,8 @@ class TestAIExplainerCore:
 
 
 class TestModelSelection:
-    """Property-based tests for model selection.
+    """
+    Property-based tests for model selection.
 
     **Feature: ai-weather-explanations, Property 2: Model selection matches configuration**
     **Validates: Requirements 2.1, 2.2, 2.5**
@@ -204,7 +212,8 @@ class TestModelSelection:
     )
     @settings(max_examples=100)
     def test_model_selection_property(self, has_api_key, model_pref):
-        """For any configuration, correct model identifier is used.
+        """
+        For any configuration, correct model identifier is used.
 
         **Feature: ai-weather-explanations, Property 2: Model selection matches configuration**
         **Validates: Requirements 2.1, 2.2, 2.5**
@@ -225,7 +234,8 @@ class TestModelSelection:
 
 
 class TestPromptConstruction:
-    """Tests for prompt construction logic.
+    """
+    Tests for prompt construction logic.
 
     **Feature: ai-weather-explanations, Property 5: Prompt includes all required weather fields**
     **Feature: ai-weather-explanations, Property 6: Alerts included when present**
@@ -327,7 +337,8 @@ class TestPromptConstruction:
     def test_prompt_field_inclusion_property(
         self, temperature, humidity, wind_speed, visibility, conditions
     ):
-        """For any weather data with required fields, prompt contains all fields.
+        """
+        For any weather data with required fields, prompt contains all fields.
 
         **Feature: ai-weather-explanations, Property 5: Prompt includes all required weather fields**
         **Validates: Requirements 4.1**
@@ -358,7 +369,8 @@ class TestPromptConstruction:
     )
     @settings(max_examples=100)
     def test_alert_inclusion_property(self, has_alerts, alert_count):
-        """For any weather data, alerts are included iff they exist.
+        """
+        For any weather data, alerts are included iff they exist.
 
         **Feature: ai-weather-explanations, Property 6: Alerts included when present**
         **Validates: Requirements 4.2**
@@ -390,7 +402,8 @@ class TestPromptConstruction:
 
 
 class TestMarkdownFormatting:
-    """Tests for markdown formatting logic.
+    """
+    Tests for markdown formatting logic.
 
     **Feature: ai-weather-explanations, Property 7: Markdown formatting follows HTML setting**
     **Validates: Requirements 4.4, 4.5**
@@ -464,7 +477,8 @@ class TestMarkdownFormatting:
     )
     @settings(max_examples=100)
     def test_markdown_formatting_property(self, text_content, preserve_markdown):
-        """For any AI response, formatting matches HTML setting.
+        """
+        For any AI response, formatting matches HTML setting.
 
         **Feature: ai-weather-explanations, Property 7: Markdown formatting follows HTML setting**
         **Validates: Requirements 4.4, 4.5**
@@ -533,7 +547,7 @@ class TestAPIIntegration:
     @pytest.mark.asyncio
     async def test_explain_weather_uses_cache(self, mocker, mock_openai_client):
         """Test that cached explanations are returned without API call."""
-        from accessiweather.ai_explainer import AIExplainer, ExplanationResult
+        from accessiweather.ai_explainer import AIExplainer
         from accessiweather.cache import Cache
 
         mocker.patch("openai.OpenAI", return_value=mock_openai_client)
@@ -559,7 +573,8 @@ class TestAPIIntegration:
 
 
 class TestErrorHandling:
-    """Tests for error handling.
+    """
+    Tests for error handling.
 
     **Feature: ai-weather-explanations, Property 9: Error messages are user-friendly**
     **Feature: ai-weather-explanations, Property 10: Errors logged without user exposure**
@@ -609,7 +624,8 @@ class TestErrorHandling:
     )
     @settings(max_examples=50)
     def test_error_messages_no_technical_details(self, error_type):
-        """For any error, user message should not contain technical details.
+        """
+        For any error, user message should not contain technical details.
 
         **Feature: ai-weather-explanations, Property 9: Error messages are user-friendly**
         **Validates: Requirements 5.1**
@@ -653,7 +669,8 @@ class TestErrorHandling:
 
 
 class TestCostEstimation:
-    """Tests for cost estimation and usage tracking.
+    """
+    Tests for cost estimation and usage tracking.
 
     **Feature: ai-weather-explanations, Property 13: Session usage accumulates correctly**
     **Feature: ai-weather-explanations, Property 14: Free model cost display**
@@ -725,7 +742,8 @@ class TestCostEstimation:
     )
     @settings(max_examples=50)
     def test_usage_accumulation_property(self, token_counts):
-        """For any sequence of token counts, total equals sum.
+        """
+        For any sequence of token counts, total equals sum.
 
         **Feature: ai-weather-explanations, Property 13: Session usage accumulates correctly**
         **Validates: Requirements 7.4**
@@ -752,7 +770,8 @@ class TestCostEstimation:
     )
     @settings(max_examples=100)
     def test_free_model_cost_property(self, model, token_count):
-        """For any free model, cost should be zero.
+        """
+        For any free model, cost should be zero.
 
         **Feature: ai-weather-explanations, Property 14: Free model cost display**
         **Validates: Requirements 7.5**
@@ -766,7 +785,8 @@ class TestCostEstimation:
 
 
 class TestDataSourceSelection:
-    """Tests for data source selection logic.
+    """
+    Tests for data source selection logic.
 
     **Feature: ai-weather-explanations, Property 8: Most recent data source selected**
     **Validates: Requirements 4.6**
@@ -826,7 +846,8 @@ class TestDataSourceSelection:
     )
     @settings(max_examples=100)
     def test_data_source_selection_property(self, num_sources, most_recent_index):
-        """For any set of sources, most recent timestamp is selected.
+        """
+        For any set of sources, most recent timestamp is selected.
 
         **Feature: ai-weather-explanations, Property 8: Most recent data source selected**
         **Validates: Requirements 4.6**
@@ -843,12 +864,8 @@ class TestDataSourceSelection:
         now = datetime.now()
         sources = []
         for i in range(num_sources):
-            if i == most_recent_index:
-                # This one is most recent
-                timestamp = now
-            else:
-                # Others are older
-                timestamp = now - timedelta(hours=i + 1)
+            # Use ternary operator instead of if-else block
+            timestamp = now if i == most_recent_index else now - timedelta(hours=i + 1)
 
             sources.append(
                 {
@@ -865,7 +882,8 @@ class TestDataSourceSelection:
 
 
 class TestUIComponents:
-    """Tests for UI components.
+    """
+    Tests for UI components.
 
     **Feature: ai-weather-explanations, Property 1: Button visibility follows AI enablement setting**
     **Feature: ai-weather-explanations, Property 15: Accessibility attributes present**
@@ -893,7 +911,8 @@ class TestUIComponents:
     @given(enabled=st.booleans())
     @settings(max_examples=50)
     def test_button_visibility_property(self, enabled):
-        """For any AI enablement state, button visibility matches setting.
+        """
+        For any AI enablement state, button visibility matches setting.
 
         **Feature: ai-weather-explanations, Property 1: Button visibility follows AI enablement setting**
         **Validates: Requirements 1.1, 1.5**
@@ -906,7 +925,8 @@ class TestUIComponents:
 
 
 class TestExplanationDialog:
-    """Tests for explanation dialog component.
+    """
+    Tests for explanation dialog component.
 
     **Feature: ai-weather-explanations, Property 16: Dialog focus management**
     **Feature: ai-weather-explanations, Property 17: Loading state announced**

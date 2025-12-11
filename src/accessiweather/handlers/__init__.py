@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .ai_handlers import on_explain_weather_pressed
 from .alert_handlers import (
     on_alert_details_pressed,
     on_alert_selected,
@@ -41,7 +42,6 @@ from .weather_handlers import (
     refresh_weather_data,
     update_weather_displays,
 )
-from .ai_handlers import on_explain_weather_pressed
 
 __all__ = [
     "on_location_changed",
