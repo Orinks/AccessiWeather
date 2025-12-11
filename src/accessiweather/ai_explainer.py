@@ -21,8 +21,14 @@ logger = logging.getLogger(__name__)
 
 # OpenRouter API configuration
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-DEFAULT_FREE_MODEL = "openrouter/auto:free"
+# Use a specific reliable free model instead of auto:free which can route to unreliable models
+DEFAULT_FREE_MODEL = "meta-llama/llama-3.2-3b-instruct:free"
 DEFAULT_PAID_MODEL = "openrouter/auto"
+# Fallback free models to try if primary returns empty response
+FALLBACK_FREE_MODELS = [
+    "mistralai/mistral-7b-instruct:free",
+    "google/gemma-2-9b-it:free",
+]
 
 
 class AIExplainerError(Exception):
@@ -338,12 +344,44 @@ class AIExplainer:
         system_prompt = self._build_system_prompt(style)
         user_prompt = self._build_prompt(weather_data, location_name, style)
 
-        # Make API call in thread to avoid blocking
-        try:
-            response = await asyncio.to_thread(self._call_openrouter, system_prompt, user_prompt)
-        except Exception as e:
-            logger.error(f"Error calling OpenRouter API: {e}", exc_info=True)
-            raise
+        # Build list of models to try: primary first, then fallbacks for free models
+        primary_model = self.get_effective_model()
+        models_to_try = [primary_model]
+        if ":free" in primary_model:
+            models_to_try.extend(FALLBACK_FREE_MODELS)
+
+        # Try each model until we get a non-empty response
+        response = None
+        last_error = None
+        for model in models_to_try:
+            try:
+                model_override = model if model != primary_model else None
+                response = await asyncio.to_thread(
+                    self._call_openrouter, system_prompt, user_prompt, model_override
+                )
+
+                # Check if we got actual content
+                if response["content"] and response["content"].strip():
+                    logger.info(f"Got valid response from model: {model}")
+                    break
+
+                # Empty response - log and try next model
+                logger.warning(f"Model {model} returned empty response, trying fallback...")
+                response = None
+
+            except Exception as e:
+                last_error = e
+                logger.warning(f"Model {model} failed: {e}, trying fallback...")
+                continue
+
+        # If all models failed
+        if response is None:
+            if last_error:
+                logger.error(f"All models failed. Last error: {last_error}", exc_info=True)
+                raise last_error
+            raise AIExplainerError(
+                "All AI models returned empty responses. Please try again later."
+            )
 
         # Process response
         raw_content = response["content"]
@@ -389,13 +427,16 @@ class AIExplainer:
 
         return result
 
-    def _call_openrouter(self, system_prompt: str, user_prompt: str) -> dict[str, Any]:
+    def _call_openrouter(
+        self, system_prompt: str, user_prompt: str, model_override: str | None = None
+    ) -> dict[str, Any]:
         """
         Make synchronous call to OpenRouter API.
 
         Args:
             system_prompt: System message for the AI
             user_prompt: User message with weather data
+            model_override: Optional model to use instead of configured model
 
         Returns:
             Dict with content, model, and token counts
@@ -406,7 +447,13 @@ class AIExplainer:
         """
         try:
             client = self._get_client()
-            model = self.get_effective_model()
+            model = model_override or self.get_effective_model()
+
+            # Build extra_body with fallback models for free tier
+            extra_body = {}
+            if ":free" in model:
+                # Use OpenRouter's native models parameter for automatic fallback
+                extra_body["models"] = FALLBACK_FREE_MODELS
 
             response = client.chat.completions.create(
                 model=model,
@@ -414,11 +461,12 @@ class AIExplainer:
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
                 ],
-                max_tokens=200,
+                max_tokens=500,  # Increased to allow complete explanations
                 extra_headers={
                     "HTTP-Referer": "https://accessiweather.orinks.net",
                     "X-Title": "AccessiWeather",
                 },
+                extra_body=extra_body if extra_body else None,
             )
 
             # Extract content - handle potential None values
