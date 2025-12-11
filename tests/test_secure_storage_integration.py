@@ -68,8 +68,8 @@ def test_secure_storage_migration(mock_app, mock_keyring):
     manager.load_config()
 
     # Verify keyring get_password was called to load secure keys
-    # (visual_crossing_api_key, github_app_id, github_app_private_key, github_app_installation_id)
-    assert mock_keyring.get_password.call_count == 4
+    # (visual_crossing_api_key, openrouter_api_key, github_app_id, github_app_private_key, github_app_installation_id)
+    assert mock_keyring.get_password.call_count == 5
     # No set_password calls during load
     assert mock_keyring.set_password.call_count == 0
 

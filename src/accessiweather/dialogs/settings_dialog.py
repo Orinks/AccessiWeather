@@ -338,7 +338,12 @@ class SettingsDialog:
             old_startup_enabled = self.config_manager.get_settings().startup_enabled
 
             # Update configuration
-            success = self.config_manager.update_settings(**new_settings.to_dict())
+            # Note: to_dict() excludes secure keys (API keys) so we must pass them explicitly
+            settings_dict = new_settings.to_dict()
+            # Add secure keys that are excluded from to_dict() for security
+            settings_dict["visual_crossing_api_key"] = new_settings.visual_crossing_api_key
+            settings_dict["openrouter_api_key"] = new_settings.openrouter_api_key
+            success = self.config_manager.update_settings(**settings_dict)
 
             # Handle startup setting changes
             if success:
