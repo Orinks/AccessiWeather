@@ -116,13 +116,17 @@ async def on_explain_weather_pressed(app: AccessiWeatherApp, widget) -> None:
         # Close loading dialog
         loading_dialog.close()
 
+        # Debug: log the explanation text
+        logger.debug(f"Explanation text length: {len(result.text) if result.text else 0}")
+        logger.debug(f"Explanation text: {result.text[:200] if result.text else 'EMPTY'}")
+
         # Show explanation dialog
         explanation_dialog = ExplanationDialog(app, result, location.name)
         explanation_dialog.show()
 
         logger.info(
             f"Generated weather explanation for {location.name} "
-            f"(tokens: {result.token_count}, cached: {result.cached})"
+            f"(tokens: {result.token_count}, cached: {result.cached}, text_len: {len(result.text) if result.text else 0})"
         )
 
     except AIExplainerError as e:

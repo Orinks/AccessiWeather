@@ -81,17 +81,24 @@ class ExplanationDialog:
         main_box.add(timestamp_label)
 
         # Explanation text (main content)
+        # Note: Set value after creation to ensure it displays correctly on all platforms
         self.explanation_text = toga.MultilineTextInput(
-            value=self.explanation.text,
             readonly=True,
             style=Pack(flex=1, padding_bottom=15),
         )
+        # Set value after widget creation
+        self.explanation_text.value = self.explanation.text or "(No explanation text received)"
         with contextlib.suppress(AttributeError):
             self.explanation_text.aria_label = "Weather explanation"
             self.explanation_text.aria_description = (
                 "AI-generated explanation of current weather conditions"
             )
         main_box.add(self.explanation_text)
+
+        # Log for debugging
+        logger.debug(
+            f"Explanation text set to: {self.explanation.text[:100] if self.explanation.text else 'EMPTY'}..."
+        )
 
         # Metadata section
         metadata_box = toga.Box(style=Pack(direction=COLUMN, padding_top=10))
