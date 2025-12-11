@@ -232,12 +232,35 @@ class AIExplainer:
             forecast_summary=weather_data.get("forecast_summary"),
         )
 
-        return (
-            f"Please explain the following weather conditions:\n\n"
-            f"{context.to_prompt_text()}\n\n"
-            f"Provide a natural language explanation of what this weather means "
-            f"for someone planning their day."
+        prompt_parts = [
+            "Please explain the following weather conditions:\n",
+            context.to_prompt_text(),
+        ]
+
+        # Add forecast periods if available
+        forecast_periods = weather_data.get("forecast_periods", [])
+        if forecast_periods:
+            prompt_parts.append("\n\nUpcoming Forecast:")
+            for period in forecast_periods:
+                period_text = f"\n- {period.get('name', 'Unknown')}: "
+                period_text += (
+                    f"{period.get('temperature', 'N/A')}°{period.get('temperature_unit', 'F')}"
+                )
+                if period.get("short_forecast"):
+                    period_text += f", {period['short_forecast']}"
+                if period.get("wind_speed"):
+                    period_text += f" (Wind: {period['wind_speed']}"
+                    if period.get("wind_direction"):
+                        period_text += f" {period['wind_direction']}"
+                    period_text += ")"
+                prompt_parts.append(period_text)
+
+        prompt_parts.append(
+            "\n\nProvide a natural language explanation of the current conditions "
+            "and what to expect over the coming days for someone planning their activities."
         )
+
+        return "".join(prompt_parts)
 
     def _format_response(self, response_text: str, preserve_markdown: bool) -> str:
         """

@@ -85,6 +85,7 @@ async def on_explain_weather_pressed(app: AccessiWeatherApp, widget) -> None:
             "visibility": current.visibility_miles,
             "pressure": current.pressure_in,
             "alerts": [],
+            "forecast_periods": [],
         }
 
         # Add alerts if present
@@ -93,6 +94,22 @@ async def on_explain_weather_pressed(app: AccessiWeatherApp, widget) -> None:
                 {"title": alert.title, "severity": alert.severity}
                 for alert in weather_data.alerts.alerts
             ]
+
+        # Add forecast periods if available (first 4-6 periods for context)
+        if weather_data.forecast and weather_data.forecast.periods:
+            forecast_periods = []
+            for period in weather_data.forecast.periods[:6]:
+                forecast_periods.append(
+                    {
+                        "name": period.name,
+                        "temperature": period.temperature,
+                        "temperature_unit": period.temperature_unit,
+                        "short_forecast": period.short_forecast,
+                        "wind_speed": period.wind_speed,
+                        "wind_direction": period.wind_direction,
+                    }
+                )
+            weather_dict["forecast_periods"] = forecast_periods
 
         # Determine explanation style
         style_map = {
