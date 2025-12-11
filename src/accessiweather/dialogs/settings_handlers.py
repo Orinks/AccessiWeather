@@ -250,6 +250,37 @@ def _apply_alert_notification_settings(dialog, settings):
         )
 
 
+def _apply_ai_settings(dialog, settings):
+    """Apply AI explanation settings to UI widgets."""
+    # Enable AI explanations switch
+    if getattr(dialog, "enable_ai_switch", None) is not None:
+        dialog.enable_ai_switch.value = getattr(settings, "enable_ai_explanations", False)
+
+    # OpenRouter API key
+    if getattr(dialog, "openrouter_api_key_input", None) is not None:
+        dialog.openrouter_api_key_input.value = getattr(settings, "openrouter_api_key", "") or ""
+
+    # Model preference
+    if getattr(dialog, "ai_model_selection", None) is not None:
+        model_pref = getattr(settings, "ai_model_preference", "auto:free")
+        if hasattr(dialog, "ai_model_value_to_display"):
+            display_value = dialog.ai_model_value_to_display.get(model_pref, "Auto (Free)")
+            try:
+                dialog.ai_model_selection.value = display_value
+            except Exception as exc:
+                logger.debug("%s: Failed to set AI model selection: %s", LOG_PREFIX, exc)
+
+    # Explanation style
+    if getattr(dialog, "ai_style_selection", None) is not None:
+        style = getattr(settings, "ai_explanation_style", "standard")
+        if hasattr(dialog, "ai_style_value_to_display"):
+            display_value = dialog.ai_style_value_to_display.get(style, "Standard (3-4 sentences)")
+            try:
+                dialog.ai_style_selection.value = display_value
+            except Exception as exc:
+                logger.debug("%s: Failed to set AI style selection: %s", LOG_PREFIX, exc)
+
+
 def apply_settings_to_ui(dialog):
     """Apply settings model to UI widgets in the dialog using helper functions."""
     try:
@@ -261,6 +292,7 @@ def apply_settings_to_ui(dialog):
         _apply_update_settings(dialog, settings)
         _apply_system_settings(dialog, settings)
         _apply_alert_notification_settings(dialog, settings)
+        _apply_ai_settings(dialog, settings)
 
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.warning("%s: Failed to apply settings to UI: %s", LOG_PREFIX, exc)
