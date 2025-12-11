@@ -1155,27 +1155,44 @@ def create_ai_tab(dialog):
     # OpenRouter API Key
     ai_box.add(
         toga.Label(
-            "OpenRouter API Key (optional):",
+            "OpenRouter API Key:",
             style=Pack(margin_bottom=5),
         )
     )
     ai_box.add(
         toga.Label(
-            "Leave empty to use free models. Get a key at openrouter.ai",
+            "Required for all models. Get a free key at openrouter.ai/keys",
             style=Pack(margin_bottom=5, font_size=9),
         )
     )
 
     dialog.openrouter_api_key_input = toga.PasswordInput(
         value=getattr(dialog.current_settings, "openrouter_api_key", ""),
-        style=Pack(margin_bottom=15, width=300),
+        style=Pack(margin_bottom=5, width=300),
         id="openrouter_api_key_input",
     )
     dialog.openrouter_api_key_input.aria_label = "OpenRouter API key"
     dialog.openrouter_api_key_input.aria_description = (
-        "Enter your OpenRouter API key for paid models. Leave empty to use free models."
+        "Enter your OpenRouter API key. Required for all models including free ones."
     )
     ai_box.add(dialog.openrouter_api_key_input)
+
+    # API Key buttons row
+    api_key_buttons_row = toga.Box(style=Pack(direction=ROW, margin_bottom=15))
+
+    dialog.validate_openrouter_api_key_button = toga.Button(
+        "Validate API Key",
+        on_press=dialog._on_validate_openrouter_api_key,
+        style=Pack(width=150),
+        id="validate_openrouter_api_key_button",
+    )
+    dialog.validate_openrouter_api_key_button.aria_label = "Validate OpenRouter API key"
+    dialog.validate_openrouter_api_key_button.aria_description = (
+        "Test your OpenRouter API key to ensure it is valid and working."
+    )
+    api_key_buttons_row.add(dialog.validate_openrouter_api_key_button)
+
+    ai_box.add(api_key_buttons_row)
 
     # Model Preference
     ai_box.add(

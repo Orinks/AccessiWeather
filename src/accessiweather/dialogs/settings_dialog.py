@@ -632,6 +632,9 @@ class SettingsDialog:
     async def _on_validate_visual_crossing_api_key(self, widget):
         await settings_operations.validate_visual_crossing_api_key(self)
 
+    async def _on_validate_openrouter_api_key(self, widget):
+        await settings_operations.validate_openrouter_api_key(self)
+
     def _initialize_update_info(self):
         settings_operations.initialize_update_info(self)
 
