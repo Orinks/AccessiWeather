@@ -346,7 +346,16 @@ class AIExplainer:
             raise
 
         # Process response
-        text = self._format_response(response["content"], preserve_markdown)
+        raw_content = response["content"]
+        logger.info(
+            f"Raw content from API (len={len(raw_content) if raw_content else 0}): {raw_content[:200] if raw_content else 'NONE'}..."
+        )
+
+        text = self._format_response(raw_content, preserve_markdown)
+        logger.info(
+            f"Formatted text (len={len(text) if text else 0}): {text[:200] if text else 'EMPTY'}..."
+        )
+
         token_count = response["total_tokens"]
         model_used = response["model"]
 
@@ -412,8 +421,16 @@ class AIExplainer:
                 },
             )
 
+            # Extract content - handle potential None values
+            content = response.choices[0].message.content
+            if content is None:
+                logger.warning("OpenRouter returned None content in response")
+                content = ""
+
+            logger.info(f"OpenRouter response: model={response.model}, content_len={len(content)}")
+
             return {
-                "content": response.choices[0].message.content,
+                "content": content,
                 "model": response.model,
                 "total_tokens": response.usage.total_tokens,
                 "prompt_tokens": response.usage.prompt_tokens,
