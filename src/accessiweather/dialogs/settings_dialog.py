@@ -149,27 +149,51 @@ class SettingsDialog:
                 closable=False,  # Prevent closing via X button to enforce modal behavior
             )
 
-            # Ensure startup configuration reflects actual system state before loading
-            with contextlib.suppress(Exception):
-                self.config_manager.sync_startup_setting()
-
-            # Load current settings
+            # Load current settings (fast - just reads from memory/config object)
             self.current_settings = self.config_manager.get_settings()
             logger.debug("%s: Loaded settings: %s", LOG_PREFIX, self.current_settings)
 
-            # Create dialog content
+            # Create dialog content (UI construction)
             self._create_dialog_content()
 
-            # Show the dialog
+            # Show the dialog immediately for responsive UX
             self.window.show()
 
             # Set initial focus to the first interactive control for accessibility
             self._set_initial_focus()
 
+            # Defer slow operations to run after dialog is visible
+            asyncio.create_task(self._deferred_init())
+
         except Exception as exc:
             logger.exception("%s: Failed to show settings dialog", LOG_PREFIX)
             if self.future and not self.future.done():
                 self.future.set_exception(exc)
+
+    async def _deferred_init(self) -> None:
+        """Run slow initialization tasks after dialog is visible."""
+        try:
+            loop = asyncio.get_running_loop()
+
+            # Sync startup setting in background (can involve file system checks)
+            with contextlib.suppress(Exception):
+                await loop.run_in_executor(None, self.config_manager.sync_startup_setting)
+
+                # Update the startup switch if the actual state differs from loaded settings
+                actual_startup = self.config_manager.get_settings().startup_enabled
+                if (
+                    hasattr(self, "startup_enabled_switch")
+                    and self.startup_enabled_switch is not None
+                    and self.startup_enabled_switch.value != actual_startup
+                ):
+                    self.startup_enabled_switch.value = actual_startup
+
+            # Initialize update info (reads cache file from disk)
+            with contextlib.suppress(Exception):
+                settings_operations.initialize_update_info(self)
+
+        except Exception as exc:
+            logger.debug("%s: Deferred init error (non-fatal): %s", LOG_PREFIX, exc)
 
     def _ensure_toga_app_context(self):
         """Ensure a Toga application context exists for window creation."""
@@ -234,11 +258,7 @@ class SettingsDialog:
         # Set window content
         self.window.content = main_box
 
-        # Initialize update service and platform info
-        try:
-            settings_operations.initialize_update_info(self)
-        except Exception as exc:
-            logger.warning("%s: Failed to initialize update info: %s", LOG_PREFIX, exc)
+        # Note: initialize_update_info is called in _deferred_init() for faster dialog open
 
     def _set_initial_focus(self):
         """Set initial focus to the first interactive control for accessibility."""
@@ -328,10 +348,7 @@ class SettingsDialog:
         logger.info("%s: OK button pressed", LOG_PREFIX)
 
         try:
-            # Ensure focus stays in dialog during processing
-            self._ensure_dialog_focus()
-
-            # Collect settings from UI
+            # Collect settings from UI (fast - just reads widget values)
             new_settings = settings_handlers.collect_settings_from_ui(self)
 
             # Capture current startup flag before persisting changes
@@ -345,133 +362,66 @@ class SettingsDialog:
             settings_dict["openrouter_api_key"] = new_settings.openrouter_api_key
             success = self.config_manager.update_settings(**settings_dict)
 
-            # Handle startup setting changes
-            if success:
-                try:
-                    new_startup_enabled = new_settings.startup_enabled
-
-                    if old_startup_enabled != new_startup_enabled:
-                        logger.info(
-                            "%s: Startup setting changed %s -> %s",
-                            LOG_PREFIX,
-                            old_startup_enabled,
-                            new_startup_enabled,
-                        )
-
-                        loop = asyncio.get_running_loop()
-                        startup_method = (
-                            self.config_manager.enable_startup
-                            if new_startup_enabled
-                            else self.config_manager.disable_startup
-                        )
-
-                        # Prevent duplicate submissions while startup toggles
-                        ok_button = getattr(self, "ok_button", None)
-                        cancel_button = getattr(self, "cancel_button", None)
-                        if ok_button is not None:
-                            ok_button.enabled = False
-                        if cancel_button is not None:
-                            cancel_button.enabled = False
-
-                        try:
-                            startup_success, startup_message = await loop.run_in_executor(
-                                None, startup_method
-                            )
-                        finally:
-                            if ok_button is not None:
-                                ok_button.enabled = True
-                            if cancel_button is not None:
-                                cancel_button.enabled = True
-
-                        if not startup_success:
-                            logger.warning(
-                                "%s: Startup management failed: %s",
-                                LOG_PREFIX,
-                                startup_message,
-                            )
-                            # Show warning but don't prevent settings save
-                            await self._show_dialog_error(
-                                "Startup Setting Warning",
-                                "Settings saved successfully, but startup setting could not be applied:\n\n"
-                                f"{startup_message}\n\nYou may need to check your system permissions.",
-                            )
-                            with contextlib.suppress(Exception):
-                                self.config_manager.sync_startup_setting()
-                        else:
-                            logger.info(
-                                "%s: Startup management successful: %s",
-                                LOG_PREFIX,
-                                startup_message,
-                            )
-                            try:
-                                synced = self.config_manager.sync_startup_setting()
-                                if not synced:
-                                    logger.warning(
-                                        "%s: Startup sync reported failure after toggle completion",
-                                        LOG_PREFIX,
-                                    )
-                                # Refresh current settings and UI so switch reflects actual state.
-                                with contextlib.suppress(Exception):
-                                    self.current_settings = self.config_manager.get_settings()
-                                settings_handlers.apply_settings_to_ui(self)
-                            except Exception as sync_exc:
-                                logger.warning(
-                                    "%s: Failed to refresh startup switch state: %s",
-                                    LOG_PREFIX,
-                                    sync_exc,
-                                )
-
-                except Exception as exc:
-                    logger.exception("%s: Error handling startup setting change", LOG_PREFIX)
-                    # Show warning but don't prevent settings save
-                    await self._show_dialog_error(
-                        "Startup Setting Error",
-                        "Settings saved successfully, but there was an error managing the startup setting:\n\n"
-                        f"{exc}\n\nYou may need to check your system permissions.",
-                    )
-                    with contextlib.suppress(Exception):
-                        self.config_manager.sync_startup_setting()
-
-            try:
-                actual_startup_state = self.config_manager.is_startup_enabled()
-            except Exception as exc:
-                logger.warning("%s: Unable to read startup state after update: %s", LOG_PREFIX, exc)
-            else:
-                if self.startup_enabled_switch is not None:
-                    self.startup_enabled_switch.value = actual_startup_state
-                if actual_startup_state != new_settings.startup_enabled:
-                    logger.warning(
-                        "%s: Startup toggle mismatch (requested %s, actual %s)",
-                        LOG_PREFIX,
-                        new_settings.startup_enabled,
-                        actual_startup_state,
-                    )
-
-            if success:
-                logger.info("%s: Settings saved successfully", LOG_PREFIX)
-                # Refresh all runtime components with new settings
-                if hasattr(self.app, "refresh_runtime_settings"):
-                    self.app.refresh_runtime_settings()
-                else:
-                    # Fallback: just update taskbar icon
-                    self._trigger_taskbar_icon_update(new_settings)
-                # Set result and close dialog
-                if self.future and not self.future.done():
-                    self.future.set_result(True)
-                if self.window:
-                    self.window.close()
-                    self.window = None  # Clear reference to help with cleanup
-                # No confirmation dialog - let focus return directly to main window
-            else:
+            if not success:
                 logger.error("%s: Failed to save settings", LOG_PREFIX)
-                # Use dialog-relative error instead of main window error
                 await self._show_dialog_error("Settings Error", "Failed to save settings.")
+                return
+
+            logger.info("%s: Settings saved successfully", LOG_PREFIX)
+
+            # Close dialog immediately for responsive UX - startup change runs in background
+            if self.future and not self.future.done():
+                self.future.set_result(True)
+            if self.window:
+                self.window.close()
+                self.window = None
+
+            # Refresh runtime components (fast - just updates object attributes)
+            if hasattr(self.app, "refresh_runtime_settings"):
+                self.app.refresh_runtime_settings()
+            else:
+                self._trigger_taskbar_icon_update(new_settings)
+
+            # Handle startup setting change in background (can be slow on Windows)
+            new_startup_enabled = new_settings.startup_enabled
+            if old_startup_enabled != new_startup_enabled:
+                logger.info(
+                    "%s: Startup setting changed %s -> %s, applying in background",
+                    LOG_PREFIX,
+                    old_startup_enabled,
+                    new_startup_enabled,
+                )
+                # Fire-and-forget - don't block UI for startup shortcut creation
+                asyncio.create_task(self._apply_startup_setting_async(new_startup_enabled))
 
         except Exception as exc:
             logger.exception("%s: Error saving settings", LOG_PREFIX)
-            # Don't close dialog on error, let user try again or cancel
-            # Use dialog-relative error instead of main window error
             await self._show_dialog_error("Settings Error", f"Error saving settings: {exc}")
+
+    async def _apply_startup_setting_async(self, enable: bool) -> None:
+        """Apply startup setting change in background without blocking UI."""
+        try:
+            loop = asyncio.get_running_loop()
+            startup_method = (
+                self.config_manager.enable_startup
+                if enable
+                else self.config_manager.disable_startup
+            )
+
+            startup_success, startup_message = await loop.run_in_executor(None, startup_method)
+
+            if startup_success:
+                logger.info("%s: Startup setting applied: %s", LOG_PREFIX, startup_message)
+            else:
+                logger.warning("%s: Startup setting failed: %s", LOG_PREFIX, startup_message)
+                # Sync config to reflect actual state
+                with contextlib.suppress(Exception):
+                    self.config_manager.sync_startup_setting()
+
+        except Exception as exc:
+            logger.error("%s: Error applying startup setting: %s", LOG_PREFIX, exc)
+            with contextlib.suppress(Exception):
+                self.config_manager.sync_startup_setting()
 
     async def _on_cancel(self, widget):
         """Handle Cancel button press - close dialog without saving."""

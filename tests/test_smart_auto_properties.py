@@ -565,7 +565,7 @@ def source_data_with_forecasts(
 
 
 class TestForecastTimelineUnification:
-    """Tests for forecast timeline merging."""
+    """Tests for forecast single-source selection."""
 
     @given(
         sources=source_data_with_forecasts(min_sources=2, max_sources=3),
@@ -579,9 +579,9 @@ class TestForecastTimelineUnification:
         **Feature: smart-auto-source, Property 7: Forecast Timeline Unification**
         **Validates: Requirements 3.1**
 
-        *For any* set of forecasts from multiple sources, the merged Forecast
-        SHALL contain all unique time periods from all sources, with no
-        duplicate periods for the same time range.
+        Forecasts are selected from a single preferred source (not merged) to avoid
+        duplicate periods with different naming conventions. The selected forecast
+        SHALL contain all periods from that single source.
         """
         engine = DataFusionEngine()
         merged, field_sources = engine.merge_forecasts(sources, location)
@@ -591,31 +591,31 @@ class TestForecastTimelineUnification:
             assert all(s.forecast is None or len(s.forecast.periods) == 0 for s in sources)
             return
 
-        # Collect all unique period keys from sources
-        all_period_keys: set[tuple[str, str]] = set()
+        # Verify we got a forecast from a single source
+        assert "forecast_source" in field_sources
+        selected_source_name = field_sources["forecast_source"]
+
+        # Find the selected source
+        selected_source = None
         for source in sources:
-            if source.success and source.forecast:
-                for period in source.forecast.periods:
-                    if period.start_time and period.end_time:
-                        key = (period.start_time.isoformat(), period.end_time.isoformat())
-                    else:
-                        key = (period.name, "")
-                    all_period_keys.add(key)
+            if source.source == selected_source_name and source.success and source.forecast:
+                selected_source = source
+                break
 
-        # Collect merged period keys
-        merged_keys: set[tuple[str, str]] = set()
-        for period in merged.periods:
-            if period.start_time and period.end_time:
-                key = (period.start_time.isoformat(), period.end_time.isoformat())
-            else:
-                key = (period.name, "")
-            merged_keys.add(key)
+        assert selected_source is not None, f"Could not find source {selected_source_name}"
 
-        # All unique periods should be in merged result
-        assert all_period_keys == merged_keys, (
-            f"Missing periods: {all_period_keys - merged_keys}, "
-            f"Extra periods: {merged_keys - all_period_keys}"
-        )
+        # The merged forecast should match the selected source's forecast exactly
+        assert len(merged.periods) == len(selected_source.forecast.periods)
+
+        # Verify all periods from selected source are present
+        for expected_period in selected_source.forecast.periods:
+            found = any(
+                p.name == expected_period.name
+                and p.start_time == expected_period.start_time
+                and p.end_time == expected_period.end_time
+                for p in merged.periods
+            )
+            assert found, f"Period {expected_period.name} not found in merged forecast"
 
     @given(location=locations())
     @settings(max_examples=50)
@@ -657,10 +657,10 @@ class TestForecastTimelineUnification:
     @settings(max_examples=50)
     def test_mixed_periods_with_and_without_times(self, location: Location) -> None:
         """
-        Test that periods with times and periods without times can be merged.
+        Test that single-source selection works with periods that have different time formats.
 
-        This tests the edge case that causes '<' not supported between
-        'str' and 'datetime.datetime' errors.
+        Since we select from a single source (not merge), we avoid the edge case
+        of comparing str and datetime.datetime.
         """
         base_time = datetime.now(UTC)
 
@@ -694,11 +694,13 @@ class TestForecastTimelineUnification:
 
         engine = DataFusionEngine()
 
-        # This should NOT raise TypeError about comparing str and datetime
-        merged, _ = engine.merge_forecasts(sources, location)
+        # This should NOT raise TypeError - we select from single source
+        merged, field_sources = engine.merge_forecasts(sources, location)
 
         assert merged is not None
-        assert len(merged.periods) == 2
+        # Should only have periods from one source (not merged)
+        assert len(merged.periods) == 1
+        assert "forecast_source" in field_sources
 
 
 # =============================================================================
@@ -1277,7 +1279,7 @@ class TestParallelFetchExecution:
 
     @pytest.mark.asyncio
     @given(location=locations())
-    @settings(max_examples=50)
+    @settings(max_examples=10)  # Reduced: timing tests don't need many examples
     async def test_all_sources_fetched_concurrently(self, location: Location) -> None:
         """
         **Feature: smart-auto-source, Property 1: Parallel Fetch Executes All Sources Concurrently**
@@ -1287,7 +1289,7 @@ class TestParallelFetchExecution:
         concurrently, and total fetch time SHALL be bounded by the slowest
         source plus overhead.
         """
-        coordinator = ParallelFetchCoordinator(timeout=5.0)
+        coordinator = ParallelFetchCoordinator(timeout=1.0)
 
         # Track when each fetch starts and ends
         fetch_times: dict[str, tuple[float, float]] = {}
@@ -1295,14 +1297,14 @@ class TestParallelFetchExecution:
 
         async def mock_nws_fetch():
             fetch_start = asyncio.get_event_loop().time() - start_time
-            await asyncio.sleep(0.1)  # Simulate network delay
+            await asyncio.sleep(0.01)  # Reduced from 0.1s - still proves concurrency
             fetch_end = asyncio.get_event_loop().time() - start_time
             fetch_times["nws"] = (fetch_start, fetch_end)
             return (CurrentConditions(temperature_f=70.0), None, None, None)
 
         async def mock_openmeteo_fetch():
             fetch_start = asyncio.get_event_loop().time() - start_time
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.01)  # Reduced from 0.1s
             fetch_end = asyncio.get_event_loop().time() - start_time
             fetch_times["openmeteo"] = (fetch_start, fetch_end)
             return (CurrentConditions(temperature_f=72.0), None, None)
@@ -1336,7 +1338,7 @@ class TestSourceFailureIsolation:
 
     @pytest.mark.asyncio
     @given(location=locations())
-    @settings(max_examples=50)
+    @settings(max_examples=25)  # Reduced: failure isolation doesn't need many examples
     async def test_one_failure_doesnt_block_others(self, location: Location) -> None:
         """
         **Feature: smart-auto-source, Property 2: Source Failure Isolation**
@@ -1346,7 +1348,7 @@ class TestSourceFailureIsolation:
         the coordinator SHALL produce valid SourceData from successful sources
         regardless of which sources failed.
         """
-        coordinator = ParallelFetchCoordinator(timeout=5.0)
+        coordinator = ParallelFetchCoordinator(timeout=1.0)
 
         async def mock_nws_fetch():
             raise ConnectionError("NWS API unavailable")
@@ -1390,7 +1392,7 @@ class TestRequestTimeoutEnforcement:
 
     @pytest.mark.asyncio
     @given(location=locations())
-    @settings(max_examples=50)
+    @settings(max_examples=10)  # Reduced: timeout tests are slow by nature
     async def test_slow_source_times_out(self, location: Location) -> None:
         """
         **Feature: smart-auto-source, Property 13: Request Timeout Enforcement**
@@ -1399,15 +1401,15 @@ class TestRequestTimeoutEnforcement:
         *For any* source request that takes longer than the configured timeout,
         the coordinator SHALL cancel that request and proceed with other sources.
         """
-        # Use a short timeout for testing
-        coordinator = ParallelFetchCoordinator(timeout=0.1)
+        # Use a very short timeout for testing (50ms instead of 100ms)
+        coordinator = ParallelFetchCoordinator(timeout=0.05)
 
         async def mock_slow_nws_fetch():
-            await asyncio.sleep(1.0)  # Much longer than timeout
+            await asyncio.sleep(0.2)  # Reduced from 1.0s - still exceeds timeout
             return (CurrentConditions(temperature_f=70.0), None, None, None)
 
         async def mock_fast_openmeteo_fetch():
-            await asyncio.sleep(0.01)  # Fast response
+            await asyncio.sleep(0.005)  # Fast response
             return (CurrentConditions(temperature_f=72.0), None, None)
 
         results = await coordinator.fetch_all(

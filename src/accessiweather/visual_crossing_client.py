@@ -6,7 +6,7 @@ implementing methods to fetch current conditions, forecast, and hourly data.
 """
 
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timedelta, timezone
 
 import httpx
 
@@ -249,6 +249,11 @@ class VisualCrossingClient:
         """Parse Visual Crossing current conditions data."""
         current = data.get("currentConditions", {})
 
+        # Get timezone offset from API response for creating timezone-aware datetimes
+        # Visual Crossing returns tzoffset as hours (e.g., -5.0 for EST)
+        tz_offset_hours = data.get("tzoffset", 0)
+        location_tz = timezone(timedelta(hours=tz_offset_hours))
+
         temp_f = current.get("temp")
         temp_c = self._convert_f_to_c(temp_f)
 
@@ -284,54 +289,21 @@ class VisualCrossingClient:
         days = data.get("days", [])
         if days:
             day_data = days[0]
+            # Get the date for combining with time strings
+            date_str = day_data.get("datetime", "")
 
-            sunrise_epoch = day_data.get("sunriseEpoch")
-            if sunrise_epoch is not None:
-                try:
-                    sunrise_time = datetime.fromtimestamp(sunrise_epoch, tz=UTC)
-                except (OSError, ValueError):
-                    logger.debug(f"Failed to parse sunrise epoch: {sunrise_epoch}")
-            if sunrise_time is None and day_data.get("sunrise"):
-                try:
-                    sunrise_time = datetime.fromisoformat(day_data["sunrise"])
-                except ValueError:
-                    logger.debug(f"Failed to parse sunrise time: {day_data['sunrise']}")
-
-            sunset_epoch = day_data.get("sunsetEpoch")
-            if sunset_epoch is not None:
-                try:
-                    sunset_time = datetime.fromtimestamp(sunset_epoch, tz=UTC)
-                except (OSError, ValueError):
-                    logger.debug(f"Failed to parse sunset epoch: {sunset_epoch}")
-            if sunset_time is None and day_data.get("sunset"):
-                try:
-                    sunset_time = datetime.fromisoformat(day_data["sunset"])
-                except ValueError:
-                    logger.debug(f"Failed to parse sunset time: {day_data['sunset']}")
-
-            moonrise_epoch = day_data.get("moonriseEpoch")
-            if moonrise_epoch is not None:
-                try:
-                    moonrise_time = datetime.fromtimestamp(moonrise_epoch, tz=UTC)
-                except (OSError, ValueError):
-                    logger.debug(f"Failed to parse moonrise epoch: {moonrise_epoch}")
-            if moonrise_time is None and day_data.get("moonrise"):
-                try:
-                    moonrise_time = datetime.fromisoformat(day_data["moonrise"])
-                except ValueError:
-                    logger.debug(f"Failed to parse moonrise time: {day_data['moonrise']}")
-
-            moonset_epoch = day_data.get("moonsetEpoch")
-            if moonset_epoch is not None:
-                try:
-                    moonset_time = datetime.fromtimestamp(moonset_epoch, tz=UTC)
-                except (OSError, ValueError):
-                    logger.debug(f"Failed to parse moonset epoch: {moonset_epoch}")
-            if moonset_time is None and day_data.get("moonset"):
-                try:
-                    moonset_time = datetime.fromisoformat(day_data["moonset"])
-                except ValueError:
-                    logger.debug(f"Failed to parse moonset time: {day_data['moonset']}")
+            # Parse sun/moon times from string format (already in local time)
+            # Visual Crossing returns times like "07:08:45" in the location's timezone
+            sunrise_time = self._parse_vc_time_string(
+                date_str, day_data.get("sunrise"), location_tz
+            )
+            sunset_time = self._parse_vc_time_string(date_str, day_data.get("sunset"), location_tz)
+            moonrise_time = self._parse_vc_time_string(
+                date_str, day_data.get("moonrise"), location_tz
+            )
+            moonset_time = self._parse_vc_time_string(
+                date_str, day_data.get("moonset"), location_tz
+            )
 
             moon_phase = describe_moon_phase(day_data.get("moonphase"))
 
@@ -432,8 +404,20 @@ class VisualCrossingClient:
 
     def _parse_hourly_forecast(self, data: dict) -> HourlyForecast:
         """Parse Visual Crossing hourly forecast data."""
+        from zoneinfo import ZoneInfo
+
         periods = []
         days = data.get("days", [])
+
+        # Get timezone info from the response
+        # Visual Crossing returns timezone name (e.g., "America/New_York")
+        location_tz = None
+        timezone_str = data.get("timezone")
+        if timezone_str:
+            try:
+                location_tz = ZoneInfo(timezone_str)
+            except Exception:
+                logger.warning(f"Failed to load timezone: {timezone_str}")
 
         # Extract hourly data from all days
         for day_data in days:
@@ -445,9 +429,13 @@ class VisualCrossingClient:
                 if datetime_str:
                     try:
                         # Visual Crossing format: "HH:MM:SS"
+                        # Times are in the location's local timezone
                         date_str = day_data.get("datetime", "")
                         full_datetime_str = f"{date_str}T{datetime_str}"
                         start_time = datetime.fromisoformat(full_datetime_str)
+                        # Add timezone info if available
+                        if location_tz and start_time:
+                            start_time = start_time.replace(tzinfo=location_tz)
                     except (ValueError, TypeError):
                         logger.warning(
                             f"Failed to parse Visual Crossing datetime: {full_datetime_str}"
@@ -606,6 +594,37 @@ class VisualCrossingClient:
             return None
 
     # Utility methods
+    def _parse_vc_time_string(
+        self, date_str: str, time_str: str | None, tz: timezone
+    ) -> datetime | None:
+        """
+        Parse Visual Crossing time string into a timezone-aware datetime.
+
+        Visual Crossing returns times like "07:08:45" which are already in the
+        location's local timezone. We combine with the date and attach the timezone.
+
+        Args:
+            date_str: Date string like "2025-12-08"
+            time_str: Time string like "07:08:45" or None
+            tz: Timezone to attach (from tzoffset in API response)
+
+        Returns:
+            Timezone-aware datetime or None if parsing fails
+
+        """
+        if not time_str or not date_str:
+            return None
+
+        try:
+            # Combine date and time, then attach timezone
+            # The time is already in local time, so we just label it with the timezone
+            full_str = f"{date_str}T{time_str}"
+            dt = datetime.fromisoformat(full_str)
+            return dt.replace(tzinfo=tz)
+        except (ValueError, TypeError) as e:
+            logger.debug(f"Failed to parse VC time '{date_str}T{time_str}': {e}")
+            return None
+
     def _convert_f_to_c(self, fahrenheit: float | None) -> float | None:
         """Convert Fahrenheit to Celsius."""
         return (fahrenheit - 32) * 5 / 9 if fahrenheit is not None else None
