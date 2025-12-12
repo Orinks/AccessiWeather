@@ -75,15 +75,28 @@
     - Filter results by country_code when data_source is "nws"
     - Return `(latitude, longitude, display_name)` tuple
 
+
     - _Requirements: 1.1, 1.3, 1.5_
+
+
+
+
   - [ ] 4.3 Write property test for NWS filtering
     - **Property 5: NWS data source filters to US-only locations**
+
     - **Validates: Requirements 2.3**
-  - [ ] 4.4 Write property test for worldwide locations
+  - [x] 4.4 Write property test for worldwide locations
+
+
+
     - **Property 6: Non-NWS data source returns worldwide locations**
+
     - **Validates: Requirements 2.4**
-  - [ ] 4.5 Update suggest_locations method
+
+  - [-] 4.5 Update suggest_locations method
+
     - Call `OpenMeteoGeocodingClient.search()` with limit parameter
+
     - Format results using `GeocodingResult.display_name`
     - Apply country filtering based on data_source
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
