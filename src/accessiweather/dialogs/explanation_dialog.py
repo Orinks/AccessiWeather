@@ -239,6 +239,17 @@ class LoadingDialog:
         if self.activity_indicator:
             self.activity_indicator.start()
 
+        # Set initial focus for accessibility
+        self._set_initial_focus()
+
+    def _set_initial_focus(self) -> None:
+        """Set focus to cancel button for accessibility."""
+        try:
+            if hasattr(self, "cancel_button") and self.cancel_button:
+                self.cancel_button.focus()
+        except Exception as e:
+            logger.debug(f"Could not set initial focus on loading dialog: {e}")
+
     def _on_cancel(self, widget) -> None:
         """Handle cancel button press."""
         logger.info("User cancelled explanation generation")
