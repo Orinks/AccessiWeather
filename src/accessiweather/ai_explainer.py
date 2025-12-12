@@ -143,6 +143,8 @@ class AIExplainer:
         api_key: str | None = None,
         model: str = DEFAULT_FREE_MODEL,
         cache: Cache | None = None,
+        custom_system_prompt: str | None = None,
+        custom_instructions: str | None = None,
     ):
         """
         Initialize with optional API key and model preference.
@@ -151,11 +153,15 @@ class AIExplainer:
             api_key: OpenRouter API key (optional for free models)
             model: Model identifier (default: openrouter/auto:free)
             cache: Optional cache instance for explanation caching
+            custom_system_prompt: Custom system prompt to use instead of default
+            custom_instructions: Custom instructions to append to user prompts
 
         """
         self.api_key = api_key
         self.model = model
         self.cache = cache
+        self.custom_system_prompt = custom_system_prompt
+        self.custom_instructions = custom_instructions
         self._session_token_count = 0
         self._client = None
 
@@ -200,18 +206,24 @@ class AIExplainer:
                 ) from e
         return self._client
 
-    def _build_system_prompt(self, style: ExplanationStyle) -> str:
-        """Build the system prompt based on explanation style."""
-        base_prompt = (
-            "You are a helpful weather assistant that explains weather conditions "
-            "in plain, accessible language. Your explanations should be easy to "
-            "understand for screen reader users and people who prefer audio descriptions. "
-            "Avoid using visual-only descriptions. Focus on how the weather will feel "
-            "and what activities it's suitable for.\n\n"
-            "IMPORTANT: Do NOT repeat the location name, date, time, or timezone in your response. "
-            "The user already sees this information. Jump straight into describing the weather "
-            "conditions and what to expect."
-        )
+    def get_effective_system_prompt(self, style: ExplanationStyle) -> str:
+        """
+        Get the system prompt to use, preferring custom over default.
+
+        Args:
+            style: Explanation style for default prompt
+
+        Returns:
+            Custom system prompt if configured, otherwise default prompt
+
+        """
+        if self.custom_system_prompt:
+            return self.custom_system_prompt
+        return self._build_default_system_prompt(style)
+
+    def _build_default_system_prompt(self, style: ExplanationStyle) -> str:
+        """Build the default system prompt based on explanation style."""
+        base_prompt = self.get_default_system_prompt()
 
         style_instructions = {
             ExplanationStyle.BRIEF: "Keep your response to 1-2 sentences.",
@@ -223,6 +235,54 @@ class AIExplainer:
         }
 
         return f"{base_prompt}\n\n{style_instructions.get(style, style_instructions[ExplanationStyle.STANDARD])}"
+
+    @staticmethod
+    def get_default_system_prompt() -> str:
+        """
+        Return the default system prompt text for display in UI.
+
+        Returns:
+            The default system prompt string
+
+        """
+        return (
+            "You are a helpful weather assistant that explains weather conditions "
+            "in plain, accessible language. Your explanations should be easy to "
+            "understand for screen reader users and people who prefer audio descriptions. "
+            "Avoid using visual-only descriptions. Focus on how the weather will feel "
+            "and what activities it's suitable for.\n\n"
+            "IMPORTANT: Do NOT repeat the location name, date, time, or timezone in your response. "
+            "The user already sees this information. Jump straight into describing the weather "
+            "conditions and what to expect."
+        )
+
+    def get_prompt_preview(
+        self,
+        style: ExplanationStyle = ExplanationStyle.STANDARD,
+    ) -> dict[str, str]:
+        """
+        Generate a preview of the prompts that will be sent to the AI.
+
+        Args:
+            style: Explanation style to use for the preview
+
+        Returns:
+            Dict with 'system_prompt' and 'user_prompt' keys
+
+        """
+        sample_weather = {
+            "temperature": 72,
+            "temperature_unit": "F",
+            "conditions": "Partly Cloudy",
+            "humidity": 65,
+            "wind_speed": 8,
+            "wind_direction": "NW",
+            "visibility": 10,
+        }
+        return {
+            "system_prompt": self.get_effective_system_prompt(style),
+            "user_prompt": self._build_prompt(sample_weather, "Sample Location", style),
+        }
 
     def _build_prompt(
         self,
@@ -278,6 +338,10 @@ class AIExplainer:
             "\n\nProvide a natural language explanation of the current conditions "
             "and what to expect over the coming days for someone planning their activities."
         )
+
+        # Add custom instructions if configured
+        if self.custom_instructions and self.custom_instructions.strip():
+            prompt_parts.append(f"\n\nAdditional Instructions: {self.custom_instructions}")
 
         return "".join(prompt_parts)
 
@@ -384,7 +448,7 @@ class AIExplainer:
                 )
 
         # Build prompts
-        system_prompt = self._build_system_prompt(style)
+        system_prompt = self.get_effective_system_prompt(style)
         user_prompt = self._build_prompt(weather_data, location_name, style)
 
         # Build list of models to try: primary first, then fallbacks for free models

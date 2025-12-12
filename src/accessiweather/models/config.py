@@ -77,6 +77,9 @@ class AppSettings:
     ai_model_preference: str = "auto:free"  # "auto:free", "auto", or specific model
     ai_explanation_style: str = "standard"  # "brief", "standard", "detailed"
     ai_cache_ttl: int = 300  # 5 minutes in seconds
+    # AI Prompt Customization Settings
+    custom_system_prompt: str | None = None  # None means use default
+    custom_instructions: str | None = None  # Appended to user prompt
 
     @staticmethod
     def _as_bool(value, default: bool) -> bool:
@@ -153,6 +156,9 @@ class AppSettings:
             "ai_model_preference": self.ai_model_preference,
             "ai_explanation_style": self.ai_explanation_style,
             "ai_cache_ttl": self.ai_cache_ttl,
+            # AI Prompt Customization
+            "custom_system_prompt": self.custom_system_prompt,
+            "custom_instructions": self.custom_instructions,
         }
 
     @classmethod
@@ -223,6 +229,9 @@ class AppSettings:
             ai_model_preference=data.get("ai_model_preference", "auto:free"),
             ai_explanation_style=data.get("ai_explanation_style", "standard"),
             ai_cache_ttl=data.get("ai_cache_ttl", 300),
+            # AI Prompt Customization
+            custom_system_prompt=data.get("custom_system_prompt"),
+            custom_instructions=data.get("custom_instructions"),
         )
 
     def to_alert_settings(self):
