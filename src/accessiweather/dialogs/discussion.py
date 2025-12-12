@@ -161,7 +161,7 @@ class ForecastDiscussionDialog:
     async def _on_explain(self, widget):
         """Handle explain button press - generate AI summary of the AFD."""
         from ..ai_explainer import AIExplainer, AIExplainerError, ExplanationStyle
-        from .explanation_dialog import ErrorDialog, ExplanationDialog, LoadingDialog
+        from .explanation_dialog import ExplanationDialog, LoadingDialog
 
         # Show loading dialog
         loading_dialog = LoadingDialog(self.app, f"AFD for {self.location_name}")
@@ -207,13 +207,11 @@ class ForecastDiscussionDialog:
 
         except AIExplainerError as e:
             loading_dialog.close()
-            error_dialog = ErrorDialog(self.app, str(e))
-            error_dialog.show()
+            await self.app.main_window.error_dialog("AFD Explanation Error", str(e))
             logger.warning(f"AI explanation error: {e}")
 
         except Exception as e:
             loading_dialog.close()
             error_message = f"Unable to generate explanation.\n\nError: {e}"
-            error_dialog = ErrorDialog(self.app, error_message)
-            error_dialog.show()
+            await self.app.main_window.error_dialog("AFD Explanation Error", error_message)
             logger.error(f"Unexpected error generating AFD explanation: {e}", exc_info=True)

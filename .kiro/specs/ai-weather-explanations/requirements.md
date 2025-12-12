@@ -18,15 +18,16 @@ This feature adds AI-powered natural language explanations of weather conditions
 
 ### Requirement 1
 
-**User Story:** As a user, I want to get plain-English explanations of weather conditions, so that I can better understand what the weather data means for my daily activities.
+**User Story:** As a user, I want to get plain-English explanations of current weather conditions and forecasts, so that I can better understand what the weather data means for my daily activities.
 
 #### Acceptance Criteria
 
 1. WHEN a user views current weather conditions THEN the System SHALL display an "Explain Weather" button alongside the weather data
-2. WHEN a user activates the "Explain Weather" button THEN the System SHALL generate a natural language explanation of the current conditions
+2. WHEN a user activates the "Explain Weather" button THEN the System SHALL generate a natural language explanation of both current conditions and upcoming forecast periods
 3. WHEN the explanation is generated THEN the System SHALL display it in an accessible dialog with proper ARIA labels
 4. WHEN the explanation dialog is shown THEN the System SHALL include the weather location and timestamp
 5. WHERE the AI feature is disabled in settings THEN the System SHALL hide the "Explain Weather" button
+6. WHEN forecast periods are available THEN the System SHALL include upcoming weather changes and timing in the explanation
 
 ### Requirement 2
 
@@ -113,3 +114,15 @@ This feature adds AI-powered natural language explanations of weather conditions
 3. WHEN the "Explain Weather" button is rendered THEN the System SHALL include descriptive aria-label and aria-description attributes
 4. WHEN an explanation is loading THEN the System SHALL announce the loading state to screen readers
 5. WHEN an error occurs THEN the System SHALL announce the error message with appropriate ARIA live region attributes
+
+### Requirement 9
+
+**User Story:** As a user interested in detailed weather analysis, I want to get plain-English explanations of Area Forecast Discussions, so that I can understand the meteorologist's technical analysis and reasoning.
+
+#### Acceptance Criteria
+
+1. WHEN a user views an Area Forecast Discussion THEN the System SHALL display an "Explain Discussion" button alongside the AFD text
+2. WHEN a user activates the "Explain Discussion" button THEN the System SHALL generate a plain-language explanation of the technical meteorological content
+3. WHEN explaining an AFD THEN the System SHALL translate technical jargon into everyday language
+4. WHEN explaining an AFD THEN the System SHALL highlight key weather events, timing, and confidence levels
+5. WHEN explaining an AFD THEN the System SHALL focus on what the forecast means for daily activities and planning
