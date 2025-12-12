@@ -29,7 +29,6 @@ async def on_explain_weather_pressed(app: AccessiWeatherApp, widget) -> None:
         ExplanationStyle,
     )
     from ..dialogs.explanation_dialog import (
-        ErrorDialog,
         ExplanationDialog,
         LoadingDialog,
     )
@@ -37,17 +36,17 @@ async def on_explain_weather_pressed(app: AccessiWeatherApp, widget) -> None:
     # Get current location
     location = app.config_manager.get_current_location()
     if not location:
-        error_dialog = ErrorDialog(app, "No location selected. Please select a location first.")
-        error_dialog.show()
+        await app.main_window.error_dialog(
+            "AI Explanation Error", "No location selected. Please select a location first."
+        )
         return
 
     # Get current weather data
     weather_data = getattr(app, "current_weather_data", None)
     if not weather_data or not weather_data.current:
-        error_dialog = ErrorDialog(
-            app, "No weather data available. Please refresh weather data first."
+        await app.main_window.error_dialog(
+            "AI Explanation Error", "No weather data available. Please refresh weather data first."
         )
-        error_dialog.show()
         return
 
     # Show loading dialog
@@ -130,6 +129,11 @@ async def on_explain_weather_pressed(app: AccessiWeatherApp, widget) -> None:
             preserve_markdown=preserve_markdown,
         )
 
+        # Check if user cancelled while we were generating
+        if loading_dialog.is_cancelled:
+            logger.info("Explanation generation was cancelled by user")
+            return
+
         # Close loading dialog
         loading_dialog.close()
 
@@ -147,15 +151,15 @@ async def on_explain_weather_pressed(app: AccessiWeatherApp, widget) -> None:
         )
 
     except AIExplainerError as e:
-        loading_dialog.close()
-        error_dialog = ErrorDialog(app, str(e))
-        error_dialog.show()
+        if not loading_dialog.is_cancelled:
+            loading_dialog.close()
+            await app.main_window.error_dialog("AI Explanation Error", str(e))
         logger.warning(f"AI explanation error: {e}")
 
     except Exception as e:
-        loading_dialog.close()
-        # Include actual error details for debugging
-        error_message = f"Unable to generate explanation.\n\nError: {e}"
-        error_dialog = ErrorDialog(app, error_message)
-        error_dialog.show()
+        if not loading_dialog.is_cancelled:
+            loading_dialog.close()
+            # Include actual error details for debugging
+            error_message = f"Unable to generate explanation.\n\nError: {e}"
+            await app.main_window.error_dialog("AI Explanation Error", error_message)
         logger.error(f"Unexpected error generating AI explanation: {e}", exc_info=True)

@@ -184,9 +184,12 @@ class LoadingDialog:
         self.location = location
         self.window: toga.Window | None = None
         self.activity_indicator: toga.ActivityIndicator | None = None
+        self.is_cancelled = False
 
     def show(self) -> None:
         """Display the loading dialog."""
+        from toga.style.pack import ROW
+
         main_box = toga.Box(style=Pack(direction=COLUMN, padding=20, alignment="center"))
 
         # Loading message
@@ -206,15 +209,28 @@ class LoadingDialog:
         # Status label
         self.status_label = toga.Label(
             "Please wait...",
-            style=Pack(font_style="italic", text_align="center"),
+            style=Pack(font_style="italic", text_align="center", padding_bottom=15),
         )
         main_box.add(self.status_label)
 
+        # Cancel button
+        button_box = toga.Box(style=Pack(direction=ROW))
+        button_box.add(toga.Box(style=Pack(flex=1)))  # Spacer
+        self.cancel_button = toga.Button(
+            "Cancel",
+            on_press=self._on_cancel,
+            style=Pack(width=100),
+        )
+        with contextlib.suppress(AttributeError):
+            self.cancel_button.aria_label = "Cancel explanation generation"
+        button_box.add(self.cancel_button)
+        button_box.add(toga.Box(style=Pack(flex=1)))  # Spacer
+        main_box.add(button_box)
+
         self.window = toga.Window(
             title="Generating Explanation",
-            size=(350, 150),
+            size=(350, 180),
             resizable=False,
-            closable=False,  # Prevent closing via X button during loading
         )
         self.window.content = main_box
         self.window.show()
@@ -222,6 +238,16 @@ class LoadingDialog:
         # Start the activity indicator
         if self.activity_indicator:
             self.activity_indicator.start()
+
+    def _on_cancel(self, widget) -> None:
+        """Handle cancel button press."""
+        logger.info("User cancelled explanation generation")
+        self.is_cancelled = True
+        if self.status_label:
+            self.status_label.text = "Cancelling..."
+        if self.cancel_button:
+            self.cancel_button.enabled = False
+        self.close()
 
     def close(self) -> None:
         """Close the loading dialog."""
