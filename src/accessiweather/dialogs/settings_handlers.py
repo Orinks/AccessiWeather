@@ -280,6 +280,16 @@ def _apply_ai_settings(dialog, settings):
             except Exception as exc:
                 logger.debug("%s: Failed to set AI style selection: %s", LOG_PREFIX, exc)
 
+    # Custom system prompt
+    if getattr(dialog, "custom_system_prompt_input", None) is not None:
+        custom_prompt = getattr(settings, "custom_system_prompt", None) or ""
+        dialog.custom_system_prompt_input.value = custom_prompt
+
+    # Custom instructions
+    if getattr(dialog, "custom_instructions_input", None) is not None:
+        custom_instructions = getattr(settings, "custom_instructions", None) or ""
+        dialog.custom_instructions_input.value = custom_instructions
+
 
 def apply_settings_to_ui(dialog):
     """Apply settings model to UI widgets in the dialog using helper functions."""
@@ -688,12 +698,26 @@ def _collect_ai_settings(dialog, current_settings: AppSettings) -> dict:
     # Cache TTL (not exposed in UI, use default)
     cache_ttl = getattr(current_settings, "ai_cache_ttl", 300)
 
+    # Custom system prompt
+    custom_system_prompt = getattr(current_settings, "custom_system_prompt", None)
+    if hasattr(dialog, "custom_system_prompt_input"):
+        value = getattr(dialog.custom_system_prompt_input, "value", "") or ""
+        custom_system_prompt = value.strip() if value.strip() else None
+
+    # Custom instructions
+    custom_instructions = getattr(current_settings, "custom_instructions", None)
+    if hasattr(dialog, "custom_instructions_input"):
+        value = getattr(dialog.custom_instructions_input, "value", "") or ""
+        custom_instructions = value.strip() if value.strip() else None
+
     return {
         "enable_ai_explanations": enable_ai,
         "openrouter_api_key": api_key,
         "ai_model_preference": model_pref,
         "ai_explanation_style": style,
         "ai_cache_ttl": cache_ttl,
+        "custom_system_prompt": custom_system_prompt,
+        "custom_instructions": custom_instructions,
     }
 
 
@@ -779,4 +803,7 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         ai_model_preference=ai["ai_model_preference"],
         ai_explanation_style=ai["ai_explanation_style"],
         ai_cache_ttl=ai["ai_cache_ttl"],
+        # AI prompt customization
+        custom_system_prompt=ai["custom_system_prompt"],
+        custom_instructions=ai["custom_instructions"],
     )

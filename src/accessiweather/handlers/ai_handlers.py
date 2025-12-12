@@ -67,11 +67,13 @@ async def on_explain_weather_pressed(app: AccessiWeatherApp, widget) -> None:
         else:
             model = settings.ai_model_preference
 
-        # Create explainer
+        # Create explainer with custom prompts from settings
         explainer = AIExplainer(
             api_key=settings.openrouter_api_key or None,
             model=model,
             cache=getattr(app, "ai_explanation_cache", None),
+            custom_system_prompt=getattr(settings, "custom_system_prompt", None),
+            custom_instructions=getattr(settings, "custom_instructions", None),
         )
 
         # Build weather data dict from current conditions

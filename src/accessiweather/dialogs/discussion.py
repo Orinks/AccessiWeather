@@ -179,11 +179,13 @@ class ForecastDiscussionDialog:
             else:
                 model = settings.ai_model_preference
 
-            # Create explainer
+            # Create explainer with custom prompts from settings
             explainer = AIExplainer(
                 api_key=settings.openrouter_api_key or None,
                 model=model,
                 cache=getattr(self.app, "ai_explanation_cache", None),
+                custom_system_prompt=getattr(settings, "custom_system_prompt", None),
+                custom_instructions=getattr(settings, "custom_instructions", None),
             )
 
             # Generate explanation using a custom prompt for AFD

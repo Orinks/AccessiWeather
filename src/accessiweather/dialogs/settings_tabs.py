@@ -1278,6 +1278,108 @@ def create_ai_tab(dialog):
 
     ai_box.add(dialog.ai_style_selection)
 
+    # Prompt Customization Section
+    ai_box.add(
+        toga.Label(
+            "Prompt Customization:",
+            style=Pack(margin_bottom=5, margin_top=15, font_weight="bold"),
+        )
+    )
+    ai_box.add(
+        toga.Label(
+            "Customize how the AI generates explanations.",
+            style=Pack(margin_bottom=10, font_size=9),
+        )
+    )
+
+    # Custom System Prompt
+    ai_box.add(
+        toga.Label(
+            "Custom System Prompt (optional):",
+            style=Pack(margin_bottom=5),
+        )
+    )
+
+    from accessiweather.ai_explainer import AIExplainer
+
+    default_prompt = AIExplainer.get_default_system_prompt()
+    current_custom_prompt = getattr(dialog.current_settings, "custom_system_prompt", None) or ""
+
+    dialog.custom_system_prompt_input = toga.MultilineTextInput(
+        value=current_custom_prompt,
+        placeholder=f"Default: {default_prompt[:100]}...",
+        style=Pack(margin_bottom=5, height=80, width=400),
+        id="custom_system_prompt_input",
+    )
+    dialog.custom_system_prompt_input.aria_label = "Custom system prompt"
+    dialog.custom_system_prompt_input.aria_description = (
+        "Enter a custom system prompt to change the AI's personality and response style. "
+        "Leave empty to use the default prompt."
+    )
+    ai_box.add(dialog.custom_system_prompt_input)
+
+    # Reset System Prompt button
+    dialog.reset_system_prompt_button = toga.Button(
+        "Reset to Default",
+        on_press=dialog._on_reset_system_prompt,
+        style=Pack(margin_bottom=15, width=150),
+        id="reset_system_prompt_button",
+    )
+    dialog.reset_system_prompt_button.aria_label = "Reset system prompt to default"
+    dialog.reset_system_prompt_button.aria_description = (
+        "Clear the custom system prompt and restore the default prompt."
+    )
+    ai_box.add(dialog.reset_system_prompt_button)
+
+    # Custom Instructions
+    ai_box.add(
+        toga.Label(
+            "Custom Instructions (optional):",
+            style=Pack(margin_bottom=5),
+        )
+    )
+
+    current_custom_instructions = (
+        getattr(dialog.current_settings, "custom_instructions", None) or ""
+    )
+
+    dialog.custom_instructions_input = toga.MultilineTextInput(
+        value=current_custom_instructions,
+        placeholder="e.g., Focus on outdoor activities, Keep responses under 50 words",
+        style=Pack(margin_bottom=5, height=60, width=400),
+        id="custom_instructions_input",
+    )
+    dialog.custom_instructions_input.aria_label = "Custom instructions"
+    dialog.custom_instructions_input.aria_description = (
+        "Enter additional instructions to append to each AI request. "
+        "These are added after the weather data."
+    )
+    ai_box.add(dialog.custom_instructions_input)
+
+    # Reset Instructions button
+    dialog.reset_instructions_button = toga.Button(
+        "Reset Instructions",
+        on_press=dialog._on_reset_instructions,
+        style=Pack(margin_bottom=15, width=150),
+        id="reset_instructions_button",
+    )
+    dialog.reset_instructions_button.aria_label = "Reset custom instructions"
+    dialog.reset_instructions_button.aria_description = "Clear the custom instructions field."
+    ai_box.add(dialog.reset_instructions_button)
+
+    # Preview Prompt button
+    dialog.preview_prompt_button = toga.Button(
+        "Preview Prompt",
+        on_press=dialog._on_preview_prompt,
+        style=Pack(margin_bottom=15, width=150),
+        id="preview_prompt_button",
+    )
+    dialog.preview_prompt_button.aria_label = "Preview AI prompt"
+    dialog.preview_prompt_button.aria_description = (
+        "Show a preview of the complete prompt that will be sent to the AI."
+    )
+    ai_box.add(dialog.preview_prompt_button)
+
     # Pricing info
     ai_box.add(
         toga.Label(

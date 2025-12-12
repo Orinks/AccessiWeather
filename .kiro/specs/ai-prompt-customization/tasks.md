@@ -48,27 +48,41 @@
 
 
 
+
     - Append custom instructions after weather data when configured
+
+
     - Skip instructions section when empty/None
     - _Requirements: 2.1, 2.2, 2.3_
-  - [ ] 2.6 Write property test for custom instructions inclusion
+  - [x] 2.6 Write property test for custom instructions inclusion
+
     - **Property 4: Custom instructions appended to prompt**
     - **Property 5: Custom instructions positioned after weather data**
     - **Property 6: Empty instructions not included**
     - **Validates: Requirements 2.1, 2.2, 2.3**
+
+
   - [ ] 2.7 Add `get_default_system_prompt()` static method
     - Return the default system prompt text for UI display
     - _Requirements: 1.5_
+
   - [ ] 2.8 Add `get_prompt_preview()` method
     - Generate preview with sample weather data
     - Return dict with system_prompt and user_prompt
+
     - _Requirements: 4.1, 4.2, 4.3_
-  - [ ] 2.9 Write property test for preview with custom instructions
+  - [x] 2.9 Write property test for preview with custom instructions
+
     - **Property 8: Preview includes custom instructions**
     - **Validates: Requirements 4.3**
 
+
+
+
 - [ ] 3. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
+
+
 
 - [ ] 4. Add prompt customization UI to settings dialog
   - [ ] 4.1 Create prompt customization section in settings dialog
