@@ -14,53 +14,11 @@ Note:
 """
 
 import logging
-import sys
-from logging.handlers import RotatingFileHandler
 
 from accessiweather.app import main as toga_main
+from accessiweather.logging_config import setup_logging
 
-
-def setup_logging(
-    log_filename: str = "accessiweather.log",
-    max_bytes: int = 5 * 1024 * 1024,
-    backup_count: int = 3,
-    log_level: int = logging.INFO,
-) -> logging.Logger:
-    """
-    Set up logging configuration with rotating file handler.
-
-    Args:
-    ----
-        log_filename: Name of the log file (default: "accessiweather.log")
-        max_bytes: Maximum size per log file in bytes (default: 5MB)
-        backup_count: Number of backup files to keep (default: 3)
-        log_level: Logging level (default: logging.INFO)
-
-    Returns:
-    -------
-        Configured logger instance
-
-    """
-    console_handler = logging.StreamHandler(sys.stdout)
-    file_handler = RotatingFileHandler(
-        log_filename,
-        maxBytes=max_bytes,
-        backupCount=backup_count,
-        encoding="utf-8",
-    )
-
-    logging.basicConfig(
-        level=log_level,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=[console_handler, file_handler],
-        force=True,  # Override any existing configuration
-    )
-
-    return logging.getLogger(__name__)
-
-
-# Set up default logging configuration
-logger = setup_logging()
+logger = logging.getLogger(__name__)
 
 
 def main(
@@ -87,6 +45,10 @@ def main(
         The constructed Toga app instance.
 
     """
+    # Set up logging with appropriate level based on debug_mode
+    log_level = logging.DEBUG if debug_mode else logging.INFO
+    setup_logging(log_level=log_level)
+
     logger.info(
         "Starting AccessiWeather application with parameters: "
         f"config_dir={config_dir}, debug_mode={debug_mode}, "

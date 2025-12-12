@@ -42,6 +42,9 @@ AccessiWeather is a cross-platform, accessible desktop weather application built
 ### Common Gotchas
 - OptionContainer: Use `.content.append(title, widget)` with two arguments, NOT tuple format `(title, widget)`
 - Toga Selection widget (dropdown) uses `.items` list and `.value` property
+- **Error Dialogs**: Use built-in `await app.main_window.error_dialog("Title", "Message")` instead of custom dialog classes
+- **Info Dialogs**: Use `await app.main_window.info_dialog("Title", "Message")` for informational messages
+- **Question Dialogs**: Use `await app.main_window.question_dialog("Title", "Question")` for yes/no prompts
 - Modal dialogs: Create with `toga.Window`, show with `.show()`, close with `.close()`
 - Focus management: Call `.focus()` on widgets for accessibility (may fail silently on some platforms)
 
@@ -105,6 +108,7 @@ briefcase package
   **Must-follow code patterns (examples)**
   - OptionContainer: use `option_container.content.append(title, widget)` (two args). Do NOT pass a tuple or use `.add()`.
   - Accessibility: every control must set `aria_label` and `aria_description` (see `docs/ACCESSIBILITY.md`).
+  - Error handling: use `await app.main_window.error_dialog("Title", "Message")` instead of custom dialog classes.
   - Async/Toga rules: make long-running code `async`, `await` calls, and use `app.add_background_task()` or `asyncio.create_task()` for background work. Do not use `asyncio.run()` in Toga UI code.
 
   **Testing & local dev commands**

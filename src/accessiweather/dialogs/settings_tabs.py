@@ -1118,3 +1118,293 @@ def create_notifications_tab(dialog):
 
     # Add the tab to the option container
     dialog.option_container.content.append("Notifications", notifications_box)
+
+
+def create_ai_tab(dialog):
+    """Build the AI Explanations tab for AI-powered weather explanations."""
+    ai_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
+    dialog.ai_tab = ai_box
+
+    # Enable AI Explanations toggle
+    ai_box.add(
+        toga.Label(
+            "AI Weather Explanations",
+            style=Pack(margin_bottom=8, font_weight="bold"),
+        )
+    )
+    ai_box.add(
+        toga.Label(
+            "Get natural language explanations of weather conditions using AI.",
+            style=Pack(margin_bottom=10, font_size=9),
+        )
+    )
+
+    dialog.enable_ai_switch = toga.Switch(
+        "Enable AI Explanations",
+        value=getattr(dialog.current_settings, "enable_ai_explanations", False),
+        style=Pack(margin_bottom=15),
+        id="enable_ai_switch",
+    )
+    dialog.enable_ai_switch.aria_label = "Enable AI explanations"
+    dialog.enable_ai_switch.aria_description = (
+        "Turn on AI-powered weather explanations. When enabled, an 'Explain Weather' "
+        "button will appear in the weather display."
+    )
+    ai_box.add(dialog.enable_ai_switch)
+
+    # OpenRouter API Key
+    ai_box.add(
+        toga.Label(
+            "OpenRouter API Key:",
+            style=Pack(margin_bottom=5),
+        )
+    )
+    ai_box.add(
+        toga.Label(
+            "Required for all models. Get a free key at openrouter.ai/keys",
+            style=Pack(margin_bottom=5, font_size=9),
+        )
+    )
+
+    dialog.openrouter_api_key_input = toga.PasswordInput(
+        value=getattr(dialog.current_settings, "openrouter_api_key", ""),
+        style=Pack(margin_bottom=5, width=300),
+        id="openrouter_api_key_input",
+    )
+    dialog.openrouter_api_key_input.aria_label = "OpenRouter API key"
+    dialog.openrouter_api_key_input.aria_description = (
+        "Enter your OpenRouter API key. Required for all models including free ones."
+    )
+    ai_box.add(dialog.openrouter_api_key_input)
+
+    # API Key buttons row
+    api_key_buttons_row = toga.Box(style=Pack(direction=ROW, margin_bottom=15))
+
+    dialog.validate_openrouter_api_key_button = toga.Button(
+        "Validate API Key",
+        on_press=dialog._on_validate_openrouter_api_key,
+        style=Pack(width=150),
+        id="validate_openrouter_api_key_button",
+    )
+    dialog.validate_openrouter_api_key_button.aria_label = "Validate OpenRouter API key"
+    dialog.validate_openrouter_api_key_button.aria_description = (
+        "Test your OpenRouter API key to ensure it is valid and working."
+    )
+    api_key_buttons_row.add(dialog.validate_openrouter_api_key_button)
+
+    ai_box.add(api_key_buttons_row)
+
+    # Model Preference
+    ai_box.add(
+        toga.Label(
+            "Model Preference:",
+            style=Pack(margin_bottom=5),
+        )
+    )
+
+    model_options = [
+        "Auto (Free)",
+        "Auto (Paid - requires API key)",
+    ]
+    dialog.ai_model_display_to_value = {
+        "Auto (Free)": "auto:free",
+        "Auto (Paid - requires API key)": "auto",
+    }
+    dialog.ai_model_value_to_display = {
+        value: key for key, value in dialog.ai_model_display_to_value.items()
+    }
+
+    dialog.ai_model_selection = toga.Selection(
+        items=model_options,
+        style=Pack(margin_bottom=15),
+        id="ai_model_selection",
+    )
+    dialog.ai_model_selection.aria_label = "AI model preference"
+    dialog.ai_model_selection.aria_description = (
+        "Choose between free models (no API key needed) or paid models (requires API key)."
+    )
+
+    try:
+        current_model = getattr(dialog.current_settings, "ai_model_preference", "auto:free")
+        display_value = dialog.ai_model_value_to_display.get(current_model, "Auto (Free)")
+        dialog.ai_model_selection.value = display_value
+    except Exception as exc:
+        logger.warning("Failed to set AI model selection: %s", exc)
+        dialog.ai_model_selection.value = "Auto (Free)"
+
+    ai_box.add(dialog.ai_model_selection)
+
+    # Explanation Style
+    ai_box.add(
+        toga.Label(
+            "Explanation Style:",
+            style=Pack(margin_bottom=5),
+        )
+    )
+
+    style_options = [
+        "Brief (1-2 sentences)",
+        "Standard (3-4 sentences)",
+        "Detailed (full paragraph)",
+    ]
+    dialog.ai_style_display_to_value = {
+        "Brief (1-2 sentences)": "brief",
+        "Standard (3-4 sentences)": "standard",
+        "Detailed (full paragraph)": "detailed",
+    }
+    dialog.ai_style_value_to_display = {
+        value: key for key, value in dialog.ai_style_display_to_value.items()
+    }
+
+    dialog.ai_style_selection = toga.Selection(
+        items=style_options,
+        style=Pack(margin_bottom=15),
+        id="ai_style_selection",
+    )
+    dialog.ai_style_selection.aria_label = "Explanation style"
+    dialog.ai_style_selection.aria_description = (
+        "Choose how detailed the AI explanations should be."
+    )
+
+    try:
+        current_style = getattr(dialog.current_settings, "ai_explanation_style", "standard")
+        display_value = dialog.ai_style_value_to_display.get(
+            current_style, "Standard (3-4 sentences)"
+        )
+        dialog.ai_style_selection.value = display_value
+    except Exception as exc:
+        logger.warning("Failed to set AI style selection: %s", exc)
+        dialog.ai_style_selection.value = "Standard (3-4 sentences)"
+
+    ai_box.add(dialog.ai_style_selection)
+
+    # Prompt Customization Section
+    ai_box.add(
+        toga.Label(
+            "Prompt Customization:",
+            style=Pack(margin_bottom=5, margin_top=15, font_weight="bold"),
+        )
+    )
+    ai_box.add(
+        toga.Label(
+            "Customize how the AI generates explanations.",
+            style=Pack(margin_bottom=10, font_size=9),
+        )
+    )
+
+    # Custom System Prompt
+    ai_box.add(
+        toga.Label(
+            "Custom System Prompt (optional):",
+            style=Pack(margin_bottom=5),
+        )
+    )
+
+    from accessiweather.ai_explainer import AIExplainer
+
+    default_prompt = AIExplainer.get_default_system_prompt()
+    current_custom_prompt = getattr(dialog.current_settings, "custom_system_prompt", None) or ""
+
+    dialog.custom_system_prompt_input = toga.MultilineTextInput(
+        value=current_custom_prompt,
+        placeholder=f"Default: {default_prompt[:100]}...",
+        style=Pack(margin_bottom=5, height=80, width=400),
+        id="custom_system_prompt_input",
+    )
+    dialog.custom_system_prompt_input.aria_label = "Custom system prompt"
+    dialog.custom_system_prompt_input.aria_description = (
+        "Enter a custom system prompt to change the AI's personality and response style. "
+        "Leave empty to use the default prompt."
+    )
+    ai_box.add(dialog.custom_system_prompt_input)
+
+    # Reset System Prompt button
+    dialog.reset_system_prompt_button = toga.Button(
+        "Reset to Default",
+        on_press=dialog._on_reset_system_prompt,
+        style=Pack(margin_bottom=15, width=150),
+        id="reset_system_prompt_button",
+    )
+    dialog.reset_system_prompt_button.aria_label = "Reset system prompt to default"
+    dialog.reset_system_prompt_button.aria_description = (
+        "Clear the custom system prompt and restore the default prompt."
+    )
+    ai_box.add(dialog.reset_system_prompt_button)
+
+    # Custom Instructions
+    ai_box.add(
+        toga.Label(
+            "Custom Instructions (optional):",
+            style=Pack(margin_bottom=5),
+        )
+    )
+
+    current_custom_instructions = (
+        getattr(dialog.current_settings, "custom_instructions", None) or ""
+    )
+
+    dialog.custom_instructions_input = toga.MultilineTextInput(
+        value=current_custom_instructions,
+        placeholder="e.g., Focus on outdoor activities, Keep responses under 50 words",
+        style=Pack(margin_bottom=5, height=60, width=400),
+        id="custom_instructions_input",
+    )
+    dialog.custom_instructions_input.aria_label = "Custom instructions"
+    dialog.custom_instructions_input.aria_description = (
+        "Enter additional instructions to append to each AI request. "
+        "These are added after the weather data."
+    )
+    ai_box.add(dialog.custom_instructions_input)
+
+    # Reset Instructions button
+    dialog.reset_instructions_button = toga.Button(
+        "Reset Instructions",
+        on_press=dialog._on_reset_instructions,
+        style=Pack(margin_bottom=15, width=150),
+        id="reset_instructions_button",
+    )
+    dialog.reset_instructions_button.aria_label = "Reset custom instructions"
+    dialog.reset_instructions_button.aria_description = "Clear the custom instructions field."
+    ai_box.add(dialog.reset_instructions_button)
+
+    # Preview Prompt button
+    dialog.preview_prompt_button = toga.Button(
+        "Preview Prompt",
+        on_press=dialog._on_preview_prompt,
+        style=Pack(margin_bottom=15, width=150),
+        id="preview_prompt_button",
+    )
+    dialog.preview_prompt_button.aria_label = "Preview AI prompt"
+    dialog.preview_prompt_button.aria_description = (
+        "Show a preview of the complete prompt that will be sent to the AI."
+    )
+    ai_box.add(dialog.preview_prompt_button)
+
+    # Pricing info
+    ai_box.add(
+        toga.Label(
+            "Cost Information:",
+            style=Pack(margin_bottom=5, margin_top=10, font_weight="bold"),
+        )
+    )
+    ai_box.add(
+        toga.Label(
+            "Free models: No cost, may have rate limits",
+            style=Pack(margin_bottom=3, font_size=9),
+        )
+    )
+    ai_box.add(
+        toga.Label(
+            "Paid models: ~$0.001 per explanation (varies by model)",
+            style=Pack(margin_bottom=3, font_size=9),
+        )
+    )
+    ai_box.add(
+        toga.Label(
+            "Visit openrouter.ai/docs for pricing details",
+            style=Pack(margin_bottom=10, font_size=9),
+        )
+    )
+
+    # Add the tab to the option container
+    dialog.option_container.content.append("AI", ai_box)

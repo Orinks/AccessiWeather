@@ -250,6 +250,47 @@ def _apply_alert_notification_settings(dialog, settings):
         )
 
 
+def _apply_ai_settings(dialog, settings):
+    """Apply AI explanation settings to UI widgets."""
+    # Enable AI explanations switch
+    if getattr(dialog, "enable_ai_switch", None) is not None:
+        dialog.enable_ai_switch.value = getattr(settings, "enable_ai_explanations", False)
+
+    # OpenRouter API key
+    if getattr(dialog, "openrouter_api_key_input", None) is not None:
+        dialog.openrouter_api_key_input.value = getattr(settings, "openrouter_api_key", "") or ""
+
+    # Model preference
+    if getattr(dialog, "ai_model_selection", None) is not None:
+        model_pref = getattr(settings, "ai_model_preference", "auto:free")
+        if hasattr(dialog, "ai_model_value_to_display"):
+            display_value = dialog.ai_model_value_to_display.get(model_pref, "Auto (Free)")
+            try:
+                dialog.ai_model_selection.value = display_value
+            except Exception as exc:
+                logger.debug("%s: Failed to set AI model selection: %s", LOG_PREFIX, exc)
+
+    # Explanation style
+    if getattr(dialog, "ai_style_selection", None) is not None:
+        style = getattr(settings, "ai_explanation_style", "standard")
+        if hasattr(dialog, "ai_style_value_to_display"):
+            display_value = dialog.ai_style_value_to_display.get(style, "Standard (3-4 sentences)")
+            try:
+                dialog.ai_style_selection.value = display_value
+            except Exception as exc:
+                logger.debug("%s: Failed to set AI style selection: %s", LOG_PREFIX, exc)
+
+    # Custom system prompt
+    if getattr(dialog, "custom_system_prompt_input", None) is not None:
+        custom_prompt = getattr(settings, "custom_system_prompt", None) or ""
+        dialog.custom_system_prompt_input.value = custom_prompt
+
+    # Custom instructions
+    if getattr(dialog, "custom_instructions_input", None) is not None:
+        custom_instructions = getattr(settings, "custom_instructions", None) or ""
+        dialog.custom_instructions_input.value = custom_instructions
+
+
 def apply_settings_to_ui(dialog):
     """Apply settings model to UI widgets in the dialog using helper functions."""
     try:
@@ -261,6 +302,7 @@ def apply_settings_to_ui(dialog):
         _apply_update_settings(dialog, settings)
         _apply_system_settings(dialog, settings)
         _apply_alert_notification_settings(dialog, settings)
+        _apply_ai_settings(dialog, settings)
 
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.warning("%s: Failed to apply settings to UI: %s", LOG_PREFIX, exc)
@@ -627,6 +669,58 @@ def _collect_alert_settings(dialog, current_settings):
     }
 
 
+def _collect_ai_settings(dialog, current_settings: AppSettings) -> dict:
+    """Collect AI explanation settings from dialog widgets."""
+    # Enable AI explanations
+    enable_ai = getattr(current_settings, "enable_ai_explanations", False)
+    if hasattr(dialog, "enable_ai_switch"):
+        enable_ai = getattr(dialog.enable_ai_switch, "value", enable_ai)
+
+    # OpenRouter API key
+    api_key = getattr(current_settings, "openrouter_api_key", "")
+    if hasattr(dialog, "openrouter_api_key_input"):
+        api_key = getattr(dialog.openrouter_api_key_input, "value", api_key) or ""
+
+    # Model preference
+    model_pref = getattr(current_settings, "ai_model_preference", "auto:free")
+    if hasattr(dialog, "ai_model_selection"):
+        display_value = getattr(dialog.ai_model_selection, "value", None)
+        if display_value and hasattr(dialog, "ai_model_display_to_value"):
+            model_pref = dialog.ai_model_display_to_value.get(display_value, model_pref)
+
+    # Explanation style
+    style = getattr(current_settings, "ai_explanation_style", "standard")
+    if hasattr(dialog, "ai_style_selection"):
+        display_value = getattr(dialog.ai_style_selection, "value", None)
+        if display_value and hasattr(dialog, "ai_style_display_to_value"):
+            style = dialog.ai_style_display_to_value.get(display_value, style)
+
+    # Cache TTL (not exposed in UI, use default)
+    cache_ttl = getattr(current_settings, "ai_cache_ttl", 300)
+
+    # Custom system prompt
+    custom_system_prompt = getattr(current_settings, "custom_system_prompt", None)
+    if hasattr(dialog, "custom_system_prompt_input"):
+        value = getattr(dialog.custom_system_prompt_input, "value", "") or ""
+        custom_system_prompt = value.strip() if value.strip() else None
+
+    # Custom instructions
+    custom_instructions = getattr(current_settings, "custom_instructions", None)
+    if hasattr(dialog, "custom_instructions_input"):
+        value = getattr(dialog.custom_instructions_input, "value", "") or ""
+        custom_instructions = value.strip() if value.strip() else None
+
+    return {
+        "enable_ai_explanations": enable_ai,
+        "openrouter_api_key": api_key,
+        "ai_model_preference": model_pref,
+        "ai_explanation_style": style,
+        "ai_cache_ttl": cache_ttl,
+        "custom_system_prompt": custom_system_prompt,
+        "custom_instructions": custom_instructions,
+    }
+
+
 def collect_settings_from_ui(dialog) -> AppSettings:
     """Read current widget values and return an AppSettings instance using helper functions."""
     current_settings = getattr(dialog, "current_settings", AppSettings())
@@ -638,6 +732,7 @@ def collect_settings_from_ui(dialog) -> AppSettings:
     sound = _collect_sound_settings(dialog)
     system = _collect_system_settings(dialog, current_settings)
     alerts = _collect_alert_settings(dialog, current_settings)
+    ai = _collect_ai_settings(dialog, current_settings)
 
     # Build and return AppSettings with collected values
     return AppSettings(
@@ -702,4 +797,13 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         taskbar_icon_text_enabled=display["taskbar_icon_text_enabled"],
         taskbar_icon_dynamic_enabled=display["taskbar_icon_dynamic_enabled"],
         taskbar_icon_text_format=display["taskbar_icon_text_format"],
+        # AI explanation settings
+        enable_ai_explanations=ai["enable_ai_explanations"],
+        openrouter_api_key=ai["openrouter_api_key"],
+        ai_model_preference=ai["ai_model_preference"],
+        ai_explanation_style=ai["ai_explanation_style"],
+        ai_cache_ttl=ai["ai_cache_ttl"],
+        # AI prompt customization
+        custom_system_prompt=ai["custom_system_prompt"],
+        custom_instructions=ai["custom_instructions"],
     )

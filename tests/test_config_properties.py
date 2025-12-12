@@ -92,6 +92,9 @@ def valid_app_settings(draw) -> AppSettings:
         show_timezone_suffix=draw(booleans()),
         html_render_current_conditions=draw(booleans()),
         html_render_forecast=draw(booleans()),
+        # AI Prompt Customization
+        custom_system_prompt=draw(one_of(none(), text(max_size=500))),
+        custom_instructions=draw(one_of(none(), text(max_size=200))),
     )
 
 
@@ -438,3 +441,79 @@ class TestEdgeCases:
         restored = AppSettings.from_dict(serialized)
 
         assert restored.alert_ignored_categories == categories
+
+
+@pytest.mark.unit
+class TestPromptCustomizationRoundtrip:
+    """
+    Property tests for AI prompt customization configuration.
+
+    **Feature: ai-prompt-customization, Property 3: Configuration persistence round-trip**
+    **Validates: Requirements 1.4, 2.4**
+    """
+
+    @given(
+        custom_system_prompt=one_of(none(), text(max_size=500)),
+        custom_instructions=one_of(none(), text(max_size=200)),
+    )
+    @settings(max_examples=100, suppress_health_check=[HealthCheck.differing_executors])
+    def test_prompt_settings_roundtrip(
+        self, custom_system_prompt: str | None, custom_instructions: str | None
+    ):
+        """
+        Test prompt settings survive serialization round-trip.
+
+        *For any* valid prompt configuration (custom system prompt and custom instructions),
+        saving to configuration and then loading should produce equivalent values.
+        """
+        settings_obj = AppSettings(
+            custom_system_prompt=custom_system_prompt,
+            custom_instructions=custom_instructions,
+        )
+
+        serialized = settings_obj.to_dict()
+        restored = AppSettings.from_dict(serialized)
+
+        assert restored.custom_system_prompt == custom_system_prompt
+        assert restored.custom_instructions == custom_instructions
+
+    def test_none_values_preserved(self):
+        """None values for prompt settings are preserved through round-trip."""
+        settings_obj = AppSettings(
+            custom_system_prompt=None,
+            custom_instructions=None,
+        )
+
+        serialized = settings_obj.to_dict()
+        restored = AppSettings.from_dict(serialized)
+
+        assert restored.custom_system_prompt is None
+        assert restored.custom_instructions is None
+
+    def test_empty_string_preserved(self):
+        """Empty strings for prompt settings are preserved through round-trip."""
+        settings_obj = AppSettings(
+            custom_system_prompt="",
+            custom_instructions="",
+        )
+
+        serialized = settings_obj.to_dict()
+        restored = AppSettings.from_dict(serialized)
+
+        assert restored.custom_system_prompt == ""
+        assert restored.custom_instructions == ""
+
+    def test_default_values(self):
+        """Default values for prompt settings are None."""
+        settings_obj = AppSettings()
+
+        assert settings_obj.custom_system_prompt is None
+        assert settings_obj.custom_instructions is None
+
+    def test_missing_keys_use_defaults(self):
+        """Missing prompt keys in dict use None defaults."""
+        data = {"temperature_unit": "celsius"}
+        settings_obj = AppSettings.from_dict(data)
+
+        assert settings_obj.custom_system_prompt is None
+        assert settings_obj.custom_instructions is None

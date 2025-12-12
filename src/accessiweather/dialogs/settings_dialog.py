@@ -222,6 +222,7 @@ class SettingsDialog:
         settings_tabs.create_notifications_tab(self)
         settings_tabs.create_audio_tab(self)
         settings_tabs.create_updates_tab(self)
+        settings_tabs.create_ai_tab(self)
         settings_tabs.create_advanced_tab(self)
 
         main_box.add(self.option_container)
@@ -353,8 +354,13 @@ class SettingsDialog:
             # Capture current startup flag before persisting changes
             old_startup_enabled = self.config_manager.get_settings().startup_enabled
 
-            # Update configuration (writes to JSON file)
-            success = self.config_manager.update_settings(**new_settings.to_dict())
+            # Update configuration
+            # Note: to_dict() excludes secure keys (API keys) so we must pass them explicitly
+            settings_dict = new_settings.to_dict()
+            # Add secure keys that are excluded from to_dict() for security
+            settings_dict["visual_crossing_api_key"] = new_settings.visual_crossing_api_key
+            settings_dict["openrouter_api_key"] = new_settings.openrouter_api_key
+            success = self.config_manager.update_settings(**settings_dict)
 
             if not success:
                 logger.error("%s: Failed to save settings", LOG_PREFIX)
@@ -580,6 +586,63 @@ class SettingsDialog:
 
     async def _on_validate_visual_crossing_api_key(self, widget):
         await settings_operations.validate_visual_crossing_api_key(self)
+
+    async def _on_validate_openrouter_api_key(self, widget):
+        await settings_operations.validate_openrouter_api_key(self)
+
+    async def _on_reset_system_prompt(self, widget):
+        """Reset the custom system prompt to default."""
+        if hasattr(self, "custom_system_prompt_input"):
+            self.custom_system_prompt_input.value = ""
+        await self.main_window.info_dialog(
+            "Prompt Reset",
+            "System prompt has been reset to default.",
+        )
+
+    async def _on_reset_instructions(self, widget):
+        """Reset the custom instructions."""
+        if hasattr(self, "custom_instructions_input"):
+            self.custom_instructions_input.value = ""
+        await self.main_window.info_dialog(
+            "Instructions Reset",
+            "Custom instructions have been cleared.",
+        )
+
+    async def _on_preview_prompt(self, widget):
+        """Show a preview of the AI prompt."""
+        from accessiweather.ai_explainer import AIExplainer, ExplanationStyle
+
+        # Get current values from UI
+        custom_system_prompt = None
+        if hasattr(self, "custom_system_prompt_input"):
+            value = getattr(self.custom_system_prompt_input, "value", "") or ""
+            custom_system_prompt = value.strip() if value.strip() else None
+
+        custom_instructions = None
+        if hasattr(self, "custom_instructions_input"):
+            value = getattr(self.custom_instructions_input, "value", "") or ""
+            custom_instructions = value.strip() if value.strip() else None
+
+        # Create explainer with current settings
+        explainer = AIExplainer(
+            api_key="preview",
+            custom_system_prompt=custom_system_prompt,
+            custom_instructions=custom_instructions,
+        )
+
+        # Generate preview
+        preview = explainer.get_prompt_preview(ExplanationStyle.STANDARD)
+
+        # Show preview dialog
+        preview_text = (
+            f"=== SYSTEM PROMPT ===\n{preview['system_prompt']}\n\n"
+            f"=== USER PROMPT (with sample data) ===\n{preview['user_prompt']}"
+        )
+
+        await self.main_window.info_dialog(
+            "Prompt Preview",
+            preview_text,
+        )
 
     def _initialize_update_info(self):
         settings_operations.initialize_update_info(self)

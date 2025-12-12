@@ -71,6 +71,15 @@ class AppSettings:
     source_priority_international: list[str] = field(
         default_factory=lambda: ["openmeteo", "visualcrossing"]
     )
+    # AI Explanation Settings
+    enable_ai_explanations: bool = False
+    openrouter_api_key: str = ""
+    ai_model_preference: str = "auto:free"  # "auto:free", "auto", or specific model
+    ai_explanation_style: str = "standard"  # "brief", "standard", "detailed"
+    ai_cache_ttl: int = 300  # 5 minutes in seconds
+    # AI Prompt Customization Settings
+    custom_system_prompt: str | None = None  # None means use default
+    custom_instructions: str | None = None  # Appended to user prompt
 
     @staticmethod
     def _as_bool(value, default: bool) -> bool:
@@ -142,6 +151,14 @@ class AppSettings:
             "taskbar_icon_text_format": self.taskbar_icon_text_format,
             "source_priority_us": self.source_priority_us,
             "source_priority_international": self.source_priority_international,
+            # AI settings (API key stored in secure storage, not here)
+            "enable_ai_explanations": self.enable_ai_explanations,
+            "ai_model_preference": self.ai_model_preference,
+            "ai_explanation_style": self.ai_explanation_style,
+            "ai_cache_ttl": self.ai_cache_ttl,
+            # AI Prompt Customization
+            "custom_system_prompt": self.custom_system_prompt,
+            "custom_instructions": self.custom_instructions,
         }
 
     @classmethod
@@ -206,6 +223,15 @@ class AppSettings:
             source_priority_international=data.get(
                 "source_priority_international", ["openmeteo", "visualcrossing"]
             ),
+            # AI settings
+            enable_ai_explanations=cls._as_bool(data.get("enable_ai_explanations"), False),
+            openrouter_api_key=data.get("openrouter_api_key", ""),
+            ai_model_preference=data.get("ai_model_preference", "auto:free"),
+            ai_explanation_style=data.get("ai_explanation_style", "standard"),
+            ai_cache_ttl=data.get("ai_cache_ttl", 300),
+            # AI Prompt Customization
+            custom_system_prompt=data.get("custom_system_prompt"),
+            custom_instructions=data.get("custom_instructions"),
         )
 
     def to_alert_settings(self):
