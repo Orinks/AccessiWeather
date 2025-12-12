@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import logging
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
+from zoneinfo import ZoneInfo
 
 if TYPE_CHECKING:
     from ..app import AccessiWeatherApp
@@ -86,6 +88,31 @@ async def on_explain_weather_pressed(app: AccessiWeatherApp, widget) -> None:
             "alerts": [],
             "forecast_periods": [],
         }
+
+        # Add local time info for the location
+        now_utc = datetime.now(UTC)
+        weather_dict["utc_time"] = now_utc.strftime("%Y-%m-%d %H:%M UTC")
+
+        # Try to get local time at the weather location
+        location_tz = getattr(location, "timezone", None)
+        if location_tz:
+            try:
+                local_tz = ZoneInfo(location_tz)
+                local_time = now_utc.astimezone(local_tz)
+                weather_dict["local_time"] = local_time.strftime("%Y-%m-%d %H:%M")
+                weather_dict["timezone"] = location_tz
+                # Add time of day description
+                hour = local_time.hour
+                if 5 <= hour < 12:
+                    weather_dict["time_of_day"] = "morning"
+                elif 12 <= hour < 17:
+                    weather_dict["time_of_day"] = "afternoon"
+                elif 17 <= hour < 21:
+                    weather_dict["time_of_day"] = "evening"
+                else:
+                    weather_dict["time_of_day"] = "night"
+            except Exception as e:
+                logger.debug(f"Could not determine local time for {location_tz}: {e}")
 
         # Add alerts if present
         if weather_data.alerts and weather_data.alerts.alerts:

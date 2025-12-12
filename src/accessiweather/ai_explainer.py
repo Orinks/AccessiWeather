@@ -21,13 +21,13 @@ logger = logging.getLogger(__name__)
 
 # OpenRouter API configuration
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-# Use a specific reliable free model instead of auto:free which can route to unreliable models
-DEFAULT_FREE_MODEL = "meta-llama/llama-3.2-3b-instruct:free"
+# Use current working free models from OpenRouter (updated Dec 2025)
+DEFAULT_FREE_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
 DEFAULT_PAID_MODEL = "openrouter/auto"
-# Fallback free models to try if primary returns empty response
+# Fallback free models to try if primary returns empty response (max 3 for OpenRouter)
 FALLBACK_FREE_MODELS = [
-    "mistralai/mistral-7b-instruct:free",
-    "google/gemma-2-9b-it:free",
+    "google/gemma-3-27b-it:free",
+    "qwen/qwen3-235b-a22b:free",
 ]
 
 
@@ -83,10 +83,22 @@ class WeatherContext:
     pressure: float | None
     alerts: list[dict[str, Any]]
     forecast_summary: str | None = None
+    local_time: str | None = None
+    utc_time: str | None = None
+    timezone: str | None = None
+    time_of_day: str | None = None
 
     def to_prompt_text(self) -> str:
         """Convert to natural language for AI prompt."""
         parts = [f"Location: {self.location}"]
+
+        # Add time context so AI knows if it's morning/afternoon/evening/night
+        if self.local_time and self.timezone:
+            parts.append(f"Local Time: {self.local_time} ({self.timezone})")
+        if self.utc_time:
+            parts.append(f"UTC Time: {self.utc_time}")
+        if self.time_of_day:
+            parts.append(f"Time of Day: {self.time_of_day}")
 
         if self.temperature is not None:
             parts.append(f"Temperature: {self.temperature}°{self.temperature_unit}")
@@ -195,7 +207,10 @@ class AIExplainer:
             "in plain, accessible language. Your explanations should be easy to "
             "understand for screen reader users and people who prefer audio descriptions. "
             "Avoid using visual-only descriptions. Focus on how the weather will feel "
-            "and what activities it's suitable for."
+            "and what activities it's suitable for.\n\n"
+            "IMPORTANT: Do NOT repeat the location name, date, time, or timezone in your response. "
+            "The user already sees this information. Jump straight into describing the weather "
+            "conditions and what to expect."
         )
 
         style_instructions = {
@@ -230,6 +245,10 @@ class AIExplainer:
             pressure=weather_data.get("pressure"),
             alerts=weather_data.get("alerts", []),
             forecast_summary=weather_data.get("forecast_summary"),
+            local_time=weather_data.get("local_time"),
+            utc_time=weather_data.get("utc_time"),
+            timezone=weather_data.get("timezone"),
+            time_of_day=weather_data.get("time_of_day"),
         )
 
         prompt_parts = [
@@ -384,13 +403,17 @@ class AIExplainer:
                     self._call_openrouter, system_prompt, user_prompt, model_override
                 )
 
-                # Check if we got actual content
-                if response["content"] and response["content"].strip():
+                # Check if we got actual content (minimum 20 chars for meaningful response)
+                content = response["content"]
+                if content and len(content.strip()) >= 20:
                     logger.info(f"Got valid response from model: {model}")
                     break
 
-                # Empty response - log and try next model
-                logger.warning(f"Model {model} returned empty response, trying fallback...")
+                # Empty or too short response - log and try next model
+                logger.warning(
+                    f"Model {model} returned insufficient response "
+                    f"(len={len(content) if content else 0}), trying fallback..."
+                )
                 response = None
 
             except Exception as e:
@@ -512,11 +535,16 @@ class AIExplainer:
                     self._call_openrouter, system_prompt, user_prompt, model_override
                 )
 
-                if response["content"] and response["content"].strip():
+                # Check if we got actual content (minimum 20 chars for meaningful response)
+                content = response["content"]
+                if content and len(content.strip()) >= 20:
                     logger.info(f"Got valid AFD response from model: {model}")
                     break
 
-                logger.warning(f"Model {model} returned empty response for AFD, trying fallback...")
+                logger.warning(
+                    f"Model {model} returned insufficient AFD response "
+                    f"(len={len(content) if content else 0}), trying fallback..."
+                )
                 response = None
 
             except Exception as e:
@@ -582,7 +610,7 @@ class AIExplainer:
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
                 ],
-                max_tokens=500,  # Increased to allow complete explanations
+                max_tokens=1000,  # Allow complete explanations without cutoff
                 extra_headers={
                     "HTTP-Referer": "https://accessiweather.orinks.net",
                     "X-Title": "AccessiWeather",
