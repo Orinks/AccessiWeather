@@ -122,7 +122,7 @@ class TestAIExplainerCore:
         explainer = AIExplainer()
 
         assert explainer.api_key is None
-        assert explainer.model == "meta-llama/llama-3.2-3b-instruct:free"
+        assert explainer.model == "meta-llama/llama-3.3-70b-instruct:free"
 
     def test_explainer_initialization_with_api_key(self):
         """Test AIExplainer initializes with provided API key."""
@@ -190,7 +190,7 @@ class TestModelSelection:
         from accessiweather.ai_explainer import AIExplainer
 
         explainer = AIExplainer(api_key=None)
-        assert explainer.get_effective_model() == "meta-llama/llama-3.2-3b-instruct:free"
+        assert explainer.get_effective_model() == "meta-llama/llama-3.3-70b-instruct:free"
 
     def test_api_key_with_free_preference_uses_free_model(self):
         """With API key but free preference, system uses free model."""
@@ -227,7 +227,7 @@ class TestModelSelection:
 
         # Without API key, always use free model
         if not has_api_key:
-            assert effective_model == "meta-llama/llama-3.2-3b-instruct:free"
+            assert effective_model == "meta-llama/llama-3.3-70b-instruct:free"
         else:
             # With API key, use the configured preference
             assert effective_model == model_pref
@@ -649,8 +649,11 @@ class TestAPIIntegration:
         """Mock the OpenAI client for testing."""
         mock_client = mocker.MagicMock()
         mock_response = mocker.MagicMock()
+        # Response must be at least 20 chars to pass minimum length check
         mock_response.choices = [
-            mocker.MagicMock(message=mocker.MagicMock(content="Test explanation"))
+            mocker.MagicMock(
+                message=mocker.MagicMock(content="Test explanation with enough content to pass")
+            )
         ]
         mock_response.model = "openrouter/auto:free"
         mock_response.usage = mocker.MagicMock(
@@ -666,9 +669,10 @@ class TestAPIIntegration:
         """Test that explain_weather returns an ExplanationResult."""
         from accessiweather.ai_explainer import AIExplainer, ExplanationResult
 
-        mocker.patch("openai.OpenAI", return_value=mock_openai_client)
-
         explainer = AIExplainer(api_key="sk-or-test")
+        # Directly set the internal client to bypass the lazy initialization
+        explainer._client = mock_openai_client
+
         weather_data = {
             "temperature": 72,
             "conditions": "Sunny",
@@ -680,7 +684,7 @@ class TestAPIIntegration:
         result = await explainer.explain_weather(weather_data, "Test City")
 
         assert isinstance(result, ExplanationResult)
-        assert result.text == "Test explanation"
+        assert result.text == "Test explanation with enough content to pass"
         assert result.token_count == 150
 
     @pytest.mark.asyncio
@@ -689,10 +693,10 @@ class TestAPIIntegration:
         from accessiweather.ai_explainer import AIExplainer
         from accessiweather.cache import Cache
 
-        mocker.patch("openai.OpenAI", return_value=mock_openai_client)
-
         cache = Cache(default_ttl=300)
         explainer = AIExplainer(api_key="sk-or-test", cache=cache)
+        # Directly set the internal client to bypass the lazy initialization
+        explainer._client = mock_openai_client
 
         weather_data = {
             "temperature": 72,
@@ -825,7 +829,7 @@ class TestCostEstimation:
         cost = explainer._estimate_cost("openrouter/auto:free", 1000)
         assert cost == 0.0
 
-        cost = explainer._estimate_cost("meta-llama/llama-3.2-3b-instruct:free", 5000)
+        cost = explainer._estimate_cost("meta-llama/llama-3.3-70b-instruct:free", 5000)
         assert cost == 0.0
 
     def test_paid_model_cost_positive(self):
@@ -855,7 +859,12 @@ class TestCostEstimation:
         # Create mock client
         mock_client = mocker.MagicMock()
         mock_response = mocker.MagicMock()
-        mock_response.choices = [mocker.MagicMock(message=mocker.MagicMock(content="Test"))]
+        # Response must be at least 20 chars to pass minimum length check
+        mock_response.choices = [
+            mocker.MagicMock(
+                message=mocker.MagicMock(content="Test response with enough content to pass")
+            )
+        ]
         mock_response.model = "openrouter/auto:free"
         mock_response.usage = mocker.MagicMock(
             total_tokens=100,
@@ -864,9 +873,9 @@ class TestCostEstimation:
         )
         mock_client.chat.completions.create.return_value = mock_response
 
-        mocker.patch("openai.OpenAI", return_value=mock_client)
-
         explainer = AIExplainer(api_key="sk-or-test")
+        # Directly set the internal client to bypass the lazy initialization
+        explainer._client = mock_client
 
         # Make multiple calls
         await explainer.explain_weather({"temperature": 70}, "City1")
@@ -901,7 +910,7 @@ class TestCostEstimation:
         model=st.sampled_from(
             [
                 "openrouter/auto:free",
-                "meta-llama/llama-3.2-3b-instruct:free",
+                "meta-llama/llama-3.3-70b-instruct:free",
                 "mistral/mistral-7b-instruct:free",
             ]
         ),
@@ -1192,17 +1201,22 @@ class TestCacheBehavior:
         # Create mock client
         mock_client = mocker.MagicMock()
         mock_response = mocker.MagicMock()
-        mock_response.choices = [mocker.MagicMock(message=mocker.MagicMock(content="Test"))]
+        # Response must be at least 20 chars to pass minimum length check
+        mock_response.choices = [
+            mocker.MagicMock(
+                message=mocker.MagicMock(content="Test response with enough content to pass")
+            )
+        ]
         mock_response.model = "openrouter/auto:free"
         mock_response.usage = mocker.MagicMock(
             total_tokens=100, prompt_tokens=80, completion_tokens=20
         )
         mock_client.chat.completions.create.return_value = mock_response
 
-        mocker.patch("openai.OpenAI", return_value=mock_client)
-
         cache = Cache(default_ttl=300)
         explainer = AIExplainer(api_key="sk-or-test", cache=cache)
+        # Directly set the internal client to bypass the lazy initialization
+        explainer._client = mock_client
 
         weather_data = {"temperature": 72, "conditions": "Sunny"}
 
@@ -1279,9 +1293,10 @@ class TestAFDExplanation:
         """Test that explain_afd returns an ExplanationResult."""
         from accessiweather.ai_explainer import AIExplainer, ExplanationResult
 
-        mocker.patch("openai.OpenAI", return_value=mock_openai_client_for_afd)
-
         explainer = AIExplainer(api_key="sk-or-test")
+        # Directly set the internal client to bypass the lazy initialization
+        explainer._client = mock_openai_client_for_afd
+
         result = await explainer.explain_afd(sample_afd_text, "Denver, CO")
 
         assert isinstance(result, ExplanationResult)
@@ -1296,9 +1311,10 @@ class TestAFDExplanation:
         """Test that explain_afd uses detailed style by default."""
         from accessiweather.ai_explainer import AIExplainer
 
-        mocker.patch("openai.OpenAI", return_value=mock_openai_client_for_afd)
-
         explainer = AIExplainer(api_key="sk-or-test")
+        # Directly set the internal client to bypass the lazy initialization
+        explainer._client = mock_openai_client_for_afd
+
         await explainer.explain_afd(sample_afd_text, "Denver, CO")
 
         # Verify the API was called (style is embedded in the prompt)
@@ -1311,9 +1327,10 @@ class TestAFDExplanation:
         """Test that explain_afd updates session token count."""
         from accessiweather.ai_explainer import AIExplainer
 
-        mocker.patch("openai.OpenAI", return_value=mock_openai_client_for_afd)
-
         explainer = AIExplainer(api_key="sk-or-test")
+        # Directly set the internal client to bypass the lazy initialization
+        explainer._client = mock_openai_client_for_afd
+
         assert explainer.session_token_count == 0
 
         await explainer.explain_afd(sample_afd_text, "Denver, CO")
