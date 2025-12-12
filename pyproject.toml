@@ -14,13 +14,13 @@ requires-python = ">=3.10"
 dependencies = [
     "toga",
     "desktop-notifier",
-    "geopy",
     "python-dateutil",
     "beautifulsoup4",
     "httpx>=0.20.0",
     "attrs>=22.2.0",
     "psutil",
     "keyring",
+    "openai>=1.0.0",
 ]
 readme = "README.md"
 classifiers = [
@@ -198,11 +198,11 @@ requires = [
     "httpx>=0.20.0",
     "python-dateutil",
     "desktop-notifier",
-    "geopy",
     "beautifulsoup4",
     "attrs>=22.2.0",
     "psutil",
     "keyring",
+    "openai>=1.0.0",
 ]
 test_requires = [
     "pytest>=7.0.0",

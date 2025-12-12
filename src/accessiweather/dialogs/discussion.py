@@ -37,6 +37,7 @@ class ForecastDiscussionDialog:
         # UI components
         self.text_display = None
         self.close_button = None
+        self.explain_button = None
 
     def _create_ui(self):
         """Create the dialog user interface."""
@@ -72,6 +73,22 @@ class ForecastDiscussionDialog:
         # Button box for better layout
         button_box = toga.Box(style=Pack(direction=ROW, margin_top=15))
 
+        # Add Explain button if AI explanations are enabled
+        if self._is_ai_enabled():
+            self.explain_button = toga.Button(
+                "Explain in Plain Language",
+                on_press=lambda w: asyncio.create_task(self._on_explain(w)),
+                style=Pack(width=180),
+            )
+            try:
+                self.explain_button.aria_label = "Explain forecast discussion"
+                self.explain_button.aria_description = (
+                    "Get an AI-generated plain language summary of this technical forecast"
+                )
+            except AttributeError:
+                pass
+            button_box.add(self.explain_button)
+
         # Add some spacing
         spacer = toga.Box(style=Pack(flex=1))
         button_box.add(spacer)
@@ -83,6 +100,14 @@ class ForecastDiscussionDialog:
 
         main_box.add(button_box)
         self.window.content = main_box
+
+    def _is_ai_enabled(self) -> bool:
+        """Check if AI explanations are enabled in settings."""
+        try:
+            settings = self.app.config_manager.get_config().settings
+            return settings.enable_ai_explanations
+        except Exception:
+            return False
 
     def _setup_accessibility(self):
         """Set up accessibility features for screen readers."""
@@ -132,3 +157,63 @@ class ForecastDiscussionDialog:
         logger.info("Forecast discussion dialog closed")
         if self.window:
             self.window.close()
+
+    async def _on_explain(self, widget):
+        """Handle explain button press - generate AI summary of the AFD."""
+        from ..ai_explainer import AIExplainer, AIExplainerError, ExplanationStyle
+        from .explanation_dialog import ExplanationDialog, LoadingDialog
+
+        # Show loading dialog
+        loading_dialog = LoadingDialog(self.app, f"AFD for {self.location_name}")
+        loading_dialog.show()
+
+        try:
+            # Get AI settings
+            settings = self.app.config_manager.get_settings()
+
+            # Determine model based on settings
+            if settings.ai_model_preference == "auto:free":
+                model = "openrouter/auto:free"
+            elif settings.ai_model_preference == "auto":
+                model = "openrouter/auto"
+            else:
+                model = settings.ai_model_preference
+
+            # Create explainer with custom prompts from settings
+            explainer = AIExplainer(
+                api_key=settings.openrouter_api_key or None,
+                model=model,
+                cache=getattr(self.app, "ai_explanation_cache", None),
+                custom_system_prompt=getattr(settings, "custom_system_prompt", None),
+                custom_instructions=getattr(settings, "custom_instructions", None),
+            )
+
+            # Generate explanation using a custom prompt for AFD
+            result = await explainer.explain_afd(
+                self.discussion_text,
+                self.location_name,
+                style=ExplanationStyle.DETAILED,
+            )
+
+            # Close loading dialog
+            loading_dialog.close()
+
+            # Show explanation dialog
+            explanation_dialog = ExplanationDialog(self.app, result, self.location_name)
+            explanation_dialog.show()
+
+            logger.info(
+                f"Generated AFD explanation for {self.location_name} "
+                f"(tokens: {result.token_count}, cached: {result.cached})"
+            )
+
+        except AIExplainerError as e:
+            loading_dialog.close()
+            await self.app.main_window.error_dialog("AFD Explanation Error", str(e))
+            logger.warning(f"AI explanation error: {e}")
+
+        except Exception as e:
+            loading_dialog.close()
+            error_message = f"Unable to generate explanation.\n\nError: {e}"
+            await self.app.main_window.error_dialog("AFD Explanation Error", error_message)
+            logger.error(f"Unexpected error generating AFD explanation: {e}", exc_info=True)

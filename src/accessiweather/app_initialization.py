@@ -94,6 +94,12 @@ def initialize_components(app: AccessiWeatherApp) -> None:
         soundpack=getattr(config.settings, "sound_pack", "default"),
     )
 
+    # Initialize AI explanation cache
+    from .cache import Cache
+
+    ai_cache_ttl = getattr(config.settings, "ai_cache_ttl", 300)  # 5 minutes default
+    app.ai_explanation_cache = Cache(default_ttl=ai_cache_ttl)
+
     config_dir = str(app.paths.config)
     alert_settings = config.settings.to_alert_settings()
     app.alert_manager = AlertManager(config_dir, alert_settings)

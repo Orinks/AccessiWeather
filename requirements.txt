@@ -1,7 +1,6 @@
 toga
 requests>=2.0
 desktop-notifier
-geopy
 python-dateutil
 beautifulsoup4>=4.0
 httpx>=0.20.0

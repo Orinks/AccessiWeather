@@ -123,6 +123,7 @@ class ConfigManager:
         # List of secure keys to load from SecureStorage
         secure_keys = [
             "visual_crossing_api_key",
+            "openrouter_api_key",
             "github_app_id",
             "github_app_private_key",
             "github_app_installation_id",

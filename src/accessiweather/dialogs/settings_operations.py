@@ -411,6 +411,161 @@ async def validate_visual_crossing_api_key(dialog):
         dialog._ensure_dialog_focus()
 
 
+async def validate_openrouter_api_key(dialog):
+    """Validate the OpenRouter API key entered by the user."""
+    dialog._ensure_dialog_focus()
+
+    api_key = str(dialog.openrouter_api_key_input.value).strip()
+    # API keys must never be logged or echoed back in errors; treat as highly sensitive.
+    if not api_key:
+        await dialog._show_dialog_error(
+            "API Key Required",
+            "Please enter your OpenRouter API key before validating.\n\n"
+            "Get a free API key at openrouter.ai/keys",
+        )
+        return
+
+    original_text = getattr(dialog.validate_openrouter_api_key_button, "text", "Validate API Key")
+
+    try:
+        import httpx
+    except ImportError as exc:  # pragma: no cover - dependency missing in env
+        logger.error("%s: httpx is required to validate the API key: %s", LOG_PREFIX, exc)
+        await dialog._show_dialog_error(
+            "Validation Error",
+            "❌ Validation requires the 'httpx' dependency. "
+            "Please install the development requirements.",
+        )
+        return
+
+    try:
+
+        def _redact_secret(text: str | None) -> str:
+            if not text:
+                return ""
+            return str(text).replace(api_key, "***")
+
+        if dialog.validate_openrouter_api_key_button:
+            dialog.validate_openrouter_api_key_button.text = "Validating..."
+            dialog.validate_openrouter_api_key_button.enabled = False
+
+        # Use OpenRouter's /api/v1/key endpoint to validate the API key
+        # This endpoint requires authentication and returns key info for valid keys
+        # Returns 401 for invalid keys
+        url = "https://openrouter.ai/api/v1/key"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "HTTP-Referer": "https://accessiweather.orinks.net",
+            "X-Title": "AccessiWeather",
+        }
+
+        max_attempts = 3
+        backoff_schedule = [0.5, 1.0]
+
+        async with httpx.AsyncClient(timeout=10.0) as http_client:
+            response = None
+            for attempt in range(1, max_attempts + 1):
+                try:
+                    response = await http_client.get(url, headers=headers)
+                    break
+                except (httpx.TimeoutException, httpx.RequestError) as exc:
+                    if attempt == max_attempts:
+                        raise
+
+                    logger.info(
+                        "%s: OpenRouter validation attempt %s failed (%s); retrying",
+                        LOG_PREFIX,
+                        attempt,
+                        _redact_secret(str(exc)),
+                    )
+
+                    if dialog.validate_openrouter_api_key_button:
+                        dialog.validate_openrouter_api_key_button.text = (
+                            f"Retrying... ({attempt + 1}/{max_attempts})"
+                        )
+
+                    await asyncio.sleep(backoff_schedule[attempt - 1])
+
+                    if dialog.validate_openrouter_api_key_button:
+                        dialog.validate_openrouter_api_key_button.text = "Validating..."
+
+        if response.status_code == 200:
+            # Parse response to get key info
+            try:
+                key_data = response.json().get("data", {})
+                key_label = key_data.get("label", "Unknown")
+                is_free_tier = key_data.get("is_free_tier", False)
+                tier_info = "Free tier" if is_free_tier else "Paid tier"
+
+                await _call_dialog_method(
+                    dialog,
+                    "info_dialog",
+                    "API Key Valid",
+                    f"✅ Your OpenRouter API key is valid and working!\n\n"
+                    f"Key: {key_label}\n"
+                    f"Tier: {tier_info}\n\n"
+                    "You can now use AI-powered weather explanations.",
+                )
+            except Exception:
+                # Fallback if parsing fails
+                await _call_dialog_method(
+                    dialog,
+                    "info_dialog",
+                    "API Key Valid",
+                    "✅ Your OpenRouter API key is valid and working!\n\n"
+                    "You can now use AI-powered weather explanations.",
+                )
+        elif response.status_code == 401:
+            await dialog._show_dialog_error(
+                "Invalid API Key",
+                "❌ The API key you entered is invalid.\n\n"
+                "Please check your API key and try again. "
+                "Make sure you copied it correctly from openrouter.ai/keys",
+            )
+        elif response.status_code == 429:
+            await dialog._show_dialog_error(
+                "Rate Limit Exceeded",
+                "⚠️ Your API key is valid, but you've exceeded your rate limit.\n\n"
+                "Please wait a moment before making more requests.",
+            )
+        else:
+            await dialog._show_dialog_error(
+                "API Error",
+                f"❌ API validation failed with status code {response.status_code}.\n\n"
+                "Please check your internet connection and try again.",
+            )
+
+    except httpx.TimeoutException:
+        await dialog._show_dialog_error(
+            "Connection Timeout",
+            "⚠️ The validation request timed out.\n\n"
+            "Please check your internet connection and try again.",
+        )
+    except httpx.RequestError as exc:
+        await dialog._show_dialog_error(
+            "Connection Error",
+            f"❌ Failed to connect to OpenRouter API.\n\n"
+            f"Error: {_redact_secret(str(exc))}\n\n"
+            "Please check your internet connection and try again.",
+        )
+    except Exception as exc:
+        logger.error(
+            "%s: Failed to validate OpenRouter API key: %s",
+            LOG_PREFIX,
+            _redact_secret(str(exc)),
+        )
+        await dialog._show_dialog_error(
+            "Validation Error",
+            "❌ An unexpected error occurred while validating your API key.\n\n"
+            f"Error: {_redact_secret(str(exc))}",
+        )
+    finally:
+        if dialog.validate_openrouter_api_key_button:
+            dialog.validate_openrouter_api_key_button.text = original_text
+            dialog.validate_openrouter_api_key_button.enabled = True
+        dialog._ensure_dialog_focus()
+
+
 async def check_for_updates(dialog):
     """Trigger an update check using the configured update service."""
     logger.info("%s: Manual update check requested", LOG_PREFIX)

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import fields
-from datetime import datetime
 from typing import Any
 
 from accessiweather.config.source_priority import SourcePriorityConfig
@@ -12,7 +11,6 @@ from accessiweather.models.weather import (
     CurrentConditions,
     DataConflict,
     Forecast,
-    ForecastPeriod,
     HourlyForecast,
     Location,
     SourceAttribution,
@@ -196,17 +194,20 @@ class DataFusionEngine:
         location: Location,
     ) -> tuple[Forecast | None, dict[str, str]]:
         """
-        Merge forecast data from multiple sources.
+        Select forecast from a single source based on location.
 
-        Combines forecast periods from all sources into a unified timeline,
-        preferring higher temporal resolution for overlapping periods.
+        Unlike merging multiple sources, forecasts are selected from a single preferred
+        source to avoid duplicate periods with different naming conventions:
+        - US locations: Prefer NWS (most accurate for US)
+        - International: Use Open-Meteo
+        - Visual Crossing: Used when explicitly selected or as fallback
 
         Args:
             sources: List of source data containers
-            location: The location for priority determination
+            location: The location for source selection
 
         Returns:
-            Tuple of merged Forecast and field-level source attribution
+            Tuple of Forecast from single source and source attribution
 
         """
         is_us = self._is_us_location(location)
@@ -218,69 +219,37 @@ class DataFusionEngine:
         if not valid_sources:
             return None, field_sources
 
-        # Get priority order
-        priority = self.config.get_priority("forecast", is_us)
+        # Select single source based on location (no merging to avoid duplicates)
+        # US: prefer NWS > Open-Meteo > Visual Crossing
+        # International: prefer Open-Meteo > Visual Crossing
+        if is_us:
+            preferred_order = ["nws", "openmeteo", "visualcrossing"]
+        else:
+            preferred_order = ["openmeteo", "visualcrossing"]
 
-        # Sort sources by priority
-        def source_priority(s: SourceData) -> int:
-            try:
-                return priority.index(s.source)
-            except ValueError:
-                return len(priority)
+        # Find the first available source in preferred order
+        selected_source = None
+        for source_name in preferred_order:
+            for source in valid_sources:
+                if source.source == source_name:
+                    selected_source = source
+                    break
+            if selected_source:
+                break
 
-        valid_sources.sort(key=source_priority)
+        # Fallback to first available if none matched preferred order
+        if not selected_source:
+            selected_source = valid_sources[0]
 
-        # Collect all periods with their source
-        all_periods: list[tuple[ForecastPeriod, str]] = []
-        for source in valid_sources:
-            if source.forecast and source.forecast.periods:
-                for period in source.forecast.periods:
-                    all_periods.append((period, source.source))
+        # Use the selected source's forecast directly (no merging)
+        forecast = selected_source.forecast
+        source_name = selected_source.source
 
-        if not all_periods:
-            return None, field_sources
+        # Track attribution
+        field_sources["forecast_source"] = source_name
+        logger.debug(f"Using {source_name} for forecast (location: {location.name})")
 
-        # Deduplicate periods by time range, keeping highest priority
-        merged_periods: list[ForecastPeriod] = []
-        seen_times: set[tuple[str, str]] = set()
-
-        for period, src in all_periods:
-            # Create a key based on start/end time or name
-            if period.start_time and period.end_time:
-                key = (
-                    period.start_time.isoformat(),
-                    period.end_time.isoformat(),
-                )
-            else:
-                key = (period.name, "")
-
-            if key not in seen_times:
-                seen_times.add(key)
-                merged_periods.append(period)
-                field_sources[f"period_{period.name}"] = src
-
-        # Sort by start time if available, with fallback for periods without times
-        # Use a tuple key: (has_time, time_or_name) to ensure consistent ordering
-        # Periods with times come first (sorted by time), then periods without times (sorted by name)
-        def sort_key(p: ForecastPeriod) -> tuple[int, datetime | str]:
-            if p.start_time is not None:
-                return (0, p.start_time)  # Periods with times first
-            return (1, p.name)  # Periods without times second
-
-        merged_periods.sort(key=sort_key)
-
-        # Use the most recent generated_at time
-        generated_at = None
-        for source in valid_sources:
-            if source.forecast and source.forecast.generated_at:
-                src_generated_at = source.forecast.generated_at
-                # Only compare if it's a datetime (skip mocks)
-                if isinstance(src_generated_at, datetime) and (
-                    generated_at is None or src_generated_at > generated_at
-                ):
-                    generated_at = src_generated_at
-
-        return Forecast(periods=merged_periods, generated_at=generated_at), field_sources
+        return forecast, field_sources
 
     def merge_hourly_forecasts(
         self,

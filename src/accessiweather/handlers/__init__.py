@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .ai_handlers import on_explain_weather_pressed
 from .alert_handlers import (
     on_alert_details_pressed,
     on_alert_selected,
@@ -72,4 +73,5 @@ __all__ = [
     "on_tray_exit",
     "test_alert_notification",
     "on_test_notification_pressed",
+    "on_explain_weather_pressed",
 ]

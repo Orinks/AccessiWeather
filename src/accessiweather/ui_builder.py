@@ -542,6 +542,23 @@ def create_weather_display_section(app: AccessiWeatherApp) -> toga.Box:
         app.forecast_container = None
         app.forecast_scroll = None
 
+    # Add "Explain Weather" button if AI explanations are enabled
+    try:
+        config = app.config_manager.get_config()
+        if config.settings.enable_ai_explanations:
+            from .ai_explainer import create_explain_weather_button
+            from .handlers.ai_handlers import on_explain_weather_pressed
+
+            app.explain_weather_button = create_explain_weather_button(
+                on_press=lambda widget: asyncio.create_task(on_explain_weather_pressed(app, widget))
+            )
+            weather_box.add(app.explain_weather_button)
+        else:
+            app.explain_weather_button = None
+    except Exception as exc:
+        logger.warning(f"Could not add AI explanation button: {exc}")
+        app.explain_weather_button = None
+
     app.discussion_button = toga.Button(
         "View Forecast Discussion",
         on_press=lambda widget: asyncio.create_task(

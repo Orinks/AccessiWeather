@@ -2,6 +2,7 @@
 Logging configuration for AccessiWeather application.
 
 This module sets up logging for the application with both console and file output.
+Logs are saved to a 'logs' subfolder within the AccessiWeather config directory.
 """
 
 import logging
@@ -10,19 +11,27 @@ import os
 import sys
 from pathlib import Path
 
+from accessiweather.config_utils import get_config_dir
+
 
 def setup_logging(log_level=logging.INFO):
-    """
+    r"""
     Set up logging for the application.
+
+    Logs are saved to {config_dir}/logs/accessiweather.log where config_dir is:
+    - Windows: %APPDATA%\.accessiweather
+    - Linux/macOS: ~/.accessiweather
+    - Portable mode: {app_dir}/config
 
     Args:
     ----
         log_level: Logging level (default: INFO)
 
     """
-    # Create logs directory if it doesn't exist
-    log_dir = Path.home() / "AccessiWeather_logs"
-    log_dir.mkdir(exist_ok=True)
+    # Get config directory and create logs subfolder
+    config_dir = Path(get_config_dir())
+    log_dir = config_dir / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
 
     # Configure root logger
     root_logger = logging.getLogger()

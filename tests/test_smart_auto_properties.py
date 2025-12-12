@@ -565,7 +565,7 @@ def source_data_with_forecasts(
 
 
 class TestForecastTimelineUnification:
-    """Tests for forecast timeline merging."""
+    """Tests for forecast single-source selection."""
 
     @given(
         sources=source_data_with_forecasts(min_sources=2, max_sources=3),
@@ -579,9 +579,9 @@ class TestForecastTimelineUnification:
         **Feature: smart-auto-source, Property 7: Forecast Timeline Unification**
         **Validates: Requirements 3.1**
 
-        *For any* set of forecasts from multiple sources, the merged Forecast
-        SHALL contain all unique time periods from all sources, with no
-        duplicate periods for the same time range.
+        Forecasts are selected from a single preferred source (not merged) to avoid
+        duplicate periods with different naming conventions. The selected forecast
+        SHALL contain all periods from that single source.
         """
         engine = DataFusionEngine()
         merged, field_sources = engine.merge_forecasts(sources, location)
@@ -591,31 +591,31 @@ class TestForecastTimelineUnification:
             assert all(s.forecast is None or len(s.forecast.periods) == 0 for s in sources)
             return
 
-        # Collect all unique period keys from sources
-        all_period_keys: set[tuple[str, str]] = set()
+        # Verify we got a forecast from a single source
+        assert "forecast_source" in field_sources
+        selected_source_name = field_sources["forecast_source"]
+
+        # Find the selected source
+        selected_source = None
         for source in sources:
-            if source.success and source.forecast:
-                for period in source.forecast.periods:
-                    if period.start_time and period.end_time:
-                        key = (period.start_time.isoformat(), period.end_time.isoformat())
-                    else:
-                        key = (period.name, "")
-                    all_period_keys.add(key)
+            if source.source == selected_source_name and source.success and source.forecast:
+                selected_source = source
+                break
 
-        # Collect merged period keys
-        merged_keys: set[tuple[str, str]] = set()
-        for period in merged.periods:
-            if period.start_time and period.end_time:
-                key = (period.start_time.isoformat(), period.end_time.isoformat())
-            else:
-                key = (period.name, "")
-            merged_keys.add(key)
+        assert selected_source is not None, f"Could not find source {selected_source_name}"
 
-        # All unique periods should be in merged result
-        assert all_period_keys == merged_keys, (
-            f"Missing periods: {all_period_keys - merged_keys}, "
-            f"Extra periods: {merged_keys - all_period_keys}"
-        )
+        # The merged forecast should match the selected source's forecast exactly
+        assert len(merged.periods) == len(selected_source.forecast.periods)
+
+        # Verify all periods from selected source are present
+        for expected_period in selected_source.forecast.periods:
+            found = any(
+                p.name == expected_period.name
+                and p.start_time == expected_period.start_time
+                and p.end_time == expected_period.end_time
+                for p in merged.periods
+            )
+            assert found, f"Period {expected_period.name} not found in merged forecast"
 
     @given(location=locations())
     @settings(max_examples=50)
@@ -657,10 +657,10 @@ class TestForecastTimelineUnification:
     @settings(max_examples=50)
     def test_mixed_periods_with_and_without_times(self, location: Location) -> None:
         """
-        Test that periods with times and periods without times can be merged.
+        Test that single-source selection works with periods that have different time formats.
 
-        This tests the edge case that causes '<' not supported between
-        'str' and 'datetime.datetime' errors.
+        Since we select from a single source (not merge), we avoid the edge case
+        of comparing str and datetime.datetime.
         """
         base_time = datetime.now(UTC)
 
@@ -694,11 +694,13 @@ class TestForecastTimelineUnification:
 
         engine = DataFusionEngine()
 
-        # This should NOT raise TypeError about comparing str and datetime
-        merged, _ = engine.merge_forecasts(sources, location)
+        # This should NOT raise TypeError - we select from single source
+        merged, field_sources = engine.merge_forecasts(sources, location)
 
         assert merged is not None
-        assert len(merged.periods) == 2
+        # Should only have periods from one source (not merged)
+        assert len(merged.periods) == 1
+        assert "forecast_source" in field_sources
 
 
 # =============================================================================
