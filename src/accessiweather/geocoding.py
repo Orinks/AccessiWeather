@@ -2,13 +2,19 @@
 Geocoding service for AccessiWeather.
 
 This module provides geocoding functionality to convert addresses and zip codes to coordinates.
+Uses Open-Meteo Geocoding API for location lookups.
 """
+
+from __future__ import annotations
 
 import logging
 import re
 
-from geopy.exc import GeocoderServiceError, GeocoderTimedOut
-from geopy.geocoders import Nominatim
+from .openmeteo_geocoding_client import (
+    GeocodingResult,
+    OpenMeteoGeocodingClient,
+    OpenMeteoGeocodingError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -19,23 +25,24 @@ class GeocodingService:
     # Regular expression for US ZIP codes (both 5-digit and ZIP+4 formats)
     ZIP_CODE_PATTERN = re.compile(r"^\d{5}(?:-\d{4})?$")
     # Allowed country codes (primarily US, potentially add territories later if needed)
-    # Nominatim often returns 'us' even for territories like PR, GU.
-    ALLOWED_COUNTRY_CODES = ["us"]
+    ALLOWED_COUNTRY_CODES = ["US"]
 
     def __init__(
         self, user_agent: str = "AccessiWeather", timeout: int = 10, data_source: str = "nws"
-    ):
+    ) -> None:
         """
         Initialize the geocoding service.
 
         Args:
-        ----
             user_agent: User agent string for API requests
             timeout: Timeout in seconds for geocoding requests
             data_source: The data source to use ('nws' or 'auto')
 
         """
-        self.geolocator = Nominatim(user_agent=user_agent, timeout=timeout)
+        self.client = OpenMeteoGeocodingClient(
+            user_agent=user_agent,
+            timeout=float(timeout),
+        )
         self.data_source = data_source
 
     def is_zip_code(self, text: str) -> bool:
@@ -43,11 +50,9 @@ class GeocodingService:
         Check if the given text is a valid US ZIP code.
 
         Args:
-        ----
             text: Text to check
 
         Returns:
-        -------
             True if the text is a valid US ZIP code, False otherwise
 
         """
@@ -58,11 +63,9 @@ class GeocodingService:
         Format a ZIP code for geocoding.
 
         Args:
-        ----
             zip_code: ZIP code to format
 
         Returns:
-        -------
             Formatted ZIP code string for geocoding
 
         """
@@ -73,18 +76,33 @@ class GeocodingService:
         # Add USA to improve geocoding accuracy
         return f"{zip_code}, USA"
 
+    def _filter_results_by_country(self, results: list[GeocodingResult]) -> list[GeocodingResult]:
+        """
+        Filter geocoding results based on data source.
+
+        Args:
+            results: List of GeocodingResult objects
+
+        Returns:
+            Filtered list based on data_source setting
+
+        """
+        if self.data_source == "nws":
+            # Filter for US locations only when using NWS
+            return [r for r in results if r.country_code in self.ALLOWED_COUNTRY_CODES]
+        # For WeatherAPI or Automatic, allow any location worldwide
+        return results
+
     def geocode_address(self, address: str) -> tuple[float, float, str] | None:
         """
         Convert an address or zip code to coordinates, filtering for US locations.
 
         Args:
-        ----
             address: Address or zip code to geocode
 
         Returns:
-        -------
             Tuple of (latitude, longitude, display_name) if successful and within
-            the US NWS coverage area, None otherwise
+            the US NWS coverage area (when using NWS), None otherwise
 
         """
         try:
@@ -98,75 +116,66 @@ class GeocodingService:
                 address = self.format_zip_code(address)
                 logger.info(f"Formatted for geocoding as: {address}")
 
-            # Attempt geocoding with increased timeout and address details
+            # Attempt geocoding
             logger.debug(f"Geocoding address: {address}")
-            # Request addressdetails=True to get country_code
-            location = self.geolocator.geocode(address, addressdetails=True)
+            results = self.client.search(address, count=5)
 
-            if not location:
+            if not results:
                 logger.warning(f"No results found for address: {original_query}")
                 return None
 
-            # --- Filter for US NWS Coverage Area if using NWS data source ---
-            if hasattr(location, "raw") and isinstance(location.raw, dict):
-                address_details = location.raw.get("address", {})
-                country_code = address_details.get("country_code", "").lower()
+            # Filter results based on data source
+            filtered_results = self._filter_results_by_country(results)
 
-                # Only filter for US locations if using NWS data source
-                if self.data_source == "nws" and country_code not in self.ALLOWED_COUNTRY_CODES:
+            if not filtered_results:
+                if self.data_source == "nws":
                     logger.warning(
-                        f"Location '{location.address}' found for query '{original_query}', "
-                        f"but filtered out due to unsupported country_code: '{country_code}'. "
+                        f"Location found for query '{original_query}', "
+                        f"but filtered out due to unsupported country. "
                         f"Only {self.ALLOWED_COUNTRY_CODES} are supported with NWS data source."
                     )
-                    return None  # Location outside coverage area
+                return None
 
-                # For WeatherAPI or Automatic, allow any location
-                logger.info(
-                    f"Successfully geocoded '{original_query}' to: {location.address} "
-                    f"(country_code: {country_code})"
-                )
-                return location.latitude, location.longitude, location.address
-            logger.warning(
-                f"Geocoding result for '{original_query}' lacks detailed address information "
-                f"to verify country code. Raw data: {getattr(location, 'raw', 'N/A')}"
+            # Return the first matching result
+            location = filtered_results[0]
+            logger.info(
+                f"Successfully geocoded '{original_query}' to: {location.display_name} "
+                f"(country_code: {location.country_code})"
             )
-            # Cannot verify country, treat as unsupported for safety
-            return None
+            return location.latitude, location.longitude, location.display_name
 
-        except (GeocoderTimedOut, GeocoderServiceError) as e:
-            logger.error(f"Geocoding error for '{original_query}': {str(e)}")
+        except OpenMeteoGeocodingError as e:
+            logger.error(f"Geocoding error for '{original_query}': {e!s}")
             return None
         except Exception as e:
-            logger.error(f"Unexpected geocoding error for '{original_query}': {str(e)}")
+            logger.error(f"Unexpected geocoding error for '{original_query}': {e!s}")
             return None
 
     def validate_coordinates(self, lat: float, lon: float, us_only: bool | None = None) -> bool:
         """
-        Validate if coordinates are within the US NWS coverage area or globally valid.
+        Validate if coordinates are within valid range and optionally within US.
 
-        This method performs a reverse geocoding lookup to determine if the
-        given coordinates are within the US (when us_only=True) or are valid
-        coordinates anywhere in the world (when us_only=False).
+        This method validates that coordinates are within valid global bounds.
+        When us_only=True, it uses a simple bounding box check for US territory
+        rather than reverse geocoding.
 
         If us_only is None, the method will use the data_source to determine whether
         to restrict validation to US locations (True for 'nws', False for others).
 
         Args:
-        ----
             lat: Latitude
             lon: Longitude
             us_only: Whether to restrict validation to US locations only
                      If None, uses data_source to determine (default: None)
 
         Returns:
-        -------
             True if coordinates are valid according to the criteria, False otherwise
 
         """
         # If us_only is not specified, determine based on data source
         if us_only is None:
             us_only = self.data_source == "nws"
+
         # Basic validation for all cases
         if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
             logger.warning(
@@ -180,59 +189,50 @@ class GeocodingService:
             logger.debug(f"Coordinates ({lat}, {lon}) are within valid global range")
             return True
 
-        try:
-            logger.debug(f"Validating coordinates: ({lat}, {lon}) for US location")
-            # Perform reverse geocoding with address details
-            location = self.geolocator.reverse((lat, lon), addressdetails=True)
+        # For US-only validation, use a simple bounding box check
+        # This covers continental US, Alaska, Hawaii, and territories
+        # Continental US: roughly 24-50°N, 66-125°W
+        # Alaska: roughly 51-72°N, 130-173°W (and some east of 180°)
+        # Hawaii: roughly 18-23°N, 154-161°W
+        # Puerto Rico/Virgin Islands: roughly 17-19°N, 64-68°W
+        # Guam: roughly 13-14°N, 144-145°E
 
-            if not location:
-                logger.warning(f"No location found for coordinates: ({lat}, {lon})")
-                return False
+        us_bounds = [
+            # Continental US
+            (24.0, 50.0, -125.0, -66.0),
+            # Alaska (main)
+            (51.0, 72.0, -180.0, -130.0),
+            # Alaska (Aleutians crossing dateline)
+            (51.0, 55.0, 172.0, 180.0),
+            # Hawaii
+            (18.0, 23.0, -161.0, -154.0),
+            # Puerto Rico / Virgin Islands
+            (17.0, 19.0, -68.0, -64.0),
+            # Guam
+            (13.0, 14.0, 144.0, 146.0),
+        ]
 
-            # Check if the location is in the US
-            if hasattr(location, "raw") and isinstance(location.raw, dict):
-                address_details = location.raw.get("address", {})
-                country_code = address_details.get("country_code", "").lower()
+        for min_lat, max_lat, min_lon, max_lon in us_bounds:
+            if min_lat <= lat <= max_lat and min_lon <= lon <= max_lon:
+                logger.info(f"Coordinates ({lat}, {lon}) validated as within US bounds")
+                return True
 
-                if country_code in self.ALLOWED_COUNTRY_CODES:
-                    logger.info(
-                        f"Coordinates ({lat}, {lon}) validated as within US (country_code: {country_code})"
-                    )
-                    return True
-                logger.warning(
-                    f"Coordinates ({lat}, {lon}) are outside the US NWS coverage area "
-                    f"(country_code: '{country_code}'). Only {self.ALLOWED_COUNTRY_CODES} are supported."
-                )
-                return False
-            logger.warning(
-                f"Reverse geocoding result for coordinates ({lat}, {lon}) lacks detailed "
-                f"address information to verify country code. Raw data: {getattr(location, 'raw', 'N/A')}"
-            )
-            # Cannot verify country, treat as unsupported for safety
-            return False
-
-        except (GeocoderTimedOut, GeocoderServiceError) as e:
-            logger.error(f"Geocoding error validating coordinates ({lat}, {lon}): {str(e)}")
-            # In case of service errors, we'll assume the coordinates are valid
-            # to avoid removing potentially valid locations due to temporary service issues
-            return True
-        except Exception as e:
-            logger.error(f"Unexpected error validating coordinates ({lat}, {lon}): {str(e)}")
-            # Same as above, assume valid in case of unexpected errors
-            return True
+        logger.warning(
+            f"Coordinates ({lat}, {lon}) are outside the US NWS coverage area bounds. "
+            f"Only US locations are supported with NWS data source."
+        )
+        return False
 
     def suggest_locations(self, query: str, limit: int = 5) -> list[str]:
         """
-        Suggest location completions based on partial input, filtering for US locations.
+        Suggest location completions based on partial input.
 
         Args:
-        ----
             query: Partial address or location name
             limit: Maximum number of suggestions to return
 
         Returns:
-        -------
-            List of suggested location strings (US locations only)
+            List of suggested location strings (filtered by data_source)
 
         """
         try:
@@ -248,54 +248,38 @@ class GeocodingService:
                 query = self.format_zip_code(query)
                 logger.info(f"Formatted for suggestions as: {query}")
 
-            # Use geocoder to get suggestions with address details
-            # Note: Nominatim doesn't have native autocomplete, so we're simulating it
-            # by using the geocode function with limit parameter
+            # Use geocoder to get suggestions
             logger.debug(f"Getting location suggestions for: {query}")
-            # Request addressdetails=True to get country_code for filtering
-            locations = self.geolocator.geocode(
-                query, exactly_one=False, limit=limit * 2, addressdetails=True
-            )
+            # Request more results than needed to allow for filtering
+            results = self.client.search(query, count=limit * 2)
 
-            if not locations:
+            if not results:
                 logger.debug(f"No suggestions found for query: {query}")
                 return []
 
-            # Filter locations based on data source
-            filtered_locations = []
+            # Filter results based on data source
+            filtered_results = self._filter_results_by_country(results)
+
+            # Limit to requested number
+            filtered_results = filtered_results[:limit]
+
+            # Extract display names
+            suggestions = [r.display_name for r in filtered_results]
 
             if self.data_source == "nws":
-                # Filter for US locations only when using NWS
-                for location in locations:
-                    if hasattr(location, "raw") and isinstance(location.raw, dict):
-                        address_details = location.raw.get("address", {})
-                        country_code = address_details.get("country_code", "").lower()
+                logger.debug(
+                    f"Found {len(suggestions)} US location suggestions for NWS data source"
+                )
+            else:
+                logger.debug(
+                    f"Found {len(suggestions)} worldwide location suggestions for non-NWS data source"
+                )
 
-                        if country_code in self.ALLOWED_COUNTRY_CODES:
-                            filtered_locations.append(location)
-                            if len(filtered_locations) >= limit:
-                                break
-
-                if filtered_locations:
-                    # Extract the display names from US locations only
-                    suggestions = [location.address for location in filtered_locations]
-                    logger.debug(
-                        f"Found {len(suggestions)} US location suggestions for NWS data source"
-                    )
-                    return suggestions
-                logger.debug(f"No US location suggestions found for query: {query}")
-                return []
-            # For WeatherAPI or Automatic, allow any location worldwide
-            filtered_locations = locations[:limit]  # Just take the first 'limit' locations
-            suggestions = [location.address for location in filtered_locations]
-            logger.debug(
-                f"Found {len(suggestions)} worldwide location suggestions for non-NWS data source"
-            )
             return suggestions
 
-        except (GeocoderTimedOut, GeocoderServiceError) as e:
-            logger.error(f"Location suggestion error for '{query}': {str(e)}")
+        except OpenMeteoGeocodingError as e:
+            logger.error(f"Location suggestion error for '{query}': {e!s}")
             return []
         except Exception as e:
-            logger.error(f"Unexpected location suggestion error for '{query}': {str(e)}")
+            logger.error(f"Unexpected location suggestion error for '{query}': {e!s}")
             return []
