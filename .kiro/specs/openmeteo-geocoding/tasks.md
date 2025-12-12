@@ -1,0 +1,129 @@
+# Implementation Plan
+
+- [x] 1. Set up feature branch and project structure
+
+
+
+
+  - [x] 1.1 Create feature branch from latest dev
+
+
+    - Run `git fetch origin dev && git checkout -b feature/openmeteo-geocoding origin/dev`
+    - _Requirements: N/A (setup)_
+
+
+
+  - [ ] 1.2 Create OpenMeteoGeocodingClient module skeleton
+    - Create `src/accessiweather/openmeteo_geocoding_client.py` with exception classes and client class stub
+    - Define `GeocodingResult` dataclass with all fields
+
+    - _Requirements: 3.1, 3.4_
+
+- [ ] 2. Implement OpenMeteoGeocodingClient
+  - [x] 2.1 Implement HTTP request infrastructure
+
+
+    - Add httpx client setup with configurable timeout and user agent
+    - Implement `_make_request()` method with retry logic
+    - _Requirements: 3.1, 3.2, 6.1_
+
+  - [x] 2.2 Implement search method
+
+    - Add `search()` method that calls Open-Meteo Geocoding API
+    - Parse JSON response into `list[GeocodingResult]`
+    - Handle empty results gracefully
+    - _Requirements: 1.1, 1.2, 1.4_
+
+  - [ ] 2.3 Write property test for API response parsing
+    - **Property 1: API response parsing extracts all required fields**
+    - **Validates: Requirements 1.2**
+  - [ ] 2.4 Implement error handling
+    - Raise `OpenMeteoGeocodingApiError` for HTTP 4xx/5xx errors
+    - Raise `OpenMeteoGeocodingNetworkError` for timeout/connection errors
+    - _Requirements: 3.3, 6.2, 6.3_
+  - [ ] 2.5 Write unit tests for OpenMeteoGeocodingClient
+    - Test request construction and parameter handling
+    - Test error handling for various HTTP status codes
+    - Test retry logic with mocked failures
+    - _Requirements: 7.3_
+
+- [ ] 3. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 4. Update GeocodingService to use OpenMeteoGeocodingClient
+  - [ ] 4.1 Replace Nominatim with OpenMeteoGeocodingClient
+    - Update `__init__` to create `OpenMeteoGeocodingClient` instead of `Nominatim`
+    - Remove geopy imports
+    - _Requirements: 5.1_
+  - [ ] 4.2 Update geocode_address method
+    - Call `OpenMeteoGeocodingClient.search()` instead of `geolocator.geocode()`
+    - Filter results by country_code when data_source is "nws"
+    - Return `(latitude, longitude, display_name)` tuple
+    - _Requirements: 1.1, 1.3, 1.5_
+  - [ ] 4.3 Write property test for NWS filtering
+    - **Property 5: NWS data source filters to US-only locations**
+    - **Validates: Requirements 2.3**
+  - [ ] 4.4 Write property test for worldwide locations
+    - **Property 6: Non-NWS data source returns worldwide locations**
+    - **Validates: Requirements 2.4**
+  - [ ] 4.5 Update suggest_locations method
+    - Call `OpenMeteoGeocodingClient.search()` with limit parameter
+    - Format results using `GeocodingResult.display_name`
+    - Apply country filtering based on data_source
+    - _Requirements: 2.1, 2.2, 2.3, 2.4_
+  - [ ] 4.6 Write property test for suggestion limits
+    - **Property 3: Suggestion count respects limit parameter**
+    - **Validates: Requirements 2.1**
+  - [ ] 4.7 Write property test for display text
+    - **Property 4: Display text contains required components**
+    - **Validates: Requirements 2.2**
+  - [ ] 4.8 Update validate_coordinates method
+    - Keep existing bounds checking logic
+    - For US-only validation, use reverse geocoding or simplify to bounds-only check
+    - _Requirements: 4.1, 4.2, 4.3, 4.4_
+  - [ ] 4.9 Write property test for coordinate validation
+    - **Property 7: Coordinate validation bounds check**
+    - **Validates: Requirements 4.1, 4.2**
+  - [ ] 4.10 Write property test for non-NWS coordinates
+    - **Property 8: Non-NWS accepts any valid global coordinates**
+    - **Validates: Requirements 4.4**
+
+- [ ] 5. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 6. Update existing ZIP code property tests
+  - [ ] 6.1 Verify existing ZIP code tests still pass
+    - Run `pytest tests/test_geocoding_properties.py -v`
+    - Fix any failures due to implementation changes
+    - _Requirements: 7.1_
+  - [ ] 6.2 Add property test for ZIP code detection
+    - **Property 2: ZIP code detection is consistent**
+    - **Validates: Requirements 1.3**
+
+- [ ] 7. Remove geopy dependency
+  - [ ] 7.1 Remove geopy from dependencies
+    - Remove `geopy` from `requirements.txt`
+    - Remove `geopy` from `pyproject.toml` dependencies
+    - _Requirements: 5.2_
+  - [ ] 7.2 Verify no remaining geopy imports
+    - Search codebase for any remaining geopy references
+    - Remove any unused imports
+    - _Requirements: 5.2_
+
+- [ ] 8. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 9. Add integration tests
+  - [ ] 9.1 Create integration test file
+    - Create `tests/test_geocoding_integration.py`
+    - Add `@pytest.mark.integration` marker to all tests
+    - _Requirements: 7.4_
+  - [ ] 9.2 Write integration tests for real API calls
+    - Test geocoding a known US location (e.g., "New York")
+    - Test geocoding a known international location
+    - Test geocoding a US ZIP code
+    - Verify response structure matches expected format
+    - _Requirements: 7.4_
+
+- [ ] 10. Final Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
