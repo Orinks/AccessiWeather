@@ -183,6 +183,7 @@ class LoadingDialog:
         self.app = app
         self.location = location
         self.window: toga.Window | None = None
+        self.activity_indicator: toga.ActivityIndicator | None = None
 
     def show(self) -> None:
         """Display the loading dialog."""
@@ -198,7 +199,11 @@ class LoadingDialog:
             loading_label.aria_label = "Loading, generating weather explanation"
         main_box.add(loading_label)
 
-        # Progress indicator (simple text for now)
+        # Activity indicator (spinning animation)
+        self.activity_indicator = toga.ActivityIndicator(style=Pack(padding_bottom=10))
+        main_box.add(self.activity_indicator)
+
+        # Status label
         self.status_label = toga.Label(
             "Please wait...",
             style=Pack(font_style="italic", text_align="center"),
@@ -207,14 +212,24 @@ class LoadingDialog:
 
         self.window = toga.Window(
             title="Generating Explanation",
-            size=(300, 150),
+            size=(350, 150),
             resizable=False,
+            closable=False,  # Prevent closing via X button during loading
         )
         self.window.content = main_box
         self.window.show()
 
+        # Start the activity indicator
+        if self.activity_indicator:
+            self.activity_indicator.start()
+
     def close(self) -> None:
         """Close the loading dialog."""
+        # Stop the activity indicator
+        if self.activity_indicator:
+            with contextlib.suppress(Exception):
+                self.activity_indicator.stop()
+
         if self.window:
             self.window.close()
             self.window = None
