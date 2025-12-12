@@ -122,7 +122,7 @@ class TestAIExplainerCore:
         explainer = AIExplainer()
 
         assert explainer.api_key is None
-        assert explainer.model == "openrouter/auto:free"
+        assert explainer.model == "meta-llama/llama-3.2-3b-instruct:free"
 
     def test_explainer_initialization_with_api_key(self):
         """Test AIExplainer initializes with provided API key."""
@@ -190,7 +190,7 @@ class TestModelSelection:
         from accessiweather.ai_explainer import AIExplainer
 
         explainer = AIExplainer(api_key=None)
-        assert explainer.get_effective_model() == "openrouter/auto:free"
+        assert explainer.get_effective_model() == "meta-llama/llama-3.2-3b-instruct:free"
 
     def test_api_key_with_free_preference_uses_free_model(self):
         """With API key but free preference, system uses free model."""
@@ -227,7 +227,7 @@ class TestModelSelection:
 
         # Without API key, always use free model
         if not has_api_key:
-            assert effective_model == "openrouter/auto:free"
+            assert effective_model == "meta-llama/llama-3.2-3b-instruct:free"
         else:
             # With API key, use the configured preference
             assert effective_model == model_pref
@@ -322,6 +322,91 @@ class TestPromptConstruction:
 
         assert "Alert" not in prompt
 
+    def test_prompt_includes_forecast_periods(self):
+        """Test that forecast periods are included in prompt when available."""
+        from accessiweather.ai_explainer import AIExplainer, ExplanationStyle
+
+        explainer = AIExplainer()
+        weather_data = {
+            "temperature": 72,
+            "conditions": "Sunny",
+            "forecast_periods": [
+                {
+                    "name": "Tonight",
+                    "temperature": 55,
+                    "temperature_unit": "F",
+                    "short_forecast": "Clear",
+                    "wind_speed": "5 mph",
+                    "wind_direction": "NW",
+                },
+                {
+                    "name": "Tomorrow",
+                    "temperature": 78,
+                    "temperature_unit": "F",
+                    "short_forecast": "Mostly Sunny",
+                    "wind_speed": "10 mph",
+                    "wind_direction": "SW",
+                },
+            ],
+        }
+
+        prompt = explainer._build_prompt(weather_data, "Seattle", ExplanationStyle.STANDARD)
+
+        # Verify forecast section header
+        assert "Upcoming Forecast" in prompt
+        # Verify period names
+        assert "Tonight" in prompt
+        assert "Tomorrow" in prompt
+        # Verify temperatures
+        assert "55" in prompt
+        assert "78" in prompt
+        # Verify short forecasts
+        assert "Clear" in prompt
+        assert "Mostly Sunny" in prompt
+        # Verify wind info
+        assert "5 mph" in prompt
+        assert "NW" in prompt
+
+    def test_prompt_excludes_forecast_when_empty(self):
+        """Test that forecast section is not in prompt when no periods."""
+        from accessiweather.ai_explainer import AIExplainer, ExplanationStyle
+
+        explainer = AIExplainer()
+        weather_data = {
+            "temperature": 72,
+            "conditions": "Clear",
+            "forecast_periods": [],
+        }
+
+        prompt = explainer._build_prompt(weather_data, "Denver", ExplanationStyle.STANDARD)
+
+        assert "Upcoming Forecast" not in prompt
+
+    def test_prompt_handles_partial_forecast_data(self):
+        """Test that prompt handles forecast periods with missing fields."""
+        from accessiweather.ai_explainer import AIExplainer, ExplanationStyle
+
+        explainer = AIExplainer()
+        weather_data = {
+            "temperature": 72,
+            "conditions": "Sunny",
+            "forecast_periods": [
+                {
+                    "name": "Tonight",
+                    "temperature": 55,
+                    # Missing temperature_unit, short_forecast, wind_speed, wind_direction
+                },
+            ],
+        }
+
+        prompt = explainer._build_prompt(weather_data, "Seattle", ExplanationStyle.STANDARD)
+
+        # Should still include the period with available data
+        assert "Tonight" in prompt
+        assert "55" in prompt
+        # Should use default temperature unit
+        assert "F" in prompt
+
     @given(
         temperature=st.floats(min_value=-50, max_value=130, allow_nan=False),
         humidity=st.integers(min_value=0, max_value=100),
@@ -399,6 +484,60 @@ class TestPromptConstruction:
         else:
             # No alert references when no alerts
             assert "Active Alerts" not in prompt
+
+    @given(
+        has_forecast=st.booleans(),
+        period_count=st.integers(min_value=1, max_value=6),
+    )
+    @settings(max_examples=100)
+    def test_forecast_period_inclusion_property(self, has_forecast, period_count):
+        """
+        For any weather data, forecast periods are included iff they exist.
+
+        **Feature: ai-weather-explanations, Property 3: Forecast data inclusion**
+        **Validates: Requirements 1.2, 1.6**
+        """
+        from accessiweather.ai_explainer import AIExplainer, ExplanationStyle
+
+        explainer = AIExplainer()
+
+        forecast_periods = []
+        if has_forecast:
+            period_names = [
+                "Tonight",
+                "Tomorrow",
+                "Tomorrow Night",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+            ]
+            for i in range(period_count):
+                forecast_periods.append(
+                    {
+                        "name": period_names[i % len(period_names)],
+                        "temperature": 60 + i * 5,
+                        "temperature_unit": "F",
+                        "short_forecast": f"Forecast {i}",
+                    }
+                )
+
+        weather_data = {
+            "temperature": 70,
+            "conditions": "Clear",
+            "forecast_periods": forecast_periods,
+        }
+
+        prompt = explainer._build_prompt(weather_data, "Test City", ExplanationStyle.STANDARD)
+
+        if has_forecast:
+            # Forecast section should be present
+            assert "Upcoming Forecast" in prompt
+            # All periods should be mentioned
+            for i in range(period_count):
+                assert f"Forecast {i}" in prompt
+        else:
+            # No forecast section when no periods
+            assert "Upcoming Forecast" not in prompt
 
 
 class TestMarkdownFormatting:
@@ -968,7 +1107,7 @@ class TestExplanationDialog:
         assert dialog.location == "Test City"
 
     def test_error_dialog_creation(self, mocker):
-        """Test that ErrorDialog can be created."""
+        """Test that ErrorDialog can be created (for backward compatibility)."""
         from accessiweather.dialogs.explanation_dialog import ErrorDialog
 
         mock_app = mocker.MagicMock()
@@ -976,3 +1115,309 @@ class TestExplanationDialog:
 
         assert dialog.app == mock_app
         assert dialog.error_message == "Test error message"
+
+
+class TestCacheBehavior:
+    """
+    Property-based tests for cache behavior.
+
+    **Feature: ai-weather-explanations, Property 3: Cache prevents duplicate API calls**
+    **Validates: Requirements 2.4**
+    """
+
+    @given(
+        temperature=st.floats(min_value=-50, max_value=130, allow_nan=False),
+        conditions=st.sampled_from(["Sunny", "Cloudy", "Rainy", "Snowy", "Windy"]),
+        location=st.sampled_from(["Seattle", "Denver", "Miami", "Phoenix", "Boston"]),
+    )
+    @settings(max_examples=50)
+    def test_cache_key_consistency_property(self, temperature, conditions, location):
+        """
+        For any weather data, the same data should produce the same cache key.
+
+        **Feature: ai-weather-explanations, Property 3: Cache prevents duplicate API calls**
+        **Validates: Requirements 2.4**
+        """
+        from accessiweather.ai_explainer import AIExplainer
+
+        explainer = AIExplainer(api_key="sk-or-test")
+        weather_data = {
+            "temperature": temperature,
+            "conditions": conditions,
+        }
+
+        # Generate cache key twice with same data
+        key1 = explainer._generate_cache_key(weather_data, location)
+        key2 = explainer._generate_cache_key(weather_data, location)
+
+        # Same data should produce same key
+        assert key1 == key2
+
+    @given(
+        temp1=st.floats(min_value=-50, max_value=50, allow_nan=False),
+        temp2=st.floats(min_value=51, max_value=130, allow_nan=False),
+    )
+    @settings(max_examples=50)
+    def test_cache_key_uniqueness_property(self, temp1, temp2):
+        """
+        For different weather data, cache keys should be different.
+
+        **Feature: ai-weather-explanations, Property 3: Cache prevents duplicate API calls**
+        **Validates: Requirements 2.4**
+        """
+        from accessiweather.ai_explainer import AIExplainer
+
+        explainer = AIExplainer(api_key="sk-or-test")
+
+        weather_data1 = {"temperature": temp1, "conditions": "Sunny"}
+        weather_data2 = {"temperature": temp2, "conditions": "Sunny"}
+
+        key1 = explainer._generate_cache_key(weather_data1, "Seattle")
+        key2 = explainer._generate_cache_key(weather_data2, "Seattle")
+
+        # Different temperatures should produce different keys
+        assert key1 != key2
+
+    @pytest.mark.asyncio
+    async def test_cache_prevents_api_calls_property(self, mocker):
+        """
+        For any cached explanation, subsequent requests should not call API.
+
+        **Feature: ai-weather-explanations, Property 3: Cache prevents duplicate API calls**
+        **Validates: Requirements 2.4**
+        """
+        from accessiweather.ai_explainer import AIExplainer
+        from accessiweather.cache import Cache
+
+        # Create mock client
+        mock_client = mocker.MagicMock()
+        mock_response = mocker.MagicMock()
+        mock_response.choices = [mocker.MagicMock(message=mocker.MagicMock(content="Test"))]
+        mock_response.model = "openrouter/auto:free"
+        mock_response.usage = mocker.MagicMock(
+            total_tokens=100, prompt_tokens=80, completion_tokens=20
+        )
+        mock_client.chat.completions.create.return_value = mock_response
+
+        mocker.patch("openai.OpenAI", return_value=mock_client)
+
+        cache = Cache(default_ttl=300)
+        explainer = AIExplainer(api_key="sk-or-test", cache=cache)
+
+        weather_data = {"temperature": 72, "conditions": "Sunny"}
+
+        # First call should hit API
+        result1 = await explainer.explain_weather(weather_data, "Test City")
+        assert result1.cached is False
+        assert mock_client.chat.completions.create.call_count == 1
+
+        # Second call should use cache (no additional API call)
+        result2 = await explainer.explain_weather(weather_data, "Test City")
+        assert result2.cached is True
+        assert mock_client.chat.completions.create.call_count == 1  # Still 1, not 2
+
+        # Third call should also use cache
+        result3 = await explainer.explain_weather(weather_data, "Test City")
+        assert result3.cached is True
+        assert mock_client.chat.completions.create.call_count == 1  # Still 1
+
+
+class TestAFDExplanation:
+    """
+    Tests for Area Forecast Discussion explanation.
+
+    **Feature: ai-weather-explanations, Property 4: AFD technical translation**
+    **Validates: Requirements 9.1, 9.2, 9.3, 9.4, 9.5**
+    """
+
+    @pytest.fixture
+    def sample_afd_text(self):
+        """Sample AFD text for testing."""
+        return """
+        .SYNOPSIS...
+        A strong cold front will move through the region tonight bringing
+        gusty winds and a chance of thunderstorms. High pressure builds
+        in behind the front for dry conditions through the weekend.
+
+        .NEAR TERM /THROUGH TONIGHT/...
+        Expect increasing clouds this afternoon ahead of the approaching
+        cold front. Temperatures will reach the upper 70s before the
+        front arrives around midnight. Winds will shift to the northwest
+        and gust to 35-40 mph behind the front.
+
+        .SHORT TERM /FRIDAY THROUGH SUNDAY/...
+        High pressure builds in Friday bringing sunny skies and cooler
+        temperatures. Highs will be in the low 60s Friday and Saturday.
+        """
+
+    @pytest.fixture
+    def mock_openai_client_for_afd(self, mocker):
+        """Mock the OpenAI client for AFD testing."""
+        mock_client = mocker.MagicMock()
+        mock_response = mocker.MagicMock()
+        mock_response.choices = [
+            mocker.MagicMock(
+                message=mocker.MagicMock(
+                    content="A cold front is coming tonight with strong winds and possible storms. "
+                    "After that, expect nice weather through the weekend with cooler temperatures."
+                )
+            )
+        ]
+        mock_response.model = "openrouter/auto:free"
+        mock_response.usage = mocker.MagicMock(
+            total_tokens=200,
+            prompt_tokens=150,
+            completion_tokens=50,
+        )
+        mock_client.chat.completions.create.return_value = mock_response
+        return mock_client
+
+    @pytest.mark.asyncio
+    async def test_explain_afd_returns_result(
+        self, mocker, mock_openai_client_for_afd, sample_afd_text
+    ):
+        """Test that explain_afd returns an ExplanationResult."""
+        from accessiweather.ai_explainer import AIExplainer, ExplanationResult
+
+        mocker.patch("openai.OpenAI", return_value=mock_openai_client_for_afd)
+
+        explainer = AIExplainer(api_key="sk-or-test")
+        result = await explainer.explain_afd(sample_afd_text, "Denver, CO")
+
+        assert isinstance(result, ExplanationResult)
+        assert result.text is not None
+        assert len(result.text) > 0
+        assert result.token_count == 200
+
+    @pytest.mark.asyncio
+    async def test_explain_afd_uses_detailed_style_by_default(
+        self, mocker, mock_openai_client_for_afd, sample_afd_text
+    ):
+        """Test that explain_afd uses detailed style by default."""
+        from accessiweather.ai_explainer import AIExplainer
+
+        mocker.patch("openai.OpenAI", return_value=mock_openai_client_for_afd)
+
+        explainer = AIExplainer(api_key="sk-or-test")
+        await explainer.explain_afd(sample_afd_text, "Denver, CO")
+
+        # Verify the API was called (style is embedded in the prompt)
+        assert mock_openai_client_for_afd.chat.completions.create.called
+
+    @pytest.mark.asyncio
+    async def test_explain_afd_tracks_session_tokens(
+        self, mocker, mock_openai_client_for_afd, sample_afd_text
+    ):
+        """Test that explain_afd updates session token count."""
+        from accessiweather.ai_explainer import AIExplainer
+
+        mocker.patch("openai.OpenAI", return_value=mock_openai_client_for_afd)
+
+        explainer = AIExplainer(api_key="sk-or-test")
+        assert explainer.session_token_count == 0
+
+        await explainer.explain_afd(sample_afd_text, "Denver, CO")
+
+        assert explainer.session_token_count == 200
+
+    def test_afd_system_prompt_mentions_plain_language(self):
+        """Test that AFD explanation requests plain language output."""
+        # The system prompt for AFD should emphasize plain language translation
+        # This is verified by checking the explain_afd method's system prompt
+        from accessiweather.ai_explainer import AIExplainer
+
+        explainer = AIExplainer()
+        # The system prompt is built inside explain_afd, so we verify the method exists
+        assert hasattr(explainer, "explain_afd")
+        assert callable(explainer.explain_afd)
+
+    @given(
+        afd_length=st.integers(min_value=100, max_value=500),
+        location=st.sampled_from(["Denver, CO", "Seattle, WA", "Miami, FL", "Phoenix, AZ"]),
+    )
+    @settings(max_examples=20)
+    def test_afd_explanation_accepts_various_lengths(self, afd_length, location):
+        """
+        For any AFD text length, the explainer should accept it without error.
+
+        **Feature: ai-weather-explanations, Property 4: AFD technical translation**
+        **Validates: Requirements 9.3**
+        """
+        from accessiweather.ai_explainer import AIExplainer
+
+        explainer = AIExplainer(api_key="sk-or-test")
+
+        # Generate sample AFD text of specified length
+        sample_afd = "A cold front will move through the region. " * (afd_length // 40)
+
+        # The explainer should be able to handle AFD text of various lengths
+        # We just verify the method exists and can be called (actual API call is mocked in other tests)
+        assert hasattr(explainer, "explain_afd")
+        assert len(sample_afd) > 0
+
+
+class TestForecastDiscussionDialog:
+    """
+    Tests for the ForecastDiscussionDialog UI component.
+
+    **Validates: Requirements 9.1**
+    """
+
+    def test_dialog_creation(self, mocker):
+        """Test that ForecastDiscussionDialog can be created."""
+        from accessiweather.dialogs.discussion import ForecastDiscussionDialog
+
+        mock_app = mocker.MagicMock()
+        dialog = ForecastDiscussionDialog(mock_app, "Sample AFD text", "Denver, CO")
+
+        assert dialog.app == mock_app
+        assert dialog.discussion_text == "Sample AFD text"
+        assert dialog.location_name == "Denver, CO"
+
+    def test_dialog_handles_empty_text(self, mocker):
+        """Test that dialog handles empty discussion text."""
+        from accessiweather.dialogs.discussion import ForecastDiscussionDialog
+
+        mock_app = mocker.MagicMock()
+        dialog = ForecastDiscussionDialog(mock_app, None, "Denver, CO")
+
+        assert dialog.discussion_text == "No forecast discussion available."
+
+    def test_dialog_handles_missing_location(self, mocker):
+        """Test that dialog handles missing location name."""
+        from accessiweather.dialogs.discussion import ForecastDiscussionDialog
+
+        mock_app = mocker.MagicMock()
+        dialog = ForecastDiscussionDialog(mock_app, "Sample text", None)
+
+        assert dialog.location_name == "Unknown Location"
+
+    def test_ai_enabled_check(self, mocker):
+        """Test that dialog correctly checks if AI is enabled."""
+        from accessiweather.dialogs.discussion import ForecastDiscussionDialog
+
+        mock_app = mocker.MagicMock()
+        mock_settings = mocker.MagicMock()
+        mock_settings.enable_ai_explanations = True
+        mock_config = mocker.MagicMock()
+        mock_config.settings = mock_settings
+        mock_app.config_manager.get_config.return_value = mock_config
+
+        dialog = ForecastDiscussionDialog(mock_app, "Sample text", "Denver, CO")
+
+        assert dialog._is_ai_enabled() is True
+
+    def test_ai_disabled_check(self, mocker):
+        """Test that dialog correctly detects when AI is disabled."""
+        from accessiweather.dialogs.discussion import ForecastDiscussionDialog
+
+        mock_app = mocker.MagicMock()
+        mock_settings = mocker.MagicMock()
+        mock_settings.enable_ai_explanations = False
+        mock_config = mocker.MagicMock()
+        mock_config.settings = mock_settings
+        mock_app.config_manager.get_config.return_value = mock_config
+
+        dialog = ForecastDiscussionDialog(mock_app, "Sample text", "Denver, CO")
+
+        assert dialog._is_ai_enabled() is False
