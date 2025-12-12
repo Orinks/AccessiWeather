@@ -97,14 +97,21 @@
 
     - Call `OpenMeteoGeocodingClient.search()` with limit parameter
 
+
     - Format results using `GeocodingResult.display_name`
+
+
+
     - Apply country filtering based on data_source
+
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
+
   - [ ] 4.6 Write property test for suggestion limits
     - **Property 3: Suggestion count respects limit parameter**
     - **Validates: Requirements 2.1**
   - [ ] 4.7 Write property test for display text
     - **Property 4: Display text contains required components**
+
     - **Validates: Requirements 2.2**
   - [ ] 4.8 Update validate_coordinates method
     - Keep existing bounds checking logic
