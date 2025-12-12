@@ -355,3 +355,232 @@ class TestOpenMeteoGeocodingClientRetry:
                 assert call_count == 3
         finally:
             client.close()
+
+
+@pytest.mark.unit
+class TestGeocodingServiceFiltering:
+    """
+    Property-based tests for GeocodingService filtering.
+
+    **Feature: openmeteo-geocoding, Property 5: NWS data source filters to US-only locations**
+    **Feature: openmeteo-geocoding, Property 6: Non-NWS data source returns worldwide locations**
+    """
+
+    @given(
+        results=st.lists(
+            st.builds(
+                GeocodingResult,
+                name=st.text(min_size=1, max_size=20).filter(lambda x: x.strip()),
+                latitude=st.floats(min_value=-90, max_value=90, allow_nan=False),
+                longitude=st.floats(min_value=-180, max_value=180, allow_nan=False),
+                country=st.text(min_size=1, max_size=30).filter(lambda x: x.strip()),
+                country_code=st.sampled_from(["US", "CA", "MX", "GB", "DE", "FR", "JP", "AU"]),
+                timezone=st.sampled_from(["America/New_York", "Europe/London", "Asia/Tokyo"]),
+            ),
+            min_size=0,
+            max_size=10,
+        )
+    )
+    @settings(max_examples=100, suppress_health_check=[HealthCheck.differing_executors])
+    def test_nws_filters_to_us_only(self, results: list[GeocodingResult]) -> None:
+        """
+        Verify NWS data source filters to US-only locations.
+
+        **Feature: openmeteo-geocoding, Property 5: NWS data source filters to US-only locations**
+        **Validates: Requirements 2.3**
+
+        For any set of geocoding results containing mixed country codes, when
+        data_source is "nws", filtering SHALL return only results where
+        country_code is "US".
+        """
+        from accessiweather.geocoding import GeocodingService
+
+        service = GeocodingService(data_source="nws")
+        filtered = service._filter_results_by_country(results)
+
+        # All filtered results should have US country code
+        for result in filtered:
+            assert result.country_code == "US", (
+                f"NWS filtering should only return US locations, got {result.country_code}"
+            )
+
+        # Count of US results should match filtered count
+        us_count = sum(1 for r in results if r.country_code == "US")
+        assert len(filtered) == us_count
+
+    @given(
+        results=st.lists(
+            st.builds(
+                GeocodingResult,
+                name=st.text(min_size=1, max_size=20).filter(lambda x: x.strip()),
+                latitude=st.floats(min_value=-90, max_value=90, allow_nan=False),
+                longitude=st.floats(min_value=-180, max_value=180, allow_nan=False),
+                country=st.text(min_size=1, max_size=30).filter(lambda x: x.strip()),
+                country_code=st.sampled_from(["US", "CA", "MX", "GB", "DE", "FR", "JP", "AU"]),
+                timezone=st.sampled_from(["America/New_York", "Europe/London", "Asia/Tokyo"]),
+            ),
+            min_size=0,
+            max_size=10,
+        )
+    )
+    @settings(max_examples=100, suppress_health_check=[HealthCheck.differing_executors])
+    def test_non_nws_returns_worldwide(self, results: list[GeocodingResult]) -> None:
+        """
+        Verify non-NWS data source returns worldwide locations.
+
+        **Feature: openmeteo-geocoding, Property 6: Non-NWS data source returns worldwide locations**
+        **Validates: Requirements 2.4**
+
+        For any set of geocoding results, when data_source is not "nws",
+        filtering SHALL return all results regardless of country code.
+        """
+        from accessiweather.geocoding import GeocodingService
+
+        service = GeocodingService(data_source="auto")
+        filtered = service._filter_results_by_country(results)
+
+        # All results should be returned
+        assert len(filtered) == len(results)
+        assert filtered == results
+
+
+@pytest.mark.unit
+class TestSuggestionLimitProperty:
+    """
+    Property-based tests for suggestion limits.
+
+    **Feature: openmeteo-geocoding, Property 3: Suggestion count respects limit parameter**
+    """
+
+    @given(limit=st.integers(min_value=1, max_value=20))
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.differing_executors])
+    def test_suggestion_count_respects_limit(self, limit: int) -> None:
+        """
+        Verify suggestion count respects limit parameter.
+
+        **Feature: openmeteo-geocoding, Property 3: Suggestion count respects limit parameter**
+        **Validates: Requirements 2.1**
+
+        For any search query and positive integer limit, suggest_locations()
+        SHALL return at most `limit` results.
+        """
+        from unittest.mock import patch
+
+        from accessiweather.geocoding import GeocodingService
+
+        service = GeocodingService(data_source="auto")
+
+        # Create mock results exceeding the limit
+        mock_results = [
+            GeocodingResult(
+                name=f"City{i}",
+                latitude=40.0 + i,
+                longitude=-74.0 + i,
+                country="United States",
+                country_code="US",
+                timezone="America/New_York",
+            )
+            for i in range(limit * 3)
+        ]
+
+        with patch.object(service.client, "search", return_value=mock_results):
+            suggestions = service.suggest_locations("test", limit=limit)
+            assert len(suggestions) <= limit
+
+
+@pytest.mark.unit
+class TestDisplayNameProperty:
+    """
+    Property-based tests for display name generation.
+
+    **Feature: openmeteo-geocoding, Property 4: Display text contains required components**
+    """
+
+    @given(
+        name=st.text(min_size=1, max_size=30).filter(lambda x: x.strip()),
+        country=st.text(min_size=1, max_size=30).filter(lambda x: x.strip()),
+        admin1=st.one_of(st.none(), st.text(min_size=1, max_size=30).filter(lambda x: x.strip())),
+    )
+    @settings(max_examples=100, suppress_health_check=[HealthCheck.differing_executors])
+    def test_display_name_contains_required_components(
+        self, name: str, country: str, admin1: str | None
+    ) -> None:
+        """
+        Verify display name contains required components.
+
+        **Feature: openmeteo-geocoding, Property 4: Display text contains required components**
+        **Validates: Requirements 2.2**
+
+        For any GeocodingResult with non-null name and country, the display_name
+        property SHALL contain both the name and country.
+        """
+        result = GeocodingResult(
+            name=name,
+            latitude=40.0,
+            longitude=-74.0,
+            country=country,
+            country_code="US",
+            timezone="America/New_York",
+            admin1=admin1,
+        )
+
+        display = result.display_name
+        assert name in display, f"Display name should contain name '{name}'"
+        assert country in display, f"Display name should contain country '{country}'"
+        if admin1:
+            assert admin1 in display, f"Display name should contain admin1 '{admin1}'"
+
+
+@pytest.mark.unit
+class TestCoordinateValidationProperty:
+    """
+    Property-based tests for coordinate validation.
+
+    **Feature: openmeteo-geocoding, Property 7: Coordinate validation bounds check**
+    **Feature: openmeteo-geocoding, Property 8: Non-NWS accepts any valid global coordinates**
+    """
+
+    @given(
+        lat=st.floats(min_value=-90, max_value=90, allow_nan=False, allow_infinity=False),
+        lon=st.floats(min_value=-180, max_value=180, allow_nan=False, allow_infinity=False),
+    )
+    @settings(max_examples=100, suppress_health_check=[HealthCheck.differing_executors])
+    def test_valid_coordinates_accepted_globally(self, lat: float, lon: float) -> None:
+        """
+        Verify valid coordinates are accepted with us_only=False.
+
+        **Feature: openmeteo-geocoding, Property 7: Coordinate validation bounds check**
+        **Validates: Requirements 4.1, 4.2**
+
+        For any latitude and longitude values, validate_coordinates() with
+        us_only=False SHALL return True if and only if -90 <= latitude <= 90
+        AND -180 <= longitude <= 180.
+        """
+        from accessiweather.geocoding import GeocodingService
+
+        service = GeocodingService(data_source="auto")
+        result = service.validate_coordinates(lat, lon, us_only=False)
+        assert result is True
+
+    @given(
+        lat=st.floats(min_value=-90, max_value=90, allow_nan=False, allow_infinity=False),
+        lon=st.floats(min_value=-180, max_value=180, allow_nan=False, allow_infinity=False),
+    )
+    @settings(max_examples=100, suppress_health_check=[HealthCheck.differing_executors])
+    def test_non_nws_accepts_valid_global_coordinates(self, lat: float, lon: float) -> None:
+        """
+        Verify non-NWS accepts any valid global coordinates.
+
+        **Feature: openmeteo-geocoding, Property 8: Non-NWS accepts any valid global coordinates**
+        **Validates: Requirements 4.4**
+
+        For any coordinates within valid bounds (-90 to 90 lat, -180 to 180 lon)
+        and data_source not equal to "nws", validate_coordinates() SHALL return
+        True without performing reverse geocoding.
+        """
+        from accessiweather.geocoding import GeocodingService
+
+        service = GeocodingService(data_source="auto")
+        # With us_only=None, it should use data_source to determine (auto = not us_only)
+        result = service.validate_coordinates(lat, lon)
+        assert result is True

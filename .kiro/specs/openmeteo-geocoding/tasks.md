@@ -34,31 +34,47 @@
     - Handle empty results gracefully
     - _Requirements: 1.1, 1.2, 1.4_
 
-  - [ ] 2.3 Write property test for API response parsing
+
+  - [x] 2.3 Write property test for API response parsing
+
+
+
+
     - **Property 1: API response parsing extracts all required fields**
     - **Validates: Requirements 1.2**
+
   - [ ] 2.4 Implement error handling
     - Raise `OpenMeteoGeocodingApiError` for HTTP 4xx/5xx errors
     - Raise `OpenMeteoGeocodingNetworkError` for timeout/connection errors
     - _Requirements: 3.3, 6.2, 6.3_
-  - [ ] 2.5 Write unit tests for OpenMeteoGeocodingClient
+
+
+  - [x] 2.5 Write unit tests for OpenMeteoGeocodingClient
+
     - Test request construction and parameter handling
     - Test error handling for various HTTP status codes
     - Test retry logic with mocked failures
     - _Requirements: 7.3_
 
-- [ ] 3. Checkpoint - Ensure all tests pass
+
+- [x] 3. Checkpoint - Ensure all tests pass
+
   - Ensure all tests pass, ask the user if questions arise.
+
 
 - [ ] 4. Update GeocodingService to use OpenMeteoGeocodingClient
   - [ ] 4.1 Replace Nominatim with OpenMeteoGeocodingClient
     - Update `__init__` to create `OpenMeteoGeocodingClient` instead of `Nominatim`
     - Remove geopy imports
     - _Requirements: 5.1_
-  - [ ] 4.2 Update geocode_address method
+  - [x] 4.2 Update geocode_address method
+
     - Call `OpenMeteoGeocodingClient.search()` instead of `geolocator.geocode()`
+
+
     - Filter results by country_code when data_source is "nws"
     - Return `(latitude, longitude, display_name)` tuple
+
     - _Requirements: 1.1, 1.3, 1.5_
   - [ ] 4.3 Write property test for NWS filtering
     - **Property 5: NWS data source filters to US-only locations**
