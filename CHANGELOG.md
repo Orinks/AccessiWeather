@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Heading navigation for forecast days - screen readers can now jump between days using heading shortcuts (H key)
 - HTML-based weather display with semantic headings for better accessibility
+- AI model browser - you can now pick specific OpenRouter models instead of just "Auto (Free)" or "Auto (Paid)". Hit "Browse Models..." in the AI tab to search through all available models, filter by free/paid, and see context lengths and pricing
 
 ### Changed
 - Forecast display now uses WebView with semantic HTML for faster rendering and better screen reader support

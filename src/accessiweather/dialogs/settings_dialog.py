@@ -644,6 +644,54 @@ class SettingsDialog:
             preview_text,
         )
 
+    async def _on_select_ai_model(self, widget):
+        """Open the AI model selection dialog."""
+        from .model_selection import show_model_selection_dialog
+
+        # Determine if we should show free models only based on current selection
+        current_model_pref = getattr(self.current_settings, "ai_model_preference", "auto:free")
+        free_only = "free" in current_model_pref.lower() or current_model_pref == "auto:free"
+
+        def on_model_selected(model_id: str):
+            """Handle model selection from the dialog."""
+            # Update the selected model display
+            if hasattr(self, "selected_model_label"):
+                self.selected_model_label.text = model_id
+            # Store the selected model ID for saving
+            self._selected_specific_model = model_id
+            # Update the model selection dropdown to show "Specific Model"
+            if hasattr(self, "ai_model_selection"):
+                # Add "Specific Model" option if not present
+                if "Specific Model" not in self.ai_model_display_to_value:
+                    self.ai_model_display_to_value["Specific Model"] = model_id
+                    self.ai_model_value_to_display[model_id] = "Specific Model"
+                else:
+                    # Update the mapping for the specific model
+                    old_model = self.ai_model_display_to_value.get("Specific Model")
+                    if old_model and old_model in self.ai_model_value_to_display:
+                        del self.ai_model_value_to_display[old_model]
+                    self.ai_model_display_to_value["Specific Model"] = model_id
+                    self.ai_model_value_to_display[model_id] = "Specific Model"
+
+                # Update selection items if needed
+                current_items = (
+                    list(self.ai_model_selection.items) if self.ai_model_selection.items else []
+                )
+                if "Specific Model" not in current_items:
+                    current_items.append("Specific Model")
+                    self.ai_model_selection.items = current_items
+
+                self.ai_model_selection.value = "Specific Model"
+
+        await show_model_selection_dialog(
+            app=self.app,
+            current_model=current_model_pref
+            if current_model_pref not in ("auto:free", "auto")
+            else "",
+            free_only=free_only,
+            on_model_selected=on_model_selected,
+        )
+
     def _initialize_update_info(self):
         settings_operations.initialize_update_info(self)
 

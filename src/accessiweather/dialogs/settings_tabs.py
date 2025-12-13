@@ -1202,30 +1202,43 @@ def create_ai_tab(dialog):
         )
     )
 
+    # Model options:
+    # - "Default Free Model" uses a specific free model (Llama 3.3 70B)
+    # - "Auto Router (Paid)" uses openrouter/auto which picks the best paid model
+    # - "Specific Model" lets user pick any model from the browser
     model_options = [
-        "Auto (Free)",
-        "Auto (Paid - requires API key)",
+        "Default Free Model (Llama 3.3 70B)",
+        "Auto Router (Paid)",
     ]
     dialog.ai_model_display_to_value = {
-        "Auto (Free)": "auto:free",
-        "Auto (Paid - requires API key)": "auto",
+        "Default Free Model (Llama 3.3 70B)": "auto:free",
+        "Auto Router (Paid)": "auto",
     }
     dialog.ai_model_value_to_display = {
         value: key for key, value in dialog.ai_model_display_to_value.items()
     }
 
+    # Check if current model is a specific model (not auto:free or auto)
+    current_model = getattr(dialog.current_settings, "ai_model_preference", "auto:free")
+    if current_model not in ("auto:free", "auto"):
+        # Add "Specific Model" option for custom model selection
+        model_options.append("Specific Model")
+        dialog.ai_model_display_to_value["Specific Model"] = current_model
+        dialog.ai_model_value_to_display[current_model] = "Specific Model"
+        dialog._selected_specific_model = current_model
+
     dialog.ai_model_selection = toga.Selection(
         items=model_options,
-        style=Pack(margin_bottom=15),
+        style=Pack(margin_bottom=5),
         id="ai_model_selection",
     )
     dialog.ai_model_selection.aria_label = "AI model preference"
     dialog.ai_model_selection.aria_description = (
-        "Choose between free models (no API key needed) or paid models (requires API key)."
+        "Choose between the default free model, auto router for paid models, "
+        "or browse to select a specific model."
     )
 
     try:
-        current_model = getattr(dialog.current_settings, "ai_model_preference", "auto:free")
         display_value = dialog.ai_model_value_to_display.get(current_model, "Auto (Free)")
         dialog.ai_model_selection.value = display_value
     except Exception as exc:
@@ -1233,6 +1246,33 @@ def create_ai_tab(dialog):
         dialog.ai_model_selection.value = "Auto (Free)"
 
     ai_box.add(dialog.ai_model_selection)
+
+    # Selected model display (shows specific model ID when selected)
+    model_display_row = toga.Box(style=Pack(direction=ROW, margin_bottom=5))
+
+    dialog.selected_model_label = toga.Label(
+        current_model if current_model not in ("auto:free", "auto") else "",
+        style=Pack(flex=1, font_size=9, padding_top=5),
+    )
+    dialog.selected_model_label.aria_label = "Currently selected model"
+    dialog.selected_model_label.aria_live = "polite"
+    model_display_row.add(dialog.selected_model_label)
+
+    ai_box.add(model_display_row)
+
+    # Select Model button
+    dialog.select_model_button = toga.Button(
+        "Browse Models...",
+        on_press=dialog._on_select_ai_model,
+        style=Pack(margin_bottom=15, width=150),
+        id="select_model_button",
+    )
+    dialog.select_model_button.aria_label = "Browse and select AI model"
+    dialog.select_model_button.aria_description = (
+        "Open a dialog to browse and select from available OpenRouter AI models. "
+        "You can filter by free or paid models and search by name."
+    )
+    ai_box.add(dialog.select_model_button)
 
     # Explanation Style
     ai_box.add(

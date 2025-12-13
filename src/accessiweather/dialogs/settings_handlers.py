@@ -687,6 +687,9 @@ def _collect_ai_settings(dialog, current_settings: AppSettings) -> dict:
         display_value = getattr(dialog.ai_model_selection, "value", None)
         if display_value and hasattr(dialog, "ai_model_display_to_value"):
             model_pref = dialog.ai_model_display_to_value.get(display_value, model_pref)
+            # If "Specific Model" is selected, use the stored specific model ID
+            if display_value == "Specific Model" and hasattr(dialog, "_selected_specific_model"):
+                model_pref = dialog._selected_specific_model
 
     # Explanation style
     style = getattr(current_settings, "ai_explanation_style", "standard")
