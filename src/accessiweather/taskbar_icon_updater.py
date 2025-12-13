@@ -147,10 +147,14 @@ class TaskbarIconUpdater:
         data["temp_f"] = self._format_temp_value(getattr(current, "temperature_f", None), "F")
         data["temp_c"] = self._format_temp_value(getattr(current, "temperature_c", None), "C")
         data["condition"] = getattr(current, "condition", None) or PLACEHOLDER_NA
-        data["humidity"] = self._format_numeric(getattr(current, "relative_humidity", None), "")
+        # Try both humidity field names (model uses 'humidity', some code uses 'relative_humidity')
+        humidity = getattr(current, "humidity", None) or getattr(current, "relative_humidity", None)
+        data["humidity"] = self._format_numeric(humidity, "%")
         data["wind"] = self._format_wind(current)
         data["wind_speed"] = self._format_numeric(getattr(current, "wind_speed", None), " mph")
-        data["wind_dir"] = getattr(current, "wind_direction", None) or PLACEHOLDER_NA
+        # wind_direction can be str ("NW") or int (270 degrees) - ensure it's a string
+        wind_dir = getattr(current, "wind_direction", None)
+        data["wind_dir"] = str(wind_dir) if wind_dir is not None else PLACEHOLDER_NA
         data["pressure"] = self._format_numeric(getattr(current, "pressure", None), " inHg")
         data["feels_like"] = self._format_feels_like(current)
         data["uv"] = self._format_numeric(getattr(current, "uv_index", None), "")
@@ -233,8 +237,9 @@ class TaskbarIconUpdater:
             return PLACEHOLDER_NA
 
         parts = []
-        if direction:
-            parts.append(direction)
+        if direction is not None:
+            # Convert to string - direction can be str ("NW") or int (270 degrees)
+            parts.append(str(direction))
         if speed is not None:
             parts.append(f"at {speed:.0f} mph")
 
