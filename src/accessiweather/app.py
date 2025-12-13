@@ -340,14 +340,12 @@ class AccessiWeatherApp(toga.App):
 
         """
         try:
-            if ai_enabled and not hasattr(self, "explain_weather_button"):
+            has_button = getattr(self, "explain_weather_button", None) is not None
+
+            if ai_enabled and not has_button:
                 # AI was just enabled - add the button
                 self._add_ai_explanation_button()
-            elif (
-                not ai_enabled
-                and hasattr(self, "explain_weather_button")
-                and self.explain_weather_button
-            ):
+            elif not ai_enabled and has_button:
                 # AI was just disabled - remove the button
                 self._remove_ai_explanation_button()
         except Exception as exc:
