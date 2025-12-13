@@ -26,22 +26,10 @@ async def on_settings_pressed(app: AccessiWeatherApp, widget: toga.Button) -> No
         settings_saved = await show_settings_dialog(app)
 
         if settings_saved:
+            # Update location dropdown in case locations changed
             app_helpers.update_location_selection(app)
-            try:
-                config = app.config_manager.get_config()
-                if app._notifier:
-                    app._notifier.sound_enabled = bool(
-                        getattr(config.settings, "sound_enabled", True)
-                    )
-                    app._notifier.soundpack = getattr(config.settings, "sound_pack", "default")
-                if app.alert_notification_system:
-                    alert_settings = config.settings.to_alert_settings()
-                    app.alert_notification_system.update_settings(alert_settings)
-                logger.info("Settings updated successfully and applied to runtime components")
-            except Exception as apply_err:  # pragma: no cover - defensive logging
-                logger.warning(
-                    "Settings saved but failed to apply to runtime components: %s", apply_err
-                )
+            # Note: refresh_runtime_settings() is called by the settings dialog
+            # after saving, so all runtime components are already updated
             logger.info("Settings updated successfully")
 
     except Exception as exc:  # pragma: no cover - defensive logging

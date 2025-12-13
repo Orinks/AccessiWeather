@@ -205,9 +205,13 @@ class AccessiWeatherApp(toga.App):
                 self.weather_client.trend_hours = max(1, int(settings.trend_hours or 24))
                 self.weather_client.air_quality_enabled = bool(settings.air_quality_enabled)
                 self.weather_client.pollen_enabled = bool(settings.pollen_enabled)
+                # Update Visual Crossing API key if changed
+                self.weather_client.visual_crossing_api_key = getattr(
+                    settings, "visual_crossing_api_key", ""
+                )
                 logger.debug("Updated WeatherClient settings")
 
-            # Update WeatherPresenter settings
+            # Update WeatherPresenter settings (handles temperature_unit, etc.)
             if self.presenter:
                 self.presenter.settings = settings
                 logger.debug("Updated WeatherPresenter settings")
@@ -221,7 +225,14 @@ class AccessiWeatherApp(toga.App):
             # Update alert notification system settings
             if self.alert_notification_system:
                 self.alert_notification_system.settings = settings
+                # Also update the alert manager with new alert settings
+                if self.alert_manager:
+                    alert_settings = settings.to_alert_settings()
+                    self.alert_manager.update_settings(alert_settings)
                 logger.debug("Updated AlertNotificationSystem settings")
+
+            # Handle minimize_to_tray toggle (create/destroy system tray)
+            self._update_system_tray_state(settings)
 
             # Update system tray tooltip with current weather data
             if hasattr(self, "status_icon") and self.status_icon:
@@ -235,10 +246,90 @@ class AccessiWeatherApp(toga.App):
             # Update AI explanation button visibility
             self._update_ai_button_visibility(settings.enable_ai_explanations)
 
+            # Update debug logging level
+            self._update_debug_logging(settings)
+
+            # Update weather history service state
+            self._update_weather_history_service(settings)
+
             logger.info("Runtime settings refreshed successfully")
 
         except Exception as exc:
             logger.error(f"Failed to refresh runtime settings: {exc}")
+
+    def _update_system_tray_state(self, settings) -> None:
+        """
+        Create or destroy system tray based on minimize_to_tray setting.
+
+        This allows toggling the system tray without restarting the app.
+        """
+        try:
+            minimize_to_tray = bool(getattr(settings, "minimize_to_tray", False))
+            has_tray = getattr(self, "status_icon", None) is not None
+
+            if minimize_to_tray and not has_tray:
+                # User enabled minimize_to_tray - create system tray
+                logger.info("Creating system tray (minimize_to_tray enabled)")
+                ui_builder.initialize_system_tray(self)
+            elif not minimize_to_tray and has_tray:
+                # User disabled minimize_to_tray - remove system tray
+                logger.info("Removing system tray (minimize_to_tray disabled)")
+                self._remove_system_tray()
+
+        except Exception as exc:
+            logger.warning(f"Failed to update system tray state: {exc}")
+
+    def _remove_system_tray(self) -> None:
+        """Remove the system tray icon and associated commands."""
+        import contextlib
+
+        try:
+            if hasattr(self, "status_icon") and self.status_icon:
+                # Remove from status_icons collection
+                if hasattr(self, "status_icons"):
+                    with contextlib.suppress(Exception):
+                        self.status_icons.discard(self.status_icon)
+                self.status_icon = None
+                self.system_tray_available = False
+                logger.debug("System tray removed")
+        except Exception as exc:
+            logger.warning(f"Error removing system tray: {exc}")
+
+    def _update_debug_logging(self, settings) -> None:
+        """Update logging level based on debug_mode setting."""
+        try:
+            import logging as log_module
+
+            debug_enabled = bool(getattr(settings, "debug_mode", False))
+            log_level = log_module.DEBUG if debug_enabled else log_module.INFO
+
+            root_logger = log_module.getLogger()
+            if root_logger.level != log_level:
+                root_logger.setLevel(log_level)
+                for handler in root_logger.handlers:
+                    handler.setLevel(log_level)
+                logger.debug(f"Logging level set to {'DEBUG' if debug_enabled else 'INFO'}")
+        except Exception as exc:
+            logger.warning(f"Failed to update debug logging: {exc}")
+
+    def _update_weather_history_service(self, settings) -> None:
+        """Enable or disable weather history service based on settings."""
+        try:
+            history_enabled = bool(getattr(settings, "weather_history_enabled", False))
+            has_service = self.weather_history_service is not None
+
+            if history_enabled and not has_service:
+                # Enable weather history
+                from .weather_history import WeatherHistoryService
+
+                self.weather_history_service = WeatherHistoryService()
+                logger.info("Weather history service enabled")
+            elif not history_enabled and has_service:
+                # Disable weather history
+                self.weather_history_service = None
+                logger.info("Weather history service disabled")
+        except Exception as exc:
+            logger.warning(f"Failed to update weather history service: {exc}")
 
     def _update_ai_button_visibility(self, ai_enabled: bool) -> None:
         """
