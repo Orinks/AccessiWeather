@@ -363,15 +363,19 @@ class AccessiWeatherApp(toga.App):
                 )
             )
 
-            # Find the weather box and add the button before the discussion button
-            if hasattr(self, "main_window") and self.main_window and self.main_window.content:
-                weather_box = self._find_weather_box(self.main_window.content)
-                if weather_box and hasattr(self, "discussion_button") and self.discussion_button:
-                    # Insert before discussion button
-                    children = list(weather_box.children)
+            # Use stored weather_box reference for reliable button placement
+            weather_box = getattr(self, "weather_box", None)
+            if weather_box and getattr(self, "discussion_button", None):
+                # Insert before discussion button
+                children = list(weather_box.children)
+                if self.discussion_button in children:
                     discussion_index = children.index(self.discussion_button)
                     weather_box.insert(discussion_index, self.explain_weather_button)
                     logger.info("Added AI explanation button to weather display")
+                else:
+                    # Fallback: add before discussion button position
+                    weather_box.add(self.explain_weather_button)
+                    logger.info("Added AI explanation button (fallback position)")
 
         except Exception as exc:
             logger.warning(f"Failed to add AI explanation button: {exc}")
@@ -379,35 +383,17 @@ class AccessiWeatherApp(toga.App):
     def _remove_ai_explanation_button(self) -> None:
         """Remove the AI explanation button from the weather display."""
         try:
-            if hasattr(self, "explain_weather_button") and self.explain_weather_button:
-                # Find the parent container and remove the button
-                if hasattr(self, "main_window") and self.main_window and self.main_window.content:
-                    weather_box = self._find_weather_box(self.main_window.content)
-                    if weather_box and self.explain_weather_button in weather_box.children:
-                        weather_box.remove(self.explain_weather_button)
-                        logger.info("Removed AI explanation button from weather display")
+            if getattr(self, "explain_weather_button", None):
+                # Use stored weather_box reference
+                weather_box = getattr(self, "weather_box", None)
+                if weather_box and self.explain_weather_button in weather_box.children:
+                    weather_box.remove(self.explain_weather_button)
+                    logger.info("Removed AI explanation button from weather display")
 
                 self.explain_weather_button = None
 
         except Exception as exc:
             logger.warning(f"Failed to remove AI explanation button: {exc}")
-
-    def _find_weather_box(self, container) -> toga.Box | None:
-        """Recursively find the weather display box in the UI hierarchy."""
-        if hasattr(container, "children"):
-            for child in container.children:
-                # Look for the box that contains the discussion button
-                if (
-                    hasattr(child, "children")
-                    and hasattr(self, "discussion_button")
-                    and self.discussion_button in child.children
-                ):
-                    return child
-                # Recursively search child containers
-                result = self._find_weather_box(child)
-                if result:
-                    return result
-        return None
 
 
 def main(config_dir: str | None = None, portable_mode: bool = False):

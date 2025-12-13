@@ -472,6 +472,8 @@ def create_weather_display_section(app: AccessiWeatherApp) -> toga.Box:
     HTML rendering provides better accessibility with semantic headings.
     """
     weather_box = toga.Box(style=Pack(direction=COLUMN, flex=1))
+    # Store reference for dynamic button management (e.g., AI explain button)
+    app.weather_box = weather_box
 
     # Get user preferences for rendering mode
     use_html_conditions = True
