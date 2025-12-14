@@ -282,6 +282,17 @@ class ModelSelectionDialog:
         # Load models
         await self._load_models()
 
+        # Set focus to search input for better UX
+        self._set_focus()
+
+    def _set_focus(self) -> None:
+        """Set focus to the search input field."""
+        try:
+            if hasattr(self.search_input, "focus"):
+                self.search_input.focus()
+        except Exception as e:
+            logger.debug(f"Could not set focus to search input: {e}")
+
     def _on_filter_changed(self, widget: toga.Switch) -> None:
         """Handle free-only filter toggle."""
         self.free_only = widget.value
@@ -374,7 +385,12 @@ class ModelSelectionDialog:
             else:
                 # Show cost per 1M tokens (prompt + completion average)
                 avg_cost = (model.pricing_prompt + model.pricing_completion) / 2
-                cost_display = f"${avg_cost:.4f}" if avg_cost < 0.01 else f"${avg_cost:.2f}"
+                if avg_cost < 0.0001:
+                    cost_display = f"${avg_cost:.2e}"  # Scientific notation for very small costs
+                elif avg_cost < 0.01:
+                    cost_display = f"${avg_cost:.6f}"  # 6 decimals for small costs
+                else:
+                    cost_display = f"${avg_cost:.2f}"
 
             table_data.append(
                 {
