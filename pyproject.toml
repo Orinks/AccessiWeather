@@ -203,6 +203,7 @@ requires = [
     "psutil",
     "keyring",
     "openai>=1.0.0",
+    "requests",
 ]
 test_requires = [
     "pytest>=7.0.0",
