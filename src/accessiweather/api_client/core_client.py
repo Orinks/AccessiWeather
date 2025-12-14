@@ -13,13 +13,7 @@ import time
 import traceback
 from typing import Any
 
-import requests
-
-# For compatibility with different requests versions
-try:
-    from requests.exceptions import JSONDecodeError
-except ImportError:
-    from json import JSONDecodeError
+import httpx
 
 from accessiweather.cache import Cache
 
@@ -159,9 +153,10 @@ class NoaaApiClient(AlertsAndProductsMixin):
                 # concurrent access. Added timeout.
                 try:
                     logger.debug(f"Sending GET request to {request_url}")
-                    response = requests.get(
-                        request_url, headers=self.headers, params=params, timeout=10
-                    )
+                    with httpx.Client() as client:
+                        response = client.get(
+                            request_url, headers=self.headers, params=params, timeout=10
+                        )
                     logger.debug(
                         f"Received response from {request_url} with status code: "
                         f"{response.status_code}"
@@ -221,7 +216,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
 
                     return data  # type: ignore[no-any-return]
 
-                except JSONDecodeError as json_err:
+                except json.JSONDecodeError as json_err:
                     error_msg = f"Failed to parse JSON response from {request_url}: {json_err}"
                     logger.error(error_msg)
                     logger.debug(f"Response content: {response.text[:500]}...")
@@ -232,21 +227,21 @@ class NoaaApiClient(AlertsAndProductsMixin):
                         url=request_url,
                     ) from json_err
 
-        except requests.exceptions.Timeout as timeout_err:
+        except httpx.TimeoutException as timeout_err:
             # Handle timeout errors specifically
             error_msg = f"Request timed out during API request to {request_url}: {timeout_err}"
             logger.error(error_msg)
             raise NoaaApiError(
                 message=error_msg, error_type=NoaaApiError.TIMEOUT_ERROR, url=request_url
             ) from timeout_err
-        except requests.exceptions.ConnectionError as conn_err:
+        except httpx.ConnectError as conn_err:
             # Handle connection errors specifically
             error_msg = f"Connection error during API request to {request_url}: {conn_err}"
             logger.error(error_msg)
             raise NoaaApiError(
                 message=error_msg, error_type=NoaaApiError.CONNECTION_ERROR, url=request_url
             ) from conn_err
-        except requests.exceptions.RequestException as req_err:
+        except httpx.RequestError as req_err:
             # Catch other request exceptions
             error_msg = f"Network error during API request to {request_url}: {req_err}"
             # Log without traceback to avoid cluttering logs with expected errors
