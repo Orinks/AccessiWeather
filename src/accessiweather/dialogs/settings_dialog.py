@@ -590,6 +590,22 @@ class SettingsDialog:
     async def _on_validate_openrouter_api_key(self, widget):
         await settings_operations.validate_openrouter_api_key(self)
 
+    async def _on_select_ai_model(self, widget):
+        """Handle AI model selection button press."""
+        from .model_selection import show_model_selection_dialog
+
+        current_model = getattr(self.current_settings, "ai_model", "openrouter/auto")
+        free_only = not getattr(self.current_settings, "allow_paid_models", False)
+
+        def on_model_selected(model_id: str) -> None:
+            """Update the selected model label when a model is selected."""
+            if hasattr(self, "selected_model_label") and self.selected_model_label:
+                self.selected_model_label.text = model_id
+
+        await show_model_selection_dialog(
+            self.app, current_model, free_only=free_only, on_model_selected=on_model_selected
+        )
+
     async def _on_reset_system_prompt(self, widget):
         """Reset the custom system prompt to default."""
         if hasattr(self, "custom_system_prompt_input"):
