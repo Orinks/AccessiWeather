@@ -192,3 +192,111 @@ async def on_explain_weather_pressed(app: AccessiWeatherApp, widget) -> None:
             error_message = f"Unable to generate explanation.\n\nError: {e}"
             await app.main_window.error_dialog("AI Explanation Error", error_message)
         logger.error(f"Unexpected error generating AI explanation: {e}", exc_info=True)
+
+
+async def generate_ai_explanation(
+    app: AccessiWeatherApp,
+    explanation_text: str,
+    location_name: str,
+    is_weather: bool = True,
+) -> None:
+    """
+    Generate AI explanation for weather or AFD text.
+
+    Args:
+        app: The AccessiWeather application instance
+        explanation_text: The weather data dict or AFD text to explain
+        location_name: The location name for context
+        is_weather: True if explaining weather data (dict), False if AFD text (str)
+
+    """
+    from ..ai_explainer import (
+        AIExplainer,
+        AIExplainerError,
+        ExplanationStyle,
+    )
+    from ..dialogs.explanation_dialog import (
+        ExplanationDialog,
+        LoadingDialog,
+    )
+
+    # Show loading dialog
+    loading_dialog = LoadingDialog(app, location_name)
+    loading_dialog.show()
+
+    try:
+        # Get AI settings
+        settings = app.config_manager.get_settings()
+
+        # Determine model based on settings
+        if settings.ai_model_preference == "auto:free":
+            model = "openrouter/auto:free"
+        elif settings.ai_model_preference == "auto":
+            model = "openrouter/auto"
+        else:
+            model = settings.ai_model_preference
+
+        # Create explainer with custom prompts from settings
+        explainer = AIExplainer(
+            api_key=settings.openrouter_api_key or None,
+            model=model,
+            cache=getattr(app, "ai_explanation_cache", None),
+            custom_system_prompt=getattr(settings, "custom_system_prompt", None),
+            custom_instructions=getattr(settings, "custom_instructions", None),
+        )
+
+        # Determine explanation style
+        style_map = {
+            "brief": ExplanationStyle.BRIEF,
+            "standard": ExplanationStyle.STANDARD,
+            "detailed": ExplanationStyle.DETAILED,
+        }
+        style = style_map.get(settings.ai_explanation_style, ExplanationStyle.STANDARD)
+
+        # Generate explanation based on type
+        if is_weather:
+            # Preserve markdown based on settings
+            preserve_markdown = getattr(settings, "html_render_current_conditions", False)
+            result = await explainer.explain_weather(
+                explanation_text,
+                location_name,
+                style=style,
+                preserve_markdown=preserve_markdown,
+            )
+        else:
+            # For AFD, use detailed style by default
+            result = await explainer.explain_afd(
+                explanation_text,
+                location_name,
+                style=ExplanationStyle.DETAILED,
+            )
+
+        # Check if user cancelled while we were generating
+        if loading_dialog.is_cancelled:
+            logger.info("Explanation generation was cancelled by user")
+            return
+
+        # Close loading dialog
+        loading_dialog.close()
+
+        # Show explanation dialog
+        explanation_dialog = ExplanationDialog(app, result, location_name)
+        explanation_dialog.show()
+
+        logger.info(
+            f"Generated explanation for {location_name} "
+            f"(tokens: {result.token_count}, cached: {result.cached})"
+        )
+
+    except AIExplainerError as e:
+        if not loading_dialog.is_cancelled:
+            loading_dialog.close()
+            await app.main_window.error_dialog("AI Explanation Error", str(e))
+        logger.warning(f"AI explanation error: {e}")
+
+    except Exception as e:
+        if not loading_dialog.is_cancelled:
+            loading_dialog.close()
+            error_message = f"Unable to generate explanation.\n\nError: {e}"
+            await app.main_window.error_dialog("AI Explanation Error", error_message)
+        logger.error(f"Unexpected error generating explanation: {e}", exc_info=True)

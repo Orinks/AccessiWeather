@@ -1125,7 +1125,7 @@ def create_ai_tab(dialog):
     ai_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
     dialog.ai_tab = ai_box
 
-    # Enable AI Explanations toggle
+    # Section header
     ai_box.add(
         toga.Label(
             "AI Weather Explanations",
@@ -1134,23 +1134,11 @@ def create_ai_tab(dialog):
     )
     ai_box.add(
         toga.Label(
-            "Get natural language explanations of weather conditions using AI.",
+            "Get natural language explanations of weather conditions using AI. "
+            "Configure your OpenRouter API key to enable the 'Explain Weather' button.",
             style=Pack(margin_bottom=10, font_size=9),
         )
     )
-
-    dialog.enable_ai_switch = toga.Switch(
-        "Enable AI Explanations",
-        value=getattr(dialog.current_settings, "enable_ai_explanations", False),
-        style=Pack(margin_bottom=15),
-        id="enable_ai_switch",
-    )
-    dialog.enable_ai_switch.aria_label = "Enable AI explanations"
-    dialog.enable_ai_switch.aria_description = (
-        "Turn on AI-powered weather explanations. When enabled, an 'Explain Weather' "
-        "button will appear in the weather display."
-    )
-    ai_box.add(dialog.enable_ai_switch)
 
     # OpenRouter API Key
     ai_box.add(

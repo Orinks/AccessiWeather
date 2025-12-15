@@ -24,7 +24,6 @@ class TestAISettingsConfiguration:
         """Test that AI settings have correct defaults."""
         settings = AppSettings()
 
-        assert settings.enable_ai_explanations is False
         assert settings.openrouter_api_key == ""
         assert settings.ai_model_preference == "auto:free"
         assert settings.ai_explanation_style == "standard"
@@ -33,14 +32,12 @@ class TestAISettingsConfiguration:
     def test_ai_settings_to_dict(self):
         """Test that AI settings are included in to_dict output."""
         settings = AppSettings(
-            enable_ai_explanations=True,
             ai_model_preference="auto",
             ai_explanation_style="detailed",
             ai_cache_ttl=600,
         )
         result = settings.to_dict()
 
-        assert result["enable_ai_explanations"] is True
         assert result["ai_model_preference"] == "auto"
         assert result["ai_explanation_style"] == "detailed"
         assert result["ai_cache_ttl"] == 600
@@ -50,14 +47,12 @@ class TestAISettingsConfiguration:
     def test_ai_settings_from_dict(self):
         """Test that AI settings are correctly loaded from dict."""
         data = {
-            "enable_ai_explanations": True,
             "ai_model_preference": "auto",
             "ai_explanation_style": "brief",
             "ai_cache_ttl": 120,
         }
         settings = AppSettings.from_dict(data)
 
-        assert settings.enable_ai_explanations is True
         assert settings.ai_model_preference == "auto"
         assert settings.ai_explanation_style == "brief"
         assert settings.ai_cache_ttl == 120
@@ -67,7 +62,6 @@ class TestAISettingsConfiguration:
         data = {}
         settings = AppSettings.from_dict(data)
 
-        assert settings.enable_ai_explanations is False
         assert settings.ai_model_preference == "auto:free"
         assert settings.ai_explanation_style == "standard"
         assert settings.ai_cache_ttl == 300
@@ -82,13 +76,12 @@ class TestAISettingsRoundTrip:
     """
 
     @given(
-        enable_ai=st.booleans(),
         model_pref=st.sampled_from(["auto:free", "auto", "gpt-4", "claude-3"]),
         style=st.sampled_from(["brief", "standard", "detailed"]),
         cache_ttl=st.integers(min_value=60, max_value=3600),
     )
     @settings(max_examples=100)
-    def test_settings_round_trip(self, enable_ai, model_pref, style, cache_ttl):
+    def test_settings_round_trip(self, model_pref, style, cache_ttl):
         """
         For any valid AI configuration, saving and loading produces equivalent values.
 
@@ -96,7 +89,6 @@ class TestAISettingsRoundTrip:
         **Validates: Requirements 3.5**
         """
         original = AppSettings(
-            enable_ai_explanations=enable_ai,
             ai_model_preference=model_pref,
             ai_explanation_style=style,
             ai_cache_ttl=cache_ttl,
@@ -106,7 +98,6 @@ class TestAISettingsRoundTrip:
         data = original.to_dict()
         restored = AppSettings.from_dict(data)
 
-        assert restored.enable_ai_explanations == original.enable_ai_explanations
         assert restored.ai_model_preference == original.ai_model_preference
         assert restored.ai_explanation_style == original.ai_explanation_style
         assert restored.ai_cache_ttl == original.ai_cache_ttl
@@ -1056,20 +1047,20 @@ class TestUIComponents:
 
         assert button.text == "Explain Weather"
 
-    @given(enabled=st.booleans())
+    @given(api_key=st.one_of(st.just(""), st.text(min_size=1)))
     @settings(max_examples=50)
-    def test_button_visibility_property(self, enabled):
+    def test_button_visibility_property(self, api_key):
         """
-        For any AI enablement state, button visibility matches setting.
+        For any API key state, button visibility matches API key presence.
 
-        **Feature: ai-weather-explanations, Property 1: Button visibility follows AI enablement setting**
+        **Feature: ai-weather-explanations, Property 1: Button visibility follows API key presence**
         **Validates: Requirements 1.1, 1.5**
         """
-        from accessiweather.ai_explainer import should_show_explain_button
+        from accessiweather.ai_explainer import has_valid_api_key
 
-        result = should_show_explain_button(ai_enabled=enabled)
+        result = has_valid_api_key(api_key)
 
-        assert result == enabled
+        assert result == bool(api_key and api_key.strip())
 
 
 class TestExplanationDialog:
@@ -1415,26 +1406,26 @@ class TestForecastDiscussionDialog:
 
         mock_app = mocker.MagicMock()
         mock_settings = mocker.MagicMock()
-        mock_settings.enable_ai_explanations = True
+        mock_settings.openrouter_api_key = "test-api-key"
         mock_config = mocker.MagicMock()
         mock_config.settings = mock_settings
         mock_app.config_manager.get_config.return_value = mock_config
 
         dialog = ForecastDiscussionDialog(mock_app, "Sample text", "Denver, CO")
 
-        assert dialog._is_ai_enabled() is True
+        assert dialog._has_api_key() is True
 
     def test_ai_disabled_check(self, mocker):
-        """Test that dialog correctly detects when AI is disabled."""
+        """Test that dialog correctly detects when API key is not configured."""
         from accessiweather.dialogs.discussion import ForecastDiscussionDialog
 
         mock_app = mocker.MagicMock()
         mock_settings = mocker.MagicMock()
-        mock_settings.enable_ai_explanations = False
+        mock_settings.openrouter_api_key = ""
         mock_config = mocker.MagicMock()
         mock_config.settings = mock_settings
         mock_app.config_manager.get_config.return_value = mock_config
 
         dialog = ForecastDiscussionDialog(mock_app, "Sample text", "Denver, CO")
 
-        assert dialog._is_ai_enabled() is False
+        assert dialog._has_api_key() is False
