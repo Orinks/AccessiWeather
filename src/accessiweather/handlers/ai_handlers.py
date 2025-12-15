@@ -60,9 +60,7 @@ async def on_explain_weather_pressed(app: AccessiWeatherApp, widget) -> None:
         settings = app.config_manager.get_settings()
 
         # Determine model based on settings
-        if settings.ai_model_preference == "auto:free":
-            model = "openrouter/auto:free"
-        elif settings.ai_model_preference == "auto":
+        if settings.ai_model_preference == "auto":
             model = "openrouter/auto"
         else:
             model = settings.ai_model_preference
@@ -229,9 +227,7 @@ async def generate_ai_explanation(
         settings = app.config_manager.get_settings()
 
         # Determine model based on settings
-        if settings.ai_model_preference == "auto:free":
-            model = "openrouter/auto:free"
-        elif settings.ai_model_preference == "auto":
+        if settings.ai_model_preference == "auto":
             model = "openrouter/auto"
         else:
             model = settings.ai_model_preference

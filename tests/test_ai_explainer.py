@@ -25,7 +25,7 @@ class TestAISettingsConfiguration:
         settings = AppSettings()
 
         assert settings.openrouter_api_key == ""
-        assert settings.ai_model_preference == "auto:free"
+        assert settings.ai_model_preference == "meta-llama/llama-3.3-70b-instruct:free"
         assert settings.ai_explanation_style == "standard"
         assert settings.ai_cache_ttl == 300
 
@@ -62,7 +62,7 @@ class TestAISettingsConfiguration:
         data = {}
         settings = AppSettings.from_dict(data)
 
-        assert settings.ai_model_preference == "auto:free"
+        assert settings.ai_model_preference == "meta-llama/llama-3.3-70b-instruct:free"
         assert settings.ai_explanation_style == "standard"
         assert settings.ai_cache_ttl == 300
 
@@ -76,7 +76,9 @@ class TestAISettingsRoundTrip:
     """
 
     @given(
-        model_pref=st.sampled_from(["auto:free", "auto", "gpt-4", "claude-3"]),
+        model_pref=st.sampled_from(
+            ["meta-llama/llama-3.3-70b-instruct:free", "auto", "gpt-4", "claude-3"]
+        ),
         style=st.sampled_from(["brief", "standard", "detailed"]),
         cache_ttl=st.integers(min_value=60, max_value=3600),
     )

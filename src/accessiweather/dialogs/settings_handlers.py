@@ -258,13 +258,22 @@ def _apply_ai_settings(dialog, settings):
 
     # Model preference
     if getattr(dialog, "ai_model_selection", None) is not None:
-        model_pref = getattr(settings, "ai_model_preference", "auto:free")
+        model_pref = getattr(
+            settings, "ai_model_preference", "meta-llama/llama-3.3-70b-instruct:free"
+        )
         if hasattr(dialog, "ai_model_value_to_display"):
-            display_value = dialog.ai_model_value_to_display.get(model_pref, "Auto (Free)")
+            display_value = dialog.ai_model_value_to_display.get(model_pref, "Llama 3.3 70B (Free)")
             try:
                 dialog.ai_model_selection.value = display_value
             except Exception as exc:
                 logger.debug("%s: Failed to set AI model selection: %s", LOG_PREFIX, exc)
+        # Update selected model label
+        if hasattr(dialog, "selected_model_label"):
+            dialog.selected_model_label.value = (
+                model_pref
+                if model_pref not in ("meta-llama/llama-3.3-70b-instruct:free", "auto")
+                else ""
+            )
 
     # Explanation style
     if getattr(dialog, "ai_style_selection", None) is not None:
