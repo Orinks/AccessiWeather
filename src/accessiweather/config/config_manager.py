@@ -139,15 +139,33 @@ class ConfigManager:
                 logger.debug(f"Failed to load {key} from secure storage: {exc}")
 
     def save_config(self) -> bool:
-        """Save configuration to file."""
+        """
+        Save configuration to file using atomic write.
+
+        Uses write-to-temp + fsync + atomic rename pattern to prevent
+        data loss if the app crashes mid-write.
+        """
         if self._config is None:
             logger.warning("No config to save")
             return False
 
         try:
             logger.info(f"Saving config to {self.config_file}")
-            with open(self.config_file, "w", encoding="utf-8") as f:
-                json.dump(self._config.to_dict(), f, indent=2, ensure_ascii=False)
+
+            # Ensure parent directory exists
+            self.config_file.parent.mkdir(parents=True, exist_ok=True)
+
+            # Atomic write: write to temp file, fsync, then rename
+            tmp_file = self.config_file.with_suffix(self.config_file.suffix + ".tmp")
+            payload = json.dumps(self._config.to_dict(), indent=2, ensure_ascii=False)
+
+            with open(tmp_file, "w", encoding="utf-8", newline="\n") as f:
+                f.write(payload)
+                f.flush()
+                os.fsync(f.fileno())
+
+            # Atomic rename (same filesystem)
+            os.replace(tmp_file, self.config_file)
 
             # Restrict permissions on POSIX systems
             try:
@@ -161,6 +179,13 @@ class ConfigManager:
 
         except Exception as e:
             logger.error(f"Failed to save config: {e}")
+            # Clean up temp file if it exists
+            try:
+                tmp_file = self.config_file.with_suffix(self.config_file.suffix + ".tmp")
+                if tmp_file.exists():
+                    tmp_file.unlink()
+            except Exception:
+                pass
             return False
 
     def get_config(self) -> AppConfig:

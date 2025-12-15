@@ -78,13 +78,13 @@ jobs:
             exit 0
           fi
 
-          # Check for meaningful changes in src/ directory
-          if git diff --quiet "$LAST_NIGHTLY_TAG"..HEAD -- src/; then
-            echo "No changes in src/ since last nightly."
+          # Check for meaningful changes in src/ or pyproject.toml
+          if git diff --quiet "$LAST_NIGHTLY_TAG"..HEAD -- src/ pyproject.toml; then
+            echo "No changes in src/ or pyproject.toml since last nightly."
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
-            echo "Changes detected in src/ since last nightly."
-            git --no-pager diff --stat "$LAST_NIGHTLY_TAG"..HEAD -- src/ | tail -20
+            echo "Changes detected in src/ or pyproject.toml since last nightly."
+            git --no-pager diff --stat "$LAST_NIGHTLY_TAG"..HEAD -- src/ pyproject.toml | tail -20
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 

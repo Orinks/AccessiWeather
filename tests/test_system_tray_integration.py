@@ -510,3 +510,205 @@ class TestLocationChanges:
 
         assert "72F/22C" in app.status_icon.text
         assert "Sunny" in app.status_icon.text
+
+
+class TestPlatformSpecificTooltipSetting:
+    """Test platform-specific tooltip setting via _set_status_icon_text."""
+
+    def test_windows_platform_sets_text_property(self, monkeypatch):
+        """Should set .Text property on Windows (sys.platform == 'win32')."""
+        from accessiweather.ui_builder import _set_status_icon_text
+
+        monkeypatch.setattr("sys.platform", "win32")
+
+        # Create real objects to avoid Mock detection
+        class FakeNotifyIcon:
+            Text = "Old Text"
+
+        class FakeImpl:
+            native = FakeNotifyIcon()
+
+        class FakeStatusIcon:
+            _impl = FakeImpl()
+            _text = "Old"
+
+        status_icon = FakeStatusIcon()
+
+        result = _set_status_icon_text(status_icon, "New Weather: 72F Sunny")
+
+        assert result is True
+        assert status_icon._impl.native.Text == "New Weather: 72F Sunny"
+
+    def test_macos_platform_sets_tooltip(self, monkeypatch):
+        """Should set button.toolTip on macOS (sys.platform == 'darwin')."""
+        from accessiweather.ui_builder import _set_status_icon_text
+
+        monkeypatch.setattr("sys.platform", "darwin")
+
+        # Create real objects to avoid Mock detection
+        class FakeButton:
+            toolTip = "Old Tooltip"
+
+        class FakeNSStatusItem:
+            button = FakeButton()
+
+        class FakeImpl:
+            native = FakeNSStatusItem()
+
+        class FakeStatusIcon:
+            _impl = FakeImpl()
+            _text = "Old"
+
+        status_icon = FakeStatusIcon()
+
+        result = _set_status_icon_text(status_icon, "New Weather: 72F Sunny")
+
+        assert result is True
+        assert status_icon._impl.native.button.toolTip == "New Weather: 72F Sunny"
+
+    def test_linux_platform_with_gtk_method(self, monkeypatch):
+        """Should use set_tooltip_text on Linux/GTK."""
+        from accessiweather.ui_builder import _set_status_icon_text
+
+        monkeypatch.setattr("sys.platform", "linux")
+
+        # Create real objects to avoid Mock detection
+        class FakeGtkStatusIcon:
+            tooltip_text = None
+
+            def set_tooltip_text(self, text):
+                self.tooltip_text = text
+
+        class FakeImpl:
+            native = FakeGtkStatusIcon()
+
+        class FakeStatusIcon:
+            _impl = FakeImpl()
+            _text = "Old"
+
+        status_icon = FakeStatusIcon()
+
+        result = _set_status_icon_text(status_icon, "New Weather: 72F Sunny")
+
+        assert result is True
+        assert status_icon._impl.native.tooltip_text == "New Weather: 72F Sunny"
+
+    def test_returns_false_when_no_impl(self):
+        """Should return False when status_icon has no _impl."""
+        from accessiweather.ui_builder import _set_status_icon_text
+
+        status_icon = MagicMock(spec=[])  # No _impl attribute
+
+        result = _set_status_icon_text(status_icon, "Test")
+
+        assert result is False
+
+    def test_returns_false_when_no_native(self):
+        """Should return False when _impl has no native."""
+        from accessiweather.ui_builder import _set_status_icon_text
+
+        status_icon = MagicMock()
+        status_icon._impl = MagicMock(spec=[])  # No native attribute
+
+        result = _set_status_icon_text(status_icon, "Test")
+
+        assert result is False
+
+    def test_skips_mock_objects(self):
+        """Should return False for Mock objects (test environment)."""
+        from accessiweather.ui_builder import _set_status_icon_text
+
+        status_icon = MagicMock()
+        # MagicMock's type name contains "Mock"
+        status_icon._impl = MagicMock()
+        status_icon._impl.native = MagicMock()
+
+        result = _set_status_icon_text(status_icon, "Test")
+
+        assert result is False
+
+    def test_updates_internal_text_attribute(self, monkeypatch):
+        """Should update _text attribute if it exists."""
+        from accessiweather.ui_builder import _set_status_icon_text
+
+        monkeypatch.setattr("sys.platform", "win32")
+
+        status_icon = MagicMock()
+        status_icon._text = "Old"
+
+        # Create a real object (not Mock) for native to avoid Mock detection
+        class FakeNotifyIcon:
+            Text = "Old"
+
+        native = FakeNotifyIcon()
+        status_icon._impl = MagicMock()
+        status_icon._impl.native = native
+
+        result = _set_status_icon_text(status_icon, "New Weather")
+
+        assert result is True
+        assert status_icon._text == "New Weather"
+
+    def test_handles_exception_gracefully(self, monkeypatch):
+        """Should handle exceptions and return False."""
+        from accessiweather.ui_builder import _set_status_icon_text
+
+        monkeypatch.setattr("sys.platform", "win32")
+
+        status_icon = MagicMock()
+
+        # Create object that raises on Text assignment
+        class BrokenNotifyIcon:
+            @property
+            def Text(self):
+                return "Old"
+
+            @Text.setter
+            def Text(self, value):
+                raise RuntimeError("Simulated failure")
+
+        native = BrokenNotifyIcon()
+        status_icon._impl = MagicMock()
+        status_icon._impl.native = native
+
+        result = _set_status_icon_text(status_icon, "Test")
+
+        assert result is False
+
+    def test_windows_without_text_attribute(self, monkeypatch):
+        """Should return False on Windows if native has no Text attribute."""
+        from accessiweather.ui_builder import _set_status_icon_text
+
+        monkeypatch.setattr("sys.platform", "win32")
+
+        status_icon = MagicMock()
+
+        class NoTextObject:
+            pass
+
+        native = NoTextObject()
+        status_icon._impl = MagicMock()
+        status_icon._impl.native = native
+
+        result = _set_status_icon_text(status_icon, "Test")
+
+        assert result is False
+
+    def test_macos_without_button_tooltip(self, monkeypatch):
+        """Should return False on macOS if native has no button.toolTip."""
+        from accessiweather.ui_builder import _set_status_icon_text
+
+        monkeypatch.setattr("sys.platform", "darwin")
+
+        status_icon = MagicMock()
+
+        class NoButtonObject:
+            pass
+
+        native = NoButtonObject()
+        status_icon._impl = MagicMock()
+        status_icon._impl.native = native
+
+        result = _set_status_icon_text(status_icon, "Test")
+
+        assert result is False

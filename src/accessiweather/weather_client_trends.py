@@ -155,14 +155,22 @@ def period_for_hours_ahead(
     if not periods:
         return None
 
-    target = normalize_datetime(datetime.now()) + timedelta(hours=hours_ahead)
+    target = normalize_datetime(datetime.now())
+    if target is None:
+        return None
+    target = target + timedelta(hours=hours_ahead)
+
     closest = None
     best_delta = None
     for period in periods:
         start = normalize_datetime(period.start_time)
         if start is None:
             continue
-        delta = abs((start - target).total_seconds())
+        try:
+            delta = abs((start - target).total_seconds())
+        except TypeError:
+            # Skip if datetime comparison fails (e.g., mixed naive/aware)
+            continue
         if best_delta is None or delta < best_delta:
             closest = period
             best_delta = delta
@@ -170,12 +178,22 @@ def period_for_hours_ahead(
 
 
 def normalize_datetime(value: datetime | None) -> datetime | None:
-    """Normalize datetimes by removing timezone information when present."""
+    """
+    Normalize datetimes to naive local time for comparison.
+
+    This ensures all datetime comparisons use naive local datetimes,
+    avoiding "can't subtract offset-naive and offset-aware datetimes" errors.
+    """
     if value is None:
         return None
-    if value.tzinfo is None:
-        return value
-    return value.astimezone().replace(tzinfo=None)
+    try:
+        if value.tzinfo is None:
+            return value
+        # Convert timezone-aware datetime to local time, then strip timezone
+        return value.astimezone().replace(tzinfo=None)
+    except Exception:
+        # If conversion fails for any reason, return None to skip this value
+        return None
 
 
 def compute_daily_trend(weather_data: WeatherData) -> TrendInsight | None:

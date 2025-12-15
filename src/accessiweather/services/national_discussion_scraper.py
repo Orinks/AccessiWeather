@@ -11,7 +11,7 @@ import logging
 import time
 from typing import Any
 
-import requests
+import httpx
 from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
@@ -110,16 +110,17 @@ class NationalDiscussionScraper:
             logger.debug(
                 f"Requesting URL: {url} (attempt {retry_count + 1}/{self.max_retries + 1})"
             )
-            response = requests.get(url, headers=self.headers, timeout=self.timeout)
-            response.raise_for_status()
+            with httpx.Client() as client:
+                response = client.get(url, headers=self.headers, timeout=self.timeout)
+                response.raise_for_status()
             return {"success": True, "text": response.text, "status_code": response.status_code}
-        except requests.exceptions.Timeout:
+        except httpx.TimeoutException:
             logger.warning(f"Request timeout for {url}")
             return {"success": False, "error": "Request timed out", "error_type": "timeout"}
-        except requests.exceptions.ConnectionError:
+        except httpx.ConnectError:
             logger.warning(f"Connection error for {url}")
             return {"success": False, "error": "Connection error", "error_type": "connection"}
-        except requests.exceptions.HTTPError as e:
+        except httpx.HTTPStatusError as e:
             logger.warning(f"HTTP error for {url}: {e}")
             return {
                 "success": False,
@@ -127,10 +128,10 @@ class NationalDiscussionScraper:
                 "error_type": "http",
                 "status_code": e.response.status_code if hasattr(e, "response") else None,
             }
-        except requests.exceptions.TooManyRedirects:
+        except httpx.RedirectError:
             logger.warning(f"Too many redirects for {url}")
             return {"success": False, "error": "Too many redirects", "error_type": "redirects"}
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             logger.warning(f"Request exception for {url}: {e}")
             return {"success": False, "error": f"Request error: {e}", "error_type": "request"}
 
@@ -406,7 +407,7 @@ def fetch_wpc_short_range():
         if result.get("full"):
             return result["full"]
         return "No discussion found. (WPC)"
-    except requests.exceptions.RequestException as e:
+    except httpx.RequestError as e:
         # For test compatibility with the request error test
         logger.error(f"Request exception in fetch_wpc_short_range: {e}")
         return "Error fetching WPC discussion."
@@ -432,7 +433,7 @@ def fetch_spc_day1():
         if result.get("full"):
             return result["full"]
         return "No discussion found. (SPC)"
-    except requests.exceptions.RequestException as e:
+    except httpx.RequestError as e:
         # For test compatibility with the request error test
         logger.error(f"Request exception in fetch_spc_day1: {e}")
         return "Error fetching SPC discussion."

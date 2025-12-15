@@ -146,9 +146,22 @@ class AlertAggregator:
 
         # Check onset time proximity
         if alert1.onset and alert2.onset:
-            time_diff = abs((alert1.onset - alert2.onset).total_seconds())
-            if time_diff > self.dedup_time_window.total_seconds():
-                return False
+            try:
+                # Normalize both datetimes to avoid naive/aware comparison errors
+                onset1 = alert1.onset
+                onset2 = alert2.onset
+                # If one is aware and one is naive, convert both to naive local time
+                if (onset1.tzinfo is None) != (onset2.tzinfo is None):
+                    if onset1.tzinfo is not None:
+                        onset1 = onset1.astimezone().replace(tzinfo=None)
+                    if onset2.tzinfo is not None:
+                        onset2 = onset2.astimezone().replace(tzinfo=None)
+                time_diff = abs((onset1 - onset2).total_seconds())
+                if time_diff > self.dedup_time_window.total_seconds():
+                    return False
+            except (TypeError, ValueError):
+                # If datetime comparison fails, skip this check
+                pass
 
         return True
 

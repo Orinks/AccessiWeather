@@ -487,8 +487,14 @@ class WeatherClient:
         """
         logger.info(f"Using smart auto source for {location.name}")
 
-        # Initialize components
-        config = SourcePriorityConfig()
+        # Initialize components with user's source priority settings
+        us_priority = getattr(
+            self.settings, "source_priority_us", ["nws", "openmeteo", "visualcrossing"]
+        )
+        intl_priority = getattr(
+            self.settings, "source_priority_international", ["openmeteo", "visualcrossing"]
+        )
+        config = SourcePriorityConfig(us_default=us_priority, international_default=intl_priority)
         coordinator = ParallelFetchCoordinator(timeout=5.0)
         fusion_engine = DataFusionEngine(config)
         alert_aggregator = AlertAggregator()

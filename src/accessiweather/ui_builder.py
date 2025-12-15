@@ -268,8 +268,8 @@ def _set_status_icon_text(status_icon: toga.MenuStatusIcon, text: str) -> bool:
     directly accesses the native control to update the tooltip text.
 
     Supported platforms:
-    - Windows: Sets NotifyIcon.Text
-    - macOS: Sets NSStatusItem.button.toolTip
+    - Windows (sys.platform == 'win32'): Sets NotifyIcon.Text via WinForms
+    - macOS (sys.platform == 'darwin'): Sets NSStatusItem.button.toolTip
 
     Args:
         status_icon: The Toga MenuStatusIcon instance
@@ -279,30 +279,90 @@ def _set_status_icon_text(status_icon: toga.MenuStatusIcon, text: str) -> bool:
         True if successfully set, False otherwise
 
     """
+    import sys
+
     try:
         impl = getattr(status_icon, "_impl", None)
         if impl is None:
+            logger.debug("Status icon has no _impl attribute")
             return False
         native = getattr(impl, "native", None)
         if native is None:
+            logger.debug("Status icon impl has no native attribute")
             return False
         type_name = type(native).__name__
 
+        # Skip mock objects in tests
         if "Mock" in type_name:
             return False
 
-        if "NotifyIcon" in type_name:
-            native.Text = text
-        elif hasattr(native, "button") and hasattr(native.button, "toolTip"):
-            native.button.toolTip = text
-        else:
-            return False
+        # Log the native object type for debugging
+        logger.debug("Native status icon type: %s on platform %s", type_name, sys.platform)
 
+        # Use sys.platform for reliable platform detection
+        # sys.platform returns 'win32' on both 32-bit and 64-bit Windows
+        if sys.platform == "win32":
+            # Windows: Toga uses WinForms NotifyIcon
+            # The native object should have a .Text property for the tooltip
+            if hasattr(native, "Text"):
+                old_text = native.Text
+                native.Text = text
+                logger.info(
+                    "Updated Windows NotifyIcon.Text: '%s' -> '%s'",
+                    old_text[:30] if old_text else "(empty)",
+                    text[:30] if text else "(empty)",
+                )
+
+                # On Windows 11, sometimes the tooltip doesn't update visually
+                # until the icon is "refreshed". Try toggling visibility or
+                # re-setting the icon to force a refresh.
+                if hasattr(native, "Visible"):
+                    # Force Windows to recognize the change by briefly toggling
+                    # This is a workaround for Windows 11 tooltip caching
+                    try:
+                        current_icon = native.Icon
+                        if current_icon is not None:
+                            # Re-set the icon to force Windows to refresh the tooltip
+                            native.Icon = current_icon
+                            logger.debug("Refreshed icon to force tooltip update")
+                    except Exception as refresh_exc:
+                        logger.debug("Icon refresh failed (non-critical): %s", refresh_exc)
+            else:
+                logger.debug("Windows native object (%s) has no Text attribute", type_name)
+                return False
+        elif sys.platform == "darwin":
+            # macOS: Toga uses NSStatusItem
+            # The tooltip is set via button.toolTip
+            if hasattr(native, "button") and hasattr(native.button, "toolTip"):
+                native.button.toolTip = text
+                logger.debug("Set macOS NSStatusItem tooltip to: %s", text[:50])
+            else:
+                logger.debug("macOS native object (%s) has no button.toolTip", type_name)
+                return False
+        else:
+            # Linux/other platforms - try generic approaches
+            # GTK/XApp status icons may have different APIs
+            if hasattr(native, "set_tooltip_text"):
+                native.set_tooltip_text(text)
+                logger.debug("Set GTK tooltip via set_tooltip_text: %s", text[:50])
+            elif hasattr(native, "Text"):
+                # Fallback to .Text if available
+                native.Text = text
+                logger.debug("Set tooltip via .Text fallback: %s", text[:50])
+            else:
+                logger.debug(
+                    "Platform %s: native object (%s) has no known tooltip API",
+                    sys.platform,
+                    type_name,
+                )
+                return False
+
+        # Update Toga's internal _text attribute if it exists
         if hasattr(status_icon, "_text"):
             status_icon._text = text
         return True
     except Exception as exc:
-        logger.debug("Failed to set native status icon text: %s", exc)
+        logger.warning("Failed to set native status icon text: %s", exc, exc_info=True)
     return False
 
 
@@ -311,6 +371,10 @@ def update_tray_icon_tooltip(
 ) -> None:
     """
     Update the system tray icon tooltip with weather information.
+
+    Uses platform-specific methods to update the tooltip text on the system tray icon.
+    On Windows (sys.platform == 'win32'), this updates the NotifyIcon.Text property.
+    On macOS (sys.platform == 'darwin'), this updates NSStatusItem.button.toolTip.
 
     Args:
         app: The AccessiWeather application instance
@@ -326,6 +390,14 @@ def update_tray_icon_tooltip(
     try:
         settings = app.config_manager.get_settings()
 
+        # Log settings for debugging
+        logger.debug(
+            "Tooltip settings: text_enabled=%s, dynamic_enabled=%s, format='%s'",
+            settings.taskbar_icon_text_enabled,
+            settings.taskbar_icon_dynamic_enabled,
+            settings.taskbar_icon_text_format,
+        )
+
         from .taskbar_icon_updater import TaskbarIconUpdater
 
         updater = TaskbarIconUpdater(
@@ -339,9 +411,19 @@ def update_tray_icon_tooltip(
         location_name = location.name if location else None
 
         tooltip_text = updater.format_tooltip(weather_data, location_name)
+        logger.debug(
+            "Formatted tooltip text: '%s'", tooltip_text[:50] if tooltip_text else "(empty)"
+        )
 
+        # Try native method first, fall back to Toga's text property
         if not _set_status_icon_text(app.status_icon, tooltip_text):
-            app.status_icon.text = tooltip_text
+            # Toga's text property may be read-only after creation on some backends
+            # but we try it as a fallback
+            try:
+                app.status_icon.text = tooltip_text
+                logger.debug("Set tooltip via Toga text property: %s", tooltip_text[:50])
+            except AttributeError:
+                logger.debug("Toga text property is read-only, native method also failed")
 
     except Exception as exc:
         logger.debug("Failed to update tray icon tooltip: %s", exc)
@@ -472,6 +554,8 @@ def create_weather_display_section(app: AccessiWeatherApp) -> toga.Box:
     HTML rendering provides better accessibility with semantic headings.
     """
     weather_box = toga.Box(style=Pack(direction=COLUMN, flex=1))
+    # Store reference for dynamic button management (e.g., AI explain button)
+    app.weather_box = weather_box
 
     # Get user preferences for rendering mode
     use_html_conditions = True
