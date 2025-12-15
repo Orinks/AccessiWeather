@@ -626,10 +626,11 @@ def create_weather_display_section(app: AccessiWeatherApp) -> toga.Box:
         app.forecast_container = None
         app.forecast_scroll = None
 
-    # Add "Explain Weather" button if AI explanations are enabled
+    # Add "Explain Weather" button if API key is configured
     try:
         config = app.config_manager.get_config()
-        if config.settings.enable_ai_explanations:
+        api_key = getattr(config.settings, "openrouter_api_key", "")
+        if api_key and api_key.strip():
             from .ai_explainer import create_explain_weather_button
             from .handlers.ai_handlers import on_explain_weather_pressed
 

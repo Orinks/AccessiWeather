@@ -233,31 +233,32 @@ class AccessiWeatherApp(toga.App):
                 self.ai_explanation_cache.default_ttl = ai_cache_ttl
 
             # Update AI explanation button visibility
-            self._update_ai_button_visibility(settings.enable_ai_explanations)
+            api_key = getattr(settings, "openrouter_api_key", "")
+            self._update_ai_button_visibility(bool(api_key and api_key.strip()))
 
             logger.info("Runtime settings refreshed successfully")
 
         except Exception as exc:
             logger.error(f"Failed to refresh runtime settings: {exc}")
 
-    def _update_ai_button_visibility(self, ai_enabled: bool) -> None:
+    def _update_ai_button_visibility(self, has_api_key: bool) -> None:
         """
-        Update the visibility of the AI explanation button based on settings.
+        Update the visibility of the AI explanation button based on API key.
 
         Args:
-            ai_enabled: Whether AI explanations are enabled in settings
+            has_api_key: Whether a valid API key is configured
 
         """
         try:
-            if ai_enabled and not hasattr(self, "explain_weather_button"):
-                # AI was just enabled - add the button
+            if has_api_key and not hasattr(self, "explain_weather_button"):
+                # API key was just configured - add the button
                 self._add_ai_explanation_button()
             elif (
-                not ai_enabled
+                not has_api_key
                 and hasattr(self, "explain_weather_button")
                 and self.explain_weather_button
             ):
-                # AI was just disabled - remove the button
+                # API key was just removed - remove the button
                 self._remove_ai_explanation_button()
         except Exception as exc:
             logger.warning(f"Failed to update AI button visibility: {exc}")

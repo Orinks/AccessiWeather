@@ -252,23 +252,28 @@ def _apply_alert_notification_settings(dialog, settings):
 
 def _apply_ai_settings(dialog, settings):
     """Apply AI explanation settings to UI widgets."""
-    # Enable AI explanations switch
-    if getattr(dialog, "enable_ai_switch", None) is not None:
-        dialog.enable_ai_switch.value = getattr(settings, "enable_ai_explanations", False)
-
     # OpenRouter API key
     if getattr(dialog, "openrouter_api_key_input", None) is not None:
         dialog.openrouter_api_key_input.value = getattr(settings, "openrouter_api_key", "") or ""
 
     # Model preference
     if getattr(dialog, "ai_model_selection", None) is not None:
-        model_pref = getattr(settings, "ai_model_preference", "auto:free")
+        model_pref = getattr(
+            settings, "ai_model_preference", "meta-llama/llama-3.3-70b-instruct:free"
+        )
         if hasattr(dialog, "ai_model_value_to_display"):
-            display_value = dialog.ai_model_value_to_display.get(model_pref, "Auto (Free)")
+            display_value = dialog.ai_model_value_to_display.get(model_pref, "Llama 3.3 70B (Free)")
             try:
                 dialog.ai_model_selection.value = display_value
             except Exception as exc:
                 logger.debug("%s: Failed to set AI model selection: %s", LOG_PREFIX, exc)
+        # Update selected model label
+        if hasattr(dialog, "selected_model_label"):
+            dialog.selected_model_label.value = (
+                model_pref
+                if model_pref not in ("meta-llama/llama-3.3-70b-instruct:free", "auto")
+                else ""
+            )
 
     # Explanation style
     if getattr(dialog, "ai_style_selection", None) is not None:
@@ -671,11 +676,6 @@ def _collect_alert_settings(dialog, current_settings):
 
 def _collect_ai_settings(dialog, current_settings: AppSettings) -> dict:
     """Collect AI explanation settings from dialog widgets."""
-    # Enable AI explanations
-    enable_ai = getattr(current_settings, "enable_ai_explanations", False)
-    if hasattr(dialog, "enable_ai_switch"):
-        enable_ai = getattr(dialog.enable_ai_switch, "value", enable_ai)
-
     # OpenRouter API key
     api_key = getattr(current_settings, "openrouter_api_key", "")
     if hasattr(dialog, "openrouter_api_key_input"):
@@ -711,7 +711,6 @@ def _collect_ai_settings(dialog, current_settings: AppSettings) -> dict:
         custom_instructions = value.strip() if value.strip() else None
 
     return {
-        "enable_ai_explanations": enable_ai,
         "openrouter_api_key": api_key,
         "ai_model_preference": model_pref,
         "ai_explanation_style": style,
@@ -798,7 +797,6 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         taskbar_icon_dynamic_enabled=display["taskbar_icon_dynamic_enabled"],
         taskbar_icon_text_format=display["taskbar_icon_text_format"],
         # AI explanation settings
-        enable_ai_explanations=ai["enable_ai_explanations"],
         openrouter_api_key=ai["openrouter_api_key"],
         ai_model_preference=ai["ai_model_preference"],
         ai_explanation_style=ai["ai_explanation_style"],
