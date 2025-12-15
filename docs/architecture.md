@@ -1,7 +1,7 @@
 # Architecture - AccessiWeather
 
-**Generated:** December 11, 2025  
-**Version:** 0.4.2  
+**Generated:** December 11, 2025
+**Version:** 0.4.2
 **Architecture Type:** Multi-Layer Desktop Application with Data Fusion
 
 ---
@@ -63,8 +63,8 @@ AccessiWeather is a cross-platform desktop weather application built with Python
 ## Architecture Pattern: Multi-Layer Desktop Application
 
 ### Layer 1: Presentation Layer
-**Purpose:** User interface and accessibility  
-**Technologies:** Toga (BeeWare), desktop-notifier  
+**Purpose:** User interface and accessibility
+**Technologies:** Toga (BeeWare), desktop-notifier
 **Components:**
 - `ui/ui_builder.py` - Main window construction
 - `dialogs/` - Modal dialog system
@@ -78,7 +78,7 @@ AccessiWeather is a cross-platform desktop weather application built with Python
 - Focus management for modals
 
 ### Layer 2: Business Logic Layer
-**Purpose:** Application logic and orchestration  
+**Purpose:** Application logic and orchestration
 **Components:**
 - `handlers/` - Event handlers for UI actions
 - `services/` - Business logic services
@@ -89,7 +89,7 @@ AccessiWeather is a cross-platform desktop weather application built with Python
 **Design Pattern:** Observer + Strategy
 
 ### Layer 3: Data Integration Layer
-**Purpose:** Weather data acquisition and fusion  
+**Purpose:** Weather data acquisition and fusion
 **Components:**
 - `weather_client.py` - Multi-source orchestrator
 - `api/nws/` - National Weather Service integration
@@ -104,8 +104,8 @@ AccessiWeather is a cross-platform desktop weather application built with Python
 4. Merge data intelligently, preferring most reliable source per field
 
 ### Layer 4: Caching Layer
-**Purpose:** Performance optimization and offline support  
-**Implementation:** `cache.py`  
+**Purpose:** Performance optimization and offline support
+**Implementation:** `cache.py`
 **Strategy:** Stale-while-revalidate
 - Default TTL: 5 minutes (configurable)
 - Serve cached data immediately
@@ -119,7 +119,7 @@ AccessiWeather is a cross-platform desktop weather application built with Python
 - Reduced rate limit issues
 
 ### Layer 5: Configuration & Storage Layer
-**Purpose:** Settings and persistent data  
+**Purpose:** Settings and persistent data
 **Components:**
 - `config/config_manager.py` - JSON I/O
 - `config/settings.py` - Settings validation
@@ -278,8 +278,8 @@ Create asyncio tasks:
          └─→ Remove expired cache entries
 ```
 
-**Implementation:** `asyncio.create_task()` with `while True` loops  
-**Cancellation:** Tasks cancelled on app shutdown  
+**Implementation:** `asyncio.create_task()` with `while True` loops
+**Cancellation:** Tasks cancelled on app shutdown
 **Error Handling:** Each task has try-except with exponential backoff on failure
 
 ---
@@ -387,8 +387,8 @@ Validate settings (AppSettings model)
 3. `GET /gridpoints/{office}/{gridX},{gridY}/forecast/hourly` - Hourly forecast
 4. `GET /alerts/active?point={lat},{lon}` - Active alerts
 
-**Rate Limiting:** Built-in exponential backoff  
-**Authentication:** None required  
+**Rate Limiting:** Built-in exponential backoff
+**Authentication:** None required
 **Error Handling:** Retry with backoff → Fall back to Open-Meteo
 
 **Data Mapping:**
@@ -407,7 +407,7 @@ Validate settings (AppSettings model)
 - `temperature_unit` - User preference (fahrenheit/celsius)
 - `wind_speed_unit` - User preference (mph/kmh/ms/kn)
 
-**Rate Limiting:** No API key required, generous rate limits  
+**Rate Limiting:** No API key required, generous rate limits
 **Error Handling:** Retry with backoff → Serve stale cache if available
 
 **Data Mapping:**
@@ -424,8 +424,8 @@ Validate settings (AppSettings model)
 - `/timeline/{location}` - Historical and forecast data
 - Enhanced alert details with impact descriptions
 
-**Authentication:** API key required (stored in keyring)  
-**Rate Limiting:** Based on subscription tier  
+**Authentication:** API key required (stored in keyring)
+**Rate Limiting:** Based on subscription tier
 **Use Case:** Enhanced alert descriptions, historical weather trends
 
 ---
@@ -491,7 +491,7 @@ Validate settings (AppSettings model)
 ## Security Architecture
 
 ### API Key Storage
-**Problem:** API keys should never be stored in plain text  
+**Problem:** API keys should never be stored in plain text
 **Solution:** Platform-specific secure storage via `keyring` library
 
 **Storage Backends:**
@@ -511,8 +511,8 @@ api_key = keyring.get_password("accessiweather", "visual_crossing_api_key")
 ```
 
 ### Configuration File Security
-**File Permissions:** Standard user-only access (`chmod 600` on Unix)  
-**Content:** No sensitive data in JSON config (keys stored separately)  
+**File Permissions:** Standard user-only access (`chmod 600` on Unix)
+**Content:** No sensitive data in JSON config (keys stored separately)
 **Validation:** All config values validated before use
 
 ---
@@ -520,23 +520,23 @@ api_key = keyring.get_password("accessiweather", "visual_crossing_api_key")
 ## Performance Optimizations
 
 ### 1. Stale-While-Revalidate Caching
-**Impact:** 80%+ reduction in API calls  
+**Impact:** 80%+ reduction in API calls
 **User Benefit:** Instant data display, faster perceived performance
 
 ### 2. Parallel API Requests
-**Implementation:** `asyncio.gather()` for simultaneous API calls  
+**Implementation:** `asyncio.gather()` for simultaneous API calls
 **Use Case:** Fetching alerts + forecast + conditions in parallel
 
 ### 3. Background Task Scheduling
-**Benefit:** UI never blocks on data fetches  
+**Benefit:** UI never blocks on data fetches
 **Implementation:** All weather updates happen in background tasks
 
 ### 4. Lazy Loading
-**Resource Loading:** Sound files loaded on-demand, not at startup  
+**Resource Loading:** Sound files loaded on-demand, not at startup
 **Dialog Creation:** Dialogs created when needed, not at app init
 
 ### 5. Test Parallelization
-**Tool:** `pytest-xdist` with `-n auto` flag  
+**Tool:** `pytest-xdist` with `-n auto` flag
 **Result:** ~4x faster test suite execution
 
 ---
@@ -574,7 +574,7 @@ NWS API call
 ```
 
 ### User-Facing Error Messages
-**Principle:** Never show raw API errors to users  
+**Principle:** Never show raw API errors to users
 **Implementation:**
 - Network errors → "Unable to connect to weather service"
 - API errors → "Weather service temporarily unavailable"
@@ -618,8 +618,8 @@ tests/
 
 ### Key Test Fixtures
 
-**`DummyConfigManager`** - Mock config for testing without file I/O  
-**`WeatherDataFactory`** - Generate realistic weather data for tests  
+**`DummyConfigManager`** - Mock config for testing without file I/O
+**`WeatherDataFactory`** - Generate realistic weather data for tests
 **`mock_toga_app`** - Toga app instance with dummy backend
 
 ---
@@ -712,7 +712,7 @@ Briefcase supports iOS/Android; UI would need adaptation for mobile form factors
 ## Architecture Decision Records (ADRs)
 
 ### ADR-001: Why Toga over other GUI frameworks?
-**Decision:** Use Toga (BeeWare)  
+**Decision:** Use Toga (BeeWare)
 **Rationale:**
 - Native accessibility support (no custom screen reader integration needed)
 - Cross-platform with single codebase
@@ -725,7 +725,7 @@ Briefcase supports iOS/Android; UI would need adaptation for mobile form factors
 - Fewer third-party widgets
 
 ### ADR-002: Why multi-source weather data?
-**Decision:** Integrate NWS + Open-Meteo + Visual Crossing  
+**Decision:** Integrate NWS + Open-Meteo + Visual Crossing
 **Rationale:**
 - NWS most accurate for US but US-only
 - Open-Meteo provides global coverage and good fallback
@@ -737,7 +737,7 @@ Briefcase supports iOS/Android; UI would need adaptation for mobile form factors
 - Data merging challenges
 
 ### ADR-003: Why JSON config instead of database?
-**Decision:** Use JSON file for configuration  
+**Decision:** Use JSON file for configuration
 **Rationale:**
 - Simple, human-readable
 - Easy backup (single file)

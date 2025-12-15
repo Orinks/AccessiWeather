@@ -60,13 +60,8 @@ async def on_explain_weather_pressed(app: AccessiWeatherApp, widget) -> None:
         settings = app.config_manager.get_settings()
 
         # Determine model based on settings
-        # "auto:free" means use the default free model (Llama 3.3 70B)
-        # "auto" means use OpenRouter's auto router (paid, picks best model)
-        # Anything else is a specific model ID
-        from accessiweather.ai_explainer import DEFAULT_FREE_MODEL
-
         if settings.ai_model_preference == "auto:free":
-            model = DEFAULT_FREE_MODEL
+            model = "openrouter/auto:free"
         elif settings.ai_model_preference == "auto":
             model = "openrouter/auto"
         else:

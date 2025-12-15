@@ -1,7 +1,7 @@
 # AI Explainer Empty Response Bug - Debug Report
 
-**Date:** December 11, 2025  
-**Status:** Under Investigation  
+**Date:** December 11, 2025
+**Status:** Under Investigation
 **Severity:** P0 - Blocks Feature Launch
 
 ## Bug Description
@@ -19,7 +19,7 @@ Ran standalone tests of the `_format_response` regex patterns:
 
 Test cases included:
 1. Simple plain text → ✅ Works
-2. Text with bold markdown → ✅ Works  
+2. Text with bold markdown → ✅ Works
 3. Text with underscores → ✅ Works (removes underscores, preserves text)
 4. Realistic weather response → ✅ Works
 5. Response with full markdown → ✅ Works
@@ -42,10 +42,10 @@ if content is None:
     content = ""  # ← BUG: Sets to empty string!
 ```
 
-**Problem:** If OpenRouter returns `None`, we set it to empty string and continue.  
+**Problem:** If OpenRouter returns `None`, we set it to empty string and continue.
 **Fix Needed:** Should raise an error or log more aggressively.
 
-### 2. **Cache Corruption** 
+### 2. **Cache Corruption**
 Location: `ai_explainer.py` → `explain_weather()` method
 
 **Suspicious Code:**
@@ -57,13 +57,13 @@ if self.cache:
         # ... may return empty cached result
 ```
 
-**Problem:** If cache has an empty result from a previous failed attempt, it will be returned.  
+**Problem:** If cache has an empty result from a previous failed attempt, it will be returned.
 **Fix Needed:** Validate cached results before returning.
 
 ### 3. **Dialog Display Logic**
 Location: `dialogs/explanation_dialog.py`
 
-**Problem:** The text might be generated correctly but not displayed in the dialog.  
+**Problem:** The text might be generated correctly but not displayed in the dialog.
 **Fix Needed:** Check if `text` is being passed to the dialog correctly.
 
 ## Debug Strategy

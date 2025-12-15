@@ -1,7 +1,7 @@
 # Source Tree Analysis - AccessiWeather
 
-**Generated:** December 11, 2025  
-**Project Root:** `/home/josh/accessiweather`  
+**Generated:** December 11, 2025
+**Project Root:** `/home/josh/accessiweather`
 **Project Type:** Desktop Application (Monolith)
 
 ---
@@ -158,8 +158,8 @@ accessiweather/
 ## Critical Directories
 
 ### `/src/accessiweather/` (Main Application)
-**Purpose:** All application source code  
-**Entry Point:** `app.py` - `AccessiWeatherApp(toga.App)` class  
+**Purpose:** All application source code
+**Entry Point:** `app.py` - `AccessiWeatherApp(toga.App)` class
 **Key Modules:**
 - `app.py` - Main application class with lifecycle management
 - `ui_builder.py` - Constructs main window and menu system
@@ -167,7 +167,7 @@ accessiweather/
 - `background_tasks.py` - Async periodic updates
 
 ### `/src/accessiweather/api/` (Weather Data Sources)
-**Purpose:** Weather API wrappers and integrations  
+**Purpose:** Weather API wrappers and integrations
 **Data Sources:**
 1. **NWS** (`api/nws/`) - US weather via weather.gov
 2. **Open-Meteo** (`openmeteo_wrapper.py`) - Global fallback
@@ -176,50 +176,50 @@ accessiweather/
 **Integration Pattern:** Multi-source with smart fallback
 
 ### `/src/accessiweather/config/` (Configuration Layer)
-**Purpose:** Settings and location management  
-**Storage:** `~/.config/accessiweather/accessiweather.json`  
-**Portable Mode:** Check for `portable.txt` flag  
+**Purpose:** Settings and location management
+**Storage:** `~/.config/accessiweather/accessiweather.json`
+**Portable Mode:** Check for `portable.txt` flag
 **Key Classes:**
 - `ConfigManager` - JSON I/O
 - `AppSettings` - Settings validation
 - `LocationOperations` - Location CRUD
 
 ### `/src/accessiweather/ui/` & `/src/accessiweather/dialogs/`
-**Purpose:** User interface construction  
-**Framework:** Toga (BeeWare)  
-**Accessibility:** All widgets have `aria_label` + `aria_description`  
+**Purpose:** User interface construction
+**Framework:** Toga (BeeWare)
+**Accessibility:** All widgets have `aria_label` + `aria_description`
 **Pattern:** Modal dialogs created with `toga.Window`
 
 ### `/src/accessiweather/notifications/` (Alert System)
-**Purpose:** Weather alert notifications  
+**Purpose:** Weather alert notifications
 **Components:**
 - `AlertNotificationSystem` - Rate limiting, severity filtering
 - `ToastNotifier` - Desktop notification integration
 - `WeatherNotifier` - Weather-specific formatting
 
 ### `/src/accessiweather/soundpacks/` (Audio System)
-**Purpose:** Customizable alert sounds  
+**Purpose:** Customizable alert sounds
 **Features:**
 - Community sound pack support
 - Alert severity → sound mapping
 - Cross-platform audio playback
 
 ### `/tests/` (Test Suite)
-**Purpose:** Unit and integration tests  
-**Framework:** pytest with async support  
-**Backend:** `toga_dummy` (unit tests), real Toga (integration)  
+**Purpose:** Unit and integration tests
+**Framework:** pytest with async support
+**Backend:** `toga_dummy` (unit tests), real Toga (integration)
 **Fixtures:** `tests/toga_test_helpers.py`
 
 ### `/docs/` (Documentation)
-**Purpose:** Project documentation and guides  
+**Purpose:** Project documentation and guides
 **Key Documents:**
 - Feature specifications (nationwide forecast, sound packs, etc.)
 - Architecture guides (CI/CD, accessibility)
 - Developer guides (git workflow, roadmap)
 
 ### `/.github/workflows/` (CI/CD)
-**Purpose:** Automated builds, tests, and releases  
-**Platforms:** Windows (MSI), macOS (DMG), Linux (planned AppImage)  
+**Purpose:** Automated builds, tests, and releases
+**Platforms:** Windows (MSI), macOS (DMG), Linux (planned AppImage)
 **Workflows:** 7 total (see technology-stack.md)
 
 ---
@@ -243,7 +243,7 @@ WeatherClient (orchestrator)
 └─→ Visual Crossing (enrichment)
     ├─→ Enhanced alerts
     └─→ Weather history
-    
+
      ↓
 WeatherDataCache (5-min TTL)
      ↓

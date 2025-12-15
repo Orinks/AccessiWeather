@@ -26,21 +26,21 @@ workflow_path: "method-brownfield"
 workflow_status:
   # Prerequisite - Documentation (if needed)
   document-project: required
-  
+
   # Phase 0 - Discovery (Optional - User Selected)
   brainstorm-project: optional
   research: optional
-  
+
   # Phase 1 - Planning
   prd: "docs/ai-weather-explanations-prd.md"
   create-ux-design: conditional
-  
+
   # Phase 2 - Solutioning
   create-architecture: recommended
   create-epics-and-stories: required
   test-design: recommended
   validate-architecture: optional
   implementation-readiness: required
-  
+
   # Phase 3 - Implementation
   sprint-planning: required

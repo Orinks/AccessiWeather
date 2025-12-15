@@ -1,7 +1,7 @@
 # Project Overview - AccessiWeather
 
-**Generated:** December 11, 2025  
-**Version:** 0.4.2  
+**Generated:** December 11, 2025
+**Version:** 0.4.2
 **Project Type:** Cross-Platform Desktop Application
 
 ---
@@ -161,9 +161,9 @@ See [source-tree-analysis.md](source-tree-analysis.md) for annotated structure.
 
 ## Development Status
 
-**Current Version:** 0.4.2  
-**Maturity:** Beta (pre-1.0)  
-**Active Development:** Yes  
+**Current Version:** 0.4.2
+**Maturity:** Beta (pre-1.0)
+**Active Development:** Yes
 **Release Cadence:** Minor releases every 2-4 weeks
 
 ### Recent Milestones
@@ -200,8 +200,8 @@ See [source-tree-analysis.md](source-tree-analysis.md) for annotated structure.
 
 ## Development Team
 
-**Primary Developer:** Orinks (Josh)  
-**Contributors:** Open source community (see GitHub contributors)  
+**Primary Developer:** Orinks (Josh)
+**Contributors:** Open source community (see GitHub contributors)
 **License:** MIT (open source)
 
 **Contributing:** See [CONTRIBUTING.md](../CONTRIBUTING.md)
@@ -273,8 +273,8 @@ See [development-guide.md](development-guide.md) for complete setup.
 ## Configuration & Data Storage
 
 ### Configuration File
-**Location:** `~/.config/accessiweather/accessiweather.json`  
-**Portable Mode:** Check for `portable.txt` → use local directory  
+**Location:** `~/.config/accessiweather/accessiweather.json`
+**Portable Mode:** Check for `portable.txt` → use local directory
 **Format:** JSON with validation
 
 ### API Keys
@@ -284,7 +284,7 @@ See [development-guide.md](development-guide.md) for complete setup.
 - Linux: Secret Service / KWallet / Gnome Keyring
 
 ### Logs
-**Location:** `~/.local/share/accessiweather/logs/` (or portable directory)  
+**Location:** `~/.local/share/accessiweather/logs/` (or portable directory)
 **Rotation:** Automatic log rotation (keeps last 3 log files)
 
 ---

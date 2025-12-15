@@ -1,6 +1,6 @@
 # Deployment Guide - AccessiWeather
 
-**Generated:** December 11, 2025  
+**Generated:** December 11, 2025
 **Target Audience:** Release managers and CI/CD maintainers
 
 ---
@@ -87,8 +87,8 @@ AccessiWeather uses **Briefcase** for cross-platform packaging and **GitHub Acti
 
 ### 1. ci.yml - Continuous Integration
 
-**Trigger:** Every push, every PR  
-**Purpose:** Code quality checks and unit tests  
+**Trigger:** Every push, every PR
+**Purpose:** Code quality checks and unit tests
 **Platforms:** Ubuntu, Windows, macOS (matrix)
 
 **Steps:**
@@ -101,7 +101,7 @@ AccessiWeather uses **Briefcase** for cross-platform packaging and **GitHub Acti
 7. Generate coverage report
 8. Upload coverage to artifacts
 
-**Duration:** ~5-10 minutes  
+**Duration:** ~5-10 minutes
 **Failure Action:** Block PR merge
 
 **Key Configuration:**
@@ -113,8 +113,8 @@ env:
 
 ### 2. briefcase-build.yml - Platform Builds
 
-**Trigger:** Manual dispatch, tag push  
-**Purpose:** Create platform-specific installers  
+**Trigger:** Manual dispatch, tag push
+**Purpose:** Create platform-specific installers
 **Platforms:** Windows (MSI), macOS (DMG)
 
 **Build Matrix:**
@@ -134,7 +134,7 @@ matrix:
 7. Package installer (`briefcase package`)
 8. Upload artifacts (MSI or DMG)
 
-**Duration:** ~15-30 minutes per platform  
+**Duration:** ~15-30 minutes per platform
 **Output:** GitHub Actions artifacts (MSI, DMG)
 
 **Platform-Specific Notes:**
@@ -151,8 +151,8 @@ matrix:
 
 ### 3. briefcase-release.yml - Release Automation
 
-**Trigger:** Tag push (e.g., `v0.4.2`)  
-**Purpose:** Create GitHub Release with installers  
+**Trigger:** Tag push (e.g., `v0.4.2`)
+**Purpose:** Create GitHub Release with installers
 **Dependencies:** Calls `briefcase-build.yml` as sub-workflow
 
 **Steps:**
@@ -164,7 +164,7 @@ matrix:
 6. Upload installers to release (MSI, DMG)
 7. Generate release notes from `CHANGELOG.md`
 
-**Duration:** ~20-40 minutes (includes build time)  
+**Duration:** ~20-40 minutes (includes build time)
 **Output:** GitHub Release with downloadable installers
 
 **Release Assets:**
@@ -174,8 +174,8 @@ matrix:
 
 ### 4. nightly-release.yml - Nightly Builds
 
-**Trigger:** Schedule (daily at 2 AM UTC)  
-**Purpose:** Provide cutting-edge builds for testing  
+**Trigger:** Schedule (daily at 2 AM UTC)
+**Purpose:** Provide cutting-edge builds for testing
 **Version Format:** `0.4.2-nightly-20251211`
 
 **Steps:**
@@ -186,14 +186,14 @@ matrix:
 5. Upload nightly installers
 6. Clean up old nightlies (keep last 7 days)
 
-**Duration:** ~20-40 minutes  
+**Duration:** ~20-40 minutes
 **Output:** GitHub Pre-Release with nightly installers
 
 **Retention Policy:** Automatically delete nightlies older than 7 days
 
 ### 5. integration-tests.yml - API Integration Tests
 
-**Trigger:** Manual dispatch, schedule (optional)  
+**Trigger:** Manual dispatch, schedule (optional)
 **Purpose:** Test real API integrations (NWS, Open-Meteo, Visual Crossing)
 
 **Steps:**
@@ -203,7 +203,7 @@ matrix:
 4. Run integration tests (`pytest -m "integration" -v`)
 5. Report results (pass/fail)
 
-**Duration:** ~5-10 minutes  
+**Duration:** ~5-10 minutes
 **Note:** Requires internet connection, may have rate limits
 
 ---
@@ -423,22 +423,22 @@ flatpak_runtime_version = "24.08"
 
 ### Common Issues
 
-**Issue:** Briefcase create fails with "Template not found"  
+**Issue:** Briefcase create fails with "Template not found"
 **Solution:**
 ```bash
 briefcase create --update  # Force template update
 ```
 
-**Issue:** Build fails with missing dependencies  
+**Issue:** Build fails with missing dependencies
 **Solution:** Check `pyproject.toml` `requires` list matches `requirements.txt`
 
-**Issue:** Windows build fails with "Visual Studio not found"  
+**Issue:** Windows build fails with "Visual Studio not found"
 **Solution:** Install Visual Studio Build Tools 2022
 
-**Issue:** macOS DMG not signed/notarized  
+**Issue:** macOS DMG not signed/notarized
 **Solution:** Set up Apple Developer certificates (optional for testing)
 
-**Issue:** Integration tests fail in CI  
+**Issue:** Integration tests fail in CI
 **Solution:** Check API rate limits, verify internet connectivity
 
 ### Debug Build Issues

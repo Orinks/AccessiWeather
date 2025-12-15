@@ -14,10 +14,10 @@ lastStep: 0
 
 # Product Requirements Document - AI Weather Explanations
 
-**Author:** Josh  
-**Date:** December 11, 2025  
-**Status:** In Development (feature/ai-weather-explanations branch)  
-**Priority:** P1 - High  
+**Author:** Josh
+**Date:** December 11, 2025
+**Status:** In Development (feature/ai-weather-explanations branch)
+**Priority:** P1 - High
 **Target Release:** v1.5.0
 
 ## Executive Summary
@@ -73,7 +73,7 @@ Current metrics show:
 1. **G1: Increase User Understanding**
    - Metric: User survey shows >70% report better weather comprehension
    - Target: Launch with 90% positive feedback in beta testing
-   
+
 2. **G2: Maintain Accessibility Excellence**
    - Metric: Screen reader navigation time to get weather summary <30 seconds
    - Target: WCAG 2.1 AAA compliance maintained
@@ -90,7 +90,7 @@ Current metrics show:
 
 1. **S1: Reduce Support Burden**
    - Metric: Weather interpretation support tickets decrease 30%
-   
+
 2. **S2: Feature Discovery**
    - Metric: "Explain Weather" button clicked within 3 app sessions by >60% of users
 
@@ -108,9 +108,9 @@ Current metrics show:
 ### Epic 1: Core Explanation Generation
 
 #### US-1.1: View Weather Explanation
-**As a** user viewing current weather  
-**I want to** click an "Explain Weather" button  
-**So that** I get a plain-English summary of what the conditions mean for my activities  
+**As a** user viewing current weather
+**I want to** click an "Explain Weather" button
+**So that** I get a plain-English summary of what the conditions mean for my activities
 
 **Acceptance Criteria:**
 1. ✅ "Explain Weather" button appears next to current conditions when AI feature enabled
@@ -123,9 +123,9 @@ Current metrics show:
 **Priority:** P0 (Must Have)
 
 #### US-1.2: Contextual Weather Insights
-**As a** user receiving an explanation  
-**I want** the AI to consider all relevant weather data (temp, humidity, wind, alerts)  
-**So that** I get comprehensive insights, not just a temperature description  
+**As a** user receiving an explanation
+**I want** the AI to consider all relevant weather data (temp, humidity, wind, alerts)
+**So that** I get comprehensive insights, not just a temperature description
 
 **Acceptance Criteria:**
 1. ✅ Prompt includes: temperature, conditions, humidity, wind speed/direction, visibility
@@ -139,9 +139,9 @@ Current metrics show:
 ### Epic 2: Free Model Support
 
 #### US-2.1: Try AI Without API Key
-**As a** new user  
-**I want to** use AI explanations without signing up for anything or entering payment info  
-**So that** I can evaluate the feature risk-free before deciding to upgrade  
+**As a** new user
+**I want to** use AI explanations without signing up for anything or entering payment info
+**So that** I can evaluate the feature risk-free before deciding to upgrade
 
 **Acceptance Criteria:**
 1. ✅ Default model is `openrouter/auto:free` (no API key needed)
@@ -150,13 +150,13 @@ Current metrics show:
 4. ✅ UI indicates "Using free models" in settings
 5. ✅ Free models are rate-limited by OpenRouter, not AccessiWeather
 
-**Priority:** P0 (Must Have)  
+**Priority:** P0 (Must Have)
 **Note:** OpenRouter changed their API after initial design—API keys are now required even for free models. Updated requirement: provide clear onboarding to get free API key from openrouter.ai/keys
 
 #### US-2.2: Caching for Free Users
-**As a** user with free models  
-**I want** explanations to be cached  
-**So that** I don't hit rate limits when refreshing weather frequently  
+**As a** user with free models
+**I want** explanations to be cached
+**So that** I don't hit rate limits when refreshing weather frequently
 
 **Acceptance Criteria:**
 1. ✅ Explanations cached for 5 minutes by default
@@ -170,9 +170,9 @@ Current metrics show:
 ### Epic 3: Paid Model Configuration
 
 #### US-3.1: Configure OpenRouter API Key
-**As a** user wanting better explanations  
-**I want to** enter my OpenRouter API key in settings  
-**So that** I can use paid models for higher quality responses  
+**As a** user wanting better explanations
+**I want to** enter my OpenRouter API key in settings
+**So that** I can use paid models for higher quality responses
 
 **Acceptance Criteria:**
 1. ✅ Settings dialog has "AI Explanations" section
@@ -185,9 +185,9 @@ Current metrics show:
 **Priority:** P1 (Should Have)
 
 #### US-3.2: Choose AI Model
-**As a** user with an API key  
-**I want to** select between free and paid model tiers  
-**So that** I can balance cost and quality based on my needs  
+**As a** user with an API key
+**I want to** select between free and paid model tiers
+**So that** I can balance cost and quality based on my needs
 
 **Acceptance Criteria:**
 1. ✅ Model dropdown with options: "Auto (Free)", "Auto (Paid - requires API key)"
@@ -199,9 +199,9 @@ Current metrics show:
 **Priority:** P1 (Should Have)
 
 #### US-3.3: Monitor Usage
-**As a** user with paid models  
-**I want to** see estimated token usage and costs  
-**So that** I can avoid unexpected charges  
+**As a** user with paid models
+**I want to** see estimated token usage and costs
+**So that** I can avoid unexpected charges
 
 **Acceptance Criteria:**
 1. ✅ Each explanation dialog shows: model used, token count, estimated cost
@@ -215,9 +215,9 @@ Current metrics show:
 ### Epic 4: Error Handling & Resilience
 
 #### US-4.1: Graceful API Failures
-**As a** user experiencing network issues  
-**I want** clear, actionable error messages  
-**So that** I understand what went wrong and how to fix it  
+**As a** user experiencing network issues
+**I want** clear, actionable error messages
+**So that** I understand what went wrong and how to fix it
 
 **Acceptance Criteria:**
 1. ✅ No technical details (HTTP codes, stack traces, API response bodies) shown to users
@@ -230,9 +230,9 @@ Current metrics show:
 **Priority:** P0 (Must Have)
 
 #### US-4.2: Fallback Strategies
-**As a** user when AI service fails  
-**I want** alternative options to get weather information  
-**So that** temporary outages don't block my access to weather data  
+**As a** user when AI service fails
+**I want** alternative options to get weather information
+**So that** temporary outages don't block my access to weather data
 
 **Acceptance Criteria:**
 1. ✅ Cached explanation offered if available (even if stale)
@@ -246,9 +246,9 @@ Current metrics show:
 ### Epic 5: Accessibility & Screen Reader Support
 
 #### US-5.1: Screen Reader Navigation
-**As a** screen reader user  
-**I want** AI explanations to be fully accessible  
-**So that** I can benefit from natural language summaries as much as sighted users  
+**As a** screen reader user
+**I want** AI explanations to be fully accessible
+**So that** I can benefit from natural language summaries as much as sighted users
 
 **Acceptance Criteria:**
 1. ✅ "Explain Weather" button has aria-label and aria-description
@@ -261,9 +261,9 @@ Current metrics show:
 **Priority:** P0 (Must Have)
 
 #### US-5.2: Plain Text Formatting
-**As a** screen reader user  
-**I want** explanations without markdown formatting  
-**So that** my screen reader doesn't announce asterisks, brackets, and other symbols  
+**As a** screen reader user
+**I want** explanations without markdown formatting
+**So that** my screen reader doesn't announce asterisks, brackets, and other symbols
 
 **Acceptance Criteria:**
 1. ✅ Markdown stripped from AI responses by default
@@ -325,10 +325,10 @@ class AppSettings:
 ### UI Components
 
 #### 1. Explain Weather Button
-**Location:** Current weather display, below conditions summary  
-**Appearance:** Standard Toga button, same style as "Refresh Weather"  
-**Label:** "Explain Weather"  
-**ARIA:** 
+**Location:** Current weather display, below conditions summary
+**Appearance:** Standard Toga button, same style as "Refresh Weather"
+**Label:** "Explain Weather"
+**ARIA:**
 - `aria-label="Get AI explanation of current weather"`
 - `aria-description="Opens a dialog with natural language explanation of weather conditions"`
 
@@ -338,8 +338,8 @@ class AppSettings:
 - Disabled (grayed out) when no weather data loaded
 
 #### 2. Explanation Dialog
-**Type:** Modal dialog (Toga Window)  
-**Size:** 500x400px (expandable)  
+**Type:** Modal dialog (Toga Window)
+**Size:** 500x400px (expandable)
 **Layout:**
 ```
 ┌─────────────────────────────────────────┐
@@ -365,13 +365,13 @@ class AppSettings:
 - Tab cycles through text → metadata → Close button → text
 
 #### 3. Loading Dialog
-**Type:** Non-modal overlay  
-**Content:** "Generating weather explanation for [Location]..." with spinner  
-**ARIA:** Live region announces "Loading weather explanation"  
+**Type:** Non-modal overlay
+**Content:** "Generating weather explanation for [Location]..." with spinner
+**ARIA:** Live region announces "Loading weather explanation"
 **Timeout:** Shows for entire API call duration, auto-closes on success
 
 #### 4. Error Dialog
-**Type:** Modal dialog  
+**Type:** Modal dialog
 **Layout:**
 ```
 ┌─────────────────────────────────────────┐
@@ -387,7 +387,7 @@ class AppSettings:
 **ARIA:** Live region announces error message immediately
 
 #### 5. Settings Section
-**Location:** Settings Dialog → New "AI Explanations" tab  
+**Location:** Settings Dialog → New "AI Explanations" tab
 **Layout:**
 ```
 AI Explanations
@@ -399,21 +399,21 @@ AI Explanations
 OpenRouter API Key:
   Required for all models. Get a free key at
   openrouter.ai/keys
-  
+
   [••••••••••••••••••••••••••abc123]
-  
+
   [Validate API Key]
 
 Model Preference:
   [Auto (Free)                    ▼]
-  
+
   Free models require an API key but don't
   charge your account. Get yours at
   openrouter.ai/keys
 
 Explanation Style:
   [Standard                       ▼]
-  
+
 Session Usage:
   Explanations: 5
   Tokens: 750
@@ -450,91 +450,91 @@ Session Usage:
 
 ### Data Properties
 
-**P1: Button Visibility Follows Setting**  
-∀ app_state: `enable_ai_explanations=True` ⟹ button visible  
-∀ app_state: `enable_ai_explanations=False` ⟹ button hidden  
+**P1: Button Visibility Follows Setting**
+∀ app_state: `enable_ai_explanations=True` ⟹ button visible
+∀ app_state: `enable_ai_explanations=False` ⟹ button hidden
 *Validates: US-1.1*
 
-**P2: Model Selection Matches Configuration**  
-∀ config: `api_key=None` ⟹ `effective_model="openrouter/auto:free"`  
-∀ config: `api_key≠None ∧ preference="auto:free"` ⟹ `effective_model="openrouter/auto:free"`  
-∀ config: `api_key≠None ∧ preference="auto"` ⟹ `effective_model="openrouter/auto"`  
+**P2: Model Selection Matches Configuration**
+∀ config: `api_key=None` ⟹ `effective_model="openrouter/auto:free"`
+∀ config: `api_key≠None ∧ preference="auto:free"` ⟹ `effective_model="openrouter/auto:free"`
+∀ config: `api_key≠None ∧ preference="auto"` ⟹ `effective_model="openrouter/auto"`
 *Validates: US-2.1, US-3.2*
 
-**P3: Cache Prevents Duplicate API Calls**  
-∀ request₁, request₂: `same_weather_data(request₁, request₂) ∧ time_delta<5min` ⟹ `no_api_call(request₂)`  
+**P3: Cache Prevents Duplicate API Calls**
+∀ request₁, request₂: `same_weather_data(request₁, request₂) ∧ time_delta<5min` ⟹ `no_api_call(request₂)`
 *Validates: US-2.2*
 
-**P4: Settings Persistence**  
-∀ settings: `save(settings) ; load()` ⟹ `settings' = settings`  
+**P4: Settings Persistence**
+∀ settings: `save(settings) ; load()` ⟹ `settings' = settings`
 *Validates: US-3.1, US-3.2*
 
 ### Behavior Properties
 
-**P5: Prompt Completeness**  
-∀ weather_data: `has_required_fields(weather_data)` ⟹ `all_fields_in_prompt(prompt)`  
-Required fields: temperature, conditions, humidity, wind_speed, visibility  
+**P5: Prompt Completeness**
+∀ weather_data: `has_required_fields(weather_data)` ⟹ `all_fields_in_prompt(prompt)`
+Required fields: temperature, conditions, humidity, wind_speed, visibility
 *Validates: US-1.2*
 
-**P6: Alerts Inclusion**  
-∀ weather_data: `has_alerts(weather_data)` ⟹ `alerts_in_prompt(prompt)`  
-∀ weather_data: `no_alerts(weather_data)` ⟹ `no_alert_mention(prompt)`  
+**P6: Alerts Inclusion**
+∀ weather_data: `has_alerts(weather_data)` ⟹ `alerts_in_prompt(prompt)`
+∀ weather_data: `no_alerts(weather_data)` ⟹ `no_alert_mention(prompt)`
 *Validates: US-1.2*
 
-**P7: Markdown Formatting**  
-∀ response: `html_disabled` ⟹ `no_markdown_syntax(formatted_response)`  
-∀ response: `html_enabled` ⟹ `markdown_preserved(formatted_response)`  
+**P7: Markdown Formatting**
+∀ response: `html_disabled` ⟹ `no_markdown_syntax(formatted_response)`
+∀ response: `html_enabled` ⟹ `markdown_preserved(formatted_response)`
 *Validates: US-5.2*
 
-**P8: Most Recent Data Source**  
-∀ sources: `|sources|>1` ⟹ `selected_source = max(sources, key=timestamp)`  
+**P8: Most Recent Data Source**
+∀ sources: `|sources|>1` ⟹ `selected_source = max(sources, key=timestamp)`
 *Validates: US-1.2*
 
 ### Safety Properties
 
-**P9: Error Message Safety**  
-∀ error: `user_message(error)` ⟹ `no_technical_details(message)`  
-Technical details: stack traces, HTTP codes, JSON responses, API internals  
+**P9: Error Message Safety**
+∀ error: `user_message(error)` ⟹ `no_technical_details(message)`
+Technical details: stack traces, HTTP codes, JSON responses, API internals
 *Validates: US-4.1*
 
-**P10: Error Logging**  
-∀ error: `occurs(error)` ⟹ `logged(error, level=ERROR) ∧ user_message_safe`  
+**P10: Error Logging**
+∀ error: `occurs(error)` ⟹ `logged(error, level=ERROR) ∧ user_message_safe`
 *Validates: US-4.1*
 
 ### Cost Properties
 
-**P11: Token Display for Paid Models**  
-∀ result: `is_paid_model(result.model)` ⟹ `display_includes(token_count)`  
+**P11: Token Display for Paid Models**
+∀ result: `is_paid_model(result.model)` ⟹ `display_includes(token_count)`
 *Validates: US-3.3*
 
-**P12: Cost Estimation Timing**  
-∀ request: `estimate_cost(request)` happens_before `api_call(request)`  
+**P12: Cost Estimation Timing**
+∀ request: `estimate_cost(request)` happens_before `api_call(request)`
 *Validates: US-3.3*
 
-**P13: Session Usage Accumulation**  
-∀ session: `total_tokens = Σ(explanation.tokens for explanation in session)`  
+**P13: Session Usage Accumulation**
+∀ session: `total_tokens = Σ(explanation.tokens for explanation in session)`
 *Validates: US-3.3*
 
-**P14: Free Model Cost Display**  
-∀ result: `":free" in result.model` ⟹ `display_cost = "No cost"`  
+**P14: Free Model Cost Display**
+∀ result: `":free" in result.model` ⟹ `display_cost = "No cost"`
 *Validates: US-3.3*
 
 ### Accessibility Properties
 
-**P15: ARIA Attributes Present**  
-∀ button: `is_explain_button(button)` ⟹ `has_aria_label(button) ∧ has_aria_description(button)`  
+**P15: ARIA Attributes Present**
+∀ button: `is_explain_button(button)` ⟹ `has_aria_label(button) ∧ has_aria_description(button)`
 *Validates: US-5.1*
 
-**P16: Dialog Focus Management**  
-∀ dialog: `opens(dialog)` ⟹ `eventually(focused(dialog.explanation_text))`  
+**P16: Dialog Focus Management**
+∀ dialog: `opens(dialog)` ⟹ `eventually(focused(dialog.explanation_text))`
 *Validates: US-5.1*
 
-**P17: Loading Announcement**  
-∀ request: `starts(request)` ⟹ `announced(loading_state, politeness=polite)`  
+**P17: Loading Announcement**
+∀ request: `starts(request)` ⟹ `announced(loading_state, politeness=polite)`
 *Validates: US-5.1*
 
-**P18: Error Announcement**  
-∀ error: `occurs(error)` ⟹ `announced(error_message, politeness=assertive)`  
+**P18: Error Announcement**
+∀ error: `occurs(error)` ⟹ `announced(error_message, politeness=assertive)`
 *Validates: US-5.1*
 
 ## Implementation Plan
@@ -593,7 +593,7 @@ Technical details: stack traces, HTTP codes, JSON responses, API internals
   - Suspected cause: Over-aggressive markdown stripping or empty API response handling
   - Debug logs added in commit `9da9601`
   - Log location changed in commit `453e753` (now in `config_dir/logs/`)
-  
+
 **Remaining Tasks:**
 - [ ] Debug and fix empty response issue
 - [ ] Verify free model behavior with actual OpenRouter API key
@@ -693,10 +693,10 @@ Technical details: stack traces, HTTP codes, JSON responses, API internals
 
 ### Current Blocker: Empty Response Bug
 
-**Issue:** Explanation dialog displays empty text despite API returning content  
-**Branch:** `feature/ai-weather-explanations`  
-**Severity:** P0 - Blocks feature launch  
-**Debug Status:** Logging added, investigating `_format_response` method  
+**Issue:** Explanation dialog displays empty text despite API returning content
+**Branch:** `feature/ai-weather-explanations`
+**Severity:** P0 - Blocks feature launch
+**Debug Status:** Logging added, investigating `_format_response` method
 
 **Hypotheses:**
 1. Markdown stripping too aggressive (removes all content)
@@ -839,13 +839,13 @@ Technical details: stack traces, HTTP codes, JSON responses, API internals
 
 ## Document Metadata
 
-**Version:** 1.0  
-**Last Updated:** December 11, 2025  
-**Status:** Draft → In Review  
-**Approved By:** [Pending]  
-**Related Branches:** `feature/ai-weather-explanations`  
-**Target Release:** v1.5.0  
-**Estimated Completion:** Week of December 16-20, 2025  
+**Version:** 1.0
+**Last Updated:** December 11, 2025
+**Status:** Draft → In Review
+**Approved By:** [Pending]
+**Related Branches:** `feature/ai-weather-explanations`
+**Target Release:** v1.5.0
+**Estimated Completion:** Week of December 16-20, 2025
 
 **Change Log:**
 - 2025-12-11: Initial PRD created from existing specs by Mary (Analyst Agent)

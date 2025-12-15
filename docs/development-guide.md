@@ -1,6 +1,6 @@
 # Development Guide - AccessiWeather
 
-**Generated:** December 11, 2025  
+**Generated:** December 11, 2025
 **Target Audience:** Contributors and developers
 
 ---
@@ -163,7 +163,7 @@ pytest --cov=accessiweather --cov-report=html
 
 ### Test Environment Setup
 
-**Unit Tests:** Use `TOGA_BACKEND=toga_dummy` automatically  
+**Unit Tests:** Use `TOGA_BACKEND=toga_dummy` automatically
 **Integration Tests:** Require internet connection
 
 ### Writing Tests
@@ -233,10 +233,10 @@ mypy src/
 
 ### Code Style Guidelines
 
-**Line Length:** 100 characters  
-**Quotes:** Double quotes (`"string"`)  
-**Imports:** Ruff auto-sorts (stdlib → third-party → local)  
-**Type Hints:** Use modern syntax: `dict[str, Any]` not `Dict[str, Any]`  
+**Line Length:** 100 characters
+**Quotes:** Double quotes (`"string"`)
+**Imports:** Ruff auto-sorts (stdlib → third-party → local)
+**Type Hints:** Use modern syntax: `dict[str, Any]` not `Dict[str, Any]`
 **Async:** Use `async`/`await` for all long-running operations
 
 **Example:**
@@ -248,11 +248,11 @@ from typing import Any
 
 async def fetch_weather(lat: float, lon: float) -> dict[str, Any]:
     """Fetch weather data for coordinates.
-    
+
     Args:
         lat: Latitude in decimal degrees
         lon: Longitude in decimal degrees
-        
+
     Returns:
         Weather data dictionary
     """
@@ -383,7 +383,7 @@ async def get_weather(self, lat, lon):
 @pytest.mark.unit
 async def test_my_api_client():
     # Unit test with mocks
-    
+
 @pytest.mark.integration
 async def test_my_api_real_call():
     # Integration test with real API
@@ -400,7 +400,7 @@ class MyDialog:
         self.app = app
         self.parent = parent_window
         self.window = None
-        
+
     def show(self):
         self.window = toga.Window(
             title="My Dialog",
@@ -447,16 +447,16 @@ export TOGA_BACKEND=toga_gtk  # Linux
 
 ### Common Issues
 
-**Issue:** `ImportError: No module named 'toga'`  
+**Issue:** `ImportError: No module named 'toga'`
 **Solution:** Activate virtual environment, reinstall dependencies
 
-**Issue:** Pre-commit hooks failing  
+**Issue:** Pre-commit hooks failing
 **Solution:** Run `ruff check --fix . && ruff format .` manually, commit again
 
-**Issue:** Tests failing with Toga errors  
+**Issue:** Tests failing with Toga errors
 **Solution:** Ensure `TOGA_BACKEND=toga_dummy` is set for unit tests
 
-**Issue:** Build fails with Briefcase  
+**Issue:** Build fails with Briefcase
 **Solution:** Check Briefcase version, ensure all deps in `pyproject.toml`
 
 ---
@@ -491,7 +491,7 @@ See [git-workflow.md](git-workflow.md) for details.
 <footer>
 ```
 
-**Types:** feat, fix, docs, style, refactor, test, chore  
+**Types:** feat, fix, docs, style, refactor, test, chore
 **Example:**
 ```
 feat(alerts): Add sound pack customization

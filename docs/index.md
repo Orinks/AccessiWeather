@@ -1,7 +1,7 @@
 # AccessiWeather - Documentation Index
 
-**Generated:** December 11, 2025  
-**Version:** 0.4.2  
+**Generated:** December 11, 2025
+**Version:** 0.4.2
 **Project Type:** Desktop Application (Monolith)
 
 ---
@@ -120,48 +120,48 @@
 ### I Want to...
 
 #### **Understand the Project**
-→ Start with [Project Overview](project-overview.md)  
-→ Read [Architecture](architecture.md) for system design  
+→ Start with [Project Overview](project-overview.md)
+→ Read [Architecture](architecture.md) for system design
 → Check [Technology Stack](technology-stack.md) for tech details
 
 #### **Set Up Development Environment**
-→ Follow [Development Guide](development-guide.md) - Quick Start section  
-→ Review [AGENTS.md](../AGENTS.md) for command reference  
+→ Follow [Development Guide](development-guide.md) - Quick Start section
+→ Review [AGENTS.md](../AGENTS.md) for command reference
 → Check [Source Tree Analysis](source-tree-analysis.md) to navigate codebase
 
 #### **Add a New Feature**
-→ Review [Architecture](architecture.md) - Component Architecture section  
-→ Check [Development Guide](development-guide.md) - Common Development Tasks  
-→ Follow [git-workflow.md](git-workflow.md) for branching strategy  
+→ Review [Architecture](architecture.md) - Component Architecture section
+→ Check [Development Guide](development-guide.md) - Common Development Tasks
+→ Follow [git-workflow.md](git-workflow.md) for branching strategy
 → Run tests per [Development Guide](development-guide.md) - Testing section
 
 #### **Modify UI**
-→ See [Source Tree Analysis](source-tree-analysis.md) - UI directories  
-→ Review [ACCESSIBILITY.md](ACCESSIBILITY.md) - All UI must be accessible  
-→ Check [`ui/ui_builder.py`](../src/accessiweather/ui_builder.py) for main window  
+→ See [Source Tree Analysis](source-tree-analysis.md) - UI directories
+→ Review [ACCESSIBILITY.md](ACCESSIBILITY.md) - All UI must be accessible
+→ Check [`ui/ui_builder.py`](../src/accessiweather/ui_builder.py) for main window
 → Look in [`dialogs/`](../src/accessiweather/dialogs/) for modal dialogs
 
 #### **Integrate New Weather API**
-→ Review [Architecture](architecture.md) - API Integration Architecture  
-→ See [`api/`](../src/accessiweather/api/) for existing integrations  
-→ Follow [Development Guide](development-guide.md) - Add New API Integration  
+→ Review [Architecture](architecture.md) - API Integration Architecture
+→ See [`api/`](../src/accessiweather/api/) for existing integrations
+→ Follow [Development Guide](development-guide.md) - Add New API Integration
 → Update [weather_client.py](../src/accessiweather/weather_client.py) orchestrator
 
 #### **Build & Release**
-→ Follow [Deployment Guide](deployment-guide.md) - Complete pipeline guide  
-→ Check [cicd_architecture.md](cicd_architecture.md) for workflow details  
+→ Follow [Deployment Guide](deployment-guide.md) - Complete pipeline guide
+→ Check [cicd_architecture.md](cicd_architecture.md) for workflow details
 → Review [build_and_artifacts.md](build_and_artifacts.md) for build system
 
 #### **Fix a Bug**
-→ Search [Source Tree Analysis](source-tree-analysis.md) for relevant files  
-→ Write test reproducing bug (see [Development Guide](development-guide.md))  
-→ Fix bug and verify with tests  
+→ Search [Source Tree Analysis](source-tree-analysis.md) for relevant files
+→ Write test reproducing bug (see [Development Guide](development-guide.md))
+→ Fix bug and verify with tests
 → Update [CHANGELOG.md](../CHANGELOG.md)
 
 #### **Improve Accessibility**
-→ Read [ACCESSIBILITY.md](ACCESSIBILITY.md) - Complete guidelines  
-→ Check [Architecture](architecture.md) - Accessibility Architecture  
-→ Test with screen readers (NVDA, JAWS, VoiceOver)  
+→ Read [ACCESSIBILITY.md](ACCESSIBILITY.md) - Complete guidelines
+→ Check [Architecture](architecture.md) - Accessibility Architecture
+→ Test with screen readers (NVDA, JAWS, VoiceOver)
 → Ensure all widgets have `aria_label` + `aria_description`
 
 ---
@@ -376,8 +376,8 @@ briefcase package
 
 **To Regenerate:** Run the `document-project` workflow with the analyst agent
 
-**Last Updated:** December 11, 2025  
-**Workflow Version:** 1.2.0  
+**Last Updated:** December 11, 2025
+**Workflow Version:** 1.2.0
 **Scan Level:** Quick (pattern-based analysis)
 
 ---
