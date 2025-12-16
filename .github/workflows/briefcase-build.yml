@@ -312,13 +312,13 @@ jobs:
 
     steps:
     - name: Download installer artifacts
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         name: windows-installer-${{ needs.build.outputs.version }}
         path: artifacts/installer/
 
     - name: Download portable artifacts
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         name: windows-portable-${{ needs.build.outputs.version }}
         path: artifacts/portable/
