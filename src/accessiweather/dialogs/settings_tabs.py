@@ -38,26 +38,6 @@ def create_general_tab(dialog):
     )
     general_box.add(dialog.update_interval_input)
 
-    aq_default = getattr(dialog.current_settings, "air_quality_notify_threshold", 3)
-    try:
-        aq_default = int(aq_default)
-    except Exception:  # pragma: no cover - fallback path
-        aq_default = 3
-
-    general_box.add(
-        toga.Label("Air Quality alert threshold (US AQI):", style=Pack(margin_bottom=5))
-    )
-    dialog.air_quality_threshold_input = toga.NumberInput(
-        value=aq_default,
-        style=Pack(margin_bottom=15),
-        id="air_quality_threshold_input",
-    )
-    dialog.air_quality_threshold_input.aria_label = "Air quality threshold"
-    dialog.air_quality_threshold_input.aria_description = (
-        "Set the US AQI level at which air quality alerts should be triggered."
-    )
-    general_box.add(dialog.air_quality_threshold_input)
-
     dialog.option_container.content.append("General", general_box)
 
 

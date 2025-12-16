@@ -53,6 +53,10 @@ class ExplanationDialog:
         # Set up close handler
         self.window.on_close = self._on_close
 
+        # Ensure window is registered with app before showing
+        if self.window not in self.app.windows:
+            self.app.windows.add(self.window)
+
         self.window.show()
 
         # Set focus to explanation text for screen readers
@@ -233,6 +237,11 @@ class LoadingDialog:
             resizable=False,
         )
         self.window.content = main_box
+
+        # Ensure window is registered with app before showing
+        if self.window not in self.app.windows:
+            self.app.windows.add(self.window)
+
         self.window.show()
 
         # Start the activity indicator
@@ -325,6 +334,11 @@ class ErrorDialog:
             resizable=False,
         )
         self.window.content = main_box
+
+        # Ensure window is registered with app before showing
+        if self.window not in self.app.windows:
+            self.app.windows.add(self.window)
+
         self.window.show()
 
     def _on_close_pressed(self, widget) -> None:

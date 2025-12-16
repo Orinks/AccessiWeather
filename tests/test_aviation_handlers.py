@@ -44,3 +44,38 @@ async def test_on_view_aviation_pressed_without_client_shows_message():
     await on_view_aviation_pressed(app, widget=object())
 
     info_dialog.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_aviation_dialog_registers_window_with_app():
+    """Test that aviation dialog registers its window with app.windows before showing."""
+    import os
+
+    os.environ["TOGA_BACKEND"] = "toga_dummy"
+
+    import toga
+
+    # Create a proper app with window set support
+    app = toga.App(
+        formal_name="Test App",
+        app_id="test.aviation.dialog",
+    )
+    app.main_window = toga.MainWindow(title="Test")
+    app.main_window.content = toga.Box()
+
+    # Simulate the app having a weather client
+    app.weather_client = object()
+
+    from accessiweather.dialogs.aviation_dialog import AviationDialog
+
+    dialog = AviationDialog(app)
+
+    # Show the dialog
+    await dialog.show_and_focus()
+
+    # Verify the window was registered with the app
+    assert dialog.window is not None
+    assert dialog.window in app.windows
+
+    # Clean up
+    dialog.window.close()

@@ -129,6 +129,10 @@ class ForecastDiscussionDialog:
                 self._create_ui()
                 self._setup_accessibility()
 
+            # Ensure window is registered with app before showing
+            if self.window not in self.app.windows:
+                self.app.windows.add(self.window)
+
             # Show the window
             self.window.show()
 

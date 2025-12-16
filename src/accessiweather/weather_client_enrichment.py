@@ -356,12 +356,6 @@ async def populate_environmental_metrics(
         return
 
     weather_data.environmental = environmental
-    if (
-        client.air_quality_notify_threshold
-        and environmental.air_quality_index is not None
-        and environmental.air_quality_index >= client.air_quality_notify_threshold
-    ):
-        client._maybe_generate_air_quality_alert(weather_data, environmental)
 
 
 async def enrich_with_visual_crossing_moon_data(

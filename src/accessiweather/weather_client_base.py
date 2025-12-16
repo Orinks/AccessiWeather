@@ -27,7 +27,6 @@ from .models import (
     AppSettings,
     AviationData,
     CurrentConditions,
-    EnvironmentalConditions,
     Forecast,
     HourlyForecast,
     HourlyForecastPeriod,
@@ -35,7 +34,6 @@ from .models import (
     SourceAttribution,
     SourceData,
     TrendInsight,
-    WeatherAlert,
     WeatherAlerts,
     WeatherData,
 )
@@ -80,13 +78,9 @@ class WeatherClient:
         if self._test_mode:
             self.air_quality_enabled = False
             self.pollen_enabled = False
-        self.air_quality_notify_threshold = int(self.settings.air_quality_notify_threshold or 0)
+
         self.offline_cache = offline_cache
-        if self.offline_cache:
-            try:
-                self.offline_cache.purge_expired()
-            except Exception as exc:  # noqa: BLE001
-                logger.debug(f"Weather cache purge failed: {exc}")
+        self._cache_purge_pending = True
 
         # Initialize Visual Crossing client if API key is provided
         self.visual_crossing_client = None
@@ -317,6 +311,14 @@ class WeatherClient:
 
         """
         logger.info(f"Fetching weather data for {location.name}")
+
+        # Lazy cache purge on first data fetch (deferred from __init__ for faster startup)
+        if self._cache_purge_pending and self.offline_cache:
+            self._cache_purge_pending = False
+            try:
+                self.offline_cache.purge_expired()
+            except Exception as exc:  # noqa: BLE001
+                logger.debug(f"Weather cache purge failed: {exc}")
 
         # Handle force_refresh by temporarily clearing cache for this location
         if force_refresh and self.offline_cache:
@@ -1069,49 +1071,6 @@ class WeatherClient:
             self.offline_cache.store(location, weather_data)
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"Failed to persist weather data cache: {exc}")
-
-    def _maybe_generate_air_quality_alert(
-        self, weather_data: WeatherData, environmental: EnvironmentalConditions
-    ) -> None:
-        if not self.alerts_enabled:
-            return
-        severity = self._air_quality_severity(environmental.air_quality_index or 0.0)
-        description = (
-            f"Air quality index is {environmental.air_quality_index:.0f}"
-            if environmental.air_quality_index is not None
-            else "Air quality threshold exceeded"
-        )
-        if environmental.air_quality_category:
-            description += f" ({environmental.air_quality_category})"
-
-        alert = WeatherAlert(
-            title="Air Quality Alert",
-            description=description,
-            severity=severity,
-            urgency="Expected",
-            certainty="Observed",
-            event="Air Quality Alert",
-            headline=f"Air quality {environmental.air_quality_category or ''}".strip(),
-            instruction="Consider limiting outdoor exposure and using air filtration indoors.",
-            areas=[weather_data.location.name],
-            source="AirQuality",
-        )
-
-        alerts = weather_data.alerts.alerts if weather_data.alerts else []
-        combined: dict[str, WeatherAlert] = {alert.get_unique_id(): alert for alert in alerts}
-        combined[alert.get_unique_id()] = alert
-        weather_data.alerts = WeatherAlerts(alerts=list(combined.values()))
-
-    def _air_quality_severity(self, value: float) -> str:
-        if value >= 300:
-            return "Extreme"
-        if value >= 200:
-            return "Severe"
-        if value >= 150:
-            return "Moderate"
-        if value >= 100:
-            return "Minor"
-        return "Unknown"
 
     def _compute_temperature_trend(self, weather_data: WeatherData) -> TrendInsight | None:
         return trends.compute_temperature_trend(weather_data, self.trend_hours)

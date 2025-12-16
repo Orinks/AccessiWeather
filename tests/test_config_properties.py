@@ -83,7 +83,6 @@ def valid_app_settings(draw) -> AppSettings:
         show_uv_index=draw(booleans()),
         air_quality_enabled=draw(booleans()),
         pollen_enabled=draw(booleans()),
-        air_quality_notify_threshold=draw(integers(min_value=1, max_value=5)),
         offline_cache_enabled=draw(booleans()),
         offline_cache_max_age_minutes=draw(integers(min_value=1, max_value=1440)),
         weather_history_enabled=draw(booleans()),
@@ -170,7 +169,6 @@ class TestAppSettingsRoundtrip:
         assert restored.show_uv_index == settings_obj.show_uv_index
         assert restored.air_quality_enabled == settings_obj.air_quality_enabled
         assert restored.pollen_enabled == settings_obj.pollen_enabled
-        assert restored.air_quality_notify_threshold == settings_obj.air_quality_notify_threshold
         assert restored.offline_cache_enabled == settings_obj.offline_cache_enabled
         assert restored.offline_cache_max_age_minutes == settings_obj.offline_cache_max_age_minutes
         assert restored.weather_history_enabled == settings_obj.weather_history_enabled

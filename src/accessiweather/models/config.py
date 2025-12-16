@@ -50,7 +50,6 @@ class AppSettings:
     show_seasonal_data: bool = True
     air_quality_enabled: bool = True
     pollen_enabled: bool = True
-    air_quality_notify_threshold: int = 3
     offline_cache_enabled: bool = True
     offline_cache_max_age_minutes: int = 180
     weather_history_enabled: bool = True
@@ -138,7 +137,6 @@ class AppSettings:
             "show_seasonal_data": self.show_seasonal_data,
             "air_quality_enabled": self.air_quality_enabled,
             "pollen_enabled": self.pollen_enabled,
-            "air_quality_notify_threshold": self.air_quality_notify_threshold,
             "offline_cache_enabled": self.offline_cache_enabled,
             "offline_cache_max_age_minutes": self.offline_cache_max_age_minutes,
             "weather_history_enabled": self.weather_history_enabled,
@@ -201,7 +199,6 @@ class AppSettings:
             show_seasonal_data=cls._as_bool(data.get("show_seasonal_data"), True),
             air_quality_enabled=cls._as_bool(data.get("air_quality_enabled"), True),
             pollen_enabled=cls._as_bool(data.get("pollen_enabled"), True),
-            air_quality_notify_threshold=data.get("air_quality_notify_threshold", 3),
             offline_cache_enabled=cls._as_bool(data.get("offline_cache_enabled"), True),
             offline_cache_max_age_minutes=data.get("offline_cache_max_age_minutes", 180),
             weather_history_enabled=cls._as_bool(data.get("weather_history_enabled"), True),
