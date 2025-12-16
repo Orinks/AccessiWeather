@@ -600,9 +600,29 @@ class SettingsDialog:
         free_only = not getattr(self.current_settings, "allow_paid_models", False)
 
         def on_model_selected(model_id: str) -> None:
-            """Update the selected model label when a model is selected."""
-            if hasattr(self, "selected_model_label") and self.selected_model_label:
+            """Handle model selection from the dialog."""
+            if hasattr(self, "selected_model_label"):
                 self.selected_model_label.text = model_id
+            self._selected_specific_model = model_id
+            if hasattr(self, "ai_model_selection"):
+                if "Specific Model" not in self.ai_model_display_to_value:
+                    self.ai_model_display_to_value["Specific Model"] = model_id
+                    self.ai_model_value_to_display[model_id] = "Specific Model"
+                else:
+                    old_model = self.ai_model_display_to_value.get("Specific Model")
+                    if old_model and old_model in self.ai_model_value_to_display:
+                        del self.ai_model_value_to_display[old_model]
+                    self.ai_model_display_to_value["Specific Model"] = model_id
+                    self.ai_model_value_to_display[model_id] = "Specific Model"
+
+                # Get current items from the ListSource (extract string values)
+                current_items = [item.value for item in self.ai_model_selection.items]
+
+                if "Specific Model" not in current_items:
+                    current_items.append("Specific Model")
+                    self.ai_model_selection.items = current_items
+
+                self.ai_model_selection.value = "Specific Model"
 
         await show_model_selection_dialog(
             self.app, current_model, free_only=free_only, on_model_selected=on_model_selected
