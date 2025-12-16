@@ -103,6 +103,10 @@ class UpdateProgressDialog:
             # Create dialog content
             self._create_dialog_content()
 
+            # Ensure window is registered with app before showing
+            if self.window not in self.app.windows:
+                self.app.windows.add(self.window)
+
             # Show the dialog
             self.window.show()
 

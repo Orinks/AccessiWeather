@@ -102,8 +102,6 @@ class SettingsDialog:
         self.temperature_unit_selection = None
         self.ok_button = None
         self.cancel_button = None
-        # Environmental controls
-        self.air_quality_threshold_input = None
 
         # Notifications tab controls
         self.notifications_tab = None
@@ -155,6 +153,10 @@ class SettingsDialog:
 
             # Create dialog content (UI construction)
             self._create_dialog_content()
+
+            # Ensure window is registered with app before showing
+            if self.window not in self.app.windows:
+                self.app.windows.add(self.window)
 
             # Show the dialog immediately for responsive UX
             self.window.show()

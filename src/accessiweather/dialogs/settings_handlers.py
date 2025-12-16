@@ -42,14 +42,6 @@ def _apply_general_settings(dialog, settings):
     if getattr(dialog, "enable_alerts_switch", None):
         dialog.enable_alerts_switch.value = getattr(settings, "enable_alerts", True)
 
-    if getattr(dialog, "air_quality_threshold_input", None):
-        try:
-            dialog.air_quality_threshold_input.value = int(
-                getattr(settings, "air_quality_notify_threshold", 3)
-            )
-        except Exception:  # pragma: no cover - defensive default
-            dialog.air_quality_threshold_input.value = 3
-
     # Time display settings
     if getattr(dialog, "time_display_mode_selection", None):
         display = dialog.time_display_value_to_display.get(
@@ -649,14 +641,6 @@ def _collect_alert_settings(dialog, current_settings):
     else:
         ignored_categories = list(getattr(current_settings, "alert_ignored_categories", []))
 
-    aq_threshold = 3
-    if getattr(dialog, "air_quality_threshold_input", None) is not None:
-        try:
-            aq_threshold = int(dialog.air_quality_threshold_input.value)
-        except (TypeError, ValueError):
-            aq_threshold = getattr(current_settings, "air_quality_notify_threshold", 3)
-    aq_threshold = max(0, min(500, aq_threshold))
-
     return {
         "alert_notifications_enabled": alerts_enabled,
         "alert_notify_extreme": notify_extreme,
@@ -670,7 +654,6 @@ def _collect_alert_settings(dialog, current_settings):
         "alert_freshness_window_minutes": freshness_window,
         "alert_max_notifications_per_hour": max_per_hour,
         "alert_ignored_categories": ignored_categories,
-        "air_quality_notify_threshold": aq_threshold,
     }
 
 
@@ -774,7 +757,6 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         alert_freshness_window_minutes=alerts["alert_freshness_window_minutes"],
         alert_max_notifications_per_hour=alerts["alert_max_notifications_per_hour"],
         alert_ignored_categories=alerts["alert_ignored_categories"],
-        air_quality_notify_threshold=alerts["air_quality_notify_threshold"],
         # Settings without UI widgets (preserve from current_settings)
         github_backend_url="",
         trend_insights_enabled=getattr(current_settings, "trend_insights_enabled", True),

@@ -129,6 +129,10 @@ class AviationDialog:
         if self.window is None:
             self._build_ui()
 
+        # Ensure window is registered with app before showing
+        if self.window not in self.app.windows:
+            self.app.windows.add(self.window)
+
         self.window.show()
 
         await asyncio.sleep(0.1)

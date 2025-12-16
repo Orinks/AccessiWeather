@@ -273,10 +273,17 @@ class AlertManager:
         )  # tokens per second
         self._rate_limit_last_refill: float = time.time()
 
-        # Load existing state
-        self._load_state()
+        # Defer state loading until first use for faster startup
+        self._state_loaded = False
 
         logger.info(f"AlertManager initialized with state file: {self.state_file}")
+
+    def _ensure_state_loaded(self):
+        """Ensure state is loaded before first use (lazy loading)."""
+        if self._state_loaded:
+            return
+        self._state_loaded = True
+        self._load_state()
 
     def _load_state(self):
         """Load alert state from persistent storage."""
@@ -513,6 +520,9 @@ class AlertManager:
             List of tuples (alert, notification_reason) for alerts that should trigger notifications.
 
         """
+        # Ensure state is loaded (lazy loading for faster startup)
+        self._ensure_state_loaded()
+
         if not alerts or not alerts.has_alerts():
             return []
 
@@ -608,6 +618,7 @@ class AlertManager:
 
     def mark_alert_resolved(self, alert_id: str):
         """Mark an alert as resolved/expired."""
+        self._ensure_state_loaded()
         if alert_id in self.alert_states:
             # We could add a resolved timestamp here if needed
             logger.info(f"Alert marked as resolved: {alert_id}")
@@ -616,6 +627,7 @@ class AlertManager:
 
     def get_alert_statistics(self) -> dict:
         """Get statistics about alert processing."""
+        self._ensure_state_loaded()
         now = datetime.now(UTC)
 
         # Refill tokens to get current state
@@ -678,6 +690,7 @@ class AlertManager:
 
     def clear_state(self):
         """Clear all alert state (for testing or reset)."""
+        self._state_loaded = True
         self.alert_states.clear()
         self.last_global_notification = None
         self.notifications_this_hour = 0

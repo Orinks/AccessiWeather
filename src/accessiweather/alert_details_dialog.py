@@ -166,6 +166,11 @@ class AlertDetailsDialog:
 
             # Set the content and show the window
             self.dialog_window.content = main_box
+
+            # Ensure window is registered with app before showing
+            if self.dialog_window not in self.app.windows:
+                self.app.windows.add(self.dialog_window)
+
             self.dialog_window.show()
 
             # Set initial focus for accessibility after window is fully rendered

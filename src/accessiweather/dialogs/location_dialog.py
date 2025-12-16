@@ -57,6 +57,11 @@ class AddLocationDialog:
     async def show_and_wait(self):
         """Show the dialog and wait for user interaction."""
         self._create_dialog()
+
+        # Ensure window is registered with app before showing
+        if self.dialog_window not in self.app.windows:
+            self.app.windows.add(self.dialog_window)
+
         self.dialog_window.show()
 
         # Set initial focus for accessibility after dialog is shown
