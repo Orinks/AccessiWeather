@@ -10,14 +10,7 @@ from typing import TYPE_CHECKING
 import toga
 
 from . import app_helpers, background_tasks, event_handlers, ui_builder
-from .alert_manager import AlertManager
-from .alert_notification_system import AlertNotificationSystem
-from .cache import WeatherDataCache
 from .config import ConfigManager
-from .display import WeatherPresenter
-from .location_manager import LocationManager
-from .weather_client import WeatherClient
-from .weather_history import WeatherHistoryService
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle guard
     from .app import AccessiWeatherApp
@@ -37,20 +30,11 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     )
     config = app.config_manager.load_config()
 
-    try:
-        from .services import GitHubUpdateService, sync_update_channel_to_service
+    # Defer update service initialization to background
+    app.update_service = None
+    asyncio.get_event_loop().call_soon(_initialize_update_service_deferred, app)
 
-        app.update_service = GitHubUpdateService(
-            app_name="AccessiWeather",
-            config_dir=app.config_manager.config_dir if app.config_manager else None,
-        )
-        # Sync the update channel from AppSettings to UpdateSettings
-        sync_update_channel_to_service(app.config_manager, app.update_service)
-        logger.info("Update service initialized")
-    except Exception as exc:  # pragma: no cover - defensive logging
-        logger.warning("Failed to initialize update service: %s", exc)
-        app.update_service = None
-
+    # Initialize weather client with lazy imports
     data_source = config.settings.data_source if config.settings else "auto"
     visual_crossing_api_key = config.settings.visual_crossing_api_key if config.settings else ""
     config_dir_value = getattr(app.config_manager, "config_dir", None)
@@ -67,6 +51,10 @@ def initialize_components(app: AccessiWeatherApp) -> None:
         except (TypeError, ValueError):  # pragma: no cover - defensive logging
             cache_root = Path.cwd()
     cache_dir = cache_root / "weather_cache"
+
+    # Lazy import WeatherDataCache
+    from .cache import WeatherDataCache
+
     offline_cache = WeatherDataCache(cache_dir)
     debug_enabled = bool(getattr(config.settings, "debug_mode", False))
     log_level = logging.DEBUG if debug_enabled else logging.INFO
@@ -74,6 +62,10 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     root_logger.setLevel(log_level)
     for handler in root_logger.handlers:
         handler.setLevel(log_level)
+
+    # Lazy import WeatherClient
+    from .weather_client import WeatherClient
+
     app.weather_client = WeatherClient(
         user_agent="AccessiWeather/2.0",
         data_source=data_source,
@@ -82,11 +74,19 @@ def initialize_components(app: AccessiWeatherApp) -> None:
         offline_cache=offline_cache,
     )
 
+    # Lazy import LocationManager
+    from .location_manager import LocationManager
+
     app.location_manager = LocationManager()
 
     config = app.config_manager.get_config()
+
+    # Lazy import WeatherPresenter
+    from .display import WeatherPresenter
+
     app.presenter = WeatherPresenter(config.settings)
 
+    # Lazy import notifier
     from .notifications.toast_notifier import SafeDesktopNotifier
 
     app._notifier = SafeDesktopNotifier(
@@ -94,11 +94,15 @@ def initialize_components(app: AccessiWeatherApp) -> None:
         soundpack=getattr(config.settings, "sound_pack", "default"),
     )
 
-    # Initialize AI explanation cache
+    # Initialize AI explanation cache (lazy import)
     from .cache import Cache
 
     ai_cache_ttl = getattr(config.settings, "ai_cache_ttl", 300)  # 5 minutes default
     app.ai_explanation_cache = Cache(default_ttl=ai_cache_ttl)
+
+    # Lazy import alert components
+    from .alert_manager import AlertManager
+    from .alert_notification_system import AlertNotificationSystem
 
     config_dir = str(app.paths.config)
     alert_settings = config.settings.to_alert_settings()
@@ -107,12 +111,10 @@ def initialize_components(app: AccessiWeatherApp) -> None:
         app.alert_manager, app._notifier, config.settings
     )
 
-    # Initialize weather history service
+    # Defer weather history service initialization
+    app.weather_history_service = None
     if config.settings.weather_history_enabled:
-        app.weather_history_service = WeatherHistoryService()
-        logger.info("Weather history service initialized")
-    else:
-        app.weather_history_service = None
+        asyncio.get_event_loop().call_soon(_initialize_weather_history_deferred, app)
 
     try:
         if bool(getattr(config.settings, "minimize_to_tray", False)):
@@ -132,6 +134,34 @@ def initialize_components(app: AccessiWeatherApp) -> None:
             group=toga.Group.COMMANDS,
         )
         app.commands.add(test_alert_command)
+
+
+def _initialize_update_service_deferred(app: AccessiWeatherApp) -> None:
+    """Initialize update service in a deferred manner to not block startup."""
+    try:
+        from .services import GitHubUpdateService, sync_update_channel_to_service
+
+        app.update_service = GitHubUpdateService(
+            app_name="AccessiWeather",
+            config_dir=app.config_manager.config_dir if app.config_manager else None,
+        )
+        sync_update_channel_to_service(app.config_manager, app.update_service)
+        logger.info("Update service initialized (deferred)")
+    except Exception as exc:  # pragma: no cover - defensive logging
+        logger.warning("Failed to initialize update service: %s", exc)
+        app.update_service = None
+
+
+def _initialize_weather_history_deferred(app: AccessiWeatherApp) -> None:
+    """Initialize weather history service in a deferred manner."""
+    try:
+        from .weather_history import WeatherHistoryService
+
+        app.weather_history_service = WeatherHistoryService()
+        logger.info("Weather history service initialized (deferred)")
+    except Exception as exc:  # pragma: no cover - defensive logging
+        logger.warning("Failed to initialize weather history service: %s", exc)
+        app.weather_history_service = None
 
 
 def load_initial_data(app: AccessiWeatherApp) -> None:

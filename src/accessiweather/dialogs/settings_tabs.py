@@ -38,26 +38,6 @@ def create_general_tab(dialog):
     )
     general_box.add(dialog.update_interval_input)
 
-    aq_default = getattr(dialog.current_settings, "air_quality_notify_threshold", 3)
-    try:
-        aq_default = int(aq_default)
-    except Exception:  # pragma: no cover - fallback path
-        aq_default = 3
-
-    general_box.add(
-        toga.Label("Air Quality alert threshold (US AQI):", style=Pack(margin_bottom=5))
-    )
-    dialog.air_quality_threshold_input = toga.NumberInput(
-        value=aq_default,
-        style=Pack(margin_bottom=15),
-        id="air_quality_threshold_input",
-    )
-    dialog.air_quality_threshold_input.aria_label = "Air quality threshold"
-    dialog.air_quality_threshold_input.aria_description = (
-        "Set the US AQI level at which air quality alerts should be triggered."
-    )
-    general_box.add(dialog.air_quality_threshold_input)
-
     dialog.option_container.content.append("General", general_box)
 
 
@@ -1125,7 +1105,7 @@ def create_ai_tab(dialog):
     ai_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
     dialog.ai_tab = ai_box
 
-    # Enable AI Explanations toggle
+    # Section header
     ai_box.add(
         toga.Label(
             "AI Weather Explanations",
@@ -1134,23 +1114,11 @@ def create_ai_tab(dialog):
     )
     ai_box.add(
         toga.Label(
-            "Get natural language explanations of weather conditions using AI.",
+            "Get natural language explanations of weather conditions using AI. "
+            "Configure your OpenRouter API key to enable the 'Explain Weather' button.",
             style=Pack(margin_bottom=10, font_size=9),
         )
     )
-
-    dialog.enable_ai_switch = toga.Switch(
-        "Enable AI Explanations",
-        value=getattr(dialog.current_settings, "enable_ai_explanations", False),
-        style=Pack(margin_bottom=15),
-        id="enable_ai_switch",
-    )
-    dialog.enable_ai_switch.aria_label = "Enable AI explanations"
-    dialog.enable_ai_switch.aria_description = (
-        "Turn on AI-powered weather explanations. When enabled, an 'Explain Weather' "
-        "button will appear in the weather display."
-    )
-    ai_box.add(dialog.enable_ai_switch)
 
     # OpenRouter API Key
     ai_box.add(
@@ -1202,37 +1170,81 @@ def create_ai_tab(dialog):
         )
     )
 
+    # Model options:
+    # - "Llama 3.3 70B (Free)" uses a specific free model
+    # - "Auto Router (Paid)" uses openrouter/auto which picks the best paid model
+    # - "Specific Model" lets user pick any model from the browser
     model_options = [
-        "Auto (Free)",
-        "Auto (Paid - requires API key)",
+        "Llama 3.3 70B (Free)",
+        "Auto Router (Paid)",
     ]
     dialog.ai_model_display_to_value = {
-        "Auto (Free)": "auto:free",
-        "Auto (Paid - requires API key)": "auto",
+        "Llama 3.3 70B (Free)": "meta-llama/llama-3.3-70b-instruct:free",
+        "Auto Router (Paid)": "auto",
     }
     dialog.ai_model_value_to_display = {
         value: key for key, value in dialog.ai_model_display_to_value.items()
     }
 
+    # Check if current model is a specific model (not free or auto)
+    current_model = getattr(
+        dialog.current_settings, "ai_model_preference", "meta-llama/llama-3.3-70b-instruct:free"
+    )
+    if current_model not in ("meta-llama/llama-3.3-70b-instruct:free", "auto"):
+        # Add "Specific Model" option for custom model selection
+        model_options.append("Specific Model")
+        dialog.ai_model_display_to_value["Specific Model"] = current_model
+        dialog.ai_model_value_to_display[current_model] = "Specific Model"
+        dialog._selected_specific_model = current_model
+
     dialog.ai_model_selection = toga.Selection(
         items=model_options,
-        style=Pack(margin_bottom=15),
+        style=Pack(margin_bottom=5),
         id="ai_model_selection",
     )
     dialog.ai_model_selection.aria_label = "AI model preference"
     dialog.ai_model_selection.aria_description = (
-        "Choose between free models (no API key needed) or paid models (requires API key)."
+        "Choose between the default free model, auto router for paid models, "
+        "or browse to select a specific model."
     )
 
     try:
-        current_model = getattr(dialog.current_settings, "ai_model_preference", "auto:free")
-        display_value = dialog.ai_model_value_to_display.get(current_model, "Auto (Free)")
+        display_value = dialog.ai_model_value_to_display.get(current_model, "Llama 3.3 70B (Free)")
         dialog.ai_model_selection.value = display_value
     except Exception as exc:
         logger.warning("Failed to set AI model selection: %s", exc)
-        dialog.ai_model_selection.value = "Auto (Free)"
+        dialog.ai_model_selection.value = "Llama 3.3 70B (Free)"
 
     ai_box.add(dialog.ai_model_selection)
+
+    # Selected model display (shows specific model ID when selected)
+    model_display_row = toga.Box(style=Pack(direction=ROW, margin_bottom=5))
+
+    dialog.selected_model_label = toga.Label(
+        current_model
+        if current_model not in ("meta-llama/llama-3.3-70b-instruct:free", "auto")
+        else "",
+        style=Pack(flex=1, font_size=9, padding_top=5),
+    )
+    dialog.selected_model_label.aria_label = "Currently selected model"
+    dialog.selected_model_label.aria_live = "polite"
+    model_display_row.add(dialog.selected_model_label)
+
+    ai_box.add(model_display_row)
+
+    # Browse Models button
+    dialog.select_model_button = toga.Button(
+        "Browse Models...",
+        on_press=dialog._on_select_ai_model,
+        style=Pack(margin_bottom=15, width=150),
+        id="select_model_button",
+    )
+    dialog.select_model_button.aria_label = "Browse and select AI model"
+    dialog.select_model_button.aria_description = (
+        "Open a dialog to browse and select from available OpenRouter AI models. "
+        "You can filter by free or paid models and search by name."
+    )
+    ai_box.add(dialog.select_model_button)
 
     # Explanation Style
     ai_box.add(

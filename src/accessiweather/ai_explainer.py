@@ -833,18 +833,18 @@ class AIExplainer:
         return sorted_sources[0]
 
 
-def should_show_explain_button(ai_enabled: bool) -> bool:
+def has_valid_api_key(api_key: str | None) -> bool:
     """
-    Determine if the Explain Weather button should be shown.
+    Check if a valid API key is configured.
 
     Args:
-        ai_enabled: Whether AI explanations are enabled in settings
+        api_key: The API key to check
 
     Returns:
-        True if button should be shown, False otherwise
+        True if API key exists and is not empty, False otherwise
 
     """
-    return ai_enabled
+    return bool(api_key and api_key.strip())
 
 
 def create_explain_weather_button(on_press):

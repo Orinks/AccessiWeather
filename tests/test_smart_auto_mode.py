@@ -106,7 +106,6 @@ async def test_auto_mode_enriches_with_visual_crossing_alerts():
     client = WeatherClient(data_source="auto", visual_crossing_api_key="test_key")
     client.air_quality_enabled = False
     client.pollen_enabled = False
-    client.air_quality_notify_threshold = 0
     client.environmental_client = None
     client.trend_insights_enabled = False
 
@@ -300,7 +299,6 @@ async def test_visual_crossing_alerts_merged_with_existing():
     client = WeatherClient(data_source="auto", visual_crossing_api_key="test_key")
     client.air_quality_enabled = False
     client.pollen_enabled = False
-    client.air_quality_notify_threshold = 0
     client.environmental_client = None
     client.trend_insights_enabled = False
 

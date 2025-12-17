@@ -42,14 +42,6 @@ def _apply_general_settings(dialog, settings):
     if getattr(dialog, "enable_alerts_switch", None):
         dialog.enable_alerts_switch.value = getattr(settings, "enable_alerts", True)
 
-    if getattr(dialog, "air_quality_threshold_input", None):
-        try:
-            dialog.air_quality_threshold_input.value = int(
-                getattr(settings, "air_quality_notify_threshold", 3)
-            )
-        except Exception:  # pragma: no cover - defensive default
-            dialog.air_quality_threshold_input.value = 3
-
     # Time display settings
     if getattr(dialog, "time_display_mode_selection", None):
         display = dialog.time_display_value_to_display.get(
@@ -252,23 +244,28 @@ def _apply_alert_notification_settings(dialog, settings):
 
 def _apply_ai_settings(dialog, settings):
     """Apply AI explanation settings to UI widgets."""
-    # Enable AI explanations switch
-    if getattr(dialog, "enable_ai_switch", None) is not None:
-        dialog.enable_ai_switch.value = getattr(settings, "enable_ai_explanations", False)
-
     # OpenRouter API key
     if getattr(dialog, "openrouter_api_key_input", None) is not None:
         dialog.openrouter_api_key_input.value = getattr(settings, "openrouter_api_key", "") or ""
 
     # Model preference
     if getattr(dialog, "ai_model_selection", None) is not None:
-        model_pref = getattr(settings, "ai_model_preference", "auto:free")
+        model_pref = getattr(
+            settings, "ai_model_preference", "meta-llama/llama-3.3-70b-instruct:free"
+        )
         if hasattr(dialog, "ai_model_value_to_display"):
-            display_value = dialog.ai_model_value_to_display.get(model_pref, "Auto (Free)")
+            display_value = dialog.ai_model_value_to_display.get(model_pref, "Llama 3.3 70B (Free)")
             try:
                 dialog.ai_model_selection.value = display_value
             except Exception as exc:
                 logger.debug("%s: Failed to set AI model selection: %s", LOG_PREFIX, exc)
+        # Update selected model label
+        if hasattr(dialog, "selected_model_label"):
+            dialog.selected_model_label.value = (
+                model_pref
+                if model_pref not in ("meta-llama/llama-3.3-70b-instruct:free", "auto")
+                else ""
+            )
 
     # Explanation style
     if getattr(dialog, "ai_style_selection", None) is not None:
@@ -644,14 +641,6 @@ def _collect_alert_settings(dialog, current_settings):
     else:
         ignored_categories = list(getattr(current_settings, "alert_ignored_categories", []))
 
-    aq_threshold = 3
-    if getattr(dialog, "air_quality_threshold_input", None) is not None:
-        try:
-            aq_threshold = int(dialog.air_quality_threshold_input.value)
-        except (TypeError, ValueError):
-            aq_threshold = getattr(current_settings, "air_quality_notify_threshold", 3)
-    aq_threshold = max(0, min(500, aq_threshold))
-
     return {
         "alert_notifications_enabled": alerts_enabled,
         "alert_notify_extreme": notify_extreme,
@@ -665,17 +654,11 @@ def _collect_alert_settings(dialog, current_settings):
         "alert_freshness_window_minutes": freshness_window,
         "alert_max_notifications_per_hour": max_per_hour,
         "alert_ignored_categories": ignored_categories,
-        "air_quality_notify_threshold": aq_threshold,
     }
 
 
 def _collect_ai_settings(dialog, current_settings: AppSettings) -> dict:
     """Collect AI explanation settings from dialog widgets."""
-    # Enable AI explanations
-    enable_ai = getattr(current_settings, "enable_ai_explanations", False)
-    if hasattr(dialog, "enable_ai_switch"):
-        enable_ai = getattr(dialog.enable_ai_switch, "value", enable_ai)
-
     # OpenRouter API key
     api_key = getattr(current_settings, "openrouter_api_key", "")
     if hasattr(dialog, "openrouter_api_key_input"):
@@ -711,7 +694,6 @@ def _collect_ai_settings(dialog, current_settings: AppSettings) -> dict:
         custom_instructions = value.strip() if value.strip() else None
 
     return {
-        "enable_ai_explanations": enable_ai,
         "openrouter_api_key": api_key,
         "ai_model_preference": model_pref,
         "ai_explanation_style": style,
@@ -775,7 +757,6 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         alert_freshness_window_minutes=alerts["alert_freshness_window_minutes"],
         alert_max_notifications_per_hour=alerts["alert_max_notifications_per_hour"],
         alert_ignored_categories=alerts["alert_ignored_categories"],
-        air_quality_notify_threshold=alerts["air_quality_notify_threshold"],
         # Settings without UI widgets (preserve from current_settings)
         github_backend_url="",
         trend_insights_enabled=getattr(current_settings, "trend_insights_enabled", True),
@@ -798,7 +779,6 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         taskbar_icon_dynamic_enabled=display["taskbar_icon_dynamic_enabled"],
         taskbar_icon_text_format=display["taskbar_icon_text_format"],
         # AI explanation settings
-        enable_ai_explanations=ai["enable_ai_explanations"],
         openrouter_api_key=ai["openrouter_api_key"],
         ai_model_preference=ai["ai_model_preference"],
         ai_explanation_style=ai["ai_explanation_style"],

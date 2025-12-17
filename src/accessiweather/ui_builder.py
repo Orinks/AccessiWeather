@@ -165,6 +165,20 @@ def render_forecast_with_headings(
     return heading_labels
 
 
+def _create_conditions_webview_lazy(height: int = 120) -> toga.WebView:
+    """Create conditions WebView with lazy import to improve startup time."""
+    from .ui.webview_weather import create_conditions_webview
+
+    return create_conditions_webview(height=height)
+
+
+def _create_forecast_webview_lazy(height: int = 200) -> toga.WebView:
+    """Create forecast WebView with lazy import to improve startup time."""
+    from .ui.webview_weather import create_forecast_webview
+
+    return create_forecast_webview(height=height)
+
+
 def initialize_system_tray(app: AccessiWeatherApp) -> bool:
     """
     Initialize system tray with Windows 11 compatibility.
@@ -575,9 +589,7 @@ def create_weather_display_section(app: AccessiWeatherApp) -> toga.Box:
 
     # Create current conditions display based on user preference
     if use_html_conditions:
-        from .ui.webview_weather import create_conditions_webview
-
-        app.current_conditions_webview = create_conditions_webview(height=120)
+        app.current_conditions_webview = _create_conditions_webview_lazy(height=120)
         weather_box.add(app.current_conditions_webview)
         app.current_conditions_display = None
     else:
@@ -601,9 +613,7 @@ def create_weather_display_section(app: AccessiWeatherApp) -> toga.Box:
 
     # Create forecast display based on user preference
     if use_html_forecast:
-        from .ui.webview_weather import create_forecast_webview
-
-        app.forecast_webview = create_forecast_webview(height=200)
+        app.forecast_webview = _create_forecast_webview_lazy(height=200)
         weather_box.add(app.forecast_webview)
         app.forecast_container = None
         app.forecast_scroll = None
@@ -626,10 +636,11 @@ def create_weather_display_section(app: AccessiWeatherApp) -> toga.Box:
         app.forecast_container = None
         app.forecast_scroll = None
 
-    # Add "Explain Weather" button if AI explanations are enabled
+    # Add "Explain Weather" button if API key is configured
     try:
         config = app.config_manager.get_config()
-        if config.settings.enable_ai_explanations:
+        api_key = getattr(config.settings, "openrouter_api_key", "")
+        if api_key and api_key.strip():
             from .ai_explainer import create_explain_weather_button
             from .handlers.ai_handlers import on_explain_weather_pressed
 
