@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+-
+
+### Changed
+-
+
+### Fixed
+-
+
+### Removed
+-
+
+---
+
+## [0.4.2] - 2025-12-16
+
+### Added
 - Heading navigation for forecast days - screen readers can now jump between days using heading shortcuts (H key)
 - HTML-based weather display with semantic headings for better accessibility
 - AI model browser - you can now pick specific OpenRouter models instead of just "Auto (Free)" or "Auto (Paid)". Hit "Browse Models..." in the AI tab to search through all available models, filter by free/paid, and see context lengths and pricing
@@ -13,21 +29,12 @@ All notable changes to this project will be documented in this file.
 - Forecast display now uses WebView with semantic HTML for faster rendering and better screen reader support
 
 ### Fixed
+- API keys now persist in secure storage regardless of selected data source, fixing auto mode's ability to use Visual Crossing when configured
 - System tray tooltip now shows actual weather data (like "45F Clear") instead of just "AccessiWeather" on Windows 11
 - Screen reader users can now navigate forecast days using heading shortcuts instead of reading through all content sequentially
 - Hourly forecast times now display correctly in your location's timezone for all data sources (NWS and Visual Crossing were showing UTC times, causing incorrect displays like "0:00 AM" for midnight UTC)
 - Forecast periods no longer appear twice - the app now picks the best single source (NWS for US, Open-Meteo internationally) instead of merging forecasts from multiple sources with different naming conventions
 - Snow depth and snowfall values now display correctly - Open-Meteo was returning data in metric units (cm/meters) but the code treated them as imperial (inches/feet), causing values to be 2-3x too high
-
-### Removed
--
-
----
-
-## [0.4.2] - 2025-12-07
-
-### Fixed
-- API keys now persist in secure storage regardless of selected data source, fixing auto mode's ability to use Visual Crossing when configured
 
 ---
 
