@@ -24,6 +24,12 @@ All notable changes to this project will be documented in this file.
 - Heading navigation for forecast days - screen readers can now jump between days using heading shortcuts (H key)
 - HTML-based weather display with semantic headings for better accessibility
 - AI model browser - you can now pick specific OpenRouter models instead of just "Auto (Free)" or "Auto (Paid)". Hit "Browse Models..." in the AI tab to search through all available models, filter by free/paid, and see context lengths and pricing
+- Smart Auto Source with seasonal weather display - automatically picks the best weather source (NWS for US, Open-Meteo internationally) and shows you which source each piece of data came from
+- Air Quality Dialog - dedicated view for detailed air quality and pollutant information accessible from the View menu
+- Hourly air quality forecasts - see pollutant levels and AQI predictions for the coming hours
+- Dynamic taskbar icon text - shows current weather conditions (temperature and conditions) in the taskbar on Windows 11+
+- Weather history trends and pollen display - compare weather against yesterday and last week, with detailed pollen count forecasts
+- Precipitation probability, snowfall, and UV index in forecasts - see detailed precipitation chance, expected snowfall amounts, and UV intensity in your forecast
 
 ### Changed
 - Forecast display now uses WebView with semantic HTML for faster rendering and better screen reader support
