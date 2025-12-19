@@ -149,7 +149,7 @@ class AddLocationDialog:
         search_box = toga.Box(style=Pack(direction=ROW, margin_bottom=5))
 
         self.search_input = toga.TextInput(
-            placeholder="Enter address, city, or ZIP code", style=Pack(flex=1, margin_right=10)
+            placeholder="City name or ZIP/postal code", style=Pack(flex=1, margin_right=10)
         )
         search_box.add(self.search_input)
 
@@ -162,7 +162,7 @@ class AddLocationDialog:
         section.add(search_box)
 
         search_help = toga.Label(
-            "Search for an address to automatically fill coordinates",
+            "Examples: 'New York', '10001', 'London'",
             style=Pack(font_style="italic", font_size=10, margin_bottom=10),
         )
         section.add(search_help)
