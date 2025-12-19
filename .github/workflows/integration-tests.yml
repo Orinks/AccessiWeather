@@ -58,7 +58,7 @@ jobs:
             --vcr-record=new_episodes
         env:
           LIVE_WEATHER_TESTS: "1"
-          # VISUAL_CROSSING_API_KEY: ${{ secrets.VISUAL_CROSSING_API_KEY }}
+          VISUAL_CROSSING_API_KEY: ${{ secrets.VISUAL_CROSSING_API_KEY }}
         timeout-minutes: 15
 
       - name: Notify on failure (scheduled runs)
