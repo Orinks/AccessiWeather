@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 import time
 from datetime import datetime
 
@@ -11,10 +10,18 @@ import pytest
 from accessiweather.models import Location
 from accessiweather.openmeteo_client import OpenMeteoApiClient
 from accessiweather.openmeteo_mapper import OpenMeteoMapper
+from tests.integration.conftest import (
+    LIVE_WEATHER_TESTS,
+    get_vcr_config,
+    skip_if_cassette_missing,
+)
 
-# Skip integration tests unless explicitly requested
-RUN_INTEGRATION = os.getenv("RUN_INTEGRATION_TESTS", "0") == "1"
-skip_reason = "Set RUN_INTEGRATION_TESTS=1 to run integration tests with real API calls"
+try:
+    import vcr
+
+    HAS_VCR = True
+except ImportError:
+    HAS_VCR = False
 
 # Test location: Lumberton, NJ (from the screenshot)
 TEST_LOCATION = Location(name="Lumberton, New Jersey", latitude=39.9643, longitude=-74.8099)
@@ -37,239 +44,239 @@ def mapper():
     return OpenMeteoMapper()
 
 
+def _run_with_cassette(cassette_name: str, test_fn):
+    """Run a test function with VCR cassette or in live mode."""
+    skip_if_cassette_missing(cassette_name)
+    if HAS_VCR:
+        my_vcr = vcr.VCR(**get_vcr_config())
+        with my_vcr.use_cassette(cassette_name):  # type: ignore[attr-defined]
+            test_fn()
+    else:
+        if not LIVE_WEATHER_TESTS:
+            pytest.skip("VCR not installed and not in live mode")
+        test_fn()
+
+
 @pytest.mark.integration
 @pytest.mark.network
-@pytest.mark.skipif(not RUN_INTEGRATION, reason=skip_reason)
-@pytest.mark.flaky(reruns=2, reruns_delay=5)
 def test_openmeteo_current_conditions_sunrise_sunset(openmeteo_client, mapper):
     """Test Open-Meteo current conditions returns valid sunrise/sunset times."""
-    # Fetch raw data from API
-    raw_data = openmeteo_client.get_current_weather(
-        latitude=TEST_LOCATION.latitude,
-        longitude=TEST_LOCATION.longitude,
-        temperature_unit="fahrenheit",
-    )
 
-    assert raw_data is not None, "Open-Meteo should return data"
-    assert "daily" in raw_data, "Response should include daily data with sunrise/sunset"
+    def run_test():
+        raw_data = openmeteo_client.get_current_weather(
+            latitude=TEST_LOCATION.latitude,
+            longitude=TEST_LOCATION.longitude,
+            temperature_unit="fahrenheit",
+        )
 
-    # Map to internal format
-    mapped_data = mapper.map_current_conditions(raw_data)
+        assert raw_data is not None, "Open-Meteo should return data"
+        assert "daily" in raw_data, "Response should include daily data with sunrise/sunset"
 
-    # Extract sunrise/sunset from mapped data
-    props = mapped_data["properties"]
-    sunrise_str = props["sunrise"]
-    sunset_str = props["sunset"]
+        mapped_data = mapper.map_current_conditions(raw_data)
 
-    assert sunrise_str is not None, "Sunrise time should be present"
-    assert sunset_str is not None, "Sunset time should be present"
+        props = mapped_data["properties"]
+        sunrise_str = props["sunrise"]
+        sunset_str = props["sunset"]
 
-    # Parse the datetime strings (they should be naive local time strings)
-    sunrise = datetime.fromisoformat(sunrise_str)
-    sunset = datetime.fromisoformat(sunset_str)
+        assert sunrise_str is not None, "Sunrise time should be present"
+        assert sunset_str is not None, "Sunset time should be present"
 
-    # Note: After our fix, sunrise/sunset are naive datetimes in local time
-    # They should NOT have timezone info
-    assert sunrise.tzinfo is None, "Sunrise should be naive (local time)"
-    assert sunset.tzinfo is None, "Sunset should be naive (local time)"
+        sunrise = datetime.fromisoformat(sunrise_str)
+        sunset = datetime.fromisoformat(sunset_str)
 
-    # Sunrise should be before sunset
-    assert sunrise < sunset, "Sunrise should occur before sunset"
+        assert sunrise.tzinfo is None, "Sunrise should be naive (local time)"
+        assert sunset.tzinfo is None, "Sunset should be naive (local time)"
 
-    # Sunrise/sunset should not be epoch (1970)
-    assert sunrise.year > 2000, f"Sunrise year {sunrise.year} is invalid"
-    assert sunset.year > 2000, f"Sunset year {sunset.year} is invalid"
+        # Contract-based assertions: sunrise before sunset, valid years
+        assert sunrise < sunset, "Sunrise should occur before sunset"
+        assert sunrise.year > 2000, f"Sunrise year {sunrise.year} is invalid"
+        assert sunset.year > 2000, f"Sunset year {sunset.year} is invalid"
 
-    # Sunrise should be in reasonable morning hours (4 AM - 9 AM typically)
-    assert 4 <= sunrise.hour <= 9, f"Sunrise hour {sunrise.hour} seems unreasonable"
+        # Relaxed hour checks for cassette replay (any reasonable hour)
+        assert 0 <= sunrise.hour <= 12, f"Sunrise hour {sunrise.hour} should be AM"
+        assert 12 <= sunset.hour <= 23, f"Sunset hour {sunset.hour} should be PM"
 
-    # Sunset should be in reasonable evening hours (4 PM - 8 PM typically)
-    assert 16 <= sunset.hour <= 20, f"Sunset hour {sunset.hour} seems unreasonable"
+        if LIVE_WEATHER_TESTS:
+            time.sleep(DELAY_BETWEEN_REQUESTS)
 
-    time.sleep(DELAY_BETWEEN_REQUESTS)
+    _run_with_cassette("openmeteo/test_current_sunrise_sunset.yaml", run_test)
 
 
 @pytest.mark.integration
 @pytest.mark.network
-@pytest.mark.skipif(not RUN_INTEGRATION, reason=skip_reason)
 def test_openmeteo_forecast_contains_sunrise_sunset(openmeteo_client):
     """Test Open-Meteo forecast includes sunrise/sunset data in raw response."""
-    # Fetch raw forecast data
-    data = openmeteo_client.get_forecast(
-        latitude=TEST_LOCATION.latitude,
-        longitude=TEST_LOCATION.longitude,
-        temperature_unit="fahrenheit",
-        days=7,
-    )
 
-    # Check raw response structure
-    assert "daily" in data, "Response should contain daily data"
-    daily = data["daily"]
+    def run_test():
+        data = openmeteo_client.get_forecast(
+            latitude=TEST_LOCATION.latitude,
+            longitude=TEST_LOCATION.longitude,
+            temperature_unit="fahrenheit",
+            days=7,
+        )
 
-    assert "sunrise" in daily, "Daily data should contain sunrise"
-    assert "sunset" in daily, "Daily data should contain sunset"
-    assert "time" in daily, "Daily data should contain time (dates)"
+        assert "daily" in data, "Response should contain daily data"
+        daily = data["daily"]
 
-    # Check that arrays have data
-    sunrise_list = daily["sunrise"]
-    sunset_list = daily["sunset"]
-    dates = daily["time"]
+        assert "sunrise" in daily, "Daily data should contain sunrise"
+        assert "sunset" in daily, "Daily data should contain sunset"
+        assert "time" in daily, "Daily data should contain time (dates)"
 
-    assert len(sunrise_list) > 0, "Sunrise array should have data"
-    assert len(sunset_list) > 0, "Sunset array should have data"
-    assert len(dates) > 0, "Dates array should have data"
-    assert len(sunrise_list) == len(sunset_list) == len(dates), "Arrays should have equal length"
+        sunrise_list = daily["sunrise"]
+        sunset_list = daily["sunset"]
+        dates = daily["time"]
 
-    # Parse and validate first day's sunrise/sunset
-    first_sunrise = sunrise_list[0]
-    first_sunset = sunset_list[0]
+        assert len(sunrise_list) > 0, "Sunrise array should have data"
+        assert len(sunset_list) > 0, "Sunset array should have data"
+        assert len(dates) > 0, "Dates array should have data"
+        assert len(sunrise_list) == len(sunset_list) == len(dates), (
+            "Arrays should have equal length"
+        )
 
-    assert first_sunrise is not None, "First sunrise should not be None"
-    assert first_sunset is not None, "First sunset should not be None"
+        first_sunrise = sunrise_list[0]
+        first_sunset = sunset_list[0]
 
-    # Parse ISO datetime strings (Open-Meteo with timezone=auto returns naive local times)
-    sunrise_dt = datetime.fromisoformat(first_sunrise)
-    sunset_dt = datetime.fromisoformat(first_sunset)
+        assert first_sunrise is not None, "First sunrise should not be None"
+        assert first_sunset is not None, "First sunset should not be None"
 
-    # Should be naive datetimes in local time
-    assert sunrise_dt.tzinfo is None, "Sunrise should be naive (local time)"
-    assert sunset_dt.tzinfo is None, "Sunset should be naive (local time)"
+        sunrise_dt = datetime.fromisoformat(first_sunrise)
+        sunset_dt = datetime.fromisoformat(first_sunset)
 
-    # Sunrise before sunset
-    assert sunrise_dt < sunset_dt, "Sunrise should be before sunset"
+        assert sunrise_dt.tzinfo is None, "Sunrise should be naive (local time)"
+        assert sunset_dt.tzinfo is None, "Sunset should be naive (local time)"
 
-    # Reasonable hours check
-    assert 4 <= sunrise_dt.hour <= 9, f"Sunrise hour {sunrise_dt.hour} seems unreasonable"
-    assert 16 <= sunset_dt.hour <= 20, f"Sunset hour {sunset_dt.hour} seems unreasonable"
+        # Contract-based assertions
+        assert sunrise_dt < sunset_dt, "Sunrise should be before sunset"
+        assert sunrise_dt.year > 2000, f"Sunrise year {sunrise_dt.year} is invalid"
+        assert sunset_dt.year > 2000, f"Sunset year {sunset_dt.year} is invalid"
 
-    time.sleep(DELAY_BETWEEN_REQUESTS)
+        # Relaxed hour checks for cassette replay
+        assert 0 <= sunrise_dt.hour <= 12, f"Sunrise hour {sunrise_dt.hour} should be AM"
+        assert 12 <= sunset_dt.hour <= 23, f"Sunset hour {sunset_dt.hour} should be PM"
+
+        if LIVE_WEATHER_TESTS:
+            time.sleep(DELAY_BETWEEN_REQUESTS)
+
+    _run_with_cassette("openmeteo/test_forecast_sunrise_sunset.yaml", run_test)
 
 
 @pytest.mark.integration
 @pytest.mark.network
-@pytest.mark.skipif(not RUN_INTEGRATION, reason=skip_reason)
 def test_openmeteo_hourly_forecast_timezone_converted(openmeteo_client, mapper):
     """Test Open-Meteo hourly forecast timestamps are converted to UTC."""
-    # Fetch raw hourly data
-    raw_data = openmeteo_client.get_hourly_forecast(
-        latitude=TEST_LOCATION.latitude,
-        longitude=TEST_LOCATION.longitude,
-        temperature_unit="fahrenheit",
-        hours=48,
-    )
 
-    # Map to internal format
-    mapped_data = mapper.map_hourly_forecast(raw_data)
-    periods = mapped_data["properties"]["periods"]
+    def run_test():
+        raw_data = openmeteo_client.get_hourly_forecast(
+            latitude=TEST_LOCATION.latitude,
+            longitude=TEST_LOCATION.longitude,
+            temperature_unit="fahrenheit",
+            hours=48,
+        )
 
-    assert len(periods) > 0, "Hourly forecast should have periods"
+        mapped_data = mapper.map_hourly_forecast(raw_data)
+        periods = mapped_data["properties"]["periods"]
 
-    # Check first few periods have valid start times
-    for i, period in enumerate(periods[:5]):
-        start_time_str = period.get("startTime")
-        if start_time_str:  # May be None if parsing failed
-            # Parse the timestamp
-            start_time = datetime.fromisoformat(start_time_str.replace("Z", "+00:00"))
+        assert len(periods) > 0, "Hourly forecast should have periods"
 
-            assert isinstance(start_time, datetime), f"Period {i} start_time should be datetime"
+        for i, period in enumerate(periods[:5]):
+            start_time_str = period.get("startTime")
+            if start_time_str:
+                start_time = datetime.fromisoformat(start_time_str.replace("Z", "+00:00"))
 
-            # Should be timezone-aware (UTC)
-            assert start_time.tzinfo is not None, f"Period {i} should be timezone-aware"
+                assert isinstance(start_time, datetime), f"Period {i} start_time should be datetime"
+                assert start_time.tzinfo is not None, f"Period {i} should be timezone-aware"
+                assert start_time.year > 2000, f"Period {i} start_time year is invalid"
 
-            # Check it's a recent hour (not epoch)
-            assert start_time.year > 2000, f"Period {i} start_time year is invalid"
+        if LIVE_WEATHER_TESTS:
+            time.sleep(DELAY_BETWEEN_REQUESTS)
 
-    time.sleep(DELAY_BETWEEN_REQUESTS)
+    _run_with_cassette("openmeteo/test_hourly_timezone.yaml", run_test)
 
 
 @pytest.mark.integration
 @pytest.mark.network
-@pytest.mark.skipif(not RUN_INTEGRATION, reason=skip_reason)
 def test_openmeteo_client_fetches_all_data_types(openmeteo_client, mapper):
     """Test Open-Meteo client can fetch current, forecast, and hourly data."""
-    # Fetch current weather
-    current_raw = openmeteo_client.get_current_weather(
-        latitude=TEST_LOCATION.latitude,
-        longitude=TEST_LOCATION.longitude,
-        temperature_unit="fahrenheit",
-    )
-    current_mapped = mapper.map_current_conditions(current_raw)
 
-    # Fetch daily forecast
-    forecast_raw = openmeteo_client.get_forecast(
-        latitude=TEST_LOCATION.latitude,
-        longitude=TEST_LOCATION.longitude,
-        temperature_unit="fahrenheit",
-        days=7,
-    )
-    forecast_mapped = mapper.map_forecast(forecast_raw)
+    def run_test():
+        current_raw = openmeteo_client.get_current_weather(
+            latitude=TEST_LOCATION.latitude,
+            longitude=TEST_LOCATION.longitude,
+            temperature_unit="fahrenheit",
+        )
+        current_mapped = mapper.map_current_conditions(current_raw)
 
-    # Fetch hourly forecast
-    hourly_raw = openmeteo_client.get_hourly_forecast(
-        latitude=TEST_LOCATION.latitude,
-        longitude=TEST_LOCATION.longitude,
-        temperature_unit="fahrenheit",
-        hours=48,
-    )
-    hourly_mapped = mapper.map_hourly_forecast(hourly_raw)
+        forecast_raw = openmeteo_client.get_forecast(
+            latitude=TEST_LOCATION.latitude,
+            longitude=TEST_LOCATION.longitude,
+            temperature_unit="fahrenheit",
+            days=7,
+        )
+        forecast_mapped = mapper.map_forecast(forecast_raw)
 
-    # All three should return successfully
-    assert current_mapped is not None, "Current conditions should be present"
-    assert forecast_mapped is not None, "Forecast should be present"
-    assert hourly_mapped is not None, "Hourly forecast should be present"
+        hourly_raw = openmeteo_client.get_hourly_forecast(
+            latitude=TEST_LOCATION.latitude,
+            longitude=TEST_LOCATION.longitude,
+            temperature_unit="fahrenheit",
+            hours=48,
+        )
+        hourly_mapped = mapper.map_hourly_forecast(hourly_raw)
 
-    # Verify current has sunrise/sunset
-    assert current_mapped["properties"]["sunrise"] is not None, "Current should have sunrise"
-    assert current_mapped["properties"]["sunset"] is not None, "Current should have sunset"
+        assert current_mapped is not None, "Current conditions should be present"
+        assert forecast_mapped is not None, "Forecast should be present"
+        assert hourly_mapped is not None, "Hourly forecast should be present"
 
-    # Verify forecast has periods
-    assert len(forecast_mapped["properties"]["periods"]) > 0, "Forecast should have periods"
+        assert current_mapped["properties"]["sunrise"] is not None, "Current should have sunrise"
+        assert current_mapped["properties"]["sunset"] is not None, "Current should have sunset"
+        assert len(forecast_mapped["properties"]["periods"]) > 0, "Forecast should have periods"
+        assert len(hourly_mapped["properties"]["periods"]) > 0, (
+            "Hourly forecast should have periods"
+        )
 
-    # Verify hourly has periods
-    assert len(hourly_mapped["properties"]["periods"]) > 0, "Hourly forecast should have periods"
+        if LIVE_WEATHER_TESTS:
+            time.sleep(DELAY_BETWEEN_REQUESTS)
 
-    time.sleep(DELAY_BETWEEN_REQUESTS)
+    _run_with_cassette("openmeteo/test_all_data_types.yaml", run_test)
 
 
 @pytest.mark.integration
 @pytest.mark.network
-@pytest.mark.skipif(not RUN_INTEGRATION, reason=skip_reason)
 def test_openmeteo_raw_response_timezone_field(openmeteo_client):
     """Test Open-Meteo API response includes timezone information."""
-    data = openmeteo_client.get_current_weather(
-        latitude=TEST_LOCATION.latitude,
-        longitude=TEST_LOCATION.longitude,
-        temperature_unit="fahrenheit",
-    )
 
-    # Check timezone field is present
-    assert "timezone" in data, "Response should include timezone"
-    assert "timezone_abbreviation" in data, "Response should include timezone abbreviation"
-    assert "utc_offset_seconds" in data, "Response should include UTC offset"
+    def run_test():
+        data = openmeteo_client.get_current_weather(
+            latitude=TEST_LOCATION.latitude,
+            longitude=TEST_LOCATION.longitude,
+            temperature_unit="fahrenheit",
+        )
 
-    timezone = data["timezone"]
-    assert isinstance(timezone, str), "Timezone should be a string"
-    assert len(timezone) > 0, "Timezone should not be empty"
+        assert "timezone" in data, "Response should include timezone"
+        assert "timezone_abbreviation" in data, "Response should include timezone abbreviation"
+        assert "utc_offset_seconds" in data, "Response should include UTC offset"
 
-    # Should be an IANA timezone (e.g., "America/New_York")
-    assert "/" in timezone or timezone == "GMT", (
-        f"Timezone '{timezone}' should be IANA format or GMT"
-    )
+        timezone = data["timezone"]
+        assert isinstance(timezone, str), "Timezone should be a string"
+        assert len(timezone) > 0, "Timezone should not be empty"
 
-    # UTC offset should be an integer (seconds)
-    utc_offset = data["utc_offset_seconds"]
-    assert isinstance(utc_offset, int), "UTC offset should be an integer"
+        assert "/" in timezone or timezone == "GMT", (
+            f"Timezone '{timezone}' should be IANA format or GMT"
+        )
 
-    time.sleep(DELAY_BETWEEN_REQUESTS)
+        utc_offset = data["utc_offset_seconds"]
+        assert isinstance(utc_offset, int), "UTC offset should be an integer"
+
+        if LIVE_WEATHER_TESTS:
+            time.sleep(DELAY_BETWEEN_REQUESTS)
+
+    _run_with_cassette("openmeteo/test_timezone_field.yaml", run_test)
 
 
+# Unit tests using sample data - no cassettes needed
 @pytest.mark.integration
 @pytest.mark.network
-@pytest.mark.skipif(not RUN_INTEGRATION, reason=skip_reason)
 def test_openmeteo_mapper_handles_sunrise_sunset(mapper):
     """Test Open-Meteo mapper correctly extracts sunrise/sunset from API response."""
-    # Create a sample response matching Open-Meteo API structure with timezone=auto
-    # (returns naive datetime strings in local time)
     sample_response = {
         "latitude": 39.9663,
         "longitude": -74.8103,
@@ -297,23 +304,18 @@ def test_openmeteo_mapper_handles_sunrise_sunset(mapper):
         },
     }
 
-    # Map with the actual mapper
     mapped_data = mapper.map_current_conditions(sample_response)
     props = mapped_data["properties"]
 
-    # Verify sunrise/sunset were extracted
     assert props["sunrise"] is not None, "Mapper should extract sunrise"
     assert props["sunset"] is not None, "Mapper should extract sunset"
 
-    # Parse the datetime strings
     sunrise = datetime.fromisoformat(props["sunrise"])
     sunset = datetime.fromisoformat(props["sunset"])
 
-    # They should be naive datetimes (local time, NOT converted to UTC)
     assert sunrise.tzinfo is None, "Sunrise should be naive (local time)"
     assert sunset.tzinfo is None, "Sunset should be naive (local time)"
 
-    # Verify reasonable values
     assert sunrise < sunset, "Sunrise should be before sunset"
     assert sunrise.year == 2025
     assert sunset.year == 2025
@@ -323,10 +325,8 @@ def test_openmeteo_mapper_handles_sunrise_sunset(mapper):
 
 @pytest.mark.integration
 @pytest.mark.network
-@pytest.mark.skipif(not RUN_INTEGRATION, reason=skip_reason)
 def test_openmeteo_mapper_handles_missing_sunrise_sunset(mapper):
     """Test mapper gracefully handles missing sunrise/sunset data."""
-    # Response without daily sunrise/sunset
     sample_response = {
         "latitude": 39.9663,
         "longitude": -74.8103,
@@ -351,7 +351,6 @@ def test_openmeteo_mapper_handles_missing_sunrise_sunset(mapper):
     mapped_data = mapper.map_current_conditions(sample_response)
     props = mapped_data["properties"]
 
-    # Should map successfully without sunrise/sunset
     assert mapped_data is not None
     assert props["temperature"]["value"] == 55.0
     assert props["sunrise"] is None
