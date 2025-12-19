@@ -65,7 +65,9 @@ class TestOpenMeteoGeocodingClientIntegration:
     def test_search_us_zip_code(self, client: OpenMeteoGeocodingClient) -> None:
         """Should find location by US ZIP code."""
         # Search for ZIP code 10001 (Manhattan, NY)
-        results = client.search("10001, USA", count=5)
+        # Note: Open-Meteo works better with ZIP code alone,
+        # not combined with country names
+        results = client.search("10001", count=5)
 
         assert len(results) > 0
         # Should find a US location
