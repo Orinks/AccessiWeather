@@ -1,0 +1,35 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - archive-api.open-meteo.com
+      User-Agent:
+      - AccessiWeather
+    method: GET
+    uri: https://archive-api.open-meteo.com/v1/archive?latitude=40.7128&longitude=-74.006&start_date=2025-12-05&end_date=2025-12-05&daily=weather_code&daily=temperature_2m_max&daily=temperature_2m_min&daily=temperature_2m_mean&daily=wind_speed_10m_max&temperature_unit=fahrenheit&timezone=auto
+  response:
+    body:
+      string: "{\"latitude\":40.738136,\"longitude\":-74.04254,\"generationtime_ms\":2.6096105575561523,\"utc_offset_seconds\":-18000,\"timezone\":\"America/New_York\",\"timezone_abbreviation\":\"GMT-5\",\"elevation\":32.0,\"daily_units\":{\"time\":\"iso8601\",\"weather_code\":\"wmo
+        code\",\"temperature_2m_max\":\"\xB0F\",\"temperature_2m_min\":\"\xB0F\",\"temperature_2m_mean\":\"\xB0F\",\"wind_speed_10m_max\":\"km/h\"},\"daily\":{\"time\":[\"2025-12-05\"],\"weather_code\":[3],\"temperature_2m_max\":[30.5],\"temperature_2m_min\":[19.8],\"temperature_2m_mean\":[25.7],\"wind_speed_10m_max\":[12.2]}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Fri, 19 Dec 2025 13:00:47 GMT
+      Transfer-Encoding:
+      - chunked
+      content-length:
+      - '523'
+    status:
+      code: 200
+      message: OK
+version: 1
