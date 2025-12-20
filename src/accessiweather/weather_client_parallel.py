@@ -206,10 +206,14 @@ class ParallelFetchCoordinator:
 
         """
         # Handle different result tuple lengths
+        # Standard tuple: (current, forecast, hourly, alerts, hydrological, marine, solar)
         current = result[0] if len(result) > 0 else None
         forecast = result[1] if len(result) > 1 else None
         hourly_forecast = result[2] if len(result) > 2 else None
         alerts = result[3] if len(result) > 3 else None
+        hydrological = result[4] if len(result) > 4 else None
+        marine = result[5] if len(result) > 5 else None
+        solar = result[6] if len(result) > 6 else None
 
         return SourceData(
             source=source_name,
@@ -217,6 +221,9 @@ class ParallelFetchCoordinator:
             forecast=forecast,
             hourly_forecast=hourly_forecast,
             alerts=alerts,
+            hydrological=hydrological,
+            marine=marine,
+            solar=solar,
             fetch_time=datetime.now(UTC),
             success=True,
             error=None,

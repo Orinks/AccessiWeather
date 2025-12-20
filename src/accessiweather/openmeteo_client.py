@@ -42,7 +42,8 @@ class OpenMeteoApiClient:
     """
 
     BASE_URL = "https://api.open-meteo.com/v1"
-    ARCHIVE_BASE_URL = "https://archive-api.open-meteo.com/v1"
+    AIR_QUALITY_BASE_URL = "https://air-quality-api.open-meteo.com/v1"
+    FLOOD_BASE_URL = "https://flood-api.open-meteo.com/v1"
 
     def __init__(
         self,
@@ -80,7 +81,11 @@ class OpenMeteoApiClient:
             self.client.close()
 
     def _make_request(
-        self, endpoint: str, params: dict[str, Any], use_archive: bool = False
+        self,
+        endpoint: str,
+        params: dict[str, Any],
+        use_archive: bool = False,
+        base_url: str | None = None,
     ) -> dict[str, Any]:
         """
         Make a request to the Open-Meteo API.
@@ -90,6 +95,7 @@ class OpenMeteoApiClient:
             endpoint: API endpoint (e.g., "forecast", "archive")
             params: Query parameters
             use_archive: If True, use the archive API base URL for historical data
+            base_url: Optional override for the base URL
 
         Returns:
         -------
@@ -101,8 +107,8 @@ class OpenMeteoApiClient:
             OpenMeteoNetworkError: If there's a network error
 
         """
-        base_url = self.ARCHIVE_BASE_URL if use_archive else self.BASE_URL
-        url = f"{base_url}/{endpoint}"
+        api_base = base_url if base_url else self.ARCHIVE_BASE_URL if use_archive else self.BASE_URL
+        url = f"{api_base}/{endpoint}"
 
         for attempt in range(self.max_retries + 1):
             try:
@@ -328,6 +334,68 @@ class OpenMeteoApiClient:
         }
 
         return self._make_request("forecast", params)
+
+    def get_air_quality(self, latitude: float, longitude: float) -> dict[str, Any]:
+        """
+        Get air quality data for a location.
+
+        Args:
+        ----
+            latitude: Latitude of the location
+            longitude: Longitude of the location
+
+        Returns:
+        -------
+            Dictionary containing air quality data
+
+        """
+        params = {
+            "latitude": latitude,
+            "longitude": longitude,
+            "current": [
+                "us_aqi",
+                "pm10",
+                "pm2_5",
+                "carbon_monoxide",
+                "nitrogen_dioxide",
+                "sulphur_dioxide",
+                "ozone",
+                # Pollen
+                "alder_pollen",
+                "birch_pollen",
+                "grass_pollen",
+                "mugwort_pollen",
+                "olive_pollen",
+                "ragweed_pollen",
+            ],
+            "hourly": ["us_aqi", "pm2_5", "pm10"],
+            "timezone": "auto",
+            "forecast_days": 1,
+        }
+        return self._make_request("air-quality", params, base_url=self.AIR_QUALITY_BASE_URL)
+
+    def get_flood_forecast(self, latitude: float, longitude: float) -> dict[str, Any]:
+        """
+        Get flood/hydrological forecast for a location.
+
+        Args:
+        ----
+            latitude: Latitude of the location
+            longitude: Longitude of the location
+
+        Returns:
+        -------
+            Dictionary containing flood forecast data
+
+        """
+        params = {
+            "latitude": latitude,
+            "longitude": longitude,
+            "daily": ["river_discharge", "river_discharge_mean", "river_discharge_median"],
+            "timezone": "auto",
+            "forecast_days": 3,
+        }
+        return self._make_request("flood", params, base_url=self.FLOOD_BASE_URL)
 
     @staticmethod
     def get_weather_description(weather_code: int | str) -> str:

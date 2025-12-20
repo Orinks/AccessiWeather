@@ -111,6 +111,9 @@ class SourceData:
     forecast: Forecast | None = None
     hourly_forecast: HourlyForecast | None = None
     alerts: WeatherAlerts | None = None
+    hydrological: HydrologicalData | None = None
+    marine: MarineForecast | None = None
+    solar: SolarData | None = None
     fetch_time: datetime = field(default_factory=lambda: datetime.now(UTC))
     success: bool = True
     error: str | None = None
@@ -446,6 +449,78 @@ class EnvironmentalConditions:
 
 
 @dataclass
+class HydrologicalData:
+    """Hydrological data (rivers, floods, lakes)."""
+
+    river_discharge: float | None = None
+    river_discharge_unit: str = "ft^3/s"
+    river_stage: float | None = None
+    river_stage_unit: str = "ft"
+    flood_category: str | None = None  # "Action", "Minor", "Moderate", "Major"
+    flood_stage_levels: dict[str, float] = field(default_factory=dict)
+    updated_at: datetime | None = None
+    source: str | None = None
+
+    def has_data(self) -> bool:
+        """Check if we have any hydrological data."""
+        return any(
+            [
+                self.river_discharge is not None,
+                self.river_stage is not None,
+                self.flood_category is not None,
+            ]
+        )
+
+
+@dataclass
+class MarineForecast:
+    """Marine forecast data."""
+
+    wave_height_ft: float | None = None
+    swell_height_ft: float | None = None
+    swell_direction: str | None = None
+    swell_period_sec: float | None = None
+    water_temperature_f: float | None = None
+    tide_level_ft: float | None = None
+    small_craft_advisory: bool = False
+    gale_warning: bool = False
+    updated_at: datetime | None = None
+    source: str | None = None
+
+    def has_data(self) -> bool:
+        """Check if we have any marine data."""
+        return any(
+            [
+                self.wave_height_ft is not None,
+                self.small_craft_advisory,
+                self.gale_warning,
+            ]
+        )
+
+
+@dataclass
+class SolarData:
+    """Solar energy and radiation data."""
+
+    solar_radiation: float | None = None  # W/m^2
+    solar_energy: float | None = None  # MJ/m^2
+    ghi: float | None = None  # Global Horizontal Irradiance
+    dni: float | None = None  # Direct Normal Irradiance
+    dif: float | None = None  # Diffuse Horizontal Irradiance
+    updated_at: datetime | None = None
+    source: str | None = None
+
+    def has_data(self) -> bool:
+        """Check if we have any solar data."""
+        return any(
+            [
+                self.solar_radiation is not None,
+                self.solar_energy is not None,
+            ]
+        )
+
+
+@dataclass
 class AviationData:
     """Aviation specific forecast and advisory data."""
 
@@ -479,6 +554,9 @@ class WeatherData:
     alerts: WeatherAlerts | None = None
     environmental: EnvironmentalConditions | None = None
     aviation: AviationData | None = None
+    hydrological: HydrologicalData | None = None
+    marine: MarineForecast | None = None
+    solar: SolarData | None = None
     trend_insights: list[TrendInsight] = field(default_factory=list)
     stale: bool = False
     stale_since: datetime | None = None
@@ -508,5 +586,8 @@ class WeatherData:
                 self.alerts and self.alerts.has_alerts(),
                 self.environmental and self.environmental.has_data(),
                 self.aviation and self.aviation.has_taf(),
+                self.hydrological and self.hydrological.has_data(),
+                self.marine and self.marine.has_data(),
+                self.solar and self.solar.has_data(),
             ]
         )

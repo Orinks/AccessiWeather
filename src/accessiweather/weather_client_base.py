@@ -30,7 +30,9 @@ from .models import (
     Forecast,
     HourlyForecast,
     HourlyForecastPeriod,
+    HydrologicalData,
     Location,
+    MarineForecast,
     SourceAttribution,
     SourceData,
     TrendInsight,
@@ -153,7 +155,9 @@ class WeatherClient:
         Forecast | None,
         str | None,
         WeatherAlerts | None,
+        WeatherAlerts | None,
         HourlyForecast | None,
+        MarineForecast | None,
     ]:
         """Fetch NWS data, respecting test overrides while using optimized parallel path."""
         method_names = [
@@ -181,13 +185,14 @@ class WeatherClient:
                 )
             except APITimeoutError as exc:
                 logger.error(f"NWS API timeout after retries: {exc}")
-                return None, None, None, None, None
+                return None, None, None, None, None, None
 
-        current, forecast_result, alerts, hourly_forecast = await asyncio.gather(
+        current, forecast_result, alerts, hourly_forecast, marine_forecast = await asyncio.gather(
             self._get_nws_current_conditions(location),
             self._get_nws_forecast_and_discussion(location),
             self._get_nws_alerts(location),
             self._get_nws_hourly_forecast(location),
+            self._get_nws_marine_forecast(location),
         )
 
         forecast: Forecast | None
@@ -197,11 +202,16 @@ class WeatherClient:
         else:
             forecast, discussion = (None, None)
 
-        return current, forecast, discussion, alerts, hourly_forecast
+        return current, forecast, discussion, alerts, hourly_forecast, marine_forecast
 
     async def _fetch_openmeteo_data(
         self, location: Location
-    ) -> tuple[CurrentConditions | None, Forecast | None, HourlyForecast | None]:
+    ) -> tuple[
+        CurrentConditions | None,
+        Forecast | None,
+        HourlyForecast | None,
+        HydrologicalData | None,
+    ]:
         """Fetch Open-Meteo data, respecting test overrides while using optimized parallel path."""
         method_names = [
             "_get_openmeteo_current_conditions",
@@ -226,13 +236,16 @@ class WeatherClient:
                 )
             except APITimeoutError as exc:
                 logger.error(f"Open-Meteo API timeout after retries: {exc}")
-                return None, None, None
+                return None, None, None, None
 
-        return await asyncio.gather(
+        current, forecast, hourly_forecast, flood = await asyncio.gather(
             self._get_openmeteo_current_conditions(location),
             self._get_openmeteo_forecast(location),
             self._get_openmeteo_hourly_forecast(location),
+            self._get_openmeteo_flood_forecast(location),
         )
+
+        return current, forecast, hourly_forecast, flood
 
     async def close(self) -> None:
         """Close the HTTP client and release resources."""
@@ -395,11 +408,12 @@ class WeatherClient:
                     raise VisualCrossingApiError("Visual Crossing API key not configured")
 
                 # Parallelize API calls for better performance
-                current, forecast, hourly_forecast, alerts = await asyncio.gather(
+                current, forecast, hourly_forecast, alerts, solar = await asyncio.gather(
                     self.visual_crossing_client.get_current_conditions(location),
                     self.visual_crossing_client.get_forecast(location),
                     self.visual_crossing_client.get_hourly_forecast(location),
                     self.visual_crossing_client.get_alerts(location),
+                    self.visual_crossing_client.get_solar_data(location),
                 )
 
                 weather_data.current = current
@@ -407,6 +421,7 @@ class WeatherClient:
                 weather_data.hourly_forecast = hourly_forecast
                 weather_data.discussion = "Forecast discussion not available from Visual Crossing."
                 weather_data.alerts = alerts
+                weather_data.solar = solar
 
                 # Process alerts for notifications if we have any (unless skipped for pre-warming)
                 if not skip_notifications and alerts and alerts.has_alerts():
@@ -424,11 +439,17 @@ class WeatherClient:
         elif api_choice == "openmeteo":
             # Use Open-Meteo API only (user explicitly selected this source)
             try:
-                current, forecast, hourly_forecast = await self._fetch_openmeteo_data(location)
+                (
+                    current,
+                    forecast,
+                    hourly_forecast,
+                    hydrological,
+                ) = await self._fetch_openmeteo_data(location)
 
                 weather_data.current = current
                 weather_data.forecast = forecast
                 weather_data.hourly_forecast = hourly_forecast
+                weather_data.hydrological = hydrological
                 weather_data.discussion = "Forecast discussion not available from Open-Meteo."
                 weather_data.alerts = WeatherAlerts(alerts=[])  # Open-Meteo doesn't provide alerts
 
@@ -445,7 +466,9 @@ class WeatherClient:
                     forecast,
                     discussion,
                     alerts,
+                    alerts,
                     hourly_forecast,
+                    marine,
                 ) = await self._fetch_nws_data(location)
 
                 weather_data.current = current
@@ -453,6 +476,7 @@ class WeatherClient:
                 weather_data.hourly_forecast = hourly_forecast
                 weather_data.discussion = discussion
                 weather_data.alerts = alerts
+                weather_data.marine = marine
 
                 if (current is None or not current.has_data()) and forecast is None:
                     logger.warning(f"NWS returned empty data for {location.name}")
@@ -516,23 +540,29 @@ class WeatherClient:
 
         # Always fetch from Open-Meteo (works globally)
         async def fetch_openmeteo():
-            current, forecast, hourly = await self._fetch_openmeteo_data(location)
-            return (current, forecast, hourly, None)  # Open-Meteo has no alerts
+            current, forecast, hourly, hydrological = await self._fetch_openmeteo_data(location)
+            # Standard tuple: (current, forecast, hourly, alerts, hydrological, marine, solar)
+            return (current, forecast, hourly, None, hydrological, None, None)
 
         # Fetch from NWS for US locations
         async def fetch_nws():
-            current, forecast, discussion, alerts, hourly = await self._fetch_nws_data(location)
-            return (current, forecast, hourly, alerts)
+            current, forecast, discussion, alerts, hourly, marine = await self._fetch_nws_data(
+                location
+            )
+            # Standard tuple: (current, forecast, hourly, alerts, hydrological, marine, solar)
+            return (current, forecast, hourly, alerts, None, marine, None)
 
         # Fetch from Visual Crossing if configured
         async def fetch_vc():
             if not self.visual_crossing_client:
-                return (None, None, None, None)
+                return (None, None, None, None, None, None, None)
             current = await self.visual_crossing_client.get_current_conditions(location)
             forecast = await self.visual_crossing_client.get_forecast(location)
             hourly = await self.visual_crossing_client.get_hourly_forecast(location)
             alerts = await self.visual_crossing_client.get_alerts(location)
-            return (current, forecast, hourly, alerts)
+            solar = await self.visual_crossing_client.get_solar_data(location)
+            # Standard tuple: (current, forecast, hourly, alerts, hydrological, marine, solar)
+            return (current, forecast, hourly, alerts, None, None, solar)
 
         # Fetch from all sources in parallel
         source_results = await coordinator.fetch_all(
@@ -614,6 +644,11 @@ class WeatherClient:
         else:
             discussion = "Forecast discussion not available from Open-Meteo."
 
+        # Extract additional data types from sources
+        hydrological = next((s.hydrological for s in source_results if s.hydrological), None)
+        marine = next((s.marine for s in source_results if s.marine), None)
+        solar = next((s.solar for s in source_results if s.solar), None)
+
         # Create the merged WeatherData
         weather_data = WeatherData(
             location=location,
@@ -622,6 +657,9 @@ class WeatherClient:
             hourly_forecast=merged_hourly,
             discussion=discussion,
             alerts=merged_alerts,
+            hydrological=hydrological,
+            marine=marine,
+            solar=solar,
             source_attribution=attribution,
             incomplete_sections=incomplete_sections,
         )
@@ -887,6 +925,12 @@ class WeatherClient:
     async def _get_openmeteo_hourly_forecast(self, location: Location) -> HourlyForecast | None:
         """Delegate to the Open-Meteo client module."""
         return await openmeteo_client.get_openmeteo_hourly_forecast(
+            location, self.openmeteo_base_url, self.timeout, self._get_http_client()
+        )
+
+    async def _get_openmeteo_flood_forecast(self, location: Location) -> HydrologicalData | None:
+        """Delegate to the Open-Meteo client module."""
+        return await openmeteo_client.get_openmeteo_flood_forecast(
             location, self.openmeteo_base_url, self.timeout, self._get_http_client()
         )
 

@@ -139,10 +139,10 @@ async def test_auto_mode_enriches_with_visual_crossing_alerts():
 
     async def mock_fetch_nws(location):
         # NWS doesn't cover international locations
-        return (None, None, None, None, None)
+        return (None, None, None, None, None, None)
 
     async def mock_fetch_openmeteo(location):
-        return (openmeteo_current, Forecast(periods=[]), HourlyForecast(periods=[]))
+        return (openmeteo_current, Forecast(periods=[]), HourlyForecast(periods=[]), None)
 
     with (
         patch.object(client, "_fetch_nws_data", side_effect=mock_fetch_nws),
@@ -348,10 +348,10 @@ async def test_visual_crossing_alerts_merged_with_existing():
 
     async def mock_fetch_nws(location):
         # NWS doesn't cover international locations
-        return (None, None, None, None, None)
+        return (None, None, None, None, None, None)
 
     async def mock_fetch_openmeteo(location):
-        return (openmeteo_current, Forecast(periods=[]), HourlyForecast(periods=[]))
+        return (openmeteo_current, Forecast(periods=[]), HourlyForecast(periods=[]), None)
 
     with (
         patch.object(client, "_fetch_nws_data", side_effect=mock_fetch_nws),

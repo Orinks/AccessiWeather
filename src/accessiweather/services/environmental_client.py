@@ -244,10 +244,16 @@ class EnvironmentalDataClient:
         environmental: EnvironmentalConditions,
     ) -> None:
         try:
-            response = await client.get(
-                self.POLLEN_ENDPOINT,
-                params={**params, "hourly": "tree_pollen,grass_pollen,weed_pollen"},
-            )
+            # Request specific pollens in addition to general categories
+            pollen_params = {
+                **params,
+                "hourly": (
+                    "tree_pollen,grass_pollen,weed_pollen,"
+                    "alder_pollen,birch_pollen,mugwort_pollen,"
+                    "olive_pollen,ragweed_pollen"
+                ),
+            }
+            response = await client.get(self.POLLEN_ENDPOINT, params=pollen_params)
             response.raise_for_status()
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"Pollen request failed: {exc}")
@@ -259,10 +265,17 @@ class EnvironmentalDataClient:
             return
 
         times = hourly.get("time")
+
+        # Map API keys to human-readable names
         pollen_types = {
             "Tree": hourly.get("tree_pollen"),
             "Grass": hourly.get("grass_pollen"),
             "Weed": hourly.get("weed_pollen"),
+            "Alder": hourly.get("alder_pollen"),
+            "Birch": hourly.get("birch_pollen"),
+            "Mugwort": hourly.get("mugwort_pollen"),
+            "Olive": hourly.get("olive_pollen"),
+            "Ragweed": hourly.get("ragweed_pollen"),
         }
 
         primary_allergen = None
@@ -274,6 +287,8 @@ class EnvironmentalDataClient:
             value, timestamp = self._latest_with_timestamp(times, series)
             if value is None:
                 continue
+
+            # Populate generaic indices
             if label == "Tree":
                 environmental.pollen_tree_index = value
             elif label == "Grass":
@@ -286,7 +301,9 @@ class EnvironmentalDataClient:
             ):
                 environmental.updated_at = timestamp
 
-            if value > primary_value:
+            # Determine primary allergen (prioritize specific types if values are similar)
+            is_specific = label not in ["Tree", "Grass", "Weed"]
+            if value > primary_value or (value == primary_value and is_specific):
                 primary_value = value
                 primary_allergen = label
 

@@ -17,6 +17,7 @@ from .models import (
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
+    MarineForecast,
     WeatherAlert,
     WeatherAlerts,
 )
@@ -283,11 +284,12 @@ async def get_nws_all_data_parallel(
     str | None,
     WeatherAlerts | None,
     HourlyForecast | None,
+    MarineForecast | None,
 ]:
     """
     Fetch all NWS data in parallel with optimized grid data caching.
 
-    Returns: (current, forecast, discussion, alerts, hourly_forecast)
+    Returns: (current, forecast, discussion, alerts, hourly_forecast, marine_forecast)
     """
     try:
         # First, fetch grid data once
@@ -315,20 +317,24 @@ async def get_nws_all_data_parallel(
         hourly_task = asyncio.create_task(
             get_nws_hourly_forecast(location, nws_base_url, user_agent, timeout, client, grid_data)
         )
+        marine_task = asyncio.create_task(
+            get_nws_marine_forecast(location, nws_base_url, user_agent, timeout, client, grid_data)
+        )
 
         # Gather all results
         current = await current_task
         forecast, discussion = await forecast_task
         alerts = await alerts_task
         hourly_forecast = await hourly_task
+        marine_forecast = await marine_task
 
-        return current, forecast, discussion, alerts, hourly_forecast
+        return current, forecast, discussion, alerts, hourly_forecast, marine_forecast
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS data in parallel: {exc}")
         if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
             raise
-        return None, None, None, None, None
+        return None, None, None, None, None, None
 
 
 @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
@@ -781,6 +787,109 @@ async def get_nws_hourly_forecast(
 
 
 @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
+async def get_nws_marine_forecast(
+    location: Location,
+    nws_base_url: str,
+    user_agent: str,
+    timeout: float,
+    client: httpx.AsyncClient | None = None,
+    grid_data: dict[str, Any] | None = None,
+) -> MarineForecast | None:
+    """Fetch marine forecast from the NWS API."""
+    try:
+        headers = {"User-Agent": user_agent}
+
+        # Use provided client or create a new one
+        if client is not None:
+            # Fetch grid data if not provided
+            if grid_data is None:
+                grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+                response = await _client_get(client, grid_url, headers=headers)
+                response.raise_for_status()
+                grid_data = response.json()
+
+            # "forecastMarine" is the key for the Coastal Waters Forecast
+            marine_url = grid_data.get("properties", {}).get("forecastMarine")
+            if not marine_url:
+                # Not a marine location
+                return None
+
+            response = await _client_get(client, marine_url, headers=headers)
+            response.raise_for_status()
+            marine_data = response.json()
+
+            return parse_nws_marine_forecast(marine_data)
+
+        # New client case
+        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+            if grid_data is None:
+                grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+                response = await new_client.get(grid_url, headers=headers)
+                response.raise_for_status()
+                grid_data = response.json()
+
+            marine_url = grid_data.get("properties", {}).get("forecastMarine")
+            if not marine_url:
+                return None
+
+            response = await new_client.get(marine_url, headers=headers)
+            response.raise_for_status()
+            marine_data = response.json()
+
+            return parse_nws_marine_forecast(marine_data)
+
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"Failed to get NWS marine forecast: {exc}")
+        return None
+
+
+def parse_nws_marine_forecast(data: dict) -> MarineForecast:
+    """Parse NWS marine forecast payload into a MarineForecast model."""
+    # Marine forecasts often come as a list of periods
+    # We'll extract data from the first period (current/upcoming)
+
+    properties = data.get("properties", {})
+    periods = properties.get("periods", [])
+
+    if not periods:
+        return MarineForecast(updated_at=datetime.now(), source="NWS")
+
+    first_period = periods[0]
+    detailed_forecast = first_period.get("detailedForecast", "")
+    short_forecast = first_period.get("shortForecast", "")
+
+    # Simple keyword extraction for alerts
+    small_craft = (
+        "Small Craft Advisory" in detailed_forecast or "Small Craft Advisory" in short_forecast
+    )
+    gale = "Gale Warning" in detailed_forecast or "Gale Warning" in short_forecast
+
+    # Naive extraction of wave height - improving this requires NLP or regex
+    # Example: "Seas 3 to 5 ft." or "Seas 4 ft."
+    wave_height_ft = None
+    import re
+
+    # Match "Seas X to Y ft" or "Seas X ft"
+    seas_match = re.search(r"Seas (\d+)(?: to (\d+))? ft", detailed_forecast)
+    if seas_match:
+        if seas_match.group(2):
+            # Take average of range
+            low = float(seas_match.group(1))
+            high = float(seas_match.group(2))
+            wave_height_ft = (low + high) / 2
+        else:
+            wave_height_ft = float(seas_match.group(1))
+
+    return MarineForecast(
+        wave_height_ft=wave_height_ft,
+        small_craft_advisory=small_craft,
+        gale_warning=gale,
+        updated_at=datetime.now(),
+        source="NWS Marine Forecast",
+    )
+
+
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_nws_tafs(
     station_id: str,
     nws_base_url: str,
@@ -944,33 +1053,6 @@ async def get_nws_radar_profiler(
         response.raise_for_status()
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to fetch radar profiler {station_id}: {exc}")
-        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
-            raise
-        return None
-
-    return response.json()
-
-
-@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
-async def get_nws_marine_forecast(
-    zone_type: str,
-    zone_id: str,
-    nws_base_url: str,
-    user_agent: str,
-    timeout: float,
-    client: httpx.AsyncClient,
-) -> dict[str, Any] | None:
-    """Fetch a marine zone forecast."""
-    del timeout
-
-    marine_url = f"{nws_base_url}/zones/{zone_type}/{zone_id}/forecast"
-    headers = {"User-Agent": user_agent}
-
-    try:
-        response = await _client_get(client, marine_url, headers=headers)
-        response.raise_for_status()
-    except Exception as exc:  # noqa: BLE001
-        logger.error(f"Failed to fetch marine forecast for {zone_type}/{zone_id}: {exc}")
         if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
             raise
         return None

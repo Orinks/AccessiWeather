@@ -17,6 +17,7 @@ from .models import (
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
+    SolarData,
     WeatherAlert,
     WeatherAlerts,
 )
@@ -202,6 +203,38 @@ class VisualCrossingClient:
             logger.error(f"Failed to get Visual Crossing alerts: {e}")
             # Return empty alerts on error rather than raising
             return WeatherAlerts(alerts=[])
+
+    @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
+    async def get_solar_data(self, location: Location) -> SolarData | None:
+        """Get solar data (radiation, energy) from Visual Crossing API."""
+        try:
+            url = f"{self.base_url}/{location.latitude},{location.longitude}"
+            params = {
+                "key": self.api_key,
+                "include": "current",
+                "unitGroup": "us",
+                "elements": "solarradiation,solarenergy,datetime",
+            }
+
+            async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
+                headers = {"User-Agent": self.user_agent}
+                response = await client.get(url, params=params, headers=headers)
+
+                if response.status_code == 401:
+                    raise VisualCrossingApiError("Invalid API key", response.status_code)
+                if response.status_code == 429:
+                    raise VisualCrossingApiError("API rate limit exceeded", response.status_code)
+                if response.status_code != 200:
+                    raise VisualCrossingApiError(
+                        f"API request failed: HTTP {response.status_code}", response.status_code
+                    )
+
+                data = response.json()
+                return self._parse_solar_data(data)
+
+        except Exception as e:
+            logger.error(f"Failed to get Visual Crossing solar data: {e}")
+            return None
 
     @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
     async def get_history(
@@ -552,6 +585,19 @@ class VisualCrossingClient:
 
         logger.info(f"Parsed {len(alerts)} Visual Crossing alerts")
         return WeatherAlerts(alerts=alerts)
+
+    def _parse_solar_data(self, data: dict) -> SolarData | None:
+        """Parse Visual Crossing solar data."""
+        current = data.get("currentConditions", {})
+        if not current:
+            return None
+
+        return SolarData(
+            solar_radiation=current.get("solarradiation"),
+            solar_energy=current.get("solarenergy"),
+            updated_at=datetime.now(),
+            source="Visual Crossing",
+        )
 
     def _map_visual_crossing_severity(self, vc_severity: str | None) -> str:
         """Map Visual Crossing severity to standard severity levels."""

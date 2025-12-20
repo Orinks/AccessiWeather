@@ -16,6 +16,7 @@ from .models import (
     ForecastPeriod,
     HourlyForecast,
     HourlyForecastPeriod,
+    HydrologicalData,
     Location,
 )
 from .utils.retry_utils import (
@@ -283,6 +284,43 @@ async def get_openmeteo_hourly_forecast(
         return None
 
 
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
+async def get_openmeteo_flood_forecast(
+    location: Location,
+    timeout: float,
+    flood_base_url: str = "https://flood-api.open-meteo.com/v1",
+    client: httpx.AsyncClient | None = None,
+) -> HydrologicalData | None:
+    """Fetch flood forecast from the Open-Meteo Flood API."""
+    try:
+        url = f"{flood_base_url}/flood"
+        params = {
+            "latitude": location.latitude,
+            "longitude": location.longitude,
+            "daily": "river_discharge,river_discharge_mean,river_discharge_median,river_discharge_max,river_discharge_min,river_discharge_p25,river_discharge_p75",
+            "forecast_days": 3,
+            "timezone": "auto",
+        }
+
+        # Use provided client or create a new one
+        if client is not None:
+            response = await _client_get(client, url, params=params)
+            response.raise_for_status()
+            data = response.json()
+            return parse_openmeteo_flood_forecast(data)
+        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+            response = await new_client.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+            return parse_openmeteo_flood_forecast(data)
+
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Failed to get OpenMeteo flood forecast: {exc}")
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
+        return None
+
+
 def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
     """Parse Open-Meteo current condition payload into a CurrentConditions model."""
     current = data.get("current", {})
@@ -519,3 +557,32 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
         periods.append(period)
 
     return HourlyForecast(periods=periods, generated_at=datetime.now())
+
+
+def parse_openmeteo_flood_forecast(data: dict) -> HydrologicalData:
+    """Parse Open-Meteo flood forecast payload into a HydrologicalData model."""
+    daily = data.get("daily", {})
+    daily_units = data.get("daily_units", {})
+
+    # Get today's values (index 0)
+    # The API returns daily values, we'll take the first available one as "current" status
+    discharge = None
+
+    # Helper to get first element or None
+    def get_first(key: str) -> float | None:
+        values = daily.get(key, [])
+        return values[0] if values and values[0] is not None else None
+
+    discharge = get_first("river_discharge")
+    if discharge is None:
+        discharge = get_first("river_discharge_mean") or get_first("river_discharge_median")
+
+    unit = daily_units.get("river_discharge", "m³/s")
+
+    # We don't get river stage (height) from this API, only discharge
+    return HydrologicalData(
+        river_discharge=discharge,
+        river_discharge_unit=unit,
+        updated_at=datetime.now(),
+        source="Open-Meteo Flood API",
+    )
