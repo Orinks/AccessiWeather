@@ -48,7 +48,7 @@ class TestModelHelpers:
     """Test model helper methods."""
 
     def test_weather_alert_get_unique_id(self):
-        """Test WeatherAlert unique ID generation."""
+        """Test WeatherAlert unique ID generation includes areas."""
         from accessiweather.models.alerts import WeatherAlert
 
         alert = WeatherAlert(
@@ -57,12 +57,44 @@ class TestModelHelpers:
             event="Thunderstorm Warning",
             severity="Severe",
             headline="Severe Thunderstorm Warning",
+            areas=["County B", "County A"],  # Test areas are sorted alphabetically
         )
 
         unique_id = alert.get_unique_id()
         assert isinstance(unique_id, str)
         assert len(unique_id) > 0
         assert "thunderstorm_warning" in unique_id.lower()
+        # Areas should be included (sorted: County A, County B)
+        assert "county_a,county_b" in unique_id.lower()
+
+    def test_weather_alert_get_unique_id_different_areas(self):
+        """Test that alerts with same event/severity/headline but different areas produce different IDs."""
+        from accessiweather.models.alerts import WeatherAlert
+
+        alert1 = WeatherAlert(
+            title="Test Alert",
+            description="Test description",
+            event="Thunderstorm Warning",
+            severity="Severe",
+            headline="Severe Thunderstorm Warning",
+            areas=["County A"],
+        )
+
+        alert2 = WeatherAlert(
+            title="Test Alert",
+            description="Test description",
+            event="Thunderstorm Warning",
+            severity="Severe",
+            headline="Severe Thunderstorm Warning",
+            areas=["County B"],
+        )
+
+        unique_id1 = alert1.get_unique_id()
+        unique_id2 = alert2.get_unique_id()
+
+        assert unique_id1 != unique_id2
+        assert "county_a" in unique_id1.lower()
+        assert "county_b" in unique_id2.lower()
 
     def test_weather_alert_get_unique_id_with_id(self):
         """Test WeatherAlert unique ID when ID is provided."""

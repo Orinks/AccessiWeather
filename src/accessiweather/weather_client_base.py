@@ -266,8 +266,10 @@ class WeatherClient:
         """
         logger.info(f"Pre-warming cache for {location.name}")
         try:
-            # Fetch fresh data (bypassing cache)
-            weather_data = await self.get_weather_data(location, force_refresh=True)
+            # Fetch fresh data (bypassing cache), skip notifications for non-selected locations
+            weather_data = await self.get_weather_data(
+                location, force_refresh=True, skip_notifications=True
+            )
 
             if weather_data.has_any_data():
                 logger.info(f"✓ Cache pre-warmed successfully for {location.name}")
@@ -300,7 +302,7 @@ class WeatherClient:
         return self.offline_cache.load(location, allow_stale=True)
 
     async def get_weather_data(
-        self, location: Location, force_refresh: bool = False
+        self, location: Location, force_refresh: bool = False, skip_notifications: bool = False
     ) -> WeatherData:
         """
         Get complete weather data for a location.
@@ -308,6 +310,7 @@ class WeatherClient:
         Args:
             location: Location to fetch weather for
             force_refresh: If True, bypass cache and force fresh API call
+            skip_notifications: If True, skip triggering alert notifications (used for pre-warming)
 
         """
         logger.info(f"Fetching weather data for {location.name}")
@@ -326,10 +329,12 @@ class WeatherClient:
             self.offline_cache.invalidate(location)
 
         # Use deduplication for concurrent requests
-        return await self._fetch_weather_data_with_dedup(location, force_refresh)
+        return await self._fetch_weather_data_with_dedup(
+            location, force_refresh, skip_notifications
+        )
 
     async def _fetch_weather_data_with_dedup(
-        self, location: Location, force_refresh: bool
+        self, location: Location, force_refresh: bool, skip_notifications: bool = False
     ) -> WeatherData:
         """
         Fetch weather data with deduplication tracking.
@@ -346,7 +351,7 @@ class WeatherClient:
 
         # Create a new task for this request
         if not force_refresh:
-            task = asyncio.create_task(self._do_fetch_weather_data(location))
+            task = asyncio.create_task(self._do_fetch_weather_data(location, skip_notifications))
             self._in_flight_requests[location_key] = task
 
             try:
@@ -356,9 +361,11 @@ class WeatherClient:
                 self._in_flight_requests.pop(location_key, None)
         else:
             # Force refresh bypasses deduplication
-            return await self._do_fetch_weather_data(location)
+            return await self._do_fetch_weather_data(location, skip_notifications)
 
-    async def _do_fetch_weather_data(self, location: Location) -> WeatherData:
+    async def _do_fetch_weather_data(
+        self, location: Location, skip_notifications: bool = False
+    ) -> WeatherData:
         """
         Perform the actual weather data fetch.
 
@@ -366,7 +373,7 @@ class WeatherClient:
         """
         # Check if we should use smart auto source (parallel multi-source fetch)
         if self.data_source == "auto":
-            return await self._fetch_smart_auto_source(location)
+            return await self._fetch_smart_auto_source(location, skip_notifications)
 
         # Determine which API to use based on data source and location
         logger.debug("Determining API choice")
@@ -401,8 +408,8 @@ class WeatherClient:
                 weather_data.discussion = "Forecast discussion not available from Visual Crossing."
                 weather_data.alerts = alerts
 
-                # Process alerts for notifications if we have any
-                if alerts and alerts.has_alerts():
+                # Process alerts for notifications if we have any (unless skipped for pre-warming)
+                if not skip_notifications and alerts and alerts.has_alerts():
                     logger.info(
                         f"Processing {len(alerts.alerts)} Visual Crossing alerts for notifications"
                     )
@@ -470,7 +477,9 @@ class WeatherClient:
 
         return weather_data
 
-    async def _fetch_smart_auto_source(self, location: Location) -> WeatherData:
+    async def _fetch_smart_auto_source(
+        self, location: Location, skip_notifications: bool = False
+    ) -> WeatherData:
         """
         Fetch weather data from all sources in parallel and merge results.
 
@@ -482,6 +491,7 @@ class WeatherClient:
 
         Args:
             location: The location to fetch weather for
+            skip_notifications: If True, skip triggering alert notifications
 
         Returns:
             Merged WeatherData from all successful sources
@@ -565,7 +575,8 @@ class WeatherClient:
             logger.warning(f"All sources returned empty data for {location.name}")
             return self._handle_all_sources_failed(location, source_results)
 
-        # Aggregate alerts from NWS and Visual Crossing
+        # Aggregate alerts - for US locations, use only NWS (authoritative source)
+        # Visual Crossing mirrors NWS alerts but lacks severity/urgency metadata
         nws_alerts = None
         vc_alerts_data = None
         for source in source_results:
@@ -574,7 +585,11 @@ class WeatherClient:
             elif source.source == "visualcrossing" and source.alerts:
                 vc_alerts_data = source.alerts
 
-        merged_alerts = alert_aggregator.aggregate_alerts(nws_alerts, vc_alerts_data)
+        # For US locations, skip VC alerts to avoid duplicates with missing metadata
+        if is_us:
+            merged_alerts = alert_aggregator.aggregate_alerts(nws_alerts, None)
+        else:
+            merged_alerts = alert_aggregator.aggregate_alerts(nws_alerts, vc_alerts_data)
 
         # Build source attribution
         attribution = SourceAttribution(
@@ -613,7 +628,9 @@ class WeatherClient:
 
         # Run enrichment tasks
         if weather_data.has_any_data():
-            enrichment_tasks = self._launch_enrichment_tasks(weather_data, location)
+            enrichment_tasks = self._launch_enrichment_tasks(
+                weather_data, location, skip_notifications
+            )
             await self._await_enrichments(enrichment_tasks, weather_data)
 
         # Cache the result
@@ -676,7 +693,7 @@ class WeatherClient:
         await vc_alerts.process_visual_crossing_alerts(alerts, location)
 
     def _launch_enrichment_tasks(
-        self, weather_data: WeatherData, location: Location
+        self, weather_data: WeatherData, location: Location, skip_notifications: bool = False
     ) -> dict[str, asyncio.Task]:
         """
         Launch enrichment tasks that can run concurrently.
@@ -688,6 +705,7 @@ class WeatherClient:
         ----
             weather_data: The WeatherData object to enrich
             location: The location for enrichment
+            skip_notifications: If True, skip triggering alert notifications
 
         Returns:
         -------
@@ -705,7 +723,7 @@ class WeatherClient:
                 self._enrich_with_nws_discussion(weather_data, location)
             )
             tasks["vc_alerts"] = asyncio.create_task(
-                self._enrich_with_visual_crossing_alerts(weather_data, location)
+                self._enrich_with_visual_crossing_alerts(weather_data, location, skip_notifications)
             )
             tasks["vc_moon_data"] = asyncio.create_task(
                 self._enrich_with_visual_crossing_moon_data(weather_data, location)
@@ -1006,9 +1024,11 @@ class WeatherClient:
         )
 
     async def _enrich_with_visual_crossing_alerts(
-        self, weather_data: WeatherData, location: Location
+        self, weather_data: WeatherData, location: Location, skip_notifications: bool = False
     ) -> None:
-        await enrichment.enrich_with_visual_crossing_alerts(self, weather_data, location)
+        await enrichment.enrich_with_visual_crossing_alerts(
+            self, weather_data, location, skip_notifications
+        )
 
     async def _enrich_with_visual_crossing_moon_data(
         self, weather_data: WeatherData, location: Location
