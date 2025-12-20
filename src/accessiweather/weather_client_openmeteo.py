@@ -307,12 +307,26 @@ async def get_openmeteo_flood_forecast(
             response = await _client_get(client, url, params=params)
             response.raise_for_status()
             data = response.json()
-            return parse_openmeteo_flood_forecast(data)
+            result = parse_openmeteo_flood_forecast(data)
+            logger.info(f"Flood forecast fetched for {location.name}")
+            if result.has_data():
+                logger.debug(
+                    f"Hydrological data: river_discharge={result.river_discharge} "
+                    f"{result.river_discharge_unit}"
+                )
+            return result
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
             response = await new_client.get(url, params=params)
             response.raise_for_status()
             data = response.json()
-            return parse_openmeteo_flood_forecast(data)
+            result = parse_openmeteo_flood_forecast(data)
+            logger.info(f"Flood forecast fetched for {location.name}")
+            if result.has_data():
+                logger.debug(
+                    f"Hydrological data: river_discharge={result.river_discharge} "
+                    f"{result.river_discharge_unit}"
+                )
+            return result
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get OpenMeteo flood forecast: {exc}")

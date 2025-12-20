@@ -230,7 +230,14 @@ class VisualCrossingClient:
                     )
 
                 data = response.json()
-                return self._parse_solar_data(data)
+                result = self._parse_solar_data(data)
+                logger.info(f"Solar data fetched for {location.name}")
+                if result and result.has_data():
+                    logger.debug(
+                        f"Solar data: radiation={result.solar_radiation}W/m², "
+                        f"energy={result.solar_energy}MJ/m²"
+                    )
+                return result
 
         except Exception as e:
             logger.error(f"Failed to get Visual Crossing solar data: {e}")

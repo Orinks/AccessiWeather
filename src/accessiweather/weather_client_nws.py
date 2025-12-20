@@ -818,7 +818,15 @@ async def get_nws_marine_forecast(
             response.raise_for_status()
             marine_data = response.json()
 
-            return parse_nws_marine_forecast(marine_data)
+            result = parse_nws_marine_forecast(marine_data)
+            logger.info(f"Marine forecast fetched for {location.name}")
+            if result.has_data():
+                logger.debug(
+                    f"Marine data: wave_height={result.wave_height_ft}ft, "
+                    f"small_craft_advisory={result.small_craft_advisory}, "
+                    f"gale_warning={result.gale_warning}"
+                )
+            return result
 
         # New client case
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
@@ -836,7 +844,15 @@ async def get_nws_marine_forecast(
             response.raise_for_status()
             marine_data = response.json()
 
-            return parse_nws_marine_forecast(marine_data)
+            result = parse_nws_marine_forecast(marine_data)
+            logger.info(f"Marine forecast fetched for {location.name}")
+            if result.has_data():
+                logger.debug(
+                    f"Marine data: wave_height={result.wave_height_ft}ft, "
+                    f"small_craft_advisory={result.small_craft_advisory}, "
+                    f"gale_warning={result.gale_warning}"
+                )
+            return result
 
     except Exception as exc:  # noqa: BLE001
         logger.debug(f"Failed to get NWS marine forecast: {exc}")

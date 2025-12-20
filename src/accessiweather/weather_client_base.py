@@ -649,6 +649,23 @@ class WeatherClient:
         marine = next((s.marine for s in source_results if s.marine), None)
         solar = next((s.solar for s in source_results if s.solar), None)
 
+        # Log which additional data types were populated
+        additional_data = []
+        if hydrological and hydrological.has_data():
+            additional_data.append("hydrological")
+        if marine and marine.has_data():
+            additional_data.append("marine")
+        if solar and solar.has_data():
+            additional_data.append("solar")
+        if additional_data:
+            logger.info(
+                f"Additional data populated for {location.name}: {', '.join(additional_data)}"
+            )
+        else:
+            logger.debug(
+                f"No additional data (hydrological/marine/solar) available for {location.name}"
+            )
+
         # Create the merged WeatherData
         weather_data = WeatherData(
             location=location,
