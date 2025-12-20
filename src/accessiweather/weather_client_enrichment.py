@@ -278,8 +278,18 @@ async def enrich_with_aviation_data(
 async def enrich_with_visual_crossing_alerts(
     client: WeatherClient, weather_data: WeatherData, location: Location
 ) -> None:
-    """Enrich weather data with alerts from Visual Crossing if available."""
+    """
+    Enrich weather data with alerts from Visual Crossing if available.
+
+    For US locations, this is skipped since NWS is the authoritative source
+    and Visual Crossing just mirrors the same alerts without severity metadata.
+    """
     if not client.visual_crossing_client:
+        return
+
+    # Skip VC alerts for US locations - NWS is authoritative and VC lacks metadata
+    if client._is_us_location(location):
+        logger.debug("Skipping Visual Crossing alerts for US location %s", location.name)
         return
 
     try:
