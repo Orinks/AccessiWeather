@@ -194,6 +194,10 @@ class AlertAggregator:
         """
         Merge duplicate alerts, keeping most detailed info.
 
+        NWS alerts are preferred as the base because they provide better metadata
+        (severity, urgency, certainty) compared to Visual Crossing which often
+        returns "Unknown" for these fields.
+
         Args:
             alerts: List of duplicate alerts to merge
 
@@ -204,8 +208,14 @@ class AlertAggregator:
         if len(alerts) == 1:
             return alerts[0]
 
-        # Start with the first alert as base
-        base = alerts[0]
+        def source_priority(alert: WeatherAlert) -> int:
+            source = (alert.source or "").lower()
+            if "nws" in source:
+                return 0
+            return 1
+
+        sorted_alerts = sorted(alerts, key=source_priority)
+        base = sorted_alerts[0]
 
         # Find the most detailed description
         best_description = base.description
@@ -220,7 +230,12 @@ class AlertAggregator:
         # Combine all areas
         all_areas: set[str] = set(base.areas) if base.areas else set()
 
-        for alert in alerts[1:]:
+        # For metadata, prefer non-Unknown values (NWS provides better metadata)
+        best_severity = base.severity
+        best_urgency = base.urgency
+        best_certainty = base.certainty
+
+        for alert in sorted_alerts[1:]:
             # Keep longer description
             if alert.description and len(alert.description) > len(best_description or ""):
                 best_description = alert.description
@@ -241,15 +256,23 @@ class AlertAggregator:
             if alert.areas:
                 all_areas.update(alert.areas)
 
+            # Prefer non-Unknown severity/urgency/certainty
+            if best_severity == "Unknown" and alert.severity and alert.severity != "Unknown":
+                best_severity = alert.severity
+            if best_urgency == "Unknown" and alert.urgency and alert.urgency != "Unknown":
+                best_urgency = alert.urgency
+            if best_certainty == "Unknown" and alert.certainty and alert.certainty != "Unknown":
+                best_certainty = alert.certainty
+
         # Create merged source string
         merged_source = ", ".join(sorted(sources)) if sources else None
 
         return WeatherAlert(
             title=base.title,
             description=best_description or base.description,
-            severity=base.severity,
-            urgency=base.urgency,
-            certainty=base.certainty,
+            severity=best_severity,
+            urgency=best_urgency,
+            certainty=best_certainty,
             event=base.event,
             headline=best_headline,
             instruction=best_instruction,
