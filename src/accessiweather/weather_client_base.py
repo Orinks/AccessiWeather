@@ -565,7 +565,8 @@ class WeatherClient:
             logger.warning(f"All sources returned empty data for {location.name}")
             return self._handle_all_sources_failed(location, source_results)
 
-        # Aggregate alerts from NWS and Visual Crossing
+        # Aggregate alerts - for US locations, use only NWS (authoritative source)
+        # Visual Crossing mirrors NWS alerts but lacks severity/urgency metadata
         nws_alerts = None
         vc_alerts_data = None
         for source in source_results:
@@ -574,7 +575,11 @@ class WeatherClient:
             elif source.source == "visualcrossing" and source.alerts:
                 vc_alerts_data = source.alerts
 
-        merged_alerts = alert_aggregator.aggregate_alerts(nws_alerts, vc_alerts_data)
+        # For US locations, skip VC alerts to avoid duplicates with missing metadata
+        if is_us:
+            merged_alerts = alert_aggregator.aggregate_alerts(nws_alerts, None)
+        else:
+            merged_alerts = alert_aggregator.aggregate_alerts(nws_alerts, vc_alerts_data)
 
         # Build source attribution
         attribution = SourceAttribution(
