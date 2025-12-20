@@ -56,7 +56,7 @@ git --no-pager show HEAD              # Show last commit
 
 **Toga Patterns**:
 - OptionContainer: Use `.content.append(title, widget)` (two arguments, NOT tuple)
-- ALL UI elements MUST have `aria_label` + `aria_description` (accessibility)
+- **Accessibility**: Toga doesn't support semantic label-pairing (see beeware/toga#2233). Screen readers announce adjacent `Label` text when users tab to inputs/selects. Make labels descriptive: `"Search for Location (city/zipcode):"` instead of just `"Search for Location:"`. This works for `TextInput`, `Selection`, and other input widgets.
 - Modal dialogs: Create with `toga.Window`, show with `.show()`, close with `.close()`
 - Test with `TOGA_BACKEND=toga_dummy` env var
 
