@@ -42,6 +42,7 @@ class OpenMeteoApiClient:
     """
 
     BASE_URL = "https://api.open-meteo.com/v1"
+    ARCHIVE_BASE_URL = "https://archive-api.open-meteo.com/v1"
     AIR_QUALITY_BASE_URL = "https://air-quality-api.open-meteo.com/v1"
     FLOOD_BASE_URL = "https://flood-api.open-meteo.com/v1"
 
