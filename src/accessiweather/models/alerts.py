@@ -33,7 +33,13 @@ class WeatherAlert:
             self.areas = []
 
     def get_unique_id(self) -> str:
-        """Get a unique identifier for this alert."""
+        """
+        Get a unique identifier for this alert.
+
+        When self.id is not provided, generates an ID from event, severity,
+        headline/title, source, and areas. Areas are sorted alphabetically
+        for consistency (same areas in different order produce the same ID).
+        """
         if self.id:
             return self.id
 
@@ -44,6 +50,8 @@ class WeatherAlert:
         ]
         if self.source:
             key_parts.append(self.source)
+        if self.areas:
+            key_parts.append(",".join(sorted(self.areas)))
         return "-".join(part.lower().replace(" ", "_") for part in key_parts)
 
     def get_content_hash(self) -> str:
