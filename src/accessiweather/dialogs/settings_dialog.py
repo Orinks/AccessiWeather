@@ -599,30 +599,53 @@ class SettingsDialog:
         current_model = getattr(self.current_settings, "ai_model", "openrouter/auto")
         free_only = not getattr(self.current_settings, "allow_paid_models", False)
 
-        def on_model_selected(model_id: str) -> None:
+        def on_model_selected(model_id: str, model_name: str = "") -> None:
             """Handle model selection from the dialog."""
             if hasattr(self, "selected_model_label"):
                 self.selected_model_label.text = model_id
             self._selected_specific_model = model_id
+
+            # Create display text with model name
+            display_text = f"Specific Model: {model_name}" if model_name else "Specific Model"
+
             if hasattr(self, "ai_model_selection"):
                 if "Specific Model" not in self.ai_model_display_to_value:
-                    self.ai_model_display_to_value["Specific Model"] = model_id
-                    self.ai_model_value_to_display[model_id] = "Specific Model"
+                    # First time selecting a specific model
+                    self.ai_model_display_to_value[display_text] = model_id
+                    self.ai_model_value_to_display[model_id] = display_text
                 else:
-                    old_model = self.ai_model_display_to_value.get("Specific Model")
-                    if old_model and old_model in self.ai_model_value_to_display:
-                        del self.ai_model_value_to_display[old_model]
-                    self.ai_model_display_to_value["Specific Model"] = model_id
-                    self.ai_model_value_to_display[model_id] = "Specific Model"
+                    # Updating an existing specific model selection
+                    old_display = None
+                    for key, value in self.ai_model_display_to_value.items():
+                        if value == model_id or (
+                            key.startswith("Specific Model")
+                            and value == self.ai_model_display_to_value.get("Specific Model")
+                        ):
+                            old_display = key
+                            break
+
+                    if old_display and old_display in self.ai_model_value_to_display:
+                        old_id = self.ai_model_display_to_value[old_display]
+                        if old_id in self.ai_model_value_to_display:
+                            del self.ai_model_value_to_display[old_id]
+                        del self.ai_model_display_to_value[old_display]
+
+                    self.ai_model_display_to_value[display_text] = model_id
+                    self.ai_model_value_to_display[model_id] = display_text
 
                 # Get current items from the ListSource (extract string values)
                 current_items = [item.value for item in self.ai_model_selection.items]
 
-                if "Specific Model" not in current_items:
-                    current_items.append("Specific Model")
-                    self.ai_model_selection.items = current_items
+                # Remove old "Specific Model" entries
+                current_items = [
+                    item for item in current_items if not item.startswith("Specific Model")
+                ]
 
-                self.ai_model_selection.value = "Specific Model"
+                # Add new display text
+                current_items.append(display_text)
+                self.ai_model_selection.items = current_items
+
+                self.ai_model_selection.value = display_text
 
         await show_model_selection_dialog(
             self.app, current_model, free_only=free_only, on_model_selected=on_model_selected
