@@ -277,8 +277,8 @@ async def test_nws_hourly_forecast_has_timestamps(http_client):
                     f"Hourly period {i} start_time year is invalid"
                 )
 
-                # Only check time bounds in live mode (cassettes have fixed times)
-                if LIVE_WEATHER_TESTS and period.start_time.tzinfo is not None:
+                # Only check time bounds in live mode WITHOUT cassettes (cassettes have fixed times)
+                if LIVE_WEATHER_TESTS and not HAS_VCR and period.start_time.tzinfo is not None:
                     now = datetime.now(UTC)
                     max_future = timedelta(days=3)
                     max_past = timedelta(hours=1)
