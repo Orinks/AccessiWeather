@@ -4957,4 +4957,114 @@ interactions:
     status:
       code: 200
       message: OK
+- request:
+    body: ''
+    headers:
+      Accept:
+      - application/geo+json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - api.weather.gov
+      User-Agent:
+      - AccessiWeather/IntegrationTest (github.com/Orinks/AccessiWeather, contact@example.com)
+    method: GET
+    uri: https://api.weather.gov/stations/KTTN/observations/latest
+  response:
+    body:
+      string: "{\n    \"@context\": [\n        \"https://geojson.org/geojson-ld/geojson-context.jsonld\",\n
+        \       {\n            \"@version\": \"1.1\",\n            \"wx\": \"https://api.weather.gov/ontology#\",\n
+        \           \"s\": \"https://schema.org/\",\n            \"geo\": \"http://www.opengis.net/ont/geosparql#\",\n
+        \           \"unit\": \"http://codes.wmo.int/common/unit/\",\n            \"@vocab\":
+        \"https://api.weather.gov/ontology#\",\n            \"geometry\": {\n                \"@id\":
+        \"s:GeoCoordinates\",\n                \"@type\": \"geo:wktLiteral\"\n            },\n
+        \           \"city\": \"s:addressLocality\",\n            \"state\": \"s:addressRegion\",\n
+        \           \"distance\": {\n                \"@id\": \"s:Distance\",\n                \"@type\":
+        \"s:QuantitativeValue\"\n            },\n            \"bearing\": {\n                \"@type\":
+        \"s:QuantitativeValue\"\n            },\n            \"value\": {\n                \"@id\":
+        \"s:value\"\n            },\n            \"unitCode\": {\n                \"@id\":
+        \"s:unitCode\",\n                \"@type\": \"@id\"\n            },\n            \"forecastOffice\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"forecastGridData\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"publicZone\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"county\":
+        {\n                \"@type\": \"@id\"\n            }\n        }\n    ],\n
+        \   \"id\": \"https://api.weather.gov/stations/KTTN/observations/2025-12-25T06:05:00+00:00\",\n
+        \   \"type\": \"Feature\",\n    \"geometry\": {\n        \"type\": \"Point\",\n
+        \       \"coordinates\": [\n            -74.82,\n            40.28\n        ]\n
+        \   },\n    \"properties\": {\n        \"@id\": \"https://api.weather.gov/stations/KTTN/observations/2025-12-25T06:05:00+00:00\",\n
+        \       \"@type\": \"wx:ObservationStation\",\n        \"elevation\": {\n
+        \           \"unitCode\": \"wmoUnit:m\",\n            \"value\": 65\n        },\n
+        \       \"station\": \"https://api.weather.gov/stations/KTTN\",\n        \"stationId\":
+        \"KTTN\",\n        \"stationName\": \"Trenton-Mercer Airport\",\n        \"timestamp\":
+        \"2025-12-25T06:05:00+00:00\",\n        \"rawMessage\": \"\",\n        \"textDescription\":
+        \"Mostly Clear\",\n        \"icon\": \"https://api.weather.gov/icons/land/night/few?size=medium\",\n
+        \       \"presentWeather\": [],\n        \"temperature\": {\n            \"unitCode\":
+        \"wmoUnit:degC\",\n            \"value\": 0,\n            \"qualityControl\":
+        \"V\"\n        },\n        \"dewpoint\": {\n            \"unitCode\": \"wmoUnit:degC\",\n
+        \           \"value\": -4,\n            \"qualityControl\": \"V\"\n        },\n
+        \       \"windDirection\": {\n            \"unitCode\": \"wmoUnit:degree_(angle)\",\n
+        \           \"value\": 210,\n            \"qualityControl\": \"V\"\n        },\n
+        \       \"windSpeed\": {\n            \"unitCode\": \"wmoUnit:km_h-1\",\n
+        \           \"value\": 7.416,\n            \"qualityControl\": \"V\"\n        },\n
+        \       \"windGust\": {\n            \"unitCode\": \"wmoUnit:km_h-1\",\n            \"value\":
+        null,\n            \"qualityControl\": \"Z\"\n        },\n        \"barometricPressure\":
+        {\n            \"unitCode\": \"wmoUnit:Pa\",\n            \"value\": 102438.26,\n
+        \           \"qualityControl\": \"V\"\n        },\n        \"seaLevelPressure\":
+        {\n            \"unitCode\": \"wmoUnit:Pa\",\n            \"value\": null,\n
+        \           \"qualityControl\": \"Z\"\n        },\n        \"visibility\":
+        {\n            \"unitCode\": \"wmoUnit:m\",\n            \"value\": 16093.44,\n
+        \           \"qualityControl\": \"C\"\n        },\n        \"maxTemperatureLast24Hours\":
+        {\n            \"unitCode\": \"wmoUnit:degC\",\n            \"value\": null\n
+        \       },\n        \"minTemperatureLast24Hours\": {\n            \"unitCode\":
+        \"wmoUnit:degC\",\n            \"value\": null\n        },\n        \"precipitationLast3Hours\":
+        {\n            \"unitCode\": \"wmoUnit:mm\",\n            \"value\": null,\n
+        \           \"qualityControl\": \"Z\"\n        },\n        \"relativeHumidity\":
+        {\n            \"unitCode\": \"wmoUnit:percent\",\n            \"value\":
+        74.458391582193,\n            \"qualityControl\": \"V\"\n        },\n        \"windChill\":
+        {\n            \"unitCode\": \"wmoUnit:degC\",\n            \"value\": -2.5297785178216667,\n
+        \           \"qualityControl\": \"V\"\n        },\n        \"heatIndex\":
+        {\n            \"unitCode\": \"wmoUnit:degC\",\n            \"value\": null,\n
+        \           \"qualityControl\": \"V\"\n        },\n        \"cloudLayers\":
+        [\n            {\n                \"base\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 3657.6\n                },\n
+        \               \"amount\": \"FEW\"\n            }\n        ]\n    }\n}"
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Access-Control-Expose-Headers:
+      - X-Correlation-Id, X-Request-Id, X-Server-Id
+      Cache-Control:
+      - public, max-age=286, s-maxage=300
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/geo+json
+      Date:
+      - Thu, 25 Dec 2025 06:13:56 GMT
+      Expires:
+      - Thu, 25 Dec 2025 06:18:42 GMT
+      Last-Modified:
+      - Thu, 25 Dec 2025 06:05:00 GMT
+      Server:
+      - nginx/1.20.1
+      Strict-Transport-Security:
+      - max-age=31536000 ; includeSubDomains ; preload
+      Vary:
+      - Accept-Encoding
+      - Accept,Feature-Flags,Accept-Language
+      X-Correlation-ID:
+      - 736860bb
+      X-Edge-Request-ID:
+      - '25305137'
+      X-Request-ID:
+      - bc29d936-bb90-4999-a83c-266475aeb3ac
+      X-Server-ID:
+      - vm-bldr-api-ops-app12.ncep.noaa.gov
+      content-length:
+      - '4325'
+    status:
+      code: 200
+      message: OK
 version: 1
