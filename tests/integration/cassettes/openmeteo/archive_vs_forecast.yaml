@@ -160,4 +160,36 @@ interactions:
     status:
       code: 200
       message: OK
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - archive-api.open-meteo.com
+      User-Agent:
+      - AccessiWeather
+    method: GET
+    uri: https://archive-api.open-meteo.com/v1/archive?latitude=40.7128&longitude=-74.006&start_date=2025-12-12&end_date=2025-12-12&daily=temperature_2m_max&daily=temperature_2m_min&temperature_unit=fahrenheit&timezone=auto
+  response:
+    body:
+      string: "{\"latitude\":40.738136,\"longitude\":-74.04254,\"generationtime_ms\":0.19884109497070312,\"utc_offset_seconds\":-18000,\"timezone\":\"America/New_York\",\"timezone_abbreviation\":\"GMT-5\",\"elevation\":32.0,\"daily_units\":{\"time\":\"iso8601\",\"temperature_2m_max\":\"\xB0F\",\"temperature_2m_min\":\"\xB0F\"},\"daily\":{\"time\":[\"2025-12-12\"],\"temperature_2m_max\":[34.8],\"temperature_2m_min\":[23.3]}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Fri, 26 Dec 2025 06:14:07 GMT
+      Transfer-Encoding:
+      - chunked
+      content-length:
+      - '366'
+    status:
+      code: 200
+      message: OK
 version: 1
