@@ -419,6 +419,7 @@ def update_tray_icon_tooltip(
             dynamic_enabled=settings.taskbar_icon_dynamic_enabled,
             format_string=settings.taskbar_icon_text_format,
             temperature_unit=settings.temperature_unit,
+            verbosity_level=getattr(settings, "verbosity_level", "standard"),
         )
 
         location = app.config_manager.get_current_location()
