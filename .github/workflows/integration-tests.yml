@@ -9,6 +9,12 @@ on:
 
   # Allow manual triggering for testing
   workflow_dispatch:
+    inputs:
+      update_cassettes:
+        description: 'Update VCR cassettes (rewrite with fresh API data)'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   integration-tests:
@@ -50,19 +56,32 @@ jobs:
           pip install -r requirements-dev.txt
           pip install -e .
 
-      - name: Run integration tests (live mode)
+      - name: Run integration tests (replay mode)
+        if: ${{ github.event.inputs.update_cassettes != 'true' }}
         run: |
           pytest tests/integration/ \
             -v \
             --tb=short \
-            --record-mode=new_episodes
+            --record-mode=none
+        env:
+          LIVE_WEATHER_TESTS: "1"
+          VISUAL_CROSSING_API_KEY: ${{ secrets.VISUAL_CROSSING_API_KEY }}
+        timeout-minutes: 15
+
+      - name: Run integration tests (update cassettes)
+        if: ${{ github.event.inputs.update_cassettes == 'true' }}
+        run: |
+          pytest tests/integration/ \
+            -v \
+            --tb=short \
+            --record-mode=all
         env:
           LIVE_WEATHER_TESTS: "1"
           VISUAL_CROSSING_API_KEY: ${{ secrets.VISUAL_CROSSING_API_KEY }}
         timeout-minutes: 15
 
       - name: Commit and push new cassettes (if any)
-        if: success()
+        if: ${{ success() && github.event.inputs.update_cassettes == 'true' }}
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
