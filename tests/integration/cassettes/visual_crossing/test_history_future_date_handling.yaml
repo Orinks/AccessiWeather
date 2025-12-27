@@ -163,4 +163,45 @@ interactions:
     status:
       code: 200
       message: ''
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - weather.visualcrossing.com
+      User-Agent:
+      - AccessiWeather/1.0
+    method: GET
+    uri: https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/39.9643,-74.8099/2026-01-25/2026-01-25?key=REDACTED&include=days&unitGroup=us&elements=datetime%2Ctempmax%2Ctempmin%2Ctemp%2Cconditions%2Cdescription%2Cwindspeed%2Cwinddir%2Cicon%2Cprecipprob%2Csnow%2Cuvindex
+  response:
+    body:
+      string: '{"queryCost":1,"latitude":39.9643,"longitude":-74.8099,"resolvedAddress":"39.9643,-74.8099","address":"39.9643,-74.8099","timezone":"America/New_York","tzoffset":-5.0,"days":[{"datetime":"2026-01-25","tempmax":38.0,"tempmin":23.6,"temp":31.7,"precipprob":4.8,"snow":null,"windspeed":14.1,"winddir":216.2,"uvindex":null,"conditions":"Partially
+        cloudy","description":"","icon":"partly-cloudy-day","normal":{"tempmax":[17.7,38.0,60.3],"tempmin":[6.9,23.6,44.9],"windspeed":[5.8,14.1,26.4],"winddir":[56.3,216.2,323.0]}}]}'
+    headers:
+      Access-Control-Allow-Headers:
+      - X-Requested-With, Content-Type, X-Codingpedia
+      Access-Control-Allow-Methods:
+      - GET, POST, DELETE, PUT
+      Access-Control-Allow-Origin:
+      - '*'
+      Cache-Control:
+      - no-cache, no-transform
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Sat, 27 Dec 2025 06:12:55 GMT
+      X-Powered-By:
+      - Visual Crossing Weather
+      content-length:
+      - '518'
+    status:
+      code: 200
+      message: ''
 version: 1

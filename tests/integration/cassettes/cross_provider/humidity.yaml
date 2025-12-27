@@ -1906,4 +1906,125 @@ interactions:
     status:
       code: 200
       message: OK
+- request:
+    body: ''
+    headers:
+      Accept:
+      - application/geo+json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - api.weather.gov
+      User-Agent:
+      - AccessiWeather/IntegrationTest (github.com/Orinks/AccessiWeather)
+    method: GET
+    uri: https://api.weather.gov/stations/KLOM/observations/latest
+  response:
+    body:
+      string: "{\n    \"@context\": [\n        \"https://geojson.org/geojson-ld/geojson-context.jsonld\",\n
+        \       {\n            \"@version\": \"1.1\",\n            \"wx\": \"https://api.weather.gov/ontology#\",\n
+        \           \"s\": \"https://schema.org/\",\n            \"geo\": \"http://www.opengis.net/ont/geosparql#\",\n
+        \           \"unit\": \"http://codes.wmo.int/common/unit/\",\n            \"@vocab\":
+        \"https://api.weather.gov/ontology#\",\n            \"geometry\": {\n                \"@id\":
+        \"s:GeoCoordinates\",\n                \"@type\": \"geo:wktLiteral\"\n            },\n
+        \           \"city\": \"s:addressLocality\",\n            \"state\": \"s:addressRegion\",\n
+        \           \"distance\": {\n                \"@id\": \"s:Distance\",\n                \"@type\":
+        \"s:QuantitativeValue\"\n            },\n            \"bearing\": {\n                \"@type\":
+        \"s:QuantitativeValue\"\n            },\n            \"value\": {\n                \"@id\":
+        \"s:value\"\n            },\n            \"unitCode\": {\n                \"@id\":
+        \"s:unitCode\",\n                \"@type\": \"@id\"\n            },\n            \"forecastOffice\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"forecastGridData\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"publicZone\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"county\":
+        {\n                \"@type\": \"@id\"\n            }\n        }\n    ],\n
+        \   \"id\": \"https://api.weather.gov/stations/KLOM/observations/2025-12-27T05:35:00+00:00\",\n
+        \   \"type\": \"Feature\",\n    \"geometry\": {\n        \"type\": \"Point\",\n
+        \       \"coordinates\": [\n            -75.27,\n            40.14\n        ]\n
+        \   },\n    \"properties\": {\n        \"@id\": \"https://api.weather.gov/stations/KLOM/observations/2025-12-27T05:35:00+00:00\",\n
+        \       \"@type\": \"wx:ObservationStation\",\n        \"elevation\": {\n
+        \           \"unitCode\": \"wmoUnit:m\",\n            \"value\": 92\n        },\n
+        \       \"station\": \"https://api.weather.gov/stations/KLOM\",\n        \"stationId\":
+        \"KLOM\",\n        \"stationName\": \"Philadelphia - Wings Field Airport\",\n
+        \       \"timestamp\": \"2025-12-27T05:35:00+00:00\",\n        \"rawMessage\":
+        \"KLOM 270535Z AUTO 36004KT 3SM -DZ BR OVC003 M01/M01 A2983 RMK AO2 T10111013\",\n
+        \       \"textDescription\": \"Light Drizzle and Fog/Mist\",\n        \"icon\":
+        \"https://api.weather.gov/icons/land/night/rain?size=medium\",\n        \"presentWeather\":
+        [\n            {\n                \"intensity\": \"light\",\n                \"modifier\":
+        null,\n                \"weather\": \"drizzle\",\n                \"rawString\":
+        \"-DZ\"\n            },\n            {\n                \"intensity\": null,\n
+        \               \"modifier\": null,\n                \"weather\": \"fog_mist\",\n
+        \               \"rawString\": \"BR\"\n            }\n        ],\n        \"temperature\":
+        {\n            \"unitCode\": \"wmoUnit:degC\",\n            \"value\": -1.1,\n
+        \           \"qualityControl\": \"V\"\n        },\n        \"dewpoint\": {\n
+        \           \"unitCode\": \"wmoUnit:degC\",\n            \"value\": -1.3,\n
+        \           \"qualityControl\": \"V\"\n        },\n        \"windDirection\":
+        {\n            \"unitCode\": \"wmoUnit:degree_(angle)\",\n            \"value\":
+        360,\n            \"qualityControl\": \"V\"\n        },\n        \"windSpeed\":
+        {\n            \"unitCode\": \"wmoUnit:km_h-1\",\n            \"value\": 7.56,\n
+        \           \"qualityControl\": \"V\"\n        },\n        \"windGust\": {\n
+        \           \"unitCode\": \"wmoUnit:km_h-1\",\n            \"value\": null,\n
+        \           \"qualityControl\": \"Z\"\n        },\n        \"barometricPressure\":
+        {\n            \"unitCode\": \"wmoUnit:Pa\",\n            \"value\": 101020,\n
+        \           \"qualityControl\": \"V\"\n        },\n        \"seaLevelPressure\":
+        {\n            \"unitCode\": \"wmoUnit:Pa\",\n            \"value\": null,\n
+        \           \"qualityControl\": \"Z\"\n        },\n        \"visibility\":
+        {\n            \"unitCode\": \"wmoUnit:m\",\n            \"value\": 4830,\n
+        \           \"qualityControl\": \"C\"\n        },\n        \"maxTemperatureLast24Hours\":
+        {\n            \"unitCode\": \"wmoUnit:degC\",\n            \"value\": null\n
+        \       },\n        \"minTemperatureLast24Hours\": {\n            \"unitCode\":
+        \"wmoUnit:degC\",\n            \"value\": null\n        },\n        \"precipitationLastHour\":
+        {\n            \"unitCode\": \"wmoUnit:mm\",\n            \"value\": null,\n
+        \           \"qualityControl\": \"Z\"\n        },\n        \"precipitationLast3Hours\":
+        {\n            \"unitCode\": \"wmoUnit:mm\",\n            \"value\": null,\n
+        \           \"qualityControl\": \"Z\"\n        },\n        \"precipitationLast6Hours\":
+        {\n            \"unitCode\": \"wmoUnit:mm\",\n            \"value\": null,\n
+        \           \"qualityControl\": \"Z\"\n        },\n        \"relativeHumidity\":
+        {\n            \"unitCode\": \"wmoUnit:percent\",\n            \"value\":
+        98.54586818515,\n            \"qualityControl\": \"V\"\n        },\n        \"windChill\":
+        {\n            \"unitCode\": \"wmoUnit:degC\",\n            \"value\": -3.8639995185283333,\n
+        \           \"qualityControl\": \"V\"\n        },\n        \"heatIndex\":
+        {\n            \"unitCode\": \"wmoUnit:degC\",\n            \"value\": null,\n
+        \           \"qualityControl\": \"V\"\n        },\n        \"cloudLayers\":
+        [\n            {\n                \"base\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 90\n                },\n                \"amount\":
+        \"OVC\"\n            }\n        ]\n    }\n}"
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Access-Control-Expose-Headers:
+      - X-Correlation-Id, X-Request-Id, X-Server-Id
+      Cache-Control:
+      - public, max-age=298, s-maxage=300
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/geo+json
+      Date:
+      - Sat, 27 Dec 2025 06:12:29 GMT
+      Expires:
+      - Sat, 27 Dec 2025 06:17:27 GMT
+      Last-Modified:
+      - Sat, 27 Dec 2025 05:35:00 GMT
+      Server:
+      - nginx/1.20.1
+      Strict-Transport-Security:
+      - max-age=31536000 ; includeSubDomains ; preload
+      Vary:
+      - Accept-Encoding
+      - Accept,Feature-Flags,Accept-Language
+      X-Correlation-ID:
+      - 1fbd6d94
+      X-Edge-Request-ID:
+      - 9f32d71e
+      X-Request-ID:
+      - 19ff5f46-32a7-409c-b142-fb0fbd04ed75
+      X-Server-ID:
+      - vm-bldr-api-ops-app3.ncep.noaa.gov
+      content-length:
+      - '5064'
+    status:
+      code: 200
+      message: OK
 version: 1
