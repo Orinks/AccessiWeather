@@ -30,9 +30,10 @@ DELAY_BETWEEN_REQUESTS = 1.0
 REQUEST_TIMEOUT = 30.0
 
 # Fixed dates for cassette tests (at least 14 days in past for ERA5 availability)
-FIXED_ARCHIVE_DATE = date(2024, 12, 1)
-FIXED_RANGE_END_DATE = date(2024, 11, 24)
-FIXED_RANGE_START_DATE = date(2024, 11, 18)  # 7 days total
+# These match the dates recorded in cassettes (today - 14 days when cassettes were recorded on 2025-12-19)
+FIXED_ARCHIVE_DATE = date(2025, 12, 5)
+FIXED_RANGE_END_DATE = date(2025, 11, 28)
+FIXED_RANGE_START_DATE = date(2025, 11, 22)  # 7 days total
 
 
 def get_archive_date() -> date:

@@ -259,7 +259,6 @@ def _apply_ai_settings(dialog, settings):
                 dialog.ai_model_selection.value = display_value
             except Exception as exc:
                 logger.debug("%s: Failed to set AI model selection: %s", LOG_PREFIX, exc)
-        # Label is static; selection widget shows the full option text
         # Update selected model label
         if hasattr(dialog, "selected_model_label"):
             dialog.selected_model_label.value = (

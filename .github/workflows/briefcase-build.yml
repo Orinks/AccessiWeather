@@ -118,7 +118,7 @@ jobs:
         python-version: ${{ env.PYTHON_VERSION }}
 
     - name: Cache pip dependencies
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-build-pip-${{ github.sha }}
@@ -126,7 +126,7 @@ jobs:
           ${{ runner.os }}-build-pip-
 
     - name: Cache Briefcase build cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       if: ${{ !github.event.inputs.skip_cache }}
       with:
         path: |
@@ -280,7 +280,7 @@ jobs:
 
     - name: Upload portable build artifact (Windows only)
       if: matrix.platform == 'windows'
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: windows-portable-${{ steps.version.outputs.version }}
         path: |
@@ -289,7 +289,7 @@ jobs:
         retention-days: 30
 
     - name: Upload Installer artifact
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: ${{ matrix.platform }}-installer-${{ steps.version.outputs.version }}
         path: |
@@ -299,7 +299,7 @@ jobs:
 
     - name: Upload Briefcase logs on failure
       if: failure()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: briefcase-build-logs-${{ matrix.platform }}
         path: logs/*
@@ -312,13 +312,13 @@ jobs:
 
     steps:
     - name: Download installer artifacts
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         name: windows-installer-${{ needs.build.outputs.version }}
         path: artifacts/installer/
 
     - name: Download portable artifacts
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         name: windows-portable-${{ needs.build.outputs.version }}
         path: artifacts/portable/
