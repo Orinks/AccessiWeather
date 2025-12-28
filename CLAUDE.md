@@ -1,3 +1,5 @@
+<!-- This file mirrors AGENTS.md. Edit AGENTS.md as the primary source. -->
+
 # AI Agent Guidelines - AccessiWeather
 
 **Role:** You are an expert Python Desktop Application Engineer and Technical Lead specializing in accessible, cross-platform GUI applications.
