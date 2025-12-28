@@ -199,6 +199,7 @@ class WeatherPresenter:
                 trends=weather_data.trend_insights,
                 hourly_forecast=weather_data.hourly_forecast,
                 air_quality=air_quality_panel,
+                alerts=weather_data.alerts,
             )
             if weather_data.current
             else None
@@ -250,6 +251,7 @@ class WeatherPresenter:
         environmental: EnvironmentalConditions | None = None,
         trends: Iterable[TrendInsight] | None = None,
         hourly_forecast: HourlyForecast | None = None,
+        alerts: WeatherAlerts | None = None,
     ) -> CurrentConditionsPresentation | None:
         if not current or not current.has_data():
             return None
@@ -268,6 +270,7 @@ class WeatherPresenter:
             trends=trends,
             hourly_forecast=hourly_forecast,
             air_quality=air_quality_panel,
+            alerts=alerts,
         )
 
     def present_forecast(
@@ -303,6 +306,7 @@ class WeatherPresenter:
         trends: Iterable[TrendInsight] | None = None,
         hourly_forecast: HourlyForecast | None = None,
         air_quality: AirQualityPresentation | None = None,
+        alerts: WeatherAlerts | None = None,
     ) -> CurrentConditionsPresentation:
         return build_current_conditions(
             current,
@@ -313,6 +317,7 @@ class WeatherPresenter:
             trends=trends,
             hourly_forecast=hourly_forecast,
             air_quality=air_quality,
+            alerts=alerts,
         )
 
     def _build_forecast(

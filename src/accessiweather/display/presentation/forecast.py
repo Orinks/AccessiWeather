@@ -43,39 +43,53 @@ def build_forecast(
     else:
         hourly = []
 
-    # Extract time display preferences from settings
+    # Extract time display preferences and verbosity from settings
     if settings:
         time_display_mode = getattr(settings, "time_display_mode", "local")
         time_format_12hour = getattr(settings, "time_format_12hour", True)
         show_timezone_suffix = getattr(settings, "show_timezone_suffix", False)
+        verbosity_level = getattr(settings, "verbosity_level", "standard")
     else:
         time_display_mode = "local"
         time_format_12hour = True
         show_timezone_suffix = False
+        verbosity_level = "standard"
+
+    # Determine which fields to include based on verbosity level
+    # minimal: temperature, conditions only
+    # standard: temperature, conditions, wind, precipitation
+    # detailed: all available fields
+    include_wind = verbosity_level in ("standard", "detailed")
+    include_precipitation = verbosity_level in ("standard", "detailed")
+    include_uv = verbosity_level == "detailed"
+    include_snowfall = verbosity_level == "detailed"
+    include_details = verbosity_level == "detailed"
 
     for period in forecast.periods[:14]:
         temp_pair = format_forecast_temperature(period, unit_pref, precision)
-        wind_value = format_period_wind(period)
+        wind_value = format_period_wind(period) if include_wind else None
         details = (
             period.detailed_forecast
-            if period.detailed_forecast and period.detailed_forecast != period.short_forecast
+            if include_details
+            and period.detailed_forecast
+            and period.detailed_forecast != period.short_forecast
             else None
         )
 
-        # Format extended fields
+        # Format extended fields based on verbosity
         precip_prob = (
             f"{int(period.precipitation_probability)}%"
-            if period.precipitation_probability is not None
+            if include_precipitation and period.precipitation_probability is not None
             else None
         )
         snowfall_val = (
             f"{period.snowfall:.1f} in"
-            if period.snowfall is not None and period.snowfall > 0
+            if include_snowfall and period.snowfall is not None and period.snowfall > 0
             else None
         )
         uv_val = (
             f"{period.uv_index:.0f} ({get_uv_description(period.uv_index)})"
-            if period.uv_index is not None
+            if include_uv and period.uv_index is not None
             else None
         )
 
@@ -142,21 +156,32 @@ def build_hourly_summary(
     precision = get_temperature_precision(unit_pref)
     summary: list[HourlyPeriodPresentation] = []
 
-    # Extract time display preferences from settings
+    # Extract time display preferences and verbosity from settings
     if settings:
         time_display_mode = getattr(settings, "time_display_mode", "local")
         time_format_12hour = getattr(settings, "time_format_12hour", True)
         show_timezone_suffix = getattr(settings, "show_timezone_suffix", False)
+        verbosity_level = getattr(settings, "verbosity_level", "standard")
     else:
         time_display_mode = "local"
         time_format_12hour = True
         show_timezone_suffix = False
+        verbosity_level = "standard"
+
+    # Determine which fields to include based on verbosity level
+    # minimal: temperature, conditions only
+    # standard: temperature, conditions, wind, precipitation
+    # detailed: all available fields
+    include_wind = verbosity_level in ("standard", "detailed")
+    include_precipitation = verbosity_level in ("standard", "detailed")
+    include_uv = verbosity_level == "detailed"
+    include_snowfall = verbosity_level == "detailed"
 
     for period in hourly_forecast.get_next_hours(6):
         if not period.has_data():
             continue
         temperature = format_period_temperature(period, unit_pref, precision)
-        wind = format_hourly_wind(period)
+        wind = format_hourly_wind(period) if include_wind else None
 
         # Use enhanced time formatter with user preferences
         time_str = format_display_time(
@@ -166,20 +191,20 @@ def build_hourly_summary(
             show_timezone=show_timezone_suffix,
         )
 
-        # Format extended fields
+        # Format extended fields based on verbosity
         precip_prob = (
             f"{int(period.precipitation_probability)}%"
-            if period.precipitation_probability is not None
+            if include_precipitation and period.precipitation_probability is not None
             else None
         )
         snowfall_val = (
             f"{period.snowfall:.1f} in"
-            if period.snowfall is not None and period.snowfall > 0
+            if include_snowfall and period.snowfall is not None and period.snowfall > 0
             else None
         )
         uv_val = (
             f"{period.uv_index:.0f} ({get_uv_description(period.uv_index)})"
-            if period.uv_index is not None
+            if include_uv and period.uv_index is not None
             else None
         )
 

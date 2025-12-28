@@ -80,6 +80,19 @@ class AppSettings:
     # AI Prompt Customization Settings
     custom_system_prompt: str | None = None  # None means use default
     custom_instructions: str | None = None  # Appended to user prompt
+    # Priority ordering settings
+    verbosity_level: str = "standard"  # "minimal", "standard", "detailed"
+    category_order: list[str] = field(
+        default_factory=lambda: [
+            "temperature",
+            "precipitation",
+            "wind",
+            "humidity_pressure",
+            "visibility_clouds",
+            "uv_index",
+        ]
+    )
+    severe_weather_override: bool = True
 
     @staticmethod
     def _as_bool(value, default: bool) -> bool:
@@ -157,6 +170,10 @@ class AppSettings:
             # AI Prompt Customization
             "custom_system_prompt": self.custom_system_prompt,
             "custom_instructions": self.custom_instructions,
+            # Priority ordering settings
+            "verbosity_level": self.verbosity_level,
+            "category_order": self.category_order,
+            "severe_weather_override": self.severe_weather_override,
         }
 
     @classmethod
@@ -230,6 +247,20 @@ class AppSettings:
             # AI Prompt Customization
             custom_system_prompt=data.get("custom_system_prompt"),
             custom_instructions=data.get("custom_instructions"),
+            # Priority ordering settings
+            verbosity_level=data.get("verbosity_level", "standard"),
+            category_order=data.get(
+                "category_order",
+                [
+                    "temperature",
+                    "precipitation",
+                    "wind",
+                    "humidity_pressure",
+                    "visibility_clouds",
+                    "uv_index",
+                ],
+            ),
+            severe_weather_override=cls._as_bool(data.get("severe_weather_override"), True),
         )
 
     def to_alert_settings(self):
