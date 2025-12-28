@@ -364,6 +364,151 @@ def create_display_tab(dialog):
         )
     )
 
+    # Information Priority Section
+    display_box.add(
+        toga.Label(
+            "Information Priority:",
+            style=Pack(margin_top=15, margin_bottom=8, font_weight="bold"),
+        )
+    )
+    display_box.add(
+        toga.Label(
+            "Control how much detail is shown in weather displays:",
+            style=Pack(margin_bottom=10, font_size=9),
+        )
+    )
+
+    verbosity_options = [
+        "Minimal (essentials only)",
+        "Standard (recommended)",
+        "Detailed (all available info)",
+    ]
+    dialog.verbosity_display_to_value = {
+        "Minimal (essentials only)": "minimal",
+        "Standard (recommended)": "standard",
+        "Detailed (all available info)": "detailed",
+    }
+    dialog.verbosity_value_to_display = {v: k for k, v in dialog.verbosity_display_to_value.items()}
+
+    dialog.verbosity_selection = toga.Selection(
+        items=verbosity_options,
+        style=Pack(margin_bottom=15),
+        id="verbosity_selection",
+    )
+    dialog.verbosity_selection.aria_label = "Verbosity level selection"
+    dialog.verbosity_selection.aria_description = (
+        "Choose how much weather information to display. "
+        "Minimal shows only essentials, Detailed shows everything available."
+    )
+
+    current_verbosity = getattr(dialog.current_settings, "verbosity_level", "standard")
+    dialog.verbosity_selection.value = dialog.verbosity_value_to_display.get(
+        current_verbosity, "Standard (recommended)"
+    )
+    display_box.add(dialog.verbosity_selection)
+
+    # Category Order
+    display_box.add(
+        toga.Label(
+            "Category Order:",
+            style=Pack(margin_top=15, margin_bottom=8, font_weight="bold"),
+        )
+    )
+    display_box.add(
+        toga.Label(
+            "Priority order:",
+            style=Pack(margin_bottom=10, font_size=9),
+        )
+    )
+
+    # Category list with reorder buttons
+    order_row = toga.Box(style=Pack(direction=ROW, margin_bottom=10))
+
+    current_order = getattr(
+        dialog.current_settings,
+        "category_order",
+        [
+            "temperature",
+            "precipitation",
+            "wind",
+            "humidity_pressure",
+            "visibility_clouds",
+            "uv_index",
+        ],
+    )
+
+    category_display_names = {
+        "temperature": "Temperature",
+        "precipitation": "Precipitation",
+        "wind": "Wind",
+        "humidity_pressure": "Humidity & Pressure",
+        "visibility_clouds": "Visibility & Clouds",
+        "uv_index": "UV Index",
+    }
+
+    dialog.category_order_list = toga.Selection(
+        items=[category_display_names.get(c, c) for c in current_order],
+        style=Pack(flex=1, margin_right=10),
+        id="category_order_list",
+    )
+    dialog.category_order_list.aria_label = "Category order"
+    dialog.category_order_list.aria_description = (
+        "Select a category and use Up/Down buttons to change its position."
+    )
+    order_row.add(dialog.category_order_list)
+
+    button_col = toga.Box(style=Pack(direction=COLUMN))
+    dialog.category_up_button = toga.Button(
+        "Up",
+        on_press=dialog._on_category_up,
+        style=Pack(margin_bottom=5, width=60),
+    )
+    dialog.category_down_button = toga.Button(
+        "Down",
+        on_press=dialog._on_category_down,
+        style=Pack(width=60),
+    )
+    button_col.add(dialog.category_up_button)
+    button_col.add(dialog.category_down_button)
+    order_row.add(button_col)
+
+    display_box.add(order_row)
+
+    dialog.reset_order_button = toga.Button(
+        "Reset to Default Order",
+        on_press=dialog._on_reset_category_order,
+        style=Pack(margin_bottom=15, width=180),
+    )
+    display_box.add(dialog.reset_order_button)
+
+    # Severe Weather Override
+    display_box.add(
+        toga.Label(
+            "Severe Weather Behavior:",
+            style=Pack(margin_top=15, margin_bottom=8, font_weight="bold"),
+        )
+    )
+
+    dialog.severe_weather_override_switch = toga.Switch(
+        "Automatically prioritize severe weather info",
+        value=getattr(dialog.current_settings, "severe_weather_override", True),
+        style=Pack(margin_bottom=10),
+        id="severe_weather_override_switch",
+    )
+    dialog.severe_weather_override_switch.aria_label = "Severe weather override toggle"
+    dialog.severe_weather_override_switch.aria_description = (
+        "When enabled, relevant weather categories are automatically moved to the top "
+        "during active severe weather alerts."
+    )
+    display_box.add(dialog.severe_weather_override_switch)
+
+    display_box.add(
+        toga.Label(
+            "Example: During a Wind Warning, wind info appears first.",
+            style=Pack(margin_bottom=10, font_size=9, font_style="italic"),
+        )
+    )
+
     dialog.option_container.content.append("Display", display_box)
 
 
@@ -1420,3 +1565,156 @@ def create_ai_tab(dialog):
 
     # Add the tab to the option container
     dialog.option_container.content.append("AI", ai_box)
+
+
+def create_display_priority_tab(dialog):
+    """Build the Display Priority tab for information ordering settings."""
+    priority_box = toga.Box(style=Pack(direction=COLUMN, margin=10))
+    dialog.display_priority_tab = priority_box
+
+    # Verbosity Level
+    priority_box.add(
+        toga.Label(
+            "Information Verbosity:",
+            style=Pack(margin_bottom=8, font_weight="bold"),
+        )
+    )
+    priority_box.add(
+        toga.Label(
+            "Control how much detail is shown in weather displays:",
+            style=Pack(margin_bottom=10, font_size=9),
+        )
+    )
+
+    verbosity_options = [
+        "Minimal (essentials only)",
+        "Standard (recommended)",
+        "Detailed (all available info)",
+    ]
+    dialog.verbosity_display_to_value = {
+        "Minimal (essentials only)": "minimal",
+        "Standard (recommended)": "standard",
+        "Detailed (all available info)": "detailed",
+    }
+    dialog.verbosity_value_to_display = {v: k for k, v in dialog.verbosity_display_to_value.items()}
+
+    dialog.verbosity_selection = toga.Selection(
+        items=verbosity_options,
+        style=Pack(margin_bottom=15),
+        id="verbosity_selection",
+    )
+    dialog.verbosity_selection.aria_label = "Verbosity level selection"
+    dialog.verbosity_selection.aria_description = (
+        "Choose how much weather information to display. "
+        "Minimal shows only essentials, Detailed shows everything available."
+    )
+
+    current_verbosity = getattr(dialog.current_settings, "verbosity_level", "standard")
+    dialog.verbosity_selection.value = dialog.verbosity_value_to_display.get(
+        current_verbosity, "Standard (recommended)"
+    )
+    priority_box.add(dialog.verbosity_selection)
+
+    # Category Order
+    priority_box.add(
+        toga.Label(
+            "Category Order:",
+            style=Pack(margin_top=15, margin_bottom=8, font_weight="bold"),
+        )
+    )
+    priority_box.add(
+        toga.Label(
+            "Priority order:",
+            style=Pack(margin_bottom=10, font_size=9),
+        )
+    )
+
+    # Category list with reorder buttons
+    order_row = toga.Box(style=Pack(direction=ROW, margin_bottom=10))
+
+    current_order = getattr(
+        dialog.current_settings,
+        "category_order",
+        [
+            "temperature",
+            "precipitation",
+            "wind",
+            "humidity_pressure",
+            "visibility_clouds",
+            "uv_index",
+        ],
+    )
+
+    category_display_names = {
+        "temperature": "Temperature",
+        "precipitation": "Precipitation",
+        "wind": "Wind",
+        "humidity_pressure": "Humidity & Pressure",
+        "visibility_clouds": "Visibility & Clouds",
+        "uv_index": "UV Index",
+    }
+
+    dialog.category_order_list = toga.Selection(
+        items=[category_display_names.get(c, c) for c in current_order],
+        style=Pack(flex=1, margin_right=10),
+        id="category_order_list",
+    )
+    dialog.category_order_list.aria_label = "Category order"
+    dialog.category_order_list.aria_description = (
+        "Select a category and use Up/Down buttons to change its position."
+    )
+    order_row.add(dialog.category_order_list)
+
+    button_col = toga.Box(style=Pack(direction=COLUMN))
+    dialog.category_up_button = toga.Button(
+        "Up",
+        on_press=dialog._on_category_up,
+        style=Pack(margin_bottom=5, width=60),
+    )
+    dialog.category_down_button = toga.Button(
+        "Down",
+        on_press=dialog._on_category_down,
+        style=Pack(width=60),
+    )
+    button_col.add(dialog.category_up_button)
+    button_col.add(dialog.category_down_button)
+    order_row.add(button_col)
+
+    priority_box.add(order_row)
+
+    dialog.reset_order_button = toga.Button(
+        "Reset to Default Order",
+        on_press=dialog._on_reset_category_order,
+        style=Pack(margin_bottom=15, width=180),
+    )
+    priority_box.add(dialog.reset_order_button)
+
+    # Severe Weather Override
+    priority_box.add(
+        toga.Label(
+            "Severe Weather Behavior:",
+            style=Pack(margin_top=15, margin_bottom=8, font_weight="bold"),
+        )
+    )
+
+    dialog.severe_weather_override_switch = toga.Switch(
+        "Automatically prioritize severe weather info",
+        value=getattr(dialog.current_settings, "severe_weather_override", True),
+        style=Pack(margin_bottom=10),
+        id="severe_weather_override_switch",
+    )
+    dialog.severe_weather_override_switch.aria_label = "Severe weather override toggle"
+    dialog.severe_weather_override_switch.aria_description = (
+        "When enabled, relevant weather categories are automatically moved to the top "
+        "during active severe weather alerts."
+    )
+    priority_box.add(dialog.severe_weather_override_switch)
+
+    priority_box.add(
+        toga.Label(
+            "Example: During a Wind Warning, wind info appears first.",
+            style=Pack(margin_bottom=10, font_size=9, font_style="italic"),
+        )
+    )
+
+    dialog.option_container.content.append("Display Priority", priority_box)
