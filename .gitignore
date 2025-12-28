@@ -285,3 +285,9 @@ AccessiWeather-wx-legacy-tmp/
 
 # External soundpacks repository (do not track)
 accessiweather-soundpacks/
+
+# Claude Code local settings (user-specific)
+.claude/
+
+# Test output logs
+junit-logs/
