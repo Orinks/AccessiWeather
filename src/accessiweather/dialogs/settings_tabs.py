@@ -416,7 +416,7 @@ def create_display_tab(dialog):
     )
     display_box.add(
         toga.Label(
-            "Drag categories to reorder, or use Up/Down buttons:",
+            "Priority order:",
             style=Pack(margin_bottom=10, font_size=9),
         )
     )
@@ -1624,7 +1624,7 @@ def create_display_priority_tab(dialog):
     )
     priority_box.add(
         toga.Label(
-            "Drag categories to reorder, or use Up/Down buttons:",
+            "Priority order:",
             style=Pack(margin_bottom=10, font_size=9),
         )
     )
