@@ -107,7 +107,7 @@ jobs:
 
     - name: Upload test report
       if: always()
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: junit-${{ matrix.python-version }}
         path: reports/junit.xml

@@ -9,6 +9,12 @@ on:
 
   # Allow manual triggering for testing
   workflow_dispatch:
+    inputs:
+      update_cassettes:
+        description: 'Update VCR cassettes (rewrite with fresh API data)'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   integration-tests:
@@ -50,16 +56,47 @@ jobs:
           pip install -r requirements-dev.txt
           pip install -e .
 
-      - name: Run integration tests (live mode)
+      - name: Run integration tests (replay mode)
+        if: ${{ github.event.inputs.update_cassettes != 'true' }}
         run: |
           pytest tests/integration/ \
             -v \
             --tb=short \
-            --vcr-record=new_episodes
+            --record-mode=none
         env:
           LIVE_WEATHER_TESTS: "1"
           VISUAL_CROSSING_API_KEY: ${{ secrets.VISUAL_CROSSING_API_KEY }}
         timeout-minutes: 15
+
+      - name: Run integration tests (update cassettes)
+        if: ${{ github.event.inputs.update_cassettes == 'true' }}
+        run: |
+          pytest tests/integration/ \
+            -v \
+            --tb=short \
+            --record-mode=all
+        env:
+          LIVE_WEATHER_TESTS: "1"
+          VISUAL_CROSSING_API_KEY: ${{ secrets.VISUAL_CROSSING_API_KEY }}
+        timeout-minutes: 15
+
+      - name: Commit and push new cassettes (if any)
+        if: ${{ success() && github.event.inputs.update_cassettes == 'true' }}
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Check if there are any changes to cassettes
+          if git diff --quiet tests/integration/cassettes/; then
+            echo "No cassette changes to commit"
+          else
+            echo "Committing new/updated cassettes..."
+            git add tests/integration/cassettes/
+            git commit -m $'chore: update VCR cassettes from integration tests run\n\nThis commit updates HTTP cassettes recorded from live weather API calls.\nRun: '"$RUN_URL"
+            git push origin main
+          fi
 
       - name: Notify on failure (scheduled runs)
         if: failure() && github.event_name == 'schedule'

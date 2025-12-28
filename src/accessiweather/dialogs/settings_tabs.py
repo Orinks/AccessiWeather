@@ -1308,11 +1308,12 @@ def create_ai_tab(dialog):
     ai_box.add(api_key_buttons_row)
 
     # Model Preference
-    dialog.ai_model_preference_label = toga.Label(
-        "Model Preference:",
-        style=Pack(margin_bottom=5),
+    ai_box.add(
+        toga.Label(
+            "Model Preference:",
+            style=Pack(margin_bottom=5),
+        )
     )
-    ai_box.add(dialog.ai_model_preference_label)
 
     # Model options:
     # - "Llama 3.3 70B (Free)" uses a specific free model
@@ -1335,30 +1336,16 @@ def create_ai_tab(dialog):
         dialog.current_settings, "ai_model_preference", "meta-llama/llama-3.3-70b-instruct:free"
     )
     if current_model not in ("meta-llama/llama-3.3-70b-instruct:free", "auto"):
-        # Extract a friendly name from the model ID
-        # Examples: "meta-llama/llama-3.3-70b-instruct:free" -> "Llama 3.3 70B"
-        #           "anthropic/claude-3.5-sonnet" -> "Claude 3.5 Sonnet"
-        model_name_parts = current_model.split("/")[-1].split(":")[0]  # Get the model name part
-        model_display_name = " ".join(
-            word.capitalize() for word in model_name_parts.replace("-", " ").split()
-        )
-
-        # Add "Specific Model: <name>" option for custom model selection
-        specific_model_display = f"Specific Model: {model_display_name}"
-        model_options.append(specific_model_display)
-        dialog.ai_model_display_to_value[specific_model_display] = current_model
-        dialog.ai_model_value_to_display[current_model] = specific_model_display
+        # Add "Specific Model" option for custom model selection
+        model_options.append("Specific Model")
+        dialog.ai_model_display_to_value["Specific Model"] = current_model
+        dialog.ai_model_value_to_display[current_model] = "Specific Model"
         dialog._selected_specific_model = current_model
-
-    def on_ai_model_selection_change(widget):
-        """Handle model selection change (label remains static)."""
-        # Label is static; selection widget shows the full option text
 
     dialog.ai_model_selection = toga.Selection(
         items=model_options,
         style=Pack(margin_bottom=5),
         id="ai_model_selection",
-        on_change=on_ai_model_selection_change,
     )
     dialog.ai_model_selection.aria_label = "AI model preference"
     dialog.ai_model_selection.aria_description = (

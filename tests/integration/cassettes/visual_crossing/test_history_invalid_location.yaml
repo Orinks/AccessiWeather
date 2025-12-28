@@ -1,0 +1,192 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - weather.visualcrossing.com
+      User-Agent:
+      - AccessiWeather/1.0
+    method: GET
+    uri: https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/999,999/2025-12-22/2025-12-22?key=REDACTED&include=days&unitGroup=us&elements=datetime%2Ctempmax%2Ctempmin%2Ctemp%2Cconditions%2Cdescription%2Cwindspeed%2Cwinddir%2Cicon%2Cprecipprob%2Csnow%2Cuvindex
+  response:
+    body:
+      string: Bad API Request:No valid locations could be determined from the input
+    headers:
+      Access-Control-Allow-Headers:
+      - X-Requested-With, Content-Type, X-Codingpedia
+      Access-Control-Allow-Methods:
+      - GET, POST, DELETE, PUT
+      Access-Control-Allow-Origin:
+      - '*'
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 23 Dec 2025 06:14:14 GMT
+      X-Powered-By:
+      - Visual Crossing Weather
+      content-length:
+      - '69'
+    status:
+      code: 400
+      message: ''
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - weather.visualcrossing.com
+      User-Agent:
+      - AccessiWeather/1.0
+    method: GET
+    uri: https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/999,999/2025-12-23/2025-12-23?key=REDACTED&include=days&unitGroup=us&elements=datetime%2Ctempmax%2Ctempmin%2Ctemp%2Cconditions%2Cdescription%2Cwindspeed%2Cwinddir%2Cicon%2Cprecipprob%2Csnow%2Cuvindex
+  response:
+    body:
+      string: Bad API Request:No valid locations could be determined from the input
+    headers:
+      Access-Control-Allow-Headers:
+      - X-Requested-With, Content-Type, X-Codingpedia
+      Access-Control-Allow-Methods:
+      - GET, POST, DELETE, PUT
+      Access-Control-Allow-Origin:
+      - '*'
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 24 Dec 2025 06:14:16 GMT
+      X-Powered-By:
+      - Visual Crossing Weather
+      content-length:
+      - '69'
+    status:
+      code: 400
+      message: ''
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - weather.visualcrossing.com
+      User-Agent:
+      - AccessiWeather/1.0
+    method: GET
+    uri: https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/999,999/2025-12-24/2025-12-24?key=REDACTED&include=days&unitGroup=us&elements=datetime%2Ctempmax%2Ctempmin%2Ctemp%2Cconditions%2Cdescription%2Cwindspeed%2Cwinddir%2Cicon%2Cprecipprob%2Csnow%2Cuvindex
+  response:
+    body:
+      string: Bad API Request:No valid locations could be determined from the input
+    headers:
+      Access-Control-Allow-Headers:
+      - X-Requested-With, Content-Type, X-Codingpedia
+      Access-Control-Allow-Methods:
+      - GET, POST, DELETE, PUT
+      Access-Control-Allow-Origin:
+      - '*'
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Thu, 25 Dec 2025 06:14:10 GMT
+      X-Powered-By:
+      - Visual Crossing Weather
+      content-length:
+      - '69'
+    status:
+      code: 400
+      message: ''
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - weather.visualcrossing.com
+      User-Agent:
+      - AccessiWeather/1.0
+    method: GET
+    uri: https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/999,999/2025-12-25/2025-12-25?key=REDACTED&include=days&unitGroup=us&elements=datetime%2Ctempmax%2Ctempmin%2Ctemp%2Cconditions%2Cdescription%2Cwindspeed%2Cwinddir%2Cicon%2Cprecipprob%2Csnow%2Cuvindex
+  response:
+    body:
+      string: Bad API Request:No valid locations could be determined from the input
+    headers:
+      Access-Control-Allow-Headers:
+      - X-Requested-With, Content-Type, X-Codingpedia
+      Access-Control-Allow-Methods:
+      - GET, POST, DELETE, PUT
+      Access-Control-Allow-Origin:
+      - '*'
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 26 Dec 2025 06:14:14 GMT
+      X-Powered-By:
+      - Visual Crossing Weather
+      content-length:
+      - '69'
+    status:
+      code: 400
+      message: ''
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - weather.visualcrossing.com
+      User-Agent:
+      - AccessiWeather/1.0
+    method: GET
+    uri: https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/999,999/2025-12-26/2025-12-26?key=REDACTED&include=days&unitGroup=us&elements=datetime%2Ctempmax%2Ctempmin%2Ctemp%2Cconditions%2Cdescription%2Cwindspeed%2Cwinddir%2Cicon%2Cprecipprob%2Csnow%2Cuvindex
+  response:
+    body:
+      string: Bad API Request:No valid locations could be determined from the input
+    headers:
+      Access-Control-Allow-Headers:
+      - X-Requested-With, Content-Type, X-Codingpedia
+      Access-Control-Allow-Methods:
+      - GET, POST, DELETE, PUT
+      Access-Control-Allow-Origin:
+      - '*'
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Sat, 27 Dec 2025 06:12:55 GMT
+      X-Powered-By:
+      - Visual Crossing Weather
+      content-length:
+      - '69'
+    status:
+      code: 400
+      message: ''
+version: 1

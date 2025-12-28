@@ -1,0 +1,227 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - api.open-meteo.com
+      User-Agent:
+      - AccessiWeather
+    method: GET
+    uri: https://api.open-meteo.com/v1/forecast?latitude=40.7128&longitude=-74.006&current=temperature_2m&current=relative_humidity_2m&current=apparent_temperature&current=is_day&current=precipitation&current=weather_code&current=cloud_cover&current=pressure_msl&current=surface_pressure&current=wind_speed_10m&current=wind_direction_10m&current=wind_gusts_10m&current=uv_index&current=snowfall&current=snow_depth&current=visibility&daily=sunrise&daily=sunset&daily=uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=1
+  response:
+    body:
+      string: "{\"latitude\":40.710335,\"longitude\":-73.99309,\"generationtime_ms\":0.3014802932739258,\"utc_offset_seconds\":-18000,\"timezone\":\"America/New_York\",\"timezone_abbreviation\":\"GMT-5\",\"elevation\":32.0,\"current_units\":{\"time\":\"iso8601\",\"interval\":\"seconds\",\"temperature_2m\":\"\xB0F\",\"relative_humidity_2m\":\"%\",\"apparent_temperature\":\"\xB0F\",\"is_day\":\"\",\"precipitation\":\"inch\",\"weather_code\":\"wmo
+        code\",\"cloud_cover\":\"%\",\"pressure_msl\":\"hPa\",\"surface_pressure\":\"hPa\",\"wind_speed_10m\":\"mp/h\",\"wind_direction_10m\":\"\xB0\",\"wind_gusts_10m\":\"mp/h\",\"uv_index\":\"\",\"snowfall\":\"inch\",\"snow_depth\":\"ft\",\"visibility\":\"ft\"},\"current\":{\"time\":\"2025-12-19T08:00\",\"interval\":900,\"temperature_2m\":54.7,\"relative_humidity_2m\":91,\"apparent_temperature\":44.1,\"is_day\":1,\"precipitation\":0.008,\"weather_code\":53,\"cloud_cover\":100,\"pressure_msl\":999.6,\"surface_pressure\":995.8,\"wind_speed_10m\":26.8,\"wind_direction_10m\":145,\"wind_gusts_10m\":58.6,\"uv_index\":0.00,\"snowfall\":0.000,\"snow_depth\":0.000,\"visibility\":35433.070},\"daily_units\":{\"time\":\"iso8601\",\"sunrise\":\"iso8601\",\"sunset\":\"iso8601\",\"uv_index_max\":\"\"},\"daily\":{\"time\":[\"2025-12-19\"],\"sunrise\":[\"2025-12-19T07:15\"],\"sunset\":[\"2025-12-19T16:30\"],\"uv_index_max\":[1.25]}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Fri, 19 Dec 2025 13:00:48 GMT
+      Transfer-Encoding:
+      - chunked
+      content-length:
+      - '1185'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - archive-api.open-meteo.com
+      User-Agent:
+      - AccessiWeather
+    method: GET
+    uri: https://archive-api.open-meteo.com/v1/archive?latitude=40.7128&longitude=-74.006&start_date=2025-12-05&end_date=2025-12-05&daily=temperature_2m_max&daily=temperature_2m_min&temperature_unit=fahrenheit&timezone=auto
+  response:
+    body:
+      string: "{\"latitude\":40.738136,\"longitude\":-74.04254,\"generationtime_ms\":0.06091594696044922,\"utc_offset_seconds\":-18000,\"timezone\":\"America/New_York\",\"timezone_abbreviation\":\"GMT-5\",\"elevation\":32.0,\"daily_units\":{\"time\":\"iso8601\",\"temperature_2m_max\":\"\xB0F\",\"temperature_2m_min\":\"\xB0F\"},\"daily\":{\"time\":[\"2025-12-05\"],\"temperature_2m_max\":[30.5],\"temperature_2m_min\":[19.8]}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Fri, 19 Dec 2025 13:00:50 GMT
+      Transfer-Encoding:
+      - chunked
+      content-length:
+      - '366'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - archive-api.open-meteo.com
+      User-Agent:
+      - AccessiWeather
+    method: GET
+    uri: https://archive-api.open-meteo.com/v1/archive?latitude=40.7128&longitude=-74.006&start_date=2025-12-09&end_date=2025-12-09&daily=temperature_2m_max&daily=temperature_2m_min&temperature_unit=fahrenheit&timezone=auto
+  response:
+    body:
+      string: "{\"latitude\":40.738136,\"longitude\":-74.04254,\"generationtime_ms\":0.19061565399169922,\"utc_offset_seconds\":-18000,\"timezone\":\"America/New_York\",\"timezone_abbreviation\":\"GMT-5\",\"elevation\":32.0,\"daily_units\":{\"time\":\"iso8601\",\"temperature_2m_max\":\"\xB0F\",\"temperature_2m_min\":\"\xB0F\"},\"daily\":{\"time\":[\"2025-12-09\"],\"temperature_2m_max\":[31.6],\"temperature_2m_min\":[18.6]}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 23 Dec 2025 06:14:07 GMT
+      Transfer-Encoding:
+      - chunked
+      content-length:
+      - '366'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - archive-api.open-meteo.com
+      User-Agent:
+      - AccessiWeather
+    method: GET
+    uri: https://archive-api.open-meteo.com/v1/archive?latitude=40.7128&longitude=-74.006&start_date=2025-12-10&end_date=2025-12-10&daily=temperature_2m_max&daily=temperature_2m_min&temperature_unit=fahrenheit&timezone=auto
+  response:
+    body:
+      string: "{\"latitude\":40.738136,\"longitude\":-74.04254,\"generationtime_ms\":0.08082389831542969,\"utc_offset_seconds\":-18000,\"timezone\":\"America/New_York\",\"timezone_abbreviation\":\"GMT-5\",\"elevation\":32.0,\"daily_units\":{\"time\":\"iso8601\",\"temperature_2m_max\":\"\xB0F\",\"temperature_2m_min\":\"\xB0F\"},\"daily\":{\"time\":[\"2025-12-10\"],\"temperature_2m_max\":[43.6],\"temperature_2m_min\":[30.8]}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Wed, 24 Dec 2025 06:14:09 GMT
+      Transfer-Encoding:
+      - chunked
+      content-length:
+      - '366'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - archive-api.open-meteo.com
+      User-Agent:
+      - AccessiWeather
+    method: GET
+    uri: https://archive-api.open-meteo.com/v1/archive?latitude=40.7128&longitude=-74.006&start_date=2025-12-11&end_date=2025-12-11&daily=temperature_2m_max&daily=temperature_2m_min&temperature_unit=fahrenheit&timezone=auto
+  response:
+    body:
+      string: "{\"latitude\":40.738136,\"longitude\":-74.04254,\"generationtime_ms\":0.19097328186035156,\"utc_offset_seconds\":-18000,\"timezone\":\"America/New_York\",\"timezone_abbreviation\":\"GMT-5\",\"elevation\":32.0,\"daily_units\":{\"time\":\"iso8601\",\"temperature_2m_max\":\"\xB0F\",\"temperature_2m_min\":\"\xB0F\"},\"daily\":{\"time\":[\"2025-12-11\"],\"temperature_2m_max\":[39.1],\"temperature_2m_min\":[27.7]}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Thu, 25 Dec 2025 06:14:02 GMT
+      Transfer-Encoding:
+      - chunked
+      content-length:
+      - '366'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - archive-api.open-meteo.com
+      User-Agent:
+      - AccessiWeather
+    method: GET
+    uri: https://archive-api.open-meteo.com/v1/archive?latitude=40.7128&longitude=-74.006&start_date=2025-12-12&end_date=2025-12-12&daily=temperature_2m_max&daily=temperature_2m_min&temperature_unit=fahrenheit&timezone=auto
+  response:
+    body:
+      string: "{\"latitude\":40.738136,\"longitude\":-74.04254,\"generationtime_ms\":0.19884109497070312,\"utc_offset_seconds\":-18000,\"timezone\":\"America/New_York\",\"timezone_abbreviation\":\"GMT-5\",\"elevation\":32.0,\"daily_units\":{\"time\":\"iso8601\",\"temperature_2m_max\":\"\xB0F\",\"temperature_2m_min\":\"\xB0F\"},\"daily\":{\"time\":[\"2025-12-12\"],\"temperature_2m_max\":[34.8],\"temperature_2m_min\":[23.3]}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Fri, 26 Dec 2025 06:14:07 GMT
+      Transfer-Encoding:
+      - chunked
+      content-length:
+      - '366'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - archive-api.open-meteo.com
+      User-Agent:
+      - AccessiWeather
+    method: GET
+    uri: https://archive-api.open-meteo.com/v1/archive?latitude=40.7128&longitude=-74.006&start_date=2025-12-13&end_date=2025-12-13&daily=temperature_2m_max&daily=temperature_2m_min&temperature_unit=fahrenheit&timezone=auto
+  response:
+    body:
+      string: "{\"latitude\":40.738136,\"longitude\":-74.04254,\"generationtime_ms\":0.22423267364501953,\"utc_offset_seconds\":-18000,\"timezone\":\"America/New_York\",\"timezone_abbreviation\":\"GMT-5\",\"elevation\":32.0,\"daily_units\":{\"time\":\"iso8601\",\"temperature_2m_max\":\"\xB0F\",\"temperature_2m_min\":\"\xB0F\"},\"daily\":{\"time\":[\"2025-12-13\"],\"temperature_2m_max\":[38.8],\"temperature_2m_min\":[24.0]}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Sat, 27 Dec 2025 06:12:47 GMT
+      Transfer-Encoding:
+      - chunked
+      content-length:
+      - '366'
+    status:
+      code: 200
+      message: OK
+version: 1
