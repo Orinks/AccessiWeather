@@ -12,17 +12,15 @@ You are responsible for the entire lifecycle of a task: understanding requiremen
 ```bash
 # Development
 briefcase dev                          # Run app with hot reload
-pytest -v                             # Run all tests (serial)
-pytest -n auto                        # Run all tests (parallel, ~4x faster)
-pytest tests/test_file.py::test_func  # Run single test
-pytest -k "test_name" -v              # Run tests matching pattern
-pytest --lf --ff -m "unit"            # Run last-failed/first-failed unit tests
+pytest                                 # Run all tests (parallel by default)
+pytest -n 0                            # Run tests serial (disable parallel)
+pytest tests/test_file.py::test_func   # Run single test
+pytest -k "test_name" -v               # Run tests matching pattern
+pytest --lf --ff -m "unit"             # Run last-failed/first-failed unit tests
 
 # Fast Testing (local development)
-python scripts/test_fast.py              # Parallel + fast Hypothesis (recommended)
-HYPOTHESIS_PROFILE=fast pytest -n auto   # Manual equivalent
-pytest -n auto -m "not integration"      # Skip slow integration tests
-pytest -n auto --dist loadscope          # Parallel by module
+HYPOTHESIS_PROFILE=fast pytest         # Even faster with fewer Hypothesis examples
+pytest -m "not integration"            # Skip slow integration tests
 
 # Linting & Formatting
 ruff check --fix . && ruff format .   # Lint + format code (line length: 100)
