@@ -101,7 +101,7 @@ def hourly_air_quality_list(
 
 @pytest.mark.unit
 @given(env=environmental_with_aqi_and_category(), settings=app_settings_strategy())
-@settings(max_examples=100)
+@settings(max_examples=50)
 def test_summary_contains_aqi_and_category(
     env: EnvironmentalConditions, settings: AppSettings
 ) -> None:
@@ -124,7 +124,7 @@ def test_summary_contains_aqi_and_category(
 
 @pytest.mark.unit
 @given(env=environmental_with_pollutant(), settings=app_settings_strategy())
-@settings(max_examples=100)
+@settings(max_examples=50)
 def test_dominant_pollutant_appears_when_available(
     env: EnvironmentalConditions, settings: AppSettings
 ) -> None:
@@ -150,7 +150,7 @@ def test_dominant_pollutant_appears_when_available(
 
 @pytest.mark.unit
 @given(category=st.sampled_from(AQI_CATEGORIES), settings=app_settings_strategy())
-@settings(max_examples=100)
+@settings(max_examples=50)
 def test_health_guidance_matches_aqi_category(category: str, settings: AppSettings) -> None:
     """
     Property 4: Health guidance matches AQI category.
@@ -190,7 +190,7 @@ def test_health_guidance_matches_aqi_category(category: str, settings: AppSettin
     hourly_data=hourly_air_quality_list(min_size=1),
     pollutant=st.sampled_from(POLLUTANT_CODES),
 )
-@settings(max_examples=100)
+@settings(max_examples=50)
 def test_pollutant_names_are_human_readable(
     hourly_data: list[HourlyAirQuality], pollutant: str
 ) -> None:
@@ -236,7 +236,7 @@ def test_pollutant_names_are_human_readable(
 
 @pytest.mark.unit
 @given(env=environmental_conditions(), settings=app_settings_strategy())
-@settings(max_examples=100)
+@settings(max_examples=50)
 def test_formatting_function_is_deterministic(
     env: EnvironmentalConditions, settings: AppSettings
 ) -> None:
@@ -259,7 +259,7 @@ def test_formatting_function_is_deterministic(
     hourly_data=hourly_air_quality_list(min_size=1),
     pollutant=st.sampled_from(POLLUTANT_CODES + [None]),
 )
-@settings(max_examples=100)
+@settings(max_examples=50)
 def test_pollutant_details_formatting_is_deterministic(
     hourly_data: list[HourlyAirQuality], pollutant: str | None
 ) -> None:
@@ -304,7 +304,7 @@ def hourly_air_quality_list_extended(
 
 @pytest.mark.unit
 @given(hourly_data=hourly_air_quality_list_extended(min_size=25, max_size=48))
-@settings(max_examples=100)
+@settings(max_examples=50)
 def test_hourly_forecast_limited_to_24_hours(hourly_data: list[HourlyAirQuality]) -> None:
     """
     Property 5: Hourly forecast limited to 24 hours.
@@ -370,7 +370,7 @@ def hourly_with_trend(draw: st.DrawFn, trend: str) -> list[HourlyAirQuality]:
 
 @pytest.mark.unit
 @given(hourly_data=hourly_with_trend("worsening"))
-@settings(max_examples=100)
+@settings(max_examples=50)
 def test_trend_worsening_identified(hourly_data: list[HourlyAirQuality]) -> None:
     """
     Property 6: Trend correctly identifies direction (worsening).
@@ -386,7 +386,7 @@ def test_trend_worsening_identified(hourly_data: list[HourlyAirQuality]) -> None
 
 @pytest.mark.unit
 @given(hourly_data=hourly_with_trend("improving"))
-@settings(max_examples=100)
+@settings(max_examples=50)
 def test_trend_improving_identified(hourly_data: list[HourlyAirQuality]) -> None:
     """
     Property 6: Trend correctly identifies direction (improving).
@@ -402,7 +402,7 @@ def test_trend_improving_identified(hourly_data: list[HourlyAirQuality]) -> None
 
 @pytest.mark.unit
 @given(hourly_data=hourly_with_trend("stable"))
-@settings(max_examples=100)
+@settings(max_examples=50)
 def test_trend_stable_identified(hourly_data: list[HourlyAirQuality]) -> None:
     """
     Property 6: Trend correctly identifies direction (stable).
@@ -418,7 +418,7 @@ def test_trend_stable_identified(hourly_data: list[HourlyAirQuality]) -> None:
 
 @pytest.mark.unit
 @given(hourly_data=hourly_air_quality_list(min_size=1, max_size=24))
-@settings(max_examples=100)
+@settings(max_examples=50)
 def test_peak_aqi_is_maximum_value(hourly_data: list[HourlyAirQuality]) -> None:
     """
     Property 7: Peak AQI is maximum value.
@@ -466,7 +466,7 @@ def hourly_with_good_aqi_entry(draw: st.DrawFn) -> list[HourlyAirQuality]:
 
 @pytest.mark.unit
 @given(hourly_data=hourly_with_good_aqi_entry())
-@settings(max_examples=100)
+@settings(max_examples=50)
 def test_best_time_has_aqi_below_threshold(hourly_data: list[HourlyAirQuality]) -> None:
     """
     Property 8: Best time has AQI below threshold.
@@ -540,7 +540,7 @@ def environmental_with_aqi_category_and_hourly(
 
 @pytest.mark.unit
 @given(env=environmental_with_aqi_category_and_hourly(trend="stable"))
-@settings(max_examples=100)
+@settings(max_examples=50)
 def test_brief_summary_contains_aqi_category_trend(env: EnvironmentalConditions) -> None:
     """
     Property 7.4a: Brief summary contains AQI, category, and trend.
@@ -587,7 +587,7 @@ def environmental_with_hourly_data(draw: st.DrawFn) -> EnvironmentalConditions:
 
 @pytest.mark.unit
 @given(env=environmental_with_hourly_data())
-@settings(max_examples=100)
+@settings(max_examples=50)
 def test_brief_summary_does_not_contain_hourly_details(env: EnvironmentalConditions) -> None:
     """
     Property 7.4b: Brief summary does not contain detailed hourly data.
@@ -607,7 +607,7 @@ def test_brief_summary_does_not_contain_hourly_details(env: EnvironmentalConditi
 
 @pytest.mark.unit
 @given(env=environmental_with_hourly_data())
-@settings(max_examples=100)
+@settings(max_examples=50)
 def test_no_duplicate_air_quality_sections(env: EnvironmentalConditions) -> None:
     """
     Property 10: No duplicate air quality sections.

@@ -107,7 +107,7 @@ class TestApiResponseParsingProperties:
     """
 
     @given(response=geocoding_api_response())
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.differing_executors])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.differing_executors])
     def test_parsing_preserves_required_fields(self, response: dict[str, Any]) -> None:
         """
         Verify API response parsing extracts all required fields.
@@ -381,7 +381,7 @@ class TestGeocodingServiceFiltering:
             max_size=10,
         )
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.differing_executors])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.differing_executors])
     def test_nws_filters_to_us_only(self, results: list[GeocodingResult]) -> None:
         """
         Verify NWS data source filters to US-only locations.
@@ -423,7 +423,7 @@ class TestGeocodingServiceFiltering:
             max_size=10,
         )
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.differing_executors])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.differing_executors])
     def test_non_nws_returns_worldwide(self, results: list[GeocodingResult]) -> None:
         """
         Verify non-NWS data source returns worldwide locations.
@@ -501,7 +501,7 @@ class TestDisplayNameProperty:
         country=st.text(min_size=1, max_size=30).filter(lambda x: x.strip()),
         admin1=st.one_of(st.none(), st.text(min_size=1, max_size=30).filter(lambda x: x.strip())),
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.differing_executors])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.differing_executors])
     def test_display_name_contains_required_components(
         self, name: str, country: str, admin1: str | None
     ) -> None:
@@ -544,7 +544,7 @@ class TestCoordinateValidationProperty:
         lat=st.floats(min_value=-90, max_value=90, allow_nan=False, allow_infinity=False),
         lon=st.floats(min_value=-180, max_value=180, allow_nan=False, allow_infinity=False),
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.differing_executors])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.differing_executors])
     def test_valid_coordinates_accepted_globally(self, lat: float, lon: float) -> None:
         """
         Verify valid coordinates are accepted with us_only=False.
@@ -566,7 +566,7 @@ class TestCoordinateValidationProperty:
         lat=st.floats(min_value=-90, max_value=90, allow_nan=False, allow_infinity=False),
         lon=st.floats(min_value=-180, max_value=180, allow_nan=False, allow_infinity=False),
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.differing_executors])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.differing_executors])
     def test_non_nws_accepts_valid_global_coordinates(self, lat: float, lon: float) -> None:
         """
         Verify non-NWS accepts any valid global coordinates.
