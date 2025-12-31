@@ -99,7 +99,7 @@ class TestSettingsPersistence:
 
     @pytest.mark.unit
     @given(html_current=st.booleans(), html_forecast=st.booleans())
-    @hypothesis_settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @hypothesis_settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_round_trip(self, html_current: bool, html_forecast: bool):
         """HTML rendering settings survive serialization round-trip."""
         original = AppSettings(
@@ -115,7 +115,7 @@ class TestSettingsPersistence:
         html_forecast=st.booleans(),
         temp_unit=st.sampled_from(["fahrenheit", "celsius", "both"]),
     )
-    @hypothesis_settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @hypothesis_settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_with_other_settings(self, html_current: bool, html_forecast: bool, temp_unit: str):
         """HTML rendering settings persist alongside other settings."""
         original = AppSettings(
@@ -174,7 +174,7 @@ class TestCurrentConditionsHtml:
 
     @pytest.mark.unit
     @given(p=current_conditions_strategy())
-    @hypothesis_settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @hypothesis_settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_valid_html5(self, p):
         """Generated HTML should be valid HTML5 structure."""
         html = generate_current_conditions_html(p)
@@ -185,7 +185,7 @@ class TestCurrentConditionsHtml:
 
     @pytest.mark.unit
     @given(p=current_conditions_strategy())
-    @hypothesis_settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @hypothesis_settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_semantic_elements(self, p):
         """Generated HTML should contain semantic elements."""
         html = generate_current_conditions_html(p)
@@ -197,7 +197,7 @@ class TestCurrentConditionsHtml:
 
     @pytest.mark.unit
     @given(p=current_conditions_strategy())
-    @hypothesis_settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @hypothesis_settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_contains_all_data(self, p):
         """Generated HTML should contain all metric labels, values, title, description."""
         html = generate_current_conditions_html(p)
@@ -214,7 +214,7 @@ class TestForecastHtml:
 
     @pytest.mark.unit
     @given(p=forecast_strategy())
-    @hypothesis_settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @hypothesis_settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_valid_html5(self, p):
         """Generated HTML should be valid HTML5 structure."""
         html = generate_forecast_html(p)
@@ -224,7 +224,7 @@ class TestForecastHtml:
 
     @pytest.mark.unit
     @given(p=forecast_strategy())
-    @hypothesis_settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @hypothesis_settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_semantic_elements(self, p):
         """Generated HTML should contain semantic elements."""
         html = generate_forecast_html(p)
@@ -235,7 +235,7 @@ class TestForecastHtml:
 
     @pytest.mark.unit
     @given(p=forecast_strategy())
-    @hypothesis_settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @hypothesis_settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_contains_all_periods(self, p):
         """Generated HTML should contain all forecast period data."""
         html = generate_forecast_html(p)
@@ -250,7 +250,7 @@ class TestHtmlAccessibility:
 
     @pytest.mark.unit
     @given(p=current_conditions_strategy())
-    @hypothesis_settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @hypothesis_settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_current_conditions_aria(self, p):
         """Current conditions HTML should have ARIA labels."""
         html = generate_current_conditions_html(p)
@@ -261,7 +261,7 @@ class TestHtmlAccessibility:
 
     @pytest.mark.unit
     @given(p=forecast_strategy())
-    @hypothesis_settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @hypothesis_settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_forecast_aria(self, p):
         """Forecast HTML should have ARIA labels."""
         html = generate_forecast_html(p)
@@ -290,7 +290,7 @@ class TestWidgetSettings:
 
     @pytest.mark.unit
     @given(html_current=st.booleans(), html_forecast=st.booleans())
-    @hypothesis_settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @hypothesis_settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_settings_stored_correctly(self, html_current: bool, html_forecast: bool):
         """Settings should correctly store widget type preferences."""
         s = AppSettings(

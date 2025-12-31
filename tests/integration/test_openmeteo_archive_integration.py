@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import time
 from datetime import date, timedelta
 
 import pytest
@@ -10,6 +9,7 @@ import pytest
 from accessiweather.openmeteo_client import OpenMeteoApiClient
 from tests.integration.conftest import (
     LIVE_WEATHER_TESTS,
+    conditional_sleep,
     get_vcr_config,
     skip_if_cassette_missing,
 )
@@ -128,8 +128,7 @@ def test_archive_endpoint_returns_historical_data(openmeteo_client):
         assert -40 <= temp_min <= 130, f"Min temp {temp_min}°F outside plausible range"
         assert temp_min <= temp_max, "Min temp should be <= max temp"
 
-        if LIVE_WEATHER_TESTS:
-            time.sleep(DELAY_BETWEEN_REQUESTS)
+        conditional_sleep(DELAY_BETWEEN_REQUESTS)
 
     _run_with_cassette("openmeteo/archive_historical_data.yaml", run_test)
 
@@ -160,8 +159,7 @@ def test_archive_endpoint_different_from_forecast(openmeteo_client):
         assert forecast_response is not None, "Forecast endpoint should work"
         assert "current" in forecast_response, "Forecast should have current data"
 
-        if LIVE_WEATHER_TESTS:
-            time.sleep(DELAY_BETWEEN_REQUESTS)
+        conditional_sleep(DELAY_BETWEEN_REQUESTS)
 
         # Fetch from archive endpoint
         target_date = get_archive_date()
@@ -180,8 +178,7 @@ def test_archive_endpoint_different_from_forecast(openmeteo_client):
         assert archive_response is not None, "Archive endpoint should work"
         assert "daily" in archive_response, "Archive should have daily data"
 
-        if LIVE_WEATHER_TESTS:
-            time.sleep(DELAY_BETWEEN_REQUESTS)
+        conditional_sleep(DELAY_BETWEEN_REQUESTS)
 
     _run_with_cassette("openmeteo/archive_vs_forecast.yaml", run_test)
 
@@ -234,7 +231,6 @@ def test_archive_date_range_query(openmeteo_client):
                 assert -40 <= temp_min <= 130, f"Day {i}: Min temp {temp_min}°F outside range"
                 assert temp_min <= temp_max, f"Day {i}: Min temp should be <= max temp"
 
-        if LIVE_WEATHER_TESTS:
-            time.sleep(DELAY_BETWEEN_REQUESTS)
+        conditional_sleep(DELAY_BETWEEN_REQUESTS)
 
     _run_with_cassette("openmeteo/archive_date_range.yaml", run_test)

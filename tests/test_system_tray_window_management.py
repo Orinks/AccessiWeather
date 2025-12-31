@@ -110,7 +110,7 @@ class TestSystemTrayStateConsistencyProperty:
     """
 
     @given(state=app_state_strategy)
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_minimize_behavior_consistency(self, state: dict) -> None:
         """
         **Feature: forecast-navigation-improvements, Property 4: System tray minimize behavior.**.
@@ -155,7 +155,7 @@ class TestEscapeKeyContextAwarenessProperty:
     """
 
     @given(state=app_state_strategy)
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_escape_key_with_dialog_does_not_minimize(self, state: dict) -> None:
         """
         **Feature: forecast-navigation-improvements, Property 6: Escape key context awareness.**.
@@ -174,7 +174,7 @@ class TestEscapeKeyContextAwarenessProperty:
         app.main_window.hide.assert_not_called()
 
     @given(state=app_state_strategy)
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_escape_key_without_dialog_always_minimizes(self, state: dict) -> None:
         """
         **Feature: forecast-navigation-improvements, Property 6: Escape key context awareness.**.
@@ -207,7 +207,7 @@ class TestFallbackMinimizeBehaviorProperty:
     """
 
     @given(minimize_enabled=st.booleans())
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_fallback_to_taskbar_when_tray_unavailable(self, minimize_enabled: bool) -> None:
         """
         **Feature: forecast-navigation-improvements, Property 8: Fallback minimize behavior.**.

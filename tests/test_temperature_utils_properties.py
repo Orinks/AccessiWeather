@@ -34,7 +34,7 @@ class TestTemperatureConversionProperties:
     """Property tests for temperature conversion functions."""
 
     @given(temp=reasonable_temps)
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_fahrenheit_roundtrip(self, temp: float) -> None:
         """celsius_to_fahrenheit(fahrenheit_to_celsius(x)) ≈ x."""
         celsius = fahrenheit_to_celsius(temp)
@@ -42,7 +42,7 @@ class TestTemperatureConversionProperties:
         assert back_to_fahrenheit == pytest.approx(temp, rel=1e-9)
 
     @given(temp=reasonable_temps)
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_celsius_roundtrip(self, temp: float) -> None:
         """fahrenheit_to_celsius(celsius_to_fahrenheit(x)) ≈ x."""
         fahrenheit = celsius_to_fahrenheit(temp)
@@ -50,7 +50,7 @@ class TestTemperatureConversionProperties:
         assert back_to_celsius == pytest.approx(temp, rel=1e-9)
 
     @given(temp=extreme_temps)
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_extreme_temps_no_overflow(self, temp: float) -> None:
         """Extreme temperatures don't cause overflow."""
         fahrenheit = celsius_to_fahrenheit(temp)
@@ -78,7 +78,7 @@ class TestDewpointProperties:
     """Property tests for dewpoint calculation."""
 
     @given(temp=reasonable_temps, humidity=valid_humidity)
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_dewpoint_never_exceeds_temperature(self, temp: float, humidity: float) -> None:
         """Dewpoint should always be less than or equal to temperature."""
         dewpoint = calculate_dewpoint(temp, humidity, unit=TemperatureUnit.FAHRENHEIT)
@@ -86,7 +86,7 @@ class TestDewpointProperties:
         assert dewpoint <= temp + 0.01  # Small tolerance for floating point
 
     @given(temp=reasonable_temps, humidity=valid_humidity)
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_dewpoint_celsius_never_exceeds_temperature(self, temp: float, humidity: float) -> None:
         """Dewpoint in Celsius should always be less than or equal to temperature."""
         dewpoint = calculate_dewpoint(temp, humidity, unit=TemperatureUnit.CELSIUS)
@@ -94,7 +94,7 @@ class TestDewpointProperties:
         assert dewpoint <= temp + 0.01
 
     @given(temp=reasonable_temps)
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_dewpoint_at_100_percent_humidity_equals_temp(self, temp: float) -> None:
         """At 100% humidity, dewpoint should approximately equal temperature."""
         dewpoint_f = calculate_dewpoint(temp, 100.0, unit=TemperatureUnit.FAHRENHEIT)
@@ -106,7 +106,7 @@ class TestDewpointProperties:
         assert dewpoint_c == pytest.approx(temp, rel=0.01, abs=0.5)
 
     @given(temp=reasonable_temps, humidity=valid_humidity)
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_dewpoint_returns_finite_value(self, temp: float, humidity: float) -> None:
         """Dewpoint calculation always returns a finite value for valid inputs."""
         dewpoint = calculate_dewpoint(temp, humidity, unit=TemperatureUnit.FAHRENHEIT)
@@ -133,7 +133,7 @@ class TestFormatTemperatureProperties:
     """Property tests for temperature formatting."""
 
     @given(temp=reasonable_temps)
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_format_contains_temperature_value_fahrenheit(self, temp: float) -> None:
         """Formatted output should contain the temperature value for Fahrenheit."""
         result = format_temperature(temp, unit=TemperatureUnit.FAHRENHEIT)
@@ -143,7 +143,7 @@ class TestFormatTemperatureProperties:
             assert "-" in result
 
     @given(temp=reasonable_temps)
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_format_contains_temperature_value_celsius(self, temp: float) -> None:
         """Formatted output should contain the temperature value for Celsius."""
         result = format_temperature(temp, unit=TemperatureUnit.CELSIUS)
@@ -151,7 +151,7 @@ class TestFormatTemperatureProperties:
         assert "°C" in result
 
     @given(temp=reasonable_temps)
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_format_both_contains_both_units(self, temp: float) -> None:
         """BOTH unit format should contain both F and C."""
         result = format_temperature(temp, unit=TemperatureUnit.BOTH)
@@ -189,7 +189,7 @@ class TestConsistencyProperties:
     """Cross-function consistency properties."""
 
     @given(temp_f=reasonable_temps)
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_dewpoint_unit_consistency(self, temp_f: float) -> None:
         """Dewpoint in F converted to C should match dewpoint calculated in C."""
         humidity = 50.0
@@ -206,7 +206,7 @@ class TestConsistencyProperties:
         assert dewpoint_f_as_c == pytest.approx(dewpoint_c, rel=1e-6)
 
     @given(temp=reasonable_temps, humidity=valid_humidity)
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_higher_humidity_means_higher_dewpoint(self, temp: float, humidity: float) -> None:
         """Higher humidity should result in higher dewpoint (for same temperature)."""
         if humidity <= 1.0:

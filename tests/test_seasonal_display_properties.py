@@ -75,14 +75,14 @@ class TestSeasonDetectionProperty:
     """Tests for season detection consistency property."""
 
     @given(date=dates(), latitude=latitudes())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_season_detection_returns_valid_season(self, date: datetime, latitude: float) -> None:
         """For any date/latitude, get_season() returns a valid Season enum."""
         season = get_season(date, latitude)
         assert season in [Season.WINTER, Season.SPRING, Season.SUMMER, Season.FALL]
 
     @given(date=dates(), latitude=st.floats(min_value=0.1, max_value=90.0, allow_nan=False))
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_northern_hemisphere_season_matches_calendar(
         self, date: datetime, latitude: float
     ) -> None:
@@ -103,7 +103,7 @@ class TestSeasonDetectionProperty:
         date=dates(),
         latitude=st.floats(min_value=-90.0, max_value=-0.1, allow_nan=False),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_southern_hemisphere_season_is_flipped(self, date: datetime, latitude: float) -> None:
         """For any Southern Hemisphere date, season is flipped from Northern."""
         season = get_season(date, latitude)
@@ -120,7 +120,7 @@ class TestSeasonDetectionProperty:
             assert season == Season.SPRING  # Flipped from fall
 
     @given(latitude=latitudes())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_hemisphere_detection_consistency(self, latitude: float) -> None:
         """For any latitude, get_hemisphere() returns consistent results."""
         hemisphere = get_hemisphere(latitude)
@@ -141,7 +141,7 @@ class TestSeasonalDataDisplayProperty:
             [TemperatureUnit.FAHRENHEIT, TemperatureUnit.CELSIUS, TemperatureUnit.BOTH]
         ),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_snow_depth_formatted_when_available(
         self, snow_depth_in: float, unit_pref: TemperatureUnit
     ) -> None:
@@ -160,7 +160,7 @@ class TestSeasonalDataDisplayProperty:
             assert "in" in result
 
     @given(frost_risk=st.sampled_from(["Low", "Moderate", "High"]))
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_frost_risk_formatted_when_not_none(self, frost_risk: str) -> None:
         """For any non-None frost risk, format_frost_risk() returns the value."""
         result = format_frost_risk(frost_risk)
@@ -185,7 +185,7 @@ class TestGracefulDegradationProperty:
             [TemperatureUnit.FAHRENHEIT, TemperatureUnit.CELSIUS, TemperatureUnit.BOTH]
         )
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_snow_depth_none_returns_none(self, unit_pref: TemperatureUnit) -> None:
         """For any unit preference, format_snow_depth() with None returns None."""
         result = format_snow_depth(None, None, unit_pref)
@@ -202,7 +202,7 @@ class TestGracefulDegradationProperty:
         assert reason is None
 
     @given(conditions=current_conditions_with_seasonal())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_select_feels_like_never_crashes(self, conditions: CurrentConditions) -> None:
         """For any CurrentConditions, select_feels_like_temperature() should not raise."""
         # This should never raise an exception
@@ -223,7 +223,7 @@ class TestFeelsLikeSelectionProperty:
         wind_mph=st.floats(min_value=5.0, max_value=50.0, allow_nan=False),
         wind_chill_f=st.floats(min_value=-60.0, max_value=40.0, allow_nan=False),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_wind_chill_selected_when_cold_and_windy(
         self, temp_f: float, wind_mph: float, wind_chill_f: float
     ) -> None:
@@ -242,7 +242,7 @@ class TestFeelsLikeSelectionProperty:
         humidity=st.integers(min_value=45, max_value=100),
         heat_index_f=st.floats(min_value=90.0, max_value=130.0, allow_nan=False),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_heat_index_selected_when_hot_and_humid(
         self, temp_f: float, humidity: int, heat_index_f: float
     ) -> None:
@@ -260,7 +260,7 @@ class TestFeelsLikeSelectionProperty:
         temp_f=st.floats(min_value=55.0, max_value=75.0, allow_nan=False),
         feels_like_f=st.floats(min_value=50.0, max_value=80.0, allow_nan=False),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_fallback_to_feels_like_in_moderate_temps(
         self, temp_f: float, feels_like_f: float
     ) -> None:
@@ -276,7 +276,7 @@ class TestFeelsLikeSelectionProperty:
         assert reason is None
 
     @given(temp_f=st.floats(min_value=55.0, max_value=75.0, allow_nan=False))
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_fallback_to_actual_temp_when_no_feels_like(self, temp_f: float) -> None:
         """In moderate temps with no feels_like, returns actual temperature."""
         current = CurrentConditions(

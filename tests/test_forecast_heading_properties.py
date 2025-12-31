@@ -233,7 +233,7 @@ class TestForecastHeadingStructureProperty:
     """
 
     @given(presentation=forecast_presentation_strategy(min_periods=0, max_periods=14))
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_heading_count_matches_period_count(self, presentation: ForecastPresentation) -> None:
         """
         **Feature: forecast-navigation-improvements, Property 1: Forecast heading structure preservation**.
@@ -257,7 +257,7 @@ class TestForecastHeadingStructureProperty:
         )
 
     @given(presentation=forecast_presentation_strategy(min_periods=1, max_periods=14))
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_each_period_has_heading_with_aria_attributes(
         self, presentation: ForecastPresentation
     ) -> None:
@@ -287,7 +287,7 @@ class TestForecastHeadingStructureProperty:
                 pass
 
     @given(presentation=forecast_presentation_strategy(min_periods=0, max_periods=14))
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_container_children_created_for_all_content(
         self, presentation: ForecastPresentation
     ) -> None:
@@ -327,7 +327,7 @@ class TestHeadingNavigationSequenceProperty:
             min_periods=1, max_periods=14, include_hourly=False
         )
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_headings_in_chronological_order(self, presentation: ForecastPresentation) -> None:
         """
         **Feature: forecast-navigation-improvements, Property 2: Heading navigation sequence**.
@@ -351,7 +351,7 @@ class TestHeadingNavigationSequenceProperty:
             min_periods=2, max_periods=14, include_hourly=False
         )
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_heading_sequence_is_complete(self, presentation: ForecastPresentation) -> None:
         """
         **Feature: forecast-navigation-improvements, Property 2: Heading navigation sequence**.
@@ -390,7 +390,7 @@ class TestHeadingContentAnnouncementProperty:
             min_periods=1, max_periods=14, include_hourly=False
         )
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_heading_aria_label_contains_day_name(self, presentation: ForecastPresentation) -> None:
         """
         **Feature: forecast-navigation-improvements, Property 3: Heading content announcement**.

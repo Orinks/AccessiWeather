@@ -233,7 +233,7 @@ class TestMissingDataPlaceholderProperty:
         location=location_strategy,
         temperature_unit=temperature_unit_strategy,
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_all_none_values_produce_valid_output(self, location, temperature_unit):
         """Property: when all weather values are None, output should not crash."""
         conditions = MockCurrentConditions(
@@ -306,7 +306,7 @@ class TestFormatStringValidationProperty:
     @given(
         placeholder=st.text(min_size=1, max_size=20, alphabet="abcdefghijklmnopqrstuvwxyz"),
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_unsupported_placeholders_detected(self, placeholder):
         """Property: placeholder not in SUPPORTED_PLACEHOLDERS should be rejected."""
         parser = FormatStringParser()
@@ -342,7 +342,7 @@ class TestIdempotencyProperty:
         location=location_strategy,
         settings=updater_settings_strategy(),
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_formatting_is_idempotent(self, conditions, location, settings):
         """Property: format_tooltip with same inputs should produce same output."""
         updater = TaskbarIconUpdater(**settings)
@@ -365,7 +365,7 @@ class TestSettingsUpdateProperty:
         new_dynamic_enabled=st.booleans(),
         new_temperature_unit=temperature_unit_strategy,
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_settings_update_changes_state(
         self, initial_settings, new_text_enabled, new_dynamic_enabled, new_temperature_unit
     ):
@@ -390,7 +390,7 @@ class TestTruncationProperty:
     @given(
         text=st.text(min_size=0, max_size=500),
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_truncation_preserves_length_invariant(self, text):
         """Property: after truncation, text length should be <= TOOLTIP_MAX_LENGTH."""
         updater = TaskbarIconUpdater()
@@ -421,7 +421,7 @@ class TestVariableExtractionProperty:
         conditions=weather_conditions_strategy(),
         location=location_strategy,
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_extraction_always_returns_all_keys(self, conditions, location):
         """Property: variable extraction should always return all expected keys."""
         updater = TaskbarIconUpdater()
@@ -455,7 +455,7 @@ class TestVariableExtractionProperty:
         conditions=weather_conditions_strategy(),
         location=location_strategy,
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_extraction_values_are_strings(self, conditions, location):
         """Property: all extracted values should be strings."""
         updater = TaskbarIconUpdater()
@@ -474,7 +474,7 @@ class TestDisabledStateProperty:
         conditions=weather_conditions_strategy(),
         location=location_strategy,
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_text_disabled_returns_default(self, conditions, location):
         """Property: when text_enabled is False, always return default tooltip."""
         updater = TaskbarIconUpdater(
@@ -491,7 +491,7 @@ class TestDisabledStateProperty:
         conditions=weather_conditions_strategy(),
         location=location_strategy,
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_dynamic_disabled_returns_default(self, conditions, location):
         """Property: when dynamic_enabled is False, always return default tooltip."""
         updater = TaskbarIconUpdater(

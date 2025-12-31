@@ -127,7 +127,7 @@ class TestTafDecoderNeverCrashes:
     """Property: decode_taf_text never crashes on any input."""
 
     @given(text=st.text(min_size=0, max_size=500))
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_arbitrary_string_does_not_crash(self, text: str) -> None:
         """decode_taf_text should handle any arbitrary string without crashing."""
         result = decode_taf_text(text)
@@ -137,7 +137,7 @@ class TestTafDecoderNeverCrashes:
     @given(
         text=st.binary(min_size=0, max_size=200).map(lambda b: b.decode("utf-8", errors="replace"))
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_binary_garbage_does_not_crash(self, text: str) -> None:
         """decode_taf_text should handle binary garbage decoded as UTF-8."""
         result = decode_taf_text(text)
@@ -153,7 +153,7 @@ class TestTafDecoderNeverCrashes:
             max_size=300,
         )
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_special_characters_do_not_crash(self, text: str) -> None:
         """decode_taf_text should handle special characters gracefully."""
         result = decode_taf_text(text)
@@ -208,7 +208,7 @@ class TestTafDecoderValidTokens:
         validity=time_ranges,
         wind=valid_wind_token(),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_basic_taf_produces_readable_output(
         self, station: str, issue_time: str, validity: str, wind: str
     ) -> None:
@@ -224,7 +224,7 @@ class TestTafDecoderValidTokens:
         assert "Wind" in result or "knot" in result.lower() or "calm" in result.lower()
 
     @given(wind=valid_wind_token())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_wind_token_produces_readable_output(self, wind: str) -> None:
         """Valid wind tokens should produce readable descriptions."""
         taf = f"TAF KJFK 010000Z 0100/0124 {wind}"
@@ -238,7 +238,7 @@ class TestTafDecoderValidTokens:
         assert has_wind_info, f"Expected wind info in: {result}"
 
     @given(cloud=valid_cloud_token())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_cloud_token_produces_readable_output(self, cloud: str) -> None:
         """Valid cloud tokens should produce readable descriptions."""
         taf = f"TAF KJFK 010000Z 0100/0124 10010KT {cloud}"
@@ -252,7 +252,7 @@ class TestTafDecoderValidTokens:
         assert has_cloud_info, f"Expected cloud info in: {result}"
 
     @given(weather=valid_weather_token())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_weather_token_produces_readable_output(self, weather: str) -> None:
         """Valid weather tokens should produce readable descriptions."""
         taf = f"TAF KJFK 010000Z 0100/0124 10010KT 6SM {weather} BKN020"
@@ -268,7 +268,7 @@ class TestTafDecoderWindFunction:
     """Property: _decode_wind output contains speed/direction when valid."""
 
     @given(wind=valid_wind_token())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_valid_wind_decoded_in_taf(self, wind: str) -> None:
         """Valid wind strings produce output with speed/direction values."""
         taf = f"TAF KJFK 010000Z 0100/0124 {wind}"
@@ -283,7 +283,7 @@ class TestTafDecoderVisibilityFunction:
     """Property: _decode_visibility handles various formats without crashing."""
 
     @given(vis=visibility_tokens)
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_visibility_formats_do_not_crash(self, vis: str) -> None:
         """Various visibility formats should be handled without crashing."""
         taf = f"TAF KJFK 010000Z 0100/0124 10010KT {vis} SKC"

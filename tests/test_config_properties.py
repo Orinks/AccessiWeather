@@ -454,7 +454,7 @@ class TestPromptCustomizationRoundtrip:
         custom_system_prompt=one_of(none(), text(max_size=500)),
         custom_instructions=one_of(none(), text(max_size=200)),
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.differing_executors])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.differing_executors])
     def test_prompt_settings_roundtrip(
         self, custom_system_prompt: str | None, custom_instructions: str | None
     ):

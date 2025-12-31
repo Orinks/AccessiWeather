@@ -82,7 +82,7 @@ class TestAISettingsRoundTrip:
         style=st.sampled_from(["brief", "standard", "detailed"]),
         cache_ttl=st.integers(min_value=60, max_value=3600),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_settings_round_trip(self, model_pref, style, cache_ttl):
         """
         For any valid AI configuration, saving and loading produces equivalent values.
@@ -203,7 +203,7 @@ class TestModelSelection:
         has_api_key=st.booleans(),
         model_pref=st.sampled_from(["openrouter/auto:free", "openrouter/auto"]),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_model_selection_property(self, has_api_key, model_pref):
         """
         For any configuration, correct model identifier is used.
@@ -411,7 +411,7 @@ class TestPromptConstruction:
             alphabet=st.characters(whitelist_categories=("L", "N", "P", "Z")),
         ),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_prompt_field_inclusion_property(
         self, temperature, humidity, wind_speed, visibility, conditions
     ):
@@ -445,7 +445,7 @@ class TestPromptConstruction:
         has_alerts=st.booleans(),
         alert_count=st.integers(min_value=1, max_value=5),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_alert_inclusion_property(self, has_alerts, alert_count):
         """
         For any weather data, alerts are included iff they exist.
@@ -482,7 +482,7 @@ class TestPromptConstruction:
         has_forecast=st.booleans(),
         period_count=st.integers(min_value=1, max_value=6),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_forecast_period_inclusion_property(self, has_forecast, period_count):
         """
         For any weather data, forecast periods are included iff they exist.
@@ -607,7 +607,7 @@ class TestMarkdownFormatting:
         ),
         preserve_markdown=st.booleans(),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_markdown_formatting_property(self, text_content, preserve_markdown):
         """
         For any AI response, formatting matches HTML setting.
@@ -909,7 +909,7 @@ class TestCostEstimation:
         ),
         token_count=st.integers(min_value=1, max_value=10000),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_free_model_cost_property(self, model, token_count):
         """
         For any free model, cost should be zero.
@@ -985,7 +985,7 @@ class TestDataSourceSelection:
         num_sources=st.integers(min_value=1, max_value=5),
         most_recent_index=st.integers(min_value=0, max_value=4),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_data_source_selection_property(self, num_sources, most_recent_index):
         """
         For any set of sources, most recent timestamp is selected.

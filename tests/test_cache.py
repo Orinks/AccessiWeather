@@ -13,6 +13,7 @@ import tempfile
 import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -83,13 +84,17 @@ class TestCache:
     def test_expired_entry(self):
         """Should return None for expired entries."""
         cache = Cache(default_ttl=1)
-        cache.set("key1", "value1", ttl=0.1)  # Expire in 100ms
 
-        time.sleep(0.2)  # Wait for expiration
+        # Mock time.time() to control expiration
+        initial_time = 1000.0
+        with patch("accessiweather.cache.time.time", return_value=initial_time):
+            cache.set("key1", "value1", ttl=10)  # Expires at 1010.0
 
-        result = cache.get("key1")
-        assert result is None
-        assert "key1" not in cache.data  # Should be removed
+        # Advance time past expiration
+        with patch("accessiweather.cache.time.time", return_value=initial_time + 15):
+            result = cache.get("key1")
+            assert result is None
+            assert "key1" not in cache.data  # Should be removed
 
     def test_has_key_exists(self):
         """Should return True for existing non-expired key."""
@@ -106,11 +111,15 @@ class TestCache:
     def test_has_key_expired(self):
         """Should return False for expired key."""
         cache = Cache()
-        cache.set("key1", "value1", ttl=0.1)
 
-        time.sleep(0.2)
+        # Mock time.time() to control expiration
+        initial_time = 1000.0
+        with patch("accessiweather.cache.time.time", return_value=initial_time):
+            cache.set("key1", "value1", ttl=10)  # Expires at 1010.0
 
-        assert cache.has_key("key1") is False
+        # Advance time past expiration
+        with patch("accessiweather.cache.time.time", return_value=initial_time + 15):
+            assert cache.has_key("key1") is False
 
     def test_invalidate(self):
         """Should remove specific cache entry."""
@@ -143,14 +152,19 @@ class TestCache:
     def test_cleanup_expired_entries(self):
         """Should remove only expired entries."""
         cache = Cache()
-        cache.set("key1", "value1", ttl=0.1)  # Expires soon
-        cache.set("key2", "value2", ttl=100)  # Stays valid
 
-        time.sleep(0.2)
-        cache.cleanup()
+        # Mock time.time() to control expiration
+        initial_time = 1000.0
+        with patch("accessiweather.cache.time.time", return_value=initial_time):
+            cache.set("key1", "value1", ttl=10)  # Expires at 1010.0
+            cache.set("key2", "value2", ttl=100)  # Expires at 1100.0
 
-        assert cache.get("key1") is None
-        assert cache.get("key2") == "value2"
+        # Advance time past key1 expiration but before key2 expiration
+        with patch("accessiweather.cache.time.time", return_value=initial_time + 15):
+            cache.cleanup()
+
+            assert cache.get("key1") is None
+            assert cache.get("key2") == "value2"
 
 
 class TestSerializationHelpers:
@@ -415,15 +429,23 @@ class TestWeatherDataCache:
         self, temp_cache_dir, sample_location, sample_weather_data
     ):
         """Should load expired data when allow_stale=True."""
-        cache = WeatherDataCache(cache_dir=temp_cache_dir, max_age_minutes=0)
+        cache = WeatherDataCache(cache_dir=temp_cache_dir, max_age_minutes=5)
 
-        # Store data
-        cache.store(sample_location, sample_weather_data)
+        # Mock datetime.now to control cache age
+        initial_time = datetime(2025, 1, 1, 12, 0, 0, tzinfo=UTC)
+        with patch("accessiweather.cache.datetime") as mock_datetime:
+            mock_datetime.now.return_value = initial_time
+            mock_datetime.fromisoformat = datetime.fromisoformat
+            # Store data at initial time
+            cache.store(sample_location, sample_weather_data)
 
-        time.sleep(0.1)  # Make data "old"
-
-        # Load with allow_stale=True
-        loaded = cache.load(sample_location, allow_stale=True)
+        # Advance time past max_age (5 minutes)
+        future_time = initial_time + timedelta(minutes=10)
+        with patch("accessiweather.cache.datetime") as mock_datetime:
+            mock_datetime.now.return_value = future_time
+            mock_datetime.fromisoformat = datetime.fromisoformat
+            # Load with allow_stale=True
+            loaded = cache.load(sample_location, allow_stale=True)
 
         assert loaded is not None
         assert loaded.stale is True
@@ -432,32 +454,49 @@ class TestWeatherDataCache:
         self, temp_cache_dir, sample_location, sample_weather_data
     ):
         """Should not load expired data when allow_stale=False."""
-        cache = WeatherDataCache(cache_dir=temp_cache_dir, max_age_minutes=0)
+        cache = WeatherDataCache(cache_dir=temp_cache_dir, max_age_minutes=5)
 
-        # Store data
-        cache.store(sample_location, sample_weather_data)
+        # Mock datetime.now to control cache age
+        initial_time = datetime(2025, 1, 1, 12, 0, 0, tzinfo=UTC)
+        with patch("accessiweather.cache.datetime") as mock_datetime:
+            mock_datetime.now.return_value = initial_time
+            mock_datetime.fromisoformat = datetime.fromisoformat
+            # Store data at initial time
+            cache.store(sample_location, sample_weather_data)
 
-        time.sleep(0.1)  # Make data "old"
-
-        # Load with allow_stale=False
-        loaded = cache.load(sample_location, allow_stale=False)
+        # Advance time past max_age (5 minutes)
+        future_time = initial_time + timedelta(minutes=10)
+        with patch("accessiweather.cache.datetime") as mock_datetime:
+            mock_datetime.now.return_value = future_time
+            mock_datetime.fromisoformat = datetime.fromisoformat
+            # Load with allow_stale=False
+            loaded = cache.load(sample_location, allow_stale=False)
 
         assert loaded is None
 
     def test_purge_expired(self, temp_cache_dir, sample_location):
         """Should remove expired cache files."""
-        cache = WeatherDataCache(cache_dir=temp_cache_dir, max_age_minutes=0)
+        cache = WeatherDataCache(cache_dir=temp_cache_dir, max_age_minutes=5)
 
         # Create an old cache file manually
         from accessiweather.models import WeatherData
 
         weather = WeatherData(location=sample_location)
-        cache.store(sample_location, weather)
 
-        time.sleep(0.1)
+        # Mock datetime.now to control cache age
+        initial_time = datetime(2025, 1, 1, 12, 0, 0, tzinfo=UTC)
+        with patch("accessiweather.cache.datetime") as mock_datetime:
+            mock_datetime.now.return_value = initial_time
+            mock_datetime.fromisoformat = datetime.fromisoformat
+            cache.store(sample_location, weather)
 
-        # Purge expired
-        cache.purge_expired()
+        # Advance time past max_age * 2 (purge uses max_age * 2)
+        future_time = initial_time + timedelta(minutes=15)  # 15 > 5*2=10
+        with patch("accessiweather.cache.datetime") as mock_datetime:
+            mock_datetime.now.return_value = future_time
+            mock_datetime.fromisoformat = datetime.fromisoformat
+            # Purge expired
+            cache.purge_expired()
 
         # Verify file was removed
         cache_files = list(temp_cache_dir.glob("*.json"))
@@ -483,11 +522,15 @@ class TestCacheEdgeCases:
     def test_cache_with_zero_ttl(self):
         """Should handle zero TTL correctly."""
         cache = Cache(default_ttl=0)
-        cache.set("key1", "value1")
 
-        # Should expire immediately
-        time.sleep(0.01)
-        assert cache.get("key1") is None
+        # Mock time.time() to control expiration
+        initial_time = 1000.0
+        with patch("accessiweather.cache.time.time", return_value=initial_time):
+            cache.set("key1", "value1")  # Expires at 1000.0 (TTL=0)
+
+        # Any future time should show as expired
+        with patch("accessiweather.cache.time.time", return_value=initial_time + 0.1):
+            assert cache.get("key1") is None
 
     def test_cache_with_very_large_ttl(self):
         """Should handle very large TTL values."""

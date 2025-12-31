@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import os
 from datetime import timedelta
 
@@ -14,6 +13,7 @@ from accessiweather.weather_client_nws import get_nws_current_conditions
 from accessiweather.weather_client_openmeteo import get_openmeteo_current_conditions
 from tests.integration.conftest import (
     LIVE_WEATHER_TESTS,
+    conditional_async_sleep,
     get_vcr_config,
     skip_if_cassette_missing,
 )
@@ -90,8 +90,7 @@ async def test_sunrise_sunset_cross_provider_comparison(nws_http_client, openmet
             openmeteo_http_client,
         )
 
-        if LIVE_WEATHER_TESTS:
-            await asyncio.sleep(DELAY_BETWEEN_REQUESTS)
+        await conditional_async_sleep(DELAY_BETWEEN_REQUESTS)
 
         # NWS doesn't provide sunrise/sunset in observations, but we can verify
         # that Open-Meteo's values are reasonable by checking consistency
@@ -154,8 +153,7 @@ async def test_temperature_cross_provider_comparison(nws_http_client, openmeteo_
                 pytest.skip(f"NWS API timed out (likely rate-limited): {e}")
             raise  # Re-raise in cassette mode - cassettes shouldn't timeout
 
-        if LIVE_WEATHER_TESTS:
-            await asyncio.sleep(DELAY_BETWEEN_REQUESTS)
+        await conditional_async_sleep(DELAY_BETWEEN_REQUESTS)
 
         try:
             openmeteo_current = await get_openmeteo_current_conditions(
@@ -226,8 +224,7 @@ async def test_humidity_cross_provider_comparison(nws_http_client, openmeteo_htt
                 pytest.skip(f"NWS API timed out (likely rate-limited): {e}")
             raise
 
-        if LIVE_WEATHER_TESTS:
-            await asyncio.sleep(DELAY_BETWEEN_REQUESTS)
+        await conditional_async_sleep(DELAY_BETWEEN_REQUESTS)
 
         try:
             openmeteo_current = await get_openmeteo_current_conditions(
@@ -297,8 +294,7 @@ async def test_data_freshness_cross_provider(nws_http_client, openmeteo_http_cli
                 pytest.skip(f"NWS API timed out (likely rate-limited): {e}")
             raise
 
-        if LIVE_WEATHER_TESTS:
-            await asyncio.sleep(DELAY_BETWEEN_REQUESTS)
+        await conditional_async_sleep(DELAY_BETWEEN_REQUESTS)
 
         try:
             openmeteo_current = await get_openmeteo_current_conditions(
@@ -346,8 +342,7 @@ async def test_wind_speed_cross_provider_comparison(nws_http_client, openmeteo_h
                 pytest.skip(f"NWS API timed out (likely rate-limited): {e}")
             raise
 
-        if LIVE_WEATHER_TESTS:
-            await asyncio.sleep(DELAY_BETWEEN_REQUESTS)
+        await conditional_async_sleep(DELAY_BETWEEN_REQUESTS)
 
         try:
             openmeteo_current = await get_openmeteo_current_conditions(

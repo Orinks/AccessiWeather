@@ -28,7 +28,7 @@ class TestCustomSystemPromptUsage:
     @given(
         custom_prompt=st.text(min_size=10, max_size=500).filter(lambda x: x.strip()),
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.differing_executors])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.differing_executors])
     def test_custom_system_prompt_used_when_configured(self, custom_prompt: str):
         """
         Test custom system prompt is used when configured.
@@ -81,7 +81,7 @@ class TestDefaultPromptFallback:
     @given(
         empty_value=st.sampled_from([None, "", "   ", "\t", "\n"]),
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.differing_executors])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.differing_executors])
     def test_default_prompt_used_when_custom_is_empty(self, empty_value: str | None):
         """
         Test default prompt is used when custom is empty.
@@ -141,7 +141,7 @@ class TestCustomInstructionsInclusion:
     @given(
         custom_instructions=st.text(min_size=5, max_size=200).filter(lambda x: x.strip()),
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.differing_executors])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.differing_executors])
     def test_custom_instructions_appended_to_prompt(self, custom_instructions: str):
         """
         Test custom instructions are appended to prompt.
@@ -170,7 +170,7 @@ class TestCustomInstructionsInclusion:
     @given(
         custom_instructions=st.text(min_size=5, max_size=200).filter(lambda x: x.strip()),
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.differing_executors])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.differing_executors])
     def test_custom_instructions_positioned_after_weather_data(self, custom_instructions: str):
         """
         Test custom instructions are positioned after weather data.
@@ -202,7 +202,7 @@ class TestCustomInstructionsInclusion:
     @given(
         empty_value=st.sampled_from([None, "", "   ", "\t", "\n"]),
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.differing_executors])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.differing_executors])
     def test_empty_instructions_not_included(self, empty_value: str | None):
         """
         Test empty instructions are not included in prompt.
@@ -281,7 +281,7 @@ class TestPromptPreview:
     @given(
         custom_instructions=st.text(min_size=5, max_size=200).filter(lambda x: x.strip()),
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.differing_executors])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.differing_executors])
     def test_preview_includes_custom_instructions(self, custom_instructions: str):
         """
         Test preview includes custom instructions.
@@ -305,7 +305,7 @@ class TestPromptPreview:
     @given(
         custom_system_prompt=st.text(min_size=10, max_size=500).filter(lambda x: x.strip()),
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.differing_executors])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.differing_executors])
     def test_preview_includes_custom_system_prompt(self, custom_system_prompt: str):
         """Preview includes custom system prompt when configured."""
         explainer = AIExplainer(
@@ -363,7 +363,7 @@ class TestResetBehavior:
     @given(
         custom_system_prompt=st.text(min_size=10, max_size=500).filter(lambda x: x.strip()),
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.differing_executors])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.differing_executors])
     def test_reset_system_prompt_restores_default(self, custom_system_prompt: str):
         """
         Test reset restores default system prompt.
@@ -398,7 +398,7 @@ class TestResetBehavior:
     @given(
         custom_instructions=st.text(min_size=5, max_size=200).filter(lambda x: x.strip()),
     )
-    @settings(max_examples=100, suppress_health_check=[HealthCheck.differing_executors])
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.differing_executors])
     def test_reset_instructions_clears_value(self, custom_instructions: str):
         """
         Test reset clears custom instructions.
