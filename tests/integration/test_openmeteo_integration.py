@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import time
 from datetime import datetime
 
 import pytest
@@ -12,6 +11,7 @@ from accessiweather.openmeteo_client import OpenMeteoApiClient
 from accessiweather.openmeteo_mapper import OpenMeteoMapper
 from tests.integration.conftest import (
     LIVE_WEATHER_TESTS,
+    conditional_sleep,
     get_vcr_config,
     skip_if_cassette_missing,
 )
@@ -96,8 +96,7 @@ def test_openmeteo_current_conditions_sunrise_sunset(openmeteo_client, mapper):
         assert 0 <= sunrise.hour <= 12, f"Sunrise hour {sunrise.hour} should be AM"
         assert 12 <= sunset.hour <= 23, f"Sunset hour {sunset.hour} should be PM"
 
-        if LIVE_WEATHER_TESTS:
-            time.sleep(DELAY_BETWEEN_REQUESTS)
+        conditional_sleep(DELAY_BETWEEN_REQUESTS)
 
     _run_with_cassette("openmeteo/test_current_sunrise_sunset.yaml", run_test)
 
@@ -154,8 +153,7 @@ def test_openmeteo_forecast_contains_sunrise_sunset(openmeteo_client):
         assert 0 <= sunrise_dt.hour <= 12, f"Sunrise hour {sunrise_dt.hour} should be AM"
         assert 12 <= sunset_dt.hour <= 23, f"Sunset hour {sunset_dt.hour} should be PM"
 
-        if LIVE_WEATHER_TESTS:
-            time.sleep(DELAY_BETWEEN_REQUESTS)
+        conditional_sleep(DELAY_BETWEEN_REQUESTS)
 
     _run_with_cassette("openmeteo/test_forecast_sunrise_sunset.yaml", run_test)
 
@@ -187,8 +185,7 @@ def test_openmeteo_hourly_forecast_timezone_converted(openmeteo_client, mapper):
                 assert start_time.tzinfo is not None, f"Period {i} should be timezone-aware"
                 assert start_time.year > 2000, f"Period {i} start_time year is invalid"
 
-        if LIVE_WEATHER_TESTS:
-            time.sleep(DELAY_BETWEEN_REQUESTS)
+        conditional_sleep(DELAY_BETWEEN_REQUESTS)
 
     _run_with_cassette("openmeteo/test_hourly_timezone.yaml", run_test)
 
@@ -233,8 +230,7 @@ def test_openmeteo_client_fetches_all_data_types(openmeteo_client, mapper):
             "Hourly forecast should have periods"
         )
 
-        if LIVE_WEATHER_TESTS:
-            time.sleep(DELAY_BETWEEN_REQUESTS)
+        conditional_sleep(DELAY_BETWEEN_REQUESTS)
 
     _run_with_cassette("openmeteo/test_all_data_types.yaml", run_test)
 
@@ -266,8 +262,7 @@ def test_openmeteo_raw_response_timezone_field(openmeteo_client):
         utc_offset = data["utc_offset_seconds"]
         assert isinstance(utc_offset, int), "UTC offset should be an integer"
 
-        if LIVE_WEATHER_TESTS:
-            time.sleep(DELAY_BETWEEN_REQUESTS)
+        conditional_sleep(DELAY_BETWEEN_REQUESTS)
 
     _run_with_cassette("openmeteo/test_timezone_field.yaml", run_test)
 
