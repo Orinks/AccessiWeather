@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from hypothesis import (
+    HealthCheck,
     Verbosity,
     settings as hypothesis_settings,
 )
@@ -19,11 +20,13 @@ pytest_plugins = ("pytest_mock",)
 # Hypothesis Performance Profiles
 # =============================================================================
 # Register profiles for different test scenarios:
+# - "fast": Minimal examples for quick iteration during development (10 examples)
 # - "ci": Fast profile for CI pipelines (fewer examples, shorter deadlines)
 # - "dev": Development profile (moderate examples for quick feedback)
 # - "thorough": Full testing profile (many examples for release validation)
 #
 # Usage:
+#   pytest --hypothesis-profile=fast  # Quick iteration
 #   pytest --hypothesis-profile=ci    # Fast CI runs
 #   pytest --hypothesis-profile=dev   # Development
 #   pytest                            # Uses default (dev)
@@ -49,6 +52,13 @@ hypothesis_settings.register_profile(
     max_examples=200,
     deadline=None,
     verbosity=Verbosity.verbose,
+)
+
+hypothesis_settings.register_profile(
+    "fast",
+    max_examples=10,
+    suppress_health_check=[HealthCheck.too_slow, HealthCheck.data_too_large],
+    deadline=None,
 )
 
 # Load profile from environment or default to "dev"
