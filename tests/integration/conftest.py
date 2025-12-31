@@ -2,13 +2,33 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 import re
+import time
 from typing import Any
 
 import pytest
 
 LIVE_WEATHER_TESTS = os.getenv("LIVE_WEATHER_TESTS", "0") == "1"
+
+
+def should_delay() -> bool:
+    """Only delay when running live tests, not when using VCR cassettes."""
+    return os.environ.get("LIVE_WEATHER_TESTS", "").lower() in ("1", "true", "yes")
+
+
+def conditional_sleep(seconds: float) -> None:
+    """Sleep only when running live tests."""
+    if should_delay():
+        time.sleep(seconds)
+
+
+async def conditional_async_sleep(seconds: float) -> None:
+    """Async sleep only when running live tests."""
+    if should_delay():
+        await asyncio.sleep(seconds)
+
 
 try:
     import vcr

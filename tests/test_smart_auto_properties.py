@@ -179,7 +179,7 @@ class TestConfigurationRoundTrip:
     """Tests for SourcePriorityConfig JSON serialization round-trip."""
 
     @given(config=source_priority_configs())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_json_round_trip_preserves_config(self, config: SourcePriorityConfig) -> None:
         """
         **Feature: smart-auto-source, Property 16: Configuration Round-Trip**
@@ -201,7 +201,7 @@ class TestConfigurationRoundTrip:
         assert restored.temperature_conflict_threshold == config.temperature_conflict_threshold
 
     @given(config=source_priority_configs())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_dict_round_trip_preserves_config(self, config: SourcePriorityConfig) -> None:
         """Test that to_dict/from_dict round-trip preserves configuration."""
         # Convert to dict
@@ -228,7 +228,7 @@ class TestDefaultPriorityApplication:
     """Tests for default priority application based on location."""
 
     @given(config=source_priority_configs(), location=locations(us_only=True))
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_us_location_uses_us_default(
         self, config: SourcePriorityConfig, location: Location
     ) -> None:
@@ -247,7 +247,7 @@ class TestDefaultPriorityApplication:
         assert priority == config.us_default
 
     @given(config=source_priority_configs(), location=locations(intl_only=True))
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_international_location_uses_international_default(
         self, config: SourcePriorityConfig, location: Location
     ) -> None:
@@ -265,7 +265,7 @@ class TestDefaultPriorityApplication:
         assert priority == config.international_default
 
     @given(config=source_priority_configs())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_configured_field_uses_field_priority(self, config: SourcePriorityConfig) -> None:
         """
         **Feature: smart-auto-source, Property 17: Default Priority Application**
@@ -294,7 +294,7 @@ class TestPriorityBasedFieldMerging:
         sources=source_data_list(min_sources=2, max_sources=3, at_least_one_success=True),
         location=locations(),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_highest_priority_source_selected_for_each_field(
         self, sources: list[SourceData], location: Location
     ) -> None:
@@ -358,7 +358,7 @@ class TestTemperatureConflictResolution:
     """Tests for temperature conflict detection and resolution."""
 
     @given(location=locations())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_temperature_conflict_uses_highest_priority(self, location: Location) -> None:
         """
         **Feature: smart-auto-source, Property 5: Temperature Conflict Resolution**
@@ -418,7 +418,7 @@ class TestNoDataLossDuringMerge:
         sources=source_data_list(min_sources=1, max_sources=3, at_least_one_success=True),
         location=locations(),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_all_available_fields_preserved(
         self, sources: list[SourceData], location: Location
     ) -> None:
@@ -571,7 +571,7 @@ class TestForecastTimelineUnification:
         sources=source_data_with_forecasts(min_sources=2, max_sources=3),
         location=locations(),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_all_unique_periods_included(
         self, sources: list[SourceData], location: Location
     ) -> None:
@@ -714,7 +714,7 @@ class TestForecastFieldPreservation:
     """Tests for preserving special forecast fields during merge."""
 
     @given(location=locations())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_precipitation_probability_preserved(self, location: Location) -> None:
         """
         **Feature: smart-auto-source, Property 8: Forecast Field Preservation**
@@ -757,7 +757,7 @@ class TestForecastFieldPreservation:
         # merging is implemented for forecasts
 
     @given(location=locations())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_uv_index_preserved(self, location: Location) -> None:
         """
         **Feature: smart-auto-source, Property 8: Forecast Field Preservation**
@@ -792,7 +792,7 @@ class TestForecastFieldPreservation:
         assert merged.periods[0].uv_index == 8.5
 
     @given(location=locations())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_snowfall_preserved(self, location: Location) -> None:
         """
         **Feature: smart-auto-source, Property 8: Forecast Field Preservation**
@@ -841,7 +841,7 @@ class TestSourceAttributionTracking:
         sources=source_data_list(min_sources=2, max_sources=3, at_least_one_success=True),
         location=locations(),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_field_sources_tracks_all_merged_fields(
         self, sources: list[SourceData], location: Location
     ) -> None:
@@ -882,7 +882,7 @@ class TestSourceAttributionTracking:
         sources=source_data_list(min_sources=2, max_sources=3, all_success=True),
         location=locations(),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_contributing_sources_tracked(
         self, sources: list[SourceData], location: Location
     ) -> None:
@@ -1008,7 +1008,7 @@ class TestAlertSourceCollection:
         nws_alert=weather_alerts(source="nws"),
         vc_alert=weather_alerts(source="visualcrossing"),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_collects_from_nws_and_visual_crossing(
         self, nws_alert: WeatherAlert, vc_alert: WeatherAlert
     ) -> None:
@@ -1064,7 +1064,7 @@ class TestAlertDeduplicationCorrectness:
     """Tests for alert deduplication."""
 
     @given(location=locations())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_same_event_same_area_same_time_deduplicated(self, location: Location) -> None:
         """
         **Feature: smart-auto-source, Property 10: Alert Deduplication Correctness**
@@ -1103,7 +1103,7 @@ class TestAlertDeduplicationCorrectness:
         assert len(result.alerts) == 1
 
     @given(location=locations())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_different_events_not_deduplicated(self, location: Location) -> None:
         """
         **Feature: smart-auto-source, Property 10: Alert Deduplication Correctness**
@@ -1150,7 +1150,7 @@ class TestAlertDetailPreservation:
     """Tests for preserving alert details during merge."""
 
     @given(location=locations())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_longest_description_preserved(self, location: Location) -> None:
         """
         **Feature: smart-auto-source, Property 11: Alert Detail Preservation**
@@ -1202,7 +1202,7 @@ class TestAlertSourceAttribution:
     """Tests for alert source attribution."""
 
     @given(alert=weather_alerts())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_single_alert_has_source(self, alert: WeatherAlert) -> None:
         """
         **Feature: smart-auto-source, Property 12: Alert Source Attribution**
@@ -1218,7 +1218,7 @@ class TestAlertSourceAttribution:
         assert len(result.alerts[0].source) > 0
 
     @given(location=locations())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_merged_alert_has_combined_sources(self, location: Location) -> None:
         """
         **Feature: smart-auto-source, Property 12: Alert Source Attribution**

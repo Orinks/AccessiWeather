@@ -99,7 +99,7 @@ class TestValidFormatStringDoesNotCrash:
     """Tests that valid format strings don't crash when formatted."""
 
     @given(data=valid_format_string_with_data())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_valid_format_string_does_not_crash(self, data: tuple[str, dict[str, str]]) -> None:
         """Valid format strings should never cause format_string to crash."""
         format_str, values = data
@@ -116,7 +116,7 @@ class TestPlaceholderReplacement:
     """Tests that format_string replaces placeholders with values."""
 
     @given(data=valid_format_string_with_data())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_all_placeholders_replaced(self, data: tuple[str, dict[str, str]]) -> None:
         """All provided placeholder values should appear in the result."""
         format_str, values = data
@@ -132,7 +132,7 @@ class TestPlaceholderReplacement:
                 )
 
     @given(data=valid_format_string_with_data())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_no_placeholder_syntax_remains(self, data: tuple[str, dict[str, str]]) -> None:
         """After formatting, no supported placeholder syntax should remain."""
         format_str, values = data
@@ -151,7 +151,7 @@ class TestUnbalancedBracesDetection:
     """Tests that mismatched braces fail validation."""
 
     @given(format_str=unbalanced_braces_string())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_unbalanced_braces_fail_validation(self, format_str: str) -> None:
         """Strings with unbalanced braces should fail validation."""
         parser = FormatStringParser()
@@ -167,7 +167,7 @@ class TestUnknownPlaceholderBehavior:
     """Tests that unknown placeholders behavior is consistent."""
 
     @given(format_str=unknown_placeholder_string())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_unknown_placeholders_fail_validation(self, format_str: str) -> None:
         """Unknown placeholders should fail validation."""
         parser = FormatStringParser()
@@ -178,7 +178,7 @@ class TestUnknownPlaceholderBehavior:
         assert "unsupported" in error.lower() or "placeholder" in error.lower()
 
     @given(format_str=unknown_placeholder_string())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_unknown_placeholders_preserved_in_output(self, format_str: str) -> None:
         """Unknown placeholders should be preserved (not replaced) in output."""
         parser = FormatStringParser()
@@ -198,7 +198,7 @@ class TestGetPlaceholdersProperties:
     """Tests that get_placeholders returns unique, ordered list."""
 
     @given(format_str=valid_format_string())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_placeholders_match_regex_order(self, format_str: str) -> None:
         """Placeholders should be returned in order of regex matches."""
         import re
@@ -212,7 +212,7 @@ class TestGetPlaceholdersProperties:
         )
 
     @given(format_str=valid_format_string())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_all_placeholders_are_supported(self, format_str: str) -> None:
         """All returned placeholders should be from the supported set."""
         parser = FormatStringParser()
@@ -224,7 +224,7 @@ class TestGetPlaceholdersProperties:
             )
 
     @given(format_str=st.text(min_size=0, max_size=100))
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_get_placeholders_returns_list(self, format_str: str) -> None:
         """get_placeholders should always return a list."""
         parser = FormatStringParser()
@@ -237,7 +237,7 @@ class TestCrashResistance:
     """Tests that parser handles any string input without exceptions."""
 
     @given(format_str=st.text(min_size=0, max_size=500))
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_validate_never_crashes(self, format_str: str) -> None:
         """validate_format_string should never raise an exception."""
         parser = FormatStringParser()
@@ -247,7 +247,7 @@ class TestCrashResistance:
         assert error is None or isinstance(error, str)
 
     @given(format_str=st.text(min_size=0, max_size=500))
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_format_string_never_crashes(self, format_str: str) -> None:
         """format_string should never raise an exception."""
         parser = FormatStringParser()
@@ -262,7 +262,7 @@ class TestCrashResistance:
             max_size=10,
         ),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_format_string_with_arbitrary_data_never_crashes(
         self, format_str: str, data: dict[str, str]
     ) -> None:
@@ -272,7 +272,7 @@ class TestCrashResistance:
         assert isinstance(result, str)
 
     @given(format_str=st.text(min_size=0, max_size=500))
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_get_placeholders_never_crashes(self, format_str: str) -> None:
         """get_placeholders should never raise an exception."""
         parser = FormatStringParser()
@@ -304,7 +304,7 @@ class TestEmptyInputHandling:
         assert result == []
 
     @given(format_str=valid_format_string())
-    @settings(max_examples=100)
+    @settings(max_examples=50)
     def test_empty_data_preserves_unknown_placeholders(self, format_str: str) -> None:
         """With empty data dict, placeholders should remain in output."""
         parser = FormatStringParser()

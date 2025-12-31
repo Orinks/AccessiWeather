@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import UTC, datetime, timedelta
 
 import httpx
@@ -19,6 +18,7 @@ from accessiweather.weather_client_nws import (
 )
 from tests.integration.conftest import (
     LIVE_WEATHER_TESTS,
+    conditional_async_sleep,
     get_vcr_config,
     skip_if_cassette_missing,
 )
@@ -96,8 +96,7 @@ async def test_nws_grid_point_contains_timezone(http_client):
             f"Timezone '{timezone}' should be IANA format"
         )
 
-        if LIVE_WEATHER_TESTS:
-            await asyncio.sleep(DELAY_BETWEEN_REQUESTS)
+        await conditional_async_sleep(DELAY_BETWEEN_REQUESTS)
 
     if HAS_VCR:
         my_vcr = vcr.VCR(**get_vcr_config())
@@ -142,8 +141,7 @@ async def test_nws_grid_point_contains_forecast_urls(http_client):
         assert isinstance(stations_url, str), "Stations URL should be a string"
         assert stations_url.startswith("https://"), f"Stations URL should be HTTPS: {stations_url}"
 
-        if LIVE_WEATHER_TESTS:
-            await asyncio.sleep(DELAY_BETWEEN_REQUESTS)
+        await conditional_async_sleep(DELAY_BETWEEN_REQUESTS)
 
     if HAS_VCR:
         my_vcr = vcr.VCR(**get_vcr_config())
@@ -177,8 +175,7 @@ async def test_nws_current_conditions_has_valid_timestamp(http_client):
         # Contract: if current conditions exist, they have required structure
         # Don't assert exact values, just that fields exist and are valid types
 
-        if LIVE_WEATHER_TESTS:
-            await asyncio.sleep(DELAY_BETWEEN_REQUESTS)
+        await conditional_async_sleep(DELAY_BETWEEN_REQUESTS)
 
     if HAS_VCR:
         my_vcr = vcr.VCR(**get_vcr_config())
@@ -233,8 +230,7 @@ async def test_nws_forecast_has_valid_periods_and_times(http_client):
                 )
                 assert period.start_time.year > 2000, f"Period {i} start_time year is invalid"
 
-        if LIVE_WEATHER_TESTS:
-            await asyncio.sleep(DELAY_BETWEEN_REQUESTS)
+        await conditional_async_sleep(DELAY_BETWEEN_REQUESTS)
 
     if HAS_VCR:
         my_vcr = vcr.VCR(**get_vcr_config())
@@ -290,8 +286,7 @@ async def test_nws_hourly_forecast_has_timestamps(http_client):
                         f"Hourly period {i} start_time {period.start_time} is too far in future"
                     )
 
-        if LIVE_WEATHER_TESTS:
-            await asyncio.sleep(DELAY_BETWEEN_REQUESTS)
+        await conditional_async_sleep(DELAY_BETWEEN_REQUESTS)
 
     if HAS_VCR:
         my_vcr = vcr.VCR(**get_vcr_config())
@@ -330,8 +325,7 @@ async def test_nws_parallel_fetch_returns_data(http_client):
         if alerts is not None:
             assert isinstance(alerts.alerts, list), "Alerts should be a list"
 
-        if LIVE_WEATHER_TESTS:
-            await asyncio.sleep(DELAY_BETWEEN_REQUESTS)
+        await conditional_async_sleep(DELAY_BETWEEN_REQUESTS)
 
     if HAS_VCR:
         my_vcr = vcr.VCR(**get_vcr_config())
@@ -358,8 +352,7 @@ async def test_nws_raw_observation_timestamp_parsing(http_client):
         )
 
         stations_url = grid_data["observationStations"]
-        if LIVE_WEATHER_TESTS:
-            await asyncio.sleep(DELAY_BETWEEN_REQUESTS)
+        await conditional_async_sleep(DELAY_BETWEEN_REQUESTS)
 
         # Get list of stations
         stations_response = await http_client.get(stations_url)
@@ -374,8 +367,7 @@ async def test_nws_raw_observation_timestamp_parsing(http_client):
         station_id = features[0]["properties"]["stationIdentifier"]
         obs_url = f"https://api.weather.gov/stations/{station_id}/observations/latest"
 
-        if LIVE_WEATHER_TESTS:
-            await asyncio.sleep(DELAY_BETWEEN_REQUESTS)
+        await conditional_async_sleep(DELAY_BETWEEN_REQUESTS)
 
         obs_response = await http_client.get(obs_url)
         if obs_response.status_code == 200:
