@@ -3,7 +3,7 @@
 import json
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -38,7 +38,12 @@ class TestSourceSelectionFixes:
     @pytest.fixture
     def config_manager(self, mock_app):
         """Create a config manager with temporary directory."""
-        return ConfigManager(mock_app)
+        # Mock SecureStorage to prevent reading from real system keyring
+        with patch(
+            "accessiweather.config.config_manager.SecureStorage.get_password", return_value=None
+        ):
+            manager = ConfigManager(mock_app)
+            yield manager
 
     @pytest.fixture
     def us_location(self):

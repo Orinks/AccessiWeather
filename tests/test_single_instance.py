@@ -262,13 +262,29 @@ class TestProcessRunningCheck:
 
         assert result is False
 
+    @pytest.mark.skipif(sys.platform != "win32", reason="Windows-specific ctypes test")
     @patch("os.name", "nt")
     def test_is_process_running_windows(self, mock_app):
-        """Should use ctypes on Windows, falling back to tasklist if unavailable."""
+        """Should use ctypes on Windows to check if process is running."""
         manager = SingleInstanceManager(mock_app)
 
-        # On non-Windows systems, ctypes.windll doesn't exist, so it falls back to subprocess
-        # We need to mock subprocess.CREATE_NO_WINDOW since it doesn't exist on Linux
+        # Test that process detection works on Windows using ctypes.windll
+        # Current process should be detected as running
+        result = manager._is_process_running(os.getpid())
+        assert result is True
+
+        # Non-existent process should not be detected
+        result = manager._is_process_running(999999999)
+        assert result is False
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="Tests subprocess fallback on non-Windows")
+    @patch("os.name", "nt")
+    def test_is_process_running_windows_fallback(self, mock_app):
+        """Should fall back to subprocess when ctypes.windll unavailable (Linux CI)."""
+        manager = SingleInstanceManager(mock_app)
+
+        # On Linux, ctypes.windll doesn't exist, so it falls back to subprocess
+        # which also fails (no tasklist), returning False for any PID
         with (
             patch("subprocess.run") as mock_run,
             patch("subprocess.CREATE_NO_WINDOW", 0x08000000, create=True),
@@ -279,7 +295,7 @@ class TestProcessRunningCheck:
 
             result = manager._is_process_running(os.getpid())
 
-            # On Linux (where tests run), ctypes.windll fails and falls back to subprocess
+            # Subprocess fallback should be called and return True
             assert result is True
             mock_run.assert_called_once()
 
