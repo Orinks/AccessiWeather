@@ -289,9 +289,6 @@ accessiweather-soundpacks/
 # Claude Code local settings (user-specific)
 .claude/
 
-# Auto-Claude AI tooling artifacts
-.auto-claude/
-
 # Git worktree metadata (should not be committed)
 .worktrees/
 
