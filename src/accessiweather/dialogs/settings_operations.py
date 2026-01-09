@@ -973,6 +973,81 @@ def initialize_update_info(dialog):
         logger.debug("%s: Failed to initialize update info: %s", LOG_PREFIX, exc)
 
 
+async def export_settings(dialog):
+    """Export application settings to a JSON file."""
+    try:
+        dialog._ensure_dialog_focus()
+
+        logger.info("%s: Export settings requested", LOG_PREFIX)
+
+        # Generate suggested filename with current date
+        suggested_filename = f"accessiweather_settings_{datetime.now():%Y-%m-%d}.json"
+
+        # Open save file dialog
+        try:
+            save_path = await _call_dialog_method(
+                dialog,
+                "save_file_dialog",
+                "Export Settings",
+                suggested_filename=suggested_filename,
+                file_types=["json"],
+            )
+        except Exception as exc:
+            logger.warning(
+                "%s: save_file_dialog not available, trying alternative approach: %s",
+                LOG_PREFIX,
+                exc,
+            )
+            # Fallback: Let user manually specify path via input dialog
+            # This is needed for backends that might not support save_file_dialog
+            await dialog._show_dialog_error(
+                "Export Settings",
+                "File save dialog is not supported on this platform. "
+                f"Please manually save to: {suggested_filename}",
+            )
+            return
+
+        if not save_path:
+            logger.info("%s: Export settings cancelled by user", LOG_PREFIX)
+            return
+
+        # Ensure path has .json extension
+        export_path = Path(save_path)
+        if export_path.suffix.lower() != ".json":
+            export_path = export_path.with_suffix(".json")
+
+        # Call config_manager.export_settings()
+        success = False
+        with contextlib.suppress(Exception):
+            success = dialog.config_manager.export_settings(export_path)
+
+        if not success:
+            await dialog._show_dialog_error(
+                "Export Failed",
+                f"Failed to export settings to:\n{export_path}",
+            )
+            return
+
+        logger.info("%s: Settings exported successfully to %s", LOG_PREFIX, export_path)
+
+        await _call_dialog_method(
+            dialog,
+            "info_dialog",
+            "Export Successful",
+            f"Your settings have been exported to:\n{export_path}\n\n"
+            "Note: API keys are stored securely in your system keychain "
+            "and are not included in the export file.",
+        )
+
+    except Exception as exc:
+        logger.exception("%s: Failed to export settings", LOG_PREFIX)
+        with contextlib.suppress(Exception):
+            await dialog._show_dialog_error(
+                "Export Error",
+                f"An error occurred while exporting settings: {exc}",
+            )
+
+
 def update_last_check_info(dialog):
     """Refresh the last-update label with any available data."""
     label = getattr(dialog, "last_check_label", None)
