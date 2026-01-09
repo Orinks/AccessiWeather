@@ -96,11 +96,11 @@ class TestExportSettings:
         """Test exported JSON excludes secure keys (API keys)."""
         # Set settings including secure keys
         config = config_manager.get_config()
-        config.settings.visual_crossing_api_key = "secret-api-key-123"
-        config.settings.openrouter_api_key = "secret-openrouter-key"
-        config.settings.github_app_id = "secret-github-app-id"
-        config.settings.github_app_private_key = "secret-private-key"
-        config.settings.github_app_installation_id = "secret-installation-id"
+        config.settings.visual_crossing_api_key = "test-api-key-xxx"
+        config.settings.openrouter_api_key = "test-openrouter-xxx"
+        config.settings.github_app_id = "test-github-app-xxx"
+        config.settings.github_app_private_key = "test-private-key-xxx"
+        config.settings.github_app_installation_id = "test-installation-xxx"
         config.settings.temperature_unit = "f"
         config_manager.save_config()
 
@@ -596,7 +596,9 @@ class TestImportSettings:
             config_manager.import_settings(corrupted_file)
 
             # Verify error was logged
-            assert any("failed" in msg.lower() or "invalid" in msg.lower() for msg in caplog.messages)
+            assert any(
+                "failed" in msg.lower() or "invalid" in msg.lower() for msg in caplog.messages
+            )
 
     def test_import_settings_returns_false_on_save_failure(
         self, config_manager, valid_settings_file
@@ -620,7 +622,9 @@ class TestImportSettings:
             )
 
         # Mock from_dict to raise an exception
-        with patch("accessiweather.models.config.AppSettings.from_dict", side_effect=ValueError("Bad data")):
+        with patch(
+            "accessiweather.models.config.AppSettings.from_dict", side_effect=ValueError("Bad data")
+        ):
             result = config_manager.import_settings(settings_file)
 
             assert result is False
@@ -644,7 +648,12 @@ class TestImportSettings:
             config_manager.import_settings(settings_file)
 
             # Check if missing fields were logged
-            assert any("defaults" in msg.lower() or "missing" in msg.lower() or "not present" in msg.lower() for msg in caplog.messages)
+            assert any(
+                "defaults" in msg.lower()
+                or "missing" in msg.lower()
+                or "not present" in msg.lower()
+                for msg in caplog.messages
+            )
 
     def test_import_settings_with_complex_types(self, config_manager, tmp_path):
         """Test import handles complex types like lists."""
@@ -730,9 +739,9 @@ class TestImportSettings:
                     "settings": {
                         "temperature_unit": "c",
                         # These should be ignored/handled properly
-                        "visual_crossing_api_key": "fake-key-123",
-                        "openrouter_api_key": "fake-openrouter-key",
-                        "github_app_id": "fake-github-id",
+                        "visual_crossing_api_key": "test-key-xxx",
+                        "openrouter_api_key": "test-openrouter-xxx",
+                        "github_app_id": "test-github-xxx",
                     },
                     "exported_at": "2024-01-01",
                 },
@@ -897,9 +906,9 @@ class TestExportImportIntegration:
         """Test that secure keys are not included in round-trip."""
         # Set settings including secure keys
         config = config_manager.get_config()
-        config.settings.visual_crossing_api_key = "secret-api-key-123"
-        config.settings.openrouter_api_key = "secret-openrouter-key"
-        config.settings.github_app_id = "secret-github-app-id"
+        config.settings.visual_crossing_api_key = "test-api-key-xxx"
+        config.settings.openrouter_api_key = "test-openrouter-xxx"
+        config.settings.github_app_id = "test-github-app-xxx"
         config.settings.temperature_unit = "c"
         config_manager.save_config()
 
@@ -968,7 +977,7 @@ class TestExportImportIntegration:
         export_path = config_manager.config_file.parent / "multi_export.json"
 
         # Perform 3 round-trips
-        for i in range(3):
+        for _ in range(3):
             # Export
             config_manager.export_settings(export_path)
 
@@ -1025,9 +1034,7 @@ class TestExportImportIntegration:
         # Add locations
         config = config_manager.get_config()
         config.locations.append(Location(name="New York", latitude=40.7, longitude=-74.0))
-        config.locations.append(
-            Location(name="San Francisco", latitude=37.77, longitude=-122.41)
-        )
+        config.locations.append(Location(name="San Francisco", latitude=37.77, longitude=-122.41))
         config_manager.save_config()
 
         # Set and export settings
