@@ -15,6 +15,7 @@ Usage examples:
   python installer/make.py verify          # Verify soundpack cleanup in built ZIP
   python installer/make.py status          # Show detected settings and versions
   python installer/make.py clean           # Clean Briefcase build artifacts (best-effort)
+  python installer/make.py bootstrap       # Bootstrap dev environment for agents/worktrees
 
 Options:
   --platform windows|macOS|linux (default: windows)
@@ -446,6 +447,70 @@ def cmd_clean(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_bootstrap(args: argparse.Namespace) -> int:
+    """
+    Bootstrap a development environment for Auto Claude agents or fresh worktrees.
+
+    Installs all dev requirements and sets TOGA_BACKEND=toga_dummy for headless testing.
+    """
+    import os
+
+    vpy, venv_dir, created = _detect_python_env()
+
+    # Ensure venv if needed
+    if venv_dir is not None and created:
+        print(f"Creating virtual environment at {venv_dir} ...")
+        code = _ensure_venv(venv_dir)
+        if code != 0:
+            return code
+    elif venv_dir is not None:
+        print(f"Using existing virtual environment at {venv_dir}")
+    else:
+        print(f"Using active Python environment: {vpy}")
+
+    # Upgrade pip first
+    print("Upgrading pip...")
+    if _pip(vpy, "install", "-U", "pip") != 0:
+        return 1
+
+    # Install dev requirements
+    print("Installing dev requirements...")
+    req_dev = ROOT / "requirements-dev.txt"
+    if req_dev.exists():
+        if _pip(vpy, "install", "-r", str(req_dev)) != 0:
+            return 1
+    else:
+        print(f"Warning: {req_dev} not found, skipping dev requirements")
+
+    # Install main requirements
+    print("Installing main requirements...")
+    req_main = ROOT / "requirements.txt"
+    if req_main.exists():
+        if _pip(vpy, "install", "-r", str(req_main)) != 0:
+            return 1
+
+    # Install the project in editable mode
+    print("Installing project in editable mode...")
+    if _pip(vpy, "install", "-e", ".") != 0:
+        return 1
+
+    # Set TOGA_BACKEND for headless testing
+    os.environ["TOGA_BACKEND"] = "toga_dummy"
+    print("Set TOGA_BACKEND=toga_dummy for headless testing")
+
+    print("\nBootstrap complete!")
+    print("Environment is ready for development and testing.")
+    print("\nTo activate the environment manually:")
+    if venv_dir:
+        if platform.system().lower().startswith("win"):
+            print(f"  source {venv_dir}/Scripts/activate  # Git Bash")
+            print(f"  {venv_dir}\\Scripts\\activate.bat    # CMD")
+        else:
+            print(f"  source {venv_dir}/bin/activate")
+    print("\nFor headless tests, ensure TOGA_BACKEND=toga_dummy is set.")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="AccessiWeather Briefcase make-like tool")
     sub = parser.add_subparsers(dest="cmd")
@@ -490,6 +555,11 @@ def main() -> int:
     p_clean = sub.add_parser("clean", help="Clean Briefcase artifacts")
     add_common(p_clean)
     p_clean.set_defaults(func=cmd_clean)
+
+    p_bootstrap = sub.add_parser(
+        "bootstrap", help="Bootstrap dev environment (install deps, set TOGA_BACKEND)"
+    )
+    p_bootstrap.set_defaults(func=cmd_bootstrap)
 
     args = parser.parse_args()
     if not getattr(args, "cmd", None):
