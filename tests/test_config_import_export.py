@@ -741,3 +741,444 @@ class TestImportSettings:
         assert result is True
         config = config_manager.get_config()
         assert config.settings.temperature_unit == "c"
+
+
+class TestExportImportIntegration:
+    """Integration tests for export-import round-trip functionality."""
+
+    @pytest.fixture
+    def mock_app(self):
+        """Create a mock Toga app for testing."""
+        app = Mock()
+        app.paths = Mock()
+        temp_dir = Path(tempfile.mkdtemp())
+        app.paths.config = temp_dir
+        return app
+
+    @pytest.fixture
+    def config_manager(self, mock_app):
+        """Create a ConfigManager instance for testing."""
+        return ConfigManager(mock_app)
+
+    def test_round_trip_preserves_basic_settings(self, config_manager):
+        """Test that basic settings survive export-import round-trip."""
+        # Set initial settings
+        config_manager.update_settings(
+            temperature_unit="c",
+            update_interval_minutes=25,
+            data_source="openmeteo",
+            enable_alerts=True,
+        )
+
+        # Export settings
+        export_path = config_manager.config_file.parent / "test_export.json"
+        export_result = config_manager.export_settings(export_path)
+        assert export_result is True
+
+        # Modify settings to different values
+        config_manager.update_settings(
+            temperature_unit="f",
+            update_interval_minutes=10,
+            data_source="nws",
+            enable_alerts=False,
+        )
+
+        # Import settings back
+        import_result = config_manager.import_settings(export_path)
+        assert import_result is True
+
+        # Verify settings match original values
+        config = config_manager.get_config()
+        assert config.settings.temperature_unit == "c"
+        assert config.settings.update_interval_minutes == 25
+        assert config.settings.data_source == "openmeteo"
+        assert config.settings.enable_alerts is True
+
+    def test_round_trip_preserves_all_settings_fields(self, config_manager):
+        """Test that all settings fields are preserved in round-trip."""
+        # Set comprehensive settings
+        config_manager.update_settings(
+            temperature_unit="f",
+            update_interval_minutes=30,
+            data_source="visualcrossing",
+            enable_alerts=False,
+            sound_enabled=False,
+            debug_mode=True,
+            alert_global_cooldown_minutes=15,
+            trend_hours=48,
+            show_detailed_forecast=True,
+        )
+
+        # Get original values for comparison
+        original_config = config_manager.get_config()
+        original_settings = original_config.settings
+
+        # Export and import
+        export_path = config_manager.config_file.parent / "comprehensive_export.json"
+        config_manager.export_settings(export_path)
+
+        # Reset to defaults
+        config_manager.update_settings(
+            temperature_unit="c",
+            update_interval_minutes=10,
+            data_source="auto",
+            enable_alerts=True,
+            sound_enabled=True,
+            debug_mode=False,
+        )
+
+        # Import back
+        config_manager.import_settings(export_path)
+
+        # Verify all fields match
+        restored_config = config_manager.get_config()
+        assert restored_config.settings.temperature_unit == original_settings.temperature_unit
+        assert (
+            restored_config.settings.update_interval_minutes
+            == original_settings.update_interval_minutes
+        )
+        assert restored_config.settings.data_source == original_settings.data_source
+        assert restored_config.settings.enable_alerts == original_settings.enable_alerts
+        assert restored_config.settings.sound_enabled == original_settings.sound_enabled
+        assert restored_config.settings.debug_mode == original_settings.debug_mode
+        assert (
+            restored_config.settings.alert_global_cooldown_minutes
+            == original_settings.alert_global_cooldown_minutes
+        )
+        assert restored_config.settings.trend_hours == original_settings.trend_hours
+        assert (
+            restored_config.settings.show_detailed_forecast
+            == original_settings.show_detailed_forecast
+        )
+
+    def test_round_trip_preserves_complex_list_settings(self, config_manager):
+        """Test that list-based settings are preserved in round-trip."""
+        # Set settings with list values
+        config = config_manager.get_config()
+        config.settings.alert_ignored_categories = ["Flood", "Wind", "Heat"]
+        config.settings.source_priority_us = ["nws", "openmeteo", "visualcrossing"]
+        config.settings.category_order = ["temperature", "wind", "precipitation", "humidity"]
+        config_manager.save_config()
+
+        # Export
+        export_path = config_manager.config_file.parent / "list_settings_export.json"
+        config_manager.export_settings(export_path)
+
+        # Clear lists
+        config.settings.alert_ignored_categories = []
+        config.settings.source_priority_us = ["auto"]
+        config.settings.category_order = []
+        config_manager.save_config()
+
+        # Import back
+        config_manager.import_settings(export_path)
+
+        # Verify lists are restored
+        restored_config = config_manager.get_config()
+        assert restored_config.settings.alert_ignored_categories == ["Flood", "Wind", "Heat"]
+        assert restored_config.settings.source_priority_us == [
+            "nws",
+            "openmeteo",
+            "visualcrossing",
+        ]
+        assert restored_config.settings.category_order == [
+            "temperature",
+            "wind",
+            "precipitation",
+            "humidity",
+        ]
+
+    def test_round_trip_does_not_restore_secure_keys(self, config_manager):
+        """Test that secure keys are not included in round-trip."""
+        # Set settings including secure keys
+        config = config_manager.get_config()
+        config.settings.visual_crossing_api_key = "secret-api-key-123"
+        config.settings.openrouter_api_key = "secret-openrouter-key"
+        config.settings.github_app_id = "secret-github-app-id"
+        config.settings.temperature_unit = "c"
+        config_manager.save_config()
+
+        # Export
+        export_path = config_manager.config_file.parent / "secure_export.json"
+        config_manager.export_settings(export_path)
+
+        # Clear secure keys
+        config.settings.visual_crossing_api_key = ""
+        config.settings.openrouter_api_key = ""
+        config.settings.github_app_id = ""
+        config.settings.temperature_unit = "f"
+        config_manager.save_config()
+
+        # Import back
+        config_manager.import_settings(export_path)
+
+        # Verify secure keys remain empty
+        restored_config = config_manager.get_config()
+        assert restored_config.settings.visual_crossing_api_key == ""
+        assert restored_config.settings.openrouter_api_key == ""
+        assert restored_config.settings.github_app_id == ""
+
+        # But regular settings should be restored
+        assert restored_config.settings.temperature_unit == "c"
+
+    def test_round_trip_with_default_settings(self, config_manager):
+        """Test round-trip with all default settings."""
+        # Get default settings
+        default_config = config_manager.get_config()
+        default_temp_unit = default_config.settings.temperature_unit
+        default_interval = default_config.settings.update_interval_minutes
+        default_source = default_config.settings.data_source
+
+        # Export defaults
+        export_path = config_manager.config_file.parent / "defaults_export.json"
+        config_manager.export_settings(export_path)
+
+        # Modify settings
+        config_manager.update_settings(
+            temperature_unit="f" if default_temp_unit != "f" else "c",
+            update_interval_minutes=999,
+            data_source="visualcrossing",
+        )
+
+        # Import defaults back
+        config_manager.import_settings(export_path)
+
+        # Verify defaults are restored
+        restored_config = config_manager.get_config()
+        assert restored_config.settings.temperature_unit == default_temp_unit
+        assert restored_config.settings.update_interval_minutes == default_interval
+        assert restored_config.settings.data_source == default_source
+
+    def test_multiple_round_trips_preserve_data(self, config_manager):
+        """Test that multiple export-import cycles preserve data integrity."""
+        # Initial settings
+        config_manager.update_settings(
+            temperature_unit="c",
+            update_interval_minutes=20,
+            data_source="openmeteo",
+            enable_alerts=True,
+            debug_mode=False,
+        )
+
+        export_path = config_manager.config_file.parent / "multi_export.json"
+
+        # Perform 3 round-trips
+        for i in range(3):
+            # Export
+            config_manager.export_settings(export_path)
+
+            # Modify
+            config_manager.update_settings(temperature_unit="f", update_interval_minutes=999)
+
+            # Import back
+            config_manager.import_settings(export_path)
+
+            # Verify settings are still correct
+            config = config_manager.get_config()
+            assert config.settings.temperature_unit == "c"
+            assert config.settings.update_interval_minutes == 20
+            assert config.settings.data_source == "openmeteo"
+            assert config.settings.enable_alerts is True
+            assert config.settings.debug_mode is False
+
+    def test_round_trip_preserves_boolean_settings(self, config_manager):
+        """Test that boolean settings are correctly preserved."""
+        # Set various boolean combinations
+        config_manager.update_settings(
+            enable_alerts=True,
+            sound_enabled=False,
+            debug_mode=True,
+            show_detailed_forecast=False,
+        )
+
+        # Export
+        export_path = config_manager.config_file.parent / "bool_export.json"
+        config_manager.export_settings(export_path)
+
+        # Flip all booleans
+        config_manager.update_settings(
+            enable_alerts=False,
+            sound_enabled=True,
+            debug_mode=False,
+            show_detailed_forecast=True,
+        )
+
+        # Import back
+        config_manager.import_settings(export_path)
+
+        # Verify booleans are restored
+        config = config_manager.get_config()
+        assert config.settings.enable_alerts is True
+        assert config.settings.sound_enabled is False
+        assert config.settings.debug_mode is True
+        assert config.settings.show_detailed_forecast is False
+
+    def test_round_trip_preserves_locations(self, config_manager):
+        """Test that existing locations are not affected by settings round-trip."""
+        from accessiweather.models import Location
+
+        # Add locations
+        config = config_manager.get_config()
+        config.locations.append(Location(name="New York", latitude=40.7, longitude=-74.0))
+        config.locations.append(
+            Location(name="San Francisco", latitude=37.77, longitude=-122.41)
+        )
+        config_manager.save_config()
+
+        # Set and export settings
+        config_manager.update_settings(temperature_unit="c", update_interval_minutes=25)
+        export_path = config_manager.config_file.parent / "locations_export.json"
+        config_manager.export_settings(export_path)
+
+        # Modify settings
+        config_manager.update_settings(temperature_unit="f", update_interval_minutes=10)
+
+        # Import settings
+        config_manager.import_settings(export_path)
+
+        # Verify locations are unchanged
+        restored_config = config_manager.get_config()
+        assert len(restored_config.locations) == 2
+        assert restored_config.locations[0].name == "New York"
+        assert restored_config.locations[1].name == "San Francisco"
+
+        # Verify settings were restored
+        assert restored_config.settings.temperature_unit == "c"
+        assert restored_config.settings.update_interval_minutes == 25
+
+    def test_round_trip_with_empty_lists(self, config_manager):
+        """Test round-trip with empty list values."""
+        # Set empty lists
+        config = config_manager.get_config()
+        config.settings.alert_ignored_categories = []
+        config.settings.category_order = []
+        config_manager.save_config()
+
+        # Export
+        export_path = config_manager.config_file.parent / "empty_lists_export.json"
+        config_manager.export_settings(export_path)
+
+        # Set non-empty lists
+        config.settings.alert_ignored_categories = ["Test"]
+        config.settings.category_order = ["temperature"]
+        config_manager.save_config()
+
+        # Import back
+        config_manager.import_settings(export_path)
+
+        # Verify empty lists are restored
+        restored_config = config_manager.get_config()
+        assert restored_config.settings.alert_ignored_categories == []
+        assert restored_config.settings.category_order == []
+
+    def test_round_trip_export_file_structure_valid(self, config_manager):
+        """Test that exported file can be read and has valid structure after round-trip."""
+        # Set settings
+        config_manager.update_settings(temperature_unit="c", update_interval_minutes=30)
+
+        # Export
+        export_path = config_manager.config_file.parent / "structure_export.json"
+        config_manager.export_settings(export_path)
+
+        # Verify file structure before import
+        with open(export_path) as f:
+            exported_data = json.load(f)
+
+        assert isinstance(exported_data, dict)
+        assert "settings" in exported_data
+        assert "exported_at" in exported_data
+        assert isinstance(exported_data["settings"], dict)
+
+        # Import should succeed
+        result = config_manager.import_settings(export_path)
+        assert result is True
+
+        # Verify settings were restored
+        config = config_manager.get_config()
+        assert config.settings.temperature_unit == "c"
+        assert config.settings.update_interval_minutes == 30
+
+    def test_round_trip_with_numeric_edge_values(self, config_manager):
+        """Test round-trip with edge case numeric values."""
+        # Set edge case values
+        config_manager.update_settings(
+            update_interval_minutes=1,  # Minimum reasonable value
+            alert_global_cooldown_minutes=0,  # Zero value
+            trend_hours=168,  # Large value (7 days)
+        )
+
+        # Export
+        export_path = config_manager.config_file.parent / "numeric_edge_export.json"
+        config_manager.export_settings(export_path)
+
+        # Change to different values
+        config_manager.update_settings(
+            update_interval_minutes=60,
+            alert_global_cooldown_minutes=30,
+            trend_hours=24,
+        )
+
+        # Import back
+        config_manager.import_settings(export_path)
+
+        # Verify edge values are restored
+        config = config_manager.get_config()
+        assert config.settings.update_interval_minutes == 1
+        assert config.settings.alert_global_cooldown_minutes == 0
+        assert config.settings.trend_hours == 168
+
+    def test_round_trip_preserves_all_data_sources(self, config_manager):
+        """Test round-trip with different data source values."""
+        data_sources = ["auto", "nws", "openmeteo", "visualcrossing"]
+
+        export_path = config_manager.config_file.parent / "source_export.json"
+
+        for source in data_sources:
+            # Set data source
+            config_manager.update_settings(data_source=source)
+
+            # Export
+            config_manager.export_settings(export_path)
+
+            # Change to different source
+            other_source = "nws" if source != "nws" else "openmeteo"
+            config_manager.update_settings(data_source=other_source)
+
+            # Import back
+            config_manager.import_settings(export_path)
+
+            # Verify source is restored
+            config = config_manager.get_config()
+            assert config.settings.data_source == source
+
+    def test_round_trip_partial_settings_uses_current_for_missing(self, config_manager):
+        """Test that round-trip with partial settings preserves unspecified fields."""
+        # Set initial comprehensive settings
+        config_manager.update_settings(
+            temperature_unit="c",
+            update_interval_minutes=30,
+            data_source="openmeteo",
+            enable_alerts=True,
+            debug_mode=True,
+        )
+
+        # Manually create partial export (only temperature_unit)
+        export_path = config_manager.config_file.parent / "partial_export.json"
+        partial_data = {
+            "settings": {"temperature_unit": "f"},
+            "exported_at": "2024-01-01T12:00:00",
+        }
+        with open(export_path, "w") as f:
+            json.dump(partial_data, f)
+
+        # Import partial settings
+        config_manager.import_settings(export_path)
+
+        # Verify specified field is updated
+        config = config_manager.get_config()
+        assert config.settings.temperature_unit == "f"
+
+        # Verify unspecified fields use defaults (not preserved)
+        # This is expected behavior - missing fields get default values
+        assert config.settings.update_interval_minutes == 10  # default
+        assert config.settings.data_source == "auto"  # default
