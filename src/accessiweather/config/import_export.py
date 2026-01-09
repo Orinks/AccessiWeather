@@ -170,3 +170,94 @@ class ImportExportOperations:
         except Exception as exc:
             self.logger.error(f"Failed to import locations: {exc}")
             return False
+
+    def import_settings(self, import_path: Path) -> bool:
+        """Import application settings from an exported JSON file.
+
+        Note: Secure keys (API keys, GitHub credentials) are NOT imported from files.
+        These must be configured separately through the settings dialog, as they are
+        stored in the system keyring.
+
+        The import merges settings without affecting locations. Invalid or unknown
+        settings keys are skipped gracefully, and validation warnings are logged.
+
+        Args:
+            import_path: Path to the JSON file containing exported settings
+
+        Returns:
+            True if settings were imported successfully, False otherwise
+        """
+        try:
+            if not import_path.exists():
+                self.logger.error(f"Import file not found: {import_path}")
+                return False
+
+            with open(import_path, encoding="utf-8") as infile:
+                data = json.load(infile)
+
+            # Validate JSON structure
+            if not isinstance(data, dict):
+                self.logger.error("Invalid settings file: root element must be a JSON object")
+                return False
+
+            settings_data = data.get("settings")
+            if not isinstance(settings_data, dict):
+                self.logger.error(
+                    "Invalid settings file: missing or invalid 'settings' key (expected object)"
+                )
+                return False
+
+            # Validate data_source if present
+            valid_sources = ["auto", "nws", "openmeteo", "visualcrossing"]
+            data_source = settings_data.get("data_source")
+            if data_source is not None and data_source not in valid_sources:
+                self.logger.warning(
+                    f"Invalid data_source '{data_source}' in imported settings, "
+                    f"will use 'auto'. Valid values: {', '.join(valid_sources)}"
+                )
+                settings_data["data_source"] = "auto"
+
+            # Import settings using from_dict() which handles defaults and validation
+            try:
+                from ..models import AppSettings
+
+                imported_settings = AppSettings.from_dict(settings_data)
+            except Exception as exc:
+                self.logger.error(f"Failed to deserialize settings: {exc}")
+                return False
+
+            # Merge imported settings with current config (preserving locations)
+            config = self._manager.get_config()
+            config.settings = imported_settings
+
+            # Save the updated configuration
+            if not self._manager.save_config():
+                self.logger.error("Failed to save imported settings")
+                return False
+
+            # Count imported settings for logging
+            imported_count = len(settings_data)
+            self.logger.info(f"Successfully imported {imported_count} settings")
+
+            # Log if imported from older export (missing newer fields)
+            current_settings_dict = imported_settings.to_dict()
+            missing_fields = []
+            for key in current_settings_dict:
+                if key not in settings_data:
+                    missing_fields.append(key)
+
+            if missing_fields:
+                self.logger.info(
+                    f"Used defaults for {len(missing_fields)} fields not present in import: "
+                    f"{', '.join(missing_fields[:5])}"
+                    + ("..." if len(missing_fields) > 5 else "")
+                )
+
+            return True
+
+        except json.JSONDecodeError as exc:
+            self.logger.error(f"Failed to parse settings file (invalid JSON): {exc}")
+            return False
+        except Exception as exc:
+            self.logger.error(f"Failed to import settings: {exc}")
+            return False
