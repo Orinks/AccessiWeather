@@ -697,11 +697,7 @@ class SettingsDialog:
 
     async def _on_import_settings(self, widget):
         """Handle Import Settings button press."""
-        # TODO: Implement in next subtask
-        await self._show_dialog_error(
-            "Not Implemented",
-            "Import settings functionality will be implemented soon.",
-        )
+        await settings_operations.import_settings(self)
 
     def _trigger_taskbar_icon_update(self, new_settings):
         """
