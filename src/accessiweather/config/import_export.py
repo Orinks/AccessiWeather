@@ -18,7 +18,8 @@ logger = logging.getLogger("accessiweather.config")
 
 
 class ImportExportOperations:
-    """Encapsulate config persistence utilities beyond the main file.
+    """
+    Encapsulate config persistence utilities beyond the main file.
 
     This class provides backup, restore, import, and export functionality for
     AccessiWeather configuration data. It handles settings and location data
@@ -32,24 +33,29 @@ class ImportExportOperations:
     """
 
     def __init__(self, manager: ConfigManager) -> None:
-        """Initialize import/export operations with a config manager.
+        """
+        Initialize import/export operations with a config manager.
 
         Args:
             manager: The ConfigManager instance to operate on
+
         """
         self._manager = manager
 
     @property
     def logger(self) -> logging.Logger:
-        """Access the configuration manager's logger instance.
+        """
+        Access the configuration manager's logger instance.
 
         Returns:
             Logger instance configured for accessiweather.config
+
         """
         return self._manager._get_logger()
 
     def backup_config(self, backup_path: Path | None = None) -> bool:
-        """Create a backup copy of the current configuration file.
+        """
+        Create a backup copy of the current configuration file.
 
         Creates a timestamped backup of the entire configuration file, including
         settings and locations. This is useful before performing risky operations
@@ -67,6 +73,7 @@ class ImportExportOperations:
 
         Returns:
             True if backup was created successfully, False otherwise
+
         """
         backup_target = backup_path or self._manager.config_file.with_suffix(".json.backup")
 
@@ -84,7 +91,8 @@ class ImportExportOperations:
             return False
 
     def restore_config(self, backup_path: Path) -> bool:
-        """Restore configuration from the provided backup file.
+        """
+        Restore configuration from the provided backup file.
 
         Replaces the current configuration file with a backup copy and reloads
         the configuration. This operation is destructive and should only be used
@@ -102,6 +110,7 @@ class ImportExportOperations:
 
         Returns:
             True if configuration was restored successfully, False otherwise
+
         """
         try:
             # SECURITY: Validate backup file exists to prevent path traversal errors
@@ -124,7 +133,8 @@ class ImportExportOperations:
             return False
 
     def export_settings(self, export_path: Path) -> bool:
-        """Export application settings to a standalone JSON file.
+        """
+        Export application settings to a standalone JSON file.
 
         Exports user preferences and configuration options (like units, data sources,
         update intervals) to a portable JSON file that can be imported on another
@@ -146,6 +156,7 @@ class ImportExportOperations:
         Note:
             After importing these settings on another system, API keys must be
             configured separately through the settings dialog.
+
         """
         try:
             config = self._manager.get_config()
@@ -167,7 +178,8 @@ class ImportExportOperations:
             return False
 
     def export_locations(self, export_path: Path) -> bool:
-        """Export configured locations to a standalone JSON file.
+        """
+        Export configured locations to a standalone JSON file.
 
         Exports all saved locations (name, latitude, longitude) to a portable
         JSON file that can be shared or imported on another system.
@@ -188,6 +200,7 @@ class ImportExportOperations:
         Privacy Note:
             Location names and coordinates may reveal personal information about
             places you frequently check. Store exported files securely.
+
         """
         try:
             config = self._manager.get_config()
@@ -216,7 +229,8 @@ class ImportExportOperations:
             return False
 
     def import_locations(self, import_path: Path) -> bool:
-        """Import locations from an exported JSON file.
+        """
+        Import locations from an exported JSON file.
 
         Reads location data from a JSON file and adds new locations to the current
         configuration. Existing locations (by name) are skipped to prevent duplicates.
@@ -242,6 +256,7 @@ class ImportExportOperations:
         Note:
             Invalid or malformed location entries are skipped with warnings logged.
             The import continues processing remaining valid entries.
+
         """
         try:
             # SECURITY: Use UTF-8 encoding to prevent encoding-based attacks
@@ -317,7 +332,8 @@ class ImportExportOperations:
             return False
 
     def import_settings(self, import_path: Path) -> bool:
-        """Import application settings from an exported JSON file.
+        """
+        Import application settings from an exported JSON file.
 
         Imports user preferences and configuration options from a JSON file,
         merging them with the current configuration while preserving locations.
@@ -344,6 +360,7 @@ class ImportExportOperations:
         Note:
             After importing settings, API keys must be configured separately
             through the settings dialog, as they are never stored in export files.
+
         """
         try:
             # SECURITY: Validate file exists to prevent path-based errors
@@ -411,8 +428,7 @@ class ImportExportOperations:
             if missing_fields:
                 self.logger.info(
                     f"Used defaults for {len(missing_fields)} fields not present in import: "
-                    f"{', '.join(missing_fields[:5])}"
-                    + ("..." if len(missing_fields) > 5 else "")
+                    f"{', '.join(missing_fields[:5])}" + ("..." if len(missing_fields) > 5 else "")
                 )
 
             return True

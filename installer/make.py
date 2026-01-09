@@ -485,9 +485,8 @@ def cmd_bootstrap(args: argparse.Namespace) -> int:
     # Install main requirements
     print("Installing main requirements...")
     req_main = ROOT / "requirements.txt"
-    if req_main.exists():
-        if _pip(vpy, "install", "-r", str(req_main)) != 0:
-            return 1
+    if req_main.exists() and _pip(vpy, "install", "-r", str(req_main)) != 0:
+        return 1
 
     # Install the project in editable mode
     print("Installing project in editable mode...")

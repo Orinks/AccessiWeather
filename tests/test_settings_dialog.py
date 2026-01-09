@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -48,13 +47,11 @@ async def _fake_call_dialog_method(dialog, method_name, *args, **kwargs):
     """Mock _call_dialog_method to track dialog calls."""
     dialog.dialog_calls.append((method_name, args, kwargs))
     # Return value based on method type
-    if method_name == "save_file_dialog":
+    if method_name == "save_file_dialog" or method_name == "open_file_dialog":
         return kwargs.get("return_value")
-    elif method_name == "open_file_dialog":
-        return kwargs.get("return_value")
-    elif method_name == "confirm_dialog":
+    if method_name == "confirm_dialog":
         return kwargs.get("return_value", True)
-    elif method_name == "info_dialog":
+    if method_name == "info_dialog":
         return None
     return None
 
@@ -70,7 +67,7 @@ class TestExportSettingsHandler:
         # Mock _call_dialog_method to track save dialog call
         async def mock_call_dialog(dlg, method_name, *args, **kwargs):
             dlg.dialog_calls.append((method_name, args, kwargs))
-            return None  # User cancelled
+            return  # User cancelled
 
         monkeypatch.setattr(settings_operations, "_call_dialog_method", mock_call_dialog)
 
@@ -164,7 +161,7 @@ class TestExportSettingsHandler:
         # Check path is in message (normalize for Windows path separators)
         path_str = str(export_path)
         args_str = str(args)
-        assert path_str in args_str or path_str.replace('\\', '\\\\') in args_str
+        assert path_str in args_str or path_str.replace("\\", "\\\\") in args_str
         assert "API keys" in str(args)  # Should mention API keys exclusion
 
     @pytest.mark.asyncio
@@ -199,8 +196,8 @@ class TestExportSettingsHandler:
         # Mock _call_dialog_method to return None (cancelled)
         async def mock_call_dialog(dlg, method_name, *args, **kwargs):
             if method_name == "save_file_dialog":
-                return None
-            return None
+                return
+            return
 
         monkeypatch.setattr(settings_operations, "_call_dialog_method", mock_call_dialog)
 
@@ -293,7 +290,7 @@ class TestImportSettingsHandler:
             dlg.dialog_calls.append((method_name, args, kwargs))
             if method_name == "confirm_dialog":
                 return True  # User confirmed
-            elif method_name == "open_file_dialog":
+            if method_name == "open_file_dialog":
                 return None  # User cancelled
             return None
 
@@ -323,13 +320,15 @@ class TestImportSettingsHandler:
         async def mock_call_dialog(dlg, method_name, *args, **kwargs):
             if method_name == "confirm_dialog":
                 return True
-            elif method_name == "open_file_dialog":
+            if method_name == "open_file_dialog":
                 return str(import_path)
             dlg.dialog_calls.append((method_name, args, kwargs))
             return None
 
         monkeypatch.setattr(settings_operations, "_call_dialog_method", mock_call_dialog)
-        monkeypatch.setattr("accessiweather.dialogs.settings_handlers.apply_settings_to_ui", MagicMock())
+        monkeypatch.setattr(
+            "accessiweather.dialogs.settings_handlers.apply_settings_to_ui", MagicMock()
+        )
 
         await settings_operations.import_settings(dialog)
 
@@ -353,14 +352,16 @@ class TestImportSettingsHandler:
         async def mock_call_dialog(dlg, method_name, *args, **kwargs):
             if method_name == "confirm_dialog":
                 return True
-            elif method_name == "open_file_dialog":
+            if method_name == "open_file_dialog":
                 return str(import_path)
             dlg.dialog_calls.append((method_name, args, kwargs))
             return None
 
         mock_apply_settings = MagicMock()
         monkeypatch.setattr(settings_operations, "_call_dialog_method", mock_call_dialog)
-        monkeypatch.setattr("accessiweather.dialogs.settings_handlers.apply_settings_to_ui", mock_apply_settings)
+        monkeypatch.setattr(
+            "accessiweather.dialogs.settings_handlers.apply_settings_to_ui", mock_apply_settings
+        )
 
         await settings_operations.import_settings(dialog)
 
@@ -383,13 +384,15 @@ class TestImportSettingsHandler:
         async def mock_call_dialog(dlg, method_name, *args, **kwargs):
             if method_name == "confirm_dialog":
                 return True
-            elif method_name == "open_file_dialog":
+            if method_name == "open_file_dialog":
                 return str(import_path)
             dlg.dialog_calls.append((method_name, args, kwargs))
             return None
 
         monkeypatch.setattr(settings_operations, "_call_dialog_method", mock_call_dialog)
-        monkeypatch.setattr("accessiweather.dialogs.settings_handlers.apply_settings_to_ui", MagicMock())
+        monkeypatch.setattr(
+            "accessiweather.dialogs.settings_handlers.apply_settings_to_ui", MagicMock()
+        )
 
         await settings_operations.import_settings(dialog)
 
@@ -401,7 +404,7 @@ class TestImportSettingsHandler:
         # Check path is in message (normalize for Windows path separators)
         path_str = str(import_path)
         args_str = str(args)
-        assert path_str in args_str or path_str.replace('\\', '\\\\') in args_str
+        assert path_str in args_str or path_str.replace("\\", "\\\\") in args_str
         assert "API keys" in str(args)  # Should mention API keys exclusion
 
     @pytest.mark.asyncio
@@ -417,7 +420,7 @@ class TestImportSettingsHandler:
         async def mock_call_dialog(dlg, method_name, *args, **kwargs):
             if method_name == "confirm_dialog":
                 return True
-            elif method_name == "open_file_dialog":
+            if method_name == "open_file_dialog":
                 return str(import_path)
             return None
 
@@ -441,7 +444,7 @@ class TestImportSettingsHandler:
         async def mock_call_dialog(dlg, method_name, *args, **kwargs):
             if method_name == "confirm_dialog":
                 return True
-            elif method_name == "open_file_dialog":
+            if method_name == "open_file_dialog":
                 return str(import_path)
             return None
 
@@ -466,7 +469,7 @@ class TestImportSettingsHandler:
         async def mock_call_dialog(dlg, method_name, *args, **kwargs):
             if method_name == "confirm_dialog":
                 return True
-            elif method_name == "open_file_dialog":
+            if method_name == "open_file_dialog":
                 return str(import_path)
             return None
 
@@ -505,7 +508,7 @@ class TestImportSettingsHandler:
         async def mock_call_dialog(dlg, method_name, *args, **kwargs):
             if method_name == "confirm_dialog":
                 return True
-            elif method_name == "open_file_dialog":
+            if method_name == "open_file_dialog":
                 return None  # User cancelled
             return None
 
@@ -529,7 +532,7 @@ class TestImportSettingsHandler:
         async def mock_call_dialog(dlg, method_name, *args, **kwargs):
             if method_name == "confirm_dialog":
                 return True
-            elif method_name == "open_file_dialog":
+            if method_name == "open_file_dialog":
                 return str(import_path)
             return None
 
@@ -556,13 +559,15 @@ class TestImportSettingsHandler:
         async def mock_call_dialog(dlg, method_name, *args, **kwargs):
             if method_name == "confirm_dialog":
                 return True
-            elif method_name == "open_file_dialog":
+            if method_name == "open_file_dialog":
                 return str(import_path)
             dlg.dialog_calls.append((method_name, args, kwargs))
             return None
 
         monkeypatch.setattr(settings_operations, "_call_dialog_method", mock_call_dialog)
-        monkeypatch.setattr("accessiweather.dialogs.settings_handlers.apply_settings_to_ui", MagicMock())
+        monkeypatch.setattr(
+            "accessiweather.dialogs.settings_handlers.apply_settings_to_ui", MagicMock()
+        )
 
         await settings_operations.import_settings(dialog)
 
@@ -583,13 +588,15 @@ class TestImportSettingsHandler:
         async def mock_call_dialog(dlg, method_name, *args, **kwargs):
             if method_name == "confirm_dialog":
                 return True
-            elif method_name == "open_file_dialog":
+            if method_name == "open_file_dialog":
                 return str(import_path)
             dlg.dialog_calls.append((method_name, args, kwargs))
             return None
 
         monkeypatch.setattr(settings_operations, "_call_dialog_method", mock_call_dialog)
-        monkeypatch.setattr("accessiweather.dialogs.settings_handlers.apply_settings_to_ui", MagicMock())
+        monkeypatch.setattr(
+            "accessiweather.dialogs.settings_handlers.apply_settings_to_ui", MagicMock()
+        )
 
         await settings_operations.import_settings(dialog)
 
