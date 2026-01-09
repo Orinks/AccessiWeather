@@ -691,6 +691,14 @@ class SettingsDialog:
     async def _on_check_updates(self, widget):
         await settings_operations.check_for_updates(self)
 
+    async def _on_export_settings(self, widget):
+        """Handle Export Settings button press."""
+        await settings_operations.export_settings(self)
+
+    async def _on_import_settings(self, widget):
+        """Handle Import Settings button press."""
+        await settings_operations.import_settings(self)
+
     def _trigger_taskbar_icon_update(self, new_settings):
         """
         Trigger immediate taskbar icon text update if settings changed.

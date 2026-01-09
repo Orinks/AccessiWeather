@@ -949,6 +949,36 @@ def create_advanced_tab(dialog):
     )
     advanced_box.add(dialog.open_config_dir_button)
 
+    advanced_box.add(toga.Label("Settings Backup", style=Pack(margin_top=20, font_weight="bold")))
+    advanced_box.add(
+        toga.Label(
+            "Export your settings to a file or import them from a backup.",
+            style=Pack(margin_top=5, margin_bottom=5, font_style="italic"),
+        )
+    )
+
+    # Export Settings button
+    dialog.export_settings_button = toga.Button(
+        "Export Settings...",
+        on_press=dialog._on_export_settings,
+        style=Pack(margin_top=5, margin_bottom=5, width=240),
+        id="export_settings_button",
+    )
+    dialog.export_settings_button.aria_label = "Export settings"
+    dialog.export_settings_button.aria_description = "Save your current application settings to a JSON file for backup or transfer to another device."
+    advanced_box.add(dialog.export_settings_button)
+
+    # Import Settings button
+    dialog.import_settings_button = toga.Button(
+        "Import Settings...",
+        on_press=dialog._on_import_settings,
+        style=Pack(margin_top=5, width=240),
+        id="import_settings_button",
+    )
+    dialog.import_settings_button.aria_label = "Import settings"
+    dialog.import_settings_button.aria_description = "Load application settings from a previously exported JSON file. This will update your current preferences."
+    advanced_box.add(dialog.import_settings_button)
+
     advanced_box.add(toga.Label("Sound Pack Files", style=Pack(margin_top=20, font_weight="bold")))
     advanced_box.add(
         toga.Label(

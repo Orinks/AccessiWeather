@@ -256,6 +256,14 @@ class ConfigManager:
         """Import locations from a file."""
         return self._import_export.import_locations(import_path)
 
+    def export_settings(self, export_path: Path) -> bool:
+        """Export application settings to a separate file."""
+        return self._import_export.export_settings(export_path)
+
+    def import_settings(self, import_path: Path) -> bool:
+        """Import application settings from a file."""
+        return self._import_export.import_settings(import_path)
+
     def enable_startup(self) -> tuple[bool, str]:
         """
         Enable application startup on boot.
