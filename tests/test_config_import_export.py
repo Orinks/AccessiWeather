@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import copy
 import json
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -154,7 +155,9 @@ class TestExportSettings:
         """Test export logs success message."""
         export_path = config_manager.config_file.parent / "exported_settings.json"
 
-        with patch("accessiweather.config.import_export.logger") as mock_logger:
+        with patch.object(config_manager, "_get_logger") as mock_get_logger:
+            mock_logger = MagicMock()
+            mock_get_logger.return_value = mock_logger
             config_manager.export_settings(export_path)
 
             # Verify success was logged
@@ -168,9 +171,11 @@ class TestExportSettings:
         export_path = config_manager.config_file.parent / "exported_settings.json"
 
         with (
-            patch("accessiweather.config.import_export.logger") as mock_logger,
+            patch.object(config_manager, "_get_logger") as mock_get_logger,
             patch("builtins.open", side_effect=OSError("Disk full")),
         ):
+            mock_logger = MagicMock()
+            mock_get_logger.return_value = mock_logger
             config_manager.export_settings(export_path)
 
             # Verify error was logged
@@ -809,9 +814,9 @@ class TestExportImportIntegration:
             show_detailed_forecast=True,
         )
 
-        # Get original values for comparison
+        # Get original values for comparison (use deepcopy to avoid reference issues)
         original_config = config_manager.get_config()
-        original_settings = original_config.settings
+        original_settings = copy.deepcopy(original_config.settings)
 
         # Export and import
         export_path = config_manager.config_file.parent / "comprehensive_export.json"

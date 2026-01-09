@@ -161,7 +161,10 @@ class TestExportSettingsHandler:
         assert len(info_dialogs) == 1
         method_name, args, kwargs = info_dialogs[0]
         assert "Export Successful" in args
-        assert str(export_path) in str(args)
+        # Check path is in message (normalize for Windows path separators)
+        path_str = str(export_path)
+        args_str = str(args)
+        assert path_str in args_str or path_str.replace('\\', '\\\\') in args_str
         assert "API keys" in str(args)  # Should mention API keys exclusion
 
     @pytest.mark.asyncio
@@ -395,7 +398,10 @@ class TestImportSettingsHandler:
         assert len(info_dialogs) == 1
         method_name, args, kwargs = info_dialogs[0]
         assert "Import Successful" in args
-        assert str(import_path) in str(args)
+        # Check path is in message (normalize for Windows path separators)
+        path_str = str(import_path)
+        args_str = str(args)
+        assert path_str in args_str or path_str.replace('\\', '\\\\') in args_str
         assert "API keys" in str(args)  # Should mention API keys exclusion
 
     @pytest.mark.asyncio
