@@ -294,3 +294,6 @@ accessiweather-soundpacks/
 
 # Test output logs
 junit-logs/
+
+# Auto Claude data directory
+.auto-claude/
