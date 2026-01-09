@@ -60,6 +60,28 @@ class ImportExportOperations:
             self.logger.error(f"Failed to restore config: {exc}")
             return False
 
+    def export_settings(self, export_path: Path) -> bool:
+        """Export application settings to a standalone JSON file.
+
+        Note: Secure keys (API keys, GitHub credentials) are NOT exported.
+        These are stored in the system keyring and must be configured separately.
+        """
+        try:
+            config = self._manager.get_config()
+            settings_data = {
+                "settings": config.settings.to_dict(),
+                "exported_at": str(datetime.now()),
+            }
+
+            with open(export_path, "w", encoding="utf-8") as outfile:
+                json.dump(settings_data, outfile, indent=2, ensure_ascii=False)
+
+            self.logger.info(f"Settings exported to {export_path}")
+            return True
+        except Exception as exc:
+            self.logger.error(f"Failed to export settings: {exc}")
+            return False
+
     def export_locations(self, export_path: Path) -> bool:
         """Export configured locations to a standalone JSON file."""
         try:
