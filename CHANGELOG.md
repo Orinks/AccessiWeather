@@ -11,7 +11,7 @@ All notable changes to this project will be documented in this file.
 -
 
 ### Fixed
--
+- **Security Fix**: Patched command injection vulnerability in the update installer - the app now validates all file paths before running installers, blocking potential malicious path manipulation. When you install updates (both MSI and portable versions), the app validates that installer files are legitimate and haven't been tampered with
 
 ### Removed
 -
