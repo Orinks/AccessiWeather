@@ -16,6 +16,7 @@ import toga
 from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
 
+from ..display.presentation.environmental import _UV_INDEX_GUIDANCE
 from ..models import AppSettings, EnvironmentalConditions, HourlyUVIndex
 
 if TYPE_CHECKING:  # pragma: no cover - circular import guard
@@ -109,8 +110,71 @@ class UVIndexDialog:
 
     def _build_summary_section(self) -> toga.Box:
         """Build the current UV index summary section."""
-        # TODO: Implement in subtask 3.3
-        box = toga.Box(style=Pack(direction=COLUMN, margin_bottom=15))
+        box = toga.Box(
+            style=Pack(direction=COLUMN, margin_bottom=15),
+        )
+
+        # Section header
+        header = toga.Label(
+            "Current UV Index",
+            style=Pack(font_weight="bold", font_size=14, margin_bottom=8),
+        )
+        header.aria_label = "Current UV index section"
+        box.add(header)
+
+        # UV index value and category
+        uv_index = self.environmental.uv_index
+        category = self.environmental.uv_category
+
+        if uv_index is not None or category:
+            uv_text = ""
+            if uv_index is not None:
+                uv_text = f"UV Index: {int(round(uv_index))}"
+            if category:
+                if uv_text:
+                    uv_text += f" ({category})"
+                else:
+                    uv_text = category
+
+            uv_label = toga.Label(
+                uv_text,
+                style=Pack(font_size=13, margin_bottom=4),
+            )
+            uv_label.aria_label = f"UV index: {uv_text}"
+            uv_label.aria_description = "Current UV index value and category"
+            box.add(uv_label)
+
+        # Health guidance
+        guidance = _UV_INDEX_GUIDANCE.get(
+            category or "", "Monitor UV levels and use sun protection as needed."
+        )
+        guidance_label = toga.Label(
+            f"Health guidance: {guidance}",
+            style=Pack(font_size=11, font_style="italic", margin_bottom=4),
+        )
+        guidance_label.aria_label = f"Health guidance: {guidance}"
+        guidance_label.aria_description = "Health recommendations based on current UV index"
+        box.add(guidance_label)
+
+        # Last updated timestamp
+        if self.environmental.updated_at:
+            time_format_12hour = (
+                getattr(self.settings, "time_format_12hour", True) if self.settings else True
+            )
+            if time_format_12hour:
+                timestamp = self.environmental.updated_at.strftime("%I:%M %p").lstrip("0")
+            else:
+                timestamp = self.environmental.updated_at.strftime("%H:%M")
+            date_str = self.environmental.updated_at.strftime("%B %d, %Y")
+            updated_text = f"Last updated: {timestamp} on {date_str}"
+            updated_label = toga.Label(
+                updated_text,
+                style=Pack(font_size=10, color="#666666"),
+            )
+            updated_label.aria_label = updated_text
+            updated_label.aria_description = "When the UV index data was last updated"
+            box.add(updated_label)
+
         return box
 
     def _build_hourly_section(self) -> toga.Box:
