@@ -5,6 +5,15 @@ This package provides utility functions for temperature conversion, unit formatt
 and other common operations, copied from the wx version for consistency.
 """
 
+from .path_validator import (
+    SecurityError,
+    validate_executable_path,
+    validate_file_exists,
+    validate_file_extension,
+    validate_no_path_traversal,
+    validate_no_suspicious_characters,
+    validate_path_within_directory,
+)
 from .retry_utils import (
     RETRYABLE_EXCEPTIONS,
     async_retry_with_backoff,
@@ -51,4 +60,12 @@ __all__ = [
     "calculate_backoff_delay",
     "is_retryable_http_error",
     "RETRYABLE_EXCEPTIONS",
+    # Path validation utilities
+    "SecurityError",
+    "validate_executable_path",
+    "validate_file_exists",
+    "validate_file_extension",
+    "validate_no_path_traversal",
+    "validate_no_suspicious_characters",
+    "validate_path_within_directory",
 ]
