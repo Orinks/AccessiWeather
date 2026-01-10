@@ -350,7 +350,6 @@ class GitHubUpdateService:
         creation_flags = 0x00000010
         subprocess.Popen(
             [str(batch_path)],
-            shell=True,
             cwd=str(target_dir),
             creationflags=creation_flags,
         )
