@@ -14,7 +14,11 @@ import toga
 from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
 
-from ..display.presentation.environmental import _UV_INDEX_GUIDANCE, format_hourly_uv_index
+from ..display.presentation.environmental import (
+    _UV_INDEX_GUIDANCE,
+    _UV_SUN_SAFETY,
+    format_hourly_uv_index,
+)
 from ..models import AppSettings, EnvironmentalConditions
 
 if TYPE_CHECKING:  # pragma: no cover - circular import guard
@@ -216,8 +220,51 @@ class UVIndexDialog:
 
     def _build_sun_safety_section(self) -> toga.Box:
         """Build the sun safety recommendations section."""
-        # TODO: Implement in subtask 3.5
-        return toga.Box(style=Pack(direction=COLUMN, margin_bottom=10))
+        box = toga.Box(
+            style=Pack(direction=COLUMN, margin_bottom=10),
+        )
+
+        # Section header
+        header = toga.Label(
+            "Sun Safety Recommendations",
+            style=Pack(font_weight="bold", font_size=14, margin_bottom=8),
+        )
+        header.aria_label = "Sun safety recommendations section"
+        box.add(header)
+
+        category = self.environmental.uv_category
+        if not category:
+            no_data = toga.Label(
+                "Sun safety recommendations are not available.",
+                style=Pack(font_size=12, font_style="italic"),
+            )
+            no_data.aria_label = "No sun safety recommendations available"
+            box.add(no_data)
+            return box
+
+        # Get recommendations for the current UV category
+        recommendations = _UV_SUN_SAFETY.get(category, "")
+        if recommendations:
+            safety_display = toga.MultilineTextInput(
+                value=recommendations,
+                readonly=True,
+                style=Pack(height=120, font_size=11),
+            )
+            safety_display.aria_label = f"Sun safety recommendations for {category} UV index"
+            safety_display.aria_description = (
+                f"Detailed sun protection recommendations for {category} UV conditions, "
+                "including sunscreen, clothing, shade, and timing guidance"
+            )
+            box.add(safety_display)
+        else:
+            no_data = toga.Label(
+                "Sun safety recommendations are not available.",
+                style=Pack(font_size=12, font_style="italic"),
+            )
+            no_data.aria_label = "No sun safety recommendations available"
+            box.add(no_data)
+
+        return box
 
     def _on_close(self, widget: toga.Widget) -> None:
         """Handle dialog close via window close button."""
