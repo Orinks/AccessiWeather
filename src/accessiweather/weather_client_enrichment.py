@@ -379,6 +379,13 @@ async def populate_environmental_metrics(
 
     weather_data.environmental = environmental
 
+    # Copy UV index from current conditions to environmental conditions
+    if weather_data.current and weather_data.current.uv_index is not None:
+        weather_data.environmental.uv_index = weather_data.current.uv_index
+        logger.debug(
+            "Copied UV index from current conditions: %s", weather_data.current.uv_index
+        )
+
 
 async def enrich_with_visual_crossing_moon_data(
     client: WeatherClient, weather_data: WeatherData, location: Location
