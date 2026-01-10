@@ -7,6 +7,8 @@ hourly forecasts with peak times, and sun safety recommendations.
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import logging
 from typing import TYPE_CHECKING
 
@@ -266,14 +268,29 @@ class UVIndexDialog:
 
         return box
 
+    async def show_and_focus(self) -> None:
+        """Display the dialog and set focus for accessibility."""
+        if self.window is None:
+            self._build_ui()
+
+        # Ensure window is registered with app before showing
+        if self.window not in self.app.windows:
+            self.app.windows.add(self.window)
+
+        self.window.show()
+
+        # Brief delay to ensure window is rendered
+        await asyncio.sleep(0.1)
+        if self._close_button:
+            with contextlib.suppress(Exception):
+                self._close_button.focus()
+
     def _on_close(self, widget: toga.Widget) -> None:
         """Handle dialog close via window close button."""
-        # TODO: Implement in subtask 3.6
         if self.window:
             self.window.close()
 
     def _on_close_button(self, widget: toga.Widget) -> None:
         """Handle Close button press."""
-        # TODO: Implement in subtask 3.6
         if self.window:
             self.window.close()
