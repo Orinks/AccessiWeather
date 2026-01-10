@@ -175,12 +175,27 @@ async def _handle_update_completion(app: AccessiWeatherApp, version: str, file_p
 async def _extract_portable_update(app: AccessiWeatherApp, zip_path: str) -> None:
     """Extract portable update from ZIP and restart the application."""
     try:
+        # Security validations before extracting portable update
+        # 1. Validate zip_path exists, has .zip extension, resolve to absolute path
+        # 2. Check for path traversal and suspicious characters
+        validated_zip = validate_executable_path(
+            zip_path, expected_suffix=".zip", expected_parent=None
+        )
+        zip_path_str = str(validated_zip)  # Use validated absolute path
+
         if app.update_service:
-            app.update_service.schedule_portable_update_and_restart(zip_path)
+            app.update_service.schedule_portable_update_and_restart(zip_path_str)
         else:
             await app.main_window.error_dialog(
                 "Update Error", "Update service not available. Please extract manually."
             )
+    except (FileNotFoundError, ValueError, SecurityError) as exc:
+        logger.error("ZIP file path validation failed: %s", exc)
+        await app.main_window.error_dialog(
+            "Update Validation Failed",
+            f"The update file failed security validation: {exc}\n\n"
+            f"Please ensure the update file exists and is valid.",
+        )
     except Exception as exc:
         logger.error("Failed to extract portable update: %s", exc)
         await app.main_window.error_dialog(
