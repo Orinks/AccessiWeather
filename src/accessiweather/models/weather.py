@@ -453,6 +453,8 @@ class EnvironmentalConditions:
                 self.pollen_grass_index is not None,
                 self.pollen_weed_index is not None,
                 len(self.hourly_air_quality) > 0,
+                self.uv_index is not None,
+                len(self.hourly_uv_index) > 0,
             ]
         )
 
