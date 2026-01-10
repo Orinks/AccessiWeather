@@ -5,7 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from ...models import AppSettings, EnvironmentalConditions, HourlyAirQuality, Location
+from ...models import (
+    AppSettings,
+    EnvironmentalConditions,
+    HourlyAirQuality,
+    HourlyUVIndex,
+    Location,
+)
 from .formatters import format_display_datetime
 
 _AIR_QUALITY_GUIDANCE: dict[str, str] = {
@@ -297,6 +303,72 @@ def format_hourly_air_quality(
         for entry in hourly_entries:
             entry_time = _format_time(entry.timestamp, time_format_12hour)
             lines.append(f"  {entry_time}: AQI {entry.aqi} ({entry.category})")
+
+    return "\n".join(lines)
+
+
+def format_hourly_uv_index(
+    hourly_data: list[HourlyUVIndex],
+    settings: AppSettings | None = None,
+    max_hours: int = 24,
+) -> str | None:
+    """
+    Format hourly UV index forecast into readable text.
+
+    Args:
+        hourly_data: List of hourly UV index forecasts.
+        settings: App settings for time formatting.
+        max_hours: Maximum number of hours to include.
+
+    Returns:
+        Formatted string describing the hourly forecast, or None if no data.
+
+    """
+    if not hourly_data:
+        return None
+
+    time_format_12hour = getattr(settings, "time_format_12hour", True) if settings else True
+    data = hourly_data[:max_hours]
+
+    current = data[0]
+    peak = max(data, key=lambda h: h.uv_index)
+    lowest = min(data, key=lambda h: h.uv_index)
+
+    lines = []
+    lines.append(f"Current: UV Index {current.uv_index:.1f} ({current.category})")
+
+    if len(data) >= 3:
+        trend_start = data[0].uv_index
+        trend_end = data[2].uv_index
+        diff = trend_end - trend_start
+
+        if diff > 2:
+            lines.append(f"Trend: Rising (UV {trend_start:.1f} → {trend_end:.1f})")
+        elif diff < -2:
+            lines.append(f"Trend: Falling (UV {trend_start:.1f} → {trend_end:.1f})")
+        else:
+            lines.append("Trend: Stable")
+
+    if peak.uv_index != current.uv_index:
+        peak_time = _format_time(peak.timestamp, time_format_12hour)
+        lines.append(
+            f"Peak: UV Index {peak.uv_index:.1f} ({peak.category}) at {peak_time}"
+        )
+
+    if lowest.uv_index < 3 and lowest.uv_index != current.uv_index:
+        lowest_time = _format_time(lowest.timestamp, time_format_12hour)
+        lines.append(f"Lowest UV: {lowest.uv_index:.1f} at {lowest_time}")
+
+    # Add individual hourly entries (show up to 12 hours)
+    hourly_entries = data[:12]
+    if hourly_entries:
+        lines.append("")
+        lines.append("Hourly Forecast:")
+        for entry in hourly_entries:
+            entry_time = _format_time(entry.timestamp, time_format_12hour)
+            lines.append(
+                f"  {entry_time}: UV Index {entry.uv_index:.1f} ({entry.category})"
+            )
 
     return "\n".join(lines)
 
