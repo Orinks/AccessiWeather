@@ -58,6 +58,38 @@ _POLLUTANT_LABELS: dict[str, str] = {
 }
 
 
+def _get_uv_category(uv_index: float | None) -> str | None:
+    """
+    Map UV index value to EPA/WHO category.
+
+    Categories based on EPA/WHO standard:
+    - Low: 0-2
+    - Moderate: 3-5
+    - High: 6-7
+    - Very High: 8-10
+    - Extreme: 11+
+
+    Args:
+        uv_index: UV index value (typically 0-15, can be higher).
+
+    Returns:
+        Category string or None if uv_index is None.
+
+    """
+    if uv_index is None:
+        return None
+
+    if uv_index <= 2:
+        return "Low"
+    if uv_index <= 5:
+        return "Moderate"
+    if uv_index <= 7:
+        return "High"
+    if uv_index <= 10:
+        return "Very High"
+    return "Extreme"
+
+
 @dataclass(slots=True)
 class AirQualityPresentation:
     """Structured representation of air quality metrics."""
