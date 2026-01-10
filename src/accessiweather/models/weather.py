@@ -416,6 +416,15 @@ class HourlyAirQuality:
 
 
 @dataclass
+class HourlyUVIndex:
+    """Single hour of UV index forecast data."""
+
+    timestamp: datetime
+    uv_index: float
+    category: str
+
+
+@dataclass
 class EnvironmentalConditions:
     """Air quality and pollen conditions."""
 
