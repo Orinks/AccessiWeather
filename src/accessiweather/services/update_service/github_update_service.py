@@ -19,6 +19,11 @@ import httpx
 if TYPE_CHECKING:
     from ...config.config_manager import ConfigManager
 
+from ...utils.path_validator import (
+    SecurityError,
+    validate_executable_path,
+    validate_path_within_directory,
+)
 from .downloads import DownloadManager
 from .releases import GITHUB_API_URL, ReleaseManager
 from .settings import (
@@ -307,6 +312,26 @@ class GitHubUpdateService:
         # Temporary extraction directory inside the target directory
         extract_dir = target_dir / "update_tmp"
         batch_path = target_dir / "accessiweather_portable_update.bat"
+
+        # Security validations before creating and executing batch script
+        try:
+            # 1. Validate zip_path exists and has .zip extension
+            validated_zip = validate_executable_path(
+                zip_path, expected_suffix=".zip", expected_parent=None
+            )
+            zip_path = validated_zip  # Use the validated path
+
+            # 2. Validate batch_path will be within target_dir
+            # Note: batch_path doesn't exist yet, so we validate the parent directory
+            validate_path_within_directory(batch_path, target_dir)
+
+            # 3. Validate target_dir is writable
+            if not os.access(target_dir, os.W_OK):
+                raise SecurityError(f"Target directory is not writable: {target_dir}")
+
+        except (FileNotFoundError, ValueError, SecurityError) as e:
+            logger.error(f"Security validation failed for portable update: {e}")
+            raise
 
         # Create the batch script content
         # Note: We use powershell for extraction as it's available on all modern Windows
