@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 import toga
 
 from .. import app_helpers
+from ..utils.path_validator import SecurityError, validate_executable_path
 from .settings_handlers import on_settings_pressed
 from .weather_handlers import refresh_weather_data
 
@@ -191,10 +192,19 @@ async def _extract_portable_update(app: AccessiWeatherApp, zip_path: str) -> Non
 async def _run_msi_installer(app: AccessiWeatherApp, msi_path: str) -> None:
     """Run the MSI installer and exit the application."""
     import subprocess
+    from pathlib import Path
 
     try:
+        # Security validations before executing MSI installer
+        # 1. Validate msi_path exists, has .msi extension, resolve to absolute path
+        # 2. Check for path traversal and suspicious characters
+        validated_msi = validate_executable_path(
+            msi_path, expected_suffix=".msi", expected_parent=None
+        )
+        msi_path_str = str(validated_msi)  # Use validated absolute path
+
         # Use /norestart to prevent automatic restart, and /qn for quiet mode
-        subprocess.Popen(["msiexec", "/i", msi_path, "/norestart"])
+        subprocess.Popen(["msiexec", "/i", msi_path_str, "/norestart"])
         # Give the installer a moment to start before we exit
         await app.main_window.info_dialog(
             "Installer Starting",
@@ -202,6 +212,13 @@ async def _run_msi_installer(app: AccessiWeatherApp, msi_path: str) -> None:
         )
         # Exit the application to allow the installer to update files
         app.request_exit()
+    except (FileNotFoundError, ValueError, SecurityError) as exc:
+        logger.error("MSI installer path validation failed: %s", exc)
+        await app.main_window.error_dialog(
+            "Installer Validation Failed",
+            f"The installer path failed security validation: {exc}\n\n"
+            f"Please ensure the installer file exists and is valid.",
+        )
     except Exception as exc:
         logger.error("Failed to run MSI installer: %s", exc)
         await app.main_window.error_dialog(
