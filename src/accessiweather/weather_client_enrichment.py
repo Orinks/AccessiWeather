@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from . import weather_client_nws as nws_client
+from .display.presentation.environmental import _get_uv_category
 from .models import AviationData, Location, WeatherAlert, WeatherAlerts, WeatherData
 from .utils import decode_taf_text
 
@@ -382,8 +383,11 @@ async def populate_environmental_metrics(
     # Copy UV index from current conditions to environmental conditions
     if weather_data.current and weather_data.current.uv_index is not None:
         weather_data.environmental.uv_index = weather_data.current.uv_index
+        weather_data.environmental.uv_category = _get_uv_category(weather_data.current.uv_index)
         logger.debug(
-            "Copied UV index from current conditions: %s", weather_data.current.uv_index
+            "Copied UV index from current conditions: %s (category: %s)",
+            weather_data.current.uv_index,
+            weather_data.environmental.uv_category,
         )
 
 
