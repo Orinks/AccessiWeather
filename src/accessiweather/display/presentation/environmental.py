@@ -54,6 +54,49 @@ _UV_INDEX_GUIDANCE: dict[str, str] = {
     ),
 }
 
+_UV_SUN_SAFETY: dict[str, str] = {
+    "Low": (
+        "Sunscreen: Not required, but SPF 15+ recommended for extended outdoor activity.\n"
+        "Clothing: Normal clothing is adequate.\n"
+        "Shade: Not necessary for protection.\n"
+        "Time: Safe to be outside all day."
+    ),
+    "Moderate": (
+        "Sunscreen: Apply SPF 30+ sunscreen 15 minutes before going outside and"
+        " reapply every 2 hours.\n"
+        "Clothing: Wear a hat and sunglasses. Cover up with light clothing if outside"
+        " for extended periods.\n"
+        "Shade: Seek shade during midday hours (10 AM - 4 PM) when the sun is strongest.\n"
+        "Time: Reduce time in the sun between late morning and mid-afternoon."
+    ),
+    "High": (
+        "Sunscreen: Apply SPF 30+ sunscreen generously and reapply every 2 hours,"
+        " or after swimming or sweating.\n"
+        "Clothing: Wear protective clothing including a wide-brimmed hat,"
+        " UV-blocking sunglasses, and long sleeves if possible.\n"
+        "Shade: Seek shade whenever possible, especially during midday hours.\n"
+        "Time: Minimize sun exposure between 10 AM and 4 PM. Plan outdoor activities"
+        " for early morning or late afternoon."
+    ),
+    "Very High": (
+        "Sunscreen: Apply SPF 50+ sunscreen liberally every 2 hours and after water exposure.\n"
+        "Clothing: Wear long sleeves, long pants, a wide-brimmed hat, and UV-blocking sunglasses."
+        " Consider sun-protective clothing (UPF 50+).\n"
+        "Shade: Stay in shade as much as possible. Use umbrellas or canopies if outdoors.\n"
+        "Time: Avoid sun exposure between 10 AM and 4 PM if possible."
+        " Outdoor activities are best before 10 AM or after 4 PM."
+    ),
+    "Extreme": (
+        "Sunscreen: Apply SPF 50+ broad-spectrum sunscreen every 1-2 hours."
+        " Use water-resistant formulas.\n"
+        "Clothing: Full protective clothing required: long sleeves, long pants, wide-brimmed hat,"
+        " and UV-blocking sunglasses. Use UPF 50+ sun-protective fabrics.\n"
+        "Shade: Stay in shade at all times when outdoors. Avoid direct sunlight.\n"
+        "Time: Avoid being outside between 10 AM and 4 PM. If you must be outside,"
+        " take all protective measures. Consider staying indoors during peak hours."
+    ),
+}
+
 _POLLUTANT_LABELS: dict[str, str] = {
     "PM2_5": "PM2.5",
     "PM10": "PM10",
