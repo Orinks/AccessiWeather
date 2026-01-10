@@ -28,6 +28,26 @@ _AIR_QUALITY_GUIDANCE: dict[str, str] = {
 
 _DEFAULT_GUIDANCE = "Monitor local guidance and limit exposure if you notice symptoms."
 
+_UV_INDEX_GUIDANCE: dict[str, str] = {
+    "Low": "No protection needed. You can safely stay outside.",
+    "Moderate": (
+        "Take precautions: wear sunscreen SPF 30+, a hat, and sunglasses."
+        " Seek shade during midday hours when the sun is strongest."
+    ),
+    "High": (
+        "Protection essential: apply SPF 30+ sunscreen every 2 hours, wear protective"
+        " clothing, a wide-brimmed hat, and UV-blocking sunglasses. Seek shade during midday."
+    ),
+    "Very High": (
+        "Extra protection required: use SPF 50+ sunscreen, wear long sleeves and pants,"
+        " a wide-brimmed hat, and sunglasses. Minimize sun exposure between 10 AM and 4 PM."
+    ),
+    "Extreme": (
+        "Take all precautions: avoid sun exposure between 10 AM and 4 PM if possible."
+        " Use SPF 50+ sunscreen, wear full protective clothing, and stay in shade when outdoors."
+    ),
+}
+
 _POLLUTANT_LABELS: dict[str, str] = {
     "PM2_5": "PM2.5",
     "PM10": "PM10",
