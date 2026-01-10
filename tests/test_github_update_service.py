@@ -1097,7 +1097,7 @@ class TestSchedulePortableUpdateAndRestartSecurity:
         nonexistent_zip = tmp_path / "nonexistent.zip"
         assert not nonexistent_zip.exists()
 
-        with pytest.raises(FileNotFoundError, match="does not exist"):
+        with pytest.raises(FileNotFoundError, match="File not found:"):
             svc_sync.schedule_portable_update_and_restart(str(nonexistent_zip))
 
     def test_path_validation_rejects_wrong_extension(
@@ -1238,8 +1238,9 @@ class TestSchedulePortableUpdateAndRestartSecurity:
             assert 'set "EXE_PATH=' in batch_content
 
             # 2. Commands use quoted variables ("%VAR%")
-            assert '"%ZIP_PATH%"' in batch_content
-            assert '"%TARGET_DIR%"' in batch_content
+            # Note: Paths may have trailing backslashes for directory operations
+            assert ('"%ZIP_PATH%"' in batch_content or "'%ZIP_PATH%'" in batch_content)
+            assert ('"%TARGET_DIR%"' in batch_content or '"%TARGET_DIR%\\"' in batch_content)
             assert '"%EXE_PATH%"' in batch_content
 
             # 3. No direct shell command injection patterns

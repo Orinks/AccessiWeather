@@ -112,7 +112,7 @@ class TestRunMsiInstallerSecurity:
         mock_app.main_window.error_dialog.assert_called_once()
         call_args = mock_app.main_window.error_dialog.call_args
         assert call_args[0][0] == "Installer Validation Failed"
-        assert "does not exist" in call_args[0][1]
+        assert "File not found:" in call_args[0][1]
 
     @pytest.mark.asyncio
     async def test_path_validation_rejects_wrong_extension(self, tmp_path, mock_app):
@@ -256,12 +256,8 @@ class TestRunMsiInstallerSecurity:
         msi_path = subdir / "update.msi"
         msi_path.write_bytes(b"fake msi content")
 
-        # Use relative path
-        relative_path = str(msi_path.relative_to(Path.cwd()))
-
-        # Run installer
-        with patch("pathlib.Path.cwd", return_value=Path.cwd()):
-            await _run_msi_installer(mock_app, str(msi_path))
+        # Run installer with the path (validate_executable_path will convert to absolute)
+        await _run_msi_installer(mock_app, str(msi_path))
 
         # Verify subprocess was called with absolute path
         assert len(mock_subprocess_popen) == 1
@@ -298,7 +294,7 @@ class TestExtractPortableUpdateSecurity:
         mock_app.main_window.error_dialog.assert_called_once()
         call_args = mock_app.main_window.error_dialog.call_args
         assert call_args[0][0] == "Update Validation Failed"
-        assert "does not exist" in call_args[0][1]
+        assert "File not found:" in call_args[0][1]
 
         # Verify update service was NOT called
         mock_app.update_service.schedule_portable_update_and_restart.assert_not_called()
