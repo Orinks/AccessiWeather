@@ -7,8 +7,6 @@ hourly forecasts with peak times, and sun safety recommendations.
 
 from __future__ import annotations
 
-import asyncio
-import contextlib
 import logging
 from typing import TYPE_CHECKING
 
@@ -16,8 +14,8 @@ import toga
 from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
 
-from ..display.presentation.environmental import _UV_INDEX_GUIDANCE
-from ..models import AppSettings, EnvironmentalConditions, HourlyUVIndex
+from ..display.presentation.environmental import _UV_INDEX_GUIDANCE, format_hourly_uv_index
+from ..models import AppSettings, EnvironmentalConditions
 
 if TYPE_CHECKING:  # pragma: no cover - circular import guard
     from ..app import AccessiWeatherApp
@@ -100,9 +98,7 @@ class UVIndexDialog:
             style=Pack(width=100),
         )
         self._close_button.aria_label = "Close dialog"
-        self._close_button.aria_description = (
-            "Close the UV index dialog and return to main window"
-        )
+        self._close_button.aria_description = "Close the UV index dialog and return to main window"
         button_box.add(self._close_button)
         main_box.add(button_box)
 
@@ -179,15 +175,49 @@ class UVIndexDialog:
 
     def _build_hourly_section(self) -> toga.Box:
         """Build the hourly UV forecast section."""
-        # TODO: Implement in subtask 3.4
-        box = toga.Box(style=Pack(direction=COLUMN, margin_bottom=15))
+        box = toga.Box(
+            style=Pack(direction=COLUMN, margin_bottom=15),
+        )
+
+        # Section header
+        header = toga.Label(
+            "Hourly Forecast",
+            style=Pack(font_weight="bold", font_size=14, margin_bottom=8),
+        )
+        header.aria_label = "Hourly UV index forecast section"
+        box.add(header)
+
+        hourly_data = self.environmental.hourly_uv_index
+        if not hourly_data:
+            no_data = toga.Label(
+                "Hourly forecast data is not available.",
+                style=Pack(font_size=12, font_style="italic"),
+            )
+            no_data.aria_label = "No hourly forecast data available"
+            box.add(no_data)
+            return box
+
+        # Use the existing format function
+        forecast_text = format_hourly_uv_index(hourly_data, self.settings, max_hours=24)
+        if forecast_text:
+            forecast_display = toga.MultilineTextInput(
+                value=forecast_text,
+                readonly=True,
+                style=Pack(height=120, font_size=11),
+            )
+            forecast_display.aria_label = "Hourly UV index forecast"
+            forecast_display.aria_description = (
+                "Detailed hourly UV index forecast including trend, peak times, "
+                "and lowest UV times for outdoor activities"
+            )
+            box.add(forecast_display)
+
         return box
 
     def _build_sun_safety_section(self) -> toga.Box:
         """Build the sun safety recommendations section."""
         # TODO: Implement in subtask 3.5
-        box = toga.Box(style=Pack(direction=COLUMN, margin_bottom=10))
-        return box
+        return toga.Box(style=Pack(direction=COLUMN, margin_bottom=10))
 
     def _on_close(self, widget: toga.Widget) -> None:
         """Handle dialog close via window close button."""
