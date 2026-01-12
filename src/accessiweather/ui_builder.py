@@ -831,6 +831,13 @@ def create_menu_system(app: AccessiWeatherApp) -> None:
         group=toga.Group.VIEW,
     )
 
+    uv_index_cmd = toga.Command(
+        lambda widget: asyncio.create_task(event_handlers.on_view_uv_index(app, widget)),
+        text="UV Index…",
+        tooltip="View detailed UV index information and sun safety recommendations",
+        group=toga.Group.VIEW,
+    )
+
     app.commands.add(
         settings_cmd,
         exit_cmd,
@@ -840,6 +847,7 @@ def create_menu_system(app: AccessiWeatherApp) -> None:
         history_cmd,
         aviation_cmd,
         air_quality_cmd,
+        uv_index_cmd,
     )
 
     if toga.Command.ABOUT in app.commands:
