@@ -44,6 +44,14 @@ POSIX_PERMISSIONS: Final = 0o600
 # for slow filesystems or heavily-loaded systems
 SUBPROCESS_TIMEOUT: Final = 5  # seconds
 
+# Windows-specific subprocess flag to prevent console window flash
+# On non-Windows systems, this constant doesn't exist in subprocess module
+# We define it here for cross-platform testing (tests may mock os.name to "nt" on Linux)
+if hasattr(subprocess, "CREATE_NO_WINDOW"):
+    CREATE_NO_WINDOW = subprocess.CREATE_NO_WINDOW
+else:
+    CREATE_NO_WINDOW = 0x08000000  # Standard Windows value
+
 
 def set_secure_file_permissions(file_path: Path | str) -> bool:
     """
@@ -265,7 +273,7 @@ def _set_windows_permissions(file_path: Path) -> bool:
             timeout=SUBPROCESS_TIMEOUT,  # Prevent indefinite hangs (5 second limit)
             # Prevent console window flash when running in GUI mode (e.g., Briefcase app)
             # CREATE_NO_WINDOW flag is Windows-specific, hence the os.name check
-            creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+            creationflags=CREATE_NO_WINDOW if os.name == "nt" else 0,
         )
 
         logger.debug(f"Set Windows permissions (user-only) on {file_path}")

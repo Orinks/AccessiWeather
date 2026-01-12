@@ -18,6 +18,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from accessiweather.config.file_permissions import (
+    CREATE_NO_WINDOW,
     POSIX_PERMISSIONS,
     SUBPROCESS_TIMEOUT,
     _set_posix_permissions,
@@ -178,7 +179,7 @@ class TestSetWindowsPermissions:
                 capture_output=True,
                 text=True,
                 timeout=SUBPROCESS_TIMEOUT,
-                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+                creationflags=CREATE_NO_WINDOW if os.name == "nt" else 0,
             )
 
     def test_missing_username_returns_false(self, temp_file):
@@ -252,7 +253,7 @@ class TestSetWindowsPermissions:
             assert result is True
             # Verify CREATE_NO_WINDOW flag is used
             call_kwargs = mock_run.call_args[1]
-            assert call_kwargs["creationflags"] == subprocess.CREATE_NO_WINDOW
+            assert call_kwargs["creationflags"] == CREATE_NO_WINDOW
 
     def test_no_create_no_window_flag_on_non_windows(self, temp_file):
         """Should not use CREATE_NO_WINDOW flag on non-Windows systems."""
