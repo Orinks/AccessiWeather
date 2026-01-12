@@ -297,8 +297,9 @@
             "command": "pytest tests/test_signature_verification.py -v",
             "expected": "All tests pass"
           },
-          "status": "pending",
-          "notes": "Test cases: valid signature, invalid signature, missing signature file, malformed signature, wrong public key. Use pytest-asyncio for async tests."
+          "status": "completed",
+          "notes": "Created comprehensive test file tests/test_signature_verification.py with 17 test cases covering: valid/invalid signature verification, malformed signatures, wrong public keys, PGPy library availability, file errors, HTTP errors (404), empty responses, timeouts with retry, max retries exceeded, client errors, unexpected exceptions, verification failures, default public key usage, and exponential backoff. All tests pass successfully. Test file follows patterns from test_github_update_service.py with proper fixtures, stubs, and async mocking. Committed as 51ea9a89.",
+          "updated_at": "2026-01-12T06:55:18.686070+00:00"
         },
         {
           "id": "subtask-5-2",
@@ -604,7 +605,7 @@
   "qa_signoff": null,
   "status": "in_progress",
   "planStatus": "in_progress",
-  "updated_at": "2026-01-12T06:50:21.833Z",
-  "last_updated": "2026-01-12T06:49:57.712962+00:00",
+  "updated_at": "2026-01-12T06:55:43.199Z",
+  "last_updated": "2026-01-12T06:55:18.686070+00:00",
   "recoveryNote": "Task recovered from stuck state at 2026-01-12T06:38:27.683Z"
 }
