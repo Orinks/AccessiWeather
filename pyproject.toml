@@ -21,6 +21,7 @@ dependencies = [
     "psutil",
     "keyring",
     "openai>=1.0.0",
+    "PGPy~=0.6.0",
 ]
 readme = "README.md"
 classifiers = [
