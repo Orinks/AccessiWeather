@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - Settings export and import - backup your preferences to a file and restore them on another machine, perfect for keeping your setup in sync across devices. Find it in Settings > Advanced. Your API keys stay secure in your system keyring and aren't included in the export file
+- Config file protection on Windows - your configuration file now has Windows-equivalent permissions (user-only access), matching the existing protection on macOS and Linux. This adds defense-in-depth for your location data and preferences
+- UV Index Dialog - dedicated view for detailed UV index information and sun protection recommendations accessible from the View menu
 
 ### Changed
 -

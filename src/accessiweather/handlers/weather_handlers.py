@@ -11,6 +11,7 @@ import toga
 
 from .. import app_helpers
 from ..dialogs.air_quality_dialog import AirQualityDialog
+from ..dialogs.uv_index_dialog import UVIndexDialog
 from ..dialogs.weather_history_dialog import WeatherHistoryDialog
 from ..models import WeatherData
 from ..performance.timer import timed_async
@@ -397,4 +398,46 @@ async def on_view_air_quality(app: AccessiWeatherApp, widget: toga.Widget) -> No
         logger.error("Failed to open air quality dialog: %s", exc)
         await app.main_window.dialog(
             toga.InfoDialog("Air Quality Error", f"Could not open air quality dialog: {exc}")
+        )
+
+
+async def on_view_uv_index(app: AccessiWeatherApp, widget: toga.Widget) -> None:
+    """Show UV index dialog."""
+    logger.info("View UV index pressed")
+
+    current_location = app.config_manager.get_current_location()
+    if not current_location:
+        await app.main_window.dialog(
+            toga.InfoDialog("UV Index", "No location selected. Please select a location first.")
+        )
+        return
+
+    if not app.current_weather_data or not app.current_weather_data.environmental:
+        await app.main_window.dialog(
+            toga.InfoDialog(
+                "UV Index",
+                "No UV index data available. Please refresh weather data first.",
+            )
+        )
+        return
+
+    environmental = app.current_weather_data.environmental
+    if not environmental.has_data():
+        await app.main_window.dialog(
+            toga.InfoDialog(
+                "UV Index",
+                "UV index data is not available for this location.",
+            )
+        )
+        return
+
+    try:
+        settings = app.config_manager.get_config().settings
+        dialog = UVIndexDialog(app, current_location.name, environmental, settings)
+        await dialog.show_and_focus()
+        app_helpers.update_status(app, "UV index dialog opened")
+    except Exception as exc:
+        logger.error("Failed to open UV index dialog: %s", exc)
+        await app.main_window.dialog(
+            toga.InfoDialog("UV Index Error", f"Could not open UV index dialog: {exc}")
         )
