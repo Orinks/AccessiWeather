@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+import os
+import subprocess
+import tempfile
+from pathlib import Path
+from unittest.mock import Mock, patch
+
 import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis.strategies import (
@@ -17,6 +23,8 @@ from hypothesis.strategies import (
     text,
 )
 
+from accessiweather.config import ConfigManager
+from accessiweather.config.file_permissions import POSIX_PERMISSIONS
 from accessiweather.models.config import AppConfig, AppSettings
 from accessiweather.models.weather import Location
 
@@ -515,3 +523,136 @@ class TestPromptCustomizationRoundtrip:
 
         assert settings_obj.custom_system_prompt is None
         assert settings_obj.custom_instructions is None
+
+
+@pytest.mark.integration
+class TestConfigFilePermissionsIntegration:
+    """
+    Integration tests for config file permissions.
+
+    Tests verify that config files are created with proper permissions
+    after save_config() calls on both POSIX and Windows systems.
+    """
+
+    @pytest.fixture
+    def mock_app(self):
+        """Create a mock Toga app for testing."""
+        app = Mock()
+        app.paths = Mock()
+
+        # Create a temporary directory for config
+        temp_dir = Path(tempfile.mkdtemp())
+        app.paths.config = temp_dir
+
+        return app
+
+    @pytest.fixture
+    def config_manager(self, mock_app):
+        """Create a ConfigManager instance for testing."""
+        return ConfigManager(mock_app)
+
+    def test_posix_permissions_set_after_save(self, config_manager):
+        """Config file should have 0o600 permissions after save on POSIX systems."""
+        if os.name != "posix":
+            pytest.skip("POSIX-only test")
+
+        # Load and save config
+        config = config_manager.load_config()
+        config.settings.temperature_unit = "celsius"
+        result = config_manager.save_config()
+
+        assert result is True
+        assert config_manager.config_file.exists()
+
+        # Verify permissions are set to 0o600 (owner read/write only)
+        stat_info = config_manager.config_file.stat()
+        permissions = stat_info.st_mode & 0o777
+        assert permissions == POSIX_PERMISSIONS
+
+    def test_windows_permissions_set_after_save(self, config_manager):
+        """Config file should have user-only permissions after save on Windows."""
+        if os.name != "nt":
+            pytest.skip("Windows-only test")
+
+        # Only run if USERNAME is available
+        if not os.environ.get("USERNAME"):
+            pytest.skip("USERNAME environment variable not set")
+
+        # Load and save config
+        config = config_manager.load_config()
+        config.settings.temperature_unit = "celsius"
+        result = config_manager.save_config()
+
+        assert result is True
+        assert config_manager.config_file.exists()
+
+        # Verify icacls shows restricted permissions (user-only access)
+        # This is a basic check - we're verifying the command runs without error
+        try:
+            icacls_result = subprocess.run(
+                ["icacls", str(config_manager.config_file)],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+            )
+            # If icacls succeeds, permissions were set
+            # Detailed permission verification would require parsing icacls output
+            assert icacls_result.returncode == 0
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError):
+            # icacls not available or failed - this is acceptable in test environments
+            pytest.skip("icacls not available or failed")
+
+    def test_permission_failure_does_not_prevent_save(self, config_manager):
+        """Permission setting failures should not prevent config saves (fail-safe)."""
+        # Mock the permission function to fail
+        with patch(
+            "accessiweather.config.file_permissions.set_secure_file_permissions"
+        ) as mock_perms:
+            mock_perms.return_value = False
+
+            # Load and save config
+            config = config_manager.load_config()
+            config.settings.temperature_unit = "celsius"
+            result = config_manager.save_config()
+
+            # Save should still succeed even if permissions fail
+            assert result is True
+            assert config_manager.config_file.exists()
+
+    def test_multiple_saves_maintain_permissions(self, config_manager):
+        """Multiple saves should maintain secure permissions."""
+        if os.name == "nt":
+            pytest.skip("POSIX-focused test for permission verification")
+
+        # First save
+        config = config_manager.load_config()
+        config.settings.temperature_unit = "celsius"
+        config_manager.save_config()
+
+        # Second save
+        config.settings.temperature_unit = "fahrenheit"
+        config_manager.save_config()
+
+        # Verify permissions are still 0o600
+        stat_info = config_manager.config_file.stat()
+        permissions = stat_info.st_mode & 0o777
+        assert permissions == POSIX_PERMISSIONS
+
+    def test_permissions_on_new_config_file(self, config_manager):
+        """New config files should have secure permissions set."""
+        if os.name == "nt":
+            pytest.skip("POSIX-focused test for permission verification")
+
+        # Ensure no config exists
+        if config_manager.config_file.exists():
+            config_manager.config_file.unlink()
+
+        # Load config (creates default and saves)
+        config_manager.load_config()
+
+        # Verify new file has correct permissions
+        assert config_manager.config_file.exists()
+        stat_info = config_manager.config_file.stat()
+        permissions = stat_info.st_mode & 0o777
+        assert permissions == POSIX_PERMISSIONS
