@@ -49,6 +49,7 @@ class DownloadManager:
         cancel_event: CancelEvent | None = None,
         expected_sha256: str | None = None,
         checksums_url: str | None = None,
+        signature_url: str | None = None,
         artifact_name: str | None = None,
     ) -> str | bool:
         """Compatibility wrapper for both legacy and dataclass-based downloads."""
@@ -88,6 +89,7 @@ class DownloadManager:
                     cancel_event=cancel_event,
                     expected_sha256=expected_sha256,
                     checksums_url=checksums_url,
+                    signature_url=signature_url,
                     artifact_name=name,
                     expected_size=file_size,
                 )
@@ -111,6 +113,7 @@ class DownloadManager:
                 cancel_event=cancel_event,
                 expected_sha256=expected_sha256,
                 checksums_url=checksums_url,
+                signature_url=signature_url,
                 artifact_name=artifact_name,
             )
         except asyncio.CancelledError:
