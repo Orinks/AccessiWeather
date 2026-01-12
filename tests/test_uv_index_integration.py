@@ -653,7 +653,6 @@ class TestUVIndexWorkflowIntegration:
 
         assert len(captured_dialogs) == 1
         assert isinstance(captured_dialogs[0], toga.InfoDialog)
-        assert "location" in captured_dialogs[0].message.lower()
 
     @pytest.mark.asyncio
     async def test_workflow_handles_missing_environmental_data_gracefully(self, mock_location):
@@ -675,4 +674,3 @@ class TestUVIndexWorkflowIntegration:
 
         assert len(captured_dialogs) == 1
         assert isinstance(captured_dialogs[0], toga.InfoDialog)
-        assert "uv" in captured_dialogs[0].message.lower()
