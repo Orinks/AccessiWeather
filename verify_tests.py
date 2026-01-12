@@ -41,7 +41,7 @@ def analyze_test_file(test_file: Path) -> dict[str, any]:
 
 
 def main():
-    """Main verification routine."""
+    """Run main verification routine."""
     print("=" * 70)
     print("FILE PERMISSIONS TEST VERIFICATION")
     print("=" * 70)

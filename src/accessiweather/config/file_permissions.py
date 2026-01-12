@@ -114,15 +114,12 @@ def set_secure_file_permissions(file_path: Path | str) -> bool:
     try:
         if os.name == "nt":
             return _set_windows_permissions(file_path)
-        else:
-            return _set_posix_permissions(file_path)
+        return _set_posix_permissions(file_path)
     except Exception as e:
         # Catch any unexpected errors to maintain fail-safe behavior
         # This is a safety net - platform-specific functions handle their own errors,
         # but we catch anything unexpected here to ensure no exceptions propagate
-        logger.debug(
-            f"Unexpected error setting permissions on {file_path}: {e}", exc_info=True
-        )
+        logger.debug(f"Unexpected error setting permissions on {file_path}: {e}", exc_info=True)
         return False
 
 
@@ -174,9 +171,7 @@ def _set_posix_permissions(file_path: Path) -> bool:
     except OSError as e:
         # Filesystem doesn't support POSIX permissions (e.g., FAT32, some network drives)
         # or other OS-level error occurred
-        logger.debug(
-            f"OS error setting POSIX permissions on {file_path}: {e}", exc_info=True
-        )
+        logger.debug(f"OS error setting POSIX permissions on {file_path}: {e}", exc_info=True)
         return False
 
     except Exception as e:
@@ -262,11 +257,11 @@ def _set_windows_permissions(file_path: Path) -> bool:
         #
         # The (F) permission includes Read, Write, Modify, Execute, Delete, and permission
         # management - equivalent to complete ownership, matching POSIX 0o600 security
-        result = subprocess.run(
+        subprocess.run(
             ["icacls", file_str, "/inheritance:r", "/grant:r", f"{username}:(F)"],
-            check=True,              # Raise CalledProcessError if icacls returns non-zero
-            capture_output=True,     # Capture stdout/stderr to prevent console spam
-            text=True,               # Decode output as text instead of bytes
+            check=True,  # Raise CalledProcessError if icacls returns non-zero
+            capture_output=True,  # Capture stdout/stderr to prevent console spam
+            text=True,  # Decode output as text instead of bytes
             timeout=SUBPROCESS_TIMEOUT,  # Prevent indefinite hangs (5 second limit)
             # Prevent console window flash when running in GUI mode (e.g., Briefcase app)
             # CREATE_NO_WINDOW flag is Windows-specific, hence the os.name check
@@ -279,9 +274,7 @@ def _set_windows_permissions(file_path: Path) -> bool:
     except subprocess.CalledProcessError as e:
         # icacls returned non-zero exit code (command failed)
         # Common causes: Access denied, file locked, filesystem doesn't support ACLs
-        logger.debug(
-            f"icacls failed to set permissions on {file_path}: {e.stderr}", exc_info=True
-        )
+        logger.debug(f"icacls failed to set permissions on {file_path}: {e.stderr}", exc_info=True)
         return False
 
     except subprocess.TimeoutExpired:

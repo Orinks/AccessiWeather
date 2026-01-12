@@ -13,7 +13,7 @@ from __future__ import annotations
 import os
 import subprocess
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -38,26 +38,30 @@ class TestSetSecureFilePermissions:
 
     def test_string_to_path_conversion(self, temp_file):
         """Should convert string path to Path object."""
-        with patch("accessiweather.config.file_permissions._set_posix_permissions") as mock_posix:
-            with patch("accessiweather.config.file_permissions.os.name", "posix"):
-                mock_posix.return_value = True
-                result = set_secure_file_permissions(str(temp_file))
+        with (
+            patch("accessiweather.config.file_permissions._set_posix_permissions") as mock_posix,
+            patch("accessiweather.config.file_permissions.os.name", "posix"),
+        ):
+            mock_posix.return_value = True
+            result = set_secure_file_permissions(str(temp_file))
 
-                assert result is True
-                mock_posix.assert_called_once()
-                # Verify Path object was passed
-                call_args = mock_posix.call_args[0][0]
-                assert isinstance(call_args, Path)
+            assert result is True
+            mock_posix.assert_called_once()
+            # Verify Path object was passed
+            call_args = mock_posix.call_args[0][0]
+            assert isinstance(call_args, Path)
 
     def test_path_object_accepted(self, temp_file):
         """Should accept Path object directly."""
-        with patch("accessiweather.config.file_permissions._set_posix_permissions") as mock_posix:
-            with patch("accessiweather.config.file_permissions.os.name", "posix"):
-                mock_posix.return_value = True
-                result = set_secure_file_permissions(temp_file)
+        with (
+            patch("accessiweather.config.file_permissions._set_posix_permissions") as mock_posix,
+            patch("accessiweather.config.file_permissions.os.name", "posix"),
+        ):
+            mock_posix.return_value = True
+            result = set_secure_file_permissions(temp_file)
 
-                assert result is True
-                mock_posix.assert_called_once_with(temp_file)
+            assert result is True
+            mock_posix.assert_called_once_with(temp_file)
 
     def test_nonexistent_file_returns_false(self, tmp_path):
         """Should return False for non-existent file."""
@@ -68,32 +72,38 @@ class TestSetSecureFilePermissions:
 
     def test_calls_posix_on_posix_systems(self, temp_file):
         """Should call _set_posix_permissions on POSIX systems."""
-        with patch("accessiweather.config.file_permissions._set_posix_permissions") as mock_posix:
-            with patch("accessiweather.config.file_permissions.os.name", "posix"):
-                mock_posix.return_value = True
-                result = set_secure_file_permissions(temp_file)
+        with (
+            patch("accessiweather.config.file_permissions._set_posix_permissions") as mock_posix,
+            patch("accessiweather.config.file_permissions.os.name", "posix"),
+        ):
+            mock_posix.return_value = True
+            result = set_secure_file_permissions(temp_file)
 
-                assert result is True
-                mock_posix.assert_called_once_with(temp_file)
+            assert result is True
+            mock_posix.assert_called_once_with(temp_file)
 
     def test_calls_windows_on_windows_systems(self, temp_file):
         """Should call _set_windows_permissions on Windows systems."""
-        with patch("accessiweather.config.file_permissions._set_windows_permissions") as mock_win:
-            with patch("accessiweather.config.file_permissions.os.name", "nt"):
-                mock_win.return_value = True
-                result = set_secure_file_permissions(temp_file)
+        with (
+            patch("accessiweather.config.file_permissions._set_windows_permissions") as mock_win,
+            patch("accessiweather.config.file_permissions.os.name", "nt"),
+        ):
+            mock_win.return_value = True
+            result = set_secure_file_permissions(temp_file)
 
-                assert result is True
-                mock_win.assert_called_once_with(temp_file)
+            assert result is True
+            mock_win.assert_called_once_with(temp_file)
 
     def test_handles_unexpected_exception(self, temp_file):
         """Should handle unexpected exceptions gracefully."""
-        with patch("accessiweather.config.file_permissions._set_posix_permissions") as mock_posix:
-            with patch("accessiweather.config.file_permissions.os.name", "posix"):
-                mock_posix.side_effect = RuntimeError("Unexpected error")
-                result = set_secure_file_permissions(temp_file)
+        with (
+            patch("accessiweather.config.file_permissions._set_posix_permissions") as mock_posix,
+            patch("accessiweather.config.file_permissions.os.name", "posix"),
+        ):
+            mock_posix.side_effect = RuntimeError("Unexpected error")
+            result = set_secure_file_permissions(temp_file)
 
-                assert result is False
+            assert result is False
 
 
 class TestSetPosixPermissions:
@@ -154,20 +164,22 @@ class TestSetWindowsPermissions:
         mock_result = Mock()
         mock_result.returncode = 0
 
-        with patch("accessiweather.config.file_permissions.subprocess.run") as mock_run:
-            with patch.dict(os.environ, {"USERNAME": "testuser"}):
-                mock_run.return_value = mock_result
-                result = _set_windows_permissions(temp_file)
+        with (
+            patch("accessiweather.config.file_permissions.subprocess.run") as mock_run,
+            patch.dict(os.environ, {"USERNAME": "testuser"}),
+        ):
+            mock_run.return_value = mock_result
+            result = _set_windows_permissions(temp_file)
 
-                assert result is True
-                mock_run.assert_called_once_with(
-                    ["icacls", str(temp_file), "/inheritance:r", "/grant:r", "testuser:(F)"],
-                    check=True,
-                    capture_output=True,
-                    text=True,
-                    timeout=SUBPROCESS_TIMEOUT,
-                    creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
-                )
+            assert result is True
+            mock_run.assert_called_once_with(
+                ["icacls", str(temp_file), "/inheritance:r", "/grant:r", "testuser:(F)"],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=SUBPROCESS_TIMEOUT,
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+            )
 
     def test_missing_username_returns_false(self, temp_file):
         """Should return False when USERNAME environment variable is missing."""
@@ -178,77 +190,87 @@ class TestSetWindowsPermissions:
 
     def test_handles_called_process_error(self, temp_file):
         """Should handle CalledProcessError from icacls."""
-        error = subprocess.CalledProcessError(
-            returncode=1, cmd="icacls", stderr="Access denied"
-        )
+        error = subprocess.CalledProcessError(returncode=1, cmd="icacls", stderr="Access denied")
 
-        with patch("accessiweather.config.file_permissions.subprocess.run") as mock_run:
-            with patch.dict(os.environ, {"USERNAME": "testuser"}):
-                mock_run.side_effect = error
-                result = _set_windows_permissions(temp_file)
+        with (
+            patch("accessiweather.config.file_permissions.subprocess.run") as mock_run,
+            patch.dict(os.environ, {"USERNAME": "testuser"}),
+        ):
+            mock_run.side_effect = error
+            result = _set_windows_permissions(temp_file)
 
-                assert result is False
+            assert result is False
 
     def test_handles_timeout_expired(self, temp_file):
         """Should handle TimeoutExpired from icacls."""
         error = subprocess.TimeoutExpired(cmd="icacls", timeout=SUBPROCESS_TIMEOUT)
 
-        with patch("accessiweather.config.file_permissions.subprocess.run") as mock_run:
-            with patch.dict(os.environ, {"USERNAME": "testuser"}):
-                mock_run.side_effect = error
-                result = _set_windows_permissions(temp_file)
+        with (
+            patch("accessiweather.config.file_permissions.subprocess.run") as mock_run,
+            patch.dict(os.environ, {"USERNAME": "testuser"}),
+        ):
+            mock_run.side_effect = error
+            result = _set_windows_permissions(temp_file)
 
-                assert result is False
+            assert result is False
 
     def test_handles_file_not_found_error(self, temp_file):
         """Should handle FileNotFoundError when icacls.exe is missing."""
-        with patch("accessiweather.config.file_permissions.subprocess.run") as mock_run:
-            with patch.dict(os.environ, {"USERNAME": "testuser"}):
-                mock_run.side_effect = FileNotFoundError("icacls.exe not found")
-                result = _set_windows_permissions(temp_file)
+        with (
+            patch("accessiweather.config.file_permissions.subprocess.run") as mock_run,
+            patch.dict(os.environ, {"USERNAME": "testuser"}),
+        ):
+            mock_run.side_effect = FileNotFoundError("icacls.exe not found")
+            result = _set_windows_permissions(temp_file)
 
-                assert result is False
+            assert result is False
 
     def test_handles_unexpected_exception(self, temp_file):
         """Should handle unexpected exceptions gracefully."""
-        with patch("accessiweather.config.file_permissions.subprocess.run") as mock_run:
-            with patch.dict(os.environ, {"USERNAME": "testuser"}):
-                mock_run.side_effect = RuntimeError("Unexpected error")
-                result = _set_windows_permissions(temp_file)
+        with (
+            patch("accessiweather.config.file_permissions.subprocess.run") as mock_run,
+            patch.dict(os.environ, {"USERNAME": "testuser"}),
+        ):
+            mock_run.side_effect = RuntimeError("Unexpected error")
+            result = _set_windows_permissions(temp_file)
 
-                assert result is False
+            assert result is False
 
     def test_uses_create_no_window_flag_on_windows(self, temp_file):
         """Should use CREATE_NO_WINDOW flag on Windows systems."""
         mock_result = Mock()
         mock_result.returncode = 0
 
-        with patch("accessiweather.config.file_permissions.subprocess.run") as mock_run:
-            with patch("accessiweather.config.file_permissions.os.name", "nt"):
-                with patch.dict(os.environ, {"USERNAME": "testuser"}):
-                    mock_run.return_value = mock_result
-                    result = _set_windows_permissions(temp_file)
+        with (
+            patch("accessiweather.config.file_permissions.subprocess.run") as mock_run,
+            patch("accessiweather.config.file_permissions.os.name", "nt"),
+            patch.dict(os.environ, {"USERNAME": "testuser"}),
+        ):
+            mock_run.return_value = mock_result
+            result = _set_windows_permissions(temp_file)
 
-                    assert result is True
-                    # Verify CREATE_NO_WINDOW flag is used
-                    call_kwargs = mock_run.call_args[1]
-                    assert call_kwargs["creationflags"] == subprocess.CREATE_NO_WINDOW
+            assert result is True
+            # Verify CREATE_NO_WINDOW flag is used
+            call_kwargs = mock_run.call_args[1]
+            assert call_kwargs["creationflags"] == subprocess.CREATE_NO_WINDOW
 
     def test_no_create_no_window_flag_on_non_windows(self, temp_file):
         """Should not use CREATE_NO_WINDOW flag on non-Windows systems."""
         mock_result = Mock()
         mock_result.returncode = 0
 
-        with patch("accessiweather.config.file_permissions.subprocess.run") as mock_run:
-            with patch("accessiweather.config.file_permissions.os.name", "posix"):
-                with patch.dict(os.environ, {"USERNAME": "testuser"}):
-                    mock_run.return_value = mock_result
-                    result = _set_windows_permissions(temp_file)
+        with (
+            patch("accessiweather.config.file_permissions.subprocess.run") as mock_run,
+            patch("accessiweather.config.file_permissions.os.name", "posix"),
+            patch.dict(os.environ, {"USERNAME": "testuser"}),
+        ):
+            mock_run.return_value = mock_result
+            result = _set_windows_permissions(temp_file)
 
-                    assert result is True
-                    # Verify CREATE_NO_WINDOW flag is 0 on non-Windows
-                    call_kwargs = mock_run.call_args[1]
-                    assert call_kwargs["creationflags"] == 0
+            assert result is True
+            # Verify CREATE_NO_WINDOW flag is 0 on non-Windows
+            call_kwargs = mock_run.call_args[1]
+            assert call_kwargs["creationflags"] == 0
 
 
 class TestPermissionsIntegration:
