@@ -173,8 +173,8 @@
             "expected": "OK"
           },
           "status": "completed",
-          "notes": "Added SignatureVerifier import and integrated signature verification call in _download_asset after checksums verification. Verification passing. Committed as c8c06bda.",
-          "updated_at": "2026-01-12T06:45:00.000000+00:00"
+          "notes": "Added signature verification call in _download_asset method after SHA256 verification (lines 203-206). Imported SignatureVerifier from signature_verification module (line 16). Implementation follows the same pattern as checksums_txt verification: checks if signature_url is provided, calls await SignatureVerifier.download_and_verify_signature(dest_path, signature_url), and returns False if verification fails. Positioned after SHA256 and checksums.txt verification as specified. Verification passed: grep confirmed SignatureVerifier import and usage.",
+          "updated_at": "2026-01-12T06:41:17.425452+00:00"
         },
         {
           "id": "subtask-3-3",
@@ -600,7 +600,7 @@
   "qa_signoff": null,
   "status": "in_progress",
   "planStatus": "in_progress",
-  "updated_at": "2026-01-12T06:38:29.845Z",
-  "last_updated": "2026-01-12T06:21:40.506021+00:00",
+  "updated_at": "2026-01-12T06:40:17.703Z",
+  "last_updated": "2026-01-12T06:41:17.425452+00:00",
   "recoveryNote": "Task recovered from stuck state at 2026-01-12T06:38:27.683Z"
 }
