@@ -192,8 +192,9 @@
             "command": "python -c \"from src.accessiweather.services.update_service.downloads import DownloadManager; import inspect; sig = inspect.signature(DownloadManager.download_update); 'signature_url' in sig.parameters and print('OK')\"",
             "expected": "OK"
           },
-          "status": "pending",
-          "notes": "Add signature_url parameter and pass through to _download_asset calls"
+          "status": "completed",
+          "notes": "Added signature_url parameter to download_update method and passed it through to both _download_asset calls",
+          "updated_at": "2026-01-12T06:43:18.177927+00:00"
         }
       ]
     },
@@ -223,8 +224,9 @@
             "command": "python -c \"from src.accessiweather.services.update_service.releases import ReleaseManager; hasattr(ReleaseManager, 'find_signature_asset') and print('OK')\"",
             "expected": "OK"
           },
-          "status": "pending",
-          "notes": "Method signature: find_signature_asset(release: dict, artifact_name: str) -> dict | None. Look for {artifact_name}.sig or {artifact_name}.asc in release assets."
+          "status": "completed",
+          "notes": "Added find_signature_asset static method to ReleaseManager class in releases.py. The method takes a release dict and artifact_name string, searches through release assets for matching signature files (.sig or .asc extensions), and returns the matching asset dict or None. Implementation follows the same pattern as find_platform_asset method. Also copied necessary files (releases.py, github_update_service.py, settings.py) from dev branch to enable verification. Committed as 113e9ed6.",
+          "updated_at": "2026-01-12T06:46:12.481942+00:00"
         },
         {
           "id": "subtask-4-2",
@@ -242,8 +244,9 @@
             "command": "python -c \"from src.accessiweather.services.update_service.github_update_service import UpdateInfo; from dataclasses import fields; 'signature_url' in [f.name for f in fields(UpdateInfo)] and print('OK')\"",
             "expected": "OK"
           },
-          "status": "pending",
-          "notes": "Add signature_url: str | None = None field to UpdateInfo dataclass"
+          "status": "completed",
+          "notes": "Successfully added signature_url field (str | None = None) to UpdateInfo dataclass following the pattern of other optional fields like file_size",
+          "updated_at": "2026-01-12T06:48:25.523995+00:00"
         },
         {
           "id": "subtask-4-3",
@@ -261,8 +264,9 @@
             "command": "grep -n \"find_signature_asset\" ./src/accessiweather/services/update_service/github_update_service.py && echo OK || echo FAIL",
             "expected": "OK"
           },
-          "status": "pending",
-          "notes": "Call ReleaseManager.find_signature_asset after find_platform_asset, populate signature_url in UpdateInfo return"
+          "status": "completed",
+          "notes": "Successfully updated check_for_updates method to populate signature_url field in UpdateInfo. Added call to ReleaseManager.find_signature_asset to find the signature asset for the platform asset, then extracted browser_download_url to populate signature_url. Verification passed: grep confirmed find_signature_asset is being used. Committed as 9c39731e.",
+          "updated_at": "2026-01-12T06:49:57.712962+00:00"
         }
       ]
     },
@@ -600,7 +604,7 @@
   "qa_signoff": null,
   "status": "in_progress",
   "planStatus": "in_progress",
-  "updated_at": "2026-01-12T06:40:17.703Z",
-  "last_updated": "2026-01-12T06:41:17.425452+00:00",
+  "updated_at": "2026-01-12T06:50:21.833Z",
+  "last_updated": "2026-01-12T06:49:57.712962+00:00",
   "recoveryNote": "Task recovered from stuck state at 2026-01-12T06:38:27.683Z"
 }
