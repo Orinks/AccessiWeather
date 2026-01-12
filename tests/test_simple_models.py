@@ -1201,9 +1201,7 @@ class TestEnvironmentalConditionsUVFields:
             ),
         ]
 
-        env = EnvironmentalConditions(
-            uv_index=7.5, uv_category="High", hourly_uv_index=hourly_data
-        )
+        env = EnvironmentalConditions(uv_index=7.5, uv_category="High", hourly_uv_index=hourly_data)
 
         assert env.uv_index == 7.5
         assert env.uv_category == "High"

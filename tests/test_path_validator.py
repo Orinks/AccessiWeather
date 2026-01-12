@@ -13,12 +13,15 @@ Tests cover:
 
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from hypothesis import (
+    HealthCheck,
     assume,
     example,
     given,
+    settings,
     strategies as st,
 )
 
@@ -492,10 +495,14 @@ class TestValidateExecutablePath:
 
     def test_suspicious_characters_in_filename(self, temp_structure):
         """Should reject file with suspicious characters."""
+        # Can't create files with * on Windows, so mock the file existence check
         evil_file = temp_structure["allowed"] / "evil*.msi"
-        evil_file.touch()
 
-        with pytest.raises(SecurityError, match="Suspicious characters in filename"):
+        with (
+            patch.object(Path, "exists", return_value=True),
+            patch.object(Path, "is_file", return_value=True),
+            pytest.raises(SecurityError, match="Suspicious characters in filename"),
+        ):
             validate_executable_path(
                 evil_file,
                 expected_suffix=".msi",
@@ -656,6 +663,7 @@ class TestEdgeCases:
 class TestHypothesisPropertyTests:
     """Property-based tests using Hypothesis."""
 
+    @settings(suppress_health_check=[HealthCheck.filter_too_much])
     @given(
         filename=st.text(
             alphabet=st.characters(
@@ -679,7 +687,9 @@ class TestHypothesisPropertyTests:
             validate_no_suspicious_characters(filename)
 
     @given(
-        suspicious_char=st.sampled_from(["<", ">", ":", '"', "|", "?", "*"]),
+        # Exclude : because on Windows it's interpreted as drive letter (e.g., "X:file.msi")
+        # Colon validation is tested separately in TestValidateNoSuspiciousCharacters
+        suspicious_char=st.sampled_from(["<", ">", '"', "|", "?", "*"]),
         prefix=st.text(
             alphabet=st.characters(
                 whitelist_categories=("Lu", "Ll", "Nd"), whitelist_characters="_-"

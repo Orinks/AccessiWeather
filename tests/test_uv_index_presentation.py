@@ -181,9 +181,7 @@ class TestFormatHourlyUVIndex:
         now = datetime.now(UTC)
         hourly_data = [
             HourlyUVIndex(timestamp=now, uv_index=4.0, category="Moderate"),
-            HourlyUVIndex(
-                timestamp=now + timedelta(hours=3), uv_index=9.5, category="Very High"
-            ),
+            HourlyUVIndex(timestamp=now + timedelta(hours=3), uv_index=9.5, category="Very High"),
             HourlyUVIndex(timestamp=now + timedelta(hours=6), uv_index=5.0, category="Moderate"),
         ]
 
@@ -354,9 +352,7 @@ class TestFormatHourlyUVIndex:
             HourlyUVIndex(timestamp=now, uv_index=2.0, category="Low"),
             HourlyUVIndex(timestamp=now + timedelta(hours=1), uv_index=4.0, category="Moderate"),
             HourlyUVIndex(timestamp=now + timedelta(hours=2), uv_index=7.0, category="High"),
-            HourlyUVIndex(
-                timestamp=now + timedelta(hours=3), uv_index=9.0, category="Very High"
-            ),
+            HourlyUVIndex(timestamp=now + timedelta(hours=3), uv_index=9.0, category="Very High"),
             HourlyUVIndex(timestamp=now + timedelta(hours=4), uv_index=11.0, category="Extreme"),
         ]
 

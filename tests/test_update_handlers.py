@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -139,10 +139,11 @@ class TestRunMsiInstallerSecurity:
     @pytest.mark.asyncio
     async def test_path_validation_rejects_path_traversal(self, tmp_path, mock_app):
         """
-        Test that path traversal attempts are properly handled.
+        Test that path traversal attempts are rejected.
 
         Security requirement: Prevent path traversal attacks (CWE-22).
-        Path resolution should normalize paths, rejecting dangerous patterns.
+        Even if the path resolves to a valid location, paths containing '..'
+        should be rejected as a defense-in-depth measure.
         """
         # Create a valid MSI file in a subdirectory
         subdir = tmp_path / "subdir"
@@ -153,15 +154,14 @@ class TestRunMsiInstallerSecurity:
         # Attempt path traversal to reference it
         traversal_path = str(subdir / ".." / "subdir" / "update.msi")
 
-        # This should still work as it resolves to a valid path
-        # The validate_executable_path function resolves the path safely
-        with patch("subprocess.Popen") as mock_popen:
-            await _run_msi_installer(mock_app, traversal_path)
-            # Should succeed and use the resolved path
-            mock_popen.assert_called_once()
-            called_args = mock_popen.call_args[0][0]
-            # The path should be resolved to absolute
-            assert Path(called_args[2]).resolve() == msi_file.resolve()
+        # Path traversal patterns should be rejected even if they resolve safely
+        await _run_msi_installer(mock_app, traversal_path)
+
+        # Verify error dialog was shown
+        mock_app.main_window.error_dialog.assert_called_once()
+        call_args = mock_app.main_window.error_dialog.call_args
+        assert call_args[0][0] == "Installer Validation Failed"
+        assert "traversal" in call_args[0][1].lower() or "security" in call_args[0][1].lower()
 
     @pytest.mark.asyncio
     async def test_path_validation_rejects_suspicious_characters(self, tmp_path, mock_app):
@@ -333,10 +333,11 @@ class TestExtractPortableUpdateSecurity:
     @pytest.mark.asyncio
     async def test_path_validation_rejects_path_traversal(self, tmp_path, mock_app):
         """
-        Test that path traversal attempts are properly handled.
+        Test that path traversal attempts are rejected.
 
         Security requirement: Prevent path traversal attacks (CWE-22).
-        Path resolution should normalize paths, rejecting dangerous patterns.
+        Even if the path resolves to a valid location, paths containing '..'
+        should be rejected as a defense-in-depth measure.
         """
         # Create a valid ZIP file in a subdirectory
         subdir = tmp_path / "subdir"
@@ -347,14 +348,16 @@ class TestExtractPortableUpdateSecurity:
         # Attempt path traversal to reference it
         traversal_path = str(subdir / ".." / "subdir" / "update.zip")
 
-        # This should still work as it resolves to a valid path
+        # Path traversal patterns should be rejected even if they resolve safely
         await _extract_portable_update(mock_app, traversal_path)
 
-        # Should succeed and use the resolved path
-        mock_app.update_service.schedule_portable_update_and_restart.assert_called_once()
-        called_path = mock_app.update_service.schedule_portable_update_and_restart.call_args[0][0]
-        # The path should be resolved to absolute
-        assert Path(called_path).resolve() == zip_file.resolve()
+        # Verify update service was NOT called
+        mock_app.update_service.schedule_portable_update_and_restart.assert_not_called()
+
+        # Verify error dialog was shown
+        mock_app.main_window.error_dialog.assert_called()
+        call_args = mock_app.main_window.error_dialog.call_args
+        assert "traversal" in call_args[0][1].lower() or "security" in call_args[0][1].lower()
 
     @pytest.mark.asyncio
     async def test_path_validation_rejects_suspicious_characters(self, tmp_path, mock_app):

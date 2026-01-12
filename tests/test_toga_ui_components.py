@@ -1147,7 +1147,9 @@ async def test_settings_dialog_open_config_dir_invokes_launcher(
                 found_call = True
                 break
 
-        assert found_call, f"Expected call with command '{expect_cmd}' not found in {run_called.call_args_list}"
+        assert found_call, (
+            f"Expected call with command '{expect_cmd}' not found in {run_called.call_args_list}"
+        )
 
 
 class TestNotificationsTab:

@@ -539,30 +539,30 @@ class TestUVIndexGuidanceAndSafety:
     def test_sun_safety_includes_sunscreen_info(self):
         """Test that sun safety recommendations include sunscreen guidance."""
         for category, safety_text in _UV_SUN_SAFETY.items():
-            assert (
-                "Sunscreen" in safety_text or "sunscreen" in safety_text.lower()
-            ), f"No sunscreen info for {category}"
+            assert "Sunscreen" in safety_text or "sunscreen" in safety_text.lower(), (
+                f"No sunscreen info for {category}"
+            )
 
     def test_sun_safety_includes_clothing_info(self):
         """Test that sun safety recommendations include clothing guidance."""
         for category, safety_text in _UV_SUN_SAFETY.items():
-            assert (
-                "Clothing" in safety_text or "clothing" in safety_text.lower()
-            ), f"No clothing info for {category}"
+            assert "Clothing" in safety_text or "clothing" in safety_text.lower(), (
+                f"No clothing info for {category}"
+            )
 
     def test_sun_safety_includes_shade_info(self):
         """Test that sun safety recommendations include shade guidance."""
         for category, safety_text in _UV_SUN_SAFETY.items():
-            assert (
-                "Shade" in safety_text or "shade" in safety_text.lower()
-            ), f"No shade info for {category}"
+            assert "Shade" in safety_text or "shade" in safety_text.lower(), (
+                f"No shade info for {category}"
+            )
 
     def test_sun_safety_includes_time_info(self):
         """Test that sun safety recommendations include timing guidance."""
         for category, safety_text in _UV_SUN_SAFETY.items():
-            assert (
-                "Time" in safety_text or "time" in safety_text.lower()
-            ), f"No time info for {category}"
+            assert "Time" in safety_text or "time" in safety_text.lower(), (
+                f"No time info for {category}"
+            )
 
 
 @pytest.mark.unit
