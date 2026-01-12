@@ -1362,7 +1362,7 @@ class TestSchedulePortableUpdateAndRestartSecurity:
             raise SecurityError("Simulated security validation failure")
 
         monkeypatch.setattr(
-            "accessiweather.services.github_update_service.validate_path_within_directory",
+            "accessiweather.services.update_service.github_update_service.validate_path_within_directory",
             mock_validate_raises,
         )
 

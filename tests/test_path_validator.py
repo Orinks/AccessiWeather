@@ -331,7 +331,12 @@ class TestValidateNoSuspiciousCharacters:
         """Should accept safe full paths with slashes."""
         # Should not raise (slashes are in path, not filename)
         validate_no_suspicious_characters("/home/user/update.msi")
-        validate_no_suspicious_characters("C:\\Users\\test\\update.msi")
+        # Windows-style paths only work correctly on Windows
+        # On Linux, "C:\Users\test\update.msi" is treated as a filename with colon
+        import sys
+
+        if sys.platform == "win32":
+            validate_no_suspicious_characters("C:\\Users\\test\\update.msi")
 
     def test_suspicious_less_than(self):
         """Should reject filename with '<' character."""
