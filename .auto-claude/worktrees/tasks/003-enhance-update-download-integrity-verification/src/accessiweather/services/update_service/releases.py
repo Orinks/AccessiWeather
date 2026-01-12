@@ -144,6 +144,12 @@ class ReleaseManager:
         return all_releases
 
     def _save_cache(self) -> None:
+        """Save the current cache to disk as JSON.
+
+        Writes the internal cache to the cache file. Logs a warning if save fails
+        but continues execution (non-critical error).
+
+        """
         if not self._cache:
             return
         try:
