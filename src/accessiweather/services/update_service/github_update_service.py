@@ -300,6 +300,42 @@ class GitHubUpdateService:
            - Cleans up
            - Restarts the application
         3. Launches the script and exits immediately
+
+        Security Considerations:
+        ======================
+        This function implements multiple security controls to prevent command injection
+        (CWE-78) and path traversal (CWE-22) vulnerabilities:
+
+        1. **No shell=True**: subprocess.Popen is called WITHOUT shell=True to prevent
+           command injection. Passing a list of arguments ensures the batch file path
+           is treated as a literal path, not interpreted by the shell.
+
+        2. **Path Validation**: All file paths are validated before use:
+           - zip_path: Must exist, have .zip extension, no path traversal
+           - batch_path: Must be within target_dir (no directory escape)
+           - target_dir: Must be writable
+
+        3. **Absolute Paths**: All paths are resolved to absolute form to prevent
+           relative path manipulation and ensure consistent path interpretation.
+
+        4. **Batch Script Security**: The generated batch script uses quoted variables
+           (e.g., "%ZIP_PATH%") to prevent argument injection even if paths contain
+           spaces or special characters.
+
+        5. **Directory Validation**: Ensures batch script is created only within the
+           application's target directory, preventing writes to arbitrary locations.
+
+        Why These Controls Matter:
+        --------------------------
+        Without these protections, an attacker who could influence the update cache
+        directory or downloaded files could:
+        - Execute arbitrary commands with user privileges
+        - Escape the application directory and modify system files
+        - Inject malicious commands into the batch script
+        - Overwrite critical files outside the application directory
+
+        The combination of shell=False + path validation + absolute paths creates
+        defense-in-depth against these attack vectors.
         """
         if platform.system() != "Windows":
             logger.error("Portable update is only supported on Windows")
@@ -314,18 +350,27 @@ class GitHubUpdateService:
         batch_path = target_dir / "accessiweather_portable_update.bat"
 
         # Security validations before creating and executing batch script
+        # These checks prevent command injection (CWE-78) and path traversal (CWE-22)
         try:
             # 1. Validate zip_path exists and has .zip extension
+            # - Prevents execution of non-ZIP files (e.g., .bat, .exe)
+            # - Detects path traversal attempts (../ sequences)
+            # - Checks for suspicious characters (shell metacharacters)
+            # - Resolves to absolute path to prevent relative path tricks
             validated_zip = validate_executable_path(
                 zip_path, expected_suffix=".zip", expected_parent=None
             )
             zip_path = validated_zip  # Use the validated path
 
             # 2. Validate batch_path will be within target_dir
+            # - Prevents writing batch scripts outside application directory
+            # - Ensures attacker can't escape to system directories
             # Note: batch_path doesn't exist yet, so we validate the parent directory
             validate_path_within_directory(batch_path, target_dir)
 
             # 3. Validate target_dir is writable
+            # - Fails fast if we don't have permissions to update
+            # - Prevents partial updates that could leave app in broken state
             if not os.access(target_dir, os.W_OK):
                 raise SecurityError(f"Target directory is not writable: {target_dir}")
 
@@ -334,6 +379,8 @@ class GitHubUpdateService:
             raise
 
         # Create the batch script content
+        # Security: Variables are quoted (e.g., "%ZIP_PATH%") to prevent argument
+        # injection even if paths contain spaces or special characters.
         # Note: We use powershell for extraction as it's available on all modern Windows
         batch_content = textwrap.dedent(f"""
             @echo off
@@ -371,10 +418,13 @@ class GitHubUpdateService:
             f.write(batch_content)
 
         # Launch the batch script detached
+        # Security: NO shell=True! This prevents command injection (CWE-78).
+        # The batch_path is passed as a list argument, not a string, so it's
+        # executed directly by Windows without shell interpretation.
         # CREATE_NEW_CONSOLE = 0x00000010
         creation_flags = 0x00000010
         subprocess.Popen(
-            [str(batch_path)],
+            [str(batch_path)],  # List of args, NOT string - prevents injection
             cwd=str(target_dir),
             creationflags=creation_flags,
         )

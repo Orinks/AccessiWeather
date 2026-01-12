@@ -173,11 +173,47 @@ async def _handle_update_completion(app: AccessiWeatherApp, version: str, file_p
 
 
 async def _extract_portable_update(app: AccessiWeatherApp, zip_path: str) -> None:
-    """Extract portable update from ZIP and restart the application."""
+    """
+    Extract portable update from ZIP and restart the application.
+
+    Security Considerations:
+    =======================
+    This function implements strict path validation to prevent command injection
+    (CWE-78) and path traversal (CWE-22) vulnerabilities:
+
+    1. **Path Validation**: Before passing zip_path to the update service, we:
+       - Verify the file exists
+       - Verify it has a .zip extension (prevents execution of .bat, .exe, etc.)
+       - Resolve to absolute path (prevents relative path manipulation)
+       - Check for path traversal sequences (../)
+       - Check for shell metacharacters and suspicious characters
+
+    2. **Validated Absolute Paths**: Only the validated absolute path is passed to
+       schedule_portable_update_and_restart(), which performs additional validation
+       and subprocess security checks.
+
+    3. **Exception Handling**: Validation failures raise specific exceptions
+       (FileNotFoundError, ValueError, SecurityError) that are caught and logged,
+       preventing execution with invalid or malicious paths.
+
+    Why This Matters:
+    ----------------
+    Without these validations, an attacker who could influence downloaded files
+    or update cache could:
+    - Execute arbitrary batch scripts or executables instead of ZIP files
+    - Use path traversal to access files outside the application directory
+    - Inject shell commands through malicious filenames
+    - Bypass update integrity checks
+
+    This validation layer works in conjunction with the security controls in
+    github_update_service.schedule_portable_update_and_restart() to provide
+    defense-in-depth protection.
+    """
     try:
         # Security validations before extracting portable update
         # 1. Validate zip_path exists, has .zip extension, resolve to absolute path
         # 2. Check for path traversal and suspicious characters
+        # These checks prevent CWE-78 (Command Injection) and CWE-22 (Path Traversal)
         validated_zip = validate_executable_path(
             zip_path, expected_suffix=".zip", expected_parent=None
         )
@@ -205,7 +241,44 @@ async def _extract_portable_update(app: AccessiWeatherApp, zip_path: str) -> Non
 
 
 async def _run_msi_installer(app: AccessiWeatherApp, msi_path: str) -> None:
-    """Run the MSI installer and exit the application."""
+    """
+    Run the MSI installer and exit the application.
+
+    Security Considerations:
+    =======================
+    This function implements multiple security controls to prevent command injection
+    (CWE-78) and path traversal (CWE-22) vulnerabilities:
+
+    1. **Path Validation**: Before executing the MSI, we:
+       - Verify the file exists
+       - Verify it has a .msi extension (prevents execution of arbitrary executables)
+       - Resolve to absolute path (prevents relative path manipulation)
+       - Check for path traversal sequences (../)
+       - Check for shell metacharacters and suspicious characters
+
+    2. **No shell=True**: subprocess.Popen is called WITHOUT shell=True. Arguments
+       are passed as a list ["msiexec", "/i", msi_path_str, "/norestart"], which
+       ensures each argument is treated literally without shell interpretation.
+
+    3. **Validated Absolute Paths**: Only the validated absolute path is passed to
+       subprocess.Popen, preventing manipulation of the path during execution.
+
+    4. **Explicit Command Arguments**: We explicitly specify msiexec and its
+       arguments rather than constructing a command string, which prevents
+       argument injection.
+
+    Why This Matters:
+    ----------------
+    Without these protections, an attacker who could influence the downloaded
+    update file could:
+    - Execute arbitrary programs instead of the legitimate MSI installer
+    - Use path traversal to execute files from unexpected locations
+    - Inject additional arguments or commands through malicious filenames
+    - Bypass Windows installer security features
+
+    The combination of path validation + subprocess list arguments + no shell=True
+    creates defense-in-depth against command injection attacks.
+    """
     import subprocess
     from pathlib import Path
 
@@ -213,12 +286,14 @@ async def _run_msi_installer(app: AccessiWeatherApp, msi_path: str) -> None:
         # Security validations before executing MSI installer
         # 1. Validate msi_path exists, has .msi extension, resolve to absolute path
         # 2. Check for path traversal and suspicious characters
+        # These checks prevent CWE-78 (Command Injection) and CWE-22 (Path Traversal)
         validated_msi = validate_executable_path(
             msi_path, expected_suffix=".msi", expected_parent=None
         )
         msi_path_str = str(validated_msi)  # Use validated absolute path
 
-        # Use /norestart to prevent automatic restart, and /qn for quiet mode
+        # Security: NO shell=True! Arguments passed as list to prevent injection.
+        # Use /norestart to prevent automatic restart, and /norestart for control
         subprocess.Popen(["msiexec", "/i", msi_path_str, "/norestart"])
         # Give the installer a moment to start before we exit
         await app.main_window.info_dialog(

@@ -54,6 +54,24 @@ All UI components must be accessible to screen readers. Before submitting a pull
 3. Verify that screen readers can properly announce UI elements
 4. Follow the guidelines in the developer documentation
 
+## Security Requirements
+
+When contributing code that involves file operations or subprocess execution:
+
+1. **NEVER use `subprocess.Popen()` with `shell=True`** unless absolutely necessary and fully documented
+2. **ALWAYS validate file paths** using the `path_validator` module before subprocess calls
+3. **ALWAYS pass subprocess arguments as lists**, not strings
+4. **ALWAYS handle security exceptions** (FileNotFoundError, ValueError, SecurityError)
+5. **ALWAYS add security tests** for new file operations or subprocess calls
+6. Review the [Security Documentation](docs/SECURITY.md) for detailed guidelines
+
+### Reporting Security Vulnerabilities
+
+If you discover a security vulnerability:
+- **DO NOT** open a public GitHub issue
+- Email the maintainers privately (see README.md for contact information)
+- Allow time for a fix before public disclosure
+
 ## Pull Request Process
 
 1. Update the documentation to reflect any changes

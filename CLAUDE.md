@@ -379,6 +379,38 @@ logger.info(f"Using key: {api_key}")  # WRONG
 logger.info(f"Using key: {api_key[:4]}...")  # OK
 ```
 
+### Subprocess Security
+
+**CRITICAL:** When using subprocess, follow these security rules to prevent command injection (CWE-78) and path traversal (CWE-22):
+
+```python
+# ALWAYS validate paths before subprocess calls
+from accessiweather.utils.path_validator import validate_executable_path
+
+validated_path = validate_executable_path(
+    file_path,
+    expected_suffix=".msi",  # or ".zip", ".bat", etc.
+    expected_parent=cache_dir  # optional parent directory check
+)
+
+# NEVER use shell=True - prevents command injection
+subprocess.Popen(["msiexec", "/i", str(validated_path), "/norestart"])
+
+# DON'T: shell=True opens command injection vulnerability
+subprocess.Popen(f"msiexec /i {path}", shell=True)  # NEVER DO THIS!
+
+# DON'T: Unvalidated paths
+subprocess.Popen(["msiexec", "/i", user_input])  # Validate first!
+```
+
+**Key Principles:**
+- NEVER use `shell=True` unless absolutely necessary and fully documented
+- ALWAYS validate file paths using `path_validator` module
+- ALWAYS pass arguments as lists, not strings
+- ALWAYS use absolute paths after validation
+- ALWAYS handle validation exceptions (FileNotFoundError, ValueError, SecurityError)
+- See [docs/SECURITY.md](docs/SECURITY.md) for comprehensive security guidelines
+
 ---
 
 ## Accessibility Requirements

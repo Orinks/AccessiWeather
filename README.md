@@ -79,6 +79,7 @@ AccessiWeather works out of the box with free data sources (NWS and Open-Meteo).
 - [Accessibility Guide](docs/ACCESSIBILITY.md) - Screen reader tips and keyboard navigation
 - [Sound Pack System](docs/SOUND_PACK_SYSTEM.md) - Create and install custom alert sounds
 - [Update System](docs/UPDATE_SYSTEM.md) - How automatic updates work
+- [Security](docs/SECURITY.md) - Security architecture and best practices
 
 ## Support & Community
 
