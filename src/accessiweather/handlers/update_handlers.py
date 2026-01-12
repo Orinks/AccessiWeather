@@ -280,7 +280,6 @@ async def _run_msi_installer(app: AccessiWeatherApp, msi_path: str) -> None:
     creates defense-in-depth against command injection attacks.
     """
     import subprocess
-    from pathlib import Path
 
     try:
         # Security validations before executing MSI installer

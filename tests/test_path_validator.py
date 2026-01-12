@@ -13,11 +13,14 @@ Tests cover:
 
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
-from hypothesis import assume, example, given
-from hypothesis import strategies as st
+from hypothesis import (
+    assume,
+    example,
+    given,
+    strategies as st,
+)
 
 from accessiweather.utils.path_validator import (
     SecurityError,
@@ -249,9 +252,7 @@ class TestValidatePathWithinDirectory:
     def test_file_within_directory(self, temp_structure):
         """Should accept file within expected directory."""
         # Should not raise
-        validate_path_within_directory(
-            temp_structure["allowed_file"], temp_structure["allowed"]
-        )
+        validate_path_within_directory(temp_structure["allowed_file"], temp_structure["allowed"])
 
     def test_file_outside_directory(self, temp_structure):
         """Should reject file outside expected directory."""
@@ -503,9 +504,7 @@ class TestValidateExecutablePath:
 
     def test_without_expected_parent(self, temp_structure):
         """Should validate without expected_parent parameter."""
-        result = validate_executable_path(
-            temp_structure["msi_file"], expected_suffix=".msi"
-        )
+        result = validate_executable_path(temp_structure["msi_file"], expected_suffix=".msi")
 
         assert result is not None
         assert result.is_absolute()
@@ -696,7 +695,11 @@ class TestHypothesisPropertyTests:
         with pytest.raises(SecurityError, match="Suspicious characters"):
             validate_no_suspicious_characters(filename)
 
-    @given(extension=st.text(alphabet=st.characters(min_codepoint=97, max_codepoint=122), min_size=2, max_size=5))
+    @given(
+        extension=st.text(
+            alphabet=st.characters(min_codepoint=97, max_codepoint=122), min_size=2, max_size=5
+        )
+    )
     @example(extension="msi")
     @example(extension="zip")
     @example(extension="bat")

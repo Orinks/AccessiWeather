@@ -1,4 +1,5 @@
-"""Path validation utilities for secure file path handling.
+"""
+Path validation utilities for secure file path handling.
 
 This module provides security-focused path validation functions to prevent
 command injection, path traversal, and other file-based security vulnerabilities.
@@ -29,8 +30,6 @@ logger = logging.getLogger(__name__)
 class SecurityError(Exception):
     """Exception raised when a security validation check fails."""
 
-    pass
-
 
 def validate_file_extension(
     file_path: Path | str,
@@ -45,6 +44,7 @@ def validate_file_extension(
 
     Raises:
         ValueError: If the file extension doesn't match the expected suffix
+
     """
     path = Path(file_path)
     if path.suffix.lower() != expected_suffix.lower():
@@ -60,6 +60,7 @@ def validate_file_exists(file_path: Path | str) -> None:
 
     Raises:
         FileNotFoundError: If the file doesn't exist
+
     """
     path = Path(file_path)
     if not path.exists():
@@ -78,6 +79,7 @@ def validate_no_path_traversal(file_path: Path | str) -> None:
 
     Raises:
         SecurityError: If path traversal patterns are detected
+
     """
     path = Path(file_path)
 
@@ -114,6 +116,7 @@ def validate_path_within_directory(
 
     Raises:
         SecurityError: If the path is outside the expected directory
+
     """
     path = Path(file_path).resolve()
     parent = Path(expected_parent).resolve()
@@ -121,9 +124,7 @@ def validate_path_within_directory(
     try:
         path.relative_to(parent)
     except ValueError as e:
-        raise SecurityError(
-            f"Path {path} is outside expected directory {parent}"
-        ) from e
+        raise SecurityError(f"Path {path} is outside expected directory {parent}") from e
 
 
 def validate_no_suspicious_characters(file_path: Path | str) -> None:
@@ -139,6 +140,7 @@ def validate_no_suspicious_characters(file_path: Path | str) -> None:
 
     Raises:
         SecurityError: If suspicious characters are found in the filename
+
     """
     path = Path(file_path)
 
@@ -185,6 +187,7 @@ def validate_executable_path(
         ...     expected_parent=cache_dir
         ... )
         >>> subprocess.Popen(["msiexec", "/i", str(msi_path)])
+
     """
     path = Path(file_path)
 

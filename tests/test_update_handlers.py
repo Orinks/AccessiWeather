@@ -22,13 +22,13 @@ from accessiweather.handlers.update_handlers import (
     _extract_portable_update,
     _run_msi_installer,
 )
-from accessiweather.utils.path_validator import SecurityError
 
 
 class MockApp:
     """Mock AccessiWeatherApp for testing."""
 
     def __init__(self):
+        """Initialize mock app with required attributes."""
         self.main_window = MagicMock()
         self.main_window.error_dialog = AsyncMock()
         self.main_window.info_dialog = AsyncMock()
@@ -64,7 +64,8 @@ class TestRunMsiInstallerSecurity:
     async def test_subprocess_call_uses_list_args_not_shell(
         self, tmp_path, mock_app, mock_subprocess_popen
     ):
-        """Test that subprocess.Popen is called with list args, not shell=True.
+        """
+        Test that subprocess.Popen is called with list args, not shell=True.
 
         Security requirement: shell=True opens command injection vulnerabilities.
         The MSI installer should be executed via msiexec with list arguments.
@@ -84,9 +85,9 @@ class TestRunMsiInstallerSecurity:
         assert "shell" not in call["kwargs"], "shell parameter should not be present"
         # If shell is present, it should be False
         if "shell" in call["kwargs"]:
-            assert (
-                call["kwargs"]["shell"] is False
-            ), "shell=True is a security vulnerability (CWE-78)"
+            assert call["kwargs"]["shell"] is False, (
+                "shell=True is a security vulnerability (CWE-78)"
+            )
 
         # Verify the command is passed as a list argument
         assert isinstance(call["args"][0], list), "Args should be a list"
@@ -98,7 +99,8 @@ class TestRunMsiInstallerSecurity:
 
     @pytest.mark.asyncio
     async def test_path_validation_rejects_missing_msi_file(self, tmp_path, mock_app):
-        """Test that missing MSI file is rejected with FileNotFoundError.
+        """
+        Test that missing MSI file is rejected with FileNotFoundError.
 
         Security requirement: Prevent execution with non-existent files.
         """
@@ -116,7 +118,8 @@ class TestRunMsiInstallerSecurity:
 
     @pytest.mark.asyncio
     async def test_path_validation_rejects_wrong_extension(self, tmp_path, mock_app):
-        """Test that file with wrong extension is rejected with ValueError.
+        """
+        Test that file with wrong extension is rejected with ValueError.
 
         Security requirement: Only accept .msi files to prevent arbitrary file execution.
         """
@@ -135,7 +138,8 @@ class TestRunMsiInstallerSecurity:
 
     @pytest.mark.asyncio
     async def test_path_validation_rejects_path_traversal(self, tmp_path, mock_app):
-        """Test that path traversal attempts are properly handled.
+        """
+        Test that path traversal attempts are properly handled.
 
         Security requirement: Prevent path traversal attacks (CWE-22).
         Path resolution should normalize paths, rejecting dangerous patterns.
@@ -161,7 +165,8 @@ class TestRunMsiInstallerSecurity:
 
     @pytest.mark.asyncio
     async def test_path_validation_rejects_suspicious_characters(self, tmp_path, mock_app):
-        """Test that filenames with suspicious characters are rejected.
+        """
+        Test that filenames with suspicious characters are rejected.
 
         Security requirement: Prevent shell metacharacter injection (CWE-78).
         """
@@ -193,7 +198,8 @@ class TestRunMsiInstallerSecurity:
     async def test_app_request_exit_called_after_installer_starts(
         self, tmp_path, mock_app, mock_subprocess_popen
     ):
-        """Test that app.request_exit() is called after installer starts.
+        """
+        Test that app.request_exit() is called after installer starts.
 
         Requirement: Application should exit to allow installer to update files.
         """
@@ -245,7 +251,8 @@ class TestRunMsiInstallerSecurity:
     async def test_uses_absolute_path_for_subprocess_call(
         self, tmp_path, mock_app, mock_subprocess_popen
     ):
-        """Test that absolute path is used for subprocess call.
+        """
+        Test that absolute path is used for subprocess call.
 
         Security requirement: Using absolute paths prevents ambiguity and
         potential directory traversal issues.
@@ -280,7 +287,8 @@ class TestExtractPortableUpdateSecurity:
 
     @pytest.mark.asyncio
     async def test_path_validation_rejects_missing_zip_file(self, tmp_path, mock_app):
-        """Test that missing ZIP file is rejected with FileNotFoundError.
+        """
+        Test that missing ZIP file is rejected with FileNotFoundError.
 
         Security requirement: Prevent execution with non-existent files.
         """
@@ -301,7 +309,8 @@ class TestExtractPortableUpdateSecurity:
 
     @pytest.mark.asyncio
     async def test_path_validation_rejects_wrong_extension(self, tmp_path, mock_app):
-        """Test that file with wrong extension is rejected with ValueError.
+        """
+        Test that file with wrong extension is rejected with ValueError.
 
         Security requirement: Only accept .zip files to prevent arbitrary file execution.
         """
@@ -323,7 +332,8 @@ class TestExtractPortableUpdateSecurity:
 
     @pytest.mark.asyncio
     async def test_path_validation_rejects_path_traversal(self, tmp_path, mock_app):
-        """Test that path traversal attempts are properly handled.
+        """
+        Test that path traversal attempts are properly handled.
 
         Security requirement: Prevent path traversal attacks (CWE-22).
         Path resolution should normalize paths, rejecting dangerous patterns.
@@ -342,15 +352,14 @@ class TestExtractPortableUpdateSecurity:
 
         # Should succeed and use the resolved path
         mock_app.update_service.schedule_portable_update_and_restart.assert_called_once()
-        called_path = (
-            mock_app.update_service.schedule_portable_update_and_restart.call_args[0][0]
-        )
+        called_path = mock_app.update_service.schedule_portable_update_and_restart.call_args[0][0]
         # The path should be resolved to absolute
         assert Path(called_path).resolve() == zip_file.resolve()
 
     @pytest.mark.asyncio
     async def test_path_validation_rejects_suspicious_characters(self, tmp_path, mock_app):
-        """Test that filenames with suspicious characters are rejected.
+        """
+        Test that filenames with suspicious characters are rejected.
 
         Security requirement: Prevent shell metacharacter injection (CWE-78).
         """
@@ -373,7 +382,8 @@ class TestExtractPortableUpdateSecurity:
 
     @pytest.mark.asyncio
     async def test_calls_update_service_with_validated_path(self, tmp_path, mock_app):
-        """Test that update service is called with validated absolute path.
+        """
+        Test that update service is called with validated absolute path.
 
         Requirement: Pass validated, absolute path to update service.
         """
@@ -386,16 +396,15 @@ class TestExtractPortableUpdateSecurity:
 
         # Verify update service was called with absolute path
         mock_app.update_service.schedule_portable_update_and_restart.assert_called_once()
-        called_path = (
-            mock_app.update_service.schedule_portable_update_and_restart.call_args[0][0]
-        )
+        called_path = mock_app.update_service.schedule_portable_update_and_restart.call_args[0][0]
         called_path_obj = Path(called_path)
         assert called_path_obj.is_absolute(), "Should use absolute path"
         assert called_path_obj == zip_path.resolve()
 
     @pytest.mark.asyncio
     async def test_handles_missing_update_service_gracefully(self, tmp_path):
-        """Test that missing update_service is handled with clear error message.
+        """
+        Test that missing update_service is handled with clear error message.
 
         Requirement: Provide helpful error when update service is unavailable.
         """
@@ -446,7 +455,8 @@ class TestExtractPortableUpdateSecurity:
 
     @pytest.mark.asyncio
     async def test_uses_absolute_path_from_relative_input(self, tmp_path, mock_app):
-        """Test that relative paths are converted to absolute paths.
+        """
+        Test that relative paths are converted to absolute paths.
 
         Security requirement: Using absolute paths prevents ambiguity.
         """
@@ -461,16 +471,15 @@ class TestExtractPortableUpdateSecurity:
 
         # Verify update service was called with absolute path
         mock_app.update_service.schedule_portable_update_and_restart.assert_called_once()
-        called_path = (
-            mock_app.update_service.schedule_portable_update_and_restart.call_args[0][0]
-        )
+        called_path = mock_app.update_service.schedule_portable_update_and_restart.call_args[0][0]
         called_path_obj = Path(called_path)
         assert called_path_obj.is_absolute(), "Should convert to absolute path"
         assert called_path_obj == zip_path.resolve()
 
     @pytest.mark.asyncio
     async def test_handles_update_service_exception(self, tmp_path, mock_app):
-        """Test that exceptions from update_service are handled gracefully.
+        """
+        Test that exceptions from update_service are handled gracefully.
 
         Requirement: Catch and display errors from update service.
         """

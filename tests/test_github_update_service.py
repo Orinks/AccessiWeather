@@ -1058,7 +1058,8 @@ class TestSchedulePortableUpdateAndRestartSecurity:
     def test_subprocess_call_without_shell_true(
         self, tmp_path, mock_platform_windows, mock_subprocess_popen, mock_os_exit, svc_sync
     ):
-        """Test that subprocess.Popen is called WITHOUT shell=True parameter.
+        """
+        Test that subprocess.Popen is called WITHOUT shell=True parameter.
 
         Security requirement: shell=True opens command injection vulnerabilities.
         The batch file should be executed directly without invoking the shell.
@@ -1079,9 +1080,9 @@ class TestSchedulePortableUpdateAndRestartSecurity:
         assert "shell" not in call["kwargs"], "shell parameter should not be present"
         # If shell is present, it should be False
         if "shell" in call["kwargs"]:
-            assert (
-                call["kwargs"]["shell"] is False
-            ), "shell=True is a security vulnerability (CWE-78)"
+            assert call["kwargs"]["shell"] is False, (
+                "shell=True is a security vulnerability (CWE-78)"
+            )
 
         # Verify the batch file path is passed as a list argument
         assert isinstance(call["args"][0], list), "Args should be a list"
@@ -1090,7 +1091,8 @@ class TestSchedulePortableUpdateAndRestartSecurity:
     def test_path_validation_rejects_missing_zip_file(
         self, tmp_path, mock_platform_windows, svc_sync
     ):
-        """Test that missing zip file is rejected with FileNotFoundError.
+        """
+        Test that missing zip file is rejected with FileNotFoundError.
 
         Security requirement: Prevent execution with non-existent files.
         """
@@ -1103,7 +1105,8 @@ class TestSchedulePortableUpdateAndRestartSecurity:
     def test_path_validation_rejects_wrong_extension(
         self, tmp_path, mock_platform_windows, svc_sync
     ):
-        """Test that file with wrong extension is rejected with ValueError.
+        """
+        Test that file with wrong extension is rejected with ValueError.
 
         Security requirement: Only accept .zip files to prevent arbitrary file execution.
         """
@@ -1117,7 +1120,8 @@ class TestSchedulePortableUpdateAndRestartSecurity:
     def test_path_validation_rejects_path_traversal_in_zip(
         self, tmp_path, mock_platform_windows, svc_sync
     ):
-        """Test that path traversal attempts in zip path are rejected.
+        """
+        Test that path traversal attempts in zip path are rejected.
 
         Security requirement: Prevent path traversal attacks (CWE-22).
         """
@@ -1128,7 +1132,7 @@ class TestSchedulePortableUpdateAndRestartSecurity:
         zip_file.write_bytes(b"fake zip content")
 
         # Attempt path traversal to reference it
-        traversal_path = str(subdir / ".." / "subdir" / "update.zip")
+        _traversal_path = str(subdir / ".." / "subdir" / "update.zip")
 
         # This should still work as it resolves to a valid path
         # But let's test a malicious traversal that goes outside tmp_path
@@ -1141,7 +1145,8 @@ class TestSchedulePortableUpdateAndRestartSecurity:
     def test_path_validation_rejects_suspicious_characters_in_filename(
         self, tmp_path, mock_platform_windows, svc_sync
     ):
-        """Test that filenames with suspicious characters are rejected.
+        """
+        Test that filenames with suspicious characters are rejected.
 
         Security requirement: Prevent shell metacharacter injection (CWE-78).
         """
@@ -1156,7 +1161,7 @@ class TestSchedulePortableUpdateAndRestartSecurity:
             tmp_path / "update;dir.zip",  # semicolon
         ]
 
-        for suspicious_path in suspicious_paths:
+        for _suspicious_path in suspicious_paths:
             # These will fail during file creation or validation
             # The important part is they don't execute shell commands
             pass  # Placeholder - actual validation tested in test_path_validator.py
@@ -1164,7 +1169,8 @@ class TestSchedulePortableUpdateAndRestartSecurity:
     def test_batch_path_within_target_directory_validation(
         self, tmp_path, mock_platform_windows, mock_subprocess_popen, mock_os_exit, svc_sync
     ):
-        """Test that batch script path is validated to be within target directory.
+        """
+        Test that batch script path is validated to be within target directory.
 
         Security requirement: Prevent batch script creation outside intended directory.
         """
@@ -1184,10 +1190,9 @@ class TestSchedulePortableUpdateAndRestartSecurity:
         # The important validation is done in validate_path_within_directory
         # which is tested in test_path_validator.py
 
-    def test_error_handling_for_invalid_zip_path(
-        self, tmp_path, mock_platform_windows, svc_sync
-    ):
-        """Test proper error handling when zip path validation fails.
+    def test_error_handling_for_invalid_zip_path(self, tmp_path, mock_platform_windows, svc_sync):
+        """
+        Test proper error handling when zip path validation fails.
 
         Security requirement: Clear error messages without exposing system details.
         """
@@ -1198,7 +1203,8 @@ class TestSchedulePortableUpdateAndRestartSecurity:
     def test_batch_script_content_security(
         self, tmp_path, mock_platform_windows, mock_subprocess_popen, mock_os_exit, svc_sync
     ):
-        """Test that generated batch script content is secure.
+        """
+        Test that generated batch script content is secure.
 
         Security requirement: Batch script should not execute arbitrary commands.
         Variables should be properly quoted.
@@ -1239,8 +1245,8 @@ class TestSchedulePortableUpdateAndRestartSecurity:
 
             # 2. Commands use quoted variables ("%VAR%")
             # Note: Paths may have trailing backslashes for directory operations
-            assert ('"%ZIP_PATH%"' in batch_content or "'%ZIP_PATH%'" in batch_content)
-            assert ('"%TARGET_DIR%"' in batch_content or '"%TARGET_DIR%\\"' in batch_content)
+            assert '"%ZIP_PATH%"' in batch_content or "'%ZIP_PATH%'" in batch_content
+            assert '"%TARGET_DIR%"' in batch_content or '"%TARGET_DIR%\\"' in batch_content
             assert '"%EXE_PATH%"' in batch_content
 
             # 3. No direct shell command injection patterns
@@ -1250,10 +1256,9 @@ class TestSchedulePortableUpdateAndRestartSecurity:
         finally:
             sys.executable = original_executable
 
-    def test_target_directory_writability_check(
-        self, tmp_path, mock_platform_windows, svc_sync
-    ):
-        """Test that target directory must be writable.
+    def test_target_directory_writability_check(self, tmp_path, mock_platform_windows, svc_sync):
+        """
+        Test that target directory must be writable.
 
         Security requirement: Prevent issues with read-only directories.
         """
@@ -1296,7 +1301,8 @@ class TestSchedulePortableUpdateAndRestartSecurity:
             sys.executable = original_executable
 
     def test_non_windows_platform_rejected(self, monkeypatch, svc_sync):
-        """Test that portable update is rejected on non-Windows platforms.
+        """
+        Test that portable update is rejected on non-Windows platforms.
 
         Security requirement: Only execute on supported platforms.
         """
@@ -1311,7 +1317,8 @@ class TestSchedulePortableUpdateAndRestartSecurity:
     def test_path_resolution_to_absolute(
         self, tmp_path, mock_platform_windows, mock_subprocess_popen, mock_os_exit, svc_sync
     ):
-        """Test that relative paths are resolved to absolute paths.
+        """
+        Test that relative paths are resolved to absolute paths.
 
         Security requirement: Prevent confusion with relative path manipulation.
         """
@@ -1339,7 +1346,8 @@ class TestSchedulePortableUpdateAndRestartSecurity:
     def test_security_error_propagation(
         self, tmp_path, mock_platform_windows, svc_sync, monkeypatch
     ):
-        """Test that SecurityError exceptions are properly propagated.
+        """
+        Test that SecurityError exceptions are properly propagated.
 
         Security requirement: Security validation failures should halt execution.
         """
@@ -1365,7 +1373,8 @@ class TestSchedulePortableUpdateAndRestartSecurity:
     def test_subprocess_call_uses_list_arguments(
         self, tmp_path, mock_platform_windows, mock_subprocess_popen, mock_os_exit, svc_sync
     ):
-        """Test that subprocess.Popen receives arguments as a list, not a string.
+        """
+        Test that subprocess.Popen receives arguments as a list, not a string.
 
         Security requirement: List arguments prevent shell injection even without shell=True.
         When using shell=False (default), passing a list prevents argument splitting issues.
@@ -1394,7 +1403,8 @@ class TestSchedulePortableUpdateAndRestartSecurity:
     def test_creation_flags_set_for_detached_process(
         self, tmp_path, mock_platform_windows, mock_subprocess_popen, mock_os_exit, svc_sync
     ):
-        """Test that subprocess.Popen uses creation flags for detached execution.
+        """
+        Test that subprocess.Popen uses creation flags for detached execution.
 
         Security requirement: Process should run detached with new console.
         CREATE_NEW_CONSOLE (0x00000010) ensures the batch script runs independently.
