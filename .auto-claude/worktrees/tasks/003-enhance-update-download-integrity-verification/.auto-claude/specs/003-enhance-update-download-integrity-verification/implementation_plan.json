@@ -1,0 +1,606 @@
+{
+  "feature": "Enhance update download integrity verification with GPG signature verification",
+  "workflow_type": "feature",
+  "workflow_rationale": "Adding GPG signature verification is a security feature that enhances the existing update system. This is a feature workflow because it adds new functionality to an existing service (update_service) with multiple implementation phases that build on each other.",
+  "phases": [
+    {
+      "id": "phase-1-setup",
+      "name": "Dependency Setup and Research",
+      "type": "setup",
+      "description": "Research and add GPG verification library dependency, document approach",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Research Python GPG libraries (PGPy, python-gnupg, pgpy) for cross-platform compatibility",
+          "service": "update_service",
+          "files_to_modify": [],
+          "files_to_create": [
+            ".auto-claude/specs/003-enhance-update-download-integrity-verification/GPG_LIBRARY_RESEARCH.md"
+          ],
+          "patterns_from": [],
+          "expected_output": "Document comparing PGPy vs python-gnupg with recommendation for pure-Python solution",
+          "verification": {
+            "type": "manual",
+            "instructions": "Review GPG_LIBRARY_RESEARCH.md for library recommendation with pros/cons analysis"
+          },
+          "status": "completed",
+          "notes": "Completed comprehensive research comparing PGPy and python-gnupg. Recommended PGPy for pure Python implementation that integrates well with Briefcase packaging. Document includes pros/cons analysis, security considerations, testing strategy, and mitigation strategies for maintenance concerns.",
+          "updated_at": "2026-01-12T05:59:27.225075+00:00"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Add chosen GPG library to pyproject.toml dependencies",
+          "service": "update_service",
+          "files_to_modify": [
+            "pyproject.toml"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "pyproject.toml:13-23"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "python -c \"import pgpy; print('OK')\" || python -c \"import gnupg; print('OK')\"",
+            "expected": "OK"
+          },
+          "status": "completed",
+          "notes": "Completed - PGPy~=0.6.0 added to both [project.dependencies] (line 24) and [tool.briefcase.app.accessiweather] requires (line 209) sections in pyproject.toml. Two commits: 441f252d (project deps) and 9cbb7b3d (Briefcase requires). PGPy chosen for pure Python implementation and cross-platform compatibility as documented in GPG_LIBRARY_RESEARCH.md.",
+          "updated_at": "2026-01-12T06:10:00.000000+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-signature-module",
+      "name": "Signature Verification Module",
+      "type": "implementation",
+      "description": "Create standalone signature verification module with GPG verification logic",
+      "depends_on": [
+        "phase-1-setup"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Create SignatureVerifier class with embedded public key and GPG verification methods",
+          "service": "update_service",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/accessiweather/services/update_service/signature_verification.py"
+          ],
+          "patterns_from": [
+            "src/accessiweather/services/update_service/downloads.py:212-226",
+            "src/accessiweather/utils/retry_utils.py"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "python -c \"from src.accessiweather.services.update_service.signature_verification import SignatureVerifier; print('OK')\"",
+            "expected": "OK"
+          },
+          "status": "completed",
+          "notes": "Created SignatureVerifier class in src/accessiweather/services/update_service/signature_verification.py. Implemented _verify_gpg_signature static method following patterns from downloads.py. Includes embedded public key constant (placeholder), proper error handling with file deletion on failure, and logging following existing patterns. Uses PGPy library for signature verification with graceful ImportError handling. Committed as 21c85230.",
+          "updated_at": "2026-01-12T06:13:41.884943+00:00"
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Implement _verify_gpg_signature static method with detached signature verification",
+          "service": "update_service",
+          "files_to_modify": [
+            "src/accessiweather/services/update_service/signature_verification.py"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/accessiweather/services/update_service/downloads.py:212-226"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "python -c \"from src.accessiweather.services.update_service.signature_verification import SignatureVerifier; hasattr(SignatureVerifier, '_verify_gpg_signature') and print('OK')\"",
+            "expected": "OK"
+          },
+          "status": "completed",
+          "notes": "Method already implemented in subtask-2-1. Verification passed: _verify_gpg_signature static method exists with correct signature (file_path: Path, signature_data: bytes, public_key: str) -> bool. Implementation includes PGPy integration, detached signature verification, proper error handling with ImportError fallback, logging, and file cleanup on verification failure. No additional changes needed.",
+          "updated_at": "2026-01-12T06:30:00.000000+00:00"
+        },
+        {
+          "id": "subtask-2-3",
+          "description": "Implement async download_and_verify_signature method with retry logic",
+          "service": "update_service",
+          "files_to_modify": [
+            "src/accessiweather/services/update_service/signature_verification.py"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/accessiweather/services/update_service/downloads.py:228-263",
+            "src/accessiweather/utils/retry_utils.py"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "python -c \"from src.accessiweather.services.update_service.signature_verification import SignatureVerifier; import inspect; print('OK' if inspect.iscoroutinefunction(SignatureVerifier.download_and_verify_signature) else 'FAIL')\"",
+            "expected": "OK"
+          },
+          "status": "completed",
+          "notes": "Implemented async download_and_verify_signature static method in SignatureVerifier class with retry logic and exponential backoff. Method downloads signature file (.sig or .asc) from provided URL using aiohttp, implements 3 retries with exponential backoff (delay * 2^attempt), handles network failures and timeouts gracefully, and verifies signature against the downloaded artifact using _verify_gpg_signature. Includes comprehensive error handling and logging. Committed as 0ed2f185.",
+          "updated_at": "2026-01-12T06:21:40.506021+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-3-integration",
+      "name": "Integrate into DownloadManager",
+      "type": "implementation",
+      "description": "Integrate signature verification into the existing download flow in DownloadManager",
+      "depends_on": [
+        "phase-2-signature-module"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Add signature_url parameter to _download_asset method",
+          "service": "update_service",
+          "files_to_modify": [
+            "src/accessiweather/services/update_service/downloads.py"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/accessiweather/services/update_service/downloads.py:121-131"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "python -c \"from src.accessiweather.services.update_service.downloads import DownloadManager; import inspect; sig = inspect.signature(DownloadManager._download_asset); 'signature_url' in sig.parameters and print('OK')\"",
+            "expected": "OK"
+          },
+          "status": "completed",
+          "notes": "Added signature_url: str | None = None parameter to _download_asset method signature at line 129, following the same pattern as checksums_url parameter. File was copied from dev branch and modified. Committed as e4534bf8. Note: Used git add -f due to worktree being in .auto-claude/ directory which is gitignored.",
+          "updated_at": "2026-01-12T06:24:00.000000+00:00"
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Add signature verification call in _download_asset after SHA256 verification",
+          "service": "update_service",
+          "files_to_modify": [
+            "src/accessiweather/services/update_service/downloads.py"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/accessiweather/services/update_service/downloads.py:191-199",
+            "src/accessiweather/services/update_service/signature_verification.py"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -n \"SignatureVerifier\" ./src/accessiweather/services/update_service/downloads.py && echo OK || echo FAIL",
+            "expected": "OK"
+          },
+          "status": "completed",
+          "notes": "Added SignatureVerifier import and integrated signature verification call in _download_asset after checksums verification. Verification passing. Committed as c8c06bda.",
+          "updated_at": "2026-01-12T06:45:00.000000+00:00"
+        },
+        {
+          "id": "subtask-3-3",
+          "description": "Update download_update compatibility wrapper to accept signature_url parameter",
+          "service": "update_service",
+          "files_to_modify": [
+            "src/accessiweather/services/update_service/downloads.py"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/accessiweather/services/update_service/downloads.py:43-96"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "python -c \"from src.accessiweather.services.update_service.downloads import DownloadManager; import inspect; sig = inspect.signature(DownloadManager.download_update); 'signature_url' in sig.parameters and print('OK')\"",
+            "expected": "OK"
+          },
+          "status": "pending",
+          "notes": "Add signature_url parameter and pass through to _download_asset calls"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-release-detection",
+      "name": "Signature Asset Detection",
+      "type": "implementation",
+      "description": "Update release manager to detect and provide signature file URLs",
+      "depends_on": [
+        "phase-3-integration"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Add find_signature_asset static method to ReleaseManager",
+          "service": "update_service",
+          "files_to_modify": [
+            "src/accessiweather/services/update_service/releases.py"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/accessiweather/services/update_service/releases.py:256-333"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "python -c \"from src.accessiweather.services.update_service.releases import ReleaseManager; hasattr(ReleaseManager, 'find_signature_asset') and print('OK')\"",
+            "expected": "OK"
+          },
+          "status": "pending",
+          "notes": "Method signature: find_signature_asset(release: dict, artifact_name: str) -> dict | None. Look for {artifact_name}.sig or {artifact_name}.asc in release assets."
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Update UpdateInfo dataclass to include signature_url field",
+          "service": "update_service",
+          "files_to_modify": [
+            "src/accessiweather/services/update_service/github_update_service.py"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/accessiweather/services/update_service/github_update_service.py:45-55"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "python -c \"from src.accessiweather.services.update_service.github_update_service import UpdateInfo; from dataclasses import fields; 'signature_url' in [f.name for f in fields(UpdateInfo)] and print('OK')\"",
+            "expected": "OK"
+          },
+          "status": "pending",
+          "notes": "Add signature_url: str | None = None field to UpdateInfo dataclass"
+        },
+        {
+          "id": "subtask-4-3",
+          "description": "Update check_for_updates to populate signature_url in UpdateInfo",
+          "service": "update_service",
+          "files_to_modify": [
+            "src/accessiweather/services/update_service/github_update_service.py"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/accessiweather/services/update_service/github_update_service.py:144-177"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -n \"find_signature_asset\" ./src/accessiweather/services/update_service/github_update_service.py && echo OK || echo FAIL",
+            "expected": "OK"
+          },
+          "status": "pending",
+          "notes": "Call ReleaseManager.find_signature_asset after find_platform_asset, populate signature_url in UpdateInfo return"
+        }
+      ]
+    },
+    {
+      "id": "phase-5-testing",
+      "name": "Unit and Integration Testing",
+      "type": "implementation",
+      "description": "Create comprehensive tests for signature verification functionality",
+      "depends_on": [
+        "phase-4-release-detection"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Create test_signature_verification.py with GPG verification tests",
+          "service": "update_service",
+          "files_to_modify": [],
+          "files_to_create": [
+            "tests/test_signature_verification.py"
+          ],
+          "patterns_from": [
+            "tests/test_github_update_service.py:0-50",
+            "tests/test_github_update_service.py"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "pytest tests/test_signature_verification.py -v",
+            "expected": "All tests pass"
+          },
+          "status": "pending",
+          "notes": "Test cases: valid signature, invalid signature, missing signature file, malformed signature, wrong public key. Use pytest-asyncio for async tests."
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Add integration tests to test_github_update_service.py for signature verification flow",
+          "service": "update_service",
+          "files_to_modify": [
+            "tests/test_github_update_service.py"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "tests/test_github_update_service.py"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "pytest tests/test_github_update_service.py -v -k signature",
+            "expected": "All signature tests pass"
+          },
+          "status": "pending",
+          "notes": "Add tests for: download with signature verification, signature URL in UpdateInfo, find_signature_asset method"
+        },
+        {
+          "id": "subtask-5-3",
+          "description": "Add property-based tests using Hypothesis for edge cases",
+          "service": "update_service",
+          "files_to_modify": [
+            "tests/test_signature_verification.py"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "tests/test_github_update_service.py"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "pytest tests/test_signature_verification.py -v --hypothesis-profile=dev",
+            "expected": "All property tests pass"
+          },
+          "status": "pending",
+          "notes": "Use hypothesis.strategies for testing malformed signatures, invalid data, boundary conditions"
+        }
+      ]
+    },
+    {
+      "id": "phase-6-documentation",
+      "name": "Documentation and Error Messages",
+      "type": "implementation",
+      "description": "Add user-facing documentation and clear error messages for signature verification",
+      "depends_on": [
+        "phase-5-testing"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-6-1",
+          "description": "Add docstrings to all new methods and classes",
+          "service": "update_service",
+          "files_to_modify": [
+            "src/accessiweather/services/update_service/signature_verification.py",
+            "src/accessiweather/services/update_service/downloads.py",
+            "src/accessiweather/services/update_service/releases.py"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/accessiweather/services/update_service/downloads.py:34-41"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Review all new methods have clear docstrings explaining parameters, return values, and exceptions"
+          },
+          "status": "pending",
+          "notes": "Follow existing docstring style with triple quotes, Args, Returns, Raises sections"
+        },
+        {
+          "id": "subtask-6-2",
+          "description": "Update CHANGELOG.md with security enhancement entry",
+          "service": "update_service",
+          "files_to_modify": [
+            "CHANGELOG.md"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "CHANGELOG.md"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -i \"signature verification\" CHANGELOG.md && echo OK || echo FAIL",
+            "expected": "OK"
+          },
+          "status": "pending",
+          "notes": "Add entry under ## [Unreleased] section describing GPG signature verification for update downloads"
+        },
+        {
+          "id": "subtask-6-3",
+          "description": "Create SIGNATURE_VERIFICATION.md documenting the feature for developers",
+          "service": "update_service",
+          "files_to_modify": [],
+          "files_to_create": [
+            "docs/SIGNATURE_VERIFICATION.md"
+          ],
+          "patterns_from": [
+            "docs/architecture.md",
+            "docs/development-guide.md"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Review docs/SIGNATURE_VERIFICATION.md explains: how it works, public key management, testing, troubleshooting"
+          },
+          "status": "pending",
+          "notes": "Include sections: Overview, How It Works, Public Key Management, Testing, Troubleshooting"
+        }
+      ]
+    },
+    {
+      "id": "phase-7-validation",
+      "name": "Final Validation and Integration",
+      "type": "integration",
+      "description": "Run full test suite and validate end-to-end signature verification works",
+      "depends_on": [
+        "phase-6-documentation"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-7-1",
+          "description": "Run full test suite with parallel execution",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "pytest -n auto -v",
+            "expected": "All tests pass"
+          },
+          "status": "pending",
+          "notes": "Ensure no regressions in existing tests"
+        },
+        {
+          "id": "subtask-7-2",
+          "description": "Run linting and formatting checks",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "ruff check . && ruff format --check . && pyright",
+            "expected": "No errors"
+          },
+          "status": "pending",
+          "notes": "Fix any linting or type checking errors"
+        },
+        {
+          "id": "subtask-7-3",
+          "description": "Manual end-to-end test with mock signed release",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "instructions": "Create mock release with .sig file, test download with signature verification enabled, verify success with valid signature and failure with invalid signature"
+          },
+          "status": "pending",
+          "notes": "Document test steps in phase completion notes"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 7,
+    "total_subtasks": 20,
+    "services_involved": [
+      "update_service"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 1,
+      "parallel_groups": [],
+      "recommended_workers": 1,
+      "speedup_estimate": "Sequential execution required due to phase dependencies"
+    },
+    "startup_command": "cd /c/Users/joshu/accessiweather/.auto-claude/worktrees/tasks/003-enhance-update-download-integrity-verification && pytest -n auto -v"
+  },
+  "verification_strategy": {
+    "risk_level": "high",
+    "skip_validation": false,
+    "test_creation_phase": "phase-5-testing",
+    "test_types_required": [
+      "unit",
+      "integration",
+      "property"
+    ],
+    "security_scanning_required": true,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "All existing tests pass without regression",
+      "New signature verification tests pass",
+      "GPG library properly integrated and working cross-platform",
+      "Signature verification can be disabled (graceful fallback)",
+      "Clear error messages when signature verification fails",
+      "Documentation explains the security enhancement"
+    ],
+    "verification_steps": [
+      {
+        "name": "Unit Tests",
+        "command": "pytest tests/test_signature_verification.py -v",
+        "expected_outcome": "All unit tests pass",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Integration Tests",
+        "command": "pytest tests/test_github_update_service.py -v",
+        "expected_outcome": "All integration tests pass including signature tests",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Property Tests",
+        "command": "pytest tests/test_signature_verification.py --hypothesis-profile=thorough",
+        "expected_outcome": "All property-based tests pass",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Full Test Suite",
+        "command": "pytest -n auto -v",
+        "expected_outcome": "All tests pass, no regressions",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Linting Check",
+        "command": "ruff check .",
+        "expected_outcome": "No linting errors",
+        "type": "quality",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Type Checking",
+        "command": "pyright",
+        "expected_outcome": "No type errors in new code",
+        "type": "quality",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Secrets Scan",
+        "command": "python .auto-claude/scan_secrets.py --all-files --json",
+        "expected_outcome": "No secrets detected (only public key embedded)",
+        "type": "security",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "High risk because this is a security-critical feature. Improper implementation could either block legitimate updates or fail to catch malicious ones. Requires thorough testing including property-based tests for edge cases, and security scanning to ensure no private keys are accidentally committed."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": true,
+      "commands": [
+        "pytest tests/test_signature_verification.py -v"
+      ],
+      "minimum_coverage": 90
+    },
+    "integration_tests": {
+      "required": true,
+      "commands": [
+        "pytest tests/test_github_update_service.py -v -k signature"
+      ],
+      "services_to_test": [
+        "update_service"
+      ]
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": []
+    },
+    "browser_verification": {
+      "required": false,
+      "pages": []
+    },
+    "database_verification": {
+      "required": false,
+      "checks": []
+    },
+    "security_verification": {
+      "required": true,
+      "checks": [
+        "No private keys committed",
+        "Public key is embedded correctly",
+        "Signature verification fails on tampered files",
+        "Signature verification succeeds on valid files",
+        "Graceful fallback when signature not available"
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "status": "in_progress",
+  "planStatus": "in_progress",
+  "updated_at": "2026-01-12T06:38:29.845Z",
+  "last_updated": "2026-01-12T06:21:40.506021+00:00",
+  "recoveryNote": "Task recovered from stuck state at 2026-01-12T06:38:27.683Z"
+}
