@@ -52,6 +52,7 @@ class UpdateInfo:
     release_notes: str = ""
     is_prerelease: bool = False
     file_size: int | None = None
+    signature_url: str | None = None
 
 
 class GitHubUpdateService:
