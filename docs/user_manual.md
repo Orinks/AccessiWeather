@@ -109,6 +109,47 @@ AccessiWeather presents comprehensive weather data:
 - **National Discussions**: WPC and SPC professional weather analysis
 - **Technical Insights**: In-depth weather pattern explanations
 
+### Environmental Information Dialogs
+
+AccessiWeather provides specialized dialogs for detailed environmental data:
+
+#### UV Index Dialog
+
+Access comprehensive UV index information through View → UV Index in the menu bar.
+
+**What You'll See:**
+- **Current UV Index**: Real-time UV index value with EPA/WHO category rating
+- **Health Guidance**: Context-specific health recommendations based on current UV level
+- **Hourly Forecast**: 24-hour UV index forecast with trend analysis
+- **Peak Times**: Identifies when UV levels are highest for activity planning
+- **Sun Safety Recommendations**: Detailed protection guidance including:
+  - Sunscreen SPF recommendations and reapplication schedule
+  - Protective clothing suggestions (hats, sunglasses, long sleeves)
+  - Shade-seeking guidance and timing recommendations
+  - Safe outdoor activity windows
+
+**UV Index Categories:**
+- **Low (0-2)**: No protection needed for most people
+- **Moderate (3-5)**: Take precautions - wear sunscreen and hat
+- **High (6-7)**: Protection essential - use SPF 30+, protective clothing
+- **Very High (8-10)**: Extra protection required - SPF 50+, minimize midday exposure
+- **Extreme (11+)**: Take all precautions - avoid sun exposure 10 AM to 4 PM
+
+**When to Check UV Index:**
+- Planning outdoor activities or sports
+- Before spending extended time outside
+- When traveling to locations with different sun exposure
+- For managing sun-sensitive health conditions
+- During summer months or at high elevations
+
+**Accessibility Features:**
+- Full screen reader compatibility with descriptive labels
+- Keyboard navigation support
+- Clear section headers for easy scanning
+- Detailed ARIA descriptions for all information panels
+
+**Note:** UV index data availability depends on your weather data source. Open-Meteo provides comprehensive UV index data for both US and international locations, including hourly forecasts.
+
 ### Notifications and Alerts
 
 AccessiWeather provides intelligent alert management:
