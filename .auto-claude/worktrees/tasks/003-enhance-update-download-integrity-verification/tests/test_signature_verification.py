@@ -16,6 +16,53 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 import pytest_asyncio
 
+# Import hypothesis for property-based testing (optional)
+try:
+    from hypothesis import HealthCheck, given, settings
+    from hypothesis import strategies as st
+
+    HYPOTHESIS_AVAILABLE = True
+except ImportError:
+    HYPOTHESIS_AVAILABLE = False
+
+    # Create dummy decorators and module for when hypothesis is not available
+    def given(*args, **kwargs):
+        return pytest.mark.skip(reason="hypothesis not installed")
+
+    def settings(*args, **kwargs):
+        return lambda f: f
+
+    class HealthCheck:
+        function_scoped_fixture = "dummy"
+
+    # Create dummy strategies module
+    class _DummyStrategies:
+        @staticmethod
+        def binary(*args, **kwargs):
+            return None
+
+        @staticmethod
+        def text(*args, **kwargs):
+            return None
+
+        @staticmethod
+        def integers(*args, **kwargs):
+            return None
+
+        @staticmethod
+        def floats(*args, **kwargs):
+            return None
+
+        @staticmethod
+        def lists(*args, **kwargs):
+            return None
+
+        @staticmethod
+        def characters(*args, **kwargs):
+            return None
+
+    st = _DummyStrategies()
+
 # Add src to path for proper imports
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -547,3 +594,332 @@ async def test_download_and_verify_signature_exponential_backoff(temp_test_file:
                 sleep_calls = [call[0][0] for call in mock_sleep.call_args_list]
                 assert sleep_calls[0] == 1.0  # 1.0 * 2^0
                 assert sleep_calls[1] == 2.0  # 1.0 * 2^1
+
+
+# -----------------------------
+# Property-based tests with Hypothesis
+# -----------------------------
+@pytest.mark.skipif(not HYPOTHESIS_AVAILABLE, reason="hypothesis not installed")
+@pytest.mark.property
+@given(
+    file_content=st.binary(min_size=0, max_size=1024 * 100),  # Up to 100KB for tests
+)
+@settings(deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture])
+def test_property_verify_gpg_signature_various_file_contents(file_content: bytes, tmp_path: Path, test_signature_data: bytes, test_public_key: str):
+    """Property test: verify GPG signature handles various file contents correctly."""
+    test_file = tmp_path / f"test_artifact_{hash(file_content)}.bin"
+    test_file.write_bytes(file_content)
+
+    # Mock pgpy module at the import level
+    mock_pgpy = MagicMock()
+    mock_key = Mock()
+    mock_key.verify.return_value = True
+    mock_pgpy.PGPKey.from_blob.return_value = (mock_key, None)
+    mock_pgpy.PGPSignature.from_blob.return_value = Mock()
+
+    with patch.dict("sys.modules", {"pgpy": mock_pgpy}):
+        result = SignatureVerifier._verify_gpg_signature(
+            test_file,
+            test_signature_data,
+            test_public_key,
+        )
+
+        # Valid signature should pass for any file content
+        assert result is True
+        assert test_file.exists()  # File should remain after successful verification
+        mock_key.verify.assert_called_once()
+
+
+@pytest.mark.skipif(not HYPOTHESIS_AVAILABLE, reason="hypothesis not installed")
+@pytest.mark.property
+@given(
+    signature_data=st.binary(min_size=1, max_size=10240),  # 1 byte to 10KB
+)
+@settings(deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture])
+def test_property_verify_gpg_signature_various_signature_formats(signature_data: bytes, tmp_path: Path, test_public_key: str):
+    """Property test: verify GPG signature handles various signature data formats."""
+    test_file = tmp_path / "test_artifact.exe"
+    test_file.write_bytes(b"Test content")
+
+    # Mock pgpy module to handle arbitrary signature data
+    mock_pgpy = MagicMock()
+    mock_key = Mock()
+    mock_key.verify.return_value = True
+    mock_pgpy.PGPKey.from_blob.return_value = (mock_key, None)
+
+    # Simulate that some signature formats are invalid
+    if b"-----BEGIN PGP SIGNATURE-----" in signature_data:
+        mock_pgpy.PGPSignature.from_blob.return_value = Mock()
+        expected_result = True
+    else:
+        # Invalid format
+        mock_pgpy.PGPSignature.from_blob.side_effect = Exception("Invalid signature format")
+        expected_result = False
+
+    with patch.dict("sys.modules", {"pgpy": mock_pgpy}):
+        result = SignatureVerifier._verify_gpg_signature(
+            test_file,
+            signature_data,
+            test_public_key,
+        )
+
+        if expected_result:
+            assert result is True
+            assert test_file.exists()
+        else:
+            # Should handle malformed signatures gracefully
+            assert result is False
+            assert not test_file.exists()  # File deleted on failure
+
+
+@pytest.mark.skipif(not HYPOTHESIS_AVAILABLE, reason="hypothesis not installed")
+@pytest.mark.property
+@given(
+    public_key=st.text(min_size=10, max_size=5000),
+)
+@settings(deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture])
+def test_property_verify_gpg_signature_various_public_keys(public_key: str, tmp_path: Path, test_signature_data: bytes):
+    """Property test: verify GPG signature handles various public key formats."""
+    test_file = tmp_path / "test_artifact.exe"
+    test_file.write_bytes(b"Test content")
+
+    # Mock pgpy module
+    mock_pgpy = MagicMock()
+
+    # Simulate valid PGP key format check
+    if "-----BEGIN PGP PUBLIC KEY BLOCK-----" in public_key:
+        mock_key = Mock()
+        mock_key.verify.return_value = True
+        mock_pgpy.PGPKey.from_blob.return_value = (mock_key, None)
+        mock_pgpy.PGPSignature.from_blob.return_value = Mock()
+        expected_result = True
+    else:
+        # Invalid key format
+        mock_pgpy.PGPKey.from_blob.side_effect = Exception("Invalid public key format")
+        expected_result = False
+
+    with patch.dict("sys.modules", {"pgpy": mock_pgpy}):
+        result = SignatureVerifier._verify_gpg_signature(
+            test_file,
+            test_signature_data,
+            public_key,
+        )
+
+        if expected_result:
+            assert result is True
+            assert test_file.exists()
+        else:
+            # Should handle invalid keys gracefully
+            assert result is False
+            assert not test_file.exists()  # File deleted on failure
+
+
+@pytest.mark.skipif(not HYPOTHESIS_AVAILABLE, reason="hypothesis not installed")
+@pytest.mark.property
+@pytest.mark.asyncio
+@given(
+    max_retries=st.integers(min_value=0, max_value=5),
+    retry_delay=st.floats(min_value=0.001, max_value=2.0, allow_nan=False, allow_infinity=False),
+)
+@settings(deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture])
+async def test_property_download_retry_configuration(max_retries: int, retry_delay: float, tmp_path: Path, test_public_key: str):
+    """Property test: verify retry logic works with various configurations."""
+    test_file = tmp_path / "test_artifact.exe"
+    test_file.write_bytes(b"Test content")
+
+    with patch("accessiweather.services.update_service.signature_verification.aiohttp.ClientSession") as mock_session_class:
+        mock_session = MagicMock()
+        # Always fail to test retry behavior
+        mock_session.get.side_effect = asyncio.TimeoutError("Request timeout")
+        mock_session.__aenter__.return_value = mock_session
+        mock_session.__aexit__.return_value = None
+        mock_session_class.return_value = mock_session
+
+        result = await SignatureVerifier.download_and_verify_signature(
+            test_file,
+            "https://example.com/artifact.sig",
+            public_key=test_public_key,
+            max_retries=max_retries,
+            retry_delay=retry_delay,
+        )
+
+        # Should always fail (timeout) but not crash
+        assert result is False
+        # Should have attempted max_retries times
+        assert mock_session.get.call_count == max(1, max_retries)
+
+
+@pytest.mark.skipif(not HYPOTHESIS_AVAILABLE, reason="hypothesis not installed")
+@pytest.mark.property
+@pytest.mark.asyncio
+@given(
+    url_path=st.text(
+        alphabet=st.characters(whitelist_categories=("Lu", "Ll", "Nd"), whitelist_characters="-_./"),
+        min_size=1,
+        max_size=200,
+    ),
+)
+@settings(deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture])
+async def test_property_download_various_urls(url_path: str, tmp_path: Path, test_signature_data: bytes, test_public_key: str, mock_aiohttp_response):
+    """Property test: verify signature download handles various URL formats."""
+    test_file = tmp_path / "test_artifact.exe"
+    test_file.write_bytes(b"Test content")
+
+    # Construct a valid URL with the generated path
+    url = f"https://example.com/{url_path.lstrip('/')}"
+
+    mock_response = mock_aiohttp_response(status=200, data=test_signature_data)
+
+    with patch("accessiweather.services.update_service.signature_verification.aiohttp.ClientSession") as mock_session_class:
+        mock_session = MagicMock()
+        mock_get_ctx = AsyncMock()
+        mock_get_ctx.__aenter__.return_value = mock_response
+        mock_get_ctx.__aexit__.return_value = None
+        mock_session.get.return_value = mock_get_ctx
+        mock_session.__aenter__.return_value = mock_session
+        mock_session.__aexit__.return_value = None
+        mock_session_class.return_value = mock_session
+
+        with patch.object(SignatureVerifier, "_verify_gpg_signature", return_value=True):
+            result = await SignatureVerifier.download_and_verify_signature(
+                test_file,
+                url,
+                public_key=test_public_key,
+                max_retries=1,
+            )
+
+            # Should handle any valid URL format
+            assert result is True
+            mock_session.get.assert_called_once()
+
+
+@pytest.mark.skipif(not HYPOTHESIS_AVAILABLE, reason="hypothesis not installed")
+@pytest.mark.property
+@given(
+    status_codes=st.lists(
+        st.integers(min_value=400, max_value=599),
+        min_size=1,
+        max_size=3,
+    ),
+)
+@settings(deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture])
+@pytest.mark.asyncio
+async def test_property_download_various_error_status_codes(status_codes: list, tmp_path: Path, test_public_key: str, mock_aiohttp_response):
+    """Property test: verify signature download handles various HTTP error status codes."""
+    test_file = tmp_path / "test_artifact.exe"
+    test_file.write_bytes(b"Test content")
+
+    # Use the first status code for testing
+    status_code = status_codes[0]
+    mock_response = mock_aiohttp_response(status=status_code, data=b"")
+
+    with patch("accessiweather.services.update_service.signature_verification.aiohttp.ClientSession") as mock_session_class:
+        mock_session = MagicMock()
+        mock_get_ctx = AsyncMock()
+        mock_get_ctx.__aenter__.return_value = mock_response
+        mock_get_ctx.__aexit__.return_value = None
+        mock_session.get.return_value = mock_get_ctx
+        mock_session.__aenter__.return_value = mock_session
+        mock_session.__aexit__.return_value = None
+        mock_session_class.return_value = mock_session
+
+        result = await SignatureVerifier.download_and_verify_signature(
+            test_file,
+            "https://example.com/artifact.sig",
+            public_key=test_public_key,
+            max_retries=1,
+        )
+
+        # Should handle all error status codes gracefully
+        assert result is False
+
+
+@pytest.mark.skipif(not HYPOTHESIS_AVAILABLE, reason="hypothesis not installed")
+@pytest.mark.property
+@given(
+    file_size=st.integers(min_value=0, max_value=1024 * 1024 * 10),  # 0 to 10MB
+)
+@settings(deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture])
+def test_property_verify_gpg_signature_various_file_sizes(file_size: int, tmp_path: Path, test_signature_data: bytes, test_public_key: str):
+    """Property test: verify GPG signature handles files of various sizes."""
+    test_file = tmp_path / "test_artifact_large.bin"
+
+    # Create file with specified size (filled with pattern to save memory)
+    chunk_size = 8192
+    with test_file.open("wb") as f:
+        remaining = file_size
+        pattern = b"A" * min(chunk_size, remaining)
+        while remaining > 0:
+            write_size = min(chunk_size, remaining)
+            f.write(pattern[:write_size])
+            remaining -= write_size
+
+    assert test_file.stat().st_size == file_size
+
+    # Mock pgpy module
+    mock_pgpy = MagicMock()
+    mock_key = Mock()
+    mock_key.verify.return_value = True
+    mock_pgpy.PGPKey.from_blob.return_value = (mock_key, None)
+    mock_pgpy.PGPSignature.from_blob.return_value = Mock()
+
+    with patch.dict("sys.modules", {"pgpy": mock_pgpy}):
+        result = SignatureVerifier._verify_gpg_signature(
+            test_file,
+            test_signature_data,
+            test_public_key,
+        )
+
+        # Should handle files of any size
+        assert result is True
+        assert test_file.exists()
+        mock_key.verify.assert_called_once()
+
+
+@pytest.mark.skipif(not HYPOTHESIS_AVAILABLE, reason="hypothesis not installed")
+@pytest.mark.property
+@given(
+    num_failures=st.integers(min_value=0, max_value=3),
+)
+@settings(deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture])
+@pytest.mark.asyncio
+async def test_property_download_retry_with_eventual_success(num_failures: int, tmp_path: Path, test_signature_data: bytes, test_public_key: str, mock_aiohttp_response):
+    """Property test: verify retry logic eventually succeeds after N failures."""
+    test_file = tmp_path / "test_artifact.exe"
+    test_file.write_bytes(b"Test content")
+
+    mock_success_response = mock_aiohttp_response(status=200, data=test_signature_data)
+
+    with patch("accessiweather.services.update_service.signature_verification.aiohttp.ClientSession") as mock_session_class:
+        mock_session = MagicMock()
+
+        call_count = 0
+
+        def mock_get(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count <= num_failures:
+                raise asyncio.TimeoutError("Request timeout")
+            # Return async context manager
+            mock_ctx = AsyncMock()
+            mock_ctx.__aenter__.return_value = mock_success_response
+            mock_ctx.__aexit__.return_value = None
+            return mock_ctx
+
+        mock_session.get.side_effect = mock_get
+        mock_session.__aenter__.return_value = mock_session
+        mock_session.__aexit__.return_value = None
+        mock_session_class.return_value = mock_session
+
+        with patch.object(SignatureVerifier, "_verify_gpg_signature", return_value=True):
+            result = await SignatureVerifier.download_and_verify_signature(
+                test_file,
+                "https://example.com/artifact.sig",
+                public_key=test_public_key,
+                max_retries=num_failures + 1,  # Ensure we have enough retries
+                retry_delay=0.01,
+            )
+
+            # Should succeed after num_failures attempts
+            assert result is True
+            assert call_count == num_failures + 1

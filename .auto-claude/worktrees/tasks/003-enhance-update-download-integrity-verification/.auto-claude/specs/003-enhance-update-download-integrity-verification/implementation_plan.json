@@ -317,8 +317,9 @@
             "command": "pytest tests/test_github_update_service.py -v -k signature",
             "expected": "All signature tests pass"
           },
-          "status": "pending",
-          "notes": "Add tests for: download with signature verification, signature URL in UpdateInfo, find_signature_asset method"
+          "status": "completed",
+          "notes": "Successfully added 8 integration tests for signature verification flow to test_github_update_service.py. Tests cover: find_signature_asset method with .sig and .asc extensions, signature_url population in UpdateInfo, download with signature verification success/failure, and graceful skip when signature_url is None. All tests pass. Also created local pytest.ini to handle missing pytest-xdist plugin, and added InvalidVersion stub to packaging module stub.",
+          "updated_at": "2026-01-12T07:00:53.786604+00:00"
         },
         {
           "id": "subtask-5-3",
@@ -605,7 +606,7 @@
   "qa_signoff": null,
   "status": "in_progress",
   "planStatus": "in_progress",
-  "updated_at": "2026-01-12T06:55:43.199Z",
-  "last_updated": "2026-01-12T06:55:18.686070+00:00",
+  "updated_at": "2026-01-12T07:01:18.046Z",
+  "last_updated": "2026-01-12T07:00:53.786604+00:00",
   "recoveryNote": "Task recovered from stuck state at 2026-01-12T06:38:27.683Z"
 }
