@@ -16,6 +16,7 @@ Usage examples:
   python installer/make.py status          # Show detected settings and versions
   python installer/make.py clean           # Clean Briefcase build artifacts (best-effort)
   python installer/make.py bootstrap       # Bootstrap dev environment for agents/worktrees
+  python installer/make.py bootstrap-no-env # Bootstrap without creating/managing venv
 
 Options:
   --platform windows|macOS|linux (default: windows)
@@ -510,6 +511,53 @@ def cmd_bootstrap(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_bootstrap_no_env(args: argparse.Namespace) -> int:
+    """
+    Bootstrap development environment without creating or managing a virtual environment.
+
+    Uses the current Python interpreter directly. Useful when the environment is
+    already set up (e.g., in CI, containers, or pre-activated venvs).
+    """
+    import os
+
+    vpy = Path(sys.executable)
+    print(f"Using current Python interpreter: {vpy}")
+
+    # Upgrade pip first
+    print("Upgrading pip...")
+    if _pip(vpy, "install", "-U", "pip") != 0:
+        return 1
+
+    # Install dev requirements
+    print("Installing dev requirements...")
+    req_dev = ROOT / "requirements-dev.txt"
+    if req_dev.exists():
+        if _pip(vpy, "install", "-r", str(req_dev)) != 0:
+            return 1
+    else:
+        print(f"Warning: {req_dev} not found, skipping dev requirements")
+
+    # Install main requirements
+    print("Installing main requirements...")
+    req_main = ROOT / "requirements.txt"
+    if req_main.exists() and _pip(vpy, "install", "-r", str(req_main)) != 0:
+        return 1
+
+    # Install the project in editable mode
+    print("Installing project in editable mode...")
+    if _pip(vpy, "install", "-e", ".") != 0:
+        return 1
+
+    # Set TOGA_BACKEND for headless testing
+    os.environ["TOGA_BACKEND"] = "toga_dummy"
+    print("Set TOGA_BACKEND=toga_dummy for headless testing")
+
+    print("\nBootstrap complete (no-env mode)!")
+    print("Dependencies installed in current Python environment.")
+    print("\nFor headless tests, ensure TOGA_BACKEND=toga_dummy is set.")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="AccessiWeather Briefcase make-like tool")
     sub = parser.add_subparsers(dest="cmd")
@@ -559,6 +607,11 @@ def main() -> int:
         "bootstrap", help="Bootstrap dev environment (install deps, set TOGA_BACKEND)"
     )
     p_bootstrap.set_defaults(func=cmd_bootstrap)
+
+    p_bootstrap_no_env = sub.add_parser(
+        "bootstrap-no-env", help="Bootstrap without creating/managing venv"
+    )
+    p_bootstrap_no_env.set_defaults(func=cmd_bootstrap_no_env)
 
     args = parser.parse_args()
     if not getattr(args, "cmd", None):
