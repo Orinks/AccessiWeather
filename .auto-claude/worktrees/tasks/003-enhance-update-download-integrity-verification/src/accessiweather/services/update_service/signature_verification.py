@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import logging
 from pathlib import Path
-from typing import Any
 
 import aiohttp
 
@@ -26,9 +25,7 @@ class SignatureVerifier:
     """Handles GPG signature verification for update downloads."""
 
     @staticmethod
-    def _verify_gpg_signature(
-        file_path: Path, signature_data: bytes, public_key: str
-    ) -> bool:
+    def _verify_gpg_signature(file_path: Path, signature_data: bytes, public_key: str) -> bool:
         """
         Verify a detached GPG signature against a file.
 
@@ -123,45 +120,47 @@ class SignatureVerifier:
         for attempt in range(max_retries):
             try:
                 # Download signature file
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(
+                async with (
+                    aiohttp.ClientSession() as session,
+                    session.get(
                         signature_url,
                         timeout=aiohttp.ClientTimeout(total=30),
-                    ) as response:
-                        if response.status != 200:
-                            logger.warning(
-                                "Failed to download signature from %s: HTTP %d (attempt %d/%d)",
-                                signature_url,
-                                response.status,
-                                attempt + 1,
-                                max_retries,
-                            )
-                            if attempt < max_retries - 1:
-                                await asyncio.sleep(retry_delay * (2**attempt))
-                                continue
-                            return False
-
-                        signature_data = await response.read()
-
-                        if not signature_data:
-                            logger.error(
-                                "Downloaded empty signature file from %s",
-                                signature_url,
-                            )
-                            return False
-
-                        logger.info(
-                            "Downloaded signature file from %s (%d bytes)",
+                    ) as response,
+                ):
+                    if response.status != 200:
+                        logger.warning(
+                            "Failed to download signature from %s: HTTP %d (attempt %d/%d)",
                             signature_url,
-                            len(signature_data),
+                            response.status,
+                            attempt + 1,
+                            max_retries,
                         )
+                        if attempt < max_retries - 1:
+                            await asyncio.sleep(retry_delay * (2**attempt))
+                            continue
+                        return False
 
-                        # Verify the signature
-                        return SignatureVerifier._verify_gpg_signature(
-                            file_path,
-                            signature_data,
-                            public_key,
+                    signature_data = await response.read()
+
+                    if not signature_data:
+                        logger.error(
+                            "Downloaded empty signature file from %s",
+                            signature_url,
                         )
+                        return False
+
+                    logger.info(
+                        "Downloaded signature file from %s (%d bytes)",
+                        signature_url,
+                        len(signature_data),
+                    )
+
+                    # Verify the signature
+                    return SignatureVerifier._verify_gpg_signature(
+                        file_path,
+                        signature_data,
+                        public_key,
+                    )
 
             except asyncio.TimeoutError:
                 logger.warning(

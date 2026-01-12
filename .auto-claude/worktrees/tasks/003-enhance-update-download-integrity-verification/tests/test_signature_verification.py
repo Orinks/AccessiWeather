@@ -10,16 +10,18 @@ import asyncio
 import sys
 import types
 from pathlib import Path
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
-import pytest_asyncio
 
 # Import hypothesis for property-based testing (optional)
 try:
-    from hypothesis import HealthCheck, given, settings
-    from hypothesis import strategies as st
+    from hypothesis import (
+        HealthCheck,
+        given,
+        settings,
+        strategies as st,
+    )
 
     HYPOTHESIS_AVAILABLE = True
 except ImportError:
@@ -186,7 +188,9 @@ def mock_aiohttp_response():
 # -----------------------------
 # Test _verify_gpp_signature static method
 # -----------------------------
-def test_verify_gpg_signature_valid(temp_test_file: Path, test_signature_data: bytes, test_public_key: str):
+def test_verify_gpg_signature_valid(
+    temp_test_file: Path, test_signature_data: bytes, test_public_key: str
+):
     """Test successful GPG signature verification."""
     # Mock pgpy module at the import level
     mock_pgpy = MagicMock()
@@ -207,7 +211,9 @@ def test_verify_gpg_signature_valid(temp_test_file: Path, test_signature_data: b
         mock_key.verify.assert_called_once()
 
 
-def test_verify_gpg_signature_invalid(temp_test_file: Path, test_signature_data: bytes, test_public_key: str):
+def test_verify_gpg_signature_invalid(
+    temp_test_file: Path, test_signature_data: bytes, test_public_key: str
+):
     """Test GPG signature verification failure with invalid signature."""
     # Mock pgpy module at the import level
     mock_pgpy = MagicMock()
@@ -262,7 +268,9 @@ def test_verify_gpg_signature_wrong_public_key(temp_test_file: Path, test_signat
         assert not temp_test_file.exists()  # File should be deleted on error
 
 
-def test_verify_gpg_signature_pgpy_not_available(temp_test_file: Path, test_signature_data: bytes, test_public_key: str):
+def test_verify_gpg_signature_pgpy_not_available(
+    temp_test_file: Path, test_signature_data: bytes, test_public_key: str
+):
     """Test GPG signature verification when PGPy library is not available."""
 
     def mock_import(name, *args, **kwargs):
@@ -281,7 +289,9 @@ def test_verify_gpg_signature_pgpy_not_available(temp_test_file: Path, test_sign
         assert temp_test_file.exists()  # File should not be deleted when library is missing
 
 
-def test_verify_gpg_signature_file_read_error(test_signature_data: bytes, test_public_key: str, tmp_path: Path):
+def test_verify_gpg_signature_file_read_error(
+    test_signature_data: bytes, test_public_key: str, tmp_path: Path
+):
     """Test GPG signature verification with file read error."""
     nonexistent_file = tmp_path / "nonexistent.exe"
 
@@ -304,11 +314,15 @@ def test_verify_gpg_signature_file_read_error(test_signature_data: bytes, test_p
 # Test download_and_verify_signature async method
 # -----------------------------
 @pytest.mark.asyncio
-async def test_download_and_verify_signature_success(temp_test_file: Path, test_signature_data: bytes, test_public_key: str, mock_aiohttp_response):
+async def test_download_and_verify_signature_success(
+    temp_test_file: Path, test_signature_data: bytes, test_public_key: str, mock_aiohttp_response
+):
     """Test successful signature download and verification."""
     mock_response = mock_aiohttp_response(status=200, data=test_signature_data)
 
-    with patch("accessiweather.services.update_service.signature_verification.aiohttp.ClientSession") as mock_session_class:
+    with patch(
+        "accessiweather.services.update_service.signature_verification.aiohttp.ClientSession"
+    ) as mock_session_class:
         mock_session = MagicMock()
         mock_get_ctx = AsyncMock()
         mock_get_ctx.__aenter__.return_value = mock_response
@@ -318,7 +332,9 @@ async def test_download_and_verify_signature_success(temp_test_file: Path, test_
         mock_session.__aexit__.return_value = None
         mock_session_class.return_value = mock_session
 
-        with patch.object(SignatureVerifier, "_verify_gpg_signature", return_value=True) as mock_verify:
+        with patch.object(
+            SignatureVerifier, "_verify_gpg_signature", return_value=True
+        ) as mock_verify:
             result = await SignatureVerifier.download_and_verify_signature(
                 temp_test_file,
                 "https://example.com/artifact.sig",
@@ -326,7 +342,9 @@ async def test_download_and_verify_signature_success(temp_test_file: Path, test_
             )
 
             assert result is True
-            mock_verify.assert_called_once_with(temp_test_file, test_signature_data, test_public_key)
+            mock_verify.assert_called_once_with(
+                temp_test_file, test_signature_data, test_public_key
+            )
 
 
 @pytest.mark.asyncio
@@ -344,11 +362,15 @@ async def test_download_and_verify_signature_file_not_found(tmp_path: Path, test
 
 
 @pytest.mark.asyncio
-async def test_download_and_verify_signature_http_404(temp_test_file: Path, test_public_key: str, mock_aiohttp_response):
+async def test_download_and_verify_signature_http_404(
+    temp_test_file: Path, test_public_key: str, mock_aiohttp_response
+):
     """Test signature download with HTTP 404 response."""
     mock_response = mock_aiohttp_response(status=404, data=b"")
 
-    with patch("accessiweather.services.update_service.signature_verification.aiohttp.ClientSession") as mock_session_class:
+    with patch(
+        "accessiweather.services.update_service.signature_verification.aiohttp.ClientSession"
+    ) as mock_session_class:
         mock_session = MagicMock()
         mock_get_ctx = AsyncMock()
         mock_get_ctx.__aenter__.return_value = mock_response
@@ -369,11 +391,15 @@ async def test_download_and_verify_signature_http_404(temp_test_file: Path, test
 
 
 @pytest.mark.asyncio
-async def test_download_and_verify_signature_empty_response(temp_test_file: Path, test_public_key: str, mock_aiohttp_response):
+async def test_download_and_verify_signature_empty_response(
+    temp_test_file: Path, test_public_key: str, mock_aiohttp_response
+):
     """Test signature download with empty signature file."""
     mock_response = mock_aiohttp_response(status=200, data=b"")
 
-    with patch("accessiweather.services.update_service.signature_verification.aiohttp.ClientSession") as mock_session_class:
+    with patch(
+        "accessiweather.services.update_service.signature_verification.aiohttp.ClientSession"
+    ) as mock_session_class:
         mock_session = MagicMock()
         mock_get_ctx = AsyncMock()
         mock_get_ctx.__aenter__.return_value = mock_response
@@ -393,11 +419,15 @@ async def test_download_and_verify_signature_empty_response(temp_test_file: Path
 
 
 @pytest.mark.asyncio
-async def test_download_and_verify_signature_timeout_with_retry(temp_test_file: Path, test_signature_data: bytes, test_public_key: str, mock_aiohttp_response):
+async def test_download_and_verify_signature_timeout_with_retry(
+    temp_test_file: Path, test_signature_data: bytes, test_public_key: str, mock_aiohttp_response
+):
     """Test signature download with timeout and successful retry."""
     mock_success_response = mock_aiohttp_response(status=200, data=test_signature_data)
 
-    with patch("accessiweather.services.update_service.signature_verification.aiohttp.ClientSession") as mock_session_class:
+    with patch(
+        "accessiweather.services.update_service.signature_verification.aiohttp.ClientSession"
+    ) as mock_session_class:
         mock_session = MagicMock()
 
         # First call times out, second succeeds
@@ -433,9 +463,13 @@ async def test_download_and_verify_signature_timeout_with_retry(temp_test_file: 
 
 
 @pytest.mark.asyncio
-async def test_download_and_verify_signature_max_retries_exceeded(temp_test_file: Path, test_public_key: str):
+async def test_download_and_verify_signature_max_retries_exceeded(
+    temp_test_file: Path, test_public_key: str
+):
     """Test signature download when max retries are exceeded."""
-    with patch("accessiweather.services.update_service.signature_verification.aiohttp.ClientSession") as mock_session_class:
+    with patch(
+        "accessiweather.services.update_service.signature_verification.aiohttp.ClientSession"
+    ) as mock_session_class:
         mock_session = MagicMock()
         mock_session.get.side_effect = asyncio.TimeoutError("Request timeout")
         mock_session.__aenter__.return_value = mock_session
@@ -455,9 +489,13 @@ async def test_download_and_verify_signature_max_retries_exceeded(temp_test_file
 
 
 @pytest.mark.asyncio
-async def test_download_and_verify_signature_client_error(temp_test_file: Path, test_public_key: str):
+async def test_download_and_verify_signature_client_error(
+    temp_test_file: Path, test_public_key: str
+):
     """Test signature download with network client error."""
-    with patch("accessiweather.services.update_service.signature_verification.aiohttp.ClientSession") as mock_session_class:
+    with patch(
+        "accessiweather.services.update_service.signature_verification.aiohttp.ClientSession"
+    ) as mock_session_class:
         mock_session = MagicMock()
 
         # Import the actual exception type from the stub
@@ -479,9 +517,13 @@ async def test_download_and_verify_signature_client_error(temp_test_file: Path, 
 
 
 @pytest.mark.asyncio
-async def test_download_and_verify_signature_unexpected_exception(temp_test_file: Path, test_public_key: str):
+async def test_download_and_verify_signature_unexpected_exception(
+    temp_test_file: Path, test_public_key: str
+):
     """Test signature download with unexpected exception."""
-    with patch("accessiweather.services.update_service.signature_verification.aiohttp.ClientSession") as mock_session_class:
+    with patch(
+        "accessiweather.services.update_service.signature_verification.aiohttp.ClientSession"
+    ) as mock_session_class:
         mock_session = MagicMock()
         mock_session.get.side_effect = Exception("Unexpected error")
         mock_session.__aenter__.return_value = mock_session
@@ -498,11 +540,15 @@ async def test_download_and_verify_signature_unexpected_exception(temp_test_file
 
 
 @pytest.mark.asyncio
-async def test_download_and_verify_signature_verification_fails(temp_test_file: Path, test_signature_data: bytes, test_public_key: str, mock_aiohttp_response):
+async def test_download_and_verify_signature_verification_fails(
+    temp_test_file: Path, test_signature_data: bytes, test_public_key: str, mock_aiohttp_response
+):
     """Test successful download but verification failure."""
     mock_response = mock_aiohttp_response(status=200, data=test_signature_data)
 
-    with patch("accessiweather.services.update_service.signature_verification.aiohttp.ClientSession") as mock_session_class:
+    with patch(
+        "accessiweather.services.update_service.signature_verification.aiohttp.ClientSession"
+    ) as mock_session_class:
         mock_session = MagicMock()
         mock_get_ctx = AsyncMock()
         mock_get_ctx.__aenter__.return_value = mock_response
@@ -512,7 +558,9 @@ async def test_download_and_verify_signature_verification_fails(temp_test_file: 
         mock_session.__aexit__.return_value = None
         mock_session_class.return_value = mock_session
 
-        with patch.object(SignatureVerifier, "_verify_gpg_signature", return_value=False) as mock_verify:
+        with patch.object(
+            SignatureVerifier, "_verify_gpg_signature", return_value=False
+        ) as mock_verify:
             result = await SignatureVerifier.download_and_verify_signature(
                 temp_test_file,
                 "https://example.com/artifact.sig",
@@ -524,11 +572,15 @@ async def test_download_and_verify_signature_verification_fails(temp_test_file: 
 
 
 @pytest.mark.asyncio
-async def test_download_and_verify_signature_default_public_key(temp_test_file: Path, test_signature_data: bytes, mock_aiohttp_response):
+async def test_download_and_verify_signature_default_public_key(
+    temp_test_file: Path, test_signature_data: bytes, mock_aiohttp_response
+):
     """Test signature verification uses default public key when not specified."""
     mock_response = mock_aiohttp_response(status=200, data=test_signature_data)
 
-    with patch("accessiweather.services.update_service.signature_verification.aiohttp.ClientSession") as mock_session_class:
+    with patch(
+        "accessiweather.services.update_service.signature_verification.aiohttp.ClientSession"
+    ) as mock_session_class:
         mock_session = MagicMock()
         mock_get_ctx = AsyncMock()
         mock_get_ctx.__aenter__.return_value = mock_response
@@ -538,7 +590,9 @@ async def test_download_and_verify_signature_default_public_key(temp_test_file: 
         mock_session.__aexit__.return_value = None
         mock_session_class.return_value = mock_session
 
-        with patch.object(SignatureVerifier, "_verify_gpg_signature", return_value=True) as mock_verify:
+        with patch.object(
+            SignatureVerifier, "_verify_gpg_signature", return_value=True
+        ) as mock_verify:
             result = await SignatureVerifier.download_and_verify_signature(
                 temp_test_file,
                 "https://example.com/artifact.sig",
@@ -552,48 +606,56 @@ async def test_download_and_verify_signature_default_public_key(temp_test_file: 
 
 
 @pytest.mark.asyncio
-async def test_download_and_verify_signature_exponential_backoff(temp_test_file: Path, test_signature_data: bytes, test_public_key: str, mock_aiohttp_response):
+async def test_download_and_verify_signature_exponential_backoff(
+    temp_test_file: Path, test_signature_data: bytes, test_public_key: str, mock_aiohttp_response
+):
     """Test that retry delay follows exponential backoff pattern."""
     mock_success_response = mock_aiohttp_response(status=200, data=test_signature_data)
 
-    with patch("accessiweather.services.update_service.signature_verification.aiohttp.ClientSession") as mock_session_class:
-        with patch("accessiweather.services.update_service.signature_verification.asyncio.sleep") as mock_sleep:
-            mock_session = MagicMock()
+    with (
+        patch(
+            "accessiweather.services.update_service.signature_verification.aiohttp.ClientSession"
+        ) as mock_session_class,
+        patch(
+            "accessiweather.services.update_service.signature_verification.asyncio.sleep"
+        ) as mock_sleep,
+    ):
+        mock_session = MagicMock()
 
-            # Fail twice, then succeed
-            call_count = 0
+        # Fail twice, then succeed
+        call_count = 0
 
-            def mock_get(*args, **kwargs):
-                nonlocal call_count
-                call_count += 1
-                if call_count <= 2:
-                    raise asyncio.TimeoutError("Request timeout")
-                # Return async context manager
-                mock_ctx = AsyncMock()
-                mock_ctx.__aenter__.return_value = mock_success_response
-                mock_ctx.__aexit__.return_value = None
-                return mock_ctx
+        def mock_get(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count <= 2:
+                raise asyncio.TimeoutError("Request timeout")
+            # Return async context manager
+            mock_ctx = AsyncMock()
+            mock_ctx.__aenter__.return_value = mock_success_response
+            mock_ctx.__aexit__.return_value = None
+            return mock_ctx
 
-            mock_session.get.side_effect = mock_get
-            mock_session.__aenter__.return_value = mock_session
-            mock_session.__aexit__.return_value = None
-            mock_session_class.return_value = mock_session
+        mock_session.get.side_effect = mock_get
+        mock_session.__aenter__.return_value = mock_session
+        mock_session.__aexit__.return_value = None
+        mock_session_class.return_value = mock_session
 
-            with patch.object(SignatureVerifier, "_verify_gpg_signature", return_value=True):
-                result = await SignatureVerifier.download_and_verify_signature(
-                    temp_test_file,
-                    "https://example.com/artifact.sig",
-                    public_key=test_public_key,
-                    max_retries=3,
-                    retry_delay=1.0,
-                )
+        with patch.object(SignatureVerifier, "_verify_gpg_signature", return_value=True):
+            result = await SignatureVerifier.download_and_verify_signature(
+                temp_test_file,
+                "https://example.com/artifact.sig",
+                public_key=test_public_key,
+                max_retries=3,
+                retry_delay=1.0,
+            )
 
-                assert result is True
-                # Check exponential backoff: delay * 2^0, delay * 2^1
-                assert mock_sleep.call_count == 2
-                sleep_calls = [call[0][0] for call in mock_sleep.call_args_list]
-                assert sleep_calls[0] == 1.0  # 1.0 * 2^0
-                assert sleep_calls[1] == 2.0  # 1.0 * 2^1
+            assert result is True
+            # Check exponential backoff: delay * 2^0, delay * 2^1
+            assert mock_sleep.call_count == 2
+            sleep_calls = [call[0][0] for call in mock_sleep.call_args_list]
+            assert sleep_calls[0] == 1.0  # 1.0 * 2^0
+            assert sleep_calls[1] == 2.0  # 1.0 * 2^1
 
 
 # -----------------------------
@@ -605,7 +667,9 @@ async def test_download_and_verify_signature_exponential_backoff(temp_test_file:
     file_content=st.binary(min_size=0, max_size=1024 * 100),  # Up to 100KB for tests
 )
 @settings(deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture])
-def test_property_verify_gpg_signature_various_file_contents(file_content: bytes, tmp_path: Path, test_signature_data: bytes, test_public_key: str):
+def test_property_verify_gpg_signature_various_file_contents(
+    file_content: bytes, tmp_path: Path, test_signature_data: bytes, test_public_key: str
+):
     """Property test: verify GPG signature handles various file contents correctly."""
     test_file = tmp_path / f"test_artifact_{hash(file_content)}.bin"
     test_file.write_bytes(file_content)
@@ -636,7 +700,9 @@ def test_property_verify_gpg_signature_various_file_contents(file_content: bytes
     signature_data=st.binary(min_size=1, max_size=10240),  # 1 byte to 10KB
 )
 @settings(deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture])
-def test_property_verify_gpg_signature_various_signature_formats(signature_data: bytes, tmp_path: Path, test_public_key: str):
+def test_property_verify_gpg_signature_various_signature_formats(
+    signature_data: bytes, tmp_path: Path, test_public_key: str
+):
     """Property test: verify GPG signature handles various signature data formats."""
     test_file = tmp_path / "test_artifact.exe"
     test_file.write_bytes(b"Test content")
@@ -678,7 +744,9 @@ def test_property_verify_gpg_signature_various_signature_formats(signature_data:
     public_key=st.text(min_size=10, max_size=5000),
 )
 @settings(deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture])
-def test_property_verify_gpg_signature_various_public_keys(public_key: str, tmp_path: Path, test_signature_data: bytes):
+def test_property_verify_gpg_signature_various_public_keys(
+    public_key: str, tmp_path: Path, test_signature_data: bytes
+):
     """Property test: verify GPG signature handles various public key formats."""
     test_file = tmp_path / "test_artifact.exe"
     test_file.write_bytes(b"Test content")
@@ -722,12 +790,16 @@ def test_property_verify_gpg_signature_various_public_keys(public_key: str, tmp_
     retry_delay=st.floats(min_value=0.001, max_value=2.0, allow_nan=False, allow_infinity=False),
 )
 @settings(deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture])
-async def test_property_download_retry_configuration(max_retries: int, retry_delay: float, tmp_path: Path, test_public_key: str):
+async def test_property_download_retry_configuration(
+    max_retries: int, retry_delay: float, tmp_path: Path, test_public_key: str
+):
     """Property test: verify retry logic works with various configurations."""
     test_file = tmp_path / "test_artifact.exe"
     test_file.write_bytes(b"Test content")
 
-    with patch("accessiweather.services.update_service.signature_verification.aiohttp.ClientSession") as mock_session_class:
+    with patch(
+        "accessiweather.services.update_service.signature_verification.aiohttp.ClientSession"
+    ) as mock_session_class:
         mock_session = MagicMock()
         # Always fail to test retry behavior
         mock_session.get.side_effect = asyncio.TimeoutError("Request timeout")
@@ -754,13 +826,21 @@ async def test_property_download_retry_configuration(max_retries: int, retry_del
 @pytest.mark.asyncio
 @given(
     url_path=st.text(
-        alphabet=st.characters(whitelist_categories=("Lu", "Ll", "Nd"), whitelist_characters="-_./"),
+        alphabet=st.characters(
+            whitelist_categories=("Lu", "Ll", "Nd"), whitelist_characters="-_./"
+        ),
         min_size=1,
         max_size=200,
     ),
 )
 @settings(deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture])
-async def test_property_download_various_urls(url_path: str, tmp_path: Path, test_signature_data: bytes, test_public_key: str, mock_aiohttp_response):
+async def test_property_download_various_urls(
+    url_path: str,
+    tmp_path: Path,
+    test_signature_data: bytes,
+    test_public_key: str,
+    mock_aiohttp_response,
+):
     """Property test: verify signature download handles various URL formats."""
     test_file = tmp_path / "test_artifact.exe"
     test_file.write_bytes(b"Test content")
@@ -770,7 +850,9 @@ async def test_property_download_various_urls(url_path: str, tmp_path: Path, tes
 
     mock_response = mock_aiohttp_response(status=200, data=test_signature_data)
 
-    with patch("accessiweather.services.update_service.signature_verification.aiohttp.ClientSession") as mock_session_class:
+    with patch(
+        "accessiweather.services.update_service.signature_verification.aiohttp.ClientSession"
+    ) as mock_session_class:
         mock_session = MagicMock()
         mock_get_ctx = AsyncMock()
         mock_get_ctx.__aenter__.return_value = mock_response
@@ -804,7 +886,9 @@ async def test_property_download_various_urls(url_path: str, tmp_path: Path, tes
 )
 @settings(deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture])
 @pytest.mark.asyncio
-async def test_property_download_various_error_status_codes(status_codes: list, tmp_path: Path, test_public_key: str, mock_aiohttp_response):
+async def test_property_download_various_error_status_codes(
+    status_codes: list, tmp_path: Path, test_public_key: str, mock_aiohttp_response
+):
     """Property test: verify signature download handles various HTTP error status codes."""
     test_file = tmp_path / "test_artifact.exe"
     test_file.write_bytes(b"Test content")
@@ -813,7 +897,9 @@ async def test_property_download_various_error_status_codes(status_codes: list, 
     status_code = status_codes[0]
     mock_response = mock_aiohttp_response(status=status_code, data=b"")
 
-    with patch("accessiweather.services.update_service.signature_verification.aiohttp.ClientSession") as mock_session_class:
+    with patch(
+        "accessiweather.services.update_service.signature_verification.aiohttp.ClientSession"
+    ) as mock_session_class:
         mock_session = MagicMock()
         mock_get_ctx = AsyncMock()
         mock_get_ctx.__aenter__.return_value = mock_response
@@ -840,7 +926,9 @@ async def test_property_download_various_error_status_codes(status_codes: list, 
     file_size=st.integers(min_value=0, max_value=1024 * 1024 * 10),  # 0 to 10MB
 )
 @settings(deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture])
-def test_property_verify_gpg_signature_various_file_sizes(file_size: int, tmp_path: Path, test_signature_data: bytes, test_public_key: str):
+def test_property_verify_gpg_signature_various_file_sizes(
+    file_size: int, tmp_path: Path, test_signature_data: bytes, test_public_key: str
+):
     """Property test: verify GPG signature handles files of various sizes."""
     test_file = tmp_path / "test_artifact_large.bin"
 
@@ -883,14 +971,22 @@ def test_property_verify_gpg_signature_various_file_sizes(file_size: int, tmp_pa
 )
 @settings(deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture])
 @pytest.mark.asyncio
-async def test_property_download_retry_with_eventual_success(num_failures: int, tmp_path: Path, test_signature_data: bytes, test_public_key: str, mock_aiohttp_response):
+async def test_property_download_retry_with_eventual_success(
+    num_failures: int,
+    tmp_path: Path,
+    test_signature_data: bytes,
+    test_public_key: str,
+    mock_aiohttp_response,
+):
     """Property test: verify retry logic eventually succeeds after N failures."""
     test_file = tmp_path / "test_artifact.exe"
     test_file.write_bytes(b"Test content")
 
     mock_success_response = mock_aiohttp_response(status=200, data=test_signature_data)
 
-    with patch("accessiweather.services.update_service.signature_verification.aiohttp.ClientSession") as mock_session_class:
+    with patch(
+        "accessiweather.services.update_service.signature_verification.aiohttp.ClientSession"
+    ) as mock_session_class:
         mock_session = MagicMock()
 
         call_count = 0

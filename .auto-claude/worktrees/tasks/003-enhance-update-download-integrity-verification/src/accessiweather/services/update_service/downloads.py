@@ -19,7 +19,8 @@ logger = logging.getLogger(__name__)
 
 
 def _looks_like_update_info(obj: object) -> bool:
-    """Check if an object has the attributes of an UpdateInfo instance.
+    """
+    Check if an object has the attributes of an UpdateInfo instance.
 
     Args:
         obj: Object to check

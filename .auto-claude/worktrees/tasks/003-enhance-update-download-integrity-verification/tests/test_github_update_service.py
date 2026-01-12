@@ -72,7 +72,6 @@ _version_mod = types.ModuleType("version")
 
 class _InvalidVersion(Exception):
     """Stub for InvalidVersion exception."""
-    pass
 
 
 class _Version:
@@ -1039,8 +1038,14 @@ async def test_find_signature_asset_with_sig_extension():
 
     release = {
         "assets": [
-            {"name": "AccessiWeather-1.0.0-win.msi", "browser_download_url": "https://example.com/app.msi"},
-            {"name": "AccessiWeather-1.0.0-win.msi.sig", "browser_download_url": "https://example.com/app.sig"},
+            {
+                "name": "AccessiWeather-1.0.0-win.msi",
+                "browser_download_url": "https://example.com/app.msi",
+            },
+            {
+                "name": "AccessiWeather-1.0.0-win.msi.sig",
+                "browser_download_url": "https://example.com/app.sig",
+            },
             {"name": "checksums.txt", "browser_download_url": "https://example.com/checksums.txt"},
         ]
     }
@@ -1059,8 +1064,14 @@ async def test_find_signature_asset_with_asc_extension():
 
     release = {
         "assets": [
-            {"name": "AccessiWeather-1.0.0-win.exe", "browser_download_url": "https://example.com/app.exe"},
-            {"name": "AccessiWeather-1.0.0-win.exe.asc", "browser_download_url": "https://example.com/app.asc"},
+            {
+                "name": "AccessiWeather-1.0.0-win.exe",
+                "browser_download_url": "https://example.com/app.exe",
+            },
+            {
+                "name": "AccessiWeather-1.0.0-win.exe.asc",
+                "browser_download_url": "https://example.com/app.asc",
+            },
         ]
     }
 
@@ -1078,7 +1089,10 @@ async def test_find_signature_asset_not_found():
 
     release = {
         "assets": [
-            {"name": "AccessiWeather-1.0.0-win.msi", "browser_download_url": "https://example.com/app.msi"},
+            {
+                "name": "AccessiWeather-1.0.0-win.msi",
+                "browser_download_url": "https://example.com/app.msi",
+            },
             {"name": "checksums.txt", "browser_download_url": "https://example.com/checksums.txt"},
         ]
     }
@@ -1163,7 +1177,9 @@ async def test_download_with_signature_verification_success(windows_platform, sv
 
     # Set up QueueHttpClient with MockStreamResponse for download
     client = QueueHttpClient(
-        stream_resp=MockStreamResponse(headers={"content-length": str(len(content))}, chunks=[content])
+        stream_resp=MockStreamResponse(
+            headers={"content-length": str(len(content))}, chunks=[content]
+        )
     )
 
     # Create UpdateInfo with signature_url
@@ -1212,7 +1228,7 @@ async def test_download_with_signature_verification_success(windows_platform, sv
 async def test_download_with_signature_verification_failure(windows_platform, svc, tmp_path):
     """Test download with failed signature verification."""
     import hashlib
-    from unittest.mock import AsyncMock, patch
+    from unittest.mock import patch
 
     # Create test data
     content = b"Test file content with invalid signature"
@@ -1220,7 +1236,9 @@ async def test_download_with_signature_verification_failure(windows_platform, sv
 
     # Set up QueueHttpClient with MockStreamResponse for download
     client = QueueHttpClient(
-        stream_resp=MockStreamResponse(headers={"content-length": str(len(content))}, chunks=[content])
+        stream_resp=MockStreamResponse(
+            headers={"content-length": str(len(content))}, chunks=[content]
+        )
     )
 
     # Create UpdateInfo with signature_url
@@ -1279,7 +1297,9 @@ async def test_download_without_signature_url_skips_verification(windows_platfor
 
     # Set up QueueHttpClient with MockStreamResponse for download
     client = QueueHttpClient(
-        stream_resp=MockStreamResponse(headers={"content-length": str(len(content))}, chunks=[content])
+        stream_resp=MockStreamResponse(
+            headers={"content-length": str(len(content))}, chunks=[content]
+        )
     )
 
     # Create UpdateInfo WITHOUT signature_url
