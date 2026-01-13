@@ -146,6 +146,73 @@ class TestConfigManagerBasics:
         # Should be the same instance
         assert first_config is second_config
 
+    def test_critical_config_fast_load(self, mock_app):
+        """
+        Test that critical settings load without keyring access.
+
+        This test verifies the lazy keyring access optimization:
+        - Critical config (temperature_unit, data_source, update_interval_minutes)
+          should load synchronously without touching the keyring
+        - SecureStorage.get_password should NOT be called during load_config()
+        - LazySecureStorage objects should be created but not accessed
+        """
+        # Create a config file with critical settings
+        test_config_data = {
+            "settings": {
+                "temperature_unit": "f",
+                "update_interval_minutes": 15,
+                "data_source": "nws",
+            },
+            "locations": [{"name": "Test City", "latitude": 40.0, "longitude": -75.0}],
+            "current_location": {"name": "Test City", "latitude": 40.0, "longitude": -75.0},
+        }
+
+        config_dir = mock_app.paths.config
+        config_file = config_dir / "accessiweather.json"
+        with open(config_file, "w") as f:
+            json.dump(test_config_data, f)
+
+        # Mock SecureStorage.get_password to ensure it's NOT called during load
+        with patch(
+            "accessiweather.config.secure_storage.SecureStorage.get_password"
+        ) as mock_get_password:
+            # Create ConfigManager and load config
+            config_manager = ConfigManager(mock_app)
+            config = config_manager.load_config()
+
+            # Verify keyring was NOT accessed during load_config()
+            assert mock_get_password.call_count == 0, (
+                f"SecureStorage.get_password should not be called during load_config(), "
+                f"but was called {mock_get_password.call_count} time(s)"
+            )
+
+        # Verify critical settings are loaded correctly
+        assert config.settings.temperature_unit == "f"
+        assert config.settings.update_interval_minutes == 15
+        assert config.settings.data_source == "nws"
+
+        # Verify location is loaded
+        assert config.current_location is not None
+        assert config.current_location.name == "Test City"
+
+        # Verify LazySecureStorage objects were created for secure keys
+        # These should exist but NOT have been accessed (._loaded should be False)
+        from accessiweather.config.secure_storage import LazySecureStorage
+
+        secure_keys = [
+            "visual_crossing_api_key",
+            "openrouter_api_key",
+            "github_app_id",
+            "github_app_private_key",
+            "github_app_installation_id",
+        ]
+        for key in secure_keys:
+            attr = getattr(config.settings, key, None)
+            assert isinstance(attr, LazySecureStorage), (
+                f"Setting '{key}' should be a LazySecureStorage instance"
+            )
+            assert not attr._loaded, f"LazySecureStorage for '{key}' should not be loaded yet"
+
 
 class TestConfigManagerSettings:
     """Test ConfigManager settings management - adapted from existing test logic."""
