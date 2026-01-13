@@ -17,6 +17,7 @@ import toga
 from . import app_helpers, app_initialization, background_tasks, ui_builder
 from .config import ConfigManager
 from .models import WeatherData
+from .performance.timer import measure
 from .single_instance import SingleInstanceManager
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle guard
@@ -97,8 +98,12 @@ class AccessiWeatherApp(toga.App):
 
         try:
             # Check for single instance before initializing anything else
-            self.single_instance_manager = SingleInstanceManager(self)
-            if not self.single_instance_manager.try_acquire_lock():
+            # Time the entire single instance check from app's perspective
+            with measure("single_instance_check"):
+                self.single_instance_manager = SingleInstanceManager(self)
+                lock_acquired = self.single_instance_manager.try_acquire_lock()
+
+            if not lock_acquired:
                 logger.info("Another instance is already running, exiting silently")
                 # Create a minimal main window to satisfy Toga's requirements
                 self.main_window = toga.MainWindow(title=self.formal_name)
