@@ -52,6 +52,7 @@ class UpdateInfo:
     release_notes: str = ""
     is_prerelease: bool = False
     file_size: int | None = None
+    signature_url: str | None = None
 
 
 class GitHubUpdateService:
@@ -167,6 +168,10 @@ class GitHubUpdateService:
             logger.warning("No suitable asset found for platform")
             return None
 
+        # Find signature asset for the platform asset
+        signature_asset = ReleaseManager.find_signature_asset(latest, asset["name"])
+        signature_url = signature_asset["browser_download_url"] if signature_asset else None
+
         return UpdateInfo(
             version=latest["tag_name"].lstrip("v"),
             download_url=asset["browser_download_url"],
@@ -174,6 +179,7 @@ class GitHubUpdateService:
             release_notes=latest.get("body", ""),
             is_prerelease=latest.get("prerelease", False),
             file_size=asset.get("size"),
+            signature_url=signature_url,
         )
 
     async def download_update(self, *args, **kwargs):

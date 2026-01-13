@@ -478,7 +478,7 @@ class ModelSelectionDialog:
     def _on_select(self, widget: toga.Button) -> None:
         """Handle select button press."""
         if self.selected_model and self.on_model_selected:
-            self.on_model_selected(self.selected_model.id)
+            self.on_model_selected(self.selected_model.id, self.selected_model.name)
 
         if self.window:
             self.window.close()
@@ -488,7 +488,7 @@ async def show_model_selection_dialog(
     app: toga.App,
     current_model: str,
     free_only: bool = True,
-    on_model_selected: Callable[[str], None] | None = None,
+    on_model_selected: Callable[[str, str], None] | None = None,
 ) -> None:
     """
     Show the model selection dialog.
@@ -497,7 +497,7 @@ async def show_model_selection_dialog(
         app: The Toga application instance
         current_model: Currently selected model ID
         free_only: If True, only show free models initially
-        on_model_selected: Callback when a model is selected
+        on_model_selected: Callback when a model is selected (receives model_id and model_name)
 
     """
     dialog = ModelSelectionDialog(

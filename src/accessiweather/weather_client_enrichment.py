@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from . import weather_client_nws as nws_client
+from .display.presentation.environmental import _get_uv_category
 from .models import AviationData, Location, WeatherAlert, WeatherAlerts, WeatherData
 from .utils import decode_taf_text
 
@@ -276,10 +277,30 @@ async def enrich_with_aviation_data(
 
 
 async def enrich_with_visual_crossing_alerts(
-    client: WeatherClient, weather_data: WeatherData, location: Location
+    client: WeatherClient,
+    weather_data: WeatherData,
+    location: Location,
+    skip_notifications: bool = False,
 ) -> None:
-    """Enrich weather data with alerts from Visual Crossing if available."""
+    """
+    Enrich weather data with alerts from Visual Crossing if available.
+
+    For US locations, this is skipped since NWS is the authoritative source
+    and Visual Crossing just mirrors the same alerts without severity metadata.
+
+    Args:
+        client: The weather client instance
+        weather_data: The weather data to enrich
+        location: The location for alerts
+        skip_notifications: If True, skip triggering alert notifications (used for pre-warming)
+
+    """
     if not client.visual_crossing_client:
+        return
+
+    # Skip VC alerts for US locations - NWS is authoritative and VC lacks metadata
+    if client._is_us_location(location):
+        logger.debug("Skipping Visual Crossing alerts for US location %s", location.name)
         return
 
     try:
@@ -297,7 +318,9 @@ async def enrich_with_visual_crossing_alerts(
 
             weather_data.alerts = WeatherAlerts(alerts=list(combined.values()))
 
-            await client._process_visual_crossing_alerts(vc_alerts_data, location)
+            # Only process for notifications if not skipped (e.g., for pre-warming)
+            if not skip_notifications:
+                await client._process_visual_crossing_alerts(vc_alerts_data, location)
     except Exception as exc:  # noqa: BLE001
         logger.debug("Failed to fetch alerts from Visual Crossing: %s", exc)
 
@@ -356,6 +379,16 @@ async def populate_environmental_metrics(
         return
 
     weather_data.environmental = environmental
+
+    # Copy UV index from current conditions to environmental conditions
+    if weather_data.current and weather_data.current.uv_index is not None:
+        weather_data.environmental.uv_index = weather_data.current.uv_index
+        weather_data.environmental.uv_category = _get_uv_category(weather_data.current.uv_index)
+        logger.debug(
+            "Copied UV index from current conditions: %s (category: %s)",
+            weather_data.current.uv_index,
+            weather_data.environmental.uv_category,
+        )
 
 
 async def enrich_with_visual_crossing_moon_data(

@@ -242,6 +242,57 @@ def _apply_alert_notification_settings(dialog, settings):
         )
 
 
+def _apply_display_priority_settings(dialog, settings):
+    """Apply display priority settings to UI widgets."""
+    # Verbosity level
+    if getattr(dialog, "verbosity_selection", None) is not None:
+        verbosity = getattr(settings, "verbosity_level", "standard")
+        if hasattr(dialog, "verbosity_value_to_display"):
+            display_value = dialog.verbosity_value_to_display.get(
+                verbosity, "Standard (recommended)"
+            )
+            try:
+                dialog.verbosity_selection.value = display_value
+            except Exception as exc:
+                logger.debug("%s: Failed to set verbosity selection: %s", LOG_PREFIX, exc)
+
+    # Category order
+    if getattr(dialog, "category_order_list", None) is not None:
+        category_order = getattr(
+            settings,
+            "category_order",
+            [
+                "temperature",
+                "precipitation",
+                "wind",
+                "humidity_pressure",
+                "visibility_clouds",
+                "uv_index",
+            ],
+        )
+        category_display_names = {
+            "temperature": "Temperature",
+            "precipitation": "Precipitation",
+            "wind": "Wind",
+            "humidity_pressure": "Humidity & Pressure",
+            "visibility_clouds": "Visibility & Clouds",
+            "uv_index": "UV Index",
+        }
+        display_items = [category_display_names.get(c, c) for c in category_order]
+        try:
+            dialog.category_order_list.items = display_items
+            if display_items:
+                dialog.category_order_list.value = display_items[0]
+        except Exception as exc:
+            logger.debug("%s: Failed to set category order list: %s", LOG_PREFIX, exc)
+
+    # Severe weather override
+    if getattr(dialog, "severe_weather_override_switch", None) is not None:
+        dialog.severe_weather_override_switch.value = getattr(
+            settings, "severe_weather_override", True
+        )
+
+
 def _apply_ai_settings(dialog, settings):
     """Apply AI explanation settings to UI widgets."""
     # OpenRouter API key
@@ -299,6 +350,7 @@ def apply_settings_to_ui(dialog):
         _apply_update_settings(dialog, settings)
         _apply_system_settings(dialog, settings)
         _apply_alert_notification_settings(dialog, settings)
+        _apply_display_priority_settings(dialog, settings)
         _apply_ai_settings(dialog, settings)
 
     except Exception as exc:  # pragma: no cover - defensive logging
@@ -657,6 +709,57 @@ def _collect_alert_settings(dialog, current_settings):
     }
 
 
+def _collect_display_priority_settings(dialog, current_settings: AppSettings) -> dict:
+    """Collect display priority settings from dialog widgets."""
+    # Verbosity level
+    verbosity_level = getattr(current_settings, "verbosity_level", "standard")
+    if hasattr(dialog, "verbosity_selection"):
+        display_value = getattr(dialog.verbosity_selection, "value", None)
+        if display_value and hasattr(dialog, "verbosity_display_to_value"):
+            verbosity_level = dialog.verbosity_display_to_value.get(display_value, verbosity_level)
+
+    # Category order - convert display names back to internal names
+    default_order = [
+        "temperature",
+        "precipitation",
+        "wind",
+        "humidity_pressure",
+        "visibility_clouds",
+        "uv_index",
+    ]
+    category_order = getattr(current_settings, "category_order", default_order)
+
+    display_to_internal = {
+        "Temperature": "temperature",
+        "Precipitation": "precipitation",
+        "Wind": "wind",
+        "Humidity & Pressure": "humidity_pressure",
+        "Visibility & Clouds": "visibility_clouds",
+        "UV Index": "uv_index",
+    }
+
+    if hasattr(dialog, "category_order_list") and dialog.category_order_list is not None:
+        try:
+            # Get items from the ListSource
+            display_items = [item.value for item in dialog.category_order_list.items]
+            category_order = [display_to_internal.get(item, item) for item in display_items]
+        except Exception as exc:
+            logger.debug("Failed to get category order from list: %s", exc)
+
+    # Severe weather override
+    severe_weather_override = getattr(current_settings, "severe_weather_override", True)
+    if hasattr(dialog, "severe_weather_override_switch"):
+        severe_weather_override = bool(
+            getattr(dialog.severe_weather_override_switch, "value", True)
+        )
+
+    return {
+        "verbosity_level": verbosity_level,
+        "category_order": category_order,
+        "severe_weather_override": severe_weather_override,
+    }
+
+
 def _collect_ai_settings(dialog, current_settings: AppSettings) -> dict:
     """Collect AI explanation settings from dialog widgets."""
     # OpenRouter API key
@@ -714,6 +817,7 @@ def collect_settings_from_ui(dialog) -> AppSettings:
     sound = _collect_sound_settings(dialog)
     system = _collect_system_settings(dialog, current_settings)
     alerts = _collect_alert_settings(dialog, current_settings)
+    display_priority = _collect_display_priority_settings(dialog, current_settings)
     ai = _collect_ai_settings(dialog, current_settings)
 
     # Build and return AppSettings with collected values
@@ -778,6 +882,10 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         taskbar_icon_text_enabled=display["taskbar_icon_text_enabled"],
         taskbar_icon_dynamic_enabled=display["taskbar_icon_dynamic_enabled"],
         taskbar_icon_text_format=display["taskbar_icon_text_format"],
+        # Display priority settings
+        verbosity_level=display_priority["verbosity_level"],
+        category_order=display_priority["category_order"],
+        severe_weather_override=display_priority["severe_weather_override"],
         # AI explanation settings
         openrouter_api_key=ai["openrouter_api_key"],
         ai_model_preference=ai["ai_model_preference"],

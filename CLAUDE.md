@@ -22,6 +22,12 @@ pytest --lf --ff -m "unit"             # Run last-failed/first-failed unit tests
 HYPOTHESIS_PROFILE=fast pytest         # Even faster with fewer Hypothesis examples
 pytest -m "not integration"            # Skip slow integration tests
 
+# Fast Testing (local development)
+python scripts/test_fast.py              # Parallel + fast Hypothesis (recommended)
+HYPOTHESIS_PROFILE=fast pytest -n auto   # Manual equivalent
+pytest -n auto -m "not integration"      # Skip slow integration tests
+pytest -n auto --dist loadscope          # Parallel by module
+
 # Linting & Formatting
 ruff check --fix . && ruff format .   # Lint + format code (line length: 100)
 pyright                               # Type checking (excludes tests/)
@@ -174,6 +180,8 @@ dialog.close()  # Close
 # Testing with dummy backend
 # Set TOGA_BACKEND=toga_dummy in tests
 ```
+
+**Accessibility Note:** Toga doesn't support semantic label-pairing (see beeware/toga#2233). Screen readers announce adjacent `Label` text when users tab to inputs/selects. Make labels descriptive: `"Search for Location (city/zipcode):"` instead of just `"Search for Location:"`. This works for `TextInput`, `Selection`, and other input widgets.
 
 ### Naming Conventions
 

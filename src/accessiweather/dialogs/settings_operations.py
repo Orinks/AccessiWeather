@@ -973,6 +973,191 @@ def initialize_update_info(dialog):
         logger.debug("%s: Failed to initialize update info: %s", LOG_PREFIX, exc)
 
 
+async def export_settings(dialog):
+    """Export application settings to a JSON file."""
+    try:
+        dialog._ensure_dialog_focus()
+
+        logger.info("%s: Export settings requested", LOG_PREFIX)
+
+        # Generate suggested filename with current date
+        suggested_filename = f"accessiweather_settings_{datetime.now():%Y-%m-%d}.json"
+
+        # Open save file dialog
+        try:
+            save_path = await _call_dialog_method(
+                dialog,
+                "save_file_dialog",
+                "Export Settings",
+                suggested_filename=suggested_filename,
+                file_types=["json"],
+            )
+        except Exception as exc:
+            logger.warning(
+                "%s: save_file_dialog not available, trying alternative approach: %s",
+                LOG_PREFIX,
+                exc,
+            )
+            # Fallback: Let user manually specify path via input dialog
+            # This is needed for backends that might not support save_file_dialog
+            await dialog._show_dialog_error(
+                "Export Settings",
+                "File save dialog is not supported on this platform. "
+                f"Please manually save to: {suggested_filename}",
+            )
+            return
+
+        if not save_path:
+            logger.info("%s: Export settings cancelled by user", LOG_PREFIX)
+            return
+
+        # Ensure path has .json extension
+        export_path = Path(save_path)
+        if export_path.suffix.lower() != ".json":
+            export_path = export_path.with_suffix(".json")
+
+        # Call config_manager.export_settings()
+        success = False
+        with contextlib.suppress(Exception):
+            success = dialog.config_manager.export_settings(export_path)
+
+        if not success:
+            await dialog._show_dialog_error(
+                "Export Failed",
+                f"Failed to export settings to:\n{export_path}",
+            )
+            return
+
+        logger.info("%s: Settings exported successfully to %s", LOG_PREFIX, export_path)
+
+        await _call_dialog_method(
+            dialog,
+            "info_dialog",
+            "Export Successful",
+            f"Your settings have been exported to:\n{export_path}\n\n"
+            "Note: API keys are stored securely in your system keychain "
+            "and are not included in the export file.",
+        )
+
+    except Exception as exc:
+        logger.exception("%s: Failed to export settings", LOG_PREFIX)
+        with contextlib.suppress(Exception):
+            await dialog._show_dialog_error(
+                "Export Error",
+                f"An error occurred while exporting settings: {exc}",
+            )
+
+
+async def import_settings(dialog):
+    """Import application settings from a JSON file and update the dialog UI."""
+    try:
+        dialog._ensure_dialog_focus()
+
+        logger.info("%s: Import settings requested", LOG_PREFIX)
+
+        # Show warning that current settings will be overwritten
+        confirmed = await _call_dialog_method(
+            dialog,
+            "confirm_dialog",
+            "Import Settings",
+            "This will overwrite your current settings with those from the file.\n\n"
+            "Your saved locations will NOT be affected.\n\n"
+            "Do you want to continue?",
+        )
+
+        if not confirmed:
+            logger.info("%s: Import settings cancelled by user during confirmation", LOG_PREFIX)
+            return
+
+        # Open file open dialog
+        try:
+            open_path = await _call_dialog_method(
+                dialog,
+                "open_file_dialog",
+                "Import Settings",
+                file_types=["json"],
+            )
+        except Exception as exc:
+            logger.warning(
+                "%s: open_file_dialog not available, trying alternative approach: %s",
+                LOG_PREFIX,
+                exc,
+            )
+            # Fallback for backends that might not support open_file_dialog
+            await dialog._show_dialog_error(
+                "Import Settings",
+                "File open dialog is not supported on this platform.",
+            )
+            return
+
+        if not open_path:
+            logger.info("%s: Import settings cancelled by user", LOG_PREFIX)
+            return
+
+        import_path = Path(open_path)
+
+        # Validate file exists and has .json extension
+        if not import_path.exists():
+            await dialog._show_dialog_error(
+                "Import Failed",
+                f"The selected file does not exist:\n{import_path}",
+            )
+            return
+
+        if import_path.suffix.lower() != ".json":
+            await dialog._show_dialog_error(
+                "Import Failed",
+                "The selected file must be a JSON file with .json extension.",
+            )
+            return
+
+        # Call config_manager.import_settings()
+        success = False
+        with contextlib.suppress(Exception):
+            success = dialog.config_manager.import_settings(import_path)
+
+        if not success:
+            await dialog._show_dialog_error(
+                "Import Failed",
+                f"Failed to import settings from:\n{import_path}\n\n"
+                "The file may be corrupted or in an invalid format. "
+                "Please check the application logs for more details.",
+            )
+            return
+
+        logger.info("%s: Settings imported successfully from %s", LOG_PREFIX, import_path)
+
+        # Reload settings into dialog UI after successful import
+        with contextlib.suppress(Exception):
+            dialog.current_settings = dialog.config_manager.get_settings()
+
+        # Apply the imported settings to the UI
+        settings_handlers.apply_settings_to_ui(dialog)
+
+        # Update status label if available
+        if getattr(dialog, "update_status_label", None):
+            dialog.update_status_label.text = "Settings were imported successfully"
+
+        # Show success message with information about what was imported
+        await _call_dialog_method(
+            dialog,
+            "info_dialog",
+            "Import Successful",
+            f"Your settings have been imported from:\n{import_path}\n\n"
+            "The settings dialog has been updated to reflect the imported values.\n\n"
+            "Note: API keys are stored securely in your system keychain "
+            "and were not included in the import file. You may need to re-enter them.",
+        )
+
+    except Exception as exc:
+        logger.exception("%s: Failed to import settings", LOG_PREFIX)
+        with contextlib.suppress(Exception):
+            await dialog._show_dialog_error(
+                "Import Error",
+                f"An error occurred while importing settings: {exc}",
+            )
+
+
 def update_last_check_info(dialog):
     """Refresh the last-update label with any available data."""
     label = getattr(dialog, "last_check_label", None)

@@ -19,6 +19,7 @@ import toga
 from accessiweather.models import AppConfig, AppSettings, Location
 from accessiweather.services import StartupManager
 
+from .file_permissions import set_secure_file_permissions
 from .github_config import GitHubConfigOperations
 from .import_export import ImportExportOperations
 from .locations import LocationOperations
@@ -187,12 +188,8 @@ class ConfigManager:
             # Atomic rename (same filesystem)
             os.replace(tmp_file, self.config_file)
 
-            # Restrict permissions on POSIX systems
-            try:
-                if os.name != "nt":
-                    os.chmod(self.config_file, 0o600)
-            except Exception:
-                logger.debug("Could not set strict permissions on config file", exc_info=True)
+            # Set restrictive file permissions (cross-platform)
+            set_secure_file_permissions(self.config_file)
 
             logger.info("Configuration saved successfully")
             return True
@@ -275,6 +272,14 @@ class ConfigManager:
     def import_locations(self, import_path: Path) -> bool:
         """Import locations from a file."""
         return self._import_export.import_locations(import_path)
+
+    def export_settings(self, export_path: Path) -> bool:
+        """Export application settings to a separate file."""
+        return self._import_export.export_settings(export_path)
+
+    def import_settings(self, import_path: Path) -> bool:
+        """Import application settings from a file."""
+        return self._import_export.import_settings(import_path)
 
     def enable_startup(self) -> tuple[bool, str]:
         """

@@ -169,6 +169,8 @@ dialog.close()  # Close
 # Set TOGA_BACKEND=toga_dummy in tests
 ```
 
+**Accessibility Note:** Toga doesn't support semantic label-pairing (see beeware/toga#2233). Screen readers announce adjacent `Label` text when users tab to inputs/selects. Make labels descriptive: `"Search for Location (city/zipcode):"` instead of just `"Search for Location:"`. This works for `TextInput`, `Selection`, and other input widgets.
+
 ### Naming Conventions
 
 | Type | Convention | Example |
