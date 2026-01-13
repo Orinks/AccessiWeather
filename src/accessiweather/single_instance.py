@@ -13,12 +13,21 @@ import os
 import subprocess
 import time
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 import toga
 
 from accessiweather.performance.timer import measure
 
 logger = logging.getLogger(__name__)
+
+# Import ctypes at module level (stdlib, always available)
+# Cache kernel32 reference on Windows for better performance
+import ctypes
+
+_kernel32: Any = None
+if os.name == "nt":
+    _kernel32 = ctypes.windll.kernel32
 
 
 class SingleInstanceManager:
@@ -159,20 +168,23 @@ class SingleInstanceManager:
 
         This is much faster than spawning tasklist.exe and doesn't create
         a visible terminal window.
+
+        Uses the module-level cached _kernel32 reference for better performance.
         """
         try:
-            import ctypes
-
-            kernel32 = ctypes.windll.kernel32
+            # Use the module-level cached kernel32 reference for performance
+            # _kernel32 is cached at module load time when os.name == "nt"
+            if _kernel32 is None:
+                raise RuntimeError("kernel32 not available")
 
             # OpenProcess with PROCESS_QUERY_LIMITED_INFORMATION (0x1000)
             # This is the minimum access right needed to query process info
             PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
-            handle = kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, pid)
+            handle = _kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, pid)
 
             if handle:
                 # Process exists, close the handle
-                kernel32.CloseHandle(handle)
+                _kernel32.CloseHandle(handle)
                 return True
 
             # Check if access was denied (process exists but we can't open it)
