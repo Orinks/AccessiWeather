@@ -22,7 +22,7 @@ from accessiweather.services import StartupManager
 from .github_config import GitHubConfigOperations
 from .import_export import ImportExportOperations
 from .locations import LocationOperations
-from .secure_storage import LazySecureStorage, SecureStorage
+from .secure_storage import LazySecureStorage
 from .settings import SettingsOperations
 
 logger = logging.getLogger("accessiweather.config")

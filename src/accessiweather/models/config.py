@@ -173,7 +173,8 @@ class AppSettings:
         return default
 
     def validate_on_access(self, setting_name: str) -> bool:
-        """Validate a non-critical setting on first access.
+        """
+        Validate a non-critical setting on first access.
 
         This method performs deferred validation for settings that are not
         critical for app startup. It validates the current value and corrects
@@ -185,6 +186,7 @@ class AppSettings:
         Returns:
             True if the setting is valid (or was corrected), False if
             the setting name is unknown.
+
         """
         if not hasattr(self, setting_name):
             return False

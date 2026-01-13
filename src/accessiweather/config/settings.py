@@ -33,7 +33,8 @@ class SettingsOperations:
         return self._manager._get_logger()
 
     def _validate_and_fix_config(self) -> None:
-        """Validate and correct critical configuration values at load time.
+        """
+        Validate and correct critical configuration values at load time.
 
         Only validates settings in CRITICAL_SETTINGS (data_source, temperature_unit,
         update_interval_minutes) to minimize startup time. Non-critical settings like
@@ -73,7 +74,8 @@ class SettingsOperations:
             self._manager.save_config()
 
     def validate_non_critical(self, setting_name: str | None = None) -> bool:
-        """Validate non-critical settings on first access.
+        """
+        Validate non-critical settings on first access.
 
         This method is called when non-critical settings are first accessed,
         implementing deferred validation to speed up startup time.
@@ -84,6 +86,7 @@ class SettingsOperations:
 
         Returns:
             True if validation passed (or corrected), False if issues found.
+
         """
         config = self._manager._config
         if config is None:

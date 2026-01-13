@@ -96,7 +96,8 @@ class SecureStorage:
 
 
 class LazySecureStorage:
-    """Lazy accessor for secure storage - only accesses keyring on first use.
+    """
+    Lazy accessor for secure storage - only accesses keyring on first use.
 
     This class defers keyring access until the value is actually needed,
     improving startup performance by avoiding synchronous I/O during initialization.
