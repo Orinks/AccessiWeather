@@ -40,7 +40,7 @@ class TestSourceSelectionFixes:
         """Create a config manager with temporary directory."""
         # Mock SecureStorage to prevent reading from real system keyring
         with patch(
-            "accessiweather.config.config_manager.SecureStorage.get_password", return_value=None
+            "accessiweather.config.secure_storage.SecureStorage.get_password", return_value=None
         ):
             manager = ConfigManager(mock_app)
             yield manager
