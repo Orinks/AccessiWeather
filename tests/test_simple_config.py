@@ -213,6 +213,82 @@ class TestConfigManagerBasics:
             )
             assert not attr._loaded, f"LazySecureStorage for '{key}' should not be loaded yet"
 
+    def test_lazy_keyring_access(self, mock_app):
+        """
+        Test that keyring is only accessed when API key property is actually read.
+
+        This test verifies the lazy keyring access pattern:
+        1. Loading config should NOT trigger keyring access
+        2. Accessing the .value property of a LazySecureStorage SHOULD trigger keyring access
+        3. Subsequent accesses should use cached value (no additional keyring calls)
+        """
+        from accessiweather.config.secure_storage import LazySecureStorage
+
+        # Create a config file
+        test_config_data = {
+            "settings": {
+                "temperature_unit": "f",
+                "update_interval_minutes": 15,
+                "data_source": "nws",
+            },
+            "locations": [],
+            "current_location": None,
+        }
+
+        config_dir = mock_app.paths.config
+        config_file = config_dir / "accessiweather.json"
+        with open(config_file, "w") as f:
+            json.dump(test_config_data, f)
+
+        with patch(
+            "accessiweather.config.secure_storage.SecureStorage.get_password"
+        ) as mock_get_password:
+            # Return a test API key when keyring is accessed
+            mock_get_password.return_value = "test-api-key-12345"
+
+            # Step 1: Load config - keyring should NOT be accessed
+            config_manager = ConfigManager(mock_app)
+            config = config_manager.load_config()
+
+            assert mock_get_password.call_count == 0, (
+                f"Keyring should not be accessed during load_config(), "
+                f"but was called {mock_get_password.call_count} time(s)"
+            )
+
+            # Verify LazySecureStorage is in place
+            api_key_lazy = config.settings.visual_crossing_api_key
+            assert isinstance(api_key_lazy, LazySecureStorage), (
+                "visual_crossing_api_key should be a LazySecureStorage instance"
+            )
+            assert not api_key_lazy._loaded, (
+                "LazySecureStorage should not be loaded before value access"
+            )
+
+            # Step 2: Access the .value property - keyring SHOULD be accessed now
+            api_key_value = api_key_lazy.value
+
+            assert mock_get_password.call_count == 1, (
+                f"Keyring should be accessed exactly once when reading .value, "
+                f"but was called {mock_get_password.call_count} time(s)"
+            )
+            assert api_key_value == "test-api-key-12345", (
+                f"Expected 'test-api-key-12345', got '{api_key_value}'"
+            )
+            assert api_key_lazy._loaded, (
+                "LazySecureStorage should be marked as loaded after value access"
+            )
+
+            # Step 3: Access value again - should use cached value, no additional keyring call
+            api_key_value_again = api_key_lazy.value
+
+            assert mock_get_password.call_count == 1, (
+                f"Keyring should not be called again on subsequent accesses, "
+                f"but call count increased to {mock_get_password.call_count}"
+            )
+            assert api_key_value_again == "test-api-key-12345", (
+                "Cached value should be returned on subsequent access"
+            )
+
 
 class TestConfigManagerSettings:
     """Test ConfigManager settings management - adapted from existing test logic."""
