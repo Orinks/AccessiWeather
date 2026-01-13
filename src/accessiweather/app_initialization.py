@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -11,6 +12,7 @@ import toga
 
 from . import app_helpers, background_tasks, event_handlers, ui_builder
 from .config import ConfigManager
+from .performance.timer import measure
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle guard
     from .app import AccessiWeatherApp
@@ -171,9 +173,7 @@ def load_initial_data(app: AccessiWeatherApp) -> None:
     location, it is displayed immediately (synchronously) before the async refresh
     begins. This provides instant perceived performance even on slow networks.
     """
-    import time
-
-    start_time = time.perf_counter()
+    startup_start_time = time.perf_counter()
     logger.info("Loading initial data (cache-first)")
 
     try:
@@ -198,13 +198,15 @@ def load_initial_data(app: AccessiWeatherApp) -> None:
 
         if cached_data:
             # Display cached data immediately (synchronously)
-            app.current_weather_data = cached_data
-            app_helpers.sync_update_weather_displays(app, cached_data)
+            with measure("cached data displayed"):
+                app.current_weather_data = cached_data
+                app_helpers.sync_update_weather_displays(app, cached_data)
 
-            elapsed = (time.perf_counter() - start_time) * 1000
+            # Log total startup time to cache display
+            elapsed_ms = (time.perf_counter() - startup_start_time) * 1000
             logger.info(
-                "Cached data displayed in %.1fms for %s",
-                elapsed,
+                "Startup: cached data displayed in %.1fms for %s",
+                elapsed_ms,
                 config.current_location.name,
             )
 
