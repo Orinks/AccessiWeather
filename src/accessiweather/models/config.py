@@ -6,6 +6,80 @@ from dataclasses import dataclass, field
 
 from .weather import Location
 
+# Critical settings needed for app initialization (load synchronously)
+# These are essential for the app to start and display basic functionality
+CRITICAL_SETTINGS: set[str] = {
+    "temperature_unit",  # Display formatting
+    "data_source",  # Weather client selection
+    "update_interval_minutes",  # Background task timing
+}
+
+# Non-critical settings (defer validation until first access)
+# These can be loaded lazily without blocking startup
+NON_CRITICAL_SETTINGS: set[str] = {
+    # Alert notification settings
+    "alert_notifications_enabled",
+    "alert_notify_extreme",
+    "alert_notify_severe",
+    "alert_notify_moderate",
+    "alert_notify_minor",
+    "alert_notify_unknown",
+    "alert_global_cooldown_minutes",
+    "alert_per_alert_cooldown_minutes",
+    "alert_escalation_cooldown_minutes",
+    "alert_freshness_window_minutes",
+    "alert_max_notifications_per_hour",
+    "alert_ignored_categories",
+    # Sound settings
+    "sound_enabled",
+    "sound_pack",
+    # GitHub settings
+    "github_backend_url",
+    "github_app_id",
+    "github_app_private_key",
+    "github_app_installation_id",
+    # AI explanation settings
+    "openrouter_api_key",
+    "ai_model_preference",
+    "ai_explanation_style",
+    "ai_cache_ttl",
+    "custom_system_prompt",
+    "custom_instructions",
+    # API key settings (loaded lazily via keyring)
+    "visual_crossing_api_key",
+    # Display preferences
+    "show_detailed_forecast",
+    "enable_alerts",
+    "minimize_to_tray",
+    "startup_enabled",
+    "auto_update_enabled",
+    "update_channel",
+    "update_check_interval_hours",
+    "debug_mode",
+    "trend_insights_enabled",
+    "trend_hours",
+    "show_dewpoint",
+    "show_pressure_trend",
+    "show_visibility",
+    "show_uv_index",
+    "show_seasonal_data",
+    "air_quality_enabled",
+    "pollen_enabled",
+    "offline_cache_enabled",
+    "offline_cache_max_age_minutes",
+    "weather_history_enabled",
+    "time_display_mode",
+    "time_format_12hour",
+    "show_timezone_suffix",
+    "html_render_current_conditions",
+    "html_render_forecast",
+    "taskbar_icon_text_enabled",
+    "taskbar_icon_dynamic_enabled",
+    "taskbar_icon_text_format",
+    "source_priority_us",
+    "source_priority_international",
+}
+
 
 @dataclass
 class AppSettings:
@@ -110,6 +184,129 @@ class AppSettings:
         if isinstance(value, (int, float)):
             return bool(value)
         return default
+
+    def validate_on_access(self, setting_name: str) -> bool:
+        """
+        Validate a non-critical setting on first access.
+
+        This method performs deferred validation for settings that are not
+        critical for app startup. It validates the current value and corrects
+        it to a default if invalid.
+
+        Args:
+            setting_name: The name of the setting to validate.
+
+        Returns:
+            True if the setting is valid (or was corrected), False if
+            the setting name is unknown.
+
+        """
+        if not hasattr(self, setting_name):
+            return False
+
+        value = getattr(self, setting_name)
+
+        # Validation rules for specific settings
+        if setting_name == "ai_explanation_style":
+            valid_styles = {"brief", "standard", "detailed"}
+            if value not in valid_styles:
+                setattr(self, setting_name, "standard")
+
+        elif setting_name == "update_channel":
+            valid_channels = {"stable", "beta", "dev"}
+            if value not in valid_channels:
+                setattr(self, setting_name, "stable")
+
+        elif setting_name == "time_display_mode":
+            valid_modes = {"local", "utc", "both"}
+            if value not in valid_modes:
+                setattr(self, setting_name, "local")
+
+        elif setting_name == "sound_pack":
+            # Ensure sound_pack is a non-empty string
+            if not isinstance(value, str) or not value.strip():
+                setattr(self, setting_name, "default")
+
+        elif setting_name == "taskbar_icon_text_format":
+            # Ensure format string is valid
+            if not isinstance(value, str) or not value.strip():
+                setattr(self, setting_name, "{temp} {condition}")
+
+        elif setting_name in {
+            "alert_global_cooldown_minutes",
+            "alert_per_alert_cooldown_minutes",
+            "alert_escalation_cooldown_minutes",
+            "alert_freshness_window_minutes",
+        }:
+            # Ensure positive integer for cooldown settings
+            if not isinstance(value, int) or value < 0:
+                defaults = {
+                    "alert_global_cooldown_minutes": 5,
+                    "alert_per_alert_cooldown_minutes": 60,
+                    "alert_escalation_cooldown_minutes": 15,
+                    "alert_freshness_window_minutes": 15,
+                }
+                setattr(self, setting_name, defaults.get(setting_name, 5))
+
+        elif setting_name == "alert_max_notifications_per_hour":
+            # Ensure positive integer
+            if not isinstance(value, int) or value < 1:
+                setattr(self, setting_name, 10)
+
+        elif setting_name == "trend_hours":
+            # Ensure reasonable range for trend hours (1-168 hours = 1 week)
+            if not isinstance(value, int) or value < 1 or value > 168:
+                setattr(self, setting_name, 24)
+
+        elif setting_name == "ai_cache_ttl":
+            # Ensure non-negative integer for cache TTL
+            if not isinstance(value, int) or value < 0:
+                setattr(self, setting_name, 300)
+
+        elif setting_name == "update_check_interval_hours":
+            # Ensure positive integer for update interval
+            if not isinstance(value, int) or value < 1:
+                setattr(self, setting_name, 24)
+
+        elif setting_name == "offline_cache_max_age_minutes":
+            # Ensure positive integer for cache age
+            if not isinstance(value, int) or value < 1:
+                setattr(self, setting_name, 180)
+
+        elif setting_name in {"source_priority_us", "source_priority_international"}:
+            # Ensure valid list of source names
+            valid_sources = {"nws", "openmeteo", "visualcrossing"}
+            if not isinstance(value, list):
+                if setting_name == "source_priority_us":
+                    setattr(self, setting_name, ["nws", "openmeteo", "visualcrossing"])
+                else:
+                    setattr(self, setting_name, ["openmeteo", "visualcrossing"])
+            else:
+                # Filter to only valid sources
+                filtered = [s for s in value if s in valid_sources]
+                if not filtered:
+                    if setting_name == "source_priority_us":
+                        setattr(self, setting_name, ["nws", "openmeteo", "visualcrossing"])
+                    else:
+                        setattr(self, setting_name, ["openmeteo", "visualcrossing"])
+                elif filtered != value:
+                    setattr(self, setting_name, filtered)
+
+        elif setting_name == "alert_ignored_categories":
+            # Ensure it's a list
+            if not isinstance(value, list):
+                setattr(self, setting_name, [])
+
+        # Boolean settings are validated by _as_bool during from_dict,
+        # but we can still ensure they're actually booleans
+        elif setting_name in NON_CRITICAL_SETTINGS:
+            # Get the default value for this setting from a fresh instance
+            default_settings = AppSettings()
+            default_value = getattr(default_settings, setting_name, None)
+            if isinstance(default_value, bool) and not isinstance(value, bool):
+                setattr(self, setting_name, self._as_bool(value, default_value))
+
+        return True
 
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
