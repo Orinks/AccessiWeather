@@ -6,15 +6,28 @@ can run at a time using a lock file approach, since Toga/BeeWare does not provid
 built-in single-instance management.
 """
 
+from __future__ import annotations
+
 import logging
 import os
 import subprocess
 import time
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 import toga
 
+from accessiweather.performance.timer import measure
+
 logger = logging.getLogger(__name__)
+
+# Import ctypes at module level (stdlib, always available)
+# Cache kernel32 reference on Windows for better performance
+import ctypes
+
+_kernel32: Any = None
+if os.name == "nt":
+    _kernel32 = ctypes.windll.kernel32
 
 
 class SingleInstanceManager:
@@ -35,6 +48,58 @@ class SingleInstanceManager:
         self.lock_file_path: Path | None = None
         self._lock_acquired = False
 
+    def _read_lock_info(self) -> tuple[int, float, str] | None:
+        """
+        Read lock file info in a single operation.
+
+        Returns
+        -------
+            tuple[int, float, str] | None: (pid, timestamp, app_name) or None if invalid format
+
+        Raises
+        ------
+            Exception: Re-raises read errors (permission denied, etc.) to be handled by caller
+
+        """
+        if not self.lock_file_path:
+            return None
+        try:
+            # Use explicit open() for better testability (builtins.open can be mocked)
+            # Single read operation - more efficient than multiple reads
+            with open(self.lock_file_path, encoding="utf-8") as f:
+                content = f.read().strip()
+            lines = content.split("\n")
+            if len(lines) < 2:
+                return None
+            return int(lines[0]), float(lines[1]), lines[2] if len(lines) > 2 else ""
+        except FileNotFoundError:
+            # File doesn't exist - return None (not an error)
+            return None
+        except (ValueError, IndexError):
+            # Invalid content format - return None
+            return None
+        # Let other exceptions (PermissionError, OSError, etc.) propagate up
+
+    def _lock_file_exists(self) -> bool:
+        """
+        Check if lock file exists using exception-based approach.
+
+        Using stat() with exception handling can be faster than exists() in some cases
+        because it avoids double system calls.
+
+        Returns
+        -------
+            bool: True if lock file exists
+
+        """
+        if not self.lock_file_path:
+            return False
+        try:
+            self.lock_file_path.stat()
+            return True
+        except (FileNotFoundError, OSError):
+            return False
+
     def try_acquire_lock(self) -> bool:
         """
         Try to acquire the single instance lock.
@@ -44,38 +109,48 @@ class SingleInstanceManager:
             bool: True if lock was acquired successfully, False if another instance is running
 
         """
-        try:
-            # Use app.paths.data for the lock file location (cross-platform data directory)
-            lock_dir = self.app.paths.data
-            lock_dir.mkdir(parents=True, exist_ok=True)
-            self.lock_file_path = lock_dir / self.lock_filename
+        with measure("single_instance_lock_acquisition"):
+            try:
+                # Use app.paths.data for the lock file location (cross-platform data directory)
+                lock_dir = self.app.paths.data
+                lock_dir.mkdir(parents=True, exist_ok=True)
+                self.lock_file_path = lock_dir / self.lock_filename
 
-            logger.info(f"Checking for existing instance using lock file: {self.lock_file_path}")
+                logger.info(
+                    f"Checking for existing instance using lock file: {self.lock_file_path}"
+                )
 
-            # Check if lock file exists and is valid
-            if self.lock_file_path and self.lock_file_path.exists():
+                # Early return: if no lock file exists, skip all stale checks
+                if not self._lock_file_exists():
+                    self._create_lock_file()
+                    self._lock_acquired = True
+                    logger.info("Successfully acquired single instance lock (no existing lock)")
+                    return True
+
+                # Lock file exists - check if it's stale
                 if self._is_lock_file_stale():
                     logger.info("Found stale lock file, removing it")
                     self._remove_lock_file()
-                else:
-                    logger.info("Another instance is already running")
-                    return False
+                    self._create_lock_file()
+                    self._lock_acquired = True
+                    logger.info("Successfully acquired single instance lock (replaced stale)")
+                    return True
 
-            # Create lock file with current process info
-            self._create_lock_file()
-            self._lock_acquired = True
-            logger.info("Successfully acquired single instance lock")
-            return True
+                # Lock file exists and is not stale - another instance is running
+                logger.info("Another instance is already running")
+                return False
 
-        except Exception as e:
-            logger.error(f"Error checking for another instance: {e}")
-            # If there's an error, assume no other instance is running
-            # to avoid blocking the application unnecessarily
-            return True
+            except Exception as e:
+                logger.error(f"Error checking for another instance: {e}")
+                # If there's an error, assume no other instance is running
+                # to avoid blocking the application unnecessarily
+                return True
 
     def _is_lock_file_stale(self) -> bool:
         """
         Check if the lock file is stale (from a crashed instance).
+
+        Uses the optimized _read_lock_info() helper for single-read operation.
 
         Returns
         -------
@@ -83,27 +158,25 @@ class SingleInstanceManager:
 
         """
         try:
-            if not self.lock_file_path or not self.lock_file_path.exists():
+            # Early return if lock file path not set
+            if not self.lock_file_path:
                 return False
 
-            # Read the lock file content
-            with open(self.lock_file_path, encoding="utf-8") as f:
-                content = f.read().strip()
+            # Use consolidated read operation - returns None if file doesn't exist or is invalid
+            lock_info = self._read_lock_info()
 
-            # Parse the lock file content
-            lines = content.split("\n")
-            if len(lines) < 2:
-                logger.warning("Invalid lock file format, considering it stale")
-                return True
+            if lock_info is None:
+                # File doesn't exist, or has invalid format
+                # Check if it's due to missing file vs invalid content
+                if self._lock_file_exists():
+                    logger.warning("Invalid lock file format, considering it stale")
+                    return True
+                return False
 
-            try:
-                pid = int(lines[0])
-                timestamp = float(lines[1])
-            except (ValueError, IndexError):
-                logger.warning("Invalid lock file content, considering it stale")
-                return True
+            pid, timestamp, _app_name = lock_info
 
             # Check if the process is still running (cross-platform approach)
+            # This is the most expensive check, so do it before timestamp check
             if not self._is_process_running(pid):
                 logger.info(f"Process {pid} is no longer running, lock file is stale")
                 return True
@@ -152,20 +225,23 @@ class SingleInstanceManager:
 
         This is much faster than spawning tasklist.exe and doesn't create
         a visible terminal window.
+
+        Uses the module-level cached _kernel32 reference for better performance.
         """
         try:
-            import ctypes
-
-            kernel32 = ctypes.windll.kernel32
+            # Use the module-level cached kernel32 reference for performance
+            # _kernel32 is cached at module load time when os.name == "nt"
+            if _kernel32 is None:
+                raise RuntimeError("kernel32 not available")
 
             # OpenProcess with PROCESS_QUERY_LIMITED_INFORMATION (0x1000)
             # This is the minimum access right needed to query process info
             PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
-            handle = kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, pid)
+            handle = _kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, pid)
 
             if handle:
                 # Process exists, close the handle
-                kernel32.CloseHandle(handle)
+                _kernel32.CloseHandle(handle)
                 return True
 
             # Check if access was denied (process exists but we can't open it)
