@@ -6,6 +6,80 @@ from dataclasses import dataclass, field
 
 from .weather import Location
 
+# Critical settings needed for app initialization (load synchronously)
+# These are essential for the app to start and display basic functionality
+CRITICAL_SETTINGS: set[str] = {
+    "temperature_unit",  # Display formatting
+    "data_source",  # Weather client selection
+    "update_interval_minutes",  # Background task timing
+}
+
+# Non-critical settings (defer validation until first access)
+# These can be loaded lazily without blocking startup
+NON_CRITICAL_SETTINGS: set[str] = {
+    # Alert notification settings
+    "alert_notifications_enabled",
+    "alert_notify_extreme",
+    "alert_notify_severe",
+    "alert_notify_moderate",
+    "alert_notify_minor",
+    "alert_notify_unknown",
+    "alert_global_cooldown_minutes",
+    "alert_per_alert_cooldown_minutes",
+    "alert_escalation_cooldown_minutes",
+    "alert_freshness_window_minutes",
+    "alert_max_notifications_per_hour",
+    "alert_ignored_categories",
+    # Sound settings
+    "sound_enabled",
+    "sound_pack",
+    # GitHub settings
+    "github_backend_url",
+    "github_app_id",
+    "github_app_private_key",
+    "github_app_installation_id",
+    # AI explanation settings
+    "openrouter_api_key",
+    "ai_model_preference",
+    "ai_explanation_style",
+    "ai_cache_ttl",
+    "custom_system_prompt",
+    "custom_instructions",
+    # API key settings (loaded lazily via keyring)
+    "visual_crossing_api_key",
+    # Display preferences
+    "show_detailed_forecast",
+    "enable_alerts",
+    "minimize_to_tray",
+    "startup_enabled",
+    "auto_update_enabled",
+    "update_channel",
+    "update_check_interval_hours",
+    "debug_mode",
+    "trend_insights_enabled",
+    "trend_hours",
+    "show_dewpoint",
+    "show_pressure_trend",
+    "show_visibility",
+    "show_uv_index",
+    "show_seasonal_data",
+    "air_quality_enabled",
+    "pollen_enabled",
+    "offline_cache_enabled",
+    "offline_cache_max_age_minutes",
+    "weather_history_enabled",
+    "time_display_mode",
+    "time_format_12hour",
+    "show_timezone_suffix",
+    "html_render_current_conditions",
+    "html_render_forecast",
+    "taskbar_icon_text_enabled",
+    "taskbar_icon_dynamic_enabled",
+    "taskbar_icon_text_format",
+    "source_priority_us",
+    "source_priority_international",
+}
+
 
 @dataclass
 class AppSettings:
