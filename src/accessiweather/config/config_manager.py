@@ -22,7 +22,7 @@ from accessiweather.services import StartupManager
 from .github_config import GitHubConfigOperations
 from .import_export import ImportExportOperations
 from .locations import LocationOperations
-from .secure_storage import SecureStorage
+from .secure_storage import LazySecureStorage, SecureStorage
 from .settings import SettingsOperations
 
 logger = logging.getLogger("accessiweather.config")
@@ -132,17 +132,18 @@ class ConfigManager:
 
     def _load_secure_keys(self) -> None:
         """
-        Load secure keys from SecureStorage into the config.
+        Set up lazy loaders for secure keys in the config.
 
         These keys are stored in the system keyring for security and are not
-        saved to the JSON config file.
+        saved to the JSON config file. Using LazySecureStorage defers the actual
+        keyring access until the values are needed, improving startup performance.
         """
         if self._config is None:
             return
 
         settings = self._config.settings
 
-        # List of secure keys to load from SecureStorage
+        # List of secure keys to load lazily from SecureStorage
         secure_keys = [
             "visual_crossing_api_key",
             "openrouter_api_key",
@@ -152,13 +153,10 @@ class ConfigManager:
         ]
 
         for key in secure_keys:
-            try:
-                value = SecureStorage.get_password(key)
-                if value:
-                    setattr(settings, key, value)
-                    logger.debug(f"Loaded {key} from secure storage")
-            except Exception as exc:
-                logger.debug(f"Failed to load {key} from secure storage: {exc}")
+            # Create lazy accessor that will load from keyring on first access
+            lazy_value = LazySecureStorage(key)
+            setattr(settings, key, lazy_value)
+            logger.debug(f"Set up lazy loader for {key}")
 
     def save_config(self) -> bool:
         """
