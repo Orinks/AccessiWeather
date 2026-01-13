@@ -291,6 +291,7 @@ accessiweather-soundpacks/
 
 # Git worktree metadata (should not be committed)
 .worktrees/
+worktrees/
 
 # Test output logs
 junit-logs/

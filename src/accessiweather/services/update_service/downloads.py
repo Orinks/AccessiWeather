@@ -13,11 +13,22 @@ from typing import Protocol
 import httpx
 
 from ...utils.retry_utils import async_retry_with_backoff
+from .signature_verification import SignatureVerifier
 
 logger = logging.getLogger(__name__)
 
 
 def _looks_like_update_info(obj: object) -> bool:
+    """
+    Check if an object has the attributes of an UpdateInfo instance.
+
+    Args:
+        obj: Object to check
+
+    Returns:
+        True if the object has download_url and artifact_name attributes
+
+    """
     return hasattr(obj, "download_url") and hasattr(obj, "artifact_name")
 
 
@@ -48,6 +59,7 @@ class DownloadManager:
         cancel_event: CancelEvent | None = None,
         expected_sha256: str | None = None,
         checksums_url: str | None = None,
+        signature_url: str | None = None,
         artifact_name: str | None = None,
     ) -> str | bool:
         """Compatibility wrapper for both legacy and dataclass-based downloads."""
@@ -87,6 +99,7 @@ class DownloadManager:
                     cancel_event=cancel_event,
                     expected_sha256=expected_sha256,
                     checksums_url=checksums_url,
+                    signature_url=signature_url,
                     artifact_name=name,
                     expected_size=file_size,
                 )
@@ -110,6 +123,7 @@ class DownloadManager:
                 cancel_event=cancel_event,
                 expected_sha256=expected_sha256,
                 checksums_url=checksums_url,
+                signature_url=signature_url,
                 artifact_name=artifact_name,
             )
         except asyncio.CancelledError:
@@ -126,9 +140,37 @@ class DownloadManager:
         cancel_event: CancelEvent | None = None,
         expected_sha256: str | None = None,
         checksums_url: str | None = None,
+        signature_url: str | None = None,
         artifact_name: str | None = None,
         expected_size: int | None = None,
     ) -> str | bool:
+        """
+        Download an asset with verification and progress tracking.
+
+        Downloads a file from the given URL, verifies its integrity using multiple methods
+        (file size, SHA256, checksums.txt, GPG signature), and reports progress via callback.
+        Includes automatic retry logic with exponential backoff for transient failures.
+
+        Args:
+            asset_url: URL to download the asset from
+            dest_path: Destination path for the downloaded file
+            progress_callback: Optional callback function(downloaded, total) for progress updates
+            cancel_event: Optional event to signal download cancellation
+            expected_sha256: Optional SHA256 hash to verify against
+            checksums_url: Optional URL to checksums.txt file for verification
+            signature_url: Optional URL to GPG signature file for verification
+            artifact_name: Name of the artifact for checksums.txt lookup
+            expected_size: Optional expected file size in bytes
+
+        Returns:
+            Path to downloaded file as string on success, False on failure
+
+        Raises:
+            asyncio.CancelledError: If the download is cancelled
+            httpx.HTTPStatusError: If the HTTP request fails
+            httpx.TimeoutException: If the request times out (triggers retry)
+
+        """
         if not asset_url or not dest_path:
             logger.error("asset_url and dest_path are required for legacy download call")
             return False
@@ -198,6 +240,11 @@ class DownloadManager:
             ):
                 return False
 
+            if signature_url and not await SignatureVerifier.download_and_verify_signature(
+                dest_path, signature_url
+            ):
+                return False
+
             try:
                 return str(dest_path)
             except Exception:  # noqa: BLE001 - return Path fallback
@@ -210,6 +257,20 @@ class DownloadManager:
 
     @staticmethod
     def _verify_sha256(dest_path: Path, expected_sha256: str) -> bool:
+        """
+        Verify a file's SHA256 hash against an expected value.
+
+        Computes the SHA256 hash of the file and compares it to the expected hash.
+        If verification fails, the file is deleted.
+
+        Args:
+            dest_path: Path to the file to verify
+            expected_sha256: Expected SHA256 hash (case-insensitive)
+
+        Returns:
+            True if hash matches, False otherwise
+
+        """
         digest = hashlib.sha256()
         with open(dest_path, "rb") as file_obj:
             for chunk in iter(lambda: file_obj.read(8192), b""):
@@ -232,6 +293,26 @@ class DownloadManager:
         checksums_url: str,
         artifact_name: str,
     ) -> bool:
+        """
+        Verify a file's SHA256 hash using a checksums.txt file.
+
+        Downloads a checksums.txt file from the given URL, parses it to find the
+        expected hash for the artifact, and verifies the downloaded file's hash.
+        If verification fails, the file is deleted. Includes automatic retry logic.
+
+        Args:
+            dest_path: Path to the file to verify
+            checksums_url: URL to the checksums.txt file
+            artifact_name: Name of the artifact to look up in checksums.txt
+
+        Returns:
+            True if hash matches or no hash found, False if mismatch
+
+        Raises:
+            httpx.HTTPStatusError: If the checksums.txt download fails (triggers retry)
+            httpx.TimeoutException: If the request times out (triggers retry)
+
+        """
         try:
             response = await self.http_client.get(checksums_url, follow_redirects=True)
             response.raise_for_status()
