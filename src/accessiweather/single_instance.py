@@ -6,6 +6,8 @@ can run at a time using a lock file approach, since Toga/BeeWare does not provid
 built-in single-instance management.
 """
 
+from __future__ import annotations
+
 import logging
 import os
 import subprocess
@@ -13,6 +15,8 @@ import time
 from pathlib import Path
 
 import toga
+
+from accessiweather.performance.timer import measure
 
 logger = logging.getLogger(__name__)
 
@@ -44,34 +48,37 @@ class SingleInstanceManager:
             bool: True if lock was acquired successfully, False if another instance is running
 
         """
-        try:
-            # Use app.paths.data for the lock file location (cross-platform data directory)
-            lock_dir = self.app.paths.data
-            lock_dir.mkdir(parents=True, exist_ok=True)
-            self.lock_file_path = lock_dir / self.lock_filename
+        with measure("single_instance_lock_acquisition"):
+            try:
+                # Use app.paths.data for the lock file location (cross-platform data directory)
+                lock_dir = self.app.paths.data
+                lock_dir.mkdir(parents=True, exist_ok=True)
+                self.lock_file_path = lock_dir / self.lock_filename
 
-            logger.info(f"Checking for existing instance using lock file: {self.lock_file_path}")
+                logger.info(
+                    f"Checking for existing instance using lock file: {self.lock_file_path}"
+                )
 
-            # Check if lock file exists and is valid
-            if self.lock_file_path and self.lock_file_path.exists():
-                if self._is_lock_file_stale():
-                    logger.info("Found stale lock file, removing it")
-                    self._remove_lock_file()
-                else:
-                    logger.info("Another instance is already running")
-                    return False
+                # Check if lock file exists and is valid
+                if self.lock_file_path and self.lock_file_path.exists():
+                    if self._is_lock_file_stale():
+                        logger.info("Found stale lock file, removing it")
+                        self._remove_lock_file()
+                    else:
+                        logger.info("Another instance is already running")
+                        return False
 
-            # Create lock file with current process info
-            self._create_lock_file()
-            self._lock_acquired = True
-            logger.info("Successfully acquired single instance lock")
-            return True
+                # Create lock file with current process info
+                self._create_lock_file()
+                self._lock_acquired = True
+                logger.info("Successfully acquired single instance lock")
+                return True
 
-        except Exception as e:
-            logger.error(f"Error checking for another instance: {e}")
-            # If there's an error, assume no other instance is running
-            # to avoid blocking the application unnecessarily
-            return True
+            except Exception as e:
+                logger.error(f"Error checking for another instance: {e}")
+                # If there's an error, assume no other instance is running
+                # to avoid blocking the application unnecessarily
+                return True
 
     def _is_lock_file_stale(self) -> bool:
         """
