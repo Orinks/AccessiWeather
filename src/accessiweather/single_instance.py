@@ -48,6 +48,58 @@ class SingleInstanceManager:
         self.lock_file_path: Path | None = None
         self._lock_acquired = False
 
+    def _read_lock_info(self) -> tuple[int, float, str] | None:
+        """
+        Read lock file info in a single operation.
+
+        Returns
+        -------
+            tuple[int, float, str] | None: (pid, timestamp, app_name) or None if invalid format
+
+        Raises
+        ------
+            Exception: Re-raises read errors (permission denied, etc.) to be handled by caller
+
+        """
+        if not self.lock_file_path:
+            return None
+        try:
+            # Use explicit open() for better testability (builtins.open can be mocked)
+            # Single read operation - more efficient than multiple reads
+            with open(self.lock_file_path, encoding="utf-8") as f:
+                content = f.read().strip()
+            lines = content.split("\n")
+            if len(lines) < 2:
+                return None
+            return int(lines[0]), float(lines[1]), lines[2] if len(lines) > 2 else ""
+        except FileNotFoundError:
+            # File doesn't exist - return None (not an error)
+            return None
+        except (ValueError, IndexError):
+            # Invalid content format - return None
+            return None
+        # Let other exceptions (PermissionError, OSError, etc.) propagate up
+
+    def _lock_file_exists(self) -> bool:
+        """
+        Check if lock file exists using exception-based approach.
+
+        Using stat() with exception handling can be faster than exists() in some cases
+        because it avoids double system calls.
+
+        Returns
+        -------
+            bool: True if lock file exists
+
+        """
+        if not self.lock_file_path:
+            return False
+        try:
+            self.lock_file_path.stat()
+            return True
+        except (FileNotFoundError, OSError):
+            return False
+
     def try_acquire_lock(self) -> bool:
         """
         Try to acquire the single instance lock.
@@ -68,20 +120,25 @@ class SingleInstanceManager:
                     f"Checking for existing instance using lock file: {self.lock_file_path}"
                 )
 
-                # Check if lock file exists and is valid
-                if self.lock_file_path and self.lock_file_path.exists():
-                    if self._is_lock_file_stale():
-                        logger.info("Found stale lock file, removing it")
-                        self._remove_lock_file()
-                    else:
-                        logger.info("Another instance is already running")
-                        return False
+                # Early return: if no lock file exists, skip all stale checks
+                if not self._lock_file_exists():
+                    self._create_lock_file()
+                    self._lock_acquired = True
+                    logger.info("Successfully acquired single instance lock (no existing lock)")
+                    return True
 
-                # Create lock file with current process info
-                self._create_lock_file()
-                self._lock_acquired = True
-                logger.info("Successfully acquired single instance lock")
-                return True
+                # Lock file exists - check if it's stale
+                if self._is_lock_file_stale():
+                    logger.info("Found stale lock file, removing it")
+                    self._remove_lock_file()
+                    self._create_lock_file()
+                    self._lock_acquired = True
+                    logger.info("Successfully acquired single instance lock (replaced stale)")
+                    return True
+
+                # Lock file exists and is not stale - another instance is running
+                logger.info("Another instance is already running")
+                return False
 
             except Exception as e:
                 logger.error(f"Error checking for another instance: {e}")
@@ -93,33 +150,33 @@ class SingleInstanceManager:
         """
         Check if the lock file is stale (from a crashed instance).
 
+        Uses the optimized _read_lock_info() helper for single-read operation.
+
         Returns
         -------
             bool: True if the lock file is stale and should be removed
 
         """
         try:
-            if not self.lock_file_path or not self.lock_file_path.exists():
+            # Early return if lock file path not set
+            if not self.lock_file_path:
                 return False
 
-            # Read the lock file content
-            with open(self.lock_file_path, encoding="utf-8") as f:
-                content = f.read().strip()
+            # Use consolidated read operation - returns None if file doesn't exist or is invalid
+            lock_info = self._read_lock_info()
 
-            # Parse the lock file content
-            lines = content.split("\n")
-            if len(lines) < 2:
-                logger.warning("Invalid lock file format, considering it stale")
-                return True
+            if lock_info is None:
+                # File doesn't exist, or has invalid format
+                # Check if it's due to missing file vs invalid content
+                if self._lock_file_exists():
+                    logger.warning("Invalid lock file format, considering it stale")
+                    return True
+                return False
 
-            try:
-                pid = int(lines[0])
-                timestamp = float(lines[1])
-            except (ValueError, IndexError):
-                logger.warning("Invalid lock file content, considering it stale")
-                return True
+            pid, timestamp, _app_name = lock_info
 
             # Check if the process is still running (cross-platform approach)
+            # This is the most expensive check, so do it before timestamp check
             if not self._is_process_running(pid):
                 logger.info(f"Process {pid} is no longer running, lock file is stale")
                 return True
