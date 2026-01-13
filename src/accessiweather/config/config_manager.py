@@ -11,6 +11,7 @@ import json
 import logging
 import os
 import sys
+import time
 from pathlib import Path
 
 import toga
@@ -82,20 +83,38 @@ class ConfigManager:
         if self._config is not None:
             return self._config
 
+        load_start = time.perf_counter()
+
         try:
             if self.config_file.exists():
                 logger.info(f"Loading config from {self.config_file}")
+
+                # Time file read and JSON parsing
+                file_read_start = time.perf_counter()
                 with open(self.config_file, encoding="utf-8") as f:
                     data = json.load(f)
-                    self._config = AppConfig.from_dict(data)
+                file_read_elapsed = time.perf_counter() - file_read_start
+                logger.debug(f"Config file read and JSON parse took {file_read_elapsed:.4f}s")
 
-                    # Load secure keys from SecureStorage (not stored in JSON for security)
-                    self._load_secure_keys()
+                # Time AppConfig.from_dict() deserialization
+                deserialize_start = time.perf_counter()
+                self._config = AppConfig.from_dict(data)
+                deserialize_elapsed = time.perf_counter() - deserialize_start
+                logger.debug(f"AppConfig deserialization took {deserialize_elapsed:.4f}s")
 
-                    # Validate and fix configuration
-                    self._settings._validate_and_fix_config()
+                # Time secure keys loading from SecureStorage
+                secure_keys_start = time.perf_counter()
+                self._load_secure_keys()
+                secure_keys_elapsed = time.perf_counter() - secure_keys_start
+                logger.debug(f"Secure keys loading took {secure_keys_elapsed:.4f}s")
 
-                    logger.info("Configuration loaded successfully")
+                # Time validation and fixing
+                validation_start = time.perf_counter()
+                self._settings._validate_and_fix_config()
+                validation_elapsed = time.perf_counter() - validation_start
+                logger.debug(f"Config validation took {validation_elapsed:.4f}s")
+
+                logger.info("Configuration loaded successfully")
             else:
                 logger.info("No config file found, creating default configuration")
                 self._config = AppConfig.default()
@@ -105,6 +124,9 @@ class ConfigManager:
             logger.error(f"Failed to load config: {e}")
             logger.info("Using default configuration")
             self._config = AppConfig.default()
+
+        load_elapsed = time.perf_counter() - load_start
+        logger.debug(f"Total config load took {load_elapsed:.4f}s")
 
         return self._config
 
