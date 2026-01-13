@@ -93,3 +93,51 @@ class SecureStorage:
         except Exception as e:
             logger.error(f"Failed to delete credential for {username}: {e}")
             return False
+
+
+class LazySecureStorage:
+    """Lazy accessor for secure storage - only accesses keyring on first use.
+
+    This class defers keyring access until the value is actually needed,
+    improving startup performance by avoiding synchronous I/O during initialization.
+    """
+
+    def __init__(self, key_name: str) -> None:
+        """
+        Initialize lazy storage accessor.
+
+        Args:
+            key_name: The key/username to retrieve from the keyring when accessed
+
+        """
+        self._key_name = key_name
+        self._value: str | None = None
+        self._loaded: bool = False
+
+    @property
+    def value(self) -> str:
+        """
+        Get the stored value, loading from keyring on first access.
+
+        Returns:
+            The password string if found, empty string otherwise
+
+        """
+        if not self._loaded:
+            self._value = SecureStorage.get_password(self._key_name)
+            self._loaded = True
+            logger.debug(f"Lazy-loaded credential for {self._key_name}")
+        return self._value or ""
+
+    def __str__(self) -> str:
+        """Return the value when converted to string."""
+        return self.value
+
+    def __bool__(self) -> bool:
+        """Return True if the value is non-empty."""
+        return bool(self.value)
+
+    def reset(self) -> None:
+        """Reset the lazy loader to fetch fresh value on next access."""
+        self._value = None
+        self._loaded = False
