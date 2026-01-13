@@ -527,3 +527,112 @@ class TestSingleInstanceManagerEdgeCases:
 
             # Should return False to be safe
             assert result is False
+
+
+class TestSingleInstancePerformance:
+    """Test performance of single instance check operations."""
+
+    @pytest.fixture
+    def mock_app(self, tmp_path):
+        """Create mock Toga app."""
+        app = Mock()
+        app.formal_name = "TestApp"
+        app.paths = Mock()
+        app.paths.data = tmp_path / "data"
+        app.paths.data.mkdir(parents=True, exist_ok=True)
+        app.main_window = Mock()
+        return app
+
+    @pytest.mark.performance
+    def test_single_instance_check_performance(self, mock_app):
+        """Single instance check should complete in under 100ms."""
+        manager = SingleInstanceManager(mock_app)
+
+        start_time = time.perf_counter()
+        result = manager.try_acquire_lock()
+        elapsed_ms = (time.perf_counter() - start_time) * 1000
+
+        assert result is True
+        assert elapsed_ms < 100, f"Single instance check took {elapsed_ms:.2f}ms, expected <100ms"
+
+        # Cleanup
+        manager.release_lock()
+
+    @pytest.mark.performance
+    def test_single_instance_check_with_existing_lock_performance(self, mock_app):
+        """Single instance check with existing lock file should complete in under 100ms."""
+        # First instance acquires lock
+        manager1 = SingleInstanceManager(mock_app)
+        manager1.try_acquire_lock()
+
+        # Second instance tries to acquire (should fail fast)
+        manager2 = SingleInstanceManager(mock_app)
+
+        start_time = time.perf_counter()
+        result = manager2.try_acquire_lock()
+        elapsed_ms = (time.perf_counter() - start_time) * 1000
+
+        assert result is False
+        assert elapsed_ms < 100, f"Lock check took {elapsed_ms:.2f}ms, expected <100ms"
+
+        # Cleanup
+        manager1.release_lock()
+
+    @pytest.mark.performance
+    def test_stale_lock_detection_performance(self, mock_app):
+        """Stale lock file detection should complete in under 100ms."""
+        manager = SingleInstanceManager(mock_app)
+
+        # Create stale lock file with non-existent PID
+        lock_dir = mock_app.paths.data
+        lock_path = lock_dir / "accessiweather.lock"
+        lock_path.write_text("999999\n1.0\nOldApp\n")
+
+        start_time = time.perf_counter()
+        result = manager.try_acquire_lock()
+        elapsed_ms = (time.perf_counter() - start_time) * 1000
+
+        assert result is True
+        assert elapsed_ms < 100, f"Stale lock detection took {elapsed_ms:.2f}ms, expected <100ms"
+
+        # Cleanup
+        manager.release_lock()
+
+    @pytest.mark.performance
+    def test_multiple_runs_consistency(self, mock_app):
+        """Multiple consecutive lock checks should all complete in under 100ms."""
+        timings = []
+
+        for i in range(5):
+            manager = SingleInstanceManager(mock_app)
+
+            start_time = time.perf_counter()
+            result = manager.try_acquire_lock()
+            elapsed_ms = (time.perf_counter() - start_time) * 1000
+
+            assert result is True, f"Run {i + 1}: Lock acquisition failed"
+            timings.append(elapsed_ms)
+
+            # Release lock for next iteration
+            manager.release_lock()
+
+        # All runs should be under 100ms
+        for i, timing in enumerate(timings):
+            assert timing < 100, f"Run {i + 1} took {timing:.2f}ms, expected <100ms"
+
+        # Verify average timing is also under 100ms
+        avg_timing = sum(timings) / len(timings)
+        assert avg_timing < 100, f"Average timing {avg_timing:.2f}ms exceeds 100ms"
+
+    @pytest.mark.performance
+    def test_lock_release_performance(self, mock_app):
+        """Lock release should complete quickly."""
+        manager = SingleInstanceManager(mock_app)
+        manager.try_acquire_lock()
+
+        start_time = time.perf_counter()
+        manager.release_lock()
+        elapsed_ms = (time.perf_counter() - start_time) * 1000
+
+        # Lock release should be very fast (<10ms)
+        assert elapsed_ms < 10, f"Lock release took {elapsed_ms:.2f}ms, expected <10ms"
