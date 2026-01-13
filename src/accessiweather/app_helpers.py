@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle guard
     from .app import AccessiWeatherApp
+    from .models import WeatherData
 
 
 logger = logging.getLogger(__name__)
@@ -205,6 +206,123 @@ def show_error_displays(app: AccessiWeatherApp, error_message: str) -> None:
 
     if app.alert_details_button:
         app.alert_details_button.enabled = False
+
+
+def _convert_alerts_to_table_data(alerts: Any) -> list[dict[str, str]]:
+    """Convert WeatherAlerts to table data format with stable identifiers.
+
+    This is a synchronous helper that mirrors the logic in weather_handlers
+    but avoids circular imports by being defined here.
+    """
+    if not alerts or not getattr(alerts, "has_alerts", lambda: False)():
+        return []
+
+    table_data: list[dict[str, str]] = []
+    active_alerts = getattr(alerts, "get_active_alerts", lambda: [])()
+
+    for alert in active_alerts[:10]:
+        event = getattr(alert, "event", None) or "Weather Alert"
+        severity = getattr(alert, "severity", None) or "Unknown"
+        headline = getattr(alert, "headline", None) or "No headline available"
+
+        if len(headline) > 80:
+            headline = headline[:77] + "..."
+
+        alert_id = (
+            getattr(alert, "get_unique_id", lambda: "unknown")()
+            if callable(getattr(alert, "get_unique_id", None))
+            else "unknown"
+        )
+
+        table_data.append(
+            {
+                "alert_id": alert_id,
+                "event": event,
+                "severity": severity,
+                "headline": headline,
+            }
+        )
+
+    return table_data
+
+
+def sync_update_weather_displays(app: AccessiWeatherApp, weather_data: WeatherData) -> None:
+    """Synchronously update UI widgets with weather data.
+
+    This function is designed for immediate display during startup when cached
+    data is available. It directly sets widget values without async operations
+    (no notifications, no WebView updates that may require async context).
+
+    Args:
+        app: The AccessiWeather application instance
+        weather_data: Weather data to display
+
+    """
+    # Skip UI updates if window is hidden to prevent phantom popups on Windows
+    if not should_show_dialog(app):
+        logger.debug("Skipping sync weather display updates - window is hidden")
+        return
+
+    try:
+        # Use presenter to format weather data
+        presentation = app.presenter.present(weather_data)
+
+        # Update current conditions display (text-based)
+        if app.current_conditions_display:
+            if presentation.current_conditions:
+                current_text = presentation.current_conditions.fallback_text
+                trend_lines = presentation.current_conditions.trends
+                if trend_lines:
+                    current_text += "\n\nTrends:\n" + "\n".join(
+                        f"• {trend}" for trend in trend_lines
+                    )
+
+                if presentation.status_messages:
+                    status_lines = "\n".join(f"• {line}" for line in presentation.status_messages)
+                    current_text += f"\n\nStatus:\n{status_lines}"
+
+                # Add source attribution for transparency
+                if presentation.source_attribution:
+                    attr = presentation.source_attribution
+                    if attr.summary_text:
+                        current_text += f"\n\n{attr.summary_text}"
+                    if attr.incomplete_sections:
+                        incomplete = ", ".join(attr.incomplete_sections)
+                        current_text += f"\nMissing sections: {incomplete}"
+
+                app.current_conditions_display.value = current_text
+            else:
+                app.current_conditions_display.value = ""
+
+        # Update forecast display (text-based)
+        if app.forecast_display:
+            if presentation.forecast:
+                app.forecast_display.value = presentation.forecast.fallback_text
+            else:
+                app.forecast_display.value = ""
+
+        # Update aviation display if present
+        aviation_display = getattr(app, "aviation_display", None)
+        if aviation_display is not None:
+            if presentation.aviation:
+                aviation_display.value = presentation.aviation.fallback_text
+            else:
+                aviation_display.value = ""
+
+        # Update alerts table
+        alerts_table_data = _convert_alerts_to_table_data(weather_data.alerts)
+        if app.alerts_table:
+            app.alerts_table.data = alerts_table_data
+
+        app.current_alerts_data = weather_data.alerts
+        if app.alert_details_button:
+            app.alert_details_button.enabled = len(alerts_table_data) > 0
+
+        logger.info("Sync weather displays updated successfully (cached data)")
+
+    except Exception as exc:  # pragma: no cover - defensive logging
+        logger.error("Failed to sync update weather displays: %s", exc)
+        show_error_displays(app, f"Display error: {exc}")
 
 
 def should_show_dialog(app: AccessiWeatherApp) -> bool:
