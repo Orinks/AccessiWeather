@@ -165,8 +165,16 @@ def _initialize_weather_history_deferred(app: AccessiWeatherApp) -> None:
 
 
 def load_initial_data(app: AccessiWeatherApp) -> None:
-    """Load persisted configuration and kick off initial data fetches."""
-    logger.info("Loading initial data")
+    """Load persisted configuration and kick off initial data fetches.
+
+    Implements cache-first startup: if cached weather data exists for the current
+    location, it is displayed immediately (synchronously) before the async refresh
+    begins. This provides instant perceived performance even on slow networks.
+    """
+    import time
+
+    start_time = time.perf_counter()
+    logger.info("Loading initial data (cache-first)")
 
     try:
         config = app.config_manager.get_config()
@@ -174,15 +182,50 @@ def load_initial_data(app: AccessiWeatherApp) -> None:
         if not config.locations:
             logger.info("No locations configured; waiting for user to add one")
             app_helpers.update_status(app, "Add a location to get started.")
-        elif config.current_location:
-            # Start initial data fetch for current location
-            task = asyncio.create_task(event_handlers.refresh_weather_data(app))
-            task.add_done_callback(background_tasks.task_done_callback)
+            return
 
-            # Kick off a background pre-warm for all other locations
-            # This ensures that switching locations later will be fast
-            if len(config.locations) > 1:
-                asyncio.create_task(_pre_warm_other_locations(app))
+        if not config.current_location:
+            logger.info("No current location set")
+            return
+
+        # CACHE-FIRST: Check for cached data synchronously for instant startup
+        cached_data = None
+        if app.weather_client:
+            try:
+                cached_data = app.weather_client.get_cached_weather(config.current_location)
+            except Exception as cache_exc:  # pragma: no cover - defensive logging
+                logger.debug("Cache lookup failed (non-fatal): %s", cache_exc)
+
+        if cached_data:
+            # Display cached data immediately (synchronously)
+            app.current_weather_data = cached_data
+            app_helpers.sync_update_weather_displays(app, cached_data)
+
+            elapsed = (time.perf_counter() - start_time) * 1000
+            logger.info(
+                "Cached data displayed in %.1fms for %s",
+                elapsed,
+                config.current_location.name,
+            )
+
+            # Show status indicating background refresh is in progress
+            app_helpers.update_status(
+                app, f"Updating weather for {config.current_location.name}..."
+            )
+        else:
+            logger.info("No cached data available for %s", config.current_location.name)
+            app_helpers.update_status(
+                app, f"Loading weather for {config.current_location.name}..."
+            )
+
+        # Start async refresh for fresh data (runs in background)
+        task = asyncio.create_task(event_handlers.refresh_weather_data(app))
+        task.add_done_callback(background_tasks.task_done_callback)
+
+        # Kick off a background pre-warm for all other locations
+        # This ensures that switching locations later will be fast
+        if len(config.locations) > 1:
+            asyncio.create_task(_pre_warm_other_locations(app))
 
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Failed to load initial data: %s", exc)
