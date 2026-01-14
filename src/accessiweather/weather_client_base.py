@@ -66,7 +66,6 @@ class WeatherClient:
         self.openmeteo_base_url = "https://api.open-meteo.com/v1"
         self.timeout = 10.0
         self.data_source = data_source  # "auto", "nws", "openmeteo", "visualcrossing"
-        self.visual_crossing_api_key = visual_crossing_api_key
         self.settings = settings or AppSettings()
         self._test_mode = bool(os.environ.get("PYTEST_CURRENT_TEST"))
         self.alerts_enabled = bool(self.settings.enable_alerts)
@@ -82,10 +81,12 @@ class WeatherClient:
         self.offline_cache = offline_cache
         self._cache_purge_pending = True
 
-        # Initialize Visual Crossing client if API key is provided
-        self.visual_crossing_client = None
-        if visual_crossing_api_key:
-            self.visual_crossing_client = VisualCrossingClient(visual_crossing_api_key, user_agent)
+        # Store the API key reference for lazy client creation
+        # Note: visual_crossing_api_key may be a LazySecureStorage object that defers
+        # keyring access until first use. We avoid checking truthiness here to prevent
+        # triggering the lazy load during initialization.
+        self._visual_crossing_api_key = visual_crossing_api_key
+        self._visual_crossing_client: VisualCrossingClient | None = None
 
         # Secondary data providers
         self.environmental_client = environmental_client
@@ -99,6 +100,40 @@ class WeatherClient:
 
         # Track in-flight requests to deduplicate concurrent calls
         self._in_flight_requests: dict[str, asyncio.Task[WeatherData]] = {}
+
+    @property
+    def visual_crossing_api_key(self) -> str:
+        """Get the Visual Crossing API key, resolving lazy accessor if needed.
+
+        The API key may be a LazySecureStorage object that defers keyring access.
+        This property resolves the value when accessed.
+        """
+        key = self._visual_crossing_api_key
+        if key is None or key == "":
+            return ""
+        # Handle LazySecureStorage by converting to string (triggers lazy load)
+        # Note: str() calls __str__ on LazySecureStorage which returns the value
+        return str(key)
+
+    @property
+    def visual_crossing_client(self) -> VisualCrossingClient | None:
+        """Get the Visual Crossing client, creating it lazily on first access.
+
+        This defers keyring access for the API key until the client is actually needed,
+        improving startup performance.
+        """
+        if self._visual_crossing_client is None:
+            # Now we check the API key truthiness, which may trigger lazy keyring load
+            api_key = self.visual_crossing_api_key
+            if api_key:
+                self._visual_crossing_client = VisualCrossingClient(api_key, self.user_agent)
+                logger.debug("Visual Crossing client created lazily")
+        return self._visual_crossing_client
+
+    @visual_crossing_client.setter
+    def visual_crossing_client(self, value: VisualCrossingClient | None) -> None:
+        """Allow direct assignment for backward compatibility and testing."""
+        self._visual_crossing_client = value
 
     def _location_key(self, location: Location) -> str:
         """Generate a unique key for a location to track in-flight requests."""

@@ -285,22 +285,4 @@ AccessiWeather-wx-legacy-tmp/
 
 # External soundpacks repository (do not track)
 accessiweather-soundpacks/
-
-# Claude Code local settings (user-specific)
-.claude/
-
-# Git worktree metadata (should not be committed)
-.worktrees/
-
-# Test output logs
-junit-logs/
-
-# Auto Claude data directory
-.auto-claude/
-
-# Auto Claude generated files
-.auto-claude-security.json
-.auto-claude-status
-.claude_settings.json
-.security-key
-logs/security/
+.auto-claude/worktrees/

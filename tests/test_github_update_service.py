@@ -70,6 +70,10 @@ _packaging_stub = types.ModuleType("packaging")
 _version_mod = types.ModuleType("version")
 
 
+class _InvalidVersion(Exception):
+    """Stub for InvalidVersion exception."""
+
+
 class _Version:
     def __init__(self, s: str):
         s = s.lstrip("vV")
@@ -108,12 +112,13 @@ class _Version:
 
 
 _version_mod.Version = _Version
+_version_mod.InvalidVersion = _InvalidVersion
 _packaging_stub.version = _version_mod
 sys.modules.setdefault("packaging", _packaging_stub)
 sys.modules.setdefault("packaging.version", _version_mod)
 
 # Import the service module normally
-from accessiweather.services.github_update_service import (  # noqa: E402
+from accessiweather.services.update_service.github_update_service import (  # noqa: E402
     GitHubUpdateService,
     UpdateInfo,
 )
@@ -1019,3 +1024,310 @@ async def test_e2e_dev_channel_nightly_update(windows_platform, svc):
     assert path.exists()
     assert path.read_bytes() == file_content
     assert path.name == "AccessiWeather-nightly-20251122-win.exe"
+
+
+# -----------------------------
+# Signature verification tests
+# -----------------------------
+
+
+@pytest.mark.asyncio
+async def test_find_signature_asset_with_sig_extension():
+    """Test find_signature_asset finds .sig file matching artifact name."""
+    from accessiweather.services.update_service.releases import ReleaseManager
+
+    release = {
+        "assets": [
+            {
+                "name": "AccessiWeather-1.0.0-win.msi",
+                "browser_download_url": "https://example.com/app.msi",
+            },
+            {
+                "name": "AccessiWeather-1.0.0-win.msi.sig",
+                "browser_download_url": "https://example.com/app.sig",
+            },
+            {"name": "checksums.txt", "browser_download_url": "https://example.com/checksums.txt"},
+        ]
+    }
+
+    signature_asset = ReleaseManager.find_signature_asset(release, "AccessiWeather-1.0.0-win.msi")
+
+    assert signature_asset is not None
+    assert signature_asset["name"] == "AccessiWeather-1.0.0-win.msi.sig"
+    assert signature_asset["browser_download_url"] == "https://example.com/app.sig"
+
+
+@pytest.mark.asyncio
+async def test_find_signature_asset_with_asc_extension():
+    """Test find_signature_asset finds .asc file matching artifact name."""
+    from accessiweather.services.update_service.releases import ReleaseManager
+
+    release = {
+        "assets": [
+            {
+                "name": "AccessiWeather-1.0.0-win.exe",
+                "browser_download_url": "https://example.com/app.exe",
+            },
+            {
+                "name": "AccessiWeather-1.0.0-win.exe.asc",
+                "browser_download_url": "https://example.com/app.asc",
+            },
+        ]
+    }
+
+    signature_asset = ReleaseManager.find_signature_asset(release, "AccessiWeather-1.0.0-win.exe")
+
+    assert signature_asset is not None
+    assert signature_asset["name"] == "AccessiWeather-1.0.0-win.exe.asc"
+    assert signature_asset["browser_download_url"] == "https://example.com/app.asc"
+
+
+@pytest.mark.asyncio
+async def test_find_signature_asset_not_found():
+    """Test find_signature_asset returns None when no signature file exists."""
+    from accessiweather.services.update_service.releases import ReleaseManager
+
+    release = {
+        "assets": [
+            {
+                "name": "AccessiWeather-1.0.0-win.msi",
+                "browser_download_url": "https://example.com/app.msi",
+            },
+            {"name": "checksums.txt", "browser_download_url": "https://example.com/checksums.txt"},
+        ]
+    }
+
+    signature_asset = ReleaseManager.find_signature_asset(release, "AccessiWeather-1.0.0-win.msi")
+
+    assert signature_asset is None
+
+
+@pytest.mark.asyncio
+async def test_check_for_updates_includes_signature_url(windows_platform, svc):
+    """Test that check_for_updates populates signature_url in UpdateInfo when signature asset exists."""
+    releases = [
+        {
+            "tag_name": "v1.0.0",
+            "published_at": "2025-01-01T00:00:00Z",
+            "prerelease": False,
+            "assets": [
+                {
+                    "name": "AccessiWeather-1.0.0-win.msi",
+                    "browser_download_url": "https://example.com/v1.0.0.msi",
+                    "size": 1024,
+                },
+                {
+                    "name": "AccessiWeather-1.0.0-win.msi.sig",
+                    "browser_download_url": "https://example.com/v1.0.0.msi.sig",
+                    "size": 512,
+                },
+            ],
+            "body": "Release with signature",
+        }
+    ]
+
+    client = QueueHttpClient(get_responses=[MockResponse(json_data=releases)])
+    svc.http_client = client
+
+    info = await svc.check_for_updates(current_version="0.9.0")
+
+    assert isinstance(info, UpdateInfo)
+    assert info.version == "1.0.0"
+    assert info.signature_url == "https://example.com/v1.0.0.msi.sig"
+
+
+@pytest.mark.asyncio
+async def test_check_for_updates_signature_url_none_when_not_present(windows_platform, svc):
+    """Test that signature_url is None when no signature asset exists."""
+    releases = [
+        {
+            "tag_name": "v1.0.0",
+            "published_at": "2025-01-01T00:00:00Z",
+            "prerelease": False,
+            "assets": [
+                {
+                    "name": "AccessiWeather-1.0.0-win.msi",
+                    "browser_download_url": "https://example.com/v1.0.0.msi",
+                    "size": 1024,
+                }
+            ],
+            "body": "Release without signature",
+        }
+    ]
+
+    client = QueueHttpClient(get_responses=[MockResponse(json_data=releases)])
+    svc.http_client = client
+
+    info = await svc.check_for_updates(current_version="0.9.0")
+
+    assert isinstance(info, UpdateInfo)
+    assert info.version == "1.0.0"
+    assert info.signature_url is None
+
+
+@pytest.mark.asyncio
+async def test_download_with_signature_verification_success(windows_platform, svc, tmp_path):
+    """Test download with successful signature verification."""
+    import hashlib
+    from unittest.mock import AsyncMock, patch
+
+    # Create test data
+    content = b"Test file content with signature"
+    sha256_hash = hashlib.sha256(content).hexdigest()
+
+    # Set up QueueHttpClient with MockStreamResponse for download
+    client = QueueHttpClient(
+        stream_resp=MockStreamResponse(
+            headers={"content-length": str(len(content))}, chunks=[content]
+        )
+    )
+
+    # Create UpdateInfo with signature_url
+    info = UpdateInfo(
+        version="1.0.0",
+        download_url="https://example.com/file.exe",
+        artifact_name="file.exe",
+        signature_url="https://example.com/file.exe.sig",
+    )
+
+    # Configure get_responses for checksums.txt
+    checksums_content = f"{sha256_hash} file.exe\n"
+    client._get_responses = [MockResponse(status_code=200, text=checksums_content)]
+
+    svc.http_client = client
+
+    # Mock SignatureVerifier.download_and_verify_signature to return True
+    with patch(
+        "accessiweather.services.update_service.downloads.SignatureVerifier.download_and_verify_signature",
+        new_callable=AsyncMock,
+        return_value=True,
+    ) as mock_verify:
+        # Call download_update with checksums_url and signature_url
+        result = await svc.download_update(
+            info,
+            checksums_url="https://example.com/checksums.txt",
+            signature_url=info.signature_url,
+        )
+
+        # Assert returns string path
+        assert isinstance(result, str)
+
+        # Assert file remains and exists
+        file_path = Path(result)
+        assert file_path.exists()
+        assert file_path.read_bytes() == content
+
+        # Verify signature verification was called
+        mock_verify.assert_called_once()
+        call_args = mock_verify.call_args
+        assert str(call_args[0][0]) == str(file_path)
+        assert call_args[0][1] == info.signature_url
+
+
+@pytest.mark.asyncio
+async def test_download_with_signature_verification_failure(windows_platform, svc, tmp_path):
+    """Test download with failed signature verification."""
+    import hashlib
+    from unittest.mock import patch
+
+    # Create test data
+    content = b"Test file content with invalid signature"
+    sha256_hash = hashlib.sha256(content).hexdigest()
+
+    # Set up QueueHttpClient with MockStreamResponse for download
+    client = QueueHttpClient(
+        stream_resp=MockStreamResponse(
+            headers={"content-length": str(len(content))}, chunks=[content]
+        )
+    )
+
+    # Create UpdateInfo with signature_url
+    info = UpdateInfo(
+        version="1.0.0",
+        download_url="https://example.com/file.exe",
+        artifact_name="file.exe",
+        signature_url="https://example.com/file.exe.sig",
+    )
+
+    # Configure get_responses for checksums.txt
+    checksums_content = f"{sha256_hash} file.exe\n"
+    client._get_responses = [MockResponse(status_code=200, text=checksums_content)]
+
+    svc.http_client = client
+
+    # Mock SignatureVerifier.download_and_verify_signature to return False (verification failure)
+    # and simulate file deletion that the real implementation would do
+    async def mock_verify_and_delete(file_path, signature_url):
+        # Simulate real behavior: delete file on verification failure
+        file_path.unlink(missing_ok=True)
+        return False
+
+    with patch(
+        "accessiweather.services.update_service.downloads.SignatureVerifier.download_and_verify_signature",
+        side_effect=mock_verify_and_delete,
+    ) as mock_verify:
+        # Call download_update with checksums_url and signature_url
+        result = await svc.download_update(
+            info,
+            checksums_url="https://example.com/checksums.txt",
+            signature_url=info.signature_url,
+        )
+
+        # Assert the function returns False due to signature verification failure
+        assert result is False
+
+        # Verify signature verification was called
+        mock_verify.assert_called_once()
+
+        # Assert the file under updates is removed
+        updates_dir = Path(svc.config_dir) / "updates"
+        files = list(updates_dir.glob("*.exe"))
+        assert not files  # File should be removed due to signature verification failure
+
+
+@pytest.mark.asyncio
+async def test_download_without_signature_url_skips_verification(windows_platform, svc, tmp_path):
+    """Test download without signature_url skips signature verification."""
+    import hashlib
+    from unittest.mock import AsyncMock, patch
+
+    # Create test data
+    content = b"Test file content without signature"
+    sha256_hash = hashlib.sha256(content).hexdigest()
+
+    # Set up QueueHttpClient with MockStreamResponse for download
+    client = QueueHttpClient(
+        stream_resp=MockStreamResponse(
+            headers={"content-length": str(len(content))}, chunks=[content]
+        )
+    )
+
+    # Create UpdateInfo WITHOUT signature_url
+    info = UpdateInfo(
+        version="1.0.0", download_url="https://example.com/file.exe", artifact_name="file.exe"
+    )
+
+    # Configure get_responses for checksums.txt
+    checksums_content = f"{sha256_hash} file.exe\n"
+    client._get_responses = [MockResponse(status_code=200, text=checksums_content)]
+
+    svc.http_client = client
+
+    # Mock SignatureVerifier to ensure it's not called
+    with patch(
+        "accessiweather.services.update_service.downloads.SignatureVerifier.download_and_verify_signature",
+        new_callable=AsyncMock,
+    ) as mock_verify:
+        # Call download_update with checksums_url but NO signature_url
+        result = await svc.download_update(info, checksums_url="https://example.com/checksums.txt")
+
+        # Assert returns string path
+        assert isinstance(result, str)
+
+        # Assert file exists
+        file_path = Path(result)
+        assert file_path.exists()
+        assert file_path.read_bytes() == content
+
+        # Verify signature verification was NOT called since signature_url is None
+        mock_verify.assert_not_called()
