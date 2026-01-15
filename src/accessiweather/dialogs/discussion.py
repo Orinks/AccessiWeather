@@ -105,7 +105,7 @@ class ForecastDiscussionDialog:
         """Check if OpenRouter API key is configured."""
         try:
             settings = self.app.config_manager.get_config().settings
-            api_key = getattr(settings, "openrouter_api_key", "")
+            api_key = str(getattr(settings, "openrouter_api_key", "") or "")
             return bool(api_key and api_key.strip())
         except Exception:
             return False

@@ -138,6 +138,18 @@ class LazySecureStorage:
         """Return True if the value is non-empty."""
         return bool(self.value)
 
+    def strip(self) -> str:
+        """Return the stripped value, delegating to the underlying string."""
+        return self.value.strip()
+
+    def __eq__(self, other: object) -> bool:
+        """Compare equality with another string or LazySecureStorage."""
+        if isinstance(other, LazySecureStorage):
+            return self.value == other.value
+        if isinstance(other, str):
+            return self.value == other
+        return NotImplemented
+
     def reset(self) -> None:
         """Reset the lazy loader to fetch fresh value on next access."""
         self._value = None
