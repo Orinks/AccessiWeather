@@ -1,18 +1,43 @@
-"""Secure storage management using system keyring."""
+"""
+Secure storage management using system keyring.
+
+Keyring import is deferred until first use to improve startup performance.
+"""
 
 from __future__ import annotations
 
 import logging
 from typing import Final
 
-try:
-    import keyring
-except ImportError:
-    keyring = None
-
 logger = logging.getLogger("accessiweather.config.secure")
 
 SERVICE_NAME: Final = "accessiweather"
+
+# Module-level cache for keyring module (lazy-loaded)
+_keyring_module = None
+_keyring_checked = False
+
+
+def _get_keyring():
+    """
+    Get the keyring module, importing it lazily on first access.
+
+    This defers the ~86ms keyring import cost until it's actually needed.
+
+    Returns:
+        The keyring module if available, None otherwise.
+
+    """
+    global _keyring_module, _keyring_checked
+    if not _keyring_checked:
+        try:
+            import keyring
+
+            _keyring_module = keyring
+        except ImportError:
+            _keyring_module = None
+        _keyring_checked = True
+    return _keyring_module
 
 
 class SecureStorage:
@@ -31,6 +56,7 @@ class SecureStorage:
             True if successful, False otherwise
 
         """
+        keyring = _get_keyring()
         if keyring is None:
             logger.warning(f"Keyring not available, cannot store credential for {username}")
             return False
@@ -59,6 +85,7 @@ class SecureStorage:
             The password string if found, None otherwise
 
         """
+        keyring = _get_keyring()
         if keyring is None:
             logger.warning(f"Keyring not available, cannot retrieve credential for {username}")
             return None
@@ -81,6 +108,7 @@ class SecureStorage:
             True if successful (or didn't exist), False on error
 
         """
+        keyring = _get_keyring()
         if keyring is None:
             return True  # Treat as success since we can't delete what we can't access
 
