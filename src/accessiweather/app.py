@@ -233,7 +233,7 @@ class AccessiWeatherApp(toga.App):
                 self.ai_explanation_cache.default_ttl = ai_cache_ttl
 
             # Update AI explanation button visibility
-            api_key = getattr(settings, "openrouter_api_key", "")
+            api_key = str(getattr(settings, "openrouter_api_key", "") or "")
             self._update_ai_button_visibility(bool(api_key and api_key.strip()))
 
             logger.info("Runtime settings refreshed successfully")

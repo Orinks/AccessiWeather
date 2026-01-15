@@ -167,16 +167,16 @@ class LazySecureStorage:
         return bool(self.value)
 
     def strip(self) -> str:
-        """Return stripped value for string compatibility."""
+        """Return the stripped value, delegating to the underlying string."""
         return self.value.strip()
 
-    def __eq__(self, other) -> bool:
-        """Compare with another value."""
+    def __eq__(self, other: object) -> bool:
+        """Compare equality with another string or LazySecureStorage."""
         if isinstance(other, LazySecureStorage):
             return self.value == other.value
         if isinstance(other, str):
             return self.value == other
-        return False
+        return NotImplemented
 
     def reset(self) -> None:
         """Reset the lazy loader to fetch fresh value on next access."""
