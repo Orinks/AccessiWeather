@@ -488,7 +488,7 @@ def create_main_ui(app: AccessiWeatherApp) -> None:
     app.main_window.content = main_box
     app.main_window.on_close = app._on_window_close
     # Attach on_show handler to refresh weather when window becomes visible
-    app.main_window.on_show = lambda: asyncio.create_task(event_handlers.on_window_show(app))
+    app.main_window.on_show = lambda widget: asyncio.create_task(event_handlers.on_window_show(app))
 
     # Add global Escape key handler for minimize-to-tray
     def on_main_window_key_down(widget, key, _modifiers=None):
