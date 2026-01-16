@@ -11,30 +11,33 @@ from accessiweather.config.secure_storage import SERVICE_NAME
 
 @pytest.fixture
 def mock_keyring():
-    """Mock the keyring module."""
-    with patch("accessiweather.config.secure_storage.keyring") as mock:
-        # Setup a dict to simulate keyring storage
-        storage = {}
+    """Mock the keyring module via the lazy loader."""
+    mock = MagicMock()
+    # Setup a dict to simulate keyring storage
+    storage = {}
 
-        def set_password(service, username, password):
-            if service != SERVICE_NAME:
-                return
-            storage[username] = password
+    def set_password(service, username, password):
+        if service != SERVICE_NAME:
+            return
+        storage[username] = password
 
-        def get_password(service, username):
-            if service != SERVICE_NAME:
-                return None
-            return storage.get(username)
+    def get_password(service, username):
+        if service != SERVICE_NAME:
+            return None
+        return storage.get(username)
 
-        def delete_password(service, username):
-            if service != SERVICE_NAME:
-                return
-            if username in storage:
-                del storage[username]
+    def delete_password(service, username):
+        if service != SERVICE_NAME:
+            return
+        if username in storage:
+            del storage[username]
 
-        mock.set_password.side_effect = set_password
-        mock.get_password.side_effect = get_password
-        mock.delete_password.side_effect = delete_password
+    mock.set_password.side_effect = set_password
+    mock.get_password.side_effect = get_password
+    mock.delete_password.side_effect = delete_password
+
+    # Patch the lazy loader function to return our mock
+    with patch("accessiweather.config.secure_storage._get_keyring", return_value=mock):
         yield mock
 
 

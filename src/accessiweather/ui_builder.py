@@ -488,7 +488,7 @@ def create_main_ui(app: AccessiWeatherApp) -> None:
     app.main_window.content = main_box
     app.main_window.on_close = app._on_window_close
     # Attach on_show handler to refresh weather when window becomes visible
-    app.main_window.on_show = lambda: asyncio.create_task(event_handlers.on_window_show(app))
+    app.main_window.on_show = lambda widget: asyncio.create_task(event_handlers.on_window_show(app))
 
     # Add global Escape key handler for minimize-to-tray
     def on_main_window_key_down(widget, key, _modifiers=None):
@@ -640,7 +640,7 @@ def create_weather_display_section(app: AccessiWeatherApp) -> toga.Box:
     # Add "Explain Weather" button if API key is configured
     try:
         config = app.config_manager.get_config()
-        api_key = getattr(config.settings, "openrouter_api_key", "")
+        api_key = str(getattr(config.settings, "openrouter_api_key", "") or "")
         if api_key and api_key.strip():
             from .ai_explainer import create_explain_weather_button
             from .handlers.ai_handlers import on_explain_weather_pressed

@@ -17,7 +17,6 @@ from pathlib import Path
 import toga
 
 from accessiweather.models import AppConfig, AppSettings, Location
-from accessiweather.services import StartupManager
 
 from .file_permissions import set_secure_file_permissions
 from .github_config import GitHubConfigOperations
@@ -62,7 +61,7 @@ class ConfigManager:
 
         self.config_file = self.config_dir / "accessiweather.json"
         self._config: AppConfig | None = None
-        self._startup_manager = StartupManager()
+        self._startup_manager = None  # Lazy-loaded on first use
         self._locations = LocationOperations(self)
         self._settings = SettingsOperations(self)
         self._github = GitHubConfigOperations(self)
@@ -281,6 +280,14 @@ class ConfigManager:
         """Import application settings from a file."""
         return self._import_export.import_settings(import_path)
 
+    def _get_startup_manager(self):
+        """Get startup manager, initializing lazily on first access."""
+        if self._startup_manager is None:
+            from accessiweather.services import StartupManager
+
+            self._startup_manager = StartupManager()
+        return self._startup_manager
+
     def enable_startup(self) -> tuple[bool, str]:
         """
         Enable application startup on boot.
@@ -291,7 +298,7 @@ class ConfigManager:
 
         """
         try:
-            success = self._startup_manager.enable_startup()
+            success = self._get_startup_manager().enable_startup()
             if success:
                 logger.info("Application startup enabled successfully")
                 return True, "Startup enabled successfully"
@@ -311,7 +318,7 @@ class ConfigManager:
 
         """
         try:
-            success = self._startup_manager.disable_startup()
+            success = self._get_startup_manager().disable_startup()
             if success:
                 logger.info("Application startup disabled successfully")
                 return True, "Startup disabled successfully"
@@ -331,7 +338,7 @@ class ConfigManager:
 
         """
         try:
-            return self._startup_manager.is_startup_enabled()
+            return self._get_startup_manager().is_startup_enabled()
         except Exception as e:
             logger.error(f"Error checking startup status: {e}")
             return False
