@@ -13,7 +13,6 @@ from typing import Protocol
 import httpx
 
 from ...utils.retry_utils import async_retry_with_backoff
-from .signature_verification import SignatureVerifier
 
 logger = logging.getLogger(__name__)
 
@@ -240,10 +239,12 @@ class DownloadManager:
             ):
                 return False
 
-            if signature_url and not await SignatureVerifier.download_and_verify_signature(
-                dest_path, signature_url
-            ):
-                return False
+            # GPG signature verification is currently disabled
+            # To enable, uncomment and ensure PGPy is installed:
+            # if signature_url and not await SignatureVerifier.download_and_verify_signature(
+            #     dest_path, signature_url
+            # ):
+            #     return False
 
             try:
                 return str(dest_path)

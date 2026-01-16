@@ -12,7 +12,30 @@ AccessiWeather implements GPG (GNU Privacy Guard) signature verification for upd
 - Graceful fallback when signatures are unavailable
 - Cross-platform support (Windows, macOS, Linux) without external dependencies
 
-**Status:** Implemented in update service (phase 6 of 7)
+**Status:** ⚠️ CURRENTLY DISABLED - The PGPy dependency has been removed. See "Enabling Signature Verification" below to re-enable.
+
+---
+
+## Enabling Signature Verification
+
+To enable GPG signature verification:
+
+1. **Add PGPy dependency** to `pyproject.toml`:
+   ```toml
+   dependencies = [
+       # ... other deps ...
+       "PGPy~=0.5.4",
+   ]
+   ```
+   Also add to `[tool.briefcase.app.accessiweather]` requires section.
+
+2. **Generate a GPG key pair** (see Key Generation section below)
+
+3. **Embed the public key** in `src/accessiweather/services/update_service/signature_verification.py`
+
+4. **Uncomment the verification call** in `src/accessiweather/services/update_service/downloads.py`
+
+5. **Add private key to CI** as GitHub secret `GPG_PRIVATE_KEY`
 
 ---
 
@@ -320,7 +343,7 @@ async def test_signature_verification_feature(tmp_path):
 1. Verify PGPy is in `pyproject.toml` dependencies:
    ```toml
    [project.dependencies]
-   PGPy = "~=0.6.0"
+   PGPy = "~=0.5.4"
    ```
 2. Reinstall dependencies:
    ```bash
@@ -359,8 +382,8 @@ async def test_signature_verification_feature(tmp_path):
 
 **4. PGPy version compatibility:**
 - Check PGPy version: `pip show PGPy`
-- Known issue: PGPy 0.6.0 has deprecation warnings on Python 3.10+
-- Solution: Pin to tested version in `pyproject.toml`: `PGPy = "~=0.6.0"`
+- Note: PGPy 0.5.4 is the latest available version on PyPI
+- Solution: Pin to tested version in `pyproject.toml`: `PGPy = "~=0.5.4"`
 
 ---
 

@@ -1,4 +1,13 @@
-"""GPG signature verification for update downloads."""
+"""
+GPG signature verification for update downloads.
+
+NOTE: Signature verification is currently DISABLED.
+The PGPy dependency has been removed from pyproject.toml.
+To enable signature verification:
+1. Add PGPy~=0.5.4 to pyproject.toml dependencies
+2. Generate a GPG key pair and embed the public key below
+3. Uncomment the verification call in downloads.py
+"""
 
 from __future__ import annotations
 
@@ -12,12 +21,13 @@ logger = logging.getLogger(__name__)
 
 
 # Embedded public key for AccessiWeather release signing
-# This is a placeholder public key - replace with actual AccessiWeather release signing key
+# NOTE: This is a placeholder - signature verification is currently DISABLED
+# To enable: generate a GPG key pair and replace this with your actual public key
 ACCESSIWEATHER_PUBLIC_KEY = """-----BEGIN PGP PUBLIC KEY BLOCK-----
 
-mQINBGExample1EAD...
-(Placeholder - Replace with actual public key)
-...
+(Placeholder - Signature verification is currently disabled)
+(To enable, generate a GPG key and replace this placeholder)
+
 -----END PGP PUBLIC KEY BLOCK-----"""
 
 
@@ -102,7 +112,8 @@ class SignatureVerifier:
         Args:
             file_path: Path to the file to verify
             signature_url: URL to download the signature file from
-            public_key: ASCII-armored public key to verify against (defaults to ACCESSIWEATHER_PUBLIC_KEY)
+            public_key: ASCII-armored public key to verify against
+                (defaults to ACCESSIWEATHER_PUBLIC_KEY)
             max_retries: Maximum number of download retry attempts (default: 3)
             retry_delay: Initial delay in seconds between retries (default: 1.0, doubles each retry)
 
