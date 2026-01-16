@@ -286,3 +286,4 @@ AccessiWeather-wx-legacy-tmp/
 # External soundpacks repository (do not track)
 accessiweather-soundpacks/
 .auto-claude/worktrees/
+.auto-claude/
