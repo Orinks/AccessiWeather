@@ -106,6 +106,8 @@ class MainWindow(forms.SizedFrame):
         self._create_menu_bar()
         # Bind close event to the frame
         self.widget.control.Bind(wx.EVT_CLOSE, self._on_close)
+        # Set initial focus to location dropdown for keyboard accessibility
+        self.location_dropdown.widget.control.SetFocus()
 
     def _setup_accessibility(self) -> None:
         """Set up accessibility labels for screen readers."""
