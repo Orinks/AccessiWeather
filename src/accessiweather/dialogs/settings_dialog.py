@@ -490,6 +490,7 @@ class SettingsDialog:
         """Handle data source selection change to update UI visibility."""
         self._update_visual_crossing_config_visibility()
         self._update_priority_settings_visibility()
+        self._update_openmeteo_model_visibility()
 
     def _get_selected_data_source(self) -> str:
         """Get the currently selected data source internal value."""
@@ -532,6 +533,24 @@ class SettingsDialog:
         else:
             if source_priority_box in container.children:
                 container.remove(source_priority_box)
+
+    def _update_openmeteo_model_visibility(self):
+        """Show Open-Meteo model settings when Open-Meteo or Auto mode is selected."""
+        container = getattr(self, "data_sources_tab", None)
+        openmeteo_model_box = getattr(self, "openmeteo_model_config_box", None)
+        if not container or not openmeteo_model_box:
+            return
+
+        selected_source = self._get_selected_data_source()
+        # Show when using Open-Meteo directly or Auto mode (which uses Open-Meteo)
+        show = selected_source in ("openmeteo", "auto")
+
+        if show:
+            if openmeteo_model_box not in container.children:
+                container.add(openmeteo_model_box)
+        else:
+            if openmeteo_model_box in container.children:
+                container.remove(openmeteo_model_box)
 
     def _on_update_channel_changed(self, widget):
         """Handle update channel selection change."""

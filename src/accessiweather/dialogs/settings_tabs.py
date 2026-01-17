@@ -721,9 +721,90 @@ def create_data_sources_tab(dialog):
     # Add the priority config box to the main container
     data_sources_box.add(dialog.source_priority_config_box)
 
+    # Open-Meteo Weather Model Configuration
+    dialog.openmeteo_model_config_box = toga.Box(style=Pack(direction=COLUMN))
+
+    dialog.openmeteo_model_config_box.add(
+        toga.Label(
+            "Open-Meteo Weather Model:",
+            style=Pack(margin_top=20, margin_bottom=5, font_weight="bold"),
+        )
+    )
+    dialog.openmeteo_model_config_box.add(
+        toga.Label(
+            "Open-Meteo weather model:",
+            style=Pack(margin_bottom=10, font_size=9),
+        )
+    )
+
+    openmeteo_model_options = [
+        "Best Match (Automatic)",
+        "ICON Seamless (DWD, Europe/Global)",
+        "ICON Global (DWD, 13km)",
+        "ICON EU (DWD, 6.5km Europe)",
+        "ICON D2 (DWD, 2km Germany)",
+        "GFS Seamless (NOAA, Americas/Global)",
+        "GFS Global (NOAA, 28km)",
+        "ECMWF IFS (9km Global)",
+        "Météo-France (Europe)",
+        "GEM (Canadian, North America)",
+        "JMA (Japan/Asia)",
+    ]
+    dialog.openmeteo_model_display_to_value = {
+        "Best Match (Automatic)": "best_match",
+        "ICON Seamless (DWD, Europe/Global)": "icon_seamless",
+        "ICON Global (DWD, 13km)": "icon_global",
+        "ICON EU (DWD, 6.5km Europe)": "icon_eu",
+        "ICON D2 (DWD, 2km Germany)": "icon_d2",
+        "GFS Seamless (NOAA, Americas/Global)": "gfs_seamless",
+        "GFS Global (NOAA, 28km)": "gfs_global",
+        "ECMWF IFS (9km Global)": "ecmwf_ifs04",
+        "Météo-France (Europe)": "meteofrance_seamless",
+        "GEM (Canadian, North America)": "gem_seamless",
+        "JMA (Japan/Asia)": "jma_seamless",
+    }
+    dialog.openmeteo_model_value_to_display = {
+        value: key for key, value in dialog.openmeteo_model_display_to_value.items()
+    }
+
+    dialog.openmeteo_model_selection = toga.Selection(
+        items=openmeteo_model_options,
+        style=Pack(margin_bottom=10),
+        id="openmeteo_model_selection",
+    )
+    dialog.openmeteo_model_selection.aria_label = "Open-Meteo weather model selection"
+    dialog.openmeteo_model_selection.aria_description = (
+        "Select the weather forecast model used by Open-Meteo. Different models have "
+        "different strengths: ICON excels in Europe, GFS in the Americas, ECMWF globally."
+    )
+
+    # Set current value
+    try:
+        current_model = getattr(dialog.current_settings, "openmeteo_weather_model", "best_match")
+        display_value = dialog.openmeteo_model_value_to_display.get(
+            current_model, openmeteo_model_options[0]
+        )
+        dialog.openmeteo_model_selection.value = display_value
+    except Exception as exc:
+        logger.warning("Failed to set Open-Meteo model selection: %s", exc)
+        dialog.openmeteo_model_selection.value = openmeteo_model_options[0]
+
+    dialog.openmeteo_model_config_box.add(dialog.openmeteo_model_selection)
+
+    dialog.openmeteo_model_config_box.add(
+        toga.Label(
+            "Note: Regional models (ICON EU, ICON D2, etc.) work best in their coverage areas. "
+            "Use 'Best Match' to let Open-Meteo automatically select the optimal model.",
+            style=Pack(margin_top=5, margin_bottom=10, font_size=9, font_style="italic"),
+        )
+    )
+
+    data_sources_box.add(dialog.openmeteo_model_config_box)
+
     # Update visibility based on selected data source
     dialog._update_visual_crossing_config_visibility()
     dialog._update_priority_settings_visibility()
+    dialog._update_openmeteo_model_visibility()
 
     dialog.option_container.content.append("Data Sources", data_sources_box)
 
