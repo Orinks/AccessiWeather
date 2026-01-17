@@ -2,38 +2,55 @@
 
 ## Overview
 
-AccessiWeather is a desktop weather application that provides comprehensive weather information with robust accessibility features and international weather support. Built using wxPython with a focus on screen reader compatibility and keyboard navigation, AccessiWeather offers weather data from multiple sources including the National Weather Service (NWS) and Open-Meteo.
+AccessiWeather is a cross-platform desktop weather application that provides comprehensive weather information with robust accessibility features and international weather support. Built using the BeeWare/Toga framework with a focus on screen reader compatibility and keyboard navigation, AccessiWeather offers weather data from multiple sources including the National Weather Service (NWS) and Open-Meteo.
 
 ## Installation
 
 AccessiWeather offers multiple installation options to suit different user needs:
 
 ### Option 1: Download Pre-built Installer (Recommended)
-1. Visit the [AccessiWeather releases page](https://github.com/Orinks/AccessiWeather/releases)
-2. Download the latest Windows installer (.exe file)
-3. Run the installer and follow the setup wizard
-4. Launch AccessiWeather from the Start Menu or desktop shortcut
 
-### Option 2: Portable Version
-1. Download the portable version from the releases page
+Visit [accessiweather.orinks.net](https://accessiweather.orinks.net) or the [GitHub releases page](https://github.com/Orinks/AccessiWeather/releases) to download:
+
+**Windows:**
+1. Download the MSI installer or portable ZIP
+2. Run the installer and follow the setup wizard
+3. Launch AccessiWeather from the Start Menu or desktop shortcut
+
+**macOS:**
+1. Download the DMG installer
+2. Open the DMG and drag AccessiWeather to Applications
+3. Launch from Applications folder
+
+**Linux:**
+- AppImage distribution is planned for a future release
+- For now, install from source (see Option 3 below)
+
+### Option 2: Portable Version (Windows)
+1. Download the portable ZIP from the releases page
 2. Extract the ZIP file to your desired location
-3. Run `accessiweather.exe` directly from the extracted folder
+3. Run `AccessiWeather.exe` directly from the extracted folder
 4. Configuration files will be saved in the same folder as the application
 
 ### Option 3: Install from Source
-1. Ensure you have Python 3.8 or higher installed
+1. Ensure you have Python 3.10 or higher installed
 2. Clone the repository or download the source code:
    ```bash
    git clone https://github.com/Orinks/AccessiWeather.git
    cd AccessiWeather
    ```
-3. Install the application:
+3. Create and activate a virtual environment:
    ```bash
-   pip install -e .
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    ```
-4. Run the application:
+4. Install the application:
    ```bash
-   accessiweather
+   pip install -e ".[dev]"
+   ```
+5. Run the application:
+   ```bash
+   briefcase dev
    ```
 
 ### Option 4: Force Portable Mode
@@ -41,6 +58,11 @@ If you want to run AccessiWeather in portable mode (saving configuration to the 
 ```bash
 accessiweather --portable
 ```
+
+### Nightly Builds
+Want to test the latest features? Nightly builds are available from the [dev branch](https://github.com/Orinks/AccessiWeather/tree/dev).
+
+⚠️ Nightly builds may contain bugs or incomplete features.
 
 ## First-Time Setup
 
@@ -405,19 +427,20 @@ The system analyzes current weather data and selects the most appropriate format
 AccessiWeather is designed with comprehensive accessibility support:
 
 ### Screen Reader Compatibility
-- **Full NVDA Support**: Tested extensively with NVDA screen reader
-- **JAWS Compatibility**: Works with JAWS screen reader
-- **Accessible Labels**: All UI elements have proper screen reader labels
+- **Windows**: Full support for NVDA and JAWS screen readers
+- **macOS**: VoiceOver compatibility
+- **Linux**: Orca screen reader support
+- **Accessible Labels**: All UI elements have proper ARIA labels and descriptions
 - **Role Definitions**: Proper ARIA roles for complex interface elements
 
 ### Keyboard Navigation
 - **Complete Keyboard Access**: Every feature accessible via keyboard
 - **Logical Tab Order**: Intuitive navigation flow through interface
 - **Focus Indicators**: Clear visual focus indicators for sighted users
-- **Keyboard Shortcuts**: Comprehensive shortcut system
+- **Keyboard Shortcuts**: Comprehensive cross-platform shortcut system
 
 ### Accessible UI Components
-- **Custom Accessible Controls**: Enhanced wxPython controls with better screen reader support
+- **Native Controls**: Toga framework provides native platform controls with built-in accessibility
 - **Proper Event Handling**: Keyboard events properly handled for accessibility
 - **Character Navigation**: Support for character-by-character text navigation
 - **Context Menus**: Accessible via keyboard shortcuts
@@ -425,17 +448,19 @@ AccessiWeather is designed with comprehensive accessibility support:
 ## Keyboard Shortcuts
 
 ### Global Shortcuts
-- **F5**: Refresh weather data
-- **Ctrl+S**: Open settings dialog
+- **Ctrl+R** (Windows/Linux) / **Cmd+R** (macOS): Refresh weather data
+- **Ctrl+,** (Windows/Linux) / **Cmd+,** (macOS): Open settings dialog
+- **Ctrl+L** (Windows/Linux) / **Cmd+L** (macOS): Add/manage locations
+- **Ctrl+Q** (Windows/Linux) / **Cmd+Q** (macOS): Quit application
+- **F1**: Open help/documentation
 - **Escape**: Minimize to system tray (when enabled)
-- **Alt+F4**: Exit application
 
 ### Navigation Shortcuts
 - **Tab / Shift+Tab**: Navigate between UI elements
 - **Arrow Keys**: Navigate lists, dropdowns, and text
 - **Enter / Space**: Activate buttons and controls
-- **Alt+Down**: Open dropdown menus
-- **Delete**: Remove selected item (locations, sound packs)
+- **Alt+Down** (Windows) / **Option+Down** (macOS): Open dropdown menus
+- **Delete** (Windows/Linux) / **Backspace** (macOS): Remove selected item (locations, sound packs)
 
 ### System Tray Shortcuts
 - **Enter**: Focus application or show context menu
@@ -473,8 +498,8 @@ AccessiWeather is designed with comprehensive accessibility support:
 - **Manage Locations**: Remove unused locations to improve performance
 
 ### Accessibility Best Practices
-- **Use Keyboard Navigation**: Take advantage of comprehensive keyboard shortcuts
-- **Configure Screen Reader**: Ensure your screen reader is properly configured for wxPython applications
+- **Use Keyboard Navigation**: Take advantage of comprehensive cross-platform keyboard shortcuts
+- **Configure Screen Reader**: Ensure your screen reader is properly configured (NVDA/JAWS on Windows, VoiceOver on macOS, Orca on Linux)
 - **Adjust Update Intervals**: Longer intervals reduce interruptions from automatic updates
 
 ## Portable Mode
@@ -504,9 +529,13 @@ accessiweather --portable
 ### Installation Issues
 
 #### Windows Installation Problems
-- **Installer Won't Run**: Right-click installer and select "Run as Administrator"
+- **MSI Installer Won't Run**: Right-click installer and select "Run as Administrator"
 - **Antivirus Blocking**: Temporarily disable antivirus or add exception for AccessiWeather
 - **Missing Dependencies**: Ensure Windows is up to date with latest Visual C++ redistributables
+
+#### macOS Installation Problems
+- **"App is damaged" Warning**: Go to System Settings → Privacy & Security and click "Open Anyway"
+- **Gatekeeper Block**: Download from official sources (GitHub Releases or accessiweather.orinks.net)
 
 #### Portable Version Issues
 - **Won't Start**: Ensure the folder has write permissions
@@ -566,7 +595,7 @@ accessiweather --portable
 
 #### Screen Reader Problems
 - **Update Screen Reader**: Ensure your screen reader software is current
-- **wxPython Compatibility**: Some screen readers may need specific wxPython configurations
+- **Platform-Specific**: On Windows use NVDA or JAWS, on macOS use VoiceOver, on Linux use Orca
 - **Alternative Navigation**: Use keyboard shortcuts if mouse navigation isn't working
 
 #### Keyboard Navigation Issues
@@ -581,6 +610,12 @@ accessiweather --portable
 - **Portable Mode**: Check if running in portable mode affects save location
 - **Disk Space**: Verify sufficient disk space for configuration files
 
+#### Configuration File Locations
+AccessiWeather stores configuration in:
+- **Windows**: `%APPDATA%\accessiweather\accessiweather.json`
+- **macOS**: `~/Library/Application Support/accessiweather/accessiweather.json`
+- **Linux**: `~/.config/accessiweather/accessiweather.json`
+
 #### Lost Configuration
 - **Backup Settings**: Regularly backup your configuration directory
 - **Default Settings**: Reset to defaults if configuration becomes corrupted
@@ -590,13 +625,20 @@ accessiweather --portable
 
 #### Log Files
 Log files are stored in:
-- **Standard Installation**: `%APPDATA%\.accessiweather\logs\`
-- **Portable Mode**: `[Application Directory]\.accessiweather\logs\`
+- **Windows**: `%APPDATA%\accessiweather\logs\`
+- **macOS**: `~/Library/Application Support/accessiweather/logs/`
+- **Linux**: `~/.config/accessiweather/logs/`
+- **Portable Mode**: `[Application Directory]/.accessiweather/logs/`
 
 #### Debug Mode
 Run AccessiWeather with debug mode for detailed logging:
 ```bash
 accessiweather --debug
+```
+
+Or when running from source:
+```bash
+briefcase dev
 ```
 
 #### Reporting Issues
