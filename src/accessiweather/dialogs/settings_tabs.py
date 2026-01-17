@@ -732,7 +732,7 @@ def create_data_sources_tab(dialog):
     )
     dialog.openmeteo_model_config_box.add(
         toga.Label(
-            "Select which weather model to use for Open-Meteo forecasts.",
+            "Open-Meteo weather model:",
             style=Pack(margin_bottom=10, font_size=9),
         )
     )
