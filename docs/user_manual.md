@@ -63,6 +63,63 @@ AccessiWeather supports multiple weather data providers:
 
 You can change your preferred data source in Settings → Data Sources → Weather Data Source.
 
+### Weather Models
+
+When using Open-Meteo or Automatic mode, you can choose which weather forecast model to use. Weather models are sophisticated computer simulations that meteorological agencies run to predict future weather conditions. Different models have different strengths depending on your location and what you need.
+
+#### What is a Weather Model?
+
+A weather model (also called a numerical weather prediction model) is a computer program that uses mathematical equations to simulate the atmosphere. These models take current observations from weather stations, satellites, and weather balloons, then calculate how the atmosphere will evolve over time.
+
+Different meteorological agencies around the world run their own models, each with unique characteristics:
+- **Resolution**: How detailed the predictions are (smaller grid = more local detail)
+- **Coverage**: Geographic area the model covers well
+- **Update Frequency**: How often the model runs with fresh data
+- **Forecast Length**: How far into the future predictions extend
+
+#### Available Models
+
+| Model | Provider | Best For | Resolution |
+|-------|----------|----------|------------|
+| **Best Match (Automatic)** | Open-Meteo | General use - automatically picks the best model for your location | Varies |
+| **ICON Seamless** | DWD (Germany) | Europe and global forecasts with smooth blending between resolutions | 2-13 km |
+| **ICON Global** | DWD (Germany) | Worldwide coverage, good baseline accuracy | 13 km |
+| **ICON EU** | DWD (Germany) | European locations - higher detail for Europe | 6.5 km |
+| **ICON D2** | DWD (Germany) | Germany and nearby regions - very high detail | 2 km |
+| **GFS Seamless** | NOAA (USA) | Americas and global, good for North America | 3-28 km |
+| **GFS Global** | NOAA (USA) | Worldwide coverage, reliable US government model | 28 km |
+| **ECMWF IFS** | ECMWF (Europe) | Highest accuracy worldwide, considered the gold standard | 9 km |
+| **Météo-France** | Météo-France | France and Europe - excellent for Western Europe | Varies |
+| **GEM** | Canada | North America, especially Canada | Varies |
+| **JMA** | Japan | Japan and East Asia | Varies |
+
+#### Choosing the Right Model
+
+**For most users**: Start with "Best Match (Automatic)" - Open-Meteo will intelligently select the best model for your location.
+
+**For specific needs**:
+- **US locations**: GFS Seamless or Best Match work well
+- **European locations**: ICON Seamless, ICON EU, or ECMWF IFS
+- **Germany**: ICON D2 for maximum local detail
+- **Canada**: GEM for optimized Canadian forecasts
+- **Japan/East Asia**: JMA for regional expertise
+- **Maximum accuracy**: ECMWF IFS is widely considered the most accurate global model
+
+#### Tips for Model Selection
+
+1. **Try different models**: Weather models can have different biases for your specific location. If one model consistently over- or under-predicts, try another.
+
+2. **Consider your use case**:
+   - For general daily planning, Best Match is usually sufficient
+   - For outdoor activities or events, try a higher-resolution regional model
+   - For travel planning, stick with global models like GFS or ECMWF
+
+3. **Regional models are limited**: High-resolution regional models (like ICON D2) only cover specific areas. If you select one for a location outside its coverage, forecasts may be less accurate.
+
+4. **Model updates vary**: Some models update every hour, others every 6 hours. More frequent updates mean fresher predictions but don't necessarily mean better accuracy.
+
+To change your weather model: Settings → Data Sources → Open-Meteo Weather Model
+
 ### Location Management
 
 AccessiWeather allows you to manage multiple weather locations:
@@ -218,6 +275,7 @@ Weather API configuration:
   - **National Weather Service**: US locations only, includes weather alerts
   - **Open-Meteo**: International locations, free service, no alerts
   - **Automatic**: Best of both - NWS for US, Open-Meteo for international (recommended)
+- **Open-Meteo Weather Model**: Choose which forecast model to use (see [Weather Models](#weather-models) below)
 - **Visual Crossing API**: Setup and configuration for Visual Crossing weather service
 
 ### Audio Tab
