@@ -4,15 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "accessiweather"
-version = "0.4.2"
-description = "AccessiWeather: An accessible weather application that includes NOAA and Open-Meteo support with focus on screen reader compatibility"
+version = "0.5.0.dev1"
+description = "AccessiWeather: An accessible weather application with NOAA and Open-Meteo support, built with wxPython for screen reader compatibility"
 authors = [
     { name = "Orinks" }
 ]
 license = {text = "MIT"}
 requires-python = ">=3.10"
 dependencies = [
-    "toga",
+    "wxPython>=4.2.0",
+    "gui_builder @ git+https://github.com/accessibleapps/gui_builder.git",
     "desktop-notifier",
     "python-dateutil",
     "beautifulsoup4",
@@ -21,6 +22,7 @@ dependencies = [
     "psutil",
     "keyring",
     "openai>=1.0.0",
+    "playsound3",
 ]
 readme = "README.md"
 classifiers = [
@@ -44,12 +46,15 @@ dev = [
     "mypy>=1.0.0",
     "pyright",
 ]
-audio = [
-    "playsound3"
-]
 
 [project.scripts]
-accessiweather = "accessiweather.cli:main"
+accessiweather = "accessiweather.main:main"
+
+[project.gui-scripts]
+accessiweather-gui = "accessiweather.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.ruff]
 line-length = 100
@@ -139,7 +144,7 @@ ignore = [
 "src/accessiweather/weatherapi_client/client.py" = ["F401", "F541", "F811", "E741"]
 "src/accessiweather/weatherapi_mapper.py" = ["F401"]
 "tests/test_logging_config.py" = ["SIM117"]
-"tests/test_smart_auto_properties.py" = ["D205", "D400", "D415", "E402", "F841"]  # Property test docstrings follow spec format, imports organized by test section
+"tests/test_smart_auto_properties.py" = ["D205", "D400", "D415", "E402", "F841"]
 
 [tool.ruff.lint.isort]
 # Black-compatible settings
@@ -157,12 +162,8 @@ skip-magic-trailing-comma = false
 # Automatically detect the appropriate line ending.
 line-ending = "auto"
 
-
-
 [tool.ruff.lint.mccabe]
 max-complexity = 15
-
-
 
 # content below this line added by briefcase convert
 # This project was generated with 0.3.23 using template: https://github.com/beeware/briefcase-template @ v0.3.23
