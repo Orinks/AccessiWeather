@@ -441,58 +441,7 @@ def show_settings_dialog(parent, app: AccessiWeatherApp) -> bool:
         # Get the underlying wx control if parent is a gui_builder widget
         parent_ctrl = getattr(parent, "control", parent)
 
-        # Create a standard wx dialog instead of gui_builder for simplicity
-        dlg = wx.Dialog(
-            parent_ctrl,
-            title="Settings",
-            size=(500, 450),
-            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
-        )
-
-        # Use dialog directly as container (no intermediate panel)
-        main_sizer = wx.BoxSizer(wx.VERTICAL)
-
-        notebook = wx.Notebook(dlg)
-
-        # Create panels
-        general_panel = _create_general_panel(notebook, app)
-        data_sources_panel = _create_data_sources_panel(notebook, app)
-        notifications_panel = _create_notifications_panel(notebook, app)
-        audio_panel = _create_audio_panel(notebook, app)
-        advanced_panel = _create_advanced_panel(notebook, app)
-
-        notebook.AddPage(general_panel, "General")
-        notebook.AddPage(data_sources_panel, "Data Sources")
-        notebook.AddPage(notifications_panel, "Notifications")
-        notebook.AddPage(audio_panel, "Audio")
-        notebook.AddPage(advanced_panel, "Advanced")
-
-        main_sizer.Add(notebook, 1, wx.EXPAND | wx.ALL, 10)
-
-        # Create buttons with dialog as parent
-        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        button_sizer.AddStretchSpacer()
-        cancel_btn = wx.Button(dlg, wx.ID_CANCEL, "Cancel")
-        ok_btn = wx.Button(dlg, wx.ID_OK, "OK")
-        button_sizer.Add(cancel_btn, 0, wx.RIGHT, 10)
-        button_sizer.Add(ok_btn, 0)
-        main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 10)
-
-        dlg.SetSizer(main_sizer)
-
-        # Store references for saving
-        dlg._controls = {
-            "general": general_panel._controls,
-            "data_sources": data_sources_panel._controls,
-            "notifications": notifications_panel._controls,
-            "audio": audio_panel._controls,
-            "advanced": advanced_panel._controls,
-        }
-        dlg._app = app
-
-        # Bind OK button
-        dlg.Bind(wx.EVT_BUTTON, lambda e: _on_settings_ok(dlg, e), id=wx.ID_OK)
-
+        dlg = SettingsDialogSimple(parent_ctrl, app)
         result = dlg.ShowModal() == wx.ID_OK
         dlg.Destroy()
         return result
@@ -505,6 +454,290 @@ def show_settings_dialog(parent, app: AccessiWeatherApp) -> bool:
             wx.OK | wx.ICON_ERROR,
         )
         return False
+
+
+class SettingsDialogSimple(wx.Dialog):
+    """Simple settings dialog without gui_builder to avoid parent issues."""
+
+    def __init__(self, parent, app: AccessiWeatherApp):
+        """Initialize the settings dialog."""
+        super().__init__(
+            parent,
+            title="Settings",
+            size=(500, 450),
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
+        )
+        self.app = app
+        self.config_manager = app.config_manager
+        self._controls = {}
+
+        self._create_ui()
+        self._load_settings()
+
+    def _create_ui(self):
+        """Create the dialog UI."""
+        # Main sizer for dialog
+        main_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Notebook for tabs
+        self.notebook = wx.Notebook(self)
+
+        # Create tab panels - all with notebook as parent
+        self._create_general_tab()
+        self._create_data_sources_tab()
+        self._create_notifications_tab()
+        self._create_audio_tab()
+        self._create_advanced_tab()
+
+        main_sizer.Add(self.notebook, 1, wx.EXPAND | wx.ALL, 10)
+
+        # Buttons - with dialog (self) as parent
+        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        button_sizer.AddStretchSpacer()
+
+        cancel_btn = wx.Button(self, wx.ID_CANCEL, "Cancel")
+        ok_btn = wx.Button(self, wx.ID_OK, "OK")
+        ok_btn.Bind(wx.EVT_BUTTON, self._on_ok)
+
+        button_sizer.Add(cancel_btn, 0, wx.RIGHT, 10)
+        button_sizer.Add(ok_btn, 0)
+        main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        self.SetSizer(main_sizer)
+
+    def _create_general_tab(self):
+        """Create the general settings tab."""
+        panel = wx.Panel(self.notebook)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Update interval
+        row1 = wx.BoxSizer(wx.HORIZONTAL)
+        row1.Add(
+            wx.StaticText(panel, label="Update Interval (minutes):"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._controls["update_interval"] = wx.SpinCtrl(panel, min=1, max=60, initial=10)
+        row1.Add(self._controls["update_interval"], 0)
+        sizer.Add(row1, 0, wx.ALL, 5)
+
+        # Temperature unit
+        row2 = wx.BoxSizer(wx.HORIZONTAL)
+        row2.Add(
+            wx.StaticText(panel, label="Temperature Unit:"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._controls["temp_unit"] = wx.Choice(panel, choices=["Fahrenheit", "Celsius"])
+        row2.Add(self._controls["temp_unit"], 0)
+        sizer.Add(row2, 0, wx.ALL, 5)
+
+        # Time format
+        row3 = wx.BoxSizer(wx.HORIZONTAL)
+        row3.Add(
+            wx.StaticText(panel, label="Time Format:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 10
+        )
+        self._controls["time_format"] = wx.Choice(panel, choices=["12-hour", "24-hour"])
+        row3.Add(self._controls["time_format"], 0)
+        sizer.Add(row3, 0, wx.ALL, 5)
+
+        # Checkboxes
+        self._controls["detailed_forecast"] = wx.CheckBox(panel, label="Show detailed forecast")
+        sizer.Add(self._controls["detailed_forecast"], 0, wx.ALL, 5)
+
+        self._controls["enable_alerts"] = wx.CheckBox(panel, label="Enable weather alerts")
+        sizer.Add(self._controls["enable_alerts"], 0, wx.ALL, 5)
+
+        panel.SetSizer(sizer)
+        self.notebook.AddPage(panel, "General")
+
+    def _create_data_sources_tab(self):
+        """Create the data sources tab."""
+        panel = wx.Panel(self.notebook)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Data source
+        row1 = wx.BoxSizer(wx.HORIZONTAL)
+        row1.Add(
+            wx.StaticText(panel, label="Weather Data Source:"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._controls["data_source"] = wx.Choice(
+            panel, choices=["Automatic", "NWS (US only)", "Open-Meteo", "Visual Crossing"]
+        )
+        row1.Add(self._controls["data_source"], 0)
+        sizer.Add(row1, 0, wx.ALL, 5)
+
+        # Visual Crossing API key
+        row2 = wx.BoxSizer(wx.HORIZONTAL)
+        row2.Add(
+            wx.StaticText(panel, label="Visual Crossing API Key:"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._controls["vc_key"] = wx.TextCtrl(panel, style=wx.TE_PASSWORD, size=(250, -1))
+        row2.Add(self._controls["vc_key"], 1)
+        sizer.Add(row2, 0, wx.ALL | wx.EXPAND, 5)
+
+        panel.SetSizer(sizer)
+        self.notebook.AddPage(panel, "Data Sources")
+
+    def _create_notifications_tab(self):
+        """Create the notifications tab."""
+        panel = wx.Panel(self.notebook)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        self._controls["alert_notif"] = wx.CheckBox(panel, label="Enable alert notifications")
+        sizer.Add(self._controls["alert_notif"], 0, wx.ALL, 5)
+
+        self._controls["notify_extreme"] = wx.CheckBox(panel, label="Notify for extreme alerts")
+        sizer.Add(self._controls["notify_extreme"], 0, wx.ALL, 5)
+
+        self._controls["notify_severe"] = wx.CheckBox(panel, label="Notify for severe alerts")
+        sizer.Add(self._controls["notify_severe"], 0, wx.ALL, 5)
+
+        self._controls["notify_moderate"] = wx.CheckBox(panel, label="Notify for moderate alerts")
+        sizer.Add(self._controls["notify_moderate"], 0, wx.ALL, 5)
+
+        self._controls["notify_minor"] = wx.CheckBox(panel, label="Notify for minor alerts")
+        sizer.Add(self._controls["notify_minor"], 0, wx.ALL, 5)
+
+        panel.SetSizer(sizer)
+        self.notebook.AddPage(panel, "Notifications")
+
+    def _create_audio_tab(self):
+        """Create the audio tab."""
+        panel = wx.Panel(self.notebook)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        self._controls["sound_enabled"] = wx.CheckBox(panel, label="Enable sounds")
+        sizer.Add(self._controls["sound_enabled"], 0, wx.ALL, 5)
+
+        row1 = wx.BoxSizer(wx.HORIZONTAL)
+        row1.Add(
+            wx.StaticText(panel, label="Sound Pack:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 10
+        )
+        self._controls["sound_pack"] = wx.Choice(panel, choices=["Default"])
+        row1.Add(self._controls["sound_pack"], 0)
+        sizer.Add(row1, 0, wx.ALL, 5)
+
+        panel.SetSizer(sizer)
+        self.notebook.AddPage(panel, "Audio")
+
+    def _create_advanced_tab(self):
+        """Create the advanced tab."""
+        panel = wx.Panel(self.notebook)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        self._controls["minimize_tray"] = wx.CheckBox(panel, label="Minimize to system tray")
+        sizer.Add(self._controls["minimize_tray"], 0, wx.ALL, 5)
+
+        self._controls["startup"] = wx.CheckBox(panel, label="Start with Windows")
+        sizer.Add(self._controls["startup"], 0, wx.ALL, 5)
+
+        self._controls["debug"] = wx.CheckBox(panel, label="Enable debug mode")
+        sizer.Add(self._controls["debug"], 0, wx.ALL, 5)
+
+        panel.SetSizer(sizer)
+        self.notebook.AddPage(panel, "Advanced")
+
+    def _load_settings(self):
+        """Load current settings into UI controls."""
+        try:
+            settings = self.config_manager.get_settings()
+
+            # General tab
+            self._controls["update_interval"].SetValue(
+                getattr(settings, "update_interval_minutes", 10)
+            )
+            temp_unit = getattr(settings, "temperature_unit", "fahrenheit")
+            self._controls["temp_unit"].SetSelection(0 if temp_unit == "fahrenheit" else 1)
+            time_12h = getattr(settings, "time_format_12hour", True)
+            self._controls["time_format"].SetSelection(0 if time_12h else 1)
+            self._controls["detailed_forecast"].SetValue(
+                getattr(settings, "show_detailed_forecast", True)
+            )
+            self._controls["enable_alerts"].SetValue(getattr(settings, "enable_alerts", True))
+
+            # Data sources tab
+            data_source = getattr(settings, "data_source", "auto")
+            source_map = {"auto": 0, "nws": 1, "openmeteo": 2, "visualcrossing": 3}
+            self._controls["data_source"].SetSelection(source_map.get(data_source, 0))
+            vc_key = getattr(settings, "visual_crossing_api_key", "") or ""
+            self._controls["vc_key"].SetValue(str(vc_key))
+
+            # Notifications tab
+            self._controls["alert_notif"].SetValue(
+                getattr(settings, "alert_notifications_enabled", True)
+            )
+            self._controls["notify_extreme"].SetValue(
+                getattr(settings, "alert_notify_extreme", True)
+            )
+            self._controls["notify_severe"].SetValue(getattr(settings, "alert_notify_severe", True))
+            self._controls["notify_moderate"].SetValue(
+                getattr(settings, "alert_notify_moderate", True)
+            )
+            self._controls["notify_minor"].SetValue(getattr(settings, "alert_notify_minor", False))
+
+            # Audio tab
+            self._controls["sound_enabled"].SetValue(getattr(settings, "sound_enabled", True))
+            self._controls["sound_pack"].SetSelection(0)
+
+            # Advanced tab
+            self._controls["minimize_tray"].SetValue(getattr(settings, "minimize_to_tray", False))
+            self._controls["startup"].SetValue(getattr(settings, "startup_enabled", False))
+            self._controls["debug"].SetValue(getattr(settings, "debug_mode", False))
+
+        except Exception as e:
+            logger.error(f"Failed to load settings: {e}")
+
+    def _on_ok(self, event):
+        """Handle OK button press."""
+        if self._save_settings():
+            self.EndModal(wx.ID_OK)
+        else:
+            wx.MessageBox("Failed to save settings.", "Error", wx.OK | wx.ICON_ERROR)
+
+    def _save_settings(self) -> bool:
+        """Save settings from UI controls."""
+        try:
+            source_values = ["auto", "nws", "openmeteo", "visualcrossing"]
+            data_source = source_values[self._controls["data_source"].GetSelection()]
+
+            settings_dict = {
+                "update_interval_minutes": self._controls["update_interval"].GetValue(),
+                "temperature_unit": "fahrenheit"
+                if self._controls["temp_unit"].GetSelection() == 0
+                else "celsius",
+                "time_format_12hour": self._controls["time_format"].GetSelection() == 0,
+                "show_detailed_forecast": self._controls["detailed_forecast"].GetValue(),
+                "enable_alerts": self._controls["enable_alerts"].GetValue(),
+                "data_source": data_source,
+                "visual_crossing_api_key": self._controls["vc_key"].GetValue(),
+                "alert_notifications_enabled": self._controls["alert_notif"].GetValue(),
+                "alert_notify_extreme": self._controls["notify_extreme"].GetValue(),
+                "alert_notify_severe": self._controls["notify_severe"].GetValue(),
+                "alert_notify_moderate": self._controls["notify_moderate"].GetValue(),
+                "alert_notify_minor": self._controls["notify_minor"].GetValue(),
+                "sound_enabled": self._controls["sound_enabled"].GetValue(),
+                "minimize_to_tray": self._controls["minimize_tray"].GetValue(),
+                "startup_enabled": self._controls["startup"].GetValue(),
+                "debug_mode": self._controls["debug"].GetValue(),
+            }
+
+            success = self.config_manager.update_settings(**settings_dict)
+            if success:
+                logger.info("Settings saved successfully")
+            return success
+
+        except Exception as e:
+            logger.error(f"Failed to save settings: {e}")
+            return False
 
 
 def _create_general_panel(parent, app):
