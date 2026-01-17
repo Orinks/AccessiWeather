@@ -78,6 +78,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "taskbar_icon_text_format",
     "source_priority_us",
     "source_priority_international",
+    "openmeteo_weather_model",
 }
 
 
@@ -144,6 +145,8 @@ class AppSettings:
     source_priority_international: list[str] = field(
         default_factory=lambda: ["openmeteo", "visualcrossing"]
     )
+    # Open-Meteo weather model selection
+    openmeteo_weather_model: str = "best_match"
     # AI Explanation Settings
     openrouter_api_key: str = ""
     ai_model_preference: str = (
@@ -273,6 +276,23 @@ class AppSettings:
             if not isinstance(value, int) or value < 1:
                 setattr(self, setting_name, 180)
 
+        elif setting_name == "openmeteo_weather_model":
+            valid_models = {
+                "best_match",
+                "icon_seamless",
+                "icon_global",
+                "icon_eu",
+                "icon_d2",
+                "gfs_seamless",
+                "gfs_global",
+                "ecmwf_ifs04",
+                "meteofrance_seamless",
+                "gem_seamless",
+                "jma_seamless",
+            }
+            if value not in valid_models:
+                setattr(self, setting_name, "best_match")
+
         elif setting_name in {"source_priority_us", "source_priority_international"}:
             # Ensure valid list of source names
             valid_sources = {"nws", "openmeteo", "visualcrossing"}
@@ -360,6 +380,7 @@ class AppSettings:
             "taskbar_icon_text_format": self.taskbar_icon_text_format,
             "source_priority_us": self.source_priority_us,
             "source_priority_international": self.source_priority_international,
+            "openmeteo_weather_model": self.openmeteo_weather_model,
             # AI settings (API key stored in secure storage, not here)
             "ai_model_preference": self.ai_model_preference,
             "ai_explanation_style": self.ai_explanation_style,
@@ -434,6 +455,7 @@ class AppSettings:
             source_priority_international=data.get(
                 "source_priority_international", ["openmeteo", "visualcrossing"]
             ),
+            openmeteo_weather_model=data.get("openmeteo_weather_model", "best_match"),
             # AI settings
             openrouter_api_key=data.get("openrouter_api_key", ""),
             ai_model_preference=data.get(

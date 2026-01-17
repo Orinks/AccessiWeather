@@ -163,6 +163,7 @@ class OpenMeteoApiClient:
         temperature_unit: str = "fahrenheit",
         wind_speed_unit: str = "mph",
         precipitation_unit: str = "inch",
+        model: str = "best_match",
     ) -> dict[str, Any]:
         """
         Get current weather conditions for a location.
@@ -174,6 +175,7 @@ class OpenMeteoApiClient:
             temperature_unit: Temperature unit ("celsius" or "fahrenheit")
             wind_speed_unit: Wind speed unit ("kmh", "ms", "mph", "kn")
             precipitation_unit: Precipitation unit ("mm" or "inch")
+            model: Weather model to use (default "best_match" for automatic selection)
 
         Returns:
         -------
@@ -214,6 +216,10 @@ class OpenMeteoApiClient:
             "forecast_days": 1,
         }
 
+        # Add model parameter if not using default
+        if model and model != "best_match":
+            params["models"] = model
+
         return self._make_request("forecast", params)
 
     def get_forecast(
@@ -224,6 +230,7 @@ class OpenMeteoApiClient:
         temperature_unit: str = "fahrenheit",
         wind_speed_unit: str = "mph",
         precipitation_unit: str = "inch",
+        model: str = "best_match",
     ) -> dict[str, Any]:
         """
         Get daily forecast for a location.
@@ -236,6 +243,7 @@ class OpenMeteoApiClient:
             temperature_unit: Temperature unit ("celsius" or "fahrenheit")
             wind_speed_unit: Wind speed unit ("kmh", "ms", "mph", "kn")
             precipitation_unit: Precipitation unit ("mm" or "inch")
+            model: Weather model to use (default "best_match" for automatic selection)
 
         Returns:
         -------
@@ -268,6 +276,10 @@ class OpenMeteoApiClient:
             "forecast_days": min(days, 16),  # API supports max 16 days
         }
 
+        # Add model parameter if not using default
+        if model and model != "best_match":
+            params["models"] = model
+
         return self._make_request("forecast", params)
 
     def get_hourly_forecast(
@@ -278,6 +290,7 @@ class OpenMeteoApiClient:
         temperature_unit: str = "fahrenheit",
         wind_speed_unit: str = "mph",
         precipitation_unit: str = "inch",
+        model: str = "best_match",
     ) -> dict[str, Any]:
         """
         Get hourly forecast for a location.
@@ -290,6 +303,7 @@ class OpenMeteoApiClient:
             temperature_unit: Temperature unit ("celsius" or "fahrenheit")
             wind_speed_unit: Wind speed unit ("kmh", "ms", "mph", "kn")
             precipitation_unit: Precipitation unit ("mm" or "inch")
+            model: Weather model to use (default "best_match" for automatic selection)
 
         Returns:
         -------
@@ -326,6 +340,10 @@ class OpenMeteoApiClient:
             "timezone": "auto",
             "forecast_hours": min(hours, 384),  # API supports max 384 hours
         }
+
+        # Add model parameter if not using default
+        if model and model != "best_match":
+            params["models"] = model
 
         return self._make_request("forecast", params)
 
