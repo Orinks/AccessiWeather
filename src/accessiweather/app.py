@@ -1,8 +1,8 @@
 """
-Simple AccessiWeather Toga application.
+AccessiWeather wxPython application.
 
-This module provides the main Toga application class following BeeWare best practices,
-with a simplified architecture that avoids complex service layers and threading issues.
+This module provides the main wxPython application class using gui_builder
+for declarative UI construction with excellent screen reader accessibility.
 """
 
 from __future__ import annotations
@@ -10,24 +10,25 @@ from __future__ import annotations
 import asyncio
 import logging
 import sys
+import threading
 from typing import TYPE_CHECKING
 
-import toga
+import wx
 
-from . import app_helpers, app_initialization, background_tasks, ui_builder
-from .config import ConfigManager
 from .models import WeatherData
+from .paths import Paths
 from .single_instance import SingleInstanceManager
 
-if TYPE_CHECKING:  # pragma: no cover - import cycle guard
+if TYPE_CHECKING:
     from .alert_manager import AlertManager
     from .alert_notification_system import AlertNotificationSystem
+    from .config import ConfigManager
     from .display import WeatherPresenter
     from .location_manager import LocationManager
+    from .ui.main_window import MainWindow
     from .weather_client import WeatherClient
 
-# Configure logging for when running with briefcase dev (bypasses main.py)
-# Only configure if no handlers are already set up (avoid double initialization)
+# Configure logging
 if not logging.getLogger().handlers:
     logging.basicConfig(
         level=logging.INFO,
@@ -38,305 +39,296 @@ if not logging.getLogger().handlers:
 logger = logging.getLogger(__name__)
 
 
-class AccessiWeatherApp(toga.App):
-    """Simple AccessiWeather application using Toga."""
+class AccessiWeatherApp(wx.App):
+    """AccessiWeather application using wxPython and gui_builder."""
 
-    def __init__(self, *args, config_dir: str | None = None, portable_mode: bool = False, **kwargs):
+    def __init__(self, config_dir: str | None = None, portable_mode: bool = False):
         """
         Initialize the AccessiWeather application.
 
         Args:
-            *args: Positional arguments passed to toga.App
             config_dir: Optional custom configuration directory path
             portable_mode: If True, use portable mode (config in app directory)
-            **kwargs: Keyword arguments passed to toga.App
 
         """
-        super().__init__(*args, **kwargs)
-
-        # Store config parameters for later use
         self._config_dir = config_dir
         self._portable_mode = portable_mode
 
-        # Core components
+        # Set up paths (similar to Toga's paths API)
+        self.paths = Paths()
+
+        # Core components (initialized in OnInit)
         self.config_manager: ConfigManager | None = None
         self.weather_client: WeatherClient | None = None
         self.location_manager: LocationManager | None = None
         self.presenter: WeatherPresenter | None = None
-        self.update_service = None  # Will be initialized after config_manager
-        self.single_instance_manager = None  # Will be initialized in startup
-        self.weather_history_service = None  # Weather history comparison service
+        self.update_service = None
+        self.single_instance_manager: SingleInstanceManager | None = None
+        self.weather_history_service = None
 
         # UI components
-        self.location_selection: toga.Selection | None = None
-        self.current_conditions_display: toga.MultilineTextInput | None = None
-        self.forecast_display: toga.MultilineTextInput | None = None
-        self.alerts_table: toga.Table | None = None
-        self.refresh_button: toga.Button | None = None
-        self.status_label: toga.Label | None = None
-        self.aviation_dialog = None
+        self.main_window: MainWindow | None = None
 
-        # Background update task
-        self.update_task: asyncio.Task | None = None
+        # Background update
+        self._update_timer: wx.Timer | None = None
         self.is_updating: bool = False
-        self.current_refresh_task: asyncio.Task | None = None  # Track active foreground refresh
 
         # Weather data storage
         self.current_weather_data: WeatherData | None = None
 
-        # Alert management system
+        # Alert management
         self.alert_manager: AlertManager | None = None
         self.alert_notification_system: AlertNotificationSystem | None = None
 
         # Notification system
-        self._notifier = None  # Will be initialized in startup
+        self._notifier = None
 
-    def startup(self):
-        """Initialize the application."""
-        logger.info("Starting AccessiWeather application")
+        # Async event loop for background tasks
+        self._async_loop: asyncio.AbstractEventLoop | None = None
+        self._async_thread: threading.Thread | None = None
+
+        super().__init__()
+
+    def OnInit(self) -> bool:
+        """Initialize the application (wxPython entry point)."""
+        logger.info("Starting AccessiWeather application (wxPython)")
 
         try:
-            # Check for single instance before initializing anything else
+            # Check for single instance
             self.single_instance_manager = SingleInstanceManager(self)
             if not self.single_instance_manager.try_acquire_lock():
-                logger.info("Another instance is already running, exiting silently")
-                # Create a minimal main window to satisfy Toga's requirements
-                self.main_window = toga.MainWindow(title=self.formal_name)
-                self.main_window.content = toga.Box()
-                # Exit silently without showing intrusive dialog
-                self.request_exit()
-                return
+                logger.info("Another instance is already running, exiting")
+                wx.MessageBox(
+                    "AccessiWeather is already running.",
+                    "Already Running",
+                    wx.OK | wx.ICON_INFORMATION,
+                )
+                return False
+
+            # Start async event loop in background thread
+            self._start_async_loop()
 
             # Initialize core components
             self._initialize_components()
 
-            # Create main UI
-            ui_builder.create_main_ui(self)
+            # Create main window using gui_builder
+            # Note: Must pass top_level_window=True to get a bound instance
+            from .ui.main_window import MainWindow
 
-            # Create menu system
-            ui_builder.create_menu_system(self)
+            self.main_window = MainWindow(app=self, top_level_window=True)
+            self.main_window.render()
+            self.main_window.display()
 
-            # Note: System tray is initialized conditionally in app_initialization.py
-            # based on minimize_to_tray setting to avoid duplicate initialization
+            # Set up keyboard accelerators (shortcuts)
+            self._setup_accelerators()
 
             # Load initial data
             self._load_initial_data()
 
+            # Start background update timer
+            self._start_background_updates()
+
+            # Play startup sound
+            self._play_startup_sound()
+
             logger.info("AccessiWeather application started successfully")
+            return True
 
         except Exception as e:
-            logger.error(f"Failed to start application: {e}")
-            # Create a minimal main window to satisfy Toga's requirements
-            if not hasattr(self, "main_window") or self.main_window is None:
-                self.main_window = toga.MainWindow(title=self.formal_name)
-                self.main_window.content = toga.Box()
-            app_helpers.show_error_dialog(
-                self, "Startup Error", f"Failed to start application: {e}"
+            logger.error(f"Failed to start application: {e}", exc_info=True)
+            wx.MessageBox(
+                f"Failed to start application: {e}",
+                "Startup Error",
+                wx.OK | wx.ICON_ERROR,
             )
+            return False
 
-    async def on_running(self):
-        """Start background tasks when the app starts running."""
-        logger.info("Application is now running, starting background tasks")
+    def _start_async_loop(self) -> None:
+        """Start asyncio event loop in a background thread."""
 
-        try:
-            # Set initial focus for accessibility after app is fully loaded
-            # Small delay to ensure UI is fully rendered before setting focus
-            await asyncio.sleep(0.1)
-            if self.location_selection:
-                try:
-                    self.location_selection.focus()
-                    logger.info("Set initial focus to location dropdown for accessibility")
-                except Exception as e:
-                    logger.warning(f"Could not set focus to location dropdown: {e}")
-                    # Try focusing on the refresh button as fallback
-                    if self.refresh_button:
-                        try:
-                            self.refresh_button.focus()
-                            logger.info(
-                                "Set initial focus to refresh button as fallback for accessibility"
-                            )
-                        except Exception as e2:
-                            logger.warning(f"Could not set focus to any widget: {e2}")
+        def run_loop():
+            self._async_loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self._async_loop)
+            self._async_loop.run_forever()
 
-            # Play startup sound after UI is ready but before background updates
-            await app_helpers.play_startup_sound(self)
+        self._async_thread = threading.Thread(target=run_loop, daemon=True)
+        self._async_thread.start()
 
-            # Start periodic weather updates as a background task and retain handle for cleanup
-            self.update_task = asyncio.create_task(background_tasks.start_background_updates(self))
-            # Ensure exceptions are consumed to avoid "Task exception was never retrieved"
-            self.update_task.add_done_callback(background_tasks.task_done_callback)
+    def run_async(self, coro) -> None:
+        """Run a coroutine in the background async loop."""
+        if self._async_loop:
+            asyncio.run_coroutine_threadsafe(coro, self._async_loop)
 
-        except Exception as e:
-            logger.error(f"Failed to start background tasks: {e}")
+    def call_after_async(self, callback, *args) -> None:
+        """Call a function on the main thread after async operation."""
+        wx.CallAfter(callback, *args)
 
-    def _initialize_components(self):
+    def _initialize_components(self) -> None:
         """Initialize core application components."""
-        app_initialization.initialize_components(self)
+        from .app_initialization import initialize_components
 
-    def _load_initial_data(self):
+        initialize_components(self)
+
+    def _load_initial_data(self) -> None:
         """Load initial configuration and data."""
-        app_initialization.load_initial_data(self)
+        from .app_initialization import load_initial_data
 
-    def _on_window_close(self, widget):
-        """Delegate window-close behavior to helper logic."""
-        return app_helpers.handle_window_close(self, widget)
+        load_initial_data(self)
 
-    def on_exit(self):
-        """Delegate shutdown cleanup to helper logic."""
-        return app_helpers.handle_exit(self)
+    def _setup_accelerators(self) -> None:
+        """Set up keyboard accelerators (shortcuts)."""
+        if not self.main_window:
+            return
+
+        # Define keyboard shortcuts
+        accelerators = [
+            (wx.ACCEL_CTRL, ord("R"), self._on_refresh_shortcut),
+            (wx.ACCEL_CTRL, ord("L"), self._on_add_location_shortcut),
+            (wx.ACCEL_CTRL, ord("D"), self._on_remove_location_shortcut),
+            (wx.ACCEL_CTRL, ord("H"), self._on_history_shortcut),
+            (wx.ACCEL_CTRL, ord("S"), self._on_settings_shortcut),
+            (wx.ACCEL_CTRL, ord("Q"), self._on_exit_shortcut),
+            (wx.ACCEL_NORMAL, wx.WXK_F5, self._on_refresh_shortcut),
+        ]
+
+        # Create accelerator table
+        # Access the underlying wx.Frame control via .widget.control
+        frame = self.main_window.widget.control
+        accel_entries = []
+        for flags, key, handler in accelerators:
+            cmd_id = wx.NewIdRef()
+            frame.Bind(wx.EVT_MENU, handler, id=cmd_id)
+            accel_entries.append(wx.AcceleratorEntry(flags, key, cmd_id))
+
+        accel_table = wx.AcceleratorTable(accel_entries)
+        frame.SetAcceleratorTable(accel_table)
+        logger.info("Keyboard accelerators set up successfully")
+
+    def _on_refresh_shortcut(self, event) -> None:
+        """Handle Ctrl+R / F5 shortcut."""
+        if self.main_window:
+            self.main_window.on_refresh()
+
+    def _on_add_location_shortcut(self, event) -> None:
+        """Handle Ctrl+L shortcut."""
+        if self.main_window:
+            self.main_window.on_add_location()
+
+    def _on_remove_location_shortcut(self, event) -> None:
+        """Handle Ctrl+D shortcut."""
+        if self.main_window:
+            self.main_window.on_remove_location()
+
+    def _on_history_shortcut(self, event) -> None:
+        """Handle Ctrl+H shortcut."""
+        if self.main_window:
+            self.main_window.on_view_history()
+
+    def _on_settings_shortcut(self, event) -> None:
+        """Handle Ctrl+S shortcut."""
+        if self.main_window:
+            self.main_window.on_settings()
+
+    def _on_exit_shortcut(self, event) -> None:
+        """Handle Ctrl+Q shortcut."""
+        self.request_exit()
+
+    def _start_background_updates(self) -> None:
+        """Start periodic background weather updates."""
+        try:
+            settings = self.config_manager.get_settings()
+            interval_minutes = getattr(settings, "update_interval_minutes", 10)
+            interval_ms = interval_minutes * 60 * 1000
+
+            self._update_timer = wx.Timer()
+            self._update_timer.Bind(wx.EVT_TIMER, self._on_background_update)
+            self._update_timer.Start(interval_ms)
+            logger.info(f"Background updates started (every {interval_minutes} minutes)")
+        except Exception as e:
+            logger.error(f"Failed to start background updates: {e}")
+
+    def _on_background_update(self, event) -> None:
+        """Handle background update timer event."""
+        if self.main_window and not self.is_updating:
+            self.main_window.refresh_weather_async()
+
+    def _play_startup_sound(self) -> None:
+        """Play startup sound if enabled."""
+        try:
+            settings = self.config_manager.get_settings()
+            if getattr(settings, "sound_enabled", True):
+                from .notifications.sound_player import play_sound
+
+                sound_pack = getattr(settings, "sound_pack", "default")
+                play_sound("startup", sound_pack)
+        except Exception as e:
+            logger.debug(f"Could not play startup sound: {e}")
+
+    def request_exit(self) -> None:
+        """Request application exit with cleanup."""
+        logger.info("Application exit requested")
+
+        # Stop background updates
+        if self._update_timer:
+            self._update_timer.Stop()
+
+        # Play exit sound
+        try:
+            settings = self.config_manager.get_settings()
+            if getattr(settings, "sound_enabled", True):
+                from .notifications.sound_player import play_sound
+
+                sound_pack = getattr(settings, "sound_pack", "default")
+                play_sound("exit", sound_pack)
+        except Exception:
+            pass
+
+        # Release single instance lock
+        if self.single_instance_manager:
+            self.single_instance_manager.release_lock()
+
+        # Stop async loop
+        if self._async_loop:
+            self._async_loop.call_soon_threadsafe(self._async_loop.stop)
+
+        # Close main window and exit
+        if self.main_window:
+            self.main_window.destroy()
+
+        self.ExitMainLoop()
 
     def refresh_runtime_settings(self) -> None:
-        """
-        Refresh runtime components with current settings.
-
-        Call this after settings are saved to ensure all app components
-        use the updated configuration without requiring an app restart.
-        """
+        """Refresh runtime components with current settings."""
         try:
             settings = self.config_manager.get_settings()
             logger.info("Refreshing runtime settings")
 
-            # Update WeatherClient settings
             if self.weather_client:
                 self.weather_client.settings = settings
                 self.weather_client.data_source = settings.data_source
                 self.weather_client.alerts_enabled = bool(settings.enable_alerts)
-                self.weather_client.trend_insights_enabled = bool(settings.trend_insights_enabled)
-                self.weather_client.trend_hours = max(1, int(settings.trend_hours or 24))
-                self.weather_client.air_quality_enabled = bool(settings.air_quality_enabled)
-                self.weather_client.pollen_enabled = bool(settings.pollen_enabled)
-                logger.debug("Updated WeatherClient settings")
 
-            # Update WeatherPresenter settings
             if self.presenter:
                 self.presenter.settings = settings
-                logger.debug("Updated WeatherPresenter settings")
 
-            # Update notifier settings
             if self._notifier:
                 self._notifier.sound_enabled = bool(getattr(settings, "sound_enabled", True))
                 self._notifier.soundpack = getattr(settings, "sound_pack", "default")
-                logger.debug("Updated notifier settings")
 
-            # Update alert notification system settings
             if self.alert_notification_system:
                 self.alert_notification_system.settings = settings
-                logger.debug("Updated AlertNotificationSystem settings")
-
-            # Update system tray tooltip with current weather data
-            if hasattr(self, "status_icon") and self.status_icon:
-                ui_builder.update_tray_icon_tooltip(self, self.current_weather_data)
-
-            # Update AI explanation cache TTL
-            if hasattr(self, "ai_explanation_cache") and self.ai_explanation_cache:
-                ai_cache_ttl = getattr(settings, "ai_cache_ttl", 300)
-                self.ai_explanation_cache.default_ttl = ai_cache_ttl
-
-            # Update AI explanation button visibility
-            api_key = str(getattr(settings, "openrouter_api_key", "") or "")
-            self._update_ai_button_visibility(bool(api_key and api_key.strip()))
 
             logger.info("Runtime settings refreshed successfully")
-
-        except Exception as exc:
-            logger.error(f"Failed to refresh runtime settings: {exc}")
-
-    def _update_ai_button_visibility(self, has_api_key: bool) -> None:
-        """
-        Update the visibility of the AI explanation button based on API key.
-
-        Args:
-            has_api_key: Whether a valid API key is configured
-
-        """
-        try:
-            if has_api_key and not hasattr(self, "explain_weather_button"):
-                # API key was just configured - add the button
-                self._add_ai_explanation_button()
-            elif (
-                not has_api_key
-                and hasattr(self, "explain_weather_button")
-                and self.explain_weather_button
-            ):
-                # API key was just removed - remove the button
-                self._remove_ai_explanation_button()
-        except Exception as exc:
-            logger.warning(f"Failed to update AI button visibility: {exc}")
-
-    def _add_ai_explanation_button(self) -> None:
-        """Add the AI explanation button to the weather display."""
-        try:
-            from .ai_explainer import create_explain_weather_button
-            from .handlers.ai_handlers import on_explain_weather_pressed
-
-            self.explain_weather_button = create_explain_weather_button(
-                on_press=lambda widget: asyncio.create_task(
-                    on_explain_weather_pressed(self, widget)
-                )
-            )
-
-            # Find the weather box and add the button before the discussion button
-            if hasattr(self, "main_window") and self.main_window and self.main_window.content:
-                weather_box = self._find_weather_box(self.main_window.content)
-                if weather_box and hasattr(self, "discussion_button") and self.discussion_button:
-                    # Insert before discussion button
-                    children = list(weather_box.children)
-                    discussion_index = children.index(self.discussion_button)
-                    weather_box.insert(discussion_index, self.explain_weather_button)
-                    logger.info("Added AI explanation button to weather display")
-
-        except Exception as exc:
-            logger.warning(f"Failed to add AI explanation button: {exc}")
-
-    def _remove_ai_explanation_button(self) -> None:
-        """Remove the AI explanation button from the weather display."""
-        try:
-            if hasattr(self, "explain_weather_button") and self.explain_weather_button:
-                # Find the parent container and remove the button
-                if hasattr(self, "main_window") and self.main_window and self.main_window.content:
-                    weather_box = self._find_weather_box(self.main_window.content)
-                    if weather_box and self.explain_weather_button in weather_box.children:
-                        weather_box.remove(self.explain_weather_button)
-                        logger.info("Removed AI explanation button from weather display")
-
-                self.explain_weather_button = None
-
-        except Exception as exc:
-            logger.warning(f"Failed to remove AI explanation button: {exc}")
-
-    def _find_weather_box(self, container) -> toga.Box | None:
-        """Recursively find the weather display box in the UI hierarchy."""
-        if hasattr(container, "children"):
-            for child in container.children:
-                # Look for the box that contains the discussion button
-                if (
-                    hasattr(child, "children")
-                    and hasattr(self, "discussion_button")
-                    and self.discussion_button in child.children
-                ):
-                    return child
-                # Recursively search child containers
-                result = self._find_weather_box(child)
-                if result:
-                    return result
-        return None
+        except Exception as e:
+            logger.error(f"Failed to refresh runtime settings: {e}")
 
 
 def main(config_dir: str | None = None, portable_mode: bool = False):
-    """
-    Provide main entry point for the simplified AccessiWeather application.
+    """Run AccessiWeather application."""
+    app = AccessiWeatherApp(config_dir=config_dir, portable_mode=portable_mode)
+    app.MainLoop()
+    return app
 
-    Args:
-        config_dir: Optional custom configuration directory path
-        portable_mode: If True, use portable mode (config in app directory)
 
-    """
-    return AccessiWeatherApp(
-        "AccessiWeather",
-        "net.orinks.accessiweather.simple",
-        description="Simple, accessible weather application",
-        home_page="https://github.com/Orinks/AccessiWeather",
-        author="Orinks",
-        config_dir=config_dir,
-        portable_mode=portable_mode,
-    )
+if __name__ == "__main__":
+    main()
