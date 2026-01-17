@@ -81,11 +81,13 @@ class MainWindow(forms.SizedFrame):
     settings_button = fields.Button(label="&Settings")
 
     def __init__(self, app: AccessiWeatherApp = None, **kwargs):
-        """Initialize the main window.
+        """
+        Initialize the main window.
 
         Args:
             app: The AccessiWeather application instance
             **kwargs: Additional keyword arguments passed to SizedFrame
+
         """
         self.app = app
         # Ensure top_level_window is set for gui_builder to return a bound instance
@@ -193,7 +195,7 @@ class MainWindow(forms.SizedFrame):
     @add_button.add_callback
     def on_add_location(self):
         """Handle add location button click."""
-        from .dialogs.location_dialog import show_add_location_dialog
+        from .dialogs import show_add_location_dialog
 
         result = show_add_location_dialog(self.widget, self.app)
         if result:
@@ -213,7 +215,7 @@ class MainWindow(forms.SizedFrame):
             return
 
         # Don't allow removing the last location
-        locations = self.app.config_manager.get_locations()
+        locations = self.app.config_manager.get_all_locations()
         if len(locations) <= 1:
             wx.MessageBox(
                 "Cannot remove the last location. Add another location first.",
@@ -241,32 +243,32 @@ class MainWindow(forms.SizedFrame):
     @settings_button.add_callback
     def on_settings(self):
         """Handle settings button click."""
-        from .dialogs.settings_dialog import show_settings_dialog
+        from .dialogs import show_settings_dialog
 
         if show_settings_dialog(self.widget, self.app):
             self.app.refresh_runtime_settings()
 
     def on_view_history(self):
         """View weather history comparison."""
-        from .dialogs.weather_history_dialog import show_weather_history_dialog
+        from .dialogs import show_weather_history_dialog
 
         show_weather_history_dialog(self.widget, self.app)
 
     def _on_aviation(self):
         """View aviation weather."""
-        from .dialogs.aviation_dialog import show_aviation_dialog
+        from .dialogs import show_aviation_dialog
 
         show_aviation_dialog(self.widget, self.app)
 
     def _on_air_quality(self):
         """View air quality information."""
-        from .dialogs.air_quality_dialog import show_air_quality_dialog
+        from .dialogs import show_air_quality_dialog
 
         show_air_quality_dialog(self.widget, self.app)
 
     def _on_uv_index(self):
         """View UV index information."""
-        from .dialogs.uv_index_dialog import show_uv_index_dialog
+        from .dialogs import show_uv_index_dialog
 
         show_uv_index_dialog(self.widget, self.app)
 
@@ -298,7 +300,7 @@ class MainWindow(forms.SizedFrame):
     def _set_current_location(self, location_name: str) -> None:
         """Set the current location."""
         try:
-            locations = self.app.config_manager.get_locations()
+            locations = self.app.config_manager.get_all_locations()
             for loc in locations:
                 if loc.name == location_name:
                     self.app.config_manager.set_current_location(loc)
@@ -327,10 +329,8 @@ class MainWindow(forms.SizedFrame):
                 wx.CallAfter(self._on_weather_error, "No location selected")
                 return
 
-            # Fetch weather data
-            weather_data = await self.app.weather_client.get_weather_data(
-                location.latitude, location.longitude, location.name
-            )
+            # Fetch weather data - pass the Location object directly
+            weather_data = await self.app.weather_client.get_weather_data(location)
 
             # Update UI on main thread
             wx.CallAfter(self._on_weather_data_received, weather_data)
@@ -344,22 +344,23 @@ class MainWindow(forms.SizedFrame):
         try:
             self.app.current_weather_data = weather_data
 
+            # Use presenter to create formatted presentation
+            presentation = self.app.presenter.present(weather_data)
+
             # Update current conditions
-            if weather_data.current_conditions:
-                self.current_conditions.set_value(
-                    self.app.presenter.format_current_conditions(weather_data)
-                )
+            if presentation.current_conditions:
+                self.current_conditions.set_value(presentation.current_conditions.fallback_text)
             else:
                 self.current_conditions.set_value("No current conditions available.")
 
             # Update forecast
-            if weather_data.forecast:
-                self.forecast_display.set_value(self.app.presenter.format_forecast(weather_data))
+            if presentation.forecast:
+                self.forecast_display.set_value(presentation.forecast.fallback_text)
             else:
                 self.forecast_display.set_value("No forecast available.")
 
             # Update alerts
-            self._update_alerts(weather_data.alerts or [])
+            self._update_alerts(weather_data.alerts)
 
             location = self.app.config_manager.get_current_location()
             location_name = location.name if location else "Unknown"
@@ -379,10 +380,21 @@ class MainWindow(forms.SizedFrame):
         self.app.is_updating = False
         self.refresh_button.enable()
 
-    def _update_alerts(self, alerts: list) -> None:
+    def _update_alerts(self, alerts) -> None:
         """Update the alerts list."""
         alert_items = []
-        for alert in alerts:
+        alert_list = []
+
+        # Handle WeatherAlerts object or list
+        if alerts:
+            if hasattr(alerts, "alerts"):
+                alert_list = alerts.alerts or []
+            elif hasattr(alerts, "get_active_alerts"):
+                alert_list = alerts.get_active_alerts() or []
+            elif isinstance(alerts, list):
+                alert_list = alerts
+
+        for alert in alert_list:
             event = getattr(alert, "event", "Unknown")
             severity = getattr(alert, "severity", "Unknown")
             alert_items.append(f"{event} ({severity})")
@@ -390,7 +402,7 @@ class MainWindow(forms.SizedFrame):
         self.alerts_panel.alerts_list.set_items(alert_items)
 
         # Enable/disable view button based on alerts
-        if alerts:
+        if alert_items:
             self.alerts_panel.view_alert_button.enable()
         else:
             self.alerts_panel.view_alert_button.disable()
@@ -401,9 +413,9 @@ class MainWindow(forms.SizedFrame):
             return
 
         alerts = self.app.current_weather_data.alerts
-        if 0 <= alert_index < len(alerts):
-            alert = alerts[alert_index]
-            from .dialogs.alert_dialog import show_alert_dialog
+        if 0 <= alert_index < len(alerts.alerts):
+            alert = alerts.alerts[alert_index]
+            from .dialogs import show_alert_dialog
 
             show_alert_dialog(self.widget, alert)
 
