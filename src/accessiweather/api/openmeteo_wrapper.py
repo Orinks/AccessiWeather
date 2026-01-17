@@ -77,6 +77,7 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
         temperature_unit = kwargs.get("temperature_unit", "fahrenheit")
         wind_speed_unit = kwargs.get("wind_speed_unit", "mph")
         precipitation_unit = kwargs.get("precipitation_unit", "inch")
+        model = kwargs.get("model", "best_match")
 
         logger.info(f"Getting current conditions from Open-Meteo for coordinates: ({lat}, {lon})")
 
@@ -88,6 +89,7 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
                 "temp_unit": temperature_unit,
                 "wind_unit": wind_speed_unit,
                 "precip_unit": precipitation_unit,
+                "model": model,
             },
         )
 
@@ -100,6 +102,7 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
                     temperature_unit=temperature_unit,
                     wind_speed_unit=wind_speed_unit,
                     precipitation_unit=precipitation_unit,
+                    model=model,
                 )
                 return self._transform_current_conditions(response)
             except Exception as e:
@@ -117,6 +120,7 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
         temperature_unit = kwargs.get("temperature_unit", "fahrenheit")
         wind_speed_unit = kwargs.get("wind_speed_unit", "mph")
         precipitation_unit = kwargs.get("precipitation_unit", "inch")
+        model = kwargs.get("model", "best_match")
 
         logger.info(f"Getting forecast from Open-Meteo for coordinates: ({lat}, {lon})")
 
@@ -129,6 +133,7 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
                 "temp_unit": temperature_unit,
                 "wind_unit": wind_speed_unit,
                 "precip_unit": precipitation_unit,
+                "model": model,
             },
         )
 
@@ -142,6 +147,7 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
                     temperature_unit=temperature_unit,
                     wind_speed_unit=wind_speed_unit,
                     precipitation_unit=precipitation_unit,
+                    model=model,
                 )
                 return self._transform_forecast(response)
             except Exception as e:
@@ -157,6 +163,7 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
         temperature_unit = kwargs.get("temperature_unit", "fahrenheit")
         wind_speed_unit = kwargs.get("wind_speed_unit", "mph")
         precipitation_unit = kwargs.get("precipitation_unit", "inch")
+        model = kwargs.get("model", "best_match")
 
         logger.info(f"Getting hourly forecast from Open-Meteo for coordinates: ({lat}, {lon})")
 
@@ -169,6 +176,7 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
                 "temp_unit": temperature_unit,
                 "wind_unit": wind_speed_unit,
                 "precip_unit": precipitation_unit,
+                "model": model,
             },
         )
 
@@ -182,6 +190,7 @@ class OpenMeteoApiWrapper(BaseApiWrapper):
                     temperature_unit=temperature_unit,
                     wind_speed_unit=wind_speed_unit,
                     precipitation_unit=precipitation_unit,
+                    model=model,
                 )
                 return self._transform_hourly_forecast(response)
             except Exception as e:

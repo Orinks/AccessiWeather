@@ -130,6 +130,19 @@ def _apply_data_source_settings(dialog, settings):
     with contextlib.suppress(Exception):
         dialog._update_visual_crossing_config_visibility()
         dialog._update_priority_settings_visibility()
+        dialog._update_openmeteo_model_visibility()
+
+    # Apply Open-Meteo model setting
+    if getattr(dialog, "openmeteo_model_selection", None) is not None:
+        try:
+            current_model = getattr(settings, "openmeteo_weather_model", "best_match")
+            display_value = dialog.openmeteo_model_value_to_display.get(
+                current_model,
+                "Best Match (Automatic)",
+            )
+            dialog.openmeteo_model_selection.value = display_value
+        except Exception as exc:
+            logger.warning("%s: Failed to apply Open-Meteo model selection: %s", LOG_PREFIX, exc)
 
 
 def _apply_sound_settings(dialog, settings):
@@ -527,11 +540,23 @@ def _collect_data_source_settings(dialog, current_settings):
         except Exception as exc:
             logger.warning("%s: Failed to get intl priority selection: %s", LOG_PREFIX, exc)
 
+    # Open-Meteo weather model setting
+    openmeteo_weather_model = getattr(current_settings, "openmeteo_weather_model", "best_match")
+    if getattr(dialog, "openmeteo_model_selection", None) is not None:
+        try:
+            selected_model = str(dialog.openmeteo_model_selection.value)
+            openmeteo_weather_model = dialog.openmeteo_model_display_to_value.get(
+                selected_model, "best_match"
+            )
+        except Exception as exc:
+            logger.warning("%s: Failed to get Open-Meteo model selection: %s", LOG_PREFIX, exc)
+
     return {
         "data_source": data_source,
         "visual_crossing_api_key": visual_crossing_api_key,
         "source_priority_us": source_priority_us,
         "source_priority_international": source_priority_international,
+        "openmeteo_weather_model": openmeteo_weather_model,
     }
 
 
@@ -836,6 +861,7 @@ def collect_settings_from_ui(dialog) -> AppSettings:
         visual_crossing_api_key=data_source["visual_crossing_api_key"],
         source_priority_us=data_source["source_priority_us"],
         source_priority_international=data_source["source_priority_international"],
+        openmeteo_weather_model=data_source["openmeteo_weather_model"],
         # Update settings
         auto_update_enabled=updates["auto_update_enabled"],
         update_channel=updates["update_channel"],

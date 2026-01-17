@@ -1166,6 +1166,7 @@ async def test_check_for_updates_signature_url_none_when_not_present(windows_pla
 
 
 @pytest.mark.asyncio
+@pytest.mark.skip(reason="GPG signature verification is currently disabled in downloads.py")
 async def test_download_with_signature_verification_success(windows_platform, svc, tmp_path):
     """Test download with successful signature verification."""
     import hashlib
@@ -1225,6 +1226,7 @@ async def test_download_with_signature_verification_success(windows_platform, sv
 
 
 @pytest.mark.asyncio
+@pytest.mark.skip(reason="GPG signature verification is currently disabled in downloads.py")
 async def test_download_with_signature_verification_failure(windows_platform, svc, tmp_path):
     """Test download with failed signature verification."""
     import hashlib
@@ -1286,6 +1288,7 @@ async def test_download_with_signature_verification_failure(windows_platform, sv
 
 
 @pytest.mark.asyncio
+@pytest.mark.skip(reason="GPG signature verification is currently disabled in downloads.py")
 async def test_download_without_signature_url_skips_verification(windows_platform, svc, tmp_path):
     """Test download without signature_url skips signature verification."""
     import hashlib

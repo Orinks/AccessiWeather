@@ -110,6 +110,7 @@ async def get_openmeteo_all_data_parallel(
     openmeteo_base_url: str,
     timeout: float,
     client: httpx.AsyncClient,
+    model: str = "best_match",
 ) -> tuple[CurrentConditions | None, Forecast | None, HourlyForecast | None]:
     """
     Fetch all Open-Meteo data in parallel.
@@ -119,13 +120,13 @@ async def get_openmeteo_all_data_parallel(
     try:
         # Fetch all data in parallel
         current_task = asyncio.create_task(
-            get_openmeteo_current_conditions(location, openmeteo_base_url, timeout, client)
+            get_openmeteo_current_conditions(location, openmeteo_base_url, timeout, client, model)
         )
         forecast_task = asyncio.create_task(
-            get_openmeteo_forecast(location, openmeteo_base_url, timeout, client)
+            get_openmeteo_forecast(location, openmeteo_base_url, timeout, client, model)
         )
         hourly_task = asyncio.create_task(
-            get_openmeteo_hourly_forecast(location, openmeteo_base_url, timeout, client)
+            get_openmeteo_hourly_forecast(location, openmeteo_base_url, timeout, client, model)
         )
 
         # Gather all results
@@ -148,6 +149,7 @@ async def get_openmeteo_current_conditions(
     openmeteo_base_url: str,
     timeout: float,
     client: httpx.AsyncClient | None = None,
+    model: str = "best_match",
 ) -> CurrentConditions | None:
     """Fetch current conditions from the Open-Meteo API."""
     try:
@@ -167,6 +169,10 @@ async def get_openmeteo_current_conditions(
             "timezone": "auto",
             "forecast_days": 1,
         }
+
+        # Add model parameter if not using default
+        if model and model != "best_match":
+            params["models"] = model
 
         # Use provided client or create a new one
         if client is not None:
@@ -201,6 +207,7 @@ async def get_openmeteo_forecast(
     openmeteo_base_url: str,
     timeout: float,
     client: httpx.AsyncClient | None = None,
+    model: str = "best_match",
 ) -> Forecast | None:
     """Fetch daily forecast from the Open-Meteo API."""
     try:
@@ -219,6 +226,10 @@ async def get_openmeteo_forecast(
             "timezone": "auto",
             "forecast_days": 7,
         }
+
+        # Add model parameter if not using default
+        if model and model != "best_match":
+            params["models"] = model
 
         # Use provided client or create a new one
         if client is not None:
@@ -245,6 +256,7 @@ async def get_openmeteo_hourly_forecast(
     openmeteo_base_url: str,
     timeout: float,
     client: httpx.AsyncClient | None = None,
+    model: str = "best_match",
 ) -> HourlyForecast | None:
     """Fetch hourly forecast from the Open-Meteo API."""
     try:
@@ -263,6 +275,10 @@ async def get_openmeteo_hourly_forecast(
             "timezone": "auto",
             "forecast_days": 2,
         }
+
+        # Add model parameter if not using default
+        if model and model != "best_match":
+            params["models"] = model
 
         # Use provided client or create a new one
         if client is not None:
