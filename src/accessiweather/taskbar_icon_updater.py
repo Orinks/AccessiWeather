@@ -39,6 +39,7 @@ class TaskbarIconUpdater:
         dynamic_enabled: bool = True,
         format_string: str = "{temp} {condition}",
         temperature_unit: str = "both",
+        verbosity_level: str = "standard",
     ):
         """
         Initialize the TaskbarIconUpdater.
@@ -48,12 +49,14 @@ class TaskbarIconUpdater:
             dynamic_enabled: Whether dynamic format selection is enabled
             format_string: The format string to use for the tooltip
             temperature_unit: Temperature unit preference (fahrenheit, celsius, both)
+            verbosity_level: Information verbosity level (minimal, standard, detailed)
 
         """
         self.text_enabled = text_enabled
         self.dynamic_enabled = dynamic_enabled
         self.format_string = format_string
         self.temperature_unit = temperature_unit
+        self.verbosity_level = verbosity_level
         self.parser = FormatStringParser()
         self._last_format_error: str | None = None
 
@@ -63,6 +66,7 @@ class TaskbarIconUpdater:
         dynamic_enabled: bool | None = None,
         format_string: str | None = None,
         temperature_unit: str | None = None,
+        verbosity_level: str | None = None,
     ) -> None:
         """
         Update taskbar icon settings.
@@ -72,6 +76,7 @@ class TaskbarIconUpdater:
             dynamic_enabled: Whether dynamic format selection is enabled
             format_string: The format string to use for the tooltip
             temperature_unit: Temperature unit preference
+            verbosity_level: Information verbosity level (minimal, standard, detailed)
 
         """
         if text_enabled is not None:
@@ -82,6 +87,8 @@ class TaskbarIconUpdater:
             self.format_string = format_string
         if temperature_unit is not None:
             self.temperature_unit = temperature_unit
+        if verbosity_level is not None:
+            self.verbosity_level = verbosity_level
 
     def format_tooltip(
         self,
@@ -90,6 +97,11 @@ class TaskbarIconUpdater:
     ) -> str:
         """
         Format the tooltip text based on weather data and settings.
+
+        The output varies based on verbosity_level:
+        - minimal: Location + temperature only
+        - standard: Location + temperature + condition (default behavior)
+        - detailed: Location + temperature + condition + feels like + humidity + wind
 
         Args:
             weather_data: Current weather data, or None if unavailable
@@ -114,7 +126,7 @@ class TaskbarIconUpdater:
 
         try:
             data = self._extract_weather_variables(current, location_name)
-            tooltip = self._format_with_fallback(self.format_string, data)
+            tooltip = self._format_by_verbosity(data)
 
             if location_name and tooltip and not tooltip.startswith(location_name):
                 tooltip = f"{location_name}: {tooltip}"
@@ -123,6 +135,47 @@ class TaskbarIconUpdater:
         except Exception as exc:
             logger.debug("Failed to format tooltip: %s", exc)
             return DEFAULT_TOOLTIP_TEXT
+
+    def _format_by_verbosity(self, data: dict[str, str]) -> str:
+        """
+        Format tooltip content based on verbosity level.
+
+        Args:
+            data: Dictionary of weather variable values
+
+        Returns:
+            Formatted tooltip string appropriate to verbosity level
+
+        """
+        if self.verbosity_level == "minimal":
+            # Minimal: just temperature
+            return data.get("temp", PLACEHOLDER_NA)
+
+        if self.verbosity_level == "detailed":
+            # Detailed: temp + condition + feels_like + humidity + wind
+            parts = [data.get("temp", PLACEHOLDER_NA)]
+
+            condition = data.get("condition")
+            if condition and condition != PLACEHOLDER_NA:
+                parts.append(condition)
+
+            feels_like = data.get("feels_like")
+            if feels_like and feels_like != PLACEHOLDER_NA:
+                parts.append(f"Feels {feels_like}")
+
+            humidity = data.get("humidity")
+            if humidity and humidity != PLACEHOLDER_NA:
+                parts.append(f"Humidity {humidity}")
+
+            wind = data.get("wind")
+            if wind and wind != PLACEHOLDER_NA:
+                parts.append(f"Wind {wind}")
+
+            return " | ".join(parts)
+
+        # Standard (default): temp + condition
+        format_string = self.format_string
+        return self._format_with_fallback(format_string, data)
 
     def _extract_weather_variables(
         self,

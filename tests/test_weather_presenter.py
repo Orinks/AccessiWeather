@@ -360,7 +360,7 @@ def test_presenter_includes_forecast_extended_fields():
     """Presenter should include precipitation probability, snowfall, and UV index in forecasts."""
     from accessiweather.models import Forecast, ForecastPeriod
 
-    settings = AppSettings(temperature_unit="fahrenheit")
+    settings = AppSettings(temperature_unit="fahrenheit", verbosity_level="detailed")
     presenter = WeatherPresenter(settings)
     location = Location(name="Extended Fields City", latitude=40.0, longitude=-75.0)
 
@@ -416,7 +416,7 @@ def test_presenter_includes_hourly_extended_fields():
     """Presenter should include extended fields in hourly forecast periods."""
     from datetime import timedelta
 
-    settings = AppSettings(temperature_unit="fahrenheit")
+    settings = AppSettings(temperature_unit="fahrenheit", verbosity_level="detailed")
     presenter = WeatherPresenter(settings)
     location = Location(name="Hourly City", latitude=40.0, longitude=-75.0)
 

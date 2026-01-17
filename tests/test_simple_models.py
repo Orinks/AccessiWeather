@@ -14,10 +14,12 @@ from accessiweather.models import (
     AppConfig,
     AppSettings,
     CurrentConditions,
+    EnvironmentalConditions,
     Forecast,
     ForecastPeriod,
     HourlyForecast,
     HourlyForecastPeriod,
+    HourlyUVIndex,
     Location,
     WeatherAlert,
     WeatherAlerts,
@@ -1058,3 +1060,216 @@ class TestModelsPackageStructure:
         assert WeatherAlert is not None
         assert WeatherAlerts is not None
         assert WeatherData is not None
+
+
+class TestHourlyUVIndexModel:
+    """Test the HourlyUVIndex data model."""
+
+    def test_hourly_uv_index_creation(self):
+        """Test basic HourlyUVIndex creation."""
+        timestamp = datetime.now(UTC)
+        uv_data = HourlyUVIndex(timestamp=timestamp, uv_index=7.5, category="High")
+
+        assert uv_data.timestamp == timestamp
+        assert uv_data.uv_index == 7.5
+        assert uv_data.category == "High"
+
+    def test_hourly_uv_index_with_different_categories(self):
+        """Test HourlyUVIndex with various UV categories."""
+        timestamp = datetime.now(UTC)
+
+        # Test Low category
+        low_uv = HourlyUVIndex(timestamp=timestamp, uv_index=1.5, category="Low")
+        assert low_uv.category == "Low"
+        assert low_uv.uv_index == 1.5
+
+        # Test Moderate category
+        moderate_uv = HourlyUVIndex(timestamp=timestamp, uv_index=4.0, category="Moderate")
+        assert moderate_uv.category == "Moderate"
+        assert moderate_uv.uv_index == 4.0
+
+        # Test High category
+        high_uv = HourlyUVIndex(timestamp=timestamp, uv_index=6.5, category="High")
+        assert high_uv.category == "High"
+        assert high_uv.uv_index == 6.5
+
+        # Test Very High category
+        very_high_uv = HourlyUVIndex(timestamp=timestamp, uv_index=9.0, category="Very High")
+        assert very_high_uv.category == "Very High"
+        assert very_high_uv.uv_index == 9.0
+
+        # Test Extreme category
+        extreme_uv = HourlyUVIndex(timestamp=timestamp, uv_index=11.5, category="Extreme")
+        assert extreme_uv.category == "Extreme"
+        assert extreme_uv.uv_index == 11.5
+
+    def test_hourly_uv_index_with_zero_value(self):
+        """Test HourlyUVIndex with zero UV index (nighttime)."""
+        timestamp = datetime.now(UTC)
+        nighttime_uv = HourlyUVIndex(timestamp=timestamp, uv_index=0.0, category="Low")
+
+        assert nighttime_uv.uv_index == 0.0
+        assert nighttime_uv.category == "Low"
+
+    def test_hourly_uv_index_with_high_precision(self):
+        """Test HourlyUVIndex with high-precision float values."""
+        timestamp = datetime.now(UTC)
+        precise_uv = HourlyUVIndex(timestamp=timestamp, uv_index=7.234, category="High")
+
+        assert precise_uv.uv_index == 7.234
+
+    def test_hourly_uv_index_timestamp_validation(self):
+        """Test HourlyUVIndex with various timestamp formats."""
+        # Test with timezone-aware datetime
+        aware_time = datetime.now(UTC)
+        uv_aware = HourlyUVIndex(timestamp=aware_time, uv_index=5.0, category="Moderate")
+        assert uv_aware.timestamp == aware_time
+
+        # Test with past timestamp
+        past_time = datetime.now(UTC) - timedelta(hours=3)
+        uv_past = HourlyUVIndex(timestamp=past_time, uv_index=3.0, category="Moderate")
+        assert uv_past.timestamp == past_time
+
+        # Test with future timestamp
+        future_time = datetime.now(UTC) + timedelta(hours=6)
+        uv_future = HourlyUVIndex(timestamp=future_time, uv_index=8.0, category="Very High")
+        assert uv_future.timestamp == future_time
+
+
+class TestEnvironmentalConditionsUVFields:
+    """Test the UV-related fields in EnvironmentalConditions model."""
+
+    def test_environmental_conditions_with_uv_index(self):
+        """Test EnvironmentalConditions with UV index data."""
+        env = EnvironmentalConditions(uv_index=6.5, uv_category="High")
+
+        assert env.uv_index == 6.5
+        assert env.uv_category == "High"
+        assert env.has_data() is True
+
+    def test_environmental_conditions_with_hourly_uv(self):
+        """Test EnvironmentalConditions with hourly UV index data."""
+        timestamp = datetime.now(UTC)
+        hourly_data = [
+            HourlyUVIndex(timestamp=timestamp, uv_index=3.0, category="Moderate"),
+            HourlyUVIndex(
+                timestamp=timestamp + timedelta(hours=1), uv_index=5.0, category="Moderate"
+            ),
+            HourlyUVIndex(timestamp=timestamp + timedelta(hours=2), uv_index=7.0, category="High"),
+        ]
+
+        env = EnvironmentalConditions(hourly_uv_index=hourly_data)
+
+        assert len(env.hourly_uv_index) == 3
+        assert env.hourly_uv_index[0].uv_index == 3.0
+        assert env.hourly_uv_index[1].uv_index == 5.0
+        assert env.hourly_uv_index[2].uv_index == 7.0
+        assert env.has_data() is True
+
+    def test_environmental_conditions_uv_has_data(self):
+        """Test has_data() method includes UV index checks."""
+        # Test with only UV index
+        env_uv_only = EnvironmentalConditions(uv_index=5.0)
+        assert env_uv_only.has_data() is True
+
+        # Test with only hourly UV index
+        hourly_data = [
+            HourlyUVIndex(timestamp=datetime.now(UTC), uv_index=4.0, category="Moderate")
+        ]
+        env_hourly_only = EnvironmentalConditions(hourly_uv_index=hourly_data)
+        assert env_hourly_only.has_data() is True
+
+        # Test with both UV index and hourly data
+        env_both = EnvironmentalConditions(uv_index=6.0, hourly_uv_index=hourly_data)
+        assert env_both.has_data() is True
+
+        # Test with no UV data but other environmental data
+        env_no_uv = EnvironmentalConditions(air_quality_index=50.0)
+        assert env_no_uv.has_data() is True
+
+        # Test empty environmental conditions
+        env_empty = EnvironmentalConditions()
+        assert env_empty.has_data() is False
+
+    def test_environmental_conditions_all_uv_fields(self):
+        """Test EnvironmentalConditions with all UV-related fields populated."""
+        timestamp = datetime.now(UTC)
+        hourly_data = [
+            HourlyUVIndex(timestamp=timestamp, uv_index=2.0, category="Low"),
+            HourlyUVIndex(
+                timestamp=timestamp + timedelta(hours=1), uv_index=4.0, category="Moderate"
+            ),
+        ]
+
+        env = EnvironmentalConditions(
+            uv_index=7.5, uv_category="High", hourly_uv_index=hourly_data
+        )
+
+        assert env.uv_index == 7.5
+        assert env.uv_category == "High"
+        assert len(env.hourly_uv_index) == 2
+        assert env.has_data() is True
+
+    def test_environmental_conditions_uv_with_other_data(self):
+        """Test EnvironmentalConditions with UV data combined with other environmental data."""
+        timestamp = datetime.now(UTC)
+        hourly_uv = [HourlyUVIndex(timestamp=timestamp, uv_index=5.0, category="Moderate")]
+
+        env = EnvironmentalConditions(
+            air_quality_index=45.0,
+            air_quality_category="Good",
+            uv_index=6.0,
+            uv_category="High",
+            hourly_uv_index=hourly_uv,
+            pollen_index=3.5,
+            pollen_category="Moderate",
+            updated_at=timestamp,
+        )
+
+        # Verify UV fields
+        assert env.uv_index == 6.0
+        assert env.uv_category == "High"
+        assert len(env.hourly_uv_index) == 1
+        assert env.hourly_uv_index[0].uv_index == 5.0
+
+        # Verify other fields
+        assert env.air_quality_index == 45.0
+        assert env.pollen_index == 3.5
+        assert env.has_data() is True
+
+    def test_environmental_conditions_default_uv_fields(self):
+        """Test EnvironmentalConditions with default UV field values."""
+        env = EnvironmentalConditions()
+
+        assert env.uv_index is None
+        assert env.uv_category is None
+        assert env.hourly_uv_index == []
+        assert env.has_data() is False
+
+    def test_environmental_conditions_uv_edge_cases(self):
+        """Test EnvironmentalConditions UV fields with edge case values."""
+        # Test with zero UV index
+        env_zero = EnvironmentalConditions(uv_index=0.0, uv_category="Low")
+        assert env_zero.uv_index == 0.0
+        assert env_zero.has_data() is True
+
+        # Test with very high UV index
+        env_extreme = EnvironmentalConditions(uv_index=15.0, uv_category="Extreme")
+        assert env_extreme.uv_index == 15.0
+        assert env_extreme.has_data() is True
+
+        # Test with empty hourly list
+        env_empty_hourly = EnvironmentalConditions(hourly_uv_index=[])
+        assert len(env_empty_hourly.hourly_uv_index) == 0
+        assert env_empty_hourly.has_data() is False
+
+    def test_environmental_conditions_uv_category_values(self):
+        """Test EnvironmentalConditions with various UV category values."""
+        categories = ["Low", "Moderate", "High", "Very High", "Extreme"]
+
+        for i, category in enumerate(categories):
+            uv_value = i * 3.0  # 0, 3, 6, 9, 12
+            env = EnvironmentalConditions(uv_index=uv_value, uv_category=category)
+            assert env.uv_category == category
+            assert env.uv_index == uv_value
+            assert env.has_data() is True

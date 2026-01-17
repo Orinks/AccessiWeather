@@ -11,17 +11,18 @@ import json
 import logging
 import os
 import sys
+import time
 from pathlib import Path
 
 import toga
 
 from accessiweather.models import AppConfig, AppSettings, Location
-from accessiweather.services import StartupManager
 
+from .file_permissions import set_secure_file_permissions
 from .github_config import GitHubConfigOperations
 from .import_export import ImportExportOperations
 from .locations import LocationOperations
-from .secure_storage import SecureStorage
+from .secure_storage import LazySecureStorage
 from .settings import SettingsOperations
 
 logger = logging.getLogger("accessiweather.config")
@@ -60,7 +61,7 @@ class ConfigManager:
 
         self.config_file = self.config_dir / "accessiweather.json"
         self._config: AppConfig | None = None
-        self._startup_manager = StartupManager()
+        self._startup_manager = None  # Lazy-loaded on first use
         self._locations = LocationOperations(self)
         self._settings = SettingsOperations(self)
         self._github = GitHubConfigOperations(self)
@@ -82,20 +83,38 @@ class ConfigManager:
         if self._config is not None:
             return self._config
 
+        load_start = time.perf_counter()
+
         try:
             if self.config_file.exists():
                 logger.info(f"Loading config from {self.config_file}")
+
+                # Time file read and JSON parsing
+                file_read_start = time.perf_counter()
                 with open(self.config_file, encoding="utf-8") as f:
                     data = json.load(f)
-                    self._config = AppConfig.from_dict(data)
+                file_read_elapsed = time.perf_counter() - file_read_start
+                logger.debug(f"Config file read and JSON parse took {file_read_elapsed:.4f}s")
 
-                    # Load secure keys from SecureStorage (not stored in JSON for security)
-                    self._load_secure_keys()
+                # Time AppConfig.from_dict() deserialization
+                deserialize_start = time.perf_counter()
+                self._config = AppConfig.from_dict(data)
+                deserialize_elapsed = time.perf_counter() - deserialize_start
+                logger.debug(f"AppConfig deserialization took {deserialize_elapsed:.4f}s")
 
-                    # Validate and fix configuration
-                    self._settings._validate_and_fix_config()
+                # Time secure keys loading from SecureStorage
+                secure_keys_start = time.perf_counter()
+                self._load_secure_keys()
+                secure_keys_elapsed = time.perf_counter() - secure_keys_start
+                logger.debug(f"Secure keys loading took {secure_keys_elapsed:.4f}s")
 
-                    logger.info("Configuration loaded successfully")
+                # Time validation and fixing
+                validation_start = time.perf_counter()
+                self._settings._validate_and_fix_config()
+                validation_elapsed = time.perf_counter() - validation_start
+                logger.debug(f"Config validation took {validation_elapsed:.4f}s")
+
+                logger.info("Configuration loaded successfully")
             else:
                 logger.info("No config file found, creating default configuration")
                 self._config = AppConfig.default()
@@ -106,21 +125,25 @@ class ConfigManager:
             logger.info("Using default configuration")
             self._config = AppConfig.default()
 
+        load_elapsed = time.perf_counter() - load_start
+        logger.debug(f"Total config load took {load_elapsed:.4f}s")
+
         return self._config
 
     def _load_secure_keys(self) -> None:
         """
-        Load secure keys from SecureStorage into the config.
+        Set up lazy loaders for secure keys in the config.
 
         These keys are stored in the system keyring for security and are not
-        saved to the JSON config file.
+        saved to the JSON config file. Using LazySecureStorage defers the actual
+        keyring access until the values are needed, improving startup performance.
         """
         if self._config is None:
             return
 
         settings = self._config.settings
 
-        # List of secure keys to load from SecureStorage
+        # List of secure keys to load lazily from SecureStorage
         secure_keys = [
             "visual_crossing_api_key",
             "openrouter_api_key",
@@ -130,13 +153,10 @@ class ConfigManager:
         ]
 
         for key in secure_keys:
-            try:
-                value = SecureStorage.get_password(key)
-                if value:
-                    setattr(settings, key, value)
-                    logger.debug(f"Loaded {key} from secure storage")
-            except Exception as exc:
-                logger.debug(f"Failed to load {key} from secure storage: {exc}")
+            # Create lazy accessor that will load from keyring on first access
+            lazy_value = LazySecureStorage(key)
+            setattr(settings, key, lazy_value)
+            logger.debug(f"Set up lazy loader for {key}")
 
     def save_config(self) -> bool:
         """
@@ -167,12 +187,8 @@ class ConfigManager:
             # Atomic rename (same filesystem)
             os.replace(tmp_file, self.config_file)
 
-            # Restrict permissions on POSIX systems
-            try:
-                if os.name != "nt":
-                    os.chmod(self.config_file, 0o600)
-            except Exception:
-                logger.debug("Could not set strict permissions on config file", exc_info=True)
+            # Set restrictive file permissions (cross-platform)
+            set_secure_file_permissions(self.config_file)
 
             logger.info("Configuration saved successfully")
             return True
@@ -256,6 +272,22 @@ class ConfigManager:
         """Import locations from a file."""
         return self._import_export.import_locations(import_path)
 
+    def export_settings(self, export_path: Path) -> bool:
+        """Export application settings to a separate file."""
+        return self._import_export.export_settings(export_path)
+
+    def import_settings(self, import_path: Path) -> bool:
+        """Import application settings from a file."""
+        return self._import_export.import_settings(import_path)
+
+    def _get_startup_manager(self):
+        """Get startup manager, initializing lazily on first access."""
+        if self._startup_manager is None:
+            from accessiweather.services import StartupManager
+
+            self._startup_manager = StartupManager()
+        return self._startup_manager
+
     def enable_startup(self) -> tuple[bool, str]:
         """
         Enable application startup on boot.
@@ -266,7 +298,7 @@ class ConfigManager:
 
         """
         try:
-            success = self._startup_manager.enable_startup()
+            success = self._get_startup_manager().enable_startup()
             if success:
                 logger.info("Application startup enabled successfully")
                 return True, "Startup enabled successfully"
@@ -286,7 +318,7 @@ class ConfigManager:
 
         """
         try:
-            success = self._startup_manager.disable_startup()
+            success = self._get_startup_manager().disable_startup()
             if success:
                 logger.info("Application startup disabled successfully")
                 return True, "Startup disabled successfully"
@@ -306,7 +338,7 @@ class ConfigManager:
 
         """
         try:
-            return self._startup_manager.is_startup_enabled()
+            return self._get_startup_manager().is_startup_enabled()
         except Exception as e:
             logger.error(f"Error checking startup status: {e}")
             return False

@@ -100,18 +100,19 @@ async def test_auto_mode_enriches_openmeteo_with_nws_discussion():
 
 @pytest.mark.asyncio
 async def test_auto_mode_enriches_with_visual_crossing_alerts():
-    """Test that auto mode adds Visual Crossing alerts when API key is configured."""
-    # Setup
-    location = Location(name="New York", latitude=40.7128, longitude=-74.0060)
+    """
+    Test that auto mode adds Visual Crossing alerts for international locations.
+
+    Visual Crossing alerts are only used for non-US locations since NWS is the
+    authoritative source for US locations.
+    """
+    # Setup - International location (London, UK)
+    location = Location(name="London", latitude=51.5074, longitude=-0.1278, country_code="GB")
     client = WeatherClient(data_source="auto", visual_crossing_api_key="test_key")
     client.air_quality_enabled = False
     client.pollen_enabled = False
     client.environmental_client = None
     client.trend_insights_enabled = False
-
-    # Mock NWS data
-    nws_current = CurrentConditions(temperature_f=72.0, temperature_c=22.2, condition="Clear")
-    nws_alerts = WeatherAlerts(alerts=[])
 
     # Mock Visual Crossing alerts
     vc_alert = WeatherAlert(
@@ -133,12 +134,15 @@ async def test_auto_mode_enriches_with_visual_crossing_alerts():
     mock_vc_client.get_alerts = AsyncMock(return_value=vc_alerts)
     client.visual_crossing_client = mock_vc_client
 
-    # Mock the fetch methods used by smart auto source
+    # Mock Open-Meteo data (used for international locations)
+    openmeteo_current = CurrentConditions(temperature_f=72.0, temperature_c=22.2, condition="Clear")
+
     async def mock_fetch_nws(location):
-        return (nws_current, Forecast(periods=[]), None, nws_alerts, HourlyForecast(periods=[]))
+        # NWS doesn't cover international locations
+        return (None, None, None, None, None)
 
     async def mock_fetch_openmeteo(location):
-        return (CurrentConditions(), Forecast(periods=[]), HourlyForecast(periods=[]))
+        return (openmeteo_current, Forecast(periods=[]), HourlyForecast(periods=[]))
 
     with (
         patch.object(client, "_fetch_nws_data", side_effect=mock_fetch_nws),
@@ -147,7 +151,7 @@ async def test_auto_mode_enriches_with_visual_crossing_alerts():
     ):
         weather_data = await client.get_weather_data(location)
 
-        # Verify Visual Crossing alert was added
+        # Verify Visual Crossing alert was added for international location
         assert len(weather_data.alerts.alerts) == 1
         assert weather_data.alerts.alerts[0].event == "Heat Advisory"
 
@@ -294,17 +298,23 @@ async def test_openmeteo_current_conditions_includes_sunrise_sunset():
 
 @pytest.mark.asyncio
 async def test_visual_crossing_alerts_merged_with_existing():
-    """Test that Visual Crossing alerts are merged with existing alerts, not replaced."""
-    location = Location(name="New York", latitude=40.7128, longitude=-74.0060)
+    """
+    Test that Visual Crossing alerts are merged with existing alerts for international locations.
+
+    For non-US locations, Visual Crossing provides alerts that should be merged
+    with any existing alerts from other sources.
+    """
+    # International location (London, UK)
+    location = Location(name="London", latitude=51.5074, longitude=-0.1278, country_code="GB")
     client = WeatherClient(data_source="auto", visual_crossing_api_key="test_key")
     client.air_quality_enabled = False
     client.pollen_enabled = False
     client.environmental_client = None
     client.trend_insights_enabled = False
 
-    # Mock NWS alert
-    nws_alert = WeatherAlert(
-        id="nws-alert-1",
+    # Mock first Visual Crossing alert (simulating existing alert)
+    existing_alert = WeatherAlert(
+        id="vc-alert-existing",
         title="Flood Warning until midnight",
         event="Flood Warning",
         severity="Severe",
@@ -312,9 +322,8 @@ async def test_visual_crossing_alerts_merged_with_existing():
         description="Heavy rains expected",
         instruction="Avoid low-lying areas",
     )
-    nws_alerts = WeatherAlerts(alerts=[nws_alert])
 
-    # Mock Visual Crossing alert (different)
+    # Mock second Visual Crossing alert (different)
     vc_alert = WeatherAlert(
         id="vc-alert-1",
         title="Heat Advisory until 8 PM",
@@ -324,7 +333,7 @@ async def test_visual_crossing_alerts_merged_with_existing():
         description="Temperatures may reach 95 degrees",
         instruction="Stay hydrated",
     )
-    vc_alerts = WeatherAlerts(alerts=[vc_alert])
+    vc_alerts = WeatherAlerts(alerts=[existing_alert, vc_alert])
 
     # Mock Visual Crossing client methods
     mock_vc_client = AsyncMock()
@@ -334,14 +343,15 @@ async def test_visual_crossing_alerts_merged_with_existing():
     mock_vc_client.get_alerts = AsyncMock(return_value=vc_alerts)
     client.visual_crossing_client = mock_vc_client
 
-    # Mock the fetch methods used by smart auto source
-    nws_current = CurrentConditions(temperature_f=72.0, condition="Clear")
+    # Mock Open-Meteo data (used for international locations)
+    openmeteo_current = CurrentConditions(temperature_f=72.0, condition="Clear")
 
     async def mock_fetch_nws(location):
-        return (nws_current, Forecast(periods=[]), None, nws_alerts, HourlyForecast(periods=[]))
+        # NWS doesn't cover international locations
+        return (None, None, None, None, None)
 
     async def mock_fetch_openmeteo(location):
-        return (CurrentConditions(), Forecast(periods=[]), HourlyForecast(periods=[]))
+        return (openmeteo_current, Forecast(periods=[]), HourlyForecast(periods=[]))
 
     with (
         patch.object(client, "_fetch_nws_data", side_effect=mock_fetch_nws),

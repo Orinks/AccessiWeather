@@ -691,6 +691,14 @@ class SettingsDialog:
     async def _on_check_updates(self, widget):
         await settings_operations.check_for_updates(self)
 
+    async def _on_export_settings(self, widget):
+        """Handle Export Settings button press."""
+        await settings_operations.export_settings(self)
+
+    async def _on_import_settings(self, widget):
+        """Handle Import Settings button press."""
+        await settings_operations.import_settings(self)
+
     def _trigger_taskbar_icon_update(self, new_settings):
         """
         Trigger immediate taskbar icon text update if settings changed.
@@ -716,3 +724,91 @@ class SettingsDialog:
 
         except Exception as exc:
             logger.debug("%s: Failed to update taskbar icon: %s", LOG_PREFIX, exc)
+
+    def _on_category_up(self, widget):
+        """Move the selected category up in the order list."""
+        if not hasattr(self, "category_order_list") or self.category_order_list is None:
+            return
+
+        try:
+            current_value = self.category_order_list.value
+            if current_value is None:
+                return
+
+            # Get current items from the ListSource
+            items = [item.value for item in self.category_order_list.items]
+            current_index = items.index(current_value)
+
+            if current_index > 0:
+                # Swap with the item above
+                items[current_index], items[current_index - 1] = (
+                    items[current_index - 1],
+                    items[current_index],
+                )
+                # Update the selection with new order
+                self.category_order_list.items = items
+                self.category_order_list.value = current_value
+                logger.debug(
+                    "%s: Moved category '%s' up from position %d to %d",
+                    LOG_PREFIX,
+                    current_value,
+                    current_index,
+                    current_index - 1,
+                )
+        except Exception as exc:
+            logger.warning("%s: Failed to move category up: %s", LOG_PREFIX, exc)
+
+    def _on_category_down(self, widget):
+        """Move the selected category down in the order list."""
+        if not hasattr(self, "category_order_list") or self.category_order_list is None:
+            return
+
+        try:
+            current_value = self.category_order_list.value
+            if current_value is None:
+                return
+
+            # Get current items from the ListSource
+            items = [item.value for item in self.category_order_list.items]
+            current_index = items.index(current_value)
+
+            if current_index < len(items) - 1:
+                # Swap with the item below
+                items[current_index], items[current_index + 1] = (
+                    items[current_index + 1],
+                    items[current_index],
+                )
+                # Update the selection with new order
+                self.category_order_list.items = items
+                self.category_order_list.value = current_value
+                logger.debug(
+                    "%s: Moved category '%s' down from position %d to %d",
+                    LOG_PREFIX,
+                    current_value,
+                    current_index,
+                    current_index + 1,
+                )
+        except Exception as exc:
+            logger.warning("%s: Failed to move category down: %s", LOG_PREFIX, exc)
+
+    def _on_reset_category_order(self, widget):
+        """Reset the category order to the default order."""
+        if not hasattr(self, "category_order_list") or self.category_order_list is None:
+            return
+
+        try:
+            default_order = [
+                "Temperature",
+                "Precipitation",
+                "Wind",
+                "Humidity & Pressure",
+                "Visibility & Clouds",
+                "UV Index",
+            ]
+            self.category_order_list.items = default_order
+            # Select the first item
+            if default_order:
+                self.category_order_list.value = default_order[0]
+            logger.info("%s: Category order reset to default", LOG_PREFIX)
+        except Exception as exc:
+            logger.warning("%s: Failed to reset category order: %s", LOG_PREFIX, exc)

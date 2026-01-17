@@ -11,30 +11,33 @@ from accessiweather.config.secure_storage import SERVICE_NAME
 
 @pytest.fixture
 def mock_keyring():
-    """Mock the keyring module."""
-    with patch("accessiweather.config.secure_storage.keyring") as mock:
-        # Setup a dict to simulate keyring storage
-        storage = {}
+    """Mock the keyring module via the lazy loader."""
+    mock = MagicMock()
+    # Setup a dict to simulate keyring storage
+    storage = {}
 
-        def set_password(service, username, password):
-            if service != SERVICE_NAME:
-                return
-            storage[username] = password
+    def set_password(service, username, password):
+        if service != SERVICE_NAME:
+            return
+        storage[username] = password
 
-        def get_password(service, username):
-            if service != SERVICE_NAME:
-                return None
-            return storage.get(username)
+    def get_password(service, username):
+        if service != SERVICE_NAME:
+            return None
+        return storage.get(username)
 
-        def delete_password(service, username):
-            if service != SERVICE_NAME:
-                return
-            if username in storage:
-                del storage[username]
+    def delete_password(service, username):
+        if service != SERVICE_NAME:
+            return
+        if username in storage:
+            del storage[username]
 
-        mock.set_password.side_effect = set_password
-        mock.get_password.side_effect = get_password
-        mock.delete_password.side_effect = delete_password
+    mock.set_password.side_effect = set_password
+    mock.get_password.side_effect = get_password
+    mock.delete_password.side_effect = delete_password
+
+    # Patch the lazy loader function to return our mock
+    with patch("accessiweather.config.secure_storage._get_keyring", return_value=mock):
         yield mock
 
 
@@ -47,7 +50,7 @@ def mock_app(tmp_path):
 
 
 def test_secure_storage_migration(mock_app, mock_keyring):
-    """Test that config loads and retrieves secure keys from keyring."""
+    """Test that config loads and retrieves secure keys lazily from keyring."""
     # Create a config file
     config_dir = mock_app.paths.config
     config_dir.mkdir(parents=True, exist_ok=True)
@@ -67,9 +70,9 @@ def test_secure_storage_migration(mock_app, mock_keyring):
     manager = ConfigManager(mock_app)
     manager.load_config()
 
-    # Verify keyring get_password was called to load secure keys
-    # (visual_crossing_api_key, openrouter_api_key, github_app_id, github_app_private_key, github_app_installation_id)
-    assert mock_keyring.get_password.call_count == 5
+    # With LazySecureStorage, keyring is NOT accessed during load_config()
+    # Keyring access is deferred until values are actually read
+    assert mock_keyring.get_password.call_count == 0
     # No set_password calls during load
     assert mock_keyring.set_password.call_count == 0
 
@@ -77,6 +80,11 @@ def test_secure_storage_migration(mock_app, mock_keyring):
     config = manager.get_config()
     assert config.settings.data_source == "auto"
     assert config.settings.startup_enabled is True
+
+    # Accessing a lazy-loaded secret triggers keyring access
+    # visual_crossing_api_key is a LazySecureStorage; access its value to trigger keyring read
+    _ = str(config.settings.visual_crossing_api_key)
+    assert mock_keyring.get_password.call_count == 1
 
 
 def test_update_settings_saves_to_keyring(mock_app, mock_keyring):

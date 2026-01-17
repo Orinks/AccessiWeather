@@ -13,8 +13,10 @@ from ...models import (
     HourlyForecastPeriod,
     Location,
     TrendInsight,
+    WeatherAlerts,
 )
 from ...utils import TemperatureUnit
+from ..priority_engine import PriorityEngine, WeatherCategory
 from ..weather_presenter import CurrentConditionsPresentation, Metric
 from .environmental import AirQualityPresentation
 from .formatters import (
@@ -330,6 +332,60 @@ def _get_severe_risk_description(risk: int) -> str:
     return "Minimal"
 
 
+def _categorize_metric(label: str) -> WeatherCategory:
+    """Map a metric label to its weather category."""
+    label_lower = label.lower()
+
+    # Temperature category
+    if any(
+        kw in label_lower for kw in ["temperature", "feels", "dewpoint", "heat index", "wind chill"]
+    ):
+        return WeatherCategory.TEMPERATURE
+
+    # Wind category
+    if "wind" in label_lower and "chill" not in label_lower:
+        return WeatherCategory.WIND
+
+    # Precipitation category
+    if any(kw in label_lower for kw in ["precipitation", "snow", "rain"]):
+        return WeatherCategory.PRECIPITATION
+
+    # Humidity/Pressure category
+    if any(kw in label_lower for kw in ["humidity", "pressure"]):
+        return WeatherCategory.HUMIDITY_PRESSURE
+
+    # Visibility/Clouds category
+    if any(kw in label_lower for kw in ["visibility", "cloud"]):
+        return WeatherCategory.VISIBILITY_CLOUDS
+
+    # UV Index category
+    if "uv" in label_lower:
+        return WeatherCategory.UV_INDEX
+
+    # Default to temperature for uncategorized metrics
+    return WeatherCategory.TEMPERATURE
+
+
+def _order_metrics_by_priority(
+    metrics: list[Metric],
+    ordered_categories: list[WeatherCategory],
+) -> list[Metric]:
+    """Reorder metrics according to category priority order."""
+    # Group metrics by category
+    categorized: dict[WeatherCategory, list[Metric]] = {cat: [] for cat in WeatherCategory}
+
+    for metric in metrics:
+        category = _categorize_metric(metric.label)
+        categorized[category].append(metric)
+
+    # Build ordered list
+    ordered: list[Metric] = []
+    for category in ordered_categories:
+        ordered.extend(categorized[category])
+
+    return ordered
+
+
 def build_current_conditions(
     current: CurrentConditions,
     location: Location,
@@ -340,6 +396,7 @@ def build_current_conditions(
     trends: Iterable[TrendInsight] | None = None,
     hourly_forecast: HourlyForecast | None = None,
     air_quality: AirQualityPresentation | None = None,
+    alerts: WeatherAlerts | None = None,
 ) -> CurrentConditionsPresentation:
     """Create a structured presentation for the current weather using helper functions."""
     title = f"Current conditions for {location.name}"
@@ -358,6 +415,20 @@ def build_current_conditions(
     use_12hour = getattr(settings, "time_format_12hour", True) if settings else True
     show_timezone = getattr(settings, "show_timezone_suffix", False) if settings else False
 
+    # Priority engine setup
+    verbosity_level = getattr(settings, "verbosity_level", "standard") if settings else "standard"
+    category_order = getattr(settings, "category_order", None) if settings else None
+    severe_weather_override = (
+        getattr(settings, "severe_weather_override", True) if settings else True
+    )
+
+    priority_engine = PriorityEngine(
+        verbosity_level=verbosity_level,
+        category_order=category_order,
+        severe_weather_override=severe_weather_override,
+    )
+    ordered_categories = priority_engine.get_category_order(alerts=alerts)
+
     # Build metrics by category
     metrics: list[Metric] = []
     metrics.extend(
@@ -370,6 +441,10 @@ def build_current_conditions(
     if show_seasonal_data:
         metrics.extend(_build_seasonal_metrics(current, unit_pref, precision))
 
+    # Reorder metrics by priority before adding non-reorderable metrics
+    metrics = _order_metrics_by_priority(metrics, ordered_categories)
+
+    # Add astronomical metrics (these don't need reordering - always at end)
     metrics.extend(
         _build_astronomical_metrics(current, time_display_mode, use_12hour, show_timezone)
     )

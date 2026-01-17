@@ -10,6 +10,7 @@ from .aviation_dialog import AviationDialog
 from .location_dialog import AddLocationDialog
 from .settings_dialog import SettingsDialog
 from .soundpack_manager_dialog import SoundPackManagerDialog
+from .uv_index_dialog import UVIndexDialog
 
 __all__ = [
     "AddLocationDialog",
@@ -17,4 +18,5 @@ __all__ = [
     "AviationDialog",
     "SettingsDialog",
     "SoundPackManagerDialog",
+    "UVIndexDialog",
 ]

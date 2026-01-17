@@ -15,6 +15,7 @@ try:
 except ImportError:
     UTC = UTC
 
+from .models import HourlyUVIndex
 from .openmeteo_client import OpenMeteoApiClient
 from .utils import TemperatureUnit, calculate_dewpoint
 
@@ -585,3 +586,101 @@ class OpenMeteoMapper:
         except Exception as e:
             logger.warning(f"Error creating detailed forecast: {str(e)}")
             return "Weather conditions expected."
+
+    def map_hourly_uv_index(self, openmeteo_data: dict[str, Any]) -> list[HourlyUVIndex]:
+        """
+        Map Open-Meteo hourly UV index data to HourlyUVIndex objects.
+
+        Args:
+        ----
+            openmeteo_data: Raw response from Open-Meteo hourly API
+
+        Returns:
+        -------
+            List of HourlyUVIndex objects (empty list if no data available)
+
+        """
+        try:
+            hourly = openmeteo_data.get("hourly", {})
+            utc_offset_seconds = openmeteo_data.get("utc_offset_seconds")
+
+            if not hourly:
+                logger.debug("No hourly data in Open-Meteo response")
+                return []
+
+            times = hourly.get("time", [])
+            uv_indices = hourly.get("uv_index", [])
+
+            if not times or not uv_indices:
+                logger.debug("No UV index data in hourly forecast")
+                return []
+
+            hourly_uv_list: list[HourlyUVIndex] = []
+
+            for i, time_str in enumerate(times):
+                if i >= len(uv_indices):
+                    break
+
+                uv_value = uv_indices[i]
+                if uv_value is None:
+                    continue
+
+                try:
+                    # Parse the time - convert from local time to UTC
+                    time_str_utc = _parse_openmeteo_datetime(time_str, utc_offset_seconds)
+                    if time_str_utc:
+                        time_obj = datetime.fromisoformat(time_str_utc)
+                    else:
+                        # Fallback to treating as UTC if parsing fails
+                        time_obj = datetime.fromisoformat(time_str.replace("Z", "+00:00"))
+
+                    # Map UV index to category
+                    category = self._get_uv_category(uv_value)
+
+                    hourly_uv = HourlyUVIndex(
+                        timestamp=time_obj,
+                        uv_index=float(uv_value),
+                        category=category,
+                    )
+                    hourly_uv_list.append(hourly_uv)
+
+                except Exception as e:
+                    logger.warning(f"Error processing hourly UV entry {i}: {str(e)}")
+                    continue
+
+            logger.debug(f"Mapped {len(hourly_uv_list)} hourly UV index entries")
+            return hourly_uv_list
+
+        except Exception as e:
+            logger.error(f"Error mapping hourly UV index: {str(e)}")
+            return []
+
+    def _get_uv_category(self, uv_index: float) -> str:
+        """
+        Map UV index value to EPA/WHO category.
+
+        Categories based on EPA/WHO standard:
+        - Low: 0-2
+        - Moderate: 3-5
+        - High: 6-7
+        - Very High: 8-10
+        - Extreme: 11+
+
+        Args:
+        ----
+            uv_index: UV index value (typically 0-15, can be higher)
+
+        Returns:
+        -------
+            Category string
+
+        """
+        if uv_index <= 2:
+            return "Low"
+        if uv_index <= 5:
+            return "Moderate"
+        if uv_index <= 7:
+            return "High"
+        if uv_index <= 10:
+            return "Very High"
+        return "Extreme"

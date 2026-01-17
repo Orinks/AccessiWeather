@@ -142,7 +142,8 @@ class AddLocationDialog:
         section = toga.Box(style=Pack(direction=COLUMN, margin_bottom=10))
 
         search_label = toga.Label(
-            "Search for Location:", style=Pack(font_weight="bold", margin_bottom=5)
+            "Search for Location (city/zipcode):",
+            style=Pack(font_weight="bold", margin_bottom=5),
         )
         section.add(search_label)
 

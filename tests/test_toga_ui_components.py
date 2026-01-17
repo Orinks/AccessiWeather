@@ -1133,10 +1133,21 @@ async def test_settings_dialog_open_config_dir_invokes_launcher(
         arg = startfile_called.call_args[0][0]
         assert str(tmp_path) in str(arg)
     else:
-        run_called.assert_called_once()
-        args = run_called.call_args[0][0]
-        assert args[0] == expect_cmd
-        assert str(tmp_path) in args[1]
+        # Check that subprocess.run was called with the expected command
+        # Note: subprocess.run may be called multiple times (e.g., for file permissions)
+        # so we verify the specific call we care about was made
+        run_called.assert_called()
+
+        # Find the call with our expected command (open/xdg-open)
+        found_call = False
+        for call in run_called.call_args_list:
+            args = call[0][0] if call[0] else []
+            if args and args[0] == expect_cmd:
+                assert str(tmp_path) in args[1]
+                found_call = True
+                break
+
+        assert found_call, f"Expected call with command '{expect_cmd}' not found in {run_called.call_args_list}"
 
 
 class TestNotificationsTab:

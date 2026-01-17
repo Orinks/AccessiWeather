@@ -27,7 +27,8 @@ except ImportError:
 TEST_LOCATION = Location(name="Lumberton, New Jersey", latitude=39.9643, longitude=-74.8099)
 
 # Fixed date for cassette tests (deterministic), dynamic for live
-TEST_DATE = datetime(2024, 12, 15)
+# Note: This date must match the dates in the VCR cassettes
+TEST_DATE = datetime(2025, 12, 22)
 if LIVE_WEATHER_TESTS:
     TEST_DATE = datetime.now() - timedelta(days=1)
 

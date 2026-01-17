@@ -36,7 +36,10 @@ def initialize_components(app: AccessiWeatherApp) -> None:
 
     # Initialize weather client with lazy imports
     data_source = config.settings.data_source if config.settings else "auto"
-    visual_crossing_api_key = config.settings.visual_crossing_api_key if config.settings else ""
+    # Note: visual_crossing_api_key is now a LazySecureStorage object that defers
+    # keyring access until first use. We pass it directly to WeatherClient which
+    # will access the value lazily when the VisualCrossing client is needed.
+    lazy_api_key = config.settings.visual_crossing_api_key if config.settings else ""
     config_dir_value = getattr(app.config_manager, "config_dir", None)
     cache_root: Path | None = None
     if config_dir_value is not None:
@@ -69,7 +72,7 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     app.weather_client = WeatherClient(
         user_agent="AccessiWeather/2.0",
         data_source=data_source,
-        visual_crossing_api_key=visual_crossing_api_key,
+        visual_crossing_api_key=lazy_api_key,
         settings=config.settings,
         offline_cache=offline_cache,
     )

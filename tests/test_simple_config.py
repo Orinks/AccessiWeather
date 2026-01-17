@@ -146,6 +146,258 @@ class TestConfigManagerBasics:
         # Should be the same instance
         assert first_config is second_config
 
+    def test_critical_config_fast_load(self, mock_app):
+        """
+        Test that critical settings load without keyring access.
+
+        This test verifies the lazy keyring access optimization:
+        - Critical config (temperature_unit, data_source, update_interval_minutes)
+          should load synchronously without touching the keyring
+        - SecureStorage.get_password should NOT be called during load_config()
+        - LazySecureStorage objects should be created but not accessed
+        """
+        # Create a config file with critical settings
+        test_config_data = {
+            "settings": {
+                "temperature_unit": "f",
+                "update_interval_minutes": 15,
+                "data_source": "nws",
+            },
+            "locations": [{"name": "Test City", "latitude": 40.0, "longitude": -75.0}],
+            "current_location": {"name": "Test City", "latitude": 40.0, "longitude": -75.0},
+        }
+
+        config_dir = mock_app.paths.config
+        config_file = config_dir / "accessiweather.json"
+        with open(config_file, "w") as f:
+            json.dump(test_config_data, f)
+
+        # Mock SecureStorage.get_password to ensure it's NOT called during load
+        with patch(
+            "accessiweather.config.secure_storage.SecureStorage.get_password"
+        ) as mock_get_password:
+            # Create ConfigManager and load config
+            config_manager = ConfigManager(mock_app)
+            config = config_manager.load_config()
+
+            # Verify keyring was NOT accessed during load_config()
+            assert mock_get_password.call_count == 0, (
+                f"SecureStorage.get_password should not be called during load_config(), "
+                f"but was called {mock_get_password.call_count} time(s)"
+            )
+
+        # Verify critical settings are loaded correctly
+        assert config.settings.temperature_unit == "f"
+        assert config.settings.update_interval_minutes == 15
+        assert config.settings.data_source == "nws"
+
+        # Verify location is loaded
+        assert config.current_location is not None
+        assert config.current_location.name == "Test City"
+
+        # Verify LazySecureStorage objects were created for secure keys
+        # These should exist but NOT have been accessed (._loaded should be False)
+        from accessiweather.config.secure_storage import LazySecureStorage
+
+        secure_keys = [
+            "visual_crossing_api_key",
+            "openrouter_api_key",
+            "github_app_id",
+            "github_app_private_key",
+            "github_app_installation_id",
+        ]
+        for key in secure_keys:
+            attr = getattr(config.settings, key, None)
+            assert isinstance(attr, LazySecureStorage), (
+                f"Setting '{key}' should be a LazySecureStorage instance"
+            )
+            assert not attr._loaded, f"LazySecureStorage for '{key}' should not be loaded yet"
+
+    def test_lazy_keyring_access(self, mock_app):
+        """
+        Test that keyring is only accessed when API key property is actually read.
+
+        This test verifies the lazy keyring access pattern:
+        1. Loading config should NOT trigger keyring access
+        2. Accessing the .value property of a LazySecureStorage SHOULD trigger keyring access
+        3. Subsequent accesses should use cached value (no additional keyring calls)
+        """
+        from accessiweather.config.secure_storage import LazySecureStorage
+
+        # Create a config file
+        test_config_data = {
+            "settings": {
+                "temperature_unit": "f",
+                "update_interval_minutes": 15,
+                "data_source": "nws",
+            },
+            "locations": [],
+            "current_location": None,
+        }
+
+        config_dir = mock_app.paths.config
+        config_file = config_dir / "accessiweather.json"
+        with open(config_file, "w") as f:
+            json.dump(test_config_data, f)
+
+        with patch(
+            "accessiweather.config.secure_storage.SecureStorage.get_password"
+        ) as mock_get_password:
+            # Return a test API key when keyring is accessed
+            mock_get_password.return_value = "test-api-key-12345"
+
+            # Step 1: Load config - keyring should NOT be accessed
+            config_manager = ConfigManager(mock_app)
+            config = config_manager.load_config()
+
+            assert mock_get_password.call_count == 0, (
+                f"Keyring should not be accessed during load_config(), "
+                f"but was called {mock_get_password.call_count} time(s)"
+            )
+
+            # Verify LazySecureStorage is in place
+            api_key_lazy = config.settings.visual_crossing_api_key
+            assert isinstance(api_key_lazy, LazySecureStorage), (
+                "visual_crossing_api_key should be a LazySecureStorage instance"
+            )
+            assert not api_key_lazy._loaded, (
+                "LazySecureStorage should not be loaded before value access"
+            )
+
+            # Step 2: Access the .value property - keyring SHOULD be accessed now
+            api_key_value = api_key_lazy.value
+
+            assert mock_get_password.call_count == 1, (
+                f"Keyring should be accessed exactly once when reading .value, "
+                f"but was called {mock_get_password.call_count} time(s)"
+            )
+            assert api_key_value == "test-api-key-12345", (
+                f"Expected 'test-api-key-12345', got '{api_key_value}'"
+            )
+            assert api_key_lazy._loaded, (
+                "LazySecureStorage should be marked as loaded after value access"
+            )
+
+            # Step 3: Access value again - should use cached value, no additional keyring call
+            api_key_value_again = api_key_lazy.value
+
+            assert mock_get_password.call_count == 1, (
+                f"Keyring should not be called again on subsequent accesses, "
+                f"but call count increased to {mock_get_password.call_count}"
+            )
+            assert api_key_value_again == "test-api-key-12345", (
+                "Cached value should be returned on subsequent access"
+            )
+
+    def test_deferred_validation(self, mock_app):
+        """
+        Test that non-critical settings are validated on first access, not at load time.
+
+        This test verifies the deferred validation pattern:
+        1. Invalid values for non-critical settings are NOT corrected during load_config()
+        2. Calling validate_on_access() validates and corrects invalid values
+        3. Critical settings are validated immediately (already tested elsewhere)
+        """
+        from accessiweather.models.config import NON_CRITICAL_SETTINGS
+
+        # Create a config file with invalid values for non-critical settings
+        test_config_data = {
+            "settings": {
+                # Critical settings (valid)
+                "temperature_unit": "f",
+                "update_interval_minutes": 15,
+                "data_source": "nws",
+                # Non-critical settings with INVALID values
+                "ai_explanation_style": "invalid_style",  # Should be brief/standard/detailed
+                "update_channel": "invalid_channel",  # Should be stable/beta/dev
+                "time_display_mode": "invalid_mode",  # Should be local/utc/both
+                "sound_pack": "",  # Should be non-empty string
+                "alert_global_cooldown_minutes": -5,  # Should be >= 0
+                "alert_max_notifications_per_hour": 0,  # Should be >= 1
+                "trend_hours": 500,  # Should be 1-168
+            },
+            "locations": [],
+            "current_location": None,
+        }
+
+        config_dir = mock_app.paths.config
+        config_file = config_dir / "accessiweather.json"
+        with open(config_file, "w") as f:
+            json.dump(test_config_data, f)
+
+        # Load config - invalid values should be loaded as-is (deferred validation)
+        config_manager = ConfigManager(mock_app)
+        config = config_manager.load_config()
+
+        # Verify critical settings are loaded correctly
+        assert config.settings.temperature_unit == "f"
+        assert config.settings.update_interval_minutes == 15
+        assert config.settings.data_source == "nws"
+
+        # Verify non-critical settings still have invalid values before validation
+        # (they were loaded from file but not yet validated)
+        assert config.settings.ai_explanation_style == "invalid_style"
+        assert config.settings.update_channel == "invalid_channel"
+        assert config.settings.time_display_mode == "invalid_mode"
+        assert config.settings.sound_pack == ""
+        assert config.settings.alert_global_cooldown_minutes == -5
+        assert config.settings.alert_max_notifications_per_hour == 0
+        assert config.settings.trend_hours == 500
+
+        # Now trigger deferred validation for each non-critical setting
+        # This simulates "first access" validation
+
+        # Validate ai_explanation_style - should correct to "standard"
+        result = config.settings.validate_on_access("ai_explanation_style")
+        assert result is True
+        assert config.settings.ai_explanation_style == "standard"
+
+        # Validate update_channel - should correct to "stable"
+        result = config.settings.validate_on_access("update_channel")
+        assert result is True
+        assert config.settings.update_channel == "stable"
+
+        # Validate time_display_mode - should correct to "local"
+        result = config.settings.validate_on_access("time_display_mode")
+        assert result is True
+        assert config.settings.time_display_mode == "local"
+
+        # Validate sound_pack - should correct to "default"
+        result = config.settings.validate_on_access("sound_pack")
+        assert result is True
+        assert config.settings.sound_pack == "default"
+
+        # Validate alert_global_cooldown_minutes - should correct to 5
+        result = config.settings.validate_on_access("alert_global_cooldown_minutes")
+        assert result is True
+        assert config.settings.alert_global_cooldown_minutes == 5
+
+        # Validate alert_max_notifications_per_hour - should correct to 10
+        result = config.settings.validate_on_access("alert_max_notifications_per_hour")
+        assert result is True
+        assert config.settings.alert_max_notifications_per_hour == 10
+
+        # Validate trend_hours - should correct to 24 (out of valid range)
+        result = config.settings.validate_on_access("trend_hours")
+        assert result is True
+        assert config.settings.trend_hours == 24
+
+        # Verify validate_on_access returns False for unknown settings
+        result = config.settings.validate_on_access("unknown_setting_name")
+        assert result is False
+
+        # Verify that a valid non-critical setting passes validation unchanged
+        config.settings.ai_cache_ttl = 600  # Valid value
+        result = config.settings.validate_on_access("ai_cache_ttl")
+        assert result is True
+        assert config.settings.ai_cache_ttl == 600  # Should remain unchanged
+
+        # Verify that the NON_CRITICAL_SETTINGS constant contains expected settings
+        assert "ai_explanation_style" in NON_CRITICAL_SETTINGS
+        assert "update_channel" in NON_CRITICAL_SETTINGS
+        assert "time_display_mode" in NON_CRITICAL_SETTINGS
+        assert "sound_pack" in NON_CRITICAL_SETTINGS
+
 
 class TestConfigManagerSettings:
     """Test ConfigManager settings management - adapted from existing test logic."""

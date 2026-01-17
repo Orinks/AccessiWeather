@@ -9,7 +9,7 @@ from typing import Any
 
 import httpx
 
-from ..models import EnvironmentalConditions, HourlyAirQuality, Location
+from ..models import EnvironmentalConditions, HourlyAirQuality, HourlyUVIndex, Location
 from ..utils.retry_utils import async_retry_with_backoff
 
 logger = logging.getLogger(__name__)
@@ -134,6 +134,58 @@ class EnvironmentalDataClient:
             return None
 
     @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=15.0)
+    async def fetch_hourly_uv_index(
+        self,
+        location: Location,
+        hours: int = 48,
+    ) -> list[HourlyUVIndex] | None:
+        """
+        Fetch hourly UV index forecast from Open-Meteo.
+
+        Args:
+            location: Location to fetch UV forecast for.
+            hours: Number of hours to forecast (max 120).
+
+        Returns:
+            List of HourlyUVIndex objects, or None on error.
+        """
+        try:
+            # Import the mapper
+            from ..openmeteo_mapper import OpenMeteoMapper
+
+            headers = {"User-Agent": self.user_agent}
+            params = {
+                "latitude": location.latitude,
+                "longitude": location.longitude,
+                "hourly": "uv_index",
+                "timezone": "auto",
+                "forecast_days": min(7, (hours // 24) + 1),  # OpenMeteo supports up to 16 days
+            }
+
+            # Use the forecast endpoint (not air quality or pollen)
+            forecast_endpoint = "https://api.open-meteo.com/v1/forecast"
+
+            async with httpx.AsyncClient(timeout=self.timeout, headers=headers) as client:
+                response = await client.get(forecast_endpoint, params=params)
+                response.raise_for_status()
+
+            payload = response.json()
+
+            # Use the existing mapper to parse the response
+            mapper = OpenMeteoMapper()
+            hourly_uv_list = mapper.map_hourly_uv_index(payload)
+
+            # Limit to requested hours
+            if hourly_uv_list and hours < len(hourly_uv_list):
+                hourly_uv_list = hourly_uv_list[:hours]
+
+            return hourly_uv_list if hourly_uv_list else None
+
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(f"Hourly UV index request failed: {exc}")
+            return None
+
+    @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=15.0)
     async def fetch(
         self,
         location: Location,
@@ -141,9 +193,10 @@ class EnvironmentalDataClient:
         include_air_quality: bool = True,
         include_pollen: bool = True,
         include_hourly_air_quality: bool = True,
+        include_hourly_uv: bool = True,
         hourly_hours: int = 48,
     ) -> EnvironmentalConditions | None:
-        if not include_air_quality and not include_pollen and not include_hourly_air_quality:
+        if not include_air_quality and not include_pollen and not include_hourly_air_quality and not include_hourly_uv:
             return None
 
         headers = {"User-Agent": self.user_agent}
@@ -179,6 +232,13 @@ class EnvironmentalDataClient:
                     )
                     for entry in hourly_data
                 ]
+
+        # Fetch hourly UV index separately if requested
+        if include_hourly_uv:
+            hourly_uv_data = await self.fetch_hourly_uv_index(location, hours=hourly_hours)
+            if hourly_uv_data:
+                environmental.hourly_uv_index = hourly_uv_data
+                logger.debug(f"Added {len(hourly_uv_data)} hourly UV index entries")
 
         if environmental.has_data():
             return environmental

@@ -5,7 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from ...models import AppSettings, EnvironmentalConditions, HourlyAirQuality, Location
+from ...models import (
+    AppSettings,
+    EnvironmentalConditions,
+    HourlyAirQuality,
+    HourlyUVIndex,
+    Location,
+)
 from .formatters import format_display_datetime
 
 _AIR_QUALITY_GUIDANCE: dict[str, str] = {
@@ -28,6 +34,69 @@ _AIR_QUALITY_GUIDANCE: dict[str, str] = {
 
 _DEFAULT_GUIDANCE = "Monitor local guidance and limit exposure if you notice symptoms."
 
+_UV_INDEX_GUIDANCE: dict[str, str] = {
+    "Low": "No protection needed. You can safely stay outside.",
+    "Moderate": (
+        "Take precautions: wear sunscreen SPF 30+, a hat, and sunglasses."
+        " Seek shade during midday hours when the sun is strongest."
+    ),
+    "High": (
+        "Protection essential: apply SPF 30+ sunscreen every 2 hours, wear protective"
+        " clothing, a wide-brimmed hat, and UV-blocking sunglasses. Seek shade during midday."
+    ),
+    "Very High": (
+        "Extra protection required: use SPF 50+ sunscreen, wear long sleeves and pants,"
+        " a wide-brimmed hat, and sunglasses. Minimize sun exposure between 10 AM and 4 PM."
+    ),
+    "Extreme": (
+        "Take all precautions: avoid sun exposure between 10 AM and 4 PM if possible."
+        " Use SPF 50+ sunscreen, wear full protective clothing, and stay in shade when outdoors."
+    ),
+}
+
+_UV_SUN_SAFETY: dict[str, str] = {
+    "Low": (
+        "Sunscreen: Not required, but SPF 15+ recommended for extended outdoor activity.\n"
+        "Clothing: Normal clothing is adequate.\n"
+        "Shade: Not necessary for protection.\n"
+        "Time: Safe to be outside all day."
+    ),
+    "Moderate": (
+        "Sunscreen: Apply SPF 30+ sunscreen 15 minutes before going outside and"
+        " reapply every 2 hours.\n"
+        "Clothing: Wear a hat and sunglasses. Cover up with light clothing if outside"
+        " for extended periods.\n"
+        "Shade: Seek shade during midday hours (10 AM - 4 PM) when the sun is strongest.\n"
+        "Time: Reduce time in the sun between late morning and mid-afternoon."
+    ),
+    "High": (
+        "Sunscreen: Apply SPF 30+ sunscreen generously and reapply every 2 hours,"
+        " or after swimming or sweating.\n"
+        "Clothing: Wear protective clothing including a wide-brimmed hat,"
+        " UV-blocking sunglasses, and long sleeves if possible.\n"
+        "Shade: Seek shade whenever possible, especially during midday hours.\n"
+        "Time: Minimize sun exposure between 10 AM and 4 PM. Plan outdoor activities"
+        " for early morning or late afternoon."
+    ),
+    "Very High": (
+        "Sunscreen: Apply SPF 50+ sunscreen liberally every 2 hours and after water exposure.\n"
+        "Clothing: Wear long sleeves, long pants, a wide-brimmed hat, and UV-blocking sunglasses."
+        " Consider sun-protective clothing (UPF 50+).\n"
+        "Shade: Stay in shade as much as possible. Use umbrellas or canopies if outdoors.\n"
+        "Time: Avoid sun exposure between 10 AM and 4 PM if possible."
+        " Outdoor activities are best before 10 AM or after 4 PM."
+    ),
+    "Extreme": (
+        "Sunscreen: Apply SPF 50+ broad-spectrum sunscreen every 1-2 hours."
+        " Use water-resistant formulas.\n"
+        "Clothing: Full protective clothing required: long sleeves, long pants, wide-brimmed hat,"
+        " and UV-blocking sunglasses. Use UPF 50+ sun-protective fabrics.\n"
+        "Shade: Stay in shade at all times when outdoors. Avoid direct sunlight.\n"
+        "Time: Avoid being outside between 10 AM and 4 PM. If you must be outside,"
+        " take all protective measures. Consider staying indoors during peak hours."
+    ),
+}
+
 _POLLUTANT_LABELS: dict[str, str] = {
     "PM2_5": "PM2.5",
     "PM10": "PM10",
@@ -36,6 +105,38 @@ _POLLUTANT_LABELS: dict[str, str] = {
     "NO2": "Nitrogen Dioxide",
     "CO": "Carbon Monoxide",
 }
+
+
+def _get_uv_category(uv_index: float | None) -> str | None:
+    """
+    Map UV index value to EPA/WHO category.
+
+    Categories based on EPA/WHO standard:
+    - Low: 0-2
+    - Moderate: 3-5
+    - High: 6-7
+    - Very High: 8-10
+    - Extreme: 11+
+
+    Args:
+        uv_index: UV index value (typically 0-15, can be higher).
+
+    Returns:
+        Category string or None if uv_index is None.
+
+    """
+    if uv_index is None:
+        return None
+
+    if uv_index <= 2:
+        return "Low"
+    if uv_index <= 5:
+        return "Moderate"
+    if uv_index <= 7:
+        return "High"
+    if uv_index <= 10:
+        return "Very High"
+    return "Extreme"
 
 
 @dataclass(slots=True)
@@ -245,6 +346,72 @@ def format_hourly_air_quality(
         for entry in hourly_entries:
             entry_time = _format_time(entry.timestamp, time_format_12hour)
             lines.append(f"  {entry_time}: AQI {entry.aqi} ({entry.category})")
+
+    return "\n".join(lines)
+
+
+def format_hourly_uv_index(
+    hourly_data: list[HourlyUVIndex],
+    settings: AppSettings | None = None,
+    max_hours: int = 24,
+) -> str | None:
+    """
+    Format hourly UV index forecast into readable text.
+
+    Args:
+        hourly_data: List of hourly UV index forecasts.
+        settings: App settings for time formatting.
+        max_hours: Maximum number of hours to include.
+
+    Returns:
+        Formatted string describing the hourly forecast, or None if no data.
+
+    """
+    if not hourly_data:
+        return None
+
+    time_format_12hour = getattr(settings, "time_format_12hour", True) if settings else True
+    data = hourly_data[:max_hours]
+
+    current = data[0]
+    peak = max(data, key=lambda h: h.uv_index)
+    lowest = min(data, key=lambda h: h.uv_index)
+
+    lines = []
+    lines.append(f"Current: UV Index {current.uv_index:.1f} ({current.category})")
+
+    if len(data) >= 3:
+        trend_start = data[0].uv_index
+        trend_end = data[2].uv_index
+        diff = trend_end - trend_start
+
+        if diff > 2:
+            lines.append(f"Trend: Rising (UV {trend_start:.1f} → {trend_end:.1f})")
+        elif diff < -2:
+            lines.append(f"Trend: Falling (UV {trend_start:.1f} → {trend_end:.1f})")
+        else:
+            lines.append("Trend: Stable")
+
+    if peak.uv_index != current.uv_index:
+        peak_time = _format_time(peak.timestamp, time_format_12hour)
+        lines.append(
+            f"Peak: UV Index {peak.uv_index:.1f} ({peak.category}) at {peak_time}"
+        )
+
+    if lowest.uv_index < 3 and lowest.uv_index != current.uv_index:
+        lowest_time = _format_time(lowest.timestamp, time_format_12hour)
+        lines.append(f"Lowest UV: {lowest.uv_index:.1f} at {lowest_time}")
+
+    # Add individual hourly entries (show up to 12 hours)
+    hourly_entries = data[:12]
+    if hourly_entries:
+        lines.append("")
+        lines.append("Hourly Forecast:")
+        for entry in hourly_entries:
+            entry_time = _format_time(entry.timestamp, time_format_12hour)
+            lines.append(
+                f"  {entry_time}: UV Index {entry.uv_index:.1f} ({entry.category})"
+            )
 
     return "\n".join(lines)
 

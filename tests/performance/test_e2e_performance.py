@@ -88,7 +88,7 @@ async def test_app_startup_with_multiple_locations(
     mock_fetch = mocker.patch.object(
         weather_client,
         "_do_fetch_weather_data",
-        side_effect=lambda loc: sample_weather_data(loc),
+        side_effect=lambda loc, skip_notifications=False: sample_weather_data(loc),
     )
 
     start_time = time.perf_counter()
@@ -129,7 +129,7 @@ async def test_rapid_location_switches(
     """
     fetch_call_count = 0
 
-    async def mock_fetch_with_delay(loc):
+    async def mock_fetch_with_delay(loc, skip_notifications=False):
         nonlocal fetch_call_count
         fetch_call_count += 1
         await asyncio.sleep(0.05)  # Simulate API latency
@@ -187,7 +187,7 @@ async def test_concurrent_refresh_deduplication(
     """
     fetch_call_count = 0
 
-    async def mock_fetch_with_delay(loc):
+    async def mock_fetch_with_delay(loc, skip_notifications=False):
         nonlocal fetch_call_count
         fetch_call_count += 1
         await asyncio.sleep(0.1)  # Simulate API latency
@@ -232,7 +232,7 @@ async def test_cache_pre_warming_effectiveness(
     Simulates: App pre-warms cache at startup, subsequent requests use cache.
     """
 
-    async def mock_fetch_with_store(loc):
+    async def mock_fetch_with_store(loc, skip_notifications=False):
         data = sample_weather_data(loc)
         if weather_client.offline_cache:
             weather_client.offline_cache.store(loc, data)
@@ -283,7 +283,7 @@ async def test_force_refresh_bypasses_optimizations(
     """
     fetch_call_count = 0
 
-    async def mock_fetch_with_delay(loc):
+    async def mock_fetch_with_delay(loc, skip_notifications=False):
         nonlocal fetch_call_count
         fetch_call_count += 1
         await asyncio.sleep(0.05)
@@ -335,7 +335,7 @@ async def test_mixed_cache_and_fresh_requests(
     Simulates: Real-world usage with some cached and some fresh data.
     """
 
-    async def mock_fetch_with_store(loc):
+    async def mock_fetch_with_store(loc, skip_notifications=False):
         data = sample_weather_data(loc)
         if weather_client.offline_cache:
             weather_client.offline_cache.store(loc, data)
@@ -382,7 +382,7 @@ async def test_concurrent_different_locations(
     """
     fetch_call_count = 0
 
-    async def mock_fetch_with_delay(loc):
+    async def mock_fetch_with_delay(loc, skip_notifications=False):
         nonlocal fetch_call_count
         fetch_call_count += 1
         await asyncio.sleep(0.05)
@@ -426,7 +426,7 @@ async def test_performance_under_load(
     Simulates: High traffic scenario with many concurrent requests.
     """
 
-    async def mock_fetch_fast(loc):
+    async def mock_fetch_fast(loc, skip_notifications=False):
         await asyncio.sleep(0.01)  # Very fast mock
         return sample_weather_data(loc)
 
