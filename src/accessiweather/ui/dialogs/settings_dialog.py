@@ -449,11 +449,10 @@ def show_settings_dialog(parent, app: AccessiWeatherApp) -> bool:
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
 
-        # Create notebook for tabs
-        panel = wx.Panel(dlg)
+        # Use dialog directly as container (no intermediate panel)
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        notebook = wx.Notebook(panel)
+        notebook = wx.Notebook(dlg)
 
         # Create panels
         general_panel = _create_general_panel(notebook, app)
@@ -470,11 +469,16 @@ def show_settings_dialog(parent, app: AccessiWeatherApp) -> bool:
 
         main_sizer.Add(notebook, 1, wx.EXPAND | wx.ALL, 10)
 
-        # Buttons
-        button_sizer = dlg.CreateButtonSizer(wx.OK | wx.CANCEL)
+        # Create buttons with dialog as parent
+        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        button_sizer.AddStretchSpacer()
+        cancel_btn = wx.Button(dlg, wx.ID_CANCEL, "Cancel")
+        ok_btn = wx.Button(dlg, wx.ID_OK, "OK")
+        button_sizer.Add(cancel_btn, 0, wx.RIGHT, 10)
+        button_sizer.Add(ok_btn, 0)
         main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 10)
 
-        panel.SetSizer(main_sizer)
+        dlg.SetSizer(main_sizer)
 
         # Store references for saving
         dlg._controls = {
