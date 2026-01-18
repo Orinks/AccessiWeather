@@ -272,14 +272,14 @@ class AccessiWeatherApp(wx.App):
         if self._update_timer:
             self._update_timer.Stop()
 
-        # Play exit sound (blocking so it finishes before app closes)
+        # Play exit sound (non-blocking, app exits immediately)
         try:
             settings = self.config_manager.get_settings()
             if getattr(settings, "sound_enabled", True):
-                from .notifications.sound_player import play_exit_sound_blocking
+                from .notifications.sound_player import play_exit_sound
 
                 sound_pack = getattr(settings, "sound_pack", "default")
-                play_exit_sound_blocking(sound_pack)
+                play_exit_sound(sound_pack)
         except Exception:
             pass
 
