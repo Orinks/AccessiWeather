@@ -200,6 +200,46 @@ def play_exit_sound(pack_dir: str = DEFAULT_PACK) -> None:
         logger.debug(f"Failed to play exit sound: {e}")
 
 
+def play_exit_sound_blocking(pack_dir: str = DEFAULT_PACK) -> None:
+    """Play the application exit sound and wait for it to finish."""
+    try:
+        sound_file = get_sound_file("exit", pack_dir)
+        if not sound_file:
+            logger.warning("Exit sound file not found.")
+            return
+
+        # Try sound_lib with blocking playback
+        if SOUND_LIB_AVAILABLE and stream is not None:
+            try:
+                _init_sound_lib_output()
+                file_stream = stream.FileStream(file=str(sound_file))
+                file_stream.play_blocking()  # Wait for sound to finish
+                logger.debug(f"Played exit sound (blocking) from pack: {pack_dir}")
+                return
+            except Exception as e:
+                logger.warning(f"sound_lib blocking playback failed: {e}")
+
+        # Fallback to winsound (which can block)
+        if platform.system() == "Windows" and winsound:
+            try:
+                winsound.PlaySound(str(sound_file), winsound.SND_FILENAME)
+                logger.debug(f"Played exit sound (blocking via winsound) from pack: {pack_dir}")
+                return
+            except Exception as e:
+                logger.warning(f"winsound blocking failed: {e}")
+
+        # Final fallback: play with a small delay
+        if playsound:
+            try:
+                playsound(str(sound_file), block=True)
+                logger.debug(f"Played exit sound (blocking via playsound) from pack: {pack_dir}")
+            except Exception as e:
+                logger.warning(f"playsound blocking failed: {e}")
+
+    except Exception as e:
+        logger.debug(f"Failed to play exit sound: {e}")
+
+
 def play_error_sound(pack_dir: str = DEFAULT_PACK) -> None:
     """Play an error sound."""
     try:
