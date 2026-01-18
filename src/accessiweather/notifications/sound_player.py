@@ -5,18 +5,34 @@ import platform
 from pathlib import Path
 from typing import Any
 
+# sound_lib for cross-platform audio playback
+try:
+    from sound_lib import output, stream
+
+    SOUND_LIB_AVAILABLE = True
+    _output_device = None
+except ImportError:
+    SOUND_LIB_AVAILABLE = False
+    output = None
+    stream = None
+    _output_device = None
+
+# Fallback to playsound3 if sound_lib unavailable
 try:
     from playsound3 import playsound
 except ImportError:
     playsound = None
 
-# Windows-specific sound playing
+# Windows-specific sound playing as final fallback
 winsound = None
 if platform.system() == "Windows":
     with contextlib.suppress(ImportError):
         import winsound  # type: ignore[import-untyped]
 
 logger = logging.getLogger(__name__)
+
+# Track active streams for cleanup
+_active_streams: list = []
 
 SOUNDPACKS_DIR = Path(__file__).parent.parent / "soundpacks"
 DEFAULT_PACK = "default"
@@ -57,12 +73,46 @@ def get_sound_file(event: str, pack_dir: str) -> Path | None:
         return None
 
 
+def _init_sound_lib_output():
+    """Initialize the sound_lib output device if not already done."""
+    global _output_device
+    if SOUND_LIB_AVAILABLE and _output_device is None:
+        try:
+            _output_device = output.Output()
+            logger.debug("sound_lib output device initialized")
+        except Exception as e:
+            logger.warning(f"Failed to initialize sound_lib output: {e}")
+    return _output_device
+
+
+def _cleanup_finished_streams():
+    """Clean up streams that have finished playing."""
+    global _active_streams
+    _active_streams = [s for s in _active_streams if s.is_playing]
+
+
 def _play_sound_file(sound_file: Path) -> bool:
     """Try to play a sound file using available backends; return True if played."""
+    global _active_streams
     success = False
 
-    # Method 1: Try winsound on Windows (most reliable)
-    if platform.system() == "Windows" and winsound:
+    # Clean up finished streams
+    _cleanup_finished_streams()
+
+    # Method 1: Try sound_lib (preferred - supports many formats)
+    if SOUND_LIB_AVAILABLE and stream is not None:
+        try:
+            _init_sound_lib_output()
+            file_stream = stream.FileStream(file=str(sound_file))
+            file_stream.play()
+            _active_streams.append(file_stream)
+            success = True
+            logger.debug(f"Played sound using sound_lib: {sound_file}")
+        except Exception as e:
+            logger.warning(f"sound_lib failed: {e}")
+
+    # Method 2: Try winsound on Windows
+    if not success and platform.system() == "Windows" and winsound:
         try:
             winsound.PlaySound(str(sound_file), winsound.SND_FILENAME | winsound.SND_ASYNC)
             success = True
@@ -70,7 +120,7 @@ def _play_sound_file(sound_file: Path) -> bool:
         except Exception as e:
             logger.warning(f"winsound failed: {e}")
 
-    # Method 2: Try playsound as fallback
+    # Method 3: Try playsound as final fallback
     if not success and playsound:
         try:
             if platform.system() == "Windows":
@@ -84,6 +134,28 @@ def _play_sound_file(sound_file: Path) -> bool:
             logger.warning(f"playsound failed: {e}")
 
     return success
+
+
+def play_sound_file(sound_file: Path) -> bool:
+    """Public API to play a sound file. Returns True if successful."""
+    return _play_sound_file(sound_file)
+
+
+def stop_all_sounds() -> None:
+    """Stop all currently playing sounds."""
+    global _active_streams
+    for s in _active_streams:
+        try:
+            if s.is_playing:
+                s.stop()
+        except Exception:
+            pass
+    _active_streams.clear()
+
+
+def is_sound_lib_available() -> bool:
+    """Check if sound_lib is available."""
+    return SOUND_LIB_AVAILABLE
 
 
 def play_notification_sound(event: str, pack_dir: str) -> None:

@@ -23,6 +23,7 @@ dependencies = [
     "keyring",
     "openai>=1.0.0",
     "playsound3",
+    "sound-lib>=0.83",
 ]
 readme = "README.md"
 classifiers = [
