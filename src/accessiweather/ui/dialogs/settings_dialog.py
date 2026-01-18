@@ -521,9 +521,27 @@ class SettingsDialogSimple(wx.Dialog):
             wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
             10,
         )
-        self._controls["sound_pack"] = wx.Choice(panel, choices=["Default"])
+
+        # Load available sound packs
+        self._sound_pack_ids = ["default"]
+        pack_names = ["Default"]
+        try:
+            from ...notifications.sound_player import get_available_sound_packs
+
+            packs = get_available_sound_packs()
+            self._sound_pack_ids = list(packs.keys())
+            pack_names = [packs[pid].get("name", pid) for pid in self._sound_pack_ids]
+        except Exception as e:
+            logger.warning(f"Failed to load sound packs: {e}")
+
+        self._controls["sound_pack"] = wx.Choice(panel, choices=pack_names)
         row1.Add(self._controls["sound_pack"], 0)
         sizer.Add(row1, 0, wx.LEFT, 10)
+
+        # Test sound button
+        test_btn = wx.Button(panel, label="Test Sound")
+        test_btn.Bind(wx.EVT_BUTTON, self._on_test_sound)
+        sizer.Add(test_btn, 0, wx.LEFT | wx.TOP, 10)
 
         manage_btn = wx.Button(panel, label="Manage Sound Packs...")
         manage_btn.Bind(wx.EVT_BUTTON, self._on_manage_soundpacks)
@@ -936,7 +954,12 @@ class SettingsDialogSimple(wx.Dialog):
 
             # Audio tab
             self._controls["sound_enabled"].SetValue(getattr(settings, "sound_enabled", True))
-            self._controls["sound_pack"].SetSelection(0)
+            current_pack = getattr(settings, "sound_pack", "default")
+            try:
+                pack_idx = self._sound_pack_ids.index(current_pack)
+                self._controls["sound_pack"].SetSelection(pack_idx)
+            except (ValueError, AttributeError):
+                self._controls["sound_pack"].SetSelection(0)
 
             # Updates tab
             self._controls["auto_update"].SetValue(getattr(settings, "auto_update_enabled", True))
@@ -1045,6 +1068,10 @@ class SettingsDialogSimple(wx.Dialog):
                 "alert_max_notifications_per_hour": self._controls["max_notifications"].GetValue(),
                 # Audio
                 "sound_enabled": self._controls["sound_enabled"].GetValue(),
+                "sound_pack": self._sound_pack_ids[self._controls["sound_pack"].GetSelection()]
+                if hasattr(self, "_sound_pack_ids")
+                and self._controls["sound_pack"].GetSelection() < len(self._sound_pack_ids)
+                else "default",
                 # Updates
                 "auto_update_enabled": self._controls["auto_update"].GetValue(),
                 "update_channel": "stable"
@@ -1126,13 +1153,70 @@ class SettingsDialogSimple(wx.Dialog):
         """Reset custom prompt to default."""
         self._controls["custom_prompt"].SetValue("")
 
+    def _on_test_sound(self, event):
+        """Play a test sound from the selected pack."""
+        try:
+            from ...notifications.sound_player import play_sample_sound
+
+            pack_idx = self._controls["sound_pack"].GetSelection()
+            if hasattr(self, "_sound_pack_ids") and pack_idx < len(self._sound_pack_ids):
+                pack_id = self._sound_pack_ids[pack_idx]
+            else:
+                pack_id = "default"
+            play_sample_sound(pack_id)
+        except Exception as e:
+            logger.error(f"Failed to play test sound: {e}")
+            wx.MessageBox(f"Failed to play test sound: {e}", "Error", wx.OK | wx.ICON_ERROR)
+
     def _on_manage_soundpacks(self, event):
         """Open sound pack management."""
-        wx.MessageBox(
-            "Sound pack management not yet implemented.",
-            "Sound Packs",
-            wx.OK | wx.ICON_INFORMATION,
-        )
+        try:
+            from .soundpack_manager_dialog import show_soundpack_manager_dialog
+
+            show_soundpack_manager_dialog(self, self.app)
+
+            # Refresh sound pack list after managing
+            self._refresh_sound_pack_list()
+        except Exception as e:
+            logger.error(f"Failed to open sound pack manager: {e}")
+            wx.MessageBox(
+                f"Failed to open sound pack manager: {e}",
+                "Error",
+                wx.OK | wx.ICON_ERROR,
+            )
+
+    def _refresh_sound_pack_list(self):
+        """Refresh the sound pack dropdown after changes."""
+        try:
+            from ...notifications.sound_player import get_available_sound_packs
+
+            # Remember current selection
+            current_idx = self._controls["sound_pack"].GetSelection()
+            current_id = (
+                self._sound_pack_ids[current_idx]
+                if current_idx < len(self._sound_pack_ids)
+                else "default"
+            )
+
+            # Reload packs
+            packs = get_available_sound_packs()
+            self._sound_pack_ids = list(packs.keys())
+            pack_names = [packs[pid].get("name", pid) for pid in self._sound_pack_ids]
+
+            # Update dropdown
+            self._controls["sound_pack"].Clear()
+            for name in pack_names:
+                self._controls["sound_pack"].Append(name)
+
+            # Restore selection
+            try:
+                new_idx = self._sound_pack_ids.index(current_id)
+                self._controls["sound_pack"].SetSelection(new_idx)
+            except ValueError:
+                if self._sound_pack_ids:
+                    self._controls["sound_pack"].SetSelection(0)
+        except Exception as e:
+            logger.warning(f"Failed to refresh sound pack list: {e}")
 
     def _on_check_updates(self, event):
         """Check for updates."""
