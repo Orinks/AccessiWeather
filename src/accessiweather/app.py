@@ -257,10 +257,10 @@ class AccessiWeatherApp(wx.App):
         try:
             settings = self.config_manager.get_settings()
             if getattr(settings, "sound_enabled", True):
-                from .notifications.sound_player import play_sound
+                from .notifications.sound_player import play_startup_sound
 
                 sound_pack = getattr(settings, "sound_pack", "default")
-                play_sound("startup", sound_pack)
+                play_startup_sound(sound_pack)
         except Exception as e:
             logger.debug(f"Could not play startup sound: {e}")
 
@@ -276,10 +276,10 @@ class AccessiWeatherApp(wx.App):
         try:
             settings = self.config_manager.get_settings()
             if getattr(settings, "sound_enabled", True):
-                from .notifications.sound_player import play_sound
+                from .notifications.sound_player import play_exit_sound
 
                 sound_pack = getattr(settings, "sound_pack", "default")
-                play_sound("exit", sound_pack)
+                play_exit_sound(sound_pack)
         except Exception:
             pass
 

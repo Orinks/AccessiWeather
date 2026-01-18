@@ -79,6 +79,14 @@ def _init_sound_lib_output():
     if SOUND_LIB_AVAILABLE and _output_device is None:
         try:
             _output_device = output.Output()
+            try:
+                _output_device.init_device()
+            except Exception as init_err:
+                # Handle "already initialized" error gracefully
+                if "already initialized" in str(init_err).lower():
+                    logger.debug("sound_lib output device already initialized")
+                else:
+                    raise
             logger.debug("sound_lib output device initialized")
         except Exception as e:
             logger.warning(f"Failed to initialize sound_lib output: {e}")
