@@ -180,6 +180,11 @@ class MainWindow(forms.SizedFrame):
         uv_index_item = view_menu.Append(wx.ID_ANY, "&UV Index...", "View UV index information")
         menu_bar.Append(view_menu, "&View")
 
+        # Tools menu
+        tools_menu = wx.Menu()
+        soundpack_item = tools_menu.Append(wx.ID_ANY, "&Soundpack Manager...", "Manage sound packs")
+        menu_bar.Append(tools_menu, "&Tools")
+
         # Help menu
         help_menu = wx.Menu()
         about_item = help_menu.Append(wx.ID_ABOUT, "&About", "About AccessiWeather")
@@ -199,6 +204,7 @@ class MainWindow(forms.SizedFrame):
         frame.Bind(wx.EVT_MENU, lambda e: self._on_aviation(), aviation_item)
         frame.Bind(wx.EVT_MENU, lambda e: self._on_air_quality(), air_quality_item)
         frame.Bind(wx.EVT_MENU, lambda e: self._on_uv_index(), uv_index_item)
+        frame.Bind(wx.EVT_MENU, lambda e: self._on_soundpack_manager(), soundpack_item)
         frame.Bind(wx.EVT_MENU, lambda e: self._on_about(), about_item)
 
     # Event handlers using gui_builder decorators
@@ -290,6 +296,12 @@ class MainWindow(forms.SizedFrame):
         from .dialogs import show_uv_index_dialog
 
         show_uv_index_dialog(self.widget, self.app)
+
+    def _on_soundpack_manager(self):
+        """Open the soundpack manager dialog."""
+        from .dialogs import show_soundpack_manager_dialog
+
+        show_soundpack_manager_dialog(self.widget, self.app)
 
     def _on_about(self):
         """Show about dialog."""
