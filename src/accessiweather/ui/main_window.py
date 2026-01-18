@@ -106,14 +106,23 @@ class MainWindow(forms.SizedFrame):
         self._create_menu_bar()
         # Bind close event to the frame
         self.widget.control.Bind(wx.EVT_CLOSE, self._on_close)
-        # Set initial focus to location dropdown after window is shown
-        # Use CallAfter to ensure focus is set after the window is fully displayed
-        wx.CallAfter(self._set_initial_focus)
+        # Bind show event to set focus when window is actually displayed
+        self.widget.control.Bind(wx.EVT_SHOW, self._on_window_shown)
+
+    def _on_window_shown(self, event) -> None:
+        """Handle window shown event to set initial focus."""
+        event.Skip()  # Allow event to propagate
+        if event.IsShown():
+            # Use CallLater to ensure focus is set after window is fully ready
+            # A small delay helps screen readers properly announce the focused control
+            wx.CallLater(100, self._set_initial_focus)
 
     def _set_initial_focus(self) -> None:
         """Set initial focus to the location dropdown for keyboard accessibility."""
         try:
-            self.location_dropdown.widget.control.SetFocus()
+            combo = self.location_dropdown.widget.control
+            combo.SetFocus()
+            logger.debug("Initial focus set to location dropdown")
         except Exception as e:
             logger.debug(f"Could not set initial focus: {e}")
 
