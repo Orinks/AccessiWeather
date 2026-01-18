@@ -106,8 +106,16 @@ class MainWindow(forms.SizedFrame):
         self._create_menu_bar()
         # Bind close event to the frame
         self.widget.control.Bind(wx.EVT_CLOSE, self._on_close)
-        # Set initial focus to location dropdown for keyboard accessibility
-        self.location_dropdown.widget.control.SetFocus()
+        # Set initial focus to location dropdown after window is shown
+        # Use CallAfter to ensure focus is set after the window is fully displayed
+        wx.CallAfter(self._set_initial_focus)
+
+    def _set_initial_focus(self) -> None:
+        """Set initial focus to the location dropdown for keyboard accessibility."""
+        try:
+            self.location_dropdown.widget.control.SetFocus()
+        except Exception as e:
+            logger.debug(f"Could not set initial focus: {e}")
 
     def _setup_accessibility(self) -> None:
         """Set up accessibility labels for screen readers."""
