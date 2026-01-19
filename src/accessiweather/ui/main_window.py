@@ -76,7 +76,7 @@ class MainWindow(forms.SizedFrame):
 
     # Control buttons
     add_button = fields.Button(label="&Add")
-    remove_button = fields.Button(label="&Remove")
+    remove_button = fields.Button(label="Re&move")
     refresh_button = fields.Button(label="&Refresh")
     explain_button = fields.Button(label="&Explain")
     settings_button = fields.Button(label="&Settings")

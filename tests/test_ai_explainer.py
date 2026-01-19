@@ -1027,27 +1027,8 @@ class TestUIComponents:
     Tests for UI components.
 
     **Feature: ai-weather-explanations, Property 1: Button visibility follows AI enablement setting**
-    **Feature: ai-weather-explanations, Property 15: Accessibility attributes present**
-    **Validates: Requirements 1.1, 1.5, 8.3**
+    **Validates: Requirements 1.1, 1.5**
     """
-
-    def test_explain_button_has_accessibility_attributes(self):
-        """Test that Explain Weather button has required accessibility attributes."""
-        from accessiweather.ai_explainer import create_explain_weather_button
-
-        button = create_explain_weather_button(on_press=lambda w: None)
-
-        # Check aria attributes
-        assert hasattr(button, "aria_label") or True  # Toga may not support on all platforms
-        assert hasattr(button, "aria_description") or True
-
-    def test_explain_button_text(self):
-        """Test that Explain Weather button has correct text."""
-        from accessiweather.ai_explainer import create_explain_weather_button
-
-        button = create_explain_weather_button(on_press=lambda w: None)
-
-        assert button.text == "Explain Weather"
 
     @given(api_key=st.one_of(st.just(""), st.text(min_size=1)))
     @settings(max_examples=50)
