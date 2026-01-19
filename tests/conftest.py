@@ -25,6 +25,46 @@ from hypothesis import (
     settings as hypothesis_settings,
 )
 
+# =============================================================================
+# Legacy Toga UI Tests - Excluded During wxPython Migration
+# =============================================================================
+# These test files import from legacy Toga UI code (handlers/, dialogs/,
+# ui_builder.py, event_handlers.py) that has been removed during the wxPython
+# migration. They are excluded from collection until migrated to wxPython.
+#
+# To migrate a test file:
+# 1. Update imports to use wxPython UI components from src/accessiweather/ui/
+# 2. Update test assertions to work with wxPython widgets
+# 3. Remove the file from this list
+#
+# Run `pytest --collect-only` to see which tests are being collected.
+# =============================================================================
+collect_ignore = [
+    "test_air_quality_dialog.py",
+    "test_air_quality_integration.py",
+    "test_additional_coverage.py",
+    "test_alert_ui_accessibility.py",
+    "test_aviation_handlers.py",
+    "test_forecast_heading_properties.py",
+    "test_hourly_aqi_ui_integration.py",
+    "test_keyboard_shortcuts.py",
+    "test_location_handlers.py",
+    "test_settings_dialog.py",
+    "test_settings_visual_crossing_validation.py",
+    "test_settings_save_priority.py",
+    "test_settings_priority_tab.py",
+    "test_settings_openmeteo_model.py",
+    "test_sound_pack_system.py",
+    "test_system_tray_integration.py",
+    "test_system_tray_window_management.py",
+    "test_uv_index_integration.py",
+    "test_uv_index_dialog.py",
+    "test_weather_display_updates.py",
+    "test_update_progress_dialog.py",
+    "test_toga_ui_components.py",
+    "test_app.py",
+]
+
 # Ensure pytest-mock plugin loads before tests so the `mocker` fixture is available
 pytest_plugins = ("pytest_mock",)
 
