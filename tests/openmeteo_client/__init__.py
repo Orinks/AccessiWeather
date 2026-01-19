@@ -1,1 +1,0 @@
-"""OpenMeteo client tests package."""

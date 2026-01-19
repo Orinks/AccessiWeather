@@ -1,245 +1,137 @@
-"""Pytest configuration for integration tests with VCR cassette infrastructure."""
+"""
+Integration test configuration with VCR cassette recording.
+
+This module provides:
+- VCR configuration for recording/replaying HTTP interactions
+- API key filtering to prevent secret leakage
+- Fixtures for test locations and API clients
+- Support for both live and recorded test modes
+
+Best Practices for API Integration Testing:
+1. Use VCR cassettes to record and replay HTTP interactions
+2. Filter sensitive data (API keys) from recorded cassettes
+3. Match requests by method, host, path (not query params which may contain API keys)
+4. Set record_mode="none" in CI to ensure tests only use recorded cassettes
+5. Use record_mode="new_episodes" when adding new tests
+6. Run live tests periodically to catch API changes
+"""
 
 from __future__ import annotations
 
-import asyncio
 import os
-import re
-import time
-from typing import Any
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
+import vcr
 
-LIVE_WEATHER_TESTS = os.getenv("LIVE_WEATHER_TESTS", "0") == "1"
+if TYPE_CHECKING:
+    from accessiweather.models import Location
 
+# =============================================================================
+# Configuration
+# =============================================================================
 
-def should_delay() -> bool:
-    """Only delay when running live tests, not when using VCR cassettes."""
-    return os.environ.get("LIVE_WEATHER_TESTS", "").lower() in ("1", "true", "yes")
+CASSETTE_DIR = Path(__file__).parent / "cassettes"
+CASSETTE_DIR.mkdir(exist_ok=True)
 
+# Environment variables for test mode control
+# - "once": Record if cassette doesn't exist, replay if it does (default for dev)
+# - "new_episodes": Record new requests, replay existing ones (good for adding tests)
+# - "none": Only replay, fail if cassette missing (good for CI)
+# - "all": Always record (use sparingly, rewrites cassettes)
+RECORD_MODE = os.environ.get("VCR_RECORD_MODE", "none")
+LIVE_TESTS = os.environ.get("LIVE_TESTS", "false").lower() == "true"
 
-def conditional_sleep(seconds: float) -> None:
-    """Sleep only when running live tests."""
-    if should_delay():
-        time.sleep(seconds)
-
-
-async def conditional_async_sleep(seconds: float) -> None:
-    """Async sleep only when running live tests."""
-    if should_delay():
-        await asyncio.sleep(seconds)
-
-
-try:
-    import vcr
-
-    HAS_VCR = True
-except ImportError:
-    HAS_VCR = False
-    vcr = None  # type: ignore[assignment]
+# API keys from environment (for live tests or recording new cassettes)
+VISUAL_CROSSING_API_KEY = os.environ.get("VISUAL_CROSSING_API_KEY", "test-api-key")
 
 
-# Pytest markers
-def pytest_configure(config: pytest.Config) -> None:
-    """Register custom markers."""
-    config.addinivalue_line("markers", "integration: mark test as integration test")
-    config.addinivalue_line("markers", "network: mark test as requiring network access")
-    config.addinivalue_line(
-        "markers", "live_only: mark test as only running with real APIs (LIVE_WEATHER_TESTS=1)"
+# =============================================================================
+# VCR Configuration
+# =============================================================================
+
+# Create custom VCR instance with our configuration
+# Note: We use filter_query_parameters and filter_headers instead of
+# before_record_request to avoid compatibility issues with different VCR versions
+integration_vcr = vcr.VCR(
+    cassette_library_dir=str(CASSETTE_DIR),
+    record_mode=RECORD_MODE,
+    # Match on method, scheme, host, port, path - NOT query params (API keys vary)
+    match_on=["method", "scheme", "host", "port", "path"],
+    # Filter sensitive data from recorded cassettes
+    filter_query_parameters=["key", "api_key", "apikey", "token"],
+    filter_headers=["authorization", "x-api-key", "api-key", "user-agent"],
+    # Decode compressed responses for readable cassettes
+    decode_compressed_response=True,
+)
+
+
+# =============================================================================
+# Fixtures
+# =============================================================================
+
+
+@pytest.fixture
+def vcr_cassette_dir() -> Path:
+    """Return the cassette directory path."""
+    return CASSETTE_DIR
+
+
+@pytest.fixture
+def us_location() -> Location:
+    """Return a US location for testing (New York City)."""
+    from accessiweather.models import Location
+
+    return Location(
+        name="New York, NY",
+        latitude=40.7128,
+        longitude=-74.0060,
+        country_code="US",
     )
 
 
-# Headers to scrub from responses
-SENSITIVE_HEADERS = [
-    "Set-Cookie",
-    "X-Request-Id",
-    "X-Correlation-Id",
-    "X-Amz-Request-Id",
-    "X-Amz-Id-2",
-    "CF-RAY",
-    "CF-Cache-Status",
-    "Report-To",
-    "NEL",
-]
+@pytest.fixture
+def international_location() -> Location:
+    """Return an international location for testing (London, UK)."""
+    from accessiweather.models import Location
 
-# Patterns for API keys in URLs and bodies
-API_KEY_PATTERNS = [
-    (re.compile(r"api_key=[^&\s]+"), "api_key=REDACTED"),
-    (re.compile(r"apikey=[^&\s]+", re.IGNORECASE), "apikey=REDACTED"),
-    (re.compile(r"key=[^&\s]+"), "key=REDACTED"),
-    (re.compile(r'"api_key"\s*:\s*"[^"]+"'), '"api_key": "REDACTED"'),
-    (re.compile(r'"apiKey"\s*:\s*"[^"]+"'), '"apiKey": "REDACTED"'),
-]
-
-
-def scrub_response(response: dict[str, Any]) -> dict[str, Any]:
-    """
-    Scrub sensitive data from recorded responses.
-
-    Args:
-        response: The VCR response dictionary.
-
-    Returns:
-        The sanitized response dictionary.
-
-    """
-    # Scrub sensitive headers
-    headers = response.get("headers", {})
-    for header in SENSITIVE_HEADERS:
-        # VCR stores headers as lists, handle both cases
-        if header in headers:
-            del headers[header]
-        # Also check lowercase
-        if header.lower() in headers:
-            del headers[header.lower()]
-
-    # Scrub body content
-    body = response.get("body", {})
-    if isinstance(body, dict) and "string" in body:
-        body_str = body["string"]
-        if isinstance(body_str, bytes):
-            try:
-                body_str = body_str.decode("utf-8")
-                was_bytes = True
-            except UnicodeDecodeError:
-                was_bytes = False
-                body_str = None
-        else:
-            was_bytes = False
-
-        if body_str:
-            # Scrub API keys from body
-            for pattern, replacement in API_KEY_PATTERNS:
-                body_str = pattern.sub(replacement, body_str)
-
-            if was_bytes:
-                body["string"] = body_str.encode("utf-8")
-            else:
-                body["string"] = body_str
-
-    return response
-
-
-def scrub_request(request: Any) -> Any:
-    """
-    Scrub sensitive data from recorded requests.
-
-    Args:
-        request: The VCR request object.
-
-    Returns:
-        The sanitized request object.
-
-    """
-    # Scrub API keys from URI
-    if hasattr(request, "uri"):
-        uri = request.uri
-        for pattern, replacement in API_KEY_PATTERNS:
-            uri = pattern.sub(replacement, uri)
-        request.uri = uri
-
-    return request
-
-
-def get_vcr_config() -> dict[str, Any]:
-    """
-    Get VCR configuration dictionary.
-
-    Returns:
-        Configuration dictionary for VCR.
-
-    """
-    cassette_dir = os.path.join(os.path.dirname(__file__), "cassettes")
-
-    # Determine record mode based on environment
-    # In live mode: record new episodes
-    # In replay mode: only play back existing cassettes
-    record_mode = "new_episodes" if LIVE_WEATHER_TESTS else "none"
-
-    return {
-        "cassette_library_dir": cassette_dir,
-        "record_mode": record_mode,
-        "filter_headers": ["Authorization", "X-Api-Key", "Cookie"],
-        "filter_post_data_parameters": ["api_key", "apikey", "key", "password", "secret"],
-        "before_record_response": scrub_response,
-        "before_record_request": scrub_request,
-        "match_on": ["method", "scheme", "host", "port", "path", "query"],
-        "decode_compressed_response": True,
-    }
-
-
-def cassette_exists(cassette_name: str) -> bool:
-    """Check if a cassette file exists."""
-    cassette_dir = os.path.join(os.path.dirname(__file__), "cassettes")
-    cassette_path = os.path.join(cassette_dir, cassette_name)
-    return os.path.exists(cassette_path)
-
-
-def skip_if_cassette_missing(cassette_name: str) -> None:
-    """Skip the test if cassette doesn't exist and not in live mode."""
-    if not LIVE_WEATHER_TESTS and not cassette_exists(cassette_name):
-        pytest.skip(f"Cassette {cassette_name} not found. Run with LIVE_WEATHER_TESTS=1 to record.")
+    return Location(
+        name="London, UK",
+        latitude=51.5074,
+        longitude=-0.1278,
+        country_code="GB",
+    )
 
 
 @pytest.fixture
-def vcr_config() -> dict[str, Any]:
-    """
-    Fixture providing VCR configuration.
+def alaska_location() -> Location:
+    """Return an Alaska location for testing (Anchorage)."""
+    from accessiweather.models import Location
 
-    Returns:
-        VCR configuration dictionary.
-
-    """
-    return get_vcr_config()
-
-
-@pytest.fixture
-def live_weather_mode() -> bool:
-    """
-    Fixture indicating if live weather tests are enabled.
-
-    Returns:
-        True if LIVE_WEATHER_TESTS=1, False otherwise.
-
-    """
-    return LIVE_WEATHER_TESTS
+    return Location(
+        name="Anchorage, AK",
+        latitude=61.2181,
+        longitude=-149.9003,
+        country_code="US",
+    )
 
 
 @pytest.fixture
-def skip_if_no_live_mode() -> None:
-    """
-    Fixture that skips the test if not in live mode.
-
-    Use this fixture for tests that should ONLY run with real APIs.
-    """
-    if not LIVE_WEATHER_TESTS:
-        pytest.skip("Test requires LIVE_WEATHER_TESTS=1 to run with real APIs")
+def visual_crossing_api_key() -> str:
+    """Return the Visual Crossing API key."""
+    return VISUAL_CROSSING_API_KEY
 
 
 @pytest.fixture
-def integration_vcr() -> Any:
-    """
-    Fixture providing a configured VCR instance.
-
-    Returns:
-        Configured VCR instance, or None if vcrpy is not installed.
-
-    """
-    if not HAS_VCR or vcr is None:
-        pytest.skip("vcrpy is not installed")
-        return None
-
-    config = get_vcr_config()
-    return vcr.VCR(**config)
+def skip_if_no_api_key():
+    """Skip test if no Visual Crossing API key is configured."""
+    if VISUAL_CROSSING_API_KEY == "test-api-key" and RECORD_MODE == "all":
+        pytest.skip("Visual Crossing API key required for recording")
 
 
 @pytest.fixture
-def cassette_dir() -> str:
-    """
-    Fixture providing the path to the cassettes directory.
-
-    Returns:
-        Absolute path to the cassettes directory.
-
-    """
-    return os.path.join(os.path.dirname(__file__), "cassettes")
+def skip_if_not_live():
+    """Skip test if not running in live mode."""
+    if not LIVE_TESTS:
+        pytest.skip("Live tests disabled (set LIVE_TESTS=true to enable)")

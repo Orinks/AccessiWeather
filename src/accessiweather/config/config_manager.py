@@ -13,10 +13,12 @@ import os
 import sys
 import time
 from pathlib import Path
-
-import toga
+from typing import TYPE_CHECKING
 
 from accessiweather.models import AppConfig, AppSettings, Location
+
+if TYPE_CHECKING:
+    from accessiweather.app import AccessiWeatherApp
 
 from .file_permissions import set_secure_file_permissions
 from .github_config import GitHubConfigOperations
@@ -29,10 +31,13 @@ logger = logging.getLogger("accessiweather.config")
 
 
 class ConfigManager:
-    """Simple configuration manager using Toga paths."""
+    """Simple configuration manager."""
 
     def __init__(
-        self, app: toga.App, config_dir: str | Path | None = None, portable_mode: bool = False
+        self,
+        app: AccessiWeatherApp,
+        config_dir: str | Path | None = None,
+        portable_mode: bool = False,
     ):
         """
         Initialize the configuration manager with a Toga app instance.
@@ -50,13 +55,10 @@ class ConfigManager:
             self.config_dir = Path(config_dir)
         elif portable_mode:
             # Portable mode: use directory alongside the executable/app
-            # For briefcase apps, use the directory of the executable
-            import sys
-
             app_dir = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path.cwd()
             self.config_dir = app_dir / "config"
         else:
-            # Default: use Toga's standard config path
+            # Default: use app's standard config path
             self.config_dir = self.app.paths.config
 
         self.config_file = self.config_dir / "accessiweather.json"

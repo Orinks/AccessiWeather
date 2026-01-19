@@ -1,10 +1,16 @@
-toga
+# wxPython UI framework
+wxPython>=4.2.0
+gui_builder @ git+https://github.com/accessibleapps/gui_builder.git
+
+# Core dependencies
+httpx>=0.20.0
 requests>=2.0
 desktop-notifier
 python-dateutil
 beautifulsoup4>=4.0
-httpx>=0.20.0
 attrs>=22.2.0
 psutil
 packaging
 keyring
+openai>=1.0.0
+playsound3

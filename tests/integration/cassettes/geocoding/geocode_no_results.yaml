@@ -1,0 +1,32 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - geocoding-api.open-meteo.com
+    method: GET
+    uri: https://geocoding-api.open-meteo.com/v1/search?count=5&format=json&language=en&name=XYZNONEXISTENT12345
+  response:
+    body:
+      string: '{"generationtime_ms":0.15294552}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 19 Jan 2026 05:03:30 GMT
+      X-Encoding-Time:
+      - 0.0018954277038574219 ms
+      content-length:
+      - '32'
+    status:
+      code: 200
+      message: OK
+version: 1

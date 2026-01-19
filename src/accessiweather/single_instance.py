@@ -1,9 +1,8 @@
 """
-Single instance manager for AccessiWeather Toga application.
+Single instance manager for AccessiWeather.
 
 This module provides functionality to ensure only one instance of the application
-can run at a time using a lock file approach, since Toga/BeeWare does not provide
-built-in single-instance management.
+can run at a time using a lock file approach.
 """
 
 import logging
@@ -12,21 +11,19 @@ import subprocess
 import time
 from pathlib import Path
 
-import toga
-
 logger = logging.getLogger(__name__)
 
 
 class SingleInstanceManager:
     """Manages single instance functionality using a lock file approach."""
 
-    def __init__(self, app: toga.App, lock_filename: str = "accessiweather.lock"):
+    def __init__(self, app, lock_filename: str = "accessiweather.lock"):
         """
         Initialize the single instance manager.
 
         Args:
         ----
-            app: The Toga application instance
+            app: The application instance (must have a paths.data attribute)
             lock_filename: Name of the lock file to create
 
         """
@@ -198,7 +195,8 @@ class SingleInstanceManager:
             timestamp = time.time()
 
             # Write lock file content
-            lock_content = f"{pid}\n{timestamp}\n{self.app.formal_name}\n"
+            app_name = getattr(self.app, "formal_name", "AccessiWeather")
+            lock_content = f"{pid}\n{timestamp}\n{app_name}\n"
 
             with open(self.lock_file_path, "w", encoding="utf-8") as f:
                 f.write(lock_content)

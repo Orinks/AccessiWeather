@@ -103,7 +103,8 @@ class WeatherClient:
 
     @property
     def visual_crossing_api_key(self) -> str:
-        """Get the Visual Crossing API key, resolving lazy accessor if needed.
+        """
+        Get the Visual Crossing API key, resolving lazy accessor if needed.
 
         The API key may be a LazySecureStorage object that defers keyring access.
         This property resolves the value when accessed.
@@ -117,7 +118,8 @@ class WeatherClient:
 
     @property
     def visual_crossing_client(self) -> VisualCrossingClient | None:
-        """Get the Visual Crossing client, creating it lazily on first access.
+        """
+        Get the Visual Crossing client, creating it lazily on first access.
 
         This defers keyring access for the API key until the client is actually needed,
         improving startup performance.
