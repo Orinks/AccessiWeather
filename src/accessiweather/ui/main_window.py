@@ -78,6 +78,7 @@ class MainWindow(forms.SizedFrame):
     add_button = fields.Button(label="&Add")
     remove_button = fields.Button(label="&Remove")
     refresh_button = fields.Button(label="&Refresh")
+    explain_button = fields.Button(label="&Explain")
     settings_button = fields.Button(label="&Settings")
 
     def __init__(self, app: AccessiWeatherApp = None, **kwargs):
@@ -170,6 +171,10 @@ class MainWindow(forms.SizedFrame):
         view_menu = wx.Menu()
         refresh_item = view_menu.Append(wx.ID_REFRESH, "&Refresh\tF5", "Refresh weather data")
         view_menu.AppendSeparator()
+        explain_item = view_menu.Append(
+            wx.ID_ANY, "&Explain Weather\tCtrl+E", "Get AI explanation of weather"
+        )
+        view_menu.AppendSeparator()
         history_item = view_menu.Append(
             wx.ID_ANY, "Weather &History\tCtrl+H", "View weather history"
         )
@@ -200,6 +205,7 @@ class MainWindow(forms.SizedFrame):
         frame.Bind(wx.EVT_MENU, lambda e: self.on_add_location(), add_item)
         frame.Bind(wx.EVT_MENU, lambda e: self.on_remove_location(), remove_item)
         frame.Bind(wx.EVT_MENU, lambda e: self.on_refresh(), refresh_item)
+        frame.Bind(wx.EVT_MENU, lambda e: self._on_explain_weather(), explain_item)
         frame.Bind(wx.EVT_MENU, lambda e: self.on_view_history(), history_item)
         frame.Bind(wx.EVT_MENU, lambda e: self._on_aviation(), aviation_item)
         frame.Bind(wx.EVT_MENU, lambda e: self._on_air_quality(), air_quality_item)
@@ -265,6 +271,11 @@ class MainWindow(forms.SizedFrame):
         """Handle refresh button click."""
         self.refresh_weather_async()
 
+    @explain_button.add_callback
+    def on_explain(self):
+        """Handle explain button click."""
+        self._on_explain_weather()
+
     @settings_button.add_callback
     def on_settings(self):
         """Handle settings button click."""
@@ -278,6 +289,12 @@ class MainWindow(forms.SizedFrame):
         from .dialogs import show_weather_history_dialog
 
         show_weather_history_dialog(self.widget, self.app)
+
+    def _on_explain_weather(self):
+        """Get AI explanation of current weather."""
+        from .dialogs import show_explanation_dialog
+
+        show_explanation_dialog(self.widget, self.app)
 
     def _on_aviation(self):
         """View aviation weather."""
