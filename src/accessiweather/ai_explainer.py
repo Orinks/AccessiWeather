@@ -845,36 +845,3 @@ def has_valid_api_key(api_key: str | None) -> bool:
 
     """
     return bool(api_key and api_key.strip())
-
-
-def create_explain_weather_button(on_press):
-    """
-    Create the Explain Weather button with accessibility attributes.
-
-    Args:
-        on_press: Callback function for button press
-
-    Returns:
-        Configured Toga Button widget
-
-    """
-    import toga
-    from toga.style import Pack
-
-    button = toga.Button(
-        "Explain Weather",
-        on_press=on_press,
-        style=Pack(margin_top=5, margin_bottom=5),
-    )
-
-    # Add accessibility attributes
-    try:
-        button.aria_label = "Get AI explanation of current weather"
-        button.aria_description = (
-            "Opens a dialog with natural language explanation of weather conditions"
-        )
-    except AttributeError:
-        # aria attributes might not be available on all platforms
-        pass
-
-    return button

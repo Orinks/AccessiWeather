@@ -1,4 +1,9 @@
-"""Essential Toga testing helpers for AccessiWeather."""
+"""
+Essential Toga testing helpers for AccessiWeather.
+
+Note: This module is only imported when Toga is available.
+During wxPython migration, non-UI tests should not depend on this module.
+"""
 
 import asyncio
 import os
@@ -8,17 +13,32 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
+# =============================================================================
+# Toga Backend Configuration
+# =============================================================================
 # Configure Toga backend for testing:
 # - Prefer 'toga_dummy' if available
 # - Otherwise fall back to platform backend (winforms on Windows CI)
+# - If neither available, this module will fail to import (which is fine,
+#   as conftest.py guards the import)
+# =============================================================================
+
 _backend = os.environ.get("TOGA_BACKEND")
 if not _backend:
     try:
         __import__("toga_dummy")
         os.environ["TOGA_BACKEND"] = "toga_dummy"
     except ModuleNotFoundError:
-        os.environ["TOGA_BACKEND"] = "toga_winforms"
+        # Try winforms on Windows, but don't fail if unavailable
+        try:
+            __import__("toga_winforms")
+            os.environ["TOGA_BACKEND"] = "toga_winforms"
+        except ModuleNotFoundError:
+            # No Toga backend available - this is fine during wxPython migration
+            # The conftest.py guards import of this module
+            pass
 
+# Import models (these don't depend on Toga)
 from accessiweather.models import (  # noqa: E402
     CurrentConditions,
     Forecast,
@@ -250,15 +270,24 @@ def failing_weather_client():
     return client
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=False)  # Changed from autouse=True to avoid affecting non-Toga tests
 def setup_toga_backend():
-    """Ensure a Toga backend is configured for tests. Prefer dummy if available."""
+    """
+    Ensure a Toga backend is configured for tests. Prefer dummy if available.
+
+    Note: This fixture is NOT autouse during wxPython migration.
+    Tests that need Toga should explicitly use this fixture or the requires_toga fixture.
+    """
     if not os.environ.get("TOGA_BACKEND"):
         try:
             __import__("toga_dummy")
             os.environ["TOGA_BACKEND"] = "toga_dummy"
         except ModuleNotFoundError:
-            os.environ["TOGA_BACKEND"] = "toga_winforms"
+            try:
+                __import__("toga_winforms")
+                os.environ["TOGA_BACKEND"] = "toga_winforms"
+            except ModuleNotFoundError:
+                pytest.skip("No Toga backend available")
     yield
 
 

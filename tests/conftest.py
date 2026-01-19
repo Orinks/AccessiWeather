@@ -1,6 +1,18 @@
-"""Test configuration and fixtures for AccessiWeather Toga app tests."""
+"""
+Test configuration and fixtures for AccessiWeather tests.
 
-# Configure toga-dummy backend for testing
+This module supports both Toga and wxPython testing environments:
+- During wxPython migration: Run backend-only tests with `pytest -m "not toga_ui"`
+- For Toga tests: Requires toga_dummy backend
+- For wxPython tests: Will be added as migration progresses
+
+Quick Commands:
+    pytest -m "not toga_ui"           # Backend-only tests (during migration)
+    pytest -m "not toga_ui and not toga"  # Exclude all Toga-related tests
+    pytest --ignore=tests/test_toga*  # Ignore Toga test files entirely
+    pytest tests/test_cache.py        # Run specific backend test
+"""
+
 import os
 import sys
 from contextlib import suppress
@@ -15,6 +27,30 @@ from hypothesis import (
 
 # Ensure pytest-mock plugin loads before tests so the `mocker` fixture is available
 pytest_plugins = ("pytest_mock",)
+
+# =============================================================================
+# UI Framework Detection
+# =============================================================================
+# Detect which UI framework is available for testing.
+# During wxPython migration, Toga may not be installed.
+# =============================================================================
+
+TOGA_AVAILABLE = False
+WXPYTHON_AVAILABLE = False
+
+try:
+    import toga_dummy  # noqa: F401
+
+    TOGA_AVAILABLE = True
+except ImportError:
+    pass
+
+try:
+    import wx  # noqa: F401
+
+    WXPYTHON_AVAILABLE = True
+except ImportError:
+    pass
 
 # =============================================================================
 # Hypothesis Performance Profiles
@@ -65,17 +101,25 @@ hypothesis_settings.register_profile(
 _profile = os.environ.get("HYPOTHESIS_PROFILE", "dev")
 hypothesis_settings.load_profile(_profile)
 
-# Set toga to use the dummy backend for headless testing
-os.environ["TOGA_BACKEND"] = "toga_dummy"
+# =============================================================================
+# Toga Backend Setup (Optional during wxPython migration)
+# =============================================================================
+# Only set up Toga backend if toga_dummy is available.
+# This allows backend-only tests to run without Toga installed.
+# =============================================================================
 
-# Mock desktop-notifier (not provided by toga-dummy)
+if TOGA_AVAILABLE:
+    os.environ["TOGA_BACKEND"] = "toga_dummy"
+
+# Mock desktop-notifier (may not be available in all environments)
 sys.modules["desktop-notifier"] = MagicMock()
 sys.modules["desktop_notifier"] = MagicMock()
 
-# Import only Toga helpers (guarded to avoid heavy imports when unavailable)
-# If optional UI deps (e.g., toga) are not installed, allow non-UI tests to run
-with suppress(Exception):
-    from tests.toga_test_helpers import *  # noqa: F401, F403
+# Import Toga helpers only if Toga is available
+# This allows non-UI tests to run without Toga installed
+if TOGA_AVAILABLE:
+    with suppress(Exception):
+        from tests.toga_test_helpers import *  # noqa: F401, F403
 
 # Explicitly load pytest-asyncio plugin even when autoload is disabled in CI
 
@@ -183,3 +227,69 @@ def verify_no_real_api_calls():
             "httpx_get": mock_httpx_get,
             "httpx_client_get": mock_httpx_client_get,
         }
+
+
+# =============================================================================
+# Skip Markers for UI Framework Tests
+# =============================================================================
+# Automatically skip tests based on available UI frameworks.
+# =============================================================================
+
+
+def pytest_configure(config):
+    """Register custom markers and configure test collection."""
+    # These markers are already defined in pytest.ini, but we document them here
+    config.addinivalue_line(
+        "markers",
+        "toga_ui: marks tests requiring Toga UI (skip during wxPython migration)",
+    )
+    config.addinivalue_line(
+        "markers",
+        "wxpython: marks tests requiring wxPython UI",
+    )
+    config.addinivalue_line(
+        "markers",
+        "backend: marks backend-only tests (no UI dependencies)",
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    """Automatically skip UI tests when the required framework is unavailable."""
+    skip_toga = pytest.mark.skip(reason="Toga not available (toga_dummy not installed)")
+    skip_wx = pytest.mark.skip(reason="wxPython not available")
+
+    for item in items:
+        # Skip Toga UI tests if Toga is not available
+        if "toga_ui" in item.keywords and not TOGA_AVAILABLE:
+            item.add_marker(skip_toga)
+
+        # Skip tests in test_toga_*.py files if Toga is not available
+        if "test_toga" in str(item.fspath) and not TOGA_AVAILABLE:
+            item.add_marker(skip_toga)
+
+        # Skip wxPython tests if wxPython is not available
+        if "wxpython" in item.keywords and not WXPYTHON_AVAILABLE:
+            item.add_marker(skip_wx)
+        if "wx_only" in item.keywords and not WXPYTHON_AVAILABLE:
+            item.add_marker(skip_wx)
+
+
+# =============================================================================
+# Fixture Availability Flags
+# =============================================================================
+# These fixtures can be used to conditionally skip tests at runtime.
+# =============================================================================
+
+
+@pytest.fixture
+def requires_toga():
+    """Skip test if Toga is not available."""
+    if not TOGA_AVAILABLE:
+        pytest.skip("Toga not available")
+
+
+@pytest.fixture
+def requires_wxpython():
+    """Skip test if wxPython is not available."""
+    if not WXPYTHON_AVAILABLE:
+        pytest.skip("wxPython not available")

@@ -1129,10 +1129,60 @@ class SettingsDialogSimple(wx.Dialog):
         if not key:
             wx.MessageBox("Please enter an API key first.", "Validation", wx.OK | wx.ICON_WARNING)
             return
-        # TODO: Implement actual validation
-        wx.MessageBox(
-            "API key validation not yet implemented.", "Validation", wx.OK | wx.ICON_INFORMATION
-        )
+
+        # Show busy cursor during validation
+        wx.BeginBusyCursor()
+        try:
+            import asyncio
+
+            from ...models import Location
+            from ...visual_crossing_client import VisualCrossingApiError, VisualCrossingClient
+
+            # Test with a known location (New York City)
+            test_location = Location(name="Test", latitude=40.7128, longitude=-74.0060)
+            client = VisualCrossingClient(api_key=key)
+
+            async def test_key():
+                try:
+                    await client.get_current_conditions(test_location)
+                    return True, None
+                except VisualCrossingApiError as e:
+                    if e.status_code == 401:
+                        return False, "Invalid API key"
+                    if e.status_code == 429:
+                        return False, "Rate limit exceeded - but key appears valid"
+                    return False, str(e.message)
+                except Exception as e:
+                    return False, str(e)
+
+            # Run the async validation
+            loop = asyncio.new_event_loop()
+            try:
+                valid, error = loop.run_until_complete(test_key())
+            finally:
+                loop.close()
+
+            if valid:
+                wx.MessageBox(
+                    "API key is valid!",
+                    "Validation Successful",
+                    wx.OK | wx.ICON_INFORMATION,
+                )
+            else:
+                wx.MessageBox(
+                    f"API key validation failed: {error}",
+                    "Validation Failed",
+                    wx.OK | wx.ICON_ERROR,
+                )
+        except Exception as e:
+            logger.error(f"Error validating Visual Crossing API key: {e}")
+            wx.MessageBox(
+                f"Error during validation: {e}",
+                "Validation Error",
+                wx.OK | wx.ICON_ERROR,
+            )
+        finally:
+            wx.EndBusyCursor()
 
     def _on_validate_openrouter_key(self, event):
         """Validate OpenRouter API key."""
@@ -1140,10 +1190,44 @@ class SettingsDialogSimple(wx.Dialog):
         if not key:
             wx.MessageBox("Please enter an API key first.", "Validation", wx.OK | wx.ICON_WARNING)
             return
-        # TODO: Implement actual validation
-        wx.MessageBox(
-            "API key validation not yet implemented.", "Validation", wx.OK | wx.ICON_INFORMATION
-        )
+
+        # Show busy cursor during validation
+        wx.BeginBusyCursor()
+        try:
+            import asyncio
+
+            from ...ai_explainer import AIExplainer
+
+            explainer = AIExplainer()
+
+            # Run the async validation
+            loop = asyncio.new_event_loop()
+            try:
+                valid = loop.run_until_complete(explainer.validate_api_key(key))
+            finally:
+                loop.close()
+
+            if valid:
+                wx.MessageBox(
+                    "API key is valid!",
+                    "Validation Successful",
+                    wx.OK | wx.ICON_INFORMATION,
+                )
+            else:
+                wx.MessageBox(
+                    "API key validation failed. Please check your key and try again.",
+                    "Validation Failed",
+                    wx.OK | wx.ICON_ERROR,
+                )
+        except Exception as e:
+            logger.error(f"Error validating OpenRouter API key: {e}")
+            wx.MessageBox(
+                f"Error during validation: {e}",
+                "Validation Error",
+                wx.OK | wx.ICON_ERROR,
+            )
+        finally:
+            wx.EndBusyCursor()
 
     def _on_browse_models(self, event):
         """Browse available AI models."""
@@ -1221,36 +1305,168 @@ class SettingsDialogSimple(wx.Dialog):
     def _on_check_updates(self, event):
         """Check for updates."""
         self._controls["update_status"].SetLabel("Checking for updates...")
-        # TODO: Implement actual update check
-        wx.CallLater(
-            1000,
-            lambda: self._controls["update_status"].SetLabel("Update check not yet implemented."),
-        )
+
+        def do_update_check():
+            try:
+                import httpx
+                from packaging import version
+
+                # Get current version from the app
+                current_version = getattr(self.app, "version", "0.0.0")
+
+                # Determine which channel to check
+                channel = (
+                    "dev" if self._controls["update_channel"].GetSelection() == 1 else "stable"
+                )
+
+                # Check GitHub releases API
+                url = "https://api.github.com/repos/Orinks/AccessiWeather/releases"
+                if channel == "stable":
+                    url = "https://api.github.com/repos/Orinks/AccessiWeather/releases/latest"
+
+                with httpx.Client(timeout=10.0) as client:
+                    response = client.get(url, headers={"Accept": "application/vnd.github.v3+json"})
+                    response.raise_for_status()
+
+                    if channel == "stable":
+                        release_data = response.json()
+                        latest_version = release_data.get("tag_name", "").lstrip("v")
+                        release_name = release_data.get("name", latest_version)
+                    else:
+                        # For dev channel, get the latest release (including prereleases)
+                        releases = response.json()
+                        if releases:
+                            release_data = releases[0]
+                            latest_version = release_data.get("tag_name", "").lstrip("v")
+                            release_name = release_data.get("name", latest_version)
+                        else:
+                            latest_version = current_version
+                            release_name = current_version
+
+                    # Compare versions
+                    try:
+                        if version.parse(latest_version) > version.parse(current_version):
+                            wx.CallAfter(
+                                self._controls["update_status"].SetLabel,
+                                f"Update available: {release_name}",
+                            )
+                            wx.CallAfter(
+                                wx.MessageBox,
+                                f"A new version is available!\n\n"
+                                f"Current: {current_version}\n"
+                                f"Latest: {release_name}\n\n"
+                                f"Visit the AccessiWeather website to download.",
+                                "Update Available",
+                                wx.OK | wx.ICON_INFORMATION,
+                            )
+                        else:
+                            wx.CallAfter(
+                                self._controls["update_status"].SetLabel,
+                                f"You're up to date (v{current_version})",
+                            )
+                    except Exception:
+                        wx.CallAfter(
+                            self._controls["update_status"].SetLabel,
+                            f"Latest: {release_name}",
+                        )
+
+            except httpx.HTTPStatusError as e:
+                logger.warning(f"HTTP error checking for updates: {e}")
+                wx.CallAfter(
+                    self._controls["update_status"].SetLabel,
+                    "Could not check for updates (HTTP error)",
+                )
+            except Exception as e:
+                logger.error(f"Error checking for updates: {e}")
+                wx.CallAfter(
+                    self._controls["update_status"].SetLabel,
+                    "Could not check for updates",
+                )
+
+        # Run update check in background thread
+        import threading
+
+        thread = threading.Thread(target=do_update_check, daemon=True)
+        thread.start()
 
     def _on_reset_defaults(self, event):
         """Reset settings to defaults."""
         result = wx.MessageBox(
-            "Are you sure you want to reset all settings to defaults?",
+            "Are you sure you want to reset all settings to defaults?\n\n"
+            "Your saved locations will be preserved.",
             "Confirm Reset",
             wx.YES_NO | wx.ICON_QUESTION,
         )
         if result == wx.YES:
-            # TODO: Implement actual reset
-            wx.MessageBox(
-                "Settings reset not yet implemented.", "Reset", wx.OK | wx.ICON_INFORMATION
-            )
+            try:
+                if self.config_manager.reset_to_defaults():
+                    # Reload settings into UI
+                    self._load_settings()
+                    wx.MessageBox(
+                        "Settings have been reset to defaults.\n\n"
+                        "Your locations have been preserved.",
+                        "Reset Complete",
+                        wx.OK | wx.ICON_INFORMATION,
+                    )
+                else:
+                    wx.MessageBox(
+                        "Failed to reset settings. Please try again.",
+                        "Reset Failed",
+                        wx.OK | wx.ICON_ERROR,
+                    )
+            except Exception as e:
+                logger.error(f"Error resetting settings: {e}")
+                wx.MessageBox(
+                    f"Error resetting settings: {e}",
+                    "Reset Error",
+                    wx.OK | wx.ICON_ERROR,
+                )
 
     def _on_full_reset(self, event):
         """Full data reset."""
         result = wx.MessageBox(
-            "Are you sure you want to reset ALL application data?\n"
-            "This will delete all settings, locations, caches, and alert history.",
+            "Are you sure you want to reset ALL application data?\n\n"
+            "This will delete:\n"
+            "• All settings\n"
+            "• All saved locations\n"
+            "• All caches\n"
+            "• Alert history\n\n"
+            "This action cannot be undone!",
             "Confirm Full Reset",
             wx.YES_NO | wx.ICON_WARNING,
         )
         if result == wx.YES:
-            # TODO: Implement actual full reset
-            wx.MessageBox("Full reset not yet implemented.", "Reset", wx.OK | wx.ICON_INFORMATION)
+            # Double-confirm for destructive action
+            result2 = wx.MessageBox(
+                "This is your last chance to cancel.\n\n"
+                "Are you absolutely sure you want to delete all data?",
+                "Final Confirmation",
+                wx.YES_NO | wx.ICON_EXCLAMATION,
+            )
+            if result2 == wx.YES:
+                try:
+                    if self.config_manager.reset_all_data():
+                        # Reload settings into UI
+                        self._load_settings()
+                        wx.MessageBox(
+                            "All application data has been reset.\n\n"
+                            "The application will now use default settings.",
+                            "Reset Complete",
+                            wx.OK | wx.ICON_INFORMATION,
+                        )
+                    else:
+                        wx.MessageBox(
+                            "Failed to reset application data. Please try again.",
+                            "Reset Failed",
+                            wx.OK | wx.ICON_ERROR,
+                        )
+                except Exception as e:
+                    logger.error(f"Error during full reset: {e}")
+                    wx.MessageBox(
+                        f"Error during reset: {e}",
+                        "Reset Error",
+                        wx.OK | wx.ICON_ERROR,
+                    )
 
     def _on_open_config_dir(self, event):
         """Open configuration directory."""
@@ -1269,22 +1485,43 @@ class SettingsDialogSimple(wx.Dialog):
 
     def _on_export_settings(self, event):
         """Export settings to file."""
+        from pathlib import Path
+
         with wx.FileDialog(
             self,
             "Export Settings",
             wildcard="JSON files (*.json)|*.json",
+            defaultFile="accessiweather_settings.json",
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
         ) as dlg:
             if dlg.ShowModal() == wx.ID_OK:
-                # TODO: Implement actual export
-                wx.MessageBox(
-                    "Settings export not yet implemented.",
-                    "Export",
-                    wx.OK | wx.ICON_INFORMATION,
-                )
+                export_path = Path(dlg.GetPath())
+                try:
+                    if self.config_manager.export_settings(export_path):
+                        wx.MessageBox(
+                            f"Settings exported successfully to:\n{export_path}\n\n"
+                            "Note: API keys are NOT included in the export for security.",
+                            "Export Complete",
+                            wx.OK | wx.ICON_INFORMATION,
+                        )
+                    else:
+                        wx.MessageBox(
+                            "Failed to export settings. Please try again.",
+                            "Export Failed",
+                            wx.OK | wx.ICON_ERROR,
+                        )
+                except Exception as e:
+                    logger.error(f"Error exporting settings: {e}")
+                    wx.MessageBox(
+                        f"Error exporting settings: {e}",
+                        "Export Error",
+                        wx.OK | wx.ICON_ERROR,
+                    )
 
     def _on_import_settings(self, event):
         """Import settings from file."""
+        from pathlib import Path
+
         with wx.FileDialog(
             self,
             "Import Settings",
@@ -1292,12 +1529,39 @@ class SettingsDialogSimple(wx.Dialog):
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
         ) as dlg:
             if dlg.ShowModal() == wx.ID_OK:
-                # TODO: Implement actual import
-                wx.MessageBox(
-                    "Settings import not yet implemented.",
-                    "Import",
-                    wx.OK | wx.ICON_INFORMATION,
+                import_path = Path(dlg.GetPath())
+                result = wx.MessageBox(
+                    "Importing settings will overwrite your current preferences.\n\n"
+                    "Your saved locations will NOT be affected.\n\n"
+                    "Do you want to continue?",
+                    "Confirm Import",
+                    wx.YES_NO | wx.ICON_QUESTION,
                 )
+                if result == wx.YES:
+                    try:
+                        if self.config_manager.import_settings(import_path):
+                            # Reload settings into UI
+                            self._load_settings()
+                            wx.MessageBox(
+                                "Settings imported successfully!\n\n"
+                                "Note: API keys must be configured separately.",
+                                "Import Complete",
+                                wx.OK | wx.ICON_INFORMATION,
+                            )
+                        else:
+                            wx.MessageBox(
+                                "Failed to import settings.\n\n"
+                                "The file may be invalid or corrupted.",
+                                "Import Failed",
+                                wx.OK | wx.ICON_ERROR,
+                            )
+                    except Exception as e:
+                        logger.error(f"Error importing settings: {e}")
+                        wx.MessageBox(
+                            f"Error importing settings: {e}",
+                            "Import Error",
+                            wx.OK | wx.ICON_ERROR,
+                        )
 
     def _on_open_soundpacks_dir(self, event):
         """Open sound packs directory."""
