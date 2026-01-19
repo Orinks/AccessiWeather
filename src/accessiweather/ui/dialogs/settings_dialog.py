@@ -1088,7 +1088,7 @@ class SettingsDialogSimple(wx.Dialog):
         webbrowser.open("https://www.visualcrossing.com/sign-up")
 
     def _on_validate_vc_api_key(self, event):
-        """Validate Visual Crossing API key."""
+        """Validate Visual Crossing API key asynchronously."""
         key = self._controls["vc_key"].GetValue()
         if not key:
             wx.MessageBox("Please enter an API key first.", "Validation", wx.OK | wx.ICON_WARNING)
@@ -1096,7 +1096,9 @@ class SettingsDialogSimple(wx.Dialog):
 
         # Show busy cursor during validation
         wx.BeginBusyCursor()
-        try:
+
+        def do_validation():
+            """Run validation in background thread."""
             import asyncio
 
             from ...models import Location
@@ -1119,37 +1121,56 @@ class SettingsDialogSimple(wx.Dialog):
                 except Exception as e:
                     return False, str(e)
 
-            # Run the async validation
-            loop = asyncio.new_event_loop()
             try:
-                valid, error = loop.run_until_complete(test_key())
-            finally:
-                loop.close()
+                # Run the async validation in a new event loop
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    valid, error = loop.run_until_complete(test_key())
+                finally:
+                    loop.close()
 
-            if valid:
-                wx.MessageBox(
-                    "API key is valid!",
-                    "Validation Successful",
-                    wx.OK | wx.ICON_INFORMATION,
-                )
-            else:
-                wx.MessageBox(
-                    f"API key validation failed: {error}",
-                    "Validation Failed",
-                    wx.OK | wx.ICON_ERROR,
-                )
-        except Exception as e:
-            logger.error(f"Error validating Visual Crossing API key: {e}")
-            wx.MessageBox(
-                f"Error during validation: {e}",
-                "Validation Error",
-                wx.OK | wx.ICON_ERROR,
-            )
-        finally:
-            wx.EndBusyCursor()
+                # Update UI on main thread
+                def show_result():
+                    wx.EndBusyCursor()
+                    if valid:
+                        wx.MessageBox(
+                            "API key is valid!",
+                            "Validation Successful",
+                            wx.OK | wx.ICON_INFORMATION,
+                        )
+                    else:
+                        wx.MessageBox(
+                            f"API key validation failed: {error}",
+                            "Validation Failed",
+                            wx.OK | wx.ICON_ERROR,
+                        )
+
+                wx.CallAfter(show_result)
+
+            except Exception as e:
+                logger.error(f"Error validating Visual Crossing API key: {e}")
+                # Capture error message before exception variable is cleared
+                error_msg = str(e)
+
+                def show_error():
+                    wx.EndBusyCursor()
+                    wx.MessageBox(
+                        f"Error during validation: {error_msg}",
+                        "Validation Error",
+                        wx.OK | wx.ICON_ERROR,
+                    )
+
+                wx.CallAfter(show_error)
+
+        # Run validation in background thread
+        import threading
+
+        thread = threading.Thread(target=do_validation, daemon=True)
+        thread.start()
 
     def _on_validate_openrouter_key(self, event):
-        """Validate OpenRouter API key."""
+        """Validate OpenRouter API key asynchronously."""
         key = self._controls["openrouter_key"].GetValue()
         if not key:
             wx.MessageBox("Please enter an API key first.", "Validation", wx.OK | wx.ICON_WARNING)
@@ -1157,41 +1178,62 @@ class SettingsDialogSimple(wx.Dialog):
 
         # Show busy cursor during validation
         wx.BeginBusyCursor()
-        try:
+
+        def do_validation():
+            """Run validation in background thread."""
             import asyncio
 
             from ...ai_explainer import AIExplainer
 
-            explainer = AIExplainer()
-
-            # Run the async validation
-            loop = asyncio.new_event_loop()
             try:
-                valid = loop.run_until_complete(explainer.validate_api_key(key))
-            finally:
-                loop.close()
+                explainer = AIExplainer()
 
-            if valid:
-                wx.MessageBox(
-                    "API key is valid!",
-                    "Validation Successful",
-                    wx.OK | wx.ICON_INFORMATION,
-                )
-            else:
-                wx.MessageBox(
-                    "API key validation failed. Please check your key and try again.",
-                    "Validation Failed",
-                    wx.OK | wx.ICON_ERROR,
-                )
-        except Exception as e:
-            logger.error(f"Error validating OpenRouter API key: {e}")
-            wx.MessageBox(
-                f"Error during validation: {e}",
-                "Validation Error",
-                wx.OK | wx.ICON_ERROR,
-            )
-        finally:
-            wx.EndBusyCursor()
+                # Run the async validation in a new event loop
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    valid = loop.run_until_complete(explainer.validate_api_key(key))
+                finally:
+                    loop.close()
+
+                # Update UI on main thread
+                def show_result():
+                    wx.EndBusyCursor()
+                    if valid:
+                        wx.MessageBox(
+                            "API key is valid!",
+                            "Validation Successful",
+                            wx.OK | wx.ICON_INFORMATION,
+                        )
+                    else:
+                        wx.MessageBox(
+                            "API key validation failed. Please check your key and try again.",
+                            "Validation Failed",
+                            wx.OK | wx.ICON_ERROR,
+                        )
+
+                wx.CallAfter(show_result)
+
+            except Exception as e:
+                logger.error(f"Error validating OpenRouter API key: {e}")
+                # Capture error message before exception variable is cleared
+                error_msg = str(e)
+
+                def show_error():
+                    wx.EndBusyCursor()
+                    wx.MessageBox(
+                        f"Error during validation: {error_msg}",
+                        "Validation Error",
+                        wx.OK | wx.ICON_ERROR,
+                    )
+
+                wx.CallAfter(show_error)
+
+        # Run validation in background thread
+        import threading
+
+        thread = threading.Thread(target=do_validation, daemon=True)
+        thread.start()
 
     def _on_browse_models(self, event):
         """Browse available AI models."""
