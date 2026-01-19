@@ -196,6 +196,10 @@ class MainWindow(forms.SizedFrame):
 
         # Help menu
         help_menu = wx.Menu()
+        check_updates_item = help_menu.Append(
+            wx.ID_ANY, "Check for &Updates...", "Check for application updates"
+        )
+        help_menu.AppendSeparator()
         about_item = help_menu.Append(wx.ID_ABOUT, "&About", "About AccessiWeather")
         menu_bar.Append(help_menu, "&Help")
 
@@ -216,6 +220,7 @@ class MainWindow(forms.SizedFrame):
         frame.Bind(wx.EVT_MENU, lambda e: self._on_air_quality(), air_quality_item)
         frame.Bind(wx.EVT_MENU, lambda e: self._on_uv_index(), uv_index_item)
         frame.Bind(wx.EVT_MENU, lambda e: self._on_soundpack_manager(), soundpack_item)
+        frame.Bind(wx.EVT_MENU, lambda e: self._on_check_updates(), check_updates_item)
         frame.Bind(wx.EVT_MENU, lambda e: self._on_about(), about_item)
 
     # Event handlers using gui_builder decorators
@@ -336,10 +341,89 @@ class MainWindow(forms.SizedFrame):
 
         show_soundpack_manager_dialog(self.widget, self.app)
 
+    def _on_check_updates(self):
+        """Check for application updates."""
+        import threading
+
+        from packaging import version
+
+        try:
+            from .. import __version__ as current_version
+        except ImportError:
+            current_version = "0.0.0"
+
+        def do_update_check():
+            try:
+                import httpx
+
+                # Check GitHub releases API
+                url = "https://api.github.com/repos/Orinks/AccessiWeather/releases/latest"
+
+                with httpx.Client(timeout=10.0) as client:
+                    response = client.get(url, headers={"Accept": "application/vnd.github.v3+json"})
+                    response.raise_for_status()
+                    release_data = response.json()
+
+                    latest_version = release_data.get("tag_name", "").lstrip("v")
+                    release_name = release_data.get("name", latest_version)
+                    html_url = release_data.get("html_url", "")
+
+                    # Compare versions
+                    try:
+                        if version.parse(latest_version) > version.parse(current_version):
+
+                            def show_update_available():
+                                result = wx.MessageBox(
+                                    f"A new version is available!\n\n"
+                                    f"Current: {current_version}\n"
+                                    f"Latest: {release_name}\n\n"
+                                    f"Would you like to open the download page?",
+                                    "Update Available",
+                                    wx.YES_NO | wx.ICON_INFORMATION,
+                                )
+                                if result == wx.YES and html_url:
+                                    import webbrowser
+
+                                    webbrowser.open(html_url)
+
+                            wx.CallAfter(show_update_available)
+                        else:
+                            wx.CallAfter(
+                                wx.MessageBox,
+                                f"You're running the latest version ({current_version}).",
+                                "No Updates Available",
+                                wx.OK | wx.ICON_INFORMATION,
+                            )
+                    except Exception:
+                        wx.CallAfter(
+                            wx.MessageBox,
+                            f"Current: {current_version}\nLatest: {release_name}",
+                            "Version Information",
+                            wx.OK | wx.ICON_INFORMATION,
+                        )
+
+            except Exception as e:
+                logger.error(f"Error checking for updates: {e}")
+                wx.CallAfter(
+                    wx.MessageBox,
+                    f"Could not check for updates: {e}",
+                    "Update Check Failed",
+                    wx.OK | wx.ICON_ERROR,
+                )
+
+        # Run update check in background thread
+        thread = threading.Thread(target=do_update_check, daemon=True)
+        thread.start()
+
     def _on_about(self):
         """Show about dialog."""
+        try:
+            from .. import __version__ as app_version
+        except ImportError:
+            app_version = "unknown"
+
         wx.MessageBox(
-            "AccessiWeather\n\n"
+            f"AccessiWeather v{app_version}\n\n"
             "An accessible weather application with NOAA and Open-Meteo support.\n\n"
             "Built with wxPython and gui_builder for screen reader compatibility.\n\n"
             "https://github.com/Orinks/AccessiWeather",
