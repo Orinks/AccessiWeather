@@ -1,4 +1,4 @@
-"""Weather history dialog for displaying historical weather comparisons using wxPython."""
+"""Weather history dialog for displaying historical weather comparisons using gui_builder."""
 
 from __future__ import annotations
 
@@ -6,53 +6,12 @@ import logging
 from typing import TYPE_CHECKING
 
 import wx
+from gui_builder import fields, forms
 
 if TYPE_CHECKING:
     from ...app import AccessiWeatherApp
 
 logger = logging.getLogger(__name__)
-
-
-def show_weather_history_dialog(parent, app: AccessiWeatherApp) -> None:
-    """
-    Show the weather history dialog.
-
-    Args:
-        parent: Parent window (gui_builder widget)
-        app: Application instance
-
-    """
-    try:
-        # Get the underlying wx control if parent is a gui_builder widget
-        parent_ctrl = getattr(parent, "control", parent)
-
-        # Get current location
-        location = app.config_manager.get_current_location()
-        if not location:
-            wx.MessageBox(
-                "Please select a location first.",
-                "No Location Selected",
-                wx.OK | wx.ICON_WARNING,
-            )
-            return
-
-        # Get weather data
-        weather_data = getattr(app, "current_weather_data", None)
-
-        # Build history sections
-        sections = _build_history_sections(app, weather_data)
-
-        dlg = WeatherHistoryDialog(parent_ctrl, location.name, sections)
-        dlg.ShowModal()
-        dlg.Destroy()
-
-    except Exception as e:
-        logger.error(f"Failed to show weather history dialog: {e}")
-        wx.MessageBox(
-            f"Failed to open weather history: {e}",
-            "Error",
-            wx.OK | wx.ICON_ERROR,
-        )
 
 
 def _build_history_sections(app, weather_data) -> list[tuple[str, str]]:
@@ -105,7 +64,6 @@ def _build_history_sections(app, weather_data) -> list[tuple[str, str]]:
             comparison_text = []
             current_temp = getattr(current, "temperature_f", None)
             yesterday_high = getattr(yesterday, "high_temp", None)
-            getattr(yesterday, "low_temp", None)
 
             if current_temp is not None and yesterday_high is not None:
                 diff = current_temp - yesterday_high
@@ -124,48 +82,55 @@ def _build_history_sections(app, weather_data) -> list[tuple[str, str]]:
     return sections
 
 
-class WeatherHistoryDialog(wx.Dialog):
-    """Dialog for displaying weather history comparisons."""
+class WeatherHistoryDialog(forms.Dialog):
+    """Dialog for displaying weather history comparisons using gui_builder."""
 
-    def __init__(self, parent, location_name: str, sections: list[tuple[str, str]]):
+    # Header
+    header_label = fields.StaticText(label="")
+    description_label = fields.StaticText(
+        label="Comparisons against previous days to provide context for current conditions."
+    )
+
+    # Text display
+    history_display = fields.Text(
+        label="Weather history text",
+        multiline=True,
+        readonly=True,
+    )
+
+    # Close button
+    close_button = fields.Button(label="&Close")
+
+    def __init__(
+        self,
+        location_name: str,
+        sections: list[tuple[str, str]],
+        **kwargs,
+    ):
         """
         Initialize the weather history dialog.
 
         Args:
-            parent: Parent window
             location_name: Name of the location
             sections: List of (heading, content) tuples
+            **kwargs: Additional keyword arguments passed to Dialog
 
         """
-        super().__init__(
-            parent,
-            title=f"Weather History - {location_name}",
-            size=(700, 500),
-            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
-        )
-
         self.location_name = location_name
         self.sections = sections
 
-        self._create_ui()
+        kwargs.setdefault("title", f"Weather History - {location_name}")
+        super().__init__(**kwargs)
+
+    def render(self, **kwargs):
+        """Render the dialog and populate with data."""
+        super().render(**kwargs)
+        self._populate_data()
         self._setup_accessibility()
 
-    def _create_ui(self):
-        """Create the dialog UI."""
-        panel = wx.Panel(self)
-        main_sizer = wx.BoxSizer(wx.VERTICAL)
-
-        # Header
-        header = wx.StaticText(panel, label=f"Weather History for {self.location_name}")
-        header.SetFont(header.GetFont().Bold().Scaled(1.2))
-        main_sizer.Add(header, 0, wx.ALL, 15)
-
-        description = wx.StaticText(
-            panel,
-            label="Comparisons against previous days to provide context for current conditions.",
-        )
-        description.SetForegroundColour(wx.Colour(128, 128, 128))
-        main_sizer.Add(description, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
+    def _populate_data(self) -> None:
+        """Populate the dialog with history data."""
+        self.header_label.set_label(f"Weather History for {self.location_name}")
 
         # Build content text
         content_lines = []
@@ -175,37 +140,56 @@ class WeatherHistoryDialog(wx.Dialog):
             content_lines.append("")
 
         history_text = "\n".join(content_lines).strip()
+        self.history_display.set_value(history_text or "No historical data available.")
 
-        # Text display
-        self.text_display = wx.TextCtrl(
-            panel,
-            value=history_text or "No historical data available.",
-            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
-        )
-        self.text_display.SetFont(
-            wx.Font(10, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
-        )
-        main_sizer.Add(self.text_display, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 15)
+    def _setup_accessibility(self) -> None:
+        """Set up accessibility labels for screen readers."""
+        self.history_display.set_accessible_label("Weather history text")
 
-        # Close button
-        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        button_sizer.AddStretchSpacer()
-
-        close_btn = wx.Button(panel, wx.ID_CLOSE, "Close")
-        close_btn.Bind(wx.EVT_BUTTON, self._on_close)
-        button_sizer.Add(close_btn, 0)
-
-        main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 15)
-
-        panel.SetSizer(main_sizer)
-
-        # Set initial focus
-        self.text_display.SetFocus()
-
-    def _setup_accessibility(self):
-        """Set up accessibility labels."""
-        self.text_display.SetName("Weather history text")
-
-    def _on_close(self, event):
+    @close_button.add_callback
+    def on_close(self):
         """Handle close button press."""
-        self.EndModal(wx.ID_CLOSE)
+        self.widget.control.EndModal(wx.ID_CLOSE)
+
+
+def show_weather_history_dialog(parent, app: AccessiWeatherApp) -> None:
+    """
+    Show the weather history dialog.
+
+    Args:
+        parent: Parent window (gui_builder widget)
+        app: Application instance
+
+    """
+    try:
+        # Get the underlying wx control if parent is a gui_builder widget
+        parent_ctrl = getattr(parent, "control", parent)
+
+        # Get current location
+        location = app.config_manager.get_current_location()
+        if not location:
+            wx.MessageBox(
+                "Please select a location first.",
+                "No Location Selected",
+                wx.OK | wx.ICON_WARNING,
+            )
+            return
+
+        # Get weather data
+        weather_data = getattr(app, "current_weather_data", None)
+
+        # Build history sections
+        sections = _build_history_sections(app, weather_data)
+
+        dlg = WeatherHistoryDialog(location.name, sections, parent=parent_ctrl)
+        dlg.render()
+        dlg.widget.control.ShowModal()
+        dlg.widget.control.Destroy()
+
+    except Exception as e:
+        logger.error(f"Failed to show weather history dialog: {e}")
+        wx.MessageBox(
+            f"Failed to open weather history: {e}",
+            "Error",
+            wx.OK | wx.ICON_ERROR,
+        )

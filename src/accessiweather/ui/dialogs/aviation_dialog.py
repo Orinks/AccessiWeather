@@ -1,4 +1,4 @@
-"""Aviation weather dialog for fetching and displaying TAF data using wxPython."""
+"""Aviation weather dialog for fetching and displaying TAF data using gui_builder."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ import re
 from typing import TYPE_CHECKING
 
 import wx
+from gui_builder import fields, forms
 
 if TYPE_CHECKING:
     from ...app import AccessiWeatherApp
@@ -16,186 +17,88 @@ logger = logging.getLogger(__name__)
 _ICAO_RE = re.compile(r"^[A-Z]{4}$")
 
 
-def show_aviation_dialog(parent, app: AccessiWeatherApp) -> None:
-    """
-    Show the aviation weather dialog.
+class AviationDialog(forms.Dialog):
+    """Dialog for fetching and displaying aviation weather using gui_builder."""
 
-    Args:
-        parent: Parent window (gui_builder widget)
-        app: Application instance
+    # Header
+    header_label = fields.StaticText(
+        label="Fetch decoded aviation weather by entering a four-letter ICAO airport code."
+    )
 
-    """
-    try:
-        # Get the underlying wx control if parent is a gui_builder widget
-        parent_ctrl = getattr(parent, "control", parent)
+    # Input section
+    code_label = fields.StaticText(label="Airport code:")
+    station_input = fields.Text(label="ICAO airport code (e.g., KJFK)")
+    fetch_button = fields.Button(label="&Get Aviation Data")
 
-        dlg = AviationDialog(parent_ctrl, app)
-        dlg.ShowModal()
-        dlg.Destroy()
+    # Status
+    status_label = fields.StaticText(label="Enter a code and press Enter to fetch the latest TAF.")
 
-    except Exception as e:
-        logger.error(f"Failed to show aviation dialog: {e}")
-        wx.MessageBox(
-            f"Failed to open aviation weather: {e}",
-            "Error",
-            wx.OK | wx.ICON_ERROR,
-        )
+    # Raw TAF section
+    raw_taf_header = fields.StaticText(label="Raw TAF")
+    raw_taf_display = fields.Text(
+        label="Raw TAF display",
+        multiline=True,
+        readonly=True,
+    )
 
+    # Decoded TAF section
+    decoded_taf_header = fields.StaticText(label="Decoded TAF")
+    decoded_taf_display = fields.Text(
+        label="Decoded TAF display",
+        multiline=True,
+        readonly=True,
+    )
 
-class AviationDialog(wx.Dialog):
-    """Dialog for fetching and displaying aviation weather."""
+    # Advisories section
+    advisories_header = fields.StaticText(label="Advisories")
+    advisories_list = fields.ListBox(label="Aviation advisories list")
+    advisories_info = fields.StaticText(label="No advisories available.")
 
-    def __init__(self, parent, app: AccessiWeatherApp):
+    # Close button
+    close_button = fields.Button(label="&Close")
+
+    def __init__(self, app: AccessiWeatherApp, **kwargs):
         """
         Initialize the aviation dialog.
 
         Args:
-            parent: Parent window
             app: Application instance
+            **kwargs: Additional keyword arguments passed to Dialog
 
         """
-        super().__init__(
-            parent,
-            title="Aviation Weather",
-            size=(900, 620),
-            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
-        )
-
         self.app = app
         self._is_fetching = False
+        self._advisories_data: list[tuple[str, str, str, str]] = []
 
-        self._create_ui()
+        kwargs.setdefault("title", "Aviation Weather")
+        super().__init__(**kwargs)
+
+    def render(self, **kwargs):
+        """Render the dialog and set up components."""
+        super().render(**kwargs)
+        self._setup_initial_state()
         self._setup_accessibility()
 
-    def _create_ui(self):
-        """Create the dialog UI."""
-        panel = wx.Panel(self)
-        main_sizer = wx.BoxSizer(wx.VERTICAL)
+    def _setup_initial_state(self) -> None:
+        """Set up initial state."""
+        self.raw_taf_display.set_value("No TAF loaded.")
+        self.decoded_taf_display.set_value("Decoded TAF will appear here.")
 
-        # Header
-        header = wx.StaticText(
-            panel,
-            label="Fetch decoded aviation weather by entering a four-letter ICAO airport code.",
-        )
-        header.SetForegroundColour(wx.Colour(85, 85, 85))
-        main_sizer.Add(header, 0, wx.ALL, 15)
+    def _setup_accessibility(self) -> None:
+        """Set up accessibility labels for screen readers."""
+        self.station_input.set_accessible_label("ICAO airport code input")
+        self.raw_taf_display.set_accessible_label("Raw TAF display")
+        self.decoded_taf_display.set_accessible_label("Decoded TAF display")
+        self.advisories_list.set_accessible_label("Aviation advisories list")
 
-        # Input row
-        input_row = wx.BoxSizer(wx.HORIZONTAL)
-
-        label = wx.StaticText(panel, label="Airport code:")
-        label.SetFont(label.GetFont().Bold())
-        input_row.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 10)
-
-        self.station_input = wx.TextCtrl(panel, size=(100, -1), style=wx.TE_PROCESS_ENTER)
-        self.station_input.SetHint("e.g., KJFK")
-        self.station_input.Bind(wx.EVT_TEXT_ENTER, self._on_fetch)
-        input_row.Add(self.station_input, 0, wx.RIGHT, 10)
-
-        self.fetch_button = wx.Button(panel, label="Get Aviation Data")
-        self.fetch_button.Bind(wx.EVT_BUTTON, self._on_fetch)
-        input_row.Add(self.fetch_button, 0)
-
-        main_sizer.Add(input_row, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
-
-        # Status
-        self.status_label = wx.StaticText(
-            panel, label="Enter a code and press Enter to fetch the latest TAF."
-        )
-        self.status_label.SetForegroundColour(wx.Colour(85, 85, 85))
-        main_sizer.Add(self.status_label, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
-
-        # Content area with two columns
-        content_row = wx.BoxSizer(wx.HORIZONTAL)
-
-        # Raw TAF column
-        raw_sizer = wx.BoxSizer(wx.VERTICAL)
-        raw_label = wx.StaticText(panel, label="Raw TAF")
-        raw_label.SetFont(raw_label.GetFont().Bold())
-        raw_sizer.Add(raw_label, 0, wx.BOTTOM, 5)
-
-        self.raw_taf_display = wx.TextCtrl(
-            panel,
-            value="No TAF loaded.",
-            style=wx.TE_MULTILINE | wx.TE_READONLY,
-        )
-        self.raw_taf_display.SetFont(
-            wx.Font(9, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
-        )
-        raw_sizer.Add(self.raw_taf_display, 1, wx.EXPAND)
-
-        content_row.Add(raw_sizer, 1, wx.EXPAND | wx.RIGHT, 10)
-
-        # Decoded TAF column
-        decoded_sizer = wx.BoxSizer(wx.VERTICAL)
-        decoded_label = wx.StaticText(panel, label="Decoded TAF")
-        decoded_label.SetFont(decoded_label.GetFont().Bold())
-        decoded_sizer.Add(decoded_label, 0, wx.BOTTOM, 5)
-
-        self.decoded_taf_display = wx.TextCtrl(
-            panel,
-            value="Decoded TAF will appear here.",
-            style=wx.TE_MULTILINE | wx.TE_READONLY,
-        )
-        decoded_sizer.Add(self.decoded_taf_display, 1, wx.EXPAND)
-
-        content_row.Add(decoded_sizer, 1, wx.EXPAND)
-
-        main_sizer.Add(content_row, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 15)
-
-        # Advisories section
-        advisories_label = wx.StaticText(panel, label="Advisories")
-        advisories_label.SetFont(advisories_label.GetFont().Bold())
-        main_sizer.Add(advisories_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 15)
-
-        self.advisories_list = wx.ListCtrl(
-            panel,
-            style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN,
-            size=(-1, 150),
-        )
-        self.advisories_list.InsertColumn(0, "Type", width=80)
-        self.advisories_list.InsertColumn(1, "Event", width=150)
-        self.advisories_list.InsertColumn(2, "Valid", width=200)
-        self.advisories_list.InsertColumn(3, "Summary", width=350)
-        main_sizer.Add(self.advisories_list, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 15)
-
-        self.advisories_info = wx.StaticText(panel, label="No advisories available.")
-        self.advisories_info.SetForegroundColour(wx.Colour(128, 128, 128))
-        main_sizer.Add(self.advisories_info, 0, wx.LEFT | wx.RIGHT | wx.TOP, 15)
-
-        # Close button
-        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        button_sizer.AddStretchSpacer()
-
-        close_btn = wx.Button(panel, wx.ID_CLOSE, "Close")
-        close_btn.Bind(wx.EVT_BUTTON, self._on_close)
-        button_sizer.Add(close_btn, 0)
-
-        main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 15)
-
-        panel.SetSizer(main_sizer)
-
-        # Set initial focus
-        self.station_input.SetFocus()
-
-    def _setup_accessibility(self):
-        """Set up accessibility labels."""
-        self.station_input.SetName("ICAO airport code input")
-        self.raw_taf_display.SetName("Raw TAF display")
-        self.decoded_taf_display.SetName("Decoded TAF display")
-        self.advisories_list.SetName("Aviation advisories list")
-
-    def _set_status(self, message: str, is_error: bool = False):
+    def _set_status(self, message: str, is_error: bool = False) -> None:
         """Update the status label."""
-        self.status_label.SetLabel(message)
-        if is_error:
-            self.status_label.SetForegroundColour(wx.Colour(198, 40, 40))
-        else:
-            self.status_label.SetForegroundColour(wx.Colour(46, 125, 50))
+        self.status_label.set_label(message)
 
-    def _on_fetch(self, event):
+    @fetch_button.add_callback
+    def on_fetch(self):
         """Handle fetch button press."""
-        code = self.station_input.GetValue().strip().upper()
+        code = self.station_input.get_value().strip().upper()
 
         if not code:
             self._set_status("Please enter a four-letter ICAO airport code.", is_error=True)
@@ -217,7 +120,7 @@ class AviationDialog(wx.Dialog):
             return
 
         self._is_fetching = True
-        self.fetch_button.Disable()
+        self.fetch_button.disable()
         self._set_status(f"Fetching aviation weather for {code}...")
 
         # Run async fetch
@@ -235,59 +138,59 @@ class AviationDialog(wx.Dialog):
             logger.error(f"Aviation fetch failed: {e}")
             wx.CallAfter(self._on_fetch_error, code, str(e))
 
-    def _on_fetch_complete(self, code: str, aviation):
+    def _on_fetch_complete(self, code: str, aviation) -> None:
         """Handle fetch completion."""
         self._is_fetching = False
-        self.fetch_button.Enable()
+        self.fetch_button.enable()
 
         if aviation is None or not aviation.has_taf():
             self._set_status(
                 f"No TAF available for {code}. The station may not publish TAF data.",
                 is_error=True,
             )
-            self.raw_taf_display.SetValue("No TAF available.")
-            self.decoded_taf_display.SetValue("No decoded TAF available.")
-            self.advisories_list.DeleteAllItems()
-            self.advisories_info.SetLabel("No advisories available.")
+            self.raw_taf_display.set_value("No TAF available.")
+            self.decoded_taf_display.set_value("No decoded TAF available.")
+            self.advisories_list.set_items([])
+            self.advisories_info.set_label("No advisories available.")
             return
 
         airport_label = aviation.airport_name or aviation.station_id or code
         self._set_status(f"Latest TAF loaded for {airport_label}.")
 
-        self.raw_taf_display.SetValue(aviation.raw_taf or "No TAF available.")
-        self.decoded_taf_display.SetValue(aviation.decoded_taf or "Unable to decode TAF.")
+        self.raw_taf_display.set_value(aviation.raw_taf or "No TAF available.")
+        self.decoded_taf_display.set_value(aviation.decoded_taf or "Unable to decode TAF.")
 
         self._update_advisories(aviation)
 
-    def _on_fetch_error(self, code: str, error: str):
+    def _on_fetch_error(self, code: str, error: str) -> None:
         """Handle fetch error."""
         self._is_fetching = False
-        self.fetch_button.Enable()
+        self.fetch_button.enable()
         self._set_status(f"Failed to retrieve aviation weather: {error}", is_error=True)
 
-    def _update_advisories(self, aviation):
+    def _update_advisories(self, aviation) -> None:
         """Update the advisories list."""
-        self.advisories_list.DeleteAllItems()
+        self._advisories_data = []
+        items = []
 
-        rows = []
         if aviation.active_sigmets:
             for sigmet in aviation.active_sigmets[:10]:
-                rows.append(self._build_advisory_row("SIGMET", sigmet))
+                row = self._build_advisory_row("SIGMET", sigmet)
+                self._advisories_data.append(row)
+                items.append(f"{row[0]}: {row[1]} - {row[3][:50]}...")
 
         if aviation.active_cwas:
             for cwa in aviation.active_cwas[:10]:
-                rows.append(self._build_advisory_row("CWA", cwa))
+                row = self._build_advisory_row("CWA", cwa)
+                self._advisories_data.append(row)
+                items.append(f"{row[0]}: {row[1]} - {row[3][:50]}...")
 
-        for row in rows:
-            index = self.advisories_list.InsertItem(self.advisories_list.GetItemCount(), row[0])
-            self.advisories_list.SetItem(index, 1, row[1])
-            self.advisories_list.SetItem(index, 2, row[2])
-            self.advisories_list.SetItem(index, 3, row[3])
+        self.advisories_list.set_items(items)
 
-        if rows:
-            self.advisories_info.SetLabel(f"{len(rows)} advisories loaded.")
+        if items:
+            self.advisories_info.set_label(f"{len(items)} advisories loaded.")
         else:
-            self.advisories_info.SetLabel("No advisories available.")
+            self.advisories_info.set_label("No advisories available.")
 
     def _build_advisory_row(self, advisory_type: str, entry: dict) -> tuple:
         """Build a row tuple for the advisories list."""
@@ -323,6 +226,34 @@ class AviationDialog(wx.Dialog):
             return str(start)
         return "--"
 
-    def _on_close(self, event):
+    @close_button.add_callback
+    def on_close(self):
         """Handle close button press."""
-        self.EndModal(wx.ID_CLOSE)
+        self.widget.control.EndModal(wx.ID_CLOSE)
+
+
+def show_aviation_dialog(parent, app: AccessiWeatherApp) -> None:
+    """
+    Show the aviation weather dialog.
+
+    Args:
+        parent: Parent window (gui_builder widget)
+        app: Application instance
+
+    """
+    try:
+        # Get the underlying wx control if parent is a gui_builder widget
+        parent_ctrl = getattr(parent, "control", parent)
+
+        dlg = AviationDialog(app, parent=parent_ctrl)
+        dlg.render()
+        dlg.widget.control.ShowModal()
+        dlg.widget.control.Destroy()
+
+    except Exception as e:
+        logger.error(f"Failed to show aviation dialog: {e}")
+        wx.MessageBox(
+            f"Failed to open aviation weather: {e}",
+            "Error",
+            wx.OK | wx.ICON_ERROR,
+        )

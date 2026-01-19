@@ -1,4 +1,4 @@
-"""wxPython Community Sound Packs Browser Dialog."""
+"""Community Sound Packs Browser Dialog using gui_builder."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import wx
+from gui_builder import fields, forms
 
 from ...notifications.sound_pack_installer import SoundPackInstaller
 from ...services.community_soundpack_service import (
@@ -24,22 +25,46 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class CommunityPacksBrowserDialog(wx.Dialog):
-    """Dialog for browsing and installing community sound packs."""
+class CommunityPacksBrowserDialog(forms.Dialog):
+    """Dialog for browsing and installing community sound packs using gui_builder."""
+
+    # Header with search
+    filter_label = fields.StaticText(label="Filter packs:")
+    search_input = fields.Text(label="Search by name or author")
+    refresh_button = fields.Button(label="&Refresh")
+
+    # Pack list section
+    list_header = fields.StaticText(label="Available Packs:")
+    pack_list = fields.ListBox(label="Available community sound packs")
+
+    # Details section
+    name_label = fields.StaticText(label="Select a pack to view details")
+    author_label = fields.StaticText(label="")
+    version_label = fields.StaticText(label="")
+    size_label = fields.StaticText(label="")
+
+    # Description
+    description_header = fields.StaticText(label="Description:")
+    description_text = fields.Text(
+        label="Pack description",
+        multiline=True,
+        readonly=True,
+    )
+
+    # Status
+    status_label = fields.StaticText(label="")
+
+    # Buttons
+    install_button = fields.Button(label="&Download && Install")
+    close_button = fields.Button(label="&Close")
 
     def __init__(
         self,
-        parent: wx.Window,
         soundpacks_dir: Path,
         on_installed: Callable[[str], None] | None = None,
-    ) -> None:
+        **kwargs,
+    ):
         """Initialize the community packs browser dialog."""
-        super().__init__(
-            parent,
-            title="Browse Community Sound Packs",
-            size=(850, 550),
-            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
-        )
         self.soundpacks_dir = soundpacks_dir
         self.on_installed = on_installed
         self.installer = SoundPackInstaller(soundpacks_dir)
@@ -56,127 +81,26 @@ class CommunityPacksBrowserDialog(wx.Dialog):
         self._pack_index: dict[str, CommunityPack] = {}
         self._selected_key: str | None = None
 
-        self._create_ui()
-        self.Centre()
+        kwargs.setdefault("title", "Browse Community Sound Packs")
+        super().__init__(**kwargs)
 
+    def render(self, **kwargs):
+        """Render the dialog and set up components."""
+        super().render(**kwargs)
+        self._setup_initial_state()
+        self._setup_accessibility()
         # Load packs after dialog is shown
         wx.CallAfter(self._start_loading)
 
-    def _create_ui(self) -> None:
-        """Create the dialog UI."""
-        panel = wx.Panel(self)
-        main_sizer = wx.BoxSizer(wx.VERTICAL)
+    def _setup_initial_state(self) -> None:
+        """Set up initial state."""
+        self.install_button.disable()
 
-        # Header with search
-        header_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        header_sizer.Add(
-            wx.StaticText(panel, label="Filter packs:"),
-            0,
-            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
-            5,
-        )
-        self.search_input = wx.TextCtrl(panel, size=(250, -1))
-        self.search_input.SetHint("Search by name or author")
-        self.search_input.Bind(wx.EVT_TEXT, self._on_search)
-        header_sizer.Add(self.search_input, 1, wx.RIGHT, 10)
-
-        self.refresh_btn = wx.Button(panel, label="Refresh")
-        self.refresh_btn.Bind(wx.EVT_BUTTON, self._on_refresh)
-        header_sizer.Add(self.refresh_btn, 0)
-
-        main_sizer.Add(header_sizer, 0, wx.EXPAND | wx.ALL, 10)
-
-        # Main content - horizontal split
-        content_sizer = wx.BoxSizer(wx.HORIZONTAL)
-
-        # Left panel - Pack list
-        left_panel = self._create_pack_list_panel(panel)
-        content_sizer.Add(left_panel, 1, wx.EXPAND | wx.RIGHT, 10)
-
-        # Right panel - Pack details
-        right_panel = self._create_details_panel(panel)
-        content_sizer.Add(right_panel, 1, wx.EXPAND)
-
-        main_sizer.Add(content_sizer, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
-
-        # Status label
-        self.status_label = wx.StaticText(panel, label="")
-        main_sizer.Add(self.status_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
-
-        # Bottom buttons
-        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        button_sizer.AddStretchSpacer()
-
-        self.install_btn = wx.Button(panel, label="Download && Install")
-        self.install_btn.Bind(wx.EVT_BUTTON, self._on_install)
-        self.install_btn.Enable(False)
-        button_sizer.Add(self.install_btn, 0, wx.RIGHT, 5)
-
-        close_btn = wx.Button(panel, wx.ID_CLOSE, label="Close")
-        close_btn.Bind(wx.EVT_BUTTON, lambda e: self.EndModal(wx.ID_CLOSE))
-        button_sizer.Add(close_btn, 0)
-
-        main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 10)
-
-        panel.SetSizer(main_sizer)
-
-    def _create_pack_list_panel(self, parent: wx.Window) -> wx.BoxSizer:
-        """Create the pack list panel."""
-        sizer = wx.BoxSizer(wx.VERTICAL)
-
-        label = wx.StaticText(parent, label="Available Packs:")
-        label_font = label.GetFont()
-        label_font.SetWeight(wx.FONTWEIGHT_BOLD)
-        label.SetFont(label_font)
-        sizer.Add(label, 0, wx.BOTTOM, 5)
-
-        self.pack_listbox = wx.ListBox(parent, style=wx.LB_SINGLE)
-        self.pack_listbox.Bind(wx.EVT_LISTBOX, self._on_pack_selected)
-        sizer.Add(self.pack_listbox, 1, wx.EXPAND)
-
-        return sizer
-
-    def _create_details_panel(self, parent: wx.Window) -> wx.BoxSizer:
-        """Create the details panel."""
-        sizer = wx.BoxSizer(wx.VERTICAL)
-
-        # Details box
-        details_box = wx.StaticBox(parent, label="Pack Details")
-        details_sizer = wx.StaticBoxSizer(details_box, wx.VERTICAL)
-
-        self.name_label = wx.StaticText(parent, label="Select a pack to view details")
-        name_font = self.name_label.GetFont()
-        name_font.SetPointSize(12)
-        name_font.SetWeight(wx.FONTWEIGHT_BOLD)
-        self.name_label.SetFont(name_font)
-        details_sizer.Add(self.name_label, 0, wx.ALL, 5)
-
-        self.author_label = wx.StaticText(parent, label="")
-        details_sizer.Add(self.author_label, 0, wx.LEFT | wx.BOTTOM, 5)
-
-        self.version_label = wx.StaticText(parent, label="")
-        details_sizer.Add(self.version_label, 0, wx.LEFT | wx.BOTTOM, 5)
-
-        self.size_label = wx.StaticText(parent, label="")
-        details_sizer.Add(self.size_label, 0, wx.LEFT | wx.BOTTOM, 5)
-
-        sizer.Add(details_sizer, 0, wx.EXPAND | wx.BOTTOM, 10)
-
-        # Description
-        desc_label = wx.StaticText(parent, label="Description:")
-        desc_font = desc_label.GetFont()
-        desc_font.SetWeight(wx.FONTWEIGHT_BOLD)
-        desc_label.SetFont(desc_font)
-        sizer.Add(desc_label, 0, wx.BOTTOM, 5)
-
-        self.description_text = wx.TextCtrl(
-            parent,
-            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_WORDWRAP,
-            size=(-1, 150),
-        )
-        sizer.Add(self.description_text, 1, wx.EXPAND)
-
-        return sizer
+    def _setup_accessibility(self) -> None:
+        """Set up accessibility labels."""
+        self.search_input.set_accessible_label("Search for sound packs by name or author")
+        self.pack_list.set_accessible_label("Available community sound packs")
+        self.description_text.set_accessible_label("Selected pack description")
 
     def _pack_key(self, pack: CommunityPack) -> str:
         """Create a stable key for a pack."""
@@ -185,13 +109,12 @@ class CommunityPacksBrowserDialog(wx.Dialog):
     def _start_loading(self, force: bool = False) -> None:
         """Start loading packs in background."""
         if not self.service:
-            self.status_label.SetLabel("Community packs unavailable")
+            self.status_label.set_label("Community packs unavailable")
             return
 
-        self.status_label.SetLabel("Loading community packs...")
-        self.refresh_btn.Enable(False)
-        self.pack_listbox.Clear()
-        self.pack_listbox.Append("Loading...")
+        self.status_label.set_label("Loading community packs...")
+        self.refresh_button.disable()
+        self.pack_list.set_items(["Loading..."])
 
         # Run async operation in thread
         def load_thread():
@@ -217,23 +140,22 @@ class CommunityPacksBrowserDialog(wx.Dialog):
         self._packs = packs
         self._pack_index = {self._pack_key(p): p for p in packs}
         self._populate_list()
-        self.refresh_btn.Enable(True)
-        self.status_label.SetLabel(f"Found {len(packs)} community packs")
+        self.refresh_button.enable()
+        self.status_label.set_label(f"Found {len(packs)} community packs")
 
     def _on_load_error(self, error: str) -> None:
         """Handle load error."""
-        self.pack_listbox.Clear()
-        self.pack_listbox.Append("Failed to load packs")
-        self.status_label.SetLabel(f"Error: {error}")
-        self.refresh_btn.Enable(True)
+        self.pack_list.set_items(["Failed to load packs"])
+        self.status_label.set_label(f"Error: {error}")
+        self.refresh_button.enable()
 
     def _populate_list(self, filter_text: str = "") -> None:
         """Populate the pack list."""
-        self.pack_listbox.Clear()
         self._selected_key = None
-        self.install_btn.Enable(False)
+        self.install_button.disable()
 
         ft = filter_text.strip().lower()
+        items = []
 
         for pack in self._packs:
             if ft and ft not in pack.name.lower() and ft not in pack.author.lower():
@@ -242,62 +164,71 @@ class CommunityPacksBrowserDialog(wx.Dialog):
             key = self._pack_key(pack)
             size_str = f"{(pack.file_size or 0) / (1024 * 1024):.1f} MB" if pack.file_size else "?"
             display = f"{pack.name} v{pack.version} by {pack.author} ({size_str})"
-            self.pack_listbox.Append(display, key)
+            items.append((display, key))
 
-        if self.pack_listbox.GetCount() == 0:
-            self.pack_listbox.Append("No packs found")
+        if items:
+            self.pack_list.set_items([item[0] for item in items])
+            # Store keys for lookup
+            self._list_keys = [item[1] for item in items]
+        else:
+            self.pack_list.set_items(["No packs found"])
+            self._list_keys = []
             self._update_details(None)
 
-    def _on_search(self, event) -> None:
+    @search_input.add_callback
+    def on_search(self):
         """Handle search input."""
-        self._populate_list(self.search_input.GetValue())
+        self._populate_list(self.search_input.get_value())
 
-    def _on_refresh(self, event) -> None:
+    @refresh_button.add_callback
+    def on_refresh(self):
         """Handle refresh button."""
         self._start_loading(force=True)
 
-    def _on_pack_selected(self, event) -> None:
+    @pack_list.add_callback
+    def on_pack_selected(self):
         """Handle pack selection."""
-        sel = self.pack_listbox.GetSelection()
-        if sel == wx.NOT_FOUND:
+        index = self.pack_list.get_index()
+        if index is None or not hasattr(self, "_list_keys") or index >= len(self._list_keys):
             self._selected_key = None
             self._update_details(None)
-            self.install_btn.Enable(False)
+            self.install_button.disable()
             return
 
-        key = self.pack_listbox.GetClientData(sel)
+        key = self._list_keys[index]
         if not key or key not in self._pack_index:
             self._selected_key = None
             self._update_details(None)
-            self.install_btn.Enable(False)
+            self.install_button.disable()
             return
 
         self._selected_key = key
         pack = self._pack_index[key]
         self._update_details(pack)
-        self.install_btn.Enable(bool(pack.download_url or getattr(pack, "repo_path", None)))
+        self.install_button.enable(bool(pack.download_url or getattr(pack, "repo_path", None)))
 
     def _update_details(self, pack: CommunityPack | None) -> None:
         """Update the details panel."""
         if not pack:
-            self.name_label.SetLabel("Select a pack to view details")
-            self.author_label.SetLabel("")
-            self.version_label.SetLabel("")
-            self.size_label.SetLabel("")
-            self.description_text.SetValue("")
+            self.name_label.set_label("Select a pack to view details")
+            self.author_label.set_label("")
+            self.version_label.set_label("")
+            self.size_label.set_label("")
+            self.description_text.set_value("")
             return
 
-        self.name_label.SetLabel(pack.name)
-        self.author_label.SetLabel(f"Author: {pack.author}")
-        self.version_label.SetLabel(f"Version: {pack.version}")
+        self.name_label.set_label(pack.name)
+        self.author_label.set_label(f"Author: {pack.author}")
+        self.version_label.set_label(f"Version: {pack.version}")
         if pack.file_size:
             mb = pack.file_size / (1024 * 1024)
-            self.size_label.SetLabel(f"Size: {mb:.1f} MB")
+            self.size_label.set_label(f"Size: {mb:.1f} MB")
         else:
-            self.size_label.SetLabel("Size: Unknown")
-        self.description_text.SetValue(pack.description or "No description provided.")
+            self.size_label.set_label("Size: Unknown")
+        self.description_text.set_value(pack.description or "No description provided.")
 
-    def _on_install(self, event) -> None:
+    @install_button.add_callback
+    def on_install(self):
         """Handle install button."""
         if not self._selected_key or not self.service:
             return
@@ -306,9 +237,17 @@ class CommunityPacksBrowserDialog(wx.Dialog):
         if not pack:
             return
 
+        # Get parent control for progress dialog
+        parent_ctrl = self.widget.control
+
         # Show progress dialog
-        progress = ProgressDialog(self, f"Downloading {pack.name}", "Preparing download...")
-        progress.Show()
+        progress = ProgressDialog(
+            title=f"Downloading {pack.name}",
+            message="Preparing download...",
+            parent=parent_ctrl,
+        )
+        progress.render()
+        progress.widget.control.Show()
 
         def download_thread():
             try:
@@ -353,11 +292,11 @@ class CommunityPacksBrowserDialog(wx.Dialog):
     def _on_download_cancelled(self, progress: ProgressDialog) -> None:
         """Handle download cancelled."""
         progress.complete_error("Download cancelled")
-        wx.CallLater(1500, progress.Destroy)
+        wx.CallLater(1500, progress.widget.control.Destroy)
 
     def _on_install_success(self, progress: ProgressDialog, pack_name: str) -> None:
         """Handle install success."""
-        progress.Destroy()
+        progress.widget.control.Destroy()
         wx.MessageBox(
             f'"{pack_name}" has been installed.\n\n'
             "Switch to the Sound Pack Manager or Settings > Audio to activate it.",
@@ -370,9 +309,14 @@ class CommunityPacksBrowserDialog(wx.Dialog):
     def _on_install_error(self, progress: ProgressDialog, error: str) -> None:
         """Handle install error."""
         progress.complete_error(error)
-        wx.CallLater(3000, progress.Destroy)
+        wx.CallLater(3000, progress.widget.control.Destroy)
 
-    def Destroy(self) -> bool:
+    @close_button.add_callback
+    def on_close(self):
+        """Handle close button."""
+        self.widget.control.EndModal(wx.ID_CLOSE)
+
+    def destroy(self) -> None:
         """Clean up resources before destroying."""
         # Clean up community service
         if self.service:
@@ -385,16 +329,17 @@ class CommunityPacksBrowserDialog(wx.Dialog):
                     loop.close()
             except Exception:
                 pass
-        return super().Destroy()
 
 
 def show_community_packs_dialog(
-    parent: wx.Window,
+    parent,
     soundpacks_dir: Path,
     on_installed: Callable[[str], None] | None = None,
 ) -> None:
     """Show the community packs browser dialog."""
     parent_ctrl = getattr(parent, "control", parent)
-    dialog = CommunityPacksBrowserDialog(parent_ctrl, soundpacks_dir, on_installed)
-    dialog.ShowModal()
-    dialog.Destroy()
+    dialog = CommunityPacksBrowserDialog(soundpacks_dir, on_installed, parent=parent_ctrl)
+    dialog.render()
+    dialog.widget.control.ShowModal()
+    dialog.destroy()
+    dialog.widget.control.Destroy()
