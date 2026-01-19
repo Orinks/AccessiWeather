@@ -46,6 +46,13 @@ dev = [
     "mypy>=1.0.0",
     "pyright",
 ]
+build = [
+    "installer_builder2 @ git+https://github.com/accessibleapps/installer_builder2.git",
+    "innosetup_builder @ git+https://github.com/accessibleapps/innosetup_builder.git",
+    "nuitka>=2.0.0",
+    "ordered-set",
+    "zstandard",
+]
 
 [project.scripts]
 accessiweather = "accessiweather.main:main"

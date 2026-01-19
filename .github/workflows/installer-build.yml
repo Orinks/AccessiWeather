@@ -1,0 +1,252 @@
+name: Build with Installer Builder
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_override:
+        description: 'Override version (optional)'
+        required: false
+        type: string
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+    branches: [main, dev]
+
+permissions:
+  contents: read
+  actions: write
+
+env:
+  PYTHON_VERSION: "3.12"
+  FORCE_COLOR: "0"
+  PYTHONUTF8: "1"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-windows:
+    name: Build Windows Installer
+    runs-on: windows-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v5
+      with:
+        path: ~\AppData\Local\pip\Cache
+        key: ${{ runner.os }}-pip-build-${{ hashFiles('pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-build-
+
+    - name: Install Inno Setup
+      run: |
+        choco install innosetup -y
+        echo "C:\Program Files (x86)\Inno Setup 6" >> $GITHUB_PATH
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        pip install -e ".[build]"
+
+    - name: Extract version
+      id: version
+      run: |
+        if [ -n "${{ github.event.inputs.version_override }}" ]; then
+          VERSION="${{ github.event.inputs.version_override }}"
+          VERSION=${VERSION#v}
+        else
+          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Building version: $VERSION"
+
+    - name: Build Windows installer
+      run: |
+        python installer/build.py --platform windows --version "${{ steps.version.outputs.version }}"
+
+    - name: Verify build outputs
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        echo "Verifying build outputs for version: $VERSION"
+
+        if [ -d "dist" ]; then
+          echo "Contents of dist directory:"
+          ls -la dist/
+        else
+          echo "Error: dist directory not found"
+          exit 1
+        fi
+
+    - name: Generate checksums
+      shell: pwsh
+      run: |
+        cd dist
+        Get-ChildItem -File | ForEach-Object {
+          $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash
+          "$hash  $($_.Name)"
+        } | Out-File -FilePath checksums.txt -Encoding utf8
+        Get-Content checksums.txt
+
+    - name: Upload Windows installer
+      uses: actions/upload-artifact@v6
+      with:
+        name: windows-installer-${{ steps.version.outputs.version }}
+        path: |
+          dist/*.exe
+          dist/checksums.txt
+        retention-days: 30
+
+    - name: Upload Windows portable
+      uses: actions/upload-artifact@v6
+      with:
+        name: windows-portable-${{ steps.version.outputs.version }}
+        path: |
+          dist/*.zip
+        retention-days: 30
+
+  build-macos:
+    name: Build macOS Installer
+    runs-on: macos-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v5
+      with:
+        path: ~/Library/Caches/pip
+        key: ${{ runner.os }}-pip-build-${{ hashFiles('pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-build-
+
+    - name: Install create-dmg
+      run: |
+        brew install create-dmg
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools wheel
+        pip install -e ".[build]"
+
+    - name: Extract version
+      id: version
+      run: |
+        if [ -n "${{ github.event.inputs.version_override }}" ]; then
+          VERSION="${{ github.event.inputs.version_override }}"
+          VERSION=${VERSION#v}
+        else
+          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Building version: $VERSION"
+
+    - name: Build macOS DMG
+      run: |
+        python installer/build.py --platform macos --version "${{ steps.version.outputs.version }}"
+
+    - name: Verify build outputs
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        echo "Verifying build outputs for version: $VERSION"
+
+        if [ -d "dist" ]; then
+          echo "Contents of dist directory:"
+          ls -la dist/
+        else
+          echo "Error: dist directory not found"
+          exit 1
+        fi
+
+    - name: Generate checksums
+      run: |
+        cd dist
+        shasum -a 256 *.dmg 2>/dev/null > checksums.txt || true
+        cat checksums.txt
+
+    - name: Upload macOS installer
+      uses: actions/upload-artifact@v6
+      with:
+        name: macos-installer-${{ steps.version.outputs.version }}
+        path: |
+          dist/*.dmg
+          dist/checksums.txt
+        retention-days: 30
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [build-windows, build-macos]
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v7
+      with:
+        path: artifacts
+
+    - name: Prepare release assets
+      run: |
+        mkdir -p release-assets
+        VERSION="${{ needs.build-windows.outputs.version }}"
+
+        # Copy all installers
+        find artifacts -name "*.exe" -exec cp {} release-assets/ \;
+        find artifacts -name "*.dmg" -exec cp {} release-assets/ \;
+        find artifacts -name "*.zip" -exec cp {} release-assets/ \;
+
+        # Generate combined checksums
+        cd release-assets
+        sha256sum * > checksums.txt
+        cat checksums.txt
+
+    - name: Create Release
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        VERSION="${{ needs.build-windows.outputs.version }}"
+        TAG="v${VERSION}"
+
+        gh release create "${TAG}" \
+          --title "AccessiWeather v${VERSION}" \
+          --generate-notes \
+          release-assets/*
