@@ -22,7 +22,7 @@ dependencies = [
     "psutil",
     "keyring",
     "openai>=1.0.0",
-    "sound-lib>=0.83",
+    "playsound3",
 ]
 readme = "README.md"
 classifiers = [
@@ -205,6 +205,7 @@ requires = [
     "psutil",
     "keyring",
     "openai>=1.0.0",
+    "playsound3",
 ]
 test_requires = [
     "pytest>=7.0.0",

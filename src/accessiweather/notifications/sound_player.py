@@ -1,24 +1,19 @@
 import json
 import logging
+import platform
 from pathlib import Path
 from typing import Any
 
-# sound_lib for cross-platform audio playback
+# playsound3 for cross-platform audio playback
 try:
-    from sound_lib import output, stream
+    from playsound3 import playsound
 
-    SOUND_LIB_AVAILABLE = True
-    _output_device = None
+    PLAYSOUND_AVAILABLE = True
 except ImportError:
-    SOUND_LIB_AVAILABLE = False
-    output = None
-    stream = None
-    _output_device = None
+    PLAYSOUND_AVAILABLE = False
+    playsound = None
 
 logger = logging.getLogger(__name__)
-
-# Track active streams for cleanup
-_active_streams: list = []
 
 SOUNDPACKS_DIR = Path(__file__).parent.parent / "soundpacks"
 DEFAULT_PACK = "default"
@@ -59,53 +54,24 @@ def get_sound_file(event: str, pack_dir: str) -> Path | None:
         return None
 
 
-def _init_sound_lib_output():
-    """Initialize the sound_lib output device if not already done."""
-    global _output_device
-    if SOUND_LIB_AVAILABLE and _output_device is None:
-        try:
-            _output_device = output.Output()
-            try:
-                _output_device.init_device()
-            except Exception as init_err:
-                # Handle "already initialized" error gracefully
-                if "already initialized" in str(init_err).lower():
-                    logger.debug("sound_lib output device already initialized")
-                else:
-                    raise
-            logger.debug("sound_lib output device initialized")
-        except Exception as e:
-            logger.warning(f"Failed to initialize sound_lib output: {e}")
-    return _output_device
+def _play_sound_file(sound_file: Path, block: bool = False) -> bool:
+    """Try to play a sound file using playsound3; return True if played."""
+    if not PLAYSOUND_AVAILABLE or playsound is None:
+        logger.warning("playsound3 not available")
+        return False
 
-
-def _cleanup_finished_streams():
-    """Clean up streams that have finished playing."""
-    global _active_streams
-    _active_streams = [s for s in _active_streams if s.is_playing]
-
-
-def _play_sound_file(sound_file: Path) -> bool:
-    """Try to play a sound file using available backends; return True if played."""
-    global _active_streams
-    success = False
-
-    # Clean up finished streams
-    _cleanup_finished_streams()
-
-    # Use sound_lib for cross-platform audio playback
-    if SOUND_LIB_AVAILABLE and stream is not None:
-        try:
-            _init_sound_lib_output()
-            file_stream = stream.FileStream(file=str(sound_file))
-            file_stream.play()
-            _active_streams.append(file_stream)
-            success = True
-            logger.debug(f"Played sound using sound_lib: {sound_file}")
-        except Exception as e:
-            logger.warning(f"sound_lib failed: {e}")
-
-    return success
+    try:
+        # Convert path for cross-platform compatibility
+        if platform.system() == "Windows":
+            sound_path = str(sound_file).replace("\\", "/")
+        else:
+            sound_path = str(sound_file)
+        playsound(sound_path, block=block)
+        logger.debug(f"Played sound using playsound3: {sound_file}")
+        return True
+    except Exception as e:
+        logger.warning(f"playsound3 failed: {e}")
+        return False
 
 
 def play_sound_file(sound_file: Path) -> bool:
@@ -114,20 +80,21 @@ def play_sound_file(sound_file: Path) -> bool:
 
 
 def stop_all_sounds() -> None:
-    """Stop all currently playing sounds."""
-    global _active_streams
-    for s in _active_streams:
-        try:
-            if s.is_playing:
-                s.stop()
-        except Exception:
-            pass
-    _active_streams.clear()
+    """
+    Stop all currently playing sounds.
+
+    Note: playsound3 doesn't support stopping sounds mid-playback.
+    This function is kept for API compatibility.
+    """
 
 
-def is_sound_lib_available() -> bool:
-    """Check if sound_lib is available."""
-    return SOUND_LIB_AVAILABLE
+def is_playsound_available() -> bool:
+    """Check if playsound3 is available."""
+    return PLAYSOUND_AVAILABLE
+
+
+# Backwards compatibility alias
+is_sound_lib_available = is_playsound_available
 
 
 def play_notification_sound(event: str, pack_dir: str) -> None:
@@ -172,17 +139,9 @@ def play_exit_sound_blocking(pack_dir: str = DEFAULT_PACK) -> None:
             logger.warning("Exit sound file not found.")
             return
 
-        # Use sound_lib with blocking playback
-        if SOUND_LIB_AVAILABLE and stream is not None:
-            try:
-                _init_sound_lib_output()
-                file_stream = stream.FileStream(file=str(sound_file))
-                file_stream.play_blocking()  # Wait for sound to finish
-                logger.debug(f"Played exit sound (blocking) from pack: {pack_dir}")
-                return
-            except Exception as e:
-                logger.warning(f"sound_lib blocking playback failed: {e}")
-
+        # Use playsound3 with blocking playback
+        if _play_sound_file(sound_file, block=True):
+            logger.debug(f"Played exit sound (blocking) from pack: {pack_dir}")
     except Exception as e:
         logger.debug(f"Failed to play exit sound: {e}")
 

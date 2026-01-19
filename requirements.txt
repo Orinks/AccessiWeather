@@ -13,4 +13,4 @@ psutil
 packaging
 keyring
 openai>=1.0.0
-sound-lib>=0.83
+playsound3
