@@ -942,12 +942,22 @@ class SettingsDialogSimple(wx.Dialog):
             ai_model = getattr(
                 settings, "ai_model_preference", "meta-llama/llama-3.3-70b-instruct:free"
             )
+            self._custom_model_id = None  # Track custom model selection
+
             if ai_model == "meta-llama/llama-3.3-70b-instruct:free":
                 self._controls["ai_model"].SetSelection(0)
-            elif ai_model == "auto":
+            elif ai_model == "openrouter/auto" or ai_model == "auto":
                 self._controls["ai_model"].SetSelection(1)
             else:
-                self._controls["ai_model"].SetSelection(0)
+                # Custom model - add it to the dropdown
+                self._custom_model_id = ai_model
+                custom_label = f"{ai_model} (Custom)"
+                choices = self._controls["ai_model"].GetItems()
+                if len(choices) > 2:
+                    self._controls["ai_model"].SetString(2, custom_label)
+                else:
+                    self._controls["ai_model"].Append(custom_label)
+                self._controls["ai_model"].SetSelection(2)
 
             ai_style = getattr(settings, "ai_explanation_style", "standard")
             style_map = {"brief": 0, "standard": 1, "detailed": 2}
@@ -1044,9 +1054,7 @@ class SettingsDialogSimple(wx.Dialog):
                 "update_check_interval_hours": self._controls["update_check_interval"].GetValue(),
                 # AI
                 "openrouter_api_key": self._controls["openrouter_key"].GetValue(),
-                "ai_model_preference": "meta-llama/llama-3.3-70b-instruct:free"
-                if self._controls["ai_model"].GetSelection() == 0
-                else "auto",
+                "ai_model_preference": self._get_selected_ai_model(),
                 "ai_explanation_style": style_values[self._controls["ai_style"].GetSelection()],
                 "custom_system_prompt": self._controls["custom_prompt"].GetValue() or None,
                 "custom_instructions": self._controls["custom_instructions"].GetValue() or None,
@@ -1074,6 +1082,23 @@ class SettingsDialogSimple(wx.Dialog):
         self._controls["data_source"].SetName("Weather data source selection")
         self._controls["vc_key"].SetName("Visual Crossing API key")
         self._controls["openrouter_key"].SetName("OpenRouter API key")
+
+    def _get_selected_ai_model(self) -> str:
+        """
+        Get the currently selected AI model ID.
+
+        Returns:
+            The model ID string for the selected AI model
+
+        """
+        selection = self._controls["ai_model"].GetSelection()
+        if selection == 0:
+            return "meta-llama/llama-3.3-70b-instruct:free"
+        if selection == 1:
+            return "openrouter/auto"
+        if selection == 2 and hasattr(self, "_custom_model_id") and self._custom_model_id:
+            return self._custom_model_id
+        return "meta-llama/llama-3.3-70b-instruct:free"
 
     def _on_ok(self, event):
         """Handle OK button press."""
@@ -1237,7 +1262,39 @@ class SettingsDialogSimple(wx.Dialog):
 
     def _on_browse_models(self, event):
         """Browse available AI models."""
-        webbrowser.open("https://openrouter.ai/models")
+        from .model_browser_dialog import show_model_browser_dialog
+
+        api_key = self._controls["openrouter_key"].GetValue() or None
+        selected_model_id = show_model_browser_dialog(self, api_key=api_key)
+
+        if selected_model_id:
+            # Update the model preference dropdown and store the custom model ID
+            self._custom_model_id = selected_model_id
+
+            # Add the custom model to the dropdown if not already there
+            choices = self._controls["ai_model"].GetItems()
+
+            # Check if this is one of the built-in options
+            if selected_model_id == "meta-llama/llama-3.3-70b-instruct:free":
+                self._controls["ai_model"].SetSelection(0)
+                self._custom_model_id = None
+            elif selected_model_id == "openrouter/auto":
+                self._controls["ai_model"].SetSelection(1)
+                self._custom_model_id = None
+            else:
+                # Add as a custom option or update existing
+                # Format: "Model Name (Custom)"
+                custom_label = f"{selected_model_id} (Custom)"
+
+                # Check if we already have a custom entry
+                if len(choices) > 2:
+                    # Update existing custom entry
+                    self._controls["ai_model"].SetString(2, custom_label)
+                else:
+                    # Add new custom entry
+                    self._controls["ai_model"].Append(custom_label)
+
+                self._controls["ai_model"].SetSelection(2)
 
     def _on_reset_prompt(self, event):
         """Reset custom prompt to default."""
