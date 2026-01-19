@@ -1,0 +1,24 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - api.open-meteo.com
+    method: GET
+    uri: https://api.open-meteo.com/v1/forecast?latitude=40.7128&longitude=-74.006&current=temperature_2m%2Crelative_humidity_2m%2Capparent_temperature%2Cis_day%2Cprecipitation%2Cweather_code%2Ccloud_cover%2Cpressure_msl%2Csurface_pressure%2Cwind_speed_10m%2Cwind_direction_10m%2Cwind_gusts_10m%2Cuv_index%2Csnowfall%2Csnow_depth%2Cvisibility&daily=sunrise%2Csunset%2Cuv_index_max&temperature_unit=celsius&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=1
+  response:
+    body:
+      string: '{"latitude":40.710335,"longitude":-73.99307,"generationtime_ms":0.098,"utc_offset_seconds":-18000,"timezone":"America/New_York","timezone_abbreviation":"EST","elevation":10.0,"current_units":{"time":"iso8601","interval":"seconds","temperature_2m":"\u00b0C","relative_humidity_2m":"%","apparent_temperature":"\u00b0C","is_day":"","precipitation":"inch","weather_code":"wmo code","cloud_cover":"%","pressure_msl":"hPa","surface_pressure":"hPa","wind_speed_10m":"mp/h","wind_direction_10m":"\u00b0","wind_gusts_10m":"mp/h","uv_index":"","snowfall":"inch","snow_depth":"inch","visibility":"ft"},"current":{"time":"2025-01-15T12:00","interval":900,"temperature_2m":7.5,"relative_humidity_2m":65,"apparent_temperature":5.7,"is_day":1,"precipitation":0.0,"weather_code":2,"cloud_cover":50,"pressure_msl":1020.5,"surface_pressure":1019.2,"wind_speed_10m":8.5,"wind_direction_10m":270,"wind_gusts_10m":15.2,"uv_index":2.5,"snowfall":0.0,"snow_depth":0.0,"visibility":32808},"daily_units":{"time":"iso8601","sunrise":"iso8601","sunset":"iso8601","uv_index_max":""},"daily":{"time":["2025-01-15"],"sunrise":["2025-01-15T07:15"],"sunset":["2025-01-15T16:55"],"uv_index_max":[3.2]}}'
+    headers:
+      Content-Type:
+      - application/json; charset=utf-8
+    status:
+      code: 200
+      message: OK
+version: 1

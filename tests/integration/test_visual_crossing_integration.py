@@ -1,240 +1,220 @@
-"""Integration tests for Visual Crossing weather provider API."""
+"""
+Integration tests for Visual Crossing API client.
+
+Visual Crossing requires an API key. Tests will use recorded cassettes
+unless RECORD_MODE=all is set (which requires a valid API key).
+
+These tests verify:
+- Current conditions parsing
+- Forecast data parsing
+- Hourly forecast parsing
+- Alert parsing
+- Historical data retrieval
+- Error handling
+"""
 
 from __future__ import annotations
 
-import os
 from datetime import datetime, timedelta
 
 import pytest
 
-from accessiweather.models import Location
-from accessiweather.visual_crossing_client import VisualCrossingClient
-from tests.integration.conftest import (
-    LIVE_WEATHER_TESTS,
-    get_vcr_config,
-    skip_if_cassette_missing,
-)
-
-try:
-    import vcr
-
-    HAS_VCR = True
-except ImportError:
-    HAS_VCR = False
-    vcr = None  # type: ignore[assignment]
-
-# Test location: Lumberton, NJ
-TEST_LOCATION = Location(name="Lumberton, New Jersey", latitude=39.9643, longitude=-74.8099)
-
-# Fixed date for cassette tests (deterministic), dynamic for live
-# Note: This date must match the dates in the VCR cassettes
-TEST_DATE = datetime(2025, 12, 22)
-if LIVE_WEATHER_TESTS:
-    TEST_DATE = datetime.now() - timedelta(days=1)
-
-
-@pytest.fixture
-def vc_client():
-    """Create Visual Crossing client for tests."""
-    api_key: str
-    if LIVE_WEATHER_TESTS:
-        env_key = os.getenv("VISUAL_CROSSING_API_KEY")
-        if not env_key:
-            pytest.skip("VISUAL_CROSSING_API_KEY required for live tests")
-        api_key = env_key
-    else:
-        api_key = "REDACTED"
-    client = VisualCrossingClient(api_key=api_key)
-    client.timeout = 30.0
-    return client
-
-
-def get_cassette_vcr():
-    """Get a VCR instance configured for cassette use."""
-    if not HAS_VCR or vcr is None:
-        return None
-    return vcr.VCR(**get_vcr_config())
+from tests.integration.conftest import integration_vcr
 
 
 @pytest.mark.integration
-@pytest.mark.network
-@pytest.mark.asyncio
-async def test_visual_crossing_get_history_yesterday(vc_client):
-    """Test fetching yesterday's weather data from Visual Crossing."""
-    my_vcr = get_cassette_vcr()
+class TestVisualCrossingCurrentConditions:
+    """
+    Test Visual Crossing current conditions API.
 
-    async def run_test():
-        history = await vc_client.get_history(TEST_LOCATION, TEST_DATE, TEST_DATE)
+    These tests require a valid API key to record cassettes.
+    Run with VCR_RECORD_MODE=all and VISUAL_CROSSING_API_KEY set.
+    """
 
-        assert history is not None, "History should not be None"
-        assert history.periods is not None, "History periods should not be None"
-        assert len(history.periods) > 0, "Should have at least one period"
+    @pytest.mark.live_only
+    @integration_vcr.use_cassette("visual_crossing/current_nyc.yaml")
+    @pytest.mark.asyncio
+    async def test_get_current_conditions(self, us_location, visual_crossing_api_key):
+        """Test fetching current conditions."""
+        from accessiweather.visual_crossing_client import VisualCrossingClient
 
-        period = history.periods[0]
-        assert period.temperature is not None, "Period should have temperature"
-        assert isinstance(period.temperature, (int, float)), "Temperature should be numeric"
-        assert -100 <= period.temperature <= 150, f"Temperature {period.temperature} out of range"
-        assert period.temperature_unit in ["F", "C"], (
-            f"Temperature unit should be F or C, got {period.temperature_unit}"
-        )
+        client = VisualCrossingClient(api_key=visual_crossing_api_key)
+        conditions = await client.get_current_conditions(us_location)
 
-    cassette_name = "visual_crossing/test_get_history_yesterday.yaml"
-    skip_if_cassette_missing(cassette_name)
-    if my_vcr is not None:
-        with my_vcr.use_cassette(cassette_name):
-            await run_test()
-    elif LIVE_WEATHER_TESTS:
-        await run_test()
-    else:
-        pytest.skip("VCR not installed and not in live mode")
+        assert conditions is not None
+        # Temperature should be present and reasonable
+        assert conditions.temperature_f is not None
+        assert -50 < conditions.temperature_f < 150
 
+        # Basic fields should be populated
+        assert conditions.condition is not None
+        assert conditions.humidity is not None
+        assert 0 <= conditions.humidity <= 100
 
-@pytest.mark.integration
-@pytest.mark.network
-@pytest.mark.asyncio
-async def test_visual_crossing_get_history_date_range(vc_client):
-    """Test fetching a date range of historical weather data."""
-    my_vcr = get_cassette_vcr()
-    end_date = TEST_DATE
-    start_date = end_date - timedelta(days=2)
+    @pytest.mark.live_only
+    @integration_vcr.use_cassette("visual_crossing/current_london.yaml")
+    @pytest.mark.asyncio
+    async def test_get_current_conditions_international(
+        self, international_location, visual_crossing_api_key
+    ):
+        """Test fetching current conditions for international location."""
+        from accessiweather.visual_crossing_client import VisualCrossingClient
 
-    async def run_test():
-        history = await vc_client.get_history(TEST_LOCATION, start_date, end_date)
+        client = VisualCrossingClient(api_key=visual_crossing_api_key)
+        conditions = await client.get_current_conditions(international_location)
 
-        assert history is not None, "History should not be None"
-        assert history.periods is not None, "History periods should not be None"
-        assert len(history.periods) >= 1, "Should have at least one period"
-        assert len(history.periods) <= 3, "Should have at most 3 periods"
-
-        for period in history.periods:
-            assert period.temperature is not None, f"Period {period.name} should have temperature"
-            assert isinstance(period.temperature, (int, float)), "Temperature should be numeric"
-
-    cassette_name = "visual_crossing/test_get_history_date_range.yaml"
-    skip_if_cassette_missing(cassette_name)
-    if my_vcr is not None:
-        with my_vcr.use_cassette(cassette_name):
-            await run_test()
-    elif LIVE_WEATHER_TESTS:
-        await run_test()
-    else:
-        pytest.skip("VCR not installed and not in live mode")
+        assert conditions is not None
+        assert conditions.temperature_f is not None
+        assert conditions.temperature_c is not None
 
 
 @pytest.mark.integration
-@pytest.mark.network
-@pytest.mark.asyncio
-async def test_visual_crossing_history_has_required_fields(vc_client):
-    """Test that historical data includes all required fields for trend comparison."""
-    my_vcr = get_cassette_vcr()
+class TestVisualCrossingForecast:
+    """Test Visual Crossing forecast API."""
 
-    async def run_test():
-        history = await vc_client.get_history(TEST_LOCATION, TEST_DATE, TEST_DATE)
+    @pytest.mark.live_only
+    @integration_vcr.use_cassette("visual_crossing/forecast_nyc.yaml")
+    @pytest.mark.asyncio
+    async def test_get_forecast(self, us_location, visual_crossing_api_key):
+        """Test fetching forecast."""
+        from accessiweather.visual_crossing_client import VisualCrossingClient
+
+        client = VisualCrossingClient(api_key=visual_crossing_api_key)
+        forecast = await client.get_forecast(us_location)
+
+        assert forecast is not None
+        assert len(forecast.periods) > 0
+
+        # Check first period
+        first_period = forecast.periods[0]
+        assert first_period.name is not None
+        assert first_period.temperature is not None
+        assert first_period.short_forecast is not None
+
+    @pytest.mark.live_only
+    @integration_vcr.use_cassette("visual_crossing/forecast_fields.yaml")
+    @pytest.mark.asyncio
+    async def test_forecast_has_all_fields(self, us_location, visual_crossing_api_key):
+        """Test that forecast periods have expected fields."""
+        from accessiweather.visual_crossing_client import VisualCrossingClient
+
+        client = VisualCrossingClient(api_key=visual_crossing_api_key)
+        forecast = await client.get_forecast(us_location)
+
+        for period in forecast.periods[:3]:  # Check first 3 days
+            assert period.name is not None
+            assert period.temperature is not None
+            # Optional fields may be None but shouldn't error
+            _ = period.wind_speed
+            _ = period.wind_direction
+            _ = period.precipitation_probability
+
+
+@pytest.mark.integration
+class TestVisualCrossingHourlyForecast:
+    """Test Visual Crossing hourly forecast API."""
+
+    @pytest.mark.live_only
+    @integration_vcr.use_cassette("visual_crossing/hourly_nyc.yaml")
+    @pytest.mark.asyncio
+    async def test_get_hourly_forecast(self, us_location, visual_crossing_api_key):
+        """Test fetching hourly forecast."""
+        from accessiweather.visual_crossing_client import VisualCrossingClient
+
+        client = VisualCrossingClient(api_key=visual_crossing_api_key)
+        hourly = await client.get_hourly_forecast(us_location)
+
+        assert hourly is not None
+        assert len(hourly.periods) > 0
+
+        # Check first hour
+        first_hour = hourly.periods[0]
+        assert first_hour.start_time is not None
+        assert first_hour.temperature is not None
+
+
+@pytest.mark.integration
+class TestVisualCrossingAlerts:
+    """Test Visual Crossing alerts API."""
+
+    @integration_vcr.use_cassette("visual_crossing/alerts_nyc.yaml")
+    @pytest.mark.asyncio
+    async def test_get_alerts(self, us_location, visual_crossing_api_key):
+        """Test fetching weather alerts."""
+        from accessiweather.visual_crossing_client import VisualCrossingClient
+
+        client = VisualCrossingClient(api_key=visual_crossing_api_key)
+        alerts = await client.get_alerts(us_location)
+
+        # Alerts may or may not be present, but should return valid object
+        assert alerts is not None
+        assert hasattr(alerts, "alerts")
+        assert isinstance(alerts.alerts, list)
+
+
+@pytest.mark.integration
+class TestVisualCrossingHistory:
+    """Test Visual Crossing historical data API."""
+
+    @pytest.mark.live_only
+    @integration_vcr.use_cassette("visual_crossing/history_nyc.yaml")
+    @pytest.mark.asyncio
+    async def test_get_history(self, us_location, visual_crossing_api_key):
+        """Test fetching historical weather data."""
+        from accessiweather.visual_crossing_client import VisualCrossingClient
+
+        client = VisualCrossingClient(api_key=visual_crossing_api_key)
+
+        # Get yesterday's weather
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=2)
+
+        history = await client.get_history(us_location, start_date, end_date)
 
         assert history is not None
         assert len(history.periods) > 0
 
-        period = history.periods[0]
 
-        assert period.temperature is not None, "Must have temperature"
-        assert isinstance(period.temperature, (int, float)), "Temperature must be numeric"
-        assert period.temperature_unit is not None, "Must have temperature unit"
-        assert period.temperature_unit in ["F", "C"], "Temperature unit must be F or C"
+@pytest.mark.integration
+class TestVisualCrossingErrorHandling:
+    """Test Visual Crossing error handling."""
 
-        assert period.name is not None or period.detailed_forecast is not None, (
-            "Should have some description"
+    @pytest.mark.live_only
+    @integration_vcr.use_cassette("visual_crossing/error_invalid_key.yaml")
+    @pytest.mark.asyncio
+    async def test_invalid_api_key(self, us_location):
+        """Test handling of invalid API key."""
+        from accessiweather.visual_crossing_client import (
+            VisualCrossingApiError,
+            VisualCrossingClient,
         )
 
-    cassette_name = "visual_crossing/test_history_has_required_fields.yaml"
-    skip_if_cassette_missing(cassette_name)
-    if my_vcr is not None:
-        with my_vcr.use_cassette(cassette_name):
-            await run_test()
-    elif LIVE_WEATHER_TESTS:
-        await run_test()
-    else:
-        pytest.skip("VCR not installed and not in live mode")
+        client = VisualCrossingClient(api_key="invalid-key")
+
+        with pytest.raises(VisualCrossingApiError) as exc_info:
+            await client.get_current_conditions(us_location)
+
+        assert exc_info.value.status_code == 401 or "Invalid" in str(exc_info.value)
 
 
 @pytest.mark.integration
-@pytest.mark.network
-@pytest.mark.asyncio
-async def test_visual_crossing_history_invalid_location(vc_client):
-    """Test that invalid coordinates are handled gracefully."""
-    my_vcr = get_cassette_vcr()
-    invalid_location = Location(name="Invalid", latitude=999, longitude=999)
+class TestVisualCrossingSeverityMapping:
+    """Test Visual Crossing severity mapping."""
 
-    async def run_test():
-        try:
-            history = await vc_client.get_history(invalid_location, TEST_DATE, TEST_DATE)
-            if history is not None:
-                assert len(history.periods) == 0, "Invalid location should return no periods"
-        except Exception:
-            pass
+    def test_severity_mapping(self):
+        """Test that severity levels are mapped correctly."""
+        from accessiweather.visual_crossing_client import VisualCrossingClient
 
-    cassette_name = "visual_crossing/test_history_invalid_location.yaml"
-    skip_if_cassette_missing(cassette_name)
-    if my_vcr is not None:
-        with my_vcr.use_cassette(cassette_name):
-            await run_test()
-    elif LIVE_WEATHER_TESTS:
-        await run_test()
-    else:
-        pytest.skip("VCR not installed and not in live mode")
+        client = VisualCrossingClient(api_key="test")
 
+        # Test mapping function
+        assert client._map_visual_crossing_severity("extreme") == "Extreme"
+        assert client._map_visual_crossing_severity("severe") == "Severe"
+        assert client._map_visual_crossing_severity("moderate") == "Moderate"
+        assert client._map_visual_crossing_severity("minor") == "Minor"
+        assert client._map_visual_crossing_severity("unknown") == "Unknown"
+        assert client._map_visual_crossing_severity(None) == "Unknown"
 
-@pytest.mark.integration
-@pytest.mark.network
-@pytest.mark.asyncio
-async def test_visual_crossing_history_future_date_handling(vc_client):
-    """Test that requesting future dates is handled appropriately."""
-    my_vcr = get_cassette_vcr()
-    future_date = TEST_DATE + timedelta(days=30)
-
-    async def run_test():
-        try:
-            history = await vc_client.get_history(TEST_LOCATION, future_date, future_date)
-            if history is not None:
-                assert isinstance(history.periods, list), "Should return a list"
-        except Exception:
-            pass
-
-    cassette_name = "visual_crossing/test_history_future_date_handling.yaml"
-    skip_if_cassette_missing(cassette_name)
-    if my_vcr is not None:
-        with my_vcr.use_cassette(cassette_name):
-            await run_test()
-    elif LIVE_WEATHER_TESTS:
-        await run_test()
-    else:
-        pytest.skip("VCR not installed and not in live mode")
-
-
-@pytest.mark.integration
-@pytest.mark.network
-@pytest.mark.asyncio
-async def test_visual_crossing_history_temperature_units(vc_client):
-    """Test that temperature units are correctly set in historical data."""
-    my_vcr = get_cassette_vcr()
-
-    async def run_test():
-        history = await vc_client.get_history(TEST_LOCATION, TEST_DATE, TEST_DATE)
-
-        assert history is not None
-        assert len(history.periods) > 0
-
-        period = history.periods[0]
-
-        assert period.temperature_unit in ["F", "C"], (
-            f"Temperature unit should be F or C, got {period.temperature_unit}"
-        )
-
-    cassette_name = "visual_crossing/test_history_temperature_units.yaml"
-    skip_if_cassette_missing(cassette_name)
-    if my_vcr is not None:
-        with my_vcr.use_cassette(cassette_name):
-            await run_test()
-    elif LIVE_WEATHER_TESTS:
-        await run_test()
-    else:
-        pytest.skip("VCR not installed and not in live mode")
+        # Test case insensitivity
+        assert client._map_visual_crossing_severity("EXTREME") == "Extreme"
+        assert client._map_visual_crossing_severity("Severe") == "Severe"

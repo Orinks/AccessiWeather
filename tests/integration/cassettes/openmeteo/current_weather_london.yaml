@@ -1,0 +1,24 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - api.open-meteo.com
+    method: GET
+    uri: https://api.open-meteo.com/v1/forecast?latitude=51.5074&longitude=-0.1278&current=temperature_2m%2Crelative_humidity_2m%2Capparent_temperature%2Cis_day%2Cprecipitation%2Cweather_code%2Ccloud_cover%2Cpressure_msl%2Csurface_pressure%2Cwind_speed_10m%2Cwind_direction_10m%2Cwind_gusts_10m%2Cuv_index%2Csnowfall%2Csnow_depth%2Cvisibility&daily=sunrise%2Csunset%2Cuv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=1
+  response:
+    body:
+      string: '{"latitude":51.5,"longitude":-0.125,"generationtime_ms":0.089,"utc_offset_seconds":0,"timezone":"Europe/London","timezone_abbreviation":"GMT","elevation":25.0,"current_units":{"time":"iso8601","interval":"seconds","temperature_2m":"\u00b0F","relative_humidity_2m":"%","apparent_temperature":"\u00b0F","is_day":"","precipitation":"inch","weather_code":"wmo code","cloud_cover":"%","pressure_msl":"hPa","surface_pressure":"hPa","wind_speed_10m":"mp/h","wind_direction_10m":"\u00b0","wind_gusts_10m":"mp/h","uv_index":"","snowfall":"inch","snow_depth":"inch","visibility":"ft"},"current":{"time":"2025-01-15T17:00","interval":900,"temperature_2m":48.2,"relative_humidity_2m":78,"apparent_temperature":44.1,"is_day":0,"precipitation":0.0,"weather_code":3,"cloud_cover":85,"pressure_msl":1015.3,"surface_pressure":1014.1,"wind_speed_10m":12.3,"wind_direction_10m":225,"wind_gusts_10m":22.5,"uv_index":0.0,"snowfall":0.0,"snow_depth":0.0,"visibility":26247},"daily_units":{"time":"iso8601","sunrise":"iso8601","sunset":"iso8601","uv_index_max":""},"daily":{"time":["2025-01-15"],"sunrise":["2025-01-15T08:02"],"sunset":["2025-01-15T16:15"],"uv_index_max":[1.5]}}'
+    headers:
+      Content-Type:
+      - application/json; charset=utf-8
+    status:
+      code: 200
+      message: OK
+version: 1

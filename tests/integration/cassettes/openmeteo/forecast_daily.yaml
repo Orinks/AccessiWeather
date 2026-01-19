@@ -1,0 +1,24 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - api.open-meteo.com
+    method: GET
+    uri: https://api.open-meteo.com/v1/forecast?latitude=40.7128&longitude=-74.006&daily=weather_code%2Ctemperature_2m_max%2Ctemperature_2m_min%2Capparent_temperature_max%2Capparent_temperature_min%2Csunrise%2Csunset%2Cprecipitation_sum%2Cprecipitation_probability_max%2Cwind_speed_10m_max%2Cwind_gusts_10m_max%2Cwind_direction_10m_dominant%2Cuv_index_max%2Csnowfall_sum&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=7
+  response:
+    body:
+      string: '{"latitude":40.710335,"longitude":-73.99307,"generationtime_ms":0.145,"utc_offset_seconds":-18000,"timezone":"America/New_York","timezone_abbreviation":"EST","elevation":10.0,"daily_units":{"time":"iso8601","weather_code":"wmo code","temperature_2m_max":"\u00b0F","temperature_2m_min":"\u00b0F","apparent_temperature_max":"\u00b0F","apparent_temperature_min":"\u00b0F","sunrise":"iso8601","sunset":"iso8601","precipitation_sum":"inch","precipitation_probability_max":"%","wind_speed_10m_max":"mp/h","wind_gusts_10m_max":"mp/h","wind_direction_10m_dominant":"\u00b0","uv_index_max":"","snowfall_sum":"inch"},"daily":{"time":["2025-01-15","2025-01-16","2025-01-17","2025-01-18","2025-01-19","2025-01-20","2025-01-21"],"weather_code":[2,3,61,1,0,2,3],"temperature_2m_max":[48.5,52.1,45.2,50.8,55.3,51.2,49.8],"temperature_2m_min":[35.2,38.5,32.1,36.8,40.2,37.5,35.8],"apparent_temperature_max":[45.2,49.5,42.1,48.2,52.8,48.5,46.2],"apparent_temperature_min":[30.5,34.2,27.8,32.5,36.8,33.2,31.5],"sunrise":["2025-01-15T07:15","2025-01-16T07:15","2025-01-17T07:14","2025-01-18T07:14","2025-01-19T07:13","2025-01-20T07:13","2025-01-21T07:12"],"sunset":["2025-01-15T16:55","2025-01-16T16:56","2025-01-17T16:57","2025-01-18T16:58","2025-01-19T16:59","2025-01-20T17:00","2025-01-21T17:02"],"precipitation_sum":[0.0,0.05,0.35,0.0,0.0,0.02,0.08],"precipitation_probability_max":[10,25,75,5,0,15,30],"wind_speed_10m_max":[12.5,15.8,22.3,10.2,8.5,11.2,14.5],"wind_gusts_10m_max":[22.5,28.3,38.5,18.2,15.5,20.2,25.8],"wind_direction_10m_dominant":[270,225,180,315,290,250,210],"uv_index_max":[3.2,2.8,1.5,3.5,4.0,3.2,2.5],"snowfall_sum":[0.0,0.0,0.5,0.0,0.0,0.0,0.0]}}'
+    headers:
+      Content-Type:
+      - application/json; charset=utf-8
+    status:
+      code: 200
+      message: OK
+version: 1

@@ -1,0 +1,46 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - geocoding-api.open-meteo.com
+    method: GET
+    uri: https://geocoding-api.open-meteo.com/v1/search?count=10&format=json&language=en&name=New
+  response:
+    body:
+      string: '{"results":[{"id":2328765,"name":"Nnewi","latitude":6.01962,"longitude":6.91729,"elevation":151.0,"feature_code":"PPLA2","country_code":"NG","admin1_id":2349961,"admin2_id":8638038,"timezone":"Africa/Lagos","population":193987,"country_id":2328926,"country":"Nigeria","admin1":"Anambra","admin2":"Nnewi
+        North"},{"id":4302308,"name":"New","latitude":38.42785,"longitude":-84.8105,"elevation":197.0,"feature_code":"PPL","country_code":"US","admin1_id":6254925,"admin2_id":4303402,"timezone":"America/New_York","country_id":6252001,"country":"United
+        States","admin1":"Kentucky","admin2":"Owen"},{"id":5101798,"name":"Newark","latitude":40.73566,"longitude":-74.17237,"elevation":9.0,"feature_code":"PPLA2","country_code":"US","admin1_id":5101760,"admin2_id":5097707,"admin3_id":5101815,"timezone":"America/New_York","population":281944,"postcodes":["07101","07102","07103","07104","07105","07106","07107","07108","07112","07114","07175","07184","07188","07189","07191","07192","07193","07195","07198","07199"],"country_id":6252001,"country":"United
+        States","admin1":"New Jersey","admin2":"Essex","admin3":"City of Newark"},{"id":4330381,"name":"Lakefront
+        Airport","latitude":30.03593,"longitude":-90.02561,"elevation":1.0,"feature_code":"AIRP","country_code":"US","admin1_id":4331987,"admin2_id":4336191,"admin3_id":4335053,"timezone":"America/Chicago","country_id":6252001,"country":"United
+        States","admin1":"Louisiana","admin2":"Orleans","admin3":"City of New Orleans"},{"id":5389489,"name":"Sacramento","latitude":38.58157,"longitude":-121.4944,"elevation":9.0,"feature_code":"PPLA","country_code":"US","admin1_id":5332921,"admin2_id":5389519,"timezone":"America/Los_Angeles","population":524943,"postcodes":["94203","94204","94205","94206","94207","94208","94209","94211","94229","94230","94232","94234","94235","94236","94237","94239","94240","94244","94245","94247","94248","94249","94250","94252","94254","94256","94257","94258","94259","94261","94262","94263","94267","94268","94269","94271","94273","94274","94277","94278","94279","94280","94282","94283","94284","94285","94286","94287","94288","94289","94290","94291","94293","94294","94295","94296","94297","94298","94299","95812","95813","95814","95815","95816","95817","95818","95819","95820","95821","95822","95823","95824","95825","95826","95827","95828","95829","95830","95831","95832","95833","95834","95835","95836","95837","95838","95840","95841","95842","95851","95852","95853","95860","95864","95865","95866","95867","95894","95899","95811"],"country_id":6252001,"country":"United
+        States","admin1":"California","admin2":"Sacramento"},{"id":4335045,"name":"New
+        Orleans","latitude":29.95465,"longitude":-90.07507,"feature_code":"PPLA2","country_code":"US","admin1_id":4331987,"admin2_id":4336191,"admin3_id":4335053,"timezone":"America/Chicago","population":389617,"postcodes":["70112","70113","70114","70115","70116","70117","70118","70119","70122","70124","70125","70126","70127","70128","70129","70130","70131","70139","70142","70143","70145","70146","70148","70150","70151","70152","70153","70154","70156","70157","70158","70159","70160","70161","70162","70163","70164","70165","70166","70167","70170","70172","70174","70175","70176","70177","70178","70179","70182","70184","70185","70186","70187","70189","70190","70195"],"country_id":6252001,"country":"United
+        States","admin1":"Louisiana","admin2":"Orleans","admin3":"City of New Orleans"},{"id":1261481,"name":"New
+        Delhi","latitude":28.62137,"longitude":77.2148,"elevation":211.0,"feature_code":"PPLC","country_code":"IN","admin1_id":1273293,"admin2_id":8347332,"admin3_id":12685419,"timezone":"Asia/Kolkata","population":317797,"country_id":1269750,"country":"India","admin1":"Delhi","admin2":"New
+        Delhi","admin3":"Chanakya Puri"},{"id":5391959,"name":"San Francisco","latitude":37.77493,"longitude":-122.41942,"elevation":16.0,"feature_code":"PPLA2","country_code":"US","admin1_id":5332921,"admin2_id":5391997,"timezone":"America/Los_Angeles","population":864816,"postcodes":["94102","94103","94104","94105","94107","94108","94109","94110","94111","94112","94114","94115","94116","94117","94118","94119","94120","94121","94122","94123","94124","94125","94126","94127","94129","94130","94131","94132","94133","94134","94137","94139","94140","94141","94142","94143","94144","94145","94146","94147","94151","94159","94160","94161","94163","94164","94172","94177","94188"],"country_id":6252001,"country":"United
+        States","admin1":"California","admin2":"San Francisco County"},{"id":2641598,"name":"Newport","latitude":51.58774,"longitude":-2.99835,"elevation":16.0,"feature_code":"PPLA2","country_code":"GB","admin1_id":2634895,"admin2_id":3333246,"admin3_id":7301651,"timezone":"Europe/London","population":306844,"country_id":2635167,"country":"United
+        Kingdom","admin1":"Wales","admin2":"Newport","admin3":"Stow Hill"},{"id":5128581,"name":"New
+        York","latitude":40.71427,"longitude":-74.00597,"elevation":10.0,"feature_code":"PPL","country_code":"US","admin1_id":5128638,"timezone":"America/New_York","population":8804190,"postcodes":["10001","10002","10003","10004","10005","10006","10007","10008","10009","10010","10011","10012","10013","10014","10016","10017","10018","10019","10020","10021","10022","10023","10024","10025","10026","10027","10028","10029","10030","10031","10032","10033","10034","10035","10036","10037","10038","10039","10040","10041","10043","10044","10045","10055","10060","10065","10069","10080","10081","10087","10090","10101","10102","10103","10104","10105","10106","10107","10108","10109","10110","10111","10112","10113","10114","10115","10116","10117","10118","10119","10120","10121","10122","10123","10124","10125","10126","10128","10129","10130","10131","10132","10133","10138","10150","10151","10152","10153","10154","10155","10156","10157","10158","10159","10160","10161","10162","10163","10164","10165","10166","10167","10168","10169","10170","10171","10172","10173","10174","10175","10176","10177","10178","10179","10185","10199","10203","10211","10212","10213","10242","10249","10256","10258","10259","10260","10261","10265","10268","10269","10270","10271","10272","10273","10274","10275","10276","10277","10278","10279","10280","10281","10282","10285","10286"],"country_id":6252001,"country":"United
+        States","admin1":"New York"}],"generationtime_ms":7.265687}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 19 Jan 2026 05:02:19 GMT
+      X-Encoding-Time:
+      - 0.01195669174194336 ms
+      content-length:
+      - '6316'
+    status:
+      code: 200
+      message: OK
+version: 1

@@ -179,7 +179,7 @@ author_email = "orin8722@gmail.com"
 [tool.briefcase.app.accessiweather]
 formal_name = "AccessiWeather"
 description = "AccessiWeather: An accessible weather application that includes NOAA and Open-Meteo support with focus on screen reader compatibility"
-long_description = """AccessiWeather is a simplified, accessible weather application built with BeeWare/Toga.
+long_description = """AccessiWeather is a simplified, accessible weather application built with wxPython.
 It provides current conditions, forecasts, and weather alerts with a focus on screen reader compatibility.
 """
 sources = [
@@ -197,7 +197,7 @@ resources = [
 entry_point = "accessiweather:main"
 
 requires = [
-    "toga",
+    "wxPython>=4.2.0",
     "playsound3",
     "httpx>=0.20.0",
     "python-dateutil",

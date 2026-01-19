@@ -1,1 +1,0 @@
-"""Performance test module initialization."""

@@ -1,0 +1,95 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - api.open-meteo.com
+    method: GET
+    uri: https://api.open-meteo.com/v1/forecast?forecast_days=2&hourly=temperature_2m%2Cweather_code%2Cwind_speed_10m%2Cwind_direction_10m%2Cpressure_msl%2Cprecipitation_probability%2Csnowfall%2Cuv_index%2Csnow_depth%2Cfreezing_level_height%2Cvisibility%2Capparent_temperature&latitude=51.5074&longitude=-0.1278&precipitation_unit=inch&temperature_unit=fahrenheit&timezone=auto&wind_speed_unit=mph
+  response:
+    body:
+      string: "{\"latitude\":51.5,\"longitude\":-0.120000124,\"generationtime_ms\":0.2988576889038086,\"utc_offset_seconds\":0,\"timezone\":\"Europe/London\",\"timezone_abbreviation\":\"GMT\",\"elevation\":16.0,\"hourly_units\":{\"time\":\"iso8601\",\"temperature_2m\":\"\xB0F\",\"weather_code\":\"wmo
+        code\",\"wind_speed_10m\":\"mp/h\",\"wind_direction_10m\":\"\xB0\",\"pressure_msl\":\"hPa\",\"precipitation_probability\":\"%\",\"snowfall\":\"inch\",\"uv_index\":\"\",\"snow_depth\":\"ft\",\"freezing_level_height\":\"ft\",\"visibility\":\"ft\",\"apparent_temperature\":\"\xB0F\"},\"hourly\":{\"time\":[\"2026-01-19T00:00\",\"2026-01-19T01:00\",\"2026-01-19T02:00\",\"2026-01-19T03:00\",\"2026-01-19T04:00\",\"2026-01-19T05:00\",\"2026-01-19T06:00\",\"2026-01-19T07:00\",\"2026-01-19T08:00\",\"2026-01-19T09:00\",\"2026-01-19T10:00\",\"2026-01-19T11:00\",\"2026-01-19T12:00\",\"2026-01-19T13:00\",\"2026-01-19T14:00\",\"2026-01-19T15:00\",\"2026-01-19T16:00\",\"2026-01-19T17:00\",\"2026-01-19T18:00\",\"2026-01-19T19:00\",\"2026-01-19T20:00\",\"2026-01-19T21:00\",\"2026-01-19T22:00\",\"2026-01-19T23:00\",\"2026-01-20T00:00\",\"2026-01-20T01:00\",\"2026-01-20T02:00\",\"2026-01-20T03:00\",\"2026-01-20T04:00\",\"2026-01-20T05:00\",\"2026-01-20T06:00\",\"2026-01-20T07:00\",\"2026-01-20T08:00\",\"2026-01-20T09:00\",\"2026-01-20T10:00\",\"2026-01-20T11:00\",\"2026-01-20T12:00\",\"2026-01-20T13:00\",\"2026-01-20T14:00\",\"2026-01-20T15:00\",\"2026-01-20T16:00\",\"2026-01-20T17:00\",\"2026-01-20T18:00\",\"2026-01-20T19:00\",\"2026-01-20T20:00\",\"2026-01-20T21:00\",\"2026-01-20T22:00\",\"2026-01-20T23:00\"],\"temperature_2m\":[47.6,46.8,46.7,46.6,46.7,46.4,45.7,45.7,46.1,46.9,48.4,49.2,50.3,51.7,51.7,51.9,51.2,50.5,49.9,49.8,50.0,50.0,50.0,50.1,50.0,49.0,47.9,48.0,48.3,48.2,47.5,47.2,46.6,46.5,47.3,48.3,49.2,49.7,49.8,49.2,48.5,47.4,47.3,47.3,47.4,47.4,46.7,47.1],\"weather_code\":[2,3,3,3,2,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,61,80,3,2,1,2,3,3,3,3,2,3,2,3,2,2,2,2,2,2,3,2,2,2,1,2,3],\"wind_speed_10m\":[2.4,2.1,1.9,1.6,2.4,2.4,2.5,2.9,2.2,1.6,2.6,3.6,3.7,5.4,6.2,6.4,6.8,6.4,5.8,6.5,7.1,6.7,7.7,7.3,6.9,6.9,6.4,7.2,7.4,7.6,6.3,7.5,6.3,6.4,8.3,10.1,11.0,10.8,11.2,10.8,10.9,8.8,7.9,6.5,8.8,8.8,7.4,7.1],\"wind_direction_10m\":[124,108,111,124,146,131,95,81,90,106,121,120,147,163,161,168,163,162,157,158,156,160,163,169,195,182,170,171,180,178,176,170,163,151,156,159,160,163,164,156,152,142,137,131,144,148,131,136],\"pressure_msl\":[1014.1,1014.3,1014.3,1014.1,1013.8,1013.9,1014.1,1014.2,1014.7,1014.8,1014.9,1014.8,1014.5,1013.9,1013.9,1013.7,1013.7,1013.5,1013.5,1013.6,1013.6,1013.6,1013.5,1013.4,1013.3,1013.6,1013.6,1013.4,1013.1,1013.1,1013.0,1013.0,1013.1,1013.1,1013.0,1012.5,1011.8,1011.1,1010.6,1009.8,1009.3,1008.8,1008.1,1007.4,1006.8,1006.1,1005.2,1004.2],\"precipitation_probability\":[0,0,0,0,0,0,0,3,3,3,0,3,3,3,3,3,0,0,3,5,18,13,18,18,8,8,3,3,3,3,0,5,0,3,0,0,3,0,0,0,0,0,5,10,15,18,30,43],\"snowfall\":[0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000],\"uv_index\":[0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.05,0.35,0.65,0.80,0.80,0.75,0.35,0.15,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.10,0.50,0.65,0.40,0.55,0.35,0.40,0.30,0.00,0.00,0.00,0.00,0.00,0.00,0.00],\"snow_depth\":[0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000],\"freezing_level_height\":[6364.830,6266.404,6299.213,5938.320,5741.470,5675.853,5643.044,5741.470,5774.278,5774.278,5938.320,5741.470,5708.662,5938.320,5741.470,5807.086,5544.620,5577.428,5610.236,5708.662,5413.386,5314.960,5347.769,5118.110,5446.194,5183.727,4986.876,4757.218,4822.834,4593.176,4691.601,4986.876,5085.302,5052.494,5019.685,5118.110,4954.068,4691.601,4494.750,4724.410,4494.750,4593.176,5380.578,5380.578,5314.960,5150.918,4363.517,4068.241],\"visibility\":[79724.406,73884.516,74475.062,63057.742,42650.918,23622.047,14107.611,12335.958,15485.564,16207.350,25065.617,41666.668,64041.996,87007.875,79527.562,96587.930,85236.219,84383.203,73753.281,73687.664,73753.281,69881.891,63713.910,66010.500,66207.352,119225.727,78608.922,67782.156,78674.539,106561.680,98162.727,94816.273,91666.664,81036.742,112073.492,152690.297,159186.359,175262.469,183858.266,159317.594,153674.547,105380.578,87532.812,75787.398,84251.969,89829.398,67847.773,70144.359],\"apparent_temperature\":[44.8,44.0,44.0,44.1,44.1,43.9,43.3,43.1,43.7,45.0,46.3,46.5,47.6,48.4,48.0,48.0,47.2,46.5,46.1,45.7,45.7,45.9,45.5,45.8,45.8,44.1,43.4,43.3,43.5,42.9,42.8,41.9,41.8,41.6,41.4,41.5,42.1,42.5,42.3,42.1,41.4,41.4,41.9,42.6,41.8,41.8,41.6,42.2]}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 19 Jan 2026 05:02:19 GMT
+      Transfer-Encoding:
+      - chunked
+      content-length:
+      - '4798'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - api.open-meteo.com
+    method: GET
+    uri: https://api.open-meteo.com/v1/forecast?daily=temperature_2m_max%2Ctemperature_2m_min%2Cweather_code%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant%2Cprecipitation_probability_max%2Csnowfall_sum%2Cuv_index_max&forecast_days=7&latitude=51.5074&longitude=-0.1278&precipitation_unit=inch&temperature_unit=fahrenheit&timezone=auto&wind_speed_unit=mph
+  response:
+    body:
+      string: "{\"latitude\":51.5,\"longitude\":-0.120000124,\"generationtime_ms\":0.3679990768432617,\"utc_offset_seconds\":0,\"timezone\":\"Europe/London\",\"timezone_abbreviation\":\"GMT\",\"elevation\":16.0,\"daily_units\":{\"time\":\"iso8601\",\"temperature_2m_max\":\"\xB0F\",\"temperature_2m_min\":\"\xB0F\",\"weather_code\":\"wmo
+        code\",\"wind_speed_10m_max\":\"mp/h\",\"wind_direction_10m_dominant\":\"\xB0\",\"precipitation_probability_max\":\"%\",\"snowfall_sum\":\"inch\",\"uv_index_max\":\"\"},\"daily\":{\"time\":[\"2026-01-19\",\"2026-01-20\",\"2026-01-21\",\"2026-01-22\",\"2026-01-23\",\"2026-01-24\",\"2026-01-25\"],\"temperature_2m_max\":[51.9,50.0,48.0,47.9,48.6,47.4,41.6],\"temperature_2m_min\":[45.7,46.5,43.7,45.6,43.8,40.9,36.4],\"weather_code\":[80,3,80,61,3,61,61],\"wind_speed_10m_max\":[7.7,11.2,12.4,9.9,12.8,13.9,7.3],\"wind_direction_10m_dominant\":[149,158,130,122,138,151,26],\"precipitation_probability_max\":[18,43,56,35,45,12,20],\"snowfall_sum\":[0.000,0.000,0.000,0.000,0.000,0.000,0.000],\"uv_index_max\":[0.80,0.65,0.15,1.15,1.40,1.25,1.20]}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 19 Jan 2026 05:02:19 GMT
+      Transfer-Encoding:
+      - chunked
+      content-length:
+      - '972'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - api.open-meteo.com
+    method: GET
+    uri: https://api.open-meteo.com/v1/forecast?current=temperature_2m%2Crelative_humidity_2m%2Capparent_temperature%2Cweather_code%2Cwind_speed_10m%2Cwind_direction_10m%2Cpressure_msl%2Csnowfall%2Csnow_depth%2Cvisibility&daily=sunrise%2Csunset%2Cuv_index_max&forecast_days=1&latitude=51.5074&longitude=-0.1278&precipitation_unit=inch&temperature_unit=fahrenheit&timezone=auto&wind_speed_unit=mph
+  response:
+    body:
+      string: "{\"latitude\":51.5,\"longitude\":-0.120000124,\"generationtime_ms\":0.20134449005126953,\"utc_offset_seconds\":0,\"timezone\":\"Europe/London\",\"timezone_abbreviation\":\"GMT\",\"elevation\":16.0,\"current_units\":{\"time\":\"iso8601\",\"interval\":\"seconds\",\"temperature_2m\":\"\xB0F\",\"relative_humidity_2m\":\"%\",\"apparent_temperature\":\"\xB0F\",\"weather_code\":\"wmo
+        code\",\"wind_speed_10m\":\"mp/h\",\"wind_direction_10m\":\"\xB0\",\"pressure_msl\":\"hPa\",\"snowfall\":\"inch\",\"snow_depth\":\"ft\",\"visibility\":\"ft\"},\"current\":{\"time\":\"2026-01-19T05:00\",\"interval\":900,\"temperature_2m\":46.4,\"relative_humidity_2m\":93,\"apparent_temperature\":43.9,\"weather_code\":2,\"wind_speed_10m\":2.4,\"wind_direction_10m\":131,\"pressure_msl\":1013.9,\"snowfall\":0.000,\"snow_depth\":0.000,\"visibility\":23622.047},\"daily_units\":{\"time\":\"iso8601\",\"sunrise\":\"iso8601\",\"sunset\":\"iso8601\",\"uv_index_max\":\"\"},\"daily\":{\"time\":[\"2026-01-19\"],\"sunrise\":[\"2026-01-19T07:55\"],\"sunset\":[\"2026-01-19T16:27\"],\"uv_index_max\":[0.80]}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 19 Jan 2026 05:02:19 GMT
+      Transfer-Encoding:
+      - chunked
+      content-length:
+      - '943'
+    status:
+      code: 200
+      message: OK
+version: 1

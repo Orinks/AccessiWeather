@@ -1,0 +1,24 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - api.open-meteo.com
+    method: GET
+    uri: https://api.open-meteo.com/v1/forecast?latitude=200.0&longitude=-74.0&current=temperature_2m%2Crelative_humidity_2m%2Capparent_temperature%2Cis_day%2Cprecipitation%2Cweather_code%2Ccloud_cover%2Cpressure_msl%2Csurface_pressure%2Cwind_speed_10m%2Cwind_direction_10m%2Cwind_gusts_10m%2Cuv_index%2Csnowfall%2Csnow_depth%2Cvisibility&daily=sunrise%2Csunset%2Cuv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=1
+  response:
+    body:
+      string: '{"error":true,"reason":"Latitude must be in range of -90 to 90\u00b0. Given: 200.0."}'
+    headers:
+      Content-Type:
+      - application/json; charset=utf-8
+    status:
+      code: 400
+      message: Bad Request
+version: 1

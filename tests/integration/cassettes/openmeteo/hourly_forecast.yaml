@@ -1,0 +1,24 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - api.open-meteo.com
+    method: GET
+    uri: https://api.open-meteo.com/v1/forecast?latitude=40.7128&longitude=-74.006&hourly=temperature_2m%2Crelative_humidity_2m%2Capparent_temperature%2Cprecipitation_probability%2Cprecipitation%2Cweather_code%2Cpressure_msl%2Csurface_pressure%2Ccloud_cover%2Cwind_speed_10m%2Cwind_direction_10m%2Cwind_gusts_10m%2Cis_day%2Csnowfall%2Cuv_index%2Csnow_depth%2Cfreezing_level_height%2Cvisibility&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_hours=48
+  response:
+    body:
+      string: '{"latitude":40.710335,"longitude":-73.99307,"generationtime_ms":0.212,"utc_offset_seconds":-18000,"timezone":"America/New_York","timezone_abbreviation":"EST","elevation":10.0,"hourly_units":{"time":"iso8601","temperature_2m":"\u00b0F","relative_humidity_2m":"%","apparent_temperature":"\u00b0F","precipitation_probability":"%","precipitation":"inch","weather_code":"wmo code","pressure_msl":"hPa","surface_pressure":"hPa","cloud_cover":"%","wind_speed_10m":"mp/h","wind_direction_10m":"\u00b0","wind_gusts_10m":"mp/h","is_day":"","snowfall":"inch","uv_index":"","snow_depth":"inch","freezing_level_height":"ft","visibility":"ft"},"hourly":{"time":["2025-01-15T00:00","2025-01-15T01:00","2025-01-15T02:00","2025-01-15T03:00","2025-01-15T04:00","2025-01-15T05:00","2025-01-15T06:00","2025-01-15T07:00","2025-01-15T08:00","2025-01-15T09:00","2025-01-15T10:00","2025-01-15T11:00","2025-01-15T12:00","2025-01-15T13:00","2025-01-15T14:00","2025-01-15T15:00","2025-01-15T16:00","2025-01-15T17:00","2025-01-15T18:00","2025-01-15T19:00","2025-01-15T20:00","2025-01-15T21:00","2025-01-15T22:00","2025-01-15T23:00"],"temperature_2m":[38.5,37.8,37.2,36.8,36.5,36.2,36.5,37.2,39.5,42.3,44.8,46.5,47.8,48.2,48.5,48.0,47.2,45.8,44.2,42.5,41.2,40.2,39.5,38.8],"relative_humidity_2m":[72,74,76,78,80,82,81,78,72,65,58,52,48,46,45,47,50,55,60,65,68,70,71,72],"apparent_temperature":[34.2,33.5,32.8,32.5,32.2,31.8,32.2,33.2,35.8,38.8,41.5,43.2,44.5,45.0,45.2,44.8,43.8,42.2,40.5,38.8,37.5,36.5,35.8,35.2],"precipitation_probability":[0,0,0,5,5,10,10,5,0,0,0,0,0,0,5,10,15,10,5,0,0,0,0,0],"precipitation":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"weather_code":[0,0,1,1,2,2,2,1,1,0,0,0,1,2,2,2,3,2,1,1,0,0,0,0],"pressure_msl":[1018.5,1018.8,1019.2,1019.5,1019.8,1020.0,1020.2,1020.5,1020.8,1021.0,1020.8,1020.5,1020.2,1019.8,1019.5,1019.2,1018.8,1018.5,1018.2,1018.0,1018.2,1018.5,1018.8,1019.0],"surface_pressure":[1017.2,1017.5,1017.8,1018.2,1018.5,1018.8,1019.0,1019.2,1019.5,1019.8,1019.5,1019.2,1018.8,1018.5,1018.2,1017.8,1017.5,1017.2,1016.8,1016.5,1016.8,1017.2,1017.5,1017.8],"cloud_cover":[10,15,25,30,40,45,40,30,20,10,5,5,15,30,40,50,65,50,30,20,15,10,5,5],"wind_speed_10m":[5.2,4.8,4.5,4.2,4.0,4.2,4.5,5.0,6.2,7.5,8.5,9.2,9.5,9.2,8.8,8.2,7.5,6.8,6.2,5.8,5.5,5.2,5.0,4.8],"wind_direction_10m":[280,275,270,265,260,265,270,275,280,285,290,295,300,305,310,305,300,295,290,285,280,278,275,272],"wind_gusts_10m":[12.5,11.8,11.2,10.5,10.0,10.5,11.2,12.0,14.5,17.2,19.5,21.2,22.0,21.5,20.5,19.2,17.5,15.8,14.2,13.2,12.5,12.0,11.5,11.2],"is_day":[0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0],"snowfall":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"uv_index":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.5,1.2,2.0,2.8,3.2,3.2,2.8,2.2,1.5,0.5,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"snow_depth":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"freezing_level_height":[3500,3450,3400,3350,3300,3280,3300,3350,3450,3600,3800,4000,4100,4150,4180,4150,4080,3950,3800,3650,3550,3480,3450,3420],"visibility":[32808,32808,32808,32808,26247,26247,29528,32808,32808,32808,32808,32808,32808,32808,29528,26247,22966,26247,29528,32808,32808,32808,32808,32808]}}'
+    headers:
+      Content-Type:
+      - application/json; charset=utf-8
+    status:
+      code: 200
+      message: OK
+version: 1
