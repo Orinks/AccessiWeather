@@ -80,27 +80,21 @@ def clean_build() -> None:
     print("Clean complete.")
 
 
-def get_data_files() -> list[tuple[str, str]]:
-    """Get list of data files to include in the build."""
-    data_files = []
+def get_data_directories() -> list[str]:
+    """Get list of data directories to include in the build."""
+    data_dirs = []
 
     # Include resources directory
     resources_dir = SRC_DIR / "accessiweather" / "resources"
     if resources_dir.exists():
-        for file in resources_dir.rglob("*"):
-            if file.is_file():
-                rel_path = file.relative_to(SRC_DIR / "accessiweather")
-                data_files.append((str(file), str(rel_path.parent)))
+        data_dirs.append(str(resources_dir))
 
     # Include soundpacks (only default)
     soundpacks_dir = SRC_DIR / "accessiweather" / "soundpacks" / "default"
     if soundpacks_dir.exists():
-        for file in soundpacks_dir.rglob("*"):
-            if file.is_file():
-                rel_path = file.relative_to(SRC_DIR / "accessiweather")
-                data_files.append((str(file), str(rel_path.parent)))
+        data_dirs.append(str(soundpacks_dir))
 
-    return data_files
+    return data_dirs
 
 
 def get_hidden_imports() -> list[str]:
@@ -142,7 +136,9 @@ def build_windows(version: str, console: bool = False) -> int:
         from installer_builder2 import InstallerBuilder
     except ImportError:
         print("Error: installer_builder2 not installed.")
-        print("Install with: pip install git+https://github.com/accessibleapps/installer_builder2.git")
+        print(
+            "Install with: pip install git+https://github.com/accessibleapps/installer_builder2.git"
+        )
         return 1
 
     print(f"Building {APP_NAME} v{version} for Windows...")
@@ -150,6 +146,7 @@ def build_windows(version: str, console: bool = False) -> int:
     # Prepare build configuration
     builder = InstallerBuilder(
         app_name=APP_NAME,
+        dist_path=str(DIST_DIR),
         main_module=MAIN_MODULE,
         version=version,
         author=APP_AUTHOR,
@@ -157,14 +154,8 @@ def build_windows(version: str, console: bool = False) -> int:
         url=APP_URL,
         console=console,
         run_at_startup=False,
-        # Include additional modules
         include_modules=get_hidden_imports(),
-        # Include data files
-        data_files=get_data_files(),
-        # Output directory
-        output_dir=str(DIST_DIR),
-        # Source directory
-        source_dir=str(SRC_DIR),
+        data_directories=get_data_directories(),
     )
 
     try:
@@ -182,13 +173,16 @@ def build_macos(version: str, console: bool = False) -> int:
         from installer_builder2 import InstallerBuilder
     except ImportError:
         print("Error: installer_builder2 not installed.")
-        print("Install with: pip install git+https://github.com/accessibleapps/installer_builder2.git")
+        print(
+            "Install with: pip install git+https://github.com/accessibleapps/installer_builder2.git"
+        )
         return 1
 
     print(f"Building {APP_NAME} v{version} for macOS...")
 
     builder = InstallerBuilder(
         app_name=APP_NAME,
+        dist_path=str(DIST_DIR),
         main_module=MAIN_MODULE,
         version=version,
         author=APP_AUTHOR,
@@ -196,9 +190,7 @@ def build_macos(version: str, console: bool = False) -> int:
         url=APP_URL,
         console=console,
         include_modules=get_hidden_imports(),
-        data_files=get_data_files(),
-        output_dir=str(DIST_DIR),
-        source_dir=str(SRC_DIR),
+        data_directories=get_data_directories(),
     )
 
     try:
@@ -211,10 +203,8 @@ def build_macos(version: str, console: bool = False) -> int:
 
 
 def main() -> int:
-    """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Build AccessiWeather using installer_builder2"
-    )
+    """Run the build process."""
+    parser = argparse.ArgumentParser(description="Build AccessiWeather using installer_builder2")
     parser.add_argument(
         "--platform",
         choices=["windows", "macos", "auto"],
@@ -260,12 +250,12 @@ def main() -> int:
     # Build for target platform
     if target_platform == "windows":
         return build_windows(version, args.console)
-    elif target_platform == "macos":
+    if target_platform == "macos":
         return build_macos(version, args.console)
-    else:
-        print(f"Error: Unsupported platform: {target_platform}")
-        print("installer_builder2 only supports Windows and macOS.")
-        return 1
+
+    print(f"Error: Unsupported platform: {target_platform}")
+    print("installer_builder2 only supports Windows and macOS.")
+    return 1
 
 
 if __name__ == "__main__":
