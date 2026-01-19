@@ -71,8 +71,6 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "time_display_mode",
     "time_format_12hour",
     "show_timezone_suffix",
-    "html_render_current_conditions",
-    "html_render_forecast",
     "taskbar_icon_text_enabled",
     "taskbar_icon_dynamic_enabled",
     "taskbar_icon_text_format",
@@ -131,9 +129,6 @@ class AppSettings:
     time_display_mode: str = "local"
     time_format_12hour: bool = True
     show_timezone_suffix: bool = False
-    # HTML rendering options - when True, use WebView with HTML; when False, use MultilineTextInput
-    html_render_current_conditions: bool = False
-    html_render_forecast: bool = False
     # Taskbar icon text options
     taskbar_icon_text_enabled: bool = False
     taskbar_icon_dynamic_enabled: bool = True
@@ -373,8 +368,6 @@ class AppSettings:
             "time_display_mode": self.time_display_mode,
             "time_format_12hour": self.time_format_12hour,
             "show_timezone_suffix": self.show_timezone_suffix,
-            "html_render_current_conditions": self.html_render_current_conditions,
-            "html_render_forecast": self.html_render_forecast,
             "taskbar_icon_text_enabled": self.taskbar_icon_text_enabled,
             "taskbar_icon_dynamic_enabled": self.taskbar_icon_dynamic_enabled,
             "taskbar_icon_text_format": self.taskbar_icon_text_format,
@@ -440,10 +433,6 @@ class AppSettings:
             time_display_mode=data.get("time_display_mode", "local"),
             time_format_12hour=cls._as_bool(data.get("time_format_12hour"), True),
             show_timezone_suffix=cls._as_bool(data.get("show_timezone_suffix"), False),
-            html_render_current_conditions=cls._as_bool(
-                data.get("html_render_current_conditions"), False
-            ),
-            html_render_forecast=cls._as_bool(data.get("html_render_forecast"), False),
             taskbar_icon_text_enabled=cls._as_bool(data.get("taskbar_icon_text_enabled"), False),
             taskbar_icon_dynamic_enabled=cls._as_bool(
                 data.get("taskbar_icon_dynamic_enabled"), True

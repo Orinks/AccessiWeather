@@ -173,33 +173,6 @@ class SettingsDialogSimple(wx.Dialog):
         )
         sizer.Add(self._controls["show_timezone_suffix"], 0, wx.LEFT, 10)
 
-        # HTML Rendering Section
-        sizer.Add(
-            wx.StaticText(panel, label="Weather Display Rendering:"),
-            0,
-            wx.ALL,
-            5,
-        )
-        sizer.Add(
-            wx.StaticText(
-                panel,
-                label="HTML rendering provides better screen reader navigation with headings.",
-            ),
-            0,
-            wx.LEFT | wx.BOTTOM,
-            5,
-        )
-
-        self._controls["html_render_current"] = wx.CheckBox(
-            panel, label="Use HTML for current conditions (requires app restart)"
-        )
-        sizer.Add(self._controls["html_render_current"], 0, wx.LEFT, 10)
-
-        self._controls["html_render_forecast"] = wx.CheckBox(
-            panel, label="Use HTML for forecast (requires app restart)"
-        )
-        sizer.Add(self._controls["html_render_forecast"], 0, wx.LEFT, 10)
-
         # Verbosity Section
         sizer.Add(
             wx.StaticText(panel, label="Information Priority:"),
@@ -879,13 +852,6 @@ class SettingsDialogSimple(wx.Dialog):
                 getattr(settings, "show_timezone_suffix", False)
             )
 
-            self._controls["html_render_current"].SetValue(
-                getattr(settings, "html_render_current_conditions", True)
-            )
-            self._controls["html_render_forecast"].SetValue(
-                getattr(settings, "html_render_forecast", True)
-            )
-
             verbosity = getattr(settings, "verbosity_level", "standard")
             verbosity_map = {"minimal": 0, "standard": 1, "detailed": 2}
             self._controls["verbosity_level"].SetSelection(verbosity_map.get(verbosity, 1))
@@ -1042,8 +1008,6 @@ class SettingsDialogSimple(wx.Dialog):
                 ],
                 "time_format_12hour": self._controls["time_format_12hour"].GetValue(),
                 "show_timezone_suffix": self._controls["show_timezone_suffix"].GetValue(),
-                "html_render_current_conditions": self._controls["html_render_current"].GetValue(),
-                "html_render_forecast": self._controls["html_render_forecast"].GetValue(),
                 "verbosity_level": verbosity_values[
                     self._controls["verbosity_level"].GetSelection()
                 ],
