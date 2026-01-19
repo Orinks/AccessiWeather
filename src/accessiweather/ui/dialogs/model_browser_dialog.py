@@ -82,6 +82,8 @@ class ModelBrowserDialog(forms.Dialog):
     def _setup_initial_state(self) -> None:
         """Set up initial button states."""
         self.select_button.disable()
+        # Clear the search box - gui_builder may use label as default text
+        self.search_box.set_value("")
 
     # Event handlers using gui_builder decorators
     @search_box.add_callback
