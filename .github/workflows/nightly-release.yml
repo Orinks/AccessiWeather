@@ -106,7 +106,7 @@ jobs:
         include:
           - os: windows-latest
             platform: windows
-            installer_pattern: "*.msi"
+            installer_pattern: "*.exe"
           - os: macos-latest
             platform: macOS
             installer_pattern: "*.dmg"
@@ -122,35 +122,30 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: Install Inno Setup (Windows only)
+        if: matrix.platform == 'windows'
+        run: |
+          choco install innosetup -y
+          echo "C:\Program Files (x86)\Inno Setup 6" >> $GITHUB_PATH
+
+      - name: Install create-dmg (macOS only)
+        if: matrix.platform == 'macOS'
+        run: brew install create-dmg
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          pip install -e .[dev]
-          pip install briefcase
+          pip install -e ".[build]"
 
-      - name: Create Briefcase app scaffold
-        run: python installer/make.py create --platform ${{ matrix.platform }}
+      - name: Build installer
+        run: |
+          # Map platform names (macOS -> macos for build script)
+          PLATFORM="${{ matrix.platform }}"
+          if [ "$PLATFORM" = "macOS" ]; then
+            PLATFORM="macos"
+          fi
+          python installer/build.py --platform "$PLATFORM"
         env:
-          DISPLAY: ""
-          ACCESSIWEATHER_TEST_MODE: "1"
-
-      - name: Build Briefcase app
-        run: python installer/make.py build --platform ${{ matrix.platform }}
-        env:
-          DISPLAY: ""
-          ACCESSIWEATHER_TEST_MODE: "1"
-
-      - name: Create portable ZIP (Windows only)
-        if: matrix.platform == 'windows'
-        run: python installer/make.py zip --platform windows || true
-        env:
-          DISPLAY: ""
-          ACCESSIWEATHER_TEST_MODE: "1"
-
-      - name: Package Briefcase app
-        run: python installer/make.py package --platform ${{ matrix.platform }}
-        env:
-          DISPLAY: ""
           ACCESSIWEATHER_TEST_MODE: "1"
 
       - name: Upload installer artifact
@@ -158,14 +153,6 @@ jobs:
         with:
           name: nightly-${{ matrix.platform }}-installer
           path: dist/${{ matrix.installer_pattern }}
-          retention-days: 7
-
-      - name: Upload portable artifact (Windows only)
-        if: matrix.platform == 'windows'
-        uses: actions/upload-artifact@v6
-        with:
-          name: nightly-windows-portable
-          path: dist/AccessiWeather_Portable_v${{ needs.prepare.outputs.version }}.zip
           retention-days: 7
 
   nightly-release:
@@ -197,7 +184,7 @@ jobs:
           cd dist
 
           # Flatten directory structure - extract files from subdirectories
-          find . -type f \( -name "*.msi" -o -name "*.dmg" -o -name "*.zip" \) -exec mv {} . \;
+          find . -type f \( -name "*.exe" -o -name "*.dmg" \) -exec mv {} . \;
 
           # Remove empty directories
           find . -type d -empty -delete
@@ -210,17 +197,15 @@ jobs:
             # Skip if it's not a file
             [ -f "$file" ] || continue
 
-            if [[ "$file" == *.msi ]]; then
-              mv "$file" "AccessiWeather-nightly-${TIMESTAMP}-windows-setup.msi"
+            if [[ "$file" == *.exe ]]; then
+              mv "$file" "AccessiWeather-nightly-${TIMESTAMP}-windows-setup.exe"
             elif [[ "$file" == *.dmg ]]; then
               mv "$file" "AccessiWeather-nightly-${TIMESTAMP}-macOS.dmg"
-            elif [[ "$file" == *.zip ]]; then
-              mv "$file" "AccessiWeather-nightly-${TIMESTAMP}-windows-portable.zip"
             fi
           done
 
           # Generate new checksums (only for files, not directories)
-          sha256sum *.msi *.dmg *.zip 2>/dev/null > checksums.txt || true
+          sha256sum *.exe *.dmg 2>/dev/null > checksums.txt || true
 
           echo "Prepared assets:"
           ls -la
@@ -237,7 +222,7 @@ jobs:
 
           # Only upload files from dist/ (exclude subdirectories)
           cd dist
-          gh release create "$TAG" *.msi *.dmg *.zip checksums.txt \
+          gh release create "$TAG" *.exe *.dmg checksums.txt \
             --title "$TITLE" \
             --generate-notes \
             --prerelease \

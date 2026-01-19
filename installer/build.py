@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import platform
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -58,6 +59,50 @@ def read_version() -> str:
             if s.startswith("version") and '"' in s:
                 return s.split('"', 2)[1]
         return "0.0.0"
+
+
+def normalize_version(version: str, build_number: int | None = None) -> str:
+    """
+    Normalize version string to numeric-only format for Nuitka.
+
+    Nuitka requires versions as up to 4 integer values (e.g., "1.2.3.4").
+    This converts versions like "0.5.0.dev1" or "0.5.0a1" to "0.5.0.1".
+
+    Args:
+        version: Version string (e.g., "0.5.0.dev1", "1.2.3", "1.0.0rc1")
+        build_number: Optional build number to append (for nightly builds)
+
+    Returns:
+        Numeric-only version string (e.g., "0.5.0.1")
+
+    """
+    # Remove 'v' prefix if present
+    version = version.lstrip("v")
+
+    # Extract numeric parts and any trailing dev/alpha/beta/rc number
+    # Pattern matches: 0.5.0.dev1, 0.5.0a1, 0.5.0b2, 0.5.0rc3, etc.
+    match = re.match(r"^(\d+\.\d+\.\d+)(?:\.?(?:dev|a|alpha|b|beta|rc)(\d+))?", version)
+
+    if match:
+        base_version = match.group(1)  # e.g., "0.5.0"
+        suffix_num = match.group(2)  # e.g., "1" from "dev1"
+
+        if build_number is not None:
+            # Use provided build number
+            return f"{base_version}.{build_number}"
+        if suffix_num:
+            # Use the number from dev/alpha/beta/rc suffix
+            return f"{base_version}.{suffix_num}"
+        # No suffix, return as-is or with .0
+        return base_version
+
+    # Fallback: try to extract just numeric parts
+    parts = re.findall(r"\d+", version)
+    if parts:
+        # Take up to 4 numeric parts
+        return ".".join(parts[:4])
+
+    return "0.0.0"
 
 
 def detect_platform() -> str:
@@ -233,8 +278,9 @@ def main() -> int:
         return 0
 
     # Determine version
-    version = args.version or read_version()
-    print(f"Version: {version}")
+    raw_version = args.version or read_version()
+    version = normalize_version(raw_version)
+    print(f"Version: {raw_version} -> {version} (normalized for Nuitka)")
 
     # Determine platform
     target_platform = args.platform
