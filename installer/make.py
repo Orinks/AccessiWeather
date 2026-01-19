@@ -452,10 +452,8 @@ def cmd_bootstrap(args: argparse.Namespace) -> int:
     """
     Bootstrap a development environment for Auto Claude agents or fresh worktrees.
 
-    Installs all dev requirements and sets TOGA_BACKEND=toga_dummy for headless testing.
+    Installs all dev requirements for development and testing.
     """
-    import os
-
     vpy, venv_dir, created = _detect_python_env()
 
     # Ensure venv if needed
@@ -494,10 +492,6 @@ def cmd_bootstrap(args: argparse.Namespace) -> int:
     if _pip(vpy, "install", "-e", ".") != 0:
         return 1
 
-    # Set TOGA_BACKEND for headless testing
-    os.environ["TOGA_BACKEND"] = "toga_dummy"
-    print("Set TOGA_BACKEND=toga_dummy for headless testing")
-
     print("\nBootstrap complete!")
     print("Environment is ready for development and testing.")
     print("\nTo activate the environment manually:")
@@ -507,7 +501,6 @@ def cmd_bootstrap(args: argparse.Namespace) -> int:
             print(f"  {venv_dir}\\Scripts\\activate.bat    # CMD")
         else:
             print(f"  source {venv_dir}/bin/activate")
-    print("\nFor headless tests, ensure TOGA_BACKEND=toga_dummy is set.")
     return 0
 
 
@@ -518,8 +511,6 @@ def cmd_bootstrap_no_env(args: argparse.Namespace) -> int:
     Uses the current Python interpreter directly. Useful when the environment is
     already set up (e.g., in CI, containers, or pre-activated venvs).
     """
-    import os
-
     vpy = Path(sys.executable)
     print(f"Using current Python interpreter: {vpy}")
 
@@ -548,13 +539,8 @@ def cmd_bootstrap_no_env(args: argparse.Namespace) -> int:
     if _pip(vpy, "install", "-e", ".") != 0:
         return 1
 
-    # Set TOGA_BACKEND for headless testing
-    os.environ["TOGA_BACKEND"] = "toga_dummy"
-    print("Set TOGA_BACKEND=toga_dummy for headless testing")
-
     print("\nBootstrap complete (no-env mode)!")
     print("Dependencies installed in current Python environment.")
-    print("\nFor headless tests, ensure TOGA_BACKEND=toga_dummy is set.")
     return 0
 
 
@@ -603,9 +589,7 @@ def main() -> int:
     add_common(p_clean)
     p_clean.set_defaults(func=cmd_clean)
 
-    p_bootstrap = sub.add_parser(
-        "bootstrap", help="Bootstrap dev environment (install deps, set TOGA_BACKEND)"
-    )
+    p_bootstrap = sub.add_parser("bootstrap", help="Bootstrap dev environment (install deps)")
     p_bootstrap.set_defaults(func=cmd_bootstrap)
 
     p_bootstrap_no_env = sub.add_parser(

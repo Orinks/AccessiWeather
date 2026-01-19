@@ -185,7 +185,7 @@ def temp_config_dir(tmp_path):
 
 @pytest.fixture
 def mock_app():
-    """Mock Toga app for ConfigManager tests."""
+    """Mock app for ConfigManager tests."""
     app = MagicMock()
     app.paths = MagicMock()
     app.paths.config = Path(tempfile.mkdtemp())

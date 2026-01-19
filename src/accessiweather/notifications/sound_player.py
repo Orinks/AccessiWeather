@@ -1,7 +1,5 @@
-import contextlib
 import json
 import logging
-import platform
 from pathlib import Path
 from typing import Any
 
@@ -16,18 +14,6 @@ except ImportError:
     output = None
     stream = None
     _output_device = None
-
-# Fallback to playsound3 if sound_lib unavailable
-try:
-    from playsound3 import playsound
-except ImportError:
-    playsound = None
-
-# Windows-specific sound playing as final fallback
-winsound = None
-if platform.system() == "Windows":
-    with contextlib.suppress(ImportError):
-        import winsound  # type: ignore[import-untyped]
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +93,7 @@ def _play_sound_file(sound_file: Path) -> bool:
     # Clean up finished streams
     _cleanup_finished_streams()
 
-    # Method 1: Try sound_lib (preferred - supports many formats)
+    # Use sound_lib for cross-platform audio playback
     if SOUND_LIB_AVAILABLE and stream is not None:
         try:
             _init_sound_lib_output()
@@ -118,28 +104,6 @@ def _play_sound_file(sound_file: Path) -> bool:
             logger.debug(f"Played sound using sound_lib: {sound_file}")
         except Exception as e:
             logger.warning(f"sound_lib failed: {e}")
-
-    # Method 2: Try winsound on Windows
-    if not success and platform.system() == "Windows" and winsound:
-        try:
-            winsound.PlaySound(str(sound_file), winsound.SND_FILENAME | winsound.SND_ASYNC)
-            success = True
-            logger.debug(f"Played sound using winsound: {sound_file}")
-        except Exception as e:
-            logger.warning(f"winsound failed: {e}")
-
-    # Method 3: Try playsound as final fallback
-    if not success and playsound:
-        try:
-            if platform.system() == "Windows":
-                sound_path = str(sound_file).replace("\\", "/")
-            else:
-                sound_path = str(sound_file)
-            playsound(sound_path, block=False)
-            success = True
-            logger.debug(f"Played sound using playsound: {sound_file}")
-        except Exception as e:
-            logger.warning(f"playsound failed: {e}")
 
     return success
 
@@ -208,7 +172,7 @@ def play_exit_sound_blocking(pack_dir: str = DEFAULT_PACK) -> None:
             logger.warning("Exit sound file not found.")
             return
 
-        # Try sound_lib with blocking playback
+        # Use sound_lib with blocking playback
         if SOUND_LIB_AVAILABLE and stream is not None:
             try:
                 _init_sound_lib_output()
@@ -218,23 +182,6 @@ def play_exit_sound_blocking(pack_dir: str = DEFAULT_PACK) -> None:
                 return
             except Exception as e:
                 logger.warning(f"sound_lib blocking playback failed: {e}")
-
-        # Fallback to winsound (which can block)
-        if platform.system() == "Windows" and winsound:
-            try:
-                winsound.PlaySound(str(sound_file), winsound.SND_FILENAME)
-                logger.debug(f"Played exit sound (blocking via winsound) from pack: {pack_dir}")
-                return
-            except Exception as e:
-                logger.warning(f"winsound blocking failed: {e}")
-
-        # Final fallback: play with a small delay
-        if playsound:
-            try:
-                playsound(str(sound_file), block=True)
-                logger.debug(f"Played exit sound (blocking via playsound) from pack: {pack_dir}")
-            except Exception as e:
-                logger.warning(f"playsound blocking failed: {e}")
 
     except Exception as e:
         logger.debug(f"Failed to play exit sound: {e}")
