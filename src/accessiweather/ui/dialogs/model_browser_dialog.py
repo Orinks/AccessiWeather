@@ -1,4 +1,4 @@
-"""Model browser dialog for selecting OpenRouter AI models."""
+"""Model browser dialog for selecting OpenRouter AI models using gui_builder."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ import threading
 from typing import TYPE_CHECKING
 
 import wx
+from gui_builder import fields, forms
 
 if TYPE_CHECKING:
     from ...api.openrouter_models import OpenRouterModel
@@ -14,120 +15,124 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class ModelBrowserDialog(wx.Dialog):
-    """Dialog for browsing and selecting OpenRouter AI models."""
+class ModelBrowserDialog(forms.Dialog):
+    """
+    Dialog for browsing and selecting OpenRouter AI models.
 
-    def __init__(self, parent, api_key: str | None = None):
+    Uses gui_builder for accessible, screen-reader-friendly UI.
+    """
+
+    # Search section
+    search_label = fields.StaticText(label="Search models:")
+    search_box = fields.Text(label="Search models by name or description")
+
+    # Filter checkbox
+    free_only_checkbox = fields.CheckBox(label="Show free models only")
+
+    # Status display
+    status_label = fields.StaticText(label="Loading models...")
+
+    # Model list
+    model_list_label = fields.StaticText(label="Available models:")
+    model_list = fields.ListBox(label="Select an AI model")
+
+    # Description display
+    description_label = fields.StaticText(label="Model description:")
+    description_text = fields.Text(
+        label="Selected model description",
+        multiline=True,
+        readonly=True,
+    )
+
+    # Buttons
+    refresh_button = fields.Button(label="&Refresh")
+    select_button = fields.Button(label="&Select")
+    cancel_button = fields.Button(label="&Cancel")
+
+    def __init__(self, api_key: str | None = None, **kwargs):
         """
         Initialize the model browser dialog.
 
         Args:
-            parent: Parent window
             api_key: Optional OpenRouter API key
+            **kwargs: Additional keyword arguments passed to Dialog
 
         """
-        super().__init__(
-            parent,
-            title="Browse AI Models",
-            size=(700, 500),
-            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
-        )
         self.api_key = api_key
         self._all_models: list[OpenRouterModel] = []
         self._filtered_models: list[OpenRouterModel] = []
         self._selected_model_id: str | None = None
 
-        self._create_ui()
+        kwargs.setdefault("title", "Browse AI Models")
+        super().__init__(**kwargs)
+
+    def render(self, **kwargs):
+        """Render the dialog and set up post-render components."""
+        super().render(**kwargs)
         self._setup_accessibility()
+        self._setup_initial_state()
         self._load_models()
 
-    def _create_ui(self):
-        """Create the dialog UI."""
-        main_sizer = wx.BoxSizer(wx.VERTICAL)
+    def _setup_accessibility(self) -> None:
+        """Set up accessibility labels for screen readers."""
+        self.search_box.set_accessible_label("Search for AI models by name or description")
+        self.model_list.set_accessible_label("Available AI models list")
+        self.description_text.set_accessible_label("Description of selected model")
 
-        # Search and filter row
-        filter_sizer = wx.BoxSizer(wx.HORIZONTAL)
+    def _setup_initial_state(self) -> None:
+        """Set up initial button states."""
+        self.select_button.disable()
 
-        # Search box
-        filter_sizer.Add(
-            wx.StaticText(self, label="Search:"),
-            0,
-            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
-            5,
-        )
-        self._search_box = wx.TextCtrl(self, size=(200, -1))
-        self._search_box.Bind(wx.EVT_TEXT, self._on_search_changed)
-        filter_sizer.Add(self._search_box, 1, wx.RIGHT, 10)
+    # Event handlers using gui_builder decorators
+    @search_box.add_callback
+    def on_search_changed(self):
+        """Handle search text changed."""
+        self._apply_filters()
 
-        # Free only checkbox
-        self._free_only_checkbox = wx.CheckBox(self, label="Free models only")
-        self._free_only_checkbox.Bind(wx.EVT_CHECKBOX, self._on_filter_changed)
-        filter_sizer.Add(self._free_only_checkbox, 0, wx.ALIGN_CENTER_VERTICAL)
+    @free_only_checkbox.add_callback
+    def on_filter_changed(self):
+        """Handle filter checkbox changed."""
+        self._apply_filters()
 
-        main_sizer.Add(filter_sizer, 0, wx.EXPAND | wx.ALL, 10)
+    @model_list.add_callback
+    def on_model_selected(self):
+        """Handle model selection in list."""
+        index = self.model_list.get_index()
+        if index is not None and 0 <= index < len(self._filtered_models):
+            model = self._filtered_models[index]
+            self._selected_model_id = model.id
+            self.select_button.enable()
 
-        # Status label
-        self._status_label = wx.StaticText(self, label="Loading models...")
-        main_sizer.Add(self._status_label, 0, wx.LEFT | wx.BOTTOM, 10)
+            # Show description
+            desc = model.description or "No description available."
+            self.description_text.set_value(desc)
+        else:
+            self._selected_model_id = None
+            self.select_button.disable()
+            self.description_text.set_value("")
 
-        # Model list
-        self._model_list = wx.ListCtrl(
-            self,
-            style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN,
-        )
-        self._model_list.InsertColumn(0, "Model Name", width=280)
-        self._model_list.InsertColumn(1, "Context", width=80)
-        self._model_list.InsertColumn(2, "Pricing", width=120)
-        self._model_list.InsertColumn(3, "Type", width=60)
-        self._model_list.Bind(wx.EVT_LIST_ITEM_SELECTED, self._on_model_selected)
-        self._model_list.Bind(wx.EVT_LIST_ITEM_ACTIVATED, self._on_model_activated)
-        main_sizer.Add(self._model_list, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
+    @refresh_button.add_callback
+    def on_refresh(self):
+        """Refresh the model list."""
+        self._load_models()
 
-        # Model description
-        main_sizer.Add(
-            wx.StaticText(self, label="Description:"),
-            0,
-            wx.LEFT | wx.TOP,
-            10,
-        )
-        self._description_text = wx.TextCtrl(
-            self,
-            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_WORDWRAP,
-            size=(-1, 60),
-        )
-        main_sizer.Add(self._description_text, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+    @select_button.add_callback
+    def on_select(self):
+        """Handle select button - close with OK."""
+        if self._selected_model_id:
+            self.widget.control.EndModal(wx.ID_OK)
 
-        # Buttons
-        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        button_sizer.AddStretchSpacer()
+    @cancel_button.add_callback
+    def on_cancel(self):
+        """Handle cancel button."""
+        self.widget.control.EndModal(wx.ID_CANCEL)
 
-        refresh_btn = wx.Button(self, label="Refresh")
-        refresh_btn.Bind(wx.EVT_BUTTON, self._on_refresh)
-        button_sizer.Add(refresh_btn, 0, wx.RIGHT, 10)
-
-        cancel_btn = wx.Button(self, wx.ID_CANCEL, "Cancel")
-        button_sizer.Add(cancel_btn, 0, wx.RIGHT, 10)
-
-        self._ok_btn = wx.Button(self, wx.ID_OK, "Select")
-        self._ok_btn.Bind(wx.EVT_BUTTON, self._on_ok)
-        self._ok_btn.Enable(False)
-        button_sizer.Add(self._ok_btn, 0)
-
-        main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 10)
-
-        self.SetSizer(main_sizer)
-
-    def _setup_accessibility(self):
-        """Set up accessibility labels."""
-        self._search_box.SetName("Search models")
-        self._model_list.SetName("Available AI models")
-        self._description_text.SetName("Model description")
-
-    def _load_models(self):
+    def _load_models(self) -> None:
         """Load models from OpenRouter in a background thread."""
-        self._status_label.SetLabel("Loading models...")
-        self._model_list.DeleteAllItems()
-        self._ok_btn.Enable(False)
+        self.status_label.set_label("Loading models...")
+        self.model_list.set_items([])
+        self.select_button.disable()
+        self._selected_model_id = None
 
         def do_load():
             """Fetch models in background thread."""
@@ -157,7 +162,7 @@ class ModelBrowserDialog(wx.Dialog):
         thread = threading.Thread(target=do_load, daemon=True)
         thread.start()
 
-    def _on_models_loaded(self, models: list, error: str | None):
+    def _on_models_loaded(self, models: list, error: str | None) -> None:
         """
         Handle models loaded from API.
 
@@ -167,16 +172,16 @@ class ModelBrowserDialog(wx.Dialog):
 
         """
         if error:
-            self._status_label.SetLabel(f"Error: {error}")
+            self.status_label.set_label(f"Error: {error}")
             return
 
         self._all_models = models
         self._apply_filters()
 
-    def _apply_filters(self):
+    def _apply_filters(self) -> None:
         """Apply search and filter criteria to the model list."""
-        search_text = self._search_box.GetValue().lower().strip()
-        free_only = self._free_only_checkbox.GetValue()
+        search_text = self.search_box.get_value().lower().strip()
+        free_only = self.free_only_checkbox.get_value()
 
         self._filtered_models = []
         for model in self._all_models:
@@ -188,7 +193,7 @@ class ModelBrowserDialog(wx.Dialog):
             if search_text and (
                 search_text not in model.name.lower()
                 and search_text not in model.id.lower()
-                and search_text not in model.description.lower()
+                and search_text not in (model.description or "").lower()
             ):
                 continue
 
@@ -196,76 +201,36 @@ class ModelBrowserDialog(wx.Dialog):
 
         self._populate_list()
 
-    def _populate_list(self):
-        """Populate the list control with filtered models."""
-        self._model_list.DeleteAllItems()
-
-        for i, model in enumerate(self._filtered_models):
-            # Format pricing
+    def _populate_list(self) -> None:
+        """Populate the list with filtered models."""
+        items = []
+        for model in self._filtered_models:
+            # Format as accessible string with all relevant info
             if model.is_free:
                 pricing = "Free"
             else:
                 # Pricing is per 1M tokens, show per 1K for readability
-                prompt_cost = model.pricing_prompt / 1000  # Convert to per 1K
-                pricing = f"${prompt_cost:.6f}/1K tokens"
+                prompt_cost = model.pricing_prompt / 1000
+                pricing = f"${prompt_cost:.6f} per 1K tokens"
 
-            # Model type
-            model_type = "Free" if model.is_free else "Paid"
+            # Create descriptive item string for screen readers
+            item = f"{model.display_name} - Context: {model.context_display} - {pricing}"
+            items.append(item)
 
-            index = self._model_list.InsertItem(i, model.display_name)
-            self._model_list.SetItem(index, 1, model.context_display)
-            self._model_list.SetItem(index, 2, pricing)
-            self._model_list.SetItem(index, 3, model_type)
+        self.model_list.set_items(items)
 
         # Update status
         total = len(self._all_models)
         showing = len(self._filtered_models)
         if showing == total:
-            self._status_label.SetLabel(f"{total} models available")
+            self.status_label.set_label(f"{total} models available")
         else:
-            self._status_label.SetLabel(f"Showing {showing} of {total} models")
+            self.status_label.set_label(f"Showing {showing} of {total} models")
 
         # Clear selection
         self._selected_model_id = None
-        self._ok_btn.Enable(False)
-        self._description_text.SetValue("")
-
-    def _on_search_changed(self, event):
-        """Handle search text changed."""
-        self._apply_filters()
-
-    def _on_filter_changed(self, event):
-        """Handle filter checkbox changed."""
-        self._apply_filters()
-
-    def _on_model_selected(self, event):
-        """Handle model selection in list."""
-        index = event.GetIndex()
-        if 0 <= index < len(self._filtered_models):
-            model = self._filtered_models[index]
-            self._selected_model_id = model.id
-            self._ok_btn.Enable(True)
-
-            # Show description
-            desc = model.description or "No description available."
-            self._description_text.SetValue(desc)
-
-    def _on_model_activated(self, event):
-        """Handle double-click on model (select and close)."""
-        index = event.GetIndex()
-        if 0 <= index < len(self._filtered_models):
-            model = self._filtered_models[index]
-            self._selected_model_id = model.id
-            self.EndModal(wx.ID_OK)
-
-    def _on_refresh(self, event):
-        """Refresh the model list."""
-        self._load_models()
-
-    def _on_ok(self, event):
-        """Handle OK button."""
-        if self._selected_model_id:
-            self.EndModal(wx.ID_OK)
+        self.select_button.disable()
+        self.description_text.set_value("")
 
     def get_selected_model_id(self) -> str | None:
         """
@@ -310,10 +275,17 @@ def show_model_browser_dialog(parent, api_key: str | None = None) -> str | None:
         # Get the underlying wx control if parent is a gui_builder widget
         parent_ctrl = getattr(parent, "control", parent)
 
-        dlg = ModelBrowserDialog(parent_ctrl, api_key=api_key)
-        result = dlg.ShowModal()
+        # Create and render the dialog
+        dlg = ModelBrowserDialog(api_key=api_key, parent=parent_ctrl)
+        dlg.render()
+
+        # Show modal and get result
+        result = dlg.widget.control.ShowModal()
         selected_id = dlg.get_selected_model_id() if result == wx.ID_OK else None
-        dlg.Destroy()
+
+        # Destroy the dialog
+        dlg.widget.control.Destroy()
+
         return selected_id
 
     except Exception as e:
