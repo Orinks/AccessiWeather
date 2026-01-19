@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(powershell -Command \"Remove-Item -Recurse -Force tmpclaude-1d39-cwd, tmpclaude-6eaa-cwd, tmpclaude-6f88-cwd, tmpclaude-f038-cwd\")"
-    ]
-  }
-}
