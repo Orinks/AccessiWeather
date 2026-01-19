@@ -1,5 +1,5 @@
 """
-AI explanation dialog for wxPython.
+AI explanation dialog using gui_builder.
 
 Displays AI-generated weather explanations with loading state and metadata.
 """
@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
 import wx
+from gui_builder import fields, forms
 
 if TYPE_CHECKING:
     from ...ai_explainer import ExplanationResult
@@ -21,73 +22,70 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class ExplanationDialog(wx.Dialog):
-    """Dialog for displaying AI-generated weather explanations."""
+class ExplanationDialog(forms.Dialog):
+    """Dialog for displaying AI-generated weather explanations using gui_builder."""
+
+    # Header
+    header_label = fields.StaticText(label="")
+    timestamp_label = fields.StaticText(label="")
+
+    # Explanation text
+    explanation_text = fields.Text(
+        label="Weather explanation",
+        multiline=True,
+        readonly=True,
+    )
+
+    # Metadata section
+    model_label = fields.StaticText(label="")
+    usage_label = fields.StaticText(label="")
+    cached_label = fields.StaticText(label="")
+
+    # Close button
+    close_button = fields.Button(label="&Close")
 
     def __init__(
         self,
-        parent,
         explanation: ExplanationResult,
         location: str,
+        **kwargs,
     ):
         """
         Create explanation dialog with result.
 
         Args:
-            parent: Parent window
             explanation: The AI-generated explanation result
             location: The location name for the weather data
+            **kwargs: Additional keyword arguments passed to Dialog
 
         """
-        super().__init__(
-            parent,
-            title=f"Weather Explanation - {location}",
-            size=(550, 450),
-            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
-        )
         self.explanation = explanation
         self.location = location
-        self._create_ui()
+
+        kwargs.setdefault("title", f"Weather Explanation - {location}")
+        super().__init__(**kwargs)
+
+    def render(self, **kwargs):
+        """Render the dialog and populate with data."""
+        super().render(**kwargs)
+        self._populate_data()
         self._setup_accessibility()
 
-    def _create_ui(self):
-        """Create the dialog UI."""
-        main_sizer = wx.BoxSizer(wx.VERTICAL)
-
-        # Header with location
-        header = wx.StaticText(
-            self,
-            label=f"Weather explanation for {self.location}",
-        )
-        header_font = header.GetFont()
-        header_font.SetWeight(wx.FONTWEIGHT_BOLD)
-        header_font.SetPointSize(header_font.GetPointSize() + 2)
-        header.SetFont(header_font)
-        main_sizer.Add(header, 0, wx.ALL, 10)
+    def _populate_data(self) -> None:
+        """Populate the dialog with explanation data."""
+        # Header
+        self.header_label.set_label(f"Weather explanation for {self.location}")
 
         # Timestamp
         timestamp_text = self.explanation.timestamp.strftime("%B %d, %Y at %I:%M %p")
-        timestamp = wx.StaticText(self, label=f"Generated: {timestamp_text}")
-        timestamp_font = timestamp.GetFont()
-        timestamp_font.SetStyle(wx.FONTSTYLE_ITALIC)
-        timestamp.SetFont(timestamp_font)
-        main_sizer.Add(timestamp, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        self.timestamp_label.set_label(f"Generated: {timestamp_text}")
 
-        # Explanation text (main content)
+        # Explanation text
         explanation_text = self.explanation.text or "(No explanation text received)"
-        self.text_ctrl = wx.TextCtrl(
-            self,
-            value=explanation_text,
-            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_WORDWRAP,
-        )
-        main_sizer.Add(self.text_ctrl, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
-
-        # Metadata section
-        metadata_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.explanation_text.set_value(explanation_text)
 
         # Model used
-        model_label = wx.StaticText(self, label=f"Model: {self.explanation.model_used}")
-        metadata_sizer.Add(model_label, 0, wx.TOP, 10)
+        self.model_label.set_label(f"Model: {self.explanation.model_used}")
 
         # Token count and cost
         cost_text = (
@@ -95,109 +93,90 @@ class ExplanationDialog(wx.Dialog):
             if self.explanation.estimated_cost == 0
             else f"~${self.explanation.estimated_cost:.6f}"
         )
-        usage_label = wx.StaticText(
-            self, label=f"Tokens: {self.explanation.token_count} | Cost: {cost_text}"
-        )
-        metadata_sizer.Add(usage_label, 0, wx.TOP, 2)
+        self.usage_label.set_label(f"Tokens: {self.explanation.token_count} | Cost: {cost_text}")
 
         # Cached indicator
         if self.explanation.cached:
-            cached_label = wx.StaticText(self, label="(Cached result)")
-            cached_font = cached_label.GetFont()
-            cached_font.SetStyle(wx.FONTSTYLE_ITALIC)
-            cached_label.SetFont(cached_font)
-            metadata_sizer.Add(cached_label, 0, wx.TOP, 2)
+            self.cached_label.set_label("(Cached result)")
 
-        main_sizer.Add(metadata_sizer, 0, wx.LEFT | wx.RIGHT, 10)
+    def _setup_accessibility(self) -> None:
+        """Set up accessibility labels for screen readers."""
+        self.explanation_text.set_accessible_label("Weather explanation")
 
-        # Close button
-        btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        btn_sizer.AddStretchSpacer()
-        close_btn = wx.Button(self, wx.ID_CLOSE, "Close")
-        close_btn.Bind(wx.EVT_BUTTON, lambda e: self.EndModal(wx.ID_OK))
-        btn_sizer.Add(close_btn, 0)
-        main_sizer.Add(btn_sizer, 0, wx.EXPAND | wx.ALL, 10)
-
-        self.SetSizer(main_sizer)
-
-        # Set focus to text for screen readers
-        self.text_ctrl.SetFocus()
-
-    def _setup_accessibility(self):
-        """Set up accessibility labels."""
-        self.text_ctrl.SetName("Weather explanation")
+    @close_button.add_callback
+    def on_close(self):
+        """Handle close button press."""
+        self.widget.control.EndModal(wx.ID_OK)
 
 
-class LoadingDialog(wx.Dialog):
-    """Dialog showing loading state while generating explanation."""
+class LoadingDialog(forms.Dialog):
+    """Dialog showing loading state while generating explanation using gui_builder."""
 
-    def __init__(self, parent, location: str):
+    # Loading message
+    loading_label = fields.StaticText(label="")
+
+    # Status label
+    status_label = fields.StaticText(label="Please wait...")
+
+    # Cancel button
+    cancel_button = fields.Button(label="&Cancel")
+
+    def __init__(self, location: str, **kwargs):
         """
         Create loading dialog.
 
         Args:
-            parent: Parent window
             location: The location being explained
+            **kwargs: Additional keyword arguments passed to Dialog
 
         """
-        super().__init__(
-            parent,
-            title="Generating Explanation",
-            size=(350, 150),
-            style=wx.DEFAULT_DIALOG_STYLE,
-        )
         self.location = location
         self.is_cancelled = False
-        self._create_ui()
+        self._gauge = None
+        self._timer = None
 
-    def _create_ui(self):
-        """Create the loading dialog UI."""
-        main_sizer = wx.BoxSizer(wx.VERTICAL)
+        kwargs.setdefault("title", "Generating Explanation")
+        super().__init__(**kwargs)
 
-        # Loading message
-        loading_label = wx.StaticText(self, label=f"Generating explanation for {self.location}...")
-        main_sizer.Add(loading_label, 0, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, 15)
+    def render(self, **kwargs):
+        """Render the dialog and set up components."""
+        super().render(**kwargs)
+        self._setup_loading_state()
 
-        # Activity indicator (gauge in indeterminate mode)
-        self.gauge = wx.Gauge(self, range=100, size=(200, 20), style=wx.GA_HORIZONTAL)
-        self.gauge.Pulse()
-        main_sizer.Add(self.gauge, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.LEFT | wx.RIGHT, 15)
+    def _setup_loading_state(self) -> None:
+        """Set up the loading state."""
+        self.loading_label.set_label(f"Generating explanation for {self.location}...")
 
-        # Status label
-        self.status_label = wx.StaticText(self, label="Please wait...")
-        status_font = self.status_label.GetFont()
-        status_font.SetStyle(wx.FONTSTYLE_ITALIC)
-        self.status_label.SetFont(status_font)
-        main_sizer.Add(self.status_label, 0, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, 10)
-
-        # Cancel button
-        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "Cancel")
-        self.cancel_btn.Bind(wx.EVT_BUTTON, self._on_cancel)
-        main_sizer.Add(self.cancel_btn, 0, wx.ALIGN_CENTER_HORIZONTAL | wx.BOTTOM, 10)
-
-        self.SetSizer(main_sizer)
+        # Add a gauge for progress indication (using wx directly for gauge)
+        # Note: gui_builder may not have a Gauge field, so we add it manually
+        parent = self.widget.control
+        self._gauge = wx.Gauge(parent, range=100, size=(200, 20), style=wx.GA_HORIZONTAL)
+        self._gauge.Pulse()
 
         # Start pulse timer
-        self.timer = wx.Timer(self)
-        self.Bind(wx.EVT_TIMER, self._on_timer, self.timer)
-        self.timer.Start(50)
+        self._timer = wx.Timer(parent)
+        parent.Bind(wx.EVT_TIMER, self._on_timer, self._timer)
+        self._timer.Start(50)
 
     def _on_timer(self, event):
         """Update the gauge pulse."""
-        self.gauge.Pulse()
+        if self._gauge:
+            self._gauge.Pulse()
 
-    def _on_cancel(self, event):
+    @cancel_button.add_callback
+    def on_cancel(self):
         """Handle cancel button press."""
         logger.info("User cancelled explanation generation")
         self.is_cancelled = True
-        self.status_label.SetLabel("Cancelling...")
-        self.cancel_btn.Enable(False)
-        self.EndModal(wx.ID_CANCEL)
+        self.status_label.set_label("Cancelling...")
+        self.cancel_button.disable()
+        self.widget.control.EndModal(wx.ID_CANCEL)
 
     def close(self):
         """Close the loading dialog."""
-        self.timer.Stop()
-        self.EndModal(wx.ID_OK)
+        if self._timer:
+            self._timer.Stop()
+        self.widget.control.EndModal(wx.ID_OK)
 
 
 def show_explanation_dialog(
@@ -235,8 +214,9 @@ def show_explanation_dialog(
         )
         return
 
-    # Show loading dialog (non-modal so we can update it)
-    loading_dialog = LoadingDialog(parent_ctrl, location.name)
+    # Show loading dialog
+    loading_dialog = LoadingDialog(location.name, parent=parent_ctrl)
+    loading_dialog.render()
 
     def generate_explanation():
         """Generate explanation in background thread."""
@@ -364,9 +344,10 @@ def show_explanation_dialog(
     def _show_result(result):
         """Show the explanation result."""
         loading_dialog.close()
-        dlg = ExplanationDialog(parent_ctrl, result, location.name)
-        dlg.ShowModal()
-        dlg.Destroy()
+        dlg = ExplanationDialog(result, location.name, parent=parent_ctrl)
+        dlg.render()
+        dlg.widget.control.ShowModal()
+        dlg.widget.control.Destroy()
         logger.info(
             f"Generated weather explanation for {location.name} "
             f"(tokens: {result.token_count}, cached: {result.cached})"
@@ -386,5 +367,5 @@ def show_explanation_dialog(
     thread.start()
 
     # Show loading dialog modally
-    loading_dialog.ShowModal()
-    loading_dialog.Destroy()
+    loading_dialog.widget.control.ShowModal()
+    loading_dialog.widget.control.Destroy()

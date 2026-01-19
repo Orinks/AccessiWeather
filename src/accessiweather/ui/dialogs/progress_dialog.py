@@ -1,4 +1,4 @@
-"""wxPython Progress Dialog for download/upload operations."""
+"""Progress Dialog for download/upload operations using gui_builder."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ import threading
 from typing import TYPE_CHECKING
 
 import wx
+from gui_builder import fields, forms
 
 if TYPE_CHECKING:
     pass
@@ -14,70 +15,58 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class ProgressDialog(wx.Dialog):
-    """Progress dialog for long-running operations."""
+class ProgressDialog(forms.Dialog):
+    """Progress dialog for long-running operations using gui_builder."""
+
+    # Status message
+    status_label = fields.StaticText(label="Please wait...")
+
+    # Detail label
+    detail_label = fields.StaticText(label="Initializing...")
+
+    # Cancel button
+    cancel_button = fields.Button(label="&Cancel")
 
     def __init__(
         self,
-        parent: wx.Window,
         title: str = "Progress",
         message: str = "Please wait...",
         can_cancel: bool = True,
-    ) -> None:
+        **kwargs,
+    ):
         """Initialize the progress dialog."""
-        super().__init__(
-            parent,
-            title=title,
-            size=(450, 180),
-            style=wx.DEFAULT_DIALOG_STYLE,
-        )
+        self._initial_message = message
+        self._can_cancel = can_cancel
         self.is_cancelled = False
         self._lock = threading.Lock()
+        self._gauge = None
 
-        self._create_ui(message, can_cancel)
-        self.Centre()
+        kwargs.setdefault("title", title)
+        super().__init__(**kwargs)
 
-    def _create_ui(self, message: str, can_cancel: bool) -> None:
-        """Create the dialog UI."""
-        panel = wx.Panel(self)
-        sizer = wx.BoxSizer(wx.VERTICAL)
+    def render(self, **kwargs):
+        """Render the dialog and set up components."""
+        super().render(**kwargs)
+        self._setup_initial_state()
 
-        # Status message
-        self.status_label = wx.StaticText(panel, label=message)
-        status_font = self.status_label.GetFont()
-        status_font.SetWeight(wx.FONTWEIGHT_BOLD)
-        self.status_label.SetFont(status_font)
-        sizer.Add(self.status_label, 0, wx.ALL | wx.EXPAND, 10)
+    def _setup_initial_state(self) -> None:
+        """Set up initial state."""
+        self.status_label.set_label(self._initial_message)
 
-        # Progress gauge
-        self.gauge = wx.Gauge(panel, range=100, size=(-1, 25))
-        sizer.Add(self.gauge, 0, wx.LEFT | wx.RIGHT | wx.EXPAND, 10)
+        if not self._can_cancel:
+            self.cancel_button.disable()
 
-        # Detail label
-        self.detail_label = wx.StaticText(panel, label="Initializing...")
-        sizer.Add(self.detail_label, 0, wx.ALL | wx.EXPAND, 10)
+        # Add a gauge for progress indication (using wx directly)
+        parent = self.widget.control
+        self._gauge = wx.Gauge(parent, range=100, size=(-1, 25))
 
-        # Cancel button
-        if can_cancel:
-            btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
-            btn_sizer.AddStretchSpacer()
-            self.cancel_btn = wx.Button(panel, wx.ID_CANCEL, label="Cancel")
-            self.cancel_btn.Bind(wx.EVT_BUTTON, self._on_cancel)
-            btn_sizer.Add(self.cancel_btn, 0)
-            btn_sizer.AddStretchSpacer()
-            sizer.Add(btn_sizer, 0, wx.EXPAND | wx.ALL, 10)
-        else:
-            self.cancel_btn = None
-
-        panel.SetSizer(sizer)
-
-    def _on_cancel(self, event) -> None:
+    @cancel_button.add_callback
+    def on_cancel(self):
         """Handle cancel button click."""
         with self._lock:
             self.is_cancelled = True
-        self.status_label.SetLabel("Cancelling...")
-        if self.cancel_btn:
-            self.cancel_btn.Enable(False)
+        self.status_label.set_label("Cancelling...")
+        self.cancel_button.disable()
 
     def update_progress(self, percent: float, status: str = "", detail: str = "") -> bool:
         """Update progress. Returns False if cancelled."""
@@ -87,11 +76,12 @@ class ProgressDialog(wx.Dialog):
 
         def _update():
             try:
-                self.gauge.SetValue(int(min(100, max(0, percent))))
+                if self._gauge:
+                    self._gauge.SetValue(int(min(100, max(0, percent))))
                 if status:
-                    self.status_label.SetLabel(status)
+                    self.status_label.set_label(status)
                 if detail:
-                    self.detail_label.SetLabel(detail)
+                    self.detail_label.set_label(detail)
             except RuntimeError:
                 pass  # Dialog may have been destroyed
 
@@ -103,9 +93,9 @@ class ProgressDialog(wx.Dialog):
 
         def _update():
             try:
-                self.status_label.SetLabel(status)
+                self.status_label.set_label(status)
                 if detail:
-                    self.detail_label.SetLabel(detail)
+                    self.detail_label.set_label(detail)
             except RuntimeError:
                 pass
 
@@ -116,12 +106,12 @@ class ProgressDialog(wx.Dialog):
 
         def _update():
             try:
-                self.gauge.SetValue(100)
-                self.status_label.SetLabel(message)
-                self.detail_label.SetLabel("")
-                if self.cancel_btn:
-                    self.cancel_btn.SetLabel("Close")
-                    self.cancel_btn.Enable(True)
+                if self._gauge:
+                    self._gauge.SetValue(100)
+                self.status_label.set_label(message)
+                self.detail_label.set_label("")
+                self.cancel_button.set_label("Close")
+                self.cancel_button.enable()
             except RuntimeError:
                 pass
 
@@ -132,11 +122,10 @@ class ProgressDialog(wx.Dialog):
 
         def _update():
             try:
-                self.status_label.SetLabel("Error")
-                self.detail_label.SetLabel(message)
-                if self.cancel_btn:
-                    self.cancel_btn.SetLabel("Close")
-                    self.cancel_btn.Enable(True)
+                self.status_label.set_label("Error")
+                self.detail_label.set_label(message)
+                self.cancel_button.set_label("Close")
+                self.cancel_button.enable()
             except RuntimeError:
                 pass
 

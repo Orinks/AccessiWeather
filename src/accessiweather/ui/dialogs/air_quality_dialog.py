@@ -1,4 +1,4 @@
-"""Air quality dialog for displaying AQI and pollutant data using wxPython."""
+"""Air quality dialog for displaying AQI and pollutant data using gui_builder."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING
 
 import wx
+from gui_builder import fields, forms
 
 if TYPE_CHECKING:
     from ...app import AccessiWeatherApp
@@ -32,79 +33,70 @@ _POLLUTANT_LABELS = {
 }
 
 
-def show_air_quality_dialog(parent, app: AccessiWeatherApp) -> None:
-    """
-    Show the air quality dialog.
+class AirQualityDialog(forms.Dialog):
+    """Dialog for displaying air quality information using gui_builder."""
 
-    Args:
-        parent: Parent window (gui_builder widget)
-        app: Application instance
+    # Summary section
+    summary_header = fields.StaticText(label="Current Air Quality")
+    aqi_label = fields.StaticText(label="")
+    pollutant_label = fields.StaticText(label="")
+    guidance_label = fields.StaticText(label="")
+    updated_label = fields.StaticText(label="")
 
-    """
-    try:
-        # Get the underlying wx control if parent is a gui_builder widget
-        parent_ctrl = getattr(parent, "control", parent)
+    # Hourly forecast section
+    hourly_header = fields.StaticText(label="Hourly Forecast")
+    hourly_display = fields.Text(
+        label="Hourly air quality forecast",
+        multiline=True,
+        readonly=True,
+    )
 
-        # Get current location
-        location = app.config_manager.get_current_location()
-        if not location:
-            wx.MessageBox(
-                "Please select a location first.",
-                "No Location Selected",
-                wx.OK | wx.ICON_WARNING,
-            )
-            return
+    # Pollutant details section
+    pollutant_header = fields.StaticText(label="Current Pollutant Levels")
+    pollutant_display = fields.Text(
+        label="Current pollutant measurements",
+        multiline=True,
+        readonly=True,
+    )
 
-        # Get weather data for environmental conditions
-        weather_data = getattr(app, "current_weather_data", None)
-        environmental = getattr(weather_data, "environmental", None) if weather_data else None
+    # No data message
+    no_data_label = fields.StaticText(label="")
 
-        dlg = AirQualityDialog(parent_ctrl, location.name, environmental, app)
-        dlg.ShowModal()
-        dlg.Destroy()
+    # Close button
+    close_button = fields.Button(label="&Close")
 
-    except Exception as e:
-        logger.error(f"Failed to show air quality dialog: {e}")
-        wx.MessageBox(
-            f"Failed to open air quality dialog: {e}",
-            "Error",
-            wx.OK | wx.ICON_ERROR,
-        )
-
-
-class AirQualityDialog(wx.Dialog):
-    """Dialog for displaying air quality information."""
-
-    def __init__(self, parent, location_name: str, environmental, app: AccessiWeatherApp):
+    def __init__(
+        self,
+        location_name: str,
+        environmental,
+        app: AccessiWeatherApp,
+        **kwargs,
+    ):
         """
         Initialize the air quality dialog.
 
         Args:
-            parent: Parent window
             location_name: Name of the location
             environmental: Environmental conditions data
             app: Application instance
+            **kwargs: Additional keyword arguments passed to Dialog
 
         """
-        super().__init__(
-            parent,
-            title=f"Air Quality - {location_name}",
-            size=(600, 500),
-            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
-        )
-
         self.location_name = location_name
         self.environmental = environmental
         self.app = app
 
-        self._create_ui()
+        kwargs.setdefault("title", f"Air Quality - {location_name}")
+        super().__init__(**kwargs)
+
+    def render(self, **kwargs):
+        """Render the dialog and populate with data."""
+        super().render(**kwargs)
+        self._populate_data()
         self._setup_accessibility()
 
-    def _create_ui(self):
-        """Create the dialog UI."""
-        panel = wx.Panel(self)
-        main_sizer = wx.BoxSizer(wx.VERTICAL)
-
+    def _populate_data(self) -> None:
+        """Populate the dialog with air quality data."""
         # Check if we have data
         has_data = (
             self.environmental
@@ -113,47 +105,33 @@ class AirQualityDialog(wx.Dialog):
         )
 
         if not has_data:
-            no_data = wx.StaticText(
-                panel,
-                label="Air quality data is not available for this location.",
-            )
-            no_data.SetFont(no_data.GetFont().Scaled(1.1))
-            main_sizer.Add(no_data, 0, wx.ALL, 20)
-        else:
-            # Summary section
-            summary_box = self._build_summary_section(panel)
-            main_sizer.Add(summary_box, 0, wx.EXPAND | wx.ALL, 15)
+            self.no_data_label.set_label("Air quality data is not available for this location.")
+            # Hide other sections
+            self.summary_header.set_label("")
+            self.aqi_label.set_label("")
+            self.pollutant_label.set_label("")
+            self.guidance_label.set_label("")
+            self.updated_label.set_label("")
+            self.hourly_header.set_label("")
+            self.hourly_display.set_value("")
+            self.pollutant_header.set_label("")
+            self.pollutant_display.set_value("")
+            return
 
-            # Hourly forecast section
-            hourly_box = self._build_hourly_section(panel)
-            main_sizer.Add(hourly_box, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 15)
+        # Hide no data message
+        self.no_data_label.set_label("")
 
-            # Pollutant details section
-            pollutant_box = self._build_pollutant_section(panel)
-            main_sizer.Add(pollutant_box, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 15)
+        # Populate summary section
+        self._populate_summary()
 
-        # Close button
-        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        button_sizer.AddStretchSpacer()
+        # Populate hourly forecast
+        self._populate_hourly()
 
-        close_btn = wx.Button(panel, wx.ID_CLOSE, "Close")
-        close_btn.Bind(wx.EVT_BUTTON, self._on_close)
-        button_sizer.Add(close_btn, 0)
+        # Populate pollutant details
+        self._populate_pollutants()
 
-        main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 15)
-
-        panel.SetSizer(main_sizer)
-
-    def _build_summary_section(self, panel) -> wx.BoxSizer:
-        """Build the current AQI summary section."""
-        sizer = wx.BoxSizer(wx.VERTICAL)
-
-        # Section header
-        header = wx.StaticText(panel, label="Current Air Quality")
-        header.SetFont(header.GetFont().Bold().Scaled(1.1))
-        sizer.Add(header, 0, wx.BOTTOM, 8)
-
-        # AQI value and category
+    def _populate_summary(self) -> None:
+        """Populate the summary section."""
         aqi = getattr(self.environmental, "air_quality_index", None)
         category = getattr(self.environmental, "air_quality_category", None)
 
@@ -166,53 +144,33 @@ class AirQualityDialog(wx.Dialog):
                     aqi_text += f" ({category})"
                 else:
                     aqi_text = category
-
-            aqi_label = wx.StaticText(panel, label=aqi_text)
-            aqi_label.SetFont(aqi_label.GetFont().Scaled(1.05))
-            sizer.Add(aqi_label, 0, wx.BOTTOM, 4)
+            self.aqi_label.set_label(aqi_text)
 
         # Dominant pollutant
         pollutant = getattr(self.environmental, "air_quality_pollutant", None)
         if pollutant:
             pollutant_name = _POLLUTANT_LABELS.get(pollutant.upper(), pollutant)
-            pollutant_label = wx.StaticText(panel, label=f"Dominant pollutant: {pollutant_name}")
-            sizer.Add(pollutant_label, 0, wx.BOTTOM, 4)
+            self.pollutant_label.set_label(f"Dominant pollutant: {pollutant_name}")
 
         # Health guidance
         guidance = _AIR_QUALITY_GUIDANCE.get(
-            category or "", "Monitor UV levels and use sun protection as needed."
+            category or "", "Monitor air quality levels as needed."
         )
-        guidance_label = wx.StaticText(panel, label=f"Health guidance: {guidance}")
-        guidance_label.SetForegroundColour(wx.Colour(128, 128, 128))
-        guidance_label.Wrap(550)
-        sizer.Add(guidance_label, 0, wx.BOTTOM, 4)
+        self.guidance_label.set_label(f"Health guidance: {guidance}")
 
         # Last updated
         updated_at = getattr(self.environmental, "updated_at", None)
         if updated_at:
             timestamp = updated_at.strftime("%I:%M %p").lstrip("0")
             date_str = updated_at.strftime("%B %d, %Y")
-            updated_label = wx.StaticText(panel, label=f"Last updated: {timestamp} on {date_str}")
-            updated_label.SetForegroundColour(wx.Colour(128, 128, 128))
-            sizer.Add(updated_label, 0)
+            self.updated_label.set_label(f"Last updated: {timestamp} on {date_str}")
 
-        return sizer
-
-    def _build_hourly_section(self, panel) -> wx.BoxSizer:
-        """Build the hourly forecast section."""
-        sizer = wx.BoxSizer(wx.VERTICAL)
-
-        # Section header
-        header = wx.StaticText(panel, label="Hourly Forecast")
-        header.SetFont(header.GetFont().Bold().Scaled(1.1))
-        sizer.Add(header, 0, wx.BOTTOM, 8)
-
+    def _populate_hourly(self) -> None:
+        """Populate the hourly forecast section."""
         hourly_data = getattr(self.environmental, "hourly_air_quality", None)
         if not hourly_data:
-            no_data = wx.StaticText(panel, label="Hourly forecast data is not available.")
-            no_data.SetForegroundColour(wx.Colour(128, 128, 128))
-            sizer.Add(no_data, 0)
-            return sizer
+            self.hourly_display.set_value("Hourly forecast data is not available.")
+            return
 
         # Build forecast text
         forecast_lines = []
@@ -223,32 +181,14 @@ class AirQualityDialog(wx.Dialog):
                 forecast_lines.append(f"{time_str}: AQI {int(round(aqi))}")
 
         forecast_text = "\n".join(forecast_lines) if forecast_lines else "No forecast data."
+        self.hourly_display.set_value(forecast_text)
 
-        forecast_display = wx.TextCtrl(
-            panel,
-            value=forecast_text,
-            style=wx.TE_MULTILINE | wx.TE_READONLY,
-            size=(-1, 100),
-        )
-        sizer.Add(forecast_display, 1, wx.EXPAND)
-
-        return sizer
-
-    def _build_pollutant_section(self, panel) -> wx.BoxSizer:
-        """Build the pollutant details section."""
-        sizer = wx.BoxSizer(wx.VERTICAL)
-
-        # Section header
-        header = wx.StaticText(panel, label="Current Pollutant Levels")
-        header.SetFont(header.GetFont().Bold().Scaled(1.1))
-        sizer.Add(header, 0, wx.BOTTOM, 8)
-
+    def _populate_pollutants(self) -> None:
+        """Populate the pollutant details section."""
         hourly_data = getattr(self.environmental, "hourly_air_quality", None)
         if not hourly_data:
-            no_data = wx.StaticText(panel, label="Pollutant data is not available.")
-            no_data.SetForegroundColour(wx.Colour(128, 128, 128))
-            sizer.Add(no_data, 0)
-            return sizer
+            self.pollutant_display.set_value("Pollutant data is not available.")
+            return
 
         # Get the most recent hour's data
         current = hourly_data[0] if hourly_data else None
@@ -279,20 +219,55 @@ class AirQualityDialog(wx.Dialog):
         else:
             pollutant_text = "No pollutant measurements available."
 
-        pollutant_display = wx.TextCtrl(
-            panel,
-            value=pollutant_text,
-            style=wx.TE_MULTILINE | wx.TE_READONLY,
-            size=(-1, 100),
-        )
-        sizer.Add(pollutant_display, 1, wx.EXPAND)
+        self.pollutant_display.set_value(pollutant_text)
 
-        return sizer
+    def _setup_accessibility(self) -> None:
+        """Set up accessibility labels for screen readers."""
+        self.hourly_display.set_accessible_label("Hourly air quality forecast")
+        self.pollutant_display.set_accessible_label("Current pollutant levels")
 
-    def _setup_accessibility(self):
-        """Set up accessibility labels."""
-        # Controls are created with meaningful labels already
-
-    def _on_close(self, event):
+    @close_button.add_callback
+    def on_close(self):
         """Handle close button press."""
-        self.EndModal(wx.ID_CLOSE)
+        self.widget.control.EndModal(wx.ID_CLOSE)
+
+
+def show_air_quality_dialog(parent, app: AccessiWeatherApp) -> None:
+    """
+    Show the air quality dialog.
+
+    Args:
+        parent: Parent window (gui_builder widget)
+        app: Application instance
+
+    """
+    try:
+        # Get the underlying wx control if parent is a gui_builder widget
+        parent_ctrl = getattr(parent, "control", parent)
+
+        # Get current location
+        location = app.config_manager.get_current_location()
+        if not location:
+            wx.MessageBox(
+                "Please select a location first.",
+                "No Location Selected",
+                wx.OK | wx.ICON_WARNING,
+            )
+            return
+
+        # Get weather data for environmental conditions
+        weather_data = getattr(app, "current_weather_data", None)
+        environmental = getattr(weather_data, "environmental", None) if weather_data else None
+
+        dlg = AirQualityDialog(location.name, environmental, app, parent=parent_ctrl)
+        dlg.render()
+        dlg.widget.control.ShowModal()
+        dlg.widget.control.Destroy()
+
+    except Exception as e:
+        logger.error(f"Failed to show air quality dialog: {e}")
+        wx.MessageBox(
+            f"Failed to open air quality dialog: {e}",
+            "Error",
+            wx.OK | wx.ICON_ERROR,
+        )
